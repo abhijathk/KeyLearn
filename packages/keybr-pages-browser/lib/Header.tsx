@@ -1,10 +1,10 @@
-import { Icon, IconButton } from "@keybr/widget";
-import { mdiMenu } from "@mdi/js";
+import { IconButton } from "@keybr/widget";
 import { type ReactNode } from "react";
 import { defineMessage, useIntl } from "react-intl";
 import { NavLink } from "react-router";
 import { AccountMenu } from "./AccountMenu.tsx";
 import * as styles from "./Header.module.less";
+import { StrokeIcon } from "./icons/index.ts";
 import { ThemeSwitcher } from "./themes/ThemeSwitcher.tsx";
 
 export function Header({
@@ -23,7 +23,7 @@ export function Header({
         <ThemeSwitcher />
         <AccountMenu />
         <IconButton
-          icon={<Icon shape={mdiMenu} />}
+          icon={<StrokeIcon name="menu" />}
           title={formatMessage(
             defineMessage({
               id: "nav.openMenu",

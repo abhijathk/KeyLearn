@@ -1,8 +1,8 @@
-import { Icon, IconButton } from "@keybr/widget";
-import { mdiClose } from "@mdi/js";
+import { IconButton } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect } from "react";
 import { defineMessage, useIntl } from "react-intl";
+import { StrokeIcon } from "./icons/index.ts";
 import * as styles from "./MenuDrawer.module.less";
 import { NavMenu } from "./NavMenu.tsx";
 
@@ -43,7 +43,7 @@ export function MenuDrawer({
         <div className={styles.head}>
           <span className={styles.title}>KeyLearn</span>
           <IconButton
-            icon={<Icon shape={mdiClose} />}
+            icon={<StrokeIcon name="close" />}
             title={formatMessage(
               defineMessage({
                 id: "nav.closeMenu",

@@ -2,20 +2,14 @@ import { COLORS, FONTS, useTheme } from "@keybr/themes";
 import {
   Dialog,
   ensureVisible,
-  Icon,
   IconButton,
   type OptionListOption,
   Popover,
 } from "@keybr/widget";
-import {
-  mdiArrowCollapseAll,
-  mdiArrowExpandAll,
-  mdiFormatFont,
-  mdiThemeLightDark,
-} from "@mdi/js";
 import { clsx } from "clsx";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { defineMessage, useIntl } from "react-intl";
+import { StrokeIcon } from "../icons/index.ts";
 import * as styles from "./ThemeSwitcher.module.less";
 
 const LazyThemeDesigner = lazy(() => import("./LazyThemeDesigner.tsx"));
@@ -41,7 +35,7 @@ export function ThemeSwitcher() {
         open={open === "color"}
         anchor={
           <IconButton
-            icon={<Icon shape={mdiThemeLightDark} />}
+            icon={<StrokeIcon name="theme" />}
             onClick={() => {
               setOpen(open === "color" ? null : "color");
             }}
@@ -64,7 +58,7 @@ export function ThemeSwitcher() {
         open={open === "font"}
         anchor={
           <IconButton
-            icon={<Icon shape={mdiFormatFont} />}
+            icon={<StrokeIcon name="font" />}
             onClick={() => {
               setOpen(open === "font" ? null : "font");
             }}
@@ -92,7 +86,7 @@ function FullscreenButton() {
     case true:
       return (
         <IconButton
-          icon={<Icon shape={mdiArrowCollapseAll} />}
+          icon={<StrokeIcon name="collapse" />}
           title={formatMessage(
             defineMessage({
               id: "t_theme_Exit_fullscreen_",
@@ -107,7 +101,7 @@ function FullscreenButton() {
     case false:
       return (
         <IconButton
-          icon={<Icon shape={mdiArrowExpandAll} />}
+          icon={<StrokeIcon name="expand" />}
           title={formatMessage(
             defineMessage({
               id: "t_theme_Enter_fullscreen_",
@@ -120,7 +114,7 @@ function FullscreenButton() {
         />
       );
     default:
-      return <IconButton icon={<Icon shape={mdiArrowExpandAll} />} />;
+      return <IconButton icon={<StrokeIcon name="expand" />} />;
   }
 }
 

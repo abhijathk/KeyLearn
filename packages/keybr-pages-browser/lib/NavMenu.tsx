@@ -1,11 +1,21 @@
 import { type PageInfo, Pages } from "@keybr/pages-shared";
-import { Icon } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
 import { useIntl } from "react-intl";
 import { NavLink } from "react-router";
+import { StrokeIcon, type StrokeIconName } from "./icons/index.ts";
 import * as styles from "./NavMenu.module.less";
 import { SubMenu } from "./SubMenu.tsx";
+
+const pageIcons: Record<string, StrokeIconName> = {
+  [Pages.practice.path]: "keyboard",
+  [Pages.profile.path]: "chart",
+  [Pages.typingTest.path]: "gauge",
+  [Pages.highScores.path]: "crown",
+  [Pages.multiplayer.path]: "people",
+  [Pages.layouts.path]: "grid",
+  [Pages.help.path]: "help",
+};
 
 export function NavMenu({
   currentPath,
@@ -58,7 +68,7 @@ function MenuItem({ children }: { readonly children: ReactNode }) {
 function MenuItemLink({
   page: {
     path,
-    link: { label, title, icon },
+    link: { label, title },
   },
   onNavigate,
 }: {
@@ -75,7 +85,7 @@ function MenuItemLink({
       title={title && formatMessage(title)}
       onClick={onNavigate}
     >
-      <Icon className={styles.icon} shape={icon ?? ""} />
+      <StrokeIcon className={styles.icon} name={pageIcons[path] ?? "help"} />
       <span className={styles.label}>{formatMessage(label)}</span>
     </NavLink>
   );
