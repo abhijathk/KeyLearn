@@ -1,16 +1,8 @@
-[![CI](https://github.com/aradzie/keybr.com/actions/workflows/ci.yml/badge.svg)](https://github.com/aradzie/keybr.com/actions/workflows/ci.yml)
+# KeyLearn — smart touch-typing tutor for adults and kids
 
-# [keybr.com](https://www.keybr.com/) is not (just) a typing test
+KeyLearn is an adaptive typing tutor that teaches touch typing the smart way:
 
-<p align="center">
-    <img src="assets/screenshot.png" alt="screenshot" width="600"/>
-</p>
-
-It's the smartest way to learn touch typing and improve your typing speed.
-On the surface, it looks pretty simple: it shows you a piece of text, and you type it out.
-But the devil is in the details — keybr.com offers a few unique features:
-
-* keybr.com tracks every single keystroke and computes statistics for each individual key.
+* It tracks every single keystroke and computes statistics for each individual key.
 * It automatically generates lessons that focus on your weakest keys.
 * You can set your own target typing speed, and it tracks your progress toward that goal.
 * It starts with a small set of the most frequent letters in your language.
@@ -18,24 +10,34 @@ But the devil is in the details — keybr.com offers a few unique features:
 * It can even predict how many more lessons you will need to complete to reach your target speed.
 * It provides a beautiful profile page with detailed graphs showing your learning progress.
 * It offers plenty of modes and configuration options.
+* No advertising, ever.
 
-<p align="center">
-    <img src="docs/assets/graph.png" alt="screenshot" width="600"/>
-</p>
+KeyLearn is being developed with two audiences in mind: a minimalist, distraction-free
+experience for adults, and a friendly, encouraging mode designed for kids who are
+learning to type (and often to read) at the same time.
 
-## Can I contribute?
+## Getting started
 
-Yes!
+See [docs/getting_started.md](./docs/getting_started.md) to launch a local instance.
 
-* **[Give us a ⭐️.](https://github.com/aradzie/keybr.com)** Help this project gain visibility and stand out.
-* **[Report a bug.](https://github.com/aradzie/keybr.com/issues)** If something is not working, let us know.
-* **[Suggest a feature.](https://github.com/aradzie/keybr.com/issues)** We are open to new ideas.
-* **[Translate.](./docs/translations.md)** If you want to see keybr.com in your language.
-* **[Getting started.](./docs/getting_started.md)** Launch a local instance of keybr.com, make a pull request.
-* **[Add a keyboard.](docs/custom_keyboard.md)** Add a custom keyboard to keybr.com
-* **[Add a language.](docs/custom_language.md)** Add a custom language to keybr.com
-* **[Join our Discord server](https://discord.gg/gY4RA4enVH).** To discuss things in a less formal way.
+## Roadmap
+
+* Kids mode: kid-friendly vocabulary, typography, sounds, and celebrations.
+* A modern minimalist UI based on Material 3 design, for both adults and kids.
+* Smarter practice engine: bigram-level statistics, accuracy-aware progression,
+  and skill decay modeling.
+* Refreshed multi-language word corpora built from openly licensed sources.
+
+## Acknowledgements
+
+KeyLearn is a fork of [keybr.com](https://github.com/aradzie/keybr.com) by
+Aliaksandr Radzivanovich, an outstanding open-source typing tutor. The adaptive
+lesson engine, phonetic word models, and much of the foundation of this project
+originate there. Full commit history is preserved in this repository.
 
 ## License
 
-Released under the GNU Affero General Public License v3.0.
+Released under the GNU Affero General Public License v3.0, the same license as
+the upstream project. If you run a modified version of KeyLearn as a network
+service, you must make your modified source code available to its users under
+the same license.

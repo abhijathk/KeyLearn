@@ -7,8 +7,8 @@ export function messageWithLink({
   readonly email: string;
   readonly link: string;
 }): Mailer.Message {
-  const subject = `Login link for keybr.com`;
-  const text = `Hello, keybr.com user!
+  const subject = `Login link for KeyLearn`;
+  const text = `Hello, KeyLearn user!
 
 Here is the link to log you in into the web-site: ${link}
 

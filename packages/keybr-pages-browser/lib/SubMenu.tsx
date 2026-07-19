@@ -4,7 +4,7 @@ import {
   useIntlDisplayNames,
   usePreferredLocale,
 } from "@keybr/intl";
-import { isPremiumUser, Pages, usePageData } from "@keybr/pages-shared";
+import { Pages } from "@keybr/pages-shared";
 import { Link as StaticLink } from "@keybr/widget";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink } from "react-router";
@@ -15,7 +15,6 @@ export function SubMenu({ currentPath }: { readonly currentPath: string }) {
   return (
     <div className={styles.root}>
       <MailLink />
-      <DiscordLink />
       <GithubLink />
       <RouterLink to={Pages.termsOfService.path}>
         {formatMessage(Pages.termsOfService.link.label)}
@@ -25,7 +24,6 @@ export function SubMenu({ currentPath }: { readonly currentPath: string }) {
       </RouterLink>
       <LocaleSwitcher currentPath={currentPath} />
       <TranslateLink />
-      <RemoveAdsLink />
     </div>
   );
 }
@@ -34,30 +32,15 @@ function MailLink() {
   const { formatMessage } = useIntl();
   return (
     <StaticLink
-      href="mailto:info@keybr.com"
+      href="mailto:abhijathka@gmail.com"
       target="email"
       title={formatMessage({
         id: "footer.emailLink.description",
-        defaultMessage: "Send your comments and suggestions to info@keybr.com",
+        defaultMessage:
+          "Send your comments and suggestions to abhijathka@gmail.com",
       })}
     >
-      info@keybr.com
-    </StaticLink>
-  );
-}
-
-function DiscordLink() {
-  const { formatMessage } = useIntl();
-  return (
-    <StaticLink
-      href="https://discord.gg/gY4RA4enVH"
-      target="discord"
-      title={formatMessage({
-        id: "footer.discordLink.description",
-        defaultMessage: "Discuss on our Discord server.",
-      })}
-    >
-      Discord
+      abhijathka@gmail.com
     </StaticLink>
   );
 }
@@ -66,11 +49,11 @@ function GithubLink() {
   const { formatMessage } = useIntl();
   return (
     <StaticLink
-      href="https://github.com/aradzie/keybr.com"
+      href="https://github.com/abhijathk/keylearn"
       target="github"
       title={formatMessage({
         id: "footer.githubLink.description",
-        defaultMessage: "The source code of keybr.com is available on Github.",
+        defaultMessage: "The source code of KeyLearn is available on Github.",
       })}
     >
       Github
@@ -82,11 +65,11 @@ function TranslateLink() {
   const { formatMessage } = useIntl();
   return (
     <StaticLink
-      href="https://github.com/aradzie/keybr.com/blob/master/docs/translations.md"
+      href="https://github.com/abhijathk/keylearn/blob/master/docs/translations.md"
       target="github"
       title={formatMessage({
         id: "footer.translateLink.description",
-        defaultMessage: "Help us translate keybr.com into your language.",
+        defaultMessage: "Help us translate KeyLearn into your language.",
       })}
     >
       <FormattedMessage
@@ -94,27 +77,6 @@ function TranslateLink() {
         defaultMessage="Translate"
       />
     </StaticLink>
-  );
-}
-
-function RemoveAdsLink() {
-  const { formatMessage } = useIntl();
-  const { publicUser } = usePageData();
-  return (
-    isPremiumUser(publicUser) || (
-      <RouterLink
-        to={Pages.account.path}
-        title={formatMessage({
-          id: "footer.removeAds.description",
-          defaultMessage: "Purchase a premium account to remove ads.",
-        })}
-      >
-        {formatMessage({
-          id: "footer.removeAds.label",
-          defaultMessage: "Remove Ads",
-        })}
-      </RouterLink>
-    )
   );
 }
 

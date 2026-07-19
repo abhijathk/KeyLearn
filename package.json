@@ -1,14 +1,14 @@
 {
   "private": true,
-  "name": "keybr.com",
+  "name": "keylearn",
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://www.keybr.com",
-  "license": "GPL-3",
+  "homepage": "https://github.com/abhijathk/keylearn",
+  "license": "AGPL-3.0",
   "author": "Aliaksandr Radzivanovich <aradzivanovich@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git@github.com:aradzie/keybr.com.git"
+    "url": "git@github.com:abhijathk/keylearn.git"
   },
   "workspaces": [
     "packages/*",
