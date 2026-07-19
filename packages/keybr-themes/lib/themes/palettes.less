@@ -6,18 +6,22 @@
 @chart-hist-m: #b43f3e;
 @chart-hist-r: #b140b4;
 
-@zone-pinky: #8ec07c;
-@zone-ring: #b8bb26;
-@zone-middle: #fabd2f;
-@zone-leftIndex: #83a698;
-@zone-rightIndex: #d3869b;
-@zone-thumb: #d66354;
+// Muted "neutral pastel" finger-zone hues: distinct per finger but dusty and
+// desaturated so the keyboard reads calm rather than as a bright rainbow.
+@zone-pinky: #c49b9b; // dusty rose
+@zone-ring: #a9bda1; // sage
+@zone-middle: #c8b48c; // sand
+@zone-leftIndex: #94a8c6; // slate blue
+@zone-rightIndex: #b19cba; // soft mauve
+@zone-thumb: #b5a292; // clay
 
 .use-textinput-colors(@colors) {
   --textinput__color: @colors[@secondary];
   --textinput--special__color: mix(@colors[@primary], @colors[@secondary], 50);
   --textinput--hit__color: mix(@colors[@primary], @colors[@secondary], 40);
-  --textinput--miss__color: @colors[@error];
+  // A softer, desaturated miss colour: a wrong keystroke should annotate the
+  // letter, not alarm with a harsh pure red.
+  --textinput--miss__color: desaturate(@colors[@error], 28%);
 }
 
 .use-interface-colors(@colors) {
