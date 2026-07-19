@@ -1,0 +1,48 @@
+@import "palettes.less";
+
+// Material 3 baseline dark theme. Dark neutral surfaces with the M3 light
+// accent, tuned for low-light adult practice.
+.material-dark-theme-props() {
+  @colors: {
+    @primary: #141218; // M3 surface (dark)
+    @secondary: #e6e0e9; // M3 on-surface (dark)
+    @accent: #d0bcff; // M3 primary (dark)
+    @error: #f2b8b5; // M3 error (dark)
+  };
+
+  --primary-d2: lighten(@colors[@primary], 10);
+  --primary-d1: lighten(@colors[@primary], 5);
+  --primary: @colors[@primary];
+  --primary-l1: lighten(@colors[@primary], 2);
+  --primary-l2: lighten(@colors[@primary], 3);
+  --secondary-d1: lighten(@colors[@secondary], 10);
+  --secondary: @colors[@secondary];
+  --secondary-l1: darken(@colors[@secondary], 10);
+  --secondary-l2: darken(@colors[@secondary], 20);
+  --secondary-f1: mix(@colors[@primary], @colors[@secondary], 20);
+  --secondary-f2: mix(@colors[@primary], @colors[@secondary], 40);
+  --accent-d2: darken(@colors[@accent], 10);
+  --accent-d1: darken(@colors[@accent], 5);
+  --accent: @colors[@accent];
+  --accent-l1: lighten(@colors[@accent], 5);
+  --accent-l2: lighten(@colors[@accent], 10);
+  --error-d1: lighten(@colors[@error], 10);
+  --error: @colors[@error];
+  --error-l1: darken(@colors[@error], 10);
+  --shadow-color: #00000088;
+  --slow-key-color: #b3261e;
+  --fast-key-color: #4c9a6a;
+  --effort-color: #d0bcff;
+  .use-textinput-colors(@colors);
+  .use-interface-colors(@colors);
+  .use-chart-colors(@colors, 50);
+  .use-keyboard-colors(@colors, 50);
+  --syntax-keyword: #5991cd;
+  --syntax-string: #72b172;
+  --syntax-number: #b281d3;
+  --syntax-comment: #9f8484;
+}
+
+html[data-color="material-dark"] {
+  .material-dark-theme-props();
+}

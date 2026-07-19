@@ -29,6 +29,18 @@ export const COLORS = new ThemeList([
     name: "System",
   },
   {
+    id: "material-light",
+    name: "Material Light",
+  },
+  {
+    id: "material-dark",
+    name: "Material Dark",
+  },
+  {
+    id: "kids",
+    name: "Kids",
+  },
+  {
     id: "light",
     name: "Light",
   },
