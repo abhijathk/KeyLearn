@@ -34,7 +34,15 @@ export function makeKeyComponent(
     shape.shape ? (
       <path className={styles.button} d={shape.shape} />
     ) : (
-      <rect className={styles.button} x={0} y={0} width={w} height={h} />
+      <rect
+        className={styles.button}
+        x={0}
+        y={0}
+        width={w}
+        height={h}
+        rx={5}
+        ry={5}
+      />
     ),
   );
   if (shape.homing) {

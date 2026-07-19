@@ -1,5 +1,9 @@
 .button {
   fill: var(--KeyboardKey-button__color);
+  // Soft raised keycap: a thin dark lip plus a gentle drop shadow. Both are
+  // theme-neutral translucent black so they read on light and dark surfaces.
+  filter: drop-shadow(0 1.5px 0 rgb(0 0 0 / 18%))
+    drop-shadow(0 2.5px 2px rgb(0 0 0 / 16%));
 }
 
 .symbol {
@@ -92,6 +96,8 @@
 .depressedKey {
   .button {
     fill: var(--KeyboardKey-button--depressed__color);
+    // Flatten the raised lip while the key is held down.
+    filter: drop-shadow(0 0.5px 0 rgb(0 0 0 / 18%));
   }
 
   .symbol {
