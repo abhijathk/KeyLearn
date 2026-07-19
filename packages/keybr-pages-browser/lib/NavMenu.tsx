@@ -1,10 +1,4 @@
-import {
-  type AnyUser,
-  Avatar,
-  type PageInfo,
-  Pages,
-  usePageData,
-} from "@keybr/pages-shared";
+import { type PageInfo, Pages } from "@keybr/pages-shared";
 import { Icon } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
@@ -12,46 +6,42 @@ import { useIntl } from "react-intl";
 import { NavLink } from "react-router";
 import * as styles from "./NavMenu.module.less";
 import { SubMenu } from "./SubMenu.tsx";
-import { ThemeSwitcher } from "./themes/ThemeSwitcher.tsx";
 
-export function NavMenu({ currentPath }: { readonly currentPath: string }) {
-  const { publicUser } = usePageData();
+export function NavMenu({
+  currentPath,
+  onNavigate,
+}: {
+  readonly currentPath: string;
+  readonly onNavigate?: () => void;
+}) {
   return (
     <div className={styles.root}>
       <MenuItem>
-        <AccountLink user={publicUser} />
+        <MenuItemLink page={Pages.practice} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>
-        <ThemeSwitcher />
+        <MenuItemLink page={Pages.profile} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>
-        <MenuItemLink page={Pages.practice} />
+        <MenuItemLink page={Pages.typingTest} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>
-        <MenuItemLink page={Pages.profile} />
+        <MenuItemLink page={Pages.highScores} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>
-        <MenuItemLink page={Pages.help} />
+        <MenuItemLink page={Pages.multiplayer} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>
-        <MenuItemLink page={Pages.highScores} />
+        <MenuItemLink page={Pages.layouts} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>
-        <MenuItemLink page={Pages.multiplayer} />
-      </MenuItem>
-
-      <MenuItem>
-        <MenuItemLink page={Pages.typingTest} />
-      </MenuItem>
-
-      <MenuItem>
-        <MenuItemLink page={Pages.layouts} />
+        <MenuItemLink page={Pages.help} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>
@@ -65,35 +55,15 @@ function MenuItem({ children }: { readonly children: ReactNode }) {
   return <div className={styles.item}>{children}</div>;
 }
 
-function AccountLink({ user }: { readonly user: AnyUser }) {
-  const { formatMessage } = useIntl();
-  return (
-    <NavLink
-      className={({ isActive }) =>
-        clsx(styles.accountLink, isActive && styles.isActive)
-      }
-      to={Pages.account.path}
-    >
-      <Avatar user={user.id != null ? user : null} size="large" />
-      <span className={styles.userName}>
-        {user.id != null
-          ? user.name
-          : formatMessage({
-              id: "t_Sing_In",
-              defaultMessage: "Sign-In",
-            })}
-      </span>
-    </NavLink>
-  );
-}
-
 function MenuItemLink({
   page: {
     path,
     link: { label, title, icon },
   },
+  onNavigate,
 }: {
   readonly page: PageInfo;
+  readonly onNavigate?: () => void;
 }) {
   const { formatMessage } = useIntl();
   return (
@@ -103,6 +73,7 @@ function MenuItemLink({
       }
       to={path}
       title={title && formatMessage(title)}
+      onClick={onNavigate}
     >
       <Icon className={styles.icon} shape={icon ?? ""} />
       <span className={styles.label}>{formatMessage(label)}</span>

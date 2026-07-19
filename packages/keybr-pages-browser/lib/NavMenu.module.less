@@ -1,11 +1,8 @@
 @import "@keybr/widget/lib/index.less";
 
 .root {
-  position: sticky;
-  inset-block-start: 0;
-  max-inline-size: 10rem;
-  box-shadow: var(--Surface__box-shadow);
-  backdrop-filter: var(--Surface__backdrop-filter);
+  display: flex;
+  flex-direction: column;
 }
 
 .item + .item {
@@ -16,12 +13,17 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  block-size: 2rem;
-  padding-inline: 1rem;
+  block-size: 2.75rem;
+  padding-inline: 0.75rem;
   padding-block: 0;
+  border-radius: 0.5rem;
   color: var(--text-color);
-  line-height: 2rem;
+  line-height: 2.75rem;
   text-decoration: none;
+
+  &:hover {
+    background-color: var(--primary-l1);
+  }
 
   &.isActive {
     color: var(--text-color);
@@ -30,35 +32,13 @@
 }
 
 .icon {
-  inline-size: 1rem;
-  block-size: 1rem;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
   fill: var(--secondary-f1);
 }
 
 .label {
   .text-truncate();
   display: inline-block;
-  margin-inline-start: 0.5rem;
-}
-
-.accountLink {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding-inline: 0;
-  padding-block: 1rem;
-  color: var(--text-color);
-  text-decoration: none;
-
-  &.isActive {
-    color: var(--text-color);
-    background-color: var(--primary-l1);
-  }
-}
-
-.userName {
-  .text-truncate();
-  max-inline-size: 8rem;
-  text-align: center;
+  margin-inline-start: 0.75rem;
 }

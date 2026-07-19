@@ -1,6 +1,7 @@
 import { PortalContainer, Toaster } from "@keybr/widget";
-import { type ReactNode } from "react";
-import { NavMenu } from "./NavMenu.tsx";
+import { type ReactNode, useState } from "react";
+import { Header } from "./Header.tsx";
+import { MenuDrawer } from "./MenuDrawer.tsx";
 import * as styles from "./Template.module.less";
 
 export function Template({
@@ -10,16 +11,20 @@ export function Template({
   readonly path: string;
   readonly children: ReactNode;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className={styles.body}>
+      <Header onOpenMenu={() => setMenuOpen(true)} />
       <main className={styles.main}>
         {children}
         <PortalContainer />
         <Toaster />
       </main>
-      <nav className={styles.nav}>
-        <NavMenu currentPath={path} />
-      </nav>
+      <MenuDrawer
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        path={path}
+      />
       <EnvName />
     </div>
   );

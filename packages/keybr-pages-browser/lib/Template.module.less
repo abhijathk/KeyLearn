@@ -1,19 +1,12 @@
 .body {
-  display: grid;
-  grid-template-areas: ". main nav";
-  grid-template-rows: 1fr;
-  grid-template-columns: 12rem 1fr auto;
+  display: flex;
+  flex-direction: column;
   min-block-size: 100vb;
 }
 
 .main {
+  display: flex;
   z-index: 1;
-  grid-area: main;
-}
-
-.nav {
-  grid-area: nav;
-  margin: 0;
-  padding-inline: 1rem;
-  padding-block: 1rem;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
