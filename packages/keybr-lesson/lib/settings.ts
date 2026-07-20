@@ -22,6 +22,12 @@ export const lessonProps = {
     recoverKeys: booleanProp("lesson.guided.recoverKeys", false),
     spacedRepetition: booleanProp("lesson.guided.spacedRepetition", false),
     bottleneckDrill: booleanProp("lesson.guided.bottleneckDrill", false),
+    // Use a Bayesian Knowledge Tracing posterior for key confidence instead of
+    // the pure speed ratio (accuracy-aware mastery). Off by default.
+    smartConfidence: booleanProp("lesson.guided.smartConfidence", false),
+    // Apply spaced-repetition decay so long-unpractised keys lose confidence
+    // over real time. Off by default.
+    skillDecay: booleanProp("lesson.guided.skillDecay", false),
   } as const,
   wordList: {
     wordListSize: numberProp("lesson.wordList.wordListSize", 1000, {
