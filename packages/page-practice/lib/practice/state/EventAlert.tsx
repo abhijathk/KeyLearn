@@ -45,6 +45,24 @@ export function EventAlert({ event }: { readonly event: LessonEvent }) {
           />
         </Award>
       );
+    case "beat-last-run":
+      return (
+        <Award icon={<TrophyIcon />}>
+          <FormattedMessage
+            id="t_ev_Beat_last_run"
+            defaultMessage="You beat your last run!"
+          />
+        </Award>
+      );
+    case "near-last-run":
+      return (
+        <Award icon={<TrophyIcon />}>
+          <FormattedMessage
+            id="t_ev_Near_last_run"
+            defaultMessage="So close — keep going!"
+          />
+        </Award>
+      );
     case "daily-goal":
       return (
         <Award icon={<DailyGoalIcon />}>

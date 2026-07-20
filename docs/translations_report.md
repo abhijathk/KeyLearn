@@ -1,6 +1,6 @@
 # English
 
-Translated: 383 messages, 4779 words
+Translated: 386 messages, 4791 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,15 +8,15 @@ Untranslated: 0 messages, 0 words
 
 Translated: 331 messages, 4434 words
 
-Untranslated: 42 messages, 292 words
+Untranslated: 44 messages, 301 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Letters*
@@ -36,15 +36,15 @@ Untranslated: 42 messages, 292 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -64,15 +64,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -92,15 +92,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -120,15 +120,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 302 messages, 3374 words
 
-Untranslated: 69 messages, 1334 words
+Untranslated: 71 messages, 1343 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Errors*
 * *Recent*
@@ -148,15 +148,15 @@ Untranslated: 69 messages, 1334 words
 
 Translated: 330 messages, 4431 words
 
-Untranslated: 43 messages, 295 words
+Untranslated: 45 messages, 304 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -176,15 +176,15 @@ Untranslated: 43 messages, 295 words
 
 Translated: 323 messages, 4383 words
 
-Untranslated: 48 messages, 325 words
+Untranslated: 50 messages, 334 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Score*
 * *Trend*
 * *Layout*
@@ -204,15 +204,15 @@ Untranslated: 48 messages, 325 words
 
 Translated: 331 messages, 4434 words
 
-Untranslated: 42 messages, 292 words
+Untranslated: 44 messages, 301 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -232,15 +232,15 @@ Untranslated: 42 messages, 292 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -260,19 +260,19 @@ Untranslated: 40 messages, 290 words
 
 Translated: 74 messages, 1017 words
 
-Untranslated: 293 messages, 3667 words
+Untranslated: 295 messages, 3676 words
 
 * *On*
 * *GO!*
 * *Off*
 * *you*
 * *Back*
-* *best*
 * *Best*
 * *Copy*
 * *Font*
 * *Help*
 * *Kids*
+* *last*
 * *Open*
 * *Speed*
 * *Trend*
@@ -288,15 +288,15 @@ Untranslated: 293 messages, 3667 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -316,16 +316,16 @@ Untranslated: 40 messages, 290 words
 
 Translated: 330 messages, 4433 words
 
-Untranslated: 43 messages, 293 words
+Untranslated: 45 messages, 302 words
 
 * *On*
 * *GO!*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -344,15 +344,15 @@ Untranslated: 43 messages, 293 words
 
 Translated: 287 messages, 2814 words
 
-Untranslated: 84 messages, 1894 words
+Untranslated: 86 messages, 1903 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -372,16 +372,16 @@ Untranslated: 84 messages, 1894 words
 
 Translated: 202 messages, 2165 words
 
-Untranslated: 166 messages, 2522 words
+Untranslated: 168 messages, 2531 words
 
 * *On*
 * *GO!*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Stats*
 * *Trend*
 * *Hidden*
@@ -400,19 +400,19 @@ Untranslated: 166 messages, 2522 words
 
 Translated: 41 messages, 475 words
 
-Untranslated: 325 messages, 4198 words
+Untranslated: 327 messages, 4207 words
 
 * *On*
 * *GO!*
 * *Off*
 * *you*
 * *Back*
-* *best*
 * *Best*
 * *Copy*
 * *Font*
 * *Help*
 * *Kids*
+* *last*
 * *Open*
 * *Speed*
 * *Speed*
@@ -428,15 +428,15 @@ Untranslated: 325 messages, 4198 words
 
 Translated: 325 messages, 4258 words
 
-Untranslated: 48 messages, 468 words
+Untranslated: 50 messages, 477 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -456,15 +456,15 @@ Untranslated: 48 messages, 468 words
 
 Translated: 329 messages, 4424 words
 
-Untranslated: 44 messages, 302 words
+Untranslated: 46 messages, 311 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -484,15 +484,15 @@ Untranslated: 44 messages, 302 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -512,15 +512,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 329 messages, 4429 words
 
-Untranslated: 44 messages, 297 words
+Untranslated: 46 messages, 306 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -540,15 +540,15 @@ Untranslated: 44 messages, 297 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -568,16 +568,16 @@ Untranslated: 40 messages, 290 words
 
 Translated: 331 messages, 4434 words
 
-Untranslated: 42 messages, 292 words
+Untranslated: 44 messages, 301 words
 
 * *On*
 * *GO!*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -596,19 +596,19 @@ Untranslated: 42 messages, 292 words
 
 Translated: 92 messages, 1624 words
 
-Untranslated: 275 messages, 3060 words
+Untranslated: 277 messages, 3069 words
 
 * *On*
 * *GO!*
 * *Off*
 * *you*
 * *Back*
-* *best*
 * *Best*
 * *Copy*
 * *Font*
 * *Help*
 * *Kids*
+* *last*
 * *Open*
 * *Speed*
 * *Stats*
@@ -624,15 +624,15 @@ Untranslated: 275 messages, 3060 words
 
 Translated: 326 messages, 4426 words
 
-Untranslated: 46 messages, 297 words
+Untranslated: 48 messages, 306 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Layout*
 * *Recent*
@@ -652,15 +652,15 @@ Untranslated: 46 messages, 297 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -680,17 +680,17 @@ Untranslated: 40 messages, 290 words
 
 Translated: 140 messages, 1209 words
 
-Untranslated: 231 messages, 3499 words
+Untranslated: 233 messages, 3508 words
 
 * *On*
 * *Off*
 * *you*
 * *Back*
-* *best*
 * *Best*
 * *Copy*
 * *Font*
 * *Kids*
+* *last*
 * *Open*
 * *Trend*
 * *Hidden*
@@ -708,15 +708,15 @@ Untranslated: 231 messages, 3499 words
 
 Translated: 298 messages, 3244 words
 
-Untranslated: 73 messages, 1464 words
+Untranslated: 75 messages, 1473 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -736,19 +736,19 @@ Untranslated: 73 messages, 1464 words
 
 Translated: 16 messages, 307 words
 
-Untranslated: 348 messages, 4344 words
+Untranslated: 350 messages, 4353 words
 
 * *On*
 * *GO!*
 * *Off*
 * *you*
 * *Back*
-* *best*
 * *Best*
 * *Copy*
 * *Font*
 * *Help*
 * *Kids*
+* *last*
 * *Open*
 * *User*
 * *Score*
@@ -764,16 +764,16 @@ Untranslated: 348 messages, 4344 words
 
 Translated: 205 messages, 2315 words
 
-Untranslated: 164 messages, 2375 words
+Untranslated: 166 messages, 2384 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Help*
 * *Kids*
+* *last*
 * *Speed*
 * *Trend*
 * *Hidden*
@@ -792,15 +792,15 @@ Untranslated: 164 messages, 2375 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -820,15 +820,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 325 messages, 4424 words
 
-Untranslated: 47 messages, 299 words
+Untranslated: 49 messages, 308 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Score*
 * *Trend*
 * *Recent*
@@ -848,15 +848,15 @@ Untranslated: 47 messages, 299 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -876,15 +876,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 330 messages, 4432 words
 
-Untranslated: 43 messages, 294 words
+Untranslated: 45 messages, 303 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Layout*
 * *Recent*
@@ -904,15 +904,15 @@ Untranslated: 43 messages, 294 words
 
 Translated: 311 messages, 4312 words
 
-Untranslated: 60 messages, 396 words
+Untranslated: 62 messages, 405 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Layout*
 * *Recent*
@@ -932,15 +932,15 @@ Untranslated: 60 messages, 396 words
 
 Translated: 291 messages, 3367 words
 
-Untranslated: 75 messages, 1318 words
+Untranslated: 77 messages, 1327 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Layout*
 * *Recent*
@@ -960,15 +960,15 @@ Untranslated: 75 messages, 1318 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -988,15 +988,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 332 messages, 4434 words
 
-Untranslated: 41 messages, 292 words
+Untranslated: 43 messages, 301 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -1016,15 +1016,15 @@ Untranslated: 41 messages, 292 words
 
 Translated: 332 messages, 4435 words
 
-Untranslated: 41 messages, 291 words
+Untranslated: 43 messages, 300 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -1044,15 +1044,15 @@ Untranslated: 41 messages, 291 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -1072,15 +1072,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 330 messages, 4431 words
 
-Untranslated: 43 messages, 295 words
+Untranslated: 45 messages, 304 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Layout*
 * *Recent*
@@ -1100,15 +1100,15 @@ Untranslated: 43 messages, 295 words
 
 Translated: 321 messages, 4338 words
 
-Untranslated: 50 messages, 370 words
+Untranslated: 52 messages, 379 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -1128,15 +1128,15 @@ Untranslated: 50 messages, 370 words
 
 Translated: 219 messages, 2014 words
 
-Untranslated: 149 messages, 2665 words
+Untranslated: 151 messages, 2674 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Stats*
 * *Trend*
 * *Hidden*
@@ -1156,15 +1156,15 @@ Untranslated: 149 messages, 2665 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -1184,15 +1184,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -1212,15 +1212,15 @@ Untranslated: 40 messages, 290 words
 
 Translated: 332 messages, 4429 words
 
-Untranslated: 41 messages, 297 words
+Untranslated: 43 messages, 306 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -1240,15 +1240,15 @@ Untranslated: 41 messages, 297 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 299 words
 
 * *On*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*
@@ -1268,16 +1268,16 @@ Untranslated: 40 messages, 290 words
 
 Translated: 332 messages, 4435 words
 
-Untranslated: 41 messages, 291 words
+Untranslated: 43 messages, 300 words
 
 * *On*
 * *GO!*
 * *Off*
 * *you*
-* *best*
 * *Best*
 * *Font*
 * *Kids*
+* *last*
 * *Trend*
 * *Recent*
 * *Language*

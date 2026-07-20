@@ -30,6 +30,18 @@ export type TopAccuracyEvent = {
   readonly previous: number;
 };
 
+export type BeatLastRunEvent = {
+  readonly type: "beat-last-run";
+  readonly score: number;
+  readonly previous: number;
+};
+
+export type NearLastRunEvent = {
+  readonly type: "near-last-run";
+  /** How far behind the last run's score, as a whole-number percentage. */
+  readonly gap: number;
+};
+
 export type DailyGoalEvent = {
   readonly type: "daily-goal";
 };
@@ -40,6 +52,8 @@ export type LessonEvent =
   | TopScoreEvent
   | TopConsistencyEvent
   | TopAccuracyEvent
+  | BeatLastRunEvent
+  | NearLastRunEvent
   | DailyGoalEvent;
 
 export type LessonEventListener = (event: LessonEvent) => void;

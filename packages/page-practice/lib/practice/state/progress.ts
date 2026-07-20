@@ -10,6 +10,7 @@ import { type Settings } from "@keybr/settings";
 import { type Step } from "@keybr/textinput";
 import { BigramTracker } from "./bigram-tracker.ts";
 import { DailyGoalEvents } from "./event-source-daily-goal.ts";
+import { LastRunEvents } from "./event-source-last-run.ts";
 import { LetterEvents } from "./event-source-letter.ts";
 import { TopAccuracyEvents } from "./event-source-top-accuracy.ts";
 import { TopConsistencyEvents } from "./event-source-top-consistency.ts";
@@ -29,10 +30,10 @@ export class Progress {
   readonly #streakList: MutableStreakList;
   readonly #dailyGoal: MutableDailyGoal;
   readonly #bigrams = new BigramTracker();
-  // Timeline of your fastest completed run this session — cumulative ms at
-  // which each character was reached. Replayed as the ghost racer. Not
-  // persisted (it lives only for the session).
-  #bestRun: { speed: number; marks: readonly number[] } | null = null;
+  // Timeline of your most recent completed run this session — cumulative ms at
+  // which each character was reached. Replayed as the ghost racer so you pace
+  // your last round. Not persisted (it lives only for the session).
+  #lastRun: { marks: readonly number[] } | null = null;
   readonly #events: LessonEventSource;
 
   constructor(settings: Settings, lesson: Lesson) {
@@ -49,10 +50,14 @@ export class Progress {
     const topScore = new TopScoreEvents();
     const topConsistency = new TopConsistencyEvents();
     const topAccuracy = new TopAccuracyEvents();
+    const lastRun = new LastRunEvents();
     const dailyGoal = new DailyGoalEvents(this.#dailyGoal);
     this.#events = new (class implements LessonEventSource {
       append(result: Result, listener: LessonEventListener): void {
         letter.append(result, listener);
+        // Beat-your-last-run fires first so an all-time record (below) wins the
+        // single award slot when both happen in the same round.
+        lastRun.append(result, listener);
         topSpeed.append(result, listener);
         topScore.append(result, listener);
         topConsistency.append(result, listener);
@@ -136,9 +141,9 @@ export class Progress {
     return this.#bigrams;
   }
 
-  /** The fastest completed run's ghost timeline this session, if any. */
-  get bestRun() {
-    return this.#bestRun;
+  /** Your most recent completed run's ghost timeline this session, if any. */
+  get lastRun() {
+    return this.#lastRun;
   }
 
   /** Feed the raw keystroke stream of a finished round to the bigram tracker. */
@@ -147,12 +152,11 @@ export class Progress {
   }
 
   /**
-   * Remember a finished run's pace curve if it's the fastest so far — the
-   * cumulative time at which each character was typed, used to replay the
-   * ghost racer.
+   * Remember a finished run's pace curve — the cumulative time at which each
+   * character was typed — so the next round can replay it as the ghost racer.
    */
-  observeRun(steps: readonly Step[], speed: number) {
-    if (steps.length < 3 || speed <= (this.#bestRun?.speed ?? 0)) {
+  observeRun(steps: readonly Step[]) {
+    if (steps.length < 3) {
       return;
     }
     const start = steps[0].timeStamp;
@@ -164,7 +168,7 @@ export class Progress {
       }
     }
     if (marks.length >= 2) {
-      this.#bestRun = { speed, marks };
+      this.#lastRun = { marks };
     }
   }
 }

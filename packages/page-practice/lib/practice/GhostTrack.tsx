@@ -11,16 +11,15 @@ import * as styles from "./GhostTrack.module.less";
 import { type LessonState } from "./state/index.ts";
 
 /**
- * A race against your own best run, sitting on top of the keyboard like part
- * of it. The bar fills to where your fastest run this session had reached at
+ * A friendly race against your own last run, sitting on top of the keyboard
+ * like part of it. The bar fills to where your previous round had reached at
  * this moment (replaying its pace curve); your dot is where you are now, and
- * it glows green when you're ahead of the bar's edge, amber when behind, or
- * accent when neck and neck. Falls back to a steady best-pace fill before a
- * full run is captured. Session-scoped; not persisted.
+ * it glows green when you've pulled ahead, staying a quiet accent otherwise.
+ * There's no "you're losing" state — it's a pacer, not a scoreboard. Shows
+ * only once there's a previous run to pace. Session-scoped; not persisted.
  */
 export function GhostTrack({ state }: { readonly state: LessonState }): ReactNode {
-  const marks = state.bestRunMarks;
-  const bestCps = state.summaryStats.speed.max / 60; // fallback pace, chars/sec
+  const marks = state.lastRunMarks;
   const total = state.textInput.length;
   const typed = Math.max(0, total - state.suffix.length);
   const youFrac = total > 0 ? Math.min(1, typed / total) : 0;
@@ -36,10 +35,10 @@ export function GhostTrack({ state }: { readonly state: LessonState }): ReactNod
     }
   }, [typed]);
 
-  const hasGhost = (marks != null && marks.length >= 2) || bestCps > 0;
+  const hasGhost = marks != null && marks.length >= 2;
   const racing = typed > 0 && youFrac < 1 && total > 0 && hasGhost;
   useEffect(() => {
-    if (!racing) {
+    if (!racing || marks == null) {
       return;
     }
     if (startRef.current == null) {
@@ -47,31 +46,25 @@ export function GhostTrack({ state }: { readonly state: LessonState }): ReactNod
     }
     const tick = () => {
       const elapsedMs = performance.now() - startRef.current!;
-      let frac: number;
-      if (marks != null && marks.length >= 2) {
-        // Replay: how far along the best run was at this elapsed time.
-        let k = 0;
-        while (k < marks.length && marks[k] <= elapsedMs) {
-          k += 1;
-        }
-        frac = k / marks.length;
-      } else {
-        frac = (bestCps * (elapsedMs / 1000)) / total;
+      // Replay: how far along the last run was at this elapsed time.
+      let k = 0;
+      while (k < marks.length && marks[k] <= elapsedMs) {
+        k += 1;
       }
-      setGhostFrac(Math.min(1, frac));
+      setGhostFrac(Math.min(1, k / marks.length));
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [racing, marks, bestCps, total]);
+  }, [racing, marks, total]);
 
   if (!hasGhost) {
-    return null; // Nothing to race against until there's a personal best.
+    return null; // Nothing to pace against until you've done a round.
   }
 
-  const delta = youFrac - ghostFrac;
-  const state3 =
-    delta > 0.01 ? styles.ahead : delta < -0.01 ? styles.behind : styles.even;
+  // Green when you're ahead of your last run's pace; quiet accent otherwise —
+  // never a "behind" alarm.
+  const state3 = youFrac - ghostFrac > 0.01 ? styles.ahead : styles.even;
 
   return (
     <div className={styles.track} aria-hidden={true}>
@@ -85,7 +78,7 @@ export function GhostTrack({ state }: { readonly state: LessonState }): ReactNod
           style={{ insetInlineStart: `${ghostFrac * 100}%` }}
         >
           <span className={styles.bestTag}>
-            <FormattedMessage id="t_ghost_best" defaultMessage="best" />
+            <FormattedMessage id="t_ghost_last" defaultMessage="last" />
           </span>
         </div>
         <div

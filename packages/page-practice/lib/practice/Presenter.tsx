@@ -370,7 +370,7 @@ function NormalLayout({
         {sizer}
       </div>
       <div id={names.keyboard} className={styles.keyboard}>
-        {focus && state.settings.get(uiProps.ghostRace) && (
+        {focus && !focusMode && state.settings.get(uiProps.ghostRace) && (
           <GhostTrack state={state} />
         )}
         <DeferredKeyboardPresenter

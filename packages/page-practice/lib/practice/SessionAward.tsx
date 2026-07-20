@@ -57,6 +57,31 @@ export function SessionAward({
       );
       detail = `${Math.round(event.accuracy * 100)}%`;
       break;
+    case "beat-last-run":
+      icon = <StrokeIcon name="chart" />;
+      title = (
+        <FormattedMessage
+          id="t_ev_Beat_last_run"
+          defaultMessage="You beat your last run!"
+        />
+      );
+      break;
+    case "near-last-run":
+      icon = <StrokeIcon name="chart" />;
+      title = (
+        <FormattedMessage
+          id="t_ev_Near_last_run"
+          defaultMessage="So close — keep going!"
+        />
+      );
+      detail = (
+        <FormattedMessage
+          id="t_ev_Near_last_run_gap"
+          defaultMessage="{gap}% to go"
+          values={{ gap: event.gap }}
+        />
+      );
+      break;
     case "daily-goal":
       icon = <StrokeIcon name="crown" />;
       title = (
