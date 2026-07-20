@@ -12,11 +12,11 @@ import { type LessonState } from "./state/index.ts";
 
 /**
  * A race against your own best run, sitting on top of the keyboard like part
- * of it. The ghost marker replays the pace curve of your fastest run this
- * session — reproducing its speed-ups and slow-downs — while your marker
- * tracks what you type now. The lane between them fills green when you're
- * ahead or amber when behind, so you can see whether you're gaining on your
- * past self. Before a full run exists it falls back to a steady best-pace line.
+ * of it. The bar fills to where your fastest run this session had reached at
+ * this moment (replaying its pace curve); your dot is where you are now, and
+ * it glows green when you're ahead of the bar's edge, amber when behind, or
+ * accent when neck and neck. Falls back to a steady best-pace fill before a
+ * full run is captured. Session-scoped; not persisted.
  */
 export function GhostTrack({ state }: { readonly state: LessonState }): ReactNode {
   const marks = state.bestRunMarks;
@@ -69,36 +69,30 @@ export function GhostTrack({ state }: { readonly state: LessonState }): ReactNod
     return null; // Nothing to race against until there's a personal best.
   }
 
-  const ahead = youFrac >= ghostFrac;
-  const started = typed > 0;
-  const lo = Math.min(youFrac, ghostFrac);
-  const hi = Math.max(youFrac, ghostFrac);
+  const delta = youFrac - ghostFrac;
+  const state3 =
+    delta > 0.01 ? styles.ahead : delta < -0.01 ? styles.behind : styles.even;
 
   return (
     <div className={styles.track} aria-hidden={true}>
       <div className={styles.rail}>
-        {started && (
-          <div
-            className={clsx(styles.gap, ahead ? styles.gapAhead : styles.gapBehind)}
-            style={{
-              insetInlineStart: `${lo * 100}%`,
-              inlineSize: `${(hi - lo) * 100}%`,
-            }}
-          />
-        )}
         <div
-          className={clsx(styles.puck, styles.ghost)}
+          className={styles.bestFill}
+          style={{ inlineSize: `${ghostFrac * 100}%` }}
+        />
+        <div
+          className={styles.bestEdge}
           style={{ insetInlineStart: `${ghostFrac * 100}%` }}
         >
-          <span className={styles.tag}>
+          <span className={styles.bestTag}>
             <FormattedMessage id="t_ghost_best" defaultMessage="best" />
           </span>
         </div>
         <div
-          className={clsx(styles.puck, styles.you, ahead && styles.winning)}
+          className={clsx(styles.you, state3)}
           style={{ insetInlineStart: `${youFrac * 100}%` }}
         >
-          <span className={styles.tag}>
+          <span className={styles.youTag}>
             <FormattedMessage id="t_ghost_you" defaultMessage="you" />
           </span>
         </div>
