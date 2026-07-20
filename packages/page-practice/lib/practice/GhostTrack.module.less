@@ -1,38 +1,73 @@
-// A slim race lane just above the practice text: your puck vs a ghost puck
-// running at your best pace.
+// A race lane that sits directly on top of the keyboard and spans its full
+// width, so it reads as part of the keyboard. Your marker vs a ghost running
+// at your best pace; the lane between them shows who's ahead.
 .track {
-  inline-size: min(72rem, 100%);
-  margin-inline: auto;
-  margin-block-end: 0.75rem;
-  padding-inline: 3rem;
+  inline-size: 100%;
+  padding-block-end: 0.9rem;
 }
 
 .rail {
   position: relative;
-  block-size: 4px;
-  border-radius: 2px;
+  block-size: 5px;
+  border-radius: 3px;
   background-color: color-mix(in oklab, var(--text-color) 12%, transparent);
+}
+
+// the segment between the two markers — green when you lead, amber when behind
+.gap {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 3px;
+  transition:
+    inset-inline-start 0.08s linear,
+    inline-size 0.08s linear;
+}
+
+.gapAhead {
+  background-color: color-mix(in oklab, var(--fast-key-color) 55%, transparent);
+}
+
+.gapBehind {
+  background-color: color-mix(in oklab, var(--slow-key-color) 45%, transparent);
 }
 
 .puck {
   position: absolute;
   inset-block-start: 50%;
-  inline-size: 0.7rem;
-  block-size: 0.7rem;
+  inline-size: 0.8rem;
+  block-size: 0.8rem;
   border-radius: 50%;
   transition: inset-inline-start 0.08s linear;
   transform: translate(-50%, -50%);
 }
 
-// the ghost of your best pace — quiet, translucent
-.ghost {
-  background-color: color-mix(in oklab, var(--text-color) 35%, transparent);
+.tag {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: 0.9rem;
+  color: var(--text-color-f1);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%);
 }
 
-// you — accent, and it glows green while you're ahead of the ghost
+// the ghost of your best pace — quiet, translucent
+.ghost {
+  background-color: color-mix(in oklab, var(--text-color) 40%, transparent);
+}
+
+// you — accent, glowing green while ahead of the ghost
 .you {
+  z-index: 1;
   background-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.you .tag {
+  color: var(--accent);
 }
 
 .winning {
@@ -40,8 +75,13 @@
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--fast-key-color) 25%, transparent);
 }
 
+.winning .tag {
+  color: var(--fast-key-color);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .puck {
+  .puck,
+  .gap {
     transition: none;
   }
 }

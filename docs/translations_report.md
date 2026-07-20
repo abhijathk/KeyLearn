@@ -1,6 +1,6 @@
 # English
 
-Translated: 381 messages, 4777 words
+Translated: 383 messages, 4779 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,10 +8,12 @@ Untranslated: 0 messages, 0 words
 
 Translated: 331 messages, 4434 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 292 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -28,18 +30,18 @@ Untranslated: 40 messages, 290 words
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Arabic
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -56,18 +58,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Bulgarian
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -84,18 +86,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Bangla
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -112,18 +114,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Catalan
 
 Translated: 302 messages, 3374 words
 
-Untranslated: 67 messages, 1332 words
+Untranslated: 69 messages, 1334 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -140,18 +142,18 @@ Untranslated: 67 messages, 1332 words
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
-* *Back to practice*
-* *Close navigation*
 * ...
 
 # Czech
 
 Translated: 330 messages, 4431 words
 
-Untranslated: 41 messages, 293 words
+Untranslated: 43 messages, 295 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -168,18 +170,18 @@ Untranslated: 41 messages, 293 words
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Language syntax:*
 * ...
 
 # Danish
 
 Translated: 323 messages, 4383 words
 
-Untranslated: 46 messages, 323 words
+Untranslated: 48 messages, 325 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -196,18 +198,18 @@ Untranslated: 46 messages, 323 words
 * *Your account*
 * *Pause for now*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
 * ...
 
 # German
 
 Translated: 331 messages, 4434 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 292 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -224,18 +226,18 @@ Untranslated: 40 messages, 290 words
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Greek
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -252,20 +254,20 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Esperanto
 
 Translated: 74 messages, 1017 words
 
-Untranslated: 291 messages, 3665 words
+Untranslated: 293 messages, 3667 words
 
 * *On*
 * *GO!*
 * *Off*
+* *you*
 * *Back*
+* *best*
 * *Best*
 * *Copy*
 * *Font*
@@ -280,18 +282,18 @@ Untranslated: 291 messages, 3665 words
 * *As bars*
 * *As dots*
 * *Dismiss*
-* *Layouts*
-* *Profile*
 * ...
 
 # Spanish
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -308,19 +310,19 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Estonian
 
 Translated: 330 messages, 4433 words
 
-Untranslated: 41 messages, 291 words
+Untranslated: 43 messages, 293 words
 
 * *On*
 * *GO!*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -336,18 +338,18 @@ Untranslated: 41 messages, 291 words
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
-* *Back to practice*
-* *Close navigation*
 * ...
 
 # Persian
 
 Translated: 287 messages, 2814 words
 
-Untranslated: 82 messages, 1892 words
+Untranslated: 84 messages, 1894 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -364,19 +366,19 @@ Untranslated: 82 messages, 1892 words
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Finnish
 
 Translated: 202 messages, 2165 words
 
-Untranslated: 164 messages, 2520 words
+Untranslated: 166 messages, 2522 words
 
 * *On*
 * *GO!*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -392,20 +394,20 @@ Untranslated: 164 messages, 2520 words
 * *Practice*
 * *Grown-ups*
 * *Best speed*
-* *Characters*
-* *Smoothing:*
 * ...
 
 # Faroese
 
 Translated: 41 messages, 475 words
 
-Untranslated: 323 messages, 4196 words
+Untranslated: 325 messages, 4198 words
 
 * *On*
 * *GO!*
 * *Off*
+* *you*
 * *Back*
+* *best*
 * *Best*
 * *Copy*
 * *Font*
@@ -420,18 +422,18 @@ Untranslated: 323 messages, 4196 words
 * *Hidden*
 * *Layout*
 * *Recent*
-* *Account*
-* *As bars*
 * ...
 
 # French
 
 Translated: 325 messages, 4258 words
 
-Untranslated: 46 messages, 466 words
+Untranslated: 48 messages, 468 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -448,18 +450,18 @@ Untranslated: 46 messages, 466 words
 * *Finger zones:*
 * *Pause for now*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
 * ...
 
 # Irish
 
 Translated: 329 messages, 4424 words
 
-Untranslated: 42 messages, 300 words
+Untranslated: 44 messages, 302 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -476,18 +478,18 @@ Untranslated: 42 messages, 300 words
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Hebrew
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -504,18 +506,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Croatian
 
 Translated: 329 messages, 4429 words
 
-Untranslated: 42 messages, 295 words
+Untranslated: 44 messages, 297 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -532,18 +534,18 @@ Untranslated: 42 messages, 295 words
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Restore Defaults*
 * ...
 
 # Hungarian
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -560,19 +562,19 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Indonesian
 
 Translated: 331 messages, 4434 words
 
-Untranslated: 40 messages, 290 words
+Untranslated: 42 messages, 292 words
 
 * *On*
 * *GO!*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -588,20 +590,20 @@ Untranslated: 40 messages, 290 words
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Icelandic
 
 Translated: 92 messages, 1624 words
 
-Untranslated: 273 messages, 3058 words
+Untranslated: 275 messages, 3060 words
 
 * *On*
 * *GO!*
 * *Off*
+* *you*
 * *Back*
+* *best*
 * *Best*
 * *Copy*
 * *Font*
@@ -616,18 +618,18 @@ Untranslated: 273 messages, 3058 words
 * *Recent*
 * *Account*
 * *As bars*
-* *As dots*
-* *Dismiss*
 * ...
 
 # Italian
 
 Translated: 326 messages, 4426 words
 
-Untranslated: 44 messages, 295 words
+Untranslated: 46 messages, 297 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -644,18 +646,18 @@ Untranslated: 44 messages, 295 words
 * *Your account*
 * *Pause for now*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
 * ...
 
 # Japanese
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -672,19 +674,19 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Korean
 
 Translated: 140 messages, 1209 words
 
-Untranslated: 229 messages, 3497 words
+Untranslated: 231 messages, 3499 words
 
 * *On*
 * *Off*
+* *you*
 * *Back*
+* *best*
 * *Best*
 * *Copy*
 * *Font*
@@ -700,18 +702,18 @@ Untranslated: 229 messages, 3497 words
 * *Language*
 * *Settings*
 * *Book Text*
-* *Every key*
-* *Grown-ups*
 * ...
 
 # Lithuanian
 
 Translated: 298 messages, 3244 words
 
-Untranslated: 71 messages, 1462 words
+Untranslated: 73 messages, 1464 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -728,20 +730,20 @@ Untranslated: 71 messages, 1462 words
 * *Open navigation*
 * *Back to practice*
 * *Close navigation*
-* *Who's practicing*
-* *Best accuracy yet!*
 * ...
 
 # Mongolian
 
 Translated: 16 messages, 307 words
 
-Untranslated: 346 messages, 4342 words
+Untranslated: 348 messages, 4344 words
 
 * *On*
 * *GO!*
 * *Off*
+* *you*
 * *Back*
+* *best*
 * *Best*
 * *Copy*
 * *Font*
@@ -756,18 +758,18 @@ Untranslated: 346 messages, 4342 words
 * *Trend*
 * *Digits*
 * *Errors*
-* *Hidden*
-* *Layout*
 * ...
 
 # Norwegian Bokmål
 
 Translated: 205 messages, 2315 words
 
-Untranslated: 162 messages, 2373 words
+Untranslated: 164 messages, 2375 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Help*
@@ -784,18 +786,18 @@ Untranslated: 162 messages, 2373 words
 * *Alphabet:*
 * *Book Text*
 * *Grown-ups*
-* *Typeface:*
-* *Smoothing:*
 * ...
 
 # Nepali
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -812,18 +814,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Dutch
 
 Translated: 325 messages, 4424 words
 
-Untranslated: 45 messages, 297 words
+Untranslated: 47 messages, 299 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -840,18 +842,18 @@ Untranslated: 45 messages, 297 words
 * *Your account*
 * *Finger zones:*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
 * ...
 
 # Polish
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -868,18 +870,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Brazilian Portuguese
 
 Translated: 330 messages, 4432 words
 
-Untranslated: 41 messages, 292 words
+Untranslated: 43 messages, 294 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -896,18 +898,18 @@ Untranslated: 41 messages, 292 words
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Keyboard layout:*
 * ...
 
 # European Portuguese
 
 Translated: 311 messages, 4312 words
 
-Untranslated: 58 messages, 394 words
+Untranslated: 60 messages, 396 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -924,18 +926,18 @@ Untranslated: 58 messages, 394 words
 * *Your account*
 * *Best accuracy*
 * *Finger zones:*
-* *Pause for now*
-* *New top score!*
 * ...
 
 # Romanian
 
 Translated: 291 messages, 3367 words
 
-Untranslated: 73 messages, 1316 words
+Untranslated: 75 messages, 1318 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -952,18 +954,18 @@ Untranslated: 73 messages, 1316 words
 * *Sound pack:*
 * *Your account*
 * *Best accuracy*
-* *Finger zones:*
-* *Pause for now*
 * ...
 
 # Russian
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -980,18 +982,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Slovak
 
 Translated: 332 messages, 4434 words
 
-Untranslated: 39 messages, 290 words
+Untranslated: 41 messages, 292 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1008,18 +1010,18 @@ Untranslated: 39 messages, 290 words
 * *Back to practice*
 * *Close navigation*
 * *Language syntax:*
-* *Who's practicing*
-* *Best accuracy yet!*
 * ...
 
 # Slovenian
 
 Translated: 332 messages, 4435 words
 
-Untranslated: 39 messages, 289 words
+Untranslated: 41 messages, 291 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1036,18 +1038,18 @@ Untranslated: 39 messages, 289 words
 * *Open navigation*
 * *Back to practice*
 * *Close navigation*
-* *Who's practicing*
-* *Best accuracy yet!*
 * ...
 
 # Albanian
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1064,18 +1066,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Swedish
 
 Translated: 330 messages, 4431 words
 
-Untranslated: 41 messages, 293 words
+Untranslated: 43 messages, 295 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1092,18 +1094,18 @@ Untranslated: 41 messages, 293 words
 * *Open navigation*
 * *Back to practice*
 * *Close navigation*
-* *Keyboard layout:*
-* *Language syntax:*
 * ...
 
 # Thai
 
 Translated: 321 messages, 4338 words
 
-Untranslated: 48 messages, 368 words
+Untranslated: 50 messages, 370 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1120,18 +1122,18 @@ Untranslated: 48 messages, 368 words
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
-* *Back to practice*
-* *Close navigation*
 * ...
 
 # Turkish
 
 Translated: 219 messages, 2014 words
 
-Untranslated: 147 messages, 2663 words
+Untranslated: 149 messages, 2665 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1148,18 +1150,18 @@ Untranslated: 147 messages, 2663 words
 * *Grown-ups*
 * *Thin line*
 * *Typeface:*
-* *Underline*
-* *Lesson done*
 * ...
 
 # Ukrainian
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1176,18 +1178,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Vietnamese
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1204,18 +1206,18 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Simplified Chinese
 
 Translated: 332 messages, 4429 words
 
-Untranslated: 39 messages, 295 words
+Untranslated: 41 messages, 297 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1232,18 +1234,18 @@ Untranslated: 39 messages, 295 words
 * *Open navigation*
 * *Back to practice*
 * *Close navigation*
-* *Who's practicing*
-* *Best accuracy yet!*
 * ...
 
 # Traditional Chinese
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 38 messages, 288 words
+Untranslated: 40 messages, 290 words
 
 * *On*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1260,19 +1262,19 @@ Untranslated: 38 messages, 288 words
 * *Back to practice*
 * *Close navigation*
 * *Who's practicing*
-* *Best accuracy yet!*
-* *Currently learning*
 * ...
 
 # Chinese (Taiwan)
 
 Translated: 332 messages, 4435 words
 
-Untranslated: 39 messages, 289 words
+Untranslated: 41 messages, 291 words
 
 * *On*
 * *GO!*
 * *Off*
+* *you*
+* *best*
 * *Best*
 * *Font*
 * *Kids*
@@ -1288,6 +1290,4 @@ Untranslated: 39 messages, 289 words
 * *Open navigation*
 * *Back to practice*
 * *Close navigation*
-* *Who's practicing*
-* *Best accuracy yet!*
 * ...

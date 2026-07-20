@@ -79,6 +79,15 @@ export function TextArea({
       setElementCursor(element, "default");
     }
   });
+  // Track Caps Lock reactively so the warning clears the instant it's turned
+  // off — reading the global on render alone leaves it stale until the next
+  // unrelated re-render.
+  const [capsLock, setCapsLock] = useState(false);
+  const syncCapsLock = () => {
+    setCapsLock(ModifierState.capsLock);
+  };
+  useWindowEvent("keydown", syncCapsLock);
+  useWindowEvent("keyup", syncCapsLock);
   useHotkeys({
     ["Enter"]: () => {
       innerRef.current?.focus();
@@ -125,7 +134,7 @@ export function TextArea({
         cursor={!demo && focus}
         focus={demo || focus}
       />
-      {!demo && focus && ModifierState.capsLock && (
+      {!demo && focus && capsLock && (
         <div className={styles.messageArea}>
           <div className={styles.messageText}>
             <FormattedMessage
