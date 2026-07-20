@@ -11,14 +11,16 @@ import * as styles from "./GhostTrack.module.less";
 import { type LessonState } from "./state/index.ts";
 
 /**
- * A race against your own best pace, sitting just above the keyboard like part
- * of it. A ghost marker crosses the current text at the fastest pace you've
- * reached so far while your marker tracks what you actually type, and the lane
- * between them fills green when you're ahead or amber when you're behind — so
- * you can see at a glance whether you're gaining on your past self.
+ * A race against your own best run, sitting on top of the keyboard like part
+ * of it. The ghost marker replays the pace curve of your fastest run this
+ * session — reproducing its speed-ups and slow-downs — while your marker
+ * tracks what you type now. The lane between them fills green when you're
+ * ahead or amber when behind, so you can see whether you're gaining on your
+ * past self. Before a full run exists it falls back to a steady best-pace line.
  */
 export function GhostTrack({ state }: { readonly state: LessonState }): ReactNode {
-  const bestCps = state.summaryStats.speed.max / 60; // best pace, chars/sec
+  const marks = state.bestRunMarks;
+  const bestCps = state.summaryStats.speed.max / 60; // fallback pace, chars/sec
   const total = state.textInput.length;
   const typed = Math.max(0, total - state.suffix.length);
   const youFrac = total > 0 ? Math.min(1, typed / total) : 0;
@@ -34,7 +36,8 @@ export function GhostTrack({ state }: { readonly state: LessonState }): ReactNod
     }
   }, [typed]);
 
-  const racing = typed > 0 && youFrac < 1 && bestCps > 0 && total > 0;
+  const hasGhost = (marks != null && marks.length >= 2) || bestCps > 0;
+  const racing = typed > 0 && youFrac < 1 && total > 0 && hasGhost;
   useEffect(() => {
     if (!racing) {
       return;
@@ -43,22 +46,33 @@ export function GhostTrack({ state }: { readonly state: LessonState }): ReactNod
       startRef.current = performance.now();
     }
     const tick = () => {
-      const elapsed = (performance.now() - startRef.current!) / 1000;
-      setGhostFrac(Math.min(1, (bestCps * elapsed) / total));
+      const elapsedMs = performance.now() - startRef.current!;
+      let frac: number;
+      if (marks != null && marks.length >= 2) {
+        // Replay: how far along the best run was at this elapsed time.
+        let k = 0;
+        while (k < marks.length && marks[k] <= elapsedMs) {
+          k += 1;
+        }
+        frac = k / marks.length;
+      } else {
+        frac = (bestCps * (elapsedMs / 1000)) / total;
+      }
+      setGhostFrac(Math.min(1, frac));
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [racing, bestCps, total]);
+  }, [racing, marks, bestCps, total]);
 
-  if (bestCps <= 0) {
+  if (!hasGhost) {
     return null; // Nothing to race against until there's a personal best.
   }
 
   const ahead = youFrac >= ghostFrac;
+  const started = typed > 0;
   const lo = Math.min(youFrac, ghostFrac);
   const hi = Math.max(youFrac, ghostFrac);
-  const started = typed > 0;
 
   return (
     <div className={styles.track} aria-hidden={true}>

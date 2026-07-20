@@ -76,6 +76,7 @@ function useLessonState(
       setKey(key + 1);
       lastLessonRef.current = makeLastLesson(result, textInput.steps);
       progress.observeSteps(textInput.steps);
+      progress.observeRun(textInput.steps, result.speed);
       onResultRef.current(result);
     });
     state.lastLesson = lastLessonRef.current;

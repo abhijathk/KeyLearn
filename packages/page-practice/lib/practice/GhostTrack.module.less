@@ -41,6 +41,8 @@
   transform: translate(-50%, -50%);
 }
 
+// Labels sit on opposite sides of the rail so they never cluster even when
+// the two markers overlap at the start line: best above, you below.
 .tag {
   position: absolute;
   inset-inline-start: 50%;
@@ -66,7 +68,10 @@
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
 }
 
+// you label sits below the rail (best sits above) so they never cluster
 .you .tag {
+  inset-block-start: 0.9rem;
+  inset-block-end: auto;
   color: var(--accent);
 }
 

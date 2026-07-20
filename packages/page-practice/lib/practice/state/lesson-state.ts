@@ -40,6 +40,8 @@ export class LessonState {
   readonly streakList: StreakList;
   readonly dailyGoal: DailyGoal;
   readonly lessonKeys: LessonKeys;
+  /** The best run's ghost timeline captured before this round, if any. */
+  readonly bestRunMarks: readonly number[] | null;
 
   lastLesson: LastLesson | null = null;
 
@@ -61,6 +63,7 @@ export class LessonState {
     this.summaryStats = progress.summaryStats.copy();
     this.streakList = progress.streakList.copy();
     this.dailyGoal = progress.dailyGoal.copy();
+    this.bestRunMarks = progress.bestRun?.marks ?? null;
     this.lessonKeys = this.lesson.update(this.keyStatsMap);
     this.#applyBottleneckFocus(progress);
     this.#reset(this.lesson.generate(this.lessonKeys, Lesson.rng));

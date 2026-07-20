@@ -29,6 +29,10 @@ export class Progress {
   readonly #streakList: MutableStreakList;
   readonly #dailyGoal: MutableDailyGoal;
   readonly #bigrams = new BigramTracker();
+  // Timeline of your fastest completed run this session — cumulative ms at
+  // which each character was reached. Replayed as the ghost racer. Not
+  // persisted (it lives only for the session).
+  #bestRun: { speed: number; marks: readonly number[] } | null = null;
   readonly #events: LessonEventSource;
 
   constructor(settings: Settings, lesson: Lesson) {
@@ -132,8 +136,35 @@ export class Progress {
     return this.#bigrams;
   }
 
+  /** The fastest completed run's ghost timeline this session, if any. */
+  get bestRun() {
+    return this.#bestRun;
+  }
+
   /** Feed the raw keystroke stream of a finished round to the bigram tracker. */
   observeSteps(steps: readonly Step[]) {
     this.#bigrams.append(steps);
+  }
+
+  /**
+   * Remember a finished run's pace curve if it's the fastest so far — the
+   * cumulative time at which each character was typed, used to replay the
+   * ghost racer.
+   */
+  observeRun(steps: readonly Step[], speed: number) {
+    if (steps.length < 3 || speed <= (this.#bestRun?.speed ?? 0)) {
+      return;
+    }
+    const start = steps[0].timeStamp;
+    const marks: number[] = [];
+    for (let i = 1; i < steps.length; i++) {
+      const t = steps[i].timeStamp - start;
+      if (t > 0) {
+        marks.push(t);
+      }
+    }
+    if (marks.length >= 2) {
+      this.#bestRun = { speed, marks };
+    }
   }
 }
