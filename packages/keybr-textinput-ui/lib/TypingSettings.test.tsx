@@ -16,20 +16,20 @@ test("render", () => {
     </FakeIntlProvider>,
   );
 
-  fireEvent.click(r.getByText("Stop cursor on error"));
-  fireEvent.click(r.getByText("Forgive errors"));
+  fireEvent.click(r.getByText("Pause cursor on mistakes"));
+  fireEvent.click(r.getByText("Auto-correct mistakes"));
 
-  fireEvent.click(r.getByText("No whitespace"));
-  fireEvent.click(r.getByText("Bar whitespace"));
-  fireEvent.click(r.getByText("Bullet whitespace"));
+  fireEvent.click(r.getByText("Hidden"));
+  fireEvent.click(r.getByText("As bars"));
+  fireEvent.click(r.getByText("As dots"));
 
-  fireEvent.click(r.getByText("Block cursor"));
-  fireEvent.click(r.getByText("Box cursor"));
-  fireEvent.click(r.getByText("Line cursor"));
-  fireEvent.click(r.getByText("Underline cursor"));
+  fireEvent.click(r.getByText("Solid block"));
+  fireEvent.click(r.getByText("Outlined box"));
+  fireEvent.click(r.getByText("Thin line"));
+  fireEvent.click(r.getByText("Underline"));
 
-  fireEvent.click(r.getByText("Jumping cursor"));
-  fireEvent.click(r.getByText("Smooth cursor"));
+  fireEvent.click(r.getByText("Snap into place"));
+  fireEvent.click(r.getByText("Glide smoothly"));
 
   r.unmount();
 });

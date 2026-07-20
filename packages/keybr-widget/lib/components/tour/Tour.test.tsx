@@ -22,9 +22,9 @@ test("empty tour", () => {
     </IntlProvider>,
   );
 
-  isNull(r.queryByText("Previous"));
-  isNull(r.queryByText("Next"));
-  isNotNull(r.queryByText("Close"));
+  isNull(r.queryByText("Back"));
+  isNull(r.queryByText("Continue"));
+  isNotNull(r.queryByText("Dismiss"));
 
   r.unmount();
 });
@@ -46,33 +46,33 @@ test("switch slides", async () => {
 
   // First slide.
 
-  isNull(r.queryByText("Previous"));
-  isNotNull(r.queryByText("Next"));
-  isNull(r.queryByText("Close"));
+  isNull(r.queryByText("Back"));
+  isNotNull(r.queryByText("Continue"));
+  isNull(r.queryByText("Dismiss"));
   isNotNull(r.queryByText("One"));
   isNull(r.queryByText("Two"));
 
   // Click next.
 
-  await userEvent.click(r.getByText("Next"));
+  await userEvent.click(r.getByText("Continue"));
 
   // Second slide.
 
-  isNotNull(r.queryByText("Previous"));
-  isNull(r.queryByText("Next"));
-  isNotNull(r.queryByText("Close"));
+  isNotNull(r.queryByText("Back"));
+  isNull(r.queryByText("Continue"));
+  isNotNull(r.queryByText("Dismiss"));
   isNull(r.queryByText("One"));
   isNotNull(r.queryByText("Two"));
 
   // Click prev.
 
-  await userEvent.click(r.getByText("Previous"));
+  await userEvent.click(r.getByText("Back"));
 
   // First slide.
 
-  isNull(r.queryByText("Previous"));
-  isNotNull(r.queryByText("Next"));
-  isNull(r.queryByText("Close"));
+  isNull(r.queryByText("Back"));
+  isNotNull(r.queryByText("Continue"));
+  isNull(r.queryByText("Dismiss"));
   isNotNull(r.queryByText("One"));
   isNull(r.queryByText("Two"));
 

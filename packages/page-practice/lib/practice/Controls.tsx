@@ -1,19 +1,15 @@
 import { Dir } from "@keybr/intl";
 import { names } from "@keybr/lesson-ui";
-import { useSettings } from "@keybr/settings";
-import { Button, Icon, IconButton, useView } from "@keybr/widget";
-import {
-  mdiAspectRatio,
-  mdiCog,
-  mdiHelpCircleOutline,
-  mdiRedo,
-  mdiUndo,
-} from "@mdi/js";
+import { IconButton, StrokeIcon, useView } from "@keybr/widget";
 import { memo, type ReactNode } from "react";
 import { useIntl } from "react-intl";
 import { views } from "../views.tsx";
 import * as styles from "./Controls.module.less";
 
+/**
+ * The quiet ghost cluster in the corner: everything the mockup keeps out of
+ * sight but a user still needs — help, reset, skip, layout, settings.
+ */
 export const Controls = memo(function Controls({
   onChangeView,
   onResetLesson,
@@ -26,73 +22,54 @@ export const Controls = memo(function Controls({
   readonly onHelp: () => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
-  const { settings } = useSettings();
   const { setView } = useView(views);
   return (
     <div id={names.controls} className={styles.controls}>
       <IconButton
-        icon={<Icon shape={mdiHelpCircleOutline} />}
+        icon={<StrokeIcon name="help" />}
         title={formatMessage({
           id: "practice.widget.showTour.description",
-          defaultMessage: "Show a guided tour with help slides.",
+          defaultMessage: "Open a guided tour with helpful walkthrough slides.",
         })}
         onClick={onHelp}
       />
       <Dir swap="icon">
         <IconButton
-          icon={<Icon shape={mdiUndo} />}
+          icon={<StrokeIcon name="undo" />}
           title={formatMessage({
             id: "practice.widget.resetLesson.description",
-            defaultMessage: "Reset the current lesson (Ctrl + Left Arrow).",
+            defaultMessage: "Restart this lesson (Ctrl + Left Arrow).",
           })}
           onClick={onResetLesson}
         />
         <IconButton
-          icon={<Icon shape={mdiRedo} />}
+          icon={<StrokeIcon name="redo" />}
           title={formatMessage({
             id: "practice.widget.skipLesson.description",
-            defaultMessage: "Skip the current lesson (Ctrl + Right Arrow).",
+            defaultMessage: "Move to the next lesson (Ctrl + Right Arrow).",
           })}
           onClick={onSkipLesson}
         />
       </Dir>
       <IconButton
-        icon={<Icon shape={mdiAspectRatio} />}
+        icon={<StrokeIcon name="grid" />}
         title={formatMessage({
           id: "practice.widget.switchView.description",
-          defaultMessage: "Switch the current interface layout.",
+          defaultMessage: "Change the current screen layout.",
         })}
         onClick={onChangeView}
       />
-      {settings.isNew ? (
-        <Button
-          icon={<Icon shape={mdiCog} />}
-          label={formatMessage({
-            id: "t_Settings",
-            defaultMessage: "Settings",
-          })}
-          title={formatMessage({
-            id: "practice.widget.settings.description",
-            defaultMessage:
-              "Change lesson settings, configure language, keyboard layout, etc.",
-          })}
-          onClick={() => {
-            setView("settings");
-          }}
-        />
-      ) : (
-        <IconButton
-          icon={<Icon shape={mdiCog} />}
-          title={formatMessage({
-            id: "practice.widget.settings.description",
-            defaultMessage:
-              "Change lesson settings, configure language, keyboard layout, etc.",
-          })}
-          onClick={() => {
-            setView("settings");
-          }}
-        />
-      )}
+      <IconButton
+        icon={<StrokeIcon name="settings" />}
+        title={formatMessage({
+          id: "practice.widget.settings.description",
+          defaultMessage:
+            "Adjust lesson settings, language, keyboard layout, and more.",
+        })}
+        onClick={() => {
+          setView("settings");
+        }}
+      />
     </div>
   );
 });

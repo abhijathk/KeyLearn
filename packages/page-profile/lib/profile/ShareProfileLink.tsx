@@ -26,7 +26,7 @@ export function ShareProfileLink({ user }: { user: NamedUser }) {
       <Field>
         <FormattedMessage
           id="t_Share_your_profile:"
-          defaultMessage="Share your profile:"
+          defaultMessage="Your profile link:"
         />
       </Field>
       <Field>
@@ -51,7 +51,7 @@ export function ShareProfileLink({ user }: { user: NamedUser }) {
           })}
           title={formatMessage({
             id: "profile.widget.share.description",
-            defaultMessage: "Copy profile link to the clipboard.",
+            defaultMessage: "Copies your profile link to the clipboard.",
           })}
           onClick={() => {
             const { current } = textFieldRef;
@@ -67,11 +67,11 @@ export function ShareProfileLink({ user }: { user: NamedUser }) {
           icon={<Icon shape={mdiOpenInNew} />}
           label={formatMessage({
             id: "t_Visit_profile",
-            defaultMessage: "Visit",
+            defaultMessage: "Open",
           })}
           title={formatMessage({
             id: "profile.widget.visit.description",
-            defaultMessage: "Visit your public profile page.",
+            defaultMessage: "Opens your public profile page.",
           })}
           onClick={() => {
             document.location = href;

@@ -7,7 +7,7 @@ export class SpeedUnit implements EnumItem {
     1 / 5,
     defineMessage({
       id: "t_Words_per_minute",
-      defaultMessage: "Words per minute",
+      defaultMessage: "Words typed per minute",
     }),
   );
   static readonly WPS = new SpeedUnit(
@@ -15,7 +15,7 @@ export class SpeedUnit implements EnumItem {
     1 / 300,
     defineMessage({
       id: "t_Words_per_second",
-      defaultMessage: "Words per second",
+      defaultMessage: "Words typed per second",
     }),
   );
   static readonly CPM = new SpeedUnit(
@@ -23,7 +23,7 @@ export class SpeedUnit implements EnumItem {
     1,
     defineMessage({
       id: "t_Characters_per_minute",
-      defaultMessage: "Characters per minute",
+      defaultMessage: "Characters typed per minute",
     }),
   );
   static readonly CPS = new SpeedUnit(
@@ -31,7 +31,7 @@ export class SpeedUnit implements EnumItem {
     1 / 60,
     defineMessage({
       id: "t_Characters_per_second",
-      defaultMessage: "Characters per second",
+      defaultMessage: "Characters typed per second",
     }),
   );
   static readonly ALL = new Enum<SpeedUnit>(

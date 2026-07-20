@@ -7,7 +7,7 @@ export function EffortLegend({ effort }: { effort: Effort }) {
   const { formatPercents } = useIntlNumbers();
   return (
     <>
-      <FormattedMessage id="t_Daily_goal:" defaultMessage="Daily goal:" />{" "}
+      <FormattedMessage id="t_Daily_goal:" defaultMessage="Daily practice goal:" />{" "}
       {[1.0, 0.75, 0.5, 0.25, 0.0].map((value) => (
         <span key={value} className={styles.cell}>
           <span

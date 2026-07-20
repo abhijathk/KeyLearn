@@ -13,12 +13,12 @@ test("render", () => {
   );
 
   isNotNull(
-    r.queryByText("Simple sign-in that does not use passwords.", {
+    r.queryByText("No passwords required", {
       exact: false,
     }),
   );
   isNotNull(
-    r.queryByText("Sign-in with your preferred social network.", {
+    r.queryByText("Log in using any social account you already have.", {
       exact: false,
     }),
   );

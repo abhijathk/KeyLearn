@@ -1,6 +1,7 @@
 import { type KeyId, useKeyboard } from "@keybr/keyboard";
 import { type Result } from "@keybr/result";
 import { type LineList } from "@keybr/textinput";
+import { Feedback } from "@keybr/textinput";
 import { addKey, deleteKey, emulateLayout } from "@keybr/textinput-events";
 import { makeSoundPlayer } from "@keybr/textinput-sounds";
 import {
@@ -74,6 +75,7 @@ function useLessonState(
     const state = new LessonState(progress, (result, textInput) => {
       setKey(key + 1);
       lastLessonRef.current = makeLastLesson(result, textInput.steps);
+      progress.observeSteps(textInput.steps);
       onResultRef.current(result);
     });
     state.lastLesson = lastLessonRef.current;
@@ -92,6 +94,10 @@ function useLessonState(
       timeout.cancel();
     };
     const playSounds = makeSoundPlayer(state.settings);
+    // Escalating help: consecutive misses on the same expected character
+    // raise the level (1 shake, 2 urgent pulse, 3 finger guide).
+    let helpAt = -1;
+    let helpMisses = 0;
     const { onKeyDown, onKeyUp, onInput } = emulateLayout(
       state.settings,
       keyboard,
@@ -108,9 +114,28 @@ function useLessonState(
         },
         onInput: (event) => {
           state.lastLesson = null;
+          const expected = state.suffix.length > 0 ? state.suffix[0] : -1;
           const feedback = state.onInput(event);
           setLines(state.lines);
           playSounds(feedback);
+          if (feedback === Feedback.Failed) {
+            helpMisses = expected === helpAt ? helpMisses + 1 : 1;
+            helpAt = expected;
+            // Let the keyboard flash the actually-pressed wrong key.
+            window.dispatchEvent(
+              new window.CustomEvent("keylearn:wrong-key", {
+                detail: { codePoint: event.codePoint, at: event.timeStamp },
+              }),
+            );
+          } else {
+            helpMisses = 0;
+            helpAt = -1;
+          }
+          window.dispatchEvent(
+            new window.CustomEvent("keylearn:help", {
+              detail: { level: Math.min(3, helpMisses) },
+            }),
+          );
           timeout.schedule(handleResetLesson, 10000);
         },
       },

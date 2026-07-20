@@ -1,7 +1,7 @@
 import { type KeyId } from "@keybr/keyboard";
 import { names } from "@keybr/lesson-ui";
 import { Screen } from "@keybr/pages-shared";
-import { enumProp, Preferences } from "@keybr/settings";
+import { enumProp, numberProp, Preferences } from "@keybr/settings";
 import { type LineList } from "@keybr/textinput";
 import {
   type IInputEvent,
@@ -10,13 +10,21 @@ import {
 } from "@keybr/textinput-events";
 import { TextArea } from "@keybr/textinput-ui";
 import { type Focusable, Zoomer } from "@keybr/widget";
-import { createRef, PureComponent, type ReactNode } from "react";
+import {
+  createRef,
+  type CSSProperties,
+  PureComponent,
+  type ReactNode,
+} from "react";
+import { uiProps } from "@keybr/result";
 import { Controls } from "./Controls.tsx";
+import { GhostTrack } from "./GhostTrack.tsx";
 import { Indicators } from "./Indicators.tsx";
 import { DeferredKeyboardPresenter } from "./KeyboardPresenter.tsx";
 import { PracticeTour } from "./PracticeTour.tsx";
 import * as styles from "./Presenter.module.less";
 import { type LessonState } from "./state/index.ts";
+import { StatusFooter } from "./StatusFooter.tsx";
 
 type Props = {
   readonly state: LessonState;
@@ -33,6 +41,8 @@ type State = {
   readonly view: View;
   readonly tour: boolean;
   readonly focus: boolean;
+  readonly focusMode: boolean;
+  readonly textSize: number;
 };
 
 enum View {
@@ -53,6 +63,10 @@ function getNextView(view: View): View {
 }
 
 const propView = enumProp("prefs.practice.view", View, View.Normal);
+const propTextSize = numberProp("prefs.practice.textScale", 1, {
+  min: 0.75,
+  max: 1.5,
+});
 
 export class Presenter extends PureComponent<Props, State> {
   readonly focusRef = createRef<Focusable>();
@@ -61,9 +75,12 @@ export class Presenter extends PureComponent<Props, State> {
     view: Preferences.get(propView),
     tour: false,
     focus: false,
+    focusMode: false,
+    textSize: Preferences.get(propTextSize),
   };
 
   override componentDidMount() {
+    window.addEventListener("keylearn:focus-mode", this.handleToggleFocusMode);
     if (this.props.state.settings.isNew) {
       this.setState({
         view: View.Normal,
@@ -72,10 +89,17 @@ export class Presenter extends PureComponent<Props, State> {
     }
   }
 
+  override componentWillUnmount() {
+    window.removeEventListener(
+      "keylearn:focus-mode",
+      this.handleToggleFocusMode,
+    );
+  }
+
   override render() {
     const {
       props: { state, lines, depressedKeys },
-      state: { view, tour, focus },
+      state: { view, tour, focus, focusMode, textSize },
       handleResetLesson,
       handleSkipLesson,
       handleKeyDown,
@@ -84,6 +108,8 @@ export class Presenter extends PureComponent<Props, State> {
       handleFocus,
       handleBlur,
       handleChangeView,
+      handleToggleFocusMode,
+      handleTextSize,
       handleHelp,
       handleTourClose,
     } = this;
@@ -93,6 +119,7 @@ export class Presenter extends PureComponent<Props, State> {
           <NormalLayout
             state={state}
             focus={tour || focus}
+            focusMode={focusMode}
             depressedKeys={depressedKeys}
             toggledKeys={ModifierState.modifiers}
             controls={
@@ -104,20 +131,34 @@ export class Presenter extends PureComponent<Props, State> {
               />
             }
             textInput={
-              <Zoomer id="TextArea/Normal">
-                <TextArea
-                  focusRef={this.focusRef}
-                  settings={state.textDisplaySettings}
-                  lines={lines}
-                  size="X0"
-                  demo={tour}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  onKeyDown={handleKeyDown}
-                  onKeyUp={handleKeyUp}
-                  onInput={handleInput}
+              <TextArea
+                focusRef={this.focusRef}
+                settings={state.textDisplaySettings}
+                lines={lines}
+                size="X0"
+                demo={tour}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyDown={handleKeyDown}
+                onKeyUp={handleKeyUp}
+                onInput={handleInput}
+              />
+            }
+            textSize={textSize}
+            sizer={
+              <label className={styles.sizer} title="Practice text size">
+                <span className={styles.sizerIcon}>Aa</span>
+                <input
+                  type="range"
+                  min={0.75}
+                  max={1.5}
+                  step={0.05}
+                  value={textSize}
+                  onChange={(ev) => {
+                    handleTextSize(Number(ev.target.value));
+                  }}
                 />
-              </Zoomer>
+              </label>
             }
             tour={tour && <PracticeTour onClose={handleTourClose} />}
           />
@@ -253,6 +294,20 @@ export class Presenter extends PureComponent<Props, State> {
     );
   };
 
+  handleTextSize = (textSize: number) => {
+    Preferences.set(propTextSize, textSize);
+    this.setState({ textSize });
+  };
+
+  handleToggleFocusMode = () => {
+    this.setState(
+      ({ focusMode }) => ({ focusMode: !focusMode }),
+      () => {
+        this.focusRef.current?.focus();
+      },
+    );
+  };
+
   handleHelp = () => {
     this.setState(
       {
@@ -283,41 +338,64 @@ export class Presenter extends PureComponent<Props, State> {
 function NormalLayout({
   state,
   focus,
+  focusMode,
   depressedKeys,
   toggledKeys,
   controls,
   textInput,
+  textSize,
+  sizer,
   tour,
 }: {
   readonly state: LessonState;
   readonly focus: boolean;
+  readonly focusMode: boolean;
   readonly depressedKeys: readonly string[];
   readonly toggledKeys: readonly string[];
   readonly controls: ReactNode;
   readonly textInput: ReactNode;
+  readonly textSize: number;
+  readonly sizer: ReactNode;
   readonly tour: ReactNode;
 }) {
   return (
-    <Screen>
-      <Indicators state={state} />
-      <div id={names.textInput} className={styles.textInput_normal}>
+    <Screen className={styles.screen}>
+      {focusMode || <Indicators state={state} />}
+      {focus && state.settings.get(uiProps.ghostRace) && (
+        <GhostTrack state={state} />
+      )}
+      <div
+        id={names.textInput}
+        className={styles.textInput_normal}
+        style={{ "--text-scale": textSize } as CSSProperties}
+      >
         {textInput}
+        {sizer}
       </div>
       <div id={names.keyboard} className={styles.keyboard}>
-        <Zoomer id="Keyboard/Normal">
-          <DeferredKeyboardPresenter
-            focus={focus}
-            depressedKeys={depressedKeys}
-            toggledKeys={toggledKeys}
-            suffix={state.suffix}
-            lastLesson={state.lastLesson}
-          />
-        </Zoomer>
+        <DeferredKeyboardPresenter
+          focus={focus}
+          depressedKeys={depressedKeys}
+          toggledKeys={toggledKeys}
+          suffix={state.suffix}
+          lastLesson={state.lastLesson}
+          masteryKeys={masteryKeysOf(state)}
+        />
       </div>
+      {focusMode || <StatusFooter state={state} />}
       {controls}
       {tour}
     </Screen>
   );
+}
+
+function masteryKeysOf(state: LessonState) {
+  return [...state.lessonKeys]
+    .filter((key) => key.isIncluded)
+    .map(({ letter: { codePoint }, confidence }) => ({
+      codePoint,
+      confidence: confidence ?? 0,
+    }));
 }
 
 function CompactLayout({

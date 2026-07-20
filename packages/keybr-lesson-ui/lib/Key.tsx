@@ -48,6 +48,15 @@ export const Key = ({
       data-code-point={codePoint}
     >
       {label}
+      {isIncluded && confidence != null && (
+        <span className={styles.gauge}>
+          <i
+            style={{
+              inlineSize: `${Math.round(Math.max(0, Math.min(1, confidence)) * 100)}%`,
+            }}
+          />
+        </span>
+      )}
       {isIncluded || (
         <svg viewBox="0 0 100 100" className={styles.cross}>
           <path d="M 0 100 L 100 0" />

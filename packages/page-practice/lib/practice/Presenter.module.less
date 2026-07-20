@@ -1,5 +1,47 @@
+.screen {
+  min-inline-size: auto;
+  max-inline-size: 84rem;
+}
+
 .textInput_normal {
-  margin-block-start: 3rem;
+  position: relative;
+  max-inline-size: 72rem;
+  margin-block-start: 5rem;
+  margin-inline: auto;
+  padding-inline: 3rem;
+  text-align: center;
+}
+
+// The text-size slider: sits quietly beside the text, gray until hovered.
+.sizer {
+  display: flex;
+  position: absolute;
+  inset-block-start: -2.2rem;
+  inset-inline-end: 3rem;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 1rem;
+  opacity: 0.3;
+  filter: grayscale(1);
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+    filter: none;
+  }
+
+  input {
+    inline-size: 6rem;
+    accent-color: var(--accent);
+  }
+}
+
+.sizerIcon {
+  color: var(--text-color-f1);
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .textInput_compact {
@@ -13,5 +55,5 @@
 }
 
 .keyboard {
-  margin-block-start: 3rem;
+  margin-block-start: 2.5rem;
 }

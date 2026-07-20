@@ -16,14 +16,14 @@ export function NumbersLessonSettings({
         <Description>
           <FormattedMessage
             id="lessonType.numbers.description"
-            defaultMessage="Practice numbers only."
+            defaultMessage="Practice typing numbers exclusively."
           />
         </Description>
       </Explainer>
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",
-          defaultMessage: "Lesson options",
+          defaultMessage: "Lesson settings",
         })}
       >
         <BenfordProp />

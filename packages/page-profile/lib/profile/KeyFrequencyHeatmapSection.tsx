@@ -15,7 +15,7 @@ export function KeyFrequencyHeatmapSection({
       <Figure.Caption>
         <FormattedMessage
           id="profile.chart.keyFrequencyHeatmap.caption"
-          defaultMessage="Key Frequency Heatmap"
+          defaultMessage="Key Frequency Map"
         />
       </Figure.Caption>
 
@@ -23,7 +23,7 @@ export function KeyFrequencyHeatmapSection({
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.keyFrequencyHeatmap.description"
-            defaultMessage="This chart shows relative key frequencies as a heatmap."
+            defaultMessage="Displays how often each key is used as a heatmap over your keyboard."
           />
         </Figure.Description>
       </Explainer>
@@ -33,7 +33,7 @@ export function KeyFrequencyHeatmapSection({
       <Figure.Legend>
         <FormattedMessage
           id="profile.chart.keyFrequencyHeatmap.legend"
-          defaultMessage="Circle color: {label1} – hit count, {label2} – miss count."
+          defaultMessage="Circle color: {label1} – number of hits, {label2} – number of misses."
           values={{
             label1: <Marker type="histogram-h" />,
             label2: <Marker type="histogram-m" />,

@@ -24,11 +24,11 @@ export function ExplainSettings(): ReactNode {
           {explainersVisible
             ? `\u25BC ${formatMessage({
                 id: "t_Hide_explanations",
-                defaultMessage: "Hide explanations",
+                defaultMessage: "Hide the tips",
               })}`
             : `\u25BA ${formatMessage({
                 id: "t_Explain_settings",
-                defaultMessage: "Explain settings",
+                defaultMessage: "Show tips for these settings",
               })}`}
         </Button>
       </Field>

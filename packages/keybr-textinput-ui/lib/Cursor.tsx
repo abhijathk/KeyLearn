@@ -23,6 +23,7 @@ export class Cursor extends Component<{
 
   override componentDidMount() {
     this.#position();
+    window.addEventListener("keylearn:wrong-key", this.#shake);
   }
 
   override componentDidUpdate() {
@@ -30,10 +31,32 @@ export class Cursor extends Component<{
   }
 
   override componentWillUnmount() {
+    window.removeEventListener("keylearn:wrong-key", this.#shake);
     if (this.#animation != null) {
       this.#animation.cancel();
     }
   }
+
+  // Shake the current letter the moment a wrong key is pressed.
+  readonly #shake = () => {
+    const cursor = this.#cursorRef.current;
+    if (
+      cursor != null &&
+      typeof cursor.animate === "function" &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      cursor.animate(
+        [
+          { transform: "translateX(0)" },
+          { transform: "translateX(-3px)", offset: 0.25 },
+          { transform: "translateX(3px)", offset: 0.5 },
+          { transform: "translateX(-2px)", offset: 0.75 },
+          { transform: "translateX(0)" },
+        ],
+        { duration: 250, easing: "ease-out" },
+      );
+    }
+  };
 
   #position() {
     const container = this.#containerRef.current;

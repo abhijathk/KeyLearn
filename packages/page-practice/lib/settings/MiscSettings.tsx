@@ -1,6 +1,7 @@
 import { SpeedUnit, uiProps } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
 import {
+  CheckBox,
   Description,
   Explainer,
   Field,
@@ -18,11 +19,43 @@ export function MiscSettings(): ReactNode {
       <FieldSet
         legend={formatMessage({
           id: "t_Interface_options",
-          defaultMessage: "Interface options",
+          defaultMessage: "Display preferences",
         })}
       >
         <SpeedUnitProp />
+        <GhostRaceProp />
       </FieldSet>
+    </>
+  );
+}
+
+function GhostRaceProp(): ReactNode {
+  const { formatMessage } = useIntl();
+  const { settings, updateSettings } = useSettings();
+  return (
+    <>
+      <FieldList>
+        <Field>
+          <CheckBox
+            label={formatMessage({
+              id: "t_Ghost_race",
+              defaultMessage: "Race against your best pace",
+            })}
+            checked={settings.get(uiProps.ghostRace)}
+            onChange={(value) => {
+              updateSettings(settings.set(uiProps.ghostRace, value));
+            }}
+          />
+        </Field>
+      </FieldList>
+      <Explainer>
+        <Description>
+          <FormattedMessage
+            id="settings.ghostRace.description"
+            defaultMessage="Shows a slim lane above the text with a ghost marker that runs at your fastest pace so far. Stay ahead of it and your marker glows — a friendly race against your past self on every round."
+          />
+        </Description>
+      </Explainer>
     </>
   );
 }
@@ -36,7 +69,7 @@ function SpeedUnitProp(): ReactNode {
         <Field>
           <FormattedMessage
             id="t_Measure_typing_speed_in:"
-            defaultMessage="Measure typing speed in:"
+            defaultMessage="Show typing speed as:"
           />
         </Field>
         <Field>
@@ -58,7 +91,7 @@ function SpeedUnitProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.typingSpeedUnit.description"
-            defaultMessage="For the purpose of typing measurement, each word is standardized to be five characters or keystrokes in English, including spaces and punctuation."
+            defaultMessage="When measuring typing speed, a word is standardized to five characters or keystrokes in English, counting spaces and punctuation."
           />
         </Description>
       </Explainer>

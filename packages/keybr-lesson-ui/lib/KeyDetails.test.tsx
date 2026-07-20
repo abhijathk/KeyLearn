@@ -25,8 +25,8 @@ test("render uncalibrated", () => {
     </FakeIntlProvider>,
   );
 
-  isNotNull(r.queryByText("Not calibrated, need more samples."));
-  isNull(r.queryByText("Learning rate:"));
+  isNotNull(r.queryByText("Not calibrated yet — keep practicing to unlock this."));
+  isNull(r.queryByText("Progress rate:"));
 
   r.unmount();
 });
@@ -49,8 +49,8 @@ test("render calibrated", () => {
     </FakeIntlProvider>,
   );
 
-  isNull(r.queryByText("Not calibrated, need more samples."));
-  isNotNull(r.queryByText("Learning rate:"));
+  isNull(r.queryByText("Not calibrated yet — keep practicing to unlock this."));
+  isNotNull(r.queryByText("Progress rate:"));
 
   r.unmount();
 });

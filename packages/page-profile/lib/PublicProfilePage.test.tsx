@@ -35,8 +35,8 @@ test("render", async () => {
     </FakeIntlProvider>,
   );
 
-  isNotNull(await r.findByText("Typing Speed"));
-  isNotNull(await r.findByText("Key Typing Speed"));
+  isNotNull(await r.findByText("Typing Speed Over Time"));
+  isNotNull(await r.findByText("Speed for This Key"));
 
   r.unmount();
 });

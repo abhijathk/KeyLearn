@@ -41,7 +41,7 @@ export function EmailLoginForm({ actions }: { actions: SignInActions }) {
           <Para>
             <FormattedMessage
               id="account.emailState.sendingText"
-              defaultMessage="Sending an e-mail with the login link to <strong>{email}</strong>... Please wait a second."
+              defaultMessage="Sending your login link to <strong>{email}</strong>… hang tight."
               values={{ email }}
             />
           </Para>
@@ -54,7 +54,7 @@ export function EmailLoginForm({ actions }: { actions: SignInActions }) {
           <Para>
             <FormattedMessage
               id="account.emailState.sentText"
-              defaultMessage="We have sent an e-mail with the login link to <strong>{email}</strong>. It should arrive soon, please check your inbox in a minute or two."
+              defaultMessage="Your login link is on its way to <strong>{email}</strong>. Give it a minute or two, then check your inbox."
               values={{ email }}
             />
           </Para>
@@ -65,7 +65,7 @@ export function EmailLoginForm({ actions }: { actions: SignInActions }) {
               icon={<Icon shape={mdiRepeat} />}
               label={formatMessage({
                 id: "t_Resend",
-                defaultMessage: "Resend",
+                defaultMessage: "Send again",
               })}
               onClick={handleClickRetry}
             />
@@ -79,7 +79,7 @@ export function EmailLoginForm({ actions }: { actions: SignInActions }) {
           <Para>
             <FormattedMessage
               id="account.emailState.errorText"
-              defaultMessage="Could not send e-mail to <strong>{email}</strong>: {message}"
+              defaultMessage="Couldn't send an email to <strong>{email}</strong>: {message}"
               values={{ email, message }}
             />
           </Para>
@@ -90,7 +90,7 @@ export function EmailLoginForm({ actions }: { actions: SignInActions }) {
               icon={<Icon shape={mdiRepeat} />}
               label={formatMessage({
                 id: "t_Retry",
-                defaultMessage: "Retry",
+                defaultMessage: "Try again",
               })}
               onClick={handleClickRetry}
             />
@@ -108,7 +108,7 @@ export function EmailLoginForm({ actions }: { actions: SignInActions }) {
                 type="email"
                 placeholder={formatMessage({
                   id: "t_Your_email_address",
-                  defaultMessage: "Your e-mail address",
+                  defaultMessage: "Email address",
                 })}
                 value={email}
                 onChange={handleChangeEmail}
@@ -120,7 +120,7 @@ export function EmailLoginForm({ actions }: { actions: SignInActions }) {
                 icon={<Icon shape={mdiSend} />}
                 label={formatMessage({
                   id: "t_Send_a_signin_link",
-                  defaultMessage: "Send a sign-in link",
+                  defaultMessage: "Email me a login link",
                 })}
                 onClick={handleClickLogin}
               />
@@ -131,11 +131,10 @@ export function EmailLoginForm({ actions }: { actions: SignInActions }) {
             <FormattedMessage
               id="account.emailForm.description"
               defaultMessage={
-                "Simple sign-in that does not use passwords. " +
-                "Just enter your e-mail address, and we will send you a login link. " +
-                "Go to your inbox, click the link to create a new account or to open an existing account for the e-mail address given. " +
-                "The link is temporary and expires in a few hours. " +
-                "To sign-in again later, enter the same e-mail address, and we will send a new link for the same account."
+                "No passwords required — enter your email address and we'll send you a one-time login link. " +
+                "Open your inbox and click the link to create a new account or access an existing one tied to that address. " +
+                "The link expires after a few hours for security. " +
+                "Need to log in again later? Just enter the same email address and we'll send a fresh link."
               }
             />
           </Para>

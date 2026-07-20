@@ -20,7 +20,7 @@ export function SmoothnessRange({
           {formatMessage(
             defineMessage({
               id: "t_Smoothness:",
-              defaultMessage: "Smoothness:",
+              defaultMessage: "Smoothing:",
             }),
           )}
         </label>
@@ -36,7 +36,7 @@ export function SmoothnessRange({
           title={formatMessage(
             defineMessage({
               id: "profile.smoothness.description",
-              defaultMessage: "Eliminate noise to see the long-term trend.",
+              defaultMessage: "Filters out the noise so you can see the long-term trend more clearly.",
             }),
           )}
           onChange={(value) => {

@@ -19,7 +19,7 @@ test("no streaks", () => {
 
   // Assert.
 
-  isNull(r.queryByText("Accuracy Threshold", { exact: false }));
+  isNull(r.queryByText("Minimum Accuracy", { exact: false }));
 
   r.unmount();
 });
@@ -42,7 +42,7 @@ test("one streak", () => {
 
   // Assert.
 
-  isNotNull(r.queryByText("Accuracy Threshold", { exact: false }));
+  isNotNull(r.queryByText("Minimum Accuracy", { exact: false }));
 
   r.unmount();
 });

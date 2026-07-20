@@ -15,7 +15,7 @@ export function SpeedChartSection({ results }: { results: readonly Result[] }) {
       <Figure.Caption>
         <FormattedMessage
           id="profile.chart.speed.caption"
-          defaultMessage="Typing Speed"
+          defaultMessage="Typing Speed Over Time"
         />
       </Figure.Caption>
 
@@ -23,7 +23,7 @@ export function SpeedChartSection({ results }: { results: readonly Result[] }) {
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.speed.description"
-            defaultMessage="This chart shows how overall typing speed changes over time."
+            defaultMessage="Tracks how your overall typing speed has changed over time."
           />
         </Figure.Description>
       </Explainer>
@@ -46,7 +46,7 @@ export function SpeedChartSection({ results }: { results: readonly Result[] }) {
       <Figure.Legend>
         <FormattedMessage
           id="profile.chart.speed.legend"
-          defaultMessage="Horizontal axis: lesson number. Vertical axis: {label1} – typing speed, {label2} – typing accuracy, {label3} – number of keys in the lessons."
+          defaultMessage="X-axis: lesson number. Y-axis: {label1} – typing speed, {label2} – typing accuracy, {label3} – number of keys used in the lessons."
           values={{
             label1: <Marker type="speed" />,
             label2: <Marker type="accuracy" />,

@@ -11,20 +11,38 @@ export function EventAlert({ event }: { readonly event: LessonEvent }) {
         <Award icon={<Key lessonKey={event.lessonKey} size="announcement" />}>
           <FormattedMessage
             id="t_ev_New_letter_unlocked"
-            defaultMessage="New letter unlocked!"
+            defaultMessage="You unlocked a new letter!"
           />
         </Award>
       );
     case "top-speed":
       return (
         <Award icon={<TrophyIcon />}>
-          <FormattedMessage id="t_ev_Top_speed" defaultMessage="Top speed!" />
+          <FormattedMessage id="t_ev_Top_speed" defaultMessage="New top speed!" />
         </Award>
       );
     case "top-score":
       return (
         <Award icon={<TrophyIcon />}>
-          <FormattedMessage id="t_ev_Top_score" defaultMessage="Top score!" />
+          <FormattedMessage id="t_ev_Top_score" defaultMessage="New top score!" />
+        </Award>
+      );
+    case "top-consistency":
+      return (
+        <Award icon={<TrophyIcon />}>
+          <FormattedMessage
+            id="t_ev_Top_consistency"
+            defaultMessage="Smoothest run yet!"
+          />
+        </Award>
+      );
+    case "top-accuracy":
+      return (
+        <Award icon={<TrophyIcon />}>
+          <FormattedMessage
+            id="t_ev_Top_accuracy"
+            defaultMessage="Best accuracy yet!"
+          />
         </Award>
       );
     case "daily-goal":
@@ -32,7 +50,7 @@ export function EventAlert({ event }: { readonly event: LessonEvent }) {
         <Award icon={<DailyGoalIcon />}>
           <FormattedMessage
             id="t_ev_Daily_goal_reached"
-            defaultMessage="Daily goal reached!"
+            defaultMessage="You hit your daily goal!"
           />
         </Award>
       );

@@ -1,6 +1,166 @@
 .root {
+  display: flex;
   position: fixed;
-  inset-inline-start: 0;
-  inset-inline-end: 0;
-  inset-block-start: 0;
+  inset: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+// ---- the ghost wireframe of the practice screen ----
+
+.wire {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  padding-block-start: 4.5rem;
+  opacity: 0.6;
+}
+
+.wireJourney {
+  display: flex;
+  gap: 0.55rem;
+
+  i {
+    inline-size: 1rem;
+    block-size: 1rem;
+    border: 1.5px solid var(--text-color-f2);
+    border-radius: 50%;
+  }
+}
+
+.wireMetrics {
+  display: flex;
+  gap: 2.5rem;
+
+  i {
+    inline-size: 6rem;
+    block-size: 2rem;
+    border: 1.5px solid var(--text-color-f2);
+    border-radius: 0.5rem;
+  }
+}
+
+.wireText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  align-items: center;
+  inline-size: min(46rem, 80vi);
+
+  i {
+    inline-size: 100%;
+    block-size: 1.1rem;
+    border: 1.5px solid var(--text-color-f2);
+    border-radius: 0.55rem;
+  }
+}
+
+.wireKeyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.wireRow {
+  display: flex;
+  gap: 0.45rem;
+
+  i {
+    inline-size: 2.2rem;
+    block-size: 2.2rem;
+    border: 1.5px solid var(--text-color-f2);
+    border-radius: 0.5rem;
+  }
+}
+
+.wireSpace {
+  inline-size: 16rem !important;
+}
+
+// ---- the typing loader on top ----
+
+.loader {
+  display: flex;
+  position: relative;
+  z-index: 1;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.keys {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.key {
+  display: grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  background-color: var(--primary-l1);
+  color: var(--text-color);
+  font-family: var(--monospace-font-family);
+  font-size: 1.25rem;
+  font-weight: 700;
+  box-shadow: 0 4px 0 var(--primary-d2);
+  animation: key-typing 1.2s ease-in-out infinite;
+
+  &:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+}
+
+@keyframes key-typing {
+  0%,
+  30%,
+  100% {
+    background-color: var(--primary-l1);
+    box-shadow: 0 4px 0 var(--primary-d2);
+    transform: translateY(0);
+  }
+
+  15% {
+    border-color: var(--accent);
+    background-color: color-mix(in oklab, var(--accent) 25%, var(--primary-l1));
+    box-shadow:
+      0 1px 0 var(--primary-d2),
+      0 0 14px 2px color-mix(in oklab, var(--accent) 45%, transparent);
+    transform: translateY(3px);
+  }
+}
+
+.track {
+  position: relative;
+  inline-size: 10rem;
+  block-size: 3px;
+  border-radius: 2px;
+  background-color: var(--primary-d2);
+  overflow: hidden;
+
+  i {
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+    background-color: var(--accent);
+    transition: inline-size 0.2s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key {
+    animation: none;
+  }
 }

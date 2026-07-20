@@ -75,7 +75,14 @@ function specialChar(whitespaceStyle: WhitespaceStyle, codePoint: CodePoint) {
 }
 
 function getClassName({ attrs }: { readonly attrs: Attr }) {
-  return attrs === Attr.Cursor ? styles.cursor : undefined;
+  switch (attrs) {
+    case Attr.Cursor:
+      return styles.cursor;
+    case Attr.Miss:
+      return styles.miss;
+    default:
+      return undefined;
+  }
 }
 
 const cursorSelector = `.${styles.cursor}`;

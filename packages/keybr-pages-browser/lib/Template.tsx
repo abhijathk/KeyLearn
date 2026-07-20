@@ -14,7 +14,11 @@ export function Template({
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className={styles.body}>
-      <Header onOpenMenu={() => setMenuOpen(true)} />
+      <Header
+        onOpenMenu={() => setMenuOpen(true)}
+        showFocus={path === "/"}
+        showBack={path !== "/"}
+      />
       <main className={styles.main}>
         {children}
         <PortalContainer />

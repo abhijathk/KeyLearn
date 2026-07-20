@@ -14,7 +14,7 @@ export function ProgressOverviewSection({
       <Figure.Caption>
         <FormattedMessage
           id="profile.chart.progressOverview.caption"
-          defaultMessage="Learning Progress Overview"
+          defaultMessage="Overall Learning Progress"
         />
       </Figure.Caption>
 
@@ -22,7 +22,7 @@ export function ProgressOverviewSection({
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.progressOverview.description"
-            defaultMessage="This chart shows the learning progress overview for all keys."
+            defaultMessage="Gives you a bird's-eye view of your learning progress across every key."
           />
         </Figure.Description>
       </Explainer>
@@ -38,7 +38,7 @@ export function ProgressOverviewSection({
       <Figure.Legend>
         <FormattedMessage
           id="profile.chart.progressOverview.legend"
-          defaultMessage="Horizontal axis: lesson number. Vertical axis: typing speed for each individual key, {label1} – slow, {label2} – fast."
+          defaultMessage="X-axis: lesson number. Y-axis: typing speed per key, from {label1} slow to {label2} fast."
           values={{
             label1: <Marker type="slow" />,
             label2: <Marker type="fast" />,

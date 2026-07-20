@@ -1,3 +1,31 @@
 .cursor {
   /* Marks a character under cursor. */
 }
+
+// A freshly mistyped character: a soft warm tint that fades — annotate the
+// mistake, never alarm. The shake happens live on the cursor at press time.
+.miss {
+  display: inline-block;
+  border-radius: 0.15em;
+  animation: char-tint 0.6s ease;
+}
+
+@keyframes char-tint {
+  0% {
+    background-color: color-mix(
+      in oklab,
+      var(--textinput--miss__color) 30%,
+      transparent
+    );
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .miss {
+    animation: none;
+  }
+}

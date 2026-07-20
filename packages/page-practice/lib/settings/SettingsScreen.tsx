@@ -54,21 +54,21 @@ function Content({ onSubmit }: { readonly onSubmit: () => void }) {
         <ExplainSettings />
 
         <Header level={1}>
-          <FormattedMessage id="t_Lessons" defaultMessage="Lessons" />
+          <FormattedMessage id="t_Lessons" defaultMessage="Practice Content" />
         </Header>
         <LessonSettings />
 
         <Spacer size={5} />
 
         <Header level={1}>
-          <FormattedMessage id="t_Typing" defaultMessage="Typing" />
+          <FormattedMessage id="t_Typing" defaultMessage="Text Input" />
         </Header>
         <TypingSettings />
 
         <Spacer size={5} />
 
         <Header level={1}>
-          <FormattedMessage id="t_Keyboard" defaultMessage="Keyboard" />
+          <FormattedMessage id="t_Keyboard" defaultMessage="Keyboard Setup" />
         </Header>
         <KeyboardSettings />
 
@@ -77,7 +77,7 @@ function Content({ onSubmit }: { readonly onSubmit: () => void }) {
         <Header level={1}>
           <FormattedMessage
             id="t_Miscellaneous"
-            defaultMessage="Miscellaneous"
+            defaultMessage="Other Settings"
           />
         </Header>
         <MiscSettings />
@@ -90,7 +90,7 @@ function Content({ onSubmit }: { readonly onSubmit: () => void }) {
                 icon={<Icon shape={mdiDeleteForever} />}
                 label={formatMessage({
                   id: "t_Reset",
-                  defaultMessage: "Reset",
+                  defaultMessage: "Restore Defaults",
                 })}
                 onClick={() => {
                   updateSettings(settings.reset());
@@ -104,7 +104,7 @@ function Content({ onSubmit }: { readonly onSubmit: () => void }) {
                 icon={<Icon shape={mdiCheckCircle} />}
                 label={formatMessage({
                   id: "t_Done",
-                  defaultMessage: "Done",
+                  defaultMessage: "Save & Close",
                 })}
                 onClick={() => {
                   onSubmit();

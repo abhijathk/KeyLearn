@@ -9,9 +9,10 @@
   min-inline-size: 20rem;
   margin: 0;
   padding: 0;
-  border: none;
-  color: var(--Button__color);
-  background-color: var(--Button__background-color);
+  border: 1px solid var(--TextField__border-color);
+  border-radius: 0.7rem;
+  color: var(--TextField__color);
+  background-color: var(--TextField__background-color);
   font-family: var(--default-font-family);
   font-size: 1rem;
   font-weight: normal;
@@ -22,8 +23,9 @@
 }
 
 .focused {
-  color: var(--Button--focused__color);
-  background-color: var(--Button--focused__background-color);
+  border-color: var(--accent);
+  color: var(--TextField--focused__color);
+  background-color: var(--TextField--focused__background-color);
   outline: none;
 }
 

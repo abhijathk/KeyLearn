@@ -47,28 +47,28 @@ export const BookPreview = memo(function BookPreview({
           <NameValue
             name={formatMessage({
               id: "t_num_Chapters",
-              defaultMessage: "Chapters",
+              defaultMessage: "Chapter count",
             })}
             value={formatNumber(numChapters)}
           />
           <NameValue
             name={formatMessage({
               id: "t_num_Paragraphs",
-              defaultMessage: "Paragraphs",
+              defaultMessage: "Paragraph count",
             })}
             value={formatNumber(numParagraphs)}
           />
           <NameValue
             name={formatMessage({
               id: "t_num_All_words",
-              defaultMessage: "All words",
+              defaultMessage: "Total words",
             })}
             value={formatNumber(numWords)}
           />
           <NameValue
             name={formatMessage({
               id: "t_num_Unique_words",
-              defaultMessage: "Unique words",
+              defaultMessage: "Distinct words",
             })}
             value={formatNumber(numUniqueWords)}
           />
@@ -84,7 +84,7 @@ export const BookPreview = memo(function BookPreview({
           <NameValue
             name={formatMessage({
               id: "t_Average_word_length",
-              defaultMessage: "Average word length",
+              defaultMessage: "Mean word length",
             })}
             value={formatNumber(avgWordLength, 2)}
           />

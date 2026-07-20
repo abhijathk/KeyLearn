@@ -1,0 +1,47 @@
+// A slim race lane just above the practice text: your puck vs a ghost puck
+// running at your best pace.
+.track {
+  inline-size: min(72rem, 100%);
+  margin-inline: auto;
+  margin-block-end: 0.75rem;
+  padding-inline: 3rem;
+}
+
+.rail {
+  position: relative;
+  block-size: 4px;
+  border-radius: 2px;
+  background-color: color-mix(in oklab, var(--text-color) 12%, transparent);
+}
+
+.puck {
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 0.7rem;
+  block-size: 0.7rem;
+  border-radius: 50%;
+  transition: inset-inline-start 0.08s linear;
+  transform: translate(-50%, -50%);
+}
+
+// the ghost of your best pace — quiet, translucent
+.ghost {
+  background-color: color-mix(in oklab, var(--text-color) 35%, transparent);
+}
+
+// you — accent, and it glows green while you're ahead of the ghost
+.you {
+  background-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.winning {
+  background-color: var(--fast-key-color);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--fast-key-color) 25%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puck {
+    transition: none;
+  }
+}

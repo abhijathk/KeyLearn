@@ -23,7 +23,7 @@ export function UserName({
           ? name
           : formatMessage({
               id: "t_Anonymous_User",
-              defaultMessage: "Anonymous User",
+              defaultMessage: "Unknown User",
             })
       }
     >

@@ -15,10 +15,10 @@ test("render", () => {
     </FakeIntlProvider>,
   );
 
-  includes(r.container.textContent!, "Chapters:1");
-  includes(r.container.textContent!, "Paragraphs:3");
-  includes(r.container.textContent!, "All words:3");
-  includes(r.container.textContent!, "Unique words:3");
+  includes(r.container.textContent!, "Chapter count:1");
+  includes(r.container.textContent!, "Paragraph count:3");
+  includes(r.container.textContent!, "Total words:3");
+  includes(r.container.textContent!, "Distinct words:3");
   includes(r.container.textContent!, "Characters:11");
 
   r.unmount();

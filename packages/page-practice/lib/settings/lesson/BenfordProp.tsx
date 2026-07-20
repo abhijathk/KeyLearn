@@ -34,7 +34,7 @@ export function BenfordProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.benfordsLaw.description"
-            defaultMessage="<a>Benford’s law</a> is an observation that in many real-life numerical data sets, the leading digit is likely to be small."
+            defaultMessage="<a>Benford’s law</a> describes a pattern found in many real-world sets of numbers: the first digit tends to be small far more often than not."
             values={{
               a: (chunks) => (
                 <Link

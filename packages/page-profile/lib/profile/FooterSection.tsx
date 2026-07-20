@@ -15,11 +15,11 @@ export function FooterSection() {
           icon={<Icon shape={mdiDownload} />}
           label={formatMessage({
             id: "t_Download_data",
-            defaultMessage: "Download data",
+            defaultMessage: "Export your data",
           })}
           title={formatMessage({
             id: "profile.download.description",
-            defaultMessage: "Download all your typing data in JSON format.",
+            defaultMessage: "Get a full export of your typing history as a JSON file.",
           })}
           onClick={() => {
             handleDownloadData();
@@ -33,12 +33,12 @@ export function FooterSection() {
           icon={<Icon shape={mdiDeleteForever} />}
           label={formatMessage({
             id: "t_Reset_statistics",
-            defaultMessage: "Reset statistics",
+            defaultMessage: "Clear statistics",
           })}
           title={formatMessage({
             id: "profile.reset.description",
             defaultMessage:
-              "Permanently delete all of your typing data and reset statistics.",
+              "Wipes your typing history for good and resets every statistic.",
           })}
           onClick={() => {
             handleResetData();
@@ -62,8 +62,8 @@ function useCommands() {
       const message = formatMessage({
         id: "profile.reset.message",
         defaultMessage:
-          "Are you sure you want to delete all data and reset your profile? " +
-          "This operation is permanent and cannot be undone!",
+          "Do you really want to erase all your data and reset your profile? " +
+          "This can't be undone once you confirm!",
       });
       if (window.confirm(message)) {
         clearResults();

@@ -38,7 +38,7 @@ export function OAuthLoginForm() {
               label={formatMessage(
                 {
                   id: "t_Signin_with_name",
-                  defaultMessage: "Sign-in with {name}",
+                  defaultMessage: "Continue with {name}",
                 },
                 { name },
               )}
@@ -53,7 +53,7 @@ export function OAuthLoginForm() {
       <Para>
         <FormattedMessage
           id="account.socialForm.description"
-          defaultMessage="Sign-in with your preferred social network. We respect your privacy and promise to never spam your wall, friends, or e-mail."
+          defaultMessage="Log in using any social account you already have. We respect your privacy and will never spam your wall, friends, or inbox."
         />
       </Para>
     </>

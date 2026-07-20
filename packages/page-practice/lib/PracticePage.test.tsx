@@ -28,9 +28,9 @@ test("render", async () => {
   );
 
   fireEvent.click(
-    await r.findByTitle("Change lesson settings", { exact: false }),
+    await r.findByTitle("Adjust lesson settings", { exact: false }),
   );
-  fireEvent.click(await r.findByText("Done"));
+  fireEvent.click(await r.findByText("Save & Close"));
 
   r.unmount();
 });

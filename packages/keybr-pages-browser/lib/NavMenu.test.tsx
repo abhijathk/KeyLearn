@@ -33,8 +33,8 @@ test("render", () => {
   );
 
   isNotNull(r.queryByText("Practice"));
-  isNotNull(r.queryByText("Polski"));
-  isNotNull(r.queryByText("English"));
+  isNotNull(r.queryByText("Profile"));
+  isNotNull(r.queryByText("Help"));
 
   r.unmount();
 });

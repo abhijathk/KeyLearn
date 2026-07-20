@@ -19,7 +19,7 @@ test("empty", (ctx) => {
     ctx.mock.timers.runAll();
   });
 
-  equal(r.container.querySelectorAll("circle").length, 0);
+  equal(r.container.querySelectorAll("rect").length, 0);
 
   r.unmount();
 });
@@ -39,7 +39,7 @@ test("unknown", (ctx) => {
     ctx.mock.timers.runAll();
   });
 
-  equal(r.container.querySelectorAll("circle").length, 0);
+  equal(r.container.querySelectorAll("rect").length, 0);
 
   r.unmount();
 });
@@ -59,7 +59,7 @@ test("without modifiers", (ctx) => {
     ctx.mock.timers.runAll();
   });
 
-  equal(r.container.querySelectorAll("circle").length, 1);
+  equal(r.container.querySelectorAll("rect").length, 1);
 
   r.unmount();
 });
@@ -79,7 +79,7 @@ test("with modifiers", (ctx) => {
     ctx.mock.timers.runAll();
   });
 
-  equal(r.container.querySelectorAll("circle").length, 2);
+  equal(r.container.querySelectorAll("rect").length, 2);
 
   r.unmount();
 });

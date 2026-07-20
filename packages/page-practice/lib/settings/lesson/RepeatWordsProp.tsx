@@ -21,7 +21,7 @@ export function RepeatWordsProp(): ReactNode {
         <Field>
           <FormattedMessage
             id="t_Repeat_each_word:"
-            defaultMessage="Repeat each word:"
+            defaultMessage="Word repetition count:"
           />
         </Field>
         <Field>
@@ -43,7 +43,7 @@ export function RepeatWordsProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.repeatWords.description"
-            defaultMessage="Repeat each word a number of times. Type a word for the first time to develop your muscle memory. Typing the same word consecutively should be easier."
+            defaultMessage="Types each word several times in a row. The first pass builds your muscle memory, and each repeat after that should feel a bit easier."
           />
         </Description>
       </Explainer>

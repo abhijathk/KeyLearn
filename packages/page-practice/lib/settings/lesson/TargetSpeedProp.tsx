@@ -26,7 +26,7 @@ export function TargetSpeedProp(): ReactNode {
         <Field>
           <FormattedMessage
             id="t_Target_typing_speed:"
-            defaultMessage="Target typing speed:"
+            defaultMessage="Your target speed:"
           />
         </Field>
         <Field>
@@ -77,7 +77,7 @@ export function TargetSpeedProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.targetSpeed.description"
-            defaultMessage="The target speed is used to measure the confidence level and the color of a letter. The closer to the target speed, the greener. In the guided mode a letter is only unlocked when you pass a target speed threshold. When you unlock all letters, you can increase the target speed to go back to the learning mode and unlock the letters again, this time with a higher speed threshold. We recommend to increase the target speed in modest steps only when you have all letters above the target speed."
+            defaultMessage="Your target speed sets the benchmark behind each letter’s confidence color — the closer you get to it, the greener the letter becomes. In guided mode, a letter unlocks only once you clear this speed threshold. Once every letter is unlocked, raising the target speed re-locks them so you can work toward a faster benchmark. Increase it in small steps, and only once every letter already sits above your current target."
           />
         </Description>
       </Explainer>

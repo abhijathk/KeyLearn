@@ -1,1 +1,1 @@
-export * from "./StrokeIcon.tsx";
+export { StrokeIcon, type StrokeIconName } from "@keybr/widget";

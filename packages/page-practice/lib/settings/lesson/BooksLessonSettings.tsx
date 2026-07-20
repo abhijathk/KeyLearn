@@ -34,14 +34,14 @@ export function BooksLessonSettings({
         <Description>
           <FormattedMessage
             id="lessonType.books.description"
-            defaultMessage="Generate typing lessons from the text of a book. All keys are included by default. This mode is for the pros."
+            defaultMessage="Turn real book text into typing lessons. Every key is enabled from the start — built for experienced typists."
           />
         </Description>
       </Explainer>
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",
-          defaultMessage: "Lesson options",
+          defaultMessage: "Lesson settings",
         })}
       >
         <BookSelector
@@ -87,12 +87,12 @@ function BookTextProcessing(): ReactNode {
           checked={settings.get(lessonProps.books.lettersOnly)}
           label={formatMessage({
             id: "t_Remove_punctuation_characters",
-            defaultMessage: "Remove punctuation characters",
+            defaultMessage: "Strip out punctuation",
           })}
           title={formatMessage({
             id: "settings.customTextLettersOnly.description",
             defaultMessage:
-              "Remove punctuation from the text to make it simpler to type.",
+              "Strips punctuation marks from the text so it’s simpler to type.",
           })}
           onChange={(value) => {
             updateSettings(settings.set(lessonProps.books.lettersOnly, value));
@@ -104,12 +104,12 @@ function BookTextProcessing(): ReactNode {
           checked={settings.get(lessonProps.books.lowercase)}
           label={formatMessage({
             id: "t_Transform_to_lowercase",
-            defaultMessage: "Transform to lowercase",
+            defaultMessage: "Switch everything to lowercase",
           })}
           title={formatMessage({
             id: "settings.customTextLowercase.description",
             defaultMessage:
-              "Transform all text to lower case to make it simpler to type.",
+              "Converts every character to lowercase so the text is simpler to type.",
           })}
           onChange={(value) => {
             updateSettings(settings.set(lessonProps.books.lowercase, value));

@@ -5,23 +5,20 @@ import { useIntl } from "react-intl";
 import { NavLink } from "react-router";
 import { StrokeIcon, type StrokeIconName } from "./icons/index.ts";
 import * as styles from "./NavMenu.module.less";
-import { SubMenu } from "./SubMenu.tsx";
 
 const pageIcons: Record<string, StrokeIconName> = {
   [Pages.practice.path]: "keyboard",
   [Pages.profile.path]: "chart",
   [Pages.typingTest.path]: "gauge",
   [Pages.highScores.path]: "crown",
-  [Pages.multiplayer.path]: "people",
   [Pages.layouts.path]: "grid",
   [Pages.help.path]: "help",
 };
 
 export function NavMenu({
-  currentPath,
   onNavigate,
 }: {
-  readonly currentPath: string;
+  readonly currentPath?: string;
   readonly onNavigate?: () => void;
 }) {
   return (
@@ -43,19 +40,11 @@ export function NavMenu({
       </MenuItem>
 
       <MenuItem>
-        <MenuItemLink page={Pages.multiplayer} onNavigate={onNavigate} />
-      </MenuItem>
-
-      <MenuItem>
         <MenuItemLink page={Pages.layouts} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>
         <MenuItemLink page={Pages.help} onNavigate={onNavigate} />
-      </MenuItem>
-
-      <MenuItem>
-        <SubMenu currentPath={currentPath} />
       </MenuItem>
     </div>
   );

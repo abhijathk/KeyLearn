@@ -83,7 +83,7 @@ export function Tour({ children, onClose, ...props }: TourProps): ReactNode {
                 <LinkButton className={styles.prev} onClick={selectPrev}>
                   {formatMessage({
                     id: "t_Previous",
-                    defaultMessage: "Previous",
+                    defaultMessage: "Back",
                   })}
                 </LinkButton>
               )}
@@ -92,14 +92,14 @@ export function Tour({ children, onClose, ...props }: TourProps): ReactNode {
                 <LinkButton className={styles.next} onClick={selectNext}>
                   {formatMessage({
                     id: "t_Next",
-                    defaultMessage: "Next",
+                    defaultMessage: "Continue",
                   })}
                 </LinkButton>
               )) || (
                 <LinkButton className={styles.next} onClick={close}>
                   {formatMessage({
                     id: "t_Close",
-                    defaultMessage: "Close",
+                    defaultMessage: "Dismiss",
                   })}
                 </LinkButton>
               )}

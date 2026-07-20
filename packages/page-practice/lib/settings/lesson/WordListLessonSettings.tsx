@@ -33,14 +33,14 @@ export function WordListLessonSettings({
         <Description>
           <FormattedMessage
             id="lessonType.wordList.description"
-            defaultMessage="Generate typing lessons from the list of the most common words of your language. All keys are included by default. This mode is for the pros."
+            defaultMessage="Build lessons from your language’s most frequent words. Every key is enabled from the start — built for experienced typists."
           />
         </Description>
       </Explainer>
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",
-          defaultMessage: "Lesson options",
+          defaultMessage: "Lesson settings",
         })}
       >
         <WordListPreview lesson={lesson} />
@@ -67,7 +67,7 @@ function WordListPreview({
         <Field>
           <FormattedMessage
             id="t_Word_list_size:"
-            defaultMessage="Word list size:"
+            defaultMessage="Number of words in the list:"
           />
         </Field>
         <Field>
@@ -88,7 +88,7 @@ function WordListPreview({
           <CheckBox
             label={formatMessage({
               id: "t_Long_words_only",
-              defaultMessage: "Long words only",
+              defaultMessage: "Longer words only",
             })}
             checked={settings.get(lessonProps.wordList.longWordsOnly)}
             onChange={(value) => {
@@ -124,7 +124,7 @@ function WordListStats({
         <NameValue
           name={formatMessage({
             id: "t_num_Unique_words",
-            defaultMessage: "Unique words",
+            defaultMessage: "Distinct words",
           })}
           value={formatNumber(wordCount)}
         />
@@ -133,7 +133,7 @@ function WordListStats({
         <NameValue
           name={formatMessage({
             id: "t_Average_word_length",
-            defaultMessage: "Average word length",
+            defaultMessage: "Mean word length",
           })}
           value={formatNumber(avgWordLength, 2)}
         />

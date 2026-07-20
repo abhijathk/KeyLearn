@@ -21,7 +21,10 @@ export function DailyGoalSettings(): ReactNode {
     <FieldSet>
       <FieldList>
         <Field>
-          <FormattedMessage id="t_Daily_goal:" defaultMessage="Daily goal:" />
+          <FormattedMessage
+            id="t_Daily_goal:"
+            defaultMessage="Daily practice goal:"
+          />
         </Field>
         <Field>
           <Range
@@ -39,7 +42,7 @@ export function DailyGoalSettings(): ReactNode {
           {settings.get(lessonProps.dailyGoal) === 0 ? (
             formatMessage({
               id: "t_Not_set",
-              defaultMessage: "Not set",
+              defaultMessage: "No goal set",
             })
           ) : (
             <Value
@@ -54,7 +57,7 @@ export function DailyGoalSettings(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.dailyGoal.description"
-            defaultMessage="Set the time you want to spend on the exercises daily. It is a simple reminder which does not limit you in any way. You can stop practicing whenever you want."
+            defaultMessage="Choose how much time you’d like to spend practicing each day. It’s just a gentle reminder, not a limit — you can stop whenever you like."
           />
         </Description>
       </Explainer>

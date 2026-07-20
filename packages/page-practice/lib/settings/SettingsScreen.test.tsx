@@ -23,28 +23,28 @@ test("render", async () => {
     </FakeIntlProvider>,
   );
 
-  isNotNull(await r.findByText("Lessons"));
-  isNotNull(await r.findByText("Typing"));
-  isNotNull(await r.findByText("Keyboard"));
-  isNotNull(await r.findByText("Miscellaneous"));
+  isNotNull(await r.findByText("Practice Content"));
+  isNotNull(await r.findByText("Text Input"));
+  isNotNull(await r.findByText("Keyboard Setup"));
+  isNotNull(await r.findByText("Other Settings"));
 
-  fireEvent.click(r.getByText("Lessons"));
+  fireEvent.click(r.getByText("Practice Content"));
 
-  isNotNull(r.queryByText("Lesson options"));
-  isNotNull(r.queryByText("Lesson preview"));
+  isNotNull(r.queryByText("Lesson settings"));
+  isNotNull(r.queryByText("Preview of your lesson"));
 
-  fireEvent.click(r.getByText("Typing"));
+  fireEvent.click(r.getByText("Text Input"));
 
-  isNotNull(r.queryByText("Typing options"));
+  isNotNull(r.queryByText("Typing helpers"));
 
-  fireEvent.click(r.getByText("Keyboard"));
+  fireEvent.click(r.getByText("Keyboard Setup"));
 
-  isNotNull(r.queryByText("Options"));
-  isNotNull(r.queryByText("Preview"));
+  isNotNull(r.queryByText("Settings"));
+  isNotNull(r.queryByText("Live Preview"));
 
-  fireEvent.click(r.getByText("Miscellaneous"));
+  fireEvent.click(r.getByText("Other Settings"));
 
-  isNotNull(r.queryByText("Interface options"));
+  isNotNull(r.queryByText("Display preferences"));
 
   r.unmount();
 });

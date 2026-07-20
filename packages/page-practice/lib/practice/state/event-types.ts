@@ -18,6 +18,18 @@ export type TopScoreEvent = {
   readonly previous: number;
 };
 
+export type TopConsistencyEvent = {
+  readonly type: "top-consistency";
+  readonly consistency: number;
+  readonly previous: number;
+};
+
+export type TopAccuracyEvent = {
+  readonly type: "top-accuracy";
+  readonly accuracy: number;
+  readonly previous: number;
+};
+
 export type DailyGoalEvent = {
   readonly type: "daily-goal";
 };
@@ -26,6 +38,8 @@ export type LessonEvent =
   | NewLetterEvent
   | TopSpeedEvent
   | TopScoreEvent
+  | TopConsistencyEvent
+  | TopAccuracyEvent
   | DailyGoalEvent;
 
 export type LessonEventListener = (event: LessonEvent) => void;

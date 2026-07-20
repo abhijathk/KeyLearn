@@ -33,6 +33,7 @@ export class Result {
       stats.time,
       stats.errors,
       stats.histogram,
+      stats.consistency,
     );
   }
 
@@ -42,6 +43,12 @@ export class Result {
   readonly speed: number;
   readonly accuracy: number;
   readonly score: number;
+  /**
+   * Typing rhythm in [0, 1] for this run, or null for results loaded from
+   * storage (rhythm is computed live from the keystroke stream and is not
+   * persisted).
+   */
+  readonly consistency: number | null;
 
   constructor(
     readonly layout: Layout,
@@ -51,6 +58,7 @@ export class Result {
     readonly time: number,
     readonly errors: number,
     readonly histogram: Histogram,
+    consistency: number | null = null,
   ) {
     const { complexity } = histogram;
     let speed = 0;
@@ -65,6 +73,7 @@ export class Result {
     this.speed = speed;
     this.accuracy = accuracy;
     this.score = score;
+    this.consistency = consistency;
   }
 
   validate({

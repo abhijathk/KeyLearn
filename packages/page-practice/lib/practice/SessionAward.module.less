@@ -1,0 +1,86 @@
+// A transient celebration banner floating at eye level, above the practice
+// text. Not a modal — it never blocks the view, and it drifts in and out.
+.layer {
+  display: flex;
+  position: fixed;
+  inset-inline: 0;
+  inset-block-start: clamp(6rem, 20vb, 11rem);
+  z-index: 90;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.card {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.85rem 1.5rem 0.85rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 45%, transparent);
+  border-radius: 1rem;
+  background-color: var(--primary-l1);
+  box-shadow:
+    0 1.25rem 3rem var(--shadow-color),
+    0 0 0 6px color-mix(in oklab, var(--accent) 12%, transparent);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: award-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes award-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.9rem) scale(0.92);
+  }
+}
+
+.tile {
+  display: grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: 0.7rem;
+  color: var(--primary);
+  background-color: var(--accent);
+  box-shadow:
+    0 0 0 5px color-mix(in oklab, var(--accent) 18%, transparent),
+    0 0 1.75rem 0.15rem color-mix(in oklab, var(--accent) 45%, transparent);
+  animation: tile-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tile > svg {
+  inline-size: 1.7rem;
+  block-size: 1.7rem;
+  stroke-width: 1.9;
+}
+
+@keyframes tile-pop {
+  0% {
+    transform: scale(0.4) rotate(-10deg);
+  }
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.title {
+  color: var(--text-color);
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.detail {
+  color: var(--accent);
+  font-family: var(--value-font-family);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .tile {
+    animation: none;
+  }
+}

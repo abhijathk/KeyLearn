@@ -1,6 +1,6 @@
 import { useIntlNumbers } from "@keybr/intl";
 import { type SummaryStats } from "@keybr/result";
-import { type ClassName, Name, Value } from "@keybr/widget";
+import { type ClassName, Value } from "@keybr/widget";
 import { clsx } from "clsx";
 import { memo, type ReactNode } from "react";
 import { useIntl } from "react-intl";
@@ -10,14 +10,20 @@ import { type Names } from "./names.ts";
 
 export const GaugeList = memo(function GaugeRow({
   summaryStats,
+  speedSpark,
   names,
 }: {
   summaryStats: SummaryStats;
+  speedSpark?: readonly number[];
   names?: Names;
 }) {
   return (
     <div className={styles.gaugeList}>
-      <SpeedGauge summaryStats={summaryStats} names={names} />
+      <SpeedGauge
+        summaryStats={summaryStats}
+        spark={speedSpark}
+        names={names}
+      />
       <AccuracyGauge summaryStats={summaryStats} names={names} />
       <ScoreGauge summaryStats={summaryStats} names={names} />
     </div>
@@ -26,9 +32,11 @@ export const GaugeList = memo(function GaugeRow({
 
 export const SpeedGauge = memo(function SpeedGauge({
   summaryStats,
+  spark,
   names,
 }: {
   summaryStats: SummaryStats;
+  spark?: readonly number[];
   names?: Names;
 }) {
   const { formatMessage } = useIntl();
@@ -37,14 +45,11 @@ export const SpeedGauge = memo(function SpeedGauge({
   return (
     <Gauge
       id={names?.speed}
-      name={
-        <Name
-          name={formatMessage({
-            id: "t_Speed",
-            defaultMessage: "Speed",
-          })}
-        />
-      }
+      aside={spark && spark.length > 1 ? <Sparkline series={spark} /> : null}
+      name={formatMessage({
+        id: "t_Speed",
+        defaultMessage: "Speed",
+      })}
       value={<Value value={formatSpeed(last)} />}
       delta={
         <Value
@@ -52,13 +57,13 @@ export const SpeedGauge = memo(function SpeedGauge({
           delta={delta}
           title={formatMessage({
             id: "metric.difference.description",
-            defaultMessage: "The difference from the average value.",
+            defaultMessage: "How this compares to your average.",
           })}
         />
       }
       title={formatMessage({
         id: "metric.speed.description",
-        defaultMessage: "Typing speed in the last lesson.",
+        defaultMessage: "Your typing speed in the most recent lesson.",
       })}
     />
   );
@@ -77,14 +82,10 @@ export const AccuracyGauge = memo(function AccuracyGauge({
   return (
     <Gauge
       id={names?.accuracy}
-      name={
-        <Name
-          name={formatMessage({
-            id: "t_Accuracy",
-            defaultMessage: "Accuracy",
-          })}
-        />
-      }
+      name={formatMessage({
+        id: "t_Accuracy",
+        defaultMessage: "Accuracy",
+      })}
       value={<Value value={formatPercents(last)} />}
       delta={
         <Value
@@ -92,14 +93,14 @@ export const AccuracyGauge = memo(function AccuracyGauge({
           delta={delta}
           title={formatMessage({
             id: "metric.difference.description",
-            defaultMessage: "The difference from the average value.",
+            defaultMessage: "How this compares to your average.",
           })}
         />
       }
       title={formatMessage({
         id: "metric.accuracy.description",
         defaultMessage:
-          "The percentage of characters typed without errors in the last lesson.",
+          "The share of characters you typed correctly in the last lesson.",
       })}
     />
   );
@@ -118,14 +119,10 @@ export const ScoreGauge = memo(function ScoreGauge({
   return (
     <Gauge
       id={names?.score}
-      name={
-        <Name
-          name={formatMessage({
-            id: "t_Score",
-            defaultMessage: "Score",
-          })}
-        />
-      }
+      name={formatMessage({
+        id: "t_Score",
+        defaultMessage: "Score",
+      })}
       value={<Value value={formatNumber(last, 0)} />}
       delta={
         <Value
@@ -133,15 +130,15 @@ export const ScoreGauge = memo(function ScoreGauge({
           delta={delta}
           title={formatMessage({
             id: "metric.difference.description",
-            defaultMessage: "The difference from the average value.",
+            defaultMessage: "How this compares to your average.",
           })}
         />
       }
       title={formatMessage({
         id: "metric.score.description",
         defaultMessage:
-          "Score of the last lesson in abstract points. " +
-          "Scores are greater when you type faster and with fewer errors.",
+          "Your last lesson's score, in points. " +
+          "You earn more by typing faster and cleaner.",
       })}
     />
   );
@@ -154,6 +151,7 @@ export const Gauge = memo(function Gauge({
   value,
   delta,
   title,
+  aside = null,
 }: {
   id?: string;
   className?: ClassName;
@@ -161,21 +159,61 @@ export const Gauge = memo(function Gauge({
   value: ReactNode;
   delta: ReactNode;
   title: string;
+  aside?: ReactNode;
 }) {
   return (
-    <span id={id} className={clsx(styles.gauge, className)} title={title}>
-      {name} {value} ({delta})
-    </span>
+    <div id={id} className={clsx(styles.gauge, className)} title={title}>
+      <div className={styles.label}>{name}</div>
+      <div className={styles.row}>
+        {aside}
+        <span className={styles.value}>{value}</span>
+        <span className={styles.delta}>{delta}</span>
+      </div>
+    </div>
   );
 });
+
+export function Sparkline({
+  series,
+  width = 64,
+  height = 20,
+}: {
+  readonly series: readonly number[];
+  readonly width?: number;
+  readonly height?: number;
+}): ReactNode {
+  const lo = Math.min(...series);
+  const hi = Math.max(...series);
+  const span = hi - lo || 1;
+  const px = (i: number) =>
+    (i * (width - 6)) / Math.max(1, series.length - 1) + 3;
+  const py = (v: number) => height - 3 - ((v - lo) * (height - 6)) / span;
+  const points = series.map((v, i) => `${px(i)},${py(v)}`).join(" ");
+  const lastIndex = series.length - 1;
+  return (
+    <svg
+      className={styles.spark}
+      viewBox={`0 0 ${width} ${height}`}
+      aria-hidden={true}
+    >
+      <polyline className={styles.sparkLine} points={points} />
+      <circle
+        className={styles.sparkDot}
+        cx={px(lastIndex)}
+        cy={py(series[lastIndex])}
+        r={2}
+      />
+    </svg>
+  );
+}
 
 function signed(value: any, delta: number): string {
   const s = String(value);
   if (delta > 0) {
-    return `\u2191+${s}`;
+    return `\u25b2 +${s}`;
   }
   if (delta < 0) {
-    return `\u2193${s}`;
+    return `\u25bc ${s}`;
   }
   return s;
 }

@@ -78,7 +78,7 @@ export enum WhitespaceStyle {
 
 export const textDisplaySettings = {
   font: Font.default,
-  caretShapeStyle: CaretShapeStyle.Underline,
+  caretShapeStyle: CaretShapeStyle.Block,
   caretMovementStyle: CaretMovementStyle.Smooth,
   whitespaceStyle: WhitespaceStyle.Bullet,
   language: Language.EN,
@@ -89,7 +89,7 @@ export const textDisplayProps = {
   caretShapeStyle: enumProp(
     "textDisplay.caretShapeStyle",
     CaretShapeStyle,
-    CaretShapeStyle.Underline,
+    CaretShapeStyle.Block,
   ),
   caretMovementStyle: enumProp(
     "textDisplay.caretMovementStyle",

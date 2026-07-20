@@ -14,7 +14,7 @@ export function KeySpeedHistogramSection({
       <Figure.Caption>
         <FormattedMessage
           id="profile.chart.keySpeedHistogram.caption"
-          defaultMessage="Key Typing Speed Histogram"
+          defaultMessage="Per-Key Speed Breakdown"
         />
       </Figure.Caption>
 
@@ -22,7 +22,7 @@ export function KeySpeedHistogramSection({
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.keySpeedHistogram.description"
-            defaultMessage="This chart shows the average typing speed for each individual key."
+            defaultMessage="Shows your average typing speed key by key."
           />
         </Figure.Description>
       </Explainer>

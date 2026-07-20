@@ -25,7 +25,6 @@ const AccountPage = lazy(() => import("./pages/account.tsx"));
 const HelpPage = lazy(() => import("./pages/help.tsx"));
 const HighScorePage = lazy(() => import("./pages/high-scores.tsx"));
 const LayoutsPage = lazy(() => import("./pages/layouts.tsx"));
-const MultiplayerPage = lazy(() => import("./pages/multiplayer.tsx"));
 const PracticePage = lazy(() => import("./pages/practice.tsx"));
 const ProfilePage = lazy(() => import("./pages/profile.tsx"));
 const TypingTestPage = lazy(() => import("./pages/typing-test.tsx"));
@@ -105,17 +104,6 @@ function PageRoutes() {
               <Title page={Pages.layouts} />
               <Suspense fallback={<LoadingProgress />}>
                 <LayoutsPage />
-              </Suspense>
-            </Template>
-          }
-        />
-        <Route
-          path={Pages.multiplayer.path}
-          element={
-            <Template path={Pages.multiplayer.path}>
-              <Title page={Pages.multiplayer} />
-              <Suspense fallback={<LoadingProgress />}>
-                <MultiplayerPage />
               </Suspense>
             </Template>
           }

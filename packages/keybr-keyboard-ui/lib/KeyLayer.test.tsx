@@ -14,9 +14,9 @@ test("render", () => {
     </KeyboardContext.Provider>,
   );
 
-  equal(r.container.querySelectorAll(".key").length, 58);
+  equal(r.container.querySelectorAll(".key").length, 54);
   equal(r.container.querySelectorAll(".depressedKey").length, 0);
-  equal(r.container.querySelectorAll(".symbol").length, 78);
+  equal(r.container.querySelectorAll(".symbol").length, 53);
 
   r.unmount();
 });
@@ -33,9 +33,9 @@ test("update", () => {
     </KeyboardContext.Provider>,
   );
 
-  equal(r.container.querySelectorAll(".key").length, 58);
+  equal(r.container.querySelectorAll(".key").length, 54);
   equal(r.container.querySelectorAll(".depressedKey").length, 3);
-  equal(r.container.querySelectorAll(".symbol").length, 78);
+  equal(r.container.querySelectorAll(".symbol").length, 53);
 
   r.unmount();
 });
@@ -61,16 +61,18 @@ test("events", async () => {
     </KeyboardContext.Provider>,
   );
 
+  const keyA = r.container.querySelector('[data-key="KeyA"] .symbol')!;
+
   events.length = 0;
-  await userEvent.hover(r.getByText("A"));
+  await userEvent.hover(keyA);
   deepEqual(events, ["hover in KeyA"]);
 
   events.length = 0;
-  await userEvent.unhover(r.getByText("A"));
+  await userEvent.unhover(keyA);
   deepEqual(events, ["hover out KeyA"]);
 
   events.length = 0;
-  await userEvent.click(r.getByText("A"));
+  await userEvent.click(keyA);
   deepEqual(events, ["hover in KeyA", "click KeyA"]);
 
   r.unmount();

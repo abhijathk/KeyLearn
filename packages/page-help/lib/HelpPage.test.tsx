@@ -17,7 +17,7 @@ test("render", () => {
     </FakeIntlProvider>,
   );
 
-  isNotNull(r.queryByText("Learn to type faster"));
+  isNotNull(r.queryByText("Type faster, the smart way"));
 
   r.unmount();
 });

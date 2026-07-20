@@ -1,4 +1,4 @@
-import { type ClassName } from "@keybr/widget";
+import { type ClassName } from "../types.ts";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
 import * as styles from "./StrokeIcon.module.less";
@@ -13,6 +13,7 @@ export type StrokeIconName =
   | "chart"
   | "gauge"
   | "crown"
+  | "trophy"
   | "people"
   | "grid"
   | "help"
@@ -28,7 +29,12 @@ export type StrokeIconName =
   | "theme"
   | "font"
   | "expand"
-  | "collapse";
+  | "collapse"
+  | "settings"
+  | "undo"
+  | "redo"
+  | "focus"
+  | "back";
 
 const shapes: Record<StrokeIconName, ReactNode> = {
   keyboard: (
@@ -51,6 +57,13 @@ const shapes: Record<StrokeIconName, ReactNode> = {
     </>
   ),
   crown: <path d="M4 8l3.5 3L12 6l4.5 5L20 8l-1.5 9h-13z" />,
+  trophy: (
+    <>
+      <path d="M7 4h10v4a5 5 0 0 1-10 0z" />
+      <path d="M7 5.5H4.5V7a3 3 0 0 0 3 3M17 5.5h2.5V7a3 3 0 0 1-3 3" />
+      <path d="M12 13v3M9 20h6M9.5 20c0-1.7.8-2.6 2.5-2.6s2.5.9 2.5 2.6" />
+    </>
+  ),
   people: (
     <>
       <circle cx="9" cy="9" r="2.6" />
@@ -126,6 +139,21 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   collapse: (
     <path d="M4 8h4a1 1 0 0 0 1-1V3M20 8h-4a1 1 0 0 1-1-1V3M15 16h4a1 1 0 0 1 1 1v4M9 16H5a1 1 0 0 0-1 1v4" />
   ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 3.2v2.3M12 18.5v2.3M3.2 12h2.3M18.5 12h2.3M5.8 5.8l1.6 1.6M16.6 16.6l1.6 1.6M18.2 5.8l-1.6 1.6M7.4 16.6l-1.6 1.6" />
+    </>
+  ),
+  undo: <path d="M8 5L4 9l4 4M4 9h10a6 6 0 0 1 0 12h-3" />,
+  redo: <path d="M16 5l4 4-4 4M20 9H10a6 6 0 0 0 0 12h3" />,
+  focus: (
+    <>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M4 9V6.5A2.5 2.5 0 0 1 6.5 4H9M15 4h2.5A2.5 2.5 0 0 1 20 6.5V9M20 15v2.5a2.5 2.5 0 0 1-2.5 2.5H15M9 20H6.5A2.5 2.5 0 0 1 4 17.5V15" />
+    </>
+  ),
+  back: <path d="M19 12H5M11 6l-6 6 6 6" />,
 };
 
 export function StrokeIcon({

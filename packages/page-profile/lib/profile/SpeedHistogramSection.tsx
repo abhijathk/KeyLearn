@@ -28,7 +28,7 @@ export function SpeedHistogramSection({ stats }: { stats: SummaryStats }) {
       <Figure.Caption>
         <FormattedMessage
           id="profile.chart.histogram.caption"
-          defaultMessage="Relative Typing Speed"
+          defaultMessage="Your Typing Speed, Compared"
         />
       </Figure.Caption>
 
@@ -36,7 +36,7 @@ export function SpeedHistogramSection({ stats }: { stats: SummaryStats }) {
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.histogram.description"
-            defaultMessage="This is a histogram of the typing speeds of all users, and your position in relation to them."
+            defaultMessage="A histogram of typing speeds across all users, with your own standing marked on it."
           />
         </Figure.Description>
       </Explainer>
@@ -45,7 +45,7 @@ export function SpeedHistogramSection({ stats }: { stats: SummaryStats }) {
         {period === "average" ? (
           <FormattedMessage
             id="profile.chart.compareAverageSpeed.description"
-            defaultMessage="Your all time average speed beats {value} of all other people."
+            defaultMessage="Your lifetime average speed outpaces {value} of everyone else."
             values={{
               value: <Value value={value > 0 ? formatPercents(cdf) : "N/A"} />,
             }}
@@ -53,7 +53,7 @@ export function SpeedHistogramSection({ stats }: { stats: SummaryStats }) {
         ) : (
           <FormattedMessage
             id="profile.chart.compareTopSpeed.description"
-            defaultMessage="Your all time top speed beats {value} of all other people."
+            defaultMessage="Your lifetime top speed outpaces {value} of everyone else."
             values={{
               value: <Value value={value > 0 ? formatPercents(cdf) : "N/A"} />,
             }}
@@ -69,14 +69,14 @@ export function SpeedHistogramSection({ stats }: { stats: SummaryStats }) {
               ? {
                   label: formatMessage({
                     id: "t_Average_speed",
-                    defaultMessage: "Average speed",
+                    defaultMessage: "Typical speed",
                   }),
                   value,
                 }
               : {
                   label: formatMessage({
                     id: "t_Top_speed",
-                    defaultMessage: "Top speed",
+                    defaultMessage: "Best speed",
                   }),
                   value,
                 },
@@ -95,7 +95,7 @@ export function SpeedHistogramSection({ stats }: { stats: SummaryStats }) {
             checked={period === "average"}
             label={formatMessage({
               id: "t_Average_speed",
-              defaultMessage: "Average speed",
+              defaultMessage: "Typical speed",
             })}
             onSelect={() => {
               setPeriod("average");
@@ -109,7 +109,7 @@ export function SpeedHistogramSection({ stats }: { stats: SummaryStats }) {
             checked={period === "top"}
             label={formatMessage({
               id: "t_Top_speed",
-              defaultMessage: "Top speed",
+              defaultMessage: "Best speed",
             })}
             onSelect={() => {
               setPeriod("top");
@@ -123,7 +123,7 @@ export function SpeedHistogramSection({ stats }: { stats: SummaryStats }) {
         <Figure.Legend>
           <FormattedMessage
             id="profile.chart.histogram.legend"
-            defaultMessage="See how fast you type relative to other users. The higher the bar is, the more people type at that speed. Your position is marked with the colored vertical lines."
+            defaultMessage="Compares your typing speed against other users. Taller bars mean more people type at that speed, and the colored vertical lines mark where you stand."
           />
         </Figure.Legend>
       </Explainer>

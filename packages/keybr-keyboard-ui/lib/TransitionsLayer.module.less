@@ -1,22 +1,25 @@
-#arrow {
-  /* Name only. */
-}
-
+// Comet trails between keys: only the strongest few pairs, flowing dots.
 .arc {
   fill: none;
+  stroke-dasharray: 1 10;
+  stroke-linecap: round;
+  animation: comet-flow 1.2s linear infinite;
 }
 
 .h {
-  stroke: var(--Chart-hist-h__color);
-  stroke-width: 2px;
+  stroke: var(--fast-key-color);
 }
 
 .m {
-  stroke: var(--Chart-hist-m__color);
-  stroke-width: 2px;
+  stroke: var(--slow-key-color);
 }
 
 .f {
   stroke: var(--text-color);
-  stroke-width: 1px;
+}
+
+@keyframes comet-flow {
+  to {
+    stroke-dashoffset: -11;
+  }
 }

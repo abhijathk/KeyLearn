@@ -1,0 +1,27 @@
+@import "@keybr/widget/lib/index.less";
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  margin-block-start: 2rem;
+}
+
+.seg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-inline: 1.75rem;
+
+  & + & {
+    border-inline-start: var(--separator-border);
+  }
+}
+
+.label {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--Name-color);
+}

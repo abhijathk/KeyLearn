@@ -32,7 +32,7 @@ export const GaugeRow = memo(function GaugeRow({
         className={styles.name}
         name={formatMessage({
           id: "t_Metrics",
-          defaultMessage: "Metrics",
+          defaultMessage: "Stats",
         })}
       />
       <GaugeList summaryStats={summaryStats} names={names} />
@@ -60,7 +60,7 @@ export const KeySetRow = memo(function KeySetRow({
         className={styles.name}
         name={formatMessage({
           id: "t_All_keys",
-          defaultMessage: "All keys",
+          defaultMessage: "Every key",
         })}
       />
       <KeySet
@@ -89,7 +89,7 @@ export const CurrentKeyRow = memo(function CurrentKeyRow({
         className={styles.name}
         name={formatMessage({
           id: "t_Current_key",
-          defaultMessage: "Current key",
+          defaultMessage: "Active key",
         })}
       />
       <CurrentKey
@@ -141,7 +141,7 @@ export const DailyGoalRow = memo(function DailyGoalRow({
         className={styles.name}
         name={formatMessage({
           id: "t_Daily_goal",
-          defaultMessage: "Daily goal",
+          defaultMessage: "Today's goal",
         })}
       />
       <DailyGoal

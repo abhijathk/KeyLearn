@@ -21,7 +21,7 @@ export function AccuracyStreaksSection({
       <Figure.Caption>
         <FormattedMessage
           id="profile.accuracy.header"
-          defaultMessage="Accuracy Streaks"
+          defaultMessage="Your Accuracy Streaks"
         />
       </Figure.Caption>
 
@@ -35,7 +35,7 @@ export function AccuracyStreaksSection({
         <Para align="center">
           <FormattedMessage
             id="profile.accuracy.noData"
-            defaultMessage="You don’t have any accuracy streaks. Consider completing a lesson with a highest accuracy possible, regardless of typing speed."
+            defaultMessage="No accuracy streaks yet. Try finishing a lesson at your highest possible accuracy, no matter how fast you type."
           />
         </Para>
       )}
@@ -44,7 +44,7 @@ export function AccuracyStreaksSection({
         <Figure.Description>
           <FormattedMessage
             id="profile.accuracy.legend"
-            defaultMessage="Above are listed the longest continuous sequences of lessons with accuracy above a given threshold, along with statistics about every such sequence. The longer the sequence of lessons, the better."
+            defaultMessage="Listed above are your longest unbroken runs of lessons that kept accuracy above a chosen minimum, along with the stats for each run. Longer runs are better."
           />
         </Figure.Description>
       </Explainer>
@@ -66,7 +66,7 @@ function StreakDetails({ streak }: { streak: Streak }) {
         <NameValue
           name={formatMessage({
             id: "t_Accuracy_threshold",
-            defaultMessage: "Accuracy threshold",
+            defaultMessage: "Minimum accuracy",
           })}
           value={formatPercents(level)}
         />
@@ -75,7 +75,7 @@ function StreakDetails({ streak }: { streak: Streak }) {
         <NameValue
           name={formatMessage({
             id: "t_num_Lessons",
-            defaultMessage: "Lessons",
+            defaultMessage: "Lessons done",
           })}
           value={formatNumber(results.length)}
         />
@@ -89,21 +89,21 @@ function StreakDetails({ streak }: { streak: Streak }) {
         <NameValue
           name={formatMessage({
             id: "t_Top_speed",
-            defaultMessage: "Top speed",
+            defaultMessage: "Best speed",
           })}
           value={formatSpeed(stats.speed.max)}
         />
         <NameValue
           name={formatMessage({
             id: "t_Average_speed",
-            defaultMessage: "Average speed",
+            defaultMessage: "Typical speed",
           })}
           value={formatSpeed(stats.speed.avg)}
         />
         <NameValue
           name={formatMessage({
             id: "t_Start_date",
-            defaultMessage: "Start date",
+            defaultMessage: "Streak started",
           })}
           value={formatDate(results[0].timeStamp, {
             dateStyle: "short",

@@ -9,13 +9,13 @@ export function AccountName({ user }: { user: UserDetails | null }) {
     <Header level={1}>
       <FormattedMessage
         id="t_Account_name"
-        defaultMessage="Account | {name}"
+        defaultMessage="Account for {name}"
         values={{
           name:
             user?.name ??
             formatMessage({
               id: "t_Anonymous_User",
-              defaultMessage: "Anonymous User",
+              defaultMessage: "Unknown User",
             }),
         }}
       />

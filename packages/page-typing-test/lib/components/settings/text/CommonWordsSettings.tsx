@@ -70,7 +70,7 @@ function Content({ wordList }: { wordList: WordList }) {
         <Field>
           {formatMessage({
             id: "t_Word_list_size:",
-            defaultMessage: "Word list size:",
+            defaultMessage: "Number of words in the list:",
           })}
         </Field>
         <Field>
@@ -102,7 +102,7 @@ function Content({ wordList }: { wordList: WordList }) {
           <NameValue
             name={formatMessage({
               id: "t_num_Unique_words",
-              defaultMessage: "Unique words",
+              defaultMessage: "Distinct words",
             })}
             value={formatNumber(wordCount)}
           />
@@ -111,7 +111,7 @@ function Content({ wordList }: { wordList: WordList }) {
           <NameValue
             name={formatMessage({
               id: "t_Average_word_length",
-              defaultMessage: "Average word length",
+              defaultMessage: "Mean word length",
             })}
             value={formatNumber(avgWordLength, 2)}
           />

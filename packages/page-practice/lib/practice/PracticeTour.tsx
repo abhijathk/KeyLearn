@@ -15,10 +15,10 @@ export const PracticeTour = memo(function PracticeTour({
         <FormattedMessage
           id="m_tour01"
           defaultMessage={
-            "<h1>Learn to Type Faster</h1>" +
-            "<p>This web application will help you to learn <em>touch typing</em> which means typing through muscle memory without using your eyesight to find the keys. It can improve your typing speed and accuracy dramatically. The opposite is <em>hunt and peck typing</em>, a method of typing in which you look at the keyboard instead of the screen, and use only the index fingers.</p>" +
-            "<p>This is a short tutorial that will explain how this application works.</p>" +
-            "<p>You can use the left and right arrow keys to navigate through these slides.</p>"
+            "<h1>Type Faster With Confidence</h1>" +
+            "<p>KeyLearn teaches you <em>touch typing</em> — typing from muscle memory instead of hunting for keys with your eyes. It can boost both your speed and accuracy by a wide margin. The alternative is <em>hunt-and-peck typing</em>, where you keep glancing down at the keyboard and rely mostly on your index fingers.</p>" +
+            "<p>This short walkthrough covers how the app works.</p>" +
+            "<p>Use the left and right arrow keys to move between these slides.</p>"
           }
         />
       </Slide>
@@ -26,9 +26,9 @@ export const PracticeTour = memo(function PracticeTour({
         <FormattedMessage
           id="m_tour02"
           defaultMessage={
-            "<p>Our teaching method is based on these principles:</p>" +
-            "<p>No boring repetitive exercises. Unlike most other typing tutors, this application does not force you to repeat the same lessons like ‘<em>jjf jjk jjf jjk</em>’ over and over again. This is very annoying and contributes very little to your overall learning.</p>" +
-            "<p>This application uses a sophisticated computer algorithm to generate typing lessons that match your skill level. These lessons consist of random words generated using a subset of the full alphabet of letters. The size of the subset and individual letter frequency is controlled by the algorithm, which provides you with the best learning experience.</p>"
+            "<p>Here’s what our teaching approach is built on:</p>" +
+            "<p>No tedious drilling. Unlike many typing tutors, KeyLearn never makes you repeat the same block like ‘<em>jjf jjk jjf jjk</em>’ over and over. That gets tiresome fast and barely helps you learn.</p>" +
+            "<p>Instead, an algorithm builds lessons that match your current skill level. Each lesson is made of random words drawn from a subset of your alphabet’s letters. The algorithm decides how large that subset is and how often each letter shows up, aiming to give you the most effective learning experience.</p>"
           }
         />
       </Slide>
@@ -36,9 +36,9 @@ export const PracticeTour = memo(function PracticeTour({
         <FormattedMessage
           id="m_tour03"
           defaultMessage={
-            "<p>Initially it starts generating words from a small subset of the most frequent letters in the alphabet.</p>" +
-            "<p>When you are typing these words, the application measures the time-to-type metric for every letter in that subset. This time is used to measure your learning progress. The more familiar you become with a letter, the less time it takes for you to type it.</p>" +
-            "<p>Once you familiarize yourself with the entire current subset of letters, the algorithm expands it by adding more and more letters to the subset.</p>"
+            "<p>At the start, words are generated from just a handful of the alphabet’s most common letters.</p>" +
+            "<p>As you type those words, the app tracks a time-to-type measurement for each letter in the subset. That measurement is how your progress gets tracked — the more comfortable you get with a letter, the faster you type it.</p>" +
+            "<p>Once you’re comfortable with the whole current subset, the algorithm grows it by folding in additional letters.</p>"
           }
         />
       </Slide>
@@ -46,31 +46,31 @@ export const PracticeTour = memo(function PracticeTour({
         <FormattedMessage
           id="m_tour04"
           defaultMessage={
-            "<p>When the algorithm includes a new letter to the current subset, the frequency of this letter is artificially increased so that it will be included in every generated word of a lesson.</p>" +
-            "<p>The algorithm can also artificially rearrange letter frequencies, placing an emphasis on the letters with the worst time-to-type metric.</p>" +
-            "<p>This means you will always be typing the letters that you are least familiar with.</p>"
+            "<p>Whenever a new letter joins the subset, its frequency gets boosted so it shows up in nearly every generated word of a lesson.</p>" +
+            "<p>The algorithm also reshuffles letter frequencies on purpose, giving more weight to whichever letters have the slowest time-to-type readings.</p>" +
+            "<p>In practice, that keeps you typing the letters you’re least comfortable with.</p>"
           }
         />
       </Slide>
       <Slide size="small" anchor={`#${names.textInput}`} position="block-end">
         <FormattedMessage
           id="m_tour05"
-          defaultMessage="<p>This is the text board. It displays the text to type out. The text changes for each new lesson. The text is generated automatically from the current subset of letters. Most of the words are not real, but are generated using the phonetic rules of your language so they sound natural and should be easy to pronounce. Besides being funny, this gives us the flexibility to use more words than actually exist.</p>"
+          defaultMessage="<p>This is the text board, showing the passage you need to type. It refreshes with every new lesson and is built automatically from your current letter subset. Most of these words aren’t real — they’re generated from your language’s phonetic rules so they still sound natural and are easy to pronounce. It’s a bit playful, and it also lets us draw from a far larger pool of words than actually exist.</p>"
         />
       </Slide>
       <Slide size="small" anchor={`#${names.keyboard}`} position="block-start">
         <FormattedMessage
           id="m_tour06"
-          defaultMessage="<p>This is the virtual keyboard. It helps you memorize key positions. Use it to find the keys and try not to look at your physical keyboard. There are small bumps on the <em>F</em> and <em>J</em> keys of your keyboard. Use these to correctly position your index fingers without having to look at the keys. Once your index fingers are in the right position you will be able to locate the remainder of the keys.</p>"
+          defaultMessage="<p>This is the virtual keyboard, which helps you memorize where each key sits. Use it to locate keys instead of glancing down at your physical keyboard. Your keyboard’s <em>F</em> and <em>J</em> keys have small raised bumps — feel for these to line up your index fingers without looking. Once your index fingers are correctly placed, you’ll be able to find every other key from there.</p>"
         />
       </Slide>
       <Slide size="small" anchor={`#${names.speed}`} position="block-end">
         <FormattedMessage
           id="m_tour07"
           defaultMessage={
-            "<p>This is the typing speed indicator and the difference from the average value. Your goal is to increase this metric, meaning higher values are better.</p>" +
-            "<p>Typing speed is measured in either <em>Words per Minute (WPM)</em> or <em>Characters per Minute (CPM)</em>. The definition of a word is standardized to be five characters, so <em>10WPM</em> is equal to <em>50CPM</em>.</p>" +
-            "<p>You can switch between the <em>WPM</em> and the <em>CPM</em> display modes on the Settings page.</p>"
+            "<p>This shows your typing speed and how it compares to your average. Higher numbers here are the goal.</p>" +
+            "<p>Speed is measured in either <em>Words per Minute (WPM)</em> or <em>Characters per Minute (CPM)</em>. Since a word is standardized to five characters, <em>10WPM</em> works out to <em>50CPM</em>.</p>" +
+            "<p>You can toggle between <em>WPM</em> and <em>CPM</em> on the Settings page.</p>"
           }
         />
       </Slide>
@@ -78,8 +78,8 @@ export const PracticeTour = memo(function PracticeTour({
         <FormattedMessage
           id="m_tour08"
           defaultMessage={
-            "<p>This is the accuracy indicator and the difference from the average value. Your goal is to increase this metric, meaning higher values are better.</p>" +
-            "<p>Accuracy is computed as the percentage of characters typed without errors. Many typos in the same position count as one error.</p>"
+            "<p>This is your accuracy reading, along with how it compares to your average. As with speed, higher is better here.</p>" +
+            "<p>Accuracy is the percentage of characters you typed correctly. Repeated mistakes at the same spot only count as a single error.</p>"
           }
         />
       </Slide>
@@ -87,23 +87,23 @@ export const PracticeTour = memo(function PracticeTour({
         <FormattedMessage
           id="m_tour09"
           defaultMessage={
-            "<p>This is the typing score indicator in abstract points and the difference from the average value.</p>" +
-            "<p>The score is calculated from your typing speed, error count, and the current size of the letter set. The formula is designed to reward for typing speed, and punish for error count. You cannot obtain a high score by typing fast while also making many errors.</p>" +
-            "<p>Users who score the highest points are recorded in the high score table.</p>"
+            "<p>This is your score, shown in abstract points, along with how it differs from your average.</p>" +
+            "<p>It’s calculated from your speed, your error count, and how many letters are currently in your set. The formula rewards fast typing and penalizes mistakes, so typing quickly while making lots of errors won’t earn you a high score.</p>" +
+            "<p>The top scorers show up on the high score table.</p>"
           }
         />
       </Slide>
       <Slide size="small" anchor={`#${names.keySet}`} position="block-end">
         <FormattedMessage
           id="m_tour10"
-          defaultMessage="<p>This indicator shows the current subset of letters used to generate the lessons, and your confidence level for every letter in the subset:</p>"
+          defaultMessage="<p>This panel lists the letters currently used to build your lessons, along with your confidence level for each one:</p>"
         />
         <KeyLegendList />
       </Slide>
       <Slide size="small" anchor={`#${names.keySet}`} position="block-end">
         <FormattedMessage
           id="m_tour11"
-          defaultMessage="<p>This indicator can also be used to predict the remaining number of lessons that are needed to fully unlock a letter, like in the example chart below. Visit it regularly to get more insight on how your learning is going, to see if you are making a progress.</p>"
+          defaultMessage="<p>The same panel can forecast how many lessons remain before a letter fully unlocks, as shown in the sample chart below. Check back often for a clearer picture of how your learning is progressing.</p>"
         />
         <KeyDetailsChartDemo />
       </Slide>
@@ -111,14 +111,14 @@ export const PracticeTour = memo(function PracticeTour({
         <FormattedMessage
           id="m_tour12"
           defaultMessage={
-            "<p>This indicator shows details about the letter with increased frequency, which is currently included in every generated word:</p>" +
+            "<p>This shows details for the letter that’s currently boosted in frequency and appearing in every generated word:</p>" +
             "<dl>" +
-            "<dt>Best typing speed</dt>" +
-            "<dd>Your best typing speed for this individual letter.</dd>" +
-            "<dt>Confidence level</dt>" +
-            "<dd>A number in range from zero to one which is computed using your typing speed, and indicates your familiarity with this letter. A letter is considered fully learned when it’s confidence level reaches one.</dd>" +
+            "<dt>Top typing speed</dt>" +
+            "<dd>The fastest you’ve ever typed this particular letter.</dd>" +
+            "<dt>Confidence score</dt>" +
+            "<dd>A value between zero and one, calculated from your typing speed, showing how well you know this letter. Once confidence reaches one, the letter counts as fully learned.</dd>" +
             "<dt>Learning rate</dt>" +
-            "<dd>How your typing speed is changing with each lesson.</dd>" +
+            "<dd>How your speed on this letter is trending from lesson to lesson.</dd>" +
             "</dl>"
           }
         />

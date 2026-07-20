@@ -13,7 +13,7 @@ export const KeyLegendList = () => {
         />{" "}
         <FormattedMessage
           id="lesson.indicator.notCalibrated"
-          defaultMessage="A non-calibrated key with an unknown confidence level. You still have not pressed this key yet."
+          defaultMessage="An uncalibrated key with an unknown confidence score — you haven't pressed it yet."
         />
       </li>
       <li>
@@ -25,7 +25,7 @@ export const KeyLegendList = () => {
         />{" "}
         <FormattedMessage
           id="lesson.indicator.leastConfidence"
-          defaultMessage="A calibrated key with the lowest confidence level. The more times you press this key, the more accurate this metric becomes."
+          defaultMessage="A calibrated key sitting at the lowest confidence level. Keep pressing it and the score sharpens over time."
         />
       </li>
       <li>
@@ -37,7 +37,7 @@ export const KeyLegendList = () => {
         />{" "}
         <FormattedMessage
           id="lesson.indicator.mostConfidence"
-          defaultMessage="A calibrated key with the highest confidence level. The more times you press this key, the more accurate this metric becomes."
+          defaultMessage="A calibrated key at the highest confidence level. The more you press it, the more precise this score gets."
         />
       </li>
       <li>
@@ -49,7 +49,7 @@ export const KeyLegendList = () => {
         />{" "}
         <FormattedMessage
           id="lesson.indicator.focused"
-          defaultMessage="A key with increased frequency. It takes you the most time to find this key so the algorithm chose it to be included in every generated word."
+          defaultMessage="A key that shows up more often. It's the one slowing you down most, so the algorithm works it into every generated word."
         />
       </li>
       <li>
@@ -61,7 +61,7 @@ export const KeyLegendList = () => {
         />{" "}
         <FormattedMessage
           id="lesson.indicator.forced"
-          defaultMessage="A key which was manually included in the lessons."
+          defaultMessage="A key you added to your lessons by hand."
         />
       </li>
       <li>
@@ -73,7 +73,7 @@ export const KeyLegendList = () => {
         />{" "}
         <FormattedMessage
           id="lesson.indicator.notIncluded"
-          defaultMessage="A key which was not yet included in the lessons."
+          defaultMessage="A key that hasn't been added to your lessons yet."
         />
       </li>
     </ul>

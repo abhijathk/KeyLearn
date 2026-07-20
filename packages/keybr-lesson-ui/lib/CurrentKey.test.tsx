@@ -29,8 +29,8 @@ test("render no key", () => {
     </FakeIntlProvider>,
   );
 
-  isNotNull(r.queryByText("All keys are unlocked."));
-  isNull(r.queryByText("Learning rate:"));
+  isNotNull(r.queryByText("Every key is unlocked."));
+  isNull(r.queryByText("Progress rate:"));
 
   r.unmount();
 });
@@ -55,8 +55,8 @@ test("render key", () => {
     </FakeIntlProvider>,
   );
 
-  isNull(r.queryByText("All keys are unlocked."));
-  isNotNull(r.queryByText("Learning rate:"));
+  isNull(r.queryByText("Every key is unlocked."));
+  isNotNull(r.queryByText("Progress rate:"));
 
   r.unmount();
 });

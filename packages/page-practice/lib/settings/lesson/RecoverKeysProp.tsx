@@ -19,7 +19,7 @@ export function RecoverKeysProp(): ReactNode {
         <Field>
           <FormattedMessage
             id="t_Unlock_a_next_key_:"
-            defaultMessage="Unlock a next key only when:"
+            defaultMessage="Only unlock the next key once:"
           />
         </Field>
         <Field>
@@ -27,7 +27,7 @@ export function RecoverKeysProp(): ReactNode {
             label={formatMessage({
               id: "t_The_previous_keys_are_",
               defaultMessage:
-                "The previous keys are also above the target speed",
+                "All previously unlocked keys are also above the target speed",
             })}
             checked={settings.get(lessonProps.guided.recoverKeys)}
             onChange={(value) => {
@@ -42,7 +42,7 @@ export function RecoverKeysProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.recoverKeys.description"
-            defaultMessage="When you focus on a new key, it is very likely that the speed of previous keys will decrease. If this option is disabled, you unlock a new key by raising only the focused key above the target speed. If this option is enabled, you will have to raise the focused key and all the previous keys above the target speed. This will make unlocking new keys harder. However, this will also make forgetting old keys harder."
+            defaultMessage="While you’re focused on a new key, your speed on earlier keys will often dip a little. With this option off, a key unlocks as soon as the one you’re focusing on clears the target speed. With it on, every previously unlocked key must also stay above the target speed before a new one unlocks — harder to progress, but it also helps keep you from losing your grip on older keys."
           />
         </Description>
       </Explainer>

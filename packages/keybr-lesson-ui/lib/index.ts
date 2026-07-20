@@ -8,6 +8,8 @@ export * from "./gauges.tsx";
 export * from "./indicators.tsx";
 export * from "./Key.tsx";
 export * from "./KeyDetails.tsx";
+export * from "./LetterJourney.tsx";
+export * from "./StreakList.tsx";
 export * from "./KeyLegend.tsx";
 export * from "./KeyLegendList.tsx";
 export * from "./KeySelector.tsx";

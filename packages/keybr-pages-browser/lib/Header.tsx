@@ -1,25 +1,93 @@
-import { IconButton } from "@keybr/widget";
-import { type ReactNode } from "react";
-import { defineMessage, useIntl } from "react-intl";
+import { IconButton, StrokeIcon } from "@keybr/widget";
+import { type ReactNode, useEffect, useState } from "react";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { NavLink } from "react-router";
 import { AccountMenu } from "./AccountMenu.tsx";
 import * as styles from "./Header.module.less";
-import { StrokeIcon } from "./icons/index.ts";
 import { ThemeSwitcher } from "./themes/ThemeSwitcher.tsx";
 
 export function Header({
   onOpenMenu,
+  showFocus = false,
+  showBack = false,
 }: {
   readonly onOpenMenu: () => void;
+  readonly showFocus?: boolean;
+  readonly showBack?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
+  const [streak, setStreak] = useState(0);
+  useEffect(() => {
+    const onStreak = (ev: Event) => {
+      setStreak((ev as CustomEvent<number>).detail ?? 0);
+    };
+    window.addEventListener("keylearn:streak", onStreak);
+    return () => {
+      window.removeEventListener("keylearn:streak", onStreak);
+    };
+  }, []);
   return (
     <header className={styles.header}>
-      <NavLink to="/" className={styles.wordmark}>
+      <div className={styles.left}>
+        {showBack && (
+          <NavLink
+            to="/"
+            className={styles.back}
+            title={formatMessage(
+              defineMessage({
+                id: "nav.backToPractice",
+                defaultMessage: "Back to practice",
+              }),
+            )}
+          >
+            <StrokeIcon name="back" />
+          </NavLink>
+        )}
+        <NavLink to="/" className={styles.wordmark}>
+        <StrokeIcon className={styles.glyph} name="keyboard" />
         <span className={styles.mark}>Key</span>
-        <span className={styles.markAlt}>Learn</span>
-      </NavLink>
+          <span className={styles.markAlt}>Learn</span>
+        </NavLink>
+      </div>
       <div className={styles.controls}>
+        {streak > 0 && (
+          <span
+            className={styles.streak}
+            title={formatMessage(
+              defineMessage({
+                id: "header.streak.description",
+                defaultMessage: "Days in a row with at least one completed lesson.",
+              }),
+            )}
+          >
+            <svg
+              className={styles.flame}
+              viewBox="0 0 24 24"
+              aria-hidden={true}
+            >
+              <path d="M12 3.5c.6 2.8-1.3 4.6-2.5 6.2-1.2 1.6-2 3.2-2 5a6.5 6.5 0 0 0 13 0c0-1.4-.4-2.7-1.1-3.8-.9 1.1-2 1.4-2.9.9.9-2.4.1-5.8-4.5-8.3z" />
+            </svg>
+            <FormattedMessage
+              id="practice.streak.days"
+              defaultMessage="{days} {days, plural, =1 {day} other {days}}"
+              values={{ days: streak }}
+            />
+          </span>
+        )}
+        {showFocus && (
+          <IconButton
+            icon={<StrokeIcon name="focus" />}
+            title={formatMessage(
+              defineMessage({
+                id: "practice.widget.focusMode.enter",
+                defaultMessage: "Focus mode: just you, the words, nothing else.",
+              }),
+            )}
+            onClick={() => {
+              window.dispatchEvent(new window.CustomEvent("keylearn:focus-mode"));
+            }}
+          />
+        )}
         <ThemeSwitcher />
         <AccountMenu />
         <IconButton
@@ -27,7 +95,7 @@ export function Header({
           title={formatMessage(
             defineMessage({
               id: "nav.openMenu",
-              defaultMessage: "Open menu",
+              defaultMessage: "Open navigation",
             }),
           )}
           onClick={onOpenMenu}

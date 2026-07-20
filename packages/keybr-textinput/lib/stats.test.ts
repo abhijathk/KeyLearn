@@ -24,6 +24,7 @@ test("compute stats", () => {
     length: 5,
     errors: 1,
     accuracy: 0.8,
+    consistency: 1, // A, B, C intervals are all 100ms → perfectly even.
     histogram: new Histogram([
       { codePoint: Space, hitCount: 1, missCount: 1, timeToType: 0 },
       { codePoint: A, hitCount: 1, missCount: 0, timeToType: 100 },

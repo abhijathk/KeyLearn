@@ -34,7 +34,7 @@ export function KeyboardSettings(): ReactNode {
       <FieldSet
         legend={formatMessage({
           id: "t_Options",
-          defaultMessage: "Options",
+          defaultMessage: "Settings",
         })}
       >
         <LayoutProp />
@@ -42,7 +42,7 @@ export function KeyboardSettings(): ReactNode {
       <FieldSet
         legend={formatMessage({
           id: "t_Preview",
-          defaultMessage: "Preview",
+          defaultMessage: "Live Preview",
         })}
       >
         <KeyboardPreview />
@@ -90,7 +90,7 @@ function LayoutProp(): ReactNode {
           />
         </Field>
         <Field>
-          <FormattedMessage id="t_Layout:" defaultMessage="Layout:" />
+          <FormattedMessage id="t_Layout:" defaultMessage="Keyboard layout:" />
         </Field>
         <Field>
           <OptionList
@@ -123,7 +123,7 @@ function LayoutProp(): ReactNode {
             disabled={!options.layout.emulate}
             label={formatMessage({
               id: "t_Emulate_layout",
-              defaultMessage: "Emulate layout",
+              defaultMessage: "Simulate this layout",
             })}
             onChange={(value) => {
               updateSettings(
@@ -140,7 +140,7 @@ function LayoutProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="keyboard.emulation.forward.description"
-            defaultMessage="Keyboard emulation ignores the keyboard layout configured in your system and allows you to practice the selected keyboard regardless of how your system is configured. It is more convenient to keep the emulation option enabled. If the above option is disabled (greyed out), this means the layout cannot be emulated (mainly for layouts which use dead keys)."
+            defaultMessage="Layout emulation overrides your system’s keyboard layout, letting you practice the layout you picked here no matter how your OS is configured. It’s usually best to leave this turned on. When the option above is greyed out, that layout can’t be emulated — this mostly happens with layouts that rely on dead keys."
           />
         </Description>
       </Explainer>
@@ -153,7 +153,7 @@ function LayoutProp(): ReactNode {
             disabled={!options.layout.emulate}
             label={formatMessage({
               id: "t_Keyboard_hardware_emulates_",
-              defaultMessage: "Keyboard hardware emulates layout",
+              defaultMessage: "My keyboard hardware already emulates this",
             })}
             onChange={(value) => {
               updateSettings(
@@ -170,7 +170,7 @@ function LayoutProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="keyboard.emulation.reverse.description"
-            defaultMessage="Use this option if you have a hardware layout switcher on your keyboard, and you see that incorrect keys are highlighted on the virtual keyboard."
+            defaultMessage="Turn this on if your keyboard has a built-in layout switch and the virtual keyboard is highlighting the wrong keys."
           />
         </Description>
       </Explainer>
@@ -186,7 +186,7 @@ function GeometryProp(): ReactNode {
     <>
       <FieldList>
         <Field>
-          <FormattedMessage id="t_Geometry:" defaultMessage="Geometry:" />
+          <FormattedMessage id="t_Geometry:" defaultMessage="Keyboard shape:" />
         </Field>
         <Field>
           <OptionList
@@ -206,7 +206,7 @@ function GeometryProp(): ReactNode {
           />
         </Field>
         <Field>
-          <FormattedMessage id="t_Zones:" defaultMessage="Zones:" />
+          <FormattedMessage id="t_Zones:" defaultMessage="Finger zones:" />
         </Field>
         <Field>
           <OptionList
@@ -228,7 +228,7 @@ function GeometryProp(): ReactNode {
           <CheckBox
             label={formatMessage({
               id: "t_Colored_keys",
-              defaultMessage: "Colored keys",
+              defaultMessage: "Color-coded keys",
             })}
             checked={settings.get(keyboardProps.colors)}
             onChange={(value) => {
@@ -241,7 +241,7 @@ function GeometryProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.keyboardColors.description"
-            defaultMessage="Show color coding of the keyboard zones. Use this option to learn which finger to use to press a key."
+            defaultMessage="Colors the keyboard by finger zone, so you can see at a glance which finger should press each key."
           />
         </Description>
       </Explainer>
@@ -250,7 +250,7 @@ function GeometryProp(): ReactNode {
           <CheckBox
             label={formatMessage({
               id: "t_Highlight_keys",
-              defaultMessage: "Highlight keys",
+              defaultMessage: "Spotlight the next key",
             })}
             checked={settings.get(keyboardProps.pointers)}
             onChange={(value) => {
@@ -263,7 +263,7 @@ function GeometryProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.keyboardPointers.description"
-            defaultMessage="Highlight a key that must to be pressed next. Use this option to quickly find the position of a key if you don’t know the keyboard layout well."
+            defaultMessage="Highlights the next key you need to press, so you can find it quickly if you’re still learning where the keys are."
           />
         </Description>
       </Explainer>

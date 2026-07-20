@@ -34,7 +34,7 @@ export function CustomTextLessonSettings({
         <Description>
           <FormattedMessage
             id="lessonType.customText.description"
-            defaultMessage="Generate typing lessons from the words of your own custom text. All keys are included by default. This mode is for the pros."
+            defaultMessage="Create typing lessons from words in text that you supply. Every key is enabled from the start — built for experienced typists."
           />
         </Description>
       </Explainer>
@@ -42,7 +42,7 @@ export function CustomTextLessonSettings({
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",
-          defaultMessage: "Lesson options",
+          defaultMessage: "Lesson settings",
         })}
       >
         <CustomTextInput />
@@ -64,7 +64,7 @@ function CustomTextInput(): ReactNode {
   return (
     <>
       <Para>
-        <FormattedMessage id="t_Examples:" defaultMessage="Examples:" />{" "}
+        <FormattedMessage id="t_Examples:" defaultMessage="Try one of these:" />{" "}
         {exampleTexts.map(({ title, content }, index) => (
           <span key={index}>
             {index > 0 ? ", " : null}
@@ -85,7 +85,7 @@ function CustomTextInput(): ReactNode {
           type="textarea"
           placeholder={formatMessage({
             id: "t_Custom_text",
-            defaultMessage: "Custom text",
+            defaultMessage: "Your Own Text",
           })}
           value={settings.get(lessonProps.customText.content)}
           onChange={(value) => {
@@ -116,7 +116,7 @@ function CustomTextStats({
         <NameValue
           name={formatMessage({
             id: "t_num_All_words",
-            defaultMessage: "All words",
+            defaultMessage: "Total words",
           })}
           value={formatNumber(numWords)}
         />
@@ -125,7 +125,7 @@ function CustomTextStats({
         <NameValue
           name={formatMessage({
             id: "t_num_Unique_words",
-            defaultMessage: "Unique words",
+            defaultMessage: "Distinct words",
           })}
           value={formatNumber(numUniqueWords)}
         />
@@ -134,7 +134,7 @@ function CustomTextStats({
         <NameValue
           name={formatMessage({
             id: "t_Average_word_length",
-            defaultMessage: "Average word length",
+            defaultMessage: "Mean word length",
           })}
           value={formatNumber(avgWordLength, 2)}
         />
@@ -153,12 +153,12 @@ function CustomTextProcessing(): ReactNode {
           checked={settings.get(lessonProps.customText.lettersOnly)}
           label={formatMessage({
             id: "t_Remove_punctuation_characters",
-            defaultMessage: "Remove punctuation characters",
+            defaultMessage: "Strip out punctuation",
           })}
           title={formatMessage({
             id: "settings.customTextLettersOnly.description",
             defaultMessage:
-              "Remove punctuation from the text to make it simpler to type.",
+              "Strips punctuation marks from the text so it’s simpler to type.",
           })}
           onChange={(value) => {
             updateSettings(
@@ -172,12 +172,12 @@ function CustomTextProcessing(): ReactNode {
           checked={settings.get(lessonProps.customText.lowercase)}
           label={formatMessage({
             id: "t_Transform_to_lowercase",
-            defaultMessage: "Transform to lowercase",
+            defaultMessage: "Switch everything to lowercase",
           })}
           title={formatMessage({
             id: "settings.customTextLowercase.description",
             defaultMessage:
-              "Transform all text to lower case to make it simpler to type.",
+              "Converts every character to lowercase so the text is simpler to type.",
           })}
           onChange={(value) => {
             updateSettings(
@@ -191,11 +191,11 @@ function CustomTextProcessing(): ReactNode {
           checked={settings.get(lessonProps.customText.randomize)}
           label={formatMessage({
             id: "t_Shuffle_words",
-            defaultMessage: "Shuffle words",
+            defaultMessage: "Randomize word order",
           })}
           title={formatMessage({
             id: "settings.customTextRandomize.description",
-            defaultMessage: "Put words from the custom text in a random order.",
+            defaultMessage: "Shuffles the words from your text into a random sequence.",
           })}
           onChange={(value) => {
             updateSettings(

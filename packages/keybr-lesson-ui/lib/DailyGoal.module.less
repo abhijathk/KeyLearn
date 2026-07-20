@@ -1,25 +1,63 @@
+@import "@keybr/widget/lib/index.less";
+
 .root {
   display: flex;
-  gap: 1rem;
+  gap: 0.6rem;
   align-items: center;
-  max-inline-size: 40rem;
 }
 
-.gauge {
+.ring {
   position: relative;
-  flex: 1;
-  inline-size: 100%;
-  block-size: 8px;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) var(--p, 0%), var(--primary-d2) 0);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background-color: var(--primary);
+  }
 }
 
-.bar {
-  position: absolute;
-  block-size: 8px;
-  background-color: var(--DailyGoal-bar__color);
+.ringDone {
+  background: conic-gradient(
+    var(--Value--more__color) 100%,
+    var(--primary-d2) 0
+  );
 }
 
-.frame {
-  position: absolute;
-  block-size: 8px;
-  border: 1px solid var(--DailyGoal-frame__color);
+.ringLabel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+  font-family: var(--value-font-family);
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: var(--text-color);
+}
+
+.ringDone .ringLabel {
+  color: var(--Value--more__color);
+}
+
+.check {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.text {
+  font-family: var(--value-font-family);
+  font-size: 0.8rem;
+  color: var(--Value-color);
+  white-space: nowrap;
 }

@@ -9,14 +9,43 @@
   padding-block: 0.75rem;
 }
 
+.left {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  min-inline-size: 2.5rem;
+  min-block-size: 2.5rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  background-color: var(--primary-l1);
+  color: var(--text-color);
+
+  &:hover {
+    border-color: var(--accent-d1);
+  }
+}
+
 .wordmark {
   display: inline-flex;
+  gap: 0.5rem;
   align-items: baseline;
   font-size: 1.35rem;
   letter-spacing: -0.02em;
   text-decoration: none;
   white-space: nowrap;
   user-select: none;
+}
+
+.glyph {
+  align-self: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  color: var(--accent);
 }
 
 .mark {
@@ -33,4 +62,46 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+
+  // The mock's control language: bordered rounded squares on a translucent
+  // surface, one geometry for every header control.
+  button {
+    display: grid;
+    place-items: center;
+    min-inline-size: 2.5rem;
+    min-block-size: 2.5rem;
+    border: var(--separator-border);
+    border-radius: 0.7rem;
+    background-color: var(--primary-l1);
+    line-height: normal;
+
+    &:hover {
+      border-color: var(--accent-d1);
+    }
+  }
+}
+
+.streak {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  block-size: 2.5rem;
+  padding-inline: 0.8rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  background-color: var(--primary-l1);
+  color: var(--Value-color);
+  font-family: var(--value-font-family);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.flame {
+  inline-size: 1rem;
+  block-size: 1rem;
+  fill: none;
+  stroke: var(--slow-key-color);
+  stroke-width: 1.7;
+  stroke-linejoin: round;
 }

@@ -25,7 +25,7 @@ test("success", async () => {
   });
   fireEvent.click(r.getByRole("button"));
 
-  await r.findByText("We have sent an e-mail", { exact: false });
+  await r.findByText("Your login link is on its way", { exact: false });
 
   isNotNull(r.queryByText("username@email.com", { exact: false }));
 
@@ -52,7 +52,7 @@ test("failure", async () => {
   });
   fireEvent.click(r.getByRole("button"));
 
-  await r.findByText("Could not send e-mail", { exact: false });
+  await r.findByText("Couldn't send an email", { exact: false });
 
   isNotNull(r.queryByText("What a terrible failure", { exact: false }));
 

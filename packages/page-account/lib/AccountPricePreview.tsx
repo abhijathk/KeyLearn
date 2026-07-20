@@ -36,7 +36,7 @@ export function AccountPricePreview() {
     <Para>
       <FormattedMessage
         id="t_Premium_account_price:"
-        defaultMessage="Premium account price:"
+        defaultMessage="Premium membership price:"
       />{" "}
       {item?.formattedTotals?.total ?? <Spinner />}
     </Para>

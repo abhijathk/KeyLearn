@@ -25,7 +25,7 @@ export function DailyStats({
         <NameValue
           name={formatMessage({
             id: "t_Daily_goal",
-            defaultMessage: "Daily goal",
+            defaultMessage: "Today's goal",
           })}
           value={formatPercents(effort.effort(stats.time))}
         />
@@ -34,7 +34,7 @@ export function DailyStats({
         <NameValue
           name={formatMessage({
             id: "t_Time",
-            defaultMessage: "Time",
+            defaultMessage: "Time spent",
           })}
           value={formatDuration(stats.time)}
         />
@@ -43,7 +43,7 @@ export function DailyStats({
         <NameValue
           name={formatMessage({
             id: "t_num_Lessons",
-            defaultMessage: "Lessons",
+            defaultMessage: "Lessons done",
           })}
           value={formatNumber(results.length)}
         />
@@ -52,7 +52,7 @@ export function DailyStats({
         <NameValue
           name={formatMessage({
             id: "t_Top_speed",
-            defaultMessage: "Top speed",
+            defaultMessage: "Best speed",
           })}
           value={formatSpeed(stats.speed.max)}
         />
@@ -61,7 +61,7 @@ export function DailyStats({
         <NameValue
           name={formatMessage({
             id: "t_Average_speed",
-            defaultMessage: "Average speed",
+            defaultMessage: "Typical speed",
           })}
           value={formatSpeed(stats.speed.avg)}
         />
@@ -70,7 +70,7 @@ export function DailyStats({
         <NameValue
           name={formatMessage({
             id: "t_Average_accuracy",
-            defaultMessage: "Average accuracy",
+            defaultMessage: "Typical accuracy",
           })}
           value={formatPercents(stats.accuracy.avg)}
         />

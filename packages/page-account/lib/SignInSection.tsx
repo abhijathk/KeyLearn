@@ -14,29 +14,29 @@ export function SignInSection({ actions }: { actions: SignInActions }) {
       <FormattedMessage
         id="account.signInPage.description"
         defaultMessage={
-          "<p>Create an account to store your typing data on our servers in the cloud. This allows you to access your profile from any computer or browser. If you don’t have an account then your typing data is stored locally and is accessible only from your current computer.</p>" +
-          "<p>We don’t store any passwords. Instead we use third-party services to authenticate our users. We offer several convenient ways to create an account and sign-in.</p>" +
-          "<p>You can opt-out at any time. Deleting an account is as simple as creating one.</p>"
+          "<p>Create a free account to back up your typing data in the cloud, so you can pick up right where you left off on any device or browser. Skip the account, and your progress simply stays saved on this one computer.</p>" +
+          "<p>We never store passwords ourselves — sign-in is handled through trusted third-party providers, giving you several quick ways to get started.</p>" +
+          "<p>Change your mind later? Deleting your account is just as easy as creating it.</p>"
         }
       />
 
       <Header level={2}>
         <FormattedMessage
           id="t_Premium_account"
-          defaultMessage="Premium account"
+          defaultMessage="Premium membership"
         />
       </Header>
 
       <FormattedMessage
         id="account.freeAccount.description"
         defaultMessage={
-          "<p>Buy a <strong>premium account</strong> to unlock additional features and enjoy an ad-free experience. Here is the list of premium account benefits:</p>" +
+          "<p>Upgrade to <strong>premium membership</strong> for extra features and a completely ad-free experience. Here's what you get:</p>" +
           "<ul>" +
-          "<li><strong>No ads.</strong> Ads may be distracting and impede your learning progress. This is a good way to get rid of them.</li>" +
-          "<li><strong>No trackers.</strong> Trackers inevitably come with ads. Remove all trackers for complete online privacy.</li>" +
-          "<li><strong>Ultra-fast responsiveness.</strong> Ads take quite some time to load. Getting rid of them means faster loading times for all pages.</li>" +
+          "<li><strong>Zero ads.</strong> No more distractions pulling your focus away from your practice.</li>" +
+          "<li><strong>Zero trackers.</strong> Ads bring trackers along with them — remove both and browse with full privacy.</li>" +
+          "<li><strong>Faster pages.</strong> Without ads to load, every page opens noticeably quicker.</li>" +
           "</ul>" +
-          "<p>It is a single time payment that provides lifetime access. It is NOT a recurring subscription.</p>"
+          "<p>This is a one-time purchase that unlocks lifetime access — not a recurring subscription.</p>"
         }
       />
 
@@ -45,7 +45,7 @@ export function SignInSection({ actions }: { actions: SignInActions }) {
       <Header level={2}>
         <FormattedMessage
           id="t_Signin_with_social_"
-          defaultMessage="Sign-in with social networks"
+          defaultMessage="Log in with a social account"
         />
       </Header>
 
@@ -54,7 +54,7 @@ export function SignInSection({ actions }: { actions: SignInActions }) {
       <Header level={2}>
         <FormattedMessage
           id="t_Signin_with_email"
-          defaultMessage="Sign-in with e-mail"
+          defaultMessage="Log in with email"
         />
       </Header>
 

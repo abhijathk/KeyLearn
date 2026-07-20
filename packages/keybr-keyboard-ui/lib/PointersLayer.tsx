@@ -8,14 +8,17 @@ import { Tasks } from "@keybr/lang";
 import { type CodePoint } from "@keybr/unicode";
 import { memo, type ReactNode, useEffect, useRef, useState } from "react";
 import * as styles from "./PointersLayer.module.less";
-import { getKeyCenter, Surface } from "./shapes.tsx";
+import { keyGap, keySize, Surface } from "./shapes.tsx";
 
 export const PointersLayer = memo(function PointersLayer({
   suffix,
   delay = 1000,
+  helpLevel = 0,
 }: {
   readonly suffix: readonly CodePoint[];
   readonly delay?: number;
+  /** Escalating help: 2 = urgent pulse, 3 = finger guide over the key. */
+  readonly helpLevel?: number;
 }): ReactNode {
   const keyboard = useKeyboard();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -26,7 +29,8 @@ export const PointersLayer = memo(function PointersLayer({
     if (suffix.length > 0) {
       const combo = keyboard.getCombo(suffix[0]);
       if (combo != null) {
-        tasks.delayed(delay, () => {
+        // Escalated help cannot wait — cue the key immediately.
+        tasks.delayed(helpLevel >= 2 ? 0 : delay, () => {
           setCombo(combo);
         });
       }
@@ -34,7 +38,7 @@ export const PointersLayer = memo(function PointersLayer({
     return () => {
       tasks.cancelAll();
     };
-  }, [keyboard, suffix, delay]);
+  }, [keyboard, suffix, delay, helpLevel]);
   useEffect(() => {
     const svg = svgRef.current;
     if (svg != null) {
@@ -43,15 +47,35 @@ export const PointersLayer = memo(function PointersLayer({
       }
     }
   }, [combo]);
-  return <Surface ref={svgRef}>{...pointers(keyboard, combo)}</Surface>;
+  const mainShape =
+    combo != null && helpLevel >= 3 ? keyboard.getShape(combo.id) : null;
+  return (
+    <Surface ref={svgRef}>
+      {...pointers(keyboard, combo, helpLevel)}
+      {mainShape != null && guideArrow(mainShape)}
+    </Surface>
+  );
 });
 
-function pointers(keyboard: Keyboard, combo: KeyCombo | null): ReactNode[] {
+function pointers(
+  keyboard: Keyboard,
+  combo: KeyCombo | null,
+  helpLevel = 0,
+): ReactNode[] {
   const children = [];
+  let main = true;
   while (combo != null) {
     const shape = keyboard.getShape(combo.id);
     if (shape != null) {
-      children.unshift(pointer(shape, styles.pointer));
+      children.unshift(
+        pointer(
+          shape,
+          main && helpLevel >= 2
+            ? `${styles.pointer} ${styles.urgent}`
+            : styles.pointer,
+        ),
+      );
+      main = false;
       if (combo.modifier.shift) {
         const l = keyboard.getShape("ShiftLeft");
         const r = keyboard.getShape("ShiftRight");
@@ -98,26 +122,43 @@ function pointer(shape: KeyShape | null, className: string): ReactNode {
   if (shape == null) {
     return null;
   }
-  const { x, y } = getKeyCenter(shape);
-  const pointerSize = 30;
+  // A rounded ring hugging the keycap, like the mockup's glowing next key.
+  const x = shape.x * keySize;
+  const y = shape.y * keySize;
+  const w = shape.w * keySize - keyGap;
+  const h = shape.h * keySize - keyGap;
   return (
-    <circle className={className} cx={x} cy={y} r={pointerSize}>
+    <rect
+      className={className}
+      x={x + 1}
+      y={y + 1}
+      width={w - 2}
+      height={h - 2}
+      rx={7}
+      ry={7}
+    >
       <animate
         attributeName="opacity"
         from={0}
         to={1}
-        dur="0.5s"
+        dur="0.3s"
         repeatCount="1"
         restart="always"
       />
-      <animate
-        attributeName="r"
-        from={0}
-        to={pointerSize}
-        dur="0.5s"
-        repeatCount="1"
-        restart="always"
-      />
-    </circle>
+    </rect>
+  );
+}
+
+function guideArrow(shape: KeyShape): ReactNode {
+  const cx = shape.x * keySize + (shape.w * keySize - keyGap) / 2;
+  const top = Math.max(8, shape.y * keySize - 10);
+  return (
+    <path
+      className={styles.guide}
+      d={
+        `M ${cx - 2} ${top - 6} h 4 v 5 h 4 ` +
+        `l -6 7 l -6 -7 h 4 z`
+      }
+    />
   );
 }

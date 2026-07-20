@@ -1,5 +1,5 @@
 import { type Lesson } from "@keybr/lesson";
-import { CurrentKeyRow, KeySetRow } from "@keybr/lesson-ui";
+import { CurrentKeyRow, LetterJourney } from "@keybr/lesson-ui";
 import { LCG } from "@keybr/rand";
 import { makeKeyStatsMap, useResults } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
@@ -36,11 +36,11 @@ export function LessonPreview({
     <FieldSet
       legend={formatMessage({
         id: "t_Lesson_preview:",
-        defaultMessage: "Lesson preview",
+        defaultMessage: "Preview of your lesson",
       })}
     >
       <div className={styles.root}>
-        <KeySetRow lessonKeys={lessonKeys} />
+        <LetterJourney lessonKeys={lessonKeys} />
         <CurrentKeyRow lessonKeys={lessonKeys} />
         <div className={styles.text}>
           <StaticText

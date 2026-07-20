@@ -7,6 +7,7 @@ import {
 } from "@keybr/textinput-events";
 import {
   type Focusable,
+  StrokeIcon,
   useHotkeys,
   useWindowEvent,
   type ZoomableProps,
@@ -95,8 +96,18 @@ export function TextArea({
     innerRef.current?.focus();
     event.preventDefault();
   };
+  const handleMouseDown = (event: BaseSyntheticEvent): void => {
+    // Keep the hidden textarea focused through the press: the default
+    // mousedown blur re-renders the lines and swallows the click.
+    event.preventDefault();
+  };
   return (
-    <div ref={ref} className={styles.root} onClick={handleClick}>
+    <div
+      ref={ref}
+      className={styles.root}
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+    >
       <TextEvents
         focusRef={innerRef}
         onFocus={handleFocus}
@@ -119,7 +130,7 @@ export function TextArea({
           <div className={styles.messageText}>
             <FormattedMessage
               id="t_Caps_Lock_is_on"
-              defaultMessage="Caps Lock is on"
+              defaultMessage="Heads up, Caps Lock is on"
             />
           </div>
         </div>
@@ -127,9 +138,10 @@ export function TextArea({
       {demo || focus || (
         <div className={styles.messageArea}>
           <div className={styles.messageText}>
+            <StrokeIcon className={styles.messageIcon} name="keyboard" />
             <FormattedMessage
-              id="t_Click_or_press_Enter_"
-              defaultMessage="Click or press Enter to activate..."
+              id="textArea.startTyping"
+              defaultMessage="Click here or press Enter to start typing"
             />
           </div>
         </div>

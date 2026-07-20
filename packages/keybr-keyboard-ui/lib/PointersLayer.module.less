@@ -1,14 +1,50 @@
+// The cued key: a glowing rounded ring hugging the keycap (the mockup's
+// "glowing key is your next letter"), gently pulsing.
 .pointer {
   fill: transparent;
   stroke: var(--KeyboardKey-pointer__color);
-  stroke-opacity: 0.5;
-  stroke-width: 5px;
+  stroke-width: 2.5px;
+  filter: drop-shadow(0 0 5px var(--KeyboardKey-pointer__color));
+  animation: pointer-pulse 1.6s ease-in-out infinite;
 }
 
 .modifierPointer {
   fill: transparent;
   stroke: var(--KeyboardKey-pointer__color);
-  stroke-opacity: 0.5;
-  stroke-width: 3px;
-  stroke-dasharray: 3px;
+  stroke-opacity: 0.6;
+  stroke-width: 1.5px;
+  stroke-dasharray: 4px;
+}
+
+@keyframes pointer-pulse {
+  50% {
+    stroke-width: 4px;
+    stroke-opacity: 0.75;
+  }
+}
+
+// escalating help: the cued key pulses urgently after repeated misses
+.urgent {
+  stroke-width: 3.5px;
+  animation: pointer-urgent 0.7s ease-in-out infinite;
+}
+
+@keyframes pointer-urgent {
+  50% {
+    stroke-width: 5px;
+    filter: drop-shadow(0 0 9px var(--KeyboardKey-pointer__color));
+  }
+}
+
+// level 3: a bobbing finger-guide arrow over the key
+.guide {
+  fill: var(--KeyboardKey-pointer__color);
+  filter: drop-shadow(0 0 5px var(--KeyboardKey-pointer__color));
+  animation: guide-bob 0.7s ease-in-out infinite;
+}
+
+@keyframes guide-bob {
+  50% {
+    transform: translateY(4px);
+  }
 }

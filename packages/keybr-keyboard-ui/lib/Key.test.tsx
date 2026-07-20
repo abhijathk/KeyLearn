@@ -60,7 +60,7 @@ test("letter labels", () => {
 
   // Assert.
 
-  equal(r.container.textContent, "Iİ");
+  equal(r.container.textContent, "I");
   equal(r.container.querySelectorAll('[data-key="my-key"]').length, 1);
 
   r.unmount();
@@ -93,7 +93,7 @@ test("dead labels", () => {
 
   // Assert.
 
-  equal(r.container.textContent, "◌̀◌́**");
+  equal(r.container.textContent, "◌̀");
   equal(r.container.querySelectorAll('[data-key="my-key"]').length, 1);
 
   r.unmount();
@@ -126,7 +126,7 @@ test("ligature labels", () => {
 
   // Assert.
 
-  equal(r.container.textContent, "XXYYAABB");
+  equal(r.container.textContent, "XX");
   equal(r.container.querySelectorAll('[data-key="my-key"]').length, 1);
 
   r.unmount();
@@ -159,7 +159,7 @@ test("mixed labels", () => {
 
   // Assert.
 
-  equal(r.container.textContent, "A◌̀XX");
+  equal(r.container.textContent, "A");
   equal(r.container.querySelectorAll('[data-key="my-key"]').length, 1);
 
   r.unmount();

@@ -28,7 +28,7 @@ test("render simple chars", () => {
       </span>,
       <span
         key={1}
-        className={undefined}
+        className="miss"
         style={{ color: "var(--textinput--miss__color)" }}
       >
         b
@@ -86,7 +86,7 @@ test("render styled chars", () => {
       </span>,
       <span
         key={1}
-        className={undefined}
+        className="miss"
         style={{ color: "var(--textinput--miss__color)" }}
       >
         b

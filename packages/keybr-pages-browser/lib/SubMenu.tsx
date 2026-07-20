@@ -37,7 +37,7 @@ function MailLink() {
       title={formatMessage({
         id: "footer.emailLink.description",
         defaultMessage:
-          "Send your comments and suggestions to abhijathka@gmail.com",
+          "Share your feedback and ideas at abhijathka@gmail.com",
       })}
     >
       abhijathka@gmail.com
@@ -53,7 +53,7 @@ function GithubLink() {
       target="github"
       title={formatMessage({
         id: "footer.githubLink.description",
-        defaultMessage: "The source code of KeyLearn is available on Github.",
+        defaultMessage: "Browse KeyLearn's source code on GitHub.",
       })}
     >
       Github
@@ -69,12 +69,12 @@ function TranslateLink() {
       target="github"
       title={formatMessage({
         id: "footer.translateLink.description",
-        defaultMessage: "Help us translate KeyLearn into your language.",
+        defaultMessage: "Help translate KeyLearn into your language.",
       })}
     >
       <FormattedMessage
         id="footer.translateLink.text"
-        defaultMessage="Translate"
+        defaultMessage="Help translate"
       />
     </StaticLink>
   );

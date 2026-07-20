@@ -1,8 +1,11 @@
-import { IconButton } from "@keybr/widget";
+import { Pages } from "@keybr/pages-shared";
+import { FONTS, useTheme } from "@keybr/themes";
+import { IconButton, StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
-import { type ReactNode, useEffect } from "react";
-import { defineMessage, useIntl } from "react-intl";
-import { StrokeIcon } from "./icons/index.ts";
+import { type ReactNode, useEffect, useState } from "react";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
+import { Link as RouterLink } from "react-router";
+import { LanguagePanel } from "./LanguagePanel.tsx";
 import * as styles from "./MenuDrawer.module.less";
 import { NavMenu } from "./NavMenu.tsx";
 
@@ -47,14 +50,159 @@ export function MenuDrawer({
             title={formatMessage(
               defineMessage({
                 id: "nav.closeMenu",
-                defaultMessage: "Close menu",
+                defaultMessage: "Close navigation",
               }),
             )}
             onClick={onClose}
           />
         </div>
-        {open && <NavMenu currentPath={path} onNavigate={onClose} />}
+        {open && (
+          <>
+            <div className={styles.label}>
+              <FormattedMessage
+                id="drawer.who"
+                defaultMessage="Who's practicing"
+              />
+            </div>
+            <div className={styles.seg}>
+              <button className={clsx(styles.segBtn, styles.segOn)}>
+                <FormattedMessage
+                  id="drawer.grownUps"
+                  defaultMessage="Grown-ups"
+                />
+              </button>
+              <button
+                className={styles.segBtn}
+                disabled={true}
+                title={formatMessage(
+                  defineMessage({
+                    id: "drawer.kidsSoon",
+                    defaultMessage: "Kids mode is coming soon.",
+                  }),
+                )}
+              >
+                <FormattedMessage id="drawer.kids" defaultMessage="Kids" />
+              </button>
+            </div>
+            <div className={styles.divider} />
+            <NavMenu currentPath={path} onNavigate={onClose} />
+            <div className={styles.divider} />
+            <div className={styles.label}>
+              <FormattedMessage
+                id="drawer.fingerColors"
+                defaultMessage="Finger colour zones on the keyboard"
+              />
+            </div>
+            <ZonesToggle />
+            <div className={styles.label}>
+              <FormattedMessage id="drawer.font" defaultMessage="Font" />
+            </div>
+            <FontPills />
+            <div className={styles.divider} />
+            <div className={styles.label}>
+              <FormattedMessage
+                id="drawer.language"
+                defaultMessage="Language"
+              />
+            </div>
+            <LanguagePanel currentPath={path} />
+            <div className={styles.divider} />
+            <div className={styles.util}>
+              <a
+                href="https://github.com/abhijathk/keylearn/blob/master/docs/translations.md"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <StrokeIcon className={styles.utilIcon} name="translate" />
+                <FormattedMessage
+                  id="drawer.translate"
+                  defaultMessage="Help translate KeyLearn"
+                />
+              </a>
+              <a
+                href="https://github.com/abhijathk/keylearn"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <StrokeIcon className={styles.utilIcon} name="code" />
+                <FormattedMessage
+                  id="drawer.source"
+                  defaultMessage="View source on GitHub"
+                />
+              </a>
+              <a href="mailto:abhijathka@gmail.com">
+                <StrokeIcon className={styles.utilIcon} name="mail" />
+                abhijathka@gmail.com
+              </a>
+              <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
+                <StrokeIcon className={styles.utilIcon} name="doc" />
+                {formatMessage(Pages.termsOfService.link.label)}
+              </RouterLink>
+              <RouterLink to={Pages.privacyPolicy.path} onClick={onClose}>
+                <StrokeIcon className={styles.utilIcon} name="shield" />
+                {formatMessage(Pages.privacyPolicy.link.label)}
+              </RouterLink>
+            </div>
+          </>
+        )}
       </aside>
     </>
+  );
+}
+
+/** Finger-zone colours on/off; applied by the practice page via an event. */
+function ZonesToggle(): ReactNode {
+  const [on, setOn] = useState(true);
+  const set = (value: boolean) => {
+    setOn(value);
+    window.dispatchEvent(
+      new window.CustomEvent("keylearn:zones", { detail: value }),
+    );
+  };
+  return (
+    <div className={styles.seg}>
+      <button
+        className={clsx(styles.segBtn, on && styles.segOn)}
+        onClick={() => {
+          set(true);
+        }}
+      >
+        <span className={styles.dots}>
+          <i style={{ background: "var(--pinky-zone-color)" }} />
+          <i style={{ background: "var(--ring-zone-color)" }} />
+          <i style={{ background: "var(--middle-zone-color)" }} />
+          <i style={{ background: "var(--left-index-zone-color)" }} />
+          <i style={{ background: "var(--right-index-zone-color)" }} />
+        </span>
+        <FormattedMessage id="drawer.zonesOn" defaultMessage="On" />
+      </button>
+      <button
+        className={clsx(styles.segBtn, on || styles.segOn)}
+        onClick={() => {
+          set(false);
+        }}
+      >
+        <FormattedMessage id="drawer.zonesOff" defaultMessage="Off" />
+      </button>
+    </div>
+  );
+}
+
+function FontPills(): ReactNode {
+  const { font, switchFont } = useTheme();
+  return (
+    <div className={styles.pills}>
+      {[...FONTS].map(({ id, name }) => (
+        <button
+          key={id}
+          className={clsx(styles.pill, id === font && styles.pillOn)}
+          onClick={() => {
+            switchFont(id);
+          }}
+        >
+          {name}
+        </button>
+      ))}
+    </div>
   );
 }

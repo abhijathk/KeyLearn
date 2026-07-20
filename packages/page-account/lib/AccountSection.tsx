@@ -28,13 +28,13 @@ export function AccountSection({
 
       <FormattedMessage
         id="account.accountPage.description"
-        defaultMessage="<p>You are using an account to store your typing data on our servers in the cloud. You will be able to access your profile from any computer or browser.</p>"
+        defaultMessage="<p>Your typing data is backed up to the cloud through your account, so your profile follows you to any computer or browser you use.</p>"
       />
 
       <FieldSet
         legend={formatMessage({
           id: "t_Account_details",
-          defaultMessage: "Account details",
+          defaultMessage: "Account settings",
         })}
       >
         <Para>
@@ -44,7 +44,7 @@ export function AccountSection({
         <Para>
           <FormattedMessage
             id="account.avatar.description"
-            defaultMessage="Your user image and name as they are visible to the public in your profile, the high scores table, and the multiplayer game."
+            defaultMessage="This image and name are shown publicly — on your profile, the high scores table, and in multiplayer games."
           />
         </Para>
 
@@ -52,7 +52,7 @@ export function AccountSection({
           <CheckBox
             label={formatMessage({
               id: "t_Anonymize_me",
-              defaultMessage: "Anonymize me",
+              defaultMessage: "Hide my identity",
             })}
             checked={user.anonymized}
             onChange={() => {
@@ -64,7 +64,7 @@ export function AccountSection({
         <Para>
           <FormattedMessage
             id="account.anonymize.description"
-            defaultMessage="Anonymization replaces your real user image and name with the one that we give you. You can switch between your real and anonymous name any number of times."
+            defaultMessage="Turning this on swaps your real image and name for one we generate for you. Toggle it on or off as often as you like."
           />
         </Para>
 
@@ -76,7 +76,7 @@ export function AccountSection({
             icon={<Icon shape={mdiExitToApp} />}
             label={formatMessage({
               id: "t_Sing_out",
-              defaultMessage: "Sign out",
+              defaultMessage: "Log out",
             })}
           />
         </Para>
@@ -85,26 +85,26 @@ export function AccountSection({
       <FieldSet
         legend={formatMessage({
           id: "t_Premium_account",
-          defaultMessage: "Premium account",
+          defaultMessage: "Premium membership",
         })}
       >
         {isPremiumUser(publicUser) ? (
           <FormattedMessage
             id="account.premiumAccount.description"
-            defaultMessage="<p>Thank you for purchasing a premium account! Now you can enjoy additional features and an ad-free experience.</p>"
+            defaultMessage="<p>Thanks for upgrading to premium membership! Enjoy the extra features and a fully ad-free experience.</p>"
           />
         ) : (
           <>
             <FormattedMessage
               id="account.freeAccount.description"
               defaultMessage={
-                "<p>Buy a <strong>premium account</strong> to unlock additional features and enjoy an ad-free experience. Here is the list of premium account benefits:</p>" +
+                "<p>Upgrade to <strong>premium membership</strong> for extra features and a completely ad-free experience. Here's what you get:</p>" +
                 "<ul>" +
-                "<li><strong>No ads.</strong> Ads may be distracting and impede your learning progress. This is a good way to get rid of them.</li>" +
-                "<li><strong>No trackers.</strong> Trackers inevitably come with ads. Remove all trackers for complete online privacy.</li>" +
-                "<li><strong>Ultra-fast responsiveness.</strong> Ads take quite some time to load. Getting rid of them means faster loading times for all pages.</li>" +
+                "<li><strong>Zero ads.</strong> No more distractions pulling your focus away from your practice.</li>" +
+                "<li><strong>Zero trackers.</strong> Ads bring trackers along with them — remove both and browse with full privacy.</li>" +
+                "<li><strong>Faster pages.</strong> Without ads to load, every page opens noticeably quicker.</li>" +
                 "</ul>" +
-                "<p>It is a single time payment that provides lifetime access. It is NOT a recurring subscription.</p>"
+                "<p>This is a one-time purchase that unlocks lifetime access — not a recurring subscription.</p>"
               }
             />
 
@@ -118,7 +118,7 @@ export function AccountSection({
                 icon={<Icon shape={mdiCreditCard} />}
                 label={formatMessage({
                   id: "t_Buy_a_premium_",
-                  defaultMessage: "Buy a premium account",
+                  defaultMessage: "Upgrade to premium",
                 })}
               />
             </Para>
@@ -129,7 +129,7 @@ export function AccountSection({
       <FieldSet
         legend={formatMessage({
           id: "t_Delete_account",
-          defaultMessage: "Delete account",
+          defaultMessage: "Remove account",
         })}
       >
         <Para>
@@ -140,7 +140,7 @@ export function AccountSection({
             icon={<Icon shape={mdiDeleteForever} />}
             label={formatMessage({
               id: "t_Delete_account",
-              defaultMessage: "Delete account",
+              defaultMessage: "Remove account",
             })}
           />
         </Para>
@@ -148,7 +148,7 @@ export function AccountSection({
         <Para>
           <FormattedMessage
             id="account.deleteAccount.description"
-            defaultMessage="This will delete all your personally identifiable information, such as your name and e-mail address from our database. This operation cannot be undone! If you only want to clear your typing statistics and start over, you can do this on the profile page."
+            defaultMessage="This permanently erases identifying information — your name and email — from our database. This can't be reversed! Looking to just reset your typing stats and start fresh instead? You can do that from the profile page."
           />
         </Para>
       </FieldSet>

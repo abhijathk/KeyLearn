@@ -28,19 +28,19 @@ export function CodeLessonSettings({
         <Description>
           <FormattedMessage
             id="lessonType.code.description"
-            defaultMessage="Practice punctuation characters that are specific to a programming language syntax."
+            defaultMessage="Practice the punctuation symbols unique to a particular programming language’s syntax."
           />
         </Description>
       </Explainer>
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",
-          defaultMessage: "Lesson options",
+          defaultMessage: "Lesson settings",
         })}
       >
         <FieldList>
           <Field>
-            <FormattedMessage id="t_Syntax:" defaultMessage="Syntax:" />
+            <FormattedMessage id="t_Syntax:" defaultMessage="Language syntax:" />
           </Field>
           <Field>
             <OptionList
@@ -82,7 +82,7 @@ export function CodeLessonSettings({
           <Description>
             <FormattedMessage
               id="lessonType.syntax.description"
-              defaultMessage="Generate lessons that resemble the specified programming language syntax."
+              defaultMessage="Builds lessons that mimic the syntax of the programming language you choose."
             />
           </Description>
         </Explainer>

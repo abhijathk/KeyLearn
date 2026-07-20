@@ -19,7 +19,7 @@ export function AllTimeSummary({
       <Header level={2}>
         <FormattedMessage
           id="t_All_Time_Statistics"
-          defaultMessage="All Time Statistics"
+          defaultMessage="Lifetime Stats"
         />
       </Header>
 
@@ -27,7 +27,7 @@ export function AllTimeSummary({
         <Statistic
           name={formatMessage({
             id: "t_Time",
-            defaultMessage: "Time",
+            defaultMessage: "Time spent",
           })}
           value={formatDuration(time)}
         />
@@ -35,7 +35,7 @@ export function AllTimeSummary({
         <Statistic
           name={formatMessage({
             id: "t_num_Lessons",
-            defaultMessage: "Lessons",
+            defaultMessage: "Lessons done",
           })}
           value={formatNumber(count)}
         />
@@ -43,7 +43,7 @@ export function AllTimeSummary({
         <Statistic
           name={formatMessage({
             id: "t_Top_speed",
-            defaultMessage: "Top speed",
+            defaultMessage: "Best speed",
           })}
           value={speed.max > 0 ? formatSpeed(speed.max) : "N/A"}
         />
@@ -51,7 +51,7 @@ export function AllTimeSummary({
         <Statistic
           name={formatMessage({
             id: "t_Average_speed",
-            defaultMessage: "Average speed",
+            defaultMessage: "Typical speed",
           })}
           value={speed.avg > 0 ? formatSpeed(speed.avg) : "N/A"}
         />
@@ -59,7 +59,7 @@ export function AllTimeSummary({
         <Statistic
           name={formatMessage({
             id: "t_Top_accuracy",
-            defaultMessage: "Top accuracy",
+            defaultMessage: "Best accuracy",
           })}
           value={accuracy.max > 0 ? formatPercents(accuracy.max) : "N/A"}
         />
@@ -67,7 +67,7 @@ export function AllTimeSummary({
         <Statistic
           name={formatMessage({
             id: "t_Average_accuracy",
-            defaultMessage: "Average accuracy",
+            defaultMessage: "Typical accuracy",
           })}
           value={accuracy.avg > 0 ? formatPercents(accuracy.avg) : "N/A"}
         />
@@ -90,7 +90,7 @@ export function TodaySummary({
       <Header level={2}>
         <FormattedMessage
           id="t_Statistics_for_Today"
-          defaultMessage="Statistics for Today"
+          defaultMessage="Today's Stats"
         />
       </Header>
 
@@ -98,7 +98,7 @@ export function TodaySummary({
         <Statistic
           name={formatMessage({
             id: "t_Time",
-            defaultMessage: "Time",
+            defaultMessage: "Time spent",
           })}
           value={formatDuration(time)}
         />
@@ -106,7 +106,7 @@ export function TodaySummary({
         <Statistic
           name={formatMessage({
             id: "t_num_Lessons",
-            defaultMessage: "Lessons",
+            defaultMessage: "Lessons done",
           })}
           value={formatNumber(count)}
         />
@@ -114,7 +114,7 @@ export function TodaySummary({
         <Statistic
           name={formatMessage({
             id: "t_Top_speed",
-            defaultMessage: "Top speed",
+            defaultMessage: "Best speed",
           })}
           value={speed.max > 0 ? formatSpeed(speed.max) : "N/A"}
         />
@@ -122,7 +122,7 @@ export function TodaySummary({
         <Statistic
           name={formatMessage({
             id: "t_Average_speed",
-            defaultMessage: "Average speed",
+            defaultMessage: "Typical speed",
           })}
           value={speed.avg > 0 ? formatSpeed(speed.avg) : "N/A"}
         />
@@ -130,7 +130,7 @@ export function TodaySummary({
         <Statistic
           name={formatMessage({
             id: "t_Top_accuracy",
-            defaultMessage: "Top accuracy",
+            defaultMessage: "Best accuracy",
           })}
           value={accuracy.max > 0 ? formatPercents(accuracy.max) : "N/A"}
         />
@@ -138,7 +138,7 @@ export function TodaySummary({
         <Statistic
           name={formatMessage({
             id: "t_Average_accuracy",
-            defaultMessage: "Average accuracy",
+            defaultMessage: "Typical accuracy",
           })}
           value={accuracy.avg > 0 ? formatPercents(accuracy.avg) : "N/A"}
         />

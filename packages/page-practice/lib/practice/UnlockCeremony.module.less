@@ -1,0 +1,173 @@
+@import "@keybr/widget/lib/index.less";
+
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  place-items: center;
+  background-color: rgb(0 0 0 / 35%);
+  backdrop-filter: blur(9px);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  align-items: center;
+  inline-size: min(27rem, calc(100vw - 3rem));
+  padding: 1.75rem;
+  border: var(--separator-border);
+  border-radius: 1.25rem;
+  background-color: var(--primary);
+  box-shadow: 0 2rem 5rem var(--shadow-color);
+  text-align: center;
+}
+
+.eyebrow {
+  color: var(--text-color-f1);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.keyTile {
+  display: grid;
+  place-items: center;
+  inline-size: 4.25rem;
+  block-size: 4.25rem;
+  border-radius: 1rem;
+  background-color: var(--accent);
+  color: var(--primary);
+  font-family: var(--monospace-font-family);
+  font-size: 2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 0 6px color-mix(in oklab, var(--accent) 20%, transparent),
+    0 0 2.5rem 0.25rem color-mix(in oklab, var(--accent) 45%, transparent);
+  animation: unlock-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes unlock-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-8deg);
+  }
+}
+
+.title {
+  color: var(--text-color);
+  font-size: 1.3rem;
+  font-weight: 750;
+}
+
+.subtitle {
+  color: var(--Name-color);
+  font-size: 0.85rem;
+
+  b {
+    color: var(--text-color);
+    text-transform: uppercase;
+  }
+}
+
+.stats {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.stat {
+  display: grid;
+  gap: 0.2rem;
+  padding-inline: 1.1rem;
+
+  & + & {
+    border-inline-start: var(--separator-border);
+  }
+}
+
+.statLabel {
+  color: var(--Name-color);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.statRow {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.statValue {
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.deltaUp,
+.deltaDown {
+  font-family: var(--value-font-family);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.deltaUp {
+  color: var(--Value--more__color);
+}
+
+.deltaDown {
+  color: var(--Value--less__color);
+}
+
+.cta {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block-start: 0.4rem;
+  padding-inline: 1.5rem;
+  padding-block: 0.7rem;
+  border: none;
+  border-radius: 0.8rem;
+  background-color: var(--accent);
+  color: var(--primary);
+  font-family: var(--default-font-family);
+  font-size: 0.95rem;
+  font-weight: 650;
+  cursor: pointer;
+
+  b {
+    text-transform: uppercase;
+  }
+
+  &:hover {
+    box-shadow: 0 0.4rem 1.5rem color-mix(in oklab, var(--accent) 40%, transparent);
+  }
+}
+
+.arrow {
+  inline-size: 1rem;
+  block-size: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ghost {
+  border: none;
+  background: transparent;
+  color: var(--text-color-f1);
+  font-family: var(--default-font-family);
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+  }
+}

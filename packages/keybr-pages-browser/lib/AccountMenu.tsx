@@ -19,7 +19,7 @@ export function AccountMenu(): ReactNode {
           title={formatMessage(
             defineMessage({
               id: "nav.account",
-              defaultMessage: "Your profile",
+              defaultMessage: "Your account",
             }),
           )}
           onClick={() => {

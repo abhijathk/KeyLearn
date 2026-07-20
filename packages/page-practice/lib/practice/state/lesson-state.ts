@@ -1,6 +1,7 @@
 import { keyboardProps, type KeyId } from "@keybr/keyboard";
 import {
   type DailyGoal,
+  GuidedLesson,
   Lesson,
   type LessonKeys,
   lessonProps,
@@ -61,7 +62,31 @@ export class LessonState {
     this.streakList = progress.streakList.copy();
     this.dailyGoal = progress.dailyGoal.copy();
     this.lessonKeys = this.lesson.update(this.keyStatsMap);
+    this.#applyBottleneckFocus(progress);
     this.#reset(this.lesson.generate(this.lessonKeys, Lesson.rng));
+  }
+
+  // Transition-aware targeting: when a slow key-pair (bigram bottleneck) is
+  // found among the included keys, focus the pair's destination key so the
+  // generated words feature it in context — drilling the awkward transition.
+  #applyBottleneckFocus(progress: Progress) {
+    if (
+      !(this.lesson instanceof GuidedLesson) ||
+      !this.settings.get(lessonProps.guided.bottleneckDrill)
+    ) {
+      return;
+    }
+    const included = this.lessonKeys.findIncludedKeys();
+    const among = new Set(included.map(({ letter }) => letter.codePoint));
+    const worst = progress.bigrams.worst(among);
+    if (worst != null) {
+      const target = included.find(
+        ({ letter }) => letter.codePoint === worst.to,
+      );
+      if (target != null) {
+        this.lessonKeys.focus(target.letter);
+      }
+    }
   }
 
   resetLesson() {

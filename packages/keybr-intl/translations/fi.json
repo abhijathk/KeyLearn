@@ -95,7 +95,6 @@
   "t_Books": "Kirjat",
   "t_Buy_a_premium_": "Osta premium-tili",
   "t_Caps_Lock_is_on": "Caps Lock on päällä",
-  "t_Click_or_press_Enter_": "Klikkaa tai paina Enter valitaksesi...",
   "t_Close": "Sulje",
   "t_Colored_keys": "Värilliset näppäimet",
   "t_Common_words": "Yleiset sanat",
@@ -201,7 +200,5 @@
   "t_num_Lessons": "Harjoitukset",
   "t_num_Paragraphs": "Kappaleet",
   "t_num_Unique_words": "Ainutlaatuiset sanat",
-  "t_theme_Enter_fullscreen_": "Mene kokonäytön tilaan.",
-  "t_theme_Exit_fullscreen_": "Poistu kokonäytön tilasta.",
   "weekDayNames": "M|T|K|T|P|L|S"
 }

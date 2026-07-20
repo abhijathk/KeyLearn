@@ -20,6 +20,8 @@ export const lessonProps = {
       max: 1,
     }),
     recoverKeys: booleanProp("lesson.guided.recoverKeys", false),
+    spacedRepetition: booleanProp("lesson.guided.spacedRepetition", false),
+    bottleneckDrill: booleanProp("lesson.guided.bottleneckDrill", false),
   } as const,
   wordList: {
     wordListSize: numberProp("lesson.wordList.wordListSize", 1000, {

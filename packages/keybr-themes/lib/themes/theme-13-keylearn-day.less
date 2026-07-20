@@ -1,0 +1,60 @@
+@import "palettes.less";
+
+// The KeyLearn day theme: the same blue-leaning identity as the night theme,
+// lifted onto a soft paper-white ground with a deeper accent for contrast.
+.keylearn-day-theme-props() {
+  @colors: {
+    @primary: #f5f6fa;
+    @secondary: #1f2433;
+    @accent: #4f78c9;
+    @error: #cf5a4a;
+  };
+
+  --primary-d2: darken(@colors[@primary], 10);
+  --primary-d1: darken(@colors[@primary], 5);
+  --primary: @colors[@primary];
+  --primary-l1: lighten(@colors[@primary], 2);
+  --primary-l2: lighten(@colors[@primary], 3);
+  --secondary-d1: darken(@colors[@secondary], 10);
+  --secondary: @colors[@secondary];
+  --secondary-l1: lighten(@colors[@secondary], 12);
+  --secondary-l2: lighten(@colors[@secondary], 24);
+  --secondary-f1: mix(@colors[@primary], @colors[@secondary], 20);
+  --secondary-f2: mix(@colors[@primary], @colors[@secondary], 40);
+  --accent-d2: darken(@colors[@accent], 16);
+  --accent-d1: darken(@colors[@accent], 8);
+  --accent: @colors[@accent];
+  --accent-l1: lighten(@colors[@accent], 8);
+  --accent-l2: lighten(@colors[@accent], 16);
+  --error-d1: darken(@colors[@error], 10);
+  --error: @colors[@error];
+  --error-l1: lighten(@colors[@error], 10);
+  --shadow-color: #00000033;
+  --slow-key-color: #d2653c;
+  --fast-key-color: #2f9e5c;
+  --effort-color: #4f78c9;
+  .use-textinput-colors(@colors);
+  --textinput-cursor__color: @colors[@primary];
+  --textinput-cursor__background-color: @colors[@accent];
+  --Button__color: @colors[@primary];
+  --Button--focused__color: @colors[@primary];
+  --MenuItem__color: @colors[@secondary];
+  --MenuItem__background-color: darken(@colors[@primary], 2);
+  --MenuItem--hover__color: @colors[@secondary];
+  --MenuItem--hover__background-color: darken(@colors[@primary], 6);
+  --MenuItem--selected__color: @colors[@primary];
+  --MenuItem--selected__background-color: @colors[@accent];
+  .use-interface-colors(@colors);
+  .use-chart-colors(@colors, 0);
+  .use-keyboard-colors(@colors, 12);
+  // Plain keycaps must still read as caps when finger colours are off.
+  --KeyboardKey-button__color: #ffffff;
+  --syntax-keyword: #3d63ad;
+  --syntax-string: #3e7d3e;
+  --syntax-number: #7a4f9d;
+  --syntax-comment: #8a7070;
+}
+
+html[data-color="keylearn-day"] {
+  .keylearn-day-theme-props();
+}

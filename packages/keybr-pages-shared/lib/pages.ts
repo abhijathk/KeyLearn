@@ -70,7 +70,7 @@ export namespace Pages {
       title: defineMessage({
         id: "page.practice.description",
         defaultMessage:
-          "Typing practice lessons to improve your speed and accuracy.",
+          "Guided typing lessons that build your speed and accuracy.",
       }),
       icon: mdiKeyboard,
     },
@@ -81,7 +81,7 @@ export namespace Pages {
         content: defineMessage({
           id: "page.practice.description",
           defaultMessage:
-            "Typing practice lessons to improve your speed and accuracy.",
+            "Guided typing lessons that build your speed and accuracy.",
         }),
       },
     ],
@@ -101,7 +101,7 @@ export namespace Pages {
       title: defineMessage({
         id: "page.profile.description",
         defaultMessage:
-          "The detailed statistics regarding your learning progress.",
+          "A detailed look at your typing progress over time.",
       }),
       icon: mdiChartAreaspline,
     },
@@ -121,7 +121,7 @@ export namespace Pages {
       }),
       title: defineMessage({
         id: "page.help.description",
-        defaultMessage: "The instructions for using this application.",
+        defaultMessage: "How to get the most out of KeyLearn.",
       }),
       icon: mdiHelpCircleOutline,
     },
@@ -131,7 +131,7 @@ export namespace Pages {
         name: "description",
         content: defineMessage({
           id: "page.help.description",
-          defaultMessage: "The instructions for using this application.",
+          defaultMessage: "How to get the most out of KeyLearn.",
         }),
       },
     ],
@@ -141,16 +141,16 @@ export namespace Pages {
     path: "/high-scores",
     title: defineMessage({
       id: "t_High_Scores",
-      defaultMessage: "High Scores",
+      defaultMessage: "Leaderboard",
     }),
     link: {
       label: defineMessage({
         id: "t_High_Scores",
-        defaultMessage: "High Scores",
+        defaultMessage: "Leaderboard",
       }),
       title: defineMessage({
         id: "page.highScores.description",
-        defaultMessage: "The high score table for the fastest users.",
+        defaultMessage: "See how the fastest typists rank.",
       }),
       icon: mdiTrophyOutline,
     },
@@ -160,7 +160,7 @@ export namespace Pages {
         name: "description",
         content: defineMessage({
           id: "page.highScores.description",
-          defaultMessage: "The high score table for the fastest users.",
+          defaultMessage: "See how the fastest typists rank.",
         }),
       },
     ],
@@ -179,7 +179,7 @@ export namespace Pages {
       }),
       title: defineMessage({
         id: "page.multiplayer.description",
-        defaultMessage: "Online multiplayer type racing game.",
+        defaultMessage: "Race other typists online in real time.",
       }),
       icon: mdiCarSide,
     },
@@ -189,7 +189,7 @@ export namespace Pages {
         name: "description",
         content: defineMessage({
           id: "page.multiplayer.description",
-          defaultMessage: "Online multiplayer type racing game.",
+          defaultMessage: "Race other typists online in real time.",
         }),
       },
     ],
@@ -199,16 +199,16 @@ export namespace Pages {
     path: "/typing-test",
     title: defineMessage({
       id: "t_Typing_Test",
-      defaultMessage: "Typing Test",
+      defaultMessage: "Speed Test",
     }),
     link: {
       label: defineMessage({
         id: "t_Typing_Test",
-        defaultMessage: "Typing Test",
+        defaultMessage: "Speed Test",
       }),
       title: defineMessage({
         id: "page.typingTest.description",
-        defaultMessage: "Typing speed and accuracy test.",
+        defaultMessage: "Test your typing speed and accuracy.",
       }),
       icon: mdiSpeedometer,
     },
@@ -218,7 +218,7 @@ export namespace Pages {
         name: "description",
         content: defineMessage({
           id: "page.typingTest.description",
-          defaultMessage: "Typing speed and accuracy test.",
+          defaultMessage: "Test your typing speed and accuracy.",
         }),
       },
     ],
@@ -237,7 +237,7 @@ export namespace Pages {
       }),
       title: defineMessage({
         id: "page.layouts.description",
-        defaultMessage: "Comparison charts of keyboard layouts.",
+        defaultMessage: "Compare keyboard layouts side by side.",
       }),
       icon: mdiKeyboardOutline,
     },
@@ -247,7 +247,7 @@ export namespace Pages {
         name: "description",
         content: defineMessage({
           id: "page.layouts.description",
-          defaultMessage: "Comparison charts of keyboard layouts.",
+          defaultMessage: "Compare keyboard layouts side by side.",
         }),
       },
     ],

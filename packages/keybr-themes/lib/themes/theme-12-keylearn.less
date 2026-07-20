@@ -1,0 +1,60 @@
+@import "palettes.less";
+
+// The signature KeyLearn theme: a deep, blue-tinted near-black ground with a
+// soft-blue accent — the look from the KeyLearn design mockups.
+.keylearn-theme-props() {
+  @colors: {
+    @primary: #141620;
+    @secondary: #e6e8ee;
+    @accent: #8db2f0;
+    @error: #ff7a6b;
+  };
+
+  --primary-d2: lighten(@colors[@primary], 12);
+  --primary-d1: lighten(@colors[@primary], 7);
+  --primary: @colors[@primary];
+  --primary-l1: lighten(@colors[@primary], 3);
+  --primary-l2: lighten(@colors[@primary], 5);
+  --secondary-d1: lighten(@colors[@secondary], 5);
+  --secondary: @colors[@secondary];
+  --secondary-l1: darken(@colors[@secondary], 15);
+  --secondary-l2: darken(@colors[@secondary], 30);
+  --secondary-f1: mix(@colors[@primary], @colors[@secondary], 25);
+  --secondary-f2: mix(@colors[@primary], @colors[@secondary], 45);
+  --accent-d2: darken(@colors[@accent], 14);
+  --accent-d1: darken(@colors[@accent], 7);
+  --accent: @colors[@accent];
+  --accent-l1: lighten(@colors[@accent], 7);
+  --accent-l2: lighten(@colors[@accent], 14);
+  --error-d1: lighten(@colors[@error], 10);
+  --error: @colors[@error];
+  --error-l1: darken(@colors[@error], 10);
+  --shadow-color: #00000088;
+  --slow-key-color: #ff8a5c;
+  --fast-key-color: #37c871;
+  --effort-color: #8db2f0;
+  .use-textinput-colors(@colors);
+  --textinput-cursor__color: @colors[@primary];
+  --textinput-cursor__background-color: @colors[@accent];
+  --Button__color: @colors[@primary];
+  --Button--focused__color: @colors[@primary];
+  --MenuItem__color: @colors[@secondary];
+  --MenuItem__background-color: lighten(@colors[@primary], 4);
+  --MenuItem--hover__color: @colors[@secondary];
+  --MenuItem--hover__background-color: lighten(@colors[@primary], 8);
+  --MenuItem--selected__color: @colors[@primary];
+  --MenuItem--selected__background-color: @colors[@accent];
+  .use-interface-colors(@colors);
+  .use-chart-colors(@colors, 50);
+  .use-keyboard-colors(@colors, 55);
+  // Plain keycaps must still read as caps when finger colours are off.
+  --KeyboardKey-button__color: lighten(@colors[@primary], 8);
+  --syntax-keyword: #8db2f0;
+  --syntax-string: #72b172;
+  --syntax-number: #b281d3;
+  --syntax-comment: #9f8484;
+}
+
+html[data-color="keylearn"] {
+  .keylearn-theme-props();
+}

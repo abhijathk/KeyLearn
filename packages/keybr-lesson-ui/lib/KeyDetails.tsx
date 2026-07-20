@@ -32,7 +32,7 @@ export const KeyDetails = ({ lessonKey }: { lessonKey: LessonKey }) => {
             <Name
               name={formatMessage({
                 id: "t_Last_speed",
-                defaultMessage: "Last speed",
+                defaultMessage: "Latest speed",
               })}
             />
           }
@@ -48,7 +48,7 @@ export const KeyDetails = ({ lessonKey }: { lessonKey: LessonKey }) => {
             <Name
               name={formatMessage({
                 id: "t_Top_speed",
-                defaultMessage: "Top speed",
+                defaultMessage: "Best speed",
               })}
             />
           }
@@ -64,7 +64,7 @@ export const KeyDetails = ({ lessonKey }: { lessonKey: LessonKey }) => {
             <Name
               name={formatMessage({
                 id: "t_Learning_rate",
-                defaultMessage: "Learning rate",
+                defaultMessage: "Progress rate",
               })}
             />
           }
@@ -88,7 +88,7 @@ export const KeyDetails = ({ lessonKey }: { lessonKey: LessonKey }) => {
       <span className={clsx(styles.keyDetails, styles.keyDetails_uncalibrated)}>
         {formatMessage({
           id: "t_Not_calibrated_",
-          defaultMessage: "Not calibrated, need more samples.",
+          defaultMessage: "Not calibrated yet — keep practicing to unlock this.",
         })}
       </span>
     );

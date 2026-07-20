@@ -28,7 +28,7 @@ export function AccuracyHistogramSection({ stats }: { stats: SummaryStats }) {
       <Figure.Caption>
         <FormattedMessage
           id="profile.chart.histogram.accuracy.caption"
-          defaultMessage="Relative Accuracy"
+          defaultMessage="Your Accuracy, Compared"
         />
       </Figure.Caption>
 
@@ -36,7 +36,7 @@ export function AccuracyHistogramSection({ stats }: { stats: SummaryStats }) {
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.histogram.accuracy.description"
-            defaultMessage="This is a histogram of the accuracies of all users, and your position in relation to them."
+            defaultMessage="A histogram of accuracy across all users, with your own standing marked on it."
           />
         </Figure.Description>
       </Explainer>
@@ -45,7 +45,7 @@ export function AccuracyHistogramSection({ stats }: { stats: SummaryStats }) {
         {period === "average" ? (
           <FormattedMessage
             id="profile.chart.compareAverageAccuracy.description"
-            defaultMessage="Your all time average accuracy beats {value} of all other people."
+            defaultMessage="Your lifetime average accuracy outpaces {value} of everyone else."
             values={{
               value: <Value value={value > 0 ? formatPercents(cdf) : "N/A"} />,
             }}
@@ -53,7 +53,7 @@ export function AccuracyHistogramSection({ stats }: { stats: SummaryStats }) {
         ) : (
           <FormattedMessage
             id="profile.chart.compareTopAccuracy.description"
-            defaultMessage="Your all time top accuracy beats {value} of all other people."
+            defaultMessage="Your lifetime top accuracy outpaces {value} of everyone else."
             values={{
               value: <Value value={value > 0 ? formatPercents(cdf) : "N/A"} />,
             }}
@@ -69,14 +69,14 @@ export function AccuracyHistogramSection({ stats }: { stats: SummaryStats }) {
               ? {
                   label: formatMessage({
                     id: "t_Average_accuracy",
-                    defaultMessage: "Average accuracy",
+                    defaultMessage: "Typical accuracy",
                   }),
                   value,
                 }
               : {
                   label: formatMessage({
                     id: "t_Top_accuracy",
-                    defaultMessage: "Top accuracy",
+                    defaultMessage: "Best accuracy",
                   }),
                   value,
                 },
@@ -95,7 +95,7 @@ export function AccuracyHistogramSection({ stats }: { stats: SummaryStats }) {
             checked={period === "average"}
             label={formatMessage({
               id: "t_Average_accuracy",
-              defaultMessage: "Average accuracy",
+              defaultMessage: "Typical accuracy",
             })}
             onSelect={() => {
               setPeriod("average");
@@ -109,7 +109,7 @@ export function AccuracyHistogramSection({ stats }: { stats: SummaryStats }) {
             checked={period === "top"}
             label={formatMessage({
               id: "t_Top_accuracy",
-              defaultMessage: "Top accuracy",
+              defaultMessage: "Best accuracy",
             })}
             onSelect={() => {
               setPeriod("top");
@@ -123,7 +123,7 @@ export function AccuracyHistogramSection({ stats }: { stats: SummaryStats }) {
         <Figure.Legend>
           <FormattedMessage
             id="profile.chart.histogram.accuracy.legend"
-            defaultMessage="See how accurate you type relative to other users. The higher the bar is, the more people type at that accuracy. Your position is marked with the colored vertical lines."
+            defaultMessage="Compares your accuracy against other users. Taller bars mean more people type at that accuracy, and the colored vertical lines mark where you stand."
           />
         </Figure.Legend>
       </Explainer>

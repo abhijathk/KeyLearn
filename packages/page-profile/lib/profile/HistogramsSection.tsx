@@ -13,7 +13,7 @@ export function HistogramsSection({ stats }: { stats: SummaryStats }) {
       <Tab
         label={formatMessage({
           id: "profile.chart.histogram.caption",
-          defaultMessage: "Relative Typing Speed",
+          defaultMessage: "Your Typing Speed, Compared",
         })}
       >
         <SpeedHistogramSection stats={stats} />
@@ -21,7 +21,7 @@ export function HistogramsSection({ stats }: { stats: SummaryStats }) {
       <Tab
         label={formatMessage({
           id: "profile.chart.histogram.accuracy.caption",
-          defaultMessage: "Relative Accuracy",
+          defaultMessage: "Your Accuracy, Compared",
         })}
       >
         <AccuracyHistogramSection stats={stats} />

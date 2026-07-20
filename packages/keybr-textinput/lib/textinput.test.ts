@@ -35,6 +35,7 @@ test("allow empty text", () => {
     length: 0,
     errors: 0,
     accuracy: 0.0,
+    consistency: 0,
     histogram: new Histogram([]),
   });
 });
@@ -86,6 +87,7 @@ test("advance to completion", () => {
     length: 4,
     errors: 0,
     accuracy: 1.0,
+    consistency: 0.9921,
     histogram: new Histogram([
       { codePoint: B, hitCount: 1, missCount: 0, timeToType: 102 },
       { codePoint: C, hitCount: 1, missCount: 0, timeToType: 103 },

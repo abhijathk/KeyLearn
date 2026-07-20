@@ -15,7 +15,7 @@ export function CalendarSection({
       <Figure.Caption>
         <FormattedMessage
           id="profile.chart.calendar.caption"
-          defaultMessage="Practice Calendar"
+          defaultMessage="Your Practice Calendar"
         />
       </Figure.Caption>
 
@@ -23,7 +23,7 @@ export function CalendarSection({
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.calendar.description"
-            defaultMessage="This calendar shows the dates of active learning."
+            defaultMessage="Marks every day you've spent practicing."
           />
         </Figure.Description>
       </Explainer>

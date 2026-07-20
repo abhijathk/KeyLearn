@@ -7,8 +7,12 @@ import {
   type Result,
 } from "@keybr/result";
 import { type Settings } from "@keybr/settings";
+import { type Step } from "@keybr/textinput";
+import { BigramTracker } from "./bigram-tracker.ts";
 import { DailyGoalEvents } from "./event-source-daily-goal.ts";
 import { LetterEvents } from "./event-source-letter.ts";
+import { TopAccuracyEvents } from "./event-source-top-accuracy.ts";
+import { TopConsistencyEvents } from "./event-source-top-consistency.ts";
 import { TopScoreEvents } from "./event-source-top-score.ts";
 import { TopSpeedEvents } from "./event-source-top-speed.ts";
 import {
@@ -24,6 +28,7 @@ export class Progress {
   readonly #summaryStats: MutableSummaryStats;
   readonly #streakList: MutableStreakList;
   readonly #dailyGoal: MutableDailyGoal;
+  readonly #bigrams = new BigramTracker();
   readonly #events: LessonEventSource;
 
   constructor(settings: Settings, lesson: Lesson) {
@@ -38,12 +43,16 @@ export class Progress {
     const letter = new LetterEvents(this.#lesson, this.#keyStatsMap);
     const topSpeed = new TopSpeedEvents();
     const topScore = new TopScoreEvents();
+    const topConsistency = new TopConsistencyEvents();
+    const topAccuracy = new TopAccuracyEvents();
     const dailyGoal = new DailyGoalEvents(this.#dailyGoal);
     this.#events = new (class implements LessonEventSource {
       append(result: Result, listener: LessonEventListener): void {
         letter.append(result, listener);
         topSpeed.append(result, listener);
         topScore.append(result, listener);
+        topConsistency.append(result, listener);
+        topAccuracy.append(result, listener);
         dailyGoal.append(result, listener);
       }
     })();
@@ -117,5 +126,14 @@ export class Progress {
 
   get dailyGoal() {
     return this.#dailyGoal;
+  }
+
+  get bigrams() {
+    return this.#bigrams;
+  }
+
+  /** Feed the raw keystroke stream of a finished round to the bigram tracker. */
+  observeSteps(steps: readonly Step[]) {
+    this.#bigrams.append(steps);
   }
 }

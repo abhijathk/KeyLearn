@@ -14,7 +14,7 @@ export function KeyFrequencyHistogramSection({
       <Figure.Caption>
         <FormattedMessage
           id="profile.chart.keyFrequencyHistogram.caption"
-          defaultMessage="Key Frequency Histogram"
+          defaultMessage="Key Frequency Breakdown"
         />
       </Figure.Caption>
 
@@ -22,7 +22,7 @@ export function KeyFrequencyHistogramSection({
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.keyFrequencyHistogram.description"
-            defaultMessage="This chart shows relative key frequencies."
+            defaultMessage="Shows how often each key comes up, relative to the others."
           />
         </Figure.Description>
       </Explainer>
@@ -38,7 +38,7 @@ export function KeyFrequencyHistogramSection({
       <Figure.Legend>
         <FormattedMessage
           id="profile.chart.keyFrequencyHistogram.legend"
-          defaultMessage="Bar color: {label1} – hit count, {label2} – miss count, {label3} – miss/hit ratio (relative miss frequency)."
+          defaultMessage="Bar color: {label1} – number of hits, {label2} – number of misses, {label3} – miss-to-hit ratio (how often you miss relative to hits)."
           values={{
             label1: <Marker type="histogram-h" />,
             label2: <Marker type="histogram-m" />,

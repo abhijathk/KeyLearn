@@ -52,7 +52,7 @@ export function ResultGrouper({
         <Field>
           <FormattedMessage
             id="t_Show_statistics_for:"
-            defaultMessage="Show statistics for:"
+            defaultMessage="Filter statistics by:"
           />
         </Field>
         <Field>
@@ -84,14 +84,14 @@ export function ResultGrouper({
               {
                 name: formatMessage({
                   id: "t_cc_Punctuation_characters",
-                  defaultMessage: "Punctuation characters",
+                  defaultMessage: "Punctuation marks",
                 }),
                 value: "punctuators",
               },
               {
                 name: formatMessage({
                   id: "t_cc_Special_characters",
-                  defaultMessage: "Special characters",
+                  defaultMessage: "Symbols",
                 }),
                 value: "specials",
               },

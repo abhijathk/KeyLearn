@@ -5,6 +5,7 @@ import { useSettings } from "@keybr/settings";
 import { singleLine, toTextDisplaySettings } from "@keybr/textinput";
 import { StaticText } from "@keybr/textinput-ui";
 import { Article, Figure } from "@keybr/widget";
+import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import { alphabet } from "./english.ts";
 import { ExampleLink } from "./ExampleLink.tsx";
@@ -16,192 +17,190 @@ export function HelpPage() {
   const { settings } = useSettings();
   const textDisplaySettings = toTextDisplaySettings(settings);
 
+  const rules: {
+    readonly id: string;
+    readonly title: ReactNode;
+    readonly art: ReactNode;
+    readonly sample: string;
+    readonly body: ReactNode;
+  }[] = [
+    {
+      id: "1",
+      title: (
+        <FormattedMessage
+          id="help.rule1.title"
+          defaultMessage="It starts with a handful of letters"
+        />
+      ),
+      art: (
+        <KeySetIllustration
+          confidences={[null, null, null, null, null, null]}
+        />
+      ),
+      sample: "teen nien neer nient relier ine neerine elerine neer",
+      body: (
+        <FormattedMessage
+          id="help.rule1.body"
+          defaultMessage="<p>The very first time you practice, KeyLearn has no data on your skills yet, so it sticks to a handful of the most frequent letters — things like ‘<em>E</em>’, ‘<em>N</em>’, ‘<em>I</em>’, ‘<em>T</em>’, ‘<em>R</em>’ and ‘<em>L</em>’ — to build your first words. Every word you see will be made only from this starter set; the rest of the alphabet stays out of play for now. Since there's no typing data yet for these letters, their indicators show up gray.</p>"
+        />
+      ),
+    },
+    {
+      id: "2",
+      title: (
+        <FormattedMessage
+          id="help.rule2.title"
+          defaultMessage="You get comfortable with those letters"
+        />
+      ),
+      art: <KeySetIllustration confidences={[0.9, 0.6, 0.7, 0.4, 0.5, 0.5]} />,
+      sample: "entin entle intell letter rittle ritin tete titient",
+      body: (
+        <FormattedMessage
+          id="help.rule2.body"
+          defaultMessage="<p>Once you start typing the generated words, KeyLearn starts logging your performance, and you'll see the indicators shift from red toward green. Red marks a key you're typing slowly, while green marks one you're typing quickly. Your job at this stage is to turn every letter green by picking up speed. Notice that in this example, ‘<em>T</em>’ is called out because it has the slowest typing speed of the bunch, which makes it the target letter. That target letter shows up in every word you're given — worth remembering, because it means you're always drilling the exact key that's currently slowing you down.</p>"
+        />
+      ),
+    },
+    {
+      id: "3",
+      title: (
+        <FormattedMessage
+          id="help.rule3.title"
+          defaultMessage="More letters join the set"
+        />
+      ),
+      art: <KeySetIllustration confidences={[1, 1, 1, 1, 1, 1, null]} />,
+      sample: "less les list res rise ins test tes listree listree",
+      body: (
+        <FormattedMessage
+          id="help.rule3.body"
+          defaultMessage="<p>Once your speed picks up and every letter has turned green, a new letter — ‘<em>S</em>’ — joins the set, and the words you're given from now on are drawn from this larger pool. ‘<em>S</em>’ becomes the new target letter and appears in every word. As before, since there's no data on it yet, its indicator starts out gray.</p>"
+        />
+      ),
+    },
+    {
+      id: "4",
+      title: (
+        <FormattedMessage
+          id="help.rule4.title"
+          defaultMessage="You master the newly added letters"
+        />
+      ),
+      art: (
+        <KeySetIllustration confidences={[1, 0.8, 0.9, 0.7, 0.6, 0.7, 0.3]} />
+      ),
+      sample: "res ress risin its seen rise ensiste liste its estine",
+      body: (
+        <FormattedMessage
+          id="help.rule4.body"
+          defaultMessage="<p>Now your goal is to turn this newest letter green too, and once you do, another letter gets added and the whole cycle repeats. In practice, don't be surprised if the letters you'd already mastered slip back toward red for a while, as shown here — that's completely normal. Your focus doesn't change: get the current target letter to green so the next one unlocks.</p>"
+        />
+      ),
+    },
+    {
+      id: "5",
+      title: (
+        <FormattedMessage id="help.rule5.title" defaultMessage="Rinse and repeat" />
+      ),
+      art: (
+        <KeySetIllustration confidences={Object.keys(alphabet).map((_) => 1)} />
+      ),
+      sample: "a list of words with all the letters",
+      body: (
+        <FormattedMessage
+          id="help.rule5.body"
+          defaultMessage="<p>Stick with it, and eventually every single letter will turn green. That's the main milestone, and you should feel great about reaching it! It doesn't have to be the end, though — keep practicing for as long as you'd like.</p>"
+        />
+      ),
+    },
+  ];
+
   return (
-    <Article>
-      <FormattedMessage
-        id="help.section1"
-        defaultMessage={
-          "<h1>Learn to type faster</h1>" +
-          "<h2>Touch typing</h2>" +
-          "<p>This web application will help you to learn <em>touch typing</em>, which means typing through muscle memory without using your eyesight to find the keys on the keyboard. It can improve your typing speed and accuracy dramatically. The opposite is <em>hunt-and-peck typing</em>, a method of typing in which you look at the keyboard instead of the screen, and use only the index fingers.</p>"
-        }
-      />
+    <Article className={styles.paper}>
+      <header className={styles.masthead}>
+        <div className={styles.kicker}>
+          <span>The KeyLearn Field Guide</span>
+        </div>
+        <div className={styles.nameplate}>Learn to Touch Type</div>
+        <div className={styles.dateline}>
+          How the adaptive lessons train your fingers
+        </div>
+      </header>
+
+      <div className={styles.lead}>
+        <FormattedMessage
+          id="help.section1"
+          defaultMessage={
+            "<h1>Type faster, the smart way</h1>" +
+            "<h2>What is touch typing?</h2>" +
+            "<p>KeyLearn teaches you <em>touch typing</em> — hitting the right keys from muscle memory alone, with no need to glance down at the keyboard. Mastering it can dramatically boost both your speed and accuracy. Its opposite is <em>hunt-and-peck typing</em>, where you keep your eyes on the keys instead of the screen and rely on just your index fingers.</p>"
+          }
+        />
+      </div>
 
       <FormattedMessage
         id="help.section2"
         defaultMessage={
-          "<h2>The teaching method</h2>" +
-          "<p>This application uses a unique approach. It employs statistics and smart algorithms to automatically create typing lessons that match your current skill level. It works by repeating the following cycle:</p>" +
+          "<h2>How the lessons are built</h2>" +
+          "<p>KeyLearn takes a different approach: it leans on statistics and adaptive algorithms to build typing drills tailored to exactly where your skills stand right now. It does this by looping through three steps:</p>" +
           "<ol>" +
-          "<li>The algorithm generates a list of random words for you, based on your typing skills. Your skill level is measured using the typing statistics collected so far. The words consist of a set of letters selected by the algorithm.</li>" +
-          "<li>You type the given words. You try to make as few mistakes as possible.</li>" +
-          "<li>As you type, the algorithm collects your typing statistics, such as the time-to-type metric for each individual key. At the end, these statistics are used to generate the next list of words for step one.</li>" +
+          "<li>Based on the typing data gathered so far, the algorithm figures out your current skill level and generates a batch of random words built from a letter set it chooses for you.</li>" +
+          "<li>You type those words, aiming to keep your mistakes to a minimum.</li>" +
+          "<li>While you type, the algorithm records fresh statistics — including how long each key takes you to hit — and feeds them back into step one to build the next batch of words.</li>" +
           "</ol>" +
-          "<p>At each stage you just type the provided lists of words, and the computer does the rest.</p>"
+          "<p>All you have to do at every stage is type the words you're given; KeyLearn handles the rest.</p>"
         }
       />
 
       <FormattedMessage
         id="help.section3"
         defaultMessage={
-          "<h2>The word generating algorithm</h2>" +
-          "<p>This application generates random but readable and pronounceable words, using the phonetic rules of your native language. These words look almost natural, and often are. Typing sensible text is much easier than repeating random letters, and it helps you remember frequent key combinations. The latest point is crucial. For example, it’s almost impossible for the letter ‘<em>W</em>’ to follow the ‘<em>Z</em>’ in English, and you will never type such a combination in this application. Instead, you will type more common words, such as ‘<em>the</em>’, ‘<em>that</em>’, ‘<em>with</em>’, and so on. Soon you will learn how to type the ‘<em>th</em>’ combo really fast.</p>" +
-          "<p>The words are generated from the letters which are selected using the following rules.</p>"
+          "<h2>How words are generated</h2>" +
+          "<p>KeyLearn builds random words that still sound natural and readable, following the phonetic patterns of your native language — many of them could pass for real words, and some are. Typing text that reads sensibly is far easier than typing a jumble of random letters, and it also helps you internalize the key combinations you'll hit most often. That second part matters a lot: in English, for instance, the letter ‘<em>W</em>’ almost never follows ‘<em>Z</em>’, so this app will never ask you to type that pairing. Instead, you'll practice far more common sequences like ‘<em>the</em>’, ‘<em>that</em>’, and ‘<em>with</em>’ — before long, you'll be flying through the ‘<em>th</em>’ combo.</p>" +
+          "<p>Here's how the algorithm picks which letters go into those words.</p>"
         }
       />
 
-      <section className={styles.rule}>
-        <h3 className={styles.ruleNumber}>1</h3>
-        <h3>
-          <FormattedMessage
-            id="help.rule1.title"
-            defaultMessage="The algorithm starts with the initial letters"
-          />
-        </h3>
-
-        <div className={styles.example}>
-          <KeySetIllustration
-            confidences={[null, null, null, null, null, null]}
-          />
-        </div>
-
-        <div className={styles.example}>
-          <StaticText
-            settings={textDisplaySettings}
-            lines={singleLine(
-              "teen nien neer nient relier ine neerine elerine neer",
-            )}
-          />
-        </div>
-
-        <FormattedMessage
-          id="help.rule1.body"
-          defaultMessage="<p>When you start practicing for the first time the computer knows nothing about your typing skills, so it uses a small set of the most common letters to generate words such as ‘<em>E</em>’, ‘<em>N</em>’, ‘<em>I</em>’, ‘<em>T</em>’, ‘<em>R</em>’ and ‘<em>L</em>’. All generated words will consist of this small letter set, with the remaining letters being unused. As the statistics for the letters are unknown, the corresponding indicators are gray.</p>"
-        />
-      </section>
-
-      <section className={styles.rule}>
-        <h3 className={styles.ruleNumber}>2</h3>
-        <h3>
-          <FormattedMessage
-            id="help.rule2.title"
-            defaultMessage="You learn the initial letters"
-          />
-        </h3>
-
-        <div className={styles.example}>
-          <KeySetIllustration confidences={[0.9, 0.6, 0.7, 0.4, 0.5, 0.5]} />
-        </div>
-
-        <div className={styles.example}>
-          <StaticText
-            settings={textDisplaySettings}
-            lines={singleLine(
-              "entin entle intell letter rittle ritin tete titient",
-            )}
-          />
-        </div>
-
-        <FormattedMessage
-          id="help.rule2.body"
-          defaultMessage="<p>As you begin to type the generated words, the computer collects your typing statistics. The indicators start to change their colors from red to green. The color red means the typing speed for that individual key is slow, and the color green indicates the opposite. At this stage your goal is to make all the letters green by improving your typing speed. Please note that in this example, letter ‘<em>T</em>’ is highlighted as it has the worst typing speed metric, so it becomes the target letter. The target letter is included in every generated word and this is a crucial piece of information to know. It means that at any given time you are practicing the exact key that gives you the most trouble.</p>"
-        />
-      </section>
-
-      <section className={styles.rule}>
-        <h3 className={styles.ruleNumber}>3</h3>
-        <h3>
-          <FormattedMessage
-            id="help.rule3.title"
-            defaultMessage="The algorithm adds more letters"
-          />
-        </h3>
-
-        <div className={styles.example}>
-          <KeySetIllustration confidences={[1, 1, 1, 1, 1, 1, null]} />
-        </div>
-
-        <div className={styles.example}>
-          <StaticText
-            settings={textDisplaySettings}
-            lines={singleLine(
-              "less les list res rise ins test tes listree listree",
-            )}
-          />
-        </div>
-
-        <FormattedMessage
-          id="help.rule3.body"
-          defaultMessage="<p>When your typing speed improves, and all the letters finally become green, a new letter ‘<em>S</em>’ is added to the set. The random words will be generated from this new expanded set of letters. Letter ‘<em>S</em>’ is the target letter and appears in every generated word. Again, the indicator color of this letter is gray because its typing statistics are unknown.</p>"
-        />
-      </section>
-
-      <section className={styles.rule}>
-        <h3 className={styles.ruleNumber}>4</h3>
-        <h3>
-          <FormattedMessage
-            id="help.rule4.title"
-            defaultMessage="You learn additional letters"
-          />
-        </h3>
-
-        <div className={styles.example}>
-          <KeySetIllustration confidences={[1, 0.8, 0.9, 0.7, 0.6, 0.7, 0.3]} />
-        </div>
-
-        <div className={styles.example}>
-          <StaticText
-            settings={textDisplaySettings}
-            lines={singleLine(
-              "res ress risin its seen rise ensiste liste its estine",
-            )}
-          />
-        </div>
-
-        <FormattedMessage
-          id="help.rule4.body"
-          defaultMessage="<p>At this step your goal is to make this new letter green, and when this happens, yet another letter is added to the set, and the cycle continues. Realistically speaking, it is very likely that the typing speed of the previous letters will degrade, and you will see that they become red again, as in the example. This is expected, your goal is still the same, to make the new target letter green to unlock the next one.</p>"
-        />
-      </section>
-
-      <section className={styles.rule}>
-        <h3 className={styles.ruleNumber}>5</h3>
-        <h3>
-          <FormattedMessage
-            id="help.rule5.title"
-            defaultMessage="The cycle repeats"
-          />
-        </h3>
-
-        <div className={styles.example}>
-          <KeySetIllustration
-            confidences={Object.keys(alphabet).map((_) => 1)}
-          />
-        </div>
-
-        <div className={styles.example}>
-          <StaticText
-            settings={textDisplaySettings}
-            lines={singleLine("a list of words with all the letters")}
-          />
-        </div>
-
-        <FormattedMessage
-          id="help.rule5.body"
-          defaultMessage="<p>If you are persistent enough, sooner or later all the letters will become green. Congratulations, you have achieved your main goal! However, this does not mean that you should stop learning, you can keep going for as long as you wish.</p>"
-        />
-      </section>
+      <div className={styles.rules}>
+        {rules.map(({ id, title, art, sample, body }) => (
+          <section key={id} className={styles.rule}>
+            <h3 className={styles.ruleNumber}>{id}</h3>
+            <h3 className={styles.ruleTitle}>{title}</h3>
+            <div className={styles.plates}>
+              <figure className={styles.plate}>
+                <div className={styles.plateArt}>{art}</div>
+                <figcaption className={styles.plateCaption}>
+                  The letter set
+                </figcaption>
+              </figure>
+              <figure className={styles.plate}>
+                <div className={styles.plateArt}>
+                  <StaticText
+                    settings={textDisplaySettings}
+                    lines={singleLine(sample)}
+                  />
+                </div>
+                <figcaption className={styles.plateCaption}>
+                  Words you'll practice
+                </figcaption>
+              </figure>
+            </div>
+            <div className={styles.ruleBody}>{body}</div>
+          </section>
+        ))}
+      </div>
 
       <FormattedMessage
         id="help.section4"
-        defaultMessage="<p>The precise meaning of each indicator color is given in the following legend.</p>"
+        defaultMessage="<p>Here's exactly what each indicator color means, laid out in the legend below.</p>"
       />
 
       <Figure>
         <Figure.Caption>
           <FormattedMessage
             id="help.indicators.caption"
-            defaultMessage="Indicator color coding."
+            defaultMessage="What each indicator color means."
           />
         </Figure.Caption>
         <KeyLegendList />
@@ -210,8 +209,8 @@ export function HelpPage() {
       <FormattedMessage
         id="help.section5"
         defaultMessage={
-          "<h2>The right way to use keyboard</h2>" +
-          "<p>Put all your fingers on the home row, the one containing the <em>Caps Lock</em> key. There are small bumps on the keys ‘<em>F</em>’ and ‘<em>J</em>’, put your index fingers on the bumps. Each finger is responsible for its own set of keys, as explained in the next illustration.</p>"
+          "<h2>Proper keyboard hand placement</h2>" +
+          "<p>Rest all your fingers on the home row — the row that contains the <em>Caps Lock</em> key. You'll feel small raised bumps on the ‘<em>F</em>’ and ‘<em>J</em>’ keys; line your index fingers up with those. From there, every finger owns a specific group of keys, shown in the illustration below.</p>"
         }
       />
 
@@ -219,7 +218,7 @@ export function HelpPage() {
         <Figure.Caption>
           <FormattedMessage
             id="help.keyboardZones.caption"
-            defaultMessage="Keyboard zones and the proper finger placement."
+            defaultMessage="Keyboard zones and where each finger belongs."
           />
         </Figure.Caption>
         <VirtualKeyboard keyboard={keyboard}>
@@ -231,16 +230,16 @@ export function HelpPage() {
       <FormattedMessage
         id="help.section6"
         defaultMessage={
-          "<h2>The effectiveness of this application</h2>" +
-          "<p>We selected a few example profiles to show you how people progress in learning touch typing when using this application. These are real, anonymized user profiles. Hopefully they will inspire you to keep learning!</p>"
+          "<h2>Does this app actually work?</h2>" +
+          "<p>Below are a handful of real, anonymized user profiles showing how people's touch typing improved while using KeyLearn. We hope seeing their progress motivates you to keep at it!</p>"
         }
       />
 
-      <ul>
+      <ul className={styles.examples}>
         <li>
           <FormattedMessage
             id="help.example1"
-            defaultMessage="<a>Example 1</a>, from 30 to 70 WPM after 4 hours 20 minutes of practicing in the course of 15 days."
+            defaultMessage="<a>Example 1</a> went from 30 to 70 WPM over 15 days, with 4 hours 20 minutes of total practice."
             values={{
               a: (chunks) => <ExampleLink index={1}>{chunks}</ExampleLink>,
             }}
@@ -250,7 +249,7 @@ export function HelpPage() {
         <li>
           <FormattedMessage
             id="help.example2"
-            defaultMessage="<a>Example 2</a>, from 35 to 70 WPM after 2 hours and 20 minutes of practicing in the course of 12 days."
+            defaultMessage="<a>Example 2</a> climbed from 35 to 70 WPM over 12 days, with just 2 hours and 20 minutes of practice."
             values={{
               a: (chunks) => <ExampleLink index={2}>{chunks}</ExampleLink>,
             }}
@@ -260,7 +259,7 @@ export function HelpPage() {
         <li>
           <FormattedMessage
             id="help.example3"
-            defaultMessage="<a>Example 3</a>, a decent jump from less than 20 to 40 WPM after 5 hours and 30 minutes of practicing in the course of 11 days."
+            defaultMessage="<a>Example 3</a> made a solid leap from under 20 to 40 WPM over 11 days, with 5 hours and 30 minutes of practice."
             values={{
               a: (chunks) => <ExampleLink index={3}>{chunks}</ExampleLink>,
             }}
@@ -270,7 +269,7 @@ export function HelpPage() {
         <li>
           <FormattedMessage
             id="help.example4"
-            defaultMessage="<a>Example 4</a>, after 2 hours and 10 minutes of practicing in the course of 11 days, typing speed stayed at ~70 WPM (which is already pretty high), but accuracy improved."
+            defaultMessage="<a>Example 4</a> held steady at roughly 70 WPM (already quite fast) across 11 days and 2 hours 10 minutes of practice, while accuracy kept climbing."
             values={{
               a: (chunks) => <ExampleLink index={4}>{chunks}</ExampleLink>,
             }}
@@ -280,7 +279,7 @@ export function HelpPage() {
         <li>
           <FormattedMessage
             id="help.example5"
-            defaultMessage="<a>Example 5</a>, from 20 to 45 WPM after about 10 hours of practicing in the course of 22 day (yes, sometimes it takes longer)."
+            defaultMessage="<a>Example 5</a> improved from 20 to 45 WPM over 22 days and about 10 hours of practice (progress isn't always fast, and that's okay)."
             values={{
               a: (chunks) => <ExampleLink index={5}>{chunks}</ExampleLink>,
             }}

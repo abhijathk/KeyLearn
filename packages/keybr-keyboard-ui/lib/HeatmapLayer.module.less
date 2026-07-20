@@ -1,15 +1,17 @@
+// Post-lesson glow halos (the KeyLearn look): blurred light under the keys.
 .spot {
-  opacity: 0.7;
+  mix-blend-mode: screen;
+  filter: blur(6px);
 }
 
 .spot_h {
-  fill: var(--Chart-hist-h__color);
+  fill: var(--fast-key-color);
 }
 
 .spot_m {
-  fill: var(--Chart-hist-m__color);
+  fill: var(--slow-key-color);
 }
 
 .spot_f {
-  fill: var(--Chart-hist-r__color);
+  fill: var(--KeyboardKey-pointer__color);
 }

@@ -25,70 +25,70 @@ export function LayoutsPage() {
         id="page.layouts.content"
         defaultMessage={
           "<h1>Keyboard Layouts</h1>" +
-          "<p>These charts visualize the efficiency of different keyboard layouts. An efficiency is a measure of how easy it is to type on a keyboard.</p>" +
-          "<p>The circles show relative key frequencies, and the arcs show relative key pair frequencies.</p>" +
-          "<p>It is easier to type when the most frequent keys are on the home row, and when the most frequent key pairs are typed with different fingers and hands. Therefore an efficient layout has the largest circles on the home row. It also has arcs that are evenly distributed across the keyboard, long and horizontal, rather than short and diagonal, because it indicates the frequent switching of fingers and hands.</p>"
+          "<p>These charts show how efficient each keyboard layout is — in other words, how easy that layout is to type on.</p>" +
+          "<p>Circle size reflects how often each key is used, and arcs show how often each pair of keys is typed one after another.</p>" +
+          "<p>Typing is easiest when your most-used keys sit on the home row and your most common key pairs alternate between different fingers and hands. That's why an efficient layout has its biggest circles clustered on the home row, along with arcs spread evenly across the keyboard that run long and horizontal rather than short and diagonal — a sign that fingers and hands are switching off frequently.</p>"
         }
       />
       <dl>
         <dt>
           <FormattedMessage
             id="layouts.stats.homeRowKeys.name"
-            defaultMessage="Keys on the home row:"
+            defaultMessage="Share of keys on the home row:"
           />
         </dt>
         <dd>
           <FormattedMessage
             id="layouts.stats.homeRowKeys.description"
-            defaultMessage="The percentage of keys typed without leaving the Caps Lock row, the more the better."
+            defaultMessage="How many keys are typed without moving off the Caps Lock row — higher is better."
           />
         </dd>
         <dt>
           <FormattedMessage
             id="layouts.stats.topRowKeys.name"
-            defaultMessage="Keys on the top row:"
+            defaultMessage="Share of keys on the top row:"
           />
         </dt>
         <dd>
           <FormattedMessage
             id="layouts.stats.topRowKeys.description"
-            defaultMessage="The percentage of keys typed on the Tab row, the less the better."
+            defaultMessage="How many keys are typed on the Tab row — lower is better."
           />
         </dd>
         <dt>
           <FormattedMessage
             id="layouts.stats.bottomRowKeys.name"
-            defaultMessage="Keys on the bottom row:"
+            defaultMessage="Share of keys on the bottom row:"
           />
         </dt>
         <dd>
           <FormattedMessage
             id="layouts.stats.bottomRowKeys.description"
-            defaultMessage="The percentage of keys typed on the Shift row, the less the better."
+            defaultMessage="How many keys are typed on the Shift row — lower is better."
           />
         </dd>
         <dt>
           <FormattedMessage
             id="layouts.stats.sameHandKeys.name"
-            defaultMessage="Keys typed by the same hand:"
+            defaultMessage="Share of keys typed by the same hand:"
           />
         </dt>
         <dd>
           <FormattedMessage
             id="layouts.stats.sameHandKeys.description"
-            defaultMessage="The percentage of keys typed by the same hand, the less the better."
+            defaultMessage="How many keys in a row are typed with the same hand — lower is better."
           />
         </dd>
         <dt>
           <FormattedMessage
             id="layouts.stats.sameFingerKeys.name"
-            defaultMessage="Keys typed by the same finger:"
+            defaultMessage="Share of keys typed by the same finger:"
           />
         </dt>
         <dd>
           <FormattedMessage
             id="layouts.stats.sameFingerKeys.description"
-            defaultMessage="The percentage of keys typed by the same finger, the less the better."
+            defaultMessage="How many keys in a row are typed with the same finger — lower is better."
           />
         </dd>
       </dl>

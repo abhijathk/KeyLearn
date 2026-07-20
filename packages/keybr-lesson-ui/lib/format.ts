@@ -57,7 +57,7 @@ export const useFormatter = (): Formatter => {
       } else {
         return formatMessage({
           id: "t_Uncertain",
-          defaultMessage: "Uncertain",
+          defaultMessage: "Not sure yet",
         });
       }
     };
@@ -67,7 +67,7 @@ export const useFormatter = (): Formatter => {
           formatMessage(
             {
               id: "t_Value_per_lesson",
-              defaultMessage: "{value}/lesson",
+              defaultMessage: "{value} per lesson",
             },
             {
               value: formatSpeed(lr),
@@ -78,7 +78,7 @@ export const useFormatter = (): Formatter => {
       } else {
         return formatMessage({
           id: "t_Uncertain",
-          defaultMessage: "Uncertain",
+          defaultMessage: "Not sure yet",
         });
       }
     };

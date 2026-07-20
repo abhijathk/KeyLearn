@@ -14,10 +14,22 @@
 }
 
 .messageText {
-  padding-inline: 2rem;
-  padding-block: 0.5rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding-inline: 1.4rem;
+  padding-block: 0.6rem;
   border: var(--separator-border);
+  border-radius: 999px;
   color: var(--Popup__color);
   background-color: var(--Popup__background-color);
   box-shadow: var(--Popup--small__box-shadow);
+  // Fixed size: the invitation pill must not scale with the practice text.
+  font-size: 1rem;
+}
+
+.messageIcon {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  color: var(--accent);
 }

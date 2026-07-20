@@ -19,16 +19,36 @@ export type KeyProps = {
   readonly showColors?: boolean;
 } & MouseProps;
 
+// Keys the KeyLearn board hides entirely: the mockup shows a floating space
+// bar with no Ctrl/Alt/Meta clutter around it.
+const hiddenKey =
+  /^(ControlLeft|ControlRight|AltLeft|AltRight|MetaLeft|MetaRight|OSLeft|OSRight|ContextMenu|Fn|FnLock|Lang[0-9]|Convert|NonConvert|KanaMode|IntlYen|IntlRo)$/;
+
+// Quiet lowercase labels for the modifier keys, as drawn in the mockup.
+const modLabelText: Record<string, string> = {
+  "Tab": "tab",
+  "Caps Lock": "caps",
+  "Shift": "shift",
+  "Enter": "enter",
+  "Backspace": "back",
+  "Esc": "esc",
+};
+
 export function makeKeyComponent(
   { letterName }: Language,
   shape: KeyShape,
 ): FunctionComponent<KeyProps> {
   const { isCodePoint, isDead, isLigature } = KeyCharacters;
-  const { id, a, b, c, d } = shape;
+  const { id, a } = shape;
   const x = shape.x * keySize;
   const y = shape.y * keySize;
   const w = shape.w * keySize - keyGap;
   const h = shape.h * keySize - keyGap;
+  if (hiddenKey.test(id)) {
+    const HiddenKey = (): ReactNode => null;
+    HiddenKey.displayName = `Key[${id}]`;
+    return memo(HiddenKey);
+  }
   const children: ReactNode[] = [];
   children.push(
     shape.shape ? (
@@ -40,8 +60,8 @@ export function makeKeyComponent(
         y={0}
         width={w}
         height={h}
-        rx={5}
-        ry={5}
+        rx={6}
+        ry={6}
       />
     ),
   );
@@ -51,57 +71,44 @@ export function makeKeyComponent(
     );
   }
   for (const label of shape.labels) {
-    children.push(makeLabel(label));
+    const text = modLabelText[label.text] ?? label.text;
+    if (text) {
+      children.push(
+        makeLabel(
+          { text, pos: [w / 2, h / 2 + 1], align: ["m", "m"] },
+          styles.modSymbol,
+        ),
+      );
+    }
   }
-  const ta = isCodePoint(a);
-  const tb = isCodePoint(b);
-  const tc = isCodePoint(c);
-  const td = isCodePoint(d);
-  const ab = ta && tb && letterName(a) === letterName(b);
-  const cd = tc && td && letterName(c) === letterName(d);
-  if (ta && !ab) {
-    children.push(makeCodePointLabel(a, 10, 27, styles.secondarySymbol));
-  }
-  if (tb && !ab) {
-    children.push(makeCodePointLabel(b, 10, 12, styles.secondarySymbol));
-  }
-  if (tc && !cd) {
-    children.push(makeCodePointLabel(c, 25, 27, styles.secondarySymbol));
-  }
-  if (td && !cd) {
-    children.push(makeCodePointLabel(d, 25, 12, styles.secondarySymbol));
-  }
-  if (ta && ab) {
-    children.push(makeCodePointLabel(a, 10, 12, styles.primarySymbol));
-  }
-  if (tc && cd) {
-    children.push(makeCodePointLabel(c, 25, 27, styles.primarySymbol));
-  }
-  if (isDead(a)) {
-    children.push(makeDeadLabel(a, 10, 27, styles.secondarySymbol));
-  }
-  if (isDead(b)) {
-    children.push(makeDeadLabel(b, 10, 12, styles.secondarySymbol));
-  }
-  if (isDead(c)) {
-    children.push(makeDeadLabel(c, 25, 27, styles.secondarySymbol));
-  }
-  if (isDead(d)) {
-    children.push(makeDeadLabel(d, 25, 12, styles.secondarySymbol));
-  }
-  if (isLigature(a)) {
-    children.push(makeLigatureLabel(a, 10, 27, styles.secondarySymbol));
-  }
-  if (isLigature(b)) {
-    children.push(makeLigatureLabel(b, 10, 12, styles.secondarySymbol));
-  }
-  if (isLigature(c)) {
-    children.push(makeLigatureLabel(c, 25, 27, styles.secondarySymbol));
-  }
-  if (isLigature(d)) {
-    children.push(makeLigatureLabel(d, 25, 12, styles.secondarySymbol));
+  // Like the mockup: every key wears one centred symbol — the base
+  // character only, no shift/altgr stacks.
+  if (isCodePoint(a)) {
+    children.push(
+      makeCodePointLabel(a, w / 2, h / 2 + 1, styles.primarySymbol),
+    );
+  } else if (isDead(a)) {
+    children.push(makeDeadLabel(a, w / 2, h / 2 + 1, styles.primarySymbol));
+  } else if (isLigature(a)) {
+    children.push(
+      makeLigatureLabel(a, w / 2, h / 2 + 1, styles.primarySymbol),
+    );
   }
   const zoneClassName = zoneClassNameOf(shape);
+  // The solid darker side of the keycap; the face drops onto it when pressed.
+  const side = shape.shape ? (
+    <path className={styles.side} d={shape.shape} transform="translate(0 3)" />
+  ) : (
+    <rect
+      className={styles.side}
+      x={0}
+      y={3}
+      width={w}
+      height={h}
+      rx={6}
+      ry={6}
+    />
+  );
   function KeyComponent({
     depressed,
     toggled,
@@ -121,9 +128,11 @@ export function makeKeyComponent(
         y={y}
         width={w}
         height={h}
+        overflow="visible"
         data-key={id}
       >
-        {...children}
+        {side}
+        <g className={styles.cap}>{...children}</g>
       </svg>
     );
   }

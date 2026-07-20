@@ -26,7 +26,11 @@ export const HeatmapLayer = memo(function HeatmapLayer({
         }
       }
     }
-    return normalize([...map]);
+    // A single miss is noise, not a pattern — only repeated misses deserve a
+    // warm halo, so a good round doesn't end painted in red.
+    const entries =
+      modifier === "m" ? [...map].filter(([, f]) => f >= 2) : [...map];
+    return normalize(entries);
   }
 
   function normalize(list: Item[]) {
@@ -54,44 +58,27 @@ export const HeatmapLayer = memo(function HeatmapLayer({
   }
 
   function draw([shape, f]: Item, index: number): ReactNode {
+    // A soft glow halo under the key: green for clean hits, warm for misses.
+    // Intensity and size scale with the count — calm, readable, no clutter.
     const { x, y } = getKeyCenter(shape);
-    switch (modifier) {
-      case "h": {
-        // Top left semicircle.
-        const r = f * 15 + 5;
-        return (
-          <path
-            key={index}
-            className={clsx(styles.spot, styles.spot_h)}
-            d={`M ${x - r} ${y + r} A${r} ${r} 0 0 1 ${x + r} ${y - r}`}
-          />
-        );
-      }
-      case "m": {
-        // Bottom right semicircle.
-        const r = f * 15 + 5;
-        return (
-          <path
-            key={index}
-            className={clsx(styles.spot, styles.spot_m)}
-            d={`M ${x - r} ${y + r} A ${r} ${r} 0 0 0 ${x + r} ${y - r}`}
-          />
-        );
-      }
-      case "f": {
-        // Full circle.
-        const r = f * 20 + 5;
-        return (
-          <circle
-            key={index}
-            className={clsx(styles.spot, styles.spot_f)}
-            cx={x}
-            cy={y}
-            r={r}
-          />
-        );
-      }
-    }
+    // Success glows bright and generous; trouble glows smaller and quieter.
+    const r = modifier === "m" ? 6 + f * 8 : 8 + f * 12;
+    const opacity = modifier === "m" ? 0.18 + f * 0.28 : 0.25 + f * 0.4;
+    const spot = {
+      h: styles.spot_h,
+      m: styles.spot_m,
+      f: styles.spot_f,
+    }[modifier];
+    return (
+      <circle
+        key={index}
+        className={clsx(styles.spot, spot)}
+        cx={x}
+        cy={y}
+        r={r}
+        opacity={opacity}
+      />
+    );
   }
 });
 

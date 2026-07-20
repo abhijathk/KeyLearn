@@ -43,15 +43,15 @@ test("mount and switch styles", async () => {
 
   // Act.
 
-  await userEvent.click(r.getByText("light"));
+  await userEvent.click(r.getByText("keylearn-day"));
 
   // Assert.
 
   equal(
     document.cookie,
-    "prefs=%7B%22color%22%3A%22light%22%2C%22font%22%3A%22spectral%22%7D",
+    "prefs=%7B%22color%22%3A%22keylearn-day%22%2C%22font%22%3A%22spectral%22%7D",
   );
-  equal(document.documentElement.dataset["color"], "light");
+  equal(document.documentElement.dataset["color"], "keylearn-day");
   equal(document.documentElement.dataset["font"], "spectral");
 
   // Act.
@@ -62,9 +62,9 @@ test("mount and switch styles", async () => {
 
   equal(
     document.cookie,
-    "prefs=%7B%22color%22%3A%22light%22%2C%22font%22%3A%22open-sans%22%7D",
+    "prefs=%7B%22color%22%3A%22keylearn-day%22%2C%22font%22%3A%22open-sans%22%7D",
   );
-  equal(document.documentElement.dataset["color"], "light");
+  equal(document.documentElement.dataset["color"], "keylearn-day");
   equal(document.documentElement.dataset["font"], "open-sans");
 
   // Cleanup.
@@ -100,10 +100,10 @@ function Switcher() {
     <div>
       <button
         onClick={() => {
-          switchColor("light");
+          switchColor("keylearn-day");
         }}
       >
-        light
+        keylearn-day
       </button>
       <button
         onClick={() => {

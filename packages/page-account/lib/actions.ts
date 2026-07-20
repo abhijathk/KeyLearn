@@ -35,9 +35,9 @@ export function useAccountActions(props: {
     const message = formatMessage({
       id: "account.deleteAccount.message",
       defaultMessage:
-        "Are you sure you want to delete your account? " +
-        "This operation is permanent and cannot be undone! " +
-        "However, you can create a new account at any time.",
+        "Delete your account for good? " +
+        "This can't be undone — " +
+        "though you're always welcome to create a new account later.",
     });
     if (window.confirm(message)) {
       AccountService.deleteAccount()

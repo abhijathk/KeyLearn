@@ -1,25 +1,40 @@
 .button {
   fill: var(--KeyboardKey-button__color);
-  // Soft raised keycap: a thin dark lip plus a gentle drop shadow. Both are
-  // theme-neutral translucent black so they read on light and dark surfaces.
-  filter: drop-shadow(0 1.5px 0 rgb(0 0 0 / 18%))
-    drop-shadow(0 2.5px 2px rgb(0 0 0 / 16%));
+}
+
+// The visible 3d side of the keycap under the face.
+.side {
+  fill: color-mix(in oklab, var(--KeyboardKey-button__color) 45%, #666b7a);
+  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 28%));
+  transition: opacity 90ms ease;
 }
 
 .symbol {
   fill: var(--KeyboardKey-symbol__color);
-  font-family: var(--default-font-family);
+  font-family: var(--monospace-font-family);
   font-size: 10px;
   cursor: default;
   user-select: none;
 }
 
 .primarySymbol {
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .secondarySymbol {
-  font-size: 11px;
+  font-size: 10px;
+}
+
+.modSymbol {
+  font-size: 9.5px;
+  font-family: var(--default-font-family);
+}
+
+// the whole face of a key; pushed down while the key is depressed
+.cap {
+  transition: transform 90ms ease;
+  will-change: transform;
 }
 
 .deadSymbol {
@@ -51,11 +66,19 @@
   .button {
     fill: var(--pinky-zone-color);
   }
+
+  .side {
+    fill: color-mix(in oklab, var(--pinky-zone-color) 45%, #666b7a);
+  }
 }
 
 .fingerRing {
   .button {
     fill: var(--ring-zone-color);
+  }
+
+  .side {
+    fill: color-mix(in oklab, var(--ring-zone-color) 45%, #666b7a);
   }
 }
 
@@ -63,11 +86,19 @@
   .button {
     fill: var(--middle-zone-color);
   }
+
+  .side {
+    fill: color-mix(in oklab, var(--middle-zone-color) 45%, #666b7a);
+  }
 }
 
 .fingerLeftIndex {
   .button {
     fill: var(--left-index-zone-color);
+  }
+
+  .side {
+    fill: color-mix(in oklab, var(--left-index-zone-color) 45%, #666b7a);
   }
 }
 
@@ -75,11 +106,19 @@
   .button {
     fill: var(--right-index-zone-color);
   }
+
+  .side {
+    fill: color-mix(in oklab, var(--right-index-zone-color) 45%, #666b7a);
+  }
 }
 
 .fingerThumb {
   .button {
     fill: var(--thumb-zone-color);
+  }
+
+  .side {
+    fill: color-mix(in oklab, var(--thumb-zone-color) 45%, #666b7a);
   }
 }
 
@@ -94,10 +133,25 @@
 }
 
 .depressedKey {
+  .cap {
+    transform: translateY(3px);
+  }
+
+  // The side vanishes as the face drops onto it — reads as pressed flat.
+  .side {
+    opacity: 0;
+  }
+
   .button {
-    fill: var(--KeyboardKey-button--depressed__color);
-    // Flatten the raised lip while the key is held down.
-    filter: drop-shadow(0 0.5px 0 rgb(0 0 0 / 18%));
+    fill: color-mix(
+      in oklab,
+      var(--KeyboardKey-pointer__color) 30%,
+      var(--KeyboardKey-button__color)
+    );
+    stroke: var(--KeyboardKey-pointer__color);
+    stroke-width: 1.5px;
+    // Glow while the key is held down.
+    filter: drop-shadow(0 0 6px var(--KeyboardKey-pointer__color));
   }
 
   .symbol {

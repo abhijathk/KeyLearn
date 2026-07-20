@@ -1,801 +1,1293 @@
 # English
 
-Translated: 342 messages, 4739 words
+Translated: 381 messages, 4777 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 336 messages, 4728 words
+Translated: 331 messages, 4434 words
 
-Untranslated: 6 messages, 11 words
+Untranslated: 40 messages, 290 words
 
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
 * *Letters*
-* *Volume:*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *Language*
+* *Grown-ups*
+* *Loudness:*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* ...
 
 # Arabic
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Bulgarian
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Bangla
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Catalan
 
-Translated: 307 messages, 3540 words
+Translated: 302 messages, 3374 words
 
-Untranslated: 33 messages, 1177 words
+Untranslated: 67 messages, 1332 words
 
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
 * *Errors*
-* *Zones:*
-* *Open menu*
-* *Close menu*
-* *Sound theme:*
-* *Your profile*
-* *Explain charts*
-* *Key sounds only*
-* *Relative Accuracy*
-* *Repeat each word:*
-* *The previous keys are also above the target speed*
-* *Generate lessons that resemble the specified programming lan...*
-* *Practice punctuation characters that are specific to a progr...*
-* *This is a histogram of the accuracies of all users, and your...*
-* *Show color coding of the keyboard zones. Use this option to ...*
-* *Generate typing lessons from the text of a book. All keys ar...*
-* *Highlight a key that must to be pressed next. Use this optio...*
-* *<p>This indicator shows the current subset of letters used t...*
-* *Repeat each word a number of times. Type a word for the firs...*
-* *See how accurate you type relative to other users. The highe...*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Sound pack:*
+* *Your account*
+* *Finger zones:*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
 * ...
 
 # Czech
 
-Translated: 335 messages, 4726 words
+Translated: 330 messages, 4431 words
 
-Untranslated: 7 messages, 13 words
+Untranslated: 41 messages, 293 words
 
-* *Font:*
-* *Syntax:*
-* *Open menu*
-* *Close menu*
-* *Sound theme:*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Typeface:*
+* *Lesson done*
+* *Sound pack:*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Language syntax:*
+* ...
 
 # Danish
 
-Translated: 328 messages, 4673 words
+Translated: 323 messages, 4383 words
 
-Untranslated: 12 messages, 44 words
+Untranslated: 46 messages, 323 words
 
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
 * *Score*
+* *Trend*
 * *Layout*
-* *Layout:*
+* *Recent*
 * *Layouts*
+* *Language*
 * *Position*
-* *Open menu*
-* *Close menu*
+* *Grown-ups*
+* *Lesson done*
 * *Multiplayer*
-* *Your profile*
-* *Download data*
-* *Key sounds only*
-* *Repeat each word a number of times. Type a word for the firs...*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* ...
 
 # German
 
-Translated: 336 messages, 4728 words
+Translated: 331 messages, 4434 words
 
-Untranslated: 6 messages, 11 words
+Untranslated: 40 messages, 290 words
 
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
 * *Position*
 * *Alphabet:*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* ...
 
 # Greek
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Esperanto
 
-Translated: 74 messages, 1111 words
+Translated: 74 messages, 1017 words
 
-Untranslated: 261 messages, 3570 words
+Untranslated: 291 messages, 3665 words
 
+* *On*
 * *GO!*
+* *Off*
+* *Back*
+* *Best*
 * *Copy*
-* *Done*
+* *Font*
 * *Help*
-* *Next*
-* *Time*
-* *Books*
-* *Close*
-* *Font:*
-* *Reset*
+* *Kids*
+* *Open*
 * *Speed*
-* *Visit*
+* *Trend*
 * *Errors*
-* *Typing*
-* *Zones:*
+* *Hidden*
+* *Recent*
+* *As bars*
+* *As dots*
+* *Dismiss*
 * *Layouts*
-* *Lessons*
-* *Lessons*
-* *Not set*
-* *Numbers*
+* *Profile*
 * ...
 
 # Spanish
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Estonian
 
-Translated: 335 messages, 4727 words
+Translated: 330 messages, 4433 words
 
-Untranslated: 7 messages, 12 words
+Untranslated: 41 messages, 291 words
 
+* *On*
 * *GO!*
-* *Font:*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
 * *Progress*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *Grown-ups*
+* *Typeface:*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* ...
 
 # Persian
 
-Translated: 292 messages, 2943 words
+Translated: 287 messages, 2814 words
 
-Untranslated: 48 messages, 1774 words
+Untranslated: 82 messages, 1892 words
 
-* *Books*
-* *Zones:*
-* *Syntax:*
-* *Open menu*
-* *Close menu*
-* *Sound theme:*
-* *Top accuracy*
-* *Your profile*
-* *Explain charts*
-* *Key sounds only*
-* *Repeat each word:*
-* *Keyboard hardware emulates layout*
-* *Circle color: {label1} – hit count, {label2} – miss count.*
-* *Practice punctuation characters that are specific to a progr...*
-* *Show color coding of the keyboard zones. Use this option to ...*
-* *Bar color: {label1} – hit count, {label2} – miss count, {lab...*
-* *Generate typing lessons from the text of a book. All keys ar...*
-* *Horizontal axis: lesson number. Vertical axis: typing speed ...*
-* *<a>Benford’s law</a> is an observation that in many real-lif...*
-* *You don’t have any accuracy streaks. Consider completing a l...*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Book Text*
+* *Grown-ups*
+* *Lesson done*
+* *Sound pack:*
+* *Your account*
+* *Best accuracy*
+* *Finger zones:*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
 * ...
 
 # Finnish
 
-Translated: 205 messages, 2268 words
+Translated: 202 messages, 2165 words
 
-Untranslated: 131 messages, 2415 words
+Untranslated: 164 messages, 2520 words
 
+* *On*
 * *GO!*
-* *Time*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Stats*
+* *Trend*
+* *Hidden*
+* *Recent*
+* *As bars*
+* *As dots*
 * *Layouts*
-* *Metrics*
-* *Not set*
-* *Syntax:*
+* *Language*
 * *Position*
 * *Practice*
-* *Settings*
-* *Open menu*
-* *Top speed*
-* *Uncertain*
+* *Grown-ups*
+* *Best speed*
 * *Characters*
-* *Close menu*
-* *Top speed!*
-* *High Scores*
-* *Multiplayer*
-* *Smoothness:*
-* *Play sounds:*
-* *Your profile*
+* *Smoothing:*
 * ...
 
 # Faroese
 
-Translated: 41 messages, 568 words
+Translated: 41 messages, 475 words
 
-Untranslated: 293 messages, 4102 words
+Untranslated: 323 messages, 4196 words
 
+* *On*
 * *GO!*
+* *Off*
+* *Back*
+* *Best*
 * *Copy*
-* *Done*
+* *Font*
 * *Help*
-* *Next*
-* *Time*
-* *Books*
-* *Close*
-* *Font:*
-* *Reset*
+* *Kids*
+* *Open*
 * *Speed*
 * *Speed*
-* *Visit*
+* *Stats*
+* *Trend*
 * *Errors*
+* *Hidden*
 * *Layout*
-* *Typing*
-* *Zones:*
+* *Recent*
 * *Account*
-* *Layout:*
-* *Layouts*
+* *As bars*
 * ...
 
 # French
 
-Translated: 330 messages, 4528 words
+Translated: 325 messages, 4258 words
 
-Untranslated: 12 messages, 211 words
+Untranslated: 46 messages, 466 words
 
-* *Zones:*
-* *Options*
-* *Volume:*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
 * *Position*
+* *Settings*
 * *Alphabet:*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
-* *Above are listed the longest continuous sequences of lessons...*
-* *When you focus on a new key, it is very likely that the spee...*
-* *The target speed is used to measure the confidence level and...*
+* *Grown-ups*
+* *Loudness:*
+* *Lesson done*
+* *Your account*
+* *Finger zones:*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* ...
 
 # Irish
 
-Translated: 334 messages, 4719 words
+Translated: 329 messages, 4424 words
 
-Untranslated: 8 messages, 20 words
+Untranslated: 42 messages, 300 words
 
-* *Zones:*
-* *Open menu*
-* *Close menu*
-* *Smoothness:*
-* *Sound theme:*
-* *Your profile*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Smoothing:*
+* *Lesson done*
+* *Sound pack:*
+* *Your account*
+* *Finger zones:*
 * *M|T|W|T|F|S|S*
-* *Key sounds only*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* ...
 
 # Hebrew
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Croatian
 
-Translated: 334 messages, 4724 words
+Translated: 329 messages, 4429 words
 
-Untranslated: 8 messages, 15 words
+Untranslated: 42 messages, 295 words
 
-* *Font:*
-* *Reset*
-* *Open menu*
-* *Close menu*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Typeface:*
+* *Lesson done*
 * *Multiplayer*
-* *Your profile*
-* *Key sounds only*
-* *Premium account price:*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Restore Defaults*
+* ...
 
 # Hungarian
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Indonesian
 
-Translated: 336 messages, 4728 words
+Translated: 331 messages, 4434 words
 
-Untranslated: 6 messages, 11 words
+Untranslated: 40 messages, 290 words
 
+* *On*
 * *GO!*
-* *Volume:*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Loudness:*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* ...
 
 # Icelandic
 
-Translated: 92 messages, 1726 words
+Translated: 92 messages, 1624 words
 
-Untranslated: 243 messages, 2955 words
+Untranslated: 273 messages, 3058 words
 
+* *On*
 * *GO!*
+* *Off*
+* *Back*
+* *Best*
 * *Copy*
-* *Done*
+* *Font*
 * *Help*
-* *Next*
-* *Time*
-* *Books*
-* *Close*
-* *Font:*
-* *Reset*
-* *Retry*
+* *Kids*
+* *Open*
 * *Speed*
-* *Visit*
+* *Stats*
+* *Trend*
 * *Errors*
-* *Typing*
-* *Zones:*
+* *Hidden*
+* *Recent*
 * *Account*
-* *Layouts*
-* *Lessons*
-* *Metrics*
+* *As bars*
+* *As dots*
+* *Dismiss*
 * ...
 
 # Italian
 
-Translated: 331 messages, 4722 words
+Translated: 326 messages, 4426 words
 
-Untranslated: 10 messages, 15 words
+Untranslated: 44 messages, 295 words
 
-* *Font:*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
 * *Layout*
+* *Recent*
 * *Account*
-* *Layout:*
 * *Layouts*
-* *Volume:*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *Language*
+* *Grown-ups*
+* *Loudness:*
+* *Typeface:*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* ...
 
 # Japanese
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Korean
 
-Translated: 142 messages, 1282 words
+Translated: 140 messages, 1209 words
 
-Untranslated: 198 messages, 3435 words
+Untranslated: 229 messages, 3497 words
 
+* *On*
+* *Off*
+* *Back*
+* *Best*
 * *Copy*
-* *Done*
-* *Next*
-* *Books*
-* *Close*
-* *Font:*
-* *Reset*
-* *Visit*
-* *Typing*
-* *Zones:*
-* *Lessons*
-* *Not set*
-* *Options*
-* *Preview*
-* *Syntax:*
-* *Volume:*
-* *All keys*
-* *Chapters*
-* *Keyboard*
-* *Previous*
+* *Font*
+* *Kids*
+* *Open*
+* *Trend*
+* *Hidden*
+* *Recent*
+* *As bars*
+* *As dots*
+* *Dismiss*
+* *Continue*
+* *Language*
+* *Settings*
+* *Book Text*
+* *Every key*
+* *Grown-ups*
 * ...
 
 # Lithuanian
 
-Translated: 302 messages, 3372 words
+Translated: 298 messages, 3244 words
 
-Untranslated: 37 messages, 1336 words
+Untranslated: 71 messages, 1462 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
-* *Accuracy Streaks*
-* *Relative Accuracy*
-* *No accuracy streaks.*
-* *Practice numbers only.*
-* *The difference from the average value.*
-* *Download all your typing data in JSON format.*
-* *The detailed statistics regarding your learning progress.*
-* *Permanently delete all of your typing data and reset statist...*
-* *This is a histogram of the accuracies of all users, and your...*
-* *Adjust the number of words in the lesson text. Making lesson...*
-* *Show color coding of the keyboard zones. Use this option to ...*
-* *Are you sure you want to delete all data and reset your prof...*
-* *You don’t have any accuracy streaks. Consider completing a l...*
-* *Highlight a key that must to be pressed next. Use this optio...*
-* *<p>This indicator shows the current subset of letters used t...*
-* *Repeat each word a number of times. Type a word for the firs...*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *No streaks yet.*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
 * ...
 
 # Mongolian
 
-Translated: 16 messages, 378 words
+Translated: 16 messages, 307 words
 
-Untranslated: 316 messages, 4263 words
+Untranslated: 346 messages, 4342 words
 
+* *On*
 * *GO!*
+* *Off*
+* *Back*
+* *Best*
 * *Copy*
-* *Done*
+* *Font*
 * *Help*
-* *Next*
-* *Time*
+* *Kids*
+* *Open*
 * *User*
-* *Books*
-* *Close*
-* *Font:*
-* *Reset*
-* *Retry*
 * *Score*
 * *Speed*
 * *Speed*
-* *Visit*
+* *Stats*
+* *Trend*
 * *Digits*
 * *Errors*
+* *Hidden*
 * *Layout*
-* *Resend*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 208 messages, 2430 words
+Translated: 205 messages, 2315 words
 
-Untranslated: 129 messages, 2256 words
+Untranslated: 162 messages, 2373 words
 
-* *Done*
+* *On*
+* *Off*
+* *Best*
+* *Font*
 * *Help*
-* *Books*
-* *Font:*
+* *Kids*
 * *Speed*
+* *Trend*
+* *Hidden*
+* *Recent*
 * *Account*
+* *As bars*
+* *As dots*
 * *Accuracy*
-* *Settings*
+* *Language*
 * *Alphabet:*
-* *Examples:*
-* *Open menu*
-* *All sounds*
-* *Close menu*
-* *Daily goal*
-* *Last speed*
-* *Custom text*
-* *Daily goal:*
-* *Smoothness:*
-* *Whitespace:*
-* *Your profile*
+* *Book Text*
+* *Grown-ups*
+* *Typeface:*
+* *Smoothing:*
 * ...
 
 # Nepali
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Dutch
 
-Translated: 330 messages, 4720 words
+Translated: 325 messages, 4424 words
 
-Untranslated: 11 messages, 17 words
+Untranslated: 45 messages, 297 words
 
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
 * *Score*
-* *Zones:*
+* *Trend*
+* *Recent*
 * *Account*
 * *Letters*
-* *Volume:*
-* *Open menu*
-* *Close menu*
+* *Language*
+* *Grown-ups*
+* *Loudness:*
+* *Lesson done*
 * *Multiplayer*
-* *Your profile*
-* *Key sounds only*
-* *Premium account*
+* *Your account*
+* *Finger zones:*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* ...
 
 # Polish
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Brazilian Portuguese
 
-Translated: 335 messages, 4727 words
+Translated: 330 messages, 4432 words
 
-Untranslated: 7 messages, 12 words
+Untranslated: 41 messages, 292 words
 
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
 * *Layout*
-* *Layout:*
+* *Recent*
 * *Layouts*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Keyboard layout:*
+* ...
 
 # European Portuguese
 
-Translated: 316 messages, 4602 words
+Translated: 311 messages, 4312 words
 
-Untranslated: 24 messages, 115 words
+Untranslated: 58 messages, 394 words
 
-* *Books*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
 * *Layout*
-* *Zones:*
-* *Layout:*
+* *Recent*
 * *Layouts*
-* *Volume:*
-* *Open menu*
-* *Close menu*
-* *Top score!*
-* *Top speed!*
-* *Sound theme:*
-* *Top accuracy*
-* *Your profile*
-* *Explain charts*
-* *Key sounds only*
-* *Average accuracy*
-* *Relative Accuracy*
-* *Repeat each word:*
-* *Daily goal reached!*
-* *New letter unlocked!*
+* *Language*
+* *Book Text*
+* *Grown-ups*
+* *Loudness:*
+* *Lesson done*
+* *Sound pack:*
+* *Your account*
+* *Best accuracy*
+* *Finger zones:*
+* *Pause for now*
+* *New top score!*
 * ...
 
 # Romanian
 
-Translated: 295 messages, 3571 words
+Translated: 291 messages, 3367 words
 
-Untranslated: 40 messages, 1124 words
+Untranslated: 73 messages, 1316 words
 
-* *Font:*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
 * *Layout*
-* *Zones:*
+* *Recent*
 * *Account*
-* *Layout:*
 * *Layouts*
-* *Open menu*
-* *Translate*
-* *Close menu*
+* *Language*
+* *Grown-ups*
+* *Typeface:*
+* *Lesson done*
 * *Multiplayer*
-* *Sound theme:*
-* *Top accuracy*
-* *Your profile*
-* *Forgive errors*
-* *Key sounds only*
-* *Average accuracy*
-* *Relative Accuracy*
-* *Repeat each word:*
-* *Start in {countDown}*
-* *Premium account price:*
+* *Sound pack:*
+* *Your account*
+* *Best accuracy*
+* *Finger zones:*
+* *Pause for now*
 * ...
 
 # Russian
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Slovak
 
-Translated: 337 messages, 4729 words
+Translated: 332 messages, 4434 words
 
-Untranslated: 5 messages, 10 words
+Untranslated: 39 messages, 290 words
 
-* *Syntax:*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Language syntax:*
+* *Who's practicing*
+* *Best accuracy yet!*
+* ...
 
 # Slovenian
 
-Translated: 337 messages, 4729 words
+Translated: 332 messages, 4435 words
 
-Untranslated: 5 messages, 10 words
+Untranslated: 39 messages, 289 words
 
-* *Font:*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Typeface:*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* ...
 
 # Albanian
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Swedish
 
-Translated: 335 messages, 4727 words
+Translated: 330 messages, 4431 words
 
-Untranslated: 7 messages, 12 words
+Untranslated: 41 messages, 293 words
 
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
 * *Layout*
-* *Layout:*
-* *Syntax:*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Keyboard layout:*
+* *Language syntax:*
+* ...
 
 # Thai
 
-Translated: 326 messages, 4619 words
+Translated: 321 messages, 4338 words
 
-Untranslated: 14 messages, 98 words
+Untranslated: 48 messages, 368 words
 
-* *Zones:*
-* *Open menu*
-* *Close menu*
-* *Sound theme:*
-* *Top accuracy*
-* *Your profile*
-* *Key sounds only*
-* *Average accuracy*
-* *Relative Accuracy*
-* *Repeat each word:*
-* *Premium account price:*
-* *This is a histogram of the accuracies of all users, and your...*
-* *Repeat each word a number of times. Type a word for the firs...*
-* *See how accurate you type relative to other users. The highe...*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Sound pack:*
+* *Your account*
+* *Best accuracy*
+* *Finger zones:*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* ...
 
 # Turkish
 
-Translated: 224 messages, 2110 words
+Translated: 219 messages, 2014 words
 
-Untranslated: 113 messages, 2574 words
+Untranslated: 147 messages, 2663 words
 
-* *Books*
-* *Font:*
-* *Zones:*
-* *Metrics*
-* *Preview*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Stats*
+* *Trend*
+* *Hidden*
+* *Recent*
+* *As bars*
+* *As dots*
 * *Sign-In*
-* *Syntax:*
+* *Language*
 * *Alphabet:*
-* *Open menu*
-* *Box cursor*
-* *Close menu*
-* *Line cursor*
-* *Source code*
-* *Whitespace:*
-* *Block cursor*
-* *Top accuracy*
-* *Your profile*
-* *No whitespace*
-* *Smooth cursor*
-* *Bar whitespace*
+* *Book Text*
+* *Grown-ups*
+* *Thin line*
+* *Typeface:*
+* *Underline*
+* *Lesson done*
 * ...
 
 # Ukrainian
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Vietnamese
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Simplified Chinese
 
-Translated: 337 messages, 4723 words
+Translated: 332 messages, 4429 words
 
-Untranslated: 5 messages, 16 words
+Untranslated: 39 messages, 295 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
 * *M|T|W|T|F|S|S*
-* *Key sounds only*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* ...
 
 # Traditional Chinese
 
-Translated: 338 messages, 4730 words
+Translated: 333 messages, 4436 words
 
-Untranslated: 4 messages, 9 words
+Untranslated: 38 messages, 288 words
 
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *On*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* *Currently learning*
+* ...
 
 # Chinese (Taiwan)
 
-Translated: 337 messages, 4729 words
+Translated: 332 messages, 4435 words
 
-Untranslated: 5 messages, 10 words
+Untranslated: 39 messages, 289 words
 
+* *On*
 * *GO!*
-* *Open menu*
-* *Close menu*
-* *Your profile*
-* *Key sounds only*
+* *Off*
+* *Best*
+* *Font*
+* *Kids*
+* *Trend*
+* *Recent*
+* *Language*
+* *Grown-ups*
+* *Lesson done*
+* *Your account*
+* *Pause for now*
+* *Find a language*
+* *Keystrokes only*
+* *Open navigation*
+* *Back to practice*
+* *Close navigation*
+* *Who's practicing*
+* *Best accuracy yet!*
+* ...

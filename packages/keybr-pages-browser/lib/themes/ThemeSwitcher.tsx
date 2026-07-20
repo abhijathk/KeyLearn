@@ -1,196 +1,27 @@
-import { COLORS, FONTS, useTheme } from "@keybr/themes";
-import {
-  Dialog,
-  ensureVisible,
-  IconButton,
-  type OptionListOption,
-  Popover,
-} from "@keybr/widget";
-import { clsx } from "clsx";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useTheme } from "@keybr/themes";
+import { IconButton, StrokeIcon } from "@keybr/widget";
 import { defineMessage, useIntl } from "react-intl";
-import { StrokeIcon } from "../icons/index.ts";
 import * as styles from "./ThemeSwitcher.module.less";
 
-const LazyThemeDesigner = lazy(() => import("./LazyThemeDesigner.tsx"));
-
+/** The single theme control in the header: toggles between night and day. */
 export function ThemeSwitcher() {
-  const { color, font, switchColor, switchFont } = useTheme();
-  const [open, setOpen] = useState(null as "color" | "font" | null);
-  const [design, setDesign] = useState(false);
+  const { formatMessage } = useIntl();
+  const { color, switchColor } = useTheme();
+  const night = color !== "keylearn-day";
   return (
     <div className={styles.root}>
-      {design && (
-        <Dialog
-          onClose={() => {
-            setDesign(false);
-          }}
-        >
-          <Suspense>
-            <LazyThemeDesigner />
-          </Suspense>
-        </Dialog>
-      )}
-      <Popover
-        open={open === "color"}
-        anchor={
-          <IconButton
-            icon={<StrokeIcon name="theme" />}
-            onClick={() => {
-              setOpen(open === "color" ? null : "color");
-            }}
-          />
-        }
-        offset={10}
-      >
-        <ColorMenu
-          selectedId={color}
-          onSelect={(id) => {
-            setOpen(null);
-            switchColor(id);
-            if (id === "custom") {
-              setDesign(true);
-            }
-          }}
-        />
-      </Popover>
-      <Popover
-        open={open === "font"}
-        anchor={
-          <IconButton
-            icon={<StrokeIcon name="font" />}
-            onClick={() => {
-              setOpen(open === "font" ? null : "font");
-            }}
-          />
-        }
-        offset={10}
-      >
-        <FontMenu
-          selectedId={font}
-          onSelect={(id) => {
-            setOpen(null);
-            switchFont(id);
-          }}
-        />
-      </Popover>
-      <FullscreenButton />
+      <IconButton
+        icon={<StrokeIcon name="theme" />}
+        title={formatMessage(
+          defineMessage({
+            id: "theme.switchTheme.description",
+            defaultMessage: "Toggle light and dark mode.",
+          }),
+        )}
+        onClick={() => {
+          switchColor(night ? "keylearn-day" : "keylearn");
+        }}
+      />
     </div>
-  );
-}
-
-function FullscreenButton() {
-  const { formatMessage } = useIntl();
-  const theme = useTheme();
-  switch (theme.fullscreenState) {
-    case true:
-      return (
-        <IconButton
-          icon={<StrokeIcon name="collapse" />}
-          title={formatMessage(
-            defineMessage({
-              id: "t_theme_Exit_fullscreen_",
-              defaultMessage: "Exit full-screen mode.",
-            }),
-          )}
-          onClick={() => {
-            theme.toggleFullscreen();
-          }}
-        />
-      );
-    case false:
-      return (
-        <IconButton
-          icon={<StrokeIcon name="expand" />}
-          title={formatMessage(
-            defineMessage({
-              id: "t_theme_Enter_fullscreen_",
-              defaultMessage: "Enter full-screen mode.",
-            }),
-          )}
-          onClick={() => {
-            theme.toggleFullscreen();
-          }}
-        />
-      );
-    default:
-      return <IconButton icon={<StrokeIcon name="expand" />} />;
-  }
-}
-
-function ColorMenu({
-  selectedId,
-  onSelect,
-}: {
-  readonly selectedId: string;
-  readonly onSelect: (id: string) => void;
-}) {
-  const options = [...COLORS].map(({ id, name }) => ({ value: id, name }));
-  const selected = options.find(({ value }) => value === selectedId);
-  return (
-    <Menu
-      options={options}
-      selectedOption={selected ?? options[0]}
-      onSelect={({ value }) => {
-        onSelect(value);
-      }}
-    />
-  );
-}
-
-function FontMenu({
-  selectedId,
-  onSelect,
-}: {
-  readonly selectedId: string;
-  readonly onSelect: (id: string) => void;
-}) {
-  const options = [...FONTS].map(({ id, name }) => ({ value: id, name }));
-  const selected = options.find(({ value }) => value === selectedId);
-  return (
-    <Menu
-      options={options}
-      selectedOption={selected ?? options[0]}
-      onSelect={({ value }) => {
-        onSelect(value);
-      }}
-    />
-  );
-}
-
-function Menu({
-  options,
-  selectedOption,
-  onSelect,
-}: {
-  readonly options: readonly OptionListOption[];
-  readonly selectedOption: OptionListOption;
-  readonly onSelect: (value: OptionListOption) => void;
-}) {
-  const list = useRef(null);
-  const item = useRef(null);
-  useEffect(() => {
-    ensureVisible(list.current, item.current);
-  });
-  return (
-    <ul ref={list} role="menu" className={styles.menu}>
-      {options.map((option, index) => (
-        <li
-          key={index}
-          ref={option === selectedOption ? item : null}
-          role="menuitem"
-          className={clsx(
-            styles.item,
-            option === selectedOption && styles.item_selected,
-          )}
-          onClick={(event) => {
-            event.preventDefault();
-            onSelect(option);
-          }}
-        >
-          {option.name}
-        </li>
-      ))}
-    </ul>
   );
 }

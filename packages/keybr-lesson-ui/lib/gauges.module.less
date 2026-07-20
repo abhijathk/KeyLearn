@@ -1,9 +1,64 @@
+@import "@keybr/widget/lib/index.less";
+
 .gaugeList {
   display: flex;
-  gap: 1rem;
-  align-items: center;
+  align-items: stretch;
+  justify-content: center;
 }
 
 .gauge {
-  min-inline-size: 5rem;
+  display: grid;
+  align-content: center;
+  gap: 0.2rem;
+  padding-inline: 1.6rem;
+  text-align: center;
+
+  & + & {
+    border-inline-start: var(--separator-border);
+  }
+}
+
+.label {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--Name-color);
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.value {
+  font-family: var(--value-font-family);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-color);
+}
+
+.spark {
+  inline-size: 4rem;
+  block-size: 1.25rem;
+  align-self: center;
+}
+
+.spark .sparkLine {
+  fill: none;
+  stroke: var(--accent-d1);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.spark .sparkDot {
+  fill: var(--accent);
+}
+
+.delta {
+  font-family: var(--value-font-family);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
 }

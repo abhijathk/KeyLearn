@@ -17,38 +17,36 @@ export function KeyboardStats({
         title={formatMessage({
           id: "layouts.stats.homeRowKeys.description",
           defaultMessage:
-            "The percentage of keys typed without leaving the Caps Lock row, the more the better.",
+            "How many keys are typed without moving off the Caps Lock row — higher is better.",
         })}
       >
         <FormattedMessage
           id="layouts.stats.homeRowKeys.name"
-          defaultMessage="Keys on the home row:"
+          defaultMessage="Share of keys on the home row:"
         />{" "}
         <Value value={formatPercents(homeRow, 0)} />
       </li>
       <li
         title={formatMessage({
           id: "layouts.stats.topRowKeys.description",
-          defaultMessage:
-            "The percentage of keys typed on the Tab row, the less the better.",
+          defaultMessage: "How many keys are typed on the Tab row — lower is better.",
         })}
       >
         <FormattedMessage
           id="layouts.stats.topRowKeys.name"
-          defaultMessage="Keys on the top row:"
+          defaultMessage="Share of keys on the top row:"
         />{" "}
         <Value value={formatPercents(topRow, 0)} />
       </li>
       <li
         title={formatMessage({
           id: "layouts.stats.bottomRowKeys.description",
-          defaultMessage:
-            "The percentage of keys typed on the Shift row, the less the better.",
+          defaultMessage: "How many keys are typed on the Shift row — lower is better.",
         })}
       >
         <FormattedMessage
           id="layouts.stats.bottomRowKeys.name"
-          defaultMessage="Keys on the bottom row:"
+          defaultMessage="Share of keys on the bottom row:"
         />{" "}
         <Value value={formatPercents(bottomRow, 0)} />
       </li>
@@ -56,12 +54,12 @@ export function KeyboardStats({
         title={formatMessage({
           id: "layouts.stats.sameHandKeys.description",
           defaultMessage:
-            "The percentage of keys typed by the same hand, the less the better.",
+            "How many keys in a row are typed with the same hand — lower is better.",
         })}
       >
         <FormattedMessage
           id="layouts.stats.sameHandKeys.name"
-          defaultMessage="Keys typed by the same hand:"
+          defaultMessage="Share of keys typed by the same hand:"
         />{" "}
         <Value value={formatPercents(1 - handSwitches, 0)} />
       </li>
@@ -69,12 +67,12 @@ export function KeyboardStats({
         title={formatMessage({
           id: "layouts.stats.sameFingerKeys.description",
           defaultMessage:
-            "The percentage of keys typed by the same finger, the less the better.",
+            "How many keys in a row are typed with the same finger — lower is better.",
         })}
       >
         <FormattedMessage
           id="layouts.stats.sameFingerKeys.name"
-          defaultMessage="Keys typed by the same finger:"
+          defaultMessage="Share of keys typed by the same finger:"
         />{" "}
         <Value value={formatPercents(1 - fingerSwitches, 0)} />
       </li>

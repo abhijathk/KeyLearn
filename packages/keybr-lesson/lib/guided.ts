@@ -8,6 +8,7 @@ import { Dictionary, filterWordList } from "./dictionary.ts";
 import { LessonKey, LessonKeys } from "./key.ts";
 import { Lesson } from "./lesson.ts";
 import { lessonProps } from "./settings.ts";
+import { findDueKey, isUrgent } from "./srs.ts";
 import { Target } from "./target.ts";
 import { generateFragment } from "./text/fragment.ts";
 import {
@@ -96,12 +97,24 @@ export class GuidedLesson extends Lesson {
     const confidenceOf = (key: LessonKey): number => {
       return recoverKeys ? (key.confidence ?? 0) : (key.bestConfidence ?? 0);
     };
-    const weakestKeys = lessonKeys
-      .findIncludedKeys()
+    const includedKeys = lessonKeys.findIncludedKeys();
+    const weakestKeys = includedKeys
       .filter((key) => confidenceOf(key) < 1)
       .sort((a, b) => confidenceOf(a) - confidenceOf(b));
-    if (weakestKeys.length > 0) {
-      lessonKeys.focus(weakestKeys[0].letter);
+    let focusLetter = weakestKeys.length > 0 ? weakestKeys[0].letter : null;
+
+    // Spaced repetition: surface a learned key that's due for review. When
+    // nothing is actively being learned it drives the focus; mid-learning it
+    // only interrupts for a key that's badly overdue.
+    if (this.settings.get(lessonProps.guided.spacedRepetition)) {
+      const due = findDueKey(keyStatsMap, includedKeys);
+      if (due != null && (focusLetter == null || isUrgent(due))) {
+        focusLetter = due.key.letter;
+      }
+    }
+
+    if (focusLetter != null) {
+      lessonKeys.focus(focusLetter);
     }
 
     return lessonKeys;

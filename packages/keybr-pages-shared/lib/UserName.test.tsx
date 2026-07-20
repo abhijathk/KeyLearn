@@ -21,7 +21,7 @@ test("render anonymous user", () => {
     </FakeIntlProvider>,
   );
 
-  isNotNull(r.queryByTitle("Anonymous User"));
+  isNotNull(r.queryByTitle("Unknown User"));
 
   r.unmount();
 });

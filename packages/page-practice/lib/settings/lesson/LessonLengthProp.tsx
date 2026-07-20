@@ -12,7 +12,7 @@ export function LessonLengthProp(): ReactNode {
         <Field>
           <FormattedMessage
             id="t_Add_words_to_lessons:"
-            defaultMessage="Add words to lessons:"
+            defaultMessage="Words per lesson:"
           />
         </Field>
         <Field>
@@ -32,7 +32,7 @@ export function LessonLengthProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.lessonLength.description"
-            defaultMessage="Adjust the number of words in the lesson text. Making lessons longer can improve your learning."
+            defaultMessage="Sets how many words appear in each lesson. Longer lessons can help you learn more effectively."
           />
         </Description>
       </Explainer>

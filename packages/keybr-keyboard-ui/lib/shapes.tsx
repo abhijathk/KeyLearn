@@ -4,7 +4,7 @@ import { type ReactNode, type RefObject } from "react";
 
 export const margin = 15;
 export const keySize = 40;
-export const keyGap = 2;
+export const keyGap = 6;
 
 export const getKeyCenter = (shape: KeyShape): Point => {
   return new Point(
