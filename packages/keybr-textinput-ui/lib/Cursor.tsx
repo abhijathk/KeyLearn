@@ -21,8 +21,22 @@ export class Cursor extends Component<{
   #initial = true;
   #animation: Animation | null = null;
 
+  #mounted = false;
+
   override componentDidMount() {
+    this.#mounted = true;
     this.#position();
+    // The block caret is measured from char.offsetLeft. On first mount the
+    // monospace web font may not be loaded yet, so the char is measured in
+    // fallback-font metrics; once the real font swaps in the centred text
+    // reflows and the caret would be left stranded. Re-snap it after fonts are
+    // ready and on the next frame so it lands on the letter, not beside it.
+    this.#reposition();
+    if (typeof document !== "undefined" && document.fonts?.ready != null) {
+      document.fonts.ready.then(() => {
+        this.#reposition();
+      });
+    }
     window.addEventListener("keylearn:wrong-key", this.#shake);
   }
 
@@ -31,11 +45,23 @@ export class Cursor extends Component<{
   }
 
   override componentWillUnmount() {
+    this.#mounted = false;
     window.removeEventListener("keylearn:wrong-key", this.#shake);
     if (this.#animation != null) {
       this.#animation.cancel();
     }
   }
+
+  // Snap the caret to the current char without a movement animation (used to
+  // correct for late layout such as web-font loading).
+  readonly #reposition = () => {
+    requestAnimationFrame(() => {
+      if (this.#mounted) {
+        this.#initial = true;
+        this.#position();
+      }
+    });
+  };
 
   // Shake the current letter the moment a wrong key is pressed.
   readonly #shake = () => {
