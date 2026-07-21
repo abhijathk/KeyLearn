@@ -69,7 +69,7 @@ export function Tour({ children, onClose, ...props }: TourProps): ReactNode {
     document.querySelector(anchor) != null;
   const liveAnchor = anchorFound ? anchor : undefined;
   const first = slideIndex === 0;
-  const last = slideIndex === length - 1;
+  const last = length === 0 || slideIndex === length - 1;
 
   return (
     <Portal>

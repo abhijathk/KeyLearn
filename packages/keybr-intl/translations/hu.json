@@ -113,7 +113,6 @@
   "practice.widget.settings.description": "A lecke beállításainak módosítása, nyelv, billentyűzetkiosztás stb. konfigurálása.",
   "practice.widget.showTour.description": "Vezetett túra indítása a segítő diákkal.",
   "practice.widget.skipLesson.description": "A lecke átugrása (Ctrl + Jobb nyíl).",
-  "practice.widget.switchView.description": "Az aktuális felhasználói felület elrendezésének változtatása.",
   "profile.accuracy.header": "Pontossági Sorozatok",
   "profile.accuracy.legend": "Fent láthatók a leghosszabb folyamatos lecke sorozatok az adott pontossági küszöb fölött, együtt a statisztikával minden ilyen sorozatról. Minél hosszabb a lecke sorozat, annál jobb.",
   "profile.accuracy.noData": "Nincsenek pontossági sorozatai. Fontolja meg, hogy a leckét a lehető legnagyobb pontossággal fejezze be, függetlenül a gépelési sebességtől.",

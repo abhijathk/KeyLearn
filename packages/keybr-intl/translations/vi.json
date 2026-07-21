@@ -113,7 +113,6 @@
   "practice.widget.settings.description": "Thay đổi cài đặt cho bài học, ngôn ngữ, bố cục bàn phím, vv.",
   "practice.widget.showTour.description": "Hiển thị chuyến tham quan có hướng dẫn với các slide trợ giúp.",
   "practice.widget.skipLesson.description": "Bỏ qua bài học này (Ctrl + mũi tên phải).",
-  "practice.widget.switchView.description": "Chuyển bố cục giao diện hiện tại.",
   "profile.accuracy.header": "Chuỗi chính xác",
   "profile.accuracy.legend": "Ở trên liệt kê các chuỗi bài học liên tục dài nhất với độ chính xác trên một ngưỡng nhất định, cùng với số liệu thống kê về mỗi chuỗi đó. Chuỗi bài học càng dài, càng tốt.",
   "profile.accuracy.noData": "Bạn không có chuỗi độ chính xác nào. Hãy cân nhắc hoàn thành một bài học với độ chính xác cao nhất có thể, bất kể tốc độ gõ.",

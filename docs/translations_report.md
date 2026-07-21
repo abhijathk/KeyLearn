@@ -1,14 +1,14 @@
 # English
 
-Translated: 396 messages, 5365 words
+Translated: 404 messages, 5527 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 331 messages, 4526 words
+Translated: 330 messages, 4520 words
 
-Untranslated: 54 messages, 783 words
+Untranslated: 63 messages, 951 words
 
 * *On*
 * *Off*
@@ -18,9 +18,11 @@ Untranslated: 54 messages, 783 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Letters*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Loudness:*
 * *Quick tour*
@@ -28,15 +30,13 @@ Untranslated: 54 messages, 783 words
 * *Start typing*
 * *Your account*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
 * ...
 
 # Arabic
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -46,25 +46,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Bulgarian
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -74,25 +74,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Bangla
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -102,25 +102,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Catalan
 
-Translated: 302 messages, 3466 words
+Translated: 301 messages, 3460 words
 
-Untranslated: 81 messages, 1825 words
+Untranslated: 90 messages, 1993 words
 
 * *On*
 * *Off*
@@ -130,9 +130,11 @@ Untranslated: 81 messages, 1825 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Errors*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
@@ -140,15 +142,13 @@ Untranslated: 81 messages, 1825 words
 * *Start typing*
 * *Your account*
 * *Finger zones:*
-* *Pause for now*
-* *Find a language*
 * ...
 
 # Czech
 
-Translated: 330 messages, 4523 words
+Translated: 329 messages, 4517 words
 
-Untranslated: 55 messages, 786 words
+Untranslated: 64 messages, 954 words
 
 * *On*
 * *Off*
@@ -158,8 +158,10 @@ Untranslated: 55 messages, 786 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Typeface:*
 * *Quick tour*
@@ -168,15 +170,13 @@ Untranslated: 55 messages, 786 words
 * *Start typing*
 * *Your account*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
 * ...
 
 # Danish
 
-Translated: 323 messages, 4475 words
+Translated: 322 messages, 4469 words
 
-Untranslated: 60 messages, 816 words
+Untranslated: 69 messages, 984 words
 
 * *On*
 * *Off*
@@ -187,24 +187,24 @@ Untranslated: 60 messages, 816 words
 * *last*
 * *Score*
 * *Trend*
+* *Cancel*
 * *Layout*
 * *Recent*
 * *Layouts*
 * *Language*
 * *Position*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Multiplayer*
-* *Start typing*
-* *Your account*
 * ...
 
 # German
 
-Translated: 331 messages, 4526 words
+Translated: 330 messages, 4520 words
 
-Untranslated: 54 messages, 783 words
+Untranslated: 63 messages, 951 words
 
 * *On*
 * *Off*
@@ -214,9 +214,11 @@ Untranslated: 54 messages, 783 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
 * *Position*
+* *Settings*
 * *Alphabet:*
 * *Grown-ups*
 * *Quick tour*
@@ -224,15 +226,13 @@ Untranslated: 54 messages, 783 words
 * *Start typing*
 * *Your account*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
 * ...
 
 # Greek
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -242,25 +242,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Esperanto
 
 Translated: 74 messages, 1109 words
 
-Untranslated: 305 messages, 4158 words
+Untranslated: 313 messages, 4320 words
 
 * *On*
 * *GO!*
@@ -276,19 +276,19 @@ Untranslated: 305 messages, 4158 words
 * *Open*
 * *Speed*
 * *Trend*
+* *Cancel*
 * *Errors*
 * *Hidden*
 * *Recent*
 * *As bars*
 * *As dots*
-* *Dismiss*
 * ...
 
 # Spanish
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -298,25 +298,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Estonian
 
-Translated: 330 messages, 4525 words
+Translated: 329 messages, 4519 words
 
-Untranslated: 55 messages, 784 words
+Untranslated: 64 messages, 952 words
 
 * *On*
 * *GO!*
@@ -327,24 +327,24 @@ Untranslated: 55 messages, 784 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
 * *Progress*
+* *Settings*
 * *Grown-ups*
 * *Typeface:*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
-* *Pause for now*
-* *Find a language*
 * ...
 
 # Persian
 
-Translated: 287 messages, 2906 words
+Translated: 286 messages, 2900 words
 
-Untranslated: 96 messages, 2385 words
+Untranslated: 105 messages, 2553 words
 
 * *On*
 * *Off*
@@ -354,8 +354,10 @@ Untranslated: 96 messages, 2385 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Book Text*
 * *Grown-ups*
 * *Quick tour*
@@ -364,15 +366,13 @@ Untranslated: 96 messages, 2385 words
 * *Start typing*
 * *Your account*
 * *Best accuracy*
-* *Finger zones:*
-* *Pause for now*
 * ...
 
 # Finnish
 
-Translated: 202 messages, 2257 words
+Translated: 202 messages, 2256 words
 
-Untranslated: 178 messages, 3013 words
+Untranslated: 186 messages, 3176 words
 
 * *On*
 * *GO!*
@@ -384,6 +384,7 @@ Untranslated: 178 messages, 3013 words
 * *last*
 * *Stats*
 * *Trend*
+* *Cancel*
 * *Hidden*
 * *Recent*
 * *As bars*
@@ -392,15 +393,14 @@ Untranslated: 178 messages, 3013 words
 * *Language*
 * *Position*
 * *Practice*
-* *Grown-ups*
-* *Best speed*
+* *Settings*
 * ...
 
 # Faroese
 
 Translated: 41 messages, 475 words
 
-Untranslated: 337 messages, 4781 words
+Untranslated: 345 messages, 4943 words
 
 * *On*
 * *GO!*
@@ -418,17 +418,17 @@ Untranslated: 337 messages, 4781 words
 * *Speed*
 * *Stats*
 * *Trend*
+* *Cancel*
 * *Errors*
 * *Hidden*
 * *Layout*
-* *Recent*
 * ...
 
 # French
 
-Translated: 325 messages, 4350 words
+Translated: 324 messages, 4344 words
 
-Untranslated: 60 messages, 959 words
+Untranslated: 69 messages, 1127 words
 
 * *On*
 * *Off*
@@ -438,9 +438,11 @@ Untranslated: 60 messages, 959 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
 * *Position*
+* *Settings*
 * *Settings*
 * *Alphabet:*
 * *Grown-ups*
@@ -448,15 +450,13 @@ Untranslated: 60 messages, 959 words
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
-* *Your account*
-* *Finger zones:*
 * ...
 
 # Irish
 
-Translated: 329 messages, 4516 words
+Translated: 328 messages, 4510 words
 
-Untranslated: 56 messages, 793 words
+Untranslated: 65 messages, 961 words
 
 * *On*
 * *Off*
@@ -466,8 +466,10 @@ Untranslated: 56 messages, 793 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Smoothing:*
@@ -476,15 +478,13 @@ Untranslated: 56 messages, 793 words
 * *Start typing*
 * *Your account*
 * *Finger zones:*
-* *M|T|W|T|F|S|S*
-* *Pause for now*
 * ...
 
 # Hebrew
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -494,25 +494,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Croatian
 
-Translated: 329 messages, 4521 words
+Translated: 328 messages, 4515 words
 
-Untranslated: 56 messages, 788 words
+Untranslated: 65 messages, 956 words
 
 * *On*
 * *Off*
@@ -522,8 +522,10 @@ Untranslated: 56 messages, 788 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Typeface:*
 * *Quick tour*
@@ -532,15 +534,13 @@ Untranslated: 56 messages, 788 words
 * *Start typing*
 * *Your account*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
 * ...
 
 # Hungarian
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -550,25 +550,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Indonesian
 
-Translated: 331 messages, 4526 words
+Translated: 330 messages, 4520 words
 
-Untranslated: 54 messages, 783 words
+Untranslated: 63 messages, 951 words
 
 * *On*
 * *GO!*
@@ -579,8 +579,10 @@ Untranslated: 54 messages, 783 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Loudness:*
 * *Quick tour*
@@ -588,15 +590,13 @@ Untranslated: 54 messages, 783 words
 * *Start typing*
 * *Your account*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
 * ...
 
 # Icelandic
 
 Translated: 92 messages, 1716 words
 
-Untranslated: 287 messages, 3551 words
+Untranslated: 295 messages, 3713 words
 
 * *On*
 * *GO!*
@@ -613,18 +613,18 @@ Untranslated: 287 messages, 3551 words
 * *Speed*
 * *Stats*
 * *Trend*
+* *Cancel*
 * *Errors*
 * *Hidden*
 * *Recent*
 * *Account*
-* *As bars*
 * ...
 
 # Italian
 
-Translated: 326 messages, 4518 words
+Translated: 325 messages, 4512 words
 
-Untranslated: 58 messages, 788 words
+Untranslated: 67 messages, 956 words
 
 * *On*
 * *Off*
@@ -634,25 +634,25 @@ Untranslated: 58 messages, 788 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Layout*
 * *Recent*
 * *Account*
 * *Layouts*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Loudness:*
 * *Typeface:*
 * *Quick tour*
 * *Lesson done*
-* *Start typing*
-* *Your account*
 * ...
 
 # Japanese
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -662,25 +662,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Korean
 
 Translated: 140 messages, 1301 words
 
-Untranslated: 243 messages, 3990 words
+Untranslated: 251 messages, 4152 words
 
 * *On*
 * *Off*
@@ -693,22 +693,22 @@ Untranslated: 243 messages, 3990 words
 * *last*
 * *Open*
 * *Trend*
+* *Cancel*
 * *Hidden*
 * *Recent*
 * *As bars*
 * *As dots*
 * *Dismiss*
+* *Display*
 * *Continue*
 * *Language*
-* *Settings*
-* *Book Text*
 * ...
 
 # Lithuanian
 
-Translated: 298 messages, 3336 words
+Translated: 297 messages, 3330 words
 
-Untranslated: 85 messages, 1955 words
+Untranslated: 94 messages, 2123 words
 
 * *On*
 * *Off*
@@ -718,25 +718,25 @@ Untranslated: 85 messages, 1955 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *No streaks yet.*
-* *Open navigation*
 * ...
 
 # Mongolian
 
 Translated: 16 messages, 307 words
 
-Untranslated: 360 messages, 4927 words
+Untranslated: 368 messages, 5089 words
 
 * *On*
 * *GO!*
@@ -756,15 +756,15 @@ Untranslated: 360 messages, 4927 words
 * *Speed*
 * *Stats*
 * *Trend*
+* *Cancel*
 * *Digits*
-* *Errors*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 205 messages, 2397 words
+Translated: 205 messages, 2396 words
 
-Untranslated: 176 messages, 2876 words
+Untranslated: 184 messages, 3039 words
 
 * *On*
 * *Off*
@@ -776,6 +776,7 @@ Untranslated: 176 messages, 2876 words
 * *last*
 * *Speed*
 * *Trend*
+* *Cancel*
 * *Hidden*
 * *Recent*
 * *Account*
@@ -783,16 +784,15 @@ Untranslated: 176 messages, 2876 words
 * *As dots*
 * *Accuracy*
 * *Language*
+* *Settings*
 * *Alphabet:*
-* *Book Text*
-* *Grown-ups*
 * ...
 
 # Nepali
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -802,25 +802,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Dutch
 
-Translated: 325 messages, 4516 words
+Translated: 324 messages, 4510 words
 
-Untranslated: 59 messages, 790 words
+Untranslated: 68 messages, 958 words
 
 * *On*
 * *Off*
@@ -831,24 +831,24 @@ Untranslated: 59 messages, 790 words
 * *last*
 * *Score*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Account*
 * *Letters*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Loudness:*
 * *Quick tour*
 * *Lesson done*
 * *Multiplayer*
-* *Start typing*
-* *Your account*
 * ...
 
 # Polish
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -858,25 +858,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Brazilian Portuguese
 
-Translated: 330 messages, 4524 words
+Translated: 329 messages, 4518 words
 
-Untranslated: 55 messages, 785 words
+Untranslated: 64 messages, 953 words
 
 * *On*
 * *Off*
@@ -886,25 +886,25 @@ Untranslated: 55 messages, 785 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Layout*
 * *Recent*
 * *Layouts*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
 * ...
 
 # European Portuguese
 
-Translated: 311 messages, 4404 words
+Translated: 310 messages, 4398 words
 
-Untranslated: 72 messages, 887 words
+Untranslated: 81 messages, 1055 words
 
 * *On*
 * *Off*
@@ -914,25 +914,25 @@ Untranslated: 72 messages, 887 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Layout*
 * *Recent*
 * *Layouts*
 * *Language*
+* *Settings*
 * *Book Text*
 * *Grown-ups*
 * *Loudness:*
 * *Quick tour*
 * *Lesson done*
 * *Sound pack:*
-* *Start typing*
-* *Your account*
 * ...
 
 # Romanian
 
-Translated: 291 messages, 3459 words
+Translated: 290 messages, 3453 words
 
-Untranslated: 87 messages, 1809 words
+Untranslated: 96 messages, 1977 words
 
 * *On*
 * *Off*
@@ -942,25 +942,25 @@ Untranslated: 87 messages, 1809 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Layout*
 * *Recent*
 * *Account*
 * *Layouts*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Typeface:*
 * *Quick tour*
 * *Lesson done*
 * *Multiplayer*
-* *Sound pack:*
-* *Start typing*
 * ...
 
 # Russian
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -970,25 +970,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Slovak
 
-Translated: 332 messages, 4526 words
+Translated: 331 messages, 4520 words
 
-Untranslated: 53 messages, 783 words
+Untranslated: 62 messages, 951 words
 
 * *On*
 * *Off*
@@ -998,25 +998,25 @@ Untranslated: 53 messages, 783 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Slovenian
 
-Translated: 332 messages, 4527 words
+Translated: 331 messages, 4521 words
 
-Untranslated: 53 messages, 782 words
+Untranslated: 62 messages, 950 words
 
 * *On*
 * *Off*
@@ -1026,8 +1026,10 @@ Untranslated: 53 messages, 782 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Typeface:*
 * *Quick tour*
@@ -1035,16 +1037,14 @@ Untranslated: 53 messages, 782 words
 * *Start typing*
 * *Your account*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
-* *Open navigation*
+* *Smart Practice*
 * ...
 
 # Albanian
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -1054,25 +1054,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Swedish
 
-Translated: 330 messages, 4523 words
+Translated: 329 messages, 4517 words
 
-Untranslated: 55 messages, 786 words
+Untranslated: 64 messages, 954 words
 
 * *On*
 * *Off*
@@ -1082,25 +1082,25 @@ Untranslated: 55 messages, 786 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Layout*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
-* *Open navigation*
+* *Smart Practice*
 * ...
 
 # Thai
 
-Translated: 321 messages, 4430 words
+Translated: 320 messages, 4424 words
 
-Untranslated: 62 messages, 861 words
+Untranslated: 71 messages, 1029 words
 
 * *On*
 * *Off*
@@ -1110,8 +1110,10 @@ Untranslated: 62 messages, 861 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
@@ -1120,15 +1122,13 @@ Untranslated: 62 messages, 861 words
 * *Your account*
 * *Best accuracy*
 * *Finger zones:*
-* *Pause for now*
-* *Find a language*
 * ...
 
 # Turkish
 
-Translated: 219 messages, 2106 words
+Translated: 219 messages, 2105 words
 
-Untranslated: 161 messages, 3156 words
+Untranslated: 169 messages, 3319 words
 
 * *On*
 * *Off*
@@ -1139,24 +1139,24 @@ Untranslated: 161 messages, 3156 words
 * *last*
 * *Stats*
 * *Trend*
+* *Cancel*
 * *Hidden*
 * *Recent*
 * *As bars*
 * *As dots*
 * *Sign-In*
 * *Language*
+* *Settings*
 * *Alphabet:*
 * *Book Text*
 * *Grown-ups*
-* *Thin line*
-* *Typeface:*
 * ...
 
 # Ukrainian
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -1166,25 +1166,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Vietnamese
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -1194,25 +1194,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Simplified Chinese
 
-Translated: 332 messages, 4521 words
+Translated: 331 messages, 4515 words
 
-Untranslated: 53 messages, 788 words
+Untranslated: 62 messages, 956 words
 
 * *On*
 * *Off*
@@ -1222,8 +1222,10 @@ Untranslated: 53 messages, 788 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
@@ -1231,16 +1233,14 @@ Untranslated: 53 messages, 788 words
 * *Your account*
 * *M|T|W|T|F|S|S*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
-* *Open navigation*
+* *Smart Practice*
 * ...
 
 # Traditional Chinese
 
-Translated: 333 messages, 4528 words
+Translated: 332 messages, 4522 words
 
-Untranslated: 52 messages, 781 words
+Untranslated: 61 messages, 949 words
 
 * *On*
 * *Off*
@@ -1250,25 +1250,25 @@ Untranslated: 52 messages, 781 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
+* *Smart Practice*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Chinese (Taiwan)
 
-Translated: 332 messages, 4527 words
+Translated: 331 messages, 4521 words
 
-Untranslated: 53 messages, 782 words
+Untranslated: 62 messages, 950 words
 
 * *On*
 * *GO!*
@@ -1279,15 +1279,15 @@ Untranslated: 53 messages, 782 words
 * *Kids*
 * *last*
 * *Trend*
+* *Cancel*
 * *Recent*
 * *Language*
+* *Settings*
 * *Grown-ups*
 * *Quick tour*
 * *Lesson done*
 * *Start typing*
 * *Your account*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
-* *Open navigation*
+* *Smart Practice*
 * ...

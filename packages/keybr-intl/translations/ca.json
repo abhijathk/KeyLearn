@@ -96,7 +96,6 @@
   "practice.widget.settings.description": "Canvia la configuració de la lliçó, configura l’idioma, la disposició del teclat, etc.",
   "practice.widget.showTour.description": "Mostra un tour guiat amb diapositives d’ajuda.",
   "practice.widget.skipLesson.description": "Salta la lliçó actual (Ctrl + Fletxa dreta).",
-  "practice.widget.switchView.description": "Canvia la disposició actual de la interfície.",
   "profile.accuracy.header": "Ratxa de precisió",
   "profile.accuracy.legend": "A sobre apareixen llistades les seqüències contínues més llargues amb una precisió per sobre d’un llindar donat, juntament amb estadístiques sobre cada seqüència. Com més llarga la seqüència de lliçons, millor.",
   "profile.accuracy.noData": "No tens ratxa de precisió. Completa una lliçó amb la màxima precisió que puguis, sense tenir en compte la velocitat.",

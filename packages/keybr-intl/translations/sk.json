@@ -113,7 +113,6 @@
   "practice.widget.settings.description": "Zmeniť nastavenie lekcií, nakonfigurovať jazyk, rozloženie kláves, atď.",
   "practice.widget.showTour.description": "Zobraziť sprievodcu s pomocou.",
   "practice.widget.skipLesson.description": "Preskočiť aktuálnu lekciu (Ctrl + Šípka vpravo)",
-  "practice.widget.switchView.description": "Zmeniť aktuálne rozloženie zobrazenia.",
   "profile.accuracy.header": "Série správnosti",
   "profile.accuracy.legend": "Vyššie sú uvedené najdlhšie neprerušené série lekcií, kde ste dosiahli správnosť nad daný prah, spolu so štatistikami o každej sérii. Čím je séria lekcií dlhšia, tým lepšie.",
   "profile.accuracy.noData": "Nemáte žiadne série správnosti. Zvážte dokončenie lekcie s čo najvyššou správnosťou, nezávisle od rýchlosti písania.",

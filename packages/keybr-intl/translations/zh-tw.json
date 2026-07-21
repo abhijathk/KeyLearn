@@ -112,7 +112,6 @@
   "practice.widget.settings.description": "更改課程設定、設定語言、鍵盤配置等等。",
   "practice.widget.showTour.description": "顯示引導式教學導覽投影片。",
   "practice.widget.skipLesson.description": "跳過目前課程（Ctrl + 右方向鍵）。",
-  "practice.widget.switchView.description": "切換當前介面配置。",
   "profile.accuracy.header": "連續正確率紀錄",
   "profile.accuracy.legend": "上面列出了正確率高於設定門檻的最長連續課程次數，並提供了統計數據。連續次數越多，表示越好。",
   "profile.accuracy.noData": "您目前沒有任何連續正確率紀錄。建議您嘗試完成一次課程，並盡可能達到最高正確率，而不必過於關注打字速度。",

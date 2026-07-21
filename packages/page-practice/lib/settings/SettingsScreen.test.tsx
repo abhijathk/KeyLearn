@@ -23,28 +23,32 @@ test("render", async () => {
     </FakeIntlProvider>,
   );
 
+  // The section rail.
   isNotNull(await r.findByText("Practice Content"));
+  isNotNull(await r.findByText("Smart Practice"));
   isNotNull(await r.findByText("Text Input"));
   isNotNull(await r.findByText("Keyboard Setup"));
-  isNotNull(await r.findByText("Other Settings"));
+  isNotNull(await r.findByText("Display"));
 
-  fireEvent.click(r.getByText("Practice Content"));
-
-  isNotNull(r.queryByText("Lesson settings"));
+  // Practice content is the default section.
+  isNotNull(await r.findByText("Lesson settings"));
   isNotNull(r.queryByText("Preview of your lesson"));
+
+  fireEvent.click(r.getByText("Smart Practice"));
+
+  isNotNull(await r.findByText("Adaptive helpers"));
 
   fireEvent.click(r.getByText("Text Input"));
 
-  isNotNull(r.queryByText("Typing helpers"));
+  isNotNull(await r.findByText("Typing helpers"));
 
   fireEvent.click(r.getByText("Keyboard Setup"));
 
-  isNotNull(r.queryByText("Settings"));
-  isNotNull(r.queryByText("Live Preview"));
+  isNotNull(await r.findByText("Live Preview"));
 
-  fireEvent.click(r.getByText("Other Settings"));
+  fireEvent.click(r.getByText("Display"));
 
-  isNotNull(r.queryByText("Display preferences"));
+  isNotNull(await r.findByText("Display preferences"));
 
   r.unmount();
 });

@@ -112,7 +112,6 @@
   "practice.widget.settings.description": "Ubah pengaturan pelajaran, konfigurasi bahasa, keyboard layout, etc.",
   "practice.widget.showTour.description": "Ubah pengaturan latihan, konfigurasi bahasa, keyboard layout, etc.",
   "practice.widget.skipLesson.description": "Lewati pelajaran ini (Ctrl + Panah Kanan).",
-  "practice.widget.switchView.description": "Ubah tamping saat ini.",
   "profile.accuracy.header": "akurasi berturut-turut",
   "profile.accuracy.legend": "Di atas tercantum rangkaian pelajaran berkelanjutan terpanjang dengan akurasi di atas ambang batas tertentu, beserta statistik tentang setiap rangkaian tersebut. Semakin panjang rangkaian pelajaran, semakin baik.",
   "profile.accuracy.noData": "Anda tidak memiliki akurasi berturut-turut. Pertimbangkan untuk menyelesaikan pelajaran dengan akurasi setinggi mungkin, terlepas dari kecepatan mengetik.",

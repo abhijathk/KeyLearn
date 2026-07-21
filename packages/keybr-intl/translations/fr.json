@@ -112,7 +112,6 @@
   "practice.widget.settings.description": "Modifier les paramètres de la leçon, configurez la langue, la disposition du clavier etc.",
   "practice.widget.showTour.description": "Montrer une visite guidée avec des diapositives d’aide.",
   "practice.widget.skipLesson.description": "Passer la leçon en cours (Ctrl + Flèche Droite).",
-  "practice.widget.switchView.description": "Basculer la disposition actuelle de l’interface.",
   "profile.accuracy.header": "Séries précises",
   "profile.accuracy.noData": "Aucune série de précision pour le moment. Essayez de terminer une lesson avec la plus grande précision possible, peu importe la vitesse de frappe.",
   "profile.chart.calendar.caption": "Calendrier des entraînements",

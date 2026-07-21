@@ -1,7 +1,9 @@
 import { KeyboardOptions, Layout } from "@keybr/keyboard";
 import { Settings } from "@keybr/settings";
-import { ViewSwitch } from "@keybr/widget";
-import { views } from "./views.tsx";
+import { ViewContext, type ViewName } from "@keybr/widget";
+import { useState } from "react";
+import { PracticeScreen } from "./practice/PracticeScreen.tsx";
+import { SettingsScreen } from "./settings/SettingsScreen.tsx";
 
 setDefaultLayout(window.navigator.language);
 
@@ -18,5 +20,19 @@ function setDefaultLayout(localeId: string) {
 }
 
 export function PracticePage() {
-  return <ViewSwitch views={views} />;
+  // The practice screen stays mounted; settings opens as a window on top of it
+  // rather than replacing the page.
+  const [view, setView] = useState<ViewName>("practice");
+  return (
+    <ViewContext.Provider
+      value={{
+        setView: (name) => {
+          setView(name);
+        },
+      }}
+    >
+      <PracticeScreen />
+      {view === "settings" && <SettingsScreen />}
+    </ViewContext.Provider>
+  );
 }

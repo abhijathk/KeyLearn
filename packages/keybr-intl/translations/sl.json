@@ -113,7 +113,6 @@
   "practice.widget.settings.description": "Spremenite nastavitve vaj, prilagodite jezik, razporeditev znakov itd.",
   "practice.widget.showTour.description": "Prikaži voden ogled z zavihki za pomoč.",
   "practice.widget.skipLesson.description": "Preskočite trenutno vajo (Ctrl + puščica v desno).",
-  "practice.widget.switchView.description": "Zamenjajte trenutni razpored vmesnika.",
   "profile.accuracy.header": "Nizi pravilnosti",
   "profile.accuracy.legend": "Zgoraj so našteti najdaljši nepretrgani nizi vaj s pravilnostjo nad podano mejo skupaj s statistiko o vsakem takem nizu. Daljši kot je niz vaj, tem bolje.",
   "profile.accuracy.noData": "Nimate nizov pravilnosti. Razmislite o opravljanju vaje z najvišjo možno pravilnosti, ne glede na hitrost tipkanja.",

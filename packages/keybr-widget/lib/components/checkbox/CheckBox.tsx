@@ -1,4 +1,3 @@
-import { mdiCheckboxBlankOutline, mdiCheckboxMarkedOutline } from "@mdi/js";
 import { clsx } from "clsx";
 import { type ReactNode, useImperativeHandle, useRef } from "react";
 import * as styles from "./CheckBox.module.less";
@@ -49,11 +48,10 @@ export function CheckBox({
         }}
         onFocus={onFocus}
       />
-      <svg className={styles.icon} viewBox="0 0 24 24">
-        <path
-          d={checked ? mdiCheckboxMarkedOutline : mdiCheckboxBlankOutline}
-        />
-      </svg>
+      {/* A modern switch: a pill track with a sliding knob. */}
+      <span className={clsx(styles.track, checked && styles.checked)}>
+        <span className={styles.knob} />
+      </span>
       <span className={styles.label}>{label || children}</span>
     </label>
   );

@@ -93,7 +93,6 @@
   "practice.widget.settings.description": "Modifică setările lecției, configurează limba, aspectul tastaturii, etc.",
   "practice.widget.showTour.description": "Prezentați un tur ghidat cu diapozitive de ajutor.",
   "practice.widget.skipLesson.description": "Sari peste lecția curentă (Ctrl + Săgeată Dreapta).",
-  "practice.widget.switchView.description": "Comută aspectul curent al interfeței.",
   "profile.accuracy.header": "Traiectorii de acuratețe",
   "profile.accuracy.legend": "Mai sus sunt enumerate cele mai lungi secvențe continue de lecții cu acuratețe peste un anumit prag, împreună cu statistici despre fiecare astfel de secvență. Cu cât secvența de lecții este mai lungă, cu atât mai bine.",
   "profile.accuracy.noData": "Nu ai nicio serie de acuratețe. Consideră să completezi o lecție cu cea mai mare acuratețe posibilă, indiferent de viteza de tastare.",

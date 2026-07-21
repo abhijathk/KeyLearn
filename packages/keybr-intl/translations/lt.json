@@ -98,7 +98,6 @@
   "practice.widget.settings.description": "Keisti pamokos nustatymus, konfigūruoti kalbą, klaviatūros išdėstymą ir kt.",
   "practice.widget.showTour.description": "Rodyti apžvalginį turą su pagalbos skaidrėmis.",
   "practice.widget.skipLesson.description": "Praleisti dabartinę pamoką (Ctrl + dešinė rodyklė).",
-  "practice.widget.switchView.description": "Pakeisti dabartinį sąsajos išdėstymą.",
   "profile.accuracy.legend": "Aukščiau pateikiamos ilgiausių nepertrauktų pamokų sekos, kurių tikslumas viršija nurodytą ribą, bei kiekvienos tokios sekos statistika. Kuo ilgesnė pamokų seka, tuo geriau.",
   "profile.chart.calendar.caption": "Praktikos kalendorius",
   "profile.chart.calendar.description": "Šis kalendorius rodo aktyvaus mokymosi datas.",

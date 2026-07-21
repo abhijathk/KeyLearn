@@ -113,7 +113,6 @@
   "practice.widget.settings.description": "שנה הגדרות שיעור, הגדר שפה, פריסת מקלדת וכו׳.",
   "practice.widget.showTour.description": "הצג סיור מודרך עם שקופיות עזרה.",
   "practice.widget.skipLesson.description": "דלג על השיעור הנוכחי (Ctrl + חץ ימינה).",
-  "practice.widget.switchView.description": "החלף את פריסת הממשק הנוכחית.",
   "profile.accuracy.header": "פסי דיוק",
   "profile.accuracy.legend": "למעלה מפורטים הרצפים הרצופים הארוכים ביותר של שיעורים עם דיוק מעל סף נתון, יחד עם סטטיסטיקה לגבי כל רצף כזה. ככל שרצף השיעורים ארוך יותר, כך ייטב.",
   "profile.accuracy.noData": "אין לך עדיין רצף של דיוק. כדאי לנסות להשלים שיעור אחד עם דיוק מירבי, גם אם זה בא על חשבון מהירות ההקלדה.",

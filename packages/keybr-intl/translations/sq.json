@@ -113,7 +113,6 @@
   "practice.widget.settings.description": "Ndryshoni cilësimet e mësimit, konfiguroni gjuhën, faqosjen e tastierës, etj.",
   "practice.widget.showTour.description": "Shfaqni një tur të drejtuar me sllajde ndihmëse.",
   "practice.widget.skipLesson.description": "Kapërceni mësimin aktual (Ctrl + Shigjeta Djathtas).",
-  "practice.widget.switchView.description": "Ndërroni faqosjen aktuale të ndërfaqes.",
   "profile.accuracy.header": "Seritë e Saktësisë",
   "profile.accuracy.legend": "Më lart renditen sekuencat më të gjata të vazhdueshme të mësimeve me saktësi mbi një prag të caktuar, së bashku me statistika rreth çdo sekuence të tillë. Sa më e gjatë sekuenca e mësimeve, aq më mirë.",
   "profile.accuracy.noData": "Nuk keni asnjë seri saktësie. Konsideroni përfundimin e një mësimi me saktësinë më të lartë të mundshme, pavarësisht shpejtësisë së shtypjes.",

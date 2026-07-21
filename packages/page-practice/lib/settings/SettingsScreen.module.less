@@ -1,7 +1,212 @@
-.footer {
-  position: sticky;
-  inset-block-end: 0;
-  padding-inline: 0;
-  padding-block: 2rem;
-  background-image: linear-gradient(transparent, var(--background-color));
+// The settings window: a centred dialog floating over the practice page, with
+// a section rail on the left and a scrollable panel on the right.
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  place-items: center;
+  padding: 2rem;
+  background-color: color-mix(in oklab, var(--primary-d2) 55%, transparent);
+  animation: overlay-in 0.2s ease;
+  backdrop-filter: blur(6px);
+}
+
+@keyframes overlay-in {
+  0% {
+    opacity: 0;
+  }
+}
+
+.window {
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+  inline-size: min(72rem, 100%);
+  block-size: min(46rem, 100%);
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, var(--secondary-f2));
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background-color: var(--primary-l1);
+  box-shadow:
+    0 2rem 5rem var(--shadow-color),
+    0 0 0 6px color-mix(in oklab, var(--accent) 8%, transparent);
+  animation: window-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes window-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(0.97);
+  }
+}
+
+// ---- the section rail ---------------------------------------------------
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.25rem 0.9rem;
+  border-inline-end: 1px solid
+    color-mix(in oklab, var(--secondary-f2) 60%, transparent);
+  background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
+}
+
+.railTitle {
+  padding-inline: 0.8rem;
+  padding-block: 0.3rem 1rem;
+  color: var(--text-color);
+  font-family: var(--default-font-family);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.railItem {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.55rem 0.8rem;
+  border: none;
+  border-radius: 0.7rem;
+  color: var(--text-color-f1);
+  background: none;
+  font-family: var(--default-font-family);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--secondary-f2) 30%, transparent);
+  }
+}
+
+.railItemActive {
+  color: var(--accent);
+  background-color: color-mix(in oklab, var(--accent) 12%, transparent);
+
+  &:hover {
+    color: var(--accent);
+    background-color: color-mix(in oklab, var(--accent) 16%, transparent);
+  }
+}
+
+.railIcon {
+  flex: none;
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  stroke-width: 1.9;
+}
+
+// ---- the main panel -----------------------------------------------------
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.mainHeader {
+  display: flex;
+  flex: none;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.8rem 1rem 0.4rem;
+}
+
+.close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-color-f1);
+  background: none;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  svg {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+  }
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--secondary-f2) 40%, transparent);
+  }
+}
+
+.mainBody {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  padding: 0.4rem 2rem 1.5rem;
+  overflow-block: auto;
+  overscroll-behavior: contain;
+}
+
+// ---- the action bar -----------------------------------------------------
+
+.actions {
+  display: flex;
+  flex: none;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.9rem 1.5rem;
+  border-block-start: 1px solid
+    color-mix(in oklab, var(--secondary-f2) 60%, transparent);
+}
+
+.filler {
+  flex: 1 1 auto;
+}
+
+.quiet {
+  padding-inline: 1rem;
+  padding-block: 0.5rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font-family: var(--default-font-family);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--secondary-f2) 35%, transparent);
+  }
+}
+
+.save {
+  padding-inline: 1.3rem;
+  padding-block: 0.55rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--primary);
+  background-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 14%, transparent);
+  font-family: var(--default-font-family);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--accent) 88%, var(--text-color));
+  }
 }

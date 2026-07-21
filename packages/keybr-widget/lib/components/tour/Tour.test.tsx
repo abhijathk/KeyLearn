@@ -24,7 +24,7 @@ test("empty tour", () => {
 
   isNull(r.queryByText("Back"));
   isNull(r.queryByText("Continue"));
-  isNotNull(r.queryByText("Dismiss"));
+  isNotNull(r.queryByText("Start typing"));
 
   r.unmount();
 });
@@ -48,7 +48,7 @@ test("switch slides", async () => {
 
   isNull(r.queryByText("Back"));
   isNotNull(r.queryByText("Continue"));
-  isNull(r.queryByText("Dismiss"));
+  isNull(r.queryByText("Start typing"));
   isNotNull(r.queryByText("One"));
   isNull(r.queryByText("Two"));
 
@@ -60,7 +60,7 @@ test("switch slides", async () => {
 
   isNotNull(r.queryByText("Back"));
   isNull(r.queryByText("Continue"));
-  isNotNull(r.queryByText("Dismiss"));
+  isNotNull(r.queryByText("Start typing"));
   isNull(r.queryByText("One"));
   isNotNull(r.queryByText("Two"));
 
@@ -72,7 +72,7 @@ test("switch slides", async () => {
 
   isNull(r.queryByText("Back"));
   isNotNull(r.queryByText("Continue"));
-  isNull(r.queryByText("Dismiss"));
+  isNull(r.queryByText("Start typing"));
   isNotNull(r.queryByText("One"));
   isNull(r.queryByText("Two"));
 

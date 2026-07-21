@@ -113,7 +113,6 @@
   "practice.widget.settings.description": "レッスン設定、言語、キーボードレイアウトなどを変更します。",
   "practice.widget.showTour.description": "ガイド付きツアーをヘルプスライドで表示します。",
   "practice.widget.skipLesson.description": "現在のレッスンをスキップ (Ctrl + 右矢印)",
-  "practice.widget.switchView.description": "インターフェイスのレイアウトを切り替える。",
   "profile.accuracy.header": "精度の傾向",
   "profile.accuracy.legend": "上記リストは、所定の閾値以上の精度を達成した最長の連続レッスンシーケンスと、各シーケンスの統計情報です。レッスンシーケンスが長いほど、精度が向上します。",
   "profile.accuracy.noData": "精度の傾向がありません。タイピング速度を気にせず、可能な限り高い精度でレッスンを完了してみてください。",

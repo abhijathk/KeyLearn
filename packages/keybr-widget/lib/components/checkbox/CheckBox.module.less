@@ -7,7 +7,7 @@
   vertical-align: middle;
   min-block-size: @field-height;
   line-height: @field-height;
-  cursor: default;
+  cursor: pointer;
 
   input {
     position: absolute;
@@ -19,14 +19,42 @@
   }
 }
 
-.icon {
-  inline-size: @field-height;
-  block-size: @field-height;
-  fill: var(--Button__background-color);
+// The switch track: a pill that fills with the accent colour when on.
+.track {
+  display: inline-flex;
+  position: relative;
+  flex: none;
+  inline-size: 2.15rem;
+  block-size: 1.25rem;
+  border-radius: 999px;
+  background-color: color-mix(in oklab, var(--secondary-f2) 65%, transparent);
+  transition: background-color 0.18s ease;
+}
+
+.checked {
+  background-color: var(--accent);
+}
+
+// The sliding knob.
+.knob {
+  position: absolute;
+  inset-inline-start: 0.15rem;
+  inset-block-start: 0.15rem;
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
+  border-radius: 50%;
+  background-color: var(--primary-l2);
+  box-shadow: 0 1px 3px var(--shadow-color);
+  transition: transform 0.18s ease;
+}
+
+.checked .knob {
+  background-color: var(--primary);
+  transform: translateX(0.9rem);
 }
 
 .root:focus-within {
-  .icon {
+  .track {
     .is-focused();
     outline-offset: 2px;
   }
@@ -36,8 +64,8 @@
   block-size: @field-height;
 }
 
-.icon + .label {
-  margin-inline-start: 0.5rem;
+.track + .label {
+  margin-inline-start: 0.6rem;
 }
 
 .disabled {

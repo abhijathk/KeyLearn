@@ -113,7 +113,6 @@
   "practice.widget.settings.description": "Zmień ustawienia lekcji, konfiguruj język, układ klawiatury itp.",
   "practice.widget.showTour.description": "Wyświetl samouczek ze slajdami pomocy.",
   "practice.widget.skipLesson.description": "Pomiń bieżącą lekcję (Ctrl + strzałka w prawo).",
-  "practice.widget.switchView.description": "Przełącz bieżący układ interfejsu.",
   "profile.accuracy.header": "Serie dokładności",
   "profile.accuracy.legend": "Powyżej wymienione są najdłuższe ciągłe sekwencje lekcji z dokładnością powyżej zadanego progu, wraz ze statystykami dotyczącymi każdej takiej sekwencji. Im dłuższa sekwencja zajęć, tym lepiej.",
   "profile.accuracy.noData": "Nie masz żadnych pasm dokładności. Rozważ ukończenie lekcji z najwyższą możliwą dokładnością, niezależnie od szybkości pisania.",
