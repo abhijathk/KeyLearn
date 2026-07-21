@@ -1,6 +1,6 @@
 # English
 
-Translated: 386 messages, 4791 words
+Translated: 386 messages, 4788 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,7 +8,7 @@ Untranslated: 0 messages, 0 words
 
 Translated: 331 messages, 4434 words
 
-Untranslated: 44 messages, 301 words
+Untranslated: 44 messages, 298 words
 
 * *On*
 * *Off*
@@ -36,7 +36,7 @@ Untranslated: 44 messages, 301 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -64,7 +64,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -92,7 +92,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -120,7 +120,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 302 messages, 3374 words
 
-Untranslated: 71 messages, 1343 words
+Untranslated: 71 messages, 1340 words
 
 * *On*
 * *Off*
@@ -148,7 +148,7 @@ Untranslated: 71 messages, 1343 words
 
 Translated: 330 messages, 4431 words
 
-Untranslated: 45 messages, 304 words
+Untranslated: 45 messages, 301 words
 
 * *On*
 * *Off*
@@ -176,7 +176,7 @@ Untranslated: 45 messages, 304 words
 
 Translated: 323 messages, 4383 words
 
-Untranslated: 50 messages, 334 words
+Untranslated: 50 messages, 331 words
 
 * *On*
 * *Off*
@@ -204,7 +204,7 @@ Untranslated: 50 messages, 334 words
 
 Translated: 331 messages, 4434 words
 
-Untranslated: 44 messages, 301 words
+Untranslated: 44 messages, 298 words
 
 * *On*
 * *Off*
@@ -232,7 +232,7 @@ Untranslated: 44 messages, 301 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -260,7 +260,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 74 messages, 1017 words
 
-Untranslated: 295 messages, 3676 words
+Untranslated: 295 messages, 3673 words
 
 * *On*
 * *GO!*
@@ -288,7 +288,7 @@ Untranslated: 295 messages, 3676 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -316,7 +316,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 330 messages, 4433 words
 
-Untranslated: 45 messages, 302 words
+Untranslated: 45 messages, 299 words
 
 * *On*
 * *GO!*
@@ -344,7 +344,7 @@ Untranslated: 45 messages, 302 words
 
 Translated: 287 messages, 2814 words
 
-Untranslated: 86 messages, 1903 words
+Untranslated: 86 messages, 1900 words
 
 * *On*
 * *Off*
@@ -372,7 +372,7 @@ Untranslated: 86 messages, 1903 words
 
 Translated: 202 messages, 2165 words
 
-Untranslated: 168 messages, 2531 words
+Untranslated: 168 messages, 2528 words
 
 * *On*
 * *GO!*
@@ -400,7 +400,7 @@ Untranslated: 168 messages, 2531 words
 
 Translated: 41 messages, 475 words
 
-Untranslated: 327 messages, 4207 words
+Untranslated: 327 messages, 4204 words
 
 * *On*
 * *GO!*
@@ -428,7 +428,7 @@ Untranslated: 327 messages, 4207 words
 
 Translated: 325 messages, 4258 words
 
-Untranslated: 50 messages, 477 words
+Untranslated: 50 messages, 474 words
 
 * *On*
 * *Off*
@@ -456,7 +456,7 @@ Untranslated: 50 messages, 477 words
 
 Translated: 329 messages, 4424 words
 
-Untranslated: 46 messages, 311 words
+Untranslated: 46 messages, 308 words
 
 * *On*
 * *Off*
@@ -484,7 +484,7 @@ Untranslated: 46 messages, 311 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -512,7 +512,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 329 messages, 4429 words
 
-Untranslated: 46 messages, 306 words
+Untranslated: 46 messages, 303 words
 
 * *On*
 * *Off*
@@ -540,7 +540,7 @@ Untranslated: 46 messages, 306 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -568,7 +568,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 331 messages, 4434 words
 
-Untranslated: 44 messages, 301 words
+Untranslated: 44 messages, 298 words
 
 * *On*
 * *GO!*
@@ -596,7 +596,7 @@ Untranslated: 44 messages, 301 words
 
 Translated: 92 messages, 1624 words
 
-Untranslated: 277 messages, 3069 words
+Untranslated: 277 messages, 3066 words
 
 * *On*
 * *GO!*
@@ -624,7 +624,7 @@ Untranslated: 277 messages, 3069 words
 
 Translated: 326 messages, 4426 words
 
-Untranslated: 48 messages, 306 words
+Untranslated: 48 messages, 303 words
 
 * *On*
 * *Off*
@@ -652,7 +652,7 @@ Untranslated: 48 messages, 306 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -680,7 +680,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 140 messages, 1209 words
 
-Untranslated: 233 messages, 3508 words
+Untranslated: 233 messages, 3505 words
 
 * *On*
 * *Off*
@@ -708,7 +708,7 @@ Untranslated: 233 messages, 3508 words
 
 Translated: 298 messages, 3244 words
 
-Untranslated: 75 messages, 1473 words
+Untranslated: 75 messages, 1470 words
 
 * *On*
 * *Off*
@@ -736,7 +736,7 @@ Untranslated: 75 messages, 1473 words
 
 Translated: 16 messages, 307 words
 
-Untranslated: 350 messages, 4353 words
+Untranslated: 350 messages, 4350 words
 
 * *On*
 * *GO!*
@@ -764,7 +764,7 @@ Untranslated: 350 messages, 4353 words
 
 Translated: 205 messages, 2315 words
 
-Untranslated: 166 messages, 2384 words
+Untranslated: 166 messages, 2381 words
 
 * *On*
 * *Off*
@@ -792,7 +792,7 @@ Untranslated: 166 messages, 2384 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -820,7 +820,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 325 messages, 4424 words
 
-Untranslated: 49 messages, 308 words
+Untranslated: 49 messages, 305 words
 
 * *On*
 * *Off*
@@ -848,7 +848,7 @@ Untranslated: 49 messages, 308 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -876,7 +876,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 330 messages, 4432 words
 
-Untranslated: 45 messages, 303 words
+Untranslated: 45 messages, 300 words
 
 * *On*
 * *Off*
@@ -904,7 +904,7 @@ Untranslated: 45 messages, 303 words
 
 Translated: 311 messages, 4312 words
 
-Untranslated: 62 messages, 405 words
+Untranslated: 62 messages, 402 words
 
 * *On*
 * *Off*
@@ -932,7 +932,7 @@ Untranslated: 62 messages, 405 words
 
 Translated: 291 messages, 3367 words
 
-Untranslated: 77 messages, 1327 words
+Untranslated: 77 messages, 1324 words
 
 * *On*
 * *Off*
@@ -960,7 +960,7 @@ Untranslated: 77 messages, 1327 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -988,7 +988,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 332 messages, 4434 words
 
-Untranslated: 43 messages, 301 words
+Untranslated: 43 messages, 298 words
 
 * *On*
 * *Off*
@@ -1016,7 +1016,7 @@ Untranslated: 43 messages, 301 words
 
 Translated: 332 messages, 4435 words
 
-Untranslated: 43 messages, 300 words
+Untranslated: 43 messages, 297 words
 
 * *On*
 * *Off*
@@ -1044,7 +1044,7 @@ Untranslated: 43 messages, 300 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -1072,7 +1072,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 330 messages, 4431 words
 
-Untranslated: 45 messages, 304 words
+Untranslated: 45 messages, 301 words
 
 * *On*
 * *Off*
@@ -1100,7 +1100,7 @@ Untranslated: 45 messages, 304 words
 
 Translated: 321 messages, 4338 words
 
-Untranslated: 52 messages, 379 words
+Untranslated: 52 messages, 376 words
 
 * *On*
 * *Off*
@@ -1128,7 +1128,7 @@ Untranslated: 52 messages, 379 words
 
 Translated: 219 messages, 2014 words
 
-Untranslated: 151 messages, 2674 words
+Untranslated: 151 messages, 2671 words
 
 * *On*
 * *Off*
@@ -1156,7 +1156,7 @@ Untranslated: 151 messages, 2674 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -1184,7 +1184,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -1212,7 +1212,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 332 messages, 4429 words
 
-Untranslated: 43 messages, 306 words
+Untranslated: 43 messages, 303 words
 
 * *On*
 * *Off*
@@ -1240,7 +1240,7 @@ Untranslated: 43 messages, 306 words
 
 Translated: 333 messages, 4436 words
 
-Untranslated: 42 messages, 299 words
+Untranslated: 42 messages, 296 words
 
 * *On*
 * *Off*
@@ -1268,7 +1268,7 @@ Untranslated: 42 messages, 299 words
 
 Translated: 332 messages, 4435 words
 
-Untranslated: 43 messages, 300 words
+Untranslated: 43 messages, 297 words
 
 * *On*
 * *GO!*

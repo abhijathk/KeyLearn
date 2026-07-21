@@ -16,7 +16,7 @@ test("render", () => {
 
   equal(r.container.querySelectorAll(".key").length, 54);
   equal(r.container.querySelectorAll(".depressedKey").length, 0);
-  equal(r.container.querySelectorAll(".symbol").length, 53);
+  equal(r.container.querySelectorAll(".symbol").length, 74);
 
   r.unmount();
 });
@@ -35,7 +35,7 @@ test("update", () => {
 
   equal(r.container.querySelectorAll(".key").length, 54);
   equal(r.container.querySelectorAll(".depressedKey").length, 3);
-  equal(r.container.querySelectorAll(".symbol").length, 53);
+  equal(r.container.querySelectorAll(".symbol").length, 74);
 
   r.unmount();
 });

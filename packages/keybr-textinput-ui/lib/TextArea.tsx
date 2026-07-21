@@ -35,6 +35,8 @@ export function TextArea({
   lineTemplate,
   demo,
   moving,
+  hideStartHint,
+  colorOf,
   focusRef,
   onFocus,
   onBlur,
@@ -49,6 +51,8 @@ export function TextArea({
   readonly lineTemplate?: ComponentType<any>;
   readonly demo?: boolean;
   readonly moving?: boolean;
+  readonly hideStartHint?: boolean;
+  readonly colorOf?: (codePoint: number) => string | null;
   readonly focusRef?: RefObject<Focusable | null>;
   readonly onFocus?: () => void;
   readonly onBlur?: () => void;
@@ -133,6 +137,7 @@ export function TextArea({
         lineTemplate={lineTemplate}
         cursor={!demo && focus}
         focus={demo || focus}
+        colorOf={colorOf}
       />
       {!demo && focus && capsLock && (
         <div className={styles.messageArea}>
@@ -144,13 +149,13 @@ export function TextArea({
           </div>
         </div>
       )}
-      {demo || focus || (
+      {demo || focus || hideStartHint || (
         <div className={styles.messageArea}>
           <div className={styles.messageText}>
             <StrokeIcon className={styles.messageIcon} name="keyboard" />
             <FormattedMessage
               id="textArea.startTyping"
-              defaultMessage="Click here or press Enter to start typing"
+              defaultMessage="Press Enter to start typing"
             />
           </div>
         </div>

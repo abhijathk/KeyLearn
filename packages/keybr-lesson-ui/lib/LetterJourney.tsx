@@ -1,16 +1,24 @@
 import { type LessonKey, type LessonKeys } from "@keybr/lesson";
 import { type ClassName } from "@keybr/widget";
 import { clsx } from "clsx";
-import { Fragment, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import * as styles from "./LetterJourney.module.less";
 import { useKeyStyles } from "./styles.ts";
 
+const STEP = 42;
+const PAD = 26;
+const MID = 48;
+const AMP = 10;
+const HEIGHT = 98;
+const RING = 14;
+
 /**
- * The Letter Journey: the alphabet drawn as a line of mini keycaps in unlock
- * order. Unlocked caps are filled with the engine's confidence colour and wear
- * a hairline gauge; the current focus key is ringed and glowing with a
- * readiness note; keys still ahead are quiet outline stops. A small counter
- * at the end tells how many keys are unlocked.
+ * The Letter Journey drawn as a trail on a map. Each letter is a stop along a
+ * winding path in unlock order; a stop's colour is the slow→fast confidence
+ * blend and the link between two unlocked stops is coloured the same way, so
+ * both the letters and the connections between them show what's strong and
+ * what's weak. The current key is a big dot ringed by a progress arc (how
+ * close it is to unlocking); everything is grey until there's data.
  */
 export function LetterJourney({
   id,
@@ -27,37 +35,68 @@ export function LetterJourney({
 }): ReactNode {
   const { confidenceColor } = useKeyStyles();
   const keys = [...lessonKeys];
+  const n = keys.length;
   const unlocked = keys.filter(({ isIncluded }) => isIncluded).length;
+  const width = PAD * 2 + (n - 1) * STEP;
+  const points = keys.map((_, i) => ({
+    x: PAD + i * STEP,
+    y: MID + AMP * Math.sin(i * 0.55),
+  }));
+  const confOf = (k: LessonKey) => Math.max(0, Math.min(1, k.confidence ?? 0));
+
   return (
     <div id={id} className={clsx(styles.journey, className)}>
-      {keys.map((key, index) => {
-        const {
-          letter: { codePoint, label },
-          confidence,
-          isIncluded,
-          isFocused,
-        } = key;
-        const conf = Math.max(0, Math.min(1, confidence ?? 0));
-        const state = isFocused
-          ? styles.here
-          : isIncluded
-            ? styles.done
-            : styles.locked;
-        // Algorithm-driven colour: the same slow->fast confidence blend the
-        // engine uses everywhere else paints each unlocked cap, including
-        // the current focus key.
-        const dotStyle =
-          (isIncluded || isFocused) && confidence != null
-            ? { backgroundColor: String(confidenceColor(conf)) }
-            : undefined;
-        return (
-          <Fragment key={codePoint}>
-            {index > 0 && (
-              <i className={clsx(styles.link, isIncluded && styles.linkOn)} />
-            )}
-            <div
-              className={clsx(styles.node, state)}
-              data-note={isFocused ? readinessNote(conf) : undefined}
+      <svg
+        className={styles.map}
+        width={width}
+        height={HEIGHT}
+        viewBox={`0 0 ${width} ${HEIGHT}`}
+      >
+        {keys.slice(0, n - 1).map((a, i) => {
+          const b = keys[i + 1];
+          const enabled = a.isIncluded && b.isIncluded;
+          const hasData = a.confidence != null && b.confidence != null;
+          const color =
+            enabled && hasData
+              ? String(confidenceColor((confOf(a) + confOf(b)) / 2))
+              : undefined;
+          const p0 = points[i];
+          const p1 = points[i + 1];
+          const cx = (p0.x + p1.x) / 2;
+          return (
+            <path
+              key={i}
+              className={enabled ? styles.link : styles.road}
+              d={`M ${p0.x} ${p0.y} C ${cx} ${p0.y}, ${cx} ${p1.y}, ${p1.x} ${p1.y}`}
+              style={color ? { stroke: color } : undefined}
+            />
+          );
+        })}
+        {keys.map((key, i) => {
+          const {
+            letter: { codePoint, label },
+            confidence,
+            isIncluded,
+            isFocused,
+          } = key;
+          const conf = confOf(key);
+          const { x, y } = points[i];
+          // Algorithm colour once there's data; grey (from CSS) until then.
+          const color =
+            isIncluded && confidence != null
+              ? String(confidenceColor(conf))
+              : undefined;
+          return (
+            <g
+              key={codePoint}
+              className={clsx(
+                styles.stop,
+                isFocused
+                  ? styles.here
+                  : isIncluded
+                    ? styles.done
+                    : styles.locked,
+              )}
               onMouseEnter={(ev) => {
                 onKeyHoverIn?.(key, ev.currentTarget);
               }}
@@ -65,20 +104,45 @@ export function LetterJourney({
                 onKeyHoverOut?.(key, ev.currentTarget);
               }}
             >
-              <span className={styles.dot} style={dotStyle}>
+              {isFocused && (
+                <>
+                  <text className={styles.note} x={x} y={y - 28}>
+                    {readinessNote(conf)}
+                  </text>
+                  <path
+                    className={styles.pin}
+                    d={`M ${x - 6} ${y - 25} L ${x + 6} ${y - 25} L ${x} ${y - 16} Z`}
+                  />
+                  <circle className={styles.ring} cx={x} cy={y} r={RING} />
+                  <circle
+                    className={styles.ringProgress}
+                    cx={x}
+                    cy={y}
+                    r={RING}
+                    transform={`rotate(-90 ${x} ${y})`}
+                    style={{
+                      strokeDasharray: `${(conf * 2 * Math.PI * RING).toFixed(1)} 999`,
+                    }}
+                  />
+                </>
+              )}
+              <circle
+                className={styles.dot}
+                cx={x}
+                cy={y}
+                r={isFocused ? 9 : isIncluded ? 7 : 4.5}
+                style={color ? { fill: color } : undefined}
+              />
+              <text className={styles.label} x={x} y={HEIGHT - 8}>
                 {label}
-                {(isIncluded || isFocused) && confidence != null && (
-                  <span className={styles.gauge}>
-                    <i style={{ inlineSize: `${Math.round(conf * 100)}%` }} />
-                  </span>
-                )}
-              </span>
-            </div>
-          </Fragment>
-        );
-      })}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
       <span className={styles.count}>
-        {unlocked}/{keys.length}
+        {unlocked}
+        <i>/{n}</i>
       </span>
     </div>
   );

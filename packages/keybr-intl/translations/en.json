@@ -382,7 +382,7 @@
   "t_ws_Bar_whitespace": "As bars",
   "t_ws_Bullet_whitespace": "As dots",
   "t_ws_No_whitespace": "Hidden",
-  "textArea.startTyping": "Click here or press Enter to start typing",
+  "textArea.startTyping": "Press Enter to start typing",
   "theme.switchTheme.description": "Toggle light and dark mode.",
   "weekDayNames": "M|T|W|T|F|S|S"
 }

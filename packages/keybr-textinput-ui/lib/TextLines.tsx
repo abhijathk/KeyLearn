@@ -28,6 +28,7 @@ export const TextLines = memo(function TextLines({
   lineTemplate: LineTemplate,
   cursor,
   focus,
+  colorOf,
 }: {
   readonly lines: LineList;
   readonly settings?: TextDisplaySettings;
@@ -36,6 +37,7 @@ export const TextLines = memo(function TextLines({
   readonly lineTemplate?: ComponentType<any>;
   readonly cursor: boolean;
   readonly focus: boolean;
+  readonly colorOf?: (codePoint: number) => string | null;
 }): ReactNode {
   const className = clsx(
     styles.root,
@@ -55,6 +57,7 @@ export const TextLines = memo(function TextLines({
           chars={chars}
           className={className}
           style={settings.font.cssProperties}
+          colorOf={colorOf}
         />
       </LineTemplate>
     ) : (
@@ -64,6 +67,7 @@ export const TextLines = memo(function TextLines({
         chars={chars}
         className={className}
         style={settings.font.cssProperties}
+        colorOf={colorOf}
       />
     ),
   );
@@ -76,11 +80,13 @@ const TextLine = memo(
     chars,
     className,
     style,
+    colorOf,
   }: {
     readonly settings: TextDisplaySettings;
     readonly chars: readonly Char[];
     readonly className: string;
     readonly style: CSSProperties;
+    readonly colorOf?: (codePoint: number) => string | null;
   }): ReactNode {
     const items: Char[][] = [];
     let itemChars: Char[] = [];
@@ -116,7 +122,12 @@ const TextLine = memo(
         dir={settings.language.direction}
       >
         {items.map((chars, index) => (
-          <TextItem key={index} settings={settings} chars={chars} />
+          <TextItem
+            key={index}
+            settings={settings}
+            chars={chars}
+            colorOf={colorOf}
+          />
         ))}
       </div>
     );
@@ -124,20 +135,26 @@ const TextLine = memo(
   (prevProps, nextProps) =>
     prevProps.settings === nextProps.settings &&
     charArraysAreEqual(prevProps.chars, nextProps.chars) && // deep equality
-    prevProps.className === nextProps.className,
+    prevProps.className === nextProps.className &&
+    prevProps.colorOf === nextProps.colorOf,
 );
 
 const TextItem = memo(
   function TextItem({
     settings,
     chars,
+    colorOf,
   }: {
     readonly settings: TextDisplaySettings;
     readonly chars: readonly Char[];
+    readonly colorOf?: (codePoint: number) => string | null;
   }): ReactNode {
-    return <span style={textItemStyle}>{renderChars(settings, chars)}</span>;
+    return (
+      <span style={textItemStyle}>{renderChars(settings, chars, colorOf)}</span>
+    );
   },
   (prevProps, nextProps) =>
     prevProps.settings === nextProps.settings &&
+    prevProps.colorOf === nextProps.colorOf &&
     charArraysAreEqual(prevProps.chars, nextProps.chars), // deep equality
 );

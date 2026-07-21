@@ -16,6 +16,7 @@ import {
   PureComponent,
   type ReactNode,
 } from "react";
+import { FormattedMessage } from "react-intl";
 import { uiProps } from "@keybr/result";
 import { Controls } from "./Controls.tsx";
 import { GhostTrack } from "./GhostTrack.tsx";
@@ -30,6 +31,7 @@ type Props = {
   readonly state: LessonState;
   readonly lines: LineList;
   readonly depressedKeys: readonly KeyId[];
+  readonly colorOf?: (codePoint: number) => string | null;
   readonly onResetLesson: () => void;
   readonly onSkipLesson: () => void;
   readonly onKeyDown: (ev: IKeyboardEvent) => void;
@@ -98,7 +100,7 @@ export class Presenter extends PureComponent<Props, State> {
 
   override render() {
     const {
-      props: { state, lines, depressedKeys },
+      props: { state, lines, depressedKeys, colorOf },
       state: { view, tour, focus, focusMode, textSize },
       handleResetLesson,
       handleSkipLesson,
@@ -137,6 +139,8 @@ export class Presenter extends PureComponent<Props, State> {
                 lines={lines}
                 size="X0"
                 demo={tour}
+                hideStartHint={true}
+                colorOf={colorOf}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
@@ -144,6 +148,7 @@ export class Presenter extends PureComponent<Props, State> {
                 onInput={handleInput}
               />
             }
+            onStart={() => this.focusRef.current?.focus()}
             textSize={textSize}
             sizer={
               <label className={styles.sizer} title="Practice text size">
@@ -345,6 +350,7 @@ function NormalLayout({
   textInput,
   textSize,
   sizer,
+  onStart,
   tour,
 }: {
   readonly state: LessonState;
@@ -356,6 +362,7 @@ function NormalLayout({
   readonly textInput: ReactNode;
   readonly textSize: number;
   readonly sizer: ReactNode;
+  readonly onStart: () => void;
   readonly tour: ReactNode;
 }) {
   return (
@@ -372,6 +379,18 @@ function NormalLayout({
       <div id={names.keyboard} className={styles.keyboard}>
         {focus && !focusMode && state.settings.get(uiProps.ghostRace) && (
           <GhostTrack state={state} />
+        )}
+        {focus || (
+          <button
+            type="button"
+            className={styles.startHint}
+            onClick={onStart}
+          >
+            <FormattedMessage
+              id="textArea.startTyping"
+              defaultMessage="Press Enter to start typing"
+            />
+          </button>
         )}
         <DeferredKeyboardPresenter
           focus={focus}

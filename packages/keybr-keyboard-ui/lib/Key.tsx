@@ -39,7 +39,7 @@ export function makeKeyComponent(
   shape: KeyShape,
 ): FunctionComponent<KeyProps> {
   const { isCodePoint, isDead, isLigature } = KeyCharacters;
-  const { id, a } = shape;
+  const { id, a, b, c, d } = shape;
   const x = shape.x * keySize;
   const y = shape.y * keySize;
   const w = shape.w * keySize - keyGap;
@@ -81,18 +81,57 @@ export function makeKeyComponent(
       );
     }
   }
-  // Like the mockup: every key wears one centred symbol — the base
-  // character only, no shift/altgr stacks.
-  if (isCodePoint(a)) {
+  const ta = isCodePoint(a);
+  const tb = isCodePoint(b);
+  const tc = isCodePoint(c);
+  const td = isCodePoint(d);
+  const ab = ta && tb && letterName(a) === letterName(b);
+  const cd = tc && td && letterName(c) === letterName(d);
+  // Letters get one centred glyph; keys whose shift layer differs (numbers,
+  // punctuation) show both symbols stacked, like the original keyboard.
+  if (ta && !ab) {
+    children.push(makeCodePointLabel(a, 10, 27, styles.secondarySymbol));
+  }
+  if (tb && !ab) {
+    children.push(makeCodePointLabel(b, 10, 12, styles.secondarySymbol));
+  }
+  if (tc && !cd) {
+    children.push(makeCodePointLabel(c, 25, 27, styles.secondarySymbol));
+  }
+  if (td && !cd) {
+    children.push(makeCodePointLabel(d, 25, 12, styles.secondarySymbol));
+  }
+  if (ta && ab) {
     children.push(
       makeCodePointLabel(a, w / 2, h / 2 + 1, styles.primarySymbol),
     );
-  } else if (isDead(a)) {
-    children.push(makeDeadLabel(a, w / 2, h / 2 + 1, styles.primarySymbol));
-  } else if (isLigature(a)) {
-    children.push(
-      makeLigatureLabel(a, w / 2, h / 2 + 1, styles.primarySymbol),
-    );
+  }
+  if (tc && cd) {
+    children.push(makeCodePointLabel(c, 25, 27, styles.primarySymbol));
+  }
+  if (isDead(a)) {
+    children.push(makeDeadLabel(a, 10, 27, styles.secondarySymbol));
+  }
+  if (isDead(b)) {
+    children.push(makeDeadLabel(b, 10, 12, styles.secondarySymbol));
+  }
+  if (isDead(c)) {
+    children.push(makeDeadLabel(c, 25, 27, styles.secondarySymbol));
+  }
+  if (isDead(d)) {
+    children.push(makeDeadLabel(d, 25, 12, styles.secondarySymbol));
+  }
+  if (isLigature(a)) {
+    children.push(makeLigatureLabel(a, 10, 27, styles.secondarySymbol));
+  }
+  if (isLigature(b)) {
+    children.push(makeLigatureLabel(b, 10, 12, styles.secondarySymbol));
+  }
+  if (isLigature(c)) {
+    children.push(makeLigatureLabel(c, 25, 27, styles.secondarySymbol));
+  }
+  if (isLigature(d)) {
+    children.push(makeLigatureLabel(d, 25, 12, styles.secondarySymbol));
   }
   const zoneClassName = zoneClassNameOf(shape);
   // The solid darker side of the keycap; the face drops onto it when pressed.

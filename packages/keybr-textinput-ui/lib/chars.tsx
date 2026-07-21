@@ -5,24 +5,40 @@ import {
   WhitespaceStyle,
 } from "@keybr/textinput";
 import { type CodePoint } from "@keybr/unicode";
-import { type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import * as styles from "./chars.module.less";
 import { getTextStyle } from "./styles.ts";
 
 export function renderChars(
   settings: TextDisplaySettings,
   chars: readonly Char[],
+  colorOf?: (codePoint: CodePoint) => string | null,
 ): ReactNode[] {
   const nodes: ReactNode[] = [];
-  type Span = { chars: CodePoint[]; attrs: number; cls: string | null };
-  let span: Span = { chars: [], attrs: 0, cls: null };
+  type Span = {
+    chars: CodePoint[];
+    attrs: number;
+    cls: string | null;
+    color: string | null;
+  };
+  let span: Span = { chars: [], attrs: 0, cls: null, color: null };
+  // Tint the letters you read/type with their key's finger-zone colour, but
+  // leave errors and the caret to their own styling.
+  const colorFor = (codePoint: CodePoint, attrs: number): string | null =>
+    colorOf != null && (attrs === Attr.Normal || attrs === Attr.Hit)
+      ? colorOf(codePoint)
+      : null;
+  const styleFor = (s: Span, special: boolean): CSSProperties | undefined => {
+    const base = getTextStyle(s, special);
+    return s.color != null ? { ...base, color: s.color } : base;
+  };
   const pushSpan = (nextSpan: Span) => {
     if (span.chars.length > 0) {
       nodes.push(
         <span
           key={nodes.length}
           className={getClassName(span)}
-          style={getTextStyle(span, /* special= */ false)}
+          style={styleFor(span, /* special= */ false)}
         >
           {String.fromCodePoint(...span.chars)}
         </span>,
@@ -33,24 +49,25 @@ export function renderChars(
   for (let i = 0; i < chars.length; i++) {
     const { codePoint, attrs, cls = null } = chars[i];
     if (codePoint > 0x0020) {
-      if (span.attrs !== attrs || span.cls !== cls) {
-        pushSpan({ chars: [], attrs, cls });
+      const color = colorFor(codePoint, attrs);
+      if (span.attrs !== attrs || span.cls !== cls || span.color !== color) {
+        pushSpan({ chars: [], attrs, cls, color });
       }
       span.chars.push(codePoint);
     } else {
-      pushSpan({ chars: [], attrs, cls });
+      pushSpan({ chars: [], attrs, cls, color: null });
       nodes.push(
         <span
           key={nodes.length}
           className={getClassName(span)}
-          style={getTextStyle(span, /* special= */ true)}
+          style={styleFor(span, /* special= */ true)}
         >
           {specialChar(settings.whitespaceStyle, codePoint)}
         </span>,
       );
     }
   }
-  pushSpan({ chars: [], attrs: 0, cls: null });
+  pushSpan({ chars: [], attrs: 0, cls: null, color: null });
   return nodes;
 }
 
