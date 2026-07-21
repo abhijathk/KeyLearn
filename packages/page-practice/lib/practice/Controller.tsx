@@ -65,13 +65,18 @@ export const Controller = memo(function Controller({
   );
 });
 
+// Lighter shades of the finger-zone colours — the same hue lifted toward the
+// foreground so the letters read clearly instead of dull. Mixing toward the
+// text colour keeps it readable in both the night and day themes.
+const lighter = (v: string) =>
+  `color-mix(in oklab, var(${v}) 45%, var(--text-color))`;
 const ZONE_COLOR: Record<string, string> = {
-  pinky: "var(--pinky-zone-color)",
-  ring: "var(--ring-zone-color)",
-  middle: "var(--middle-zone-color)",
-  leftIndex: "var(--left-index-zone-color)",
-  rightIndex: "var(--right-index-zone-color)",
-  thumb: "var(--thumb-zone-color)",
+  pinky: lighter("--pinky-zone-color"),
+  ring: lighter("--ring-zone-color"),
+  middle: lighter("--middle-zone-color"),
+  leftIndex: lighter("--left-index-zone-color"),
+  rightIndex: lighter("--right-index-zone-color"),
+  thumb: lighter("--thumb-zone-color"),
 };
 
 function zoneColorOf(keyboard: Keyboard): (codePoint: number) => string | null {
