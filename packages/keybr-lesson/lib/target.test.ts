@@ -34,7 +34,9 @@ test("keyConfidence defaults to the classic speed ratio", () => {
 test("smartConfidence rewards a fast+accurate history with mastery", () => {
   const settings = new Settings()
     .set(lessonProps.targetSpeed, 250)
-    .set(lessonProps.guided.smartConfidence, true);
+    .set(lessonProps.guided.smartConfidence, true)
+    // Isolate BKT: no decay factor multiplying the posterior.
+    .set(lessonProps.guided.skillDecay, false);
   const target = new Target(settings);
   const samples = Array.from({ length: 8 }, () =>
     sample({ timeStamp: 0, timeToType: 180, hitCount: 10, missCount: 0 }),
@@ -55,9 +57,30 @@ test("smartConfidence withholds mastery from a fast-but-sloppy history", () => {
   isTrue((confidence ?? 1) < 1);
 });
 
+test("smartConfidence blends BKT into the speed ratio 2:1 (classic stays dominant)", () => {
+  const settings = new Settings()
+    .set(lessonProps.targetSpeed, 250)
+    .set(lessonProps.guided.smartConfidence, true)
+    .set(lessonProps.guided.skillDecay, false);
+  const target = new Target(settings);
+  // Classic ratio is 240ms/400ms = 0.6 (slow); BKT posterior is high from a
+  // fast+accurate sample history. The 2:1 blend must lift confidence above the
+  // classic 0.6 but stay closer to it than to the ~1.05 BKT value.
+  const samples = Array.from({ length: 8 }, () =>
+    sample({ timeStamp: 0, timeToType: 180, hitCount: 10, missCount: 0 }),
+  );
+  const { confidence } = target.keyConfidence(
+    keyStats({ timeToType: 400, samples }),
+  );
+  isTrue((confidence ?? 0) > 0.6);
+  isTrue((confidence ?? 1) < 0.85);
+});
+
 test("skillDecay lowers confidence for a long-unpractised key", () => {
   const day = 24 * 60 * 60 * 1000;
-  const base = new Settings().set(lessonProps.targetSpeed, 250);
+  const base = new Settings()
+    .set(lessonProps.targetSpeed, 250)
+    .set(lessonProps.guided.skillDecay, false);
   const decayed = new Settings()
     .set(lessonProps.targetSpeed, 250)
     .set(lessonProps.guided.skillDecay, true);

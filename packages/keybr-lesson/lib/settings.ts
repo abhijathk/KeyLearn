@@ -20,14 +20,17 @@ export const lessonProps = {
       max: 1,
     }),
     recoverKeys: booleanProp("lesson.guided.recoverKeys", false),
-    spacedRepetition: booleanProp("lesson.guided.spacedRepetition", false),
-    bottleneckDrill: booleanProp("lesson.guided.bottleneckDrill", false),
-    // Use a Bayesian Knowledge Tracing posterior for key confidence instead of
-    // the pure speed ratio (accuracy-aware mastery). Off by default.
-    smartConfidence: booleanProp("lesson.guided.smartConfidence", false),
+    // Front-load "due" keys as a warmup; layers on top of the speed algorithm.
+    spacedRepetition: booleanProp("lesson.guided.spacedRepetition", true),
+    // Target weak bigrams; layers on top of the speed algorithm.
+    bottleneckDrill: booleanProp("lesson.guided.bottleneckDrill", true),
+    // Blend a Bayesian Knowledge Tracing posterior (accuracy-aware) into the
+    // classic speed-ratio confidence at 2:1 — the speed ratio stays dominant,
+    // BKT adds a minority accuracy signal alongside it.
+    smartConfidence: booleanProp("lesson.guided.smartConfidence", true),
     // Apply spaced-repetition decay so long-unpractised keys lose confidence
-    // over real time. Off by default.
-    skillDecay: booleanProp("lesson.guided.skillDecay", false),
+    // over real time; multiplies the classic confidence, so it runs alongside.
+    skillDecay: booleanProp("lesson.guided.skillDecay", true),
   } as const,
   wordList: {
     wordListSize: numberProp("lesson.wordList.wordListSize", 1000, {
