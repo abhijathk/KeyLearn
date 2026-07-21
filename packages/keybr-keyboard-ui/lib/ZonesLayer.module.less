@@ -1,0 +1,37 @@
+// Restyle the illustration into a light line-drawing: CSS overrides every
+// path's inline fill so the structural lines (fingers, nails, folds) become
+// thin strokes over a faint translucent body, and the darker mid-tone shapes
+// that only model shading are dropped. A quiet resting-state guide.
+.hand {
+  // A soft frost: a gentle blur over the milky translucent body reads like
+  // frosted glass while the key colours still show through underneath.
+  filter: blur(0.6px);
+
+  path {
+    fill: var(--secondary);
+    fill-opacity: 0.16;
+    stroke: var(--secondary);
+    stroke-opacity: 0.5;
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  // wrist/forearm flowing down below the keyboard — a touch fainter than the
+  // hand so it recedes.
+  .forearm {
+    fill-opacity: 0.11;
+    stroke-opacity: 0.4;
+  }
+
+  path[opacity],
+  path[fill="#f0f"],
+  path[fill="#e7af77"],
+  path[fill="#d79260"],
+  path[fill="#cb854f"],
+  path[fill="#a67c52"],
+  path[fill="#8c6239"] {
+    display: none;
+  }
+}
