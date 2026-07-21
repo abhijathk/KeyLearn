@@ -10,7 +10,6 @@ const pageIcons: Record<string, StrokeIconName> = {
   [Pages.practice.path]: "keyboard",
   [Pages.profile.path]: "chart",
   [Pages.typingTest.path]: "gauge",
-  [Pages.highScores.path]: "crown",
   [Pages.layouts.path]: "grid",
   [Pages.help.path]: "help",
 };
@@ -33,10 +32,6 @@ export function NavMenu({
 
       <MenuItem>
         <MenuItemLink page={Pages.typingTest} onNavigate={onNavigate} />
-      </MenuItem>
-
-      <MenuItem>
-        <MenuItemLink page={Pages.highScores} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>

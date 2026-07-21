@@ -1,6 +1,7 @@
 import { type KeyId } from "@keybr/keyboard";
 import { names } from "@keybr/lesson-ui";
 import { Screen } from "@keybr/pages-shared";
+import { uiProps } from "@keybr/result";
 import { enumProp, numberProp, Preferences } from "@keybr/settings";
 import { type LineList } from "@keybr/textinput";
 import {
@@ -17,7 +18,6 @@ import {
   type ReactNode,
 } from "react";
 import { FormattedMessage } from "react-intl";
-import { uiProps } from "@keybr/result";
 import { Controls } from "./Controls.tsx";
 import { GhostTrack } from "./GhostTrack.tsx";
 import { Indicators } from "./Indicators.tsx";
@@ -140,7 +140,7 @@ export class Presenter extends PureComponent<Props, State> {
                 size="X0"
                 demo={tour}
                 hideStartHint={true}
-                colorOf={colorOf}
+                colorOf={focusMode ? undefined : colorOf}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
@@ -381,11 +381,7 @@ function NormalLayout({
           <GhostTrack state={state} />
         )}
         {focus || (
-          <button
-            type="button"
-            className={styles.startHint}
-            onClick={onStart}
-          >
+          <button type="button" className={styles.startHint} onClick={onStart}>
             <FormattedMessage
               id="textArea.startTyping"
               defaultMessage="Press Enter to start typing"

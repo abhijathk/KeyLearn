@@ -23,7 +23,6 @@ export function main() {
 
 const AccountPage = lazy(() => import("./pages/account.tsx"));
 const HelpPage = lazy(() => import("./pages/help.tsx"));
-const HighScorePage = lazy(() => import("./pages/high-scores.tsx"));
 const LayoutsPage = lazy(() => import("./pages/layouts.tsx"));
 const PracticePage = lazy(() => import("./pages/practice.tsx"));
 const ProfilePage = lazy(() => import("./pages/profile.tsx"));
@@ -82,17 +81,6 @@ function PageRoutes() {
               <Title page={Pages.help} />
               <Suspense fallback={<LoadingProgress />}>
                 <HelpPage />
-              </Suspense>
-            </Template>
-          }
-        />
-        <Route
-          path={Pages.highScores.path}
-          element={
-            <Template path={Pages.highScores.path}>
-              <Title page={Pages.highScores} />
-              <Suspense fallback={<LoadingProgress />}>
-                <HighScorePage />
               </Suspense>
             </Template>
           }
