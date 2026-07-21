@@ -7,8 +7,17 @@ export function makeExampleLesson(
 ): LessonKeys {
   const keys: LessonKey[] = [];
 
+  // Show the set that's in play plus a couple of upcoming locked stops, so the
+  // journey trail stays readable in the help figure instead of spanning all 26
+  // letters. (The final "every letter mastered" example still shows them all.)
+  const ROAD_AHEAD = 2;
+  const shown = Math.min(letters.length, confidences.length + ROAD_AHEAD);
+
   let index = 0;
   for (const letter of Letter.frequencyOrder(letters)) {
+    if (index >= shown) {
+      break;
+    }
     if (index < confidences.length) {
       const confidence = confidences[index];
       keys.push(
