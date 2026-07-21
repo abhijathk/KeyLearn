@@ -36,8 +36,15 @@ export const defaultBktParams: BktParams = {
   pS: 0.1,
 };
 
-/** Posterior at or above which a key is considered mastered. */
-export const bktMasteryThreshold = 0.95;
+/**
+ * Posterior at or above which a key is considered mastered — i.e. the posterior
+ * that maps to a blended confidence of 1, the same unlock line the classic
+ * speed ratio uses ({@link Target.keyConfidence}, guided.ts). Calibrated to
+ * 0.80 so BKT crosses that line after two clean (fast + accurate) reps, matching
+ * the classic algorithm's unlock pace rather than lagging it by a rep (0.95
+ * would require three).
+ */
+export const bktMasteryThreshold = 0.8;
 
 /**
  * A single Bayesian update: given the current mastery probability and one
