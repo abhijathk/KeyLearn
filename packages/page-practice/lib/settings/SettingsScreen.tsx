@@ -137,29 +137,31 @@ function SettingsWindow({
         </div>
 
         <div className={styles.main}>
-          <div className={styles.mainHeader}>
-            <ExplainSettings />
-            <button
-              type="button"
-              className={styles.close}
-              title={formatMessage({
-                id: "t_Close",
-                defaultMessage: "Dismiss",
-              })}
-              onClick={onCancel}
-            >
-              <StrokeIcon name="close" />
-            </button>
-          </div>
-          <div className={styles.mainBody}>
-            <ExplainerBoundary>
+          {/* The boundary must enclose both the tips toggle and the section
+              content, or the toggle talks to a dead context. */}
+          <ExplainerBoundary>
+            <div className={styles.mainHeader}>
+              <ExplainSettings />
+              <button
+                type="button"
+                className={styles.close}
+                title={formatMessage({
+                  id: "t_Close",
+                  defaultMessage: "Dismiss",
+                })}
+                onClick={onCancel}
+              >
+                <StrokeIcon name="close" />
+              </button>
+            </div>
+            <div className={styles.mainBody}>
               {section === "practice" && <LessonSettings />}
               {section === "smart" && <SmartPracticeSettings />}
               {section === "typing" && <TypingSettings />}
               {section === "keyboard" && <KeyboardSettings />}
               {section === "general" && <MiscSettings />}
-            </ExplainerBoundary>
-          </div>
+            </div>
+          </ExplainerBoundary>
           <div className={styles.actions}>
             <button
               type="button"

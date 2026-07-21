@@ -3,7 +3,9 @@ import { Button, Field, FieldList, useExplainerState } from "@keybr/widget";
 import { type ReactNode, useLayoutEffect } from "react";
 import { useIntl } from "react-intl";
 
-const propExplainSettings = booleanProp("prefs.settings.explain", true);
+// Tips are tucked away by default; the header toggle brings them back for
+// anyone who wants the full explanations.
+const propExplainSettings = booleanProp("prefs.settings.explain", false);
 
 export function ExplainSettings(): ReactNode {
   const { formatMessage } = useIntl();

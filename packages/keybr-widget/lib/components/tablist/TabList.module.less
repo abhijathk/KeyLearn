@@ -1,22 +1,35 @@
 @import "../../styles/components.less";
 
+// A segmented control: all tabs share one pill-shaped track on a single line,
+// and the active tab is a filled accent segment.
 .root {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  display: inline-flex;
+  gap: 0.15rem;
+  align-items: center;
+  max-inline-size: 100%;
   margin-block-end: 1rem;
+  padding: 0.25rem;
+  border: var(--separator-border);
+  border-radius: 999px;
+  overflow-inline: auto;
+  background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
 }
 
 .item {
   .is-blurred();
-  block-size: 2.2rem;
-  padding-inline: 1.1rem;
-  border: var(--separator-border);
+  flex: none;
+  block-size: 2rem;
+  padding-inline: 1rem;
   border-radius: 999px;
-  line-height: 2.2rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 2rem;
   text-align: center;
   white-space: nowrap;
   cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .item:focus-visible {
@@ -24,30 +37,35 @@
 }
 
 .item_active {
-  border-color: var(--accent);
-  color: var(--accent);
-  background-color: color-mix(in oklab, var(--accent) 10%, transparent);
+  color: var(--primary);
+  background-color: var(--accent);
 }
 
 .item_inactive {
-  color: var(--text-color-f2);
+  color: var(--text-color-f1);
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--secondary-f2) 30%, transparent);
+  }
 }
 
 .spacer {
-  block-size: 2.5rem;
-  line-height: 2.5rem;
+  flex: none;
+  inline-size: 0;
+  block-size: 2rem;
 }
 
 .spacer_middle {
-  inline-size: 1rem;
+  inline-size: 0;
 }
 
 .spacer_first {
-  inline-size: 3rem;
+  inline-size: 0;
 }
 
 .spacer_last {
-  flex: 1;
+  inline-size: 0;
 }
 
 .disabled {
