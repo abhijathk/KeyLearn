@@ -1,20 +1,21 @@
 .root {
   display: flex;
-  flex: 1 1 0;
+  gap: 0.3rem;
   align-items: center;
 }
 
 .item {
-  inline-size: 0.8rem;
-  block-size: 0.8rem;
-  border-radius: 50%;
-  background-color: var(--separator-color);
-
-  & + & {
-    margin-inline-start: 0.2rem;
-  }
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 999px;
+  background-color: color-mix(in oklab, var(--secondary-f2) 70%, transparent);
+  transition:
+    inline-size 0.25s ease,
+    background-color 0.25s ease;
 }
 
+// The current step reads as a filled accent pill, so progress is obvious.
 .current {
-  background-color: var(--text-color);
+  inline-size: 1.4rem;
+  background-color: var(--accent);
 }

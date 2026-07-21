@@ -62,6 +62,7 @@ export const Indicators = memo(function Indicators({
   return (
     <div id={names.indicators} className={styles.indicators}>
       <LetterJourney
+        id={names.keySet}
         lessonKeys={lessonKeys}
         onKeyHoverIn={(key, elem) => {
           setHover({ type: "visible-in", key, elem });

@@ -1,8 +1,8 @@
-import { CurrentKey, DailyGoal, StreakList } from "@keybr/lesson-ui";
+import { CurrentKey, DailyGoal, names, StreakList } from "@keybr/lesson-ui";
 import { memo, type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
-import * as styles from "./StatusFooter.module.less";
 import { type LessonState } from "./state/index.ts";
+import * as styles from "./StatusFooter.module.less";
 
 export const StatusFooter = memo(function StatusFooter({
   state: { lessonKeys, streakList, dailyGoal },
@@ -18,7 +18,7 @@ export const StatusFooter = memo(function StatusFooter({
             defaultMessage="Currently learning"
           />
         </span>
-        <CurrentKey lessonKeys={lessonKeys} />
+        <CurrentKey id={names.currentKey} lessonKeys={lessonKeys} />
       </div>
       <div className={styles.seg}>
         <span className={styles.label}>

@@ -1,9 +1,8 @@
-import { mdiClose } from "@mdi/js";
 import { Children, type ReactElement, type ReactNode, useState } from "react";
 import { useIntl } from "react-intl";
 import { useHotkeys } from "../../hooks/use-hotkeys.ts";
 import { LinkButton } from "../button/LinkButton.tsx";
-import { Icon } from "../icon/Icon.tsx";
+import { StrokeIcon } from "../icon/StrokeIcon.tsx";
 import { Backdrop } from "../popup/Backdrop.tsx";
 import { Popup } from "../popup/Popup.tsx";
 import { Spotlight } from "../popup/Spotlight.tsx";
@@ -62,50 +61,89 @@ export function Tour({ children, onClose, ...props }: TourProps): ReactNode {
   });
 
   const { anchor, position } = currentSlide.props;
+  // Guard against a slide pointing at an element that isn't on the page: fall
+  // back to a centred slide instead of crashing when the anchor can't be found.
+  const anchorFound =
+    anchor != null &&
+    typeof document !== "undefined" &&
+    document.querySelector(anchor) != null;
+  const liveAnchor = anchorFound ? anchor : undefined;
+  const first = slideIndex === 0;
+  const last = slideIndex === length - 1;
 
   return (
     <Portal>
       <Backdrop>
-        <Spotlight anchor={anchor} />
+        {liveAnchor ? (
+          <Spotlight anchor={liveAnchor} />
+        ) : (
+          <div className={styles.dim} />
+        )}
 
-        <Popup {...props} anchor={anchor} position={position} offset={30}>
-          <div className={styles.root}>
-            {currentSlide}
-
-            <LinkButton className={styles.close} onClick={close}>
-              <Icon shape={mdiClose} />
-            </LinkButton>
-
-            <div className={styles.footer}>
-              <Meter length={slides.length} slideIndex={slideIndex} />
-
-              {slideIndex > 0 && (
-                <LinkButton className={styles.prev} onClick={selectPrev}>
+        <div className={styles.scope}>
+          <Popup {...props} anchor={liveAnchor} position={position} offset={30}>
+            <div className={styles.card} key={slideIndex}>
+              <div className={styles.header}>
+                <span className={styles.badge}>
+                  <StrokeIcon name="keyboard" />
+                </span>
+                <span className={styles.kicker}>
                   {formatMessage({
-                    id: "t_Previous",
-                    defaultMessage: "Back",
+                    id: "tour.kicker",
+                    defaultMessage: "Quick tour",
                   })}
-                </LinkButton>
-              )}
-
-              {(slideIndex < slides.length - 1 && (
-                <LinkButton className={styles.next} onClick={selectNext}>
-                  {formatMessage({
-                    id: "t_Next",
-                    defaultMessage: "Continue",
-                  })}
-                </LinkButton>
-              )) || (
-                <LinkButton className={styles.next} onClick={close}>
-                  {formatMessage({
+                </span>
+                <span className={styles.counter}>
+                  <b>{slideIndex + 1}</b>
+                  <i>/{length}</i>
+                </span>
+                <LinkButton
+                  className={styles.close}
+                  onClick={close}
+                  title={formatMessage({
                     id: "t_Close",
                     defaultMessage: "Dismiss",
                   })}
+                >
+                  <StrokeIcon name="close" />
                 </LinkButton>
-              )}
+              </div>
+
+              <div className={styles.body}>{currentSlide}</div>
+
+              <div className={styles.footer}>
+                <Meter length={slides.length} slideIndex={slideIndex} />
+
+                <div className={styles.actions}>
+                  {!first && (
+                    <LinkButton className={styles.prev} onClick={selectPrev}>
+                      {formatMessage({
+                        id: "t_Previous",
+                        defaultMessage: "Back",
+                      })}
+                    </LinkButton>
+                  )}
+
+                  {last ? (
+                    <LinkButton className={styles.next} onClick={close}>
+                      {formatMessage({
+                        id: "tour.finish",
+                        defaultMessage: "Start typing",
+                      })}
+                    </LinkButton>
+                  ) : (
+                    <LinkButton className={styles.next} onClick={selectNext}>
+                      {formatMessage({
+                        id: "t_Next",
+                        defaultMessage: "Continue",
+                      })}
+                    </LinkButton>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </Popup>
+          </Popup>
+        </div>
       </Backdrop>
     </Portal>
   );

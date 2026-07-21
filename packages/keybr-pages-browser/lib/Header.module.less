@@ -9,6 +9,11 @@
   padding-block: 0.75rem;
 }
 
+// Focus mode: only the exit button remains, tucked to the trailing edge.
+.focusBar {
+  justify-content: flex-end;
+}
+
 .left {
   display: flex;
   gap: 0.6rem;
@@ -22,8 +27,8 @@
   min-block-size: 2.5rem;
   border: var(--separator-border);
   border-radius: 0.7rem;
-  background-color: var(--primary-l1);
   color: var(--text-color);
+  background-color: var(--primary-l1);
 
   &:hover {
     border-color: var(--accent-d1);
@@ -89,12 +94,12 @@
   padding-inline: 0.8rem;
   border: var(--separator-border);
   border-radius: 0.7rem;
-  background-color: var(--primary-l1);
   color: var(--Value-color);
+  background-color: var(--primary-l1);
   font-family: var(--value-font-family);
   font-size: 0.8rem;
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .flame {

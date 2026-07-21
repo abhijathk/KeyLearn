@@ -1,6 +1,6 @@
-import { type ClassName } from "../types.ts";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
+import { type ClassName } from "../types.ts";
 import * as styles from "./StrokeIcon.module.less";
 
 /**
@@ -31,6 +31,7 @@ export type StrokeIconName =
   | "expand"
   | "collapse"
   | "settings"
+  | "tune"
   | "undo"
   | "redo"
   | "focus"
@@ -141,8 +142,16 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   ),
   settings: (
     <>
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M12 3.2v2.3M12 18.5v2.3M3.2 12h2.3M18.5 12h2.3M5.8 5.8l1.6 1.6M16.6 16.6l1.6 1.6M18.2 5.8l-1.6 1.6M7.4 16.6l-1.6 1.6" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+    </>
+  ),
+  tune: (
+    <>
+      <path d="M5 6h14M5 12h14M5 18h14" />
+      <circle cx="9" cy="6" r="2.2" />
+      <circle cx="15" cy="12" r="2.2" />
+      <circle cx="8" cy="18" r="2.2" />
     </>
   ),
   undo: <path d="M8 5L4 9l4 4M4 9h10a6 6 0 0 1 0 12h-3" />,

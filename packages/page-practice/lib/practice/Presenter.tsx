@@ -130,6 +130,8 @@ export class Presenter extends PureComponent<Props, State> {
                 onResetLesson={handleResetLesson}
                 onSkipLesson={handleSkipLesson}
                 onHelp={handleHelp}
+                textSize={textSize}
+                onTextSize={handleTextSize}
               />
             }
             textInput={
@@ -150,21 +152,6 @@ export class Presenter extends PureComponent<Props, State> {
             }
             onStart={() => this.focusRef.current?.focus()}
             textSize={textSize}
-            sizer={
-              <label className={styles.sizer} title="Practice text size">
-                <span className={styles.sizerIcon}>Aa</span>
-                <input
-                  type="range"
-                  min={0.75}
-                  max={1.5}
-                  step={0.05}
-                  value={textSize}
-                  onChange={(ev) => {
-                    handleTextSize(Number(ev.target.value));
-                  }}
-                />
-              </label>
-            }
             tour={tour && <PracticeTour onClose={handleTourClose} />}
           />
         );
@@ -349,7 +336,6 @@ function NormalLayout({
   controls,
   textInput,
   textSize,
-  sizer,
   onStart,
   tour,
 }: {
@@ -361,7 +347,6 @@ function NormalLayout({
   readonly controls: ReactNode;
   readonly textInput: ReactNode;
   readonly textSize: number;
-  readonly sizer: ReactNode;
   readonly onStart: () => void;
   readonly tour: ReactNode;
 }) {
@@ -374,7 +359,7 @@ function NormalLayout({
         style={{ "--text-scale": textSize } as CSSProperties}
       >
         {textInput}
-        {sizer}
+        {focusMode || controls}
       </div>
       <div id={names.keyboard} className={styles.keyboard}>
         {focus && !focusMode && state.settings.get(uiProps.ghostRace) && (
@@ -398,7 +383,6 @@ function NormalLayout({
         />
       </div>
       {focusMode || <StatusFooter state={state} />}
-      {controls}
       {tour}
     </Screen>
   );
@@ -429,8 +413,8 @@ function CompactLayout({
       <Indicators state={state} />
       <div id={names.textInput} className={styles.textInput_compact}>
         {textInput}
+        {controls}
       </div>
-      {controls}
     </Screen>
   );
 }
@@ -450,8 +434,8 @@ function BareLayout({
     <Screen>
       <div id={names.textInput} className={styles.textInput_bare}>
         {textInput}
+        {controls}
       </div>
-      {controls}
     </Screen>
   );
 }

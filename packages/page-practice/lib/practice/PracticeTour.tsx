@@ -88,22 +88,21 @@ export const PracticeTour = memo(function PracticeTour({
           id="m_tour09"
           defaultMessage={
             "<p>This is your score, shown in abstract points, along with how it differs from your average.</p>" +
-            "<p>It’s calculated from your speed, your error count, and how many letters are currently in your set. The formula rewards fast typing and penalizes mistakes, so typing quickly while making lots of errors won’t earn you a high score.</p>" +
-            "<p>The top scorers show up on the high score table.</p>"
+            "<p>It’s calculated from your speed, your error count, and how many letters are currently in your set. The formula rewards fast typing and penalizes mistakes, so typing quickly while making lots of errors won’t earn you a high score.</p>"
           }
         />
       </Slide>
       <Slide size="small" anchor={`#${names.keySet}`} position="block-end">
         <FormattedMessage
           id="m_tour10"
-          defaultMessage="<p>This panel lists the letters currently used to build your lessons, along with your confidence level for each one:</p>"
+          defaultMessage="<p>This trail maps the letters currently used to build your lessons, in the order you unlock them, each one coloured by how confident you are with it:</p>"
         />
         <KeyLegendList />
       </Slide>
       <Slide size="small" anchor={`#${names.keySet}`} position="block-end">
         <FormattedMessage
           id="m_tour11"
-          defaultMessage="<p>The same panel can forecast how many lessons remain before a letter fully unlocks, as shown in the sample chart below. Check back often for a clearer picture of how your learning is progressing.</p>"
+          defaultMessage="<p>Hovering a stop on the trail forecasts how many lessons remain before that letter fully unlocks, as shown in the sample chart below. Check back often for a clearer picture of how your learning is progressing.</p>"
         />
         <KeyDetailsChartDemo />
       </Slide>

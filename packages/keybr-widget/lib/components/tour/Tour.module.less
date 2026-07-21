@@ -1,22 +1,176 @@
-.root {
+// Neutralise the shared Popup chrome (square background + shadow) just for the
+// tour, so the rounded card below is the only visible surface.
+.scope {
+  --Popup__background-color: transparent;
+  --Popup__box-shadow: none;
+}
+
+// A soft dim behind the free-floating intro slides (the anchored slides get
+// their cut-out dim from the Spotlight instead).
+.dim {
+  position: fixed;
+  inset: 0;
+  background-color: color-mix(in oklab, var(--primary-d2) 55%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.card {
   display: flex;
   flex-direction: column;
-  padding-inline: 3rem;
-  padding-block: 3rem 2rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--secondary-f2));
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background-color: var(--primary-l1);
+  box-shadow:
+    0 1.5rem 4rem var(--shadow-color),
+    0 0 0 6px color-mix(in oklab, var(--accent) 10%, transparent);
+  animation: tour-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tour-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.6rem) scale(0.97);
+  }
+}
+
+// ---- header -------------------------------------------------------------
+
+.header {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.9rem 1rem 0.9rem 1.1rem;
+  border-block-end: 1px solid
+    color-mix(in oklab, var(--secondary-f2) 60%, transparent);
+  background-color: color-mix(in oklab, var(--accent) 6%, transparent);
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: 0.6rem;
+  color: var(--primary);
+  background-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 16%, transparent);
+
+  svg {
+    inline-size: 1.2rem;
+    block-size: 1.2rem;
+    stroke-width: 1.9;
+  }
+}
+
+.kicker {
+  flex: 1 1 auto;
+  color: var(--text-color);
+  font-family: var(--default-font-family);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.counter {
+  color: var(--text-color-f1);
+  font-family: var(--value-font-family, var(--monospace-font-family));
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+
+  b {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  i {
+    opacity: 0.7;
+    font-style: normal;
+  }
 }
 
 .close {
-  position: absolute;
-  inset-inline-end: 1rem;
-  inset-block-start: 1rem;
+  display: grid;
+  place-items: center;
+  inline-size: 1.9rem;
+  block-size: 1.9rem;
+  margin-inline-start: 0.2rem;
+  border-radius: 50%;
+  color: var(--text-color-f1);
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  svg {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+  }
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--secondary-f2) 40%, transparent);
+  }
 }
+
+// ---- body ---------------------------------------------------------------
+
+.body {
+  padding: 1.4rem 1.6rem 0.6rem;
+}
+
+// ---- footer -------------------------------------------------------------
 
 .footer {
   display: flex;
+  gap: 1rem;
   align-items: center;
-  margin-block-start: 1rem;
+  padding: 0.9rem 1.4rem 1.2rem;
 }
 
-.prev + .next {
-  margin-inline-start: 1rem;
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-inline-start: auto;
+}
+
+.prev,
+.next {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 1.1rem;
+  padding-block: 0.5rem;
+  border-radius: 999px;
+  font-family: var(--default-font-family);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.prev {
+  border: 1px solid transparent;
+  color: var(--text-color-f1);
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--secondary-f2) 35%, transparent);
+  }
+}
+
+.next {
+  border: 1px solid var(--accent);
+  color: var(--primary);
+  background-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 14%, transparent);
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--accent) 88%, var(--text-color));
+  }
 }

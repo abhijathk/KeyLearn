@@ -1,6 +1,6 @@
 # English
 
-Translated: 391 messages, 5349 words
+Translated: 396 messages, 5365 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,7 +8,7 @@ Untranslated: 0 messages, 0 words
 
 Translated: 331 messages, 4526 words
 
-Untranslated: 49 messages, 767 words
+Untranslated: 54 messages, 783 words
 
 * *On*
 * *Off*
@@ -23,20 +23,20 @@ Untranslated: 49 messages, 767 words
 * *Language*
 * *Grown-ups*
 * *Loudness:*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Arabic
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -49,22 +49,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Bulgarian
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -77,22 +77,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Bangla
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -105,22 +105,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Catalan
 
 Translated: 302 messages, 3466 words
 
-Untranslated: 76 messages, 1809 words
+Untranslated: 81 messages, 1825 words
 
 * *On*
 * *Off*
@@ -134,21 +134,21 @@ Untranslated: 76 messages, 1809 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
 * *Sound pack:*
+* *Start typing*
 * *Your account*
 * *Finger zones:*
 * *Pause for now*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
 * ...
 
 # Czech
 
 Translated: 330 messages, 4523 words
 
-Untranslated: 50 messages, 770 words
+Untranslated: 55 messages, 786 words
 
 * *On*
 * *Off*
@@ -162,21 +162,21 @@ Untranslated: 50 messages, 770 words
 * *Language*
 * *Grown-ups*
 * *Typeface:*
+* *Quick tour*
 * *Lesson done*
 * *Sound pack:*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Danish
 
 Translated: 323 messages, 4475 words
 
-Untranslated: 55 messages, 800 words
+Untranslated: 60 messages, 816 words
 
 * *On*
 * *Off*
@@ -193,18 +193,18 @@ Untranslated: 55 messages, 800 words
 * *Language*
 * *Position*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
 * *Multiplayer*
+* *Start typing*
 * *Your account*
-* *Pause for now*
-* *Find a language*
 * ...
 
 # German
 
 Translated: 331 messages, 4526 words
 
-Untranslated: 49 messages, 767 words
+Untranslated: 54 messages, 783 words
 
 * *On*
 * *Off*
@@ -219,20 +219,20 @@ Untranslated: 49 messages, 767 words
 * *Position*
 * *Alphabet:*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Greek
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -245,22 +245,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Esperanto
 
 Translated: 74 messages, 1109 words
 
-Untranslated: 300 messages, 4142 words
+Untranslated: 305 messages, 4158 words
 
 * *On*
 * *GO!*
@@ -288,7 +288,7 @@ Untranslated: 300 messages, 4142 words
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -301,22 +301,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Estonian
 
 Translated: 330 messages, 4525 words
 
-Untranslated: 50 messages, 768 words
+Untranslated: 55 messages, 784 words
 
 * *On*
 * *GO!*
@@ -332,19 +332,19 @@ Untranslated: 50 messages, 768 words
 * *Progress*
 * *Grown-ups*
 * *Typeface:*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
 * ...
 
 # Persian
 
 Translated: 287 messages, 2906 words
 
-Untranslated: 91 messages, 2369 words
+Untranslated: 96 messages, 2385 words
 
 * *On*
 * *Off*
@@ -358,21 +358,21 @@ Untranslated: 91 messages, 2369 words
 * *Language*
 * *Book Text*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
 * *Sound pack:*
+* *Start typing*
 * *Your account*
 * *Best accuracy*
 * *Finger zones:*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
 * ...
 
 # Finnish
 
 Translated: 202 messages, 2257 words
 
-Untranslated: 173 messages, 2997 words
+Untranslated: 178 messages, 3013 words
 
 * *On*
 * *GO!*
@@ -400,7 +400,7 @@ Untranslated: 173 messages, 2997 words
 
 Translated: 41 messages, 475 words
 
-Untranslated: 332 messages, 4765 words
+Untranslated: 337 messages, 4781 words
 
 * *On*
 * *GO!*
@@ -428,7 +428,7 @@ Untranslated: 332 messages, 4765 words
 
 Translated: 325 messages, 4350 words
 
-Untranslated: 55 messages, 943 words
+Untranslated: 60 messages, 959 words
 
 * *On*
 * *Off*
@@ -445,18 +445,18 @@ Untranslated: 55 messages, 943 words
 * *Alphabet:*
 * *Grown-ups*
 * *Loudness:*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Finger zones:*
-* *Pause for now*
-* *Find a language*
 * ...
 
 # Irish
 
 Translated: 329 messages, 4516 words
 
-Untranslated: 51 messages, 777 words
+Untranslated: 56 messages, 793 words
 
 * *On*
 * *Off*
@@ -469,22 +469,22 @@ Untranslated: 51 messages, 777 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Smoothing:*
 * *Lesson done*
 * *Sound pack:*
+* *Start typing*
 * *Your account*
 * *Finger zones:*
 * *M|T|W|T|F|S|S*
 * *Pause for now*
-* *Find a language*
-* *Keystrokes only*
 * ...
 
 # Hebrew
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -497,22 +497,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Croatian
 
 Translated: 329 messages, 4521 words
 
-Untranslated: 51 messages, 772 words
+Untranslated: 56 messages, 788 words
 
 * *On*
 * *Off*
@@ -526,21 +526,21 @@ Untranslated: 51 messages, 772 words
 * *Language*
 * *Grown-ups*
 * *Typeface:*
+* *Quick tour*
 * *Lesson done*
 * *Multiplayer*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Hungarian
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -553,22 +553,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Indonesian
 
 Translated: 331 messages, 4526 words
 
-Untranslated: 49 messages, 767 words
+Untranslated: 54 messages, 783 words
 
 * *On*
 * *GO!*
@@ -583,20 +583,20 @@ Untranslated: 49 messages, 767 words
 * *Language*
 * *Grown-ups*
 * *Loudness:*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # Icelandic
 
 Translated: 92 messages, 1716 words
 
-Untranslated: 282 messages, 3535 words
+Untranslated: 287 messages, 3551 words
 
 * *On*
 * *GO!*
@@ -624,7 +624,7 @@ Untranslated: 282 messages, 3535 words
 
 Translated: 326 messages, 4518 words
 
-Untranslated: 53 messages, 772 words
+Untranslated: 58 messages, 788 words
 
 * *On*
 * *Off*
@@ -642,17 +642,17 @@ Untranslated: 53 messages, 772 words
 * *Grown-ups*
 * *Loudness:*
 * *Typeface:*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
-* *Pause for now*
-* *Find a language*
 * ...
 
 # Japanese
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -665,22 +665,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Korean
 
 Translated: 140 messages, 1301 words
 
-Untranslated: 238 messages, 3974 words
+Untranslated: 243 messages, 3990 words
 
 * *On*
 * *Off*
@@ -708,7 +708,7 @@ Untranslated: 238 messages, 3974 words
 
 Translated: 298 messages, 3336 words
 
-Untranslated: 80 messages, 1939 words
+Untranslated: 85 messages, 1955 words
 
 * *On*
 * *Off*
@@ -721,22 +721,22 @@ Untranslated: 80 messages, 1939 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *No streaks yet.*
 * *Open navigation*
-* *Back to practice*
-* *Close navigation*
 * ...
 
 # Mongolian
 
 Translated: 16 messages, 307 words
 
-Untranslated: 355 messages, 4911 words
+Untranslated: 360 messages, 4927 words
 
 * *On*
 * *GO!*
@@ -762,9 +762,9 @@ Untranslated: 355 messages, 4911 words
 
 # Norwegian Bokmål
 
-Translated: 205 messages, 2407 words
+Translated: 205 messages, 2397 words
 
-Untranslated: 171 messages, 2850 words
+Untranslated: 176 messages, 2876 words
 
 * *On*
 * *Off*
@@ -792,7 +792,7 @@ Untranslated: 171 messages, 2850 words
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -805,22 +805,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Dutch
 
 Translated: 325 messages, 4516 words
 
-Untranslated: 54 messages, 774 words
+Untranslated: 59 messages, 790 words
 
 * *On*
 * *Off*
@@ -837,18 +837,18 @@ Untranslated: 54 messages, 774 words
 * *Language*
 * *Grown-ups*
 * *Loudness:*
+* *Quick tour*
 * *Lesson done*
 * *Multiplayer*
+* *Start typing*
 * *Your account*
-* *Finger zones:*
-* *Pause for now*
 * ...
 
 # Polish
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -861,22 +861,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Brazilian Portuguese
 
 Translated: 330 messages, 4524 words
 
-Untranslated: 50 messages, 769 words
+Untranslated: 55 messages, 785 words
 
 * *On*
 * *Off*
@@ -891,20 +891,20 @@ Untranslated: 50 messages, 769 words
 * *Layouts*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
-* *Open navigation*
-* *Back to practice*
 * ...
 
 # European Portuguese
 
 Translated: 311 messages, 4404 words
 
-Untranslated: 67 messages, 871 words
+Untranslated: 72 messages, 887 words
 
 * *On*
 * *Off*
@@ -921,18 +921,18 @@ Untranslated: 67 messages, 871 words
 * *Book Text*
 * *Grown-ups*
 * *Loudness:*
+* *Quick tour*
 * *Lesson done*
 * *Sound pack:*
+* *Start typing*
 * *Your account*
-* *Best accuracy*
-* *Finger zones:*
 * ...
 
 # Romanian
 
 Translated: 291 messages, 3459 words
 
-Untranslated: 82 messages, 1793 words
+Untranslated: 87 messages, 1809 words
 
 * *On*
 * *Off*
@@ -949,18 +949,18 @@ Untranslated: 82 messages, 1793 words
 * *Language*
 * *Grown-ups*
 * *Typeface:*
+* *Quick tour*
 * *Lesson done*
 * *Multiplayer*
 * *Sound pack:*
-* *Your account*
-* *Best accuracy*
+* *Start typing*
 * ...
 
 # Russian
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -973,22 +973,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Slovak
 
 Translated: 332 messages, 4526 words
 
-Untranslated: 48 messages, 767 words
+Untranslated: 53 messages, 783 words
 
 * *On*
 * *Off*
@@ -1001,22 +1001,22 @@ Untranslated: 48 messages, 767 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Language syntax:*
 * ...
 
 # Slovenian
 
 Translated: 332 messages, 4527 words
 
-Untranslated: 48 messages, 766 words
+Untranslated: 53 messages, 782 words
 
 * *On*
 * *Off*
@@ -1030,21 +1030,21 @@ Untranslated: 48 messages, 766 words
 * *Language*
 * *Grown-ups*
 * *Typeface:*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
-* *Back to practice*
-* *Close navigation*
 * ...
 
 # Albanian
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -1057,22 +1057,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Swedish
 
 Translated: 330 messages, 4523 words
 
-Untranslated: 50 messages, 770 words
+Untranslated: 55 messages, 786 words
 
 * *On*
 * *Off*
@@ -1086,21 +1086,21 @@ Untranslated: 50 messages, 770 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
-* *Back to practice*
-* *Close navigation*
 * ...
 
 # Thai
 
 Translated: 321 messages, 4430 words
 
-Untranslated: 57 messages, 845 words
+Untranslated: 62 messages, 861 words
 
 * *On*
 * *Off*
@@ -1113,22 +1113,22 @@ Untranslated: 57 messages, 845 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
 * *Sound pack:*
+* *Start typing*
 * *Your account*
 * *Best accuracy*
 * *Finger zones:*
 * *Pause for now*
 * *Find a language*
-* *Keystrokes only*
-* *Open navigation*
 * ...
 
 # Turkish
 
 Translated: 219 messages, 2106 words
 
-Untranslated: 156 messages, 3140 words
+Untranslated: 161 messages, 3156 words
 
 * *On*
 * *Off*
@@ -1156,7 +1156,7 @@ Untranslated: 156 messages, 3140 words
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -1169,22 +1169,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Vietnamese
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -1197,22 +1197,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Simplified Chinese
 
 Translated: 332 messages, 4521 words
 
-Untranslated: 48 messages, 772 words
+Untranslated: 53 messages, 788 words
 
 * *On*
 * *Off*
@@ -1225,22 +1225,22 @@ Untranslated: 48 messages, 772 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *M|T|W|T|F|S|S*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
-* *Back to practice*
-* *Close navigation*
 * ...
 
 # Traditional Chinese
 
 Translated: 333 messages, 4528 words
 
-Untranslated: 47 messages, 765 words
+Untranslated: 52 messages, 781 words
 
 * *On*
 * *Off*
@@ -1253,22 +1253,22 @@ Untranslated: 47 messages, 765 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
 * *Back to practice*
-* *Close navigation*
-* *Who's practicing*
 * ...
 
 # Chinese (Taiwan)
 
 Translated: 332 messages, 4527 words
 
-Untranslated: 48 messages, 766 words
+Untranslated: 53 messages, 782 words
 
 * *On*
 * *GO!*
@@ -1282,12 +1282,12 @@ Untranslated: 48 messages, 766 words
 * *Recent*
 * *Language*
 * *Grown-ups*
+* *Quick tour*
 * *Lesson done*
+* *Start typing*
 * *Your account*
 * *Pause for now*
 * *Find a language*
 * *Keystrokes only*
 * *Open navigation*
-* *Back to practice*
-* *Close navigation*
 * ...

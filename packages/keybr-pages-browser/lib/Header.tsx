@@ -1,10 +1,15 @@
 import { IconButton, StrokeIcon } from "@keybr/widget";
+import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { NavLink } from "react-router";
 import { AccountMenu } from "./AccountMenu.tsx";
 import * as styles from "./Header.module.less";
 import { ThemeSwitcher } from "./themes/ThemeSwitcher.tsx";
+
+const toggleFocusMode = () => {
+  window.dispatchEvent(new window.CustomEvent("keylearn:focus-mode"));
+};
 
 export function Header({
   onOpenMenu,
@@ -17,15 +22,45 @@ export function Header({
 }): ReactNode {
   const { formatMessage } = useIntl();
   const [streak, setStreak] = useState(0);
+  const [focusMode, setFocusMode] = useState(false);
   useEffect(() => {
     const onStreak = (ev: Event) => {
       setStreak((ev as CustomEvent<number>).detail ?? 0);
     };
+    // Mirror the practice screen's focus-mode toggle so the header can strip
+    // itself down to just the exit button while focus mode is on.
+    const onFocusMode = () => {
+      setFocusMode((v) => !v);
+    };
     window.addEventListener("keylearn:streak", onStreak);
+    window.addEventListener("keylearn:focus-mode", onFocusMode);
     return () => {
       window.removeEventListener("keylearn:streak", onStreak);
+      window.removeEventListener("keylearn:focus-mode", onFocusMode);
     };
   }, []);
+
+  // In focus mode nothing but the keyboard, the practice text, and a single
+  // button to leave should remain — so the header collapses to just that.
+  if (focusMode && showFocus) {
+    return (
+      <header className={clsx(styles.header, styles.focusBar)}>
+        <div className={styles.controls}>
+          <IconButton
+            icon={<StrokeIcon name="focus" />}
+            title={formatMessage(
+              defineMessage({
+                id: "practice.widget.focusMode.exit",
+                defaultMessage: "Leave focus mode.",
+              }),
+            )}
+            onClick={toggleFocusMode}
+          />
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className={styles.header}>
       <div className={styles.left}>
@@ -44,8 +79,8 @@ export function Header({
           </NavLink>
         )}
         <NavLink to="/" className={styles.wordmark}>
-        <StrokeIcon className={styles.glyph} name="keyboard" />
-        <span className={styles.mark}>Key</span>
+          <StrokeIcon className={styles.glyph} name="keyboard" />
+          <span className={styles.mark}>Key</span>
           <span className={styles.markAlt}>Learn</span>
         </NavLink>
       </div>
@@ -56,7 +91,8 @@ export function Header({
             title={formatMessage(
               defineMessage({
                 id: "header.streak.description",
-                defaultMessage: "Days in a row with at least one completed lesson.",
+                defaultMessage:
+                  "Days in a row with at least one completed lesson.",
               }),
             )}
           >
@@ -80,11 +116,14 @@ export function Header({
             title={formatMessage(
               defineMessage({
                 id: "practice.widget.focusMode.enter",
-                defaultMessage: "Focus mode: just you, the words, nothing else.",
+                defaultMessage:
+                  "Focus mode: just you, the words, nothing else.",
               }),
             )}
             onClick={() => {
-              window.dispatchEvent(new window.CustomEvent("keylearn:focus-mode"));
+              window.dispatchEvent(
+                new window.CustomEvent("keylearn:focus-mode"),
+              );
             }}
           />
         )}

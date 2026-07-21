@@ -1,26 +1,64 @@
-// The ghost cluster: fixed to the top-right corner just under the header,
-// nearly invisible until hovered.
+// The toolbar sits where the text-size slider used to, in the top-right corner
+// of the practice-text area. At rest it's just a settings gear and a collapse
+// toggle; the rest of the tools unfold to the left when opened.
 .controls {
   display: flex;
-  position: fixed;
-  inset-inline-end: 1rem;
-  inset-block-start: 4.25rem;
+  position: absolute;
+  inset-inline-end: 3rem;
+  inset-block-start: -2.6rem;
   z-index: 10;
   gap: 0.1rem;
   align-items: center;
-  opacity: 0.45;
+  opacity: 0.55;
   transition: opacity 0.2s ease;
 
-  &:hover {
+  &:hover,
+  &.open {
     opacity: 1;
   }
+
+  // Keep the whole toolbar small and unobtrusive.
+  button {
+    padding: 0.25rem;
+  }
+
+  svg {
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+  }
+}
+
+// The revealed cluster of tools, unfolding with a quick slide-in.
+.tools {
+  display: flex;
+  gap: 0.1rem;
+  align-items: center;
+  animation: tools-in 0.2s ease;
+}
+
+@keyframes tools-in {
+  0% {
+    opacity: 0;
+    transform: translateX(0.6rem);
+  }
+}
+
+// The collapse toggle, tinted with the accent while open.
+.toggle {
+  display: inline-flex;
+  border-radius: 50%;
+  transition: color 0.15s ease;
+}
+
+.toggleOpen {
+  color: var(--accent);
 }
 
 .sizer {
   display: flex;
   gap: 0.4rem;
   align-items: center;
-  margin-inline-end: 0.4rem;
+  margin-inline: 0.2rem 0.4rem;
 
   input {
     inline-size: 5rem;
