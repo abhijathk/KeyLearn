@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 360">
+  <rect width="240" height="360" fill="#0d2b1e"/>
+  <rect x="10" y="10" width="220" height="340" fill="none" stroke="#2e8b57" stroke-width="1.5"/>
+  <g stroke="#3fbf7f" stroke-width="2" fill="#144a32">
+    <path d="M60 150 L75 80 L90 150 Z"/>
+    <path d="M95 150 L120 55 L145 150 Z"/>
+    <path d="M150 150 L165 90 L180 150 Z"/>
+  </g>
+  <circle cx="120" cy="52" r="4" fill="#8fe6b8"/>
+  <path d="M40 200 C90 185 150 185 200 200" stroke="#d9b23a" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M52 212 C98 198 142 198 188 212" stroke="#d9b23a" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <text x="120" y="252" text-anchor="middle" fill="#e8f5ee" font-family="Georgia, serif" font-size="24" font-weight="bold">The Wonderful</text>
+  <text x="120" y="280" text-anchor="middle" fill="#e8f5ee" font-family="Georgia, serif" font-size="24" font-weight="bold">Wizard of Oz</text>
+  <line x1="80" y1="298" x2="160" y2="298" stroke="#3fbf7f" stroke-width="1"/>
+  <text x="120" y="320" text-anchor="middle" fill="#9fd4b8" font-family="Georgia, serif" font-size="13" letter-spacing="2">L. FRANK BAUM</text>
+</svg>

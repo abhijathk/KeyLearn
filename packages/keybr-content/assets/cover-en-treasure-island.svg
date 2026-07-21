@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 360">
+  <rect width="240" height="360" fill="#0e1e33"/>
+  <rect x="10" y="10" width="220" height="340" fill="none" stroke="#c9a227" stroke-width="1.5"/>
+  <circle cx="168" cy="78" r="22" fill="#e6c65a"/>
+  <path d="M20 150 Q70 110 120 148 T220 150 L220 170 L20 170 Z" fill="#173252"/>
+  <path d="M78 148 C95 120 132 118 150 146" fill="#1f4a35"/>
+  <path d="M112 132 L112 96 M112 96 L134 108 L112 118" stroke="#e8dcc0" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M20 172 L220 172 M20 184 L220 184" stroke="#2a4a74" stroke-width="2" opacity="0.7"/>
+  <text x="120" y="252" text-anchor="middle" fill="#f2ead6" font-family="Georgia, serif" font-size="28" font-weight="bold">Treasure</text>
+  <text x="120" y="284" text-anchor="middle" fill="#f2ead6" font-family="Georgia, serif" font-size="28" font-weight="bold">Island</text>
+  <line x1="80" y1="300" x2="160" y2="300" stroke="#c9a227" stroke-width="1"/>
+  <text x="120" y="322" text-anchor="middle" fill="#d8c98e" font-family="Georgia, serif" font-size="12" letter-spacing="1.5">ROBERT LOUIS STEVENSON</text>
+</svg>

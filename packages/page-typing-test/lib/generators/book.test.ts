@@ -9,7 +9,7 @@ test("generate words", () => {
       paragraphIndex: 0,
     },
     {
-      book: Book.EN_ALICE_WONDERLAND,
+      book: Book.EN_WIZARD_OZ,
       content: [
         ["Chapter I", ["one two three"]],
         ["Chapter II", ["four five six"]],

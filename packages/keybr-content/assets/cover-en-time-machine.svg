@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 360">
+  <rect width="240" height="360" fill="#101c24"/>
+  <rect x="10" y="10" width="220" height="340" fill="none" stroke="#b0793a" stroke-width="1.5"/>
+  <g fill="none" stroke="#c98f4c" stroke-linecap="round">
+    <circle cx="120" cy="110" r="60" stroke-width="2" opacity="0.35"/>
+    <circle cx="120" cy="110" r="44" stroke-width="2" opacity="0.55"/>
+    <circle cx="120" cy="110" r="28" stroke-width="2.5" opacity="0.8"/>
+    <circle cx="120" cy="110" r="12" stroke-width="3"/>
+    <line x1="120" y1="110" x2="120" y2="76" stroke-width="3"/>
+    <line x1="120" y1="110" x2="143" y2="122" stroke-width="3"/>
+  </g>
+  <circle cx="120" cy="110" r="3.5" fill="#e9c184"/>
+  <text x="120" y="252" text-anchor="middle" fill="#efe6d8" font-family="Georgia, serif" font-size="30" font-weight="bold">The Time</text>
+  <text x="120" y="286" text-anchor="middle" fill="#efe6d8" font-family="Georgia, serif" font-size="30" font-weight="bold">Machine</text>
+  <line x1="80" y1="302" x2="160" y2="302" stroke="#b0793a" stroke-width="1"/>
+  <text x="120" y="324" text-anchor="middle" fill="#d9b98c" font-family="Georgia, serif" font-size="13" letter-spacing="2">H. G. WELLS</text>
+</svg>

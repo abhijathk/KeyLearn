@@ -9,7 +9,7 @@ test("render", () => {
   const r = render(
     <FakeIntlProvider>
       <BookPreview
-        book={Book.EN_ALICE_WONDERLAND}
+        book={Book.EN_WIZARD_OZ}
         content={[["chapter", ["one", "two", "three"]]]}
       />
     </FakeIntlProvider>,

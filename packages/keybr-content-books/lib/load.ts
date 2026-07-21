@@ -2,51 +2,43 @@ import { Book, type Content } from "@keybr/content";
 
 export async function loadContent(book: Book): Promise<Content> {
   switch (book) {
-    case Book.EN_ALICE_WONDERLAND:
+    case Book.EN_WIZARD_OZ:
       return (
         await import(
-          /* webpackChunkName: "book-en-alice-wonderland" */
-          "./data/en-alice-wonderland.json",
+          /* webpackChunkName: "book-en-wizard-oz" */
+          "./data/en-wizard-oz.json",
           { with: { type: "json" } }
         )
       ).default as any;
-    case Book.EN_JEKYLL_HYDE:
+    case Book.EN_TREASURE_ISLAND:
       return (
         await import(
-          /* webpackChunkName: "book-en-jekyll-hyde" */
-          "./data/en-jekyll-hyde.json",
+          /* webpackChunkName: "book-en-treasure-island" */
+          "./data/en-treasure-island.json",
           { with: { type: "json" } }
         )
       ).default as any;
-    case Book.EN_CALL_WILD:
+    case Book.EN_HOUND_BASKERVILLES:
       return (
         await import(
-          /* webpackChunkName: "book-en-call-wild" */
-          "./data/en-call-wild.json",
+          /* webpackChunkName: "book-en-hound-baskervilles" */
+          "./data/en-hound-baskervilles.json",
           { with: { type: "json" } }
         )
       ).default as any;
-    case Book.ES_MARIANELA:
+    case Book.EN_TIME_MACHINE:
       return (
         await import(
-          /* webpackChunkName: "book-es-marianela" */
-          "./data/es-marianela.json",
+          /* webpackChunkName: "book-en-time-machine" */
+          "./data/en-time-machine.json",
           { with: { type: "json" } }
         )
       ).default as any;
-    case Book.DE_ALICE_WONDERLAND:
+    case Book.EN_ANNE_GREEN_GABLES:
       return (
         await import(
-          /* webpackChunkName: "book-de-alice-wonderland" */
-          "./data/de-alice-wonderland.json",
-          { with: { type: "json" } }
-        )
-      ).default as any;
-    case Book.FR_ALICE_WONDERLAND:
-      return (
-        await import(
-          /* webpackChunkName: "book-fr-alice-wonderland" */
-          "./data/fr-alice-wonderland.json",
+          /* webpackChunkName: "book-en-anne-green-gables" */
+          "./data/en-anne-green-gables.json",
           { with: { type: "json" } }
         )
       ).default as any;

@@ -40,7 +40,7 @@ export const lessonProps = {
     longWordsOnly: booleanProp("lesson.wordList.longWordsOnly", false),
   } as const,
   books: {
-    book: itemProp("lesson.books.book", Book.ALL, Book.EN_ALICE_WONDERLAND),
+    book: itemProp("lesson.books.book", Book.ALL, Book.EN_WIZARD_OZ),
     paragraphIndex: numberProp("lesson.books.paragraphIndex", 0, {
       min: 0,
       max: 1000,

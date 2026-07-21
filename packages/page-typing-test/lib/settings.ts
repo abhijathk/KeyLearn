@@ -62,7 +62,7 @@ export const typingTestProps = {
       max: 1000,
     }),
   } as const,
-  book: itemProp("typingTest.book", Book.ALL, Book.EN_ALICE_WONDERLAND),
+  book: itemProp("typingTest.book", Book.ALL, Book.EN_WIZARD_OZ),
   bookParagraphIndex: numberProp("typingTest.book.paragraphIndex", 0, {
     min: 0,
     max: 1000,

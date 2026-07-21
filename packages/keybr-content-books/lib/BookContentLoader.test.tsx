@@ -8,7 +8,7 @@ test("load book", async () => {
   let ref = null as BookContent | null;
 
   const r = render(
-    <BookContentLoader book={Book.EN_ALICE_WONDERLAND} fallback="fallback">
+    <BookContentLoader book={Book.EN_WIZARD_OZ} fallback="fallback">
       {(result) => {
         ref = result;
         return <div>alice</div>;
@@ -18,10 +18,10 @@ test("load book", async () => {
 
   await r.findByText("alice");
 
-  equal(ref?.book, Book.EN_ALICE_WONDERLAND);
+  equal(ref?.book, Book.EN_WIZARD_OZ);
 
   r.rerender(
-    <BookContentLoader book={Book.EN_JEKYLL_HYDE} fallback="fallback">
+    <BookContentLoader book={Book.EN_TREASURE_ISLAND} fallback="fallback">
       {(result) => {
         ref = result;
         return <div>jekyll</div>;
@@ -31,7 +31,7 @@ test("load book", async () => {
 
   await r.findByText("jekyll");
 
-  equal(ref?.book, Book.EN_JEKYLL_HYDE);
+  equal(ref?.book, Book.EN_TREASURE_ISLAND);
 
   r.unmount();
 });

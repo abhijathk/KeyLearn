@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 360">
+  <rect width="240" height="360" fill="#171c22"/>
+  <rect x="10" y="10" width="220" height="340" fill="none" stroke="#5d7a6a" stroke-width="1.5"/>
+  <circle cx="120" cy="88" r="34" fill="#e8e4d4" opacity="0.92"/>
+  <path d="M20 150 Q75 120 130 146 T220 142 L220 175 L20 175 Z" fill="#232f2a"/>
+  <path d="M20 168 Q80 146 140 166 T220 164 L220 200 L20 200 Z" fill="#1b2420"/>
+  <g stroke="#3d4f46" stroke-width="3" opacity="0.55" stroke-linecap="round">
+    <line x1="28" y1="212" x2="212" y2="212"/>
+    <line x1="44" y1="224" x2="196" y2="224"/>
+  </g>
+  <text x="120" y="258" text-anchor="middle" fill="#e6e8e3" font-family="Georgia, serif" font-size="22" font-weight="bold">The Hound of</text>
+  <text x="120" y="284" text-anchor="middle" fill="#e6e8e3" font-family="Georgia, serif" font-size="22" font-weight="bold">the Baskervilles</text>
+  <line x1="80" y1="300" x2="160" y2="300" stroke="#5d7a6a" stroke-width="1"/>
+  <text x="120" y="322" text-anchor="middle" fill="#a9bcae" font-family="Georgia, serif" font-size="12" letter-spacing="1.5">ARTHUR CONAN DOYLE</text>
+</svg>

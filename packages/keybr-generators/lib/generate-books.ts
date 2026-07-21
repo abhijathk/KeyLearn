@@ -5,12 +5,11 @@ import { Parser } from "commonmark";
 import { pathTo } from "./root.ts";
 
 for (const name of [
-  "en-alice-wonderland",
-  "en-call-wild",
-  "en-jekyll-hyde",
-  "es-marianela",
-  "de-alice-wonderland",
-  "fr-alice-wonderland",
+  "en-wizard-oz",
+  "en-treasure-island",
+  "en-hound-baskervilles",
+  "en-time-machine",
+  "en-anne-green-gables",
 ]) {
   generate(
     pathTo(`books/${name}.txt`),

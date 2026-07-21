@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 360">
+  <rect width="240" height="360" fill="#20351f"/>
+  <rect x="10" y="10" width="220" height="340" fill="none" stroke="#a8c686" stroke-width="1.5"/>
+  <path d="M60 150 L120 84 L180 150 Z" fill="#3a5a38" stroke="#a8c686" stroke-width="2"/>
+  <rect x="78" y="150" width="84" height="46" fill="#2c452a" stroke="#a8c686" stroke-width="2"/>
+  <rect x="108" y="164" width="24" height="32" fill="#c96f43"/>
+  <rect x="86" y="160" width="14" height="14" fill="#e9edda"/>
+  <rect x="140" y="160" width="14" height="14" fill="#e9edda"/>
+  <circle cx="52" cy="120" r="12" fill="#d98ca4"/>
+  <circle cx="190" cy="112" r="9" fill="#d98ca4"/>
+  <circle cx="200" cy="130" r="6" fill="#e7b3c2"/>
+  <text x="120" y="248" text-anchor="middle" fill="#f0f3e4" font-family="Georgia, serif" font-size="26" font-weight="bold">Anne of</text>
+  <text x="120" y="278" text-anchor="middle" fill="#f0f3e4" font-family="Georgia, serif" font-size="26" font-weight="bold">Green Gables</text>
+  <line x1="80" y1="296" x2="160" y2="296" stroke="#a8c686" stroke-width="1"/>
+  <text x="120" y="320" text-anchor="middle" fill="#c4d3a5" font-family="Georgia, serif" font-size="12" letter-spacing="1.5">L. M. MONTGOMERY</text>
+</svg>
