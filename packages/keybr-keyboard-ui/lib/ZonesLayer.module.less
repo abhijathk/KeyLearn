@@ -18,20 +18,11 @@
     vector-effect: non-scaling-stroke;
   }
 
-  // wrist/forearm flowing down below the keyboard — a touch fainter than the
-  // hand so it recedes.
-  .forearm {
-    fill-opacity: 0.11;
-    stroke-opacity: 0.4;
-  }
-
+  // Only drop the faint zone-shadow shapes and the magenta markers. Every
+  // other shape (palm, wrist, fingers) is kept and flattened to one colour by
+  // the fill above, so the full hand shows with no interior shading.
   path[opacity],
-  path[fill="#f0f"],
-  path[fill="#e7af77"],
-  path[fill="#d79260"],
-  path[fill="#cb854f"],
-  path[fill="#a67c52"],
-  path[fill="#8c6239"] {
+  path[fill="#f0f"] {
     display: none;
   }
 }
