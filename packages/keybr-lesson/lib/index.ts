@@ -6,6 +6,7 @@ export * from "./dailygoal.ts";
 export * from "./decay.ts";
 export * from "./guided.ts";
 export * from "./key.ts";
+export * from "./kids-words.ts";
 export * from "./learningrate.ts";
 export * from "./learningsession.ts";
 export * from "./lesson.ts";

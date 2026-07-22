@@ -6,6 +6,7 @@ import { type KeyStatsMap } from "@keybr/result";
 import { type Settings } from "@keybr/settings";
 import { Dictionary, filterWordList } from "./dictionary.ts";
 import { LessonKey, LessonKeys } from "./key.ts";
+import { filterKidsWords } from "./kids-words.ts";
 import { Lesson } from "./lesson.ts";
 import { lessonProps } from "./settings.ts";
 import { findDueKey, isUrgent } from "./srs.ts";
@@ -28,6 +29,15 @@ export class GuidedLesson extends Lesson {
     wordList: WordList,
   ) {
     super(settings, keyboard, model);
+    if (settings.get(lessonProps.guided.kidsWords)) {
+      // Same algorithm, kid-sized vocabulary. If the intersection is too
+      // small to feed the generator, keep the full list — the phonetic
+      // pseudo-word fallback still guards short letter sets either way.
+      const kids = filterKidsWords(wordList);
+      if (kids.length >= 50) {
+        wordList = kids;
+      }
+    }
     this.dictionary = new Dictionary(
       filterWordList(wordList, this.codePoints).filter(
         (word) => word.length > 2,

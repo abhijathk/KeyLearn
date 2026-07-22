@@ -14,6 +14,9 @@ export const lessonProps = {
   length: numberProp("lesson.length", 0, { min: 0, max: 1 }),
   guided: {
     naturalWords: booleanProp("lesson.guided.naturalWords", true),
+    // Kids mode: intersect the dictionary with a curated child vocabulary.
+    // The adaptive algorithm is untouched — only the word pool changes.
+    kidsWords: booleanProp("lesson.guided.kidsWords", false),
     keyboardOrder: booleanProp("lesson.guided.keyboardOrder", false),
     alphabetSize: numberProp("lesson.guided.alphabetSize", 0, {
       min: 0,
