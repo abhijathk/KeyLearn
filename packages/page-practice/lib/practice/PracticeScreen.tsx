@@ -1,13 +1,14 @@
 import { catchError } from "@keybr/debug";
 import { KeyboardProvider } from "@keybr/keyboard";
 import { schedule } from "@keybr/lang";
-import { type Lesson } from "@keybr/lesson";
+import { type Lesson, lessonProps } from "@keybr/lesson";
 import { LessonLoader } from "@keybr/lesson-loader";
 import { LoadingProgress } from "@keybr/pages-shared";
-import { type Result, useResults } from "@keybr/result";
+import { DailyStatsMap, type Result, useResults } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller } from "./Controller.tsx";
+import { GoalCeremony } from "./GoalCeremony.tsx";
 import { SessionAward } from "./SessionAward.tsx";
 import { type LessonEvent, Progress } from "./state/index.ts";
 import { UnlockCeremony } from "./UnlockCeremony.tsx";
@@ -28,10 +29,40 @@ type Ceremony = {
   readonly prev: Result | null;
 };
 
+type GoalStats = {
+  readonly goalMinutes: number;
+  readonly minutes: number;
+  readonly lessons: number;
+  readonly topSpeed: number;
+};
+
+// The goal ceremony fires once per calendar day, even across page reloads.
+const goalCelebratedKey = "keylearn.goalCelebrated";
+
+function goalAlreadyCelebrated(): boolean {
+  try {
+    return (
+      localStorage.getItem(goalCelebratedKey) === new Date().toDateString()
+    );
+  } catch {
+    return false;
+  }
+}
+
+function rememberGoalCelebrated(): void {
+  try {
+    localStorage.setItem(goalCelebratedKey, new Date().toDateString());
+  } catch {
+    // Storage may be unavailable; celebrating twice is harmless.
+  }
+}
+
 function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
+  const { settings } = useSettings();
   const { results, appendResults } = useResults();
   const [progress, { total, current }] = useProgress(lesson, results);
   const [ceremony, setCeremony] = useState<Ceremony | null>(null);
+  const [goal, setGoal] = useState<GoalStats | null>(null);
   const [award, setAward] = useState<LessonEvent | null>(null);
   const awardTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const showAward = (event: LessonEvent) => {
@@ -49,7 +80,8 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
           progress={progress}
           onResult={(result) => {
             if (result.validate()) {
-              const prev = results.length > 0 ? results[results.length - 1] : null;
+              const prev =
+                results.length > 0 ? results[results.length - 1] : null;
               progress.append(result, (event) => {
                 if (event.type === "new-letter") {
                   // The unlock ceremony replaces the plain toast for new keys.
@@ -58,8 +90,23 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
                     result,
                     prev,
                   });
+                } else if (event.type === "daily-goal") {
+                  // Crossing the daily goal earns the full ceremony window.
+                  if (!goalAlreadyCelebrated()) {
+                    rememberGoalCelebrated();
+                    const today = new DailyStatsMap([...results, result]).today
+                      .results;
+                    setGoal({
+                      goalMinutes: settings.get(lessonProps.dailyGoal),
+                      minutes: Math.round(
+                        today.reduce((sum, { time }) => sum + time, 0) / 60000,
+                      ),
+                      lessons: today.length,
+                      topSpeed: Math.max(...today.map(({ speed }) => speed)),
+                    });
+                  }
                 } else {
-                  // Records and goal wins celebrate at eye level, above the text.
+                  // Records celebrate at eye level, above the text.
                   showAward(event);
                 }
               });
@@ -86,6 +133,17 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
             }}
             onClose={() => {
               setCeremony(null);
+            }}
+          />
+        )}
+        {goal != null && (
+          <GoalCeremony
+            goalMinutes={goal.goalMinutes}
+            minutes={goal.minutes}
+            lessons={goal.lessons}
+            topSpeed={goal.topSpeed}
+            onContinue={() => {
+              setGoal(null);
             }}
           />
         )}
