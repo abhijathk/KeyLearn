@@ -9,7 +9,14 @@ export function ThemeSwitcher() {
   const { color, switchColor } = useTheme();
   const night = color !== "keylearn-day";
   return (
-    <div className={styles.root}>
+    <div
+      className={styles.root}
+      onMouseDown={(ev) => {
+        // Keep the focus where it is: stealing it from the practice text
+        // area would blur it and reset the lesson in progress.
+        ev.preventDefault();
+      }}
+    >
       <IconButton
         icon={<StrokeIcon name="theme" />}
         title={formatMessage(
