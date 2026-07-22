@@ -28,10 +28,10 @@ export function Header({
     const onStreak = (ev: Event) => {
       setStreak((ev as CustomEvent<number>).detail ?? 0);
     };
-    // Mirror the practice screen's focus-mode toggle so the header can strip
-    // itself down to just the exit button while focus mode is on.
-    const onFocusMode = () => {
-      setFocusMode((v) => !v);
+    // The practice screen owns focus mode and broadcasts its state; the
+    // header just follows, so the two can never drift apart.
+    const onFocusMode = (ev: Event) => {
+      setFocusMode(Boolean((ev as CustomEvent<boolean>).detail));
     };
     // While keys are landing, the header controls step back too (the logo
     // stays put).
@@ -39,11 +39,11 @@ export function Header({
       setTyping(Boolean((ev as CustomEvent<boolean>).detail));
     };
     window.addEventListener("keylearn:streak", onStreak);
-    window.addEventListener("keylearn:focus-mode", onFocusMode);
+    window.addEventListener("keylearn:focus-mode-state", onFocusMode);
     window.addEventListener("keylearn:typing", onTyping);
     return () => {
       window.removeEventListener("keylearn:streak", onStreak);
-      window.removeEventListener("keylearn:focus-mode", onFocusMode);
+      window.removeEventListener("keylearn:focus-mode-state", onFocusMode);
       window.removeEventListener("keylearn:typing", onTyping);
     };
   }, []);

@@ -109,8 +109,20 @@ export class Presenter extends PureComponent<Props, State> {
     }
   }
 
+  // The presenter owns the focus-mode state: the header only requests a
+  // toggle and then follows the broadcast state, so the two can never drift
+  // apart (a stale header once left the whole practice chrome hidden).
+  #broadcastFocusMode(focusMode: boolean) {
+    window.dispatchEvent(
+      new window.CustomEvent("keylearn:focus-mode-state", {
+        detail: focusMode,
+      }),
+    );
+  }
+
   override componentDidMount() {
     window.addEventListener("keylearn:focus-mode", this.handleToggleFocusMode);
+    this.#broadcastFocusMode(this.state.focusMode);
     if (this.props.state.settings.isNew) {
       this.setState({
         view: View.Normal,
@@ -125,6 +137,7 @@ export class Presenter extends PureComponent<Props, State> {
       this.handleToggleFocusMode,
     );
     this.#stopTyping();
+    this.#broadcastFocusMode(false);
   }
 
   override render() {
@@ -326,6 +339,7 @@ export class Presenter extends PureComponent<Props, State> {
     this.setState(
       ({ focusMode }) => ({ focusMode: !focusMode }),
       () => {
+        this.#broadcastFocusMode(this.state.focusMode);
         this.focusRef.current?.focus();
       },
     );
