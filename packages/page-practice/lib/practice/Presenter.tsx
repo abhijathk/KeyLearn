@@ -382,7 +382,13 @@ function NormalLayout({
           masteryKeys={masteryKeysOf(state)}
         />
       </div>
-      {focusMode || <StatusFooter state={state} />}
+      {focusMode || (
+        // While the resting hands are draped over the keyboard the lane slides
+        // down out from under them, and slides back up once typing starts.
+        <div className={focus ? styles.footerZone : styles.footerZone_rest}>
+          <StatusFooter state={state} />
+        </div>
+      )}
       {tour}
     </Screen>
   );
