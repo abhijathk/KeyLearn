@@ -39,3 +39,28 @@
 .size_X3 {
   font-size: calc(5rem * var(--text-scale, 1));
 }
+
+// The Ink Road focus band: past lines recede, the caret's line owns the
+// light, coming lines wait slightly dimmed — with soft fades at the line
+// edges, like a window onto a longer road.
+.band {
+  transition: opacity 0.45s ease;
+}
+
+.band_past {
+  opacity: 0.38;
+}
+
+.band_active {
+  opacity: 1;
+}
+
+.band_next {
+  opacity: 0.62;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .band {
+    transition: none;
+  }
+}

@@ -29,14 +29,20 @@ test("render simple chars", () => {
       <span
         key={1}
         className="miss"
-        style={{ color: "var(--textinput--miss__color)" }}
+        style={{
+          color:
+            "color-mix(in oklab, var(--textinput--miss__color) 65%, var(--textinput--hit__color))",
+        }}
       >
         b
       </span>,
       <span
         key={2}
         className={undefined}
-        style={{ color: "var(--textinput--hit__color)" }}
+        style={{
+          color:
+            "color-mix(in oklab, var(--textinput-cursor__background-color) 55%, var(--textinput--hit__color))",
+        }}
       >
         c
       </span>,
@@ -45,7 +51,7 @@ test("render simple chars", () => {
         className={undefined}
         style={{ color: "var(--textinput--hit__color)" }}
       >
-        {"\uE000"}
+        {"\u00A0"}
       </span>,
       <span
         key={4}
@@ -87,14 +93,20 @@ test("render styled chars", () => {
       <span
         key={1}
         className="miss"
-        style={{ color: "var(--textinput--miss__color)" }}
+        style={{
+          color:
+            "color-mix(in oklab, var(--textinput--miss__color) 65%, var(--textinput--hit__color))",
+        }}
       >
         b
       </span>,
       <span
         key={2}
         className={undefined}
-        style={{ color: "var(--textinput--hit__color)" }}
+        style={{
+          color:
+            "color-mix(in oklab, var(--textinput-cursor__background-color) 55%, var(--textinput--hit__color))",
+        }}
       >
         c
       </span>,
@@ -103,7 +115,7 @@ test("render styled chars", () => {
         className={undefined}
         style={{ color: "var(--textinput--hit__color)" }}
       >
-        {"\uE000"}
+        {"\u00A0"}
       </span>,
       <span
         key={4}
@@ -158,7 +170,7 @@ test("render special chars", () => {
         className={undefined}
         style={{ color: "var(--textinput--special__color)" }}
       >
-        {"\uE000"}
+        {"\u00A0"}
       </span>,
     ],
   );

@@ -11,6 +11,7 @@ import {
 } from "@keybr/textinput-events";
 import { TextArea } from "@keybr/textinput-ui";
 import { type Focusable, Zoomer } from "@keybr/widget";
+import { clsx } from "clsx";
 import {
   createRef,
   type CSSProperties,
@@ -20,7 +21,7 @@ import {
 import { FormattedMessage } from "react-intl";
 import { Controls } from "./Controls.tsx";
 import { GhostTrack } from "./GhostTrack.tsx";
-import { Indicators } from "./Indicators.tsx";
+import { Indicators, JourneyStrip } from "./Indicators.tsx";
 import { DeferredKeyboardPresenter } from "./KeyboardPresenter.tsx";
 import { PracticeTour } from "./PracticeTour.tsx";
 import * as styles from "./Presenter.module.less";
@@ -31,7 +32,6 @@ type Props = {
   readonly state: LessonState;
   readonly lines: LineList;
   readonly depressedKeys: readonly KeyId[];
-  readonly colorOf?: (codePoint: number) => string | null;
   readonly onResetLesson: () => void;
   readonly onSkipLesson: () => void;
   readonly onKeyDown: (ev: IKeyboardEvent) => void;
@@ -100,7 +100,7 @@ export class Presenter extends PureComponent<Props, State> {
 
   override render() {
     const {
-      props: { state, lines, depressedKeys, colorOf },
+      props: { state, lines, depressedKeys },
       state: { view, tour, focus, focusMode, textSize },
       handleResetLesson,
       handleSkipLesson,
@@ -142,7 +142,6 @@ export class Presenter extends PureComponent<Props, State> {
                 size="X0"
                 demo={tour}
                 hideStartHint={true}
-                colorOf={focusMode ? undefined : colorOf}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
@@ -352,7 +351,14 @@ function NormalLayout({
 }) {
   return (
     <Screen className={styles.screen}>
-      {focusMode || <Indicators state={state} />}
+      {focusMode || (
+        // While typing, everything but the text and keyboard steps back a
+        // touch so the typing zone owns the attention.
+        <div className={focus ? styles.dimmed : undefined}>
+          <Indicators state={state} />
+          <StatusFooter state={state} />
+        </div>
+      )}
       <div
         id={names.textInput}
         className={styles.textInput_normal}
@@ -392,10 +398,16 @@ function NormalLayout({
         />
       </div>
       {focusMode || (
-        // While the resting hands are draped over the keyboard the lane slides
-        // down out from under them, and slides back up once typing starts.
-        <div className={focus ? styles.footerZone : styles.footerZone_rest}>
-          <StatusFooter state={state} />
+        // While the resting hands are draped over the keyboard the journey
+        // strip slides down out from under them, and back up when typing.
+        <div
+          className={
+            focus
+              ? clsx(styles.footerZone, styles.dimmed)
+              : styles.footerZone_rest
+          }
+        >
+          <JourneyStrip state={state} />
         </div>
       )}
       {tour}

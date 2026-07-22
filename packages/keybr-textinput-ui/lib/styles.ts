@@ -33,8 +33,10 @@ const textStyles = {
   hit: {
     color: "var(--textinput--hit__color)",
   } satisfies CSSProperties,
+  // A dried mistake: a pale red stain left in the trail, not a shout.
   miss: {
-    color: "var(--textinput--miss__color)",
+    color:
+      "color-mix(in oklab, var(--textinput--miss__color) 65%, var(--textinput--hit__color))",
   } satisfies CSSProperties,
   garbage: {
     color: "var(--textinput__color)",

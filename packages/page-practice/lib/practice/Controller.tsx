@@ -1,4 +1,4 @@
-import { type Keyboard, keyboardProps, type KeyId, useKeyboard } from "@keybr/keyboard";
+import { type KeyId, useKeyboard } from "@keybr/keyboard";
 import { type Result } from "@keybr/result";
 import { type LineList } from "@keybr/textinput";
 import { Feedback } from "@keybr/textinput";
@@ -42,20 +42,11 @@ export const Controller = memo(function Controller({
   useWindowEvent("focus", handleResetLesson);
   useWindowEvent("blur", handleResetLesson);
   useDocumentEvent("visibilitychange", handleResetLesson);
-  // Tint the practice letters with their key's finger-zone colour, but only
-  // while finger colours are switched on for the keyboard.
-  const keyboard = useKeyboard();
-  const zonesOn = progress.settings.get(keyboardProps.colors);
-  const colorOf = useMemo(
-    () => (zonesOn ? zoneColorOf(keyboard) : undefined),
-    [keyboard, zonesOn],
-  );
   return (
     <Presenter
       state={state}
       lines={state.lines}
       depressedKeys={state.depressedKeys}
-      colorOf={colorOf}
       onResetLesson={handleResetLesson}
       onSkipLesson={handleSkipLesson}
       onKeyDown={handleKeyDown}
@@ -64,31 +55,6 @@ export const Controller = memo(function Controller({
     />
   );
 });
-
-// Lighter shades of the finger-zone colours — the same hue lifted toward the
-// foreground so the letters read clearly instead of dull. Mixing toward the
-// text colour keeps it readable in both the night and day themes.
-const lighter = (v: string) =>
-  `color-mix(in oklab, var(${v}) 45%, var(--text-color))`;
-const ZONE_COLOR: Record<string, string> = {
-  pinky: lighter("--pinky-zone-color"),
-  ring: lighter("--ring-zone-color"),
-  middle: lighter("--middle-zone-color"),
-  leftIndex: lighter("--left-index-zone-color"),
-  rightIndex: lighter("--right-index-zone-color"),
-  thumb: lighter("--thumb-zone-color"),
-};
-
-function zoneColorOf(keyboard: Keyboard): (codePoint: number) => string | null {
-  return (codePoint) => {
-    const combo = keyboard.getCombo(codePoint);
-    if (combo == null) {
-      return null;
-    }
-    const shape = keyboard.getShape(combo.id);
-    return shape?.finger != null ? (ZONE_COLOR[shape.finger] ?? null) : null;
-  };
-}
 
 function useLessonState(
   progress: Progress,

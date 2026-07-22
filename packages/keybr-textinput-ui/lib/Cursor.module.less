@@ -1,0 +1,101 @@
+// The block caret as the "you are here" dot of the text road: softly rounded,
+// with a breathing accent halo.
+.caret {
+  border-radius: 0.14em;
+  animation: caret-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes caret-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px
+        color-mix(
+          in oklab,
+          var(--textinput-cursor__background-color) 16%,
+          transparent
+        ),
+      0 0 10px 1px
+        color-mix(
+          in oklab,
+          var(--textinput-cursor__background-color) 40%,
+          transparent
+        );
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 4px
+        color-mix(
+          in oklab,
+          var(--textinput-cursor__background-color) 26%,
+          transparent
+        ),
+      0 0 18px 4px
+        color-mix(
+          in oklab,
+          var(--textinput-cursor__background-color) 65%,
+          transparent
+        );
+  }
+}
+
+// The wrong keystroke: the block flinches in pale red.
+.flinch {
+  background-color: color-mix(
+    in oklab,
+    var(--textinput--miss__color) 75%,
+    var(--background-color)
+  ) !important;
+  box-shadow:
+    0 0 0 3px
+      color-mix(in oklab, var(--textinput--miss__color) 22%, transparent),
+    0 0 14px 2px
+      color-mix(in oklab, var(--textinput--miss__color) 50%, transparent) !important;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    animation: none;
+  }
+}
+
+// The focus band veils: background-coloured washes that dim the text above
+// and below the caret's line, sliding smoothly as the caret advances.
+.veilPast,
+.veilNext {
+  display: none;
+  position: absolute;
+  inset-inline: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition:
+    inset-block-start 0.45s ease,
+    block-size 0.45s ease;
+}
+
+// the finished stretch recedes furthest
+.veilPast {
+  background-color: color-mix(
+    in srgb,
+    var(--background-color) 62%,
+    transparent
+  );
+}
+
+// the road ahead waits, only lightly dimmed
+.veilNext {
+  background-color: color-mix(
+    in srgb,
+    var(--background-color) 38%,
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .veilPast,
+  .veilNext {
+    transition: none;
+  }
+}

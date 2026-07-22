@@ -48,6 +48,10 @@ export const CORMORANT = new FontFace("Cormorant", "400", "normal", ["serif"], c
 export const CORMORANT_I = new FontFace("Cormorant", "400", "italic", ["serif"], cl);
 export const CORMORANT_B = new FontFace("Cormorant", "700", "normal", ["serif"], cl);
 export const CORMORANT_BI = new FontFace("Cormorant", "700", "italic", ["serif"], cl);
+export const JETBRAINS_MONO = new FontFace("JetBrains Mono", "400", "normal", ["Ubuntu Mono", "monospace"], cgl);
+export const JETBRAINS_MONO_I = new FontFace("JetBrains Mono", "400", "italic", ["Ubuntu Mono", "monospace"], cgl);
+export const JETBRAINS_MONO_B = new FontFace("JetBrains Mono", "700", "normal", ["Ubuntu Mono", "monospace"], cgl);
+export const JETBRAINS_MONO_BI = new FontFace("JetBrains Mono", "700", "italic", ["Ubuntu Mono", "monospace"], cgl);
 export const NEWSREADER = new FontFace("Newsreader", "400", "normal", ["serif"], ["latin"]);
 export const NEWSREADER_I = new FontFace("Newsreader", "400", "italic", ["serif"], ["latin"]);
 export const NEWSREADER_B = new FontFace("Newsreader", "700", "normal", ["serif"], ["latin"]);
@@ -122,6 +126,10 @@ export const FONTS_FACES: readonly FontFace[] = [
   CORMORANT_I,
   CORMORANT_B,
   CORMORANT_BI,
+  JETBRAINS_MONO,
+  JETBRAINS_MONO_I,
+  JETBRAINS_MONO_B,
+  JETBRAINS_MONO_BI,
   NEWSREADER,
   NEWSREADER_I,
   NEWSREADER_B,

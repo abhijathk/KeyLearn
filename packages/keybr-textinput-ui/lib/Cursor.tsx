@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { findCursor } from "./chars.tsx";
+import * as styles from "./Cursor.module.less";
 import { getCursorStyle } from "./styles.ts";
 
 export class Cursor extends Component<{
@@ -18,6 +19,8 @@ export class Cursor extends Component<{
 }> {
   readonly #containerRef = createRef<HTMLDivElement>();
   readonly #cursorRef = createRef<HTMLSpanElement>();
+  readonly #veilPastRef = createRef<HTMLDivElement>();
+  readonly #veilNextRef = createRef<HTMLDivElement>();
   #initial = true;
   #animation: Animation | null = null;
 
@@ -63,11 +66,18 @@ export class Cursor extends Component<{
     });
   };
 
-  // Shake the current letter the moment a wrong key is pressed.
+  // The wrong keystroke: the block flinches — pale red fill, red halo, and a
+  // quick shake — then settles back to the accent.
   readonly #shake = () => {
     const cursor = this.#cursorRef.current;
+    if (cursor == null) {
+      return;
+    }
+    cursor.classList.add(styles.flinch);
+    window.setTimeout(() => {
+      cursor.classList.remove(styles.flinch);
+    }, 380);
     if (
-      cursor != null &&
       typeof cursor.animate === "function" &&
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
@@ -172,6 +182,25 @@ export class Cursor extends Component<{
         break;
     }
 
+    // The focus band: veils dim the finished stretch above the caret's line
+    // and the not-yet stretch below it. As the caret nears the end of its
+    // line the lower veil steps down early, so the next line brightens while
+    // the eye still has time to read ahead.
+    const veilPast = this.#veilPastRef.current;
+    const veilNext = this.#veilNextRef.current;
+    const container = this.#containerRef.current;
+    if (veilPast != null && veilNext != null && container != null) {
+      const width = container.clientWidth || 1;
+      const nearEnd = x + w * 14 >= width;
+      const activeBottom = y + (nearEnd ? h * 2 : h);
+      veilPast.style.display = "block";
+      veilPast.style.insetBlockStart = "0";
+      veilPast.style.blockSize = `${Math.max(0, y)}px`;
+      veilNext.style.display = "block";
+      veilNext.style.insetBlockStart = `${activeBottom}px`;
+      veilNext.style.insetBlockEnd = "0";
+    }
+
     const fromLeft = cursor.offsetLeft;
     const fromTop = cursor.offsetTop;
 
@@ -220,6 +249,15 @@ export class Cursor extends Component<{
   #hide(cursor: HTMLElement) {
     const { style } = cursor;
 
+    const veilPast = this.#veilPastRef.current;
+    const veilNext = this.#veilNextRef.current;
+    if (veilPast != null) {
+      veilPast.style.display = "none";
+    }
+    if (veilNext != null) {
+      veilNext.style.display = "none";
+    }
+
     cursor.textContent = "";
 
     style.display = "none";
@@ -234,8 +272,15 @@ export class Cursor extends Component<{
   override render(): ReactNode {
     return (
       <div ref={this.#containerRef} style={containerStyle}>
+        <div ref={this.#veilPastRef} className={styles.veilPast} />
+        <div ref={this.#veilNextRef} className={styles.veilNext} />
         <span
           ref={this.#cursorRef}
+          className={
+            this.props.settings.caretShapeStyle === CaretShapeStyle.Block
+              ? styles.caret
+              : undefined
+          }
           style={{
             ...cursorStyle,
             ...getCursorStyle(this.props.settings.caretShapeStyle),
@@ -259,6 +304,8 @@ const cursorStyle = {
   top: 0,
   width: 0,
   height: 0,
+  // above the focus-band veils
+  zIndex: 2,
 } satisfies CSSProperties;
 
 function wpmToDuration(wpm: number): number {

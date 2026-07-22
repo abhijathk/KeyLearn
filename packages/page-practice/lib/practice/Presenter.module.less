@@ -10,7 +10,7 @@
   position: relative;
   max-inline-size: 72rem;
   margin-inline: auto;
-  margin-block-start: 5rem;
+  margin-block-start: 3rem;
   padding-inline: 3rem;
   text-align: center;
 }
@@ -137,4 +137,10 @@
   .startKeycap {
     animation: none;
   }
+}
+
+// While typing, the chrome around the text and keyboard steps back a touch.
+.dimmed {
+  opacity: 0.6;
+  transition: opacity 0.45s ease;
 }

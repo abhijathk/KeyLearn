@@ -80,7 +80,7 @@ export const textDisplaySettings = {
   font: Font.default,
   caretShapeStyle: CaretShapeStyle.Block,
   caretMovementStyle: CaretMovementStyle.Smooth,
-  whitespaceStyle: WhitespaceStyle.Bullet,
+  whitespaceStyle: WhitespaceStyle.Space,
   language: Language.EN,
 } as const satisfies TextDisplaySettings;
 
@@ -99,7 +99,7 @@ export const textDisplayProps = {
   whitespaceStyle: enumProp(
     "textDisplay.whitespaceStyle",
     WhitespaceStyle,
-    WhitespaceStyle.Bullet,
+    WhitespaceStyle.Space,
   ),
 } as const;
 

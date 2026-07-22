@@ -1,4 +1,5 @@
 import {
+  Attr,
   type Char,
   charArraysAreEqual,
   type Line,
@@ -48,14 +49,40 @@ export const TextLines = memo(function TextLines({
     size === "X2" && styles.size_X2,
     size === "X3" && styles.size_X3,
   );
-  const children = lines.lines.map(({ text, chars, ...props }: Line) =>
+  // The focus band: the line the caret is on owns the light; the finished
+  // line recedes furthest, the coming lines wait a little dimmed. As the caret
+  // nears the end of its line, the next line brightens early so the eye can
+  // read ahead across the line break without slowing down.
+  const activeIndex = cursor
+    ? lines.lines.findIndex(({ chars }) =>
+        chars.some(({ attrs }) => attrs === Attr.Cursor),
+      )
+    : -1;
+  let nearEnd = false;
+  if (activeIndex >= 0) {
+    const { chars } = lines.lines[activeIndex];
+    const cursorAt = chars.findIndex(({ attrs }) => attrs === Attr.Cursor);
+    nearEnd = cursorAt >= 0 && chars.length - cursorAt <= 12;
+  }
+  const bandOf = (index: number): string | false =>
+    cursor &&
+    activeIndex >= 0 &&
+    clsx(
+      styles.band,
+      index < activeIndex
+        ? styles.band_past
+        : index === activeIndex || (nearEnd && index === activeIndex + 1)
+          ? styles.band_active
+          : styles.band_next,
+    );
+  const children = lines.lines.map(({ text, chars, ...props }: Line, index) =>
     LineTemplate != null ? (
       <LineTemplate key={text} {...props}>
         <TextLine
           key={text}
           settings={settings}
           chars={chars}
-          className={className}
+          className={clsx(className, bandOf(index))}
           style={settings.font.cssProperties}
           colorOf={colorOf}
         />
@@ -65,7 +92,7 @@ export const TextLines = memo(function TextLines({
         key={text}
         settings={settings}
         chars={chars}
-        className={className}
+        className={clsx(className, bandOf(index))}
         style={settings.font.cssProperties}
         colorOf={colorOf}
       />

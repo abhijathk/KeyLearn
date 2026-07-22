@@ -55,6 +55,49 @@ export const Indicators = memo(function Indicators({
   }, [streak]);
   return (
     <div id={names.indicators} className={styles.indicators}>
+      <div className={styles.metrics}>
+        <Pulse summaryStats={summaryStats} speeds={speeds} names={names} />
+      </div>
+    </div>
+  );
+});
+
+/**
+ * The letter journey as its own strip, parked at the bottom of the screen
+ * below the keyboard and the resting hands.
+ */
+export const JourneyStrip = memo(function JourneyStrip({
+  state: { keyStatsMap, lessonKeys },
+}: {
+  readonly state: LessonState;
+}): ReactNode {
+  type HoverState = Readonly<
+    | { type: "hidden" }
+    | { type: "visible-in"; key: LessonKey; elem: Element }
+    | { type: "visible"; key: LessonKey; elem: Element }
+    | { type: "visible-out"; key: LessonKey; elem: Element }
+  >;
+  const [hover, setHover] = useState<HoverState>({ type: "hidden" });
+  useEffect(() => {
+    const tasks = new Tasks();
+    switch (hover.type) {
+      case "visible-in":
+        tasks.delayed(300, () => {
+          setHover({ ...hover, type: "visible" });
+        });
+        break;
+      case "visible-out":
+        tasks.delayed(300, () => {
+          setHover({ type: "hidden" });
+        });
+        break;
+    }
+    return () => {
+      tasks.cancelAll();
+    };
+  }, [hover]);
+  return (
+    <div className={styles.journeyStrip}>
       <LetterJourney
         id={names.keySet}
         lessonKeys={lessonKeys}
@@ -72,9 +115,6 @@ export const Indicators = memo(function Indicators({
           }
         }}
       />
-      <div className={styles.metrics}>
-        <Pulse summaryStats={summaryStats} speeds={speeds} names={names} />
-      </div>
       {(hover.type === "visible" || hover.type === "visible-out") && (
         <Portal>
           <Popup

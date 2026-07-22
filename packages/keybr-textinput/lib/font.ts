@@ -3,8 +3,8 @@ import { Enum, type EnumItem } from "@keybr/lang";
 import {
   type FontFace,
   FONTS_FACES,
+  JETBRAINS_MONO,
   type Script,
-  UBUNTU_MONO,
 } from "@keybr/themes";
 import { type CSSProperties } from "react";
 
@@ -15,7 +15,8 @@ export class Font implements EnumItem {
 
   static get default() {
     return (
-      Font.ALL.find(({ name }) => name === UBUNTU_MONO.name) ?? Font.ALL.at(0)
+      Font.ALL.find(({ name }) => name === JETBRAINS_MONO.name) ??
+      Font.ALL.at(0)
     );
   }
 
