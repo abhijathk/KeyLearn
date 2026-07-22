@@ -3,13 +3,13 @@
 // daily-goal stations.
 .lane {
   display: flex;
-  gap: 1.4rem;
+  gap: 1.1rem;
   align-items: center;
   justify-content: center;
   inline-size: min(64rem, 100%);
   min-block-size: 2.6rem;
   margin-inline: auto;
-  margin-block-start: 0.4rem;
+  margin-block-start: 0.1rem;
   padding-inline: 1rem;
 }
 
@@ -141,16 +141,23 @@
 }
 
 .stationValue {
-  color: var(--text-color);
+  color: var(--text-color-f1);
   font-family: var(--value-font-family);
+  font-size: 0.92rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+// the active key's own speed leads this row
+.stationValue_hi {
+  color: var(--text-color);
   font-size: 1.05rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
 }
 
 .microLabel {
   color: var(--text-color-f2);
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -158,13 +165,13 @@
 }
 
 .chip {
-  padding-inline: 0.4rem;
-  padding-block: 0.05rem;
+  padding-inline: 0.35rem;
+  padding-block: 0.04rem;
   border-radius: 999px;
   color: var(--text-color-f1);
   background-color: color-mix(in oklab, var(--secondary-f2) 25%, transparent);
   font-family: var(--value-font-family);
-  font-size: 0.72rem;
+  font-size: 0.64rem;
   font-weight: 600;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -221,8 +228,8 @@
 // ---- streak --------------------------------------------------------------
 
 .flame {
-  inline-size: 1.05rem;
-  block-size: 1.05rem;
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
   fill: none;
   stroke: var(--slow-key-color);
   stroke-width: 1.7;
@@ -254,8 +261,8 @@
   display: grid;
   position: relative;
   place-items: center;
-  inline-size: 1.7rem;
-  block-size: 1.7rem;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
   border-radius: 50%;
   background: conic-gradient(var(--accent) var(--p, 0%), var(--primary-d2) 0);
 

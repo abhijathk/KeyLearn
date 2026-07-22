@@ -44,6 +44,7 @@ type State = {
   readonly tour: boolean;
   readonly focus: boolean;
   readonly focusMode: boolean;
+  readonly typing: boolean;
   readonly textSize: number;
 };
 
@@ -78,8 +79,36 @@ export class Presenter extends PureComponent<Props, State> {
     tour: false,
     focus: false,
     focusMode: false,
+    typing: false,
     textSize: Preferences.get(propTextSize),
   };
+
+  #typingTimer: ReturnType<typeof setTimeout> | undefined;
+
+  // Dim the chrome only while keys are actually landing: any keystroke turns
+  // it on, three quiet seconds turn it back off.
+  #pokeTyping() {
+    if (!this.state.typing) {
+      this.setState({ typing: true });
+      window.dispatchEvent(
+        new window.CustomEvent("keylearn:typing", { detail: true }),
+      );
+    }
+    clearTimeout(this.#typingTimer);
+    this.#typingTimer = setTimeout(() => {
+      this.#stopTyping();
+    }, 5000);
+  }
+
+  #stopTyping() {
+    clearTimeout(this.#typingTimer);
+    if (this.state.typing) {
+      this.setState({ typing: false });
+      window.dispatchEvent(
+        new window.CustomEvent("keylearn:typing", { detail: false }),
+      );
+    }
+  }
 
   override componentDidMount() {
     window.addEventListener("keylearn:focus-mode", this.handleToggleFocusMode);
@@ -96,12 +125,13 @@ export class Presenter extends PureComponent<Props, State> {
       "keylearn:focus-mode",
       this.handleToggleFocusMode,
     );
+    this.#stopTyping();
   }
 
   override render() {
     const {
       props: { state, lines, depressedKeys },
-      state: { view, tour, focus, focusMode, textSize },
+      state: { view, tour, focus, focusMode, typing, textSize },
       handleResetLesson,
       handleSkipLesson,
       handleKeyDown,
@@ -122,6 +152,7 @@ export class Presenter extends PureComponent<Props, State> {
             state={state}
             focus={tour || focus}
             focusMode={focusMode}
+            typing={typing}
             depressedKeys={depressedKeys}
             toggledKeys={ModifierState.modifiers}
             controls={
@@ -234,6 +265,7 @@ export class Presenter extends PureComponent<Props, State> {
   handleKeyDown = (ev: IKeyboardEvent) => {
     if (this.state.focus) {
       this.props.onKeyDown(ev);
+      this.#pokeTyping();
     }
   };
 
@@ -261,6 +293,7 @@ export class Presenter extends PureComponent<Props, State> {
   };
 
   handleBlur = () => {
+    this.#stopTyping();
     this.setState(
       {
         focus: false,
@@ -330,6 +363,7 @@ function NormalLayout({
   state,
   focus,
   focusMode,
+  typing,
   depressedKeys,
   toggledKeys,
   controls,
@@ -341,6 +375,7 @@ function NormalLayout({
   readonly state: LessonState;
   readonly focus: boolean;
   readonly focusMode: boolean;
+  readonly typing: boolean;
   readonly depressedKeys: readonly string[];
   readonly toggledKeys: readonly string[];
   readonly controls: ReactNode;
@@ -354,7 +389,7 @@ function NormalLayout({
       {focusMode || (
         // While typing, everything but the text and keyboard steps back a
         // touch so the typing zone owns the attention.
-        <div className={focus ? styles.dimmed : undefined}>
+        <div className={clsx(styles.chrome, typing && styles.dimmed)}>
           <Indicators state={state} />
           <StatusFooter state={state} />
         </div>
@@ -403,7 +438,7 @@ function NormalLayout({
         <div
           className={
             focus
-              ? clsx(styles.footerZone, styles.dimmed)
+              ? clsx(styles.footerZone, typing && styles.dimmed)
               : styles.footerZone_rest
           }
         >

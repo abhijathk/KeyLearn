@@ -112,3 +112,15 @@
   stroke-width: 1.7;
   stroke-linejoin: round;
 }
+
+// While keys are landing on the practice screen, the header controls step
+// back a touch; the wordmark stays put.
+.controls.controlsDimmed {
+  opacity: 0.6;
+}
+
+// the fade is smooth both ways: transition on the base, opacity on the state
+.header .controls {
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}

@@ -23,6 +23,7 @@ export function Header({
   const { formatMessage } = useIntl();
   const [streak, setStreak] = useState(0);
   const [focusMode, setFocusMode] = useState(false);
+  const [typing, setTyping] = useState(false);
   useEffect(() => {
     const onStreak = (ev: Event) => {
       setStreak((ev as CustomEvent<number>).detail ?? 0);
@@ -32,11 +33,18 @@ export function Header({
     const onFocusMode = () => {
       setFocusMode((v) => !v);
     };
+    // While keys are landing, the header controls step back too (the logo
+    // stays put).
+    const onTyping = (ev: Event) => {
+      setTyping(Boolean((ev as CustomEvent<boolean>).detail));
+    };
     window.addEventListener("keylearn:streak", onStreak);
     window.addEventListener("keylearn:focus-mode", onFocusMode);
+    window.addEventListener("keylearn:typing", onTyping);
     return () => {
       window.removeEventListener("keylearn:streak", onStreak);
       window.removeEventListener("keylearn:focus-mode", onFocusMode);
+      window.removeEventListener("keylearn:typing", onTyping);
     };
   }, []);
 
@@ -47,7 +55,7 @@ export function Header({
       <header className={clsx(styles.header, styles.focusBar)}>
         <div className={styles.controls}>
           <IconButton
-            icon={<StrokeIcon name="focus" />}
+            icon={<StrokeIcon name="expand" />}
             title={formatMessage(
               defineMessage({
                 id: "practice.widget.focusMode.exit",
@@ -84,7 +92,7 @@ export function Header({
           <span className={styles.markAlt}>Learn</span>
         </NavLink>
       </div>
-      <div className={styles.controls}>
+      <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
         {streak > 0 && (
           <span
             className={styles.streak}

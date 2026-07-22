@@ -92,6 +92,7 @@ function KeyStations({
   return (
     <>
       <Station
+        emphasis={true}
         label={
           <>
             <FormattedMessage id="t_Last_speed" defaultMessage="Latest speed" />
@@ -363,14 +364,23 @@ function Station({
   label,
   value,
   title,
+  emphasis = false,
 }: {
   readonly label: ReactNode;
   readonly value: string;
   readonly title: string;
+  readonly emphasis?: boolean;
 }): ReactNode {
   return (
     <div className={styles.station} title={title}>
-      <span className={styles.stationValue}>{value}</span>
+      <span
+        className={clsx(
+          styles.stationValue,
+          emphasis && styles.stationValue_hi,
+        )}
+      >
+        {value}
+      </span>
       <span className={styles.microLabel}>{label}</span>
     </div>
   );
