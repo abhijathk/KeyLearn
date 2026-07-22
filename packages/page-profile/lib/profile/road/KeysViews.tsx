@@ -1,7 +1,7 @@
 import { useIntlNumbers } from "@keybr/intl";
 import { useFormatter, useKeyStyles } from "@keybr/lesson-ui";
 import { type KeyStatsMap, timeToSpeed } from "@keybr/result";
-import { Tab, TabList } from "@keybr/widget";
+import { clsx } from "clsx";
 import { type ReactNode, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./road.module.less";
@@ -60,31 +60,33 @@ export function KeysViews({
   return (
     <>
       <div className={styles.centered}>
-        <TabList
-          selectedIndex={view}
-          onSelect={(index) => {
-            setView(index);
-          }}
-        >
-          <Tab
-            label={formatMessage({
+        <span className={styles.seg}>
+          {[
+            formatMessage({
               id: "profile.keys.heatmap",
               defaultMessage: "Heatmap",
-            })}
-          />
-          <Tab
-            label={formatMessage({
+            }),
+            formatMessage({
               id: "profile.keys.speed",
               defaultMessage: "Speed",
-            })}
-          />
-          <Tab
-            label={formatMessage({
+            }),
+            formatMessage({
               id: "profile.keys.frequency",
               defaultMessage: "Frequency",
-            })}
-          />
-        </TabList>
+            }),
+          ].map((name, index) => (
+            <button
+              key={name}
+              type="button"
+              className={clsx(styles.segItem, view === index && styles.segOn)}
+              onClick={() => {
+                setView(index);
+              }}
+            >
+              {name}
+            </button>
+          ))}
+        </span>
       </div>
       {view === 0 && <HeatKeyboard facts={facts} />}
       {view === 1 && <SpeedBars facts={facts} />}

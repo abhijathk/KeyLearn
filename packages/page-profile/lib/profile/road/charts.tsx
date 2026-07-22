@@ -330,8 +330,9 @@ export function AllKeysChart({
   readonly confidenceOf: (timeToType: number | null) => number | null;
 }): ReactNode {
   const { confidenceColor } = useKeyStyles();
+  const { formatSpeed } = useFormatter();
   const W = 1000;
-  const H = 150;
+  const H = 230;
   const X0 = 36;
   const series = keyStatsMap.letters
     .map((letter) => {
@@ -351,26 +352,49 @@ export function AllKeysChart({
   const lo = Math.min(...all) * 0.85;
   const maxLen = Math.max(...series.map(({ speeds }) => speeds.length));
   const py = (v: number) => 10 + ((hi - v) * (H - 20)) / (hi - lo || 1);
+  // spread the end-of-line letter labels apart so close lines stay readable
+  const ends = series
+    .map(({ letter, speeds, conf }) => {
+      const vals = smoothed(speeds, 0.6);
+      return { letter, conf, vals, y: py(vals[vals.length - 1]) };
+    })
+    .sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) {
+    if (ends[i].y - ends[i - 1].y < 13) {
+      ends[i] = { ...ends[i], y: ends[i - 1].y + 13 };
+    }
+  }
+  const labelY = new Map(ends.map(({ letter, y }) => [letter, y]));
+  const gridVals = [0.2, 0.5, 0.8].map((f) => lo + (hi - lo) * (1 - f));
   return (
     <svg
       className={styles.chart}
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="none"
-      style={{ blockSize: "8rem" }}
+      style={{ blockSize: "11.5rem" }}
     >
-      {[0.25, 0.75].map((f) => (
-        <line
-          key={f}
-          x1={X0}
-          y1={10 + (H - 20) * f}
-          x2={W - 28}
-          y2={10 + (H - 20) * f}
-          stroke="var(--primary-d2)"
-          strokeWidth="1"
-        />
+      {gridVals.map((v) => (
+        <g key={v}>
+          <line
+            x1={X0}
+            y1={py(v)}
+            x2={W - 28}
+            y2={py(v)}
+            stroke="var(--primary-d2)"
+            strokeWidth="1"
+          />
+          <text
+            x={2}
+            y={py(v) + 3}
+            fill="var(--text-color-f2)"
+            fontSize="10"
+            style={{ fontFamily: "inherit" }}
+          >
+            {formatSpeed(v, { unit: false })}
+          </text>
+        </g>
       ))}
-      {series.map(({ letter, speeds, conf }) => {
-        const vals = smoothed(speeds, 0.6);
+      {ends.map(({ letter, vals, conf, y }) => {
         const px = (i: number) =>
           X0 + (i * (W - X0 - 28)) / Math.max(1, maxLen - 1);
         const pts = vals.map((v, i) => [px(i), py(v)] as const);
@@ -384,14 +408,16 @@ export function AllKeysChart({
               d={pathOf(pts)}
               fill="none"
               stroke={color}
-              strokeWidth="1.4"
-              opacity="0.85"
+              strokeWidth="2"
+              opacity="0.9"
+              strokeLinejoin="round"
             />
+            <circle cx={lx} cy={ly} r="2.5" fill={color} />
             <text
-              x={lx + 8}
-              y={ly + 3}
+              x={lx + 9}
+              y={y + 3.5}
               fill={color}
-              fontSize="10"
+              fontSize="11"
               fontWeight="700"
               style={{ fontFamily: "inherit" }}
             >
@@ -440,6 +466,10 @@ export function PopulationChart({
   const bx = (best / (n - 1)) * W;
   const bNearEdge = bx > W - 70;
   const tNearStart = tx < 70;
+  // when the two markers sit close, their labels take separate rows
+  const crowded = Math.abs(bx - tx) < 95;
+  const tLabelY = 11;
+  const bLabelY = crowded ? 24 : 11;
   return (
     <svg
       className={styles.chart}
@@ -468,7 +498,7 @@ export function PopulationChart({
       />
       <text
         x={tNearStart ? tx + 6 : tx - 6}
-        y="11"
+        y={tLabelY}
         fill="var(--accent)"
         fontSize="9.5"
         textAnchor={tNearStart ? "start" : "end"}
@@ -487,7 +517,7 @@ export function PopulationChart({
       />
       <text
         x={bNearEdge ? bx - 6 : bx + 6}
-        y="11"
+        y={bLabelY}
         fill="var(--fast-key-color)"
         fontSize="9.5"
         textAnchor={bNearEdge ? "end" : "start"}
