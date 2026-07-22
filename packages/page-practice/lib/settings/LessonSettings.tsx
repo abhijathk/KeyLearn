@@ -11,7 +11,7 @@ import {
 } from "@keybr/lesson";
 import { LessonLoader } from "@keybr/lesson-loader";
 import { type Settings, useSettings } from "@keybr/settings";
-import { Tab, TabList } from "@keybr/widget";
+import { clsx } from "clsx";
 import { type ReactNode } from "react";
 import { useIntl } from "react-intl";
 import { BooksLessonSettings } from "./lesson/BooksLessonSettings.tsx";
@@ -22,57 +22,56 @@ import { GuidedLessonSettings } from "./lesson/GuidedLessonSettings.tsx";
 import { LessonPreview } from "./lesson/LessonPreview.tsx";
 import { NumbersLessonSettings } from "./lesson/NumbersLessonSettings.tsx";
 import { WordListLessonSettings } from "./lesson/WordListLessonSettings.tsx";
+import * as styles from "./SettingsScreen.module.less";
 
 export function LessonSettings(): ReactNode {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
+  const labels = [
+    formatMessage({
+      id: "t_Guided_lessons",
+      defaultMessage: "Guided practice",
+    }),
+    formatMessage({
+      id: "t_Common_words",
+      defaultMessage: "Frequent words",
+    }),
+    formatMessage({
+      id: "t_Books",
+      defaultMessage: "Book Text",
+    }),
+    formatMessage({
+      id: "t_Custom_text",
+      defaultMessage: "Your Own Text",
+    }),
+    formatMessage({
+      id: "t_Source_code",
+      defaultMessage: "Code Snippets",
+    }),
+    formatMessage({
+      id: "t_Numbers",
+      defaultMessage: "Number Drills",
+    }),
+  ];
+  const selected = LessonType.ALL.indexOf(settings.get(lessonProps.type));
   return (
     <>
-      <TabList
-        selectedIndex={LessonType.ALL.indexOf(settings.get(lessonProps.type))}
-        onSelect={(index) => {
-          updateSettings(
-            settings.set(lessonProps.type, LessonType.ALL.at(index)),
-          );
-        }}
-      >
-        <Tab
-          label={formatMessage({
-            id: "t_Guided_lessons",
-            defaultMessage: "Guided practice",
-          })}
-        />
-        <Tab
-          label={formatMessage({
-            id: "t_Common_words",
-            defaultMessage: "Frequent words",
-          })}
-        />
-        <Tab
-          label={formatMessage({
-            id: "t_Books",
-            defaultMessage: "Book Text",
-          })}
-        />
-        <Tab
-          label={formatMessage({
-            id: "t_Custom_text",
-            defaultMessage: "Your Own Text",
-          })}
-        />
-        <Tab
-          label={formatMessage({
-            id: "t_Source_code",
-            defaultMessage: "Code Snippets",
-          })}
-        />
-        <Tab
-          label={formatMessage({
-            id: "t_Numbers",
-            defaultMessage: "Number Drills",
-          })}
-        />
-      </TabList>
+      <span className={styles.seg}>
+        {labels.map((label, index) => (
+          <button
+            key={label}
+            type="button"
+            className={clsx(styles.segItem, selected === index && styles.segOn)}
+            onClick={() => {
+              updateSettings(
+                settings.set(lessonProps.type, LessonType.ALL.at(index)),
+              );
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </span>
       <LessonLoader>
         {(lesson) => (
           <>
