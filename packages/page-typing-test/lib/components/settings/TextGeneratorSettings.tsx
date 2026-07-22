@@ -1,83 +1,76 @@
 import { useSettings } from "@keybr/settings";
-import { Field, FieldList, FieldSet, Para, RadioBox } from "@keybr/widget";
+import { FieldSet, Para } from "@keybr/widget";
+import { clsx } from "clsx";
+import { FormattedMessage, useIntl } from "react-intl";
 import { TextSourceType, typingTestProps } from "../../settings.ts";
+import * as styles from "../settings.module.less";
 import { BookSettings } from "./text/BookSettings.tsx";
 import { CommonWordsSettings } from "./text/CommonWordsSettings.tsx";
 import { PseudoWordsSettings } from "./text/PseudoWordsSettings.tsx";
 
 export function TextGeneratorSettings() {
+  const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
+  const sources = [
+    {
+      type: TextSourceType.CommonWords,
+      label: formatMessage({
+        id: "typingTest.source.commonWords",
+        defaultMessage: "Common words",
+      }),
+    },
+    {
+      type: TextSourceType.PseudoWords,
+      label: formatMessage({
+        id: "typingTest.source.pseudoWords",
+        defaultMessage: "Pseudo words",
+      }),
+    },
+    {
+      type: TextSourceType.Book,
+      label: formatMessage({
+        id: "typingTest.source.book",
+        defaultMessage: "Book paragraphs",
+      }),
+    },
+  ];
+  const selected = settings.get(typingTestProps.type);
   return (
     <>
-      <FieldSet legend="Text Settings">
-        <Para>Choose what text to type in the test.</Para>
-
-        <FieldList>
-          <Field>
-            <RadioBox
-              label="Common words"
-              name="text-source"
-              value="text-source-common-words"
-              checked={
-                settings.get(typingTestProps.type) ===
-                TextSourceType.CommonWords
-              }
-              onSelect={() => {
-                updateSettings(
-                  settings.set(
-                    typingTestProps.type,
-                    TextSourceType.CommonWords,
-                  ),
-                );
+      <FieldSet
+        legend={formatMessage({
+          id: "typingTest.settings.textLegend",
+          defaultMessage: "Text settings",
+        })}
+      >
+        <Para>
+          <FormattedMessage
+            id="typingTest.settings.textIntro"
+            defaultMessage="Choose what text to type in the test."
+          />
+        </Para>
+        <span className={styles.seg}>
+          {sources.map(({ type, label }) => (
+            <button
+              key={label}
+              type="button"
+              className={clsx(
+                styles.segItem,
+                selected === type && styles.segOn,
+              )}
+              onClick={() => {
+                updateSettings(settings.set(typingTestProps.type, type));
               }}
-            />
-          </Field>
-          <Field>
-            <RadioBox
-              label="Pseudo words"
-              name="text-source"
-              value="text-source-pseudo-words"
-              checked={
-                settings.get(typingTestProps.type) ===
-                TextSourceType.PseudoWords
-              }
-              onSelect={() => {
-                updateSettings(
-                  settings.set(
-                    typingTestProps.type,
-                    TextSourceType.PseudoWords,
-                  ),
-                );
-              }}
-            />
-          </Field>
-          <Field>
-            <RadioBox
-              label="Book paragraphs"
-              name="text-source"
-              value="text-source-book"
-              checked={
-                settings.get(typingTestProps.type) === TextSourceType.Book
-              }
-              onSelect={() => {
-                updateSettings(
-                  settings.set(typingTestProps.type, TextSourceType.Book),
-                );
-              }}
-            />
-          </Field>
-        </FieldList>
+            >
+              {label}
+            </button>
+          ))}
+        </span>
       </FieldSet>
 
-      {settings.get(typingTestProps.type) === TextSourceType.CommonWords && (
-        <CommonWordsSettings />
-      )}
-      {settings.get(typingTestProps.type) === TextSourceType.PseudoWords && (
-        <PseudoWordsSettings />
-      )}
-      {settings.get(typingTestProps.type) === TextSourceType.Book && (
-        <BookSettings />
-      )}
+      {selected === TextSourceType.CommonWords && <CommonWordsSettings />}
+      {selected === TextSourceType.PseudoWords && <PseudoWordsSettings />}
+      {selected === TextSourceType.Book && <BookSettings />}
     </>
   );
 }

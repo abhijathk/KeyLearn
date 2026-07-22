@@ -1,6 +1,6 @@
 # English
 
-Translated: 493 messages, 5943 words
+Translated: 499 messages, 5960 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,7 +8,7 @@ Untranslated: 0 messages, 0 words
 
 Translated: 329 messages, 4405 words
 
-Untranslated: 140 messages, 1405 words
+Untranslated: 146 messages, 1422 words
 
 * *On*
 * *now*
@@ -17,13 +17,13 @@ Untranslated: 140 messages, 1405 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -36,7 +36,7 @@ Untranslated: 140 messages, 1405 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -45,13 +45,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -64,7 +64,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -73,13 +73,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -92,7 +92,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -101,13 +101,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -120,7 +120,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 301 messages, 3460 words
 
-Untranslated: 166 messages, 2332 words
+Untranslated: 172 messages, 2349 words
 
 * *On*
 * *now*
@@ -129,13 +129,13 @@ Untranslated: 166 messages, 2332 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -148,7 +148,7 @@ Untranslated: 166 messages, 2332 words
 
 Translated: 328 messages, 4402 words
 
-Untranslated: 141 messages, 1408 words
+Untranslated: 147 messages, 1425 words
 
 * *On*
 * *now*
@@ -157,13 +157,13 @@ Untranslated: 141 messages, 1408 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -176,7 +176,7 @@ Untranslated: 141 messages, 1408 words
 
 Translated: 321 messages, 4354 words
 
-Untranslated: 146 messages, 1438 words
+Untranslated: 152 messages, 1455 words
 
 * *On*
 * *now*
@@ -185,13 +185,13 @@ Untranslated: 146 messages, 1438 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -204,7 +204,7 @@ Untranslated: 146 messages, 1438 words
 
 Translated: 329 messages, 4405 words
 
-Untranslated: 140 messages, 1405 words
+Untranslated: 146 messages, 1422 words
 
 * *On*
 * *now*
@@ -213,13 +213,13 @@ Untranslated: 140 messages, 1405 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -232,7 +232,7 @@ Untranslated: 140 messages, 1405 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -241,13 +241,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -260,7 +260,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 74 messages, 1109 words
 
-Untranslated: 389 messages, 4659 words
+Untranslated: 395 messages, 4676 words
 
 * *On*
 * *GO!*
@@ -272,7 +272,6 @@ Untranslated: 389 messages, 4659 words
 * *Best*
 * *Copy*
 * *Done*
-* *Font*
 * *Help*
 * *hits*
 * *Kids*
@@ -281,6 +280,7 @@ Untranslated: 389 messages, 4659 words
 * *Open*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * ...
 
@@ -288,7 +288,7 @@ Untranslated: 389 messages, 4659 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -297,13 +297,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -316,7 +316,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 328 messages, 4404 words
 
-Untranslated: 141 messages, 1406 words
+Untranslated: 147 messages, 1423 words
 
 * *On*
 * *GO!*
@@ -326,13 +326,13 @@ Untranslated: 141 messages, 1406 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -344,7 +344,7 @@ Untranslated: 141 messages, 1406 words
 
 Translated: 286 messages, 2900 words
 
-Untranslated: 181 messages, 2892 words
+Untranslated: 187 messages, 2909 words
 
 * *On*
 * *now*
@@ -353,13 +353,13 @@ Untranslated: 181 messages, 2892 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -372,7 +372,7 @@ Untranslated: 181 messages, 2892 words
 
 Translated: 202 messages, 2256 words
 
-Untranslated: 262 messages, 3515 words
+Untranslated: 268 messages, 3532 words
 
 * *On*
 * *GO!*
@@ -382,13 +382,13 @@ Untranslated: 262 messages, 3515 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -400,7 +400,7 @@ Untranslated: 262 messages, 3515 words
 
 Translated: 41 messages, 475 words
 
-Untranslated: 421 messages, 5282 words
+Untranslated: 427 messages, 5299 words
 
 * *On*
 * *GO!*
@@ -412,7 +412,6 @@ Untranslated: 421 messages, 5282 words
 * *Best*
 * *Copy*
 * *Done*
-* *Font*
 * *Help*
 * *hits*
 * *Kids*
@@ -421,6 +420,7 @@ Untranslated: 421 messages, 5282 words
 * *Open*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * ...
 
@@ -428,7 +428,7 @@ Untranslated: 421 messages, 5282 words
 
 Translated: 323 messages, 4229 words
 
-Untranslated: 146 messages, 1581 words
+Untranslated: 152 messages, 1598 words
 
 * *On*
 * *now*
@@ -437,13 +437,13 @@ Untranslated: 146 messages, 1581 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -456,7 +456,7 @@ Untranslated: 146 messages, 1581 words
 
 Translated: 327 messages, 4395 words
 
-Untranslated: 142 messages, 1415 words
+Untranslated: 148 messages, 1432 words
 
 * *On*
 * *now*
@@ -465,13 +465,13 @@ Untranslated: 142 messages, 1415 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -484,7 +484,7 @@ Untranslated: 142 messages, 1415 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -493,13 +493,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -512,7 +512,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 327 messages, 4400 words
 
-Untranslated: 142 messages, 1410 words
+Untranslated: 148 messages, 1427 words
 
 * *On*
 * *now*
@@ -521,13 +521,13 @@ Untranslated: 142 messages, 1410 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -540,7 +540,7 @@ Untranslated: 142 messages, 1410 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -549,13 +549,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -568,7 +568,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 329 messages, 4405 words
 
-Untranslated: 140 messages, 1405 words
+Untranslated: 146 messages, 1422 words
 
 * *On*
 * *GO!*
@@ -578,13 +578,13 @@ Untranslated: 140 messages, 1405 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -596,7 +596,7 @@ Untranslated: 140 messages, 1405 words
 
 Translated: 92 messages, 1716 words
 
-Untranslated: 371 messages, 4052 words
+Untranslated: 377 messages, 4069 words
 
 * *On*
 * *GO!*
@@ -608,7 +608,6 @@ Untranslated: 371 messages, 4052 words
 * *Best*
 * *Copy*
 * *Done*
-* *Font*
 * *Help*
 * *hits*
 * *Kids*
@@ -617,6 +616,7 @@ Untranslated: 371 messages, 4052 words
 * *Open*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * ...
 
@@ -624,7 +624,7 @@ Untranslated: 371 messages, 4052 words
 
 Translated: 324 messages, 4397 words
 
-Untranslated: 144 messages, 1410 words
+Untranslated: 150 messages, 1427 words
 
 * *On*
 * *now*
@@ -633,13 +633,13 @@ Untranslated: 144 messages, 1410 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -652,7 +652,7 @@ Untranslated: 144 messages, 1410 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -661,13 +661,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -680,7 +680,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 140 messages, 1301 words
 
-Untranslated: 327 messages, 4491 words
+Untranslated: 333 messages, 4508 words
 
 * *On*
 * *now*
@@ -691,7 +691,6 @@ Untranslated: 327 messages, 4491 words
 * *Best*
 * *Copy*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
@@ -699,6 +698,7 @@ Untranslated: 327 messages, 4491 words
 * *Open*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -708,7 +708,7 @@ Untranslated: 327 messages, 4491 words
 
 Translated: 296 messages, 3215 words
 
-Untranslated: 171 messages, 2577 words
+Untranslated: 177 messages, 2594 words
 
 * *On*
 * *now*
@@ -717,13 +717,13 @@ Untranslated: 171 messages, 2577 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -736,7 +736,7 @@ Untranslated: 171 messages, 2577 words
 
 Translated: 16 messages, 307 words
 
-Untranslated: 444 messages, 5428 words
+Untranslated: 450 messages, 5445 words
 
 * *On*
 * *GO!*
@@ -748,7 +748,6 @@ Untranslated: 444 messages, 5428 words
 * *Best*
 * *Copy*
 * *Done*
-* *Font*
 * *Help*
 * *hits*
 * *Kids*
@@ -757,6 +756,7 @@ Untranslated: 444 messages, 5428 words
 * *Open*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * ...
 
@@ -764,7 +764,7 @@ Untranslated: 444 messages, 5428 words
 
 Translated: 205 messages, 2396 words
 
-Untranslated: 260 messages, 3378 words
+Untranslated: 266 messages, 3395 words
 
 * *On*
 * *now*
@@ -773,7 +773,6 @@ Untranslated: 260 messages, 3378 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *Help*
 * *hits*
 * *Kids*
@@ -781,6 +780,7 @@ Untranslated: 260 messages, 3378 words
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -792,7 +792,7 @@ Untranslated: 260 messages, 3378 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -801,13 +801,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -820,7 +820,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 323 messages, 4395 words
 
-Untranslated: 145 messages, 1412 words
+Untranslated: 151 messages, 1429 words
 
 * *On*
 * *now*
@@ -829,13 +829,13 @@ Untranslated: 145 messages, 1412 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -848,7 +848,7 @@ Untranslated: 145 messages, 1412 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -857,13 +857,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -876,7 +876,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 328 messages, 4403 words
 
-Untranslated: 141 messages, 1407 words
+Untranslated: 147 messages, 1424 words
 
 * *On*
 * *now*
@@ -885,13 +885,13 @@ Untranslated: 141 messages, 1407 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -904,7 +904,7 @@ Untranslated: 141 messages, 1407 words
 
 Translated: 309 messages, 4283 words
 
-Untranslated: 158 messages, 1509 words
+Untranslated: 164 messages, 1526 words
 
 * *On*
 * *now*
@@ -913,13 +913,13 @@ Untranslated: 158 messages, 1509 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -932,7 +932,7 @@ Untranslated: 158 messages, 1509 words
 
 Translated: 289 messages, 3338 words
 
-Untranslated: 173 messages, 2431 words
+Untranslated: 179 messages, 2448 words
 
 * *On*
 * *now*
@@ -941,13 +941,13 @@ Untranslated: 173 messages, 2431 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -960,7 +960,7 @@ Untranslated: 173 messages, 2431 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -969,13 +969,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -988,7 +988,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 139 messages, 1405 words
+Untranslated: 145 messages, 1422 words
 
 * *On*
 * *now*
@@ -997,13 +997,13 @@ Untranslated: 139 messages, 1405 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1016,7 +1016,7 @@ Untranslated: 139 messages, 1405 words
 
 Translated: 330 messages, 4406 words
 
-Untranslated: 139 messages, 1404 words
+Untranslated: 145 messages, 1421 words
 
 * *On*
 * *now*
@@ -1025,13 +1025,13 @@ Untranslated: 139 messages, 1404 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1044,7 +1044,7 @@ Untranslated: 139 messages, 1404 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -1053,13 +1053,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1072,7 +1072,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 328 messages, 4402 words
 
-Untranslated: 141 messages, 1408 words
+Untranslated: 147 messages, 1425 words
 
 * *On*
 * *now*
@@ -1081,13 +1081,13 @@ Untranslated: 141 messages, 1408 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1100,7 +1100,7 @@ Untranslated: 141 messages, 1408 words
 
 Translated: 319 messages, 4309 words
 
-Untranslated: 148 messages, 1483 words
+Untranslated: 154 messages, 1500 words
 
 * *On*
 * *now*
@@ -1109,13 +1109,13 @@ Untranslated: 148 messages, 1483 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1128,7 +1128,7 @@ Untranslated: 148 messages, 1483 words
 
 Translated: 219 messages, 2105 words
 
-Untranslated: 245 messages, 3658 words
+Untranslated: 251 messages, 3675 words
 
 * *On*
 * *now*
@@ -1137,13 +1137,13 @@ Untranslated: 245 messages, 3658 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1156,7 +1156,7 @@ Untranslated: 245 messages, 3658 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -1165,13 +1165,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1184,7 +1184,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -1193,13 +1193,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1212,7 +1212,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 330 messages, 4400 words
 
-Untranslated: 139 messages, 1410 words
+Untranslated: 145 messages, 1427 words
 
 * *On*
 * *now*
@@ -1221,13 +1221,13 @@ Untranslated: 139 messages, 1410 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1240,7 +1240,7 @@ Untranslated: 139 messages, 1410 words
 
 Translated: 331 messages, 4407 words
 
-Untranslated: 138 messages, 1403 words
+Untranslated: 144 messages, 1420 words
 
 * *On*
 * *now*
@@ -1249,13 +1249,13 @@ Untranslated: 138 messages, 1403 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*
@@ -1268,7 +1268,7 @@ Untranslated: 138 messages, 1403 words
 
 Translated: 330 messages, 4406 words
 
-Untranslated: 139 messages, 1404 words
+Untranslated: 145 messages, 1421 words
 
 * *On*
 * *GO!*
@@ -1278,13 +1278,13 @@ Untranslated: 139 messages, 1404 words
 * *Best*
 * *Best*
 * *Done*
-* *Font*
 * *hits*
 * *Kids*
 * *last*
 * *More*
 * *Open*
 * *Pace*
+* *Text*
 * *Time*
 * *Time*
 * *Chars*

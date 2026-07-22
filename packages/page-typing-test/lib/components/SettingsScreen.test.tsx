@@ -21,11 +21,11 @@ test("render", async () => {
   );
 
   fireEvent.click(r.getByText("Text"));
-  await r.findByText("Text Settings");
+  await r.findByText("Text settings");
 
-  fireEvent.click(r.getByText("Common words", { selector: "span" }));
-  fireEvent.click(r.getByText("Pseudo words", { selector: "span" }));
-  fireEvent.click(r.getByText("Book paragraphs", { selector: "span" }));
+  fireEvent.click(r.getByText("Common words", { selector: "button" }));
+  fireEvent.click(r.getByText("Pseudo words", { selector: "button" }));
+  fireEvent.click(r.getByText("Book paragraphs", { selector: "button" }));
 
   r.unmount();
 });
