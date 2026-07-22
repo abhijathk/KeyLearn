@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: space-between;
   padding-inline: 1.25rem;
-  padding-block: 0.75rem;
+  padding-block: 0.4rem;
 }
 
 // Focus mode: only the exit button remains, tucked to the trailing edge.
@@ -37,7 +37,8 @@
 
 .wordmark {
   display: inline-flex;
-  gap: 0.5rem;
+  // "KeyLearn" is one word: no gap between the two marks, only after the glyph.
+  gap: 0;
   align-items: baseline;
   font-size: 1.35rem;
   letter-spacing: -0.02em;
@@ -50,6 +51,7 @@
   align-self: center;
   inline-size: 1.6rem;
   block-size: 1.6rem;
+  margin-inline-end: 0.5rem;
   color: var(--accent);
 }
 
@@ -60,7 +62,7 @@
 
 .markAlt {
   color: var(--text-color-f1);
-  font-weight: 300;
+  font-weight: 200;
 }
 
 .controls {
