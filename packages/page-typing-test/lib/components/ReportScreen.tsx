@@ -1,36 +1,18 @@
-import {
-  AccuracyHistogram,
-  makeAccuracyDistribution,
-  makeSpeedDistribution,
-  RollingSpeedChart,
-  SpeedHistogram,
-  TimeToTypeHistogram,
-} from "@keybr/chart";
+import { makeAccuracyDistribution, makeSpeedDistribution } from "@keybr/chart";
 import { useIntlNumbers } from "@keybr/intl";
 import { useFormatter } from "@keybr/lesson-ui";
 import { Screen } from "@keybr/pages-shared";
-import {
-  Box,
-  Button,
-  Field,
-  FieldList,
-  formatDuration,
-  Icon,
-  Kbd,
-  Name,
-  NameValue,
-  Para,
-  Spacer,
-  useHotkeys,
-  useView,
-  Value,
-} from "@keybr/widget";
-import { mdiSkipNext } from "@mdi/js";
-import { type ReactNode } from "react";
+import { formatDuration, Kbd, useHotkeys, useView } from "@keybr/widget";
+import { FormattedMessage } from "react-intl";
 import { type TestResult } from "../session/index.ts";
 import { views } from "../views.tsx";
 import { Replay } from "./Replay.tsx";
-import * as styles from "./ReportScreen.module.less";
+import {
+  PopulationChart,
+  RollingSpeedChart,
+  TimeToTypeChart,
+} from "./report-charts.tsx";
+import * as styles from "./road.module.less";
 
 export function ReportScreen({ result }: { result: TestResult }) {
   const { setView } = useView(views);
@@ -52,142 +34,170 @@ export function ReportScreen({ result }: { result: TestResult }) {
 
   return (
     <Screen>
-      <Box alignItems="center" justifyContent="center">
-        <Indicator
-          name="Speed"
-          value={
-            <Metric
-              value={formatSpeed(speed, { unit: false })}
-              unit={speedUnit.id}
-            />
-          }
-        />
-        <Separator />
-        <Indicator
-          name="Accuracy"
-          value={
-            <Metric value={`${formatNumber(accuracy * 100, 2)}`} unit="%" />
-          }
-        />
-      </Box>
+      <div className={styles.col}>
+        <div className={styles.heroRow}>
+          <div className={styles.heroCell}>
+            <div className={styles.heroLab}>
+              <FormattedMessage id="t_Speed" defaultMessage="Speed" />
+            </div>
+            <div className={`${styles.hero} ${styles.heroAccent}`}>
+              {formatSpeed(speed, { unit: false })}
+              <i>{speedUnit.id}</i>
+            </div>
+          </div>
+          <div className={styles.heroDivider} />
+          <div className={styles.heroCell}>
+            <div className={styles.heroLab}>
+              <FormattedMessage id="t_Accuracy" defaultMessage="Accuracy" />
+            </div>
+            <div className={styles.hero}>
+              {formatNumber(accuracy * 100, 2)}
+              <i>%</i>
+            </div>
+          </div>
+        </div>
 
-      <Para align="center">
-        <NameValue name="Characters" value={formatNumber(length)} />
-        <NameValue name="Errors" value={formatNumber(errors)} />
-        <NameValue
-          name="Time"
-          value={formatDuration(time, { showMillis: true })}
-        />
-      </Para>
+        <div className={`${styles.whisper} ${styles.whisperCenter}`}>
+          <span>
+            <span className={styles.lab}>
+              <FormattedMessage
+                id="typingTest.report.characters"
+                defaultMessage="Characters"
+              />
+            </span>
+            {formatNumber(length)}
+          </span>
+          <span>
+            <span className={styles.lab}>
+              <FormattedMessage
+                id="typingTest.report.errors"
+                defaultMessage="Errors"
+              />
+            </span>
+            {formatNumber(errors)}
+          </span>
+          <span>
+            <span className={styles.lab}>
+              <FormattedMessage
+                id="typingTest.report.time"
+                defaultMessage="Time"
+              />
+            </span>
+            {formatDuration(time, { showMillis: true })}
+          </span>
+        </div>
 
-      <Box alignItems="center" justifyContent="center">
-        <SpeedHistogram
-          distribution={dSpeed}
-          thresholds={[{ label: "Speed", value: speed }]}
-          width="45rem"
-          height="15rem"
-        />
-      </Box>
-
-      <Para align="center">
-        <Name>
-          Faster than <Value value={formatPercents(pSpeed)} /> of all other
-          people.
-        </Name>{" "}
-        <Name>
-          You are in the top <Value value={formatPercents(top(pSpeed))} />.
-        </Name>
-      </Para>
-
-      <Box alignItems="center" justifyContent="center">
-        <AccuracyHistogram
-          distribution={dAccuracy}
-          thresholds={[{ label: "Accuracy", value: accuracy }]}
-          width="45rem"
-          height="15rem"
-        />
-      </Box>
-
-      <Para align="center">
-        <Name>
-          More accurate than <Value value={formatPercents(pAccuracy)} /> of all
-          other people.
-        </Name>{" "}
-        <Name>
-          You are in the top <Value value={formatPercents(top(pAccuracy))} />.
-        </Name>
-      </Para>
-
-      <Box alignItems="center" justifyContent="center">
-        <TimeToTypeHistogram
-          steps={result.steps}
-          width="45rem"
-          height="15rem"
-        />
-      </Box>
-
-      <Para align="center">Time to type a character histogram.</Para>
-
-      <Box alignItems="center" justifyContent="center">
-        <RollingSpeedChart
-          stats={result.stats}
-          steps={result.steps}
-          width="45rem"
-          height="15rem"
-        />
-      </Box>
-
-      <Para align="center">Typing speed change over time chart.</Para>
-
-      <Spacer size={3} />
-
-      <Replay result={result} />
-
-      <Spacer size={3} />
-
-      <FieldList>
-        <Field.Filler />
-        <Field>
-          <Button
-            label="Next test"
-            icon={<Icon shape={mdiSkipNext} />}
-            onClick={handleNext}
+        <div className={styles.sect}>
+          <FormattedMessage
+            id="typingTest.report.compared"
+            defaultMessage="Compared to everyone"
           />
-        </Field>
-        <Field.Filler />
-      </FieldList>
+        </div>
+        <div className={styles.histPair}>
+          <div className={styles.hist}>
+            <PopulationChart
+              distribution={dSpeed}
+              value={speed}
+              valueLabel={`you ${formatSpeed(speed, { unit: false })}`}
+              loLabel="0"
+              hiLabel={formatSpeed(dSpeed.length - 1)}
+            />
+            <div className={styles.legendRow}>
+              <FormattedMessage
+                id="typingTest.report.fasterThan"
+                defaultMessage="faster than {percent} of all other people — the top {top}"
+                values={{
+                  percent: <b>{formatPercents(pSpeed)}</b>,
+                  top: <b>{formatPercents(top(pSpeed))}</b>,
+                }}
+              />
+            </div>
+          </div>
+          <div className={styles.hist}>
+            <PopulationChart
+              distribution={dAccuracy}
+              value={dAccuracy.scale(accuracy)}
+              valueLabel={`you ${formatNumber(accuracy * 100, 1)}%`}
+              loLabel="0%"
+              hiLabel="100%"
+            />
+            <div className={styles.legendRow}>
+              <FormattedMessage
+                id="typingTest.report.moreAccurateThan"
+                defaultMessage="more accurate than {percent} of all other people — the top {top}"
+                values={{
+                  percent: <b>{formatPercents(pAccuracy)}</b>,
+                  top: <b>{formatPercents(top(pAccuracy))}</b>,
+                }}
+              />
+            </div>
+          </div>
+        </div>
 
-      <Para align="center">
-        Press <Kbd>Enter</Kbd> to start a new test.
-      </Para>
+        <div className={styles.sect}>
+          <FormattedMessage
+            id="typingTest.report.overTheTest"
+            defaultMessage="Speed over the test"
+          />
+        </div>
+        <div className={styles.hist}>
+          <RollingSpeedChart
+            steps={result.steps}
+            averageSpeed={speed}
+            formatSpeed={(value) => formatSpeed(value, { unit: false })}
+          />
+          <div className={styles.legendRow}>
+            <FormattedMessage
+              id="typingTest.report.overTheTestLegend"
+              defaultMessage="your speed as the test went on — the dashed line is your average"
+            />
+          </div>
+        </div>
+
+        <div className={styles.sect}>
+          <FormattedMessage
+            id="typingTest.report.timePerChar"
+            defaultMessage="Time per character"
+          />
+        </div>
+        <div className={styles.hist}>
+          <TimeToTypeChart steps={result.steps} />
+          <div className={styles.legendRow}>
+            <FormattedMessage
+              id="typingTest.report.timePerCharLegend"
+              defaultMessage="how long each character took — shorter bars to the left mean faster fingers"
+            />
+          </div>
+        </div>
+
+        <div className={styles.sect}>
+          <FormattedMessage
+            id="typingTest.report.replay"
+            defaultMessage="Watch the replay"
+          />
+        </div>
+        <div className={styles.replayWrap}>
+          <Replay result={result} />
+        </div>
+
+        <div className={styles.nextRow}>
+          <button type="button" className={styles.nextBtn} onClick={handleNext}>
+            <FormattedMessage
+              id="typingTest.report.nextTest"
+              defaultMessage="Next test"
+            />
+          </button>
+        </div>
+        <div className={styles.legendRow}>
+          <FormattedMessage
+            id="typingTest.report.pressEnter"
+            defaultMessage="press {key} to start a new test"
+            values={{ key: <Kbd>Enter</Kbd> }}
+          />
+        </div>
+      </div>
     </Screen>
   );
-}
-
-function Indicator({ name, value }: { name: ReactNode; value: ReactNode }) {
-  return (
-    <div className={styles.indicator}>
-      <div className={styles.indicatorValue}>
-        <Value>{value}</Value>
-      </div>
-      <div className={styles.indicatorName}>
-        <Name>{name}</Name>
-      </div>
-    </div>
-  );
-}
-
-function Metric({ value, unit }: { value: ReactNode; unit: ReactNode }) {
-  return (
-    <>
-      <span className={styles.valueLabel}>{value}</span>
-      <span className={styles.unitLabel}>{unit}</span>
-    </>
-  );
-}
-
-function Separator() {
-  return <div className={styles.separator} />;
 }
 
 function top(value: number) {

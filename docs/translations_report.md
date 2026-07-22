@@ -1,6 +1,6 @@
 # English
 
-Translated: 462 messages, 5828 words
+Translated: 480 messages, 5905 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,7 +8,7 @@ Untranslated: 0 messages, 0 words
 
 Translated: 330 messages, 4520 words
 
-Untranslated: 111 messages, 1203 words
+Untranslated: 126 messages, 1252 words
 
 * *On*
 * *now*
@@ -16,27 +16,27 @@ Untranslated: 111 messages, 1203 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Letters*
 * ...
 
 # Arabic
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -44,27 +44,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Bulgarian
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -72,27 +72,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Bangla
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -100,27 +100,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Catalan
 
 Translated: 301 messages, 3460 words
 
-Untranslated: 138 messages, 2245 words
+Untranslated: 153 messages, 2294 words
 
 * *On*
 * *now*
@@ -128,27 +128,27 @@ Untranslated: 138 messages, 2245 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *Errors*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
 * ...
 
 # Czech
 
 Translated: 329 messages, 4517 words
 
-Untranslated: 112 messages, 1206 words
+Untranslated: 127 messages, 1255 words
 
 * *On*
 * *now*
@@ -156,27 +156,27 @@ Untranslated: 112 messages, 1206 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Danish
 
 Translated: 322 messages, 4469 words
 
-Untranslated: 117 messages, 1236 words
+Untranslated: 132 messages, 1285 words
 
 * *On*
 * *now*
@@ -184,27 +184,27 @@ Untranslated: 117 messages, 1236 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
 * *Score*
 * *Speed*
+* *Speed*
 * *Trend*
-* *Cancel*
-* *Layout*
-* *misses*
-* *Recent*
-* *Streak*
 * ...
 
 # German
 
 Translated: 330 messages, 4520 words
 
-Untranslated: 111 messages, 1203 words
+Untranslated: 126 messages, 1252 words
 
 * *On*
 * *now*
@@ -212,27 +212,27 @@ Untranslated: 111 messages, 1203 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Greek
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -240,27 +240,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Esperanto
 
 Translated: 74 messages, 1109 words
 
-Untranslated: 361 messages, 4572 words
+Untranslated: 376 messages, 4621 words
 
 * *On*
 * *GO!*
@@ -271,6 +271,7 @@ Untranslated: 361 messages, 4572 words
 * *Best*
 * *Best*
 * *Copy*
+* *Done*
 * *Font*
 * *Help*
 * *hits*
@@ -279,16 +280,15 @@ Untranslated: 361 messages, 4572 words
 * *Open*
 * *Open*
 * *Pace*
-* *Speed*
-* *Speed*
-* *Trend*
+* *Time*
+* *Time*
 * ...
 
 # Spanish
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -296,27 +296,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Estonian
 
 Translated: 329 messages, 4519 words
 
-Untranslated: 112 messages, 1204 words
+Untranslated: 127 messages, 1253 words
 
 * *On*
 * *GO!*
@@ -325,26 +325,26 @@ Untranslated: 112 messages, 1204 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
-* *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
 * ...
 
 # Persian
 
 Translated: 286 messages, 2900 words
 
-Untranslated: 153 messages, 2805 words
+Untranslated: 168 messages, 2854 words
 
 * *On*
 * *now*
@@ -352,27 +352,27 @@ Untranslated: 153 messages, 2805 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Finnish
 
 Translated: 202 messages, 2256 words
 
-Untranslated: 234 messages, 3428 words
+Untranslated: 249 messages, 3477 words
 
 * *On*
 * *GO!*
@@ -381,26 +381,26 @@ Untranslated: 234 messages, 3428 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Stats*
-* *Trend*
-* *Cancel*
-* *Hidden*
-* *misses*
-* *Recent*
 * ...
 
 # Faroese
 
 Translated: 41 messages, 475 words
 
-Untranslated: 393 messages, 5195 words
+Untranslated: 408 messages, 5244 words
 
 * *On*
 * *GO!*
@@ -411,6 +411,7 @@ Untranslated: 393 messages, 5195 words
 * *Best*
 * *Best*
 * *Copy*
+* *Done*
 * *Font*
 * *Help*
 * *hits*
@@ -419,16 +420,15 @@ Untranslated: 393 messages, 5195 words
 * *Open*
 * *Open*
 * *Pace*
-* *Speed*
-* *Speed*
-* *Speed*
+* *Time*
+* *Time*
 * ...
 
 # French
 
 Translated: 324 messages, 4344 words
 
-Untranslated: 117 messages, 1379 words
+Untranslated: 132 messages, 1428 words
 
 * *On*
 * *now*
@@ -436,27 +436,27 @@ Untranslated: 117 messages, 1379 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Irish
 
 Translated: 328 messages, 4510 words
 
-Untranslated: 113 messages, 1213 words
+Untranslated: 128 messages, 1262 words
 
 * *On*
 * *now*
@@ -464,27 +464,27 @@ Untranslated: 113 messages, 1213 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Hebrew
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -492,27 +492,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Croatian
 
 Translated: 328 messages, 4515 words
 
-Untranslated: 113 messages, 1208 words
+Untranslated: 128 messages, 1257 words
 
 * *On*
 * *now*
@@ -520,27 +520,27 @@ Untranslated: 113 messages, 1208 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Hungarian
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -548,27 +548,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Indonesian
 
 Translated: 330 messages, 4520 words
 
-Untranslated: 111 messages, 1203 words
+Untranslated: 126 messages, 1252 words
 
 * *On*
 * *GO!*
@@ -577,26 +577,26 @@ Untranslated: 111 messages, 1203 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
-* *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
 * ...
 
 # Icelandic
 
 Translated: 92 messages, 1716 words
 
-Untranslated: 343 messages, 3965 words
+Untranslated: 358 messages, 4014 words
 
 * *On*
 * *GO!*
@@ -607,6 +607,7 @@ Untranslated: 343 messages, 3965 words
 * *Best*
 * *Best*
 * *Copy*
+* *Done*
 * *Font*
 * *Help*
 * *hits*
@@ -615,16 +616,15 @@ Untranslated: 343 messages, 3965 words
 * *Open*
 * *Open*
 * *Pace*
-* *Speed*
-* *Speed*
-* *Stats*
+* *Time*
+* *Time*
 * ...
 
 # Italian
 
 Translated: 325 messages, 4512 words
 
-Untranslated: 115 messages, 1208 words
+Untranslated: 130 messages, 1257 words
 
 * *On*
 * *now*
@@ -632,27 +632,27 @@ Untranslated: 115 messages, 1208 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *Layout*
-* *misses*
-* *Recent*
-* *Streak*
-* *Account*
 * ...
 
 # Japanese
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -660,27 +660,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Korean
 
 Translated: 140 messages, 1301 words
 
-Untranslated: 299 messages, 4404 words
+Untranslated: 314 messages, 4453 words
 
 * *On*
 * *now*
@@ -690,6 +690,7 @@ Untranslated: 299 messages, 4404 words
 * *Best*
 * *Best*
 * *Copy*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
@@ -697,18 +698,17 @@ Untranslated: 299 messages, 4404 words
 * *Open*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
 * *Speed*
-* *Trend*
-* *Cancel*
-* *Hidden*
-* *misses*
 * ...
 
 # Lithuanian
 
 Translated: 297 messages, 3330 words
 
-Untranslated: 142 messages, 2375 words
+Untranslated: 157 messages, 2424 words
 
 * *On*
 * *now*
@@ -716,27 +716,27 @@ Untranslated: 142 messages, 2375 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Mongolian
 
 Translated: 16 messages, 307 words
 
-Untranslated: 416 messages, 5341 words
+Untranslated: 431 messages, 5390 words
 
 * *On*
 * *GO!*
@@ -747,6 +747,7 @@ Untranslated: 416 messages, 5341 words
 * *Best*
 * *Best*
 * *Copy*
+* *Done*
 * *Font*
 * *Help*
 * *hits*
@@ -755,16 +756,15 @@ Untranslated: 416 messages, 5341 words
 * *Open*
 * *Open*
 * *Pace*
-* *User*
-* *Score*
-* *Speed*
+* *Time*
+* *Time*
 * ...
 
 # Norwegian Bokmål
 
 Translated: 205 messages, 2396 words
 
-Untranslated: 232 messages, 3291 words
+Untranslated: 247 messages, 3340 words
 
 * *On*
 * *now*
@@ -772,6 +772,7 @@ Untranslated: 232 messages, 3291 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *Help*
 * *hits*
@@ -779,20 +780,19 @@ Untranslated: 232 messages, 3291 words
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
 * *Speed*
 * *Speed*
-* *Trend*
-* *Cancel*
-* *Hidden*
-* *misses*
-* *Recent*
+* *Speed*
 * ...
 
 # Nepali
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -800,27 +800,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Dutch
 
 Translated: 324 messages, 4510 words
 
-Untranslated: 116 messages, 1210 words
+Untranslated: 131 messages, 1259 words
 
 * *On*
 * *now*
@@ -828,27 +828,27 @@ Untranslated: 116 messages, 1210 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
 * *Score*
 * *Speed*
+* *Speed*
 * *Trend*
-* *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Account*
 * ...
 
 # Polish
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -856,27 +856,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Brazilian Portuguese
 
 Translated: 329 messages, 4518 words
 
-Untranslated: 112 messages, 1205 words
+Untranslated: 127 messages, 1254 words
 
 * *On*
 * *now*
@@ -884,27 +884,27 @@ Untranslated: 112 messages, 1205 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *Layout*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
 * ...
 
 # European Portuguese
 
 Translated: 310 messages, 4398 words
 
-Untranslated: 129 messages, 1307 words
+Untranslated: 144 messages, 1356 words
 
 * *On*
 * *now*
@@ -912,27 +912,27 @@ Untranslated: 129 messages, 1307 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *Layout*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
 * ...
 
 # Romanian
 
 Translated: 290 messages, 3453 words
 
-Untranslated: 144 messages, 2229 words
+Untranslated: 159 messages, 2278 words
 
 * *On*
 * *now*
@@ -940,27 +940,27 @@ Untranslated: 144 messages, 2229 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *Layout*
-* *misses*
-* *Recent*
-* *Streak*
-* *Account*
 * ...
 
 # Russian
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -968,27 +968,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Slovak
 
 Translated: 331 messages, 4520 words
 
-Untranslated: 110 messages, 1203 words
+Untranslated: 125 messages, 1252 words
 
 * *On*
 * *now*
@@ -996,27 +996,27 @@ Untranslated: 110 messages, 1203 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Slovenian
 
 Translated: 331 messages, 4521 words
 
-Untranslated: 110 messages, 1202 words
+Untranslated: 125 messages, 1251 words
 
 * *On*
 * *now*
@@ -1024,27 +1024,27 @@ Untranslated: 110 messages, 1202 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Albanian
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -1052,27 +1052,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Swedish
 
 Translated: 329 messages, 4517 words
 
-Untranslated: 112 messages, 1206 words
+Untranslated: 127 messages, 1255 words
 
 * *On*
 * *now*
@@ -1080,27 +1080,27 @@ Untranslated: 112 messages, 1206 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *Layout*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
 * ...
 
 # Thai
 
 Translated: 320 messages, 4424 words
 
-Untranslated: 119 messages, 1281 words
+Untranslated: 134 messages, 1330 words
 
 * *On*
 * *now*
@@ -1108,27 +1108,27 @@ Untranslated: 119 messages, 1281 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Turkish
 
 Translated: 219 messages, 2105 words
 
-Untranslated: 217 messages, 3571 words
+Untranslated: 232 messages, 3620 words
 
 * *On*
 * *now*
@@ -1136,27 +1136,27 @@ Untranslated: 217 messages, 3571 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Stats*
 * *Trend*
-* *Cancel*
-* *Hidden*
-* *misses*
-* *Recent*
-* *Streak*
 * ...
 
 # Ukrainian
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -1164,27 +1164,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Vietnamese
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -1192,27 +1192,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Simplified Chinese
 
 Translated: 331 messages, 4515 words
 
-Untranslated: 110 messages, 1208 words
+Untranslated: 125 messages, 1257 words
 
 * *On*
 * *now*
@@ -1220,27 +1220,27 @@ Untranslated: 110 messages, 1208 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Traditional Chinese
 
 Translated: 332 messages, 4522 words
 
-Untranslated: 109 messages, 1201 words
+Untranslated: 124 messages, 1250 words
 
 * *On*
 * *now*
@@ -1248,27 +1248,27 @@ Untranslated: 109 messages, 1201 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
 * *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
-* *Language*
 * ...
 
 # Chinese (Taiwan)
 
 Translated: 331 messages, 4521 words
 
-Untranslated: 110 messages, 1202 words
+Untranslated: 125 messages, 1251 words
 
 * *On*
 * *GO!*
@@ -1277,17 +1277,17 @@ Untranslated: 110 messages, 1202 words
 * *you*
 * *Best*
 * *Best*
+* *Done*
 * *Font*
 * *hits*
 * *Kids*
 * *last*
 * *Open*
 * *Pace*
+* *Time*
+* *Time*
+* *Chars*
+* *Speed*
 * *Speed*
 * *Trend*
-* *Cancel*
-* *misses*
-* *Recent*
-* *Streak*
-* *Heatmap*
 * ...

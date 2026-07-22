@@ -1,0 +1,278 @@
+// The typing test in the practice page's design language — one narrative
+// column, no boxes, whisper typography, roads and glowing dots.
+.col {
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
+  font-family: var(--value-font-family);
+}
+
+.sect {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin-block-start: 2.6rem;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+
+  &::after {
+    content: "";
+    flex: 1;
+    block-size: 1px;
+    background-image: linear-gradient(to right, var(--primary-d2), transparent);
+  }
+}
+
+// ---- toolbar -------------------------------------------------------------
+
+.toolbar {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.seg {
+  display: inline-flex;
+  gap: 0.15rem;
+  padding: 0.22rem;
+  border-radius: 999px;
+  background-color: var(--primary-l1);
+}
+
+.segItem {
+  padding: 0.3rem 0.9rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font-family: var(--value-font-family);
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.segOn {
+  color: var(--primary);
+  background-color: var(--accent);
+}
+
+.gear {
+  display: grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-color-f1);
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+    background-color: var(--primary-l1);
+  }
+
+  svg {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+    fill: currentColor;
+  }
+}
+
+// ---- live progress -------------------------------------------------------
+
+.proad {
+  position: relative;
+  block-size: 5px;
+  margin-block-start: 1.4rem;
+  border-radius: 999px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--primary-d2) 0 6px,
+    transparent 6px 12px
+  );
+}
+
+.pdone {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  border-radius: 999px;
+  background-image: linear-gradient(
+    to right,
+    color-mix(in oklab, var(--accent) 35%, var(--primary-l1)),
+    var(--accent)
+  );
+  transition: inline-size 0.2s ease-out;
+}
+
+.pdot {
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 11px;
+  block-size: 11px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  box-shadow: 0 0 8px 2px color-mix(in oklab, var(--accent) 55%, transparent);
+  transition: inset-inline-start 0.2s ease-out;
+  transform: translate(-50%, -50%);
+}
+
+.whisper {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+  margin-block-start: 0.9rem;
+  color: var(--text-color-f1);
+  font-size: 0.66rem;
+  font-weight: 600;
+  column-gap: 1.4rem;
+  font-variant-numeric: tabular-nums;
+
+  > span {
+    white-space: nowrap;
+  }
+}
+
+.whisperCenter {
+  justify-content: center;
+}
+
+.lab {
+  margin-inline-end: 0.3rem;
+  color: var(--text-color-f2);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+// ---- report heroes -------------------------------------------------------
+
+.heroRow {
+  display: flex;
+  gap: 2.4rem;
+  align-items: flex-end;
+  justify-content: center;
+  margin-block-start: 1.2rem;
+}
+
+.heroCell {
+  text-align: center;
+}
+
+.heroLab {
+  color: var(--text-color-f2);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero {
+  margin-block-start: 0.3rem;
+  color: var(--text-color);
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  i {
+    margin-inline-start: 0.3rem;
+    color: var(--text-color-f2);
+    font-size: 1rem;
+    font-weight: 600;
+    font-style: normal;
+  }
+}
+
+.heroAccent {
+  color: var(--accent);
+}
+
+.heroDivider {
+  align-self: stretch;
+  inline-size: 1px;
+  margin-block: 0.4rem;
+  background-image: linear-gradient(
+    to bottom,
+    transparent,
+    var(--primary-d2),
+    transparent
+  );
+}
+
+// ---- charts --------------------------------------------------------------
+
+.chart {
+  inline-size: 100%;
+}
+
+.hist {
+  margin-block-start: 1.2rem;
+}
+
+.histPair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+
+  @media (max-width: 60rem) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.legendRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-block-start: 0.6rem;
+  color: var(--text-color-f2);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  b {
+    color: var(--text-color-f1);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ---- replay --------------------------------------------------------------
+
+.replayWrap {
+  margin-block-start: 1.4rem;
+}
+
+// ---- next test -----------------------------------------------------------
+
+.nextRow {
+  display: flex;
+  justify-content: center;
+  margin-block-start: 2.6rem;
+}
+
+.nextBtn {
+  padding: 0.55rem 1.6rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  background: none;
+  font-family: var(--value-font-family);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--primary);
+    background-color: var(--accent);
+  }
+}

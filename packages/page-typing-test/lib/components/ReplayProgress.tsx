@@ -1,13 +1,10 @@
 import { useIntlNumbers } from "@keybr/intl";
 import { useFormatter } from "@keybr/lesson-ui";
-import {
-  AnimationFrames,
-  formatDuration,
-  NameValue,
-  Para,
-} from "@keybr/widget";
+import { AnimationFrames, formatDuration } from "@keybr/widget";
 import { useEffect, useState } from "react";
+import { FormattedMessage } from "react-intl";
 import { type ReplayState } from "../session/index.ts";
+import * as styles from "./road.module.less";
 
 export function ReplayProgress({ stepper }: { stepper: ReplayState }) {
   const { formatInteger } = useIntlNumbers();
@@ -17,17 +14,35 @@ export function ReplayProgress({ stepper }: { stepper: ReplayState }) {
     time,
   } = useReplayProgress(stepper);
   return (
-    <Para align="center">
-      <NameValue
-        name="Progress"
-        value={`${formatInteger(progress)}/${formatInteger(length)}`}
-      />
-      <NameValue
-        name="Time"
-        value={formatDuration(time, { showMillis: true })}
-      />
-      <NameValue name="Speed" value={formatSpeed(speed)} />
-    </Para>
+    <div className={`${styles.whisper} ${styles.whisperCenter}`}>
+      <span>
+        <span className={styles.lab}>
+          <FormattedMessage
+            id="typingTest.replay.progress"
+            defaultMessage="Progress"
+          />
+        </span>
+        {`${formatInteger(progress)}/${formatInteger(length)}`}
+      </span>
+      <span>
+        <span className={styles.lab}>
+          <FormattedMessage
+            id="typingTest.progress.time"
+            defaultMessage="Time"
+          />
+        </span>
+        {formatDuration(time, { showMillis: true })}
+      </span>
+      <span>
+        <span className={styles.lab}>
+          <FormattedMessage
+            id="typingTest.progress.speed"
+            defaultMessage="Speed"
+          />
+        </span>
+        {formatSpeed(speed)}
+      </span>
+    </div>
   );
 }
 
