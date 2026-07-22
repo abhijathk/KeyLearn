@@ -35,8 +35,10 @@ test("render", async () => {
     </FakeIntlProvider>,
   );
 
-  isNotNull(await r.findByText("Typing Speed Over Time"));
-  isNotNull(await r.findByText("Speed for This Key"));
+  // The named user's road profile renders with their identity band.
+  isNotNull(await r.findByText("somebody"));
+  isNotNull(await r.findByText(/The speed story/));
+  isNotNull(await r.findByText(/One key's story/));
 
   r.unmount();
 });

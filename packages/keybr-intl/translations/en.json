@@ -74,6 +74,7 @@
   "keyboard.emulation.reverse.description": "Turn this on if your keyboard has a built-in layout switch and the virtual keyboard is highlighting the wrong keys.",
   "language.search.placeholder": "Find a language",
   "layouts.road.bottomRow": "Bottom row",
+  "layouts.road.closeDesigner": "Close the designer",
   "layouts.road.designCustom": "Design a custom layout",
   "layouts.road.header": "Keyboard Layouts",
   "layouts.road.homeRow": "Home row",

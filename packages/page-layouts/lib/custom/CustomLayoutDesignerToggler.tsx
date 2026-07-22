@@ -10,9 +10,25 @@ export function CustomLayoutDesignerToggler() {
   const [visible, setVisible] = useState(false);
   if (visible) {
     return (
-      <Suspense>
-        <LazyCustomLayoutDesigner />
-      </Suspense>
+      <>
+        <div className={styles.designerRow}>
+          <button
+            type="button"
+            className={styles.designerCancel}
+            onClick={() => {
+              setVisible(false);
+            }}
+          >
+            <FormattedMessage
+              id="layouts.road.closeDesigner"
+              defaultMessage="Close the designer"
+            />
+          </button>
+        </div>
+        <Suspense>
+          <LazyCustomLayoutDesigner />
+        </Suspense>
+      </>
     );
   } else {
     return (

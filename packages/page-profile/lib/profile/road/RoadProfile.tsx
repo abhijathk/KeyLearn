@@ -50,10 +50,12 @@ export function RoadProfile({
   keyStatsMap,
   dailyStatsMap,
   stats,
+  user = null,
 }: {
   readonly keyStatsMap: KeyStatsMap;
   readonly dailyStatsMap: DailyStatsMap;
   readonly stats: SummaryStats;
+  readonly user?: NamedUser | null;
 }): ReactNode {
   const { settings } = useSettings();
   const target = useMemo(() => new Target(settings), [settings]);
@@ -64,7 +66,7 @@ export function RoadProfile({
   const { results } = keyStatsMap;
   return (
     <div className={styles.col}>
-      <Identity stats={stats} results={results} />
+      <Identity stats={stats} results={results} user={user} />
       <LifeRoad stats={stats} />
       <StatStrips stats={stats} today={dailyStatsMap.today.stats} />
       <Journey keyStatsMap={keyStatsMap} confidenceOf={confidenceOf} />
@@ -137,7 +139,7 @@ export function RoadProfile({
         </div>
       </Explainer>
       <CalendarHeat dailyStatsMap={dailyStatsMap} />
-      <DataRow />
+      {user == null && <DataRow />}
       <div className={styles.foot}>
         <FormattedMessage
           id="profile.road.foot"
@@ -153,9 +155,11 @@ export function RoadProfile({
 function Identity({
   stats,
   results,
+  user,
 }: {
   readonly stats: SummaryStats;
   readonly results: readonly { readonly timeStamp: number }[];
+  readonly user: NamedUser | null;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const { formatNumber } = useIntlNumbers();
@@ -165,13 +169,16 @@ function Identity({
     toggleExplainers(Preferences.get(propExplainSettings));
   });
   const streak = dailyStreak(results);
-  const signedIn = publicUser.id != null;
-  const name = signedIn
-    ? publicUser.name
-    : formatMessage({
-        id: "profile.road.guest",
-        defaultMessage: "Guest learner",
-      });
+  const signedIn = user != null || publicUser.id != null;
+  const name =
+    user != null
+      ? user.name
+      : signedIn
+        ? publicUser.name
+        : formatMessage({
+            id: "profile.road.guest",
+            defaultMessage: "Guest learner",
+          });
   return (
     <div className={styles.id}>
       <span className={styles.avatar}>
