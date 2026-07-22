@@ -10,7 +10,7 @@ import { Pulse } from "./Pulse.tsx";
 import { type LessonState } from "./state/index.ts";
 
 export const Indicators = memo(function Indicators({
-  state: { keyStatsMap, summaryStats, lessonKeys },
+  state: { keyStatsMap, summaryStats, lessonKeys, streakList, dailyGoal },
 }: {
   readonly state: LessonState;
 }): ReactNode {
@@ -56,7 +56,14 @@ export const Indicators = memo(function Indicators({
   return (
     <div id={names.indicators} className={styles.indicators}>
       <div className={styles.metrics}>
-        <Pulse summaryStats={summaryStats} speeds={speeds} names={names} />
+        <Pulse
+          summaryStats={summaryStats}
+          speeds={speeds}
+          lessonKeys={lessonKeys}
+          streakList={streakList}
+          dailyGoal={dailyGoal}
+          names={names}
+        />
       </div>
     </div>
   );

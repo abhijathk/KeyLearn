@@ -26,7 +26,6 @@ import { DeferredKeyboardPresenter } from "./KeyboardPresenter.tsx";
 import { PracticeTour } from "./PracticeTour.tsx";
 import * as styles from "./Presenter.module.less";
 import { type LessonState } from "./state/index.ts";
-import { StatusFooter } from "./StatusFooter.tsx";
 
 type Props = {
   readonly state: LessonState;
@@ -391,7 +390,6 @@ function NormalLayout({
         // touch so the typing zone owns the attention.
         <div className={clsx(styles.chrome, typing && styles.dimmed)}>
           <Indicators state={state} />
-          <StatusFooter state={state} />
         </div>
       )}
       <div

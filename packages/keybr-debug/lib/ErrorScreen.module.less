@@ -1,0 +1,130 @@
+// The friendly crash screen: a calm card with a stuck-key face, one clear
+// action, and the technical report folded away.
+.screen {
+  display: grid;
+  place-items: center;
+  min-block-size: 60vb;
+  padding: 2rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-inline-size: 34rem;
+  padding: 2.5rem 2.5rem 2rem;
+  border: 1px solid
+    color-mix(in oklab, var(--accent, #7fb1f7) 30%, var(--secondary-f2, #555));
+  border-radius: 1.25rem;
+  background-color: var(--primary-l1, transparent);
+  box-shadow: 0 1.5rem 4rem var(--shadow-color, rgb(0 0 0 / 40%));
+  text-align: center;
+}
+
+// a keycap with a worried face — the mood-face language, in trouble
+.face svg {
+  inline-size: 4rem;
+  block-size: 4rem;
+  fill: none;
+  stroke: var(--accent, #7fb1f7);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.eye {
+  fill: var(--accent, #7fb1f7);
+  stroke: none;
+}
+
+.title {
+  margin-block: 1.1rem 0.5rem;
+  color: var(--text-color, #ddd);
+  font-family: var(--default-font-family, sans-serif);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.body {
+  margin-block: 0 1.4rem;
+  color: var(--text-color-f1, #aaa);
+  font-family: var(--default-font-family, sans-serif);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.reload {
+  padding-inline: 1.4rem;
+  padding-block: 0.6rem;
+  border: 1px solid var(--accent, #7fb1f7);
+  border-radius: 999px;
+  color: var(--primary, #14161c);
+  background-color: var(--accent, #7fb1f7);
+  box-shadow: 0 0 0 4px
+    color-mix(in oklab, var(--accent, #7fb1f7) 14%, transparent);
+  font-family: var(--default-font-family, sans-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+// ---- the folded technical report -----------------------------------------
+
+.details {
+  inline-size: 100%;
+  margin-block-start: 1.5rem;
+  text-align: start;
+}
+
+.summary {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  list-style: none;
+  color: var(--text-color-f2, #888);
+  font-family: var(--default-font-family, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.chevron {
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: transform 0.2s ease;
+}
+
+.details[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.details[open] .summary {
+  color: var(--text-color-f1, #aaa);
+}
+
+.details pre {
+  max-block-size: 16rem;
+  margin-block-start: 0.6rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.6rem;
+  overflow: auto;
+  color: var(--text-color-f1, #aaa);
+  background-color: color-mix(
+    in oklab,
+    var(--primary-d2, #000) 60%,
+    transparent
+  );
+  font-size: 0.72rem;
+  line-height: 1.5;
+}

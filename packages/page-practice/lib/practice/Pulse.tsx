@@ -1,34 +1,49 @@
 import { useIntlNumbers } from "@keybr/intl";
-import { lessonProps } from "@keybr/lesson";
-import { type Names, useFormatter, useKeyStyles } from "@keybr/lesson-ui";
-import { type SummaryStats } from "@keybr/result";
+import {
+  type DailyGoal as DailyGoalType,
+  LearningRate,
+  type LessonKeys,
+  lessonProps,
+  Target,
+} from "@keybr/lesson";
+import { Key, type Names, useFormatter } from "@keybr/lesson-ui";
+import {
+  type StreakList as StreakListType,
+  type SummaryStats,
+  timeToSpeed,
+} from "@keybr/result";
 import { useSettings } from "@keybr/settings";
+import { StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
-import { memo, type ReactNode } from "react";
+import { type CSSProperties, memo, type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./Pulse.module.less";
 
 /**
- * The Pulse: the whole metrics section drawn as one slim thread. The line
- * begins as the recent-lessons trend curve, flows into the speed numeral,
- * continues as a dotted road (the Letter Journey's grammar for "still to
- * come") to a flag at the target speed — a glowing dot marks how far along
- * you are — and accuracy and score ride along as quiet stations. One row,
- * so the practice text and keyboard keep the stage.
+ * The one-band telemetry: everything in a single composition with strict
+ * visual hierarchy. The hero speed leads; the macro road (you on the way to
+ * the target speed) and the focused key's micro road (its way to unlocking)
+ * stack in one lane beside it, rhyming dot above dot; and every other number
+ * collapses into a whisper line of pure typography underneath.
  */
 export const Pulse = memo(function Pulse({
   summaryStats,
   speeds,
+  lessonKeys,
+  streakList,
+  dailyGoal,
   names,
 }: {
   readonly summaryStats: SummaryStats;
   readonly speeds: readonly number[];
+  readonly lessonKeys: LessonKeys;
+  readonly streakList: StreakListType;
+  readonly dailyGoal: DailyGoalType;
   readonly names?: Names;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const { formatNumber, formatPercents } = useIntlNumbers();
-  const { formatSpeed, speedUnit } = useFormatter();
-  const { confidenceColor } = useKeyStyles();
+  const { formatSpeed, formatConfidence, speedUnit } = useFormatter();
   const { settings } = useSettings();
   const target = settings.get(lessonProps.targetSpeed);
   const { count, speed, accuracy, score } = summaryStats;
@@ -36,113 +51,249 @@ export const Pulse = memo(function Pulse({
   const frac =
     hasData && target > 0 ? Math.min(1, Math.max(0, speed.last / target)) : 0;
   const reached = hasData && speed.last >= target;
-  // A metric dot's tint: the algorithm red-to-green scale centred on your
-  // average — half a `scale` above reads fully green, half below fully red.
-  const tintOf = (delta: number, scale: number) =>
-    hasData
-      ? String(
-          confidenceColor(Math.min(1, Math.max(0, 0.5 + delta / (scale || 1)))),
-        )
-      : undefined;
+
+  const focusedKey = lessonKeys.findFocusedKey();
+  const keyCalibrated =
+    focusedKey != null &&
+    focusedKey.timeToType != null &&
+    focusedKey.bestTimeToType != null &&
+    focusedKey.confidence != null &&
+    focusedKey.bestConfidence != null;
+  const conf = keyCalibrated
+    ? Math.min(1, Math.max(0, focusedKey.confidence!))
+    : 0;
+  const best = keyCalibrated
+    ? Math.min(1, Math.max(0, focusedKey.bestConfidence!))
+    : 0;
+  const learningRate =
+    focusedKey != null
+      ? (LearningRate.from(focusedKey.samples, new Target(settings))
+          ?.learningRate ?? null)
+      : null;
+
   return (
     <div className={styles.root}>
-      {speeds.length > 1 && (
+      <div className={styles.l1}>
+        {speeds.length > 1 && (
+          <div
+            className={styles.sparkWrap}
+            title={formatMessage(
+              {
+                id: "practice.trend.label",
+                defaultMessage: "Past {count} lessons",
+              },
+              { count: speeds.length },
+            )}
+          >
+            <Spark speeds={speeds} />
+          </div>
+        )}
         <div
-          className={styles.sparkWrap}
-          title={formatMessage(
-            {
-              id: "practice.trend.label",
-              defaultMessage: "Past {count} lessons",
-            },
-            { count: speeds.length },
-          )}
-        >
-          <Spark speeds={speeds} />
-        </div>
-      )}
-      <div
-        id={names?.speed}
-        className={styles.speed}
-        title={formatMessage({
-          id: "metric.speed.description",
-          defaultMessage: "Your typing speed in the most recent lesson.",
-        })}
-      >
-        <span className={styles.speedValue}>
-          {hasData ? formatSpeed(speed.last, { unit: false }) : "—"}
-          <i className={styles.speedUnit}>{speedUnit.id}</i>
-        </span>
-        {hasData && <Chip delta={speed.delta} text={formatSpeed} />}
-      </div>
-      <div className={styles.road}>
-        <span
-          className={styles.roadDone}
-          style={{ flexBasis: `${frac * 100}%` }}
-        />
-        <span
-          className={clsx(styles.you, reached && styles.youReached)}
+          id={names?.speed}
+          className={styles.speed}
           title={formatMessage({
-            id: "practice.pulse.you.description",
-            defaultMessage:
-              "You are here — your latest speed on the way to the goal.",
+            id: "metric.speed.description",
+            defaultMessage: "Your typing speed in the most recent lesson.",
           })}
-        />
-        <span className={styles.roadAhead} />
-        <span className={styles.goal}>
-          <svg className={styles.flag} viewBox="0 0 14 16" aria-hidden={true}>
-            <path d="M3 15V2m0 0h8l-2.5 3L11 8H3" />
-          </svg>
-          {formatSpeed(target)}
-        </span>
-        <span className={styles.caption}>
-          {hasData &&
-            (reached ? (
-              <FormattedMessage
-                id="practice.pulse.goalReached"
-                defaultMessage="Goal reached — raise it in settings"
-              />
+        >
+          <span className={styles.speedValue}>
+            {hasData ? formatSpeed(speed.last, { unit: false }) : "—"}
+            <i className={styles.speedUnit}>{speedUnit.id}</i>
+          </span>
+        </div>
+        {hasData && <Chip delta={speed.delta} text={formatSpeed} />}
+
+        <div className={styles.roads}>
+          <div
+            className={clsx(styles.road, styles.roadMacro)}
+            title={formatMessage({
+              id: "practice.pulse.you.description",
+              defaultMessage:
+                "You are here — your latest speed on the way to the goal.",
+            })}
+          >
+            <span
+              className={styles.roadDone}
+              style={{ flexBasis: `${frac * 100}%` }}
+            />
+            <span className={clsx(styles.you, reached && styles.youReached)} />
+            <span className={styles.roadAhead} />
+            <span className={styles.goal}>
+              <svg
+                className={styles.flag}
+                viewBox="0 0 14 16"
+                aria-hidden={true}
+              >
+                <path d="M3 15V2m0 0h8l-2.5 3L11 8H3" />
+              </svg>
+              {formatSpeed(target)}
+              <em className={styles.pct}>
+                {hasData &&
+                  (reached ? (
+                    <FormattedMessage
+                      id="practice.pulse.goalReached"
+                      defaultMessage="Goal reached — raise it in settings"
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="practice.pulse.progress"
+                      defaultMessage="{percent}% of the way"
+                      values={{ percent: Math.round(frac * 100) }}
+                    />
+                  ))}
+              </em>
+            </span>
+          </div>
+
+          <div
+            id={names?.currentKey}
+            className={clsx(styles.road, styles.roadMicro)}
+            title={formatMessage({
+              id: "practice.lane.road.description",
+              defaultMessage:
+                "This key's road to unlocking: the glowing dot is where you are now, the hollow ring is your best so far, the star is the unlock.",
+            })}
+          >
+            {focusedKey != null ? (
+              <>
+                <span className={styles.keycap}>
+                  <Key lessonKey={focusedKey} />
+                </span>
+                {keyCalibrated ? (
+                  <>
+                    <span
+                      className={clsx(styles.roadDone, styles.microDone)}
+                      style={{ flexBasis: `${conf * 100}%` }}
+                    />
+                    <span className={clsx(styles.you, styles.microYou)} />
+                    <span
+                      className={styles.bestMark}
+                      style={{ insetInlineStart: `${best * 100}%` }}
+                    />
+                    <span className={styles.roadAhead} />
+                    <svg
+                      className={styles.star}
+                      viewBox="0 0 14 14"
+                      aria-hidden={true}
+                    >
+                      <path d="M7 1.2 8.5 5l3.9.2-3 2.5 1 3.8L7 9.3l-3.4 2.2 1-3.8-3-2.5L5.5 5Z" />
+                    </svg>
+                    <span className={styles.microVal}>
+                      {formatSpeed(timeToSpeed(focusedKey.timeToType!))}
+                      <i>
+                        <FormattedMessage
+                          id="practice.pulse.now"
+                          defaultMessage="now"
+                        />
+                        {" · "}
+                        {formatConfidence(focusedKey.confidence)}
+                      </i>
+                    </span>
+                  </>
+                ) : (
+                  <span className={styles.microNote}>
+                    <FormattedMessage
+                      id="t_Not_calibrated_"
+                      defaultMessage="Not calibrated yet — keep practicing to unlock this."
+                    />
+                  </span>
+                )}
+              </>
             ) : (
-              <FormattedMessage
-                id="practice.pulse.progress"
-                defaultMessage="{percent}% of the way"
-                values={{ percent: Math.round(frac * 100) }}
-              />
-            ))}
-        </span>
+              <span className={styles.microNote}>
+                <StrokeIcon className={styles.trophy} name="trophy" />
+                <FormattedMessage
+                  id="t_All_keys_are_unlocked"
+                  defaultMessage="Every key is unlocked."
+                />
+              </span>
+            )}
+          </div>
+        </div>
       </div>
-      <Station
-        id={names?.accuracy}
-        label={<FormattedMessage id="t_Accuracy" defaultMessage="Accuracy" />}
-        value={hasData ? formatPercents(accuracy.last) : "—"}
-        chip={
-          hasData ? (
-            <Chip delta={accuracy.delta} text={(v) => formatPercents(v)} />
-          ) : null
-        }
-        tint={tintOf(accuracy.delta, 0.04)}
-        title={formatMessage({
-          id: "metric.accuracy.description",
-          defaultMessage:
-            "The share of characters you typed correctly in the last lesson.",
-        })}
-      />
-      <Station
-        id={names?.score}
-        label={<FormattedMessage id="t_Score" defaultMessage="Score" />}
-        value={hasData ? formatNumber(score.last, 0) : "—"}
-        chip={
-          hasData ? (
-            <Chip delta={score.delta} text={(v) => formatNumber(v, 0)} />
-          ) : null
-        }
-        tint={tintOf(score.delta, Math.max(1, score.avg * 0.4))}
-        title={formatMessage({
-          id: "metric.score.description",
-          defaultMessage:
-            "Your last lesson's score, in points. " +
-            "You earn more by typing faster and cleaner.",
-        })}
-      />
+
+      <div className={styles.whisper}>
+        <span
+          id={names?.accuracy}
+          title={formatMessage({
+            id: "metric.accuracy.description",
+            defaultMessage:
+              "The share of characters you typed correctly in the last lesson.",
+          })}
+        >
+          <span className={styles.lab}>
+            <FormattedMessage id="t_Accuracy" defaultMessage="Accuracy" />
+          </span>
+          <b>{hasData ? formatPercents(accuracy.last) : "—"}</b>{" "}
+          {hasData && <Delta delta={accuracy.delta} text={formatPercents} />}
+        </span>
+        <span
+          id={names?.score}
+          title={formatMessage({
+            id: "metric.score.description",
+            defaultMessage:
+              "Your last lesson's score, in points. " +
+              "You earn more by typing faster and cleaner.",
+          })}
+        >
+          <span className={styles.lab}>
+            <FormattedMessage id="t_Score" defaultMessage="Score" />
+          </span>
+          <b>{hasData ? formatNumber(score.last, 0) : "—"}</b>{" "}
+          {hasData && (
+            <Delta delta={score.delta} text={(v) => formatNumber(v, 0)} />
+          )}
+        </span>
+        <span
+          title={formatMessage({
+            id: "practice.lane.best.description",
+            defaultMessage: "The fastest you have ever typed this key.",
+          })}
+        >
+          <span className={styles.lab}>
+            <FormattedMessage id="practice.pulse.best" defaultMessage="Best" />
+          </span>
+          {keyCalibrated ? (
+            <>
+              <b>{formatSpeed(timeToSpeed(focusedKey!.bestTimeToType!))}</b>
+              {" · "}
+              {formatConfidence(focusedKey!.bestConfidence)}
+            </>
+          ) : (
+            <b>—</b>
+          )}
+        </span>
+        <span
+          title={formatMessage({
+            id: "metric.learningRate.description",
+            defaultMessage:
+              "How your speed on this key is trending from lesson to lesson.",
+          })}
+        >
+          <span className={styles.lab}>
+            <FormattedMessage id="practice.pulse.pace" defaultMessage="Pace" />
+          </span>
+          {learningRate != null && learningRate === learningRate ? (
+            <Delta
+              delta={learningRate}
+              text={(v) =>
+                formatMessage(
+                  {
+                    id: "practice.pulse.perLesson",
+                    defaultMessage: "{value}/lesson",
+                  },
+                  { value: formatSpeed(v) },
+                )
+              }
+            />
+          ) : (
+            <b>—</b>
+          )}{" "}
+          <Mood rate={learningRate} />
+        </span>
+        <StreakWhisper streakList={streakList} />
+        {dailyGoal.goal > 0 && <TodayWhisper dailyGoal={dailyGoal} />}
+      </div>
     </div>
   );
 });
@@ -172,33 +323,181 @@ function Chip({
   );
 }
 
-function Station({
-  id,
-  label,
-  value,
-  chip,
-  tint,
-  title,
+/** A whisper-line delta: just a tinted numeral, no pill. */
+function Delta({
+  delta,
+  text,
+  plain = false,
 }: {
-  readonly id?: string;
-  readonly label: ReactNode;
-  readonly value: string;
-  readonly chip: ReactNode;
-  readonly tint?: string;
-  readonly title: string;
+  readonly delta: number;
+  readonly text: (value: number) => string;
+  readonly plain?: boolean;
 }): ReactNode {
+  const { formatMessage } = useIntl();
+  const cls = delta > 0 ? styles.up : delta < 0 ? styles.down : undefined;
+  const sign = plain ? "" : delta > 0 ? "+" : delta < 0 ? "−" : "";
   return (
-    <div id={id} className={styles.station} title={title}>
-      <span className={styles.stationTop}>
-        <span
-          className={styles.stationDot}
-          style={tint ? { backgroundColor: tint } : undefined}
-        />
-        <span className={styles.stationValue}>{value}</span>
-        {chip}
+    <span
+      className={cls}
+      title={formatMessage({
+        id: "metric.difference.description",
+        defaultMessage: "How this compares to your average.",
+      })}
+    >
+      {sign}
+      {text(plain ? delta : Math.abs(delta))}
+    </span>
+  );
+}
+
+/**
+ * The mood face, drawn from scratch for KeyLearn: one round stroke-style face
+ * whose mouth bends with the learning rate — gently up, up, or beaming at
+ * +1/+5/+10 per lesson, with the mirror frowns going down. Flat and grey when
+ * nothing is moving.
+ */
+function Mood({ rate }: { readonly rate: number | null }): ReactNode {
+  const r = rate != null && rate === rate ? rate : 0;
+  const level =
+    r > 0
+      ? r >= 10
+        ? 3
+        : r >= 5
+          ? 2
+          : 1
+      : r < 0
+        ? r <= -10
+          ? 3
+          : r <= -5
+            ? 2
+            : 1
+        : 0;
+  const happy = r > 0;
+  const sad = r < 0;
+  const bend = level * 2.2;
+  const d = happy
+    ? `M6.6 12 Q10 ${12 + bend} 13.4 12`
+    : sad
+      ? `M6.6 13.4 Q10 ${13.4 - bend} 13.4 13.4`
+      : "M6.9 12.7 H13.1";
+  return (
+    <svg
+      className={clsx(
+        styles.mood,
+        happy && styles.moodHappy,
+        sad && styles.moodSad,
+        level >= 3 && styles.moodMax,
+      )}
+      viewBox="0 0 20 20"
+      aria-hidden={true}
+    >
+      <circle cx="10" cy="10" r="8.4" />
+      {level >= 3 && happy ? (
+        <>
+          <path d="M5.9 8.2 Q7.2 6.8 8.5 8.2" />
+          <path d="M11.5 8.2 Q12.8 6.8 14.1 8.2" />
+        </>
+      ) : (
+        <>
+          <circle className={styles.moodEye} cx="7.2" cy="8" r="0.95" />
+          <circle className={styles.moodEye} cx="12.8" cy="8" r="0.95" />
+        </>
+      )}
+      <path d={d} />
+    </svg>
+  );
+}
+
+const milestones = [5, 10, 25, 50, 100, 250];
+
+function StreakWhisper({
+  streakList,
+}: {
+  readonly streakList: StreakListType;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const { formatPercents } = useIntlNumbers();
+  let bestRun: { level: number; length: number } | null = null;
+  for (const { level, results } of streakList) {
+    if (results.length > 0 && (bestRun == null || level > bestRun.level)) {
+      bestRun = { level, length: results.length };
+    }
+  }
+  const title = formatMessage({
+    id: "practice.lane.streak.description",
+    defaultMessage:
+      "Your longest run of lessons typed at high accuracy, and the next milestone.",
+  });
+  if (bestRun == null) {
+    return (
+      <span title={title}>
+        <span className={styles.lab}>
+          <FormattedMessage
+            id="practice.pulse.streak"
+            defaultMessage="Streak"
+          />
+        </span>
+        <b>—</b>
       </span>
-      <span className={styles.microLabel}>{label}</span>
-    </div>
+    );
+  }
+  const next = milestones.find((m) => m > bestRun.length) ?? bestRun.length;
+  const prev = [0, ...milestones].filter((m) => m <= bestRun.length).pop() ?? 0;
+  const fracRun = next > prev ? (bestRun.length - prev) / (next - prev) : 1;
+  return (
+    <span title={`${title} (${formatPercents(bestRun.level)}+)`}>
+      <span className={styles.lab}>
+        <FormattedMessage id="practice.pulse.streak" defaultMessage="Streak" />
+      </span>
+      <b>{bestRun.length}</b>
+      <span className={styles.miniBar}>
+        <i
+          style={
+            { inlineSize: `${Math.round(fracRun * 100)}%` } as CSSProperties
+          }
+        />
+      </span>
+      <FormattedMessage
+        id="practice.pulse.next"
+        defaultMessage="next {next}"
+        values={{ next }}
+      />
+    </span>
+  );
+}
+
+function TodayWhisper({
+  dailyGoal,
+}: {
+  readonly dailyGoal: DailyGoalType;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const { value, goal } = dailyGoal;
+  const done = value >= 1;
+  const pct = Math.max(0, Math.min(1, value));
+  const minutesDone = Math.round(value * goal);
+  return (
+    <span
+      title={formatMessage({
+        id: "practice.lane.today.description",
+        defaultMessage: "Today's practice time, out of your daily goal.",
+      })}
+    >
+      <span
+        className={clsx(styles.miniRing, done && styles.miniRingDone)}
+        style={{ "--p": `${Math.round(pct * 100)}%` } as CSSProperties}
+      />
+      <b>
+        <FormattedMessage
+          id="practice.lane.todayMinutes"
+          defaultMessage="{done}/{goal}min"
+          values={{ done: minutesDone, goal }}
+        />
+      </b>{" "}
+      <span className={styles.lab}>
+        <FormattedMessage id="t_Daily_goal" defaultMessage="Today's goal" />
+      </span>
+    </span>
   );
 }
 
