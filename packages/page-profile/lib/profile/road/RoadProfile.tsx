@@ -196,10 +196,12 @@ function Identity({
           {!signedIn && (
             <>
               {" · "}
-              <FormattedMessage
-                id="profile.road.notSignedIn"
-                defaultMessage="not signed in — sign in to keep and share your progress"
-              />
+              <span className={styles.signInHint}>
+                <FormattedMessage
+                  id="profile.road.notSignedIn"
+                  defaultMessage="not signed in — sign in to keep and share your progress"
+                />
+              </span>
             </>
           )}
         </i>
