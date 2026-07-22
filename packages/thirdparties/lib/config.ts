@@ -8,3 +8,5 @@ export const cloudflareAnalyticsId = process.env.CLOUDFLARE_ANALYTICS_ID || "0";
 export const cookiebotClientId = process.env.COOKIEBOT_CLIENT_ID || "0";
 export const paddleToken = process.env.PADDLE_TOKEN || "0";
 export const paddlePriceId = process.env.PADDLE_PRICE_ID || "0";
+export const adSenseClientId = process.env.ADSENSE_CLIENT_ID || "0";
+export const adSenseSlotId = process.env.ADSENSE_SLOT_ID || "0";

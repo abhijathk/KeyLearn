@@ -21,6 +21,7 @@
     "@keybr/result-loader": "*",
     "@keybr/settings-loader": "*",
     "@keybr/theme-designer": "*",
+    "@keybr/thirdparties": "*",
     "@keybr/themes": "*",
     "@keybr/widget": "*"
   },
