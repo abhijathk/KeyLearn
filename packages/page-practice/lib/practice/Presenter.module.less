@@ -49,61 +49,92 @@
   margin-block-start: 2.5rem;
 }
 
-// "Press Enter to start typing" — a pill floating on top of the keyboard,
-// clickable to start, shown only at rest.
+// The start invitation: an Enter keycap in the app's own key style that
+// gently presses itself, with the message as a micro-label under it. Shown
+// only at rest, floating just above the top edge of the keyboard (so it never
+// clashes with the ghost lane, which only shows while focused).
 .startHint {
   display: inline-flex;
   position: absolute;
   inset-inline-start: 50%;
-  // Sit just above the top edge of the keyboard, clear of the resting hands
-  // (this hint only shows while unfocused, so it never clashes with the ghost
-  // lane, which only shows while focused).
   inset-block-start: 0;
   z-index: 5;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.45rem;
   align-items: center;
-  padding-inline: 1.2rem;
-  padding-block: 0.6rem;
-  border: 1px solid color-mix(in oklab, var(--accent) 45%, transparent);
-  border-radius: 999px;
+  border: none;
   color: var(--text-color);
-  background-color: color-mix(in oklab, var(--primary) 78%, transparent);
-  font-family: var(--default-font-family);
-  font-size: 1rem;
-  font-weight: 600;
+  background: none;
   cursor: pointer;
-  transform: translate(-50%, -125%);
-  // Breathe slowly with a glowing border to draw the eye to the start action.
-  animation: hint-breathe 2.8s ease-in-out infinite;
-  backdrop-filter: blur(3px);
+  transform: translate(-50%, -112%);
+}
 
-  &:hover {
-    border-color: var(--accent);
-    animation-play-state: paused;
+.startKeycap {
+  display: grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 2.7rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 55%, transparent);
+  border-radius: 0.55rem;
+  color: var(--accent);
+  background-color: var(--primary-l1);
+  // the keycap's own 3D edge, like the virtual keyboard's keys
+  box-shadow:
+    0 3px 0 color-mix(in oklab, var(--accent) 35%, var(--primary-d2)),
+    0 0 0 3px color-mix(in oklab, var(--accent) 12%, transparent),
+    0 0.4rem 1.4rem color-mix(in oklab, var(--accent) 25%, transparent);
+  animation: keycap-press 2.6s ease-in-out infinite;
+
+  svg {
+    inline-size: 1.4rem;
+    block-size: 1.4rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linejoin: round;
+    stroke-linecap: round;
   }
 }
 
-@keyframes hint-breathe {
+.startHint:hover .startKeycap {
+  border-color: var(--accent);
+  animation-play-state: paused;
+}
+
+// The key presses itself: a quick dip and release, edge squashing under it.
+@keyframes keycap-press {
   0%,
+  78%,
   100% {
-    border-color: color-mix(in oklab, var(--accent) 35%, transparent);
     box-shadow:
-      0 0 0 0 color-mix(in oklab, var(--accent) 45%, transparent),
-      0 0.4rem 1.2rem color-mix(in oklab, var(--accent) 12%, transparent);
-    transform: translate(-50%, -125%) scale(1);
+      0 3px 0 color-mix(in oklab, var(--accent) 35%, var(--primary-d2)),
+      0 0 0 3px color-mix(in oklab, var(--accent) 12%, transparent),
+      0 0.4rem 1.4rem color-mix(in oklab, var(--accent) 25%, transparent);
+    transform: translateY(0);
   }
 
-  50% {
-    border-color: var(--accent);
+  85%,
+  91% {
     box-shadow:
-      0 0 0 0.55rem color-mix(in oklab, var(--accent) 0%, transparent),
-      0 0.6rem 1.8rem color-mix(in oklab, var(--accent) 40%, transparent);
-    transform: translate(-50%, -125%) scale(1.045);
+      0 1px 0 color-mix(in oklab, var(--accent) 35%, var(--primary-d2)),
+      0 0 0 5px color-mix(in oklab, var(--accent) 20%, transparent),
+      0 0.5rem 1.6rem color-mix(in oklab, var(--accent) 45%, transparent);
+    transform: translateY(2px);
   }
+}
+
+.startLabel {
+  color: var(--text-color-f1);
+  font-family: var(--default-font-family);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .startHint {
+  .startKeycap {
     animation: none;
   }
 }

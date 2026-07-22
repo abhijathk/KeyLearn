@@ -366,11 +366,20 @@ function NormalLayout({
           <GhostTrack state={state} />
         )}
         {focus || (
+          // The invitation as a self-pressing Enter keycap in the app's own
+          // key style, with the message riding under it as a micro-label.
           <button type="button" className={styles.startHint} onClick={onStart}>
-            <FormattedMessage
-              id="textArea.startTyping"
-              defaultMessage="Press Enter to start typing"
-            />
+            <span className={styles.startKeycap}>
+              <svg viewBox="0 0 24 24" aria-hidden={true}>
+                <path d="M19 6v6a2 2 0 0 1-2 2H6.8M10 10l-4 4 4 4" />
+              </svg>
+            </span>
+            <span className={styles.startLabel}>
+              <FormattedMessage
+                id="textArea.startTyping"
+                defaultMessage="Press Enter to start typing"
+              />
+            </span>
           </button>
         )}
         <DeferredKeyboardPresenter
