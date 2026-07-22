@@ -161,6 +161,7 @@
   "practice.pulse.streak": "Streak",
   "practice.pulse.you.description": "You are here — your latest speed on the way to the goal.",
   "practice.streak.days": "{days} {days, plural, =1 {day} other {days}}",
+  "practice.tour.chartLegend": "past lessons — the dotted road ahead is the forecast to the goal",
   "practice.trend.label": "Past {count} lessons",
   "practice.widget.focusMode.enter": "Focus mode: just you, the words, nothing else.",
   "practice.widget.focusMode.exit": "Leave focus mode.",
