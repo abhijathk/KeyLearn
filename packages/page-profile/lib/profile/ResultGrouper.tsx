@@ -15,9 +15,10 @@ import {
   useResults,
 } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
-import { Field, FieldList, OptionList } from "@keybr/widget";
+import { clsx } from "clsx";
 import { type ReactNode, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import * as styles from "./road/road.module.less";
 
 export function ResultGrouper({
   children,
@@ -48,61 +49,70 @@ export function ResultGrouper({
 
   return (
     <>
-      <FieldList>
-        <Field>
+      <div className={styles.filterRow}>
+        <span className={styles.axis}>
           <FormattedMessage
             id="t_Show_statistics_for:"
             defaultMessage="Filter statistics by:"
           />
-        </Field>
-        <Field>
-          <OptionList
-            options={layoutOptions}
-            value={selectedLayout.id}
-            onSelect={(value) => {
-              setSelectedLayout(Layout.ALL.get(value));
-            }}
-          />
-        </Field>
-        <Field>
-          <OptionList
-            options={[
-              {
-                name: formatMessage({
-                  id: "t_cc_Letters",
-                  defaultMessage: "Letters",
-                }),
-                value: "letters",
-              },
-              {
-                name: formatMessage({
-                  id: "t_cc_Digits",
-                  defaultMessage: "Digits",
-                }),
-                value: "digits",
-              },
-              {
-                name: formatMessage({
-                  id: "t_cc_Punctuation_characters",
-                  defaultMessage: "Punctuation marks",
-                }),
-                value: "punctuators",
-              },
-              {
-                name: formatMessage({
-                  id: "t_cc_Special_characters",
-                  defaultMessage: "Symbols",
-                }),
-                value: "specials",
-              },
-            ]}
-            value={characterClass}
-            onSelect={(value) => {
-              setCharacterClass(value);
-            }}
-          />
-        </Field>
-      </FieldList>
+        </span>
+        <select
+          className={styles.filterSelect}
+          value={selectedLayout.id}
+          onChange={(ev) => {
+            setSelectedLayout(Layout.ALL.get(ev.target.value));
+          }}
+        >
+          {layoutOptions.map(({ value, name }) => (
+            <option key={value} value={value}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <span className={styles.seg}>
+          {[
+            [
+              "letters",
+              formatMessage({
+                id: "t_cc_Letters",
+                defaultMessage: "Letters",
+              }),
+            ],
+            [
+              "digits",
+              formatMessage({ id: "t_cc_Digits", defaultMessage: "Digits" }),
+            ],
+            [
+              "punctuators",
+              formatMessage({
+                id: "t_cc_Punctuation_characters",
+                defaultMessage: "Punctuation marks",
+              }),
+            ],
+            [
+              "specials",
+              formatMessage({
+                id: "t_cc_Special_characters",
+                defaultMessage: "Symbols",
+              }),
+            ],
+          ].map(([value, name]) => (
+            <button
+              key={value}
+              type="button"
+              className={clsx(
+                styles.segItem,
+                characterClass === value && styles.segOn,
+              )}
+              onClick={() => {
+                setCharacterClass(value);
+              }}
+            >
+              {name}
+            </button>
+          ))}
+        </span>
+      </div>
 
       <KeyboardContext.Provider value={keyboard}>
         <PhoneticModelLoader language={selectedLayout.language}>
