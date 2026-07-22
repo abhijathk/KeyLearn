@@ -107,17 +107,6 @@ export function MenuDrawer({
             </div>
             <div className={styles.util}>
               <a
-                href="https://github.com/abhijathk/keylearn/blob/master/docs/translations.md"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <StrokeIcon className={styles.utilIcon} name="translate" />
-                <FormattedMessage
-                  id="drawer.translate"
-                  defaultMessage="Help translate KeyLearn"
-                />
-              </a>
-              <a
                 href="https://github.com/abhijathk/keylearn"
                 target="_blank"
                 rel="noreferrer"
@@ -127,10 +116,6 @@ export function MenuDrawer({
                   id="drawer.source"
                   defaultMessage="View source on GitHub"
                 />
-              </a>
-              <a href="mailto:abhijathka@gmail.com">
-                <StrokeIcon className={styles.utilIcon} name="mail" />
-                abhijathka@gmail.com
               </a>
               <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
                 <StrokeIcon className={styles.utilIcon} name="doc" />

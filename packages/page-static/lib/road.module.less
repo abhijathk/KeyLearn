@@ -1,0 +1,142 @@
+// The legal pages in the road design language: one narrative mono column,
+// whisper section rules, a friendly "short version" up top — readable words,
+// not legalese.
+.paper {
+  box-sizing: border-box;
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
+  margin-block: 2rem;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+}
+
+.kicker {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+
+  &::after {
+    content: "";
+    flex: 1;
+    block-size: 1px;
+    background-image: linear-gradient(to right, var(--primary-d2), transparent);
+  }
+}
+
+.nameplate {
+  margin-block-start: 1.1rem;
+  color: var(--text-color);
+  font-size: clamp(1.8rem, 4vi, 2.4rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.dateline {
+  margin-block-start: 0.6rem;
+  color: var(--text-color-f2);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+// ---- "the short version" ------------------------------------------------
+
+.glance {
+  margin-block-start: 2rem;
+}
+
+.glanceLab {
+  margin-block-end: 0.8rem;
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+// ---- sections -----------------------------------------------------------
+
+.sect {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin-block-start: 2.6rem;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+
+  &::after {
+    content: "";
+    flex: 1;
+    block-size: 1px;
+    background-image: linear-gradient(to right, var(--primary-d2), transparent);
+  }
+}
+
+.paper p {
+  max-inline-size: 52rem;
+  margin-block: 0.9rem 0;
+  color: var(--text-color-f1);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.paper em {
+  color: var(--accent);
+  font-weight: 700;
+  font-style: normal;
+}
+
+.paper a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.paper ul {
+  display: grid;
+  gap: 0.55rem;
+  list-style: none;
+  max-inline-size: 52rem;
+  margin-block: 0.9rem 0;
+  padding: 0;
+}
+
+.paper li {
+  position: relative;
+  padding-inline-start: 1.6rem;
+  color: var(--text-color-f1);
+  font-size: 0.88rem;
+  line-height: 1.65;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0.35rem;
+    inset-block-start: 0.6rem;
+    inline-size: 0.4rem;
+    block-size: 0.4rem;
+    border-radius: 50%;
+    background-color: var(--accent);
+    box-shadow: 0 0 6px 1px color-mix(in oklab, var(--accent) 45%, transparent);
+  }
+}
+
+.foot {
+  margin-block-start: 3rem;
+  color: var(--text-color-f2);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
