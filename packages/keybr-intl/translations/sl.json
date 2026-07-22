@@ -103,7 +103,6 @@
   "page.help.description": "Navodila za uporabo te aplikacije.",
   "page.highScores.content": "<h1>Najboljši rezultati</h1><p>Seznam najboljših tipkarjev zadnjih nekaj dni,  razvrščenih po rezultatu od najboljših do najslabših. Rezultat tipkanja se izračuna iz hitrosti tipkanja, dolžine besedila, števila različnih znakov v besedilu in števila napak. Izračun je oblikovan tako, da nagrajuje višjo hitrost, daljše besedilo in večjo abecedo ter kaznuje za število napak.</p>",
   "page.highScores.description": "Seznam najboljših rezultatov za najhitrejše uporabnike.",
-  "page.layouts.content": "<h1>Razporeditve znakov</h1><p>Ti grafi prikazujejo učinkovitost različnih razporeditev tipk. Učinkovitost je merilo, kako lahko se tipka na tipkovnici.</p><p>Krogci prikazujejo relativne frekvence tipk, loki pa prikazujejo relativne frekvence parov tipk.</p><p>Lažje je tipkati, ko so najpogostejše tipke v domači vrstici in ko se najpogostejše pare piše z različnimi prsti in rokami. Zaradi tega ima učinkovita razporeditev največje krogce v domači vrstici. Taka razporeditev ima tudi loke, ki so enakomerno razporejeni po tipkovnici, so dolgi in vodoravni namesto kratki in diagonalni, saj to označuje pogosto menjavanje prstov in rok.</p>",
   "page.layouts.description": "Tabele za primerjavo razporeditev znakov.",
   "page.multiplayer.description": "Spletna večigralska tipkarska dirkaška igra.",
   "page.practice.description": "Tipkarske vaje za izboljšanje vaše hitrosti in pravilnosti.",

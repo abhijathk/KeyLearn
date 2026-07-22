@@ -103,7 +103,6 @@
   "page.help.description": "Läs instruktioner för applikationen.",
   "page.highScores.content": "<h1>Topplista</h1><p>Listan över de snabbaste skrivarna under de senaste dagarna, sorterat från högst till lägst poäng. Poäng bestäms från hastighet, längd på text och antal fel. Formeln är designad för att belöna hastighet, längd på texter, och antalet använda bokstäver, men också bestraffa antalet gjorda fel.</p>",
   "page.highScores.description": "Topplistan med de snabbaste skrivarna.",
-  "page.layouts.content": "<h1>Tangentbordslayouter</h1><p>Dessa diagram visualiserar effektiviteten hos olika tangentbordslayouter. En effektivitet är ett mått på hur lätt det är att skriva på ett tangentbord.</p><p>Cirklarna visar relativa tangentfrekvenser, och bågarna visar relativa tangentparsfrekvenser.</p><p>Det är lättare att skriv när de vanligaste tangenterna finns på hemraden, och när de vanligaste tangentparen skrivs med olika fingrar och händer. Därför har en effektiv layout de största cirklarna på hemmaraden. Den har också bågar som är jämnt fördelade över tangentbordet, långa och horisontella, snarare än korta och diagonala, eftersom det indikerar att fingrar och händer ofta byts.</p>",
   "page.layouts.description": "Jämförelser av tangentbordslayouts.",
   "page.multiplayer.description": "Online multiplayer skriv-racingspel.",
   "page.practice.description": "Ta ett skrivtest, ta lektioner, lär dig att skriva snabbare.",

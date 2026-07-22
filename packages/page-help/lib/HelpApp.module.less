@@ -1,113 +1,137 @@
 @import "@keybr/widget/lib/index.less";
 
-// A modern-broadsheet treatment: serif display type, hairline rules, a drop
-// cap, framed figure plates, and numbered "chapters" for the algorithm rules.
-@serif: Georgia, "Times New Roman", Times, serif;
+// The help page in the road design language — one narrative column, whisper
+// typography, mono values, gradient hairlines instead of boxes.
 
 .paper {
   box-sizing: border-box;
-  inline-size: min(58rem, 92vi);
+  inline-size: min(64rem, 100%);
   margin-inline: auto;
-  margin-block: 2.5rem;
+  margin-block: 2rem;
   color: var(--text-color);
+  font-family: var(--value-font-family);
 }
 
 // ---------------------------------------------------------------- masthead
 
 .masthead {
-  margin-block-end: 2.5rem;
-  padding-block-end: 1.1rem;
-  border-block-end: 3px double var(--secondary-f2);
-  text-align: center;
+  margin-block-end: 2.4rem;
 }
 
 .kicker {
   display: flex;
-  gap: 0.9rem;
+  gap: 0.7rem;
   align-items: center;
-  justify-content: center;
-  margin-block-end: 0.9rem;
-  color: var(--text-color-f1);
+  color: var(--text-color-f2);
   font-family: var(--default-font-family);
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.kicker::before,
 .kicker::after {
   content: "";
   flex: 1;
   block-size: 1px;
-  background-color: var(--secondary-f2);
-  opacity: 0.55;
+  background-image: linear-gradient(to right, var(--primary-d2), transparent);
 }
 
 .nameplate {
-  margin: 0;
+  margin-block-start: 1.1rem;
   color: var(--text-color);
-  font-family: @serif;
-  font-size: clamp(2.4rem, 6vi, 3.6rem);
-  font-weight: 800;
-  font-style: italic;
-  line-height: 1.02;
-  letter-spacing: -0.015em;
+  font-size: clamp(1.8rem, 4vi, 2.4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
 .dateline {
-  margin-block-start: 0.7rem;
-  color: var(--text-color-f1);
-  font-family: var(--default-font-family);
-  font-size: 0.7rem;
+  margin-block-start: 0.6rem;
+  color: var(--text-color-f2);
+  font-size: 0.62rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 // ---------------------------------------------------------- shared typography
 
 .paper h1 {
-  margin-block: 0 0.5rem;
+  margin-block: 0 0.4rem;
   color: var(--text-color);
-  font-family: @serif;
-  font-size: clamp(2rem, 5vi, 2.9rem);
-  font-weight: 800;
-  line-height: 1.08;
-  text-align: center;
+  font-family: inherit;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.2;
   text-wrap: balance;
 }
 
 .paper h2 {
-  margin-block: 2.75rem 1rem;
-  padding-block-end: 0.5rem;
-  border-block-end: 1px solid var(--secondary-f2);
-  color: var(--text-color);
-  font-family: @serif;
-  font-size: 1.6rem;
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin-block: 2.6rem 0.9rem;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.paper h2::after {
+  content: "";
+  flex: 1;
+  block-size: 1px;
+  background-image: linear-gradient(to right, var(--primary-d2), transparent);
+}
+
+.paper h3 {
+  margin-block: 1.6rem 0.5rem;
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+// figures shed the widget frame; their captions whisper
+.paper figure {
+  margin-inline: 0;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.paper figure figcaption {
+  margin-block-end: 0.5rem;
+  color: var(--text-color-f2);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: start;
+  text-transform: uppercase;
 }
 
 .paper p {
-  margin-block: 0 1rem;
-  color: var(--text-color);
-  font-family: var(--default-font-family);
-  font-size: 1.02rem;
-  line-height: 1.75;
-  text-align: justify;
-  hyphens: auto;
+  max-inline-size: 52rem;
+  margin-block: 0 0.9rem;
+  color: var(--text-color-f1);
+  font-size: 0.88rem;
+  line-height: 1.7;
+  text-align: start;
 }
 
 .paper em {
-  font-family: @serif;
-  font-weight: 600;
-  font-style: italic;
+  color: var(--accent);
+  font-weight: 700;
+  font-style: normal;
 }
 
 .paper ol,
 .paper ul {
   list-style: none;
+  max-inline-size: 52rem;
   margin-block: 0 1rem;
   padding-inline-start: 0;
   counter-reset: item;
@@ -116,12 +140,11 @@
 .paper ol > li,
 .paper ul > li {
   position: relative;
-  margin-block-end: 0.85rem;
-  padding-inline-start: 2.4rem;
-  color: var(--text-color);
-  font-family: var(--default-font-family);
-  font-size: 1.02rem;
-  line-height: 1.7;
+  margin-block-end: 0.8rem;
+  padding-inline-start: 2.2rem;
+  color: var(--text-color-f1);
+  font-size: 0.88rem;
+  line-height: 1.65;
 }
 
 .paper ol > li {
@@ -133,27 +156,28 @@
   display: grid;
   position: absolute;
   inset-inline-start: 0;
-  inset-block-start: 0.05rem;
+  inset-block-start: 0.1rem;
   place-items: center;
-  inline-size: 1.6rem;
-  block-size: 1.6rem;
-  border-radius: 0.4rem;
-  color: var(--primary);
-  background-color: var(--accent);
-  font-family: @serif;
-  font-size: 0.9rem;
+  inline-size: 1.4rem;
+  block-size: 1.4rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font-size: 0.72rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .paper ul > li::before {
   content: "";
   position: absolute;
   inset-inline-start: 0.55rem;
-  inset-block-start: 0.7rem;
+  inset-block-start: 0.6rem;
   inline-size: 0.4rem;
   block-size: 0.4rem;
   border-radius: 50%;
   background-color: var(--accent);
+  box-shadow: 0 0 6px 1px color-mix(in oklab, var(--accent) 45%, transparent);
 }
 
 .paper a {
@@ -162,34 +186,31 @@
   text-underline-offset: 2px;
 }
 
+// the key legend inside figures reads as tidy keycap + explanation rows
+.paper figure ul > li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding-inline-start: 0;
+}
+
+.paper figure ul > li::before {
+  content: none;
+}
+
+.paper figure ul > li > :first-child {
+  flex: 0 0 auto;
+}
+
 // ------------------------------------------------------------------- lead
 
 .lead {
   margin-block-end: 1rem;
 }
 
-// the lead "What is touch typing?" sits as a centred deck under the headline
+// the lead "What is touch typing?" reads as a whisper deck under the headline
 .lead h2 {
-  margin-block: 0.25rem 1.5rem;
-  padding-block-end: 0;
-  border-block-end: 0;
-  color: var(--text-color-f1);
-  font-size: 1.15rem;
-  font-weight: 500;
-  font-style: italic;
-  text-align: center;
-}
-
-// a broadsheet drop cap on the opening paragraph
-.lead p:first-of-type::first-letter {
-  float: inline-start;
-  margin-inline-end: 0.7rem;
-  margin-block-start: 0.4rem;
-  color: var(--accent);
-  font-family: @serif;
-  font-size: 3.6rem;
-  font-weight: 800;
-  line-height: 0.72;
+  margin-block: 0.9rem 0.9rem;
 }
 
 // ------------------------------------------------------------ numbered rules
@@ -201,34 +222,32 @@
 .rule {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.4rem 1.4rem;
+  gap: 0.4rem 1.3rem;
   align-items: start;
-  padding-block: 2rem;
-  border-block-start: 1px solid var(--secondary-f2);
-}
-
-.rule:last-child {
-  border-block-end: 1px solid var(--secondary-f2);
+  padding-block: 1.8rem 0.6rem;
 }
 
 .ruleNumber {
+  display: grid;
   grid-row: 1 / 3;
+  place-items: center;
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
   margin: 0;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
   color: var(--accent);
-  font-family: @serif;
-  font-size: 3.6rem;
-  font-weight: 800;
-  font-style: italic;
-  line-height: 0.9;
-  font-variant-numeric: lining-nums;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .ruleTitle {
   align-self: center;
   margin: 0;
   color: var(--text-color);
-  font-family: @serif;
-  font-size: 1.45rem;
+  font-size: 1.05rem;
   font-weight: 700;
 }
 
@@ -240,49 +259,39 @@
   margin-block: 0;
 }
 
-// figure plates: the letter set and the sample words, framed like clippings
+// figure plates: the letter set and the sample words, side by side with
+// whisper captions — no frames.
 .plates {
   display: flex;
   flex-wrap: wrap;
   grid-column: 2;
-  gap: 1rem;
-  margin-block: 0.4rem 1.1rem;
+  gap: 1.6rem;
+  margin-block: 0.5rem 1rem;
 }
 
 .plate {
   flex: 1 1 14rem;
   margin: 0;
-  padding: 1rem 1.1rem 0.6rem;
-  border: 1px solid var(--secondary-f2);
-  border-radius: 0.5rem;
-  background-color: var(--primary-l1);
 }
 
 .plateArt {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   min-block-size: 2.4rem;
 }
 
 .plateCaption {
-  margin-block-start: 0.7rem;
-  color: var(--text-color-f1);
-  font-family: var(--default-font-family);
-  font-size: 0.62rem;
+  margin-block-start: 0.4rem;
+  color: var(--text-color-f2);
+  font-size: 0.55rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-align: center;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 // --------------------------------------------------------------- field notes
 
 .examples {
-  margin-block-start: 1.25rem;
-  padding: 1.5rem 1.75rem 0.75rem;
-  border: 1px solid var(--secondary-f2);
-  border-radius: 0.6rem;
-  background-color: var(--primary-l1);
+  margin-block-start: 1rem;
 }
-

@@ -103,7 +103,6 @@
   "page.help.description": "Nabavite upute o korištenju ove aplikacije.",
   "page.highScores.content": "<h1>Visoke ocjene</h1><p>Tablica najbržih daktilografa posljednjih nekoliko dana, poredana po njihovim rezultatima od najboljih do najgorih. Rezultat upisivanja mjeri se od brzine tipkanja, duljine teksta, broja različitih znakova u tekstu i broja pogrešaka. Formula je dizajnirana tako da nagrađuje veću brzinu, duži tekst i veću abecedu, ali da kažnjava broj pogrešaka.</p>",
   "page.highScores.description": "Pogledajte tablicu s najboljim rezultatima s najbržim daktilografima.",
-  "page.layouts.content": "<h1>Rasporedi tipkovnice</h1><p>Ovi grafikoni vizualiziraju učinkovitost različitih rasporeda tipkovnice. Učinkovitost je mjera koliko je jednostavno tipkati na tipkovnici.</p><p>Krugovi prikazuju relativne frekvencije tipki, a lukovi relativne frekvencije para tipki.</p><p>Lakše je tipkati kada su najčešće tipke u početnom redu, a kada se najčešći parovi tipki tipkaju različitim prstima i rukama. Stoga učinkovit raspored ima najveće krugove u domaćem redu. Također ima lukova koji su ravnomjerno raspoređeni po tipkovnici, dugi i vodoravni, a ne kratki i dijagonalni, jer ukazuje na često prebacivanje prstiju i ruku.</p>",
   "page.layouts.description": "Grafikoni za usporedbu rasporeda tipkovnice.",
   "page.multiplayer.description": "Online multiplayer igra tipkanja.",
   "page.practice.description": "Napravite test tipkanja, vježbajte lekcije tipkanja, naučite brže tipkati.",

@@ -1,0 +1,168 @@
+// The layouts page in the road design language — one narrative column,
+// whisper typography, no boxes.
+.col {
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
+  font-family: var(--value-font-family);
+}
+
+.sect {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin-block-start: 2.6rem;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+
+  &::after {
+    content: "";
+    flex: 1;
+    block-size: 1px;
+    background-image: linear-gradient(to right, var(--primary-d2), transparent);
+  }
+}
+
+.title {
+  margin-block: 1.2rem 0;
+  color: var(--text-color);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.para {
+  max-inline-size: 52rem;
+  margin-block: 0.8rem 0;
+  color: var(--text-color-f1);
+  font-size: 0.88rem;
+  line-height: 1.65;
+
+  em {
+    color: var(--accent);
+    font-weight: 700;
+    font-style: normal;
+  }
+}
+
+// metric definitions as tidy label / value rows
+.defs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1rem;
+  max-inline-size: 52rem;
+  margin-block: 1rem 0;
+
+  dt {
+    color: var(--accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text-color-f1);
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: flex-end;
+  margin-block-start: 1.6rem;
+}
+
+.lab {
+  margin-inline-end: 0.3rem;
+  color: var(--text-color-f2);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.filterSelect {
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 999px;
+  color: var(--text-color);
+  background-color: var(--primary-l1);
+  font-family: var(--value-font-family);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent);
+  }
+}
+
+.whisper {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+  margin-block-start: 0.9rem;
+  color: var(--text-color-f1);
+  font-size: 0.72rem;
+  font-weight: 600;
+  column-gap: 1.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+// the per-layout stat strip
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+  margin-block: 0.9rem 0.4rem;
+  color: var(--text-color-f1);
+  font-size: 0.72rem;
+  font-weight: 600;
+  column-gap: 1.6rem;
+  font-variant-numeric: tabular-nums;
+
+  > span {
+    white-space: nowrap;
+    cursor: help;
+  }
+
+  b {
+    color: var(--text-color);
+    font-weight: 700;
+  }
+}
+
+.board {
+  margin-block-start: 0.6rem;
+}
+
+.designerRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-start: 1rem;
+}
+
+.designerBtn {
+  padding: 0.45rem 1.2rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  background: none;
+  font-family: var(--value-font-family);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--primary);
+    background-color: var(--accent);
+  }
+}

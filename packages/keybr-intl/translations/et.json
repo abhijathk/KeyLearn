@@ -101,7 +101,6 @@
   "page.help.description": "Hangi rakenduse kasutamise juhised.",
   "page.highScores.content": "<h1>Kõrgeimad skoorid</h1><p>Tabel viimaste päevade kiireimatest masinakirjutajatest, mis on järjestatud parimatest punktidest halvimateni. Tippimise skoor on mõõdetud kirjutamiskiiruse, teksti pikkuse, erinevate tähemärkide arvu tekstis ja vigade arvu põhjal. Valem on koostatud nii, et premeerib kiiremat kiirust, pikemat teksti ja suuremat tähestikku, kuid karistab vigade arvu eest.</p>",
   "page.highScores.description": "Vaata kiireimate tippijate tabelit.",
-  "page.layouts.content": "<h1>Klaviatuuri paigutused</h1><p>See graafik visualiseerib erinevate klaviatuuri paigutuste tõhusust. Tõhusus on mõõt, kui lihtne on klaviatuuril tippida.</p><p>Kiired näitavad suhtelist klahvide sagedust ja kaared näitavad suhtelist klahvipaari sagedust.</p><p>Et on lihtsam tippida, kui kõige sagedamini kasutatavad klahvid on põhirivis ja kui kõige sagedamini kasutatavad klahvipaarid kirjutatakse erinevate sõrmede ja kätega. Seetõttu on tõhusa paigutuse puhul suurimad ringid algriba peal. Samuti on kaared ühtlaselt üle klaviatuuri jaotatud, pigem pikad ja horisontaalsed kui lühikesed ja diagonaalsed, sest see näitab sõrmede ja käte sagedast vahetamist.</p>",
   "page.layouts.description": "Klaviatuuripaigutuste võrdlustabelid.",
   "page.multiplayer.description": "Online tippimise võidusõidumäng.",
   "page.practice.description": "Tee tippimistest, harjuta kirjutamistehnikat, õpi kiiremini trükkima.",

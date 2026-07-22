@@ -1,5 +1,6 @@
-import { Button, Field, FieldList, Spacer } from "@keybr/widget";
 import { lazy, Suspense, useState } from "react";
+import { FormattedMessage } from "react-intl";
+import * as styles from "../road.module.less";
 
 const LazyCustomLayoutDesigner = lazy(
   () => import("./LazyCustomLayoutDesigner.tsx"),
@@ -11,25 +12,24 @@ export function CustomLayoutDesignerToggler() {
     return (
       <Suspense>
         <LazyCustomLayoutDesigner />
-        <Spacer size={3} />
       </Suspense>
     );
   } else {
     return (
-      <>
-        <FieldList>
-          <Field.Filler />
-          <Button
-            onClick={() => {
-              setVisible(true);
-            }}
-          >
-            Design a custom layout
-          </Button>
-          <Field.Filler />
-        </FieldList>
-        <Spacer size={3} />
-      </>
+      <div className={styles.designerRow}>
+        <button
+          type="button"
+          className={styles.designerBtn}
+          onClick={() => {
+            setVisible(true);
+          }}
+        >
+          <FormattedMessage
+            id="layouts.road.designCustom"
+            defaultMessage="Design a custom layout"
+          />
+        </button>
+      </div>
     );
   }
 }

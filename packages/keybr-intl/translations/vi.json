@@ -103,7 +103,6 @@
   "page.help.description": "Hướng dẫn cách dùng ứng dụng.",
   "page.highScores.content": "<h1>Điểm cao</h1><p>Bảng xếp hạng các người dùng gõ nhanh nhất trong những ngày gần đây, xếp theo tốc độ gõ từ trên xuống dưới. Điểm số được đo theo tốc độ gõ, độ dài bài, số kí tự khác nhau trong bài, và số lỗi sai. Công thức tính đã được thiết kế để khuyến khích thưởng tốc độ gõ, bài dài và số kí tự đa dạng, nhưng phạt số lỗi sai.</p>",
   "page.highScores.description": "Bảng xếp hạng người dùng theo tốc độ gõ phím.",
-  "page.layouts.content": "<h1>Bố cục Bàn phím</h1><p>Các biểu đồ này trực quan hóa hiệu quả của các bố cục bàn phím khác nhau. Hiệu quả là thước đo mức độ dễ dàng khi gõ trên bàn phím.</p><p>Các vòng tròn hiển thị tần suất phím tương đối, và các cung hiển thị tần suất cặp phím tương đối.</p><p>Gõ phím dễ dàng hơn khi các phím thường dùng nhất nằm trên hàng cơ bản, và khi các cặp phím thường dùng nhất được gõ bằng các ngón tay và bàn tay khác nhau. Do đó, một bố cục hiệu quả có các vòng tròn lớn nhất trên hàng cơ bản. Nó cũng có các cung được phân bổ đều trên bàn phím, dài và ngang, thay vì ngắn và chéo, bởi vì nó cho thấy sự chuyển đổi thường xuyên của các ngón tay và bàn tay.</p>",
   "page.layouts.description": "Biểu đồ so sánh bố cục bàn phím.",
   "page.multiplayer.description": "Trò chơi đua xe nhiều người chơi trực tuyến.",
   "page.practice.description": "Làm bài kiểm tra đánh máy, luyện gõ phím, học cách gõ nhanh hơn.",

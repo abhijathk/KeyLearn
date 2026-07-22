@@ -103,7 +103,6 @@
   "page.help.description": "Získajte inštrukcie, ako používať túto aplikáciu.",
   "page.highScores.content": "<h1>Najvyššie skóre</h1><p>Tabuľka najrýchlejších strojopiscov za posledných pár dní, usporiadaná podľa získaného skóre od najlepšieho po najhoršie. Skóre je výsledkom merania rýchlosti písania, dĺžky textu, počtu rôznych znakov v texte a počtu chýb. Vzorec je navrhnutý tak, aby odmeňoval za vyššiu rýchlosť, dlhší text a rozsiahlejšiu abecedu, a trestal za počet chýb.</p>",
   "page.highScores.description": "Pozrite tabuľku najvyšších skóre s najrýchlejšími strojopiscami.",
-  "page.layouts.content": "<h1>Rozloženie klávesnice</h1><p>Tieto grafy vizualizujú účinnosť rôznych rozložení klávesnice. Efektivita je meradlom toho, ako ľahko sa na klávesnici píše.</p><p>Krúžky znázorňujú relatívne frekvencie klávesov a kruhy znázorňujú relatívne frekvencie dvojíc klávesov.</p><p>Je ľahšie písať, keď sa najčastejšie klávesy nachádzajú vo východzom riadku a keď sa najčastejšie dvojice klávesov píšu rôznymi prstami a rukami. Preto má efektívne rozloženie najväčšie kruhy na východzom riadku. Má tiež oblúky, ktoré sú rovnomerne rozložené po celej klávesnici, dlhé a vodorovné, a nie krátke a šikmé, pretože to naznačuje časté striedanie prstov a rúk.</p>",
   "page.layouts.description": "Porovnanie rozložení kláves na klávesniciach.",
   "page.multiplayer.description": "Online pretek v písaní pre viacero hráčov.",
   "page.practice.description": "Absolvujte test rýchlosti a správnosti písania, cvičte písanie v lekciách, naučte sa písať rýchlejšie.",
