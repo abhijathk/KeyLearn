@@ -1,12 +1,12 @@
 @import "palettes.less";
 
-// The KeyLearn day theme: the same blue-leaning identity as the night theme,
-// lifted onto a soft paper-white ground with a deeper accent for contrast.
+// The KeyLearn day theme: the same identity as the night theme, lifted onto
+// a soft paper-white ground with a deeper green accent for contrast.
 .keylearn-day-theme-props() {
   @colors: {
     @primary: #f5f6fa;
     @secondary: #1f2433;
-    @accent: #4f78c9;
+    @accent: #2f8a5d;
     @error: #cf5a4a;
   };
 
@@ -32,7 +32,7 @@
   --shadow-color: #00000033;
   --slow-key-color: #d2653c;
   --fast-key-color: #2f9e5c;
-  --effort-color: #4f78c9;
+  --effort-color: #2f8a5d;
   .use-textinput-colors(@colors);
   --textinput-cursor__color: @colors[@primary];
   --textinput-cursor__background-color: @colors[@accent];
@@ -49,10 +49,11 @@
   .use-keyboard-colors(@colors, 12);
   // Plain keycaps must still read as caps when finger colours are off.
   --KeyboardKey-button__color: #ffffff;
-  --syntax-keyword: #3d63ad;
+  --syntax-keyword: #2f7a52;
   --syntax-string: #3e7d3e;
   --syntax-number: #7a4f9d;
   --syntax-comment: #8a7070;
+  --control-color: #2f8a5d;
 }
 
 html[data-color="keylearn-day"] {

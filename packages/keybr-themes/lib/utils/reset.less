@@ -10,27 +10,33 @@ html {
 }
 
 // The whole UI is sized in rem, so stepping the root font size up with the
-// viewport keeps the site comfortably readable on retina / 4K displays
-// running at low scaling, where 16px would render tiny.
-@media (min-width: 1800px) {
+// viewport keeps the site comfortably readable on retina / 4K displays,
+// where the browser-default 16px renders small.
+@media (min-width: 1280px) {
   html {
     font-size: 17px;
   }
 }
 
-@media (min-width: 2200px) {
+@media (min-width: 1600px) {
   html {
-    font-size: 19px;
+    font-size: 18px;
   }
 }
 
-@media (min-width: 2800px) {
+@media (min-width: 2000px) {
+  html {
+    font-size: 19.5px;
+  }
+}
+
+@media (min-width: 2600px) {
   html {
     font-size: 22px;
   }
 }
 
-@media (min-width: 3600px) {
+@media (min-width: 3400px) {
   html {
     font-size: 26px;
   }

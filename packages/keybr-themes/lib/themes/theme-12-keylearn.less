@@ -1,12 +1,12 @@
 @import "palettes.less";
 
 // The signature KeyLearn theme: a deep, blue-tinted near-black ground with a
-// soft-blue accent — the look from the KeyLearn design mockups.
+// pastel mint accent.
 .keylearn-theme-props() {
   @colors: {
     @primary: #141620;
     @secondary: #e6e8ee;
-    @accent: #8db2f0;
+    @accent: #8fd9b6;
     @error: #ff7a6b;
   };
 
@@ -32,7 +32,7 @@
   --shadow-color: #00000088;
   --slow-key-color: #ff8a5c;
   --fast-key-color: #37c871;
-  --effort-color: #8db2f0;
+  --effort-color: #8fd9b6;
   .use-textinput-colors(@colors);
   --textinput-cursor__color: @colors[@primary];
   --textinput-cursor__background-color: @colors[@accent];
@@ -49,10 +49,11 @@
   .use-keyboard-colors(@colors, 55);
   // Plain keycaps must still read as caps when finger colours are off.
   --KeyboardKey-button__color: lighten(@colors[@primary], 8);
-  --syntax-keyword: #8db2f0;
+  --syntax-keyword: #8fd9b6;
   --syntax-string: #72b172;
   --syntax-number: #b281d3;
   --syntax-comment: #9f8484;
+  --control-color: #8fd9b6;
 }
 
 html[data-color="keylearn"] {
