@@ -15,7 +15,13 @@ import {
 import { useSettings } from "@keybr/settings";
 import { StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
-import { type CSSProperties, memo, type ReactNode } from "react";
+import {
+  type CSSProperties,
+  memo,
+  type ReactNode,
+  useEffect,
+  useState,
+} from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./Pulse.module.less";
 
@@ -466,21 +472,60 @@ function StreakWhisper({
   );
 }
 
+/**
+ * Accrues practice time live, between lesson results: while keys are landing
+ * (the presenter's typing signal) a one-second ticker adds to a local extra,
+ * and every recorded result resets the extra so nothing double-counts. The
+ * ring moves while you type instead of jumping once per lesson.
+ */
+function useLiveExtraMs(recordedValue: number): number {
+  const [typing, setTyping] = useState(false);
+  const [extraMs, setExtraMs] = useState(0);
+  useEffect(() => {
+    const onTyping = (ev: Event) => {
+      setTyping(Boolean((ev as CustomEvent<boolean>).detail));
+    };
+    window.addEventListener("keylearn:typing", onTyping);
+    return () => {
+      window.removeEventListener("keylearn:typing", onTyping);
+    };
+  }, []);
+  useEffect(() => {
+    if (!typing) {
+      return;
+    }
+    const timer = setInterval(() => {
+      setExtraMs((ms) => ms + 1000);
+    }, 1000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [typing]);
+  useEffect(() => {
+    // A finished lesson lands in the recorded value; drop the live extra.
+    setExtraMs(0);
+  }, [recordedValue]);
+  return extraMs;
+}
+
 function TodayWhisper({
   dailyGoal,
 }: {
   readonly dailyGoal: DailyGoalType;
 }): ReactNode {
   const { formatMessage } = useIntl();
-  const { value, goal } = dailyGoal;
+  const { value: recorded, goal } = dailyGoal;
+  const extraMs = useLiveExtraMs(recorded);
+  const value = recorded + (goal > 0 ? extraMs / (goal * 60000) : 0);
   const done = value >= 1;
   const pct = Math.max(0, Math.min(1, value));
-  const minutesDone = Math.round(value * goal);
+  const minutesDone = Math.floor(value * goal);
   return (
     <span
       title={formatMessage({
         id: "practice.lane.today.description",
-        defaultMessage: "Today's practice time, out of your daily goal.",
+        defaultMessage:
+          "Today's practice time, out of your daily goal. Only time spent actually typing counts — pauses between lessons don't.",
       })}
     >
       <span

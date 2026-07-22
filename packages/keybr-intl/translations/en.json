@@ -167,7 +167,7 @@
   "practice.lane.best.description": "The fastest you have ever typed this key.",
   "practice.lane.road.description": "This key's road to unlocking: the glowing dot is where you are now, the hollow ring is your best so far, the star is the unlock.",
   "practice.lane.streak.description": "Your longest run of lessons typed at high accuracy, and the next milestone.",
-  "practice.lane.today.description": "Today's practice time, out of your daily goal.",
+  "practice.lane.today.description": "Today's practice time, out of your daily goal. Only time spent actually typing counts — pauses between lessons don't.",
   "practice.lane.todayMinutes": "{done}/{goal}min",
   "practice.pulse.best": "Best",
   "practice.pulse.goalReached": "Goal reached — raise it in settings",

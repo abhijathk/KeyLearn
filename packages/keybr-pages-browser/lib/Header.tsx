@@ -53,7 +53,14 @@ export function Header({
   if (focusMode && showFocus) {
     return (
       <header className={clsx(styles.header, styles.focusBar)}>
-        <div className={styles.controls}>
+        <div
+          className={styles.controls}
+          onMouseDown={(ev) => {
+            // Keep the focus in the text area: stealing it would blur the
+            // practice and reset the lesson in progress.
+            ev.preventDefault();
+          }}
+        >
           <IconButton
             icon={<StrokeIcon name="expand" />}
             title={formatMessage(
@@ -119,21 +126,29 @@ export function Header({
           </span>
         )}
         {showFocus && (
-          <IconButton
-            icon={<StrokeIcon name="focus" />}
-            title={formatMessage(
-              defineMessage({
-                id: "practice.widget.focusMode.enter",
-                defaultMessage:
-                  "Focus mode: just you, the words, nothing else.",
-              }),
-            )}
-            onClick={() => {
-              window.dispatchEvent(
-                new window.CustomEvent("keylearn:focus-mode"),
-              );
+          <span
+            onMouseDown={(ev) => {
+              // Keep the focus in the text area so entering focus mode
+              // doesn't blur the practice and reset the lesson.
+              ev.preventDefault();
             }}
-          />
+          >
+            <IconButton
+              icon={<StrokeIcon name="focus" />}
+              title={formatMessage(
+                defineMessage({
+                  id: "practice.widget.focusMode.enter",
+                  defaultMessage:
+                    "Focus mode: just you, the words, nothing else.",
+                }),
+              )}
+              onClick={() => {
+                window.dispatchEvent(
+                  new window.CustomEvent("keylearn:focus-mode"),
+                );
+              }}
+            />
+          </span>
         )}
         <ThemeSwitcher />
         <AccountMenu />
