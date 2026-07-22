@@ -1,5 +1,4 @@
 import { Pages } from "@keybr/pages-shared";
-import { FONTS, useTheme } from "@keybr/themes";
 import { IconButton, StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -97,10 +96,6 @@ export function MenuDrawer({
             </div>
             <ZonesToggle />
             <div className={styles.label}>
-              <FormattedMessage id="drawer.font" defaultMessage="Font" />
-            </div>
-            <FontPills />
-            <div className={styles.label}>
               <FormattedMessage
                 id="drawer.language"
                 defaultMessage="Language"
@@ -187,25 +182,6 @@ function ZonesToggle(): ReactNode {
       >
         <FormattedMessage id="drawer.zonesOff" defaultMessage="Off" />
       </button>
-    </div>
-  );
-}
-
-function FontPills(): ReactNode {
-  const { font, switchFont } = useTheme();
-  return (
-    <div className={styles.pills}>
-      {[...FONTS].map(({ id, name }) => (
-        <button
-          key={id}
-          className={clsx(styles.pill, id === font && styles.pillOn)}
-          onClick={() => {
-            switchFont(id);
-          }}
-        >
-          {name}
-        </button>
-      ))}
     </div>
   );
 }
