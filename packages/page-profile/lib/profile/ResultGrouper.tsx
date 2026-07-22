@@ -56,19 +56,21 @@ export function ResultGrouper({
             defaultMessage="Filter statistics by:"
           />
         </span>
-        <select
-          className={styles.filterSelect}
-          value={selectedLayout.id}
-          onChange={(ev) => {
-            setSelectedLayout(Layout.ALL.get(ev.target.value));
-          }}
-        >
-          {layoutOptions.map(({ value, name }) => (
-            <option key={value} value={value}>
-              {name}
-            </option>
-          ))}
-        </select>
+        {resultsLayouts.size > 1 && (
+          <select
+            className={styles.filterSelect}
+            value={selectedLayout.id}
+            onChange={(ev) => {
+              setSelectedLayout(Layout.ALL.get(ev.target.value));
+            }}
+          >
+            {layoutOptions.map(({ value, name }) => (
+              <option key={value} value={value}>
+                {name}
+              </option>
+            ))}
+          </select>
+        )}
         <span className={styles.seg}>
           {[
             [

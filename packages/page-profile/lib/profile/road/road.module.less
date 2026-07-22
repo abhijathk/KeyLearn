@@ -622,3 +622,93 @@
   color: var(--primary);
   background-color: var(--accent);
 }
+
+// the clear-statistics confirmation, in the settings-window language
+.confirmOverlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  place-items: center;
+  padding: 2rem;
+  background-color: color-mix(in oklab, var(--primary-d2) 55%, transparent);
+  backdrop-filter: blur(5px);
+}
+
+.confirmCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-inline-size: 26rem;
+  padding: 2rem 2.2rem 1.6rem;
+  border: 1px solid
+    color-mix(in oklab, var(--slow-key-color) 40%, var(--secondary-f2));
+  border-radius: 1.25rem;
+  background-color: var(--primary-l1);
+  box-shadow:
+    0 1.5rem 4rem var(--shadow-color),
+    0 0 0 6px color-mix(in oklab, var(--slow-key-color) 10%, transparent);
+  text-align: center;
+}
+
+.confirmIcon {
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  fill: none;
+  stroke: var(--slow-key-color);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.confirmTitle {
+  margin-block: 0.9rem 0.4rem;
+  color: var(--text-color);
+  font-family: var(--default-font-family);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.confirmBody {
+  margin-block: 0 1.3rem;
+  color: var(--text-color-f1);
+  font-family: var(--default-font-family);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.confirmCancel {
+  padding: 0.5rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font-family: var(--default-font-family);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--secondary-f2) 35%, transparent);
+  }
+}
+
+.confirmDelete {
+  padding: 0.5rem 1.2rem;
+  border: 1px solid var(--slow-key-color);
+  border-radius: 999px;
+  color: var(--primary);
+  background-color: var(--slow-key-color);
+  box-shadow: 0 0 0 4px
+    color-mix(in oklab, var(--slow-key-color) 14%, transparent);
+  font-family: var(--default-font-family);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}

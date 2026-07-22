@@ -165,13 +165,13 @@ function Identity({
     toggleExplainers(Preferences.get(propExplainSettings));
   });
   const streak = dailyStreak(results);
-  const name =
-    "name" in publicUser && publicUser.name != null
-      ? publicUser.name
-      : formatMessage({
-          id: "profile.road.anonymous",
-          defaultMessage: "Practice profile",
-        });
+  const signedIn = publicUser.id != null;
+  const name = signedIn
+    ? publicUser.name
+    : formatMessage({
+        id: "profile.road.guest",
+        defaultMessage: "Guest learner",
+      });
   return (
     <div className={styles.id}>
       <span className={styles.avatar}>
@@ -193,6 +193,15 @@ function Identity({
               streak: formatNumber(streak),
             }}
           />
+          {!signedIn && (
+            <>
+              {" · "}
+              <FormattedMessage
+                id="profile.road.notSignedIn"
+                defaultMessage="not signed in — sign in to keep and share your progress"
+              />
+            </>
+          )}
         </i>
       </span>
       <span className={styles.idActions}>
@@ -977,6 +986,7 @@ function DataRow(): ReactNode {
   const { publicUser } = usePageData();
   const { copyText } = useClipboard();
   const { results, clearResults } = useResultsSafe();
+  const [confirming, setConfirming] = useState(false);
   const named = "id" in publicUser && publicUser.id != null;
   const href = named
     ? (() => {
@@ -1054,15 +1064,7 @@ function DataRow(): ReactNode {
               "Wipes your typing history for good and resets every statistic.",
           })}
           onClick={() => {
-            const message = formatMessage({
-              id: "profile.reset.message",
-              defaultMessage:
-                "Do you really want to erase all your data and reset your profile? " +
-                "This can't be undone once you confirm!",
-            });
-            if (window.confirm(message)) {
-              clearResults();
-            }
+            setConfirming(true);
           }}
         >
           ⌫{" "}
@@ -1072,6 +1074,58 @@ function DataRow(): ReactNode {
           />
         </button>
       </div>
+      {confirming && (
+        <div className={styles.confirmOverlay}>
+          <div className={styles.confirmCard}>
+            <svg
+              className={styles.confirmIcon}
+              viewBox="0 0 24 24"
+              aria-hidden={true}
+            >
+              <path d="M5 7h14M10 7V5a1.5 1.5 0 0 1 1.5-1.5h1A1.5 1.5 0 0 1 14 5v2M7 7l1 13h8l1-13M10 11v5M14 11v5" />
+            </svg>
+            <h2 className={styles.confirmTitle}>
+              <FormattedMessage
+                id="profile.reset.title"
+                defaultMessage="Erase your whole typing history?"
+              />
+            </h2>
+            <p className={styles.confirmBody}>
+              <FormattedMessage
+                id="profile.reset.message"
+                defaultMessage="Do you really want to erase all your data and reset your profile? This can't be undone once you confirm!"
+              />
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.confirmCancel}
+                onClick={() => {
+                  setConfirming(false);
+                }}
+              >
+                <FormattedMessage
+                  id="profile.reset.keep"
+                  defaultMessage="Keep my data"
+                />
+              </button>
+              <button
+                type="button"
+                className={styles.confirmDelete}
+                onClick={() => {
+                  setConfirming(false);
+                  clearResults();
+                }}
+              >
+                <FormattedMessage
+                  id="profile.reset.confirm"
+                  defaultMessage="Erase everything"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
