@@ -1,43 +1,65 @@
 @import "@keybr/widget/lib/index.less";
 
+// Borderless nav rows: a stroke icon, a mono label, and a glowing accent dot
+// marking where you are — no separators, no boxes.
+
 .root {
   display: flex;
   flex-direction: column;
-}
-
-.item + .item {
-  border-block-start: var(--separator-border);
+  gap: 0.1rem;
 }
 
 .link {
   display: flex;
+  position: relative;
   align-items: center;
-  justify-content: flex-start;
-  block-size: 2.75rem;
-  padding-inline: 0.75rem;
-  padding-block: 0;
-  border-radius: 0.7rem;
-  color: var(--text-color);
-  line-height: 2.75rem;
+  block-size: 2.4rem;
+  padding-inline: 0.9rem 0.75rem;
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 2.4rem;
   text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 
   &:hover {
-    background-color: var(--primary-l1);
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--primary-l1) 70%, transparent);
   }
 
   &.isActive {
-    color: var(--accent);
-    background-color: var(--primary-l1);
+    color: var(--text-color);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: -0.15rem;
+      inset-block-start: 50%;
+      inline-size: 7px;
+      block-size: 7px;
+      border-radius: 50%;
+      background-color: var(--accent);
+      box-shadow: 0 0 8px 2px
+        color-mix(in oklab, var(--accent) 55%, transparent);
+      transform: translateY(-50%);
+    }
   }
 }
 
 .icon {
-  inline-size: 1.25rem;
-  block-size: 1.25rem;
-  color: var(--secondary-f1);
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  color: var(--text-color-f2);
+  transition: color 0.15s ease;
 }
 
-.link.isActive .icon,
+.link.isActive .icon {
+  color: var(--accent);
+}
+
 .link:hover .icon {
   color: var(--text-color);
 }

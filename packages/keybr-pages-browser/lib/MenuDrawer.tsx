@@ -44,6 +44,7 @@ export function MenuDrawer({
         aria-hidden={!open}
       >
         <div className={styles.head}>
+          <StrokeIcon className={styles.headIcon} name="keyboard" />
           <span className={styles.title}>KeyLearn</span>
           <IconButton
             icon={<StrokeIcon name="close" />}
@@ -84,9 +85,10 @@ export function MenuDrawer({
                 <FormattedMessage id="drawer.kids" defaultMessage="Kids" />
               </button>
             </div>
-            <div className={styles.divider} />
+            <div className={styles.label}>
+              <FormattedMessage id="drawer.goTo" defaultMessage="Go to" />
+            </div>
             <NavMenu currentPath={path} onNavigate={onClose} />
-            <div className={styles.divider} />
             <div className={styles.label}>
               <FormattedMessage
                 id="drawer.fingerColors"
@@ -98,7 +100,6 @@ export function MenuDrawer({
               <FormattedMessage id="drawer.font" defaultMessage="Font" />
             </div>
             <FontPills />
-            <div className={styles.divider} />
             <div className={styles.label}>
               <FormattedMessage
                 id="drawer.language"
@@ -106,7 +107,9 @@ export function MenuDrawer({
               />
             </div>
             <LanguagePanel currentPath={path} />
-            <div className={styles.divider} />
+            <div className={styles.label}>
+              <FormattedMessage id="drawer.more" defaultMessage="More" />
+            </div>
             <div className={styles.util}>
               <a
                 href="https://github.com/abhijathk/keylearn/blob/master/docs/translations.md"

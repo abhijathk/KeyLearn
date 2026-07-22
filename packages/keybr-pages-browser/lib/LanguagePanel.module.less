@@ -10,34 +10,39 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  block-size: 2.25rem;
-  padding-inline: 0.75rem;
-  border: var(--separator-border);
-  border-radius: 0.6rem;
+  block-size: 2.1rem;
+  padding-inline: 0.85rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 999px;
   background-color: var(--primary-l1);
+  transition: border-color 0.15s ease;
+
+  &:focus-within {
+    border-color: var(--accent);
+  }
 
   input {
     flex: 1;
     min-inline-size: 0;
     border: none;
-    outline: none;
-    background: transparent;
     color: var(--text-color);
-    font-family: var(--default-font-family);
-    font-size: 0.85rem;
+    background: transparent;
+    outline: none;
+    font-family: var(--value-font-family);
+    font-size: 0.78rem;
 
     &::placeholder {
-      color: var(--text-color-f1);
+      color: var(--text-color-f2);
     }
   }
 }
 
 .searchIcon {
   flex: none;
-  inline-size: 0.9rem;
-  block-size: 0.9rem;
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
   fill: none;
-  stroke: var(--text-color-f1);
+  stroke: var(--text-color-f2);
   stroke-width: 1.8;
   stroke-linecap: round;
 }
@@ -46,8 +51,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  max-block-size: 14rem;
-  overflow-y: auto;
+  max-block-size: 13rem;
+  overflow-block: auto;
 }
 
 .row {
@@ -56,19 +61,21 @@
   align-items: center;
   justify-content: space-between;
   padding-inline: 0.75rem;
-  padding-block: 0.45rem;
+  padding-block: 0.4rem;
   border: none;
   border-radius: 0.5rem;
+  color: var(--text-color-f1);
   background: transparent;
-  color: var(--text-color);
-  font-family: var(--default-font-family);
-  font-size: 0.85rem;
+  font-family: var(--value-font-family);
+  font-size: 0.78rem;
+  font-weight: 600;
   text-align: start;
   text-decoration: none;
   cursor: pointer;
 
   &:hover {
-    background-color: var(--primary-l1);
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--primary-l1) 70%, transparent);
   }
 }
 
@@ -83,9 +90,10 @@
 }
 
 .code {
-  color: var(--text-color-f1);
-  font-family: var(--monospace-font-family);
-  font-size: 0.7rem;
+  color: var(--text-color-f2);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .check {
@@ -94,8 +102,8 @@
   fill: none;
   stroke: var(--accent);
   stroke-width: 2.2;
-  stroke-linecap: round;
   stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 .variants {
@@ -107,23 +115,34 @@
 .variant,
 .variantOn {
   padding-inline: 0.7rem;
-  padding-block: 0.3rem;
-  border: var(--separator-border);
+  padding-block: 0.28rem;
+  border: 1px solid var(--primary-d2);
   border-radius: 999px;
-  color: var(--text-color);
-  font-family: var(--monospace-font-family);
-  font-size: 0.7rem;
+  color: var(--text-color-f1);
+  font-family: var(--value-font-family);
+  font-size: 0.65rem;
+  font-weight: 600;
   text-decoration: none;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--text-color);
+  }
 }
 
 .variantOn {
   border-color: var(--accent);
-  background-color: var(--accent);
   color: var(--primary);
+  background-color: var(--accent);
+
+  &:hover {
+    color: var(--primary);
+  }
 }
 
 .suggest {
   color: var(--accent);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-decoration: none;
 }
