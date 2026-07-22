@@ -1,5 +1,8 @@
 @import "../../styles/components.less";
 
+// A minimal road-style slider: a thin rounded track and a small glowing
+// accent dot for a thumb.
+
 .root {
   display: inline-block;
   vertical-align: middle;
@@ -8,30 +11,42 @@
 }
 
 .thumb {
-  inline-size: 1.8rem;
-  block-size: 1.8rem;
-  margin-block-start: -0.9rem;
+  inline-size: 0.8rem;
+  block-size: 0.8rem;
+  margin-block-start: -0.325rem;
   border: none;
   border-radius: 50%;
   color: transparent;
-  background-color: var(--Button__background-color);
+  background-color: var(--control-color, #8fd9b6);
+  box-shadow: 0 0 6px 1px
+    color-mix(in oklab, var(--control-color, #8fd9b6) 45%, transparent);
   cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+.thumb_hover {
+  box-shadow: 0 0 9px 2px
+    color-mix(in oklab, var(--control-color, #8fd9b6) 60%, transparent);
 }
 
 .track {
   .is-blurred();
   inline-size: 100%;
-  block-size: 1px;
+  block-size: 0.2rem;
   border: none;
-  border-radius: 0;
+  border-radius: 999px;
   color: transparent;
-  background-color: var(--Button__background-color);
+  background-color: color-mix(
+    in oklab,
+    var(--control-color, #8fd9b6) 22%,
+    var(--primary-l1)
+  );
   cursor: pointer;
 }
 
 .track_focused {
   .is-focused();
-  outline-offset: 2px;
+  outline-offset: 4px;
 }
 
 input[type="range"].root {
@@ -48,6 +63,10 @@ input[type="range"].root::-webkit-slider-thumb {
   .thumb();
 }
 
+input[type="range"].root:hover::-webkit-slider-thumb {
+  .thumb_hover();
+}
+
 input[type="range"].root::-webkit-slider-runnable-track {
   .track();
 }
@@ -59,6 +78,10 @@ input[type="range"].root:focus::-webkit-slider-runnable-track {
 
 input[type="range"].root::-moz-range-thumb {
   .thumb();
+}
+
+input[type="range"].root:hover::-moz-range-thumb {
+  .thumb_hover();
 }
 
 input[type="range"].root::-moz-range-track {
