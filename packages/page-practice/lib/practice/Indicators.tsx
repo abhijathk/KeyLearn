@@ -1,18 +1,12 @@
 import { Tasks } from "@keybr/lang";
-import { type LessonKey, lessonProps } from "@keybr/lesson";
-import {
-  GaugeList,
-  LetterJourney,
-  names,
-  useFormatter,
-} from "@keybr/lesson-ui";
+import { type LessonKey } from "@keybr/lesson";
+import { LetterJourney, names } from "@keybr/lesson-ui";
 import { LocalDate, type Result } from "@keybr/result";
-import { useSettings } from "@keybr/settings";
 import { Popup, Portal } from "@keybr/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
-import { FormattedMessage } from "react-intl";
 import * as styles from "./Indicators.module.less";
 import { KeyExtendedDetails } from "./KeyExtendedDetails.tsx";
+import { Pulse } from "./Pulse.tsx";
 import { type LessonState } from "./state/index.ts";
 
 export const Indicators = memo(function Indicators({
@@ -79,12 +73,7 @@ export const Indicators = memo(function Indicators({
         }}
       />
       <div className={styles.metrics}>
-        <GaugeList
-          summaryStats={summaryStats}
-          speedSpark={speeds}
-          names={names}
-        />
-        {speeds.length > 1 && <TrendTile speeds={speeds} />}
+        <Pulse summaryStats={summaryStats} speeds={speeds} names={names} />
       </div>
       {(hover.type === "visible" || hover.type === "visible-out") && (
         <Portal>
@@ -107,66 +96,6 @@ export const Indicators = memo(function Indicators({
     </div>
   );
 });
-
-function TrendTile({
-  speeds,
-}: {
-  readonly speeds: readonly number[];
-}): ReactNode {
-  const { settings } = useSettings();
-  const { formatSpeed } = useFormatter();
-  const target = settings.get(lessonProps.targetSpeed);
-  const width = 210;
-  const height = 56;
-  const pad = 4;
-  const lo = Math.min(...speeds, target) * 0.95;
-  const hi = Math.max(...speeds, target) * 1.05;
-  const span = hi - lo || 1;
-  const px = (i: number) =>
-    pad + (i * (width - pad * 2)) / Math.max(1, speeds.length - 1);
-  const py = (v: number) =>
-    height - pad - ((v - lo) * (height - pad * 2)) / span;
-  const points = speeds.map((v, i) => `${px(i)},${py(v)}`).join(" ");
-  const last = speeds.length - 1;
-  return (
-    <div className={styles.trend}>
-      <div className={styles.trendLabel}>
-        <FormattedMessage
-          id="practice.trend.label"
-          defaultMessage="Past {count} lessons"
-          values={{ count: speeds.length }}
-        />
-      </div>
-      <svg
-        className={styles.trendChart}
-        viewBox={`0 0 ${width} ${height}`}
-        aria-hidden={true}
-      >
-        <line
-          className={styles.trendTarget}
-          x1={pad}
-          y1={py(target)}
-          x2={width - pad}
-          y2={py(target)}
-        />
-        <polyline className={styles.trendLine} points={points} />
-        <circle
-          className={styles.trendDot}
-          cx={px(last)}
-          cy={py(speeds[last])}
-          r={2.5}
-        />
-      </svg>
-      <div className={styles.trendCaption}>
-        <FormattedMessage
-          id="practice.trend.target"
-          defaultMessage="goal {speed}"
-          values={{ speed: formatSpeed(target) }}
-        />
-      </div>
-    </div>
-  );
-}
 
 function dailyStreak(results: readonly Result[]): number {
   if (results.length === 0) {

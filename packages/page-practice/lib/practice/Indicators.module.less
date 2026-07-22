@@ -2,22 +2,23 @@
   display: flex;
   position: relative;
   flex-direction: column;
+  gap: 0.35rem;
   align-items: center;
-  gap: 0.75rem;
-  padding-block: 1rem;
+  padding-block: 0.5rem 0.25rem;
 }
 
 .metrics {
   display: flex;
   align-items: stretch;
   justify-content: center;
+  inline-size: 100%;
 }
 
 .streak {
   display: flex;
   position: absolute;
-  inset-block-start: 0.5rem;
   inset-inline-end: 0;
+  inset-block-start: 0.5rem;
   gap: 0.4rem;
   align-items: center;
   padding-inline: 0.75rem;
@@ -37,51 +38,4 @@
   stroke: var(--slow-key-color);
   stroke-width: 1.7;
   stroke-linejoin: round;
-}
-
-.trend {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 0.25rem;
-  padding-inline: 1.6rem;
-  border-inline-start: var(--separator-border);
-  text-align: center;
-}
-
-.trendLabel {
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--Name-color);
-}
-
-.trendChart {
-  inline-size: 13rem;
-  block-size: 3.5rem;
-  overflow: visible;
-}
-
-.trendTarget {
-  stroke: var(--Name-color);
-  stroke-width: 1;
-  stroke-dasharray: 4 4;
-}
-
-.trendLine {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.trendDot {
-  fill: var(--accent);
-}
-
-.trendCaption {
-  font-family: var(--value-font-family);
-  font-size: 0.7rem;
-  color: var(--Name-color);
 }

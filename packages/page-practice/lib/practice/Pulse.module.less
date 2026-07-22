@@ -1,0 +1,233 @@
+// The Pulse: metrics drawn as one slim thread — a single row, so the practice
+// text and keyboard keep the stage. No boxes, no borders; one hairline, one
+// numeral, a single accent glow.
+.root {
+  display: flex;
+  gap: 1.1rem;
+  align-items: center;
+  inline-size: min(58rem, 100%);
+  min-block-size: 2.6rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.sparkWrap {
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+
+.spark {
+  inline-size: 6rem;
+  block-size: 1.65rem;
+}
+
+.sparkLine {
+  fill: none;
+  stroke: var(--secondary-f1);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.sparkDot {
+  fill: var(--accent);
+}
+
+.speed {
+  display: flex;
+  flex: none;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.speedValue {
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.speedUnit {
+  margin-inline-start: 0.25rem;
+  color: var(--text-color-f1);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-style: normal;
+}
+
+// ---- the road: solid to "you", dotted to the flag ------------------------
+
+.road {
+  display: flex;
+  position: relative;
+  flex: 1 1 8rem;
+  align-items: center;
+  min-inline-size: 6rem;
+}
+
+.roadDone {
+  flex: none;
+  block-size: 2px;
+  border-radius: 999px;
+  background-image: linear-gradient(
+    to right,
+    color-mix(in oklab, var(--accent) 25%, transparent),
+    var(--accent)
+  );
+}
+
+.you {
+  flex: none;
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  margin-inline: -0.05rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+  animation: pulse-breathe 2.8s ease-in-out infinite;
+}
+
+.youReached {
+  box-shadow:
+    0 0 0 5px color-mix(in oklab, var(--accent) 25%, transparent),
+    0 0 1.1rem 0.2rem color-mix(in oklab, var(--accent) 60%, transparent);
+  animation: none;
+}
+
+@keyframes pulse-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px color-mix(in oklab, var(--accent) 14%, transparent),
+      0 0 0.5rem 0.05rem color-mix(in oklab, var(--accent) 35%, transparent);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 5px color-mix(in oklab, var(--accent) 22%, transparent),
+      0 0 1rem 0.15rem color-mix(in oklab, var(--accent) 55%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .you {
+    animation: none;
+  }
+}
+
+// The dotted "still to come" segment, same grammar as the journey's road.
+.roadAhead {
+  flex: 1 1 auto;
+  block-size: 2px;
+  margin-inline-start: 0.1rem;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--primary-d2) 0 2px,
+    transparent 2px 8px
+  );
+}
+
+.goal {
+  display: flex;
+  flex: none;
+  gap: 0.25rem;
+  align-items: center;
+  margin-inline-start: 0.4rem;
+  color: var(--text-color-f1);
+  font-family: var(--value-font-family);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.flag {
+  inline-size: 0.8rem;
+  block-size: 0.9rem;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+// "53% of the way" rides under the dotted road without adding row height.
+.caption {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 100%;
+  margin-block-start: 0.15rem;
+  color: var(--text-color-f2);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+// ---- the stations: quiet inline metrics ----------------------------------
+
+.station {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 0.05rem;
+  align-items: center;
+}
+
+.stationTop {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.stationDot {
+  inline-size: 0.45rem;
+  block-size: 0.45rem;
+  border-radius: 50%;
+  background-color: var(--primary-d2);
+  transition: background-color 0.3s ease;
+}
+
+.stationValue {
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+// ---- shared bits ---------------------------------------------------------
+
+.microLabel {
+  color: var(--text-color-f2);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.chip {
+  padding-inline: 0.4rem;
+  padding-block: 0.05rem;
+  border-radius: 999px;
+  font-family: var(--value-font-family);
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.chipUp {
+  color: color-mix(in oklab, var(--fast-key-color) 70%, var(--text-color));
+  background-color: color-mix(in oklab, var(--fast-key-color) 14%, transparent);
+}
+
+.chipDown {
+  color: color-mix(in oklab, var(--slow-key-color) 70%, var(--text-color));
+  background-color: color-mix(in oklab, var(--slow-key-color) 14%, transparent);
+}
+
+.chipFlat {
+  color: var(--text-color-f1);
+  background-color: color-mix(in oklab, var(--secondary-f2) 25%, transparent);
+}
