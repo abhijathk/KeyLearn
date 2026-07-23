@@ -1,0 +1,35 @@
+// The Grown-up / Kids switch at the top of the profile page.
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+  inline-size: fit-content;
+  margin: 1rem auto 0;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-color) 7%, transparent);
+}
+
+.tab {
+  padding: 0.4rem 1.4rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: transparent;
+  font-family: var(--value-font-family);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.on {
+  color: var(--primary);
+  background-color: var(--accent);
+}
+
+.note {
+  margin-block-start: 0.4rem;
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.68rem;
+  text-align: center;
+}

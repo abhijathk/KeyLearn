@@ -14,6 +14,9 @@ export type OpenRequest =
       // Load our own data.
       readonly type: "private";
       readonly userId: string | null;
+      // Kids results live in their own local database, separate from the
+      // grown-up history, and never sync to the grown-up account.
+      readonly kids?: boolean;
     }
   | {
       // Load data of a public user.
@@ -31,7 +34,11 @@ export function wrapResultStorage(storage: ResultStorage): ResultStorage {
 
 function openRawResultStorage(
   request:
-    | { readonly type: "private"; readonly userId: string | null }
+    | {
+        readonly type: "private";
+        readonly userId: string | null;
+        readonly kids?: boolean;
+      }
     | {
         readonly type: "public";
         readonly userId: string;
@@ -39,7 +46,11 @@ function openRawResultStorage(
 ) {
   switch (request.type) {
     case "private": {
-      const { userId } = request;
+      const { userId, kids = false } = request;
+      if (kids) {
+        const local = new PersistentResultStorage("history-kids");
+        return new ResultStorageOfAnonymousUser(local);
+      }
       if (userId == null) {
         const local = new PersistentResultStorage();
         return new ResultStorageOfAnonymousUser(local);

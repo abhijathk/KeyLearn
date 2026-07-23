@@ -8,7 +8,11 @@ import {
 import { type LocalResultStorage } from "./types.ts";
 
 export class PersistentResultStorage implements LocalResultStorage {
-  readonly #factory = new DBNamedFactory(indexedDB, "history", 1);
+  readonly #factory;
+
+  constructor(name = "history") {
+    this.#factory = new DBNamedFactory(indexedDB, name, 1);
+  }
 
   async load(): Promise<Result[]> {
     const db = await this.#factory.openDatabase(migration);
