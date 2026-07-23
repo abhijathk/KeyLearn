@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
-import { AVATAR_PRESETS, photoToDataUrl } from "./avatars.ts";
+import { photoToDataUrl,presetsFor } from "./avatars.ts";
 import { useProfiles } from "./context.tsx";
 import { ParentGate } from "./ParentGate.tsx";
 import { ProfileAvatar } from "./ProfileAvatar.tsx";
@@ -185,9 +185,21 @@ function ProfileEditor({
     profile?.birthYear != null ? String(profile.birthYear) : "",
   );
   const [avatar, setAvatar] = useState<Avatar>(
-    profile?.avatar ?? { type: "icon", id: AVATAR_PRESETS[0].id },
+    profile?.avatar ?? { type: "icon", id: presetsFor("kid")[0].id },
   );
   const [error, setError] = useState<string | null>(null);
+
+  // Switching between Kid and Grown-up swaps the palette; carry a selected
+  // swatch over to the same colour slot in the other palette.
+  const switchKind = (next: ProfileKind) => {
+    setKind(next);
+    if (avatar.type === "icon") {
+      const index = presetsFor(kind).findIndex((p) => p.id === avatar.id);
+      if (index >= 0) {
+        setAvatar({ type: "icon", id: presetsFor(next)[index].id });
+      }
+    }
+  };
 
   const pickPhoto = (file: File | undefined) => {
     if (file == null) {
@@ -238,13 +250,13 @@ function ProfileEditor({
         <div className={styles.kindRow}>
           <button
             className={clsx(styles.seg, kind === "kid" && styles.segOn)}
-            onClick={() => setKind("kid")}
+            onClick={() => switchKind("kid")}
           >
             <FormattedMessage id="profiles.kid" defaultMessage="Kid" />
           </button>
           <button
             className={clsx(styles.seg, kind === "adult" && styles.segOn)}
-            onClick={() => setKind("adult")}
+            onClick={() => switchKind("adult")}
           >
             <FormattedMessage id="profiles.adult" defaultMessage="Grown-up" />
           </button>
@@ -253,7 +265,7 @@ function ProfileEditor({
         <div className={styles.avatarRow}>
           <ProfileAvatar avatar={avatar} name={firstName || "?"} size={72} />
           <div className={styles.presetGrid}>
-            {AVATAR_PRESETS.map((p) => (
+            {presetsFor(kind).map((p) => (
               <button
                 key={p.id}
                 className={clsx(

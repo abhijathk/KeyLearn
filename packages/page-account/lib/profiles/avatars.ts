@@ -1,5 +1,6 @@
-// A small set of friendly avatar presets (an emoji-free colour + glyph),
-// plus the photo-upload helper. No external assets.
+// Pastel avatar presets (an emoji-free colour + glyph) plus the photo-upload
+// helper. Kids pick from punchier pastels, grown-ups from paler ones; the
+// letter ink is a darker shade of the same hue. No external assets.
 
 export type AvatarPreset = {
   readonly id: string;
@@ -7,19 +8,75 @@ export type AvatarPreset = {
   readonly fg: string;
 };
 
-export const AVATAR_PRESETS: readonly AvatarPreset[] = [
-  { id: "leaf", bg: "#58b947", fg: "#ffffff" },
-  { id: "sky", bg: "#3aa0ff", fg: "#ffffff" },
-  { id: "sun", bg: "#ffcf3f", fg: "#5c4500" },
-  { id: "coral", bg: "#ff7d68", fg: "#ffffff" },
-  { id: "grape", bg: "#a06cff", fg: "#ffffff" },
-  { id: "teal", bg: "#3ac9a7", fg: "#053b30" },
-  { id: "rose", bg: "#f5a8b8", fg: "#5c1526" },
-  { id: "slate", bg: "#7c8aa5", fg: "#ffffff" },
+export const KID_AVATAR_PRESETS: readonly AvatarPreset[] = [
+  { id: "k-punch", bg: "#e48b8b", fg: "#6a2f2f" },
+  { id: "k-peach", bg: "#e4a68b", fg: "#6a412f" },
+  { id: "k-tangerine", bg: "#e4c08b", fg: "#6a522f" },
+  { id: "k-amber", bg: "#e4db8b", fg: "#6a642f" },
+  { id: "k-lemon", bg: "#d2e48b", fg: "#5e6a2f" },
+  { id: "k-lime", bg: "#b8e48b", fg: "#4d6a2f" },
+  { id: "k-meadow", bg: "#9de48b", fg: "#3b6a2f" },
+  { id: "k-mint", bg: "#8be494", fg: "#2f6a35" },
+  { id: "k-seafoam", bg: "#8be4af", fg: "#2f6a47" },
+  { id: "k-lagoon", bg: "#8be4c9", fg: "#2f6a58" },
+  { id: "k-sky", bg: "#8be4e4", fg: "#2f6a6a" },
+  { id: "k-cornflower", bg: "#8bc9e4", fg: "#2f586a" },
+  { id: "k-blueberry", bg: "#8bafe4", fg: "#2f476a" },
+  { id: "k-periwinkle", bg: "#8b94e4", fg: "#2f356a" },
+  { id: "k-iris", bg: "#9d8be4", fg: "#3b2f6a" },
+  { id: "k-lavender", bg: "#b88be4", fg: "#4c2f6a" },
+  { id: "k-orchid", bg: "#d28be4", fg: "#5e2f6a" },
+  { id: "k-bubblegum", bg: "#e48bdb", fg: "#6a2f64" },
+  { id: "k-flamingo", bg: "#e48bc0", fg: "#6a2f52" },
+  { id: "k-blush", bg: "#e48ba6", fg: "#6a2f41" },
 ];
 
+export const ADULT_AVATAR_PRESETS: readonly AvatarPreset[] = [
+  { id: "a-punch", bg: "#e9cece", fg: "#6f3e3e" },
+  { id: "a-peach", bg: "#e9d6ce", fg: "#6f4d3e" },
+  { id: "a-tangerine", bg: "#e9dece", fg: "#6f5c3e" },
+  { id: "a-amber", bg: "#e9e6ce", fg: "#6f6a3e" },
+  { id: "a-lemon", bg: "#e3e9ce", fg: "#656f3e" },
+  { id: "a-lime", bg: "#dbe9ce", fg: "#576f3e" },
+  { id: "a-meadow", bg: "#d3e9ce", fg: "#486f3e" },
+  { id: "a-mint", bg: "#cee9d0", fg: "#3e6f43" },
+  { id: "a-seafoam", bg: "#cee9d9", fg: "#3e6f52" },
+  { id: "a-lagoon", bg: "#cee9e1", fg: "#3e6f60" },
+  { id: "a-sky", bg: "#cee9e9", fg: "#3e6f6f" },
+  { id: "a-cornflower", bg: "#cee1e9", fg: "#3e606f" },
+  { id: "a-blueberry", bg: "#ced9e9", fg: "#3e526f" },
+  { id: "a-periwinkle", bg: "#ced0e9", fg: "#3e436f" },
+  { id: "a-iris", bg: "#d3cee9", fg: "#483e6f" },
+  { id: "a-lavender", bg: "#dbcee9", fg: "#573e6f" },
+  { id: "a-orchid", bg: "#e3cee9", fg: "#653e6f" },
+  { id: "a-bubblegum", bg: "#e9cee6", fg: "#6f3e6a" },
+  { id: "a-flamingo", bg: "#e9cede", fg: "#6f3e5c" },
+  { id: "a-blush", bg: "#e9ced6", fg: "#6f3e4d" },
+];
+
+export function presetsFor(kind: "kid" | "adult"): readonly AvatarPreset[] {
+  return kind === "kid" ? KID_AVATAR_PRESETS : ADULT_AVATAR_PRESETS;
+}
+
+// Profiles saved before the pastel palettes used these ids.
+const LEGACY_IDS: Readonly<Record<string, string>> = {
+  leaf: "k-meadow",
+  sky: "k-cornflower",
+  sun: "k-amber",
+  coral: "k-peach",
+  grape: "k-lavender",
+  teal: "k-lagoon",
+  rose: "k-blush",
+  slate: "a-blueberry",
+};
+
 export function presetById(id: string): AvatarPreset {
-  return AVATAR_PRESETS.find((p) => p.id === id) ?? AVATAR_PRESETS[0];
+  const mapped = LEGACY_IDS[id] ?? id;
+  return (
+    KID_AVATAR_PRESETS.find((p) => p.id === mapped) ??
+    ADULT_AVATAR_PRESETS.find((p) => p.id === mapped) ??
+    KID_AVATAR_PRESETS[0]
+  );
 }
 
 /**

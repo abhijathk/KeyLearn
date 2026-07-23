@@ -1,12 +1,17 @@
-import { hashCode, LCG, randomSamples } from "@keybr/rand";
+import { hashCode, LCG } from "@keybr/rand";
 import { type ClassName, type MouseProps } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
-import { colors } from "./colors.ts";
-import { borderShapes, cellSize, centerShapes, size } from "./shapes.ts";
-import { Graphics, Path, Transform } from "./svg.ts";
+import { palettes } from "./colors.ts";
 import { initials } from "./util.ts";
 
+const size = 100;
+
+/**
+ * A deterministic avatar generated from the user name: soft translucent
+ * washes over a pastel ground, in palettes sampled from famous paintings,
+ * with the user's initials inked on top.
+ */
 export function Identicon({
   className,
   name,
@@ -16,68 +21,41 @@ export function Identicon({
   readonly name: string;
 } & MouseProps): ReactNode {
   const random = LCG(hashCode(name));
-  const palette = randomSamples(colors, 3, random);
+  const palette = palettes[(random() * palettes.length) | 0];
   const text = initials(name);
-  const makePath = (
-    shapes: (graphics: Graphics, shapeIndex: number) => void,
-    positions: readonly [x: number, y: number][],
-  ): string => {
-    const shapeIndex = (random() * 1000) | 0;
-    let rotation = (random() * 1000) | 0;
-    const path = new Path();
-    for (const [x, y] of positions) {
-      const transform = new Transform(
-        cellSize * x,
-        cellSize * y,
-        cellSize,
-        rotation++ % 4,
-      );
-      shapes(new Graphics(path, transform), shapeIndex);
-    }
-    return String(path);
-  };
-
+  const washes = [];
+  for (let i = 0; i < 4; i++) {
+    const cx = 15 + random() * 70;
+    const cy = 15 + random() * 70;
+    const rx = 22 + random() * 20;
+    const ry = 16 + random() * 18;
+    const angle = ((random() * 180) | 0) - 90;
+    washes.push(
+      <ellipse
+        key={i}
+        cx={cx}
+        cy={cy}
+        rx={rx}
+        ry={ry}
+        fill={palette.wash[i % palette.wash.length]}
+        fillOpacity={0.5 + random() * 0.25}
+        transform={`rotate(${angle} ${cx} ${cy})`}
+      />,
+    );
+  }
   return (
     <svg {...props} className={clsx(className)} viewBox={`0 0 ${size} ${size}`}>
-      <path
-        fill={palette[0]}
-        d={makePath(borderShapes, [
-          [1, 0],
-          [2, 0],
-          [2, 3],
-          [1, 3],
-          [0, 1],
-          [3, 1],
-          [3, 2],
-          [0, 2],
-        ])}
-      />
-      <path
-        fill={palette[1]}
-        d={makePath(borderShapes, [
-          [0, 0],
-          [3, 0],
-          [3, 3],
-          [0, 3],
-        ])}
-      />
-      <path
-        fill={palette[2]}
-        d={makePath(centerShapes, [
-          [1, 1],
-          [2, 1],
-          [2, 2],
-          [1, 2],
-        ])}
-      />
-      <circle cx={50} cy={50} r={40} fill="#ffffff" opacity={0.7} />
+      <rect width={size} height={size} fill={palette.ground} />
+      {washes}
+      <circle cx={50} cy={50} r={38} fill={palette.ground} opacity={0.55} />
       <text
         x={50}
         y={50}
         dominantBaseline="central"
         textAnchor="middle"
-        fontSize={text.length === 1 ? 80 : text.length === 2 ? 60 : 40}
-        fill="#000000"
+        fontSize={text.length === 1 ? 72 : text.length === 2 ? 52 : 36}
+        fontFamily="Georgia, 'Times New Roman', serif"
+        fill={palette.ink}
       >
         {text}
       </text>
