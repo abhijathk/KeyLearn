@@ -27,38 +27,21 @@ button.anchor > * {
   box-shadow: 0 1rem 3rem var(--shadow-color, rgba(0, 0, 0, 0.4));
 }
 
-.link {
-  display: block;
-  padding-inline: 0.75rem;
-  padding-block: 0.5rem;
-  border-radius: 0.5rem;
-  color: var(--text-color);
-  background-color: var(--primary-l1);
-  text-align: center;
-  text-decoration: none;
-
-  &:hover {
-    background-color: var(
-      --MenuItem--hover__background-color,
-      var(--primary-l2)
-    );
-  }
-}
-
+.link,
 .linkGhost {
   display: block;
   padding-inline: 0.75rem;
   padding-block: 0.5rem;
+  border: var(--separator-border);
   border-radius: 0.5rem;
   color: var(--text-color);
-  background-color: transparent;
+  background-color: color-mix(in oklab, var(--text-color) 7%, transparent);
+  font-weight: 600;
   text-align: center;
   text-decoration: none;
 
   &:hover {
-    background-color: var(
-      --MenuItem--hover__background-color,
-      var(--primary-l2)
-    );
+    border-color: var(--accent-d1);
+    background-color: color-mix(in oklab, var(--text-color) 12%, transparent);
   }
 }

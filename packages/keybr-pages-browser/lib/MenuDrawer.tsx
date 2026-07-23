@@ -43,12 +43,11 @@ export function MenuDrawer({
     navigate(kind === "kid" ? Pages.kids.path : Pages.practice.path);
   };
 
-  // The Grown-ups / Kids switch is only relevant while the household has no
-  // full set of profiles; once both kinds exist, the learner switcher above
-  // covers every destination.
-  const hasKid = household.profiles.some((p) => p.kind === "kid");
-  const hasAdult = household.profiles.some((p) => p.kind === "adult");
-  const showModeSwitch = !(hasKid && hasAdult);
+  // The Grown-ups / Kids switch is only relevant when signed out or when the
+  // account has no profiles yet — once profiles exist, the learner switcher
+  // above covers every destination. (The provider presents an empty
+  // household while signed out, so that case is covered too.)
+  const showModeSwitch = household.profiles.length === 0;
 
   // The who's-practicing switch also swaps the active profile: Grown-ups
   // picks an adult profile (or none, showing the admin avatar); Kids picks a
