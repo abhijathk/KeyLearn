@@ -39,6 +39,7 @@ function AnchorButton({
 export function AccountMenu(): ReactNode {
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
+  const { active } = useProfiles();
   const [open, setOpen] = useState(false);
   const signedIn = publicUser.id != null;
   const close = () => setOpen(false);
@@ -57,7 +58,17 @@ export function AccountMenu(): ReactNode {
             setOpen(!open);
           }}
         >
-          <Avatar user={signedIn ? publicUser : null} size="medium" />
+          {active != null ? (
+            // The selected learner fronts the menu; the admin avatar shows
+            // for a credentials-only login, the anonymous face otherwise.
+            <ProfileAvatar
+              avatar={active.avatar}
+              name={active.firstName}
+              size={29}
+            />
+          ) : (
+            <Avatar user={signedIn ? publicUser : null} size="medium" />
+          )}
         </AnchorButton>
       }
       offset={10}
@@ -66,10 +77,6 @@ export function AccountMenu(): ReactNode {
         <ProfileSwitcher onNavigate={close} />
         {signedIn ? (
           <>
-            <div className={styles.who}>
-              <Avatar user={publicUser} size="medium" />
-              <span className={styles.name}>{publicUser.name}</span>
-            </div>
             <NavLink
               className={styles.link}
               to={Pages.account.path}
@@ -161,16 +168,6 @@ function ProfileSwitcher({
           </button>
         ))}
       </div>
-      <NavLink
-        className={styles.linkGhost}
-        to={Pages.account.path}
-        onClick={onNavigate}
-      >
-        <FormattedMessage
-          id="nav.manageProfiles"
-          defaultMessage="Manage profiles"
-        />
-      </NavLink>
     </div>
   );
 }
