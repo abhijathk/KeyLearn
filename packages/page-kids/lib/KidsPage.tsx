@@ -171,6 +171,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [sessionSecs, setSessionSecs] = useState(prefs.timerMin * 60);
   const [sessionOver, setSessionOver] = useState(false);
   const [regenNonce, setRegenNonce] = useState(0);
+  const [landNonce, setLandNonce] = useState(0);
   const [finishMsg, setFinishMsg] = useState(FINISH_MSGS[0]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -185,6 +186,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const missStreakRef = useRef(0);
   const comboRunRef = useRef(0);
   const growScaleRef = useRef(1);
+  const roundsRef = useRef(0);
   const [pressed, setPressed] = useState<string | null>(null);
   const pressedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -217,7 +219,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       growScaleRef.current = Math.min(growScaleRef.current * 1.22, 2.4);
       worldRef.current?.grow(growScaleRef.current);
       setGrowNonce((n) => n + 1);
-      setScore((s) => saveBest(s + 50));
+      setScore((s) => saveBest(s + 10));
       if (prefsRef.current.sounds) {
         kidsAudio.playWin();
       }
@@ -243,7 +245,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     textInputRef.current = new TextInput(flat, toTextInputSettings(settings));
     lastStampRef.current = 0;
     missStreakRef.current = 0;
-    worldRef.current?.setProgress(0);
+    worldRef.current?.startRun();
     forceTick();
   }, [lesson, lessonKeys, included, settings, regenNonce]);
 
@@ -262,7 +264,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return s;
   };
 
-  // ── the 3D world ───────────────────────────────────────────────────────
+  // ── the 3D world (rebuilt with a fresh land every three rounds) ────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas == null) {
@@ -270,12 +272,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     }
     const world = createKidsWorld(canvas, pickLand());
     worldRef.current = world;
+    world.startRun();
     const loader =
       loaderRef.current != null ? createLoaderScene(loaderRef.current) : null;
     world.ready
       .then(() => {
         if (prefsRef.current.night) {
           world.setNight(true);
+        }
+        if (growScaleRef.current > 1) {
+          world.grow(growScaleRef.current); // the dino keeps its earned size
         }
         if (prefsRef.current.dino !== "TRex") {
           return world.setPlayer(prefsRef.current.dino);
@@ -294,9 +300,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       world.dispose();
       worldRef.current = null;
     };
-  }, []);
+  }, [landNonce]);
 
-  // The world pane never grows more than 35% taller than the helper card.
+  // The world pane never grows more than 50% taller than the helper card.
   useEffect(() => {
     const scene = sceneCardRef.current;
     const kb = kbCardRef.current;
@@ -305,7 +311,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     }
     const cap = () => {
       if (kb != null && prefsRef.current.kbMode !== "off") {
-        scene.style.maxHeight = `${Math.round(kb.offsetHeight * 1.35)}px`;
+        scene.style.maxHeight = `${Math.round(kb.offsetHeight * 1.5)}px`;
       } else {
         scene.style.maxHeight = "";
       }
@@ -380,12 +386,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             return next;
           });
         }
-        setScore((s) => saveBest(s + 10));
+        setScore((s) => saveBest(s + 1));
         if (sounds && key !== " ") {
           kidsAudio.playMove();
         }
         if (pos > 0 && passage[pos - 1] === " ") {
-          setScore((s) => saveBest(s + 50));
+          setScore((s) => saveBest(s + 5));
           setWords((w) => w + 1);
           if (sounds) {
             kidsAudio.playPoint();
@@ -395,9 +401,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           setSay(CHEERS[Math.floor(Math.random() * CHEERS.length)]);
         }
         if (textInput.completed) {
-          setScore((s) => saveBest(s + 50));
+          setScore((s) => saveBest(s + 10));
           setWords((w) => w + 1);
-          setSay("CAMP! +50 bonus — the whole herd cheers!!");
+          setSay("CAMP! +10 — the whole herd cheers!!");
           if (sounds) {
             kidsAudio.playPoint();
           }
@@ -413,6 +419,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             appendResults([result]);
           } else {
             setRegenNonce((n) => n + 1);
+          }
+          // Every third camp, the trail crosses into a brand-new land.
+          roundsRef.current += 1;
+          if (roundsRef.current % 3 === 0) {
+            setSay("The trail crosses into a new land — keep going!");
+            setLoaded(false);
+            setLandNonce((n) => n + 1);
           }
         }
       } else {

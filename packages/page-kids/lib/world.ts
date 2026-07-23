@@ -77,7 +77,11 @@ export const LANDS: readonly Land[] = [
   },
 ];
 
-const FINISH_X = 46;
+/** How far one round carries the runner. The trail never rewinds — each new
+ * round plants the camp flag another stretch ahead. */
+const RUN_LEN = 40;
+/** Trail coverage: three rounds land-to-land, plus a margin. */
+const TRAIL_END = 150;
 const groundY = (x: number) =>
   Math.sin(x * 0.045) * 1.6 + Math.sin(x * 0.011 + 1.7) * 2.4;
 
@@ -93,6 +97,8 @@ export type KidsWorld = {
   readonly ready: Promise<void>;
   setPlayer(name: string): Promise<void>;
   setProgress(frac: number): void;
+  /** Plant the camp flag a fresh stretch ahead — the runner never rewinds. */
+  startRun(): void;
   jump(): void;
   stumble(): void;
   roar(): void;
@@ -133,7 +139,7 @@ export function createKidsWorld(
     const w = canvas.clientWidth || 800;
     const h = canvas.clientHeight || 300;
     const a = w / h;
-    const S = 9.5;
+    const S = 11.5; // a touch wider than the game's 9.5 — more land in view
     cam.left = -S * a;
     cam.right = S * a;
     // The frustum reaches further below the look-at point than above it, so
@@ -190,6 +196,7 @@ export function createKidsWorld(
     }
     const geo = new THREE.PlaneGeometry(400, 120, 200, 40);
     geo.rotateX(-Math.PI / 2);
+    geo.translate(60, 0, 0); // centre the ground on the trail, not the origin
     const pos = geo.attributes.position;
     const colors = new Float32Array(pos.count * 3);
     const cGrass = new THREE.Color(land.grass);
@@ -242,7 +249,7 @@ export function createKidsWorld(
     scene.add(ground);
 
     if (land.path === "stones") {
-      const count = 46;
+      const count = 95;
       const stones = new THREE.InstancedMesh(
         jitterGeo(new THREE.CylinderGeometry(1.05, 1.2, 0.16, 8), 0.11),
         new THREE.MeshStandardMaterial({ color: 0x9c948a, roughness: 1 }),
@@ -348,6 +355,16 @@ export function createKidsWorld(
   let player: DinoRig | null = null;
   let playerX = -6;
   let targetX = -6;
+  let runStart = -6;
+  let runEnd = runStart + RUN_LEN;
+  let flagPole: THREE.Mesh | null = null;
+  let flagCone: THREE.Mesh | null = null;
+  function placeFlag() {
+    if (flagPole != null && flagCone != null) {
+      flagPole.position.set(runEnd, groundY(runEnd) + 1.7, 0);
+      flagCone.position.set(runEnd + 0.55, groundY(runEnd) + 3, 0);
+    }
+  }
   let jumpV = 0;
   let jumpY = 0;
   let stumbleT = 0;
@@ -382,6 +399,10 @@ export function createKidsWorld(
       { model: "Triceratops", x: 20, z: -8, h: 2.4 },
       { model: "Apatosaurus", x: 34, z: -10, h: 3.4 },
       { model: "Parasaurolophus", x: 44, z: -7, h: 2.4 },
+      { model: land.friend, x: 72, z: -8, h: 2.6 },
+      { model: "Stegosaurus", x: 96, z: -6, h: 2.4 },
+      { model: "Apatosaurus", x: 122, z: -10, h: 3.4 },
+      { model: "Triceratops", x: 142, z: -7, h: 2.4 },
     ];
     for (const spot of herdSpots) {
       const gltf = await loadModel(`${ASSETS}/models/dino/${spot.model}.glb`);
@@ -400,10 +421,10 @@ export function createKidsWorld(
     }
 
     for (const [file, count, minD, maxD, side] of [
-      [land.trees, 14, 6, 26, "back"],
-      ["Rocks", 7, 5, 22, "back"],
-      ["Flowers", 14, 3, 14, "both"],
-      ["Bushes", 9, 4, 16, "both"],
+      [land.trees, 26, 6, 26, "back"],
+      ["Rocks", 12, 5, 22, "back"],
+      ["Flowers", 24, 3, 14, "both"],
+      ["Bushes", 16, 4, 16, "both"],
     ] as const) {
       const gltf = await loadModel(`${ASSETS}/models/nature/${file}.glb`);
       const variants = [...gltf.scene.children];
@@ -419,7 +440,7 @@ export function createKidsWorld(
         );
         const wrap = new THREE.Group();
         wrap.add(v);
-        const x = -26 + Math.random() * 90;
+        const x = -26 + Math.random() * (TRAIL_END + 26);
         const depth = minD + Math.random() * (maxD - minD);
         const z =
           side === "back" ? -depth : Math.random() > 0.65 ? depth : -depth;
@@ -430,19 +451,18 @@ export function createKidsWorld(
       }
     }
 
-    const pole = new THREE.Mesh(
+    flagPole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.06, 0.06, 3.4, 6),
       new THREE.MeshStandardMaterial({ color: 0x8a6f4c }),
     );
-    pole.position.set(FINISH_X, groundY(FINISH_X) + 1.7, 0);
-    const flag = new THREE.Mesh(
+    flagCone = new THREE.Mesh(
       new THREE.ConeGeometry(0.5, 1, 3),
       new THREE.MeshStandardMaterial({ color: 0xff5c5c }),
     );
-    flag.rotation.z = -Math.PI / 2;
-    flag.position.set(FINISH_X + 0.55, groundY(FINISH_X) + 3, 0);
-    pole.castShadow = flag.castShadow = true;
-    scene.add(pole, flag);
+    flagCone.rotation.z = -Math.PI / 2;
+    flagPole.castShadow = flagCone.castShadow = true;
+    scene.add(flagPole, flagCone);
+    placeFlag();
 
     await applySky(land.mood);
   })();
@@ -536,7 +556,12 @@ export function createKidsWorld(
     ready,
     setPlayer,
     setProgress(frac) {
-      targetX = -6 + Math.max(0, Math.min(1, frac)) * (FINISH_X + 2);
+      targetX = runStart + Math.max(0, Math.min(1, frac)) * (runEnd - runStart);
+    },
+    startRun() {
+      runStart = Math.min(targetX, TRAIL_END - RUN_LEN);
+      runEnd = runStart + RUN_LEN;
+      placeFlag();
     },
     jump() {
       jumpV = 0.34;
