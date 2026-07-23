@@ -24,9 +24,12 @@
     "@keybr/themes": "*",
     "@paddle/paddle-node-sdk": "^3.6.0",
     "@types/ws": "^8.18.1",
+    "nodemailer": "^7.0.0",
     "ws": "^8.20.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.0"
+  },
   "scripts": {
     "clean": "rm -fr .types",
     "compile": "tsc",
