@@ -139,7 +139,7 @@ export function createKidsWorld(
     const w = canvas.clientWidth || 800;
     const h = canvas.clientHeight || 300;
     const a = w / h;
-    const S = 11.5; // a touch wider than the game's 9.5 — more land in view
+    const S = 13.5; // wider than the game's 9.5 — plenty of land in view
     cam.left = -S * a;
     cam.right = S * a;
     // The frustum reaches further below the look-at point than above it, so
