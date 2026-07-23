@@ -1,11 +1,13 @@
 import { KidsPage } from "@keybr/page-kids";
 import { ResultLoader } from "@keybr/result-loader";
+import { useProfiles } from "../profiles/context.tsx";
 
 export default function Page() {
+  // An active kid profile gets its own local history; with no profile
+  // selected we fall back to the shared local kids trail.
+  const { namespace } = useProfiles();
   return (
-    // The kids trail learns in its own local history — a child's unlocks are
-    // earned by the child, not inherited from the grown-up's typing.
-    <ResultLoader kids={true}>
+    <ResultLoader kids={namespace == null} namespace={namespace}>
       <KidsPage />
     </ResultLoader>
   );

@@ -13,6 +13,7 @@ import { createRoot } from "react-dom/client";
 import { useIntl } from "react-intl";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { IntlLoader } from "./loader/IntlLoader.tsx";
+import { ProfilesProvider } from "./profiles/context.tsx";
 import { Template } from "./Template.tsx";
 import { ThemeProvider } from "./themes/ThemeProvider.tsx";
 import { Title } from "./Title.tsx";
@@ -27,6 +28,7 @@ const RegisterPage = lazy(() => import("./pages/register.tsx"));
 const ForgotPasswordPage = lazy(() => import("./pages/forgot-password.tsx"));
 const ResetPasswordPage = lazy(() => import("./pages/reset-password.tsx"));
 const HelpPage = lazy(() => import("./pages/help.tsx"));
+const ProfilesManagePage = lazy(() => import("./pages/profiles.tsx"));
 const KidsPage = lazy(() => import("./pages/kids.tsx"));
 const LayoutsPage = lazy(() => import("./pages/layouts.tsx"));
 const PracticePage = lazy(() => import("./pages/practice.tsx"));
@@ -42,7 +44,9 @@ export function App() {
         <IntlLoader>
           <SettingsLoader>
             <ThemeProvider>
-              <PageRoutes />
+              <ProfilesProvider>
+                <PageRoutes />
+              </ProfilesProvider>
             </ThemeProvider>
           </SettingsLoader>
         </IntlLoader>
@@ -86,6 +90,17 @@ function PageRoutes() {
               <Title page={Pages.help} />
               <Suspense fallback={<LoadingProgress />}>
                 <HelpPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.profiles.path}
+          element={
+            <Template path={Pages.profiles.path}>
+              <Title page={Pages.profiles} />
+              <Suspense fallback={<LoadingProgress />}>
+                <ProfilesManagePage />
               </Suspense>
             </Template>
           }

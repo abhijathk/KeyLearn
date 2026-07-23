@@ -53,6 +53,44 @@ button.anchor > * {
   }
 }
 
+.switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-block-end: 0.75rem;
+  border-block-end: 1px solid var(--separator-color, rgba(128, 128, 128, 0.3));
+}
+
+.switcherLabel {
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.avatars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.avatarPick {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.avatarPickOn {
+  padding: 0;
+  border: 2px solid var(--accent, currentColor);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
 .linkGhost {
   display: block;
   padding-inline: 0.75rem;

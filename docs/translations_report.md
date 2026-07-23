@@ -1,6 +1,6 @@
 # English
 
-Translated: 540 messages, 6145 words
+Translated: 566 messages, 6226 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,16 +8,18 @@ Untranslated: 0 messages, 0 words
 
 Translated: 328 messages, 4403 words
 
-Untranslated: 186 messages, 1577 words
+Untranslated: 210 messages, 1644 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -26,26 +28,26 @@ Untranslated: 186 messages, 1577 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Arabic
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -54,26 +56,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Bulgarian
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -82,26 +84,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Bangla
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -110,26 +112,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Catalan
 
 Translated: 300 messages, 3458 words
 
-Untranslated: 212 messages, 2504 words
+Untranslated: 236 messages, 2571 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -138,26 +140,26 @@ Untranslated: 212 messages, 2504 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Czech
 
 Translated: 327 messages, 4400 words
 
-Untranslated: 187 messages, 1580 words
+Untranslated: 211 messages, 1647 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -166,26 +168,26 @@ Untranslated: 187 messages, 1580 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Danish
 
 Translated: 320 messages, 4352 words
 
-Untranslated: 192 messages, 1610 words
+Untranslated: 216 messages, 1677 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -194,26 +196,26 @@ Untranslated: 192 messages, 1610 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # German
 
 Translated: 328 messages, 4403 words
 
-Untranslated: 186 messages, 1577 words
+Untranslated: 210 messages, 1644 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -222,26 +224,26 @@ Untranslated: 186 messages, 1577 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Greek
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -250,21 +252,20 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Esperanto
 
 Translated: 74 messages, 1109 words
 
-Untranslated: 434 messages, 4829 words
+Untranslated: 458 messages, 4896 words
 
 * *On*
 * *or*
 * *GO!*
+* *Kid*
 * *now*
 * *Off*
 * *you*
@@ -273,6 +274,7 @@ Untranslated: 434 messages, 4829 words
 * *Best*
 * *Copy*
 * *Done*
+* *Edit*
 * *Help*
 * *hits*
 * *Kids*
@@ -280,24 +282,24 @@ Untranslated: 434 messages, 4829 words
 * *Kids*
 * *last*
 * *More*
-* *Open*
-* *Open*
 * ...
 
 # Spanish
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -306,27 +308,27 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Estonian
 
 Translated: 327 messages, 4402 words
 
-Untranslated: 187 messages, 1578 words
+Untranslated: 211 messages, 1645 words
 
 * *On*
 * *or*
 * *GO!*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -335,25 +337,25 @@ Untranslated: 187 messages, 1578 words
 * *More*
 * *Open*
 * *Pace*
-* *Text*
-* *Time*
-* *Time*
+* *Save*
 * ...
 
 # Persian
 
 Translated: 285 messages, 2898 words
 
-Untranslated: 227 messages, 3064 words
+Untranslated: 251 messages, 3131 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -362,27 +364,27 @@ Untranslated: 227 messages, 3064 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Finnish
 
 Translated: 201 messages, 2254 words
 
-Untranslated: 308 messages, 3687 words
+Untranslated: 332 messages, 3754 words
 
 * *On*
 * *or*
 * *GO!*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -391,20 +393,19 @@ Untranslated: 308 messages, 3687 words
 * *More*
 * *Open*
 * *Pace*
-* *Text*
-* *Time*
-* *Time*
+* *Save*
 * ...
 
 # Faroese
 
 Translated: 41 messages, 475 words
 
-Untranslated: 466 messages, 5452 words
+Untranslated: 490 messages, 5519 words
 
 * *On*
 * *or*
 * *GO!*
+* *Kid*
 * *now*
 * *Off*
 * *you*
@@ -413,6 +414,7 @@ Untranslated: 466 messages, 5452 words
 * *Best*
 * *Copy*
 * *Done*
+* *Edit*
 * *Help*
 * *hits*
 * *Kids*
@@ -420,24 +422,24 @@ Untranslated: 466 messages, 5452 words
 * *Kids*
 * *last*
 * *More*
-* *Open*
-* *Open*
 * ...
 
 # French
 
 Translated: 322 messages, 4227 words
 
-Untranslated: 192 messages, 1753 words
+Untranslated: 216 messages, 1820 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -446,26 +448,26 @@ Untranslated: 192 messages, 1753 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Irish
 
 Translated: 326 messages, 4393 words
 
-Untranslated: 188 messages, 1587 words
+Untranslated: 212 messages, 1654 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -474,26 +476,26 @@ Untranslated: 188 messages, 1587 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Hebrew
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -502,26 +504,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Croatian
 
 Translated: 326 messages, 4398 words
 
-Untranslated: 188 messages, 1582 words
+Untranslated: 212 messages, 1649 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -530,26 +532,26 @@ Untranslated: 188 messages, 1582 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Hungarian
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -558,27 +560,27 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Indonesian
 
 Translated: 328 messages, 4403 words
 
-Untranslated: 186 messages, 1577 words
+Untranslated: 210 messages, 1644 words
 
 * *On*
 * *or*
 * *GO!*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -587,20 +589,19 @@ Untranslated: 186 messages, 1577 words
 * *More*
 * *Open*
 * *Pace*
-* *Text*
-* *Time*
-* *Time*
+* *Save*
 * ...
 
 # Icelandic
 
 Translated: 92 messages, 1716 words
 
-Untranslated: 416 messages, 4222 words
+Untranslated: 440 messages, 4289 words
 
 * *On*
 * *or*
 * *GO!*
+* *Kid*
 * *now*
 * *Off*
 * *you*
@@ -609,6 +610,7 @@ Untranslated: 416 messages, 4222 words
 * *Best*
 * *Copy*
 * *Done*
+* *Edit*
 * *Help*
 * *hits*
 * *Kids*
@@ -616,24 +618,24 @@ Untranslated: 416 messages, 4222 words
 * *Kids*
 * *last*
 * *More*
-* *Open*
-* *Open*
 * ...
 
 # Italian
 
 Translated: 323 messages, 4395 words
 
-Untranslated: 190 messages, 1582 words
+Untranslated: 214 messages, 1649 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -642,26 +644,26 @@ Untranslated: 190 messages, 1582 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Japanese
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -670,20 +672,19 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Korean
 
 Translated: 139 messages, 1299 words
 
-Untranslated: 373 messages, 4663 words
+Untranslated: 397 messages, 4730 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
@@ -692,6 +693,7 @@ Untranslated: 373 messages, 4663 words
 * *Best*
 * *Copy*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -700,24 +702,24 @@ Untranslated: 373 messages, 4663 words
 * *More*
 * *Open*
 * *Open*
-* *Pace*
-* *Text*
 * ...
 
 # Lithuanian
 
 Translated: 295 messages, 3213 words
 
-Untranslated: 217 messages, 2749 words
+Untranslated: 241 messages, 2816 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -726,21 +728,20 @@ Untranslated: 217 messages, 2749 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Mongolian
 
 Translated: 16 messages, 307 words
 
-Untranslated: 489 messages, 5598 words
+Untranslated: 513 messages, 5665 words
 
 * *On*
 * *or*
 * *GO!*
+* *Kid*
 * *now*
 * *Off*
 * *you*
@@ -749,6 +750,7 @@ Untranslated: 489 messages, 5598 words
 * *Best*
 * *Copy*
 * *Done*
+* *Edit*
 * *Help*
 * *hits*
 * *Kids*
@@ -756,24 +758,24 @@ Untranslated: 489 messages, 5598 words
 * *Kids*
 * *last*
 * *More*
-* *Open*
-* *Open*
 * ...
 
 # Norwegian Bokmål
 
 Translated: 204 messages, 2394 words
 
-Untranslated: 306 messages, 3550 words
+Untranslated: 330 messages, 3617 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *Help*
 * *hits*
 * *Kids*
@@ -783,25 +785,25 @@ Untranslated: 306 messages, 3550 words
 * *More*
 * *Open*
 * *Pace*
-* *Text*
-* *Time*
-* *Time*
+* *Save*
 * ...
 
 # Nepali
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -810,26 +812,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Dutch
 
 Translated: 322 messages, 4393 words
 
-Untranslated: 191 messages, 1584 words
+Untranslated: 215 messages, 1651 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -838,26 +840,26 @@ Untranslated: 191 messages, 1584 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Polish
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -866,26 +868,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Brazilian Portuguese
 
 Translated: 327 messages, 4401 words
 
-Untranslated: 187 messages, 1579 words
+Untranslated: 211 messages, 1646 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -894,26 +896,26 @@ Untranslated: 187 messages, 1579 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # European Portuguese
 
 Translated: 308 messages, 4281 words
 
-Untranslated: 204 messages, 1681 words
+Untranslated: 228 messages, 1748 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -922,26 +924,26 @@ Untranslated: 204 messages, 1681 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Romanian
 
 Translated: 288 messages, 3336 words
 
-Untranslated: 219 messages, 2603 words
+Untranslated: 243 messages, 2670 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -950,26 +952,26 @@ Untranslated: 219 messages, 2603 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Russian
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -978,26 +980,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Slovak
 
 Translated: 329 messages, 4403 words
 
-Untranslated: 185 messages, 1577 words
+Untranslated: 209 messages, 1644 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1006,26 +1008,26 @@ Untranslated: 185 messages, 1577 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Slovenian
 
 Translated: 329 messages, 4404 words
 
-Untranslated: 185 messages, 1576 words
+Untranslated: 209 messages, 1643 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1034,26 +1036,26 @@ Untranslated: 185 messages, 1576 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Albanian
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1062,26 +1064,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Swedish
 
 Translated: 327 messages, 4400 words
 
-Untranslated: 187 messages, 1580 words
+Untranslated: 211 messages, 1647 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1090,26 +1092,26 @@ Untranslated: 187 messages, 1580 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Thai
 
 Translated: 318 messages, 4307 words
 
-Untranslated: 194 messages, 1655 words
+Untranslated: 218 messages, 1722 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1118,26 +1120,26 @@ Untranslated: 194 messages, 1655 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Turkish
 
 Translated: 219 messages, 2105 words
 
-Untranslated: 290 messages, 3828 words
+Untranslated: 314 messages, 3895 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1146,26 +1148,26 @@ Untranslated: 290 messages, 3828 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Ukrainian
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1174,26 +1176,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Vietnamese
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1202,26 +1204,26 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Simplified Chinese
 
 Translated: 329 messages, 4398 words
 
-Untranslated: 185 messages, 1582 words
+Untranslated: 209 messages, 1649 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1230,26 +1232,26 @@ Untranslated: 185 messages, 1582 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Traditional Chinese
 
 Translated: 330 messages, 4405 words
 
-Untranslated: 184 messages, 1575 words
+Untranslated: 208 messages, 1642 words
 
 * *On*
 * *or*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1258,27 +1260,27 @@ Untranslated: 184 messages, 1575 words
 * *More*
 * *Open*
 * *Pace*
+* *Save*
 * *Text*
-* *Time*
-* *Time*
-* *Chars*
 * ...
 
 # Chinese (Taiwan)
 
 Translated: 329 messages, 4404 words
 
-Untranslated: 185 messages, 1576 words
+Untranslated: 209 messages, 1643 words
 
 * *On*
 * *or*
 * *GO!*
+* *Kid*
 * *now*
 * *Off*
 * *you*
 * *Best*
 * *Best*
 * *Done*
+* *Edit*
 * *hits*
 * *Kids*
 * *Kids*
@@ -1287,7 +1289,5 @@ Untranslated: 185 messages, 1576 words
 * *More*
 * *Open*
 * *Pace*
-* *Text*
-* *Time*
-* *Time*
+* *Save*
 * ...

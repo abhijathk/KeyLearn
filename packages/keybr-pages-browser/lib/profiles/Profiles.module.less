@@ -1,0 +1,255 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: 2rem;
+}
+
+.title {
+  margin-block-end: 2rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  max-inline-size: 48rem;
+}
+
+.tileWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  inline-size: 9rem;
+  block-size: 9rem;
+  padding: 1rem;
+  border: 2px solid transparent;
+  border-radius: 1.25rem;
+  background: var(--primary-l1, rgba(128, 128, 128, 0.1));
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease;
+
+  &:hover {
+    border-color: var(--accent, currentColor);
+    transform: translateY(-3px);
+  }
+}
+
+.tileActive {
+  border-color: var(--accent, currentColor);
+}
+
+.tileAdd {
+  border-style: dashed;
+  border-color: var(--text-color-f2, currentColor);
+  color: var(--text-color-f2, var(--text-color-f1));
+  background: transparent;
+}
+
+.plus {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.tileName {
+  font-weight: 700;
+}
+
+.tileKind {
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.editBtn {
+  padding-inline: 0.75rem;
+  padding-block: 0.2rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-color-f2, var(--text-color-f1));
+  background: transparent;
+  font-size: 0.72rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+    text-decoration: underline;
+  }
+}
+
+.avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  object-fit: cover;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  font-weight: 800;
+}
+
+.hint {
+  margin-block-start: 2rem;
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.loginCta {
+  margin-block-start: 1.5rem;
+  padding-inline: 1.5rem;
+  padding-block: 0.6rem;
+  border-radius: 999px;
+  color: var(--primary);
+  background: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+// ── overlays (gate + editor) ───────────────────────────────────────────
+.gate {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  place-items: center;
+  background: rgba(20, 24, 40, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.gateCard,
+.editor {
+  inline-size: min(28rem, 92vi);
+  max-block-size: 92vb;
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  overflow-block: auto;
+  background: var(--background-color, #1c2030);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.gateTitle {
+  margin-block-end: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.gateQ {
+  margin-block-end: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.gateWrong {
+  margin-block: 0.5rem;
+  color: var(--error-color, #d0322e);
+  font-weight: 600;
+}
+
+.gateActions,
+.editorActions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block-start: 1rem;
+}
+
+.gateActions {
+  justify-content: flex-end;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.kindRow {
+  display: flex;
+  gap: 0.3rem;
+  margin-block-end: 1rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--primary-l1, rgba(128, 128, 128, 0.1));
+}
+
+.seg {
+  flex: 1;
+  padding-block: 0.4rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.segOn {
+  color: var(--primary);
+  background: var(--accent);
+}
+
+.avatarRow {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-block-end: 1rem;
+}
+
+.presetGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.swatch {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.swatchOn {
+  border-color: var(--text-color);
+  outline: 2px solid var(--accent, currentColor);
+}
+
+.uploadBtn {
+  padding-inline: 0.75rem;
+  border: 1px dashed var(--text-color-f2, currentColor);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: transparent;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.deleteBtn {
+  padding-inline: 0.75rem;
+  padding-block: 0.35rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--error-color, #d0322e);
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

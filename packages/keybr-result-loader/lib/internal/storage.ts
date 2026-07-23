@@ -17,6 +17,9 @@ export type OpenRequest =
       // Kids results live in their own local database, separate from the
       // grown-up history, and never sync to the grown-up account.
       readonly kids?: boolean;
+      // A household-profile local namespace (e.g. "profile-p3f9k2"). When set,
+      // results are kept in their own local database and never synced.
+      readonly namespace?: string | null;
     }
   | {
       // Load data of a public user.
@@ -38,6 +41,7 @@ function openRawResultStorage(
         readonly type: "private";
         readonly userId: string | null;
         readonly kids?: boolean;
+        readonly namespace?: string | null;
       }
     | {
         readonly type: "public";
@@ -46,7 +50,12 @@ function openRawResultStorage(
 ) {
   switch (request.type) {
     case "private": {
-      const { userId, kids = false } = request;
+      const { userId, kids = false, namespace = null } = request;
+      // A specific learner profile — always local, never synced.
+      if (namespace != null) {
+        const local = new PersistentResultStorage(`history-${namespace}`);
+        return new ResultStorageOfAnonymousUser(local);
+      }
       if (kids) {
         const local = new PersistentResultStorage("history-kids");
         return new ResultStorageOfAnonymousUser(local);

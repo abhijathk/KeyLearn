@@ -66,6 +66,31 @@ export class Controller {
     return this.renderPage(ctx, Pages.account, intl);
   }
 
+  @http.GET(`${Pages.profiles.path}`)
+  async ["profiles-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.profiles);
+  }
+
+  @http.GET(`${Pages.login.path}`)
+  async ["login-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.login);
+  }
+
+  @http.GET(`${Pages.register.path}`)
+  async ["register-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.register);
+  }
+
+  @http.GET(`${Pages.forgotPassword.path}`)
+  async ["forgot-password-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.forgotPassword);
+  }
+
+  @http.GET(`${Pages.resetPassword.path}/{token:[a-zA-Z0-9]+}`)
+  async ["reset-password-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.resetPassword);
+  }
+
   @http.GET(`${Pages.kids.path}`)
   async ["kids"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.kids);

@@ -88,6 +88,15 @@ export namespace Pages {
     ],
   } satisfies PageInfo;
 
+  export const profiles = {
+    path: "/profiles",
+    title: defineMessage({ id: "t_Profiles", defaultMessage: "Profiles" }),
+    link: {
+      label: defineMessage({ id: "t_Profiles", defaultMessage: "Profiles" }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
   export const login = {
     path: "/login",
     title: defineMessage({ id: "t_Log_In", defaultMessage: "Log In" }),
