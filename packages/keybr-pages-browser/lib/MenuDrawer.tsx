@@ -8,6 +8,16 @@ import { LanguagePanel } from "./LanguagePanel.tsx";
 import * as styles from "./MenuDrawer.module.less";
 import { NavMenu } from "./NavMenu.tsx";
 
+// Remembered so the ad slot (grown-ups only) and future visits know which
+// side of the app the household uses.
+function rememberMode(mode: "grown-ups" | "kids") {
+  try {
+    localStorage.setItem("keylearn.mode", mode);
+  } catch {
+    // Storage may be unavailable.
+  }
+}
+
 export function MenuDrawer({
   open,
   onClose,
@@ -65,24 +75,35 @@ export function MenuDrawer({
               />
             </div>
             <div className={styles.seg}>
-              <button className={clsx(styles.segBtn, styles.segOn)}>
+              <RouterLink
+                className={clsx(
+                  styles.segBtn,
+                  path !== Pages.kids.path && styles.segOn,
+                )}
+                to={Pages.practice.path}
+                onClick={() => {
+                  rememberMode("grown-ups");
+                  onClose();
+                }}
+              >
                 <FormattedMessage
                   id="drawer.grownUps"
                   defaultMessage="Grown-ups"
                 />
-              </button>
-              <button
-                className={styles.segBtn}
-                disabled={true}
-                title={formatMessage(
-                  defineMessage({
-                    id: "drawer.kidsSoon",
-                    defaultMessage: "Kids mode is coming soon.",
-                  }),
+              </RouterLink>
+              <RouterLink
+                className={clsx(
+                  styles.segBtn,
+                  path === Pages.kids.path && styles.segOn,
                 )}
+                to={Pages.kids.path}
+                onClick={() => {
+                  rememberMode("kids");
+                  onClose();
+                }}
               >
                 <FormattedMessage id="drawer.kids" defaultMessage="Kids" />
-              </button>
+              </RouterLink>
             </div>
             <div className={styles.label}>
               <FormattedMessage id="drawer.goTo" defaultMessage="Go to" />

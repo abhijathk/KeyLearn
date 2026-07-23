@@ -6,6 +6,7 @@ import {
   mdiKeyboard,
   mdiKeyboardOutline,
   mdiSpeedometer,
+  mdiTeddyBear,
   mdiTrophyOutline,
 } from "@mdi/js";
 import { defineMessage, type MessageDescriptor } from "react-intl";
@@ -87,6 +88,37 @@ export namespace Pages {
     ],
   } satisfies PageInfo;
 
+  export const kids = {
+    path: "/kids",
+    title: defineMessage({
+      id: "t_Kids",
+      defaultMessage: "Kids",
+    }),
+    link: {
+      label: defineMessage({
+        id: "t_Kids",
+        defaultMessage: "Kids",
+      }),
+      title: defineMessage({
+        id: "page.kids.description",
+        defaultMessage:
+          "A dino typing adventure for kids — same smart lessons, playful world.",
+      }),
+      icon: mdiTeddyBear,
+    },
+    meta: [
+      ...meta,
+      {
+        name: "description",
+        content: defineMessage({
+          id: "page.kids.description",
+          defaultMessage:
+            "A dino typing adventure for kids — same smart lessons, playful world.",
+        }),
+      },
+    ],
+  } satisfies PageInfo;
+
   export const profile = {
     path: "/profile",
     title: defineMessage({
@@ -100,8 +132,7 @@ export namespace Pages {
       }),
       title: defineMessage({
         id: "page.profile.description",
-        defaultMessage:
-          "A detailed look at your typing progress over time.",
+        defaultMessage: "A detailed look at your typing progress over time.",
       }),
       icon: mdiChartAreaspline,
     },

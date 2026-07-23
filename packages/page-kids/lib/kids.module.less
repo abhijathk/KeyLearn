@@ -1,0 +1,741 @@
+// KeyLearn Kids: the locked mock, ported. A clean white kid system over the
+// Dino Run world — light by default, with its own playful night mode.
+.root {
+  --paper: #fdfcf9;
+  --card: #ffffff;
+  --kink: #3a3a4e;
+  --kink2: #8f8fa3;
+  --leaf: #58b947;
+  --leaf-d: #3f9e30;
+  --sunny: #ffcf3f;
+  --sunny-d: #f0b400;
+  --sky: #3aa0ff;
+  --coral: #ff7d68;
+  --rose: #f5a8b8;
+  --sage: #8fce7e;
+  --sand: #f2c94c;
+  --seafoam: #5fc9a7;
+  --terra: #f5a25f;
+  --clay: #c9b8a8;
+  --kshadow:
+    0 10px 26px rgba(70, 90, 50, 0.12), 0 2px 6px rgba(70, 90, 50, 0.08);
+  --kr: 1.5rem;
+  --key-bg: #ffffff;
+  --kline: #f2f2ea;
+  --glass: #ffffffee;
+  --disc: #e8ecdc;
+  --nail: var(--sunny);
+  --nail-d: var(--sunny-d);
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  min-block-size: 0;
+  padding-block-end: 1rem;
+  color: var(--kink);
+  background: var(--paper);
+  font-family: "Arial Rounded MT Bold", ui-rounded, "Trebuchet MS", sans-serif;
+}
+
+.rootDark {
+  --paper: #1d2136;
+  --card: #2a2f4d;
+  --kink: #f2f2fc;
+  --kink2: #a2a8cc;
+  --key-bg: #333a5e;
+  --kline: #3a4064;
+  --glass: #2a2f4dee;
+  --disc: #3a4064;
+  --nail: #6fe3c0;
+  --nail-d: #2fae86;
+  --kshadow: 0 10px 26px rgba(0, 0, 10, 0.45), 0 2px 6px rgba(0, 0, 10, 0.3);
+}
+
+.top {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  inline-size: min(76rem, 96vi);
+  padding-block-start: 0.4rem;
+}
+
+.banner {
+  margin-inline-start: auto;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  color: var(--kink2);
+  background: var(--card);
+  box-shadow: var(--kshadow);
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  b {
+    color: var(--kink);
+  }
+}
+
+.chipBtn {
+  display: grid;
+  place-items: center;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border: 0;
+  border-radius: 0.85rem;
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.08),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+
+  &:hover {
+    transform: scale(1.08) rotate(-4deg);
+  }
+
+  &:active {
+    transform: translateY(2px);
+  }
+}
+
+// ── the world ──────────────────────────────────────────────────────────
+.sceneCard {
+  position: relative;
+  flex: 1 1 auto;
+  inline-size: min(76rem, 96vi);
+  min-block-size: 10rem;
+  border-radius: var(--kr);
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: var(--kshadow);
+}
+
+.canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.loading {
+  display: grid;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  place-items: center;
+  background: var(--paper);
+}
+
+.loadLabel {
+  margin-block-start: 0.9rem;
+  color: var(--kink2);
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.loadGround {
+  position: relative;
+  inline-size: 13rem;
+  block-size: 6px;
+  margin: 0.4rem auto 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--kline);
+
+  i {
+    position: absolute;
+    inset-block-start: 0;
+    inline-size: 2.2rem;
+    block-size: 100%;
+    border-radius: 999px;
+    background: var(--leaf);
+    opacity: 0.55;
+    animation: lslide 0.7s linear infinite;
+  }
+}
+
+@keyframes lslide {
+  from {
+    inset-inline-start: 110%;
+  }
+
+  to {
+    inset-inline-start: -25%;
+  }
+}
+
+.hudRight {
+  display: flex;
+  position: absolute;
+  inset-inline-end: 0.9rem;
+  inset-block-start: 0.9rem;
+  z-index: 6;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: flex-end;
+}
+
+.chip {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  min-inline-size: 7.4rem;
+  min-block-size: 2.35rem;
+  padding: 0.3rem 0.8rem 0.3rem 0.38rem;
+  border-radius: 999px;
+  background: var(--glass);
+  box-shadow: 0 4px 14px rgba(40, 60, 30, 0.18);
+  text-align: start;
+  backdrop-filter: blur(6px);
+}
+
+.ci {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: 50%;
+  background: var(--disc);
+
+  svg {
+    inline-size: 0.9rem;
+    block-size: 0.9rem;
+    fill: #8f95a3;
+  }
+}
+
+.chipLab {
+  color: var(--kink2);
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chipVal {
+  color: var(--kink);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.ringT {
+  position: relative;
+  flex: none;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: 50%;
+  background: conic-gradient(var(--leaf) calc(var(--tp, 100) * 1%), #e8ecdc 0);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: var(--card);
+  }
+}
+
+.timerLow {
+  color: #e0442e;
+}
+
+.scorePop {
+  position: absolute;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  animation: spop 0.9s ease-out forwards;
+}
+
+@keyframes spop {
+  to {
+    opacity: 0;
+    transform: translateY(-46px);
+  }
+}
+
+.growBanner {
+  display: flex;
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: 34%;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.6rem 1.5rem;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--leaf);
+  box-shadow: 0 10px 30px rgba(63, 158, 48, 0.45);
+  font-size: 1.35rem;
+  font-weight: 800;
+  transform: translate(-50%, -50%) scale(0);
+}
+
+.growBannerShow {
+  animation: gpop 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes gpop {
+  15% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+}
+
+// the practice line floats over the world like subtitles
+.words {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: 1rem;
+  z-index: 5;
+  max-inline-size: 94%;
+  padding: 0.5rem 1.6rem 0.6rem;
+  border-radius: 1.2rem;
+  color: var(--kink);
+  background: var(--glass);
+  box-shadow: 0 8px 26px rgba(40, 60, 30, 0.22);
+  font-size: clamp(1.7rem, 3.1vi, 3.4rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  backdrop-filter: blur(8px);
+}
+
+.hit {
+  color: color-mix(in srgb, var(--kink) 25%, transparent);
+}
+
+.cur {
+  display: inline-block;
+  padding: 0 0.1em;
+  border-radius: 0.45rem;
+  color: var(--kink);
+  background: var(--sunny);
+  box-shadow: 0 3px 0 var(--sunny-d);
+  animation: bcur 0.8s infinite;
+}
+
+@keyframes bcur {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.say {
+  min-block-size: 1.3em;
+  color: var(--leaf-d);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+// ── the helper card: hands + keyboard ──────────────────────────────────
+.kbWrap {
+  --ku: clamp(0.6rem, 1.12vi, 1rem);
+  display: flex;
+  flex: none;
+  gap: 1.3em;
+  align-items: stretch;
+  padding: 0.95em 1.3em;
+  border-radius: var(--kr);
+  background: var(--card);
+  box-shadow: var(--kshadow);
+  font-size: clamp(0.6rem, 1.12vi, 1rem);
+}
+
+.kbWrapFull {
+  --ku: clamp(0.54rem, 0.98vi, 0.88rem);
+  font-size: clamp(0.54rem, 0.98vi, 0.88rem);
+}
+
+.kbWrapWide {
+  justify-content: space-evenly;
+  inline-size: min(76rem, 96vi);
+}
+
+.hands {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.handsArt {
+  position: relative;
+  inline-size: 19em;
+  margin: 0 auto;
+
+  img {
+    display: block;
+    inline-size: 100%;
+  }
+}
+
+.fingerDot {
+  position: absolute;
+  inline-size: 0.9em;
+  block-size: 1.05em;
+  border-radius: 50%;
+  background: var(--nail);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  transform: translate(-50%, -50%);
+}
+
+.fingerDotOn {
+  box-shadow:
+    0 0 0 4px var(--nail-d),
+    0 0 14px var(--nail);
+  opacity: 1;
+  animation: fpulse 0.55s infinite;
+}
+
+@keyframes fpulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.kb {
+  text-align: center;
+}
+
+.krow {
+  display: flex;
+  gap: 0.6em;
+  justify-content: center;
+  margin-block-start: 0.55em;
+
+  &:first-child {
+    margin-block-start: 0;
+  }
+}
+
+.kbWrapFull .krow {
+  gap: 0.4em;
+  margin-block-start: 0.42em;
+}
+
+.key {
+  display: grid;
+  position: relative;
+  place-items: center;
+  inline-size: calc(var(--ku) * 3.4);
+  block-size: calc(var(--ku) * 3.2);
+  border-radius: calc(var(--ku) * 0.9);
+  color: var(--kink);
+  background: var(--key-bg);
+  box-shadow:
+    0 3.5px 0 color-mix(in srgb, var(--kz) 78%, #6a6a5a),
+    inset 0 0 0 2.5px var(--kz);
+  font-size: calc(var(--ku) * 1.5);
+  font-weight: 800;
+  transition: transform 0.08s ease;
+}
+
+.keySpace {
+  --kz: var(--clay);
+  inline-size: calc(var(--ku) * 17.5);
+  border-radius: 999px;
+}
+
+.keyMod {
+  color: var(--kink2);
+  font-size: calc(var(--ku) * 0.62);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.keyW15 {
+  inline-size: calc(var(--ku) * 4.8);
+}
+
+.keyW2 {
+  inline-size: calc(var(--ku) * 6);
+}
+
+.keyW25 {
+  inline-size: calc(var(--ku) * 7.4);
+}
+
+.keyDual {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  place-items: center;
+  padding: 0.28em 0;
+}
+
+.kTop {
+  opacity: 0.65;
+  font-size: calc(var(--ku) * 0.6);
+  line-height: 1;
+}
+
+.kBot {
+  font-size: calc(var(--ku) * 0.8);
+  line-height: 1;
+}
+
+.keyPressed {
+  box-shadow:
+    0 0.5px 0 color-mix(in srgb, var(--kz) 78%, #6a6a5a),
+    inset 0 0 0 2.5px var(--kz);
+  transform: translateY(3px);
+}
+
+.keyNext {
+  z-index: 1;
+  background: var(--sunny);
+  box-shadow:
+    0 3.5px 0 var(--sunny-d),
+    inset 0 0 0 2.5px var(--sunny-d);
+  animation: nextpulse 1s infinite;
+}
+
+@keyframes nextpulse {
+  50% {
+    box-shadow:
+      0 6px 20px rgba(240, 180, 0, 0.55),
+      0 3.5px 0 var(--sunny-d);
+    transform: scale(1.14);
+  }
+}
+
+.bump {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: calc(var(--ku) * 0.32);
+  inline-size: calc(var(--ku) * 0.75);
+  block-size: calc(var(--ku) * 0.2);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--kz) 70%, #555);
+  transform: translateX(-50%);
+}
+
+.kbHint {
+  margin-block-start: 0.55em;
+  color: var(--kink2);
+  font-size: 0.58em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.handsHint {
+  margin-block-start: auto;
+  color: var(--kink2);
+  font-size: 0.58em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+
+  b {
+    color: var(--leaf-d);
+  }
+}
+
+// ── overlays: settings + finish ────────────────────────────────────────
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  place-items: center;
+  background: rgba(40, 44, 70, 0.45);
+  backdrop-filter: blur(7px);
+}
+
+.card {
+  inline-size: min(30rem, 94vi);
+  max-block-size: 92vb;
+  padding: 1.5rem 1.6rem 1.4rem;
+  border-radius: 2rem;
+  overflow-block: auto;
+  background: var(--card);
+  box-shadow: 0 30px 70px rgba(20, 25, 50, 0.4);
+  animation: pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7) rotate(-2deg);
+  }
+}
+
+.cardTitle {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block-end: 1.1rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.hIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--sky) 26%, var(--card));
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.08),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.05);
+  transform: rotate(-6deg);
+}
+
+.srow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-block-start: 0.45rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 1.2rem;
+  background: color-mix(in srgb, var(--kline) 40%, transparent);
+}
+
+.ri {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.3rem;
+  block-size: 2.3rem;
+  border-radius: 0.85rem;
+  box-shadow: inset 0 -2.5px 0 rgba(0, 0, 0, 0.12);
+
+  svg {
+    inline-size: 1.3rem;
+    block-size: 1.3rem;
+  }
+}
+
+.sl {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.sd {
+  color: var(--kink2);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.ctl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: flex-end;
+  margin-inline-start: auto;
+}
+
+.pill {
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  color: var(--kink2);
+  background: var(--card);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--kline) 80%, #888);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.12s ease;
+
+  &:active {
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--kline) 80%, #888);
+    transform: translateY(2px);
+  }
+}
+
+.pillOn {
+  color: #5c4500;
+  background: var(--sunny);
+  box-shadow: 0 3px 0 var(--sunny-d);
+}
+
+.cta {
+  inline-size: 100%;
+  margin-block-start: 1.2rem;
+  padding: 0.85rem;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--leaf);
+  box-shadow: 0 5px 0 var(--leaf-d);
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:active {
+    box-shadow: 0 1px 0 var(--leaf-d);
+    transform: translateY(4px);
+  }
+}
+
+.finishCard {
+  text-align: center;
+}
+
+.finishBadge {
+  display: grid;
+  place-items: center;
+  inline-size: 4.2rem;
+  block-size: 4.2rem;
+  margin: 0 auto 0.4rem;
+  border-radius: 50%;
+  background: var(--sunny);
+  box-shadow: 0 4px 0 var(--sunny-d);
+}
+
+.finishMsg {
+  margin-block-end: 1rem;
+  color: var(--kink2);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.finishStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-block-end: 0.4rem;
+}
+
+.fstat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 1.2rem;
+  background: color-mix(in srgb, var(--kline) 40%, transparent);
+}
+
+.fstatVal {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.finishBest {
+  margin-block-end: 0.4rem;
+  color: var(--kink2);
+  font-size: 0.72rem;
+  font-weight: 800;
+}

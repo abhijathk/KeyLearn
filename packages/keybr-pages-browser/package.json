@@ -10,6 +10,7 @@
     "@keybr/page-account": "*",
     "@keybr/page-help": "*",
     "@keybr/page-highscores": "*",
+    "@keybr/page-kids": "*",
     "@keybr/page-layouts": "*",
     "@keybr/page-multiplayer": "*",
     "@keybr/page-practice": "*",
@@ -21,8 +22,8 @@
     "@keybr/result-loader": "*",
     "@keybr/settings-loader": "*",
     "@keybr/theme-designer": "*",
-    "@keybr/thirdparties": "*",
     "@keybr/themes": "*",
+    "@keybr/thirdparties": "*",
     "@keybr/widget": "*"
   },
   "devDependencies": {},
