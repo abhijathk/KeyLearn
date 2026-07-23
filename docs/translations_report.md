@@ -1,16 +1,17 @@
 # English
 
-Translated: 511 messages, 6020 words
+Translated: 540 messages, 6145 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 329 messages, 4405 words
+Translated: 328 messages, 4403 words
 
-Untranslated: 157 messages, 1469 words
+Untranslated: 186 messages, 1577 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -29,16 +30,16 @@ Untranslated: 157 messages, 1469 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Arabic
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -57,16 +58,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Bulgarian
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -85,16 +86,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Bangla
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -113,16 +114,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Catalan
 
-Translated: 301 messages, 3460 words
+Translated: 300 messages, 3458 words
 
-Untranslated: 183 messages, 2396 words
+Untranslated: 212 messages, 2504 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -141,16 +142,16 @@ Untranslated: 183 messages, 2396 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Czech
 
-Translated: 328 messages, 4402 words
+Translated: 327 messages, 4400 words
 
-Untranslated: 158 messages, 1472 words
+Untranslated: 187 messages, 1580 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -169,16 +170,16 @@ Untranslated: 158 messages, 1472 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Danish
 
-Translated: 321 messages, 4354 words
+Translated: 320 messages, 4352 words
 
-Untranslated: 163 messages, 1502 words
+Untranslated: 192 messages, 1610 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -197,16 +198,16 @@ Untranslated: 163 messages, 1502 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # German
 
-Translated: 329 messages, 4405 words
+Translated: 328 messages, 4403 words
 
-Untranslated: 157 messages, 1469 words
+Untranslated: 186 messages, 1577 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -225,16 +226,16 @@ Untranslated: 157 messages, 1469 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Greek
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -253,16 +254,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Esperanto
 
 Translated: 74 messages, 1109 words
 
-Untranslated: 406 messages, 4723 words
+Untranslated: 434 messages, 4829 words
 
 * *On*
+* *or*
 * *GO!*
 * *now*
 * *Off*
@@ -281,16 +282,16 @@ Untranslated: 406 messages, 4723 words
 * *More*
 * *Open*
 * *Open*
-* *Pace*
 * ...
 
 # Spanish
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -309,16 +310,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Estonian
 
-Translated: 328 messages, 4404 words
+Translated: 327 messages, 4402 words
 
-Untranslated: 158 messages, 1470 words
+Untranslated: 187 messages, 1578 words
 
 * *On*
+* *or*
 * *GO!*
 * *now*
 * *Off*
@@ -337,16 +338,16 @@ Untranslated: 158 messages, 1470 words
 * *Text*
 * *Time*
 * *Time*
-* *Chars*
 * ...
 
 # Persian
 
-Translated: 286 messages, 2900 words
+Translated: 285 messages, 2898 words
 
-Untranslated: 198 messages, 2956 words
+Untranslated: 227 messages, 3064 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -365,16 +366,16 @@ Untranslated: 198 messages, 2956 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Finnish
 
-Translated: 202 messages, 2256 words
+Translated: 201 messages, 2254 words
 
-Untranslated: 279 messages, 3579 words
+Untranslated: 308 messages, 3687 words
 
 * *On*
+* *or*
 * *GO!*
 * *now*
 * *Off*
@@ -393,16 +394,16 @@ Untranslated: 279 messages, 3579 words
 * *Text*
 * *Time*
 * *Time*
-* *Chars*
 * ...
 
 # Faroese
 
 Translated: 41 messages, 475 words
 
-Untranslated: 438 messages, 5346 words
+Untranslated: 466 messages, 5452 words
 
 * *On*
+* *or*
 * *GO!*
 * *now*
 * *Off*
@@ -421,16 +422,16 @@ Untranslated: 438 messages, 5346 words
 * *More*
 * *Open*
 * *Open*
-* *Pace*
 * ...
 
 # French
 
-Translated: 323 messages, 4229 words
+Translated: 322 messages, 4227 words
 
-Untranslated: 163 messages, 1645 words
+Untranslated: 192 messages, 1753 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -449,16 +450,16 @@ Untranslated: 163 messages, 1645 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Irish
 
-Translated: 327 messages, 4395 words
+Translated: 326 messages, 4393 words
 
-Untranslated: 159 messages, 1479 words
+Untranslated: 188 messages, 1587 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -477,16 +478,16 @@ Untranslated: 159 messages, 1479 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Hebrew
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -505,16 +506,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Croatian
 
-Translated: 327 messages, 4400 words
+Translated: 326 messages, 4398 words
 
-Untranslated: 159 messages, 1474 words
+Untranslated: 188 messages, 1582 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -533,16 +534,16 @@ Untranslated: 159 messages, 1474 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Hungarian
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -561,16 +562,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Indonesian
 
-Translated: 329 messages, 4405 words
+Translated: 328 messages, 4403 words
 
-Untranslated: 157 messages, 1469 words
+Untranslated: 186 messages, 1577 words
 
 * *On*
+* *or*
 * *GO!*
 * *now*
 * *Off*
@@ -589,16 +590,16 @@ Untranslated: 157 messages, 1469 words
 * *Text*
 * *Time*
 * *Time*
-* *Chars*
 * ...
 
 # Icelandic
 
 Translated: 92 messages, 1716 words
 
-Untranslated: 388 messages, 4116 words
+Untranslated: 416 messages, 4222 words
 
 * *On*
+* *or*
 * *GO!*
 * *now*
 * *Off*
@@ -617,16 +618,16 @@ Untranslated: 388 messages, 4116 words
 * *More*
 * *Open*
 * *Open*
-* *Pace*
 * ...
 
 # Italian
 
-Translated: 324 messages, 4397 words
+Translated: 323 messages, 4395 words
 
-Untranslated: 161 messages, 1474 words
+Untranslated: 190 messages, 1582 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -645,16 +646,16 @@ Untranslated: 161 messages, 1474 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Japanese
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -673,16 +674,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Korean
 
-Translated: 140 messages, 1301 words
+Translated: 139 messages, 1299 words
 
-Untranslated: 344 messages, 4555 words
+Untranslated: 373 messages, 4663 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -701,16 +702,16 @@ Untranslated: 344 messages, 4555 words
 * *Open*
 * *Pace*
 * *Text*
-* *Time*
 * ...
 
 # Lithuanian
 
-Translated: 296 messages, 3215 words
+Translated: 295 messages, 3213 words
 
-Untranslated: 188 messages, 2641 words
+Untranslated: 217 messages, 2749 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -729,16 +730,16 @@ Untranslated: 188 messages, 2641 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Mongolian
 
 Translated: 16 messages, 307 words
 
-Untranslated: 461 messages, 5492 words
+Untranslated: 489 messages, 5598 words
 
 * *On*
+* *or*
 * *GO!*
 * *now*
 * *Off*
@@ -757,16 +758,16 @@ Untranslated: 461 messages, 5492 words
 * *More*
 * *Open*
 * *Open*
-* *Pace*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 205 messages, 2396 words
+Translated: 204 messages, 2394 words
 
-Untranslated: 277 messages, 3442 words
+Untranslated: 306 messages, 3550 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -785,16 +786,16 @@ Untranslated: 277 messages, 3442 words
 * *Text*
 * *Time*
 * *Time*
-* *Chars*
 * ...
 
 # Nepali
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -813,16 +814,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Dutch
 
-Translated: 323 messages, 4395 words
+Translated: 322 messages, 4393 words
 
-Untranslated: 162 messages, 1476 words
+Untranslated: 191 messages, 1584 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -841,16 +842,16 @@ Untranslated: 162 messages, 1476 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Polish
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -869,16 +870,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Brazilian Portuguese
 
-Translated: 328 messages, 4403 words
+Translated: 327 messages, 4401 words
 
-Untranslated: 158 messages, 1471 words
+Untranslated: 187 messages, 1579 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -897,16 +898,16 @@ Untranslated: 158 messages, 1471 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # European Portuguese
 
-Translated: 309 messages, 4283 words
+Translated: 308 messages, 4281 words
 
-Untranslated: 175 messages, 1573 words
+Untranslated: 204 messages, 1681 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -925,16 +926,16 @@ Untranslated: 175 messages, 1573 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Romanian
 
-Translated: 289 messages, 3338 words
+Translated: 288 messages, 3336 words
 
-Untranslated: 190 messages, 2495 words
+Untranslated: 219 messages, 2603 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -953,16 +954,16 @@ Untranslated: 190 messages, 2495 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Russian
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -981,16 +982,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Slovak
 
-Translated: 330 messages, 4405 words
+Translated: 329 messages, 4403 words
 
-Untranslated: 156 messages, 1469 words
+Untranslated: 185 messages, 1577 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1009,16 +1010,16 @@ Untranslated: 156 messages, 1469 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Slovenian
 
-Translated: 330 messages, 4406 words
+Translated: 329 messages, 4404 words
 
-Untranslated: 156 messages, 1468 words
+Untranslated: 185 messages, 1576 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1037,16 +1038,16 @@ Untranslated: 156 messages, 1468 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Albanian
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1065,16 +1066,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Swedish
 
-Translated: 328 messages, 4402 words
+Translated: 327 messages, 4400 words
 
-Untranslated: 158 messages, 1472 words
+Untranslated: 187 messages, 1580 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1093,16 +1094,16 @@ Untranslated: 158 messages, 1472 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Thai
 
-Translated: 319 messages, 4309 words
+Translated: 318 messages, 4307 words
 
-Untranslated: 165 messages, 1547 words
+Untranslated: 194 messages, 1655 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1121,16 +1122,16 @@ Untranslated: 165 messages, 1547 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Turkish
 
 Translated: 219 messages, 2105 words
 
-Untranslated: 262 messages, 3722 words
+Untranslated: 290 messages, 3828 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1149,16 +1150,16 @@ Untranslated: 262 messages, 3722 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Ukrainian
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1177,16 +1178,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Vietnamese
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1205,16 +1206,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Simplified Chinese
 
-Translated: 330 messages, 4400 words
+Translated: 329 messages, 4398 words
 
-Untranslated: 156 messages, 1474 words
+Untranslated: 185 messages, 1582 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1233,16 +1234,16 @@ Untranslated: 156 messages, 1474 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Traditional Chinese
 
-Translated: 331 messages, 4407 words
+Translated: 330 messages, 4405 words
 
-Untranslated: 155 messages, 1467 words
+Untranslated: 184 messages, 1575 words
 
 * *On*
+* *or*
 * *now*
 * *Off*
 * *you*
@@ -1261,16 +1262,16 @@ Untranslated: 155 messages, 1467 words
 * *Time*
 * *Time*
 * *Chars*
-* *Go to*
 * ...
 
 # Chinese (Taiwan)
 
-Translated: 330 messages, 4406 words
+Translated: 329 messages, 4404 words
 
-Untranslated: 156 messages, 1468 words
+Untranslated: 185 messages, 1576 words
 
 * *On*
+* *or*
 * *GO!*
 * *now*
 * *Off*
@@ -1289,5 +1290,4 @@ Untranslated: 156 messages, 1468 words
 * *Text*
 * *Time*
 * *Time*
-* *Chars*
 * ...

@@ -88,6 +88,54 @@ export namespace Pages {
     ],
   } satisfies PageInfo;
 
+  export const login = {
+    path: "/login",
+    title: defineMessage({ id: "t_Log_In", defaultMessage: "Log In" }),
+    link: {
+      label: defineMessage({ id: "t_Log_In", defaultMessage: "Log In" }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  export const register = {
+    path: "/register",
+    title: defineMessage({ id: "t_Register", defaultMessage: "Register" }),
+    link: {
+      label: defineMessage({ id: "t_Register", defaultMessage: "Register" }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  export const forgotPassword = {
+    path: "/forgot-password",
+    title: defineMessage({
+      id: "t_Forgot_Password",
+      defaultMessage: "Forgot Password",
+    }),
+    link: {
+      label: defineMessage({
+        id: "t_Forgot_Password",
+        defaultMessage: "Forgot Password",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  export const resetPassword = {
+    path: "/reset-password",
+    title: defineMessage({
+      id: "t_Reset_Password",
+      defaultMessage: "Reset Password",
+    }),
+    link: {
+      label: defineMessage({
+        id: "t_Reset_Password",
+        defaultMessage: "Reset Password",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
   export const kids = {
     path: "/kids",
     title: defineMessage({

@@ -52,3 +52,21 @@ button.anchor > * {
     );
   }
 }
+
+.linkGhost {
+  display: block;
+  padding-inline: 0.75rem;
+  padding-block: 0.5rem;
+  border-radius: 0.5rem;
+  color: var(--text-color);
+  background-color: transparent;
+  text-align: center;
+  text-decoration: none;
+
+  &:hover {
+    background-color: var(
+      --MenuItem--hover__background-color,
+      var(--primary-l2)
+    );
+  }
+}

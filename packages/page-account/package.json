@@ -13,7 +13,9 @@
     "@keybr/request": "*",
     "@keybr/thirdparties": "*",
     "@keybr/widget": "*",
-    "@paddle/paddle-js": "^1.6.2"
+    "@mdi/js": "*",
+    "@paddle/paddle-js": "^1.6.2",
+    "react-router": "*"
   },
   "devDependencies": {},
   "scripts": {

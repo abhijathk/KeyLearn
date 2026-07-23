@@ -22,6 +22,10 @@ export function main() {
 }
 
 const AccountPage = lazy(() => import("./pages/account.tsx"));
+const LoginPage = lazy(() => import("./pages/login.tsx"));
+const RegisterPage = lazy(() => import("./pages/register.tsx"));
+const ForgotPasswordPage = lazy(() => import("./pages/forgot-password.tsx"));
+const ResetPasswordPage = lazy(() => import("./pages/reset-password.tsx"));
 const HelpPage = lazy(() => import("./pages/help.tsx"));
 const KidsPage = lazy(() => import("./pages/kids.tsx"));
 const LayoutsPage = lazy(() => import("./pages/layouts.tsx"));
@@ -82,6 +86,50 @@ function PageRoutes() {
               <Title page={Pages.help} />
               <Suspense fallback={<LoadingProgress />}>
                 <HelpPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.login.path}
+          element={
+            <Template path={Pages.login.path}>
+              <Title page={Pages.login} />
+              <Suspense fallback={<LoadingProgress />}>
+                <LoginPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.register.path}
+          element={
+            <Template path={Pages.register.path}>
+              <Title page={Pages.register} />
+              <Suspense fallback={<LoadingProgress />}>
+                <RegisterPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.forgotPassword.path}
+          element={
+            <Template path={Pages.forgotPassword.path}>
+              <Title page={Pages.forgotPassword} />
+              <Suspense fallback={<LoadingProgress />}>
+                <ForgotPasswordPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={`${Pages.resetPassword.path}/:token`}
+          element={
+            <Template path={Pages.resetPassword.path}>
+              <Title page={Pages.resetPassword} />
+              <Suspense fallback={<LoadingProgress />}>
+                <ResetPasswordPage />
               </Suspense>
             </Template>
           }

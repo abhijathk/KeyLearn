@@ -1,0 +1,40 @@
+.divider {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-block: 1rem;
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    border-block-start: 1px solid var(--separator-color, currentColor);
+    opacity: 0.4;
+  }
+}
+
+.error {
+  color: var(--error-color, #d0322e);
+  font-weight: 600;
+}
+
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-block-start: 1.25rem;
+}
+
+.link {
+  color: var(--primary, currentColor);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
