@@ -1,3 +1,4 @@
+import { profileStorageKey } from "@keybr/pages-shared";
 import * as THREE from "three";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -793,8 +794,9 @@ export function createLoaderScene(canvas: HTMLCanvasElement): {
 export function pickLand(): Land {
   let n = 0;
   try {
-    n = Number(localStorage.getItem("kids.land") ?? 0);
-    localStorage.setItem("kids.land", String(n + 1));
+    const key = profileStorageKey("kids.land");
+    n = Number(localStorage.getItem(key) ?? 0);
+    localStorage.setItem(key, String(n + 1));
   } catch {
     // Storage may be unavailable.
   }

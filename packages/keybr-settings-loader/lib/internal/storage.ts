@@ -1,3 +1,4 @@
+import { activeProfileId } from "@keybr/pages-shared";
 import { request } from "@keybr/request";
 import { Settings, type SettingsStorage } from "@keybr/settings";
 import { ObjectStorage } from "./objectstore.ts";
@@ -9,6 +10,29 @@ export function openSettingsStorage(
   json: unknown | null,
 ): SettingsStorage {
   const storage = new ObjectStorage();
+  // A household profile behaves like its own account: settings live in a
+  // profile-scoped local slot and never sync to the admin's server account.
+  const profileId = activeProfileId();
+  if (profileId != null) {
+    const key = `profile-${profileId}.${STORAGE_KEY}`;
+    return new (class implements SettingsStorage {
+      async load(): Promise<Settings> {
+        const value = storage.get(key);
+        if (value != null) {
+          return new Settings(value as any);
+        } else {
+          const settings = new Settings(undefined, true);
+          storage.set(key, settings.toJSON());
+          return settings;
+        }
+      }
+
+      async store(settings: Settings): Promise<Settings> {
+        storage.set(key, settings.toJSON());
+        return settings;
+      }
+    })();
+  }
   if (userId != null) {
     return new (class implements SettingsStorage {
       async load(): Promise<Settings> {

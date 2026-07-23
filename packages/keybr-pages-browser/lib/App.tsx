@@ -1,5 +1,5 @@
 import { ErrorHandler } from "@keybr/debug";
-import { ProfilesProvider } from "@keybr/page-account";
+import { ProfilesProvider, useProfiles } from "@keybr/page-account";
 import {
   getPageData,
   LoadingProgress,
@@ -9,7 +9,7 @@ import {
 } from "@keybr/pages-shared";
 import { SettingsLoader } from "@keybr/settings-loader";
 import { querySelector } from "@keybr/widget";
-import { lazy, Suspense } from "react";
+import { lazy, type ReactNode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { useIntl } from "react-intl";
 import { BrowserRouter, Route, Routes } from "react-router";
@@ -42,16 +42,30 @@ export function App() {
     <PageDataContext.Provider value={getPageData()}>
       <ErrorHandler>
         <IntlLoader>
-          <SettingsLoader>
-            <ThemeProvider>
-              <ProfilesProvider>
-                <PageRoutes />
-              </ProfilesProvider>
-            </ThemeProvider>
-          </SettingsLoader>
+          <ProfilesProvider>
+            <ProfileScope>
+              <SettingsLoader>
+                <ThemeProvider>
+                  <PageRoutes />
+                </ThemeProvider>
+              </SettingsLoader>
+            </ProfileScope>
+          </ProfilesProvider>
         </IntlLoader>
       </ErrorHandler>
     </PageDataContext.Provider>
+  );
+}
+
+// Each household profile behaves like its own account: when the active
+// profile changes, the whole subtree remounts so settings, result histories
+// and game state all reload from that profile's storage.
+function ProfileScope({ children }: { readonly children: ReactNode }) {
+  const { active } = useProfiles();
+  return (
+    <div key={active?.id ?? "none"} style={{ display: "contents" }}>
+      {children}
+    </div>
   );
 }
 

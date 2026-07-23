@@ -1,6 +1,7 @@
 import { keyboardProps, KeyboardProvider } from "@keybr/keyboard";
 import { Lesson, lessonProps, LessonType } from "@keybr/lesson";
 import { LessonLoader } from "@keybr/lesson-loader";
+import { profileStorageKey } from "@keybr/pages-shared";
 import { MutableKeyStatsMap, Result, useResults } from "@keybr/result";
 import { SettingsContext, useSettings } from "@keybr/settings";
 import {
@@ -57,8 +58,10 @@ import {
   pickLand,
 } from "./world.ts";
 
-const BEST_KEY = "kids.best";
-const PREFS_KEY = "kids.prefs";
+// Storage keys are namespaced by the active household profile so every
+// learner keeps their own scores and toy-box settings.
+const BEST_KEY = () => profileStorageKey("kids.best");
+const PREFS_KEY = () => profileStorageKey("kids.prefs");
 
 type KbMode = "off" | "simple" | "full";
 
@@ -94,7 +97,7 @@ function loadPrefs(): Prefs {
   try {
     return {
       ...DEFAULT_PREFS,
-      ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}"),
+      ...JSON.parse(localStorage.getItem(PREFS_KEY()) ?? "{}"),
     };
   } catch {
     return { ...DEFAULT_PREFS };
@@ -103,7 +106,7 @@ function loadPrefs(): Prefs {
 
 function loadBest(): number {
   try {
-    return Number(localStorage.getItem(BEST_KEY) ?? 0) || 0;
+    return Number(localStorage.getItem(BEST_KEY()) ?? 0) || 0;
   } catch {
     return 0;
   }
@@ -218,7 +221,7 @@ const HATCHLINGS = [
 
 function peekNextLandName(): string {
   try {
-    const n = Number(localStorage.getItem("kids.land") ?? 0);
+    const n = Number(localStorage.getItem(profileStorageKey("kids.land")) ?? 0);
     return LANDS[n % LANDS.length].name;
   } catch {
     return LANDS[0].name;
@@ -327,7 +330,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     setPrefs((old) => {
       const next = { ...old, ...patch };
       try {
-        localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+        localStorage.setItem(PREFS_KEY(), JSON.stringify(next));
       } catch {
         // Storage may be unavailable.
       }
@@ -415,7 +418,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     setBest((b) => {
       if (s > b) {
         try {
-          localStorage.setItem(BEST_KEY, String(s));
+          localStorage.setItem(BEST_KEY(), String(s));
         } catch {
           // Storage may be unavailable.
         }

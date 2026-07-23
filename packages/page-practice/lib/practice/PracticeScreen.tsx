@@ -3,7 +3,7 @@ import { KeyboardProvider } from "@keybr/keyboard";
 import { schedule } from "@keybr/lang";
 import { type Lesson, lessonProps } from "@keybr/lesson";
 import { LessonLoader } from "@keybr/lesson-loader";
-import { LoadingProgress } from "@keybr/pages-shared";
+import { LoadingProgress, profileStorageKey } from "@keybr/pages-shared";
 import { DailyStatsMap, type Result, useResults } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -37,12 +37,12 @@ type GoalStats = {
 };
 
 // The goal ceremony fires once per calendar day, even across page reloads.
-const goalCelebratedKey = "keylearn.goalCelebrated";
+const goalCelebratedKey = () => profileStorageKey("keylearn.goalCelebrated");
 
 function goalAlreadyCelebrated(): boolean {
   try {
     return (
-      localStorage.getItem(goalCelebratedKey) === new Date().toDateString()
+      localStorage.getItem(goalCelebratedKey()) === new Date().toDateString()
     );
   } catch {
     return false;
@@ -51,7 +51,7 @@ function goalAlreadyCelebrated(): boolean {
 
 function rememberGoalCelebrated(): void {
   try {
-    localStorage.setItem(goalCelebratedKey, new Date().toDateString());
+    localStorage.setItem(goalCelebratedKey(), new Date().toDateString());
   } catch {
     // Storage may be unavailable; celebrating twice is harmless.
   }

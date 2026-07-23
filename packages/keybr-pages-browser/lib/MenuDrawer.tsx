@@ -43,6 +43,13 @@ export function MenuDrawer({
     navigate(kind === "kid" ? Pages.kids.path : Pages.practice.path);
   };
 
+  // The Grown-ups / Kids switch is only relevant while the household has no
+  // full set of profiles; once both kinds exist, the learner switcher above
+  // covers every destination.
+  const hasKid = household.profiles.some((p) => p.kind === "kid");
+  const hasAdult = household.profiles.some((p) => p.kind === "adult");
+  const showModeSwitch = !(hasKid && hasAdult);
+
   // The who's-practicing switch also swaps the active profile: Grown-ups
   // picks an adult profile (or none, showing the admin avatar); Kids picks a
   // kid profile when one exists.
@@ -147,37 +154,41 @@ export function MenuDrawer({
                 </RouterLink>
               )
             )}
-            <div className={styles.label}>
-              <FormattedMessage
-                id="drawer.who"
-                defaultMessage="Who's practicing"
-              />
-            </div>
-            <div className={styles.seg}>
-              <RouterLink
-                className={clsx(
-                  styles.segBtn,
-                  path !== Pages.kids.path && styles.segOn,
-                )}
-                to={Pages.practice.path}
-                onClick={toGrownUps}
-              >
-                <FormattedMessage
-                  id="drawer.grownUps"
-                  defaultMessage="Grown-ups"
-                />
-              </RouterLink>
-              <RouterLink
-                className={clsx(
-                  styles.segBtn,
-                  path === Pages.kids.path && styles.segOn,
-                )}
-                to={Pages.kids.path}
-                onClick={toKids}
-              >
-                <FormattedMessage id="drawer.kids" defaultMessage="Kids" />
-              </RouterLink>
-            </div>
+            {showModeSwitch && (
+              <>
+                <div className={styles.label}>
+                  <FormattedMessage
+                    id="drawer.who"
+                    defaultMessage="Who's practicing"
+                  />
+                </div>
+                <div className={styles.seg}>
+                  <RouterLink
+                    className={clsx(
+                      styles.segBtn,
+                      path !== Pages.kids.path && styles.segOn,
+                    )}
+                    to={Pages.practice.path}
+                    onClick={toGrownUps}
+                  >
+                    <FormattedMessage
+                      id="drawer.grownUps"
+                      defaultMessage="Grown-ups"
+                    />
+                  </RouterLink>
+                  <RouterLink
+                    className={clsx(
+                      styles.segBtn,
+                      path === Pages.kids.path && styles.segOn,
+                    )}
+                    to={Pages.kids.path}
+                    onClick={toKids}
+                  >
+                    <FormattedMessage id="drawer.kids" defaultMessage="Kids" />
+                  </RouterLink>
+                </div>
+              </>
+            )}
             {kidLock && (
               <div className={styles.lockNote}>
                 <FormattedMessage

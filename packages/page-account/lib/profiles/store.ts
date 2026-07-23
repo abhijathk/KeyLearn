@@ -23,7 +23,7 @@ export type Household = {
   readonly activeId: string | null;
 };
 
-const KEY = "keylearn.household";
+import { HOUSEHOLD_STORAGE_KEY as KEY } from "@keybr/pages-shared";
 
 const EMPTY: Household = { profiles: [], activeId: null };
 
