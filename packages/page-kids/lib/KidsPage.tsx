@@ -516,8 +516,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     <div className={clsx(styles.root, prefs.night && styles.rootDark)}>
       <div className={styles.top}>
         <span className={styles.banner}>
-          <DinoFill size={16} color="#2d8cff" /> <b>Key</b>Learn Kids ·{" "}
-          {included} keys on your trail
+          <b>Key</b>Learn Kids · {included} keys on your trail
         </span>
         <button
           type="button"
