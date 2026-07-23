@@ -739,3 +739,178 @@
   font-size: 0.72rem;
   font-weight: 800;
 }
+
+// ── stuck-key rescue: the glowing key and fingertip get louder ─────────
+.keyStuck {
+  z-index: 2;
+  animation: stuckpulse 0.7s infinite;
+}
+
+@keyframes stuckpulse {
+  50% {
+    box-shadow:
+      0 8px 26px rgba(240, 180, 0, 0.7),
+      0 3.5px 0 var(--sunny-d);
+    transform: scale(1.35);
+  }
+}
+
+.fingerDotStrong {
+  animation: fstrong 0.4s infinite;
+}
+
+@keyframes fstrong {
+  50% {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scale(1.6);
+  }
+}
+
+// ── naming the hatchling ───────────────────────────────────────────────
+.nameInput {
+  display: block;
+  inline-size: min(16rem, 90%);
+  margin: 0 auto;
+  padding: 0.7rem 1rem;
+  border: 3px solid var(--kline);
+  border-radius: 999px;
+  color: var(--kink);
+  background: var(--paper);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: center;
+
+  &:focus {
+    border-color: var(--sunny);
+    outline: none;
+  }
+}
+
+// ── the new-letter ceremony ────────────────────────────────────────────
+.cerEyebrow {
+  color: var(--leaf-d);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+}
+
+.cerLetter {
+  margin: 0.1em 0;
+  color: var(--kink);
+  font-size: 6rem;
+  font-weight: 800;
+  line-height: 1.05;
+  text-shadow: 0 6px 0 var(--sunny);
+  animation: bcur 0.8s infinite;
+}
+
+.cerDots {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-block-start: 0.6rem;
+}
+
+.cerDot {
+  display: grid;
+  place-items: center;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--kline) 55%, transparent);
+  transition: all 0.15s ease;
+}
+
+.cerDotOn {
+  background: var(--sunny);
+  box-shadow: 0 3px 0 var(--sunny-d);
+  transform: scale(1.12);
+}
+
+// ── the trail map between lands ────────────────────────────────────────
+.mapRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.4rem 0 0.9rem;
+}
+
+.mapStopWrap {
+  display: flex;
+  align-items: center;
+}
+
+.mapHop {
+  inline-size: 1.6rem;
+  margin-block-end: 1.4rem;
+  border-block-start: 3px dashed
+    color-mix(in srgb, var(--kink2) 45%, transparent);
+}
+
+.mapStop {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  inline-size: 4.6rem;
+}
+
+.mapStopName {
+  color: var(--kink2);
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.mapStopHere {
+  .mapStopName {
+    color: var(--leaf-d);
+  }
+}
+
+.mapStopNext {
+  animation: bcur 0.9s infinite;
+}
+
+// ── the grown-ups corner ───────────────────────────────────────────────
+.grownups {
+  margin-block-start: 1rem;
+  padding-block-start: 0.7rem;
+  border-block-start: 2px dashed
+    color-mix(in srgb, var(--kink2) 30%, transparent);
+  color: var(--kink2);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.grownupsTitle {
+  display: block;
+  margin-block-end: 0.15rem;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.grownupsLink {
+  color: var(--leaf-d);
+  font-weight: 800;
+}
+
+// ── settings extras ────────────────────────────────────────────────────
+.pillEgg {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  opacity: 0.6;
+  cursor: default;
+}
+
+.aaIcon {
+  color: #2d5a8a;
+  font-size: 1rem;
+  font-weight: 800;
+}

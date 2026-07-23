@@ -25,6 +25,8 @@ import {
   ChatIcon,
   ClockIcon,
   DinoFill,
+  EggIcon,
+  FlagIcon,
   FlameIcon,
   GearIcon,
   HandIcon,
@@ -51,6 +53,7 @@ import {
   createKidsWorld,
   createLoaderScene,
   type KidsWorld,
+  LANDS,
   pickLand,
 } from "./world.ts";
 
@@ -61,6 +64,8 @@ type KbMode = "off" | "simple" | "full";
 
 type Prefs = {
   dino: string;
+  name: string;
+  bigLetters: boolean;
   sounds: boolean;
   hands: boolean;
   kbMode: KbMode;
@@ -74,6 +79,8 @@ type Prefs = {
 // the simple keyboard with helper hands.
 const DEFAULT_PREFS: Prefs = {
   dino: "TRex",
+  name: "",
+  bigLetters: false,
   sounds: false,
   hands: true,
   kbMode: "simple",
@@ -102,13 +109,121 @@ function loadBest(): number {
   }
 }
 
-const CHEERS = [
-  "Leap!",
-  "The herd is cheering!",
-  "Combo rising!",
-  "So fast!!",
-  "Camp flag ahead!",
-];
+// The say-line between the world and the keyboard. Many voices per moment so
+// the trail never repeats itself — and the praise is for EFFORT, because
+// that's what keeps a kid trying after the next miss. {name}, {letter},
+// {finger} and {land} are filled in at speak time.
+const SAYS = {
+  start: [
+    "The herd is walking home to the Green Valley — every letter is a step!",
+    "A long trail, a brave dino, and you — every letter is a step home!",
+    "{name} sniffs the morning air. The Green Valley is far — start walking!",
+    "The herd is ready. Your fingers lead the way today!",
+    "Every key you press is one pawstep closer to home.",
+  ],
+  cheer: [
+    "Your fingers worked so hard!",
+    "You didn't give up!",
+    "Steady steps — that's how the herd walks!",
+    "The herd is cheering for YOU!",
+    "Great try after try!",
+    "Camp flag ahead — keep going!",
+    "{name} loves running next to you!",
+    "One letter at a time — that's the way!",
+    "Look at those fingers go!",
+    "The little dinos are copying your steps!",
+  ],
+  camp: [
+    "CAMP! +10 — the whole herd cheers for {name}!",
+    "CAMP! You led {name} all the way to the flag!",
+    "The tents are up — {name} gets a berry snack. +10!",
+    "Camp reached! The herd stomps their feet for you. +10!",
+    "Flag! {name} takes a big happy breath. +10!",
+  ],
+  miss: [
+    "Whoops — {name} stopped! The glowing key shows the way.",
+    "Oops! No rush — find the glowing key.",
+    "{name} tripped on a pebble. The glowing key helps you both up!",
+    "Not that one — but you're SO close. Look for the glow!",
+    "Wrong stone! Peek at the glowing key and try again.",
+  ],
+  roar: [
+    "RAWWRR!! Take a breath — look for the glowing key!",
+    "RAWWRR!! Even big dinos rest. Breathe, then find the glow.",
+    "A big roar! Shake your hands, smile, and try the glowing key.",
+    "RAWWRR!! {name} says: slow is smooth, smooth is fast!",
+  ],
+  grow: [
+    "{name} grew — a brand new key joined your trail!",
+    "A new key! {name} stretches taller than ever!",
+    "Your trail got bigger — and so did {name}!",
+    "New key unlocked! The herd gasps — {name} is HUGE now!",
+  ],
+  hatch: [
+    "An egg hatched — {dino} joined the herd! (see settings)",
+    "Crack… crack… {dino} hatched! Say hi in settings!",
+    "A wild egg wobbled and out popped {dino}! (find them in settings)",
+  ],
+  streak: [
+    "{name} is SO proud — 10 in a row!",
+    "TEN in a row! {name} does a happy hop!",
+    "Ten perfect steps — the herd can't believe it!",
+    "10 straight! Your fingers know the trail by heart!",
+  ],
+  idle: [
+    "{name} is waiting — press the glowing key!",
+    "{name} looks back at you. Ready to walk on?",
+    "The trail is quiet… one glowing key starts it again!",
+    "{name} taps a claw. Shall we keep going?",
+  ],
+  stuck: [
+    "Look — the {letter} key! Your {finger} presses it.",
+    "The {letter} key is right there, under your {finger}!",
+    "Try this: peek at your {finger}, then press {letter} gently.",
+  ],
+  stuckSpace: [
+    "Look — the space bar! A thumb presses it.",
+    "The BIG long key — give it a thumb tap!",
+  ],
+  wake: [
+    "The {letter} key is awake — back to the trail!",
+    "{letter} is your friend now — onward!",
+    "You woke up {letter}! The trail continues!",
+  ],
+  crossed: [
+    "A brand new land! Smell that fresh air!",
+    "Chapter {chapter}! New trees, new stones, same brave typist.",
+    "The herd crossed over — welcome to {land}!",
+    "New land, new adventure — the flag is waiting ahead!",
+  ],
+  timerEnd: [
+    "The herd makes camp. Wonderful typing today!",
+    "The sun sets on the trail — you did wonderfully today!",
+    "Campfire time! {name} curls up, warm and proud of you.",
+    "That's the session — the whole herd sleeps happy tonight!",
+  ],
+} as const;
+
+const pickSay = (list: readonly string[]) =>
+  list[Math.floor(Math.random() * list.length)];
+
+const fillSay = (t: string, vars: Record<string, string>) =>
+  t.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
+
+/** Dinos hatch from eggs as the trail grows — they are earned, not picked. */
+const HATCHLINGS = [
+  { id: "Velociraptor", label: "Vela", at: 8 },
+  { id: "Triceratops", label: "Tops", at: 10 },
+] as const;
+
+function peekNextLandName(): string {
+  try {
+    const n = Number(localStorage.getItem("kids.land") ?? 0);
+    return LANDS[n % LANDS.length].name;
+  } catch {
+    return LANDS[0].name;
+  }
+}
 
 const FINISH_MSGS = [
   "Your fingers are getting SO fast — the herd can barely keep up!",
@@ -158,14 +273,26 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [nameOpen, setNameOpen] = useState(() => loadPrefs().name === "");
+  const [mapOpen, setMapOpen] = useState(false);
+  const [ceremony, setCeremony] = useState<{
+    letter: string;
+    presses: number;
+  } | null>(null);
+  const [chapter, setChapter] = useState(1);
+  const [landName, setLandName] = useState("");
+  const [stuckHelp, setStuckHelp] = useState(false);
+  const [draftName, setDraftName] = useState(() => loadPrefs().name);
 
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(loadBest);
   const [combo, setCombo] = useState(1);
   const [maxCombo, setMaxCombo] = useState(1);
   const [words, setWords] = useState(0);
-  const [say, setSay] = useState(
-    "Every letter is a step — unlock a new key and your dino grows!",
+  const [say, setSay] = useState(() =>
+    fillSay(pickSay(SAYS.start), {
+      name: loadPrefs().name || "Your dino",
+    }),
   );
   const [growNonce, setGrowNonce] = useState(0);
   const [sessionSecs, setSessionSecs] = useState(prefs.timerMin * 60);
@@ -187,6 +314,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const comboRunRef = useRef(0);
   const growScaleRef = useRef(1);
   const roundsRef = useRef(0);
+  const streakRef = useRef(0);
+  const stuckRef = useRef({ pos: -1, misses: 0 });
+  const beckonedRef = useRef(false);
+  const prevLettersRef = useRef<ReadonlySet<number> | null>(null);
+  const ceremonyRef = useRef(ceremony);
+  ceremonyRef.current = ceremony;
   const [pressed, setPressed] = useState<string | null>(null);
   const pressedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -212,9 +345,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return { lessonKeys: keys, included: keys.findIncludedKeys().length };
   }, [lesson, results]);
 
-  // A new key joining the practice set is THE growth moment.
+  // A new key joining the practice set is THE growth moment: the dino grows,
+  // the letter introduces itself, and sometimes an egg hatches.
   const prevIncluded = useRef(-1);
   useEffect(() => {
+    const letters = new Set(
+      lessonKeys.findIncludedKeys().map(({ letter }) => letter.codePoint),
+    );
     if (prevIncluded.current !== -1 && included > prevIncluded.current) {
       growScaleRef.current = Math.min(growScaleRef.current * 1.22, 2.4);
       worldRef.current?.grow(growScaleRef.current);
@@ -223,10 +360,35 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       if (prefsRef.current.sounds) {
         kidsAudio.playWin();
       }
-      setSay("A brand new key joined your trail — your dino grew!");
+      speak("grow");
+      // Introduce the newcomer: the kid wakes it up with three slow presses.
+      const prev = prevLettersRef.current;
+      const fresh = [...letters].find((cp) => prev == null || !prev.has(cp));
+      if (fresh != null) {
+        const letter = String.fromCodePoint(fresh).toLowerCase();
+        if (FINGER_OF[letter] != null) {
+          setCeremony({ letter, presses: 0 });
+        }
+      }
+      // Did the trail reach an egg?
+      for (const { id, label, at } of HATCHLINGS) {
+        if (prevIncluded.current < at && included >= at) {
+          speak("hatch", { dino: label });
+          if (prefsRef.current.sounds) {
+            kidsAudio.playSuccess();
+          }
+        }
+      }
     }
     prevIncluded.current = included;
-  }, [included]);
+    prevLettersRef.current = letters;
+  }, [included, lessonKeys]);
+
+  const dinoName = () => prefsRef.current.name || "Your dino";
+
+  const speak = (key: keyof typeof SAYS, vars: Record<string, string> = {}) => {
+    setSay(fillSay(pickSay(SAYS[key]), { name: dinoName(), ...vars }));
+  };
 
   // A fresh passage whenever the lesson or the stats move on. Kids runs are
   // short — 6 words to start, one more for every few unlocked keys, capped at
@@ -272,6 +434,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     }
     const world = createKidsWorld(canvas, pickLand());
     worldRef.current = world;
+    setLandName(world.land.name);
     world.startRun();
     const loader =
       loaderRef.current != null ? createLoaderScene(loaderRef.current) : null;
@@ -329,16 +492,46 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
   const blockedRef = useRef(false);
-  blockedRef.current = settingsOpen || finishOpen || sessionOver;
+  blockedRef.current =
+    settingsOpen ||
+    finishOpen ||
+    sessionOver ||
+    nameOpen ||
+    mapOpen ||
+    ceremony != null;
 
   useEffect(() => {
     const onKeyDown = (ev: KeyboardEvent) => {
       if (ev.key.length !== 1 || ev.ctrlKey || ev.metaKey || ev.altKey) {
         return;
       }
+      // The new-letter ceremony listens only for its own letter.
+      const cer = ceremonyRef.current;
+      if (cer != null) {
+        ev.preventDefault();
+        if (ev.key.toLowerCase() === cer.letter) {
+          kidsAudio.init();
+          worldRef.current?.burstAtPlayer([0x37c871, 0xffd66b], 6, 0.2);
+          if (prefsRef.current.sounds) {
+            kidsAudio.playPoint();
+          }
+          if (cer.presses + 1 >= 3) {
+            setCeremony(null);
+            worldRef.current?.hop();
+            if (prefsRef.current.sounds) {
+              kidsAudio.playWin();
+            }
+            speak("wake", { letter: cer.letter.toUpperCase() });
+          } else {
+            setCeremony({ ...cer, presses: cer.presses + 1 });
+          }
+        }
+        return;
+      }
       if (blockedRef.current) {
         return;
       }
+      beckonedRef.current = false;
       const textInput = textInputRef.current;
       if (textInput == null || textInput.completed) {
         return;
@@ -375,8 +568,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       const pos = textInput.pos;
       if (feedback === Feedback.Succeeded || feedback === Feedback.Recovered) {
         missStreakRef.current = 0;
+        stuckRef.current = { pos: -1, misses: 0 };
+        setStuckHelp(false);
         worldRef.current?.setProgress(pos / Math.max(1, passage.length));
         worldRef.current?.burstAtPlayer([0xd9c9a3, 0xcbb98f], 4, 0.1);
+        streakRef.current += 1;
+        if (streakRef.current % 10 === 0) {
+          worldRef.current?.hop();
+          speak("streak");
+        }
         comboRunRef.current += 1;
         if (comboRunRef.current >= 5) {
           comboRunRef.current = 0;
@@ -398,12 +598,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           }
         }
         if (cheers && Math.random() < 0.2) {
-          setSay(CHEERS[Math.floor(Math.random() * CHEERS.length)]);
+          speak("cheer");
         }
         if (textInput.completed) {
           setScore((s) => saveBest(s + 10));
           setWords((w) => w + 1);
-          setSay("CAMP! +10 — the whole herd cheers!!");
+          speak("camp");
           if (sounds) {
             kidsAudio.playPoint();
           }
@@ -420,34 +620,56 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           } else {
             setRegenNonce((n) => n + 1);
           }
-          // Every third camp, the trail crosses into a brand-new land.
+          // Every third camp, the trail map opens and the herd crosses into
+          // a brand-new land.
           roundsRef.current += 1;
           if (roundsRef.current % 3 === 0) {
-            setSay("The trail crosses into a new land — keep going!");
-            setLoaded(false);
-            setLandNonce((n) => n + 1);
+            setTimeout(() => setMapOpen(true), 900);
           }
         }
       } else {
         missStreakRef.current += 1;
+        streakRef.current = 0;
         comboRunRef.current = 0;
         setCombo(1);
+        // A wrong key takes one point back — but the score never goes below
+        // zero, and the best is never touched.
+        setScore((v) => Math.max(0, v - 1));
         worldRef.current?.stumble();
+        // The same key missed three times gets louder, friendlier help.
+        if (stuckRef.current.pos === pos) {
+          stuckRef.current.misses += 1;
+        } else {
+          stuckRef.current = { pos, misses: 1 };
+        }
+        const expected = passage[pos];
+        if (stuckRef.current.misses >= 3 && expected != null) {
+          setStuckHelp(true);
+          const finger = FINGER_OF[expected];
+          if (expected === " ") {
+            speak("stuckSpace");
+          } else {
+            speak("stuck", {
+              letter: expected.toUpperCase(),
+              finger: finger != null ? FINGER_NAMES[finger] : "finger",
+            });
+          }
+        }
         if (missStreakRef.current >= 3) {
           missStreakRef.current = 0;
           worldRef.current?.roar();
           if (sounds) {
             kidsAudio.playRoar();
           }
-          if (cheers) {
-            setSay("RAWWRR!! Take a breath — look for the glowing key!");
+          if (cheers && stuckRef.current.misses < 3) {
+            speak("roar");
           }
         } else {
           if (sounds) {
             kidsAudio.playDrop();
           }
-          if (cheers) {
-            setSay("Whoops — the dino stopped! The glowing key shows the way.");
+          if (cheers && stuckRef.current.misses < 3) {
+            speak("miss");
           }
         }
       }
@@ -472,7 +694,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           setFinishMsg(
             FINISH_MSGS[Math.floor(Math.random() * FINISH_MSGS.length)],
           );
-          setSay("The herd makes camp. Wonderful typing today!");
+          speak("timerEnd");
           if (prefsRef.current.sounds) {
             kidsAudio.playSuccess();
           }
@@ -484,6 +706,33 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     }, 1000);
     return () => clearInterval(id);
   }, []);
+
+  // A patient dino: after ten quiet seconds it turns around and beckons.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (blockedRef.current || !loaded || beckonedRef.current) {
+        return;
+      }
+      const last = lastKeyAtRef.current;
+      if (performance.now() - (last || 0) > 10000) {
+        beckonedRef.current = true;
+        worldRef.current?.beckon();
+        speak("idle");
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [loaded]);
+
+  const crossIntoNextLand = () => {
+    setMapOpen(false);
+    speak("crossed", {
+      chapter: String(chapter + 1),
+      land: peekNextLandName(),
+    });
+    setChapter((c) => c + 1);
+    setLoaded(false);
+    setLandNonce((n) => n + 1);
+  };
 
   const playAgain = () => {
     setFinishOpen(false);
@@ -571,7 +820,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               <div className={styles.loadGround}>
                 <i />
               </div>
-              <div className={styles.loadLabel}>Running to the valley…</div>
+              <div className={styles.loadLabel}>
+                {landName !== ""
+                  ? `Chapter ${chapter} · ${landName}`
+                  : "Running to the valley…"}
+              </div>
             </div>
           </div>
         )}
@@ -647,7 +900,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                   at < pos ? styles.hit : at === pos ? styles.cur : undefined
                 }
               >
-                {ch === " " ? " " : ch}
+                {ch === " " ? " " : prefs.bigLetters ? ch.toUpperCase() : ch}
               </span>
             );
           })}
@@ -684,6 +937,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                     className={clsx(
                       styles.fingerDot,
                       id === nextFinger && styles.fingerDotOn,
+                      id === nextFinger && stuckHelp && styles.fingerDotStrong,
                     )}
                     style={{ left: `${left}%`, top: `${top}%` }}
                   />
@@ -710,6 +964,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                         def={def}
                         next={def.char != null && def.char === nextChar}
                         pressed={def.char != null && def.char === pressed}
+                        stuck={stuckHelp}
                       />
                     ))}
                   </div>
@@ -721,6 +976,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                   space={true}
                   next={nextChar === " "}
                   pressed={pressed === " "}
+                  stuck={stuckHelp}
                 />
               </div>
               <div className={styles.kbHint}>
@@ -790,6 +1046,178 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             <button type="button" className={styles.cta} onClick={playAgain}>
               Run again!
             </button>
+            <div className={styles.grownups}>
+              <span className={styles.grownupsTitle}>For grown-ups</span>
+              Practiced{" "}
+              {Math.max(1, Math.round((sessionTotal - sessionSecs) / 60))} min ·{" "}
+              {included} keys on the trail · {words} words typed ·{" "}
+              <a className={styles.grownupsLink} href="/profile">
+                see the full progress chart
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {nameOpen && (
+        <div className={styles.overlay}>
+          <div className={clsx(styles.card, styles.finishCard)}>
+            <div className={styles.finishBadge}>
+              <EggIcon size={34} color="#5c4500" />
+            </div>
+            <div
+              className={styles.cardTitle}
+              style={{ justifyContent: "center" }}
+            >
+              Your dino hatched!
+            </div>
+            <div className={styles.finishMsg}>
+              It will run every step of the trail with you. What will you call
+              it?
+            </div>
+            <input
+              className={styles.nameInput}
+              maxLength={12}
+              placeholder="Rexy"
+              value={draftName}
+              autoFocus={true}
+              onChange={(ev) => setDraftName(ev.target.value)}
+              onKeyDown={(ev) => {
+                if (ev.key === "Enter") {
+                  savePrefs({ name: draftName.trim() || "Rexy" });
+                  setNameOpen(false);
+                }
+              }}
+            />
+            <button
+              type="button"
+              className={styles.cta}
+              onClick={() => {
+                savePrefs({ name: draftName.trim() || "Rexy" });
+                setNameOpen(false);
+              }}
+            >
+              Say hello!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {ceremony != null && (
+        <div className={styles.overlay}>
+          <div className={clsx(styles.card, styles.finishCard)}>
+            <div className={styles.cerEyebrow}>NEW LETTER!</div>
+            <div className={styles.cerLetter}>
+              {ceremony.letter.toUpperCase()}
+            </div>
+            <div className={styles.finishMsg}>
+              Your{" "}
+              <b style={{ color: "var(--leaf-d)" }}>
+                {FINGER_NAMES[FINGER_OF[ceremony.letter]]}
+              </b>{" "}
+              presses it — tap {ceremony.letter.toUpperCase()} three times to
+              wake it up!
+            </div>
+            <div className={styles.cerDots}>
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className={clsx(
+                    styles.cerDot,
+                    i < ceremony.presses && styles.cerDotOn,
+                  )}
+                >
+                  <StarIcon
+                    size={20}
+                    color={i < ceremony.presses ? "#5c4500" : "#c9c9bb"}
+                  />
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mapOpen && (
+        <div className={styles.overlay}>
+          <div className={clsx(styles.card, styles.finishCard)}>
+            <div className={styles.finishBadge}>
+              <FlagIcon size={30} color="#5c4500" />
+            </div>
+            <div
+              className={styles.cardTitle}
+              style={{ justifyContent: "center" }}
+            >
+              Chapter {chapter} complete!
+            </div>
+            <div className={styles.finishMsg}>
+              {dinoName()} crossed {landName} — the herd walks on toward the
+              Green Valley.
+            </div>
+            <div className={styles.mapRow}>
+              {LANDS.map(({ name }, i) => {
+                const here = name === landName;
+                const next = name === peekNextLandName();
+                return (
+                  <div key={name} className={styles.mapStopWrap}>
+                    {i > 0 && <span className={styles.mapHop} />}
+                    <div
+                      className={clsx(
+                        styles.mapStop,
+                        here && styles.mapStopHere,
+                        next && styles.mapStopNext,
+                      )}
+                    >
+                      {here ? (
+                        <FlagIcon size={18} />
+                      ) : (
+                        <DinoFill
+                          size={20}
+                          color={next ? "#3d6b2e" : "#b9b9a9"}
+                        />
+                      )}
+                      <span className={styles.mapStopName}>{name}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className={styles.finishStats}>
+              <div className={styles.fstat}>
+                <div className={styles.sd}>Camps</div>
+                <div
+                  className={styles.fstatVal}
+                  style={{ color: "var(--leaf-d)" }}
+                >
+                  {roundsRef.current}
+                </div>
+              </div>
+              <div className={styles.fstat}>
+                <div className={styles.sd}>Words</div>
+                <div
+                  className={styles.fstatVal}
+                  style={{ color: "var(--sunny-d)" }}
+                >
+                  {words}
+                </div>
+              </div>
+              <div className={styles.fstat}>
+                <div className={styles.sd}>Score</div>
+                <div
+                  className={styles.fstatVal}
+                  style={{ color: "var(--coral)" }}
+                >
+                  {score}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              className={styles.cta}
+              onClick={crossIntoNextLand}
+            >
+              Cross into {peekNextLandName()}!
+            </button>
           </div>
         </div>
       )}
@@ -797,7 +1225,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       {settingsOpen && (
         <SettingsCard
           prefs={prefs}
+          included={included}
           savePrefs={savePrefs}
+          onRename={() => {
+            setSettingsOpen(false);
+            setDraftName(prefs.name);
+            setNameOpen(true);
+          }}
           onPickDino={(dino) => {
             savePrefs({ dino });
             worldRef.current?.setPlayer(dino).catch(() => {});
@@ -819,11 +1253,13 @@ function Key({
   next,
   pressed,
   space = false,
+  stuck = false,
 }: {
   readonly def: KeyDef;
   readonly next: boolean;
   readonly pressed: boolean;
   readonly space?: boolean;
+  readonly stuck?: boolean;
 }) {
   const zone = def.char != null ? ZONE_OF[def.char] : undefined;
   return (
@@ -837,6 +1273,7 @@ function Key({
         def.width === "w2" && styles.keyW2,
         def.width === "w25" && styles.keyW25,
         next && styles.keyNext,
+        next && stuck && styles.keyStuck,
         pressed && styles.keyPressed,
       )}
       style={{
@@ -858,13 +1295,17 @@ function Key({
 
 function SettingsCard({
   prefs,
+  included,
   savePrefs,
+  onRename,
   onPickDino,
   onPickTimer,
   onClose,
 }: {
   readonly prefs: Prefs;
+  readonly included: number;
   readonly savePrefs: (patch: Partial<Prefs>) => void;
+  readonly onRename: () => void;
   readonly onPickDino: (dino: string) => void;
   readonly onPickTimer: (min: number) => void;
   readonly onClose: () => void;
@@ -884,24 +1325,62 @@ function SettingsCard({
             <DinoFill size={30} />
           </span>
           <div>
-            <div className={styles.sl}>Dino friend</div>
+            <div className={styles.sl}>
+              {prefs.name !== "" ? prefs.name : "Dino friend"}
+            </div>
             <div className={styles.sd}>who runs with you</div>
           </div>
           <div className={styles.ctl}>
-            {[
-              ["Velociraptor", "Vela"],
-              ["TRex", "Rex"],
-              ["Triceratops", "Tops"],
-            ].map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                className={pill(prefs.dino === id)}
-                onClick={() => onPickDino(id)}
-              >
-                {label}
-              </button>
-            ))}
+            <button
+              type="button"
+              className={pill(prefs.dino === "TRex")}
+              onClick={() => onPickDino("TRex")}
+            >
+              Rex
+            </button>
+            {HATCHLINGS.map(({ id, label, at }) =>
+              included >= at ? (
+                <button
+                  key={id}
+                  type="button"
+                  className={pill(prefs.dino === id)}
+                  onClick={() => onPickDino(id)}
+                >
+                  {label}
+                </button>
+              ) : (
+                <button
+                  key={id}
+                  type="button"
+                  className={clsx(styles.pill, styles.pillEgg)}
+                  disabled={true}
+                  title={`This egg hatches at ${at} keys`}
+                >
+                  <EggIcon size={14} color="currentColor" /> {at} keys
+                </button>
+              ),
+            )}
+            <button type="button" className={styles.pill} onClick={onRename}>
+              Rename
+            </button>
+          </div>
+        </div>
+        <div className={styles.srow}>
+          <span className={styles.ri} style={{ background: "var(--sky)" }}>
+            <span className={styles.aaIcon}>Aa</span>
+          </span>
+          <div>
+            <div className={styles.sl}>Big letters</div>
+            <div className={styles.sd}>show the words in CAPITALS</div>
+          </div>
+          <div className={styles.ctl}>
+            <button
+              type="button"
+              className={pill(prefs.bigLetters)}
+              onClick={() => savePrefs({ bigLetters: !prefs.bigLetters })}
+            >
+              {prefs.bigLetters ? "On" : "Off"}
+            </button>
           </div>
         </div>
         <div className={styles.srow}>

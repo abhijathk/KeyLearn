@@ -100,6 +100,10 @@ export type KidsWorld = {
   /** Plant the camp flag a fresh stretch ahead — the runner never rewinds. */
   startRun(): void;
   jump(): void;
+  /** A happy little bounce — for streaks and other proud moments. */
+  hop(): void;
+  /** The dino turns to the viewer and wiggles — "come on, keep typing!" */
+  beckon(): void;
   stumble(): void;
   roar(): void;
   grow(scale: number): void;
@@ -368,6 +372,8 @@ export function createKidsWorld(
   let jumpV = 0;
   let jumpY = 0;
   let stumbleT = 0;
+  let beckonT = 0;
+  let wasAirborne = false;
   let roarT = 0;
   let growTarget = 1;
   const friends: DinoRig[] = [];
@@ -508,7 +514,16 @@ export function createKidsWorld(
       jumpY = Math.max(0, jumpY + jumpV);
       jumpV -= 0.03;
       p.y = groundY(p.x) + jumpY;
+      if (jumpY > 0.05) {
+        wasAirborne = true;
+      } else if (wasAirborne) {
+        wasAirborne = false; // touchdown — kick up a puff of dust
+        burst(p.x, p.y + 0.15, p.z, [0xcfc4ae, 0xb8ab90], 8, 0.14);
+      }
       const moving = Math.abs(dx) > 0.08;
+      if (moving) {
+        beckonT = 0;
+      }
       if (player.run && player.idle) {
         player.run.weight += ((moving ? 1 : 0) - player.run.weight) * 0.12;
         player.idle.weight = 1 - player.run.weight;
@@ -521,7 +536,13 @@ export function createKidsWorld(
       } else if (stumbleT > 0) {
         stumbleT -= 0.05;
         player.wrap.rotation.z = Math.sin(stumbleT * Math.PI) * -0.3;
+      } else if (beckonT > 0) {
+        beckonT -= 0.012;
+        const k = Math.sin(Math.max(0, Math.min(1, beckonT)) * Math.PI);
+        player.wrap.rotation.y = Math.PI / 2 - k;
+        player.wrap.rotation.z = Math.sin(beckonT * 14) * 0.05 * k;
       } else {
+        player.wrap.rotation.y = Math.PI / 2;
         player.wrap.rotation.z = 0;
       }
       cam.position.x += (p.x - 2 - cam.position.x) * 0.06;
@@ -565,6 +586,14 @@ export function createKidsWorld(
     },
     jump() {
       jumpV = 0.34;
+    },
+    hop() {
+      if (jumpY <= 0) {
+        jumpV = 0.22;
+      }
+    },
+    beckon() {
+      beckonT = 1;
     },
     stumble() {
       stumbleT = 1;

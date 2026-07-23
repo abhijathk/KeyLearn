@@ -241,3 +241,38 @@ export function BranchIcon({ size = 22, color = "#fff" }: IconProps) {
     </svg>
   );
 }
+
+export function EggIcon({ size = 22, color = "#8a7a5c" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3c3.6 0 6.5 5 6.5 10a6.5 6.5 0 0 1-13 0C5.5 8 8.4 3 12 3z" />
+      <path d="M9 12l1.6 1.6L12 12l1.4 1.6L15 12" />
+    </svg>
+  );
+}
+
+export function FlagIcon({ size = 16, color = "#ff5c5c" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill={color}
+      stroke={color}
+      strokeWidth={1.6}
+      strokeLinecap="round"
+    >
+      <path d="M6 21V4" fill="none" />
+      <path d="M6 4l10 3.5L6 11z" />
+    </svg>
+  );
+}
