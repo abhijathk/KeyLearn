@@ -229,7 +229,7 @@ export function MenuDrawer({
               <div className={styles.label}>
                 <FormattedMessage
                   id="drawer.language"
-                  defaultMessage="Language"
+                  defaultMessage="Site language"
                 />
               </div>
               <LanguagePanel currentPath={path} />
