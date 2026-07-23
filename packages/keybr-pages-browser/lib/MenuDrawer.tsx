@@ -135,6 +135,19 @@ export function MenuDrawer({
                         size={36}
                       />
                       <span className={styles.learnerName}>{p.firstName}</span>
+                      <span className={styles.learnerKind}>
+                        {p.kind === "kid" ? (
+                          <FormattedMessage
+                            id="profiles.kid"
+                            defaultMessage="Kid"
+                          />
+                        ) : (
+                          <FormattedMessage
+                            id="profiles.adult"
+                            defaultMessage="Grown-up"
+                          />
+                        )}
+                      </span>
                     </button>
                   ))}
                 </div>
