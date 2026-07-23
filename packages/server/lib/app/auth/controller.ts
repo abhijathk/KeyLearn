@@ -14,17 +14,19 @@ import {
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { randomString, type SessionState } from "@fastr/middleware-session";
-import { User, UserLoginRequest } from "@keybr/database";
+import { User, UserExistsError, UserLoginRequest } from "@keybr/database";
 import { Logger } from "@keybr/logger";
 import { type AbstractAdapter } from "@keybr/oauth";
 import { z } from "zod";
 import { Mailer } from "../mail/index.ts";
-import { messageWithLink } from "./email.ts";
+import { messageWithLink, messageWithResetLink } from "./email.ts";
 import { pAdapter } from "./pipe.ts";
 import { type AuthState } from "./types.ts";
 import { zod } from "./zod.ts";
 
 const jsonOpts = { maxLength: 4096 };
+
+const MIN_PASSWORD = 8;
 
 const TCreateToken = z.object({
   email: z.string().min(1).email(),
@@ -32,6 +34,46 @@ const TCreateToken = z.object({
 type TCreateToken = z.infer<typeof TCreateToken>;
 const PCreateToken = zod(TCreateToken, () => {
   throw new ApplicationError("Invalid e-mail address");
+});
+
+const TRegister = z.object({
+  email: z.string().min(1).email(),
+  password: z.string().min(MIN_PASSWORD).max(128),
+  name: z.string().max(32).optional(),
+});
+type TRegister = z.infer<typeof TRegister>;
+const PRegister = zod(TRegister, () => {
+  throw new ApplicationError(
+    `Enter a valid email and a password of at least ${MIN_PASSWORD} characters`,
+  );
+});
+
+const TLogin = z.object({
+  email: z.string().min(1).email(),
+  password: z.string().min(1).max(128),
+});
+type TLogin = z.infer<typeof TLogin>;
+const PLogin = zod(TLogin, () => {
+  throw new ApplicationError("Invalid email or password");
+});
+
+const TForgot = z.object({
+  email: z.string().min(1).email(),
+});
+type TForgot = z.infer<typeof TForgot>;
+const PForgot = zod(TForgot, () => {
+  throw new ApplicationError("Invalid e-mail address");
+});
+
+const TReset = z.object({
+  token: z.string().min(1),
+  password: z.string().min(MIN_PASSWORD).max(128),
+});
+type TReset = z.infer<typeof TReset>;
+const PReset = zod(TReset, () => {
+  throw new ApplicationError(
+    `Password must be at least ${MIN_PASSWORD} characters`,
+  );
 });
 
 const TPatchAccount = z.object({
@@ -100,6 +142,86 @@ export class Controller {
       throw new ApplicationError("Error sending e-mail message");
     }
     ctx.response.body = { email };
+  }
+
+  @http.POST({ name: "register-password", path: "/auth/register-password" })
+  async registerWithPassword(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PRegister, jsonOpts) { email, password, name }: TRegister,
+  ) {
+    ctx.state.session.destroy();
+    let user;
+    try {
+      user = await User.registerWithPassword(email, password, name ?? "");
+    } catch (err) {
+      if (err instanceof UserExistsError) {
+        throw new ApplicationError(
+          "An account with this email already exists. Try logging in instead.",
+        );
+      }
+      throw err;
+    }
+    ctx.state.session.start();
+    ctx.state.session.set("userId", user.id!);
+    ctx.response.body = { ok: true };
+  }
+
+  @http.POST({ name: "login-password", path: "/auth/login-password" })
+  async loginWithPassword(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PLogin, jsonOpts) { email, password }: TLogin,
+  ) {
+    const user = await User.loginWithPassword(email, password);
+    if (user == null) {
+      // One message for both cases — never reveal whether the email exists.
+      throw new ForbiddenError("Invalid email or password");
+    }
+    ctx.state.session.destroy();
+    ctx.state.session.start();
+    ctx.state.session.set("userId", user.id!);
+    ctx.response.body = { ok: true };
+  }
+
+  @http.POST({ name: "forgot-password", path: "/auth/forgot-password" })
+  async forgotPassword(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PForgot, jsonOpts) { email }: TForgot,
+  ) {
+    // Only send a link to accounts that actually exist, but always answer the
+    // same way so the endpoint can't be used to probe for registered emails.
+    const user = await User.findByEmail(email);
+    if (user != null) {
+      const token = String(await UserLoginRequest.init(email));
+      const link = String(
+        new URL(`/reset-password/${token}`, this.canonicalUrl),
+      );
+      try {
+        await this.mailer.sendMail(messageWithResetLink({ email, link }));
+      } catch (err: any) {
+        Logger.warn(err, "Error sending reset e-mail to '%s'", email);
+      }
+    }
+    ctx.response.body = { ok: true };
+  }
+
+  @http.POST({ name: "reset-password", path: "/auth/reset-password" })
+  async resetPassword(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PReset, jsonOpts) { token, password }: TReset,
+  ) {
+    const email = await UserLoginRequest.consume(token);
+    if (email == null) {
+      throw new ForbiddenError("This reset link has expired or is invalid");
+    }
+    const user = await User.findByEmail(email);
+    if (user == null) {
+      throw new ForbiddenError("This reset link has expired or is invalid");
+    }
+    await user.setPassword(password);
+    ctx.state.session.destroy();
+    ctx.state.session.start();
+    ctx.state.session.set("userId", user.id!);
+    ctx.response.body = { ok: true };
   }
 
   @http.GET({ name: "login", path: "/login/{token}" })

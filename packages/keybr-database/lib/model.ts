@@ -11,7 +11,16 @@ import { PublicId } from "@keybr/publicid";
 import { type Knex } from "knex";
 import { type JSONSchema, Model, type Pojo, snakeCaseMappers } from "objection";
 import { anonymousName } from "./name.ts";
+import { hashPassword, verifyPassword } from "./password.ts";
 import { Random } from "./util.ts";
+
+/** Thrown when a registration email is already in use. */
+export class UserExistsError extends Error {
+  constructor() {
+    super("A user with this email address already exists");
+    this.name = "UserExistsError";
+  }
+}
 
 export function TimestampMixin(superClass: typeof Model): typeof Model {
   return class extends superClass implements Model {
@@ -44,6 +53,8 @@ export class User extends TimestampMixin(Model) {
     table.string("email", email.maxLength).notNullable();
     table.string("name", name.maxLength).notNullable();
     table.boolean("anonymized").notNullable().defaultTo(false);
+    // Null for OAuth / magic-link accounts; set only for email+password.
+    table.string("password_hash", 128).nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.unique(["email"]);
     table.unique(["name"]);
@@ -53,6 +64,7 @@ export class User extends TimestampMixin(Model) {
   email?: string;
   name?: string;
   anonymized?: number;
+  passwordHash?: string | null;
   createdAt?: Date;
   externalIds?: UserExternalId[];
   order?: Order;
@@ -107,6 +119,47 @@ export class User extends TimestampMixin(Model) {
         .insertAndFetch({ email, name });
     }
     return user;
+  }
+
+  // Creates a brand-new email+password account. Throws if the email is
+  // already taken (whatever the sign-in method).
+  static async registerWithPassword(
+    email: string,
+    password: string,
+    hint: string,
+  ): Promise<User> {
+    const existing = await User.findByEmail(email);
+    if (existing != null) {
+      throw new UserExistsError();
+    }
+    const name = await User.findUniqueName(email, hint || email);
+    const passwordHash = await hashPassword(password);
+    return await User.query()
+      .withGraphFetched("externalIds")
+      .withGraphFetched("order")
+      .insertAndFetch({ email, name, passwordHash });
+  }
+
+  // Verifies an email+password pair. Returns null on any mismatch — the
+  // caller must not reveal which half was wrong.
+  static async loginWithPassword(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
+    const user = await User.findByEmail(email);
+    if (user == null) {
+      // Compare against a dummy hash anyway to keep the timing uniform.
+      await verifyPassword(password, null);
+      return null;
+    }
+    if (await verifyPassword(password, user.passwordHash)) {
+      return user;
+    }
+    return null;
+  }
+
+  async setPassword(password: string): Promise<void> {
+    await this.$query().patch({ passwordHash: await hashPassword(password) });
   }
 
   static async findUniqueName(
@@ -463,6 +516,18 @@ export class UserLoginRequest extends TimestampMixin(Model) {
       return User.login(request.email!);
     }
     return null;
+  }
+
+  // One-shot: validates a token, deletes it so it can't be reused, and
+  // returns the email it was issued for. For the password-reset flow.
+  static async consume(accessToken: string): Promise<string | null> {
+    await this.deleteExpired();
+    const request = await UserLoginRequest.findByAccessToken(accessToken);
+    if (request == null) {
+      return null;
+    }
+    await UserLoginRequest.query().deleteById(request.id!);
+    return request.email!;
   }
 
   static async deleteExpired(now: number = Date.now()): Promise<void> {
