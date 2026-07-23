@@ -176,3 +176,78 @@
     }
   }
 }
+
+// The grown-ups-only zone when a kid profile is active.
+.locked {
+  opacity: 0.35;
+  filter: grayscale(0.6);
+  pointer-events: none;
+  user-select: none;
+}
+
+.lockNote {
+  margin-block-start: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: var(--separator-border);
+  border-radius: 0.5rem;
+  color: var(--text-color-f2);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+// Learner switcher at the top of the drawer.
+.learners {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.learner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: center;
+  inline-size: 4.2rem;
+  padding: 0.5rem 0.25rem;
+  border: 2px solid transparent;
+  border-radius: 0.7rem;
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent-d1);
+  }
+}
+
+.learnerOn {
+  border-color: var(--accent);
+  background-color: var(--primary-l1);
+}
+
+.learnerName {
+  max-inline-size: 100%;
+  overflow: hidden;
+  color: var(--text-color);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setupLink {
+  display: block;
+  margin-block-start: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--text-color-f2);
+  border-radius: 0.5rem;
+  color: var(--text-color-f1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--accent-d1);
+    color: var(--text-color);
+  }
+}

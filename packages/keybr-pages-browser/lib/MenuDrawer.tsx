@@ -1,9 +1,10 @@
-import { Pages } from "@keybr/pages-shared";
+import { ProfileAvatar, useProfiles } from "@keybr/page-account";
+import { Pages, usePageData } from "@keybr/pages-shared";
 import { IconButton, StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { Link as RouterLink } from "react-router";
+import { Link as RouterLink, useNavigate } from "react-router";
 import { LanguagePanel } from "./LanguagePanel.tsx";
 import * as styles from "./MenuDrawer.module.less";
 import { NavMenu } from "./NavMenu.tsx";
@@ -28,6 +29,41 @@ export function MenuDrawer({
   readonly path: string;
 }): ReactNode {
   const { formatMessage } = useIntl();
+  // A kid profile gets a locked-down drawer: navigation, settings, language
+  // and the utility links are grown-ups only.
+  const navigate = useNavigate();
+  const { publicUser } = usePageData();
+  const { household, active, select } = useProfiles();
+  const signedIn = publicUser.id != null;
+  const kidLock = active?.kind === "kid";
+
+  const switchTo = (id: string, kind: "adult" | "kid") => {
+    select(id);
+    onClose();
+    navigate(kind === "kid" ? Pages.kids.path : Pages.practice.path);
+  };
+
+  // The who's-practicing switch also swaps the active profile: Grown-ups
+  // picks an adult profile (or none, showing the admin avatar); Kids picks a
+  // kid profile when one exists.
+  const toGrownUps = () => {
+    if (active?.kind !== "adult") {
+      const adult = household.profiles.find((p) => p.kind === "adult");
+      select(adult?.id ?? null);
+    }
+    rememberMode("grown-ups");
+    onClose();
+  };
+  const toKids = () => {
+    if (active?.kind !== "kid") {
+      const kid = household.profiles.find((p) => p.kind === "kid");
+      if (kid != null) {
+        select(kid.id);
+      }
+    }
+    rememberMode("kids");
+    onClose();
+  };
   useEffect(() => {
     if (!open) {
       return;
@@ -68,6 +104,49 @@ export function MenuDrawer({
         </div>
         {open && (
           <>
+            {household.profiles.length > 0 ? (
+              <>
+                <div className={styles.label}>
+                  <FormattedMessage
+                    id="nav.learners"
+                    defaultMessage="Learners"
+                  />
+                </div>
+                <div className={styles.learners}>
+                  {household.profiles.map((p) => (
+                    <button
+                      key={p.id}
+                      className={clsx(
+                        styles.learner,
+                        active?.id === p.id && styles.learnerOn,
+                      )}
+                      title={p.firstName}
+                      onClick={() => switchTo(p.id, p.kind)}
+                    >
+                      <ProfileAvatar
+                        avatar={p.avatar}
+                        name={p.firstName}
+                        size={36}
+                      />
+                      <span className={styles.learnerName}>{p.firstName}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              signedIn && (
+                <RouterLink
+                  className={styles.setupLink}
+                  to={Pages.account.path}
+                  onClick={onClose}
+                >
+                  <FormattedMessage
+                    id="nav.setUpProfiles"
+                    defaultMessage="Set up profiles"
+                  />
+                </RouterLink>
+              )
+            )}
             <div className={styles.label}>
               <FormattedMessage
                 id="drawer.who"
@@ -81,10 +160,7 @@ export function MenuDrawer({
                   path !== Pages.kids.path && styles.segOn,
                 )}
                 to={Pages.practice.path}
-                onClick={() => {
-                  rememberMode("grown-ups");
-                  onClose();
-                }}
+                onClick={toGrownUps}
               >
                 <FormattedMessage
                   id="drawer.grownUps"
@@ -97,55 +173,67 @@ export function MenuDrawer({
                   path === Pages.kids.path && styles.segOn,
                 )}
                 to={Pages.kids.path}
-                onClick={() => {
-                  rememberMode("kids");
-                  onClose();
-                }}
+                onClick={toKids}
               >
                 <FormattedMessage id="drawer.kids" defaultMessage="Kids" />
               </RouterLink>
             </div>
-            <div className={styles.label}>
-              <FormattedMessage id="drawer.goTo" defaultMessage="Go to" />
-            </div>
-            <NavMenu currentPath={path} onNavigate={onClose} />
-            <div className={styles.label}>
-              <FormattedMessage
-                id="drawer.fingerColors"
-                defaultMessage="Finger colour zones on the keyboard"
-              />
-            </div>
-            <ZonesToggle />
-            <div className={styles.label}>
-              <FormattedMessage
-                id="drawer.language"
-                defaultMessage="Language"
-              />
-            </div>
-            <LanguagePanel currentPath={path} />
-            <div className={styles.label}>
-              <FormattedMessage id="drawer.more" defaultMessage="More" />
-            </div>
-            <div className={styles.util}>
-              <a
-                href="https://github.com/abhijathk/keylearn"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <StrokeIcon className={styles.utilIcon} name="code" />
+            {kidLock && (
+              <div className={styles.lockNote}>
                 <FormattedMessage
-                  id="drawer.source"
-                  defaultMessage="View source on GitHub"
+                  id="drawer.kidLock"
+                  defaultMessage="Grown-ups only — switch to a grown-up profile to use these."
                 />
-              </a>
-              <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
-                <StrokeIcon className={styles.utilIcon} name="doc" />
-                {formatMessage(Pages.termsOfService.link.label)}
-              </RouterLink>
-              <RouterLink to={Pages.privacyPolicy.path} onClick={onClose}>
-                <StrokeIcon className={styles.utilIcon} name="shield" />
-                {formatMessage(Pages.privacyPolicy.link.label)}
-              </RouterLink>
+              </div>
+            )}
+            <div
+              className={clsx(kidLock && styles.locked)}
+              aria-disabled={kidLock}
+              // Inert blocks clicks and keyboard focus for the whole zone.
+              inert={kidLock}
+            >
+              <div className={styles.label}>
+                <FormattedMessage id="drawer.goTo" defaultMessage="Go to" />
+              </div>
+              <NavMenu currentPath={path} onNavigate={onClose} />
+              <div className={styles.label}>
+                <FormattedMessage
+                  id="drawer.fingerColors"
+                  defaultMessage="Finger colour zones on the keyboard"
+                />
+              </div>
+              <ZonesToggle />
+              <div className={styles.label}>
+                <FormattedMessage
+                  id="drawer.language"
+                  defaultMessage="Language"
+                />
+              </div>
+              <LanguagePanel currentPath={path} />
+              <div className={styles.label}>
+                <FormattedMessage id="drawer.more" defaultMessage="More" />
+              </div>
+              <div className={styles.util}>
+                <a
+                  href="https://github.com/abhijathk/keylearn"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <StrokeIcon className={styles.utilIcon} name="code" />
+                  <FormattedMessage
+                    id="drawer.source"
+                    defaultMessage="View source on GitHub"
+                  />
+                </a>
+                <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
+                  <StrokeIcon className={styles.utilIcon} name="doc" />
+                  {formatMessage(Pages.termsOfService.link.label)}
+                </RouterLink>
+                <RouterLink to={Pages.privacyPolicy.path} onClick={onClose}>
+                  <StrokeIcon className={styles.utilIcon} name="shield" />
+                  {formatMessage(Pages.privacyPolicy.link.label)}
+                </RouterLink>
+              </div>
             </div>
           </>
         )}

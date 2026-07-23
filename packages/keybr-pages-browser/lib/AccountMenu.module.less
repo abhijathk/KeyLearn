@@ -21,6 +21,10 @@ button.anchor > * {
   gap: 0.75rem;
   inline-size: 15rem;
   padding: 1rem;
+  border: var(--separator-border);
+  border-radius: 0.9rem;
+  background-color: var(--background-color);
+  box-shadow: 0 1rem 3rem var(--shadow-color, rgba(0, 0, 0, 0.4));
 }
 
 .link {
@@ -39,44 +43,6 @@ button.anchor > * {
       var(--primary-l2)
     );
   }
-}
-
-.switcher {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding-block-end: 0.75rem;
-  border-block-end: 1px solid var(--separator-color, rgba(128, 128, 128, 0.3));
-}
-
-.switcherLabel {
-  color: var(--text-color-f2, var(--text-color-f1));
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.avatars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.avatarPick {
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
-}
-
-.avatarPickOn {
-  padding: 0;
-  border: 2px solid var(--accent, currentColor);
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
 }
 
 .linkGhost {
