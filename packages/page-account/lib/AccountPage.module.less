@@ -1,0 +1,187 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  inline-size: min(44rem, 96vi);
+  margin-inline: auto;
+  padding-block: 2rem;
+}
+
+// ── identity header ────────────────────────────────────────────────────
+.identity {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-inline-size: 0;
+}
+
+.displayName {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.email {
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.85rem;
+}
+
+// ── cards ──────────────────────────────────────────────────────────────
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border: var(--separator-border);
+  border-radius: 1rem;
+  background: var(--primary-l1);
+}
+
+.cardHead {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.cardTitle {
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cardNote {
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.rowLabel {
+  font-weight: 600;
+}
+
+.rowSub {
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.78rem;
+}
+
+// ── premium ────────────────────────────────────────────────────────────
+.perks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    font-size: 0.88rem;
+
+    &::before {
+      content: "✓";
+      color: var(--accent-d1, var(--accent));
+      font-weight: 700;
+    }
+  }
+}
+
+// ── danger zone ────────────────────────────────────────────────────────
+.danger {
+  border-color: color-mix(
+    in srgb,
+    var(--error-color, #d0322e) 40%,
+    transparent
+  );
+}
+
+.dangerLink {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  color: var(--error-color, #d0322e);
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ── signed-out ─────────────────────────────────────────────────────────
+.signedOut {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  inline-size: min(30rem, 96vi);
+  margin-inline: auto;
+  padding-block: 3rem;
+  text-align: center;
+}
+
+.welcomeTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.ctaRow {
+  display: flex;
+  gap: 0.75rem;
+  margin-block-start: 0.5rem;
+}
+
+.ctaPrimary {
+  padding-inline: 1.75rem;
+  padding-block: 0.6rem;
+  border-radius: 999px;
+  color: var(--primary);
+  background: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ctaGhost {
+  padding-inline: 1.75rem;
+  padding-block: 0.6rem;
+  border: var(--separator-border);
+  border-radius: 999px;
+  color: var(--text-color);
+  text-decoration: none;
+}
+
+.altLogin {
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.85rem;
+}
+
+.altLoginLink {
+  color: var(--accent-d1, var(--accent));
+  font-weight: 600;
+  text-decoration: none;
+}

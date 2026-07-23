@@ -12,10 +12,6 @@ export type AccountActions = {
   readonly checkout: () => void;
 };
 
-export type SignInActions = {
-  readonly registerEmail: (email: string) => Promise<unknown>;
-};
-
 export function useAccountActions(props: {
   user: UserDetails;
   publicUser: AnyUser;
@@ -65,17 +61,6 @@ export function useAccountActions(props: {
       logout,
       checkout,
     } as AccountActions,
-  };
-}
-
-export function useSignInActions() {
-  const registerEmail = (email: string) => {
-    return AccountService.registerEmail(email);
-  };
-  return {
-    actions: {
-      registerEmail,
-    } as SignInActions,
   };
 }
 

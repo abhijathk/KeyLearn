@@ -1,3 +1,7 @@
-import { ProfilesPage } from "../profiles/ProfilesPage.tsx";
+import { Pages } from "@keybr/pages-shared";
+import { Navigate } from "react-router";
 
-export default ProfilesPage;
+// Profiles now live inside the account page; keep the old path working.
+export default function Page() {
+  return <Navigate to={Pages.account.path} replace={true} />;
+}

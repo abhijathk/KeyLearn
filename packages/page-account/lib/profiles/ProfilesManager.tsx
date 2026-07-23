@@ -1,9 +1,8 @@
-import { Pages, usePageData } from "@keybr/pages-shared";
 import { Button, Field, FieldList, TextField } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { NavLink, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { AVATAR_PRESETS, photoToDataUrl } from "./avatars.ts";
 import { useProfiles } from "./context.tsx";
 import { ParentGate } from "./ParentGate.tsx";
@@ -16,48 +15,21 @@ type Editing =
   | { readonly mode: "edit"; readonly profile: Profile }
   | null;
 
-export function ProfilesPage(): ReactNode {
+/**
+ * The household profile manager, embedded in the account page: a row of
+ * learner tiles to switch between, plus add / edit / delete behind a
+ * grown-ups-only gate. The caller only shows it to a signed-in admin.
+ */
+export function ProfilesManager(): ReactNode {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
-  const { publicUser } = usePageData();
   const { household, active, add, update, remove, select } = useProfiles();
   const [editing, setEditing] = useState<Editing>(null);
-  // A single gate guards every admin action; once passed it stays open for
-  // this visit to the page.
+  // One gate covers every admin action; once passed it stays open for the visit.
   const [unlocked, setUnlocked] = useState(false);
   const [gateNext, setGateNext] = useState<(() => void) | null>(null);
 
-  // The household belongs to the signed-in account, so profiles can only be
-  // set up once you're logged in. Existing profiles can still be switched.
-  const signedIn = publicUser.id != null;
-  if (!signedIn && household.profiles.length === 0) {
-    return (
-      <div className={styles.page}>
-        <h1 className={styles.title}>
-          <FormattedMessage
-            id="profiles.title"
-            defaultMessage="Who's learning today?"
-          />
-        </h1>
-        <p className={styles.hint}>
-          <FormattedMessage
-            id="profiles.needLogin"
-            defaultMessage="Log in to set up profiles for your household — one for each learner."
-          />
-        </p>
-        <NavLink className={styles.loginCta} to={Pages.login.path}>
-          <FormattedMessage id="t_Log_In" defaultMessage="Log In" />
-        </NavLink>
-      </div>
-    );
-  }
-
   const guard = (action: () => void) => {
-    // Managing profiles is an admin action — require the account first.
-    if (!signedIn) {
-      navigate(Pages.login.path);
-      return;
-    }
     if (unlocked) {
       action();
     } else {
@@ -71,14 +43,7 @@ export function ProfilesPage(): ReactNode {
   };
 
   return (
-    <div className={styles.page}>
-      <h1 className={styles.title}>
-        <FormattedMessage
-          id="profiles.title"
-          defaultMessage="Who's learning today?"
-        />
-      </h1>
-
+    <div className={styles.manager}>
       <div className={styles.grid}>
         {household.profiles.map((p) => (
           <div key={p.id} className={styles.tileWrap}>
@@ -89,7 +54,7 @@ export function ProfilesPage(): ReactNode {
               )}
               onClick={() => openProfile(p)}
             >
-              <ProfileAvatar avatar={p.avatar} name={p.firstName} size={88} />
+              <ProfileAvatar avatar={p.avatar} name={p.firstName} size={72} />
               <span className={styles.tileName}>{p.firstName}</span>
               <span className={styles.tileKind}>
                 {p.kind === "kid" ? (

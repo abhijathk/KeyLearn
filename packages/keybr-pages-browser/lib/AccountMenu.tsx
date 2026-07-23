@@ -1,11 +1,10 @@
+import { ProfileAvatar, useProfiles } from "@keybr/page-account";
 import { Avatar, Pages, usePageData } from "@keybr/pages-shared";
 import { type AnchorProps, getBoundingBox, Popover } from "@keybr/widget";
 import { type ReactNode, useImperativeHandle, useRef, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { NavLink, useNavigate } from "react-router";
 import * as styles from "./AccountMenu.module.less";
-import { useProfiles } from "./profiles/context.tsx";
-import { ProfileAvatar } from "./profiles/ProfileAvatar.tsx";
 
 // The Popover injects an `anchor` ref and measures it with getBoundingBox();
 // a plain <button> drops that ref, so the anchor must forward it.
@@ -121,7 +120,7 @@ function ProfileSwitcher({
     return (
       <NavLink
         className={styles.link}
-        to={signedIn ? Pages.profiles.path : Pages.login.path}
+        to={signedIn ? Pages.account.path : Pages.login.path}
         onClick={onNavigate}
       >
         {signedIn ? (
@@ -164,7 +163,7 @@ function ProfileSwitcher({
       </div>
       <NavLink
         className={styles.linkGhost}
-        to={Pages.profiles.path}
+        to={Pages.account.path}
         onClick={onNavigate}
       >
         <FormattedMessage

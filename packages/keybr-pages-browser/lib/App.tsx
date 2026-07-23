@@ -1,4 +1,5 @@
 import { ErrorHandler } from "@keybr/debug";
+import { ProfilesProvider } from "@keybr/page-account";
 import {
   getPageData,
   LoadingProgress,
@@ -13,7 +14,6 @@ import { createRoot } from "react-dom/client";
 import { useIntl } from "react-intl";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { IntlLoader } from "./loader/IntlLoader.tsx";
-import { ProfilesProvider } from "./profiles/context.tsx";
 import { Template } from "./Template.tsx";
 import { ThemeProvider } from "./themes/ThemeProvider.tsx";
 import { Title } from "./Title.tsx";

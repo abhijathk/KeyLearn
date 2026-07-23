@@ -2,10 +2,12 @@ import { test } from "node:test";
 import { FakeIntlProvider } from "@keybr/intl";
 import { PageDataContext } from "@keybr/pages-shared";
 import { render } from "@testing-library/react";
-import { isNotNull, isNull } from "rich-assert";
+import { MemoryRouter } from "react-router";
+import { isNotNull } from "rich-assert";
 import { AccountPage } from "./AccountPage.tsx";
+import { ProfilesProvider } from "./profiles/context.tsx";
 
-test("render sign-in fragment", () => {
+test("render signed-out account page", () => {
   const r = render(
     <PageDataContext.Provider
       value={{
@@ -13,27 +15,30 @@ test("render sign-in fragment", () => {
         locale: "en",
         user: null,
         publicUser: {
-          id: "xyz",
+          id: null,
           name: "name",
           imageUrl: null,
-          premium: false,
         },
         settings: null,
       }}
     >
-      <FakeIntlProvider>
-        <AccountPage />
-      </FakeIntlProvider>
+      <MemoryRouter>
+        <FakeIntlProvider>
+          <ProfilesProvider>
+            <AccountPage />
+          </ProfilesProvider>
+        </FakeIntlProvider>
+      </MemoryRouter>
     </PageDataContext.Provider>,
   );
 
-  isNotNull(r.queryByText("Unknown User", { exact: false }));
-  isNull(r.queryByText("Your typing data is backed up to the cloud", { exact: false }));
+  isNotNull(r.queryByText("Register", { exact: false }));
+  isNotNull(r.queryByText("Log In", { exact: false }));
 
   r.unmount();
 });
 
-test("render account fragment", () => {
+test("render signed-in account page", () => {
   const r = render(
     <PageDataContext.Provider
       value={{
@@ -44,16 +49,7 @@ test("render account fragment", () => {
           email: "name@keybr.com",
           name: "name",
           anonymized: false,
-          externalId: [
-            {
-              provider: "custom",
-              id: "externalId",
-              name: "externalName",
-              url: "externalUrl",
-              imageUrl: "externalImageUrl",
-              createdAt: "2001-02-03T04:05:06.789Z",
-            },
-          ],
+          externalId: [],
           order: null,
           createdAt: "2001-02-03T04:05:06.789Z",
         },
@@ -61,19 +57,25 @@ test("render account fragment", () => {
           id: "xyz",
           name: "name",
           imageUrl: null,
-          premium: false,
+          // Premium avoids the Paddle price-preview path, which needs the
+          // third-party script that isn't loaded in tests.
+          premium: true,
         },
         settings: null,
       }}
     >
-      <FakeIntlProvider>
-        <AccountPage />
-      </FakeIntlProvider>
+      <MemoryRouter>
+        <FakeIntlProvider>
+          <ProfilesProvider>
+            <AccountPage />
+          </ProfilesProvider>
+        </FakeIntlProvider>
+      </MemoryRouter>
     </PageDataContext.Provider>,
   );
 
-  isNull(r.queryByText("Unknown User", { exact: false }));
-  isNotNull(r.queryByText("Your typing data is backed up to the cloud", { exact: false }));
+  isNotNull(r.queryByText("name@keybr.com", { exact: false }));
+  isNotNull(r.queryByText("Hide my identity", { exact: false }));
 
   r.unmount();
 });
