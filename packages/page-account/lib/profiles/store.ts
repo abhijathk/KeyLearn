@@ -64,7 +64,13 @@ function newId(): string {
   return "p" + Math.random().toString(36).slice(2, 9);
 }
 
+/** A household holds at most this many profiles, kids and grown-ups mixed. */
+export const MAX_PROFILES = 4;
+
 export function addProfile(h: Household, data: Omit<Profile, "id">): Household {
+  if (h.profiles.length >= MAX_PROFILES) {
+    return h; // The UI hides the add tile at the cap; this is the backstop.
+  }
   const profile: Profile = { ...data, id: newId() };
   return {
     profiles: [...h.profiles, profile],

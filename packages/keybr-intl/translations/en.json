@@ -323,6 +323,7 @@
   "profiles.gate.wrong": "Not quite — try again.",
   "profiles.kid": "Kid",
   "profiles.lastName": "Last name (optional)",
+  "profiles.maxReached": "A household can have up to {max} profiles — kids and grown-ups in any mix. Delete one to add another.",
   "profiles.needName": "Please enter a first name.",
   "profiles.save": "Save",
   "profiles.uploadPhoto": "Photo…",

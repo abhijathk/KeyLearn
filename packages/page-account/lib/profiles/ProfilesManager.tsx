@@ -8,7 +8,12 @@ import { useProfiles } from "./context.tsx";
 import { ParentGate } from "./ParentGate.tsx";
 import { ProfileAvatar } from "./ProfileAvatar.tsx";
 import * as styles from "./Profiles.module.less";
-import { type Avatar, type Profile, type ProfileKind } from "./store.ts";
+import {
+  type Avatar,
+  MAX_PROFILES,
+  type Profile,
+  type ProfileKind,
+} from "./store.ts";
 
 type Editing =
   | { readonly mode: "add" }
@@ -84,19 +89,31 @@ export function ProfilesManager(): ReactNode {
           </div>
         ))}
 
-        <button
-          className={clsx(styles.tile, styles.tileAdd)}
-          onClick={() => guard(() => setEditing({ mode: "add" }))}
-        >
-          <span className={styles.plus}>+</span>
-          <span className={styles.tileName}>
-            <FormattedMessage
-              id="profiles.add"
-              defaultMessage="Add a profile"
-            />
-          </span>
-        </button>
+        {household.profiles.length < MAX_PROFILES && (
+          <button
+            className={clsx(styles.tile, styles.tileAdd)}
+            onClick={() => guard(() => setEditing({ mode: "add" }))}
+          >
+            <span className={styles.plus}>+</span>
+            <span className={styles.tileName}>
+              <FormattedMessage
+                id="profiles.add"
+                defaultMessage="Add a profile"
+              />
+            </span>
+          </button>
+        )}
       </div>
+
+      {household.profiles.length >= MAX_PROFILES && (
+        <p className={styles.hint}>
+          <FormattedMessage
+            id="profiles.maxReached"
+            defaultMessage="A household can have up to {max} profiles — kids and grown-ups in any mix. Delete one to add another."
+            values={{ max: MAX_PROFILES }}
+          />
+        </p>
+      )}
 
       {active != null && (
         <p className={styles.hint}>
