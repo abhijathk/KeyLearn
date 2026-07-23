@@ -3,15 +3,14 @@ import {
   Avatar,
   isPremiumUser,
   Pages,
-  Screen,
   usePageData,
   type UserDetails,
 } from "@keybr/pages-shared";
-import { Button, CheckBox, Icon } from "@keybr/widget";
+import { Button, CheckBox, Icon, StrokeIcon } from "@keybr/widget";
 import { mdiCreditCard } from "@mdi/js";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import * as styles from "./AccountPage.module.less";
 import { AccountPricePreview } from "./AccountPricePreview.tsx";
 import { useAccountActions } from "./actions.ts";
@@ -26,6 +25,58 @@ export function AccountPage() {
   return <SignedOut />;
 }
 
+// The account floats over the app like the settings window — a dimmed,
+// blurred backdrop and a centred panel in the road design language.
+function FloatingShell({
+  title,
+  children,
+}: {
+  readonly title: ReactNode;
+  readonly children: ReactNode;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const navigate = useNavigate();
+  const close = () => navigate("/");
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        close();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <div
+      className={styles.overlay}
+      role="presentation"
+      onClick={(ev) => {
+        if (ev.target === ev.currentTarget) {
+          close();
+        }
+      }}
+    >
+      <div className={styles.window} role="dialog" aria-modal={true}>
+        <div className={styles.windowHead}>
+          <span className={styles.windowTitle}>{title}</span>
+          <button
+            className={styles.windowClose}
+            title={formatMessage({
+              id: "account.close",
+              defaultMessage: "Close and return to practice",
+            })}
+            onClick={close}
+          >
+            <StrokeIcon name="close" />
+          </button>
+        </div>
+        <div className={styles.windowBody}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
 function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   const { formatMessage } = useIntl();
   const { user, publicUser, actions } = useAccountActions(props);
@@ -33,7 +84,9 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   const [confirm, setConfirm] = useState<"logout" | "delete" | null>(null);
 
   return (
-    <Screen>
+    <FloatingShell
+      title={<FormattedMessage id="t_Account" defaultMessage="Account" />}
+    >
       <div className={styles.page}>
         <div className={styles.identity}>
           <Avatar user={publicUser} size="large" />
@@ -223,13 +276,15 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
           />
         )}
       </div>
-    </Screen>
+    </FloatingShell>
   );
 }
 
 function SignedOut(): ReactNode {
   return (
-    <Screen>
+    <FloatingShell
+      title={<FormattedMessage id="t_Account" defaultMessage="Account" />}
+    >
       <div className={styles.signedOut}>
         <h1 className={styles.welcomeTitle}>
           <FormattedMessage
@@ -252,6 +307,6 @@ function SignedOut(): ReactNode {
           </NavLink>
         </div>
       </div>
-    </Screen>
+    </FloatingShell>
   );
 }
