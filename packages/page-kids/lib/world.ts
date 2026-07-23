@@ -84,6 +84,9 @@ const RUN_LEN = 40;
 const TRAIL_END = 150;
 const groundY = (x: number) =>
   Math.sin(x * 0.045) * 1.6 + Math.sin(x * 0.011 + 1.7) * 2.4;
+/** The trail wanders a little, like feet chose it — never far from the lane. */
+const meander = (x: number) =>
+  Math.sin(x * 0.07) * 0.7 + Math.sin(x * 0.023 + 2.1) * 0.4;
 
 type DinoRig = {
   readonly wrap: THREE.Group;
@@ -228,11 +231,17 @@ export function createKidsWorld(
       if (patch > 0.62) {
         tmp.lerp(cDirt, (patch - 0.62) * 0.9);
       }
+      const halfWidth =
+        (land.path === "sand" ? 2.2 : 1.6) + noise2(x * 0.17, 3.1) * 0.45;
       const pathBlend = Math.max(
         0,
-        1 - Math.abs(z) / (land.path === "sand" ? 2.2 : 1.5),
+        1 - Math.abs(z - meander(x)) / Math.max(1, halfWidth),
       );
-      tmp.lerp(cDirt, pathBlend * (land.path === "stones" ? 0.38 : 0.85));
+      tmp.lerp(cDirt, pathBlend * (land.path === "stones" ? 0.5 : 0.85));
+      if (pathBlend > 0.55) {
+        // the packed, well-trodden core of the trail is a shade deeper
+        tmp.lerp(cDirt.clone().multiplyScalar(0.82), (pathBlend - 0.55) * 0.7);
+      }
       colors[i * 3] = tmp.r;
       colors[i * 3 + 1] = tmp.g;
       colors[i * 3 + 2] = tmp.b;
@@ -252,24 +261,81 @@ export function createKidsWorld(
     ground.receiveShadow = true;
     scene.add(ground);
 
+    const dummy = new THREE.Object3D();
+    const tint = new THREE.Color();
     if (land.path === "stones") {
-      const count = 95;
+      // Hand-laid slabs: no two alike — each gets its own warm-grey tint,
+      // an elliptical squash, a lean into the hillside, and a real shadow.
+      const count = 110;
       const stones = new THREE.InstancedMesh(
-        jitterGeo(new THREE.CylinderGeometry(1.05, 1.2, 0.16, 8), 0.11),
-        new THREE.MeshStandardMaterial({ color: 0x9c948a, roughness: 1 }),
+        jitterGeo(new THREE.CylinderGeometry(1, 1.18, 0.2, 7), 0.16),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 }),
         count,
       );
-      const dummy = new THREE.Object3D();
+      const cStone = new THREE.Color(0x9c948a);
+      const cWarm = new THREE.Color(land.dirt);
+      let sx = -40;
       for (let i = 0; i < count; i++) {
-        const sx = -40 + i * 2.1 + Math.random() * 0.8;
-        dummy.position.set(sx, groundY(sx) + 0.05, (Math.random() - 0.5) * 1.6);
-        dummy.rotation.y = Math.random() * Math.PI;
-        dummy.scale.setScalar(0.75 + Math.random() * 0.55);
+        sx += 1.35 + Math.random() * 1.15;
+        const sz = meander(sx) + (Math.random() - 0.5) * 1.5;
+        const slope = (groundY(sx + 0.6) - groundY(sx - 0.6)) / 1.2;
+        dummy.position.set(sx, groundY(sx) + 0.04, sz);
+        dummy.rotation.set(
+          (Math.random() - 0.5) * 0.1,
+          Math.random() * Math.PI,
+          -slope * 0.5 + (Math.random() - 0.5) * 0.1,
+        );
+        const base = 0.55 + Math.random() * 0.6;
+        dummy.scale.set(
+          base * (0.85 + Math.random() * 0.5),
+          1,
+          base * (0.85 + Math.random() * 0.5),
+        );
         dummy.updateMatrix();
         stones.setMatrixAt(i, dummy.matrix);
+        tint
+          .copy(cStone)
+          .lerp(cWarm, Math.random() * 0.35)
+          .multiplyScalar(0.9 + Math.random() * 0.25);
+        stones.setColorAt(i, tint);
       }
+      stones.castShadow = true;
       stones.receiveShadow = true;
       scene.add(stones);
+    }
+
+    // Pebbles kicked to the edges of the trail — every land has them.
+    {
+      const count = 130;
+      const pebbles = new THREE.InstancedMesh(
+        new THREE.DodecahedronGeometry(0.14, 0),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 }),
+        count,
+      );
+      const cPebble = new THREE.Color(0x8f887c);
+      const cDust = new THREE.Color(land.dirt);
+      for (let i = 0; i < count; i++) {
+        const px = -40 + Math.random() * (TRAIL_END + 40);
+        const side = Math.random() > 0.5 ? 1 : -1;
+        const pz = meander(px) + side * (1.3 + Math.random() * 1.6);
+        dummy.position.set(px, groundY(px) + 0.05, pz);
+        dummy.rotation.set(
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+        );
+        dummy.scale.setScalar(0.5 + Math.random() * 1.1);
+        dummy.updateMatrix();
+        pebbles.setMatrixAt(i, dummy.matrix);
+        tint
+          .copy(cPebble)
+          .lerp(cDust, Math.random() * 0.5)
+          .multiplyScalar(0.85 + Math.random() * 0.3);
+        pebbles.setColorAt(i, tint);
+      }
+      pebbles.castShadow = true;
+      pebbles.receiveShadow = true;
+      scene.add(pebbles);
     }
   }
 
