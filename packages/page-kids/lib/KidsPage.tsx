@@ -226,16 +226,26 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     prevIncluded.current = included;
   }, [included]);
 
-  // A fresh passage whenever the lesson or the stats move on.
+  // A fresh passage whenever the lesson or the stats move on. Kids runs are
+  // short — 6 words to start, one more for every few unlocked keys, capped at
+  // 10. Only a kid with the whole alphabet on their trail gets the full
+  // grown-up passage.
   useEffect(() => {
-    const text = lesson.generate(lessonKeys, Lesson.rng);
-    passageRef.current = flattenStyledText(text);
-    textInputRef.current = new TextInput(text, toTextInputSettings(settings));
+    let flat = flattenStyledText(lesson.generate(lessonKeys, Lesson.rng));
+    if (included < lesson.letters.length) {
+      const wordCount = Math.min(
+        10,
+        6 + Math.floor(Math.max(0, included - 6) / 5),
+      );
+      flat = flat.split(" ").slice(0, wordCount).join(" ");
+    }
+    passageRef.current = flat;
+    textInputRef.current = new TextInput(flat, toTextInputSettings(settings));
     lastStampRef.current = 0;
     missStreakRef.current = 0;
     worldRef.current?.setProgress(0);
     forceTick();
-  }, [lesson, lessonKeys, settings, regenNonce]);
+  }, [lesson, lessonKeys, included, settings, regenNonce]);
 
   const saveBest = (s: number) => {
     setBest((b) => {
