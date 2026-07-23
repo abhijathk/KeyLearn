@@ -1,7 +1,6 @@
 import { catchError } from "@keybr/debug";
 import { type AnyUser, type UserDetails } from "@keybr/pages-shared";
 import { useState } from "react";
-import { useIntl } from "react-intl";
 import { checkoutProduct } from "./checkout.ts";
 import { AccountService, type PatchAccountRequest } from "./service.ts";
 
@@ -16,7 +15,6 @@ export function useAccountActions(props: {
   user: UserDetails;
   publicUser: AnyUser;
 }) {
-  const { formatMessage } = useIntl();
   const [{ user, publicUser }, setState] = useState(props);
 
   const patchAccount = (request: PatchAccountRequest) => {
@@ -27,21 +25,14 @@ export function useAccountActions(props: {
       .catch(catchError);
   };
 
+  // Confirmation now happens in a custom dialog on the account page, so these
+  // just perform the action.
   const deleteAccount = () => {
-    const message = formatMessage({
-      id: "account.deleteAccount.message",
-      defaultMessage:
-        "Delete your account for good? " +
-        "This can't be undone — " +
-        "though you're always welcome to create a new account later.",
-    });
-    if (window.confirm(message)) {
-      AccountService.deleteAccount()
-        .then(() => {
-          reload("/");
-        })
-        .catch(catchError);
-    }
+    AccountService.deleteAccount()
+      .then(() => {
+        reload("/");
+      })
+      .catch(catchError);
   };
 
   const logout = () => {

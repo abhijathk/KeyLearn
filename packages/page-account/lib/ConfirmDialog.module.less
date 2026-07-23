@@ -1,0 +1,66 @@
+.scrim {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(20, 24, 40, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  inline-size: min(26rem, 100%);
+  padding: 1.5rem;
+  border: var(--separator-border);
+  border-radius: 1rem;
+  background: var(--background-color, #1c2030);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  animation: pop 0.18s ease-out;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.message {
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin-block-start: 0.5rem;
+}
+
+.confirm {
+  padding-inline: 1.25rem;
+  padding-block: 0.5rem;
+  border: var(--separator-border);
+  border-radius: 999px;
+  color: var(--primary);
+  background: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirmDanger {
+  border-color: transparent;
+  color: #fff;
+  background: var(--error-color, #d0322e);
+}

@@ -1,8 +1,11 @@
 {
   "account.anonymize.label": "Hide my identity",
   "account.anonymize.sub": "Show a generated name and picture on leaderboards and multiplayer instead of your own.",
+  "account.delete.confirmTitle": "Delete your account?",
   "account.delete.note": "Permanently erases your name and email from our servers. This can't be undone. Your learner profiles stay on this device.",
-  "account.deleteAccount.message": "Delete your account for good? This can't be undone — though you're always welcome to create a new account later.",
+  "account.deleteAccount.message": "This permanently erases your name and email from our servers and can't be undone. You're always welcome to create a new account later.",
+  "account.logout.confirmMessage": "You'll need to log back in to sync your progress. Learner profiles stay on this device.",
+  "account.logout.confirmTitle": "Log out?",
   "account.perk.ads": "No ads, ever.",
   "account.perk.speed": "Faster pages. One-time purchase, lifetime access.",
   "account.perk.trackers": "No trackers — full privacy.",
