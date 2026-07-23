@@ -735,7 +735,8 @@ export function createLoaderScene(canvas: HTMLCanvasElement): {
     0.1,
     100,
   );
-  cam.position.set(-6, 2.4, 8);
+  // Straight-on side profile — the runner crosses the frame, no angle.
+  cam.position.set(0, 1.6, 10);
   cam.lookAt(0, 1.3, 0);
   let mixer: THREE.AnimationMixer | null = null;
   let disposed = false;
