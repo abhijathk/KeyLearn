@@ -1,8 +1,10 @@
+import { usePageData } from "@keybr/pages-shared";
 import {
   createContext,
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -37,6 +39,8 @@ export function ProfilesProvider({
 }: {
   readonly children: ReactNode;
 }) {
+  const { publicUser } = usePageData();
+  const signedIn = publicUser.id != null;
   const [household, setHousehold] = useState<Household>(loadHousehold);
 
   const commit = useCallback((next: Household) => {
@@ -44,10 +48,20 @@ export function ProfilesProvider({
     setHousehold(next);
   }, []);
 
+  // Profiles belong to the signed-in account. After a logout the household
+  // data stays on the device, but no profile may remain selected — the app
+  // falls back to the anonymous experience until someone logs back in.
+  useEffect(() => {
+    if (!signedIn && household.activeId != null) {
+      commit(setActive(household, null));
+    }
+  }, [signedIn, household, commit]);
+
   const value = useMemo<ProfilesContextValue>(() => {
-    const active = activeProfile(household);
+    const active = signedIn ? activeProfile(household) : null;
     return {
-      household,
+      // Signed out, the household presents as empty — no tiles, no switcher.
+      household: signedIn ? household : { profiles: [], activeId: null },
       active,
       namespace: historyNamespace(active),
       add: (data) => commit(addProfile(household, data)),
@@ -55,7 +69,7 @@ export function ProfilesProvider({
       remove: (id) => commit(removeProfile(household, id)),
       select: (id) => commit(setActive(household, id)),
     };
-  }, [household, commit]);
+  }, [signedIn, household, commit]);
 
   return (
     <ProfilesContext.Provider value={value}>
