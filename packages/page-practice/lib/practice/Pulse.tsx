@@ -20,6 +20,7 @@ import {
   memo,
   type ReactNode,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -50,7 +51,7 @@ export const Pulse = memo(function Pulse({
   const { formatMessage } = useIntl();
   const { formatNumber, formatPercents } = useIntlNumbers();
   const { formatSpeed, formatConfidence, speedUnit } = useFormatter();
-  const { settings } = useSettings();
+  const { settings, updateSettings } = useSettings();
   const target = settings.get(lessonProps.targetSpeed);
   const { count, speed, accuracy, score } = summaryStats;
   const hasData = count > 0;
@@ -139,12 +140,19 @@ export const Pulse = memo(function Pulse({
                 "You are here — your latest speed on the way to the goal.",
             })}
           >
-            <span
-              className={styles.roadDone}
-              style={{ flexBasis: `${frac * 100}%` }}
-            />
-            <span className={clsx(styles.you, reached && styles.youReached)} />
-            <span className={styles.roadAhead} />
+            {/* The track splits done:ahead by flex-grow so the fill is always
+                exactly proportional; the goal label sits outside it and can't
+                collapse the "still to go" dashes. */}
+            <span className={styles.track}>
+              <span className={styles.roadDone} style={{ flexGrow: frac }} />
+              <span
+                className={clsx(styles.you, reached && styles.youReached)}
+              />
+              <span
+                className={styles.roadAhead}
+                style={{ flexGrow: 1 - frac }}
+              />
+            </span>
             <span className={clsx(styles.goal, crossed && styles.goalLit)}>
               <svg
                 className={styles.flag}
@@ -154,7 +162,8 @@ export const Pulse = memo(function Pulse({
                 <path d="M3 15V2m0 0h8l-2.5 3L11 8H3" />
               </svg>
               {formatSpeed(target)}
-              {/* Once the goal is reached the flag simply pulses — no label. */}
+              {/* Before the goal: a quiet "% of the way" hint. After it: the
+                  flag pulses and a small −/+ appears to retune the goal. */}
               {hasData && !reached && (
                 <em className={styles.pct}>
                   <FormattedMessage
@@ -164,6 +173,13 @@ export const Pulse = memo(function Pulse({
                   />
                 </em>
               )}
+              <GoalTuner
+                target={target}
+                reached={reached}
+                onChange={(next) =>
+                  updateSettings(settings.set(lessonProps.targetSpeed, next))
+                }
+              />
             </span>
           </div>
 
@@ -183,16 +199,21 @@ export const Pulse = memo(function Pulse({
                 </span>
                 {keyCalibrated ? (
                   <>
-                    <span
-                      className={clsx(styles.roadDone, styles.microDone)}
-                      style={{ flexBasis: `${conf * 100}%` }}
-                    />
-                    <span className={clsx(styles.you, styles.microYou)} />
-                    <span
-                      className={styles.bestMark}
-                      style={{ insetInlineStart: `${best * 100}%` }}
-                    />
-                    <span className={styles.roadAhead} />
+                    <span className={styles.track}>
+                      <span
+                        className={clsx(styles.roadDone, styles.microDone)}
+                        style={{ flexGrow: conf }}
+                      />
+                      <span className={clsx(styles.you, styles.microYou)} />
+                      <span
+                        className={styles.roadAhead}
+                        style={{ flexGrow: 1 - conf }}
+                      />
+                      <span
+                        className={styles.bestMark}
+                        style={{ insetInlineStart: `${best * 100}%` }}
+                      />
+                    </span>
                     <svg
                       className={styles.star}
                       viewBox="0 0 14 14"
@@ -319,6 +340,98 @@ export const Pulse = memo(function Pulse({
     </div>
   );
 });
+
+/**
+ * The tiny −/+ that lets the learner retune their goal the moment they reach
+ * it. It shows as soon as the goal is met and lingers there; only once the
+ * learner has nudged the goal and then left it alone for ten seconds does it
+ * fade away. Raising the goal past the current speed un-lights the flag, which
+ * also tucks the tuner away. Steps snap to fives, exactly like the settings
+ * control, and stay clamped to the target-speed bounds.
+ */
+function GoalTuner({
+  target,
+  reached,
+  onChange,
+}: {
+  readonly target: number;
+  readonly reached: boolean;
+  readonly onChange: (next: number) => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const [dismissed, setDismissed] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const clear = () => {
+    if (timer.current != null) {
+      clearTimeout(timer.current);
+      timer.current = undefined;
+    }
+  };
+  // A fresh reach re-arms the tuner; leaving the reached state hides it.
+  useEffect(() => {
+    if (!reached) {
+      setDismissed(false);
+      clear();
+    }
+    return clear;
+  }, [reached]);
+
+  if (!reached || dismissed) {
+    return null;
+  }
+
+  const { min, max } = lessonProps.targetSpeed;
+  const nudge = (dir: number) => {
+    const next =
+      dir < 0
+        ? Math.max(min, Math.ceil(target / 5) * 5 - 5)
+        : Math.min(max, Math.floor(target / 5) * 5 + 5);
+    if (next !== target) {
+      onChange(next);
+    }
+    clear();
+    timer.current = setTimeout(() => {
+      setDismissed(true);
+    }, 10000);
+  };
+
+  return (
+    <span className={styles.tuner}>
+      <button
+        type="button"
+        className={styles.tune}
+        disabled={target <= min}
+        onClick={() => {
+          nudge(-1);
+        }}
+        title={formatMessage({
+          id: "practice.pulse.goalDown",
+          defaultMessage: "Lower the goal",
+        })}
+      >
+        <svg viewBox="0 0 12 12" aria-hidden={true}>
+          <path d="M2.5 6h7" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        className={styles.tune}
+        disabled={target >= max}
+        onClick={() => {
+          nudge(1);
+        }}
+        title={formatMessage({
+          id: "practice.pulse.goalUp",
+          defaultMessage: "Raise the goal",
+        })}
+      >
+        <svg viewBox="0 0 12 12" aria-hidden={true}>
+          <path d="M6 2.5v7M2.5 6h7" />
+        </svg>
+      </button>
+    </span>
+  );
+}
 
 /**
  * Live typing speed for the hero readout: listens for the controller's live

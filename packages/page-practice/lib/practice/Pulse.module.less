@@ -109,13 +109,25 @@
   block-size: 0.7rem;
 }
 
+// The proportional part of a road: the done fill, the "you" dot and the dashed
+// remainder split this by flex-grow, so the fill is always exactly to scale
+// regardless of the label that follows.
+.track {
+  display: flex;
+  position: relative;
+  flex: 1 1 auto;
+  align-items: center;
+  min-inline-size: 4rem;
+}
+
 // the macro line sits a half-step lower, framing the hero's midline
 .roadMacro {
   transform: translateY(0.55rem);
 }
 
 .roadDone {
-  flex: none;
+  // grow is set inline (= the completed fraction); basis 0 so grow alone sizes.
+  flex: 0 0 0;
   block-size: 2px;
   border-radius: 999px;
   background-image: linear-gradient(
@@ -177,13 +189,14 @@
 }
 
 .roadAhead {
-  flex: 1 1 auto;
+  // grow is set inline (= the remaining fraction); basis 0 so grow alone sizes.
+  flex: 0 0 0;
   block-size: 2px;
   margin-inline-start: 0.15rem;
   background-image: repeating-linear-gradient(
     to right,
-    var(--primary-d2) 0 2px,
-    transparent 2px 8px
+    color-mix(in oklab, var(--text-color-f1) 55%, transparent) 0 2px,
+    transparent 2px 7px
   );
 }
 
@@ -253,6 +266,72 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+// The −/+ retune control that surfaces once the goal is reached: two tiny
+// accent chips that fade in beside the pulsing flag.
+.tuner {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin-inline-start: 0.35rem;
+  animation: tunerin 0.25s ease both;
+}
+
+@keyframes tunerin {
+  from {
+    opacity: 0;
+    transform: translateX(-0.2rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tune {
+  display: grid;
+  place-items: center;
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  padding: 0;
+  border: 1px solid color-mix(in oklab, var(--accent) 45%, transparent);
+  border-radius: 50%;
+  color: var(--accent);
+  background-color: color-mix(in oklab, var(--accent) 12%, transparent);
+  cursor: pointer;
+  transition:
+    transform 0.1s ease,
+    background-color 0.1s ease;
+
+  svg {
+    inline-size: 0.72rem;
+    block-size: 0.72rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--accent) 24%, transparent);
+    transform: scale(1.12);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tuner {
+    animation: none;
+  }
 }
 
 // ---- the micro road ------------------------------------------------------

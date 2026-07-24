@@ -201,6 +201,8 @@
   "practice.lane.todayMinutes": "{done}/{goal}min",
   "practice.live.description": "Live speed — the running average while you type.",
   "practice.pulse.best": "Best",
+  "practice.pulse.goalDown": "Lower the goal",
+  "practice.pulse.goalUp": "Raise the goal",
   "practice.pulse.next": "next {next}",
   "practice.pulse.now": "now",
   "practice.pulse.pace": "Pace",
