@@ -45,6 +45,33 @@ type ProfilesContextValue = {
 
 const ProfilesContext = createContext<ProfilesContextValue | null>(null);
 
+// The "who's practising?" prompt is shown once per browser session.
+const PICK_KEY = "keylearn.pickDismissed";
+
+function pickDismissedInSession(): boolean {
+  try {
+    return sessionStorage.getItem(PICK_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function rememberPickDismissed(): void {
+  try {
+    sessionStorage.setItem(PICK_KEY, "1");
+  } catch {
+    // Storage may be unavailable.
+  }
+}
+
+function forgetPickDismissed(): void {
+  try {
+    sessionStorage.removeItem(PICK_KEY);
+  } catch {
+    // Storage may be unavailable.
+  }
+}
+
 export function ProfilesProvider({
   children,
 }: {
@@ -54,27 +81,37 @@ export function ProfilesProvider({
   const signedIn = publicUser.id != null;
   const cap = maxProfiles(isPremiumUser(publicUser));
   const [household, setHousehold] = useState<Household>(loadHousehold);
-  // The picker is offered once per page load; dismissing keeps the admin.
-  const [pickDismissed, setPickDismissed] = useState(false);
+  // "Who's practising?" is offered once per browser session for accounts with
+  // several grown-ups; the flag persists across reloads and is cleared on
+  // logout so the next sign-in asks again.
+  const [pickDismissed, setPickDismissed] = useState(pickDismissedInSession);
 
   const commit = useCallback((next: Household) => {
     saveHousehold(next);
     setHousehold(next);
+  }, []);
+  const markPicked = useCallback(() => {
+    rememberPickDismissed();
+    setPickDismissed(true);
   }, []);
 
   // Profiles belong to the signed-in account. After a logout the household
   // data stays on the device, but no profile may remain selected — the app
   // falls back to the anonymous experience until someone logs back in.
   useEffect(() => {
-    if (!signedIn && household.activeId != null) {
-      commit(setActive(household, null));
+    if (!signedIn) {
+      forgetPickDismissed();
+      setPickDismissed(false);
+      if (household.activeId != null) {
+        commit(setActive(household, null));
+      }
     }
   }, [signedIn, household, commit]);
 
   // On sign-in the default learner is always a grown-up, never a kid: with a
   // single grown-up profile it is selected automatically; with none, the app
   // stays on the admin account (and nudges to create profiles). Several
-  // grown-ups are ambiguous, so the picker asks who is practising.
+  // grown-ups are ambiguous, so the picker below asks who is practising.
   useEffect(() => {
     if (signedIn && household.activeId == null) {
       const adults = adultProfiles(household);
@@ -93,18 +130,19 @@ export function ProfilesProvider({
       active,
       namespace: historyNamespace(active),
       maxProfiles: cap,
-      needsPick:
-        signedIn && active == null && adults.length >= 2 && !pickDismissed,
+      // Ask even when a grown-up is already active from a previous session —
+      // several grown-ups share one account, so confirm who is here now.
+      needsPick: signedIn && adults.length >= 2 && !pickDismissed,
       add: (data) => commit(addProfile(household, data, cap)),
       update: (id, patch) => commit(updateProfile(household, id, patch)),
       remove: (id) => commit(removeProfile(household, id)),
       select: (id) => {
-        setPickDismissed(true);
+        markPicked();
         commit(setActive(household, id));
       },
-      dismissPick: () => setPickDismissed(true),
+      dismissPick: markPicked,
     };
-  }, [signedIn, household, commit, cap, pickDismissed]);
+  }, [signedIn, household, commit, cap, pickDismissed, markPicked]);
 
   return (
     <ProfilesContext.Provider value={value}>

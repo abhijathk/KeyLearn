@@ -37,7 +37,11 @@ export function ProfilePicker(): ReactNode {
         }
       }}
     >
-      <div className={shell.window} role="dialog" aria-modal={true}>
+      <div
+        className={`${shell.window} ${shell.compact}`}
+        role="dialog"
+        aria-modal={true}
+      >
         <div className={shell.windowHead}>
           <span className={shell.windowTitle}>
             <FormattedMessage

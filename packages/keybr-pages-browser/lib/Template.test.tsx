@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import { FakeIntlProvider } from "@keybr/intl";
+import { ProfilesProvider } from "@keybr/page-account";
 import { PageDataContext } from "@keybr/pages-shared";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
@@ -23,9 +24,11 @@ test("render", () => {
     >
       <FakeIntlProvider>
         <MemoryRouter>
-          <Template path="/page">
-            <div>hello</div>
-          </Template>
+          <ProfilesProvider>
+            <Template path="/page">
+              <div>hello</div>
+            </Template>
+          </ProfilesProvider>
         </MemoryRouter>
       </FakeIntlProvider>
     </PageDataContext.Provider>,
@@ -54,9 +57,11 @@ test("render alt", () => {
     >
       <FakeIntlProvider>
         <MemoryRouter>
-          <Template path="/page">
-            <div>hello</div>
-          </Template>
+          <ProfilesProvider>
+            <Template path="/page">
+              <div>hello</div>
+            </Template>
+          </ProfilesProvider>
         </MemoryRouter>
       </FakeIntlProvider>
     </PageDataContext.Provider>,
