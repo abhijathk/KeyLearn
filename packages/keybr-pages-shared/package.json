@@ -8,6 +8,7 @@
   "dependencies": {
     "@keybr/identicon": "*",
     "@keybr/intl": "*",
+    "@keybr/result": "*",
     "@keybr/widget": "*"
   },
   "devDependencies": {},

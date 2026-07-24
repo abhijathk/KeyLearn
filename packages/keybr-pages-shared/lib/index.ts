@@ -2,6 +2,7 @@ export * from "./Avatar.tsx";
 export * from "./LoadingProgress.tsx";
 export * from "./pagedata.tsx";
 export * from "./pages.ts";
+export * from "./ngram-store.ts";
 export * from "./profile-storage.ts";
 export * from "./Root.tsx";
 export * from "./Screen.tsx";

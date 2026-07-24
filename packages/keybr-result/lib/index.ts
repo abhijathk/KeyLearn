@@ -6,6 +6,7 @@ export * from "./fake.tsx";
 export * from "./group.ts";
 export * from "./keystats.ts";
 export * from "./localdate.ts";
+export * from "./ngramstats.ts";
 export * from "./recover.ts";
 export * from "./result.ts";
 export * from "./settings.ts";

@@ -1,14 +1,15 @@
 import { type LoadingEventListener } from "@keybr/lang";
 import { type Lesson, MutableDailyGoal } from "@keybr/lesson";
+import { loadNgramStats, saveNgramStats } from "@keybr/pages-shared";
 import {
   MutableKeyStatsMap,
   MutableStreakList,
   MutableSummaryStats,
+  type NgramStats,
   type Result,
 } from "@keybr/result";
 import { type Settings } from "@keybr/settings";
 import { type Step } from "@keybr/textinput";
-import { BigramTracker } from "./bigram-tracker.ts";
 import { DailyGoalEvents } from "./event-source-daily-goal.ts";
 import { LastRunEvents } from "./event-source-last-run.ts";
 import { LetterEvents } from "./event-source-letter.ts";
@@ -29,7 +30,9 @@ export class Progress {
   readonly #summaryStats: MutableSummaryStats;
   readonly #streakList: MutableStreakList;
   readonly #dailyGoal: MutableDailyGoal;
-  readonly #bigrams = new BigramTracker();
+  // Persisted per profile, so bottleneck targeting keeps improving across
+  // sessions and the profile page can chart your slowest transitions.
+  readonly #bigrams: NgramStats = loadNgramStats();
   // Timeline of your most recent completed run this session — cumulative ms at
   // which each character was reached. Replayed as the ghost racer so you pace
   // your last round. Not persisted (it lives only for the session).
@@ -149,6 +152,7 @@ export class Progress {
   /** Feed the raw keystroke stream of a finished round to the bigram tracker. */
   observeSteps(steps: readonly Step[]) {
     this.#bigrams.append(steps);
+    saveNgramStats(this.#bigrams);
   }
 
   /**

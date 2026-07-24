@@ -1,7 +1,11 @@
 import { keyboardProps, KeyboardProvider } from "@keybr/keyboard";
 import { Lesson, lessonProps, LessonType } from "@keybr/lesson";
 import { LessonLoader } from "@keybr/lesson-loader";
-import { profileStorageKey } from "@keybr/pages-shared";
+import {
+  loadNgramStats,
+  profileStorageKey,
+  saveNgramStats,
+} from "@keybr/pages-shared";
 import { MutableKeyStatsMap, Result, useResults } from "@keybr/result";
 import { SettingsContext, useSettings } from "@keybr/settings";
 import {
@@ -447,6 +451,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const streakRef = useRef(0);
   const stuckRef = useRef({ pos: -1, misses: 0 });
   const beckonedRef = useRef(false);
+  // Per-profile n-gram weakness stats: kids get the same bottleneck drill as
+  // grown-ups, accruing across sessions so awkward transitions get smoothed out.
+  const ngramsRef = useRef(loadNgramStats());
   const prevLettersRef = useRef<ReadonlySet<number> | null>(null);
   const ceremonyRef = useRef(ceremony);
   ceremonyRef.current = ceremony;
@@ -574,6 +581,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // come from the age band, growing by a word for every few unlocked keys.
   // Older kids graduate to the full grown-up passage sooner.
   useEffect(() => {
+    // Bottleneck drill: steer the next passage toward the child's slowest key
+    // transition, exactly as grown-up mode does.
+    if (settings.get(lessonProps.guided.bottleneckDrill)) {
+      const included = lessonKeys.findIncludedKeys();
+      const among = new Set(included.map(({ letter }) => letter.codePoint));
+      const worst = ngramsRef.current.worst(among);
+      if (worst != null) {
+        const target = included.find(
+          ({ letter }) => letter.codePoint === worst.to,
+        );
+        if (target != null) {
+          lessonKeys.focus(target.letter);
+        }
+      }
+    }
     let flat = flattenStyledText(lesson.generate(lessonKeys, Lesson.rng));
     if (included < lesson.letters.length && included < cfg.fullPassageAt) {
       const wordCount = Math.min(
@@ -796,6 +818,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           if (sounds) {
             kidsAudio.playPoint();
           }
+          // Learn this run's key transitions so the bottleneck drill improves.
+          ngramsRef.current.append(textInput.steps);
+          saveNgramStats(ngramsRef.current);
           const result = Result.fromStats(
             settings.get(keyboardProps.layout),
             settings.get(lessonProps.type).textType,
