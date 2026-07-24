@@ -1,6 +1,7 @@
 import {
   type BooksLesson,
   type CodeLesson,
+  type CurriculumLesson,
   type CustomTextLesson,
   type GuidedLesson,
   type Lesson,
@@ -16,6 +17,7 @@ import { type ReactNode } from "react";
 import { useIntl } from "react-intl";
 import { BooksLessonSettings } from "./lesson/BooksLessonSettings.tsx";
 import { CodeLessonSettings } from "./lesson/CodeLessonSettings.tsx";
+import { CurriculumLessonSettings } from "./lesson/CurriculumLessonSettings.tsx";
 import { CustomTextLessonSettings } from "./lesson/CustomTextLessonSettings.tsx";
 import { DailyGoalSettings } from "./lesson/DailyGoalSettings.tsx";
 import { GuidedLessonSettings } from "./lesson/GuidedLessonSettings.tsx";
@@ -31,6 +33,10 @@ export function LessonSettings(): ReactNode {
     formatMessage({
       id: "t_Guided_lessons",
       defaultMessage: "Guided practice",
+    }),
+    formatMessage({
+      id: "lessonType.curriculum.name",
+      defaultMessage: "Classic course",
     }),
     formatMessage({
       id: "t_Common_words",
@@ -89,6 +95,8 @@ function tabBody(settings: Settings, lesson: Lesson): ReactNode {
   switch (settings.get(lessonProps.type)) {
     case LessonType.GUIDED:
       return <GuidedLessonSettings lesson={lesson as GuidedLesson} />;
+    case LessonType.CURRICULUM:
+      return <CurriculumLessonSettings lesson={lesson as CurriculumLesson} />;
     case LessonType.WORDLIST:
       return <WordListLessonSettings lesson={lesson as WordListLesson} />;
     case LessonType.BOOKS:

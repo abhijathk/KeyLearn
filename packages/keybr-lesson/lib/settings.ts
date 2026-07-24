@@ -35,6 +35,10 @@ export const lessonProps = {
     // over real time; multiplies the classic confidence, so it runs alongside.
     skillDecay: booleanProp("lesson.guided.skillDecay", true),
   } as const,
+  curriculum: {
+    // How many new keys the classic curriculum introduces per stage.
+    stageSize: numberProp("lesson.curriculum.stageSize", 2, { min: 1, max: 5 }),
+  } as const,
   wordList: {
     wordListSize: numberProp("lesson.wordList.wordListSize", 1000, {
       min: 10,

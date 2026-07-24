@@ -3,6 +3,7 @@ import { TextType } from "@keybr/result";
 
 export class LessonType implements EnumItem {
   static readonly GUIDED = new LessonType("guided", TextType.GENERATED);
+  static readonly CURRICULUM = new LessonType("curriculum", TextType.GENERATED);
   static readonly WORDLIST = new LessonType("wordlist", TextType.NATURAL);
   static readonly BOOKS = new LessonType("books", TextType.NATURAL);
   static readonly CUSTOM = new LessonType("custom", TextType.NATURAL);
@@ -10,6 +11,7 @@ export class LessonType implements EnumItem {
   static readonly NUMBERS = new LessonType("numbers", TextType.NUMBERS);
   static readonly ALL = new Enum<LessonType>(
     LessonType.GUIDED,
+    LessonType.CURRICULUM,
     LessonType.WORDLIST,
     LessonType.BOOKS,
     LessonType.CUSTOM,

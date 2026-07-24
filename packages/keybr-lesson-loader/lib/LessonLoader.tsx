@@ -5,6 +5,7 @@ import { KeyboardOptions, useKeyboard } from "@keybr/keyboard";
 import {
   BooksLesson,
   CodeLesson,
+  CurriculumLesson,
   CustomTextLesson,
   GuidedLesson,
   type Lesson,
@@ -102,6 +103,12 @@ function useLoader(model: PhoneticModel): Lesson | null {
         case LessonType.CODE: {
           if (!didCancel) {
             setResult(new CodeLesson(settings, keyboard, model));
+          }
+          break;
+        }
+        case LessonType.CURRICULUM: {
+          if (!didCancel) {
+            setResult(new CurriculumLesson(settings, keyboard, model));
           }
           break;
         }
