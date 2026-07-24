@@ -143,7 +143,16 @@ export function Header({
             <StrokeIcon name="back" />
           </NavLink>
         )}
-        <NavLink to={kids ? "/kids" : "/"} className={styles.wordmark}>
+        <NavLink
+          to={kids ? "/kids" : "/"}
+          className={styles.wordmark}
+          title={formatMessage(
+            defineMessage({
+              id: "nav.home",
+              defaultMessage: "KeyLearn home",
+            }),
+          )}
+        >
           <StrokeIcon className={styles.glyph} name="keyboard" />
           <span className={styles.mark}>Key</span>
           <span className={styles.markAlt}>Learn</span>
