@@ -1,22 +1,23 @@
-import { StrokeIcon } from "@keybr/widget";
-import { type ReactNode } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { type ReactNode, useState } from "react";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
+import { ConfirmDialog } from "../ConfirmDialog.tsx";
 import * as shell from "../FloatingShell.module.less";
 import { useProfiles } from "./context.tsx";
 import { ProfileAvatar } from "./ProfileAvatar.tsx";
 import * as styles from "./ProfilePicker.module.less";
 
 /**
- * Shown once after signing in to an account that has several grown-ups and no
- * learner chosen yet: a floating window asking who is practising. Every
- * profile — kids and grown-ups — is offered; picking one switches to it, and
- * dismissing keeps the admin account for now.
+ * Shown once per session after signing in to an account that has several
+ * grown-ups: a compact floating window asking who is practising. Every profile
+ * — kids and grown-ups — is offered; picking one switches to it. There is no
+ * dismiss, only a small log-out button (with confirmation) to leave.
  */
 export function ProfilePicker(): ReactNode {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
-  const { needsPick, household, select, dismissPick } = useProfiles();
+  const { needsPick, household, select } = useProfiles();
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   if (!needsPick) {
     return null;
@@ -28,15 +29,7 @@ export function ProfilePicker(): ReactNode {
   };
 
   return (
-    <div
-      className={shell.overlay}
-      role="presentation"
-      onClick={(ev) => {
-        if (ev.target === ev.currentTarget) {
-          dismissPick();
-        }
-      }}
-    >
+    <div className={shell.overlay} role="presentation">
       <div
         className={`${shell.window} ${shell.compact}`}
         role="dialog"
@@ -50,14 +43,10 @@ export function ProfilePicker(): ReactNode {
             />
           </span>
           <button
-            className={shell.windowClose}
-            title={formatMessage({
-              id: "profiles.picker.dismiss",
-              defaultMessage: "Stay on the account",
-            })}
-            onClick={dismissPick}
+            className={styles.logoutBtn}
+            onClick={() => setConfirmLogout(true)}
           >
-            <StrokeIcon name="close" />
+            <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
           </button>
         </div>
         <div className={shell.windowBody}>
@@ -85,6 +74,30 @@ export function ProfilePicker(): ReactNode {
           </div>
         </div>
       </div>
+      {confirmLogout && (
+        <ConfirmDialog
+          title={formatMessage(
+            defineMessage({
+              id: "drawer.logout.title",
+              defaultMessage: "Log out?",
+            }),
+          )}
+          message={formatMessage(
+            defineMessage({
+              id: "drawer.logout.message",
+              defaultMessage:
+                "Practice history stays on this device and on your account. You can log back in any time.",
+            }),
+          )}
+          confirmLabel={formatMessage(
+            defineMessage({ id: "nav.logOut", defaultMessage: "Log out" }),
+          )}
+          onConfirm={() => {
+            window.location.href = "/auth/logout";
+          }}
+          onCancel={() => setConfirmLogout(false)}
+        />
+      )}
     </div>
   );
 }

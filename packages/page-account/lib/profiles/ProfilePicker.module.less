@@ -47,3 +47,25 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+
+// A small log-out button in the window header (replaces the close control).
+.logoutBtn {
+  padding: 0.3rem 0.7rem;
+  border: var(--separator-border);
+  border-radius: 0.5rem;
+  color: var(--error-color, #d0322e);
+  background: transparent;
+  font-family: var(--value-font-family);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--error-color, #d0322e);
+    background-color: color-mix(
+      in oklab,
+      var(--error-color, #d0322e) 12%,
+      transparent
+    );
+  }
+}
