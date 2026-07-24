@@ -38,6 +38,7 @@ import {
 } from "./charts.tsx";
 import { KeysViews } from "./KeysViews.tsx";
 import * as styles from "./road.module.less";
+import { SlowTransitions } from "./SlowTransitions.tsx";
 
 const propExplainSettings = booleanProp("prefs.profile.explain", true);
 
@@ -122,6 +123,8 @@ export function RoadProfile({
       <KeysViews keyStatsMap={keyStatsMap} confidenceOf={confidenceOf} />
       <Compared stats={stats} />
       <AccuracySection results={results} />
+      {/* Own profile only — the n-gram stats live in this browser's storage. */}
+      {user == null && <SlowTransitions keyStatsMap={keyStatsMap} />}
       <div className={styles.sect}>
         <FormattedMessage
           id="profile.road.calendar"
