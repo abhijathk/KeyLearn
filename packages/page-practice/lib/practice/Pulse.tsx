@@ -20,7 +20,6 @@ import {
   memo,
   type ReactNode,
   useEffect,
-  useRef,
   useState,
 } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -341,13 +340,23 @@ export const Pulse = memo(function Pulse({
   );
 });
 
+// A tuning "session" begins at the learner's FIRST nudge and lasts 30s. It's
+// kept at module scope on purpose: changing the target speed re-seeds the
+// practice tree, which briefly remounts this component — module state survives
+// that, so the −/+ doesn't vanish the instant it's clicked. It also means the
+// control stays put for the full 30s even when raising the goal above the
+// current speed momentarily un-reaches it.
+const TUNE_MS = 30000;
+let tuneStartedAt: number | null = null;
+let tuneSpent = false; // a session already elapsed during the current reach
+
 /**
  * The tiny −/+ that lets the learner retune their goal the moment they reach
- * it. It shows as soon as the goal is met and stays put until 30s after the
- * learner's FIRST nudge (later nudges don't restart that clock). Raising the
- * goal past the current speed un-lights the flag, which also tucks the tuner
- * away. Steps snap to fives, exactly like the settings control, and stay
- * clamped to the target-speed bounds.
+ * it. It shows as soon as the goal is met; the learner's first nudge starts a
+ * 30s clock (not restarted by later nudges) after which it fades — and it
+ * stays visible for that whole window even if a nudge raises the goal past the
+ * current speed. Steps snap to fives, exactly like the settings control, and
+ * stay clamped to the target-speed bounds.
  */
 function GoalTuner({
   target,
@@ -359,32 +368,62 @@ function GoalTuner({
   readonly onChange: (next: number) => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
-  const [dismissed, setDismissed] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const clear = () => {
-    if (timer.current != null) {
-      clearTimeout(timer.current);
-      timer.current = undefined;
-    }
-  };
-  // A fresh reach re-arms the tuner; leaving the reached state hides it.
+  const [, bump] = useState(0);
+  const [fading, setFading] = useState(false);
+  const rerender = () => bump((n) => n + 1);
+  const sessionActive =
+    tuneStartedAt != null && Date.now() - tuneStartedAt < TUNE_MS;
+
+  // Leaving the reached state clears the "already tuned" latch, so the next
+  // time the goal is genuinely reached the control is offered afresh.
   useEffect(() => {
     if (!reached) {
-      setDismissed(false);
-      clear();
+      tuneSpent = false;
     }
-    return clear;
   }, [reached]);
 
-  if (!reached || dismissed) {
+  // When the 30s window elapses, begin a slow fade rather than snapping away.
+  useEffect(() => {
+    if (tuneStartedAt == null || fading) {
+      return;
+    }
+    const remaining = TUNE_MS - (Date.now() - tuneStartedAt);
+    const t = setTimeout(
+      () => {
+        setFading(true);
+      },
+      Math.max(0, remaining),
+    );
+    return () => {
+      clearTimeout(t);
+    };
+  }, [sessionActive, reached, fading]);
+
+  // Once the fade has played out, actually retire the session.
+  useEffect(() => {
+    if (!fading) {
+      return;
+    }
+    const t = setTimeout(() => {
+      if (reached) {
+        tuneSpent = true;
+      }
+      tuneStartedAt = null;
+      setFading(false);
+      rerender();
+    }, 900);
+    return () => {
+      clearTimeout(t);
+    };
+  }, [fading, reached]);
+
+  if (!fading && !sessionActive && (!reached || tuneSpent)) {
     return null;
   }
 
   const { min, max } = lessonProps.targetSpeed;
   // One nudge moves the goal a whole 5 units (of the displayed speed), snapped
-  // to a round multiple. The 30s countdown starts at the FIRST change and is
-  // not restarted by later nudges — so the control fades 30s after the learner
-  // first touched the goal, however many times they adjust it.
+  // to a round multiple.
   const STEP = 25; // 25 chars/min == 5 wpm
   const nudge = (dir: number) => {
     const next =
@@ -394,16 +433,14 @@ function GoalTuner({
     if (next !== target) {
       onChange(next);
     }
-    if (timer.current == null) {
-      timer.current = setTimeout(() => {
-        timer.current = undefined;
-        setDismissed(true);
-      }, 30000);
+    if (tuneStartedAt == null) {
+      tuneStartedAt = Date.now();
+      rerender();
     }
   };
 
   return (
-    <span className={styles.tuner}>
+    <span className={clsx(styles.tuner, fading && styles.tunerLeaving)}>
       <button
         type="button"
         className={styles.tune}

@@ -289,6 +289,24 @@
   }
 }
 
+// After the 30s window the control fades out gently instead of snapping away.
+.tunerLeaving {
+  animation: tunerout 0.9s ease both;
+  pointer-events: none;
+}
+
+@keyframes tunerout {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(0.25rem);
+  }
+}
+
 .tune {
   display: grid;
   place-items: center;
