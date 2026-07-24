@@ -128,3 +128,50 @@
   opacity: 1;
   transition: opacity 0.6s ease;
 }
+
+// On the kids page, the header adopts the kids day/night palette so it sits
+// on the same warm surface as the game below (the kids page sets
+// body[data-kids] while it is mounted; leaving it reverts to the adult theme).
+// Retheming is done by overriding the design tokens on the header subtree, so
+// the wordmark, buttons and avatar all follow automatically.
+:global(body[data-kids="day"]) .header {
+  --background-color: #fdfcf9;
+  --primary: #fdfcf9;
+  --primary-l1: #ffffff;
+  --primary-l2: #ffffff;
+  --primary-d1: #ece8dc;
+  --primary-d2: #dcd7c7;
+  --text-color: #3a3a4e;
+  --text-color-f1: #6a6a7e;
+  --text-color-f2: #9a9aae;
+  --accent: #f0b400;
+  --accent-d1: #d89e00;
+  --accent-l1: #ffcf3f;
+  --separator-color: #e4dfd0;
+  --separator-border: 1px solid #e4dfd0;
+  --shadow-color: rgba(70, 90, 50, 0.12);
+  border-block-end: 1px solid #eae5d6;
+
+  background-color: #fdfcf9;
+}
+
+:global(body[data-kids="night"]) .header {
+  --background-color: #1d2136;
+  --primary: #1d2136;
+  --primary-l1: #2a2f4d;
+  --primary-l2: #333a5e;
+  --primary-d1: #171b2c;
+  --primary-d2: #12152220;
+  --text-color: #f2f2fc;
+  --text-color-f1: #c7cbe6;
+  --text-color-f2: #a2a8cc;
+  --accent: #6fe3c0;
+  --accent-d1: #2fae86;
+  --accent-l1: #8ff0d4;
+  --separator-color: #3a4064;
+  --separator-border: 1px solid #3a4064;
+  --shadow-color: rgba(0, 0, 10, 0.45);
+  border-block-end: 1px solid #3a4064;
+
+  background-color: #1d2136;
+}

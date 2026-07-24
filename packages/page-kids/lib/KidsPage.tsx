@@ -405,6 +405,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return { lessonKeys: keys, included: keys.findIncludedKeys().length };
   }, [lesson, results]);
 
+  // Publish the kids day/night theme on <body> so the app header (outside this
+  // page's tree) can reskin itself to match while a child is practising.
+  useEffect(() => {
+    document.body.dataset.kids = prefs.night ? "night" : "day";
+    return () => {
+      delete document.body.dataset.kids;
+    };
+  }, [prefs.night]);
+
   // A new key joining the practice set is THE growth moment: the dino grows,
   // the letter introduces itself, and sometimes an egg hatches.
   const prevIncluded = useRef(-1);
