@@ -66,6 +66,30 @@ export function AboutPage() {
         reworked around families and rebuilt to be warm rather than clinical.
       </p>
 
+      <Sect>The story so far</Sect>
+      <p>
+        KeyLearn began in 2026 as a simple wish: a typing tutor good enough for
+        a grown-up to sharpen on, yet gentle enough for a five-year-old to love.
+        The best open-source engine around — keybr — already nailed the hard
+        part, the adaptive lesson algorithm, so KeyLearn started there and grew
+        outward: a playful dino-run world for children, per-learner household
+        profiles, age-aware pacing, a friendlier interface, and support for many
+        languages. Version <em>{APP_VERSION}</em> is the first public release —
+        the foundation the rest of the journey is built on.
+      </p>
+
+      <Sect>The maker</Sect>
+      <p>
+        KeyLearn is designed and built by <em>AK</em>, an independent developer
+        working mostly solo. It started at the kitchen table, watching a young
+        family member hunt-and-peck at a keyboard and wishing for something that
+        felt more like a game than a chore. AK has spent years building software
+        for the web, but this is the first project made squarely for family — no
+        company behind it, no investors to please, just care put into a tool
+        meant to be genuinely useful. Feedback and contributions are always
+        welcome.
+      </p>
+
       <Sect>How the learning works</Sect>
       <p>
         Rather than marching you through fixed drills, KeyLearn measures how
@@ -85,12 +109,44 @@ export function AboutPage() {
         proven engine, just dressed for their age.
       </p>
 
+      <Sect>What we stand for</Sect>
+      <ul>
+        <li>
+          <em>Learners first.</em> Every decision is judged by one question —
+          does it help someone type better and enjoy getting there?
+        </li>
+        <li>
+          <em>Kindness over pressure.</em> Progress is celebrated, mistakes are
+          forgiven, and no one is shamed into practising.
+        </li>
+        <li>
+          <em>Privacy by default.</em> No ads, no trackers, no selling data.
+          Practise as a guest and nothing ever leaves your device.
+        </li>
+        <li>
+          <em>Open and honest.</em> The whole source is public, the language is
+          plain, and there are no dark patterns or hidden costs.
+        </li>
+        <li>
+          <em>Built to last.</em> Careful, unhurried work over hype — a tool you
+          can trust for years, not a growth experiment.
+        </li>
+      </ul>
+
       <Sect>Open source, and yours</Sect>
       <p>
         KeyLearn is published under the GNU AGPL license: the whole source code
         is open for you to read, run, or improve. There is nothing to buy, no
         subscription, and no advertising. Your practice data belongs to you —
-        export it or erase it whenever you like.
+        export it or erase it whenever you like.{" "}
+        <a
+          href="https://github.com/abhijathk/keylearn"
+          target="_blank"
+          rel="noreferrer"
+        >
+          View the source on GitHub
+        </a>
+        .
       </p>
 
       <Sect>Version</Sect>

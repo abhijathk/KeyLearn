@@ -232,17 +232,6 @@ export function MenuDrawer({
                 <FormattedMessage id="drawer.more" defaultMessage="More" />
               </div>
               <div className={styles.util}>
-                <a
-                  href="https://github.com/abhijathk/keylearn"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <StrokeIcon className={styles.utilIcon} name="code" />
-                  <FormattedMessage
-                    id="drawer.source"
-                    defaultMessage="View source on GitHub"
-                  />
-                </a>
                 <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="doc" />
                   {formatMessage(Pages.termsOfService.link.label)}
@@ -251,14 +240,14 @@ export function MenuDrawer({
                   <StrokeIcon className={styles.utilIcon} name="shield" />
                   {formatMessage(Pages.privacyPolicy.link.label)}
                 </RouterLink>
-                <RouterLink to={Pages.about.path} onClick={onClose}>
-                  <StrokeIcon className={styles.utilIcon} name="help" />
-                  {formatMessage(Pages.about.link.label)}
-                </RouterLink>
               </div>
             </div>
             <div className={styles.account}>
               <div className={styles.util}>
+                <RouterLink to={Pages.about.path} onClick={onClose}>
+                  <StrokeIcon className={styles.utilIcon} name="help" />
+                  {formatMessage(Pages.about.link.label)}
+                </RouterLink>
                 {signedIn ? (
                   <>
                     <RouterLink to={Pages.account.path} onClick={onClose}>

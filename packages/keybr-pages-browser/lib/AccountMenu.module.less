@@ -2,11 +2,69 @@
 
 .anchor {
   display: inline-flex;
+  gap: 0.45rem;
   align-items: center;
 }
 
-// Match the avatar to the 1.8rem stroke icons in the header controls.
-.anchor > * {
+// The avatar matches the 1.8rem stroke icons in the header controls, and
+// carries the K / G badge as a bubble in its corner.
+.avatarWrap {
+  position: relative;
+  flex: none;
   inline-size: 1.8rem;
   block-size: 1.8rem;
+}
+
+.avatarWrap > :first-child {
+  inline-size: 1.8rem;
+  block-size: 1.8rem;
+  border-radius: 50%;
+}
+
+.name {
+  max-inline-size: 8rem;
+  overflow: hidden;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// A round notification-style bubble marking the active learner as a kid (K)
+// or grown-up (G): the kids' sunny key-focus yellow with black text, ringed
+// in the header surface so it reads as an overlay.
+.badge {
+  display: grid;
+  position: absolute;
+  inset-inline-end: -0.2rem;
+  inset-block-end: -0.2rem;
+  place-items: center;
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
+  border: 1.5px solid var(--primary);
+  border-radius: 50%;
+  color: #000000;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 35%);
+  font-family: var(--default-font-family);
+  font-size: 0.5rem;
+  font-weight: 800;
+  line-height: 1;
+
+  // Bright pastel yellow for kids, pale yellow for grown-ups.
+  &[data-kind="kid"] {
+    background-color: #ffe27a;
+  }
+
+  &[data-kind="adult"] {
+    background-color: #f4e9ad;
+  }
+}
+
+// On a narrow viewport the name is dropped; the avatar and badge remain.
+@media (width <= 34rem) {
+  .name {
+    display: none;
+  }
 }

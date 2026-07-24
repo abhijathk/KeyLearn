@@ -1,6 +1,6 @@
 # English
 
-Translated: 557 messages, 5986 words
+Translated: 556 messages, 5982 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,7 +8,7 @@ Untranslated: 0 messages, 0 words
 
 Translated: 306 messages, 3986 words
 
-Untranslated: 220 messages, 1783 words
+Untranslated: 219 messages, 1779 words
 
 * *or*
 * *Kid*
@@ -36,7 +36,7 @@ Untranslated: 220 messages, 1783 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -64,7 +64,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -90,7 +90,7 @@ Untranslated: 218 messages, 1781 words
 
 # Bangla
 
-Translated: 554 messages, 5966 words
+Translated: 553 messages, 5962 words
 
 Untranslated: 3 messages, 20 words
 
@@ -102,7 +102,7 @@ Untranslated: 3 messages, 20 words
 
 Translated: 278 messages, 3041 words
 
-Untranslated: 246 messages, 2710 words
+Untranslated: 245 messages, 2706 words
 
 * *or*
 * *Kid*
@@ -130,7 +130,7 @@ Untranslated: 246 messages, 2710 words
 
 Translated: 305 messages, 3983 words
 
-Untranslated: 221 messages, 1786 words
+Untranslated: 220 messages, 1782 words
 
 * *or*
 * *Kid*
@@ -158,7 +158,7 @@ Untranslated: 221 messages, 1786 words
 
 Translated: 298 messages, 3935 words
 
-Untranslated: 226 messages, 1816 words
+Untranslated: 225 messages, 1812 words
 
 * *or*
 * *Kid*
@@ -186,7 +186,7 @@ Untranslated: 226 messages, 1816 words
 
 Translated: 306 messages, 3986 words
 
-Untranslated: 220 messages, 1783 words
+Untranslated: 219 messages, 1779 words
 
 * *or*
 * *Kid*
@@ -214,7 +214,7 @@ Untranslated: 220 messages, 1783 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -242,7 +242,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 52 messages, 692 words
 
-Untranslated: 468 messages, 5035 words
+Untranslated: 467 messages, 5031 words
 
 * *or*
 * *GO!*
@@ -270,7 +270,7 @@ Untranslated: 468 messages, 5035 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -298,7 +298,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 305 messages, 3985 words
 
-Untranslated: 221 messages, 1784 words
+Untranslated: 220 messages, 1780 words
 
 * *or*
 * *GO!*
@@ -326,7 +326,7 @@ Untranslated: 221 messages, 1784 words
 
 Translated: 263 messages, 2481 words
 
-Untranslated: 261 messages, 3270 words
+Untranslated: 260 messages, 3266 words
 
 * *or*
 * *Kid*
@@ -354,7 +354,7 @@ Untranslated: 261 messages, 3270 words
 
 Translated: 179 messages, 1837 words
 
-Untranslated: 342 messages, 3893 words
+Untranslated: 341 messages, 3889 words
 
 * *or*
 * *GO!*
@@ -382,7 +382,7 @@ Untranslated: 342 messages, 3893 words
 
 Translated: 20 messages, 80 words
 
-Untranslated: 499 messages, 5636 words
+Untranslated: 498 messages, 5632 words
 
 * *or*
 * *GO!*
@@ -410,7 +410,7 @@ Untranslated: 499 messages, 5636 words
 
 Translated: 300 messages, 3810 words
 
-Untranslated: 226 messages, 1959 words
+Untranslated: 225 messages, 1955 words
 
 * *or*
 * *Kid*
@@ -438,7 +438,7 @@ Untranslated: 226 messages, 1959 words
 
 Translated: 304 messages, 3976 words
 
-Untranslated: 222 messages, 1793 words
+Untranslated: 221 messages, 1789 words
 
 * *or*
 * *Kid*
@@ -464,7 +464,7 @@ Untranslated: 222 messages, 1793 words
 
 # Gujarati
 
-Translated: 556 messages, 5985 words
+Translated: 555 messages, 5981 words
 
 Untranslated: 1 messages, 1 words
 
@@ -474,7 +474,7 @@ Untranslated: 1 messages, 1 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -500,7 +500,7 @@ Untranslated: 218 messages, 1781 words
 
 # Hindi
 
-Translated: 554 messages, 5966 words
+Translated: 553 messages, 5962 words
 
 Untranslated: 3 messages, 20 words
 
@@ -512,7 +512,7 @@ Untranslated: 3 messages, 20 words
 
 Translated: 304 messages, 3981 words
 
-Untranslated: 222 messages, 1788 words
+Untranslated: 221 messages, 1784 words
 
 * *or*
 * *Kid*
@@ -540,7 +540,7 @@ Untranslated: 222 messages, 1788 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -568,7 +568,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 306 messages, 3986 words
 
-Untranslated: 220 messages, 1783 words
+Untranslated: 219 messages, 1779 words
 
 * *or*
 * *GO!*
@@ -596,7 +596,7 @@ Untranslated: 220 messages, 1783 words
 
 Translated: 71 messages, 1301 words
 
-Untranslated: 449 messages, 4426 words
+Untranslated: 448 messages, 4422 words
 
 * *or*
 * *GO!*
@@ -624,7 +624,7 @@ Untranslated: 449 messages, 4426 words
 
 Translated: 302 messages, 3981 words
 
-Untranslated: 224 messages, 1788 words
+Untranslated: 223 messages, 1784 words
 
 * *or*
 * *Kid*
@@ -652,7 +652,7 @@ Untranslated: 224 messages, 1788 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -678,7 +678,7 @@ Untranslated: 218 messages, 1781 words
 
 # Kannada
 
-Translated: 554 messages, 5966 words
+Translated: 553 messages, 5962 words
 
 Untranslated: 3 messages, 20 words
 
@@ -690,7 +690,7 @@ Untranslated: 3 messages, 20 words
 
 Translated: 117 messages, 882 words
 
-Untranslated: 407 messages, 4869 words
+Untranslated: 406 messages, 4865 words
 
 * *or*
 * *Kid*
@@ -718,7 +718,7 @@ Untranslated: 407 messages, 4869 words
 
 Translated: 273 messages, 2796 words
 
-Untranslated: 251 messages, 2955 words
+Untranslated: 250 messages, 2951 words
 
 * *or*
 * *Kid*
@@ -744,7 +744,7 @@ Untranslated: 251 messages, 2955 words
 
 # Malayalam
 
-Translated: 556 messages, 5985 words
+Translated: 555 messages, 5981 words
 
 Untranslated: 1 messages, 1 words
 
@@ -754,7 +754,7 @@ Untranslated: 1 messages, 1 words
 
 Translated: 4 messages, 31 words
 
-Untranslated: 515 messages, 5685 words
+Untranslated: 514 messages, 5681 words
 
 * *or*
 * *GO!*
@@ -782,7 +782,7 @@ Untranslated: 515 messages, 5685 words
 
 Translated: 182 messages, 1977 words
 
-Untranslated: 340 messages, 3756 words
+Untranslated: 339 messages, 3752 words
 
 * *or*
 * *Kid*
@@ -810,7 +810,7 @@ Untranslated: 340 messages, 3756 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -838,7 +838,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 301 messages, 3979 words
 
-Untranslated: 225 messages, 1790 words
+Untranslated: 224 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -866,7 +866,7 @@ Untranslated: 225 messages, 1790 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -894,7 +894,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 305 messages, 3984 words
 
-Untranslated: 221 messages, 1785 words
+Untranslated: 220 messages, 1781 words
 
 * *or*
 * *Kid*
@@ -922,7 +922,7 @@ Untranslated: 221 messages, 1785 words
 
 Translated: 286 messages, 3864 words
 
-Untranslated: 238 messages, 1887 words
+Untranslated: 237 messages, 1883 words
 
 * *or*
 * *Kid*
@@ -950,7 +950,7 @@ Untranslated: 238 messages, 1887 words
 
 Translated: 271 messages, 3088 words
 
-Untranslated: 250 messages, 2646 words
+Untranslated: 249 messages, 2642 words
 
 * *or*
 * *Kid*
@@ -978,7 +978,7 @@ Untranslated: 250 messages, 2646 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -1006,7 +1006,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 307 messages, 3986 words
 
-Untranslated: 219 messages, 1783 words
+Untranslated: 218 messages, 1779 words
 
 * *or*
 * *Kid*
@@ -1034,7 +1034,7 @@ Untranslated: 219 messages, 1783 words
 
 Translated: 307 messages, 3987 words
 
-Untranslated: 219 messages, 1782 words
+Untranslated: 218 messages, 1778 words
 
 * *or*
 * *Kid*
@@ -1062,7 +1062,7 @@ Untranslated: 219 messages, 1782 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -1090,7 +1090,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 305 messages, 3983 words
 
-Untranslated: 221 messages, 1786 words
+Untranslated: 220 messages, 1782 words
 
 * *or*
 * *Kid*
@@ -1116,7 +1116,7 @@ Untranslated: 221 messages, 1786 words
 
 # Tamil
 
-Translated: 554 messages, 5966 words
+Translated: 553 messages, 5962 words
 
 Untranslated: 3 messages, 20 words
 
@@ -1126,7 +1126,7 @@ Untranslated: 3 messages, 20 words
 
 # Telugu
 
-Translated: 554 messages, 5966 words
+Translated: 553 messages, 5962 words
 
 Untranslated: 3 messages, 20 words
 
@@ -1138,7 +1138,7 @@ Untranslated: 3 messages, 20 words
 
 Translated: 296 messages, 3890 words
 
-Untranslated: 228 messages, 1861 words
+Untranslated: 227 messages, 1857 words
 
 * *or*
 * *Kid*
@@ -1166,7 +1166,7 @@ Untranslated: 228 messages, 1861 words
 
 Translated: 197 messages, 1688 words
 
-Untranslated: 324 messages, 4034 words
+Untranslated: 323 messages, 4030 words
 
 * *or*
 * *Kid*
@@ -1194,7 +1194,7 @@ Untranslated: 324 messages, 4034 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -1220,7 +1220,7 @@ Untranslated: 218 messages, 1781 words
 
 # Urdu
 
-Translated: 554 messages, 5966 words
+Translated: 553 messages, 5962 words
 
 Untranslated: 3 messages, 20 words
 
@@ -1232,7 +1232,7 @@ Untranslated: 3 messages, 20 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -1260,7 +1260,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 307 messages, 3981 words
 
-Untranslated: 219 messages, 1788 words
+Untranslated: 218 messages, 1784 words
 
 * *or*
 * *Kid*
@@ -1288,7 +1288,7 @@ Untranslated: 219 messages, 1788 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1781 words
+Untranslated: 217 messages, 1777 words
 
 * *or*
 * *Kid*
@@ -1316,7 +1316,7 @@ Untranslated: 218 messages, 1781 words
 
 Translated: 307 messages, 3987 words
 
-Untranslated: 219 messages, 1782 words
+Untranslated: 218 messages, 1778 words
 
 * *or*
 * *GO!*

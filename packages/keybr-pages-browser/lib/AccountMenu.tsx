@@ -5,10 +5,10 @@ import { defineMessage, useIntl } from "react-intl";
 import * as styles from "./AccountMenu.module.less";
 
 /**
- * The header avatar is a passive indicator of who is practicing — Account,
- * Log out and the learner switcher all live in the menu drawer. The face
- * follows the usual priority: active learner, then the admin account, then
- * anonymous.
+ * The header identity chip — a passive indicator of who is practising.
+ * With an active learner it shows their avatar, first name and a K (kid) or
+ * G (grown-up) badge; otherwise just the admin or anonymous avatar. Account,
+ * Log out and the learner switcher all live in the menu drawer.
  */
 export function AccountMenu(): ReactNode {
   const { formatMessage } = useIntl();
@@ -26,11 +26,30 @@ export function AccountMenu(): ReactNode {
       )}
     >
       {active != null ? (
-        <ProfileAvatar
-          avatar={active.avatar}
-          name={active.firstName}
-          size={29}
-        />
+        <>
+          <span className={styles.avatarWrap}>
+            <ProfileAvatar
+              avatar={active.avatar}
+              name={active.firstName}
+              size={29}
+            />
+            <span
+              className={styles.badge}
+              data-kind={active.kind}
+              title={
+                active.kind === "kid"
+                  ? formatMessage({ id: "profiles.kid", defaultMessage: "Kid" })
+                  : formatMessage({
+                      id: "profiles.adult",
+                      defaultMessage: "Grown-up",
+                    })
+              }
+            >
+              {active.kind === "kid" ? "K" : "G"}
+            </span>
+          </span>
+          <span className={styles.name}>{active.firstName}</span>
+        </>
       ) : (
         <Avatar user={signedIn ? publicUser : null} size="medium" />
       )}
