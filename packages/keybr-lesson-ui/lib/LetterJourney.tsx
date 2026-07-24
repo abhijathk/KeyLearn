@@ -1,27 +1,24 @@
 import { type LessonKey, type LessonKeys } from "@keybr/lesson";
 import { type ClassName } from "@keybr/widget";
 import { clsx } from "clsx";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import * as styles from "./LetterJourney.module.less";
 import { useKeyStyles } from "./styles.ts";
 
-const STEP = 42;
-const PAD = 30;
-const PAD_TOP = 46; // room for the focused key's "% ready" note above row one
-const ROW_H = 46;
-const AMP = 8;
-const RING = 14;
-// Alphabets longer than this wrap onto balanced rows, so scripts with many
-// letters (e.g. Devanagari, Malayalam) stay readable instead of shrinking.
-const MAX_PER_ROW = 26;
+const CAP_W = 30;
+const CAP_H = 26;
+const STEP = 42; // cap width + gap between stops
+const PAD = 24; // side padding (>= CAP_W / 2)
+const PAD_TOP = 28; // room for the focused key's note above the first lane
+const ROW_H = 52;
 
 /**
- * The Letter Journey drawn as a trail on a map. Each letter is a stop along a
- * winding path in unlock order; a stop's colour is the slow→fast confidence
- * blend and the link between two unlocked stops is coloured the same way, so
- * both the letters and the connections between them show what's strong and
- * what's weak. The current key is a big dot ringed by a progress arc (how
- * close it is to unlocking); everything is grey until there's data.
+ * The Letter Journey: every key laid out in unlock order as a keycap sitting on
+ * a straight road — no curves. The road you've travelled is solid; the road
+ * ahead (locked keys) is dashed with ghosted caps. Each unlocked cap wears a
+ * confidence-coloured underline (slow → fast), and the current key is ringed in
+ * the accent with how close it is to unlocking noted above. The whole thing
+ * wraps into stacked straight lanes when it runs out of width.
  */
 export function LetterJourney({
   id,
@@ -40,51 +37,73 @@ export function LetterJourney({
   const keys = [...lessonKeys];
   const n = keys.length;
   const unlocked = keys.filter(({ isIncluded }) => isIncluded).length;
-  // Wrap long alphabets onto several balanced rows laid out as a snake, so the
-  // trail stays continuous while every letter keeps its full size.
-  const rows = Math.max(1, Math.ceil(n / MAX_PER_ROW));
-  const perRow = Math.ceil(n / rows);
-  const width = PAD * 2 + (Math.min(n, perRow) - 1) * STEP;
-  const height = PAD_TOP + rows * ROW_H;
-  const points = keys.map((_, i) => {
-    const row = Math.floor(i / perRow);
-    const idx = i - row * perRow;
-    const col = row % 2 === 0 ? idx : perRow - 1 - idx;
-    return {
-      x: PAD + col * STEP,
-      y: PAD_TOP + row * ROW_H + AMP * Math.sin(i * 0.7),
+
+  // Fit as many caps per lane as the width allows, then wrap into stacked
+  // straight lanes on narrower screens.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [perLane, setPerLane] = useState(n || 1);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (el == null) {
+      return;
+    }
+    const measure = () => {
+      const avail = (el.clientWidth || 0) - 72; // leave room for the count
+      const fit = Math.floor((avail - PAD * 2) / STEP) + 1;
+      setPerLane(Math.min(n || 1, Math.max(6, Number.isFinite(fit) ? fit : n)));
     };
-  });
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+    };
+  }, [n]);
+
+  const per = Math.max(1, Math.min(n || 1, perLane));
+  const rows = Math.max(1, Math.ceil(n / per));
+  const laneLen = Math.min(n, per);
+  const width = PAD * 2 + Math.max(0, laneLen - 1) * STEP;
+  const height = PAD_TOP + rows * ROW_H;
+  const pos = (i: number) => {
+    const row = Math.floor(i / per);
+    return { x: PAD + (i - row * per) * STEP, y: PAD_TOP + row * ROW_H, row };
+  };
   const confOf = (k: LessonKey) => Math.max(0, Math.min(1, k.confidence ?? 0));
 
   return (
-    <div id={id} className={clsx(styles.journey, className)}>
+    <div id={id} ref={wrapRef} className={clsx(styles.journey, className)}>
       <svg
         className={styles.map}
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
       >
-        {keys.slice(0, n - 1).map((a, i) => {
-          const b = keys[i + 1];
+        {/* the road: a segment between each pair of same-lane neighbours */}
+        {keys.slice(1).map((b, idx) => {
+          const i = idx + 1;
+          const a = keys[i - 1];
+          const pa = pos(i - 1);
+          const pb = pos(i);
+          if (pa.row !== pb.row) {
+            return null;
+          }
           const enabled = a.isIncluded && b.isIncluded;
-          const hasData = a.confidence != null && b.confidence != null;
-          const color =
-            enabled && hasData
-              ? String(confidenceColor((confOf(a) + confOf(b)) / 2))
-              : undefined;
-          const p0 = points[i];
-          const p1 = points[i + 1];
-          const cx = (p0.x + p1.x) / 2;
           return (
-            <path
-              key={i}
-              className={enabled ? styles.link : styles.road}
-              d={`M ${p0.x} ${p0.y} C ${cx} ${p0.y}, ${cx} ${p1.y}, ${p1.x} ${p1.y}`}
-              style={color ? { stroke: color } : undefined}
+            <line
+              key={`seg${i}`}
+              className={enabled ? styles.seg : styles.segAhead}
+              x1={pa.x + CAP_W / 2}
+              y1={pa.y}
+              x2={pb.x - CAP_W / 2}
+              y2={pb.y}
             />
           );
         })}
+        {/* the caps */}
         {keys.map((key, i) => {
           const {
             letter: { codePoint, label },
@@ -93,12 +112,12 @@ export function LetterJourney({
             isFocused,
           } = key;
           const conf = confOf(key);
-          const { x, y } = points[i];
-          // Algorithm colour once there's data; grey (from CSS) until then.
+          const { x, y } = pos(i);
           const color =
             isIncluded && confidence != null
               ? String(confidenceColor(conf))
               : undefined;
+          const nx = Math.max(CAP_W, Math.min(width - CAP_W, x));
           return (
             <g
               key={codePoint}
@@ -119,43 +138,35 @@ export function LetterJourney({
             >
               {isFocused && (
                 <>
-                  {/* Keep the note (and its pin) inside the SVG when the
-                      current key sits near an edge. */}
-                  {(() => {
-                    const nx = Math.max(46, Math.min(width - 46, x));
-                    return (
-                      <>
-                        <text className={styles.note} x={nx} y={y - 28}>
-                          {readinessNote(conf)}
-                        </text>
-                        <path
-                          className={styles.pin}
-                          d={`M ${nx - 6} ${y - 25} L ${nx + 6} ${y - 25} L ${nx} ${y - 16} Z`}
-                        />
-                      </>
-                    );
-                  })()}
-                  <circle className={styles.ring} cx={x} cy={y} r={RING} />
-                  <circle
-                    className={styles.ringProgress}
-                    cx={x}
-                    cy={y}
-                    r={RING}
-                    transform={`rotate(-90 ${x} ${y})`}
-                    style={{
-                      strokeDasharray: `${(conf * 2 * Math.PI * RING).toFixed(1)} 999`,
-                    }}
+                  <text className={styles.note} x={nx} y={y - CAP_H / 2 - 10}>
+                    {readinessNote(conf)}
+                  </text>
+                  <path
+                    className={styles.pin}
+                    d={`M ${nx - 5} ${y - CAP_H / 2 - 6} L ${nx + 5} ${y - CAP_H / 2 - 6} L ${nx} ${y - CAP_H / 2 - 1} Z`}
                   />
                 </>
               )}
-              <circle
-                className={styles.dot}
-                cx={x}
-                cy={y}
-                r={isFocused ? 9 : isIncluded ? 7 : 4.5}
-                style={color ? { fill: color } : undefined}
+              <rect
+                className={styles.cap}
+                x={x - CAP_W / 2}
+                y={y - CAP_H / 2}
+                width={CAP_W}
+                height={CAP_H}
+                rx={5}
               />
-              <text className={styles.label} x={x} y={y + 17}>
+              {isIncluded && color != null && (
+                <rect
+                  className={styles.bar}
+                  x={x - CAP_W / 2 + 4}
+                  y={y + CAP_H / 2 - 4}
+                  width={CAP_W - 8}
+                  height={2.5}
+                  rx={1.5}
+                  style={{ fill: color }}
+                />
+              )}
+              <text className={styles.label} x={x} y={y + 4.5}>
                 {label}
               </text>
             </g>

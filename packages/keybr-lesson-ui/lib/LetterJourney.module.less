@@ -2,7 +2,7 @@
 
 .journey {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.8rem;
   align-items: center;
   justify-content: center;
   padding-block: 0.1rem 0.25rem;
@@ -14,77 +14,64 @@
   overflow: visible;
 }
 
-// a connection between two unlocked stops, coloured by confidence (inline) so
-// you can see which links are strong; grey until there's data.
-.link {
-  fill: none;
-  stroke: var(--primary-d2);
-  stroke-width: 2.25;
-  stroke-linecap: round;
-  transition: stroke 0.3s ease;
+.stop {
+  cursor: default;
 }
 
-// the road still to come — a faint dotted path past the locked stops.
-.road {
-  fill: none;
+// ---- the road ------------------------------------------------------------
+
+// the stretch already travelled — a solid line tinted toward the accent.
+.seg {
+  stroke: color-mix(in oklab, var(--accent) 38%, var(--primary-d2));
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+// the road still to come, past the locked caps — faint and dashed.
+.segAhead {
   stroke: var(--primary-d2);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-dasharray: 1 6;
 }
 
-.stop {
-  cursor: default;
-}
+// ---- the caps ------------------------------------------------------------
 
-.dot {
+.cap {
   transition:
-    r 0.2s ease,
-    fill 0.3s ease;
+    fill 0.3s ease,
+    stroke 0.3s ease;
 }
 
-// cleared stops: filled with their confidence colour (inline); grey with no
-// data yet.
-.done .dot {
-  fill: var(--primary-d2);
-  stroke: var(--primary);
+// cleared keys: a flat chip; the confidence colour rides the underline bar.
+.done .cap {
+  fill: var(--primary-l1);
+  stroke: var(--primary-d2);
   stroke-width: 1;
 }
 
-// stops still locked: small faint hollow markers.
-.locked .dot {
+// locked keys: ghosted chips on the dashed road.
+.locked .cap {
   fill: var(--primary);
   stroke: var(--primary-d2);
-  stroke-width: 1.5;
+  stroke-width: 1.25;
+  stroke-dasharray: 2 3;
+  opacity: 0.6;
 }
 
-// the current stop: a big dot in its algorithm colour (inline), grey with no
-// data, wrapped by a progress ring.
-.here .dot {
-  fill: var(--primary-d2);
-}
-
-// the progress ring around the current stop.
-.ring {
-  fill: none;
-  stroke: var(--primary-d2);
-  stroke-width: 2.5;
-}
-
-.ringProgress {
-  fill: none;
+// the current key: ringed in the accent.
+.here .cap {
+  fill: var(--primary-l1);
   stroke: var(--accent);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  transition: stroke-dasharray 0.3s ease;
+  stroke-width: 2;
 }
 
-.pin {
-  fill: var(--accent);
+// the confidence underline under an unlocked cap (fill set inline).
+.bar {
+  transition: fill 0.3s ease;
 }
 
 .label {
-  fill: var(--secondary-f1);
   font-family: var(--monospace-font-family);
   font-size: 13.5px;
   font-weight: 700;
@@ -105,6 +92,7 @@
   font-weight: 800;
 }
 
+// the readiness note above the current cap, and its little pin.
 .note {
   fill: var(--accent);
   font-family: var(--default-font-family);
@@ -113,6 +101,10 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-anchor: middle;
+}
+
+.pin {
+  fill: var(--accent);
 }
 
 // "6/26" progress tag.
