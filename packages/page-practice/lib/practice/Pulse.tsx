@@ -343,11 +343,11 @@ export const Pulse = memo(function Pulse({
 
 /**
  * The tiny −/+ that lets the learner retune their goal the moment they reach
- * it. It shows as soon as the goal is met and lingers there; only once the
- * learner has nudged the goal and then left it alone for ten seconds does it
- * fade away. Raising the goal past the current speed un-lights the flag, which
- * also tucks the tuner away. Steps snap to fives, exactly like the settings
- * control, and stay clamped to the target-speed bounds.
+ * it. It shows as soon as the goal is met and stays put until 30s after the
+ * learner's FIRST nudge (later nudges don't restart that clock). Raising the
+ * goal past the current speed un-lights the flag, which also tucks the tuner
+ * away. Steps snap to fives, exactly like the settings control, and stay
+ * clamped to the target-speed bounds.
  */
 function GoalTuner({
   target,
@@ -382,7 +382,9 @@ function GoalTuner({
 
   const { min, max } = lessonProps.targetSpeed;
   // One nudge moves the goal a whole 5 units (of the displayed speed), snapped
-  // to a round multiple; the control lingers 30s after the last nudge.
+  // to a round multiple. The 30s countdown starts at the FIRST change and is
+  // not restarted by later nudges — so the control fades 30s after the learner
+  // first touched the goal, however many times they adjust it.
   const STEP = 25; // 25 chars/min == 5 wpm
   const nudge = (dir: number) => {
     const next =
@@ -392,10 +394,12 @@ function GoalTuner({
     if (next !== target) {
       onChange(next);
     }
-    clear();
-    timer.current = setTimeout(() => {
-      setDismissed(true);
-    }, 30000);
+    if (timer.current == null) {
+      timer.current = setTimeout(() => {
+        timer.current = undefined;
+        setDismissed(true);
+      }, 30000);
+    }
   };
 
   return (
