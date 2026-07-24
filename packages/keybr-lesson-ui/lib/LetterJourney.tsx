@@ -92,6 +92,10 @@ export function LetterJourney({
             return null;
           }
           const enabled = a.isIncluded && b.isIncluded;
+          const segColor =
+            enabled && a.confidence != null && b.confidence != null
+              ? String(confidenceColor((confOf(a) + confOf(b)) / 2))
+              : undefined;
           return (
             <line
               key={`seg${i}`}
@@ -100,6 +104,7 @@ export function LetterJourney({
               y1={pa.y}
               x2={pb.x - CAP_W / 2}
               y2={pb.y}
+              style={segColor != null ? { stroke: segColor } : undefined}
             />
           );
         })}
@@ -116,6 +121,19 @@ export function LetterJourney({
           const color =
             isIncluded && confidence != null
               ? String(confidenceColor(conf))
+              : undefined;
+          // Tint the cap by its confidence (a subtle fill); the current key's
+          // accent ring comes from CSS, so it keeps only the tinted fill.
+          const capStyle =
+            color != null
+              ? isFocused
+                ? {
+                    fill: `color-mix(in oklab, ${color} 20%, var(--primary-l1))`,
+                  }
+                : {
+                    fill: `color-mix(in oklab, ${color} 20%, var(--primary-l1))`,
+                    stroke: color,
+                  }
               : undefined;
           const nx = Math.max(CAP_W, Math.min(width - CAP_W, x));
           return (
@@ -154,18 +172,8 @@ export function LetterJourney({
                 width={CAP_W}
                 height={CAP_H}
                 rx={5}
+                style={capStyle}
               />
-              {isIncluded && color != null && (
-                <rect
-                  className={styles.bar}
-                  x={x - CAP_W / 2 + 4}
-                  y={y + CAP_H / 2 - 4}
-                  width={CAP_W - 8}
-                  height={2.5}
-                  rx={1.5}
-                  style={{ fill: color }}
-                />
-              )}
               <text className={styles.label} x={x} y={y + 4.5}>
                 {label}
               </text>

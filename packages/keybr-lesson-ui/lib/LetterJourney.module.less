@@ -38,17 +38,16 @@
 // ---- the caps ------------------------------------------------------------
 
 .cap {
+  fill: var(--primary-l1);
+  stroke: var(--primary-d2);
+  stroke-width: 1;
   transition:
     fill 0.3s ease,
     stroke 0.3s ease;
 }
 
-// cleared keys: a flat chip; the confidence colour rides the underline bar.
-.done .cap {
-  fill: var(--primary-l1);
-  stroke: var(--primary-d2);
-  stroke-width: 1;
-}
+// cleared keys carry a confidence-tinted fill and coloured border, both set
+// inline; the base above is the fallback before there's data.
 
 // locked keys: ghosted chips on the dashed road.
 .locked .cap {
@@ -59,16 +58,10 @@
   opacity: 0.6;
 }
 
-// the current key: ringed in the accent.
+// the current key: ringed in the accent (fill tint comes inline).
 .here .cap {
-  fill: var(--primary-l1);
   stroke: var(--accent);
   stroke-width: 2;
-}
-
-// the confidence underline under an unlocked cap (fill set inline).
-.bar {
-  transition: fill 0.3s ease;
 }
 
 .label {
