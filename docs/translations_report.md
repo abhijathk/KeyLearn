@@ -464,12 +464,9 @@ Untranslated: 223 messages, 1796 words
 
 # Gujarati
 
-Translated: 556 messages, 5970 words
+Translated: 558 messages, 5989 words
 
-Untranslated: 2 messages, 19 words
-
-* *Log out?*
-* *Practice history stays on this device and on your account. Y...*
+Untranslated: 0 messages, 0 words
 
 # Hebrew
 
@@ -745,31 +742,9 @@ Untranslated: 252 messages, 2958 words
 
 # Malayalam
 
-Translated: 351 messages, 5423 words
+Translated: 558 messages, 5989 words
 
-Untranslated: 201 messages, 528 words
-
-* *you*
-* *Back*
-* *Copy*
-* *Done*
-* *Help*
-* *Kids*
-* *last*
-* *Open*
-* *Open*
-* *Text*
-* *Time*
-* *Time*
-* *User*
-* *Chars*
-* *Score*
-* *Speed*
-* *Speed*
-* *Stats*
-* *Cancel*
-* *Digits*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Mongolian
 
