@@ -107,12 +107,6 @@ export const Pulse = memo(function Pulse({
           })}
         >
           <span className={styles.speedValue}>
-            {showLive
-              ? formatSpeed(live.cpm, { unit: false })
-              : hasData
-                ? formatSpeed(speed.last, { unit: false })
-                : "—"}
-            <i className={styles.speedUnit}>{speedUnit.id}</i>
             {showLive && (
               <i
                 className={styles.liveDot}
@@ -123,6 +117,12 @@ export const Pulse = memo(function Pulse({
                 })}
               />
             )}
+            {showLive
+              ? formatSpeed(live.cpm, { unit: false })
+              : hasData
+                ? formatSpeed(speed.last, { unit: false })
+                : "—"}
+            <i className={styles.speedUnit}>{speedUnit.id}</i>
           </span>
         </div>
         {hasData && <Chip delta={speed.delta} text={formatSpeed} />}

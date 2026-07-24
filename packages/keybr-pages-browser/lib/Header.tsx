@@ -11,6 +11,94 @@ const toggleFocusMode = () => {
   window.dispatchEvent(new window.CustomEvent("keylearn:focus-mode"));
 };
 
+// The kids page moved its sound / day-night / settings controls up into the
+// header. It publishes their state via keylearn:kids-state and acts on the
+// header's keylearn:kids-toggle requests.
+type KidsControlState = {
+  readonly sounds: boolean;
+  readonly night: boolean;
+  readonly keys: number;
+};
+
+function useKidsControls(): KidsControlState {
+  const [state, setState] = useState<KidsControlState>({
+    sounds: false,
+    night: false,
+    keys: 0,
+  });
+  useEffect(() => {
+    const onState = (ev: Event) => {
+      setState((ev as CustomEvent<KidsControlState>).detail);
+    };
+    window.addEventListener("keylearn:kids-state", onState);
+    return () => window.removeEventListener("keylearn:kids-state", onState);
+  }, []);
+  return state;
+}
+
+function kidsToggle(what: "sound" | "night" | "settings"): void {
+  window.dispatchEvent(
+    new window.CustomEvent("keylearn:kids-toggle", { detail: what }),
+  );
+}
+
+function KidSoundIcon({ muted }: { readonly muted: boolean }): ReactNode {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden={true}
+    >
+      <path
+        d="M4 9v6h4l5 4V5L8 9H4z"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      {muted ? (
+        <path d="M16 9l5 6M21 9l-5 6" strokeWidth="1.8" strokeLinecap="round" />
+      ) : (
+        <path
+          d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8 8 0 0 1 0 12"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  );
+}
+
+function KidNightIcon({ night }: { readonly night: boolean }): ReactNode {
+  return night ? (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden={true}
+    >
+      <circle cx="12" cy="12" r="4.5" strokeWidth="1.8" />
+      <path
+        d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8L6 18M18 6l1.8-1.8"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  ) : (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden={true}
+    >
+      <path
+        d="M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function Header({
   onOpenMenu,
   showFocus = false,
@@ -26,6 +114,7 @@ export function Header({
   const [streak, setStreak] = useState(0);
   const [focusMode, setFocusMode] = useState(false);
   const [typing, setTyping] = useState(false);
+  const kidsState = useKidsControls();
   useEffect(() => {
     const onStreak = (ev: Event) => {
       setStreak((ev as CustomEvent<number>).detail ?? 0);
@@ -81,7 +170,7 @@ export function Header({
   return (
     <header className={styles.header}>
       <div className={styles.left}>
-        {showBack && (
+        {showBack && !kids && (
           <NavLink
             to="/"
             className={styles.back}
@@ -100,6 +189,20 @@ export function Header({
           <span className={styles.mark}>Key</span>
           <span className={styles.markAlt}>Learn</span>
         </NavLink>
+        {kids && (
+          <span className={styles.kidsTag}>
+            <FormattedMessage id="header.kids" defaultMessage="Kids" />
+            {kidsState.keys > 0 && (
+              <em className={styles.kidsKeys}>
+                <FormattedMessage
+                  id="header.kids.keys"
+                  defaultMessage="{n} keys"
+                  values={{ n: kidsState.keys }}
+                />
+              </em>
+            )}
+          </span>
+        )}
       </div>
       <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
         {streak > 0 && (
@@ -151,6 +254,40 @@ export function Header({
               }}
             />
           </span>
+        )}
+        {kids && (
+          <>
+            <IconButton
+              icon={<KidSoundIcon muted={!kidsState.sounds} />}
+              title={formatMessage(
+                defineMessage({
+                  id: "kids.header.sound",
+                  defaultMessage: "Sounds on or off",
+                }),
+              )}
+              onClick={() => kidsToggle("sound")}
+            />
+            <IconButton
+              icon={<KidNightIcon night={kidsState.night} />}
+              title={formatMessage(
+                defineMessage({
+                  id: "kids.header.night",
+                  defaultMessage: "Day or night",
+                }),
+              )}
+              onClick={() => kidsToggle("night")}
+            />
+            <IconButton
+              icon={<StrokeIcon name="settings" />}
+              title={formatMessage(
+                defineMessage({
+                  id: "kids.header.settings",
+                  defaultMessage: "Settings",
+                }),
+              )}
+              onClick={() => kidsToggle("settings")}
+            />
+          </>
         )}
         {!kids && <ThemeSwitcher />}
         <AccountMenu />

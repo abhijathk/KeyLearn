@@ -33,11 +33,9 @@ import {
   GearIcon,
   HandIcon,
   KeysIcon,
-  MoonIcon,
   SoundIcon,
   SproutIcon,
   StarIcon,
-  SunIcon,
   TentIcon,
   TrophyIcon,
 } from "./icons.tsx";
@@ -413,6 +411,37 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       delete document.body.dataset.kids;
     };
   }, [prefs.night]);
+
+  // The kids controls (sound, day/night, settings) live in the app header now.
+  // Publish their state to it, and act on the header's toggle requests.
+  useEffect(() => {
+    window.dispatchEvent(
+      new window.CustomEvent("keylearn:kids-state", {
+        detail: {
+          sounds: prefs.sounds,
+          night: prefs.night,
+          keys: included,
+        },
+      }),
+    );
+  }, [prefs.sounds, prefs.night, included]);
+  useEffect(() => {
+    const onToggle = (ev: Event) => {
+      const what = (ev as CustomEvent<string>).detail;
+      if (what === "sound") {
+        savePrefs({ sounds: !prefsRef.current.sounds });
+      } else if (what === "night") {
+        const night = !prefsRef.current.night;
+        savePrefs({ night });
+        worldRef.current?.setNight(night);
+      } else if (what === "settings") {
+        setSettingsOpen(true);
+      }
+    };
+    window.addEventListener("keylearn:kids-toggle", onToggle);
+    return () => window.removeEventListener("keylearn:kids-toggle", onToggle);
+     
+  }, []);
 
   // A new key joining the practice set is THE growth moment: the dino grows,
   // the letter introduces itself, and sometimes an egg hatches.
@@ -845,49 +874,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
   return (
     <div className={clsx(styles.root, prefs.night && styles.rootDark)}>
-      <div className={styles.top}>
-        <span className={styles.banner}>
-          <b>Key</b>Learn Kids · {included} keys on your trail
-        </span>
-        <button
-          type="button"
-          className={styles.chipBtn}
-          style={{
-            background: "color-mix(in srgb, var(--sand) 32%, var(--card))",
-          }}
-          title="Sounds on or off"
-          onClick={() => savePrefs({ sounds: !prefs.sounds })}
-        >
-          <SoundIcon muted={!prefs.sounds} />
-        </button>
-        <button
-          type="button"
-          className={styles.chipBtn}
-          style={{
-            background: "color-mix(in srgb, var(--seafoam) 32%, var(--card))",
-          }}
-          title="Day or night"
-          onClick={() => {
-            const night = !prefs.night;
-            savePrefs({ night });
-            worldRef.current?.setNight(night);
-          }}
-        >
-          {prefs.night ? <SunIcon /> : <MoonIcon />}
-        </button>
-        <button
-          type="button"
-          className={styles.chipBtn}
-          style={{
-            background: "color-mix(in srgb, var(--sky) 26%, var(--card))",
-          }}
-          title="Settings"
-          onClick={() => setSettingsOpen(true)}
-        >
-          <GearIcon />
-        </button>
-      </div>
-
       <div className={styles.sceneCard} ref={sceneCardRef}>
         <canvas className={styles.canvas} ref={canvasRef} />
         {!loaded && (

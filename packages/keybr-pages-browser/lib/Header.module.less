@@ -134,6 +134,26 @@
 // body[data-kids] while it is mounted; leaving it reverts to the adult theme).
 // Retheming is done by overriding the design tokens on the header subtree, so
 // the wordmark, buttons and avatar all follow automatically.
+
+// The "Kids" tag beside the wordmark on the kids page, with a small keys count.
+.kidsTag {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  margin-inline-start: 0.5rem;
+  color: var(--accent);
+  font-family: var(--value-font-family);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.kidsKeys {
+  color: var(--text-color-f1);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-style: normal;
+}
+
 :global(body[data-kids="day"]) .header {
   --background-color: #fdfcf9;
   --primary: #fdfcf9;
