@@ -93,10 +93,10 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
         <PointersLayer suffix={suffix} helpLevel={helpLevel} />
       )}
       {focus && lastLesson && (
-        <HeatmapLayer histogram={flatten(lastLesson.misses)} modifier="m" />
+        <HeatmapLayer histogram={flatten(lastLesson.hits)} modifier="h" />
       )}
       {focus && lastLesson && (
-        <HeatmapLayer histogram={flatten(lastLesson.hits)} modifier="h" />
+        <HeatmapLayer histogram={flatten(lastLesson.misses)} modifier="m" />
       )}
       {focus && lastLesson && (
         <TransitionsLayer histogram={lastLesson.misses2} modifier="m" />

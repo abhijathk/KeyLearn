@@ -61,9 +61,10 @@ export const HeatmapLayer = memo(function HeatmapLayer({
     // A soft glow halo under the key: green for clean hits, warm for misses.
     // Intensity and size scale with the count — calm, readable, no clutter.
     const { x, y } = getKeyCenter(shape);
-    // Success glows bright and generous; trouble glows smaller and quieter.
-    const r = modifier === "m" ? 6 + f * 8 : 8 + f * 12;
-    const opacity = modifier === "m" ? 0.18 + f * 0.28 : 0.25 + f * 0.4;
+    // Success glows soft and generous; a fumble glows a clear, saturated red so
+    // it reads on its own against the green.
+    const r = modifier === "m" ? 8 + f * 9 : 8 + f * 12;
+    const opacity = modifier === "m" ? 0.3 + f * 0.42 : 0.25 + f * 0.4;
     const spot = {
       h: styles.spot_h,
       m: styles.spot_m,

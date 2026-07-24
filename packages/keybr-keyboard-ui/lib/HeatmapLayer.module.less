@@ -1,17 +1,21 @@
 // Post-lesson glow halos (the KeyLearn look): blurred light under the keys.
 .spot {
-  mix-blend-mode: screen;
   filter: blur(6px);
 }
 
+// Clean hits glow green and add up brightly (screen blend = a soft green field).
 .spot_h {
   fill: var(--fast-key-color);
+  mix-blend-mode: screen;
 }
 
+// Misses glow a clear red on their own — normal blend, so a fumbled key reads
+// as a distinct red spot instead of washing into the green around it.
 .spot_m {
   fill: var(--slow-key-color);
 }
 
 .spot_f {
   fill: var(--KeyboardKey-pointer__color);
+  mix-blend-mode: screen;
 }
