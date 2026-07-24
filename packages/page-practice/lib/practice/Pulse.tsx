@@ -58,6 +58,9 @@ export const Pulse = memo(function Pulse({
   // While the learner is actively typing, the hero shows the live cumulative
   // speed with a pulsing dot; otherwise the recorded last-lesson speed.
   const showLive = live.typing && live.cpm > 0;
+  // The goal flag lights up the moment the current speed crosses the target.
+  const crossed =
+    target > 0 && (showLive ? live.cpm : hasData ? speed.last : 0) >= target;
   const frac =
     hasData && target > 0 ? Math.min(1, Math.max(0, speed.last / target)) : 0;
   const reached = hasData && speed.last >= target;
@@ -142,7 +145,7 @@ export const Pulse = memo(function Pulse({
             />
             <span className={clsx(styles.you, reached && styles.youReached)} />
             <span className={styles.roadAhead} />
-            <span className={styles.goal}>
+            <span className={clsx(styles.goal, crossed && styles.goalLit)}>
               <svg
                 className={styles.flag}
                 viewBox="0 0 14 16"

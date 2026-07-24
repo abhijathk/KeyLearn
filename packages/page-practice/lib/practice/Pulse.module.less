@@ -98,6 +98,8 @@
   flex-direction: column;
   gap: 1.35rem;
   min-inline-size: 6rem;
+  // The target road doesn't need the full width — keep it tidy.
+  max-inline-size: 34rem;
 }
 
 .road {
@@ -206,6 +208,29 @@
   stroke-width: 1.6;
   stroke-linejoin: round;
   stroke-linecap: round;
+}
+
+// The goal lights up the instant the current speed crosses the target.
+.goalLit {
+  color: var(--accent);
+}
+
+.goalLit .flag {
+  stroke: var(--accent);
+  filter: drop-shadow(
+    0 0 0.35rem color-mix(in oklab, var(--accent) 75%, transparent)
+  );
+  animation: goalpop 0.5s ease;
+}
+
+@keyframes goalpop {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.35);
+  }
 }
 
 .pct {

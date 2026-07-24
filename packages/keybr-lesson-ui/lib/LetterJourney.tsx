@@ -6,8 +6,8 @@ import * as styles from "./LetterJourney.module.less";
 import { useKeyStyles } from "./styles.ts";
 
 const STEP = 42;
-const PAD = 26;
-const PAD_TOP = 34;
+const PAD = 30;
+const PAD_TOP = 46; // room for the focused key's "% ready" note above row one
 const ROW_H = 46;
 const AMP = 8;
 const RING = 14;
@@ -119,13 +119,22 @@ export function LetterJourney({
             >
               {isFocused && (
                 <>
-                  <text className={styles.note} x={x} y={y - 28}>
-                    {readinessNote(conf)}
-                  </text>
-                  <path
-                    className={styles.pin}
-                    d={`M ${x - 6} ${y - 25} L ${x + 6} ${y - 25} L ${x} ${y - 16} Z`}
-                  />
+                  {/* Keep the note (and its pin) inside the SVG when the
+                      current key sits near an edge. */}
+                  {(() => {
+                    const nx = Math.max(46, Math.min(width - 46, x));
+                    return (
+                      <>
+                        <text className={styles.note} x={nx} y={y - 28}>
+                          {readinessNote(conf)}
+                        </text>
+                        <path
+                          className={styles.pin}
+                          d={`M ${nx - 6} ${y - 25} L ${nx + 6} ${y - 25} L ${nx} ${y - 16} Z`}
+                        />
+                      </>
+                    );
+                  })()}
                   <circle className={styles.ring} cx={x} cy={y} r={RING} />
                   <circle
                     className={styles.ringProgress}
