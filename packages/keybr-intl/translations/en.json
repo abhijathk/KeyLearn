@@ -49,6 +49,7 @@
   "ceremony.title": "You’ve unlocked a new key!",
   "dailyGoal.done": "Complete · {done} of {goal} min",
   "dailyGoal.progress": "{done} of {goal} min so far",
+  "drawer.account": "Account",
   "drawer.fingerColors": "Finger colour zones on the keyboard",
   "drawer.goTo": "Go to",
   "drawer.grownUps": "Grown-ups",

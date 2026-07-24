@@ -277,6 +277,62 @@ export async function loadMessages(locale: LocaleId): Promise<Messages> {
           { with: { type: "json" } }
         )
       ).default;
+    case "bn":
+      return (
+        await import(
+          /* webpackChunkName: "messages-bn" */ "./messages/bn.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case "gu":
+      return (
+        await import(
+          /* webpackChunkName: "messages-gu" */ "./messages/gu.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case "hi":
+      return (
+        await import(
+          /* webpackChunkName: "messages-hi" */ "./messages/hi.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case "kn":
+      return (
+        await import(
+          /* webpackChunkName: "messages-kn" */ "./messages/kn.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case "ml":
+      return (
+        await import(
+          /* webpackChunkName: "messages-ml" */ "./messages/ml.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case "ta":
+      return (
+        await import(
+          /* webpackChunkName: "messages-ta" */ "./messages/ta.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case "te":
+      return (
+        await import(
+          /* webpackChunkName: "messages-te" */ "./messages/te.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case "ur":
+      return (
+        await import(
+          /* webpackChunkName: "messages-ur" */ "./messages/ur.json",
+          { with: { type: "json" } }
+        )
+      ).default;
     default:
       throw new Error(
         process.env.NODE_ENV !== "production"

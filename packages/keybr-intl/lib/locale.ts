@@ -28,6 +28,7 @@ export const allLocales: readonly LocaleId[] = [
   "af",
   "ar",
   "bg",
+  "bn",
   "ca",
   "cs",
   "da",
@@ -40,13 +41,17 @@ export const allLocales: readonly LocaleId[] = [
   "fi",
   "fr",
   "ga",
+  "gu",
   "he",
+  "hi",
   "hr",
   "hu",
   "id",
   "it",
   "ja",
+  "kn",
   "ko",
+  "ml",
   "ne",
   "nl",
   "pl",
@@ -56,9 +61,12 @@ export const allLocales: readonly LocaleId[] = [
   "ru",
   "sk",
   "sv",
+  "ta",
+  "te",
   "th",
   "tr",
   "uk",
+  "ur",
   "vi",
   "zh-hans",
   "zh-hant",
@@ -70,6 +78,7 @@ export function getDir(locale: LocaleId): "ltr" | "rtl" {
     case "ar":
     case "fa":
     case "he":
+    case "ur":
       return "rtl";
     default:
       return "ltr";
