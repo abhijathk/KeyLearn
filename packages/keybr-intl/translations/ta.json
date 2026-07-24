@@ -195,7 +195,6 @@
   "practice.lane.today.description": "உங்கள் தினசரி இலக்கில், இன்றைய பயிற்சி நேரம். உண்மையில் தட்டச்சு செய்யப்பட்ட நேரம் மட்டுமே கணக்கிடப்படுகிறது — பாடங்களுக்கு இடையிலான இடைநிறுத்தங்கள் கணக்கிடப்படுவதில்லை.",
   "practice.lane.todayMinutes": "{done}/{goal}நிமி",
   "practice.pulse.best": "சிறந்தது",
-  "practice.pulse.goalReached": "இலக்கு அடையப்பட்டது — அமைப்புகளில் அதை உயர்த்தவும்",
   "practice.pulse.next": "அடுத்தது {next}",
   "practice.pulse.now": "இப்போது",
   "practice.pulse.pace": "வேகம்",

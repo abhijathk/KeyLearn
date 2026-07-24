@@ -197,7 +197,6 @@
   "practice.lane.today.description": "നിങ്ങളുടെ ദൈനംദിന ലക്ഷ്യത്തിൽ, ഇന്നത്തെ പരിശീലന സമയം. യഥാർത്ഥത്തിൽ ടൈപ്പ് ചെയ്യുന്ന സമയം മാത്രമേ കണക്കാക്കൂ — പാഠങ്ങൾക്കിടയിലുള്ള ഇടവേളകൾ കണക്കാക്കില്ല.",
   "practice.lane.todayMinutes": "{done}/{goal}മിനിറ്റ്",
   "practice.pulse.best": "മികച്ചത്",
-  "practice.pulse.goalReached": "ലക്ഷ്യം എത്തി — ക്രമീകരണങ്ങളിൽ അത് ഉയർത്തുക",
   "practice.pulse.next": "അടുത്തത് {next}",
   "practice.pulse.now": "ഇപ്പോൾ",
   "practice.pulse.pace": "വേഗത",

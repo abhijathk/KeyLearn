@@ -154,21 +154,16 @@ export const Pulse = memo(function Pulse({
                 <path d="M3 15V2m0 0h8l-2.5 3L11 8H3" />
               </svg>
               {formatSpeed(target)}
-              <em className={styles.pct}>
-                {hasData &&
-                  (reached ? (
-                    <FormattedMessage
-                      id="practice.pulse.goalReached"
-                      defaultMessage="Goal reached — raise it in settings"
-                    />
-                  ) : (
-                    <FormattedMessage
-                      id="practice.pulse.progress"
-                      defaultMessage="{percent}% of the way"
-                      values={{ percent: Math.round(frac * 100) }}
-                    />
-                  ))}
-              </em>
+              {/* Once the goal is reached the flag simply pulses — no label. */}
+              {hasData && !reached && (
+                <em className={styles.pct}>
+                  <FormattedMessage
+                    id="practice.pulse.progress"
+                    defaultMessage="{percent}% of the way"
+                    values={{ percent: Math.round(frac * 100) }}
+                  />
+                </em>
+              )}
             </span>
           </div>
 

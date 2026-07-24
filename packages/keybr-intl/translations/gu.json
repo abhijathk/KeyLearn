@@ -197,7 +197,6 @@
   "practice.lane.today.description": "તમારા દૈનિક લક્ષ્યમાંથી આજનો પ્રેક્ટિસ સમય. ફક્ત ખરેખર ટાઇપ કરવામાં વિતાવેલો સમય ગણાય છે — પાઠ વચ્ચેના વિરામ નહીં.",
   "practice.lane.todayMinutes": "{done}/{goal}મિનિટ",
   "practice.pulse.best": "શ્રેષ્ઠ",
-  "practice.pulse.goalReached": "લક્ષ્ય પહોંચ્યું — સેટિંગ્સમાં તેને વધારો",
   "practice.pulse.next": "આગળ {next}",
   "practice.pulse.now": "હમણાં",
   "practice.pulse.pace": "ગતિ",

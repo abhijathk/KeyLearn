@@ -217,19 +217,31 @@
 
 .goalLit .flag {
   stroke: var(--accent);
-  filter: drop-shadow(
-    0 0 0.35rem color-mix(in oklab, var(--accent) 75%, transparent)
-  );
-  animation: goalpop 0.5s ease;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: goalpulse 1.1s ease-in-out infinite;
 }
 
-@keyframes goalpop {
-  0% {
+@keyframes goalpulse {
+  0%,
+  100% {
     transform: scale(1);
+    filter: drop-shadow(
+      0 0 0.2rem color-mix(in oklab, var(--accent) 45%, transparent)
+    );
   }
 
-  40% {
-    transform: scale(1.35);
+  50% {
+    transform: scale(1.28);
+    filter: drop-shadow(
+      0 0 0.55rem color-mix(in oklab, var(--accent) 85%, transparent)
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .goalLit .flag {
+    animation: none;
   }
 }
 

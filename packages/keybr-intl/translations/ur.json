@@ -195,7 +195,6 @@
   "practice.lane.today.description": "آپ کے یومیہ ہدف میں سے آج کی مشق کا وقت۔ صرف اصل ٹائپنگ میں گزرا وقت شمار ہوتا ہے — اسباق کے درمیان وقفے نہیں۔",
   "practice.lane.todayMinutes": "{done}/{goal}منٹ",
   "practice.pulse.best": "بہترین",
-  "practice.pulse.goalReached": "ہدف پہنچ گیا — اسے ترتیبات میں بڑھائیں",
   "practice.pulse.next": "اگلا {next}",
   "practice.pulse.now": "اب",
   "practice.pulse.pace": "رفتار",

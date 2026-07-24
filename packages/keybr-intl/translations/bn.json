@@ -195,7 +195,6 @@
   "practice.lane.today.description": "আজকের অনুশীলনের সময়, আপনার দৈনিক লক্ষ্যের মধ্যে। কেবল প্রকৃত টাইপিংয়ে কাটানো সময়ই গোনা হয় — পাঠের মাঝের বিরতি নয়।",
   "practice.lane.todayMinutes": "{done}/{goal}মিনিট",
   "practice.pulse.best": "সেরা",
-  "practice.pulse.goalReached": "লক্ষ্যে পৌঁছেছেন — সেটিংসে এটি বাড়ান",
   "practice.pulse.next": "পরবর্তী {next}",
   "practice.pulse.now": "এখন",
   "practice.pulse.pace": "গতি",

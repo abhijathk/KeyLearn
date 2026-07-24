@@ -195,7 +195,6 @@
   "practice.lane.today.description": "आज का अभ्यास समय, आपके दैनिक लक्ष्य में से। केवल असल में टाइप करने में बिताया समय गिना जाता है — सबकों के बीच के विराम नहीं।",
   "practice.lane.todayMinutes": "{done}/{goal} मिनट",
   "practice.pulse.best": "सर्वश्रेष्ठ",
-  "practice.pulse.goalReached": "लक्ष्य पूरा हुआ — इसे सेटिंग्स में बढ़ाएँ",
   "practice.pulse.next": "अगला {next}",
   "practice.pulse.now": "अभी",
   "practice.pulse.pace": "रफ़्तार",

@@ -195,7 +195,6 @@
   "practice.lane.today.description": "ನಿಮ್ಮ ದೈನಂದಿನ ಗುರಿಯಲ್ಲಿ ಇಂದಿನ ಅಭ್ಯಾಸದ ಸಮಯ. ವಾಸ್ತವವಾಗಿ ಟೈಪ್ ಮಾಡಲು ಕಳೆದ ಸಮಯ ಮಾತ್ರ ಎಣಿಕೆಯಾಗುತ್ತದೆ — ಪಾಠಗಳ ನಡುವಿನ ವಿರಾಮಗಳಲ್ಲ.",
   "practice.lane.todayMinutes": "{done}/{goal}ನಿಮಿಷ",
   "practice.pulse.best": "ಅತ್ಯುತ್ತಮ",
-  "practice.pulse.goalReached": "ಗುರಿ ತಲುಪಿದೆ — ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಅದನ್ನು ಹೆಚ್ಚಿಸಿ",
   "practice.pulse.next": "ಮುಂದಿನ {next}",
   "practice.pulse.now": "ಈಗ",
   "practice.pulse.pace": "ಗತಿ",

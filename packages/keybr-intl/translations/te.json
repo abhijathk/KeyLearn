@@ -195,7 +195,6 @@
   "practice.lane.today.description": "మీ రోజువారీ లక్ష్యంలో నేటి ప్రాక్టీస్ సమయం. నిజంగా టైప్ చేసిన సమయం మాత్రమే లెక్కించబడుతుంది — పాఠాల మధ్య విరామాలు లెక్కించబడవు.",
   "practice.lane.todayMinutes": "{done}/{goal}నిమి",
   "practice.pulse.best": "ఉత్తమం",
-  "practice.pulse.goalReached": "లక్ష్యం చేరుకున్నారు — సెట్టింగుల్లో దాన్ని పెంచండి",
   "practice.pulse.next": "తదుపరి {next}",
   "practice.pulse.now": "ఇప్పుడు",
   "practice.pulse.pace": "వేగం",
