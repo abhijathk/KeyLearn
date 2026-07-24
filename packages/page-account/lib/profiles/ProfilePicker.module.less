@@ -1,0 +1,49 @@
+@import "@keybr/widget/lib/index.less";
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+  inline-size: 6.5rem;
+  padding: 0.9rem 0.5rem;
+  border: 2px solid transparent;
+  border-radius: 0.9rem;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent);
+    background-color: var(--primary-l1);
+  }
+}
+
+.name {
+  max-inline-size: 100%;
+  overflow: hidden;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kind {
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

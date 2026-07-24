@@ -131,6 +131,10 @@ export function activeProfile(h: Household): Profile | null {
   return h.profiles.find((p) => p.id === h.activeId) ?? null;
 }
 
+export function adultProfiles(h: Household): readonly Profile[] {
+  return h.profiles.filter((p) => p.kind === "adult");
+}
+
 /**
  * The local result-history namespace for a profile. Kept stable and distinct
  * from the default "history" store so each learner's progress is their own.

@@ -1,5 +1,9 @@
 import { ErrorHandler } from "@keybr/debug";
-import { ProfilesProvider, useProfiles } from "@keybr/page-account";
+import {
+  ProfilePicker,
+  ProfilesProvider,
+  useProfiles,
+} from "@keybr/page-account";
 import {
   getPageData,
   LoadingProgress,
@@ -110,6 +114,7 @@ function PageRoutes() {
   return (
     <BrowserRouter basename={Pages.intlBase(locale)}>
       <FirstRunRedirect />
+      <ProfilePicker />
       <Routes>
         <Route
           index={true}
