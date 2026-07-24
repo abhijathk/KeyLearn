@@ -1,7 +1,13 @@
+import { type ReactNode } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./road.module.less";
 
 // The legal pages, written to be read: plain words, honest promises, and the
 // same road design language as the rest of the app.
+
+// Rich-text chunk used across the localized copy so words can be emphasised
+// inside a translatable message rather than split into fragments.
+const em = (chunks: ReactNode) => <em>{chunks}</em>;
 
 function Masthead({
   kicker,
@@ -21,7 +27,7 @@ function Masthead({
   );
 }
 
-function Sect({ children }: { readonly children: string }) {
+function Sect({ children }: { readonly children: ReactNode }) {
   return <div className={styles.sect}>{children}</div>;
 }
 
@@ -29,134 +35,214 @@ function Sect({ children }: { readonly children: string }) {
 export const APP_VERSION = "01.00.00";
 
 export function AboutPage() {
+  const { formatMessage } = useIntl();
   return (
     <div className={styles.paper}>
       <Masthead
-        kicker="The KeyLearn story"
-        title="About KeyLearn"
-        dateline={`Free · Open source · Version ${APP_VERSION}`}
+        kicker={formatMessage({
+          id: "about.kicker",
+          defaultMessage: "The KeyLearn story",
+        })}
+        title={formatMessage({
+          id: "about.title",
+          defaultMessage: "About KeyLearn",
+        })}
+        dateline={formatMessage(
+          {
+            id: "about.dateline",
+            defaultMessage: "Free · Open source · Version {version}",
+          },
+          { version: APP_VERSION },
+        )}
       />
 
       <div className={styles.glance}>
-        <div className={styles.glanceLab}>In a sentence</div>
+        <div className={styles.glanceLab}>
+          <FormattedMessage
+            id="about.glance.label"
+            defaultMessage="In a sentence"
+          />
+        </div>
         <ul>
           <li>
-            KeyLearn is a <em>free, open-source</em> touch-typing tutor for the
-            whole household — grown-ups and kids alike.
+            <FormattedMessage
+              id="about.glance.1"
+              defaultMessage="KeyLearn is a <em>free, open-source</em> touch-typing tutor for the whole household — grown-ups and kids alike."
+              values={{ em }}
+            />
           </li>
           <li>
-            It watches the keys that slow you down and builds your practice
-            around <em>them</em>, so every minute is spent where it counts.
+            <FormattedMessage
+              id="about.glance.2"
+              defaultMessage="It watches the keys that slow you down and builds your practice around <em>them</em>, so every minute is spent where it counts."
+              values={{ em }}
+            />
           </li>
           <li>
-            Children get a playful dino-run world that adapts to their age;
-            grown-ups get a focused, data-rich practice screen.
+            <FormattedMessage
+              id="about.glance.3"
+              defaultMessage="Children get a playful dino-run world that adapts to their age; grown-ups get a focused, data-rich practice screen."
+            />
           </li>
-          <li>No ads, no trackers, and your data stays yours.</li>
+          <li>
+            <FormattedMessage
+              id="about.glance.4"
+              defaultMessage="No ads, no trackers, and your data stays yours."
+            />
+          </li>
         </ul>
       </div>
 
-      <Sect>Why KeyLearn exists</Sect>
+      <Sect>
+        <FormattedMessage
+          id="about.why.h"
+          defaultMessage="Why KeyLearn exists"
+        />
+      </Sect>
       <p>
-        Typing well is a quiet superpower — it takes the friction out of every
-        message, essay, and line of code you&rsquo;ll ever write. KeyLearn was
-        built to teach that skill in the most encouraging way we could manage:
-        short sessions, honest feedback, and a sense of steady progress you can
-        actually feel. It&rsquo;s a fork of the open-source keybr engine,
-        reworked around families and rebuilt to be warm rather than clinical.
+        <FormattedMessage
+          id="about.why.p"
+          defaultMessage="Typing well is a quiet superpower — it takes the friction out of every message, essay, and line of code you’ll ever write. KeyLearn was built to teach that skill in the most encouraging way we could manage: short sessions, honest feedback, and a sense of steady progress you can actually feel. It’s a fork of the open-source keybr engine, reworked around families and rebuilt to be warm rather than clinical."
+        />
       </p>
 
-      <Sect>The story so far</Sect>
+      <Sect>
+        <FormattedMessage
+          id="about.story.h"
+          defaultMessage="The story so far"
+        />
+      </Sect>
       <p>
-        KeyLearn began in 2026 as a simple wish: a typing tutor good enough for
-        a grown-up to sharpen on, yet gentle enough for a five-year-old to love.
-        The best open-source engine around — keybr — already nailed the hard
-        part, the adaptive lesson algorithm, so KeyLearn started there and grew
-        outward: a playful dino-run world for children, per-learner household
-        profiles, age-aware pacing, a friendlier interface, and support for many
-        languages. Version <em>{APP_VERSION}</em> is the first public release —
-        the foundation the rest of the journey is built on.
+        <FormattedMessage
+          id="about.story.p"
+          defaultMessage="KeyLearn began in 2026 as a simple wish: a typing tutor good enough for a grown-up to sharpen on, yet gentle enough for a five-year-old to love. The best open-source engine around — keybr — already nailed the hard part, the adaptive lesson algorithm, so KeyLearn started there and grew outward: a playful dino-run world for children, per-learner household profiles, age-aware pacing, a friendlier interface, and support for many languages. Version <em>{version}</em> is the first public release — the foundation the rest of the journey is built on."
+          values={{ em, version: APP_VERSION }}
+        />
       </p>
 
-      <Sect>The maker</Sect>
+      <Sect>
+        <FormattedMessage id="about.maker.h" defaultMessage="The maker" />
+      </Sect>
       <p>
-        KeyLearn is designed and built by <em>AK</em>, an independent developer
-        working mostly solo. It started at the kitchen table, watching a young
-        family member hunt-and-peck at a keyboard and wishing for something that
-        felt more like a game than a chore. AK has spent years building software
-        for the web, but this is the first project made squarely for family — no
-        company behind it, no investors to please, just care put into a tool
-        meant to be genuinely useful. Feedback and contributions are always
-        welcome.
+        <FormattedMessage
+          id="about.maker.p"
+          defaultMessage="KeyLearn is designed and built by <em>AK</em>, an independent developer working mostly solo. It started at the kitchen table, watching a young family member hunt-and-peck at a keyboard and wishing for something that felt more like a game than a chore. AK has spent years building software for the web, but this is the first project made squarely for family — no company behind it, no investors to please, just care put into a tool meant to be genuinely useful. Feedback and contributions are always welcome."
+          values={{ em }}
+        />
       </p>
 
-      <Sect>How the learning works</Sect>
+      <Sect>
+        <FormattedMessage
+          id="about.how.h"
+          defaultMessage="How the learning works"
+        />
+      </Sect>
       <p>
-        Rather than marching you through fixed drills, KeyLearn measures how
-        quickly and cleanly you hit each key and weaves your weak spots into the
-        words it generates. A letter only joins your set once you can type it
-        both quickly <em>and</em> accurately, so the difficulty rises exactly as
-        fast as you do — never faster.
+        <FormattedMessage
+          id="about.how.p"
+          defaultMessage="Rather than marching you through fixed drills, KeyLearn measures how quickly and cleanly you hit each key and weaves your weak spots into the words it generates. A letter only joins your set once you can type it both quickly <em>and</em> accurately, so the difficulty rises exactly as fast as you do — never faster."
+          values={{ em }}
+        />
       </p>
 
-      <Sect>Made for the whole family</Sect>
+      <Sect>
+        <FormattedMessage
+          id="about.family.h"
+          defaultMessage="Made for the whole family"
+        />
+      </Sect>
       <p>
-        One account holds a profile for each person in your home, and every
-        profile keeps its own progress. Kids step into a friendly dino-run
-        adventure that scales to their age — shorter sessions, gentler pacing,
-        and bigger encouragement for the youngest — while grown-ups get the full
-        practice screen with detailed statistics. Everyone learns on the same
-        proven engine, just dressed for their age.
+        <FormattedMessage
+          id="about.family.p"
+          defaultMessage="One account holds a profile for each person in your home, and every profile keeps its own progress. Kids step into a friendly dino-run adventure that scales to their age — shorter sessions, gentler pacing, and bigger encouragement for the youngest — while grown-ups get the full practice screen with detailed statistics. Everyone learns on the same proven engine, just dressed for their age."
+        />
       </p>
 
-      <Sect>What we stand for</Sect>
+      <Sect>
+        <FormattedMessage
+          id="about.values.h"
+          defaultMessage="What we stand for"
+        />
+      </Sect>
       <ul>
         <li>
-          <em>Learners first.</em> Every decision is judged by one question —
-          does it help someone type better and enjoy getting there?
+          <FormattedMessage
+            id="about.values.1"
+            defaultMessage="<em>Learners first.</em> Every decision is judged by one question — does it help someone type better and enjoy getting there?"
+            values={{ em }}
+          />
         </li>
         <li>
-          <em>Kindness over pressure.</em> Progress is celebrated, mistakes are
-          forgiven, and no one is shamed into practising.
+          <FormattedMessage
+            id="about.values.2"
+            defaultMessage="<em>Kindness over pressure.</em> Progress is celebrated, mistakes are forgiven, and no one is shamed into practising."
+            values={{ em }}
+          />
         </li>
         <li>
-          <em>Privacy by default.</em> No ads, no trackers, no selling data.
-          Practise as a guest and nothing ever leaves your device.
+          <FormattedMessage
+            id="about.values.3"
+            defaultMessage="<em>Privacy by default.</em> No ads, no trackers, no selling data. Practise as a guest and nothing ever leaves your device."
+            values={{ em }}
+          />
         </li>
         <li>
-          <em>Open and honest.</em> The whole source is public, the language is
-          plain, and there are no dark patterns or hidden costs.
+          <FormattedMessage
+            id="about.values.4"
+            defaultMessage="<em>Open and honest.</em> The whole source is public, the language is plain, and there are no dark patterns or hidden costs."
+            values={{ em }}
+          />
         </li>
         <li>
-          <em>Built to last.</em> Careful, unhurried work over hype — a tool you
-          can trust for years, not a growth experiment.
+          <FormattedMessage
+            id="about.values.5"
+            defaultMessage="<em>Built to last.</em> Careful, unhurried work over hype — a tool you can trust for years, not a growth experiment."
+            values={{ em }}
+          />
         </li>
       </ul>
 
-      <Sect>Open source, and yours</Sect>
+      <Sect>
+        <FormattedMessage
+          id="about.oss.h"
+          defaultMessage="Open source, and yours"
+        />
+      </Sect>
       <p>
-        KeyLearn is published under the GNU AGPL license: the whole source code
-        is open for you to read, run, or improve. There is nothing to buy, no
-        subscription, and no advertising. Your practice data belongs to you —
-        export it or erase it whenever you like.{" "}
-        <a
-          href="https://github.com/abhijathk/keylearn"
-          target="_blank"
-          rel="noreferrer"
-        >
-          View the source on GitHub
-        </a>
-        .
+        <FormattedMessage
+          id="about.oss.p"
+          defaultMessage="KeyLearn is published under the GNU AGPL license: the whole source code is open for you to read, run, or improve. There is nothing to buy, no subscription, and no advertising. Your practice data belongs to you — export it or erase it whenever you like. <a>View the source on GitHub</a>."
+          values={{
+            a: (chunks: ReactNode) => (
+              <a
+                href="https://github.com/abhijathk/keylearn"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {chunks}
+              </a>
+            ),
+          }}
+        />
       </p>
 
-      <Sect>Version</Sect>
+      <Sect>
+        <FormattedMessage id="about.version.h" defaultMessage="Version" />
+      </Sect>
       <p>
-        You&rsquo;re running KeyLearn <em>v{APP_VERSION}</em>. Each release
-        bumps this number so you always know which build you&rsquo;re on.
+        <FormattedMessage
+          id="about.version.p"
+          defaultMessage="You’re running KeyLearn <em>v{version}</em>. Each release bumps this number so you always know which build you’re on."
+          values={{ em, version: APP_VERSION }}
+        />
       </p>
 
       <div className={styles.foot}>
-        keylearn · v{APP_VERSION} · learn to type, joyfully
+        <FormattedMessage
+          id="about.foot"
+          defaultMessage="keylearn · v{version} · learn to type, joyfully"
+          values={{ version: APP_VERSION }}
+        />
       </div>
     </div>
   );

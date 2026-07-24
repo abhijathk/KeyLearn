@@ -1,6 +1,6 @@
 # English
 
-Translated: 562 messages, 6001 words
+Translated: 590 messages, 6650 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,7 +8,7 @@ Untranslated: 0 messages, 0 words
 
 Translated: 306 messages, 3986 words
 
-Untranslated: 224 messages, 1797 words
+Untranslated: 249 messages, 2324 words
 
 * *or*
 * *Kid*
@@ -22,7 +22,6 @@ Untranslated: 224 messages, 1797 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -30,13 +29,14 @@ Untranslated: 224 messages, 1797 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Arabic
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -50,7 +50,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -58,13 +57,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Bulgarian
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -78,7 +78,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -86,29 +85,42 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Bangla
 
-Translated: 552 messages, 5960 words
+Translated: 551 messages, 5954 words
 
-Untranslated: 9 messages, 40 words
+Untranslated: 35 messages, 573 words
 
-* *Kids*
 * *About*
+* *Version*
 * *Log out?*
 * *Settings*
+* *The maker*
 * *Day or night*
+* *In a sentence*
+* *About KeyLearn*
+* *Lower the goal*
+* *Raise the goal*
 * *Sounds on or off*
+* *The story so far*
+* *What we stand for*
 * *Who's practising?*
-* *Live speed — the running average while you type.*
-* *Practice history stays on this device and on your account. Y...*
+* *The KeyLearn story*
+* *Why KeyLearn exists*
+* *How the learning works*
+* *Open source, and yours*
+* *Made for the whole family*
+* *No ads, no trackers, and your data stays yours.*
+* ...
 
 # Catalan
 
 Translated: 278 messages, 3041 words
 
-Untranslated: 250 messages, 2724 words
+Untranslated: 275 messages, 3251 words
 
 * *or*
 * *Kid*
@@ -122,7 +134,6 @@ Untranslated: 250 messages, 2724 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -130,13 +141,14 @@ Untranslated: 250 messages, 2724 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Czech
 
 Translated: 305 messages, 3983 words
 
-Untranslated: 225 messages, 1800 words
+Untranslated: 250 messages, 2327 words
 
 * *or*
 * *Kid*
@@ -150,7 +162,6 @@ Untranslated: 225 messages, 1800 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -158,13 +169,14 @@ Untranslated: 225 messages, 1800 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Danish
 
 Translated: 298 messages, 3935 words
 
-Untranslated: 230 messages, 1830 words
+Untranslated: 255 messages, 2357 words
 
 * *or*
 * *Kid*
@@ -178,7 +190,6 @@ Untranslated: 230 messages, 1830 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -186,13 +197,14 @@ Untranslated: 230 messages, 1830 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # German
 
 Translated: 306 messages, 3986 words
 
-Untranslated: 224 messages, 1797 words
+Untranslated: 249 messages, 2324 words
 
 * *or*
 * *Kid*
@@ -206,7 +218,6 @@ Untranslated: 224 messages, 1797 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -214,13 +225,14 @@ Untranslated: 224 messages, 1797 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Greek
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -234,7 +246,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -242,13 +253,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Esperanto
 
 Translated: 52 messages, 692 words
 
-Untranslated: 472 messages, 5049 words
+Untranslated: 497 messages, 5576 words
 
 * *or*
 * *GO!*
@@ -266,17 +278,17 @@ Untranslated: 472 messages, 5049 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Open*
+* *Pace*
 * ...
 
 # Spanish
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -290,7 +302,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -298,13 +309,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Estonian
 
 Translated: 305 messages, 3985 words
 
-Untranslated: 225 messages, 1798 words
+Untranslated: 250 messages, 2325 words
 
 * *or*
 * *GO!*
@@ -319,12 +331,12 @@ Untranslated: 225 messages, 1798 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
 * *Save*
 * *Text*
+* *Time*
 * *Time*
 * ...
 
@@ -332,7 +344,7 @@ Untranslated: 225 messages, 1798 words
 
 Translated: 263 messages, 2481 words
 
-Untranslated: 265 messages, 3284 words
+Untranslated: 290 messages, 3811 words
 
 * *or*
 * *Kid*
@@ -346,7 +358,6 @@ Untranslated: 265 messages, 3284 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -354,13 +365,14 @@ Untranslated: 265 messages, 3284 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Finnish
 
 Translated: 179 messages, 1837 words
 
-Untranslated: 346 messages, 3907 words
+Untranslated: 371 messages, 4434 words
 
 * *or*
 * *GO!*
@@ -375,12 +387,12 @@ Untranslated: 346 messages, 3907 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
 * *Save*
 * *Text*
+* *Time*
 * *Time*
 * ...
 
@@ -388,7 +400,7 @@ Untranslated: 346 messages, 3907 words
 
 Translated: 20 messages, 80 words
 
-Untranslated: 503 messages, 5650 words
+Untranslated: 528 messages, 6177 words
 
 * *or*
 * *GO!*
@@ -406,17 +418,17 @@ Untranslated: 503 messages, 5650 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Open*
+* *Pace*
 * ...
 
 # French
 
 Translated: 300 messages, 3810 words
 
-Untranslated: 230 messages, 1973 words
+Untranslated: 255 messages, 2500 words
 
 * *or*
 * *Kid*
@@ -430,7 +442,6 @@ Untranslated: 230 messages, 1973 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -438,13 +449,14 @@ Untranslated: 230 messages, 1973 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Irish
 
 Translated: 304 messages, 3976 words
 
-Untranslated: 226 messages, 1807 words
+Untranslated: 251 messages, 2334 words
 
 * *or*
 * *Kid*
@@ -458,7 +470,6 @@ Untranslated: 226 messages, 1807 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -466,27 +477,42 @@ Untranslated: 226 messages, 1807 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Gujarati
 
-Translated: 554 messages, 5979 words
+Translated: 553 messages, 5973 words
 
-Untranslated: 7 messages, 21 words
+Untranslated: 33 messages, 554 words
 
-* *Kids*
 * *About*
+* *Version*
 * *Settings*
+* *The maker*
 * *Day or night*
+* *In a sentence*
+* *About KeyLearn*
+* *Lower the goal*
+* *Raise the goal*
 * *Sounds on or off*
+* *The story so far*
+* *What we stand for*
 * *Who's practising?*
+* *The KeyLearn story*
+* *Why KeyLearn exists*
+* *How the learning works*
+* *Open source, and yours*
+* *Made for the whole family*
+* *No ads, no trackers, and your data stays yours.*
 * *Live speed — the running average while you type.*
+* ...
 
 # Hebrew
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -500,7 +526,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -508,19 +533,21 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Hindi
 
-Translated: 552 messages, 5960 words
+Translated: 580 messages, 6605 words
 
-Untranslated: 9 messages, 40 words
+Untranslated: 10 messages, 45 words
 
-* *Kids*
 * *About*
 * *Log out?*
 * *Settings*
 * *Day or night*
+* *Lower the goal*
+* *Raise the goal*
 * *Sounds on or off*
 * *Who's practising?*
 * *Live speed — the running average while you type.*
@@ -530,7 +557,7 @@ Untranslated: 9 messages, 40 words
 
 Translated: 304 messages, 3981 words
 
-Untranslated: 226 messages, 1802 words
+Untranslated: 251 messages, 2329 words
 
 * *or*
 * *Kid*
@@ -544,7 +571,6 @@ Untranslated: 226 messages, 1802 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -552,13 +578,14 @@ Untranslated: 226 messages, 1802 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Hungarian
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -572,7 +599,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -580,13 +606,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Indonesian
 
 Translated: 306 messages, 3986 words
 
-Untranslated: 224 messages, 1797 words
+Untranslated: 249 messages, 2324 words
 
 * *or*
 * *GO!*
@@ -601,12 +628,12 @@ Untranslated: 224 messages, 1797 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
 * *Save*
 * *Text*
+* *Time*
 * *Time*
 * ...
 
@@ -614,7 +641,7 @@ Untranslated: 224 messages, 1797 words
 
 Translated: 71 messages, 1301 words
 
-Untranslated: 453 messages, 4440 words
+Untranslated: 478 messages, 4967 words
 
 * *or*
 * *GO!*
@@ -632,17 +659,17 @@ Untranslated: 453 messages, 4440 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Open*
+* *Pace*
 * ...
 
 # Italian
 
 Translated: 302 messages, 3981 words
 
-Untranslated: 228 messages, 1802 words
+Untranslated: 253 messages, 2329 words
 
 * *or*
 * *Kid*
@@ -656,7 +683,6 @@ Untranslated: 228 messages, 1802 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -664,13 +690,14 @@ Untranslated: 228 messages, 1802 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Japanese
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -684,7 +711,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -692,29 +718,42 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Kannada
 
-Translated: 552 messages, 5960 words
+Translated: 551 messages, 5954 words
 
-Untranslated: 9 messages, 40 words
+Untranslated: 35 messages, 573 words
 
-* *Kids*
 * *About*
+* *Version*
 * *Log out?*
 * *Settings*
+* *The maker*
 * *Day or night*
+* *In a sentence*
+* *About KeyLearn*
+* *Lower the goal*
+* *Raise the goal*
 * *Sounds on or off*
+* *The story so far*
+* *What we stand for*
 * *Who's practising?*
-* *Live speed — the running average while you type.*
-* *Practice history stays on this device and on your account. Y...*
+* *The KeyLearn story*
+* *Why KeyLearn exists*
+* *How the learning works*
+* *Open source, and yours*
+* *Made for the whole family*
+* *No ads, no trackers, and your data stays yours.*
+* ...
 
 # Korean
 
 Translated: 117 messages, 882 words
 
-Untranslated: 411 messages, 4883 words
+Untranslated: 436 messages, 5410 words
 
 * *or*
 * *Kid*
@@ -730,19 +769,19 @@ Untranslated: 411 messages, 4883 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Open*
 * *Pace*
 * *Save*
+* *Text*
 * ...
 
 # Lithuanian
 
 Translated: 273 messages, 2796 words
 
-Untranslated: 255 messages, 2969 words
+Untranslated: 280 messages, 3496 words
 
 * *or*
 * *Kid*
@@ -756,7 +795,6 @@ Untranslated: 255 messages, 2969 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -764,27 +802,42 @@ Untranslated: 255 messages, 2969 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Malayalam
 
-Translated: 554 messages, 5979 words
+Translated: 553 messages, 5973 words
 
-Untranslated: 7 messages, 21 words
+Untranslated: 33 messages, 554 words
 
-* *Kids*
 * *About*
+* *Version*
 * *Settings*
+* *The maker*
 * *Day or night*
+* *In a sentence*
+* *About KeyLearn*
+* *Lower the goal*
+* *Raise the goal*
 * *Sounds on or off*
+* *The story so far*
+* *What we stand for*
 * *Who's practising?*
+* *The KeyLearn story*
+* *Why KeyLearn exists*
+* *How the learning works*
+* *Open source, and yours*
+* *Made for the whole family*
+* *No ads, no trackers, and your data stays yours.*
 * *Live speed — the running average while you type.*
+* ...
 
 # Mongolian
 
 Translated: 4 messages, 31 words
 
-Untranslated: 519 messages, 5699 words
+Untranslated: 544 messages, 6226 words
 
 * *or*
 * *GO!*
@@ -802,17 +855,17 @@ Untranslated: 519 messages, 5699 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Open*
+* *Pace*
 * ...
 
 # Norwegian Bokmål
 
 Translated: 182 messages, 1977 words
 
-Untranslated: 344 messages, 3770 words
+Untranslated: 369 messages, 4297 words
 
 * *or*
 * *Kid*
@@ -827,12 +880,12 @@ Untranslated: 344 messages, 3770 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
 * *Save*
 * *Text*
+* *Time*
 * *Time*
 * ...
 
@@ -840,7 +893,7 @@ Untranslated: 344 messages, 3770 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -854,7 +907,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -862,13 +914,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Dutch
 
 Translated: 301 messages, 3979 words
 
-Untranslated: 229 messages, 1804 words
+Untranslated: 254 messages, 2331 words
 
 * *or*
 * *Kid*
@@ -882,7 +935,6 @@ Untranslated: 229 messages, 1804 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -890,13 +942,14 @@ Untranslated: 229 messages, 1804 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Polish
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -910,7 +963,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -918,13 +970,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Brazilian Portuguese
 
 Translated: 305 messages, 3984 words
 
-Untranslated: 225 messages, 1799 words
+Untranslated: 250 messages, 2326 words
 
 * *or*
 * *Kid*
@@ -938,7 +991,6 @@ Untranslated: 225 messages, 1799 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -946,13 +998,14 @@ Untranslated: 225 messages, 1799 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # European Portuguese
 
 Translated: 286 messages, 3864 words
 
-Untranslated: 242 messages, 1901 words
+Untranslated: 267 messages, 2428 words
 
 * *or*
 * *Kid*
@@ -966,7 +1019,6 @@ Untranslated: 242 messages, 1901 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -974,13 +1026,14 @@ Untranslated: 242 messages, 1901 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Romanian
 
 Translated: 271 messages, 3088 words
 
-Untranslated: 254 messages, 2660 words
+Untranslated: 279 messages, 3187 words
 
 * *or*
 * *Kid*
@@ -994,7 +1047,6 @@ Untranslated: 254 messages, 2660 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1002,13 +1054,14 @@ Untranslated: 254 messages, 2660 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Russian
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -1022,7 +1075,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1030,13 +1082,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Slovak
 
 Translated: 307 messages, 3986 words
 
-Untranslated: 223 messages, 1797 words
+Untranslated: 248 messages, 2324 words
 
 * *or*
 * *Kid*
@@ -1050,7 +1103,6 @@ Untranslated: 223 messages, 1797 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1058,13 +1110,14 @@ Untranslated: 223 messages, 1797 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Slovenian
 
 Translated: 307 messages, 3987 words
 
-Untranslated: 223 messages, 1796 words
+Untranslated: 248 messages, 2323 words
 
 * *or*
 * *Kid*
@@ -1078,7 +1131,6 @@ Untranslated: 223 messages, 1796 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1086,13 +1138,14 @@ Untranslated: 223 messages, 1796 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Albanian
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -1106,7 +1159,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1114,13 +1166,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Swedish
 
 Translated: 305 messages, 3983 words
 
-Untranslated: 225 messages, 1800 words
+Untranslated: 250 messages, 2327 words
 
 * *or*
 * *Kid*
@@ -1134,7 +1187,6 @@ Untranslated: 225 messages, 1800 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1142,45 +1194,70 @@ Untranslated: 225 messages, 1800 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Tamil
 
-Translated: 552 messages, 5960 words
+Translated: 551 messages, 5954 words
 
-Untranslated: 9 messages, 40 words
+Untranslated: 35 messages, 573 words
 
-* *Kids*
 * *About*
+* *Version*
 * *Log out?*
 * *Settings*
+* *The maker*
 * *Day or night*
+* *In a sentence*
+* *About KeyLearn*
+* *Lower the goal*
+* *Raise the goal*
 * *Sounds on or off*
+* *The story so far*
+* *What we stand for*
 * *Who's practising?*
-* *Live speed — the running average while you type.*
-* *Practice history stays on this device and on your account. Y...*
+* *The KeyLearn story*
+* *Why KeyLearn exists*
+* *How the learning works*
+* *Open source, and yours*
+* *Made for the whole family*
+* *No ads, no trackers, and your data stays yours.*
+* ...
 
 # Telugu
 
-Translated: 552 messages, 5960 words
+Translated: 551 messages, 5954 words
 
-Untranslated: 9 messages, 40 words
+Untranslated: 35 messages, 573 words
 
-* *Kids*
 * *About*
+* *Version*
 * *Log out?*
 * *Settings*
+* *The maker*
 * *Day or night*
+* *In a sentence*
+* *About KeyLearn*
+* *Lower the goal*
+* *Raise the goal*
 * *Sounds on or off*
+* *The story so far*
+* *What we stand for*
 * *Who's practising?*
-* *Live speed — the running average while you type.*
-* *Practice history stays on this device and on your account. Y...*
+* *The KeyLearn story*
+* *Why KeyLearn exists*
+* *How the learning works*
+* *Open source, and yours*
+* *Made for the whole family*
+* *No ads, no trackers, and your data stays yours.*
+* ...
 
 # Thai
 
 Translated: 296 messages, 3890 words
 
-Untranslated: 232 messages, 1875 words
+Untranslated: 257 messages, 2402 words
 
 * *or*
 * *Kid*
@@ -1194,7 +1271,6 @@ Untranslated: 232 messages, 1875 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1202,13 +1278,14 @@ Untranslated: 232 messages, 1875 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Turkish
 
 Translated: 197 messages, 1688 words
 
-Untranslated: 328 messages, 4048 words
+Untranslated: 353 messages, 4575 words
 
 * *or*
 * *Kid*
@@ -1222,7 +1299,6 @@ Untranslated: 328 messages, 4048 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1230,13 +1306,14 @@ Untranslated: 328 messages, 4048 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Ukrainian
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -1250,7 +1327,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1258,29 +1334,42 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Urdu
 
-Translated: 552 messages, 5960 words
+Translated: 551 messages, 5954 words
 
-Untranslated: 9 messages, 40 words
+Untranslated: 35 messages, 573 words
 
-* *Kids*
 * *About*
+* *Version*
 * *Log out?*
 * *Settings*
+* *The maker*
 * *Day or night*
+* *In a sentence*
+* *About KeyLearn*
+* *Lower the goal*
+* *Raise the goal*
 * *Sounds on or off*
+* *The story so far*
+* *What we stand for*
 * *Who's practising?*
-* *Live speed — the running average while you type.*
-* *Practice history stays on this device and on your account. Y...*
+* *The KeyLearn story*
+* *Why KeyLearn exists*
+* *How the learning works*
+* *Open source, and yours*
+* *Made for the whole family*
+* *No ads, no trackers, and your data stays yours.*
+* ...
 
 # Vietnamese
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -1294,7 +1383,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1302,13 +1390,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Simplified Chinese
 
 Translated: 307 messages, 3981 words
 
-Untranslated: 223 messages, 1802 words
+Untranslated: 248 messages, 2329 words
 
 * *or*
 * *Kid*
@@ -1322,7 +1411,6 @@ Untranslated: 223 messages, 1802 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1330,13 +1418,14 @@ Untranslated: 223 messages, 1802 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Traditional Chinese
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 222 messages, 1795 words
+Untranslated: 247 messages, 2322 words
 
 * *or*
 * *Kid*
@@ -1350,7 +1439,6 @@ Untranslated: 222 messages, 1795 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
@@ -1358,13 +1446,14 @@ Untranslated: 222 messages, 1795 words
 * *Text*
 * *Time*
 * *Time*
+* *About*
 * ...
 
 # Chinese (Taiwan)
 
 Translated: 307 messages, 3987 words
 
-Untranslated: 223 messages, 1796 words
+Untranslated: 248 messages, 2323 words
 
 * *or*
 * *GO!*
@@ -1379,11 +1468,11 @@ Untranslated: 223 messages, 1796 words
 * *Kids*
 * *Kids*
 * *Kids*
-* *Kids*
 * *last*
 * *Open*
 * *Pace*
 * *Save*
 * *Text*
+* *Time*
 * *Time*
 * ...
