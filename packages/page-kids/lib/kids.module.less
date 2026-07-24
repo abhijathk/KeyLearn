@@ -364,7 +364,27 @@
 }
 
 // ── the helper card: hands + keyboard ──────────────────────────────────
+
+// A subtle muted-sound marker in the bottom-right corner of the keyboard card,
+// shown only while sounds are off.
+.mutedMark {
+  position: absolute;
+  inset-block-end: 0.6rem;
+  inset-inline-end: 0.7rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  opacity: 0.35;
+  pointer-events: none;
+
+  svg {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+  }
+}
+
 .kbWrap {
+  position: relative;
   --ku: clamp(0.6rem, 1.12vi, 1rem);
   display: flex;
   flex: none;

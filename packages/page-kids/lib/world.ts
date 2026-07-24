@@ -110,8 +110,9 @@ export type KidsWorld = {
   beckon(): void;
   stumble(): void;
   roar(): void;
-  grow(scale: number): void;
-  /** Baby (0) → adult (1): reshapes the dino's body, colour and gait. */
+  /** A celebratory size-pop when a new key unlocks. */
+  grow(): void;
+  /** Baby (0) → adult (1): reshapes the dino's body, size, colour and gait. */
   setAge(age: number): void;
   burstAtPlayer(colors: readonly number[], count?: number, up?: number): void;
   playerScreenXY(): readonly [number, number] | null;
@@ -515,6 +516,11 @@ export function createKidsWorld(
     rig.mixer.timeScale = L(1.4, 1);
   }
 
+  // Overall size also reads the age — a small (not tiny) baby up to a big (not
+  // giant) adult, so the stage is legible at a glance.
+  const sizeForAge = (age: number) =>
+    0.72 + 0.66 * Math.max(0, Math.min(1, age));
+
   async function setPlayer(name: string) {
     const gltf = await loadModel(`${ASSETS}/models/dino/${name}.glb`);
     const targetH = name === "TRex" ? 3.1 : name === "Triceratops" ? 2.6 : 2.3;
@@ -743,16 +749,17 @@ export function createKidsWorld(
         burst(p.x + 1.2, p.y + 2.4, p.z, [0xff5c5c, 0xffd66b], 12, 0.28);
       }
     },
-    grow(scale) {
-      growTarget = scale;
+    grow() {
+      // A celebratory pop; the steady size is set by the age (setAge below).
       if (player) {
-        player.wrap.scale.setScalar(scale * 1.18); // pop, then settle
+        player.wrap.scale.setScalar(growTarget * 1.18); // pop, then settle
         const p = player.wrap.position;
         burst(p.x, p.y + 2.2, p.z, [0x37c871, 0xffd66b, 0x8fd9b6], 18, 0.32);
       }
     },
     setAge(age) {
       dinoAge = Math.max(0, Math.min(1, age));
+      growTarget = sizeForAge(dinoAge);
       if (player) {
         morphDino(player, dinoAge);
       }

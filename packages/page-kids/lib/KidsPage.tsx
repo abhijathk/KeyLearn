@@ -179,7 +179,21 @@ const SAYS = {
     "{name} grew — a brand new key joined your trail!",
     "A new key! {name} stretches taller than ever!",
     "Your trail got bigger — and so did {name}!",
-    "New key unlocked! The herd gasps — {name} is HUGE now!",
+    "New key unlocked! The herd gasps — {name} is bigger now!",
+    "Whoa — {name} just grew into a {stage}!",
+    "A new key, a bigger {name}! Now a proud {stage}.",
+    "{name} shot up a little — hello, {stage}!",
+  ],
+  // Growth feels different for a baby than for a nearly-grown dino.
+  growYoung: [
+    "Baby {name} wobbles up a size — so cute and growing!",
+    "Little {name} squeaks with joy — a new key, a bigger baby!",
+    "{name} is still tiny, but growing bigger every key!",
+  ],
+  growOld: [
+    "Towering {name} rumbles — nearly full-grown now!",
+    "{name} lets out a deep, proud roar — almost an adult!",
+    "The earth trembles as mighty {name} grows again!",
   ],
   hatch: [
     "An egg hatched — {dino} joined the herd! (see settings)",
@@ -197,6 +211,25 @@ const SAYS = {
     "{name} looks back at you. Ready to walk on?",
     "The trail is quiet… one glowing key starts it again!",
     "{name} taps a claw. Shall we keep going?",
+    "{name} sniffs the breeze, then glances at the glowing key.",
+    "A butterfly lands on {name}'s nose. Press a key to shoo it!",
+    "{name} is counting clouds. Wake them with the glowing key!",
+    "Still here! {name} would love one more step.",
+  ],
+  // Little dinos idle in cute, wobbly ways; grown dinos wait with quiet power.
+  idleYoung: [
+    "Baby {name} peeps up at you — press the glowing key!",
+    "Tiny {name} does a wobbly spin, waiting for a key.",
+    "{name} chews a leaf and blinks — one glowing key, please!",
+    "Wee {name} plops down for a rest. Press a key to bounce up!",
+    "{name} chirps a tiny squeak — the glowing key wakes it!",
+  ],
+  idleOld: [
+    "Mighty {name} stands tall, waiting for your next key.",
+    "{name} scans the horizon. One glowing key and you march on.",
+    "The ground stills under grown {name} — press the glowing key.",
+    "{name} gives a slow, steady nod. Ready when you are.",
+    "Big {name} flexes a claw and waits, calm and strong.",
   ],
   stuck: [
     "Look — the {letter} key! Your {finger} presses it.",
@@ -283,6 +316,23 @@ function cheerPool(band: AgeBand): readonly string[] {
     default:
       return SAYS.cheer;
   }
+}
+
+// Messages flavour themselves to the dino's own age: a baby's lines are cute
+// and wobbly, an adult's are mighty and calm. Categories with "…Young"/"…Old"
+// variants mix those in when the dino is little / nearly grown.
+const SAYS_ANY = SAYS as unknown as Record<string, readonly string[]>;
+function agedPool(key: keyof typeof SAYS, age: number): readonly string[] {
+  const base = SAYS_ANY[key] ?? [];
+  const young = SAYS_ANY[`${key}Young`];
+  const old = SAYS_ANY[`${key}Old`];
+  if (age < 0.35 && young) {
+    return [...base, ...young];
+  }
+  if (age > 0.65 && old) {
+    return [...base, ...old];
+  }
+  return base;
 }
 
 /** Dinos hatch from eggs as the trail grows — they are earned, not picked. */
@@ -393,7 +443,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const lastKeyAtRef = useRef(0);
   const missStreakRef = useRef(0);
   const comboRunRef = useRef(0);
-  const growScaleRef = useRef(1);
   const roundsRef = useRef(0);
   const streakRef = useRef(0);
   const stuckRef = useRef({ pos: -1, misses: 0 });
@@ -473,9 +522,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       lessonKeys.findIncludedKeys().map(({ letter }) => letter.codePoint),
     );
     if (prevIncluded.current !== -1 && included > prevIncluded.current) {
-      growScaleRef.current = Math.min(growScaleRef.current * 1.22, 2.4);
-      worldRef.current?.grow(growScaleRef.current);
       worldRef.current?.setAge(dinoAgeOf(included, lesson.letters.length));
+      worldRef.current?.grow();
       setGrowNonce((n) => n + 1);
       setScore((s) => saveBest(s + 10));
       if (prefsRef.current.sounds) {
@@ -506,9 +554,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   }, [included, lessonKeys]);
 
   const dinoName = () => prefsRef.current.name || "Your dino";
+  // The dino's current age (0 baby → 1 adult), kept fresh for the say-lines.
+  const dinoAgeRef = useRef(0);
+  dinoAgeRef.current = dinoAgeOf(included, lesson.letters.length);
 
   const speak = (key: keyof typeof SAYS, vars: Record<string, string> = {}) => {
-    setSay(fillSay(pickSay(SAYS[key]), { name: dinoName(), ...vars }));
+    const age = dinoAgeRef.current;
+    setSay(
+      fillSay(pickSay(agedPool(key, age)), {
+        name: dinoName(),
+        stage: dinoStage(age),
+        ...vars,
+      }),
+    );
   };
 
   // A fresh passage whenever the lesson or the stats move on. Kids runs are
@@ -574,10 +632,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         if (prefsRef.current.night) {
           world.setNight(true);
         }
-        if (growScaleRef.current > 1) {
-          world.grow(growScaleRef.current); // the dino keeps its earned size
-        }
-        // The dino carries its age (baby → adult) across rebuilds and swaps.
+        // The dino carries its age (baby → adult, size and all) across
+        // rebuilds and dino swaps.
         world.setAge(dinoAgeOf(included, lesson.letters.length));
         if (prefsRef.current.dino !== "TRex") {
           return world.setPlayer(prefsRef.current.dino);
@@ -1028,6 +1084,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             wide && styles.kbWrapWide,
           )}
         >
+          {!prefs.sounds && (
+            <span
+              className={styles.mutedMark}
+              title="Sounds are off"
+              aria-label="Sounds are off"
+            >
+              <SoundIcon muted={true} />
+            </span>
+          )}
           {prefs.hands && (
             <div className={styles.hands}>
               <div className={styles.handsArt}>
