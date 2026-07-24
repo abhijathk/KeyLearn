@@ -54,6 +54,10 @@ export const Pulse = memo(function Pulse({
   const target = settings.get(lessonProps.targetSpeed);
   const { count, speed, accuracy, score } = summaryStats;
   const hasData = count > 0;
+  const live = useLiveSpeed();
+  // While the learner is actively typing, the hero shows the live cumulative
+  // speed with a pulsing dot; otherwise the recorded last-lesson speed.
+  const showLive = live.typing && live.cpm > 0;
   const frac =
     hasData && target > 0 ? Math.min(1, Math.max(0, speed.last / target)) : 0;
   const reached = hasData && speed.last >= target;
@@ -103,8 +107,22 @@ export const Pulse = memo(function Pulse({
           })}
         >
           <span className={styles.speedValue}>
-            {hasData ? formatSpeed(speed.last, { unit: false }) : "—"}
+            {showLive
+              ? formatSpeed(live.cpm, { unit: false })
+              : hasData
+                ? formatSpeed(speed.last, { unit: false })
+                : "—"}
             <i className={styles.speedUnit}>{speedUnit.id}</i>
+            {showLive && (
+              <i
+                className={styles.liveDot}
+                title={formatMessage({
+                  id: "practice.live.description",
+                  defaultMessage:
+                    "Live speed — the running average while you type.",
+                })}
+              />
+            )}
           </span>
         </div>
         {hasData && <Chip delta={speed.delta} text={formatSpeed} />}
@@ -303,6 +321,36 @@ export const Pulse = memo(function Pulse({
     </div>
   );
 });
+
+/**
+ * Live typing speed for the hero readout: listens for the controller's live
+ * cumulative-speed events and whether keys are currently landing. The dot
+ * only pulses while typing; when it stops the hero falls back to the recorded
+ * last-lesson number (which the live value has converged to).
+ */
+function useLiveSpeed(): { readonly cpm: number; readonly typing: boolean } {
+  const [cpm, setCpm] = useState(0);
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    const onSpeed = (ev: Event) => {
+      setCpm((ev as CustomEvent<number>).detail);
+    };
+    const onTyping = (ev: Event) => {
+      const on = Boolean((ev as CustomEvent<boolean>).detail);
+      setTyping(on);
+      if (!on) {
+        setCpm(0);
+      }
+    };
+    window.addEventListener("keylearn:live-speed", onSpeed);
+    window.addEventListener("keylearn:typing", onTyping);
+    return () => {
+      window.removeEventListener("keylearn:live-speed", onSpeed);
+      window.removeEventListener("keylearn:typing", onTyping);
+    };
+  }, []);
+  return { cpm, typing };
+}
 
 function Chip({
   delta,

@@ -87,6 +87,9 @@ function useLessonState(
       setLines(state.lines);
       setDepressedKeys((state.depressedKeys = []));
       timeout.cancel();
+      window.dispatchEvent(
+        new window.CustomEvent("keylearn:live-speed", { detail: 0 }),
+      );
     };
     const handleSkipLesson = () => {
       state.skipLesson();
@@ -119,6 +122,18 @@ function useLessonState(
           const feedback = state.onInput(event);
           setLines(state.lines);
           playSounds(feedback);
+          // Live speed: the cumulative average across every keystroke typed so
+          // far this lesson, so the header reads a steady figure that lands on
+          // the recorded lesson speed at the end. In chars/min, like the
+          // recorded value the header formats.
+          const steps = state.textInput.steps;
+          if (steps.length >= 2) {
+            const time = steps.at(-1)!.timeStamp - steps[0]!.timeStamp;
+            const cpm = time > 0 ? (steps.length / (time / 1000)) * 60 : 0;
+            window.dispatchEvent(
+              new window.CustomEvent("keylearn:live-speed", { detail: cpm }),
+            );
+          }
           if (feedback === Feedback.Failed) {
             helpMisses = expected === helpAt ? helpMisses + 1 : 1;
             helpAt = expected;

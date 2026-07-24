@@ -270,6 +270,24 @@
 }
 
 // Log out reads in red, and stays red on hover (its icon too).
+// Signed-out call-to-action links: Log In in the accent green, Register in
+// the kids' sunny yellow, so they stand out from the plain utility links.
+.account .util a.loginLink {
+  color: var(--accent);
+
+  &:hover .utilIcon {
+    color: var(--accent);
+  }
+}
+
+.account .util a.registerLink {
+  color: #f0b400;
+
+  &:hover .utilIcon {
+    color: #f0b400;
+  }
+}
+
 .account .util a.logout {
   color: var(--error-color, #d0322e);
 

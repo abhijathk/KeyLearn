@@ -1,6 +1,6 @@
 # English
 
-Translated: 557 messages, 5987 words
+Translated: 557 messages, 5991 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,7 +8,7 @@ Untranslated: 0 messages, 0 words
 
 Translated: 306 messages, 3986 words
 
-Untranslated: 220 messages, 1784 words
+Untranslated: 220 messages, 1788 words
 
 * *or*
 * *Kid*
@@ -36,7 +36,7 @@ Untranslated: 220 messages, 1784 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -64,7 +64,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -92,19 +92,19 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 552 messages, 5960 words
 
-Untranslated: 5 messages, 27 words
+Untranslated: 5 messages, 31 words
 
 * *About*
 * *Log out?*
 * *Who's practising?*
-* *Stay on the account*
+* *Live speed — the running average while you type.*
 * *Practice history stays on this device and on your account. Y...*
 
 # Catalan
 
 Translated: 278 messages, 3041 words
 
-Untranslated: 246 messages, 2711 words
+Untranslated: 246 messages, 2715 words
 
 * *or*
 * *Kid*
@@ -132,7 +132,7 @@ Untranslated: 246 messages, 2711 words
 
 Translated: 305 messages, 3983 words
 
-Untranslated: 221 messages, 1787 words
+Untranslated: 221 messages, 1791 words
 
 * *or*
 * *Kid*
@@ -160,7 +160,7 @@ Untranslated: 221 messages, 1787 words
 
 Translated: 298 messages, 3935 words
 
-Untranslated: 226 messages, 1817 words
+Untranslated: 226 messages, 1821 words
 
 * *or*
 * *Kid*
@@ -188,7 +188,7 @@ Untranslated: 226 messages, 1817 words
 
 Translated: 306 messages, 3986 words
 
-Untranslated: 220 messages, 1784 words
+Untranslated: 220 messages, 1788 words
 
 * *or*
 * *Kid*
@@ -216,7 +216,7 @@ Untranslated: 220 messages, 1784 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -244,7 +244,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 52 messages, 692 words
 
-Untranslated: 468 messages, 5036 words
+Untranslated: 468 messages, 5040 words
 
 * *or*
 * *GO!*
@@ -272,7 +272,7 @@ Untranslated: 468 messages, 5036 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -300,7 +300,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 305 messages, 3985 words
 
-Untranslated: 221 messages, 1785 words
+Untranslated: 221 messages, 1789 words
 
 * *or*
 * *GO!*
@@ -328,7 +328,7 @@ Untranslated: 221 messages, 1785 words
 
 Translated: 263 messages, 2481 words
 
-Untranslated: 261 messages, 3271 words
+Untranslated: 261 messages, 3275 words
 
 * *or*
 * *Kid*
@@ -356,7 +356,7 @@ Untranslated: 261 messages, 3271 words
 
 Translated: 179 messages, 1837 words
 
-Untranslated: 342 messages, 3894 words
+Untranslated: 342 messages, 3898 words
 
 * *or*
 * *GO!*
@@ -384,7 +384,7 @@ Untranslated: 342 messages, 3894 words
 
 Translated: 20 messages, 80 words
 
-Untranslated: 499 messages, 5637 words
+Untranslated: 499 messages, 5641 words
 
 * *or*
 * *GO!*
@@ -412,7 +412,7 @@ Untranslated: 499 messages, 5637 words
 
 Translated: 300 messages, 3810 words
 
-Untranslated: 226 messages, 1960 words
+Untranslated: 226 messages, 1964 words
 
 * *or*
 * *Kid*
@@ -440,7 +440,7 @@ Untranslated: 226 messages, 1960 words
 
 Translated: 304 messages, 3976 words
 
-Untranslated: 222 messages, 1794 words
+Untranslated: 222 messages, 1798 words
 
 * *or*
 * *Kid*
@@ -468,17 +468,17 @@ Untranslated: 222 messages, 1794 words
 
 Translated: 554 messages, 5979 words
 
-Untranslated: 3 messages, 8 words
+Untranslated: 3 messages, 12 words
 
 * *About*
 * *Who's practising?*
-* *Stay on the account*
+* *Live speed — the running average while you type.*
 
 # Hebrew
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -506,19 +506,19 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 552 messages, 5960 words
 
-Untranslated: 5 messages, 27 words
+Untranslated: 5 messages, 31 words
 
 * *About*
 * *Log out?*
 * *Who's practising?*
-* *Stay on the account*
+* *Live speed — the running average while you type.*
 * *Practice history stays on this device and on your account. Y...*
 
 # Croatian
 
 Translated: 304 messages, 3981 words
 
-Untranslated: 222 messages, 1789 words
+Untranslated: 222 messages, 1793 words
 
 * *or*
 * *Kid*
@@ -546,7 +546,7 @@ Untranslated: 222 messages, 1789 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -574,7 +574,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 306 messages, 3986 words
 
-Untranslated: 220 messages, 1784 words
+Untranslated: 220 messages, 1788 words
 
 * *or*
 * *GO!*
@@ -602,7 +602,7 @@ Untranslated: 220 messages, 1784 words
 
 Translated: 71 messages, 1301 words
 
-Untranslated: 449 messages, 4427 words
+Untranslated: 449 messages, 4431 words
 
 * *or*
 * *GO!*
@@ -630,7 +630,7 @@ Untranslated: 449 messages, 4427 words
 
 Translated: 302 messages, 3981 words
 
-Untranslated: 224 messages, 1789 words
+Untranslated: 224 messages, 1793 words
 
 * *or*
 * *Kid*
@@ -658,7 +658,7 @@ Untranslated: 224 messages, 1789 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -686,19 +686,19 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 552 messages, 5960 words
 
-Untranslated: 5 messages, 27 words
+Untranslated: 5 messages, 31 words
 
 * *About*
 * *Log out?*
 * *Who's practising?*
-* *Stay on the account*
+* *Live speed — the running average while you type.*
 * *Practice history stays on this device and on your account. Y...*
 
 # Korean
 
 Translated: 117 messages, 882 words
 
-Untranslated: 407 messages, 4870 words
+Untranslated: 407 messages, 4874 words
 
 * *or*
 * *Kid*
@@ -726,7 +726,7 @@ Untranslated: 407 messages, 4870 words
 
 Translated: 273 messages, 2796 words
 
-Untranslated: 251 messages, 2956 words
+Untranslated: 251 messages, 2960 words
 
 * *or*
 * *Kid*
@@ -754,17 +754,17 @@ Untranslated: 251 messages, 2956 words
 
 Translated: 554 messages, 5979 words
 
-Untranslated: 3 messages, 8 words
+Untranslated: 3 messages, 12 words
 
 * *About*
 * *Who's practising?*
-* *Stay on the account*
+* *Live speed — the running average while you type.*
 
 # Mongolian
 
 Translated: 4 messages, 31 words
 
-Untranslated: 515 messages, 5686 words
+Untranslated: 515 messages, 5690 words
 
 * *or*
 * *GO!*
@@ -792,7 +792,7 @@ Untranslated: 515 messages, 5686 words
 
 Translated: 182 messages, 1977 words
 
-Untranslated: 340 messages, 3757 words
+Untranslated: 340 messages, 3761 words
 
 * *or*
 * *Kid*
@@ -820,7 +820,7 @@ Untranslated: 340 messages, 3757 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -848,7 +848,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 301 messages, 3979 words
 
-Untranslated: 225 messages, 1791 words
+Untranslated: 225 messages, 1795 words
 
 * *or*
 * *Kid*
@@ -876,7 +876,7 @@ Untranslated: 225 messages, 1791 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -904,7 +904,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 305 messages, 3984 words
 
-Untranslated: 221 messages, 1786 words
+Untranslated: 221 messages, 1790 words
 
 * *or*
 * *Kid*
@@ -932,7 +932,7 @@ Untranslated: 221 messages, 1786 words
 
 Translated: 286 messages, 3864 words
 
-Untranslated: 238 messages, 1888 words
+Untranslated: 238 messages, 1892 words
 
 * *or*
 * *Kid*
@@ -960,7 +960,7 @@ Untranslated: 238 messages, 1888 words
 
 Translated: 271 messages, 3088 words
 
-Untranslated: 250 messages, 2647 words
+Untranslated: 250 messages, 2651 words
 
 * *or*
 * *Kid*
@@ -988,7 +988,7 @@ Untranslated: 250 messages, 2647 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -1016,7 +1016,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 307 messages, 3986 words
 
-Untranslated: 219 messages, 1784 words
+Untranslated: 219 messages, 1788 words
 
 * *or*
 * *Kid*
@@ -1044,7 +1044,7 @@ Untranslated: 219 messages, 1784 words
 
 Translated: 307 messages, 3987 words
 
-Untranslated: 219 messages, 1783 words
+Untranslated: 219 messages, 1787 words
 
 * *or*
 * *Kid*
@@ -1072,7 +1072,7 @@ Untranslated: 219 messages, 1783 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -1100,7 +1100,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 305 messages, 3983 words
 
-Untranslated: 221 messages, 1787 words
+Untranslated: 221 messages, 1791 words
 
 * *or*
 * *Kid*
@@ -1128,31 +1128,31 @@ Untranslated: 221 messages, 1787 words
 
 Translated: 552 messages, 5960 words
 
-Untranslated: 5 messages, 27 words
+Untranslated: 5 messages, 31 words
 
 * *About*
 * *Log out?*
 * *Who's practising?*
-* *Stay on the account*
+* *Live speed — the running average while you type.*
 * *Practice history stays on this device and on your account. Y...*
 
 # Telugu
 
 Translated: 552 messages, 5960 words
 
-Untranslated: 5 messages, 27 words
+Untranslated: 5 messages, 31 words
 
 * *About*
 * *Log out?*
 * *Who's practising?*
-* *Stay on the account*
+* *Live speed — the running average while you type.*
 * *Practice history stays on this device and on your account. Y...*
 
 # Thai
 
 Translated: 296 messages, 3890 words
 
-Untranslated: 228 messages, 1862 words
+Untranslated: 228 messages, 1866 words
 
 * *or*
 * *Kid*
@@ -1180,7 +1180,7 @@ Untranslated: 228 messages, 1862 words
 
 Translated: 197 messages, 1688 words
 
-Untranslated: 324 messages, 4035 words
+Untranslated: 324 messages, 4039 words
 
 * *or*
 * *Kid*
@@ -1208,7 +1208,7 @@ Untranslated: 324 messages, 4035 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -1236,19 +1236,19 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 552 messages, 5960 words
 
-Untranslated: 5 messages, 27 words
+Untranslated: 5 messages, 31 words
 
 * *About*
 * *Log out?*
 * *Who's practising?*
-* *Stay on the account*
+* *Live speed — the running average while you type.*
 * *Practice history stays on this device and on your account. Y...*
 
 # Vietnamese
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -1276,7 +1276,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 307 messages, 3981 words
 
-Untranslated: 219 messages, 1789 words
+Untranslated: 219 messages, 1793 words
 
 * *or*
 * *Kid*
@@ -1304,7 +1304,7 @@ Untranslated: 219 messages, 1789 words
 
 Translated: 308 messages, 3988 words
 
-Untranslated: 218 messages, 1782 words
+Untranslated: 218 messages, 1786 words
 
 * *or*
 * *Kid*
@@ -1332,7 +1332,7 @@ Untranslated: 218 messages, 1782 words
 
 Translated: 307 messages, 3987 words
 
-Untranslated: 219 messages, 1783 words
+Untranslated: 219 messages, 1787 words
 
 * *or*
 * *GO!*

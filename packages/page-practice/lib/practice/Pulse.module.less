@@ -58,6 +58,38 @@
   font-style: normal;
 }
 
+// A small dot that pulses beside the speed while the learner is typing, to
+// signal the number is live and updating.
+.liveDot {
+  display: inline-block;
+  vertical-align: middle;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  margin-inline-start: 0.4rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+  animation: live-pulse 1s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liveDot {
+    animation: none;
+  }
+}
+
 // ---- the stacked roads ---------------------------------------------------
 
 .roads {

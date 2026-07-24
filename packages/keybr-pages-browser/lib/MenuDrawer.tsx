@@ -246,11 +246,19 @@ export function MenuDrawer({
                   </RouterLink>
                 ) : (
                   <>
-                    <RouterLink to={Pages.login.path} onClick={onClose}>
+                    <RouterLink
+                      className={styles.loginLink}
+                      to={Pages.login.path}
+                      onClick={onClose}
+                    >
                       <StrokeIcon className={styles.utilIcon} name="user" />
                       <FormattedMessage id="t_Log_In" defaultMessage="Log In" />
                     </RouterLink>
-                    <RouterLink to={Pages.register.path} onClick={onClose}>
+                    <RouterLink
+                      className={styles.registerLink}
+                      to={Pages.register.path}
+                      onClick={onClose}
+                    >
                       <StrokeIcon className={styles.utilIcon} name="people" />
                       <FormattedMessage
                         id="t_Register"

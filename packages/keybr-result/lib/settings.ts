@@ -3,5 +3,5 @@ import { SpeedUnit } from "./speedunit.ts";
 
 export const uiProps = {
   speedUnit: itemProp("ui.speedUnit", SpeedUnit.ALL, SpeedUnit.WPM),
-  ghostRace: booleanProp("ui.ghostRace", true),
+  ghostRace: booleanProp("ui.ghostRace", false),
 } as const;
