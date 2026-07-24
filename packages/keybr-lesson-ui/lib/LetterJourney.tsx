@@ -38,19 +38,19 @@ export function LetterJourney({
   const n = keys.length;
   const unlocked = keys.filter(({ isIncluded }) => isIncluded).length;
 
-  // Fit as many caps per lane as the width allows, then wrap into stacked
-  // straight lanes on narrower screens.
+  // A Latin-sized alphabet (English is 26) always rides a single line — the SVG
+  // scales to fit the width. Only the big scripts (Devanagari, Malayalam, …)
+  // wrap, into balanced lanes sized to the available width.
+  const ONE_LINE_MAX = 30;
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [perLane, setPerLane] = useState(n || 1);
+  const [availWidth, setAvailWidth] = useState(0);
   useEffect(() => {
     const el = wrapRef.current;
     if (el == null) {
       return;
     }
     const measure = () => {
-      const avail = (el.clientWidth || 0) - 72; // leave room for the count
-      const fit = Math.floor((avail - PAD * 2) / STEP) + 1;
-      setPerLane(Math.min(n || 1, Math.max(6, Number.isFinite(fit) ? fit : n)));
+      setAvailWidth(el.clientWidth || 0);
     };
     measure();
     if (typeof ResizeObserver === "undefined") {
@@ -61,9 +61,15 @@ export function LetterJourney({
     return () => {
       ro.disconnect();
     };
-  }, [n]);
+  }, []);
 
-  const per = Math.max(1, Math.min(n || 1, perLane));
+  let per = Math.max(1, n);
+  if (n > ONE_LINE_MAX && availWidth > 0) {
+    const fit = Math.floor((availWidth - 72 - PAD * 2) / STEP) + 1;
+    const maxPer = Math.max(10, Number.isFinite(fit) ? fit : n);
+    const laneRows = Math.max(1, Math.ceil(n / maxPer));
+    per = Math.ceil(n / laneRows); // balance the lanes
+  }
   const rows = Math.max(1, Math.ceil(n / per));
   const laneLen = Math.min(n, per);
   const width = PAD * 2 + Math.max(0, laneLen - 1) * STEP;
