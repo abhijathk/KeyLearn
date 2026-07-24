@@ -440,7 +440,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     };
     window.addEventListener("keylearn:kids-toggle", onToggle);
     return () => window.removeEventListener("keylearn:kids-toggle", onToggle);
-     
   }, []);
 
   // A new key joining the practice set is THE growth moment: the dino grows,
@@ -876,6 +875,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     <div className={clsx(styles.root, prefs.night && styles.rootDark)}>
       <div className={styles.sceneCard} ref={sceneCardRef}>
         <canvas className={styles.canvas} ref={canvasRef} />
+        <span className={styles.keysChip}>
+          <b>{included}</b> keys on your trail
+        </span>
         {!loaded && (
           <div className={styles.loading}>
             <div>

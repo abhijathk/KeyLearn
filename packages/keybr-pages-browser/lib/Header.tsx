@@ -1,3 +1,4 @@
+import { GearIcon, MoonIcon, SoundIcon, SunIcon } from "@keybr/page-kids";
 import { IconButton, StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -42,58 +43,16 @@ function kidsToggle(what: "sound" | "night" | "settings"): void {
   );
 }
 
-function KidSoundIcon({ muted }: { readonly muted: boolean }): ReactNode {
+// A playful hamburger drawn to sit among the kids chip buttons.
+function KidMenuIcon(): ReactNode {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden={true}
-    >
+    <svg viewBox="0 0 24 24" width={19} height={19} aria-hidden={true}>
       <path
-        d="M4 9v6h4l5 4V5L8 9H4z"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      {muted ? (
-        <path d="M16 9l5 6M21 9l-5 6" strokeWidth="1.8" strokeLinecap="round" />
-      ) : (
-        <path
-          d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8 8 0 0 1 0 12"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-      )}
-    </svg>
-  );
-}
-
-function KidNightIcon({ night }: { readonly night: boolean }): ReactNode {
-  return night ? (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden={true}
-    >
-      <circle cx="12" cy="12" r="4.5" strokeWidth="1.8" />
-      <path
-        d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8L6 18M18 6l1.8-1.8"
-        strokeWidth="1.8"
+        d="M5 7h14M5 12h14M5 17h14"
+        fill="none"
+        stroke="#7a5cc0"
+        strokeWidth={2.2}
         strokeLinecap="round"
-      />
-    </svg>
-  ) : (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden={true}
-    >
-      <path
-        d="M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
       />
     </svg>
   );
@@ -184,25 +143,12 @@ export function Header({
             <StrokeIcon name="back" />
           </NavLink>
         )}
-        <NavLink to="/" className={styles.wordmark}>
+        <NavLink to={kids ? "/kids" : "/"} className={styles.wordmark}>
           <StrokeIcon className={styles.glyph} name="keyboard" />
           <span className={styles.mark}>Key</span>
           <span className={styles.markAlt}>Learn</span>
+          {kids && <span className={styles.kidsMark}>Kids</span>}
         </NavLink>
-        {kids && (
-          <span className={styles.kidsTag}>
-            <FormattedMessage id="header.kids" defaultMessage="Kids" />
-            {kidsState.keys > 0 && (
-              <em className={styles.kidsKeys}>
-                <FormattedMessage
-                  id="header.kids.keys"
-                  defaultMessage="{n} keys"
-                  values={{ n: kidsState.keys }}
-                />
-              </em>
-            )}
-          </span>
-        )}
       </div>
       <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
         {streak > 0 && (
@@ -257,8 +203,12 @@ export function Header({
         )}
         {kids && (
           <>
-            <IconButton
-              icon={<KidSoundIcon muted={!kidsState.sounds} />}
+            <button
+              type="button"
+              className={styles.kidsChip}
+              style={{
+                background: "color-mix(in srgb, #f2c94c 34%, #ffffff)",
+              }}
               title={formatMessage(
                 defineMessage({
                   id: "kids.header.sound",
@@ -266,9 +216,15 @@ export function Header({
                 }),
               )}
               onClick={() => kidsToggle("sound")}
-            />
-            <IconButton
-              icon={<KidNightIcon night={kidsState.night} />}
+            >
+              <SoundIcon muted={!kidsState.sounds} />
+            </button>
+            <button
+              type="button"
+              className={styles.kidsChip}
+              style={{
+                background: "color-mix(in srgb, #5fc9a7 34%, #ffffff)",
+              }}
               title={formatMessage(
                 defineMessage({
                   id: "kids.header.night",
@@ -276,9 +232,15 @@ export function Header({
                 }),
               )}
               onClick={() => kidsToggle("night")}
-            />
-            <IconButton
-              icon={<StrokeIcon name="settings" />}
+            >
+              {kidsState.night ? <SunIcon /> : <MoonIcon />}
+            </button>
+            <button
+              type="button"
+              className={styles.kidsChip}
+              style={{
+                background: "color-mix(in srgb, #3aa0ff 28%, #ffffff)",
+              }}
               title={formatMessage(
                 defineMessage({
                   id: "kids.header.settings",
@@ -286,21 +248,40 @@ export function Header({
                 }),
               )}
               onClick={() => kidsToggle("settings")}
-            />
+            >
+              <GearIcon />
+            </button>
           </>
         )}
         {!kids && <ThemeSwitcher />}
         <AccountMenu />
-        <IconButton
-          icon={<StrokeIcon name="menu" />}
-          title={formatMessage(
-            defineMessage({
-              id: "nav.openMenu",
-              defaultMessage: "Open navigation",
-            }),
-          )}
-          onClick={onOpenMenu}
-        />
+        {kids ? (
+          <button
+            type="button"
+            className={styles.kidsChip}
+            style={{ background: "color-mix(in srgb, #a06cff 26%, #ffffff)" }}
+            title={formatMessage(
+              defineMessage({
+                id: "nav.openMenu",
+                defaultMessage: "Open navigation",
+              }),
+            )}
+            onClick={onOpenMenu}
+          >
+            <KidMenuIcon />
+          </button>
+        ) : (
+          <IconButton
+            icon={<StrokeIcon name="menu" />}
+            title={formatMessage(
+              defineMessage({
+                id: "nav.openMenu",
+                defaultMessage: "Open navigation",
+              }),
+            )}
+            onClick={onOpenMenu}
+          />
+        )}
       </div>
     </header>
   );

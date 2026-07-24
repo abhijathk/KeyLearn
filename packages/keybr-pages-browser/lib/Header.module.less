@@ -135,23 +135,44 @@
 // Retheming is done by overriding the design tokens on the header subtree, so
 // the wordmark, buttons and avatar all follow automatically.
 
-// The "Kids" tag beside the wordmark on the kids page, with a small keys count.
-.kidsTag {
-  display: inline-flex;
-  gap: 0.4rem;
-  align-items: baseline;
-  margin-inline-start: 0.5rem;
+// "Kids" reads as part of the logo — same size/weight as "Key", in the accent,
+// with a hairline separator dot after "Learn".
+.kidsMark {
+  margin-inline-start: 0.45rem;
   color: var(--accent);
-  font-family: var(--value-font-family);
-  font-size: 0.95rem;
   font-weight: 700;
 }
 
-.kidsKeys {
-  color: var(--text-color-f1);
-  font-size: 0.72rem;
-  font-weight: 600;
-  font-style: normal;
+.kidsMark::before {
+  content: "·";
+  margin-inline-end: 0.45rem;
+  color: var(--text-color-f2);
+  font-weight: 400;
+}
+
+// The kids page controls (and its burger) are playful colour chips, matching
+// the original in-page buttons, instead of the plain header icon buttons.
+.kidsChip {
+  display: grid;
+  place-items: center;
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.7rem;
+  box-shadow:
+    0 2px 0 rgb(0 0 0 / 8%),
+    inset 0 -2px 0 rgb(0 0 0 / 5%);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+
+  &:hover {
+    transform: scale(1.08) rotate(-4deg);
+  }
+
+  &:active {
+    transform: translateY(2px);
+  }
 }
 
 :global(body[data-kids="day"]) .header {

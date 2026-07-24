@@ -98,6 +98,27 @@
 }
 
 // ── the world ──────────────────────────────────────────────────────────
+
+// A small "N keys on your trail" chip in the corner of the scene (moved off the
+// header, which now shows only the KeyLearn Kids logo).
+.keysChip {
+  position: absolute;
+  inset-inline-start: 0.7rem;
+  inset-block-start: 0.7rem;
+  z-index: 2;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  color: var(--kink2);
+  background: var(--glass);
+  box-shadow: var(--kshadow);
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  b {
+    color: var(--kink);
+  }
+}
+
 .sceneCard {
   position: relative;
   flex: 1 1 auto;
