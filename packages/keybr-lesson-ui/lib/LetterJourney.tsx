@@ -15,10 +15,10 @@ const ROW_H = 52;
 /**
  * The Letter Journey: every key laid out in unlock order as a keycap sitting on
  * a straight road — no curves. The road you've travelled is solid; the road
- * ahead (locked keys) is dashed with ghosted caps. Each unlocked cap wears a
- * confidence-coloured underline (slow → fast), and the current key is ringed in
- * the accent with how close it is to unlocking noted above. The whole thing
- * wraps into stacked straight lanes when it runs out of width.
+ * ahead (locked keys) is dashed with ghosted caps. Each unlocked cap is tinted
+ * by its confidence (slow → fast) with a matching coloured border, and the
+ * current key is ringed in the accent with how close it is to unlocking noted
+ * above. The whole thing wraps into stacked straight lanes to fit the width.
  */
 export function LetterJourney({
   id,
