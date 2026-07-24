@@ -1001,6 +1001,66 @@ export class Layout implements XEnumItem {
       Geometry.MATRIX,
     ),
   );
+  static readonly HI_INSCRIPT = new Layout(
+    /* id= */ "hi-inscript",
+    /* xid= */ 0xbc,
+    /* name= */ "Hindi InScript",
+    /* family= */ "hi-inscript",
+    /* language= */ Language.HI,
+    /* emulate= */ true,
+    /* geometries= */ new Enum(
+      Geometry.ANSI_101,
+      Geometry.ANSI_101_FULL,
+      Geometry.ISO_102,
+      Geometry.ISO_102_FULL,
+      Geometry.MATRIX,
+    ),
+  );
+  static readonly HI_PHONETIC = new Layout(
+    /* id= */ "hi-phonetic",
+    /* xid= */ 0xbd,
+    /* name= */ "Hindi Phonetic",
+    /* family= */ "hi-phonetic",
+    /* language= */ Language.HI,
+    /* emulate= */ true,
+    /* geometries= */ new Enum(
+      Geometry.ANSI_101,
+      Geometry.ANSI_101_FULL,
+      Geometry.ISO_102,
+      Geometry.ISO_102_FULL,
+      Geometry.MATRIX,
+    ),
+  );
+  static readonly ML_INSCRIPT = new Layout(
+    /* id= */ "ml-inscript",
+    /* xid= */ 0xbe,
+    /* name= */ "Malayalam InScript",
+    /* family= */ "ml-inscript",
+    /* language= */ Language.ML,
+    /* emulate= */ true,
+    /* geometries= */ new Enum(
+      Geometry.ANSI_101,
+      Geometry.ANSI_101_FULL,
+      Geometry.ISO_102,
+      Geometry.ISO_102_FULL,
+      Geometry.MATRIX,
+    ),
+  );
+  static readonly ML_PHONETIC = new Layout(
+    /* id= */ "ml-phonetic",
+    /* xid= */ 0xbf,
+    /* name= */ "Malayalam Phonetic",
+    /* family= */ "ml-phonetic",
+    /* language= */ Language.ML,
+    /* emulate= */ true,
+    /* geometries= */ new Enum(
+      Geometry.ANSI_101,
+      Geometry.ANSI_101_FULL,
+      Geometry.ISO_102,
+      Geometry.ISO_102_FULL,
+      Geometry.MATRIX,
+    ),
+  );
   static readonly TH_TH = new Layout(
     /* id= */ "th-th",
     /* xid= */ 0x9a,
@@ -1449,6 +1509,10 @@ export class Layout implements XEnumItem {
     Layout.BE_BY,
     Layout.SL_SI,
     Layout.SV_SE,
+    Layout.HI_INSCRIPT,
+    Layout.HI_PHONETIC,
+    Layout.ML_INSCRIPT,
+    Layout.ML_PHONETIC,
     Layout.UK_UA,
     Layout.RU_RU,
     Layout.RU_STATICA_3X5,

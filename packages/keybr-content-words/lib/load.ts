@@ -108,6 +108,13 @@ export async function loadWordList(language: Language): Promise<WordList> {
           { with: { type: "json" } }
         )
       ).default;
+    case Language.HI:
+      return (
+        await import(
+          /* webpackChunkName: "words-hi" */ "./data/words-hi.json",
+          { with: { type: "json" } }
+        )
+      ).default;
     case Language.HR:
       return (
         await import(
@@ -147,6 +154,13 @@ export async function loadWordList(language: Language): Promise<WordList> {
       return (
         await import(
           /* webpackChunkName: "words-lv" */ "./data/words-lv.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case Language.ML:
+      return (
+        await import(
+          /* webpackChunkName: "words-ml" */ "./data/words-ml.json",
           { with: { type: "json" } }
         )
       ).default;

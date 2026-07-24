@@ -82,12 +82,16 @@ import { LAYOUT_FR_FR } from "./layout/fr_fr.ts";
 import { LAYOUT_FR_OPTIMOT_ERGO } from "./layout/fr_optimot_ergo.ts";
 import { LAYOUT_HE_IL } from "./layout/he_il.ts";
 import { LAYOUT_HE_IL_ARKN } from "./layout/he_il_arkn.ts";
+import { LAYOUT_HI_INSCRIPT } from "./layout/hi_inscript.ts";
+import { LAYOUT_HI_PHONETIC } from "./layout/hi_phonetic.ts";
 import { LAYOUT_HU_HU } from "./layout/hu_hu.ts";
 import { LAYOUT_IT_IT } from "./layout/it_it.ts";
 import { LAYOUT_JA_JP } from "./layout/ja_jp.ts";
 import { LAYOUT_JA_JP_JIS } from "./layout/ja_jp_jis.ts";
 import { LAYOUT_LT_LT } from "./layout/lt_lt.ts";
 import { LAYOUT_LV_LV } from "./layout/lv_lv.ts";
+import { LAYOUT_ML_INSCRIPT } from "./layout/ml_inscript.ts";
+import { LAYOUT_ML_PHONETIC } from "./layout/ml_phonetic.ts";
 import { LAYOUT_NB_DVORAK } from "./layout/nb_dvorak.ts";
 import { LAYOUT_NB_KVIKK } from "./layout/nb_kvikk.ts";
 import { LAYOUT_NB_NO } from "./layout/nb_no.ts";
@@ -210,6 +214,10 @@ const layouts = new Map<Layout, CharacterDict>([
   [Layout.SV_SE, LAYOUT_SV_SE],
   [Layout.TH_MAN, LAYOUT_TH_TH_MAN],
   [Layout.TH_PAT, LAYOUT_TH_TH_PAT],
+  [Layout.HI_INSCRIPT, LAYOUT_HI_INSCRIPT],
+  [Layout.HI_PHONETIC, LAYOUT_HI_PHONETIC],
+  [Layout.ML_INSCRIPT, LAYOUT_ML_INSCRIPT],
+  [Layout.ML_PHONETIC, LAYOUT_ML_PHONETIC],
   [Layout.TH_TH, LAYOUT_TH_TH],
   [Layout.TR_TR_F, LAYOUT_TR_TR_F],
   [Layout.TR_TR_Q, LAYOUT_TR_TR_Q],

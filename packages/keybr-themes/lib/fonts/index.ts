@@ -3,7 +3,17 @@ import { type CSSProperties } from "react";
 export type FontWeight = "100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900";
 export type FontStyle = "normal" | "italic";
 export type Fallback = "cursive" | "fantasy" | "monospace" | "sans-serif" | "serif" | "whitespace" | string;
-export type Script = "arabic" | "cyrillic" | "greek" | "hebrew" | "hiragana" | "katakana" | "latin" | "thai";
+export type Script =
+  | "arabic"
+  | "cyrillic"
+  | "devanagari"
+  | "greek"
+  | "hebrew"
+  | "hiragana"
+  | "katakana"
+  | "latin"
+  | "malayalam"
+  | "thai";
 
 export class FontFace {
   readonly family: string;
@@ -41,6 +51,8 @@ const cghl = ["cyrillic", "greek", "hebrew", "latin"] as const satisfies Script[
 const achl = ["arabic", "cyrillic", "hebrew", "latin"] as const satisfies Script[];
 const acghlt = ["arabic", "cyrillic", "greek", "hebrew", "latin", "thai"] as const satisfies Script[];
 const hiragana = ["hiragana"] as const satisfies Script[];
+const devanagari = ["devanagari"] as const satisfies Script[];
+const malayalam = ["malayalam"] as const satisfies Script[];
 
 export const ARAD = new FontFace("Arad", "400", "normal", ["whitespace"], ["arabic"]);
 export const ARAD_B = new FontFace("Arad", "700", "normal", ["whitespace"], ["arabic"]);
@@ -56,6 +68,10 @@ export const NEWSREADER = new FontFace("Newsreader", "400", "normal", ["serif"],
 export const NEWSREADER_I = new FontFace("Newsreader", "400", "italic", ["serif"], ["latin"]);
 export const NEWSREADER_B = new FontFace("Newsreader", "700", "normal", ["serif"], ["latin"]);
 export const NEWSREADER_BI = new FontFace("Newsreader", "700", "italic", ["serif"], ["latin"]);
+export const NOTO_SANS_DEVANAGARI = new FontFace("Noto Sans Devanagari", "400", "normal", ["sans-serif"], devanagari);
+export const NOTO_SANS_DEVANAGARI_B = new FontFace("Noto Sans Devanagari", "700", "normal", ["sans-serif"], devanagari);
+export const NOTO_SANS_MALAYALAM = new FontFace("Noto Sans Malayalam", "400", "normal", ["sans-serif"], malayalam);
+export const NOTO_SANS_MALAYALAM_B = new FontFace("Noto Sans Malayalam", "700", "normal", ["sans-serif"], malayalam);
 export const NOTO_SANS_JP = new FontFace("Noto Sans JP", "400", "normal", ["sans-serif"], hiragana);
 export const NOTO_SANS_JP_B = new FontFace("Noto Sans JP", "700", "normal", ["sans-serif"], hiragana);
 export const NOTO_SERIF_JP = new FontFace("Noto Serif JP", "400", "normal", ["serif"], hiragana);
@@ -134,6 +150,10 @@ export const FONTS_FACES: readonly FontFace[] = [
   NEWSREADER_I,
   NEWSREADER_B,
   NEWSREADER_BI,
+  NOTO_SANS_DEVANAGARI,
+  NOTO_SANS_DEVANAGARI_B,
+  NOTO_SANS_MALAYALAM,
+  NOTO_SANS_MALAYALAM_B,
   NOTO_SANS_JP,
   NOTO_SANS_JP_B,
   NOTO_SERIF_JP,

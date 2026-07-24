@@ -92,6 +92,12 @@ export class Language implements EnumItem {
     /* direction= */ "rtl",
     /* alphabet= */ "אבגדהוזחטיכךלמםנןסעפףצץקרשת",
   );
+  static readonly HI = new Language(
+    /* id= */ "hi",
+    /* script= */ "devanagari",
+    /* direction= */ "ltr",
+    /* alphabet= */ "ँंःअआइईउऊऋएऐऑओऔकखगघचछजझञटठडढणतथदधनपफबभमयरलवशषसह़ािीुूृेैॉोौ्क़ख़ग़ज़ड़ढ़फ़",
+  );
   static readonly HR = new Language(
     /* id= */ "hr",
     /* script= */ "latin",
@@ -127,6 +133,12 @@ export class Language implements EnumItem {
     /* script= */ "latin",
     /* direction= */ "ltr",
     /* alphabet= */ "aābcčdeēfgģhiījkķlļmnņoprsštuūvzž",
+  );
+  static readonly ML = new Language(
+    /* id= */ "ml",
+    /* script= */ "malayalam",
+    /* direction= */ "ltr",
+    /* alphabet= */ "ംഃഅആഇഈഉഊഎഏഐഒഓഔകഖഗഘങചഛജഞടഠഡഢണതഥദധനപഫബഭമയരറലളഴവശഷസഹാിീുൂൃെേൈൊോൌ്ൗൺൻർൽൾ",
   );
   static readonly NB = new Language(
     /* id= */ "nb",
@@ -217,12 +229,14 @@ export class Language implements EnumItem {
     Language.FI,
     Language.FR,
     Language.HE,
+    Language.HI,
     Language.HR,
     Language.HU,
     Language.IT,
     // Language.JA,
     Language.LT,
     Language.LV,
+    Language.ML,
     Language.NB,
     Language.NL,
     Language.PL,
@@ -243,10 +257,12 @@ export class Language implements EnumItem {
   readonly script:
     | "arabic"
     | "cyrillic"
+    | "devanagari"
     | "greek"
     | "hebrew"
     | "hiragana"
     | "latin"
+    | "malayalam"
     | "thai";
   /** The direction of the writing system, either "ltr" for left-to-right, or "rtl" for right-to-left. */
   readonly direction: "ltr" | "rtl";
@@ -270,10 +286,12 @@ export class Language implements EnumItem {
     script:
       | "arabic"
       | "cyrillic"
+      | "devanagari"
       | "greek"
       | "hebrew"
       | "hiragana"
       | "latin"
+      | "malayalam"
       | "thai",
     direction: "ltr" | "rtl",
     alphabet: string,
@@ -341,6 +359,38 @@ export class Language implements EnumItem {
         return String.fromCodePoint(/* DOTTED CIRCLE */ 0x25cc, codePoint);
       }
     }
+    if (codePoint >= 0x0900 && codePoint <= 0x097f) {
+      // Devanagari Unicode block — no letter case. Combining marks (matras,
+      // virama, anusvara/candrabindu, nukta) render on a dotted circle.
+      if (
+        codePoint === 0x0900 ||
+        (codePoint >= 0x0901 && codePoint <= 0x0903) ||
+        codePoint === 0x093a ||
+        codePoint === 0x093b ||
+        codePoint === 0x093c ||
+        (codePoint >= 0x093e && codePoint <= 0x094f) ||
+        (codePoint >= 0x0951 && codePoint <= 0x0957) ||
+        codePoint === 0x0962 ||
+        codePoint === 0x0963
+      ) {
+        return String.fromCodePoint(/* DOTTED CIRCLE */ 0x25cc, codePoint);
+      }
+      return String.fromCodePoint(codePoint);
+    }
+    if (codePoint >= 0x0d00 && codePoint <= 0x0d7f) {
+      // Malayalam Unicode block — no letter case. Combining marks (matras,
+      // virama, anusvara/visarga) render on a dotted circle.
+      if (
+        (codePoint >= 0x0d00 && codePoint <= 0x0d03) ||
+        (codePoint >= 0x0d3b && codePoint <= 0x0d3c) ||
+        (codePoint >= 0x0d3e && codePoint <= 0x0d4f) ||
+        (codePoint >= 0x0d57 && codePoint <= 0x0d57) ||
+        (codePoint >= 0x0d62 && codePoint <= 0x0d63)
+      ) {
+        return String.fromCodePoint(/* DOTTED CIRCLE */ 0x25cc, codePoint);
+      }
+      return String.fromCodePoint(codePoint);
+    }
     // Locale-specific uppercase variant of a letter.
     // For example in Turkish there are dotted and dotless letter I,
     // each with its own lower and uppercase variant.
@@ -403,8 +453,12 @@ export function getExampleText({ script }: Language): string {
       return "תאכל יותר תפוחים ותפוזים.";
     case "hiragana":
       return "リンゴとオレンジをもっと食べましょう。";
+    case "devanagari":
+      return "अधिक सेब और संतरे खाओ।";
     case "latin":
       return "Eat more apples and oranges.";
+    case "malayalam":
+      return "കൂടുതൽ ആപ്പിളും ഓറഞ്ചും കഴിക്കൂ.";
     case "thai":
       return "กินส้มกับแอปเปิลเยอะ ๆ";
   }
@@ -422,8 +476,12 @@ export function getExampleLetters({ script }: Language): CodePoint[] {
       return [0x05d0, 0x05d1, 0x05d2, 0x05d3, 0x05d4, 0x05d5];
     case "hiragana":
       return [0x3041, 0x3043, 0x3045, 0x3047, 0x3049, 0x304b];
+    case "devanagari":
+      return [0x0915, 0x0916, 0x0917, 0x0918, 0x091a, 0x091b];
     case "latin":
       return [0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066];
+    case "malayalam":
+      return [0x0d15, 0x0d16, 0x0d17, 0x0d18, 0x0d19, 0x0d1a];
     case "thai":
       return [0x0e01, 0x0e02, 0x0e04, 0x0e06, 0x0e07, 0x0e08];
   }
