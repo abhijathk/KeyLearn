@@ -5,12 +5,12 @@ import { type ReactNode, useMemo } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./road.module.less";
 
-const WEEKS = 26;
+const WEEKS = 52;
 const DAY = 24 * 60 * 60 * 1000;
 
 /**
  * The practice calendar as a compact heat grid: one cell per day for the last
- * half year, tinted by how much of the daily goal was met, with month and
+ * year, tinted by how much of the daily goal was met, with month and
  * weekday labels and the exact date and time on hover.
  */
 export function CalendarHeat({

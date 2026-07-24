@@ -128,7 +128,7 @@ export function RoadProfile({
       <div className={styles.sect}>
         <FormattedMessage
           id="profile.road.calendar"
-          defaultMessage="Practice calendar — last 6 months"
+          defaultMessage="Practice calendar — last year"
         />
       </div>
       <Explainer>

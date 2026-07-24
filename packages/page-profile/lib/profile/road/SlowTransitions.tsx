@@ -1,5 +1,6 @@
 import { loadNgramStats } from "@keybr/pages-shared";
 import { type KeyStatsMap } from "@keybr/result";
+import { Explainer } from "@keybr/widget";
 import { type ReactNode, useMemo } from "react";
 import { FormattedMessage } from "react-intl";
 import * as road from "./road.module.less";
@@ -62,14 +63,16 @@ export function SlowTransitions({
           defaultMessage="Slowest transitions — the key-pairs holding you back"
         />
       </div>
-      <div className={road.whisper}>
-        <span>
-          <FormattedMessage
-            id="profile.chart.transitions.description"
-            defaultMessage="Two keys can each be quick alone yet slow as a pair — awkward rolls and same-finger jumps. These are the transitions your practice is quietly drilling."
-          />
-        </span>
-      </div>
+      <Explainer>
+        <div className={road.whisper}>
+          <span>
+            <FormattedMessage
+              id="profile.chart.transitions.description"
+              defaultMessage="Two keys can each be quick alone yet slow as a pair — awkward rolls and same-finger jumps. These are the transitions your practice is quietly drilling."
+            />
+          </span>
+        </div>
+      </Explainer>
       <div className={styles.list}>
         {rows.map(({ seq, time, errors }, index) => {
           const [from, to] = seq;

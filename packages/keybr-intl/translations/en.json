@@ -308,7 +308,7 @@
   "profile.road.aimLegend": "╌ ╌ the speed you're aiming for",
   "profile.road.allKeys": "All keys over time — every key's speed, lesson by lesson",
   "profile.road.allKeysLegend": "each line is one key · red = slow → green = fast",
-  "profile.road.calendar": "Practice calendar — last 6 months",
+  "profile.road.calendar": "Practice calendar — last year",
   "profile.road.compared": "Compared to everyone",
   "profile.road.data": "Your data",
   "profile.road.distribution": "distribution of your lessons",
