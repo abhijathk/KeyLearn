@@ -77,15 +77,16 @@ export const TransitionsLayer = memo(function TransitionsLayer({
     const Y1 = y0 + Math.sin(theta) * t;
     const X2 = x1 - Math.cos(theta) * t;
     const Y2 = y1 - Math.sin(theta) * t;
-    // A comet trail: a dotted stroke flowing from the previous key to the
-    // next, weight and opacity scaling with how often the pair occurred.
+    // A clean curved arc from the previous key to the next; its weight and
+    // opacity scale with how often the pair occurred, so strong pairs read
+    // heavy and rare ones stay faint.
     return (
       <path
         key={index}
         className={clsx(styles.arc, modifierStyle(modifier))}
         d={`M ${X1} ${Y1} Q ${mx} ${my} ${X2} ${Y2}`}
-        opacity={0.3 + f * 0.5}
-        style={{ strokeWidth: 1.5 + f * 2 }}
+        opacity={0.45 + f * 0.5}
+        style={{ strokeWidth: 1.5 + f * 3.5 }}
       />
     );
   }

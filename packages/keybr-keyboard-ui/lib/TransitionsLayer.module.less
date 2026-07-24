@@ -1,25 +1,26 @@
-// Comet trails between keys: only the strongest few pairs, flowing dots.
+// Curved connections between keys: the strongest few pairs you typed, drawn as
+// clean glowing arcs — mint for smooth (correct) transitions, coral for the
+// fumbled ones. Thickness and opacity scale with how often the pair occurred
+// (set inline), so strong pairs read heavy and rare ones stay faint.
 .arc {
   fill: none;
-  stroke-dasharray: 1 10;
   stroke-linecap: round;
-  animation: comet-flow 1.2s linear infinite;
 }
 
 .h {
   stroke: var(--fast-key-color);
+  filter: drop-shadow(
+    0 0 2.5px color-mix(in oklab, var(--fast-key-color) 60%, transparent)
+  );
 }
 
 .m {
   stroke: var(--slow-key-color);
+  filter: drop-shadow(
+    0 0 2.5px color-mix(in oklab, var(--slow-key-color) 60%, transparent)
+  );
 }
 
 .f {
-  stroke: var(--text-color);
-}
-
-@keyframes comet-flow {
-  to {
-    stroke-dashoffset: -11;
-  }
+  stroke: var(--text-color-f1);
 }
