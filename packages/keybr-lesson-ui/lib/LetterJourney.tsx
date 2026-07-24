@@ -7,10 +7,13 @@ import { useKeyStyles } from "./styles.ts";
 
 const STEP = 42;
 const PAD = 26;
-const MID = 48;
-const AMP = 10;
-const HEIGHT = 98;
+const PAD_TOP = 34;
+const ROW_H = 46;
+const AMP = 8;
 const RING = 14;
+// Alphabets longer than this wrap onto balanced rows, so scripts with many
+// letters (e.g. Devanagari, Malayalam) stay readable instead of shrinking.
+const MAX_PER_ROW = 26;
 
 /**
  * The Letter Journey drawn as a trail on a map. Each letter is a stop along a
@@ -37,11 +40,21 @@ export function LetterJourney({
   const keys = [...lessonKeys];
   const n = keys.length;
   const unlocked = keys.filter(({ isIncluded }) => isIncluded).length;
-  const width = PAD * 2 + (n - 1) * STEP;
-  const points = keys.map((_, i) => ({
-    x: PAD + i * STEP,
-    y: MID + AMP * Math.sin(i * 0.55),
-  }));
+  // Wrap long alphabets onto several balanced rows laid out as a snake, so the
+  // trail stays continuous while every letter keeps its full size.
+  const rows = Math.max(1, Math.ceil(n / MAX_PER_ROW));
+  const perRow = Math.ceil(n / rows);
+  const width = PAD * 2 + (Math.min(n, perRow) - 1) * STEP;
+  const height = PAD_TOP + rows * ROW_H;
+  const points = keys.map((_, i) => {
+    const row = Math.floor(i / perRow);
+    const idx = i - row * perRow;
+    const col = row % 2 === 0 ? idx : perRow - 1 - idx;
+    return {
+      x: PAD + col * STEP,
+      y: PAD_TOP + row * ROW_H + AMP * Math.sin(i * 0.7),
+    };
+  });
   const confOf = (k: LessonKey) => Math.max(0, Math.min(1, k.confidence ?? 0));
 
   return (
@@ -49,8 +62,8 @@ export function LetterJourney({
       <svg
         className={styles.map}
         width={width}
-        height={HEIGHT}
-        viewBox={`0 0 ${width} ${HEIGHT}`}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
       >
         {keys.slice(0, n - 1).map((a, i) => {
           const b = keys[i + 1];
@@ -133,7 +146,7 @@ export function LetterJourney({
                 r={isFocused ? 9 : isIncluded ? 7 : 4.5}
                 style={color ? { fill: color } : undefined}
               />
-              <text className={styles.label} x={x} y={HEIGHT - 8}>
+              <text className={styles.label} x={x} y={y + 17}>
                 {label}
               </text>
             </g>
