@@ -236,26 +236,10 @@ export function MenuDrawer({
                   {formatMessage(Pages.about.link.label)}
                 </RouterLink>
                 {signedIn ? (
-                  <>
-                    <RouterLink to={Pages.account.path} onClick={onClose}>
-                      <StrokeIcon className={styles.utilIcon} name="user" />
-                      {formatMessage(Pages.account.link.label)}
-                    </RouterLink>
-                    <a
-                      className={styles.logout}
-                      href="/auth/logout"
-                      onClick={(ev) => {
-                        ev.preventDefault();
-                        setConfirmLogout(true);
-                      }}
-                    >
-                      <StrokeIcon className={styles.utilIcon} name="back" />
-                      <FormattedMessage
-                        id="nav.logOut"
-                        defaultMessage="Log out"
-                      />
-                    </a>
-                  </>
+                  <RouterLink to={Pages.account.path} onClick={onClose}>
+                    <StrokeIcon className={styles.utilIcon} name="user" />
+                    {formatMessage(Pages.account.link.label)}
+                  </RouterLink>
                 ) : (
                   <>
                     <RouterLink to={Pages.login.path} onClick={onClose}>
@@ -279,6 +263,22 @@ export function MenuDrawer({
                   <StrokeIcon className={styles.utilIcon} name="shield" />
                   {formatMessage(Pages.privacyPolicy.link.label)}
                 </RouterLink>
+                {signedIn && (
+                  <a
+                    className={styles.logout}
+                    href="/auth/logout"
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      setConfirmLogout(true);
+                    }}
+                  >
+                    <StrokeIcon className={styles.utilIcon} name="back" />
+                    <FormattedMessage
+                      id="nav.logOut"
+                      defaultMessage="Log out"
+                    />
+                  </a>
+                )}
               </div>
             </div>
           </>

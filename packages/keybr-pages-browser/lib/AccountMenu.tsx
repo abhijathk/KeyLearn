@@ -51,7 +51,9 @@ export function AccountMenu(): ReactNode {
           <span className={styles.name}>{active.firstName}</span>
         </>
       ) : (
-        <Avatar user={signedIn ? publicUser : null} size="medium" />
+        <span className={styles.avatarWrap}>
+          <Avatar user={signedIn ? publicUser : null} size="normal" />
+        </span>
       )}
     </span>
   );

@@ -47,6 +47,11 @@
   stroke-linecap: round;
 }
 
+// Wraps the scrollable list so a fade and a chevron can signal more below.
+.listWrap {
+  position: relative;
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -54,6 +59,46 @@
   // Tall enough to show about five languages before scrolling.
   max-block-size: 10rem;
   overflow-block: auto;
+}
+
+// A soft fade at the bottom edge hinting that the list scrolls.
+.listWrap::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 1.7rem;
+  background: linear-gradient(to bottom, transparent, var(--primary));
+  pointer-events: none;
+}
+
+// A small downward chevron under the fade — "there are more languages".
+.more {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0.15rem;
+  block-size: 0.5rem;
+  pointer-events: none;
+
+  &::after {
+    content: "";
+    display: block;
+    inline-size: 0.4rem;
+    block-size: 0.4rem;
+    margin-inline: auto;
+    border-inline-end: 2px solid var(--text-color-f2);
+    border-block-end: 2px solid var(--text-color-f2);
+    transform: rotate(45deg);
+  }
+}
+
+// At the end of the list there is nothing more to reveal — drop both cues.
+.listWrap.atEnd::after {
+  display: none;
+}
+
+.atEnd .more {
+  display: none;
 }
 
 .row {
