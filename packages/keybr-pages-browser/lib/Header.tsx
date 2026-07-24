@@ -15,10 +15,12 @@ export function Header({
   onOpenMenu,
   showFocus = false,
   showBack = false,
+  kids = false,
 }: {
   readonly onOpenMenu: () => void;
   readonly showFocus?: boolean;
   readonly showBack?: boolean;
+  readonly kids?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const [streak, setStreak] = useState(0);
@@ -150,7 +152,7 @@ export function Header({
             />
           </span>
         )}
-        <ThemeSwitcher />
+        {!kids && <ThemeSwitcher />}
         <AccountMenu />
         <IconButton
           icon={<StrokeIcon name="menu" />}

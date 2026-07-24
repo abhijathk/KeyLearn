@@ -54,6 +54,7 @@ export function Template({
         onOpenMenu={() => setMenuOpen(true)}
         showFocus={path === "/"}
         showBack={path !== "/"}
+        kids={path === "/kids"}
       />
       <main className={styles.main}>
         {children}
