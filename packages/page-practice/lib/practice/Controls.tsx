@@ -1,5 +1,7 @@
 import { Dir } from "@keybr/intl";
 import { names } from "@keybr/lesson-ui";
+import { uiProps } from "@keybr/result";
+import { useSettings } from "@keybr/settings";
 import { IconButton, StrokeIcon, useView } from "@keybr/widget";
 import { clsx } from "clsx";
 import { memo, type ReactNode, useState } from "react";
@@ -28,8 +30,10 @@ export const Controls = memo(function Controls({
   readonly onTextSize?: (value: number) => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
+  const { settings, updateSettings } = useSettings();
   const { setView } = useView(views);
   const [open, setOpen] = useState(false);
+  const keyboardHidden = settings.get(uiProps.hideKeyboard);
   return (
     <div
       id={names.controls}
@@ -48,7 +52,7 @@ export const Controls = memo(function Controls({
           />
           <Dir swap="icon">
             <IconButton
-              icon={<StrokeIcon name="undo" />}
+              icon={<StrokeIcon name="restart" />}
               title={formatMessage({
                 id: "practice.widget.resetLesson.description",
                 defaultMessage: "Restart this lesson (Ctrl + Left Arrow).",
@@ -56,7 +60,7 @@ export const Controls = memo(function Controls({
               onClick={onResetLesson}
             />
             <IconButton
-              icon={<StrokeIcon name="redo" />}
+              icon={<StrokeIcon name="skip" />}
               title={formatMessage({
                 id: "practice.widget.skipLesson.description",
                 defaultMessage: "Move to the next lesson (Ctrl + Right Arrow).",
@@ -64,6 +68,28 @@ export const Controls = memo(function Controls({
               onClick={onSkipLesson}
             />
           </Dir>
+          <IconButton
+            icon={
+              <StrokeIcon name={keyboardHidden ? "keyboardOff" : "keyboard"} />
+            }
+            title={formatMessage(
+              keyboardHidden
+                ? {
+                    id: "practice.widget.showKeyboard.description",
+                    defaultMessage: "Show the on-screen keyboard.",
+                  }
+                : {
+                    id: "practice.widget.hideKeyboard.description",
+                    defaultMessage:
+                      "Hide the on-screen keyboard — practise typing without looking down.",
+                  },
+            )}
+            onClick={() => {
+              updateSettings(
+                settings.set(uiProps.hideKeyboard, !keyboardHidden),
+              );
+            }}
+          />
           {onTextSize != null && (
             <label
               className={styles.sizer}

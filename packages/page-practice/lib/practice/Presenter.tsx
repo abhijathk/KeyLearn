@@ -435,14 +435,16 @@ function NormalLayout({
             </span>
           </button>
         )}
-        <DeferredKeyboardPresenter
-          focus={focus}
-          depressedKeys={depressedKeys}
-          toggledKeys={toggledKeys}
-          suffix={state.suffix}
-          lastLesson={state.lastLesson}
-          masteryKeys={masteryKeysOf(state)}
-        />
+        {state.settings.get(uiProps.hideKeyboard) || (
+          <DeferredKeyboardPresenter
+            focus={focus}
+            depressedKeys={depressedKeys}
+            toggledKeys={toggledKeys}
+            suffix={state.suffix}
+            lastLesson={state.lastLesson}
+            masteryKeys={masteryKeysOf(state)}
+          />
+        )}
       </div>
       {focusMode || (
         // While the resting hands are draped over the keyboard the journey

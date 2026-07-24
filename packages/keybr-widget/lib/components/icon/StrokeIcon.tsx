@@ -34,6 +34,9 @@ export type StrokeIconName =
   | "tune"
   | "undo"
   | "redo"
+  | "restart"
+  | "skip"
+  | "keyboardOff"
   | "focus"
   | "back";
 
@@ -163,6 +166,28 @@ const shapes: Record<StrokeIconName, ReactNode> = {
     </>
   ),
   back: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  // A circular arrow — "do this one again".
+  restart: (
+    <>
+      <path d="M20 11.5a8 8 0 1 1-2.3-5.4" />
+      <path d="M20 4v4h-4" />
+    </>
+  ),
+  // A chevron and a bar — "move on to the next one".
+  skip: (
+    <>
+      <path d="M7 6l6 6-6 6" />
+      <path d="M16 6v12" />
+    </>
+  ),
+  // The keyboard, struck through — "hide it".
+  keyboardOff: (
+    <>
+      <rect x="3" y="6" width="18" height="12" rx="2.5" />
+      <path d="M7 10h0M15 10h0M7 13.5h6" />
+      <path d="M4 4l16 16" />
+    </>
+  ),
 };
 
 export function StrokeIcon({
