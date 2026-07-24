@@ -218,7 +218,7 @@ export function MenuDrawer({
               inert={kidLock}
             >
               <div className={styles.label}>
-                <FormattedMessage id="drawer.goTo" defaultMessage="Go to" />
+                <FormattedMessage id="drawer.goTo" defaultMessage="Explore" />
               </div>
               <NavMenu currentPath={path} onNavigate={onClose} />
               <div className={styles.label}>
@@ -228,19 +228,6 @@ export function MenuDrawer({
                 />
               </div>
               <LanguagePanel currentPath={path} />
-              <div className={styles.label}>
-                <FormattedMessage id="drawer.more" defaultMessage="More" />
-              </div>
-              <div className={styles.util}>
-                <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
-                  <StrokeIcon className={styles.utilIcon} name="doc" />
-                  {formatMessage(Pages.termsOfService.link.label)}
-                </RouterLink>
-                <RouterLink to={Pages.privacyPolicy.path} onClick={onClose}>
-                  <StrokeIcon className={styles.utilIcon} name="shield" />
-                  {formatMessage(Pages.privacyPolicy.link.label)}
-                </RouterLink>
-              </div>
             </div>
             <div className={styles.account}>
               <div className={styles.util}>
@@ -284,6 +271,14 @@ export function MenuDrawer({
                     </RouterLink>
                   </>
                 )}
+                <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
+                  <StrokeIcon className={styles.utilIcon} name="doc" />
+                  {formatMessage(Pages.termsOfService.link.label)}
+                </RouterLink>
+                <RouterLink to={Pages.privacyPolicy.path} onClick={onClose}>
+                  <StrokeIcon className={styles.utilIcon} name="shield" />
+                  {formatMessage(Pages.privacyPolicy.link.label)}
+                </RouterLink>
               </div>
             </div>
           </>
