@@ -27,8 +27,8 @@
   z-index: 101;
   flex-direction: column;
   gap: 0.7rem;
-  inline-size: min(23rem, 88vi);
-  padding: 1.2rem 1.4rem 1.6rem;
+  inline-size: min(19.5rem, 86vi);
+  padding: 1.2rem 1.2rem 1.6rem;
   border-inline-start: 1px solid var(--primary-d2);
   overflow-block: auto;
   color: var(--text-color);
@@ -196,10 +196,12 @@
 }
 
 // Learner switcher at the top of the drawer.
+// Learners lay out four to a row; a fifth profile (premium accounts allow up
+// to eight) starts a second row underneath.
 .learners {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
 }
 
 .learner {
@@ -207,8 +209,8 @@
   flex-direction: column;
   gap: 0.3rem;
   align-items: center;
-  inline-size: 4.2rem;
-  padding: 0.5rem 0.25rem;
+  min-inline-size: 0;
+  padding: 0.45rem 0.15rem;
   border: 2px solid transparent;
   border-radius: 0.7rem;
   background: transparent;
@@ -258,4 +260,24 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+// Account / Log out sit in a footer pinned to the very bottom of the panel.
+.account {
+  margin-block-start: auto;
+  padding-block-start: 0.9rem;
+  border-block-start: 1px solid var(--primary-d2);
+}
+
+// Log out reads in red, and stays red on hover (its icon too).
+.account .util a.logout {
+  color: var(--error-color, #d0322e);
+
+  &:hover {
+    color: var(--error-color, #d0322e);
+
+    .utilIcon {
+      color: var(--error-color, #d0322e);
+    }
+  }
 }

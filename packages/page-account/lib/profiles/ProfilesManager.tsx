@@ -8,12 +8,7 @@ import { useProfiles } from "./context.tsx";
 import { ParentGate } from "./ParentGate.tsx";
 import { ProfileAvatar } from "./ProfileAvatar.tsx";
 import * as styles from "./Profiles.module.less";
-import {
-  type Avatar,
-  MAX_PROFILES,
-  type Profile,
-  type ProfileKind,
-} from "./store.ts";
+import { type Avatar, type Profile, type ProfileKind } from "./store.ts";
 
 type Editing =
   | { readonly mode: "add" }
@@ -28,7 +23,8 @@ type Editing =
 export function ProfilesManager(): ReactNode {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
-  const { household, active, add, update, remove, select } = useProfiles();
+  const { household, active, maxProfiles, add, update, remove, select } =
+    useProfiles();
   const [editing, setEditing] = useState<Editing>(null);
   // One gate covers every admin action; once passed it stays open for the visit.
   const [unlocked, setUnlocked] = useState(false);
@@ -89,7 +85,7 @@ export function ProfilesManager(): ReactNode {
           </div>
         ))}
 
-        {household.profiles.length < MAX_PROFILES && (
+        {household.profiles.length < maxProfiles && (
           <button
             className={clsx(styles.tile, styles.tileAdd)}
             onClick={() => guard(() => setEditing({ mode: "add" }))}
@@ -105,12 +101,12 @@ export function ProfilesManager(): ReactNode {
         )}
       </div>
 
-      {household.profiles.length >= MAX_PROFILES && (
+      {household.profiles.length >= maxProfiles && (
         <p className={styles.hint}>
           <FormattedMessage
             id="profiles.maxReached"
             defaultMessage="A household can have up to {max} profiles — kids and grown-ups in any mix. Delete one to add another."
-            values={{ max: MAX_PROFILES }}
+            values={{ max: maxProfiles }}
           />
         </p>
       )}

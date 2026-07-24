@@ -25,6 +25,87 @@ function Sect({ children }: { readonly children: string }) {
   return <div className={styles.sect}>{children}</div>;
 }
 
+// Bump on every release. Format: MAJOR.MINOR.PATCH, zero-padded.
+export const APP_VERSION = "01.00.00";
+
+export function AboutPage() {
+  return (
+    <div className={styles.paper}>
+      <Masthead
+        kicker="The KeyLearn story"
+        title="About KeyLearn"
+        dateline={`Free · Open source · Version ${APP_VERSION}`}
+      />
+
+      <div className={styles.glance}>
+        <div className={styles.glanceLab}>In a sentence</div>
+        <ul>
+          <li>
+            KeyLearn is a <em>free, open-source</em> touch-typing tutor for the
+            whole household — grown-ups and kids alike.
+          </li>
+          <li>
+            It watches the keys that slow you down and builds your practice
+            around <em>them</em>, so every minute is spent where it counts.
+          </li>
+          <li>
+            Children get a playful dino-run world that adapts to their age;
+            grown-ups get a focused, data-rich practice screen.
+          </li>
+          <li>No ads, no trackers, and your data stays yours.</li>
+        </ul>
+      </div>
+
+      <Sect>Why KeyLearn exists</Sect>
+      <p>
+        Typing well is a quiet superpower — it takes the friction out of every
+        message, essay, and line of code you&rsquo;ll ever write. KeyLearn was
+        built to teach that skill in the most encouraging way we could manage:
+        short sessions, honest feedback, and a sense of steady progress you can
+        actually feel. It&rsquo;s a fork of the open-source keybr engine,
+        reworked around families and rebuilt to be warm rather than clinical.
+      </p>
+
+      <Sect>How the learning works</Sect>
+      <p>
+        Rather than marching you through fixed drills, KeyLearn measures how
+        quickly and cleanly you hit each key and weaves your weak spots into the
+        words it generates. A letter only joins your set once you can type it
+        both quickly <em>and</em> accurately, so the difficulty rises exactly as
+        fast as you do — never faster.
+      </p>
+
+      <Sect>Made for the whole family</Sect>
+      <p>
+        One account holds a profile for each person in your home, and every
+        profile keeps its own progress. Kids step into a friendly dino-run
+        adventure that scales to their age — shorter sessions, gentler pacing,
+        and bigger encouragement for the youngest — while grown-ups get the full
+        practice screen with detailed statistics. Everyone learns on the same
+        proven engine, just dressed for their age.
+      </p>
+
+      <Sect>Open source, and yours</Sect>
+      <p>
+        KeyLearn is published under the GNU AGPL license: the whole source code
+        is open for you to read, run, or improve. There is nothing to buy, no
+        subscription, and no advertising. Your practice data belongs to you —
+        export it or erase it whenever you like.
+      </p>
+
+      <Sect>Version</Sect>
+      <p>
+        You&rsquo;re running KeyLearn <em>v{APP_VERSION}</em>. Each release
+        bumps this number so you always know which build you&rsquo;re on.
+      </p>
+
+      <div className={styles.foot}>
+        keylearn · v{APP_VERSION} · learn to type, joyfully
+      </div>
+    </div>
+  );
+}
+
 export function TermsOfServicePage() {
   return (
     <div className={styles.paper}>

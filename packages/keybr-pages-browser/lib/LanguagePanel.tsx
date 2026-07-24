@@ -8,24 +8,21 @@ import {
 import { Pages, usePageData } from "@keybr/pages-shared";
 import { Link as StaticLink } from "@keybr/widget";
 import { type ReactNode, useState } from "react";
-import { useIntl } from "react-intl";
 import * as styles from "./LanguagePanel.module.less";
 
 /**
- * The mock's two-level language picker: a searchable list of languages in
- * their own names, and a row of region pills when the chosen language has
- * more than one variant.
+ * A two-level language picker: a scrollable list of languages in their own
+ * names, and a row of region pills when the chosen language has more than
+ * one variant.
  */
 export function LanguagePanel({
   currentPath,
 }: {
   readonly currentPath: string;
 }): ReactNode {
-  const { formatMessage } = useIntl();
   const { formatLocalLanguageName } = useIntlDisplayNames();
   const { locale: activeLocale } = usePageData();
   const preferredLocale = usePreferredLocale();
-  const [query, setQuery] = useState("");
   const [openBase, setOpenBase] = useState(() => baseOf(activeLocale));
 
   const groups = new Map<string, LocaleId[]>();
@@ -33,35 +30,11 @@ export function LanguagePanel({
     const base = baseOf(locale);
     groups.set(base, [...(groups.get(base) ?? []), locale]);
   }
-  const q = query.trim().toLowerCase();
-  const visible = [...groups.entries()].filter(([base, locales]) => {
-    if (!q) {
-      return true;
-    }
-    const name = formatLocalLanguageName(locales[0]).toLowerCase();
-    return base.startsWith(q) || name.includes(q);
-  });
+  const visible = [...groups.entries()];
   const openVariants = groups.get(openBase) ?? [];
 
   return (
     <div className={styles.root}>
-      <div className={styles.search}>
-        <svg className={styles.searchIcon} viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="6.5" />
-          <path d="M15.8 15.8L20 20" />
-        </svg>
-        <input
-          type="text"
-          value={query}
-          placeholder={formatMessage({
-            id: "language.search.placeholder",
-            defaultMessage: "Find a language",
-          })}
-          onChange={(ev) => {
-            setQuery(ev.target.value);
-          }}
-        />
-      </div>
       <div className={styles.list}>
         {visible.map(([base, locales]) => {
           const active = baseOf(activeLocale) === base;

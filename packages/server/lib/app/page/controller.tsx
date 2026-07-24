@@ -221,6 +221,19 @@ export class Controller {
     return this.renderPage(ctx, Pages.privacyPolicy, intl);
   }
 
+  @http.GET(`${Pages.about.path}`)
+  async ["about"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.about);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.about.path}`)
+  async ["about-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.about, intl);
+  }
+
   async pageData(
     ctx: Context<RouterState & AuthState>,
     { locale }: IntlShape,

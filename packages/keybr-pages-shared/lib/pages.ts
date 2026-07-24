@@ -371,6 +371,21 @@ export namespace Pages {
     meta: [{ name: "robots", content: "noindex" }],
   } satisfies PageInfo;
 
+  export const about = {
+    path: "/about",
+    title: defineMessage({
+      id: "t_About",
+      defaultMessage: "About",
+    }),
+    link: {
+      label: defineMessage({
+        id: "t_About",
+        defaultMessage: "About",
+      }),
+    },
+    meta,
+  } satisfies PageInfo;
+
   export function profileOf(arg: string): string;
   export function profileOf(arg: NamedUser): string;
   export function profileOf(arg: AnonymousUser): null;

@@ -73,11 +73,24 @@ function newId(): string {
   return "p" + Math.random().toString(36).slice(2, 9);
 }
 
-/** A household holds at most this many profiles, kids and grown-ups mixed. */
-export const MAX_PROFILES = 4;
+// A household holds at most this many profiles, kids and grown-ups mixed —
+// four on a free account, eight with premium.
+export const MAX_PROFILES_FREE = 4;
+export const MAX_PROFILES_PREMIUM = 8;
 
-export function addProfile(h: Household, data: Omit<Profile, "id">): Household {
-  if (h.profiles.length >= MAX_PROFILES) {
+/** Back-compat default cap (free tier). Prefer maxProfiles(premium). */
+export const MAX_PROFILES = MAX_PROFILES_FREE;
+
+export function maxProfiles(premium: boolean): number {
+  return premium ? MAX_PROFILES_PREMIUM : MAX_PROFILES_FREE;
+}
+
+export function addProfile(
+  h: Household,
+  data: Omit<Profile, "id">,
+  max: number = MAX_PROFILES_FREE,
+): Household {
+  if (h.profiles.length >= max) {
     return h; // The UI hides the add tile at the cap; this is the backstop.
   }
   const profile: Profile = { ...data, id: newId() };

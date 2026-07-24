@@ -1,4 +1,4 @@
-import { usePageData } from "@keybr/pages-shared";
+import { isPremiumUser, usePageData } from "@keybr/pages-shared";
 import {
   createContext,
   type ReactNode,
@@ -14,6 +14,7 @@ import {
   historyNamespace,
   type Household,
   loadHousehold,
+  maxProfiles,
   type Profile,
   removeProfile,
   saveHousehold,
@@ -26,6 +27,8 @@ type ProfilesContextValue = {
   readonly active: Profile | null;
   /** Local result-history namespace for the active profile, or null. */
   readonly namespace: string | null;
+  /** How many profiles this account may hold (8 with premium, else 4). */
+  readonly maxProfiles: number;
   readonly add: (data: Omit<Profile, "id">) => void;
   readonly update: (id: string, patch: Partial<Omit<Profile, "id">>) => void;
   readonly remove: (id: string) => void;
@@ -41,6 +44,7 @@ export function ProfilesProvider({
 }) {
   const { publicUser } = usePageData();
   const signedIn = publicUser.id != null;
+  const cap = maxProfiles(isPremiumUser(publicUser));
   const [household, setHousehold] = useState<Household>(loadHousehold);
 
   const commit = useCallback((next: Household) => {
@@ -64,12 +68,13 @@ export function ProfilesProvider({
       household: signedIn ? household : { profiles: [], activeId: null },
       active,
       namespace: historyNamespace(active),
-      add: (data) => commit(addProfile(household, data)),
+      maxProfiles: cap,
+      add: (data) => commit(addProfile(household, data, cap)),
       update: (id, patch) => commit(updateProfile(household, id, patch)),
       remove: (id) => commit(removeProfile(household, id)),
       select: (id) => commit(setActive(household, id)),
     };
-  }, [signedIn, household, commit]);
+  }, [signedIn, household, commit, cap]);
 
   return (
     <ProfilesContext.Provider value={value}>

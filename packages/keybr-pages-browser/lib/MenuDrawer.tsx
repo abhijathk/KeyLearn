@@ -251,13 +251,13 @@ export function MenuDrawer({
                   <StrokeIcon className={styles.utilIcon} name="shield" />
                   {formatMessage(Pages.privacyPolicy.link.label)}
                 </RouterLink>
+                <RouterLink to={Pages.about.path} onClick={onClose}>
+                  <StrokeIcon className={styles.utilIcon} name="help" />
+                  {formatMessage(Pages.about.link.label)}
+                </RouterLink>
               </div>
-              <div className={styles.label}>
-                <FormattedMessage
-                  id="drawer.account"
-                  defaultMessage="Account"
-                />
-              </div>
+            </div>
+            <div className={styles.account}>
               <div className={styles.util}>
                 {signedIn ? (
                   <>
@@ -266,6 +266,7 @@ export function MenuDrawer({
                       {formatMessage(Pages.account.link.label)}
                     </RouterLink>
                     <a
+                      className={styles.logout}
                       href="/auth/logout"
                       onClick={(ev) => {
                         ev.preventDefault();
