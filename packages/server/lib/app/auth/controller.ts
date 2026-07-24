@@ -120,7 +120,7 @@ export class Controller {
         ctx.state.session.start();
         ctx.state.session.set("userId", user.id!);
       }
-      ctx.response.redirect("/account");
+      ctx.response.redirect("/");
     } else {
       throw new BadRequestError();
     }
@@ -234,7 +234,7 @@ export class Controller {
     if (user != null) {
       ctx.state.session.start();
       ctx.state.session.set("userId", user.id!);
-      ctx.response.redirect("/account");
+      ctx.response.redirect("/");
     } else {
       throw new ForbiddenError("Invalid login link", {
         description:
@@ -249,7 +249,7 @@ export class Controller {
   @http.GET({ name: "logout", path: "/auth/logout" })
   async logout(ctx: Context<RouterState & SessionState & AuthState>) {
     ctx.state.session.destroy();
-    ctx.response.redirect("/account");
+    ctx.response.redirect("/");
   }
 
   @http.PATCH({ name: "patch-account", path: "/_/account" })

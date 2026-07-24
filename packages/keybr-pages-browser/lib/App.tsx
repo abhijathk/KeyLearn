@@ -6,13 +6,20 @@ import {
   PageDataContext,
   Pages,
   Root,
+  usePageData,
 } from "@keybr/pages-shared";
 import { SettingsLoader } from "@keybr/settings-loader";
 import { querySelector } from "@keybr/widget";
-import { lazy, type ReactNode, Suspense } from "react";
+import { lazy, type ReactNode, Suspense, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { useIntl } from "react-intl";
-import { BrowserRouter, Route, Routes } from "react-router";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router";
 import { IntlLoader } from "./loader/IntlLoader.tsx";
 import { Template } from "./Template.tsx";
 import { ThemeProvider } from "./themes/ThemeProvider.tsx";
@@ -69,10 +76,39 @@ function ProfileScope({ children }: { readonly children: ReactNode }) {
   );
 }
 
+// After a fresh sign-in with no learner profiles on this device, the account
+// window opens once as a reminder to set the household up. With profiles
+// present (or after that one nudge) the app lands straight on practice.
+function FirstRunRedirect(): ReactNode {
+  const { publicUser } = usePageData();
+  const { household } = useProfiles();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const id = publicUser.id;
+    if (id == null || household.profiles.length > 0 || pathname !== "/") {
+      return;
+    }
+    const key = `keylearn.welcomed.${id}`;
+    try {
+      if (sessionStorage.getItem(key) != null) {
+        return;
+      }
+      sessionStorage.setItem(key, "1");
+    } catch {
+      return;
+    }
+    navigate(Pages.account.path);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
+
 function PageRoutes() {
   const { locale } = useIntl();
   return (
     <BrowserRouter basename={Pages.intlBase(locale)}>
+      <FirstRunRedirect />
       <Routes>
         <Route
           index={true}

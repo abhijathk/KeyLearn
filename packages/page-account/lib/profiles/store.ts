@@ -23,13 +23,18 @@ export type Household = {
   readonly activeId: string | null;
 };
 
-import { HOUSEHOLD_STORAGE_KEY as KEY } from "@keybr/pages-shared";
+import { householdStorageKey } from "@keybr/pages-shared";
 
 const EMPTY: Household = { profiles: [], activeId: null };
 
 export function loadHousehold(): Household {
   try {
-    const raw = localStorage.getItem(KEY);
+    // Signed out there is no key and therefore no household.
+    const key = householdStorageKey();
+    if (key == null) {
+      return EMPTY;
+    }
+    const raw = localStorage.getItem(key);
     if (raw == null) {
       return EMPTY;
     }
@@ -52,7 +57,11 @@ export function loadHousehold(): Household {
 
 export function saveHousehold(h: Household): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(h));
+    const key = householdStorageKey();
+    if (key == null) {
+      return;
+    }
+    localStorage.setItem(key, JSON.stringify(h));
   } catch {
     // Storage may be unavailable / full.
   }

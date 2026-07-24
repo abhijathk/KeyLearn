@@ -1,4 +1,4 @@
-import { ProfileAvatar, useProfiles } from "@keybr/page-account";
+import { ConfirmDialog, ProfileAvatar, useProfiles } from "@keybr/page-account";
 import { Pages, usePageData } from "@keybr/pages-shared";
 import { IconButton, StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
@@ -36,6 +36,7 @@ export function MenuDrawer({
   const { household, active, select } = useProfiles();
   const signedIn = publicUser.id != null;
   const kidLock = active?.kind === "kid";
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   // Switching learners keeps the drawer open — parents often flip between
   // profiles to compare, and the panel survives the app remount underneath.
@@ -222,13 +223,6 @@ export function MenuDrawer({
               <NavMenu currentPath={path} onNavigate={onClose} />
               <div className={styles.label}>
                 <FormattedMessage
-                  id="drawer.fingerColors"
-                  defaultMessage="Finger colour zones on the keyboard"
-                />
-              </div>
-              <ZonesToggle />
-              <div className={styles.label}>
-                <FormattedMessage
                   id="drawer.language"
                   defaultMessage="Site language"
                 />
@@ -271,7 +265,13 @@ export function MenuDrawer({
                       <StrokeIcon className={styles.utilIcon} name="user" />
                       {formatMessage(Pages.account.link.label)}
                     </RouterLink>
-                    <a href="/auth/logout">
+                    <a
+                      href="/auth/logout"
+                      onClick={(ev) => {
+                        ev.preventDefault();
+                        setConfirmLogout(true);
+                      }}
+                    >
                       <StrokeIcon className={styles.utilIcon} name="back" />
                       <FormattedMessage
                         id="nav.logOut"
@@ -299,44 +299,33 @@ export function MenuDrawer({
           </>
         )}
       </aside>
+      {confirmLogout && (
+        <ConfirmDialog
+          title={formatMessage(
+            defineMessage({
+              id: "drawer.logout.title",
+              defaultMessage: "Log out?",
+            }),
+          )}
+          message={formatMessage(
+            defineMessage({
+              id: "drawer.logout.message",
+              defaultMessage:
+                "Practice history stays on this device and on your account. You can log back in any time.",
+            }),
+          )}
+          confirmLabel={formatMessage(
+            defineMessage({
+              id: "nav.logOut",
+              defaultMessage: "Log out",
+            }),
+          )}
+          onConfirm={() => {
+            window.location.href = "/auth/logout";
+          }}
+          onCancel={() => setConfirmLogout(false)}
+        />
+      )}
     </>
-  );
-}
-
-/** Finger-zone colours on/off; applied by the practice page via an event. */
-function ZonesToggle(): ReactNode {
-  const [on, setOn] = useState(true);
-  const set = (value: boolean) => {
-    setOn(value);
-    window.dispatchEvent(
-      new window.CustomEvent("keylearn:zones", { detail: value }),
-    );
-  };
-  return (
-    <div className={styles.seg}>
-      <button
-        className={clsx(styles.segBtn, on && styles.segOn)}
-        onClick={() => {
-          set(true);
-        }}
-      >
-        <span className={styles.dots}>
-          <i style={{ background: "var(--pinky-zone-color)" }} />
-          <i style={{ background: "var(--ring-zone-color)" }} />
-          <i style={{ background: "var(--middle-zone-color)" }} />
-          <i style={{ background: "var(--left-index-zone-color)" }} />
-          <i style={{ background: "var(--right-index-zone-color)" }} />
-        </span>
-        <FormattedMessage id="drawer.zonesOn" defaultMessage="On" />
-      </button>
-      <button
-        className={clsx(styles.segBtn, on || styles.segOn)}
-        onClick={() => {
-          set(false);
-        }}
-      >
-        <FormattedMessage id="drawer.zonesOff" defaultMessage="Off" />
-      </button>
-    </div>
   );
 }

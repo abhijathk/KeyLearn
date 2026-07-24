@@ -1,0 +1,128 @@
+@import "@keybr/widget/lib/index.less";
+
+// The floating settings-style window: dimmed blurred backdrop, a centred
+// panel on --primary-l1 with an accent-tinted border, road typography.
+
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  place-items: center;
+  padding: 2rem;
+  background-color: color-mix(in oklab, var(--primary-d2) 55%, transparent);
+  animation: overlay-in 0.2s ease;
+  backdrop-filter: blur(6px);
+}
+
+@keyframes overlay-in {
+  0% {
+    opacity: 0;
+  }
+}
+
+.window {
+  display: flex;
+  flex-direction: column;
+  inline-size: min(58rem, 100%);
+  block-size: min(44rem, 100%);
+  border: 1px solid color-mix(in oklab, var(--accent) 25%, var(--primary-d2));
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background-color: var(--primary-l1);
+  box-shadow: 0 2rem 5rem var(--shadow-color);
+  font-family: var(--value-font-family);
+  animation: window-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes window-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(0.97);
+  }
+}
+
+.windowHead {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 1.1rem 1.4rem 0.9rem;
+  border-block-end: 1px solid var(--primary-d2);
+}
+
+.windowTitle {
+  display: flex;
+  flex: 1;
+  gap: 0.7rem;
+  align-items: center;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+
+  &::after {
+    content: "";
+    flex: 1;
+    block-size: 1px;
+    background-image: linear-gradient(to right, var(--primary-d2), transparent);
+  }
+}
+
+.windowClose {
+  display: grid;
+  place-items: center;
+  inline-size: 2.1rem;
+  block-size: 2.1rem;
+  padding: 0;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent-d1);
+    color: var(--text-color);
+  }
+
+  svg {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+  }
+}
+
+.windowBody {
+  flex: 1;
+  padding: 1.6rem 1.8rem 2rem;
+  overflow-block: auto;
+}
+
+// A compact window hugs its content — auth forms and small notices.
+.window.compact {
+  inline-size: min(26.5rem, 100%);
+  block-size: auto;
+  max-block-size: min(92vb, 100%);
+
+  .windowBody {
+    padding: 1.3rem 1.5rem 1.5rem;
+  }
+}
+
+// Height glides towards the measured content instead of jumping.
+.animatedHeight {
+  overflow: hidden;
+  transition: block-size 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .window {
+    animation: none;
+  }
+
+  .animatedHeight {
+    transition: none;
+  }
+}

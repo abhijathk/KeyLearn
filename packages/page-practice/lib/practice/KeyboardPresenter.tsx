@@ -3,8 +3,8 @@ import {
   flatten,
   HeatmapLayer,
   KeyLayer,
-  MasteryLayer,
   type MasteryKey,
+  MasteryLayer,
   PointersLayer,
   TransitionsLayer,
   VirtualKeyboard,
@@ -32,7 +32,7 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
   readonly lastLesson: LastLesson | null;
   readonly masteryKeys?: readonly MasteryKey[];
 }): ReactNode {
-  const { settings, updateSettings } = useSettings();
+  const { settings } = useSettings();
   const keyboard = useKeyboard();
   const colors = settings.get(keyboardProps.colors);
   const pointers = settings.get(keyboardProps.pointers);
@@ -74,17 +74,6 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
     }
     return undefined;
   }, [wrongKey]);
-  useEffect(() => {
-    // The drawer's finger-colours toggle lives outside this page's tree.
-    const onZones = (ev: Event) => {
-      const on = Boolean((ev as CustomEvent<boolean>).detail);
-      updateSettings(settings.set(keyboardProps.colors, on));
-    };
-    window.addEventListener("keylearn:zones", onZones);
-    return () => {
-      window.removeEventListener("keylearn:zones", onZones);
-    };
-  }, [settings, updateSettings]);
   return (
     <VirtualKeyboard keyboard={keyboard} height="19rem">
       <KeyLayer
