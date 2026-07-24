@@ -111,13 +111,26 @@
 
 // The proportional part of a road: the done fill, the "you" dot and the dashed
 // remainder split this by flex-grow, so the fill is always exactly to scale
-// regardless of the label that follows.
+// regardless of the label that follows. It's a fixed length (not flex:1) so
+// the trailing label doesn't get pushed to the container edge — the two roads
+// then end at different points, keeping the right side lively and uneven
+// rather than a ruled column.
 .track {
   display: flex;
   position: relative;
-  flex: 1 1 auto;
+  flex: 0 1 17rem;
   align-items: center;
   min-inline-size: 4rem;
+}
+
+// Different lengths per road, so the labels trail off unevenly (and the target
+// road stays the shorter of the two).
+.roadMacro .track {
+  flex-basis: 15rem;
+}
+
+.roadMicro .track {
+  flex-basis: 19rem;
 }
 
 // the macro line sits a half-step lower, framing the hero's midline
