@@ -381,18 +381,21 @@ function GoalTuner({
   }
 
   const { min, max } = lessonProps.targetSpeed;
+  // One nudge moves the goal a whole 5 units (of the displayed speed), snapped
+  // to a round multiple; the control lingers 30s after the last nudge.
+  const STEP = 25; // 25 chars/min == 5 wpm
   const nudge = (dir: number) => {
     const next =
       dir < 0
-        ? Math.max(min, Math.ceil(target / 5) * 5 - 5)
-        : Math.min(max, Math.floor(target / 5) * 5 + 5);
+        ? Math.max(min, Math.ceil(target / STEP) * STEP - STEP)
+        : Math.min(max, Math.floor(target / STEP) * STEP + STEP);
     if (next !== target) {
       onChange(next);
     }
     clear();
     timer.current = setTimeout(() => {
       setDismissed(true);
-    }, 10000);
+    }, 30000);
   };
 
   return (

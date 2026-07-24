@@ -154,7 +154,7 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
 
 function useProgress(lesson: Lesson, results: readonly Result[]) {
   const { settings } = useSettings();
-  const [done, setDone] = useState(false);
+  const [seeded, setSeeded] = useState<Progress | null>(null);
   const [loading, setLoading] = useState({ total: 0, current: 0 });
   const progress = useMemo(
     () => new Progress(settings, lesson),
@@ -163,15 +163,19 @@ function useProgress(lesson: Lesson, results: readonly Result[]) {
   useEffect(() => {
     // Populating the progress object can take a long time, so we do this
     // asynchronously, interleaved with the browser event loop to avoid
-    // freezing of the UI.
+    // freezing of the UI. We track which progress *object* has been seeded, so
+    // that when a settings change (e.g. nudging the target speed) swaps in a
+    // fresh, empty progress, we report null until it is seeded — otherwise the
+    // empty object renders as blank stats and never re-populates (the seed
+    // completing wouldn't change any state to trigger a re-render).
     const controller = new AbortController();
     const { signal } = controller;
     schedule(progress.seedAsync(lesson.filter(results), setLoading), { signal })
-      .then(() => setDone(true))
+      .then(() => setSeeded(progress))
       .catch(catchError);
     return () => {
       controller.abort();
     };
   }, [progress, lesson, results]);
-  return [done ? progress : null, loading] as const;
+  return [seeded === progress ? progress : null, loading] as const;
 }

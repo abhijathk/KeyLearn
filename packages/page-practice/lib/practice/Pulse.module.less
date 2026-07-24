@@ -295,10 +295,10 @@
   inline-size: 1.05rem;
   block-size: 1.05rem;
   padding: 0;
-  border: 1px solid color-mix(in oklab, var(--accent) 45%, transparent);
+  border: 1px solid color-mix(in oklab, var(--text-color-f1) 40%, transparent);
   border-radius: 50%;
-  color: var(--accent);
-  background-color: color-mix(in oklab, var(--accent) 12%, transparent);
+  color: var(--text-color-f1);
+  background-color: color-mix(in oklab, var(--text-color-f1) 10%, transparent);
   cursor: pointer;
   transition:
     transform 0.1s ease,
@@ -314,7 +314,11 @@
   }
 
   &:hover:not(:disabled) {
-    background-color: color-mix(in oklab, var(--accent) 24%, transparent);
+    background-color: color-mix(
+      in oklab,
+      var(--text-color-f1) 20%,
+      transparent
+    );
     transform: scale(1.12);
   }
 
