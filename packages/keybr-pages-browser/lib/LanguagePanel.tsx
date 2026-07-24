@@ -47,7 +47,13 @@ export function LanguagePanel({
     const base = baseOf(locale);
     groups.set(base, [...(groups.get(base) ?? []), locale]);
   }
-  const visible = [...groups.entries()];
+  // Float the language you're viewing to the very top, then English, then the
+  // rest in their original order — so your current language is one glance away.
+  const activeBase = baseOf(activeLocale);
+  const englishBase = baseOf(defaultLocale);
+  const rank = (base: string) =>
+    base === activeBase ? 0 : base === englishBase ? 1 : 2;
+  const visible = [...groups.entries()].sort(([a], [b]) => rank(a) - rank(b));
   const openVariants = groups.get(openBase) ?? [];
 
   return (
