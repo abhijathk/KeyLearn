@@ -5,14 +5,19 @@ export type FontStyle = "normal" | "italic";
 export type Fallback = "cursive" | "fantasy" | "monospace" | "sans-serif" | "serif" | "whitespace" | string;
 export type Script =
   | "arabic"
+  | "bengali"
   | "cyrillic"
   | "devanagari"
   | "greek"
+  | "gujarati"
   | "hebrew"
   | "hiragana"
+  | "kannada"
   | "katakana"
   | "latin"
   | "malayalam"
+  | "tamil"
+  | "telugu"
   | "thai";
 
 export class FontFace {
@@ -53,6 +58,12 @@ const acghlt = ["arabic", "cyrillic", "greek", "hebrew", "latin", "thai"] as con
 const hiragana = ["hiragana"] as const satisfies Script[];
 const devanagari = ["devanagari"] as const satisfies Script[];
 const malayalam = ["malayalam"] as const satisfies Script[];
+const arabic = ["arabic"] as const satisfies Script[];
+const bengali = ["bengali"] as const satisfies Script[];
+const gujarati = ["gujarati"] as const satisfies Script[];
+const kannada = ["kannada"] as const satisfies Script[];
+const tamil = ["tamil"] as const satisfies Script[];
+const telugu = ["telugu"] as const satisfies Script[];
 
 export const ARAD = new FontFace("Arad", "400", "normal", ["whitespace"], ["arabic"]);
 export const ARAD_B = new FontFace("Arad", "700", "normal", ["whitespace"], ["arabic"]);
@@ -72,6 +83,18 @@ export const NOTO_SANS_DEVANAGARI = new FontFace("Noto Sans Devanagari", "400", 
 export const NOTO_SANS_DEVANAGARI_B = new FontFace("Noto Sans Devanagari", "700", "normal", ["sans-serif"], devanagari);
 export const NOTO_SANS_MALAYALAM = new FontFace("Noto Sans Malayalam", "400", "normal", ["sans-serif"], malayalam);
 export const NOTO_SANS_MALAYALAM_B = new FontFace("Noto Sans Malayalam", "700", "normal", ["sans-serif"], malayalam);
+export const NOTO_SANS_BENGALI = new FontFace("Noto Sans Bengali", "400", "normal", ["sans-serif"], bengali);
+export const NOTO_SANS_BENGALI_B = new FontFace("Noto Sans Bengali", "700", "normal", ["sans-serif"], bengali);
+export const NOTO_SANS_GUJARATI = new FontFace("Noto Sans Gujarati", "400", "normal", ["sans-serif"], gujarati);
+export const NOTO_SANS_GUJARATI_B = new FontFace("Noto Sans Gujarati", "700", "normal", ["sans-serif"], gujarati);
+export const NOTO_SANS_KANNADA = new FontFace("Noto Sans Kannada", "400", "normal", ["sans-serif"], kannada);
+export const NOTO_SANS_KANNADA_B = new FontFace("Noto Sans Kannada", "700", "normal", ["sans-serif"], kannada);
+export const NOTO_SANS_TAMIL = new FontFace("Noto Sans Tamil", "400", "normal", ["sans-serif"], tamil);
+export const NOTO_SANS_TAMIL_B = new FontFace("Noto Sans Tamil", "700", "normal", ["sans-serif"], tamil);
+export const NOTO_SANS_TELUGU = new FontFace("Noto Sans Telugu", "400", "normal", ["sans-serif"], telugu);
+export const NOTO_SANS_TELUGU_B = new FontFace("Noto Sans Telugu", "700", "normal", ["sans-serif"], telugu);
+export const NOTO_SANS_ARABIC = new FontFace("Noto Sans Arabic", "400", "normal", ["sans-serif"], arabic);
+export const NOTO_SANS_ARABIC_B = new FontFace("Noto Sans Arabic", "700", "normal", ["sans-serif"], arabic);
 export const NOTO_SANS_JP = new FontFace("Noto Sans JP", "400", "normal", ["sans-serif"], hiragana);
 export const NOTO_SANS_JP_B = new FontFace("Noto Sans JP", "700", "normal", ["sans-serif"], hiragana);
 export const NOTO_SERIF_JP = new FontFace("Noto Serif JP", "400", "normal", ["serif"], hiragana);
@@ -154,6 +177,18 @@ export const FONTS_FACES: readonly FontFace[] = [
   NOTO_SANS_DEVANAGARI_B,
   NOTO_SANS_MALAYALAM,
   NOTO_SANS_MALAYALAM_B,
+  NOTO_SANS_BENGALI,
+  NOTO_SANS_BENGALI_B,
+  NOTO_SANS_GUJARATI,
+  NOTO_SANS_GUJARATI_B,
+  NOTO_SANS_KANNADA,
+  NOTO_SANS_KANNADA_B,
+  NOTO_SANS_TAMIL,
+  NOTO_SANS_TAMIL_B,
+  NOTO_SANS_TELUGU,
+  NOTO_SANS_TELUGU_B,
+  NOTO_SANS_ARABIC,
+  NOTO_SANS_ARABIC_B,
   NOTO_SANS_JP,
   NOTO_SANS_JP_B,
   NOTO_SERIF_JP,

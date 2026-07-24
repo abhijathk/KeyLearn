@@ -1,6 +1,7 @@
 import { Language } from "@keybr/keyboard";
 import AR from "@keybr/phonetic-model/assets/model-ar.data";
 import BE from "@keybr/phonetic-model/assets/model-be.data";
+import BN from "@keybr/phonetic-model/assets/model-bn.data";
 import BR from "@keybr/phonetic-model/assets/model-br.data";
 import CS from "@keybr/phonetic-model/assets/model-cs.data";
 import DA from "@keybr/phonetic-model/assets/model-da.data";
@@ -13,12 +14,14 @@ import ET from "@keybr/phonetic-model/assets/model-et.data";
 import FA from "@keybr/phonetic-model/assets/model-fa.data";
 import FI from "@keybr/phonetic-model/assets/model-fi.data";
 import FR from "@keybr/phonetic-model/assets/model-fr.data";
+import GU from "@keybr/phonetic-model/assets/model-gu.data";
 import HE from "@keybr/phonetic-model/assets/model-he.data";
 import HI from "@keybr/phonetic-model/assets/model-hi.data";
 import HR from "@keybr/phonetic-model/assets/model-hr.data";
 import HU from "@keybr/phonetic-model/assets/model-hu.data";
 import IT from "@keybr/phonetic-model/assets/model-it.data";
 import JA from "@keybr/phonetic-model/assets/model-ja.data";
+import KN from "@keybr/phonetic-model/assets/model-kn.data";
 import LT from "@keybr/phonetic-model/assets/model-lt.data";
 import LV from "@keybr/phonetic-model/assets/model-lv.data";
 import ML from "@keybr/phonetic-model/assets/model-ml.data";
@@ -30,9 +33,12 @@ import RO from "@keybr/phonetic-model/assets/model-ro.data";
 import RU from "@keybr/phonetic-model/assets/model-ru.data";
 import SL from "@keybr/phonetic-model/assets/model-sl.data";
 import SV from "@keybr/phonetic-model/assets/model-sv.data";
+import TA from "@keybr/phonetic-model/assets/model-ta.data";
+import TE from "@keybr/phonetic-model/assets/model-te.data";
 import TH from "@keybr/phonetic-model/assets/model-th.data";
 import TR from "@keybr/phonetic-model/assets/model-tr.data";
 import UK from "@keybr/phonetic-model/assets/model-uk.data";
+import UR from "@keybr/phonetic-model/assets/model-ur.data";
 import VI from "@keybr/phonetic-model/assets/model-vi.data";
 
 export function modelAssetPath(language: Language): string {
@@ -107,6 +113,18 @@ export function modelAssetPath(language: Language): string {
       return UK;
     case Language.VI:
       return VI;
+    case Language.BN:
+      return BN;
+    case Language.GU:
+      return GU;
+    case Language.KN:
+      return KN;
+    case Language.TA:
+      return TA;
+    case Language.TE:
+      return TE;
+    case Language.UR:
+      return UR;
     default:
       throw new Error();
   }

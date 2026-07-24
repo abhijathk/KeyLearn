@@ -229,7 +229,11 @@ export function MenuDrawer({
               </div>
               <LanguagePanel currentPath={path} />
             </div>
-            <div className={styles.account}>
+            <div
+              className={clsx(styles.account, kidLock && styles.locked)}
+              aria-disabled={kidLock}
+              inert={kidLock}
+            >
               <div className={styles.util}>
                 <RouterLink to={Pages.about.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="help" />

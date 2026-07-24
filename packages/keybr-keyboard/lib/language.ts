@@ -213,9 +213,46 @@ export class Language implements EnumItem {
     /* alphabet= */ "aáàảãạăắằẳẵặâấầẩẫậbcdđeéèẻẽẹêếềểễệghiíìỉĩịklmnoóòỏõọôốồổỗộơớờởỡợpqrstuúùủũụưứừửữựvxyýỳỷỹỵ",
   );
 
+  static readonly BN = new Language(
+    /* id= */ "bn",
+    /* script= */ "bengali",
+    /* direction= */ "ltr",
+    /* alphabet= */ "ঁংঃঅআইঈউঊঋএঐওঔকখগঘঙচছজঝঞটঠডঢণতথদধনপফবভমযরলশষসহ়ািীুূৃেৈোৌ্ৎৗড়ঢ়য়",
+  );
+  static readonly GU = new Language(
+    /* id= */ "gu",
+    /* script= */ "gujarati",
+    /* direction= */ "ltr",
+    /* alphabet= */ "ંઃઅઆઇઈઉઊઋઍએઐઑઓઔકખગઘચછજઝઞટઠડઢણતથદધનપફબભમયરલળવશષસહાિીુૂૃૅેૈૉોૌ્",
+  );
+  static readonly KN = new Language(
+    /* id= */ "kn",
+    /* script= */ "kannada",
+    /* direction= */ "ltr",
+    /* alphabet= */ "ಂಃಅಆಇಈಉಊಋಎಏಐಒಓಔಕಖಗಘಚಛಜಝಞಟಠಡಢಣತಥದಧನಪಫಬಭಮಯರಲಳವಶಷಸಹಾಿೀುೂೃೆೇೈೊೋೌ್",
+  );
+  static readonly TA = new Language(
+    /* id= */ "ta",
+    /* script= */ "tamil",
+    /* direction= */ "ltr",
+    /* alphabet= */ "ஃஅஆஇஈஉஊஎஏஐஒஓகஙசஜஞடணதநனபமயரறலளழவஷஸஹாிீுூெேைொோௌ்",
+  );
+  static readonly TE = new Language(
+    /* id= */ "te",
+    /* script= */ "telugu",
+    /* direction= */ "ltr",
+    /* alphabet= */ "ంఃఅఆఇఈఉఊఎఏఐఒఓఔకఖగఘచఛజఞటఠడఢణతథదధనపఫబభమయరఱలళవశషసహాిీుూృెేైొోౌ్ౖ",
+  );
+  static readonly UR = new Language(
+    /* id= */ "ur",
+    /* script= */ "arabic",
+    /* direction= */ "rtl",
+    /* alphabet= */ "ءآأؤإئابةتثجحخدذرزسشصضطظعغفقكلمنهوىيًٌٍَُِّْٰٓٹپچڈڑژکگںھہیے",
+  );
   static readonly ALL = new Enum<Language>(
     Language.AR,
     Language.BE,
+    Language.BN,
     Language.BR,
     Language.CS,
     Language.DA,
@@ -228,6 +265,7 @@ export class Language implements EnumItem {
     Language.FA,
     Language.FI,
     Language.FR,
+    Language.GU,
     Language.HE,
     Language.HI,
     Language.HR,
@@ -245,9 +283,12 @@ export class Language implements EnumItem {
     Language.RU,
     Language.SL,
     Language.SV,
+    Language.TA,
+    Language.TE,
     Language.TH,
     Language.TR,
     Language.UK,
+    Language.UR,
     Language.VI,
   );
 
@@ -256,13 +297,18 @@ export class Language implements EnumItem {
   /** The writing system, such as Cyrillic, Georgian, Greek, Hebrew, Latin, Thai, etc. */
   readonly script:
     | "arabic"
+    | "bengali"
     | "cyrillic"
     | "devanagari"
     | "greek"
+    | "gujarati"
     | "hebrew"
     | "hiragana"
+    | "kannada"
     | "latin"
     | "malayalam"
+    | "tamil"
+    | "telugu"
     | "thai";
   /** The direction of the writing system, either "ltr" for left-to-right, or "rtl" for right-to-left. */
   readonly direction: "ltr" | "rtl";
@@ -285,13 +331,18 @@ export class Language implements EnumItem {
     id: string,
     script:
       | "arabic"
+      | "bengali"
       | "cyrillic"
       | "devanagari"
       | "greek"
+      | "gujarati"
       | "hebrew"
       | "hiragana"
+      | "kannada"
       | "latin"
       | "malayalam"
+      | "tamil"
+      | "telugu"
       | "thai",
     direction: "ltr" | "rtl",
     alphabet: string,
@@ -358,6 +409,67 @@ export class Language implements EnumItem {
         // Thai combining marks.
         return String.fromCodePoint(/* DOTTED CIRCLE */ 0x25cc, codePoint);
       }
+    }
+    if (codePoint >= 0x0980 && codePoint <= 0x09ff) {
+      // Bengali block — no letter case; render combining marks on a circle.
+      if (
+        (codePoint >= 0x0981 && codePoint <= 0x0983) ||
+        codePoint === 0x09bc ||
+        (codePoint >= 0x09be && codePoint <= 0x09cd) ||
+        codePoint === 0x09d7 ||
+        (codePoint >= 0x09e2 && codePoint <= 0x09e3)
+      ) {
+        return String.fromCodePoint(/* DOTTED CIRCLE */ 0x25cc, codePoint);
+      }
+      return String.fromCodePoint(codePoint);
+    }
+    if (codePoint >= 0x0a80 && codePoint <= 0x0aff) {
+      // Gujarati block.
+      if (
+        (codePoint >= 0x0a81 && codePoint <= 0x0a83) ||
+        codePoint === 0x0abc ||
+        (codePoint >= 0x0abe && codePoint <= 0x0acd) ||
+        (codePoint >= 0x0ae2 && codePoint <= 0x0ae3)
+      ) {
+        return String.fromCodePoint(/* DOTTED CIRCLE */ 0x25cc, codePoint);
+      }
+      return String.fromCodePoint(codePoint);
+    }
+    if (codePoint >= 0x0b80 && codePoint <= 0x0bff) {
+      // Tamil block.
+      if (
+        codePoint === 0x0b82 ||
+        (codePoint >= 0x0bbe && codePoint <= 0x0bcd) ||
+        codePoint === 0x0bd7
+      ) {
+        return String.fromCodePoint(/* DOTTED CIRCLE */ 0x25cc, codePoint);
+      }
+      return String.fromCodePoint(codePoint);
+    }
+    if (codePoint >= 0x0c00 && codePoint <= 0x0c7f) {
+      // Telugu block.
+      if (
+        (codePoint >= 0x0c00 && codePoint <= 0x0c04) ||
+        (codePoint >= 0x0c3e && codePoint <= 0x0c4d) ||
+        (codePoint >= 0x0c55 && codePoint <= 0x0c56) ||
+        (codePoint >= 0x0c62 && codePoint <= 0x0c63)
+      ) {
+        return String.fromCodePoint(/* DOTTED CIRCLE */ 0x25cc, codePoint);
+      }
+      return String.fromCodePoint(codePoint);
+    }
+    if (codePoint >= 0x0c80 && codePoint <= 0x0cff) {
+      // Kannada block.
+      if (
+        (codePoint >= 0x0c81 && codePoint <= 0x0c83) ||
+        codePoint === 0x0cbc ||
+        (codePoint >= 0x0cbe && codePoint <= 0x0ccd) ||
+        (codePoint >= 0x0cd5 && codePoint <= 0x0cd6) ||
+        (codePoint >= 0x0ce2 && codePoint <= 0x0ce3)
+      ) {
+        return String.fromCodePoint(/* DOTTED CIRCLE */ 0x25cc, codePoint);
+      }
+      return String.fromCodePoint(codePoint);
     }
     if (codePoint >= 0x0900 && codePoint <= 0x097f) {
       // Devanagari Unicode block — no letter case. Combining marks (matras,
@@ -453,12 +565,22 @@ export function getExampleText({ script }: Language): string {
       return "תאכל יותר תפוחים ותפוזים.";
     case "hiragana":
       return "リンゴとオレンジをもっと食べましょう。";
+    case "bengali":
+      return "আরও আপেল আর কমলা খাও।";
     case "devanagari":
       return "अधिक सेब और संतरे खाओ।";
+    case "gujarati":
+      return "વધુ સફરજન અને નારંગી ખાઓ.";
+    case "kannada":
+      return "ಹೆಚ್ಚು ಸೇಬು ಮತ್ತು ಕಿತ್ತಳೆ ತಿನ್ನಿ.";
     case "latin":
       return "Eat more apples and oranges.";
     case "malayalam":
       return "കൂടുതൽ ആപ്പിളും ഓറഞ്ചും കഴിക്കൂ.";
+    case "tamil":
+      return "மேலும் ஆப்பிள் மற்றும் ஆரஞ்சு சாப்பிடு.";
+    case "telugu":
+      return "మరిన్ని ఆపిల్స్ మరియు నారింజలు తినండి.";
     case "thai":
       return "กินส้มกับแอปเปิลเยอะ ๆ";
   }
@@ -476,12 +598,22 @@ export function getExampleLetters({ script }: Language): CodePoint[] {
       return [0x05d0, 0x05d1, 0x05d2, 0x05d3, 0x05d4, 0x05d5];
     case "hiragana":
       return [0x3041, 0x3043, 0x3045, 0x3047, 0x3049, 0x304b];
+    case "bengali":
+      return [0x0995, 0x0996, 0x0997, 0x0998, 0x099a, 0x099b];
     case "devanagari":
       return [0x0915, 0x0916, 0x0917, 0x0918, 0x091a, 0x091b];
+    case "gujarati":
+      return [0x0a95, 0x0a96, 0x0a97, 0x0a98, 0x0a9a, 0x0a9b];
+    case "kannada":
+      return [0x0c95, 0x0c96, 0x0c97, 0x0c98, 0x0c9a, 0x0c9b];
     case "latin":
       return [0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066];
     case "malayalam":
       return [0x0d15, 0x0d16, 0x0d17, 0x0d18, 0x0d19, 0x0d1a];
+    case "tamil":
+      return [0x0b95, 0x0b99, 0x0b9a, 0x0b9e, 0x0b9f, 0x0ba3];
+    case "telugu":
+      return [0x0c15, 0x0c16, 0x0c17, 0x0c18, 0x0c1a, 0x0c1b];
     case "thai":
       return [0x0e01, 0x0e02, 0x0e04, 0x0e06, 0x0e07, 0x0e08];
   }

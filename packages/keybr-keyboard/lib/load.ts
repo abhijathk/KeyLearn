@@ -15,6 +15,8 @@ import { Layout } from "./layout.ts";
 import { LAYOUT_AR_SA } from "./layout/ar_sa.ts";
 import { LAYOUT_AR_SA_102 } from "./layout/ar_sa_102.ts";
 import { LAYOUT_BE_BY } from "./layout/be_by.ts";
+import { LAYOUT_BN_INSCRIPT } from "./layout/bn_inscript.ts";
+import { LAYOUT_BN_PHONETIC } from "./layout/bn_phonetic.ts";
 import { LAYOUT_BR_CHWERTY_MATHS } from "./layout/br_chwerty_maths.ts";
 import { LAYOUT_CS_CZ } from "./layout/cs_cz.ts";
 import { LAYOUT_DA_DK } from "./layout/da_dk.ts";
@@ -80,6 +82,8 @@ import { LAYOUT_FR_ERGO_L } from "./layout/fr_ergo_l.ts";
 import { LAYOUT_FR_ERGOPTI } from "./layout/fr_ergopti.ts";
 import { LAYOUT_FR_FR } from "./layout/fr_fr.ts";
 import { LAYOUT_FR_OPTIMOT_ERGO } from "./layout/fr_optimot_ergo.ts";
+import { LAYOUT_GU_INSCRIPT } from "./layout/gu_inscript.ts";
+import { LAYOUT_GU_PHONETIC } from "./layout/gu_phonetic.ts";
 import { LAYOUT_HE_IL } from "./layout/he_il.ts";
 import { LAYOUT_HE_IL_ARKN } from "./layout/he_il_arkn.ts";
 import { LAYOUT_HI_INSCRIPT } from "./layout/hi_inscript.ts";
@@ -88,6 +92,8 @@ import { LAYOUT_HU_HU } from "./layout/hu_hu.ts";
 import { LAYOUT_IT_IT } from "./layout/it_it.ts";
 import { LAYOUT_JA_JP } from "./layout/ja_jp.ts";
 import { LAYOUT_JA_JP_JIS } from "./layout/ja_jp_jis.ts";
+import { LAYOUT_KN_INSCRIPT } from "./layout/kn_inscript.ts";
+import { LAYOUT_KN_PHONETIC } from "./layout/kn_phonetic.ts";
 import { LAYOUT_LT_LT } from "./layout/lt_lt.ts";
 import { LAYOUT_LV_LV } from "./layout/lv_lv.ts";
 import { LAYOUT_ML_INSCRIPT } from "./layout/ml_inscript.ts";
@@ -107,12 +113,17 @@ import { LAYOUT_RU_RU } from "./layout/ru_ru.ts";
 import { LAYOUT_RU_STATICA_3X5 } from "./layout/ru_statica_3x5.ts";
 import { LAYOUT_SL_SI } from "./layout/sl_si.ts";
 import { LAYOUT_SV_SE } from "./layout/sv_se.ts";
+import { LAYOUT_TA_INSCRIPT } from "./layout/ta_inscript.ts";
+import { LAYOUT_TE_INSCRIPT } from "./layout/te_inscript.ts";
+import { LAYOUT_TE_PHONETIC } from "./layout/te_phonetic.ts";
 import { LAYOUT_TH_TH } from "./layout/th_th.ts";
 import { LAYOUT_TH_TH_MAN } from "./layout/th_th_man.ts";
 import { LAYOUT_TH_TH_PAT } from "./layout/th_th_pat.ts";
 import { LAYOUT_TR_TR_F } from "./layout/tr_tr_f.ts";
 import { LAYOUT_TR_TR_Q } from "./layout/tr_tr_q.ts";
 import { LAYOUT_UK_UA } from "./layout/uk_ua.ts";
+import { LAYOUT_UR_INSCRIPT } from "./layout/ur_inscript.ts";
+import { LAYOUT_UR_PHONETIC } from "./layout/ur_phonetic.ts";
 import { nullMod, remapZones } from "./mod.ts";
 import { KeyboardOptions } from "./settings.ts";
 import { type CharacterDict, type GeometryDict } from "./types.ts";
@@ -214,6 +225,17 @@ const layouts = new Map<Layout, CharacterDict>([
   [Layout.SV_SE, LAYOUT_SV_SE],
   [Layout.TH_MAN, LAYOUT_TH_TH_MAN],
   [Layout.TH_PAT, LAYOUT_TH_TH_PAT],
+  [Layout.TA_INSCRIPT, LAYOUT_TA_INSCRIPT],
+  [Layout.TE_INSCRIPT, LAYOUT_TE_INSCRIPT],
+  [Layout.TE_PHONETIC, LAYOUT_TE_PHONETIC],
+  [Layout.KN_INSCRIPT, LAYOUT_KN_INSCRIPT],
+  [Layout.KN_PHONETIC, LAYOUT_KN_PHONETIC],
+  [Layout.GU_INSCRIPT, LAYOUT_GU_INSCRIPT],
+  [Layout.GU_PHONETIC, LAYOUT_GU_PHONETIC],
+  [Layout.BN_INSCRIPT, LAYOUT_BN_INSCRIPT],
+  [Layout.BN_PHONETIC, LAYOUT_BN_PHONETIC],
+  [Layout.UR_INSCRIPT, LAYOUT_UR_INSCRIPT],
+  [Layout.UR_PHONETIC, LAYOUT_UR_PHONETIC],
   [Layout.HI_INSCRIPT, LAYOUT_HI_INSCRIPT],
   [Layout.HI_PHONETIC, LAYOUT_HI_PHONETIC],
   [Layout.ML_INSCRIPT, LAYOUT_ML_INSCRIPT],

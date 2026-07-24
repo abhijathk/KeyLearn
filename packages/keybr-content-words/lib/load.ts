@@ -248,6 +248,48 @@ export async function loadWordList(language: Language): Promise<WordList> {
           { with: { type: "json" } }
         )
       ).default;
+    case Language.BN:
+      return (
+        await import(
+          /* webpackChunkName: "words-bn" */ "./data/words-bn.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case Language.GU:
+      return (
+        await import(
+          /* webpackChunkName: "words-gu" */ "./data/words-gu.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case Language.KN:
+      return (
+        await import(
+          /* webpackChunkName: "words-kn" */ "./data/words-kn.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case Language.TA:
+      return (
+        await import(
+          /* webpackChunkName: "words-ta" */ "./data/words-ta.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case Language.TE:
+      return (
+        await import(
+          /* webpackChunkName: "words-te" */ "./data/words-te.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+    case Language.UR:
+      return (
+        await import(
+          /* webpackChunkName: "words-ur" */ "./data/words-ur.json",
+          { with: { type: "json" } }
+        )
+      ).default;
     default:
       throw new Error();
   }
