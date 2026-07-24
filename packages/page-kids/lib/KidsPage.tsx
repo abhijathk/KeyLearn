@@ -20,6 +20,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { type AgeBand, bandConfig, currentAge, currentBand } from "./age.ts";
 import { kidsAudio } from "./audio.ts";
 import {
   BranchIcon,
@@ -78,29 +79,33 @@ type Prefs = {
   night: boolean;
 };
 
-// Kids defaults: light mode, quiet sounds, a silent 10-minute session,
-// the simple keyboard with helper hands.
-const DEFAULT_PREFS: Prefs = {
-  dino: "TRex",
-  name: "",
-  bigLetters: false,
-  sounds: false,
-  hands: true,
-  kbMode: "simple",
-  timerVisible: false,
-  timerMin: 10,
-  cheers: true,
-  night: false,
-};
+// Kids defaults: light mode, quiet sounds, a silent session, and the text
+// size, helper hands, keyboard guide and timer length tuned to the learner's
+// age band. Anything saved in the toy-box settings still wins.
+function defaultPrefs(): Prefs {
+  const cfg = bandConfig(currentBand());
+  return {
+    dino: "TRex",
+    name: "",
+    bigLetters: cfg.bigLetters,
+    sounds: false,
+    hands: cfg.hands,
+    kbMode: cfg.kbMode,
+    timerVisible: false,
+    timerMin: cfg.timerMin,
+    cheers: true,
+    night: false,
+  };
+}
 
 function loadPrefs(): Prefs {
   try {
     return {
-      ...DEFAULT_PREFS,
+      ...defaultPrefs(),
       ...JSON.parse(localStorage.getItem(PREFS_KEY()) ?? "{}"),
     };
   } catch {
-    return { ...DEFAULT_PREFS };
+    return defaultPrefs();
   }
 }
 
@@ -135,6 +140,22 @@ const SAYS = {
     "One letter at a time — that's the way!",
     "Look at those fingers go!",
     "The little dinos are copying your steps!",
+  ],
+  // Extra-warm lines mixed in for the youngest walkers.
+  cheerYoung: [
+    "WOW! Look at you go!",
+    "You pressed it all by yourself!",
+    "Super duper typing!",
+    "{name} does a happy wiggle!",
+    "High five! Well… high claw!",
+  ],
+  // Cooler phrasing for the 9-and-up crowd — praise without the baby talk.
+  cheerCool: [
+    "Clean hit. Keep the rhythm.",
+    "Smooth — the herd barely keeps up.",
+    "Nice streak building.",
+    "{name} nods, impressed.",
+    "That's the pace — steady and sharp.",
   ],
   camp: [
     "CAMP! +10 — the whole herd cheers for {name}!",
@@ -213,6 +234,36 @@ const pickSay = (list: readonly string[]) =>
 const fillSay = (t: string, vars: Record<string, string>) =>
   t.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
 
+// One calibrating line for parents: kids' speeds are NOT adult speeds, and
+// most worry evaporates once the realistic range for the age is on screen.
+function grownupsAgeNote(words: number, practicedSecs: number): string {
+  const age = currentAge();
+  const [lo, hi] = bandConfig(currentBand()).typicalWpm;
+  const mins = Math.max(1, Math.round(practicedSecs / 60));
+  const wpm = Math.round(words / mins);
+  const who = age != null ? `age ${age}` : "this age group";
+  const track =
+    words > 0 && wpm >= lo
+      ? " — right on track"
+      : words > 0
+        ? " — every session builds it"
+        : "";
+  return `typical for ${who} is ${lo}–${hi} WPM${track} · `;
+}
+
+// The praise pool leans warmer for little kids and cooler for older ones.
+function cheerPool(band: AgeBand): readonly string[] {
+  switch (band) {
+    case "5-6":
+      return [...SAYS.cheer, ...SAYS.cheerYoung, ...SAYS.cheerYoung];
+    case "9-10":
+    case "11+":
+      return [...SAYS.cheer.slice(0, 5), ...SAYS.cheerCool, ...SAYS.cheerCool];
+    default:
+      return SAYS.cheer;
+  }
+}
+
 /** Dinos hatch from eggs as the trail grows — they are earned, not picked. */
 const HATCHLINGS = [
   { id: "Velociraptor", label: "Vela", at: 8 },
@@ -257,7 +308,10 @@ function KidsSettings({ children }: { readonly children: ReactNode }) {
     () =>
       settings
         .set(lessonProps.type, LessonType.GUIDED)
-        .set(lessonProps.guided.kidsWords, true),
+        .set(lessonProps.guided.kidsWords, true)
+        // New letters unlock at an age-appropriate speed, so a six-year-old
+        // sees the trail grow at the same emotional pace as a ten-year-old.
+        .set(lessonProps.targetSpeed, bandConfig(currentBand()).targetCpm),
     [settings],
   );
   return (
@@ -271,6 +325,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const { settings } = useSettings();
   const { results, appendResults } = useResults();
   const [, forceTick] = useReducer((n: number) => n + 1, 0);
+  // The age band is fixed for the visit; the page remounts on profile switch.
+  const band = useMemo(currentBand, []);
+  const cfg = bandConfig(band);
 
   const [prefs, setPrefs] = useState(loadPrefs);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -394,17 +451,27 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   };
 
   // A fresh passage whenever the lesson or the stats move on. Kids runs are
-  // short — 6 words to start, one more for every few unlocked keys, capped at
-  // 10. Only a kid with the whole alphabet on their trail gets the full
-  // grown-up passage.
+  // short — the starting length, the ceiling and the preferred word size all
+  // come from the age band, growing by a word for every few unlocked keys.
+  // Older kids graduate to the full grown-up passage sooner.
   useEffect(() => {
     let flat = flattenStyledText(lesson.generate(lessonKeys, Lesson.rng));
-    if (included < lesson.letters.length) {
+    if (included < lesson.letters.length && included < cfg.fullPassageAt) {
       const wordCount = Math.min(
-        10,
-        6 + Math.floor(Math.max(0, included - 6) / 5),
+        cfg.capWords,
+        cfg.baseWords + Math.floor(Math.max(0, included - 6) / 5),
       );
-      flat = flat.split(" ").slice(0, wordCount).join(" ");
+      let ws = flat.split(" ");
+      if (Number.isFinite(cfg.maxWordLen)) {
+        const short = ws.filter((w) => w.length <= cfg.maxWordLen);
+        // Prefer short words for little hands; if the generator produced too
+        // few, take the shortest of what it gave us instead.
+        ws =
+          short.length >= wordCount
+            ? short
+            : [...ws].sort((a, b) => a.length - b.length);
+      }
+      flat = ws.slice(0, wordCount).join(" ");
     }
     passageRef.current = flat;
     textInputRef.current = new TextInput(flat, toTextInputSettings(settings));
@@ -576,7 +643,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         worldRef.current?.setProgress(pos / Math.max(1, passage.length));
         worldRef.current?.burstAtPlayer([0xd9c9a3, 0xcbb98f], 4, 0.1);
         streakRef.current += 1;
-        if (streakRef.current % 10 === 0) {
+        if (streakRef.current % cfg.hopEvery === 0) {
           worldRef.current?.hop();
           speak("streak");
         }
@@ -600,8 +667,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             kidsAudio.playPoint();
           }
         }
-        if (cheers && Math.random() < 0.2) {
-          speak("cheer");
+        if (cheers && Math.random() < cfg.cheerChance) {
+          setSay(fillSay(pickSay(cheerPool(band)), { name: dinoName() }));
         }
         if (textInput.completed) {
           setScore((s) => saveBest(s + 10));
@@ -636,8 +703,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         comboRunRef.current = 0;
         setCombo(1);
         // A wrong key takes one point back — but the score never goes below
-        // zero, and the best is never touched.
-        setScore((v) => Math.max(0, v - 1));
+        // zero, the best is never touched, and the youngest walkers are
+        // forgiven entirely.
+        if (cfg.missPenalty) {
+          setScore((v) => Math.max(0, v - 1));
+        }
         worldRef.current?.stumble();
         // The same key missed three times gets louder, friendlier help.
         if (stuckRef.current.pos === pos) {
@@ -646,7 +716,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           stuckRef.current = { pos, misses: 1 };
         }
         const expected = passage[pos];
-        if (stuckRef.current.misses >= 3 && expected != null) {
+        if (stuckRef.current.misses >= cfg.rescueMisses && expected != null) {
           setStuckHelp(true);
           const finger = FINGER_OF[expected];
           if (expected === " ") {
@@ -664,14 +734,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           if (sounds) {
             kidsAudio.playRoar();
           }
-          if (cheers && stuckRef.current.misses < 3) {
+          if (cheers && stuckRef.current.misses < cfg.rescueMisses) {
             speak("roar");
           }
         } else {
           if (sounds) {
             kidsAudio.playDrop();
           }
-          if (cheers && stuckRef.current.misses < 3) {
+          if (cheers && stuckRef.current.misses < cfg.rescueMisses) {
             speak("miss");
           }
         }
@@ -1054,6 +1124,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               Practiced{" "}
               {Math.max(1, Math.round((sessionTotal - sessionSecs) / 60))} min ·{" "}
               {included} keys on the trail · {words} words typed ·{" "}
+              {grownupsAgeNote(words, sessionTotal - sessionSecs)}
               <a className={styles.grownupsLink} href="/profile">
                 see the full progress chart
               </a>

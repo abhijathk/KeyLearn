@@ -18,6 +18,24 @@ function showAds(): boolean {
   }
 }
 
+// The drawer's open state survives the subtree remount that a learner
+// switch triggers, so flipping profiles doesn't slam the panel shut.
+function loadMenuOpen(): boolean {
+  try {
+    return sessionStorage.getItem("keylearn.drawer") === "open";
+  } catch {
+    return false;
+  }
+}
+
+function saveMenuOpen(open: boolean): void {
+  try {
+    sessionStorage.setItem("keylearn.drawer", open ? "open" : "closed");
+  } catch {
+    // Storage may be unavailable.
+  }
+}
+
 export function Template({
   path,
   children,
@@ -25,7 +43,11 @@ export function Template({
   readonly path: string;
   readonly children: ReactNode;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpenState] = useState(loadMenuOpen);
+  const setMenuOpen = (open: boolean) => {
+    saveMenuOpen(open);
+    setMenuOpenState(open);
+  };
   return (
     <div className={styles.body}>
       <Header

@@ -37,9 +37,10 @@ export function MenuDrawer({
   const signedIn = publicUser.id != null;
   const kidLock = active?.kind === "kid";
 
+  // Switching learners keeps the drawer open — parents often flip between
+  // profiles to compare, and the panel survives the app remount underneath.
   const switchTo = (id: string, kind: "adult" | "kid") => {
     select(id);
-    onClose();
     navigate(kind === "kid" ? Pages.kids.path : Pages.practice.path);
   };
 
@@ -256,6 +257,43 @@ export function MenuDrawer({
                   <StrokeIcon className={styles.utilIcon} name="shield" />
                   {formatMessage(Pages.privacyPolicy.link.label)}
                 </RouterLink>
+              </div>
+              <div className={styles.label}>
+                <FormattedMessage
+                  id="drawer.account"
+                  defaultMessage="Account"
+                />
+              </div>
+              <div className={styles.util}>
+                {signedIn ? (
+                  <>
+                    <RouterLink to={Pages.account.path} onClick={onClose}>
+                      <StrokeIcon className={styles.utilIcon} name="user" />
+                      {formatMessage(Pages.account.link.label)}
+                    </RouterLink>
+                    <a href="/auth/logout">
+                      <StrokeIcon className={styles.utilIcon} name="back" />
+                      <FormattedMessage
+                        id="nav.logOut"
+                        defaultMessage="Log out"
+                      />
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <RouterLink to={Pages.login.path} onClick={onClose}>
+                      <StrokeIcon className={styles.utilIcon} name="user" />
+                      <FormattedMessage id="t_Log_In" defaultMessage="Log In" />
+                    </RouterLink>
+                    <RouterLink to={Pages.register.path} onClick={onClose}>
+                      <StrokeIcon className={styles.utilIcon} name="people" />
+                      <FormattedMessage
+                        id="t_Register"
+                        defaultMessage="Register"
+                      />
+                    </RouterLink>
+                  </>
+                )}
               </div>
             </div>
           </>

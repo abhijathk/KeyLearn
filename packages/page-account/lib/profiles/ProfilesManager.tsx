@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
-import { photoToDataUrl,presetsFor } from "./avatars.ts";
+import { photoToDataUrl, presetsFor } from "./avatars.ts";
 import { useProfiles } from "./context.tsx";
 import { ParentGate } from "./ParentGate.tsx";
 import { ProfileAvatar } from "./ProfileAvatar.tsx";
@@ -220,12 +220,23 @@ function ProfileEditor({
       );
       return;
     }
-    const year = birthYear.trim() === "" ? null : Number(birthYear);
+    // Accept either a birth year ("2019") or a plain age ("7") — a small
+    // number is converted so the stored value is always a birth year, and
+    // the learner's age keeps counting up on its own.
+    const raw = birthYear.trim() === "" ? null : Number(birthYear);
+    const year =
+      raw != null && Number.isFinite(raw)
+        ? raw > 0 && raw < 120
+          ? new Date().getFullYear() - raw
+          : raw >= 1900
+            ? raw
+            : null
+        : null;
     onSave({
       kind,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      birthYear: Number.isFinite(year) ? year : null,
+      birthYear: year,
       avatar,
     });
   };

@@ -26,6 +26,27 @@ export function activeProfileId(): string | null {
   }
 }
 
+/** The birth year of the active household profile, or null when unknown. */
+export function activeProfileBirthYear(): number | null {
+  try {
+    const raw = localStorage.getItem(HOUSEHOLD_STORAGE_KEY);
+    if (raw == null) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as {
+      profiles?: { id: string; birthYear?: number | null }[];
+      activeId?: string | null;
+    };
+    const profile = (parsed.profiles ?? []).find(
+      (p) => p.id === parsed.activeId,
+    );
+    const year = profile?.birthYear;
+    return typeof year === "number" && Number.isFinite(year) ? year : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Namespaces a storage key by the active profile: "kids.best" becomes
  * "profile-p123.kids.best" while a profile is selected, and stays "kids.best"
