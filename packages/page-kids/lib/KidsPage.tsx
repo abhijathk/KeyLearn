@@ -226,6 +226,29 @@ const SAYS = {
   ],
 } as const;
 
+// The dino grows from a just-hatched baby (few keys) to a full adult (whole
+// alphabet). Age is 0→1 across that span; the stage name is shown to the kid.
+const DINO_MIN_KEYS = 6;
+function dinoAgeOf(included: number, total: number): number {
+  const span = Math.max(1, total - DINO_MIN_KEYS);
+  return Math.max(0, Math.min(1, (included - DINO_MIN_KEYS) / span));
+}
+function dinoStage(age: number): string {
+  if (age < 0.05) {
+    return "Baby";
+  }
+  if (age < 0.3) {
+    return "Toddler";
+  }
+  if (age < 0.6) {
+    return "Youngster";
+  }
+  if (age < 0.95) {
+    return "Teen";
+  }
+  return "Adult";
+}
+
 const pickSay = (list: readonly string[]) =>
   list[Math.floor(Math.random() * list.length)];
 
@@ -452,6 +475,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     if (prevIncluded.current !== -1 && included > prevIncluded.current) {
       growScaleRef.current = Math.min(growScaleRef.current * 1.22, 2.4);
       worldRef.current?.grow(growScaleRef.current);
+      worldRef.current?.setAge(dinoAgeOf(included, lesson.letters.length));
       setGrowNonce((n) => n + 1);
       setScore((s) => saveBest(s + 10));
       if (prefsRef.current.sounds) {
@@ -553,6 +577,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         if (growScaleRef.current > 1) {
           world.grow(growScaleRef.current); // the dino keeps its earned size
         }
+        // The dino carries its age (baby → adult) across rebuilds and swaps.
+        world.setAge(dinoAgeOf(included, lesson.letters.length));
         if (prefsRef.current.dino !== "TRex") {
           return world.setPlayer(prefsRef.current.dino);
         }
@@ -949,8 +975,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               <SproutIcon />
             </span>
             <div>
-              <div className={styles.chipLab}>Dino size</div>
-              <div className={styles.chipVal}>Lv {included}</div>
+              <div className={styles.chipLab}>Dino stage</div>
+              <div className={styles.chipVal}>
+                {dinoStage(dinoAgeOf(included, lesson.letters.length))}
+              </div>
             </div>
           </div>
           <div className={styles.chip}>
@@ -1102,12 +1130,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 </div>
               </div>
               <div className={styles.fstat}>
-                <div className={styles.sd}>Dino size</div>
+                <div className={styles.sd}>Dino stage</div>
                 <div
                   className={styles.fstatVal}
                   style={{ color: "var(--leaf-d)" }}
                 >
-                  Lv {included}
+                  {dinoStage(dinoAgeOf(included, lesson.letters.length))}
                 </div>
               </div>
             </div>

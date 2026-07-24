@@ -111,6 +111,8 @@ export type KidsWorld = {
   stumble(): void;
   roar(): void;
   grow(scale: number): void;
+  /** Baby (0) → adult (1): reshapes the dino's body, colour and gait. */
+  setAge(age: number): void;
   burstAtPlayer(colors: readonly number[], count?: number, up?: number): void;
   playerScreenXY(): readonly [number, number] | null;
   setNight(night: boolean): void;
@@ -443,8 +445,75 @@ export function createKidsWorld(
   let wasAirborne = false;
   let roarT = 0;
   let growTarget = 1;
+  // 0 = just-hatched baby, 1 = fully-grown adult. Drives real proportion,
+  // colour and gait changes on top of the overall size growth.
+  let dinoAge = 1;
+  const boneBase = new WeakMap<THREE.Object3D, THREE.Vector3>();
   const friends: DinoRig[] = [];
   const sparks: THREE.Mesh[] = [];
+
+  // Reshape the loaded skeleton by age: babies get an oversized head, stubby
+  // legs, a short tail and a round belly (that reads as "cute"), maturing to
+  // lean adult proportions; the skin softens to a lighter green when little,
+  // and the whole gait quickens so the baby bounces along.
+  function morphDino(rig: DinoRig, age: number): void {
+    const a = Math.max(0, Math.min(1, age));
+    const L = (baby: number, adult: number) => baby + (adult - baby) * a;
+    const wrap = rig.wrap;
+    const setUniform = (name: string, f: number) => {
+      const bone = wrap.getObjectByName(name);
+      if (bone == null) {
+        return;
+      }
+      let base = boneBase.get(bone);
+      if (base == null) {
+        base = bone.scale.clone();
+        boneBase.set(bone, base);
+      }
+      bone.scale.set(base.x * f, base.y * f, base.z * f);
+    };
+    setUniform("Head", L(1.62, 1)); // big baby head
+    setUniform("BackUpLeg.L", L(0.82, 1));
+    setUniform("BackUpLeg.R", L(0.82, 1));
+    setUniform("BackLowLeg.L", L(0.84, 1));
+    setUniform("BackLowLeg.R", L(0.84, 1));
+    setUniform("Tail1", L(0.72, 1)); // short baby tail (scales the whole tail)
+    // A rounder belly when little (wider/deeper torso, non-uniform).
+    const torso = wrap.getObjectByName("Torso");
+    if (torso != null) {
+      let base = boneBase.get(torso);
+      if (base == null) {
+        base = torso.scale.clone();
+        boneBase.set(torso, base);
+      }
+      torso.scale.set(
+        base.x * L(1.14, 1),
+        base.y * L(1.05, 1),
+        base.z * L(1.2, 1),
+      );
+    }
+    // Soft, lighter skin as a baby; richer/darker fully grown.
+    const babyTint = new THREE.Color(0xbdedb0);
+    wrap.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh && m.material) {
+        const mat = m.material as THREE.MeshStandardMaterial;
+        if (mat.color) {
+          const key = m as unknown as THREE.Object3D;
+          let base = boneBase.get(key);
+          if (base == null) {
+            base = new THREE.Vector3(mat.color.r, mat.color.g, mat.color.b);
+            boneBase.set(key, base);
+          }
+          mat.color
+            .setRGB(base.x, base.y, base.z)
+            .lerp(babyTint, (1 - a) * 0.32);
+        }
+      }
+    });
+    // Little dinos bustle; grown ones stride with weight.
+    rig.mixer.timeScale = L(1.4, 1);
+  }
 
   async function setPlayer(name: string) {
     const gltf = await loadModel(`${ASSETS}/models/dino/${name}.glb`);
@@ -458,6 +527,7 @@ export function createKidsWorld(
     }
     player = rig;
     scene.add(rig.wrap);
+    morphDino(rig, dinoAge);
   }
 
   const ready = (async () => {
@@ -656,7 +726,7 @@ export function createKidsWorld(
     },
     hop() {
       if (jumpY <= 0) {
-        jumpV = 0.22;
+        jumpV = 0.22 * (1 + (1 - dinoAge) * 0.5); // littler dinos bounce higher
       }
     },
     beckon() {
@@ -679,6 +749,12 @@ export function createKidsWorld(
         player.wrap.scale.setScalar(scale * 1.18); // pop, then settle
         const p = player.wrap.position;
         burst(p.x, p.y + 2.2, p.z, [0x37c871, 0xffd66b, 0x8fd9b6], 18, 0.32);
+      }
+    },
+    setAge(age) {
+      dinoAge = Math.max(0, Math.min(1, age));
+      if (player) {
+        morphDino(player, dinoAge);
       }
     },
     burstAtPlayer(colors, count = 6, up = 0.12) {
