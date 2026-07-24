@@ -201,6 +201,7 @@ export function Header({
             />
           </span>
         )}
+        <AccountMenu />
         {kids && (
           <>
             <button
@@ -254,7 +255,6 @@ export function Header({
           </>
         )}
         {!kids && <ThemeSwitcher />}
-        <AccountMenu />
         {kids ? (
           <button
             type="button"

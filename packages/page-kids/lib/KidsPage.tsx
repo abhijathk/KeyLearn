@@ -872,7 +872,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const wide = kbVisible && (prefs.kbMode === "full" || prefs.hands);
 
   return (
-    <div className={clsx(styles.root, prefs.night && styles.rootDark)}>
+    <div
+      className={clsx(styles.root, prefs.night && styles.rootDark)}
+      style={{ fontFamily: cfg.font }}
+    >
       <div className={styles.sceneCard} ref={sceneCardRef}>
         <canvas className={styles.canvas} ref={canvasRef} />
         <span className={styles.keysChip}>

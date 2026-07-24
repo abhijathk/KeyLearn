@@ -36,6 +36,8 @@ export type BandConfig = {
   readonly kbMode: "off" | "simple" | "full";
   /** Realistic words-per-minute range for the band, for grown-ups. */
   readonly typicalWpm: readonly [number, number];
+  /** A playful font stack, chosen to fit the age; falls back to rounded sans. */
+  readonly font: string;
 };
 
 const CONFIGS: Record<AgeBand, BandConfig> = {
@@ -54,6 +56,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     hands: true,
     kbMode: "simple",
     typicalWpm: [5, 8],
+    font: '"Shantell Sans", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "7-8": {
     baseWords: 6,
@@ -70,6 +73,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     hands: true,
     kbMode: "simple",
     typicalWpm: [8, 15],
+    font: '"Nunito", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "9-10": {
     baseWords: 7,
@@ -86,6 +90,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     hands: true,
     kbMode: "simple",
     typicalWpm: [15, 25],
+    font: '"Rubik", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "11+": {
     baseWords: 7,
@@ -102,6 +107,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     hands: false,
     kbMode: "full",
     typicalWpm: [20, 35],
+    font: '"Open Sans", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
 };
 
