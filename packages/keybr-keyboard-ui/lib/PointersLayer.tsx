@@ -135,10 +135,18 @@ function cometPointer(shape: KeyShape | null, urgent: boolean): ReactNode {
   // Rounded-rect perimeter: the straight stretches plus the corner arcs.
   const perimeter = 2 * (w + h) - 8 * r + 2 * Math.PI * r;
   const rect = { x, y, width: w, height: h, rx: r, ry: r };
+  // One lap takes longer on bigger keys, so the spark travels at the same
+  // speed everywhere (a standard key's ~132px perimeter maps to 1.8s).
+  const duration = perimeter / 73;
   return (
     <g
       className={urgent ? `${styles.comet} ${styles.urgent}` : styles.comet}
-      style={{ "--comet-perimeter": perimeter } as CSSProperties}
+      style={
+        {
+          "--comet-perimeter": perimeter,
+          "--comet-duration": `${duration.toFixed(2)}s`,
+        } as CSSProperties
+      }
     >
       <rect className={styles.rail} {...rect} />
       {/* The tail: stacked dashes whose LEADING edges all align at the head

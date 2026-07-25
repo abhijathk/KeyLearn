@@ -23,7 +23,9 @@
   stroke: var(--KeyboardKey-pointer__color);
   stroke-width: 2.5px;
   stroke-linecap: round;
-  animation: comet-chase 1.8s linear infinite;
+  // Duration is set per key from its perimeter, so the spark moves at the
+  // same speed on a letter key and on the wide space bar alike.
+  animation: comet-chase var(--comet-duration, 1.8s) linear infinite;
 }
 
 @keyframes comet-chase {
@@ -47,7 +49,7 @@
   .tail,
   .spark {
     stroke-width: 3.5px;
-    animation-duration: 0.8s;
+    animation-duration: calc(var(--comet-duration, 1.8s) * 0.45);
   }
 }
 
