@@ -1,3 +1,4 @@
+import { clearNgramStats } from "@keybr/pages-shared";
 import { useResults } from "@keybr/result";
 import { Button, Field, FieldList, Icon } from "@keybr/widget";
 import { mdiDeleteForever, mdiDownload } from "@mdi/js";
@@ -67,6 +68,9 @@ function useCommands() {
       });
       if (window.confirm(message)) {
         clearResults();
+        // The n-gram weakness data (the "slowest transitions") lives in its
+        // own per-profile store — wipe it along with the typing history.
+        clearNgramStats();
       }
     },
   };

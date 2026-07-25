@@ -25,7 +25,9 @@ export function SlowTransitions({
       loadNgramStats()
         .topWeak(2, 8)
         .sort((a, b) => b.time - a.time),
-    [],
+    // Re-read the store when the results change, so "Clear statistics"
+    // empties this chart immediately instead of showing stale pairs.
+    [keyStatsMap],
   );
 
   const labelOf = useMemo(() => {

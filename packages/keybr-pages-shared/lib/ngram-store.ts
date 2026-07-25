@@ -19,6 +19,15 @@ export function loadNgramStats(): NgramStats {
   return new NgramStats();
 }
 
+/** Wipes the active profile's n-gram data (the "slowest transitions"). */
+export function clearNgramStats(): void {
+  try {
+    localStorage.removeItem(profileStorageKey(KEY));
+  } catch {
+    // Storage unavailable — nothing to clear.
+  }
+}
+
 export function saveNgramStats(stats: NgramStats): void {
   try {
     localStorage.setItem(

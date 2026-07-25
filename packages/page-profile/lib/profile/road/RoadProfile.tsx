@@ -2,7 +2,11 @@ import { makeAccuracyDistribution, makeSpeedDistribution } from "@keybr/chart";
 import { useIntlNumbers } from "@keybr/intl";
 import { LearningRate, Target } from "@keybr/lesson";
 import { useFormatter, useKeyStyles } from "@keybr/lesson-ui";
-import { type NamedUser, usePageData } from "@keybr/pages-shared";
+import {
+  clearNgramStats,
+  type NamedUser,
+  usePageData,
+} from "@keybr/pages-shared";
 import {
   type DailyStatsMap,
   type KeyStatsMap,
@@ -1127,6 +1131,9 @@ function DataRow(): ReactNode {
                 onClick={() => {
                   setConfirming(false);
                   clearResults();
+                  // The n-gram weakness data (the "slowest transitions") has
+                  // its own per-profile store — wipe it with the history.
+                  clearNgramStats();
                 }}
               >
                 <FormattedMessage

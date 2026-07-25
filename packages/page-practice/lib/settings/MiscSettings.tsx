@@ -39,7 +39,7 @@ function GhostRaceProp(): ReactNode {
           <CheckBox
             label={formatMessage({
               id: "t_Ghost_race",
-              defaultMessage: "Race against your best pace",
+              defaultMessage: "Race against your last race",
             })}
             checked={settings.get(uiProps.ghostRace)}
             onChange={(value) => {
@@ -52,7 +52,7 @@ function GhostRaceProp(): ReactNode {
         <Description>
           <FormattedMessage
             id="settings.ghostRace.description"
-            defaultMessage="Shows a slim lane above the text with a ghost marker that runs at your fastest pace so far. Stay ahead of it and your marker glows — a friendly race against your past self on every round."
+            defaultMessage="Shows a slim lane above the text with a ghost marker that replays your last race. Stay ahead of it and your marker glows — a friendly race against your past self on every round."
           />
         </Description>
       </Explainer>
