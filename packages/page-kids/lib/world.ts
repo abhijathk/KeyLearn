@@ -270,10 +270,10 @@ export function createKidsWorld(
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   // The cube world runs brighter and more saturated — kids-bright, sunny.
   const bright = theme.sky === "flat";
-  renderer.toneMappingExposure = bright ? 1.42 : 1.16;
+  renderer.toneMappingExposure = bright ? 1.5 : 1.16;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   canvas.style.filter = bright
-    ? "saturate(1.3) brightness(1.08)"
+    ? "saturate(1.5) brightness(1.12)"
     : "saturate(1.07) contrast(1.045)";
 
   const scene = new THREE.Scene();
@@ -447,6 +447,10 @@ export function createKidsWorld(
         map: theme.floorTextured ? diff : null,
         normalMap: theme.floorTextured ? nor : null,
         normalScale: new THREE.Vector2(0.85, 0.85),
+        // Cube world: a half-transparent floor so the bright sky shows
+        // through the grass for an airier, lighter look.
+        transparent: !theme.floorTextured,
+        opacity: theme.floorTextured ? 1 : 0.5,
       }),
     );
     ground.receiveShadow = true;
@@ -552,6 +556,12 @@ export function createKidsWorld(
         if (mat) {
           mat.metalness = 0.05;
           mat.roughness = Math.max(0.65, mat.roughness ?? 0.8);
+          // A few cube props lost their atlas texture in conversion and would
+          // render as dark/untextured blobs — give any map-less cube material
+          // a friendly foliage green so nothing reads as black.
+          if (!theme.floorTextured && mat.map == null && mat.color) {
+            mat.color.set(0x86c95f);
+          }
         }
         m.castShadow = true;
         m.receiveShadow = true;
