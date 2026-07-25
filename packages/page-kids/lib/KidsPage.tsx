@@ -37,11 +37,13 @@ import {
   GearIcon,
   HandIcon,
   KeysIcon,
+  PawIcon,
   SoundIcon,
   SproutIcon,
   StarIcon,
   TentIcon,
   TrophyIcon,
+  WorldIcon,
 } from "./icons.tsx";
 import {
   FINGER_DOTS,
@@ -89,9 +91,12 @@ type Prefs = {
 // size, helper hands, keyboard guide and timer length tuned to the learner's
 // age band. Anything saved in the toy-box settings still wins.
 function defaultPrefs(): Prefs {
-  const cfg = bandConfig(currentBand());
+  const band = currentBand();
+  const cfg = bandConfig(band);
   return {
-    world: "dino",
+    // Little ones start in the friendly Cube World; big kids get Dino Run.
+    // Either can switch worlds any time in the toy-box.
+    world: band === "5-6" || band === "7-8" ? "cube" : "dino",
     dino: "TRex",
     cube: "Character_Male_1",
     name: "",
@@ -669,7 +674,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     setLandName(world.land.name);
     world.startRun();
     const loader =
-      loaderRef.current != null ? createLoaderScene(loaderRef.current) : null;
+      loaderRef.current != null
+        ? createLoaderScene(loaderRef.current, theme)
+        : null;
     world.ready
       .then(() => {
         if (prefsRef.current.night) {
@@ -1535,7 +1542,7 @@ function SettingsCard({
         </div>
         <div className={styles.srow}>
           <span className={styles.ri} style={{ background: "var(--lilac)" }}>
-            <DinoFill size={30} />
+            <WorldIcon size={26} />
           </span>
           <div>
             <div className={styles.sl}>Pick your world</div>
@@ -1560,7 +1567,7 @@ function SettingsCard({
         </div>
         <div className={styles.srow}>
           <span className={styles.ri} style={{ background: "var(--sage)" }}>
-            <DinoFill size={30} />
+            <PawIcon size={26} />
           </span>
           <div>
             <div className={styles.sl}>

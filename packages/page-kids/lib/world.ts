@@ -51,14 +51,14 @@ export const LANDS: readonly Land[] = [
     friend: "Stegosaurus",
   },
   {
-    name: "Mammoth Crossing",
-    mood: "overcast",
-    tex: "snow_02",
-    grass: 0xaac4d6,
-    grassVar: 0x92b2c6,
-    dirt: 0x7b98ae,
-    sun: 0xdceeff,
-    fog: 0xdfeafc,
+    name: "Pine Ridge",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x6fa84a,
+    grassVar: 0x86bd5e,
+    dirt: 0x8a6f4c,
+    sun: 0xffe9c4,
+    fog: 0xcfe6c2,
     path: "stones",
     trees: "MegaPine",
     friend: "Apatosaurus",
@@ -85,37 +85,37 @@ export const CUBE_LANDS: readonly Land[] = [
     name: "Green Hollow",
     mood: "day",
     tex: "leafy_grass",
-    grass: 0x6bbf59,
-    grassVar: 0x84d06a,
-    dirt: 0x9a7b4f,
-    sun: 0xffe9c4,
-    fog: 0xcdeecb,
+    grass: 0x74d95a,
+    grassVar: 0x92e86f,
+    dirt: 0xa9855a,
+    sun: 0xfff0cf,
+    fog: 0xc8f0bf,
     path: "stones",
     trees: "CubeTrees",
     friend: "Sheep",
   },
   {
-    name: "Frost Fields",
-    mood: "overcast",
-    tex: "snow_02",
-    grass: 0xbcd6e6,
-    grassVar: 0xa6c2d4,
-    dirt: 0x8299ad,
-    sun: 0xdceeff,
-    fog: 0xe4eefb,
+    name: "Meadow Run",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x86e05f,
+    grassVar: 0xa2ef78,
+    dirt: 0xc9a869,
+    sun: 0xfff2d0,
+    fog: 0xd6f4c2,
     path: "stones",
     trees: "CubeTrees",
-    friend: "Wolf",
+    friend: "Dog",
   },
   {
     name: "Sunny Farm",
     mood: "day",
     tex: "leafy_grass",
-    grass: 0x8bbe5a,
-    grassVar: 0x9ccf6a,
-    dirt: 0xc7a86e,
-    sun: 0xfff2d0,
-    fog: 0xe8f0cf,
+    grass: 0x8be85a,
+    grassVar: 0xa8f472,
+    dirt: 0xd4b673,
+    sun: 0xfff6d6,
+    fog: 0xe2f6c6,
     path: "sand",
     trees: "CubeTrees",
     friend: "Horse",
@@ -154,6 +154,10 @@ export type WorldTheme = {
   ])[];
   /** Multiplier on scenery size — cube models are authored larger. */
   readonly sceneryScale: number;
+  /** Photo-textured ground (dino) vs. flat stylized ground (cube). */
+  readonly floorTextured: boolean;
+  /** HDR skybox (dino) vs. a flat 2D gradient sky (cube). */
+  readonly sky: "hdr" | "flat";
 };
 
 export const DINO_THEME: WorldTheme = {
@@ -182,13 +186,15 @@ export const DINO_THEME: WorldTheme = {
     ["MegaPlants", 30, 2, 15, "both"],
   ],
   sceneryScale: 1,
+  floorTextured: true,
+  sky: "hdr",
 };
 
 export const CUBE_THEME: WorldTheme = {
   modelDir: "cube",
   sceneryDir: "cube",
   defaultPlayer: "Character_Male_1",
-  playerHeight: () => 2.4,
+  playerHeight: () => 3.4,
   morphsBody: false,
   lands: CUBE_LANDS,
   herd: [
@@ -206,6 +212,8 @@ export const CUBE_THEME: WorldTheme = {
     ["CubeRocks", 12, 4, 20, "back"],
   ],
   sceneryScale: 0.42,
+  floorTextured: false,
+  sky: "flat",
 };
 
 /** How far one round carries the runner. The trail never rewinds — each new
@@ -260,12 +268,16 @@ export function createKidsWorld(
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.16;
+  // The cube world runs brighter and more saturated — kids-bright, sunny.
+  const bright = theme.sky === "flat";
+  renderer.toneMappingExposure = bright ? 1.42 : 1.16;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  canvas.style.filter = "saturate(1.07) contrast(1.045)";
+  canvas.style.filter = bright
+    ? "saturate(1.3) brightness(1.08)"
+    : "saturate(1.07) contrast(1.045)";
 
   const scene = new THREE.Scene();
-  const sun = new THREE.DirectionalLight(land.sun, 2.4);
+  const sun = new THREE.DirectionalLight(land.sun, bright ? 3.0 : 2.4);
   sun.position.set(-18, 30, 18);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -273,7 +285,10 @@ export function createKidsWorld(
   sun.shadow.camera.right = 50;
   sun.shadow.camera.top = 30;
   sun.shadow.camera.bottom = -30;
-  scene.add(sun, new THREE.HemisphereLight(0xcfe8ff, land.grass, 0.5));
+  scene.add(
+    sun,
+    new THREE.HemisphereLight(0xffffff, land.grass, bright ? 1.0 : 0.5),
+  );
   scene.fog = new THREE.Fog(land.fog, 60, 160);
 
   const cam = new THREE.OrthographicCamera();
@@ -301,6 +316,36 @@ export function createKidsWorld(
   const pmrem = new THREE.PMREMGenerator(renderer);
   const rgbe = new RGBELoader();
   async function applySky(mood: string) {
+    if (theme.sky === "flat") {
+      // A 2D gradient sky drawn to a canvas — no orbiting camera means no
+      // skybox is needed, and a flat backdrop suits the blocky cube world.
+      const [top, bottom] =
+        mood === "night"
+          ? ["#232c52", "#3d4a7a"]
+          : ["#7ec5f2", "#d7f0d2"];
+      const c = document.createElement("canvas");
+      c.width = 16;
+      c.height = 256;
+      const g = c.getContext("2d")!;
+      const grad = g.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0, top);
+      grad.addColorStop(1, bottom);
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 16, 256);
+      const sky = new THREE.CanvasTexture(c);
+      sky.colorSpace = THREE.SRGBColorSpace;
+      scene.background = sky;
+      scene.backgroundBlurriness = 0;
+      scene.environment = null;
+      scene.environmentIntensity = 1;
+      scene.backgroundIntensity = 1;
+      (scene.fog as THREE.Fog).color.set(
+        mood === "night" ? 0x3d4a7a : land.fog,
+      );
+      sun.intensity = mood === "night" ? 2.0 : 2.7;
+      sun.color.set(mood === "night" ? 0xb8c8ec : land.sun);
+      return;
+    }
     const tex = await rgbe.loadAsync(`${ASSETS}/env/${mood}.hdr`);
     tex.mapping = THREE.EquirectangularReflectionMapping;
     scene.background = tex;
@@ -358,10 +403,12 @@ export function createKidsWorld(
       }
       pos.setY(i, y);
       const n = (noise2(x * 0.8, z * 0.9) + 1) / 2;
+      // Textured ground stays pale (the photo map darkens it); flat cube
+      // ground carries the full grass colour itself.
       tmp
         .setRGB(1, 1, 1)
-        .lerp(cGrass, 0.4)
-        .lerp(cVar, n * 0.2);
+        .lerp(cGrass, theme.floorTextured ? 0.4 : 0.9)
+        .lerp(cVar, n * (theme.floorTextured ? 0.2 : 0.4));
       const patch = (noise2(x * 0.09 + 7.3, z * 0.13) + 1) / 2;
       if (patch > 0.62) {
         tmp.lerp(cDirt, (patch - 0.62) * 0.9);
@@ -383,13 +430,15 @@ export function createKidsWorld(
     }
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     geo.computeVertexNormals();
+    // Cube world: flat stylized ground (vertex colours only) so the floor
+    // reads as a low-poly surface under the blocky cast, not photo grass.
     const ground = new THREE.Mesh(
       geo,
       new THREE.MeshStandardMaterial({
         vertexColors: true,
         roughness: 1,
-        map: diff,
-        normalMap: nor,
+        map: theme.floorTextured ? diff : null,
+        normalMap: theme.floorTextured ? nor : null,
         normalScale: new THREE.Vector2(0.85, 0.85),
       }),
     );
@@ -688,7 +737,7 @@ export function createKidsWorld(
       const clip = calm(gltf.animations ?? []);
       if (clip) {
         const a = mixer.clipAction(clip);
-        a.timeScale = 0.75;
+        a.timeScale = 1; // companions idle at a natural, lively pace
         a.play();
       }
       friends.push({ wrap, mixer, run: null, idle: null });
@@ -920,10 +969,14 @@ export function createKidsWorld(
 }
 
 /**
- * The little running TRex shown while the real world loads — the same model,
- * on its own tiny canvas, so the loader is the game.
+ * The little running character shown while the real world loads — the same
+ * model as the chosen world, on its own tiny canvas, so the loader is the
+ * game. Defaults to the TRex; pass a theme to load its cube hero instead.
  */
-export function createLoaderScene(canvas: HTMLCanvasElement): {
+export function createLoaderScene(
+  canvas: HTMLCanvasElement,
+  theme: WorldTheme = DINO_THEME,
+): {
   dispose(): void;
 } {
   const renderer = new THREE.WebGLRenderer({
@@ -952,7 +1005,9 @@ export function createLoaderScene(canvas: HTMLCanvasElement): {
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
   loader
-    .loadAsync(`${ASSETS}/models/dino/TRex.glb`)
+    .loadAsync(
+      `${ASSETS}/models/${theme.modelDir}/${theme.defaultPlayer}.glb`,
+    )
     .then((gltf) => {
       if (disposed) {
         return;

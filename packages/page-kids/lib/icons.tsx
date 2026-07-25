@@ -31,6 +31,39 @@ export function DinoFill({ size = 34, color = "#3d6b2e" }: IconProps) {
   );
 }
 
+// A cheerful little planet — the two worlds you can run in.
+export function WorldIcon({ size = 34, color = "#fff" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.6 10h16.8M3.6 14h16.8" />
+      <path d="M12 3.5c2.6 2.4 2.6 14.6 0 17M12 3.5c-2.6 2.4-2.6 14.6 0 17" />
+    </svg>
+  );
+}
+
+// A soft paw print — your running buddy, dino or cube hero alike.
+export function PawIcon({ size = 34, color = "#fff" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill={color}>
+      <ellipse cx="12" cy="15.5" rx="4.4" ry="3.6" />
+      <circle cx="6.2" cy="11" r="1.9" />
+      <circle cx="10" cy="8.2" r="2" />
+      <circle cx="14" cy="8.2" r="2" />
+      <circle cx="17.8" cy="11" r="1.9" />
+    </svg>
+  );
+}
+
 export function StarIcon({ size = 15, color = "#fff" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill={color}>
