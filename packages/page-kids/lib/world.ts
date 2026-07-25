@@ -151,9 +151,15 @@ export type WorldTheme = {
     number,
     number,
     "back" | "both",
+    number?, // optional per-category size multiplier (e.g. bigger buildings)
   ])[];
   /** Multiplier on scenery size — cube models are authored larger. */
   readonly sceneryScale: number;
+  /** How many per-biome trees to scatter (default 30). */
+  readonly treeCount?: number;
+  /** A pool of "spooky" models: one random guard stands near the camp flag
+   * every session, and a whole crew joins around Halloween. */
+  readonly flagGuard?: readonly string[];
   /** Photo-textured ground (dino) vs. flat stylized ground (cube/hero). */
   readonly floorTextured: boolean;
   /** Ground opacity — a see-through floor reads airier (1 = solid). */
@@ -163,7 +169,26 @@ export type WorldTheme = {
   /** GLBs whose animation clips are shared by every character (KayKit rigs
    * ship their movement clips separately from the meshes). */
   readonly animationUrls?: readonly string[];
+  /** Camera framing. The hero world uses a flatter, side-on, zoomed view;
+   * dino/cube keep the original 3/4 angle. */
+  readonly view?: {
+    readonly camY: number;
+    readonly camZ: number;
+    readonly lookY: number;
+    readonly frustum: number;
+    readonly topF: number;
+    readonly botF: number;
+  };
 };
+
+const DEFAULT_VIEW = {
+  camY: 14,
+  camZ: 22,
+  lookY: 2.2,
+  frustum: 13.5,
+  topF: 0.62,
+  botF: 1.38,
+} as const;
 
 export const DINO_THEME: WorldTheme = {
   modelDir: "dino",
@@ -203,29 +228,40 @@ export const HERO_THEME: WorldTheme = {
   modelDir: "hero",
   sceneryDir: "hero",
   defaultPlayer: "Knight",
-  playerHeight: () => 2.6,
+  playerHeight: () => 3.4,
   morphsBody: false,
   animationUrls: ["anims-move.glb", "anims-idle.glb"],
   lands: HERO_LANDS,
   herd: [
-    { model: "$friend", x: 6, z: -6, h: 2.4 },
-    { model: "Mage", x: 20, z: -8, h: 2.4 },
-    { model: "Rogue", x: 34, z: -10, h: 2.3 },
-    { model: "Barbarian", x: 44, z: -7, h: 2.6 },
-    { model: "$friend", x: 72, z: -8, h: 2.4 },
-    { model: "Ranger", x: 96, z: -6, h: 2.4 },
-    { model: "Rogue_Hooded", x: 122, z: -10, h: 2.3 },
-    { model: "Knight", x: 142, z: -7, h: 2.5 },
+    { model: "$friend", x: 6, z: -5, h: 3.2 },
+    { model: "Mage", x: 20, z: -7, h: 3.2 },
+    { model: "Rogue", x: 34, z: -9, h: 3.0 },
+    { model: "Barbarian", x: 44, z: -6, h: 3.4 },
+    { model: "$friend", x: 72, z: -7, h: 3.2 },
+    { model: "Ranger", x: 96, z: -5, h: 3.2 },
+    { model: "Rogue_Hooded", x: 122, z: -9, h: 3.0 },
+    { model: "Mage", x: 142, z: -6, h: 3.3 },
   ],
+  // A lush tropical forest — a few big trees, lots of bushes, grass and rocks,
+  // with the odd village building tucked into the treeline.
+  treeCount: 15,
   ground: [
-    ["HeroBushes", 22, 4, 18, "both"],
-    ["HeroRocks", 12, 5, 22, "back"],
-    ["HeroGrass", 34, 2, 15, "both"],
+    ["HeroBuildings", 4, 9, 18, "back", 2.6],
+    ["HeroBushes", 54, 2.5, 15, "both"],
+    ["HeroRocks", 20, 3, 18, "both"],
+    ["HeroGrass", 96, 1.5, 14, "both"],
   ],
-  sceneryScale: 0.85,
+  sceneryScale: 1.2,
+  // Skeleton_Warrior is reserved as a selectable main character, so the trail
+  // guards are the other skeletons only.
+  flagGuard: ["Skeleton_Minion", "Skeleton_Mage", "Skeleton_Rogue"],
   floorTextured: false,
   floorOpacity: 1,
   sky: "flat",
+  // Flatter and more horizontal than the dino 3/4 view, but still angled
+  // enough to show the forest behind the trail. The runner sits high in the
+  // frame (big botF) so the practice-text card never covers it.
+  view: { camY: 11, camZ: 33, lookY: 3.6, frustum: 12, topF: 0.6, botF: 1.28 },
 };
 
 /** How far one round carries the runner. The trail never rewinds — each new
@@ -307,26 +343,27 @@ export function createKidsWorld(
     ? new THREE.Fog(land.fog, 34, 120)
     : new THREE.Fog(land.fog, 60, 160);
 
+  const V = theme.view ?? DEFAULT_VIEW;
   const cam = new THREE.OrthographicCamera();
   function resize() {
     const w = canvas.clientWidth || 800;
     const h = canvas.clientHeight || 300;
     const a = w / h;
-    const S = 13.5; // wider than the game's 9.5 — plenty of land in view
+    const S = V.frustum;
     cam.left = -S * a;
     cam.right = S * a;
     // The frustum reaches further below the look-at point than above it, so
     // the trail (and the runner) sit clear of the floating words bar.
-    cam.top = S * 0.62;
-    cam.bottom = -S * 1.38;
+    cam.top = S * V.topF;
+    cam.bottom = -S * V.botF;
     cam.near = -100;
     cam.far = 300;
     cam.updateProjectionMatrix();
     renderer.setSize(w, h, false);
   }
   resize();
-  cam.position.set(-10, 14, 22);
-  cam.lookAt(0, 2.2, 0);
+  cam.position.set(-10, V.camY, V.camZ);
+  cam.lookAt(0, V.lookY, 0);
 
   // ── sky ────────────────────────────────────────────────────────────────
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -649,6 +686,7 @@ export function createKidsWorld(
 
   // ── population ─────────────────────────────────────────────────────────
   let player: DinoRig | null = null;
+  let playerH = 2.6; // fitted height of the current player model
   let playerX = -6;
   let targetX = -6;
   let runStart = -6;
@@ -663,6 +701,8 @@ export function createKidsWorld(
   }
   let jumpV = 0;
   let jumpY = 0;
+  let jumpCount = 0; // jumps used since last touchdown (max 2 = double jump)
+  let playerGhostly = false; // skeleton hero: floats and glides like a ghost
   let stumbleT = 0;
   let beckonT = 0;
   let wasAirborne = false;
@@ -674,6 +714,21 @@ export function createKidsWorld(
   const boneBase = new WeakMap<THREE.Object3D, THREE.Vector3>();
   const friends: DinoRig[] = [];
   const sparks: THREE.Mesh[] = [];
+
+  // A friendly game-style pointer ring hovering over the hero — "this is you".
+  const heroRing = new THREE.Mesh(
+    new THREE.TorusGeometry(0.5, 0.11, 10, 28),
+    new THREE.MeshStandardMaterial({
+      color: 0x37c871,
+      emissive: 0x37c871,
+      emissiveIntensity: 0.7,
+      roughness: 0.5,
+      metalness: 0,
+    }),
+  );
+  heroRing.rotation.x = Math.PI / 2.2; // tilt the ring toward the camera
+  heroRing.visible = false;
+  scene.add(heroRing);
 
   // Reshape the loaded skeleton by age: babies get an oversized head, stubby
   // legs, a short tail and a round belly (that reads as "cute"), maturing to
@@ -745,7 +800,8 @@ export function createKidsWorld(
 
   async function setPlayer(name: string) {
     const gltf = await loadModel(`${ASSETS}/models/${theme.modelDir}/${name}.glb`);
-    const rig = rigOf(gltf, theme.playerHeight(name));
+    playerH = theme.playerHeight(name);
+    const rig = rigOf(gltf, playerH);
     rig.wrap.position.set(playerX, groundY(playerX), 0);
     rig.wrap.rotation.y = Math.PI / 2;
     if (player) {
@@ -753,6 +809,7 @@ export function createKidsWorld(
       scene.remove(player.wrap);
     }
     player = rig;
+    playerGhostly = /skeleton/i.test(name);
     scene.add(rig.wrap);
     if (theme.morphsBody) {
       morphDino(rig, dinoAge);
@@ -781,27 +838,71 @@ export function createKidsWorld(
       clips.find((c) => /idle|stand|eat|graze/i.test(c.name)) ??
       clips.find((c) => /walk/i.test(c.name)) ??
       null;
-    for (const spot of theme.herd) {
-      const model = spot.model === "$friend" ? land.friend : spot.model;
+    // Each companion gets a different loop so they don't all bob in unison —
+    // some stand, some gesture, some fidget; skeletons twitch eerily.
+    const pickIdle = (clips: THREE.AnimationClip[], scary: boolean) => {
+      // Only calm, friendly loops — no hitting or throwing. Skeletons read as
+      // spooky purely through a slow, swaying idle (set below via timeScale).
+      const names = scary
+        ? ["Idle_B", "Idle_A"]
+        : ["Idle_A", "Idle_B", "Interact"];
+      const pool = names
+        .map((n) => clips.find((c) => c.name === n))
+        .filter((c): c is THREE.AnimationClip => c != null);
+      return pool.length > 0
+        ? pool[Math.floor(Math.random() * pool.length)]
+        : calm(clips);
+    };
+    const spawnCompanion = async (
+      model: string,
+      x: number,
+      z: number,
+      h: number,
+      scary = false,
+    ) => {
       const gltf = await loadModel(
         `${ASSETS}/models/${theme.modelDir}/${model}.glb`,
       );
-      const wrap = fitToHeight(gltf.scene, spot.h);
-      wrap.position.set(spot.x, groundY(spot.x), spot.z);
-      wrap.rotation.y = 0.4 + Math.random() * 1.2;
+      const wrap = fitToHeight(gltf.scene, h);
+      wrap.position.set(x, groundY(x), z);
+      // A random home facing — the crowd looks every which way, not all one way.
+      const homeY = Math.random() * Math.PI * 2;
+      wrap.rotation.y = homeY;
+      wrap.userData = { homeY, homeX: x, scary };
       scene.add(wrap);
       const mixer = new THREE.AnimationMixer(gltf.scene);
-      const clip = calm(clipsFor(gltf));
+      const clip = pickIdle(clipsFor(gltf), scary);
       if (clip) {
         const a = mixer.clipAction(clip);
-        a.timeScale = 1; // companions idle at a natural, lively pace
+        a.timeScale = (scary ? 0.6 : 0.85) + Math.random() * 0.4;
         a.play();
+        // Start each one at a random point in its loop so companions sharing
+        // a clip are never bobbing in unison.
+        a.time = Math.random() * (clip.duration || 1);
       }
       friends.push({ wrap, mixer, run: null, idle: null });
+    };
+    for (const spot of theme.herd) {
+      const model = spot.model === "$friend" ? land.friend : spot.model;
+      await spawnCompanion(model, spot.x, spot.z, spot.h);
+    }
+    // A lone skeleton keeps watch near the camp flag every session — and a
+    // whole spooky crew shows up around Halloween (October).
+    if (theme.flagGuard && theme.flagGuard.length > 0) {
+      const pickGuard = () =>
+        theme.flagGuard![Math.floor(Math.random() * theme.flagGuard!.length)];
+      await spawnCompanion(pickGuard(), runEnd - 3, -3, 3.0, true);
+      if (new Date().getMonth() === 9) {
+        for (let i = 0; i < 5; i++) {
+          const gx = 24 + Math.random() * (TRAIL_END - 30);
+          const gz = (Math.random() > 0.5 ? -1 : 1) * (3 + Math.random() * 6);
+          await spawnCompanion(pickGuard(), gx, gz, 3.0, true);
+        }
+      }
     }
 
-    for (const [file, count, minD, maxD, side] of [
-      [land.trees, 30, 6, 26, "back"] as const,
+    for (const [file, count, minD, maxD, side, scaleMul = 1] of [
+      [land.trees, theme.treeCount ?? 30, 6, 26, "back"] as const,
       ...theme.ground,
     ]) {
       const gltf = await loadModel(
@@ -826,7 +927,9 @@ export function createKidsWorld(
           side === "back" ? -depth : Math.random() > 0.65 ? depth : -depth;
         wrap.position.set(x, groundY(x), z);
         wrap.rotation.y = Math.random() * Math.PI * 2;
-        wrap.scale.setScalar((0.8 + Math.random() * 0.8) * theme.sceneryScale);
+        wrap.scale.setScalar(
+          (0.8 + Math.random() * 0.8) * theme.sceneryScale * scaleMul,
+        );
         scene.add(wrap);
       }
     }
@@ -888,10 +991,16 @@ export function createKidsWorld(
       jumpY = Math.max(0, jumpY + jumpV);
       jumpV -= 0.03;
       p.y = groundY(p.x) + jumpY;
+      // The skeleton hero still runs on its feet, but with a faint hover and
+      // bob so it reads as a little spooky — not fully floating.
+      if (playerGhostly) {
+        p.y += 0.12 + Math.sin(clock.elapsedTime * 2.2) * 0.08;
+      }
       if (jumpY > 0.05) {
         wasAirborne = true;
       } else if (wasAirborne) {
         wasAirborne = false; // touchdown — kick up a puff of dust
+        jumpCount = 0; // back on the ground: jumps refresh
         burst(p.x, p.y + 0.15, p.z, [0xcfc4ae, 0xb8ab90], 8, 0.14);
       }
       const moving = Math.abs(dx) > 0.08;
@@ -899,6 +1008,8 @@ export function createKidsWorld(
         beckonT = 0;
       }
       if (player.run && player.idle) {
+        // Legs move when moving (skeleton included) — the ghostly feel comes
+        // from the faint hover above, not from stiff gliding.
         player.run.weight += ((moving ? 1 : 0) - player.run.weight) * 0.12;
         player.idle.weight = 1 - player.run.weight;
       }
@@ -919,14 +1030,54 @@ export function createKidsWorld(
         player.wrap.rotation.y = Math.PI / 2;
         player.wrap.rotation.z = 0;
       }
+      // Float the pointer ring just above the hero's head, gently bob + spin.
+      const top = playerH * player.wrap.scale.y;
+      heroRing.visible = true;
+      heroRing.position.set(
+        p.x,
+        p.y + top + 0.7 + Math.sin(clock.elapsedTime * 2) * 0.12,
+        p.z,
+      );
+      heroRing.rotation.z += 0.03;
       cam.position.x += (p.x - 2 - cam.position.x) * 0.06;
       sun.position.x = cam.position.x - 8;
       sun.target.position.x = cam.position.x;
       sun.target.updateMatrixWorld();
       player.mixer.update(dt);
     }
+    // Companions notice the runner: when it comes near they turn to watch it
+    // pass, then drift back to their own random facing once it's gone.
+    const heroX = player ? player.wrap.position.x : 0;
+    const heroZ = player ? player.wrap.position.z : 0;
     for (const f of friends) {
       f.mixer.update(dt);
+      const ud = f.wrap.userData as {
+        homeY?: number;
+        homeX?: number;
+        scary?: boolean;
+      };
+      if (ud.homeY == null || ud.homeX == null) {
+        continue;
+      }
+      const near = player != null && Math.abs(heroX - ud.homeX) < 7;
+      const target = near
+        ? Math.atan2(heroX - f.wrap.position.x, heroZ - f.wrap.position.z)
+        : ud.homeY;
+      let diff = target - f.wrap.rotation.y;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      f.wrap.rotation.y += diff * (near ? 0.12 : 0.04);
+      // Only skeletons act spooky when the hero comes close — a shudder and a
+      // rise — then settle back once it passes. Everyone else just watches.
+      const homeGY = groundY(ud.homeX);
+      if (ud.scary && near) {
+        f.wrap.rotation.z = Math.sin(clock.elapsedTime * 9) * 0.14;
+        f.wrap.position.y =
+          homeGY + 0.15 + Math.abs(Math.sin(clock.elapsedTime * 4)) * 0.2;
+      } else if (ud.scary) {
+        f.wrap.rotation.z *= 0.88;
+        f.wrap.position.y += (homeGY - f.wrap.position.y) * 0.1;
+      }
     }
     for (let i = sparks.length - 1; i >= 0; i--) {
       const s = sparks[i];
@@ -959,7 +1110,12 @@ export function createKidsWorld(
       placeFlag();
     },
     jump() {
-      jumpV = 0.34;
+      // Single or double jump only — holding/mashing space can't turn into
+      // flight. A second mid-air jump gives a little extra lift.
+      if (jumpCount < 2) {
+        jumpV = jumpCount === 0 ? 0.34 : 0.3;
+        jumpCount += 1;
+      }
     },
     hop() {
       if (jumpY <= 0) {

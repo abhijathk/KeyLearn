@@ -501,13 +501,11 @@ const HATCHLINGS = [
   { id: "Triceratops", label: "Tops", at: 10 },
 ] as const;
 
-// The Hero Trail cast — pick your adventurer.
+// The Hero Trail heroes you can BE — reserved for the main character so the
+// trail companions never look like you.
 const HERO_CHARACTERS = [
   { id: "Knight", label: "Knight" },
-  { id: "Mage", label: "Wizard" },
-  { id: "Ranger", label: "Archer" },
-  { id: "Rogue", label: "Scout" },
-  { id: "Barbarian", label: "Mighty" },
+  { id: "Skeleton_Warrior", label: "Skeleton" },
 ] as const;
 
 function peekNextLandName(): string {
@@ -1611,6 +1609,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             savePrefs({ dino });
             worldRef.current?.setPlayer(dino).catch(() => {});
           }}
+          onPickHero={(hero) => {
+            savePrefs({ hero });
+            worldRef.current?.setPlayer(hero).catch(() => {});
+          }}
           onPickTimer={(timerMin) => {
             savePrefs({ timerMin });
             setSessionSecs(timerMin * 60);
@@ -1674,6 +1676,7 @@ function SettingsCard({
   savePrefs,
   onRename,
   onPickDino,
+  onPickHero,
   onPickTimer,
   onClose,
 }: {
@@ -1682,6 +1685,7 @@ function SettingsCard({
   readonly savePrefs: (patch: Partial<Prefs>) => void;
   readonly onRename: () => void;
   readonly onPickDino: (dino: string) => void;
+  readonly onPickHero: (hero: string) => void;
   readonly onPickTimer: (min: number) => void;
   readonly onClose: () => void;
 }) {
@@ -1738,7 +1742,7 @@ function SettingsCard({
                     key={id}
                     type="button"
                     className={pill(prefs.hero === id)}
-                    onClick={() => savePrefs({ hero: id })}
+                    onClick={() => onPickHero(id)}
                   >
                     {label}
                   </button>
