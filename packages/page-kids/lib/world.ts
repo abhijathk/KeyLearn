@@ -160,6 +160,8 @@ export type WorldTheme = {
   /** A pool of "spooky" models: one random guard stands near the camp flag
    * every session, and a whole crew joins around Halloween. */
   readonly flagGuard?: readonly string[];
+  /** Show the floating game-style pointer ring over the hero (Hero Trail). */
+  readonly pointerRing?: boolean;
   /** Photo-textured ground (dino) vs. flat stylized ground (cube/hero). */
   readonly floorTextured: boolean;
   /** Ground opacity — a see-through floor reads airier (1 = solid). */
@@ -258,6 +260,7 @@ export const HERO_THEME: WorldTheme = {
   floorTextured: false,
   floorOpacity: 1,
   sky: "flat",
+  pointerRing: true,
   // Flatter and more horizontal than the dino 3/4 view, but still angled
   // enough to show the forest behind the trail. The runner sits high in the
   // frame (big botF) so the practice-text card never covers it.
@@ -715,9 +718,11 @@ export function createKidsWorld(
   const friends: DinoRig[] = [];
   const sparks: THREE.Mesh[] = [];
 
-  // A friendly game-style pointer ring hovering over the hero — "this is you".
+  // A friendly game-style pointer floating over the hero — "this is you".
+  // The knight gets a glowing ring; the skeleton gets a little Halloween
+  // pumpkin instead.
   const heroRing = new THREE.Mesh(
-    new THREE.TorusGeometry(0.5, 0.11, 10, 28),
+    new THREE.TorusGeometry(0.3, 0.07, 10, 24),
     new THREE.MeshStandardMaterial({
       color: 0x37c871,
       emissive: 0x37c871,
@@ -729,6 +734,45 @@ export function createKidsWorld(
   heroRing.rotation.x = Math.PI / 2.2; // tilt the ring toward the camera
   heroRing.visible = false;
   scene.add(heroRing);
+
+  const heroPumpkin = new THREE.Group();
+  const pumpkinBody = new THREE.Mesh(
+    new THREE.SphereGeometry(0.3, 14, 12),
+    new THREE.MeshStandardMaterial({
+      color: 0xff7a1a,
+      emissive: 0xff7a1a,
+      emissiveIntensity: 0.35,
+      roughness: 0.6,
+    }),
+  );
+  pumpkinBody.scale.set(1.2, 0.85, 1.2);
+  const pumpkinStem = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.03, 0.05, 0.13, 6),
+    new THREE.MeshStandardMaterial({ color: 0x5a7f34, roughness: 0.8 }),
+  );
+  pumpkinStem.position.y = 0.3;
+  // A glowing carved jack-o'-lantern face sitting proud of the front surface,
+  // facing the camera (the body's front is at z ~0.36 after the x1.2 scale).
+  const faceMat = new THREE.MeshStandardMaterial({
+    color: 0xffe23a,
+    emissive: 0xffd21a,
+    emissiveIntensity: 1.8,
+    roughness: 0.5,
+  });
+  const eyeGeo = new THREE.ConeGeometry(0.09, 0.13, 3);
+  const eyeL = new THREE.Mesh(eyeGeo, faceMat);
+  eyeL.rotation.x = Math.PI / 2; // lay the triangle flat against the front
+  eyeL.position.set(-0.12, 0.08, 0.33);
+  const eyeR = eyeL.clone();
+  eyeR.position.x = 0.12;
+  const mouth = new THREE.Mesh(
+    new THREE.BoxGeometry(0.24, 0.07, 0.06),
+    faceMat,
+  );
+  mouth.position.set(0, -0.09, 0.33);
+  heroPumpkin.add(pumpkinBody, pumpkinStem, eyeL, eyeR, mouth);
+  heroPumpkin.visible = false;
+  scene.add(heroPumpkin);
 
   // Reshape the loaded skeleton by age: babies get an oversized head, stubby
   // legs, a short tail and a round belly (that reads as "cute"), maturing to
@@ -860,15 +904,20 @@ export function createKidsWorld(
       h: number,
       scary = false,
     ) => {
-      const gltf = await loadModel(
-        `${ASSETS}/models/${theme.modelDir}/${model}.glb`,
-      );
+      let gltf;
+      try {
+        gltf = await loadModel(`${ASSETS}/models/${theme.modelDir}/${model}.glb`);
+      } catch {
+        return; // a single missing companion never breaks the world
+      }
       const wrap = fitToHeight(gltf.scene, h);
       wrap.position.set(x, groundY(x), z);
       // A random home facing — the crowd looks every which way, not all one way.
       const homeY = Math.random() * Math.PI * 2;
       wrap.rotation.y = homeY;
-      wrap.userData = { homeY, homeX: x, scary };
+      // Only some companions are "smilers" who give a happy bob; the rest just
+      // stop and stare when the hero passes.
+      wrap.userData = { homeY, homeX: x, scary, smiler: Math.random() < 0.35 };
       scene.add(wrap);
       const mixer = new THREE.AnimationMixer(gltf.scene);
       const clip = pickIdle(clipsFor(gltf), scary);
@@ -905,9 +954,12 @@ export function createKidsWorld(
       [land.trees, theme.treeCount ?? 30, 6, 26, "back"] as const,
       ...theme.ground,
     ]) {
-      const gltf = await loadModel(
-        `${ASSETS}/models/${theme.sceneryDir}/${file}.glb`,
-      );
+      let gltf;
+      try {
+        gltf = await loadModel(`${ASSETS}/models/${theme.sceneryDir}/${file}.glb`);
+      } catch {
+        continue; // skip a missing scenery set rather than break the build
+      }
       const variants = [...gltf.scene.children];
       for (let i = 0; i < count; i++) {
         const v = variants[i % variants.length].clone();
@@ -1030,15 +1082,22 @@ export function createKidsWorld(
         player.wrap.rotation.y = Math.PI / 2;
         player.wrap.rotation.z = 0;
       }
-      // Float the pointer ring just above the hero's head, gently bob + spin.
-      const top = playerH * player.wrap.scale.y;
-      heroRing.visible = true;
-      heroRing.position.set(
-        p.x,
-        p.y + top + 0.7 + Math.sin(clock.elapsedTime * 2) * 0.12,
-        p.z,
-      );
-      heroRing.rotation.z += 0.03;
+      // Float the pointer just above the hero's head (Hero Trail only) — a
+      // ring for the knight, a bobbing pumpkin for the skeleton.
+      if (theme.pointerRing) {
+        const top = playerH * player.wrap.scale.y;
+        const py = p.y + top + 0.7 + Math.sin(clock.elapsedTime * 2) * 0.12;
+        heroRing.visible = !playerGhostly;
+        heroPumpkin.visible = playerGhostly;
+        if (playerGhostly) {
+          // Keep the carved face toward the camera, just a gentle sway.
+          heroPumpkin.position.set(p.x, py, p.z);
+          heroPumpkin.rotation.y = Math.sin(clock.elapsedTime * 1.5) * 0.15;
+        } else {
+          heroRing.position.set(p.x, py, p.z);
+          heroRing.rotation.z += 0.03;
+        }
+      }
       cam.position.x += (p.x - 2 - cam.position.x) * 0.06;
       sun.position.x = cam.position.x - 8;
       sun.target.position.x = cam.position.x;
@@ -1055,6 +1114,7 @@ export function createKidsWorld(
         homeY?: number;
         homeX?: number;
         scary?: boolean;
+        smiler?: boolean;
       };
       if (ud.homeY == null || ud.homeX == null) {
         continue;
@@ -1067,16 +1127,29 @@ export function createKidsWorld(
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
       f.wrap.rotation.y += diff * (near ? 0.12 : 0.04);
-      // Only skeletons act spooky when the hero comes close — a shudder and a
-      // rise — then settle back once it passes. Everyone else just watches.
       const homeGY = groundY(ud.homeX);
-      if (ud.scary && near) {
-        f.wrap.rotation.z = Math.sin(clock.elapsedTime * 9) * 0.14;
-        f.wrap.position.y =
-          homeGY + 0.15 + Math.abs(Math.sin(clock.elapsedTime * 4)) * 0.2;
-      } else if (ud.scary) {
-        f.wrap.rotation.z *= 0.88;
-        f.wrap.position.y += (homeGY - f.wrap.position.y) * 0.1;
+      if (ud.scary) {
+        // Skeletons act spooky when the hero is near — a shudder and a rise —
+        // then settle back once it passes.
+        if (near) {
+          f.wrap.rotation.z = Math.sin(clock.elapsedTime * 9) * 0.14;
+          f.wrap.position.y =
+            homeGY + 0.15 + Math.abs(Math.sin(clock.elapsedTime * 4)) * 0.2;
+        } else {
+          f.wrap.rotation.z *= 0.88;
+          f.wrap.position.y += (homeGY - f.wrap.position.y) * 0.1;
+        }
+      } else {
+        // Everyone else stops what they were doing and turns to watch. A
+        // random few "smilers" add a happy bob; the rest simply stand and
+        // stare, then pick it all back up once the hero has passed.
+        f.mixer.timeScale = near ? 0 : 1;
+        if (near && ud.smiler) {
+          f.wrap.position.y =
+            homeGY + Math.abs(Math.sin(clock.elapsedTime * 5)) * 0.13;
+        } else {
+          f.wrap.position.y += (homeGY - f.wrap.position.y) * 0.1;
+        }
       }
     }
     for (let i = sparks.length - 1; i >= 0; i--) {
@@ -1147,8 +1220,13 @@ export function createKidsWorld(
     setAge(age) {
       dinoAge = Math.max(0, Math.min(1, age));
       growTarget = sizeForAge(dinoAge);
-      if (player && theme.morphsBody) {
-        morphDino(player, dinoAge);
+      if (player) {
+        // Snap to the current size so switching worlds carries the growth
+        // straight over instead of re-growing from a baby.
+        player.wrap.scale.setScalar(growTarget);
+        if (theme.morphsBody) {
+          morphDino(player, dinoAge);
+        }
       }
     },
     burstAtPlayer(colors, count = 6, up = 0.12) {
