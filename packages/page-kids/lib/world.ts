@@ -28,11 +28,11 @@ export const LANDS: readonly Land[] = [
     name: "Fern Valley",
     mood: "day",
     tex: "leafy_grass",
-    grass: 0x5d7f43,
-    grassVar: 0x74905a,
-    dirt: 0x8a6f4c,
+    grass: 0x74b84e,
+    grassVar: 0x8ecb64,
+    dirt: 0x9a7b4f,
     sun: 0xffe9c4,
-    fog: 0xbfe0c8,
+    fog: 0xcdeec0,
     path: "stones",
     trees: "MegaBroadleaf",
     friend: "Triceratops",
@@ -41,11 +41,11 @@ export const LANDS: readonly Land[] = [
     name: "Blossom Meadow",
     mood: "day",
     tex: "leafy_grass",
-    grass: 0x7aa855,
-    grassVar: 0x94c46a,
+    grass: 0x86cc5e,
+    grassVar: 0xa0dc72,
     dirt: 0xc9b287,
     sun: 0xfff2d0,
-    fog: 0xd8f0c8,
+    fog: 0xd9f0c4,
     path: "stones",
     trees: "MegaBroadleaf",
     friend: "Stegosaurus",
@@ -54,11 +54,11 @@ export const LANDS: readonly Land[] = [
     name: "Pine Ridge",
     mood: "day",
     tex: "leafy_grass",
-    grass: 0x6fa84a,
-    grassVar: 0x86bd5e,
+    grass: 0x6cbf4a,
+    grassVar: 0x84d060,
     dirt: 0x8a6f4c,
     sun: 0xffe9c4,
-    fog: 0xcfe6c2,
+    fog: 0xcbe8bc,
     path: "stones",
     trees: "MegaPine",
     friend: "Apatosaurus",
@@ -67,11 +67,11 @@ export const LANDS: readonly Land[] = [
     name: "Amber Sands",
     mood: "day",
     tex: "sandy_gravel",
-    grass: 0xc2a06c,
-    grassVar: 0xb08c56,
-    dirt: 0xa07a4c,
+    grass: 0xd8b878,
+    grassVar: 0xc9a865,
+    dirt: 0xba9358,
     sun: 0xffe2b0,
-    fog: 0xf0d9b0,
+    fog: 0xf0e0b8,
     path: "sand",
     trees: "MegaDead",
     friend: "Parasaurolophus",
@@ -218,9 +218,12 @@ export const DINO_THEME: WorldTheme = {
     ["MegaPlants", 30, 2, 15, "both"],
   ],
   sceneryScale: 1,
-  floorTextured: true,
+  // Modernised to match Hero Trail: flat stylized ground + gradient sky +
+  // brighter lighting, and a gentler, flatter camera.
+  floorTextured: false,
   floorOpacity: 1,
-  sky: "hdr",
+  sky: "flat",
+  view: { camY: 11, camZ: 30, lookY: 3.0, frustum: 13, topF: 0.66, botF: 1.34 },
 };
 
 // Hero Trail — a little band of adventurers questing home through the forest.
@@ -607,18 +610,6 @@ export function createKidsWorld(
         if (mat) {
           mat.metalness = 0.05;
           mat.roughness = Math.max(0.65, mat.roughness ?? 0.8);
-          // A few cube props lost their atlas texture in conversion and would
-          // render as dark/untextured blobs — give any map-less cube material
-          // a friendly foliage green so nothing reads as black.
-          if (!theme.floorTextured && mat.map == null && mat.color) {
-            mat.color.set(0x86c95f);
-          }
-          // Cube world: a gentle emissive floor so no prop (dark atlas
-          // regions, deep shadows) ever reads as a black blob — kids-bright.
-          if (!theme.floorTextured && mat.emissive) {
-            mat.emissive.set(0x3a5a2c);
-            mat.emissiveIntensity = 0.28;
-          }
         }
         m.castShadow = true;
         m.receiveShadow = true;
