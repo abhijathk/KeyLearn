@@ -35,6 +35,9 @@ const LeftHand = memo(function LeftHand({
 }): ReactNode {
   return (
     <svg x={x} y={y} overflow="visible" className={styles.hand}>
+      {/* Stretched from the fingertip anchor: a whisper wider and a
+          good bit taller, so the full palm and wrist stay in view. */}
+      <g transform="scale(1.05 1.18)">
       <path
         d="m-20.952 107.51c1.05-3.47 13.56-32.34 16.11-41.01 2.89-7.28 15.54-32.02 20.5-43.35 4.94-11.32.95-21.36-7.05-26.57-8-5.22-19.13 12.52-23.3 17.79-4.16 5.26-45.2 80.97-49.51 85.73-4.3 4.75-8.21-7.2-3.34-17.49s4.16-24.48 8.34-32.13c4.17-7.65 37.56-17.74 39.96-35.61 2.42-17.88-9.7-20.38-15.2-20.38-5.48 0-29.17 15.72-29.17 15.72s4.76-4.6 2.75-9.74c-6.72-17.33-20.12.34-20.12.34s-.83-.76-4.3.09c-3.48.83-73.04 49.23-80.06 56.57-7.03 7.33-11.06 19.1-12.59 38.25a153.26 153.26 0 01-2.28 15.62h159.3a60.79 60.79 0 00-.04-3.83z"
         fill="#797979"
@@ -189,6 +192,7 @@ const LeftHand = memo(function LeftHand({
         d="m22.938 89.3c.5-1.64.13-9.93-.06-16.36a15.12 15.12 0 00-3.6 2.6c.02 8.83.48 24.23 3.66 13.76z"
         fill="#ffe5cf"
       />
+      </g>
     </svg>
   );
 });
@@ -200,6 +204,9 @@ const RightHand = memo(function RightHand({
 }): ReactNode {
   return (
     <svg x={x} y={y} overflow="visible" className={styles.hand}>
+      {/* Stretched from the fingertip anchor: a whisper wider and a
+          good bit taller, so the full palm and wrist stay in view. */}
+      <g transform="scale(1.05 1.18)">
       <path
         d="m-43.956 76.301c-1.92 3.08 4.8 12.14 7.92 35.6h43.62c-4.07-9.33-8.83-18.82-12.52-24.92-7.9-12.98-36.87-14.14-39.02-10.68z"
         fill="#797979"
@@ -356,6 +363,7 @@ const RightHand = memo(function RightHand({
         d="m116.82-5.2394c-.87.99-1.38 2.18-1.08 3.08 1.05 3.13 10.07 8.95 11.69 9.82 1 .52 2.72.88 4.03.48-7.11-2.08-12.66-9.52-14.65-13.38z"
         fill="#dbb793"
       />
+      </g>
     </svg>
   );
 });

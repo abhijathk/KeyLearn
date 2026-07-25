@@ -1,9 +1,17 @@
 // The one-band telemetry: hero speed, the macro and micro roads stacked in a
-// single lane, and a whisper line of pure typography underneath.
+// single lane, and a whisper line of pure typography underneath — all riding
+// in one floating frosted island, centred on the stage.
 .root {
-  inline-size: min(64rem, 100%);
+  inline-size: min(72rem, calc(100% - 2.5rem));
   margin-inline: auto;
-  padding-inline: 1rem;
+  margin-block-start: 0.6rem;
+  padding-inline: 1.5rem;
+  padding-block: 1rem 0.85rem;
+  border-radius: 1.25rem;
+  background-color: color-mix(in srgb, var(--primary-l1) 78%, transparent);
+  box-shadow: 0 0.9rem 2.5rem
+    color-mix(in srgb, var(--shadow-color) 45%, transparent);
+  backdrop-filter: blur(16px);
 }
 
 // ---- line one: hero + roads ----------------------------------------------
@@ -12,6 +20,9 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+  justify-content: center;
+  // Room for the tools cluster riding in the island's top-right corner.
+  padding-inline-end: 5rem;
 }
 
 .sparkWrap {
@@ -67,6 +78,7 @@
   block-size: 0.5rem;
   margin-inline-end: 0.45rem;
   border-radius: 50%;
+  // A recording-light red: unmistakably "live", distinct from the mint UI.
   background-color: #e0342e;
   animation: live-pulse 1s ease-in-out infinite;
 }
@@ -98,8 +110,7 @@
   flex-direction: column;
   gap: 1.35rem;
   min-inline-size: 6rem;
-  // The target road doesn't need the full width — keep it tidy.
-  max-inline-size: 34rem;
+  // The roads stretch across the whole island beside the hero.
 }
 
 .road {
@@ -111,31 +122,23 @@
 
 // The proportional part of a road: the done fill, the "you" dot and the dashed
 // remainder split this by flex-grow, so the fill is always exactly to scale
-// regardless of the label that follows. It's a fixed length (not flex:1) so
-// the trailing label doesn't get pushed to the container edge — the two roads
-// then end at different points, keeping the right side lively and uneven
-// rather than a ruled column.
+// regardless of the label that follows. Both roads take all remaining width,
+// so the lines extend across the island and the labels trail at the far end.
 .track {
   display: flex;
   position: relative;
-  flex: 0 1 17rem;
+  flex: 1 1 auto;
   align-items: center;
   min-inline-size: 4rem;
-}
-
-// Different lengths per road, so the labels trail off unevenly. The top goal
-// road is the longest; the key road below is shorter.
-.roadMacro .track {
-  flex-basis: 20rem;
-}
-
-.roadMicro .track {
-  flex-basis: 14rem;
 }
 
 // the macro line sits a half-step lower, framing the hero's midline
 .roadMacro {
   transform: translateY(0.55rem);
+}
+
+.roadMicro {
+  /* Empty. */
 }
 
 .roadDone {
@@ -344,6 +347,11 @@
     stroke-linecap: round;
   }
 
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
   &:hover:not(:disabled) {
     background-color: color-mix(
       in oklab,
@@ -355,11 +363,6 @@
 
   &:active:not(:disabled) {
     transform: scale(0.94);
-  }
-
-  &:disabled {
-    opacity: 0.35;
-    cursor: default;
   }
 }
 
@@ -439,6 +442,9 @@
   row-gap: 0.2rem;
   justify-content: center;
   margin-block-start: 0.9rem;
+  padding-block-start: 0.7rem;
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--primary-d2) 70%, transparent);
   color: var(--text-color-f1);
   font-family: var(--value-font-family);
   font-size: 0.66rem;

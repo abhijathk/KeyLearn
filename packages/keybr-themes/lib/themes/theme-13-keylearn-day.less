@@ -49,6 +49,11 @@
   .use-keyboard-colors(@colors, 12);
   // Plain keycaps must still read as caps when finger colours are off.
   --KeyboardKey-button__color: #ffffff;
+  // Pale blue-grey keycap edge for the day board (mockup --key-edge).
+  --KeyboardKey-edge__color: #b2bdd6;
+  // The comet cue needs weight against white keycaps: the shared #3fbf8e
+  // washes out, so the day board points with the deep accent green.
+  --KeyboardKey-pointer__color: @colors[@accent];
   --syntax-keyword: #2f7a52;
   --syntax-string: #3e7d3e;
   --syntax-number: #7a4f9d;

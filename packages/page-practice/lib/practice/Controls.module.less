@@ -28,18 +28,30 @@
   }
 }
 
-// The revealed cluster of tools, unfolding with a quick slide-in.
+// The revealed cluster of tools: a small frosted panel dropping down from
+// the toolbar, tools stacked vertically.
 .tools {
   display: flex;
-  gap: 0.1rem;
+  position: absolute;
+  inset-block-start: calc(100% + 0.4rem);
+  inset-inline-end: 0;
+  z-index: 20;
+  flex-direction: column;
+  gap: 0.15rem;
   align-items: center;
+  padding: 0.4rem 0.3rem;
+  border-radius: 0.8rem;
+  background-color: color-mix(in srgb, var(--primary-l1) 92%, transparent);
+  box-shadow: 0 0.6rem 1.6rem
+    color-mix(in srgb, var(--shadow-color) 50%, transparent);
+  backdrop-filter: blur(12px);
   animation: tools-in 0.2s ease;
 }
 
 @keyframes tools-in {
   0% {
     opacity: 0;
-    transform: translateX(0.6rem);
+    transform: translateY(-0.4rem);
   }
 }
 
@@ -56,12 +68,18 @@
 
 .sizer {
   display: flex;
-  gap: 0.4rem;
+  flex-direction: column;
+  gap: 0.35rem;
   align-items: center;
-  margin-inline: 0.2rem 0.4rem;
+  margin-block: 0.3rem 0.2rem;
 
+  // The text-size slider stands upright in the drop-down; rtl puts the
+  // larger size at the top, so dragging up grows the text.
   input {
-    inline-size: 5rem;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    inline-size: auto;
+    block-size: 5.5rem;
     accent-color: var(--accent);
   }
 }

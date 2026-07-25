@@ -79,6 +79,19 @@ export function LetterJourney({
     return { x: PAD + (i - row * per) * STEP, y: PAD_TOP + row * ROW_H, row };
   };
   const confOf = (k: LessonKey) => Math.max(0, Math.min(1, k.confidence ?? 0));
+  // Readiness notes need breathing room: when several focused keys sit close
+  // together their labels would overlap, so only keys at least three stops
+  // apart (left to right) get the text — the rest keep just their pin.
+  const noted = new Set<number>();
+  {
+    let last = -Infinity;
+    keys.forEach((key, i) => {
+      if (key.isFocused && i - last >= 3) {
+        noted.add(i);
+        last = i;
+      }
+    });
+  }
 
   return (
     <div id={id} ref={wrapRef} className={clsx(styles.journey, className)}>
@@ -128,18 +141,14 @@ export function LetterJourney({
             isIncluded && confidence != null
               ? String(confidenceColor(conf))
               : undefined;
-          // Tint the cap by its confidence (a subtle fill); the current key's
-          // accent ring comes from CSS, so it keeps only the tinted fill.
+          // Tint the cap by its confidence (a subtle fill). The current key is
+          // fully styled from CSS — a solid accent chip — so no inline fill.
           const capStyle =
-            color != null
-              ? isFocused
-                ? {
-                    fill: `color-mix(in oklab, ${color} 20%, var(--primary-l1))`,
-                  }
-                : {
-                    fill: `color-mix(in oklab, ${color} 20%, var(--primary-l1))`,
-                    stroke: color,
-                  }
+            color != null && !isFocused
+              ? {
+                  fill: `color-mix(in oklab, ${color} 20%, var(--primary-l1))`,
+                  stroke: color,
+                }
               : undefined;
           const nx = Math.max(CAP_W, Math.min(width - CAP_W, x));
           return (
@@ -162,9 +171,11 @@ export function LetterJourney({
             >
               {isFocused && (
                 <>
-                  <text className={styles.note} x={nx} y={y - CAP_H / 2 - 10}>
-                    {readinessNote(conf)}
-                  </text>
+                  {noted.has(i) && (
+                    <text className={styles.note} x={nx} y={y - CAP_H / 2 - 10}>
+                      {readinessNote(conf)}
+                    </text>
+                  )}
                   <path
                     className={styles.pin}
                     d={`M ${nx - 5} ${y - CAP_H / 2 - 6} L ${nx + 5} ${y - CAP_H / 2 - 6} L ${nx} ${y - CAP_H / 2 - 1} Z`}

@@ -47,8 +47,13 @@
   .use-interface-colors(@colors);
   .use-chart-colors(@colors, 50);
   .use-keyboard-colors(@colors, 55);
+  // The cued-key ring in the signature mint, matching the caret and accent
+  // (the shared palette default #3fbf8e reads too dark on the night ground).
+  --KeyboardKey-pointer__color: @colors[@accent];
   // Plain keycaps must still read as caps when finger colours are off.
   --KeyboardKey-button__color: lighten(@colors[@primary], 8);
+  // Deep keycap edge so the 3d side reads as shadow, not a grey ledge.
+  --KeyboardKey-edge__color: #0e1118;
   --syntax-keyword: #8fd9b6;
   --syntax-string: #72b172;
   --syntax-number: #b281d3;

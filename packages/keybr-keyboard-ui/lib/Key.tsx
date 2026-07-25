@@ -49,6 +49,12 @@ export function makeKeyComponent(
     HiddenKey.displayName = `Key[${id}]`;
     return memo(HiddenKey);
   }
+  // Modifier keys and the space bar stay in the plain cap colour even when
+  // finger zones are on — only the typing keys wear their zone tint (as in
+  // the redesign mockup, where tab/caps/shift/enter/back/space are neutral).
+  const neutralKey =
+    id === "Space" ||
+    shape.labels.some(({ text }) => modLabelText[text] != null);
   const children: ReactNode[] = [];
   children.push(
     shape.shape ? (
@@ -60,8 +66,8 @@ export function makeKeyComponent(
         y={0}
         width={w}
         height={h}
-        rx={6}
-        ry={6}
+        rx={9}
+        ry={9}
       />
     ),
   );
@@ -144,8 +150,8 @@ export function makeKeyComponent(
       y={3}
       width={w}
       height={h}
-      rx={6}
-      ry={6}
+      rx={9}
+      ry={9}
     />
   );
   function KeyComponent({
@@ -161,7 +167,7 @@ export function makeKeyComponent(
           styles.key,
           depressed && styles.depressedKey,
           toggled && styles.toggledKey,
-          showColors && zoneClassName,
+          showColors && !neutralKey && zoneClassName,
         )}
         x={x}
         y={y}

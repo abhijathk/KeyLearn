@@ -185,31 +185,6 @@ export function Header({
             />
           </span>
         )}
-        {showFocus && (
-          <span
-            onMouseDown={(ev) => {
-              // Keep the focus in the text area so entering focus mode
-              // doesn't blur the practice and reset the lesson.
-              ev.preventDefault();
-            }}
-          >
-            <IconButton
-              icon={<StrokeIcon name="focus" />}
-              title={formatMessage(
-                defineMessage({
-                  id: "practice.widget.focusMode.enter",
-                  defaultMessage:
-                    "Focus mode: just you, the words, nothing else.",
-                }),
-              )}
-              onClick={() => {
-                window.dispatchEvent(
-                  new window.CustomEvent("keylearn:focus-mode"),
-                );
-              }}
-            />
-          </span>
-        )}
         <AccountMenu />
         {kids && (
           <>
@@ -262,6 +237,32 @@ export function Header({
               <GearIcon />
             </button>
           </>
+        )}
+        {/* Focus mode rides beside the day/night switch. */}
+        {showFocus && (
+          <span
+            onMouseDown={(ev) => {
+              // Keep the focus in the text area so entering focus mode
+              // doesn't blur the practice and reset the lesson.
+              ev.preventDefault();
+            }}
+          >
+            <IconButton
+              icon={<StrokeIcon name="focus" />}
+              title={formatMessage(
+                defineMessage({
+                  id: "practice.widget.focusMode.enter",
+                  defaultMessage:
+                    "Focus mode: just you, the words, nothing else.",
+                }),
+              )}
+              onClick={() => {
+                window.dispatchEvent(
+                  new window.CustomEvent("keylearn:focus-mode"),
+                );
+              }}
+            />
+          </span>
         )}
         {!kids && <ThemeSwitcher />}
         {kids ? (

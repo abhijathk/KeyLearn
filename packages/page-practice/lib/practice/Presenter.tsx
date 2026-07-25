@@ -404,6 +404,9 @@ function NormalLayout({
         // touch so the typing zone owns the attention.
         <div className={clsx(styles.chrome, typing && styles.dimmed)}>
           <Indicators state={state} />
+          {/* The practice tools ride inside the telemetry island's top-right
+              corner, as drawn in the redesign mockup. */}
+          <div className={styles.chromeTools}>{controls}</div>
         </div>
       )}
       <div
@@ -412,7 +415,6 @@ function NormalLayout({
         style={{ "--text-scale": textSize } as CSSProperties}
       >
         {textInput}
-        {focusMode || controls}
       </div>
       <div id={names.keyboard} className={styles.keyboard}>
         {focus && !focusMode && state.settings.get(uiProps.ghostRace) && (
