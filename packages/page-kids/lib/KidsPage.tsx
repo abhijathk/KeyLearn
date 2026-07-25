@@ -55,6 +55,8 @@ import {
 import * as styles from "./kids.module.less";
 import {
   createKidsWorld,
+  CUBE_THEME,
+  DINO_THEME,
   createLoaderScene,
   type KidsWorld,
   LANDS,
@@ -69,7 +71,9 @@ const PREFS_KEY = () => profileStorageKey("kids.prefs");
 type KbMode = "off" | "simple" | "full";
 
 type Prefs = {
+  world: "dino" | "cube";
   dino: string;
+  cube: string;
   name: string;
   bigLetters: boolean;
   sounds: boolean;
@@ -87,7 +91,9 @@ type Prefs = {
 function defaultPrefs(): Prefs {
   const cfg = bandConfig(currentBand());
   return {
+    world: "dino",
     dino: "TRex",
+    cube: "Character_Male_1",
     name: "",
     bigLetters: cfg.bigLetters,
     sounds: false,
@@ -343,6 +349,14 @@ function agedPool(key: keyof typeof SAYS, age: number): readonly string[] {
 const HATCHLINGS = [
   { id: "Velociraptor", label: "Vela", at: 8 },
   { id: "Triceratops", label: "Tops", at: 10 },
+] as const;
+
+// The Cube World cast — pick your blocky runner.
+const CUBE_CHARACTERS = [
+  { id: "Character_Male_1", label: "Max" },
+  { id: "Character_Female_1", label: "Mia" },
+  { id: "Character_Male_2", label: "Leo" },
+  { id: "Character_Female_2", label: "Ivy" },
 ] as const;
 
 function peekNextLandName(): string {
@@ -643,7 +657,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     if (canvas == null) {
       return;
     }
-    const world = createKidsWorld(canvas, pickLand());
+    // Same engine, different theme: the toggle picks the dino world or the
+    // cube world, each with its own cast, companions and biomes.
+    const theme = prefsRef.current.world === "cube" ? CUBE_THEME : DINO_THEME;
+    const chosen =
+      prefsRef.current.world === "cube"
+        ? prefsRef.current.cube
+        : prefsRef.current.dino;
+    const world = createKidsWorld(canvas, pickLand(theme.lands), theme);
     worldRef.current = world;
     setLandName(world.land.name);
     world.startRun();
@@ -654,11 +675,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         if (prefsRef.current.night) {
           world.setNight(true);
         }
-        // The dino carries its age (baby → adult, size and all) across
-        // rebuilds and dino swaps.
+        // The runner carries its age (baby → adult, size and all) across
+        // rebuilds and character swaps.
         world.setAge(dinoAgeOf(included, lesson.letters.length));
-        if (prefsRef.current.dino !== "TRex") {
-          return world.setPlayer(prefsRef.current.dino);
+        if (chosen !== theme.defaultPlayer) {
+          return world.setPlayer(chosen);
         }
         return;
       })
@@ -674,7 +695,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       world.dispose();
       worldRef.current = null;
     };
-  }, [landNonce]);
+  }, [landNonce, prefs.world]);
 
   // The world pane never grows more than 50% taller than the helper card.
   useEffect(() => {
@@ -1056,7 +1077,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               <SproutIcon />
             </span>
             <div>
-              <div className={styles.chipLab}>Dino stage</div>
+              <div className={styles.chipLab}>{prefs.world === "cube" ? "Hero stage" : "Dino stage"}</div>
               <div className={styles.chipVal}>
                 {dinoStage(dinoAgeOf(included, lesson.letters.length))}
               </div>
@@ -1220,7 +1241,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 </div>
               </div>
               <div className={styles.fstat}>
-                <div className={styles.sd}>Dino stage</div>
+                <div className={styles.sd}>{prefs.world === "cube" ? "Hero stage" : "Dino stage"}</div>
                 <div
                   className={styles.fstatVal}
                   style={{ color: "var(--leaf-d)" }}
@@ -1513,48 +1534,101 @@ function SettingsCard({
           Your game, your way
         </div>
         <div className={styles.srow}>
+          <span className={styles.ri} style={{ background: "var(--lilac)" }}>
+            <DinoFill size={30} />
+          </span>
+          <div>
+            <div className={styles.sl}>Pick your world</div>
+            <div className={styles.sd}>where you run</div>
+          </div>
+          <div className={styles.ctl}>
+            <button
+              type="button"
+              className={pill(prefs.world === "dino")}
+              onClick={() => savePrefs({ world: "dino" })}
+            >
+              Dino Run
+            </button>
+            <button
+              type="button"
+              className={pill(prefs.world === "cube")}
+              onClick={() => savePrefs({ world: "cube" })}
+            >
+              Cube World
+            </button>
+          </div>
+        </div>
+        <div className={styles.srow}>
           <span className={styles.ri} style={{ background: "var(--sage)" }}>
             <DinoFill size={30} />
           </span>
           <div>
             <div className={styles.sl}>
-              {prefs.name !== "" ? prefs.name : "Dino friend"}
+              {prefs.name !== "" ? prefs.name : "Your buddy"}
             </div>
             <div className={styles.sd}>who runs with you</div>
           </div>
           <div className={styles.ctl}>
-            <button
-              type="button"
-              className={pill(prefs.dino === "TRex")}
-              onClick={() => onPickDino("TRex")}
-            >
-              Rex
-            </button>
-            {HATCHLINGS.map(({ id, label, at }) =>
-              included >= at ? (
+            {prefs.world === "cube" ? (
+              <>
+                {CUBE_CHARACTERS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={pill(prefs.cube === id)}
+                    onClick={() => savePrefs({ cube: id })}
+                  >
+                    {label}
+                  </button>
+                ))}
                 <button
-                  key={id}
                   type="button"
-                  className={pill(prefs.dino === id)}
-                  onClick={() => onPickDino(id)}
+                  className={styles.pill}
+                  onClick={onRename}
                 >
-                  {label}
+                  Rename
                 </button>
-              ) : (
+              </>
+            ) : (
+              <>
                 <button
-                  key={id}
                   type="button"
-                  className={clsx(styles.pill, styles.pillEgg)}
-                  disabled={true}
-                  title={`This egg hatches at ${at} keys`}
+                  className={pill(prefs.dino === "TRex")}
+                  onClick={() => onPickDino("TRex")}
                 >
-                  <EggIcon size={14} color="currentColor" /> {at} keys
+                  Rex
                 </button>
-              ),
+                {HATCHLINGS.map(({ id, label, at }) =>
+                  included >= at ? (
+                    <button
+                      key={id}
+                      type="button"
+                      className={pill(prefs.dino === id)}
+                      onClick={() => onPickDino(id)}
+                    >
+                      {label}
+                    </button>
+                  ) : (
+                    <button
+                      key={id}
+                      type="button"
+                      className={clsx(styles.pill, styles.pillEgg)}
+                      disabled={true}
+                      title={`This egg hatches at ${at} keys`}
+                    >
+                      <EggIcon size={14} color="currentColor" /> {at} keys
+                    </button>
+                  ),
+                )}
+                <button
+                  type="button"
+                  className={styles.pill}
+                  onClick={onRename}
+                >
+                  Rename
+                </button>
+              </>
             )}
-            <button type="button" className={styles.pill} onClick={onRename}>
-              Rename
-            </button>
           </div>
         </div>
         <div className={styles.srow}>

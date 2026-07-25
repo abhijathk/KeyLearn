@@ -78,6 +78,136 @@ export const LANDS: readonly Land[] = [
   },
 ];
 
+/** A cube-block world for the alternate game — same trails and mood, but a
+ * blocky character running past cube trees, with farm-animal companions. */
+export const CUBE_LANDS: readonly Land[] = [
+  {
+    name: "Green Hollow",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x6bbf59,
+    grassVar: 0x84d06a,
+    dirt: 0x9a7b4f,
+    sun: 0xffe9c4,
+    fog: 0xcdeecb,
+    path: "stones",
+    trees: "CubeTrees",
+    friend: "Sheep",
+  },
+  {
+    name: "Frost Fields",
+    mood: "overcast",
+    tex: "snow_02",
+    grass: 0xbcd6e6,
+    grassVar: 0xa6c2d4,
+    dirt: 0x8299ad,
+    sun: 0xdceeff,
+    fog: 0xe4eefb,
+    path: "stones",
+    trees: "CubeTrees",
+    friend: "Wolf",
+  },
+  {
+    name: "Sunny Farm",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x8bbe5a,
+    grassVar: 0x9ccf6a,
+    dirt: 0xc7a86e,
+    sun: 0xfff2d0,
+    fog: 0xe8f0cf,
+    path: "sand",
+    trees: "CubeTrees",
+    friend: "Horse",
+  },
+];
+
+/**
+ * A world theme: same engine (camera, run loop, particles, physics, and the
+ * whole KidsWorld API), different cast and scenery. The dino theme reproduces
+ * the original behaviour exactly; the cube theme swaps in blocky characters.
+ */
+export type WorldTheme = {
+  /** Folder under models/ for the player and companion models. */
+  readonly modelDir: string;
+  /** Folder under models/ for the scatter collection GLBs. */
+  readonly sceneryDir: string;
+  readonly defaultPlayer: string;
+  readonly playerHeight: (name: string) => number;
+  /** Dino-style baby→adult body morph. Cube characters only scale. */
+  readonly morphsBody: boolean;
+  readonly lands: readonly Land[];
+  /** Companions dotted along the trail. "$friend" resolves to land.friend. */
+  readonly herd: readonly {
+    readonly model: string;
+    readonly x: number;
+    readonly z: number;
+    readonly h: number;
+  }[];
+  /** Shared ground dressing (the per-biome trees are added separately). */
+  readonly ground: readonly (readonly [
+    string,
+    number,
+    number,
+    number,
+    "back" | "both",
+  ])[];
+  /** Multiplier on scenery size — cube models are authored larger. */
+  readonly sceneryScale: number;
+};
+
+export const DINO_THEME: WorldTheme = {
+  modelDir: "dino",
+  sceneryDir: "nature",
+  defaultPlayer: "TRex",
+  playerHeight: (name) =>
+    name === "TRex" ? 3.1 : name === "Triceratops" ? 2.6 : 2.3,
+  morphsBody: true,
+  lands: LANDS,
+  herd: [
+    { model: "$friend", x: 6, z: -6, h: 2.6 },
+    { model: "Triceratops", x: 20, z: -8, h: 2.4 },
+    { model: "Apatosaurus", x: 34, z: -10, h: 3.4 },
+    { model: "Parasaurolophus", x: 44, z: -7, h: 2.4 },
+    { model: "$friend", x: 72, z: -8, h: 2.6 },
+    { model: "Stegosaurus", x: 96, z: -6, h: 2.4 },
+    { model: "Apatosaurus", x: 122, z: -10, h: 3.4 },
+    { model: "Triceratops", x: 142, z: -7, h: 2.4 },
+  ],
+  ground: [
+    ["MegaBushes", 18, 4, 18, "both"],
+    ["MegaRocks", 10, 5, 22, "back"],
+    ["MegaPebbles", 22, 2, 12, "both"],
+    ["MegaFlowers", 26, 2, 13, "both"],
+    ["MegaPlants", 30, 2, 15, "both"],
+  ],
+  sceneryScale: 1,
+};
+
+export const CUBE_THEME: WorldTheme = {
+  modelDir: "cube",
+  sceneryDir: "cube",
+  defaultPlayer: "Character_Male_1",
+  playerHeight: () => 2.4,
+  morphsBody: false,
+  lands: CUBE_LANDS,
+  herd: [
+    { model: "$friend", x: 6, z: -6, h: 1.6 },
+    { model: "Cat", x: 20, z: -8, h: 1.1 },
+    { model: "Pig", x: 34, z: -9, h: 1.4 },
+    { model: "Chicken", x: 44, z: -7, h: 1.1 },
+    { model: "$friend", x: 72, z: -8, h: 1.6 },
+    { model: "Dog", x: 96, z: -6, h: 1.3 },
+    { model: "Sheep", x: 122, z: -9, h: 1.5 },
+    { model: "Cat", x: 142, z: -7, h: 1.1 },
+  ],
+  ground: [
+    ["CubePlants", 30, 3, 16, "both"],
+    ["CubeRocks", 12, 4, 20, "back"],
+  ],
+  sceneryScale: 0.42,
+};
+
 /** How far one round carries the runner. The trail never rewinds — each new
  * round plants the camp flag another stretch ahead. */
 const RUN_LEN = 40;
@@ -124,6 +254,7 @@ export type KidsWorld = {
 export function createKidsWorld(
   canvas: HTMLCanvasElement,
   land: Land,
+  theme: WorldTheme = DINO_THEME,
 ): KidsWorld {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.shadowMap.enabled = true;
@@ -522,9 +653,8 @@ export function createKidsWorld(
     0.72 + 0.66 * Math.max(0, Math.min(1, age));
 
   async function setPlayer(name: string) {
-    const gltf = await loadModel(`${ASSETS}/models/dino/${name}.glb`);
-    const targetH = name === "TRex" ? 3.1 : name === "Triceratops" ? 2.6 : 2.3;
-    const rig = rigOf(gltf, targetH);
+    const gltf = await loadModel(`${ASSETS}/models/${theme.modelDir}/${name}.glb`);
+    const rig = rigOf(gltf, theme.playerHeight(name));
     rig.wrap.position.set(playerX, groundY(playerX), 0);
     rig.wrap.rotation.y = Math.PI / 2;
     if (player) {
@@ -533,28 +663,23 @@ export function createKidsWorld(
     }
     player = rig;
     scene.add(rig.wrap);
-    morphDino(rig, dinoAge);
+    if (theme.morphsBody) {
+      morphDino(rig, dinoAge);
+    }
   }
 
   const ready = (async () => {
-    await setPlayer("TRex");
+    await setPlayer(theme.defaultPlayer);
 
     const calm = (clips: THREE.AnimationClip[]) =>
       clips.find((c) => /idle|stand|eat|graze/i.test(c.name)) ??
       clips.find((c) => /walk/i.test(c.name)) ??
       null;
-    const herdSpots = [
-      { model: land.friend, x: 6, z: -6, h: 2.6 },
-      { model: "Triceratops", x: 20, z: -8, h: 2.4 },
-      { model: "Apatosaurus", x: 34, z: -10, h: 3.4 },
-      { model: "Parasaurolophus", x: 44, z: -7, h: 2.4 },
-      { model: land.friend, x: 72, z: -8, h: 2.6 },
-      { model: "Stegosaurus", x: 96, z: -6, h: 2.4 },
-      { model: "Apatosaurus", x: 122, z: -10, h: 3.4 },
-      { model: "Triceratops", x: 142, z: -7, h: 2.4 },
-    ];
-    for (const spot of herdSpots) {
-      const gltf = await loadModel(`${ASSETS}/models/dino/${spot.model}.glb`);
+    for (const spot of theme.herd) {
+      const model = spot.model === "$friend" ? land.friend : spot.model;
+      const gltf = await loadModel(
+        `${ASSETS}/models/${theme.modelDir}/${model}.glb`,
+      );
       const wrap = fitToHeight(gltf.scene, spot.h);
       wrap.position.set(spot.x, groundY(spot.x), spot.z);
       wrap.rotation.y = 0.4 + Math.random() * 1.2;
@@ -570,14 +695,12 @@ export function createKidsWorld(
     }
 
     for (const [file, count, minD, maxD, side] of [
-      [land.trees, 30, 6, 26, "back"],
-      ["MegaBushes", 18, 4, 18, "both"],
-      ["MegaRocks", 10, 5, 22, "back"],
-      ["MegaPebbles", 22, 2, 12, "both"],
-      ["MegaFlowers", 26, 2, 13, "both"],
-      ["MegaPlants", 30, 2, 15, "both"],
-    ] as const) {
-      const gltf = await loadModel(`${ASSETS}/models/nature/${file}.glb`);
+      [land.trees, 30, 6, 26, "back"] as const,
+      ...theme.ground,
+    ]) {
+      const gltf = await loadModel(
+        `${ASSETS}/models/${theme.sceneryDir}/${file}.glb`,
+      );
       const variants = [...gltf.scene.children];
       for (let i = 0; i < count; i++) {
         const v = variants[i % variants.length].clone();
@@ -597,7 +720,7 @@ export function createKidsWorld(
           side === "back" ? -depth : Math.random() > 0.65 ? depth : -depth;
         wrap.position.set(x, groundY(x), z);
         wrap.rotation.y = Math.random() * Math.PI * 2;
-        wrap.scale.setScalar(0.8 + Math.random() * 0.8);
+        wrap.scale.setScalar((0.8 + Math.random() * 0.8) * theme.sceneryScale);
         scene.add(wrap);
       }
     }
@@ -762,7 +885,7 @@ export function createKidsWorld(
     setAge(age) {
       dinoAge = Math.max(0, Math.min(1, age));
       growTarget = sizeForAge(dinoAge);
-      if (player) {
+      if (player && theme.morphsBody) {
         morphDino(player, dinoAge);
       }
     },
@@ -876,7 +999,7 @@ export function createLoaderScene(canvas: HTMLCanvasElement): {
   };
 }
 
-export function pickLand(): Land {
+export function pickLand(lands: readonly Land[] = LANDS): Land {
   let n = 0;
   try {
     const key = profileStorageKey("kids.land");
@@ -885,5 +1008,5 @@ export function pickLand(): Land {
   } catch {
     // Storage may be unavailable.
   }
-  return LANDS[n % LANDS.length];
+  return lands[n % lands.length];
 }
