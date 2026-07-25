@@ -34,7 +34,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xffe9c4,
     fog: 0xbfe0c8,
     path: "stones",
-    trees: "Trees",
+    trees: "MegaBroadleaf",
     friend: "Triceratops",
   },
   {
@@ -47,7 +47,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xfff2d0,
     fog: 0xd8f0c8,
     path: "stones",
-    trees: "BirchTrees",
+    trees: "MegaBroadleaf",
     friend: "Stegosaurus",
   },
   {
@@ -60,7 +60,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xdceeff,
     fog: 0xdfeafc,
     path: "stones",
-    trees: "PineTrees",
+    trees: "MegaPine",
     friend: "Apatosaurus",
   },
   {
@@ -73,7 +73,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xffe2b0,
     fog: 0xf0d9b0,
     path: "sand",
-    trees: "PalmTrees",
+    trees: "MegaDead",
     friend: "Parasaurolophus",
   },
 ];
@@ -570,10 +570,12 @@ export function createKidsWorld(
     }
 
     for (const [file, count, minD, maxD, side] of [
-      [land.trees, 26, 6, 26, "back"],
-      ["Rocks", 12, 5, 22, "back"],
-      ["Flowers", 24, 3, 14, "both"],
-      ["Bushes", 16, 4, 16, "both"],
+      [land.trees, 30, 6, 26, "back"],
+      ["MegaBushes", 18, 4, 18, "both"],
+      ["MegaRocks", 10, 5, 22, "back"],
+      ["MegaPebbles", 22, 2, 12, "both"],
+      ["MegaFlowers", 26, 2, 13, "both"],
+      ["MegaPlants", 30, 2, 15, "both"],
     ] as const) {
       const gltf = await loadModel(`${ASSETS}/models/nature/${file}.glb`);
       const variants = [...gltf.scene.children];
