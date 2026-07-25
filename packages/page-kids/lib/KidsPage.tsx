@@ -1541,8 +1541,8 @@ function SettingsCard({
           Your game, your way
         </div>
         <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--lilac)" }}>
-            <WorldIcon size={26} />
+          <span className={styles.ri} style={{ background: "var(--seafoam)" }}>
+            <WorldIcon size={24} color="#12664a" />
           </span>
           <div>
             <div className={styles.sl}>Pick your world</div>
@@ -1567,7 +1567,7 @@ function SettingsCard({
         </div>
         <div className={styles.srow}>
           <span className={styles.ri} style={{ background: "var(--sage)" }}>
-            <PawIcon size={26} />
+            <PawIcon size={24} color="#3d6b2e" />
           </span>
           <div>
             <div className={styles.sl}>

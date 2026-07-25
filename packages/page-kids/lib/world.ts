@@ -289,7 +289,11 @@ export function createKidsWorld(
     sun,
     new THREE.HemisphereLight(0xffffff, land.grass, bright ? 1.0 : 0.5),
   );
-  scene.fog = new THREE.Fog(land.fog, 60, 160);
+  // The cube world fogs in nearer so the ground dissolves into the flat sky
+  // at the horizon — no hard grass/sky seam.
+  scene.fog = bright
+    ? new THREE.Fog(land.fog, 34, 120)
+    : new THREE.Fog(land.fog, 60, 160);
 
   const cam = new THREE.OrthographicCamera();
   function resize() {
@@ -339,8 +343,10 @@ export function createKidsWorld(
       scene.environment = null;
       scene.environmentIntensity = 1;
       scene.backgroundIntensity = 1;
+      // Fog matches the sky's lower band so the ground fades straight into
+      // the backdrop.
       (scene.fog as THREE.Fog).color.set(
-        mood === "night" ? 0x3d4a7a : land.fog,
+        mood === "night" ? 0x3d4a7a : 0xd7f0d2,
       );
       sun.intensity = mood === "night" ? 2.0 : 2.7;
       sun.color.set(mood === "night" ? 0xb8c8ec : land.sun);
@@ -404,11 +410,12 @@ export function createKidsWorld(
       pos.setY(i, y);
       const n = (noise2(x * 0.8, z * 0.9) + 1) / 2;
       // Textured ground stays pale (the photo map darkens it); flat cube
-      // ground carries the full grass colour itself.
+      // ground carries a softer, pastel grass so it melts into the sky
+      // rather than sitting as a hard bright slab.
       tmp
         .setRGB(1, 1, 1)
-        .lerp(cGrass, theme.floorTextured ? 0.4 : 0.9)
-        .lerp(cVar, n * (theme.floorTextured ? 0.2 : 0.4));
+        .lerp(cGrass, theme.floorTextured ? 0.4 : 0.72)
+        .lerp(cVar, n * (theme.floorTextured ? 0.2 : 0.32));
       const patch = (noise2(x * 0.09 + 7.3, z * 0.13) + 1) / 2;
       if (patch > 0.62) {
         tmp.lerp(cDirt, (patch - 0.62) * 0.9);
