@@ -78,54 +78,54 @@ export const LANDS: readonly Land[] = [
   },
 ];
 
-/** A cube-block world for the alternate game — same trails and mood, but a
- * blocky character running past cube trees, with farm-animal companions. */
-export const CUBE_LANDS: readonly Land[] = [
+// Hero Trail — a gentle quest through the enchanted forest. Same trails and
+// mood as Dino Run, but a little band of heroes walking home.
+export const HERO_LANDS: readonly Land[] = [
   {
-    name: "Green Hollow",
+    name: "Greenwood",
     mood: "day",
     tex: "leafy_grass",
-    grass: 0x74d95a,
-    grassVar: 0x92e86f,
-    dirt: 0xa9855a,
+    grass: 0x6cc24a,
+    grassVar: 0x86d660,
+    dirt: 0x9a7b4f,
     sun: 0xfff0cf,
-    fog: 0xc8f0bf,
+    fog: 0xcdeec0,
     path: "stones",
-    trees: "CubeTrees",
-    friend: "Sheep",
+    trees: "HeroTrees",
+    friend: "Ranger",
   },
   {
-    name: "Meadow Run",
+    name: "Sunny Glade",
     mood: "day",
     tex: "leafy_grass",
-    grass: 0x86e05f,
-    grassVar: 0xa2ef78,
-    dirt: 0xc9a869,
-    sun: 0xfff2d0,
-    fog: 0xd6f4c2,
-    path: "stones",
-    trees: "CubeTrees",
-    friend: "Dog",
-  },
-  {
-    name: "Sunny Farm",
-    mood: "day",
-    tex: "leafy_grass",
-    grass: 0x8be85a,
-    grassVar: 0xa8f472,
-    dirt: 0xd4b673,
+    grass: 0x7ed257,
+    grassVar: 0x98e070,
+    dirt: 0xc4a568,
     sun: 0xfff6d6,
-    fog: 0xe2f6c6,
+    fog: 0xd9f0c4,
+    path: "stones",
+    trees: "HeroTrees",
+    friend: "Mage",
+  },
+  {
+    name: "Old Oak Way",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x63b84a,
+    grassVar: 0x7fcc60,
+    dirt: 0xb08d58,
+    sun: 0xffecc0,
+    fog: 0xcbe8bc,
     path: "sand",
-    trees: "CubeTrees",
-    friend: "Horse",
+    trees: "HeroTrees",
+    friend: "Barbarian",
   },
 ];
 
 /**
  * A world theme: same engine (camera, run loop, particles, physics, and the
  * whole KidsWorld API), different cast and scenery. The dino theme reproduces
- * the original behaviour exactly; the cube theme swaps in blocky characters.
+ * the original behaviour exactly; the hero theme swaps in KayKit adventurers.
  */
 export type WorldTheme = {
   /** Folder under models/ for the player and companion models. */
@@ -154,10 +154,15 @@ export type WorldTheme = {
   ])[];
   /** Multiplier on scenery size — cube models are authored larger. */
   readonly sceneryScale: number;
-  /** Photo-textured ground (dino) vs. flat stylized ground (cube). */
+  /** Photo-textured ground (dino) vs. flat stylized ground (cube/hero). */
   readonly floorTextured: boolean;
-  /** HDR skybox (dino) vs. a flat 2D gradient sky (cube). */
+  /** Ground opacity — a see-through floor reads airier (1 = solid). */
+  readonly floorOpacity: number;
+  /** HDR skybox (dino) vs. a flat 2D gradient sky (cube/hero). */
   readonly sky: "hdr" | "flat";
+  /** GLBs whose animation clips are shared by every character (KayKit rigs
+   * ship their movement clips separately from the meshes). */
+  readonly animationUrls?: readonly string[];
 };
 
 export const DINO_THEME: WorldTheme = {
@@ -187,32 +192,39 @@ export const DINO_THEME: WorldTheme = {
   ],
   sceneryScale: 1,
   floorTextured: true,
+  floorOpacity: 1,
   sky: "hdr",
 };
 
-export const CUBE_THEME: WorldTheme = {
-  modelDir: "cube",
-  sceneryDir: "cube",
-  defaultPlayer: "Character_Male_1",
-  playerHeight: () => 3.4,
+// Hero Trail — a little band of adventurers questing home through the forest.
+// KayKit heroes share one rig, so their walk/run/idle clips are loaded from a
+// shared animation GLB and bound to every character by bone name.
+export const HERO_THEME: WorldTheme = {
+  modelDir: "hero",
+  sceneryDir: "hero",
+  defaultPlayer: "Knight",
+  playerHeight: () => 2.6,
   morphsBody: false,
-  lands: CUBE_LANDS,
+  animationUrls: ["anims-move.glb", "anims-idle.glb"],
+  lands: HERO_LANDS,
   herd: [
-    { model: "$friend", x: 6, z: -6, h: 1.6 },
-    { model: "Cat", x: 20, z: -8, h: 1.1 },
-    { model: "Pig", x: 34, z: -9, h: 1.4 },
-    { model: "Chicken", x: 44, z: -7, h: 1.1 },
-    { model: "$friend", x: 72, z: -8, h: 1.6 },
-    { model: "Dog", x: 96, z: -6, h: 1.3 },
-    { model: "Sheep", x: 122, z: -9, h: 1.5 },
-    { model: "Cat", x: 142, z: -7, h: 1.1 },
+    { model: "$friend", x: 6, z: -6, h: 2.4 },
+    { model: "Mage", x: 20, z: -8, h: 2.4 },
+    { model: "Rogue", x: 34, z: -10, h: 2.3 },
+    { model: "Barbarian", x: 44, z: -7, h: 2.6 },
+    { model: "$friend", x: 72, z: -8, h: 2.4 },
+    { model: "Ranger", x: 96, z: -6, h: 2.4 },
+    { model: "Rogue_Hooded", x: 122, z: -10, h: 2.3 },
+    { model: "Knight", x: 142, z: -7, h: 2.5 },
   ],
   ground: [
-    ["CubePlants", 30, 3, 16, "both"],
-    ["CubeRocks", 12, 4, 20, "back"],
+    ["HeroBushes", 22, 4, 18, "both"],
+    ["HeroRocks", 12, 5, 22, "back"],
+    ["HeroGrass", 34, 2, 15, "both"],
   ],
-  sceneryScale: 0.42,
+  sceneryScale: 0.85,
   floorTextured: false,
+  floorOpacity: 1,
   sky: "flat",
 };
 
@@ -447,10 +459,9 @@ export function createKidsWorld(
         map: theme.floorTextured ? diff : null,
         normalMap: theme.floorTextured ? nor : null,
         normalScale: new THREE.Vector2(0.85, 0.85),
-        // Cube world: a half-transparent floor so the bright sky shows
-        // through the grass for an airier, lighter look.
-        transparent: !theme.floorTextured,
-        opacity: theme.floorTextured ? 1 : 0.5,
+        // A see-through floor (cube) reads airier; the hero forest stays solid.
+        transparent: theme.floorOpacity < 1,
+        opacity: theme.floorOpacity,
       }),
     );
     ground.receiveShadow = true;
@@ -562,6 +573,12 @@ export function createKidsWorld(
           if (!theme.floorTextured && mat.map == null && mat.color) {
             mat.color.set(0x86c95f);
           }
+          // Cube world: a gentle emissive floor so no prop (dark atlas
+          // regions, deep shadows) ever reads as a black blob — kids-bright.
+          if (!theme.floorTextured && mat.emissive) {
+            mat.emissive.set(0x3a5a2c);
+            mat.emissiveIntensity = 0.28;
+          }
         }
         m.castShadow = true;
         m.receiveShadow = true;
@@ -596,13 +613,21 @@ export function createKidsWorld(
     wrap.add(root);
     return wrap;
   }
+  // Characters carry their own clips (dino/cube); KayKit heroes get them from
+  // the shared animation GLBs, bound by matching bone names at runtime.
+  let sharedClips: THREE.AnimationClip[] = [];
+  const clipsFor = (gltf: { animations?: THREE.AnimationClip[] }) =>
+    gltf.animations && gltf.animations.length > 0
+      ? gltf.animations
+      : sharedClips;
+
   function rigOf(
     gltf: { scene: THREE.Group; animations: THREE.AnimationClip[] },
     targetH: number,
   ): DinoRig {
     const wrap = fitToHeight(gltf.scene, targetH);
     const mixer = new THREE.AnimationMixer(gltf.scene);
-    const clips = gltf.animations ?? [];
+    const clips = clipsFor(gltf);
     const pick = (re: RegExp) =>
       clips.find((c) => re.test(c.name.toLowerCase())) ?? null;
     const runClip = pick(/run|gallop|walk/);
@@ -735,6 +760,21 @@ export function createKidsWorld(
   }
 
   const ready = (async () => {
+    // Load the shared movement/idle clips first so every hero can play them.
+    if (theme.animationUrls) {
+      for (const url of theme.animationUrls) {
+        try {
+          const g = await loader.loadAsync(`${ASSETS}/models/${theme.modelDir}/${url}`);
+          sharedClips = sharedClips.concat(
+            (g.animations ?? []).filter(
+              (c) => !/death|attack|bite|hit/i.test(c.name),
+            ),
+          );
+        } catch {
+          // A missing clip file just means no animation — still playable.
+        }
+      }
+    }
     await setPlayer(theme.defaultPlayer);
 
     const calm = (clips: THREE.AnimationClip[]) =>
@@ -751,7 +791,7 @@ export function createKidsWorld(
       wrap.rotation.y = 0.4 + Math.random() * 1.2;
       scene.add(wrap);
       const mixer = new THREE.AnimationMixer(gltf.scene);
-      const clip = calm(gltf.animations ?? []);
+      const clip = calm(clipsFor(gltf));
       if (clip) {
         const a = mixer.clipAction(clip);
         a.timeScale = 1; // companions idle at a natural, lively pace
@@ -988,7 +1028,7 @@ export function createKidsWorld(
 /**
  * The little running character shown while the real world loads — the same
  * model as the chosen world, on its own tiny canvas, so the loader is the
- * game. Defaults to the TRex; pass a theme to load its cube hero instead.
+ * game. Defaults to the TRex; pass a theme to load its hero instead.
  */
 export function createLoaderScene(
   canvas: HTMLCanvasElement,
@@ -1046,10 +1086,26 @@ export function createLoaderScene(
       gltf.scene.position.y = -box.min.y * s;
       gltf.scene.rotation.y = Math.PI / 2;
       scene.add(gltf.scene);
-      const run = (gltf.animations ?? []).find((c) => /run/i.test(c.name));
-      if (run != null) {
-        mixer = new THREE.AnimationMixer(gltf.scene);
-        mixer.clipAction(run).play();
+      const playRun = (clips: readonly THREE.AnimationClip[]) => {
+        const run = clips.find((c) => /run/i.test(c.name));
+        if (run != null) {
+          mixer = new THREE.AnimationMixer(gltf.scene);
+          mixer.clipAction(run).play();
+        }
+      };
+      const own = gltf.animations ?? [];
+      if (own.some((c) => /run/i.test(c.name)) || !theme.animationUrls) {
+        playRun(own);
+      } else {
+        // KayKit heroes: fetch the shared run clip and bind it by bone name.
+        loader
+          .loadAsync(`${ASSETS}/models/${theme.modelDir}/${theme.animationUrls[0]}`)
+          .then((g) => {
+            if (!disposed) {
+              playRun(g.animations ?? []);
+            }
+          })
+          .catch(() => {});
       }
     })
     .catch(() => {});

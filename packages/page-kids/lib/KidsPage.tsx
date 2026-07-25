@@ -57,7 +57,7 @@ import {
 import * as styles from "./kids.module.less";
 import {
   createKidsWorld,
-  CUBE_THEME,
+  HERO_THEME,
   DINO_THEME,
   createLoaderScene,
   type KidsWorld,
@@ -73,9 +73,9 @@ const PREFS_KEY = () => profileStorageKey("kids.prefs");
 type KbMode = "off" | "simple" | "full";
 
 type Prefs = {
-  world: "dino" | "cube";
+  world: "dino" | "hero";
   dino: string;
-  cube: string;
+  hero: string;
   name: string;
   bigLetters: boolean;
   sounds: boolean;
@@ -94,11 +94,11 @@ function defaultPrefs(): Prefs {
   const band = currentBand();
   const cfg = bandConfig(band);
   return {
-    // Little ones start in the friendly Cube World; big kids get Dino Run.
+    // Little ones start in the friendly Hero Trail; big kids get Dino Run.
     // Either can switch worlds any time in the toy-box.
-    world: band === "5-6" || band === "7-8" ? "cube" : "dino",
+    world: band === "5-6" || band === "7-8" ? "hero" : "dino",
     dino: "TRex",
-    cube: "Character_Male_1",
+    hero: "Knight",
     name: "",
     bigLetters: cfg.bigLetters,
     sounds: false,
@@ -274,6 +274,130 @@ const SAYS = {
   ],
 } as const;
 
+// Hero Trail voice: the same warm, effort-first coaching, re-flavoured for a
+// little band of adventurers questing home. Only the world-specific lines are
+// overridden; the key/finger help (stuck, wake, …) is shared with SAYS.
+const HERO_SAYS = {
+  ...SAYS,
+  start: [
+    "The party is marching home through the forest — every letter is a step!",
+    "A long trail, a brave hero, and you — every letter is a step home!",
+    "{name} lifts their lantern. The village is far — let's walk!",
+    "The heroes are ready. Your fingers lead the way today!",
+    "Every key you press is one step closer to home.",
+  ],
+  cheer: [
+    "Your fingers worked so hard!",
+    "You didn't give up!",
+    "Steady steps — that's how heroes walk!",
+    "The whole party is cheering for YOU!",
+    "Great try after try!",
+    "Campfire ahead — keep going!",
+    "{name} loves adventuring next to you!",
+    "One letter at a time — that's the way!",
+    "Look at those fingers go!",
+    "The other heroes copy your brave steps!",
+  ],
+  cheerYoung: [
+    "WOW! Look at you go!",
+    "You pressed it all by yourself!",
+    "Super duper typing!",
+    "{name} does a happy twirl!",
+    "High five, brave one!",
+  ],
+  cheerCool: [
+    "Clean hit. Keep the rhythm.",
+    "Smooth — the party barely keeps up.",
+    "Nice streak building.",
+    "{name} nods, impressed.",
+    "That's the pace — steady and sharp.",
+  ],
+  camp: [
+    "CAMP! +10 — the whole party cheers for {name}!",
+    "CAMP! You led {name} all the way to the campfire!",
+    "The tents are up — {name} gets a warm snack. +10!",
+    "Campfire reached! The heroes stomp for you. +10!",
+    "Rest stop! {name} takes a big happy breath. +10!",
+  ],
+  miss: [
+    "Whoops — {name} paused! The glowing key shows the way.",
+    "Oops! No rush — find the glowing key.",
+    "{name} stepped on a twig. The glowing key helps you both up!",
+    "Not that one — but you're SO close. Look for the glow!",
+    "Wrong stone! Peek at the glowing key and try again.",
+  ],
+  roar: [
+    "HYAA!! Take a breath — look for the glowing key!",
+    "Even brave heroes rest. Breathe, then find the glow.",
+    "A mighty shout! Shake your hands, smile, and try the glowing key.",
+    "{name} says: slow is smooth, smooth is fast!",
+  ],
+  grow: [
+    "{name} grew braver — a brand new key joined your trail!",
+    "A new key! {name} stands a little taller!",
+    "Your trail got longer — and {name} grew braver!",
+    "New key unlocked! The party gasps — {name} is a {stage} now!",
+    "Whoa — {name} just became a {stage}!",
+    "A new key, and a prouder {name}! Now a {stage}.",
+    "{name} leveled up — hello, {stage}!",
+  ],
+  growYoung: [
+    "Little {name} puffs up with courage — a new key!",
+    "Brave little {name} beams — a new key, a bigger heart!",
+    "{name} is still learning, but braver every key!",
+  ],
+  growOld: [
+    "Mighty {name} stands tall — nearly a Champion now!",
+    "{name} gives a proud, calm nod — almost a Champion!",
+    "The forest cheers as {name} grows braver again!",
+  ],
+  streak: [
+    "{name} is SO proud — 10 in a row!",
+    "TEN in a row! {name} does a happy hop!",
+    "Ten perfect steps — the party can't believe it!",
+    "10 straight! Your fingers know the trail by heart!",
+  ],
+  idle: [
+    "{name} is waiting — press the glowing key!",
+    "{name} looks back at you. Ready to walk on?",
+    "The trail is quiet… one glowing key starts it again!",
+    "{name} taps a boot. Shall we keep going?",
+    "{name} watches a firefly, then glances at the glowing key.",
+    "A butterfly lands on {name}'s nose. Press a key to shoo it!",
+    "{name} is counting clouds. Wake them with the glowing key!",
+    "Still here! {name} would love one more step.",
+  ],
+  idleYoung: [
+    "Little {name} peeps up at you — press the glowing key!",
+    "{name} does a wobbly spin, waiting for a key.",
+    "{name} hums a tune and blinks — one glowing key, please!",
+    "Wee {name} sits for a rest. Press a key to bounce up!",
+  ],
+  idleOld: [
+    "Brave {name} stands tall, waiting for your next key.",
+    "{name} scans the horizon. One glowing key and you march on.",
+    "{name} rests a hand on their sword — press the glowing key.",
+    "{name} gives a slow, steady nod. Ready when you are.",
+  ],
+  crossed: [
+    "A brand new land! Smell that fresh forest air!",
+    "Chapter {chapter}! New trees, new stones, same brave hero.",
+    "The party crossed over — welcome to {land}!",
+    "New land, new adventure — the campfire is waiting ahead!",
+  ],
+  timerEnd: [
+    "The party makes camp. Wonderful typing today!",
+    "The sun sets on the trail — you did wonderfully today!",
+    "Campfire time! {name} rests, warm and proud of you.",
+    "That's the quest for today — the whole party sleeps happy!",
+  ],
+} as const;
+
+const saysOf = (world: "dino" | "hero") =>
+  world === "hero"
+    ? (HERO_SAYS as unknown as typeof SAYS)
+    : SAYS;
+
 // The dino grows from a just-hatched baby (few keys) to a full adult (whole
 // alphabet). Age is 0→1 across that span; the stage name is shown to the kid.
 const DINO_MIN_KEYS = 6;
@@ -295,6 +419,23 @@ function dinoStage(age: number): string {
     return "Teen";
   }
   return "Adult";
+}
+
+// Hero Trail growth reads as ranks earned on the quest, not ages.
+function heroStage(age: number): string {
+  if (age < 0.05) {
+    return "Novice";
+  }
+  if (age < 0.3) {
+    return "Squire";
+  }
+  if (age < 0.6) {
+    return "Adventurer";
+  }
+  if (age < 0.95) {
+    return "Hero";
+  }
+  return "Champion";
 }
 
 const pickSay = (list: readonly string[]) =>
@@ -321,26 +462,30 @@ function grownupsAgeNote(words: number, practicedSecs: number): string {
 }
 
 // The praise pool leans warmer for little kids and cooler for older ones.
-function cheerPool(band: AgeBand): readonly string[] {
+function cheerPool(s: typeof SAYS, band: AgeBand): readonly string[] {
   switch (band) {
     case "5-6":
-      return [...SAYS.cheer, ...SAYS.cheerYoung, ...SAYS.cheerYoung];
+      return [...s.cheer, ...s.cheerYoung, ...s.cheerYoung];
     case "9-10":
     case "11+":
-      return [...SAYS.cheer.slice(0, 5), ...SAYS.cheerCool, ...SAYS.cheerCool];
+      return [...s.cheer.slice(0, 5), ...s.cheerCool, ...s.cheerCool];
     default:
-      return SAYS.cheer;
+      return s.cheer;
   }
 }
 
 // Messages flavour themselves to the dino's own age: a baby's lines are cute
 // and wobbly, an adult's are mighty and calm. Categories with "…Young"/"…Old"
 // variants mix those in when the dino is little / nearly grown.
-const SAYS_ANY = SAYS as unknown as Record<string, readonly string[]>;
-function agedPool(key: keyof typeof SAYS, age: number): readonly string[] {
-  const base = SAYS_ANY[key] ?? [];
-  const young = SAYS_ANY[`${key}Young`];
-  const old = SAYS_ANY[`${key}Old`];
+function agedPool(
+  s: typeof SAYS,
+  key: keyof typeof SAYS,
+  age: number,
+): readonly string[] {
+  const any = s as unknown as Record<string, readonly string[]>;
+  const base = any[key] ?? [];
+  const young = any[`${key}Young`];
+  const old = any[`${key}Old`];
   if (age < 0.35 && young) {
     return [...base, ...young];
   }
@@ -356,12 +501,13 @@ const HATCHLINGS = [
   { id: "Triceratops", label: "Tops", at: 10 },
 ] as const;
 
-// The Cube World cast — pick your blocky runner.
-const CUBE_CHARACTERS = [
-  { id: "Character_Male_1", label: "Max" },
-  { id: "Character_Female_1", label: "Mia" },
-  { id: "Character_Male_2", label: "Leo" },
-  { id: "Character_Female_2", label: "Ivy" },
+// The Hero Trail cast — pick your adventurer.
+const HERO_CHARACTERS = [
+  { id: "Knight", label: "Knight" },
+  { id: "Mage", label: "Wizard" },
+  { id: "Ranger", label: "Archer" },
+  { id: "Rogue", label: "Scout" },
+  { id: "Barbarian", label: "Mighty" },
 ] as const;
 
 function peekNextLandName(): string {
@@ -444,8 +590,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [maxCombo, setMaxCombo] = useState(1);
   const [words, setWords] = useState(0);
   const [say, setSay] = useState(() =>
-    fillSay(pickSay(SAYS.start), {
-      name: loadPrefs().name || "Your dino",
+    fillSay(pickSay(saysOf(loadPrefs().world).start), {
+      name:
+        loadPrefs().name ||
+        (loadPrefs().world === "hero" ? "Your hero" : "Your dino"),
     }),
   );
   const [growNonce, setGrowNonce] = useState(0);
@@ -579,17 +727,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     prevLettersRef.current = letters;
   }, [included, lessonKeys]);
 
-  const dinoName = () => prefsRef.current.name || "Your dino";
-  // The dino's current age (0 baby → 1 adult), kept fresh for the say-lines.
+  const dinoName = () =>
+    prefsRef.current.name ||
+    (prefsRef.current.world === "hero" ? "Your hero" : "Your dino");
+  // The runner's current growth (0 → 1), kept fresh for the say-lines.
   const dinoAgeRef = useRef(0);
   dinoAgeRef.current = dinoAgeOf(included, lesson.letters.length);
 
   const speak = (key: keyof typeof SAYS, vars: Record<string, string> = {}) => {
     const age = dinoAgeRef.current;
+    const world = prefsRef.current.world;
     setSay(
-      fillSay(pickSay(agedPool(key, age)), {
+      fillSay(pickSay(agedPool(saysOf(world), key, age)), {
         name: dinoName(),
-        stage: dinoStage(age),
+        stage: (world === "hero" ? heroStage : dinoStage)(age),
         ...vars,
       }),
     );
@@ -663,11 +814,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       return;
     }
     // Same engine, different theme: the toggle picks the dino world or the
-    // cube world, each with its own cast, companions and biomes.
-    const theme = prefsRef.current.world === "cube" ? CUBE_THEME : DINO_THEME;
+    // hero world, each with its own cast, companions and biomes.
+    const theme = prefsRef.current.world === "hero" ? HERO_THEME : DINO_THEME;
     const chosen =
-      prefsRef.current.world === "cube"
-        ? prefsRef.current.cube
+      prefsRef.current.world === "hero"
+        ? prefsRef.current.hero
         : prefsRef.current.dino;
     const world = createKidsWorld(canvas, pickLand(theme.lands), theme);
     worldRef.current = world;
@@ -837,7 +988,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           }
         }
         if (cheers && Math.random() < cfg.cheerChance) {
-          setSay(fillSay(pickSay(cheerPool(band)), { name: dinoName() }));
+          setSay(
+            fillSay(pickSay(cheerPool(saysOf(prefsRef.current.world), band)), {
+              name: dinoName(),
+            }),
+          );
         }
         if (textInput.completed) {
           setScore((s) => saveBest(s + 10));
@@ -1084,9 +1239,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               <SproutIcon />
             </span>
             <div>
-              <div className={styles.chipLab}>{prefs.world === "cube" ? "Hero stage" : "Dino stage"}</div>
+              <div className={styles.chipLab}>{prefs.world === "hero" ? "Hero level" : "Dino stage"}</div>
               <div className={styles.chipVal}>
-                {dinoStage(dinoAgeOf(included, lesson.letters.length))}
+                {(prefs.world === "hero" ? heroStage : dinoStage)(dinoAgeOf(included, lesson.letters.length))}
               </div>
             </div>
           </div>
@@ -1248,12 +1403,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 </div>
               </div>
               <div className={styles.fstat}>
-                <div className={styles.sd}>{prefs.world === "cube" ? "Hero stage" : "Dino stage"}</div>
+                <div className={styles.sd}>{prefs.world === "hero" ? "Hero level" : "Dino stage"}</div>
                 <div
                   className={styles.fstatVal}
                   style={{ color: "var(--leaf-d)" }}
                 >
-                  {dinoStage(dinoAgeOf(included, lesson.letters.length))}
+                  {(prefs.world === "hero" ? heroStage : dinoStage)(dinoAgeOf(included, lesson.letters.length))}
                 </div>
               </div>
             </div>
@@ -1558,10 +1713,10 @@ function SettingsCard({
             </button>
             <button
               type="button"
-              className={pill(prefs.world === "cube")}
-              onClick={() => savePrefs({ world: "cube" })}
+              className={pill(prefs.world === "hero")}
+              onClick={() => savePrefs({ world: "hero" })}
             >
-              Cube World
+              Hero Trail
             </button>
           </div>
         </div>
@@ -1576,14 +1731,14 @@ function SettingsCard({
             <div className={styles.sd}>who runs with you</div>
           </div>
           <div className={styles.ctl}>
-            {prefs.world === "cube" ? (
+            {prefs.world === "hero" ? (
               <>
-                {CUBE_CHARACTERS.map(({ id, label }) => (
+                {HERO_CHARACTERS.map(({ id, label }) => (
                   <button
                     key={id}
                     type="button"
-                    className={pill(prefs.cube === id)}
-                    onClick={() => savePrefs({ cube: id })}
+                    className={pill(prefs.hero === id)}
+                    onClick={() => savePrefs({ hero: id })}
                   >
                     {label}
                   </button>
