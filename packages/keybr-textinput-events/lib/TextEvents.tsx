@@ -54,7 +54,10 @@ function useInputHandler() {
 
 const divStyle = {
   position: "absolute",
-  insetInlineStart: "0px",
+  // Parked far off-screen: macOS draws its native Caps Lock badge at the
+  // focused field's position, and our on-screen keyboard already shows the
+  // caps state — keep the OS badge out of the viewport.
+  insetInlineStart: "-9999px",
   insetBlockStart: "0px",
   inlineSize: "0px",
   blockSize: "0px",

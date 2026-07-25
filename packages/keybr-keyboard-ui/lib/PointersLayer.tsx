@@ -6,7 +6,14 @@ import {
 } from "@keybr/keyboard";
 import { Tasks } from "@keybr/lang";
 import { type CodePoint } from "@keybr/unicode";
-import { memo, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  memo,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import * as styles from "./PointersLayer.module.less";
 import { keyGap, keySize, Surface } from "./shapes.tsx";
 
@@ -67,14 +74,7 @@ function pointers(
   while (combo != null) {
     const shape = keyboard.getShape(combo.id);
     if (shape != null) {
-      children.unshift(
-        pointer(
-          shape,
-          main && helpLevel >= 2
-            ? `${styles.pointer} ${styles.urgent}`
-            : styles.pointer,
-        ),
-      );
+      children.unshift(cometPointer(shape, main && helpLevel >= 2));
       main = false;
       if (combo.modifier.shift) {
         const l = keyboard.getShape("ShiftLeft");
@@ -118,11 +118,78 @@ function pointers(
   return children;
 }
 
+/**
+ * The comet cue: a spark of light travelling around the keycap's border on a
+ * faint rail, with a fading trail behind it. Three rects share one rounded
+ * geometry; the dash pattern and an animated dash offset make the light move.
+ */
+function cometPointer(shape: KeyShape | null, urgent: boolean): ReactNode {
+  if (shape == null) {
+    return null;
+  }
+  const x = shape.x * keySize + 1;
+  const y = shape.y * keySize + 1;
+  const w = shape.w * keySize - keyGap - 2;
+  const h = shape.h * keySize - keyGap - 2;
+  const r = 7;
+  // Rounded-rect perimeter: the straight stretches plus the corner arcs.
+  const perimeter = 2 * (w + h) - 8 * r + 2 * Math.PI * r;
+  const rect = { x, y, width: w, height: h, rx: r, ry: r };
+  return (
+    <g
+      className={urgent ? `${styles.comet} ${styles.urgent}` : styles.comet}
+      style={{ "--comet-perimeter": perimeter } as CSSProperties}
+    >
+      <rect className={styles.rail} {...rect} />
+      {/* The tail: stacked dashes whose LEADING edges all align at the head
+          (each layer's dash offset is shifted by its own length), fading in
+          opacity the further they trail behind — a smooth gradient comet
+          rather than a hard-edged snake. */}
+      {[
+        [0.32, 0.08],
+        [0.27, 0.16],
+        [0.22, 0.26],
+        [0.17, 0.4],
+        [0.12, 0.58],
+        [0.07, 0.8],
+      ].map(([frac, opacity], i) => {
+        const len = perimeter * frac;
+        return (
+          <rect
+            key={i}
+            className={styles.tail}
+            {...rect}
+            strokeDasharray={`${len} ${perimeter - len}`}
+            strokeOpacity={opacity}
+            style={{ "--dash-shift": `${len}px` } as CSSProperties}
+          />
+        );
+      })}
+      <rect
+        className={styles.spark}
+        {...rect}
+        strokeDasharray={`${perimeter * 0.035} ${perimeter * 0.965}`}
+        style={
+          { "--dash-shift": `${perimeter * 0.035}px` } as CSSProperties
+        }
+      />
+      <animate
+        attributeName="opacity"
+        from={0}
+        to={1}
+        dur="0.3s"
+        repeatCount="1"
+        restart="always"
+      />
+    </g>
+  );
+}
+
 function pointer(shape: KeyShape | null, className: string): ReactNode {
   if (shape == null) {
     return null;
   }
-  // A rounded ring hugging the keycap, like the mockup's glowing next key.
+  // A rounded ring hugging the keycap (used for modifier hints).
   const x = shape.x * keySize;
   const y = shape.y * keySize;
   const w = shape.w * keySize - keyGap;

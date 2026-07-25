@@ -59,7 +59,8 @@ test("without modifiers", (ctx) => {
     ctx.mock.timers.runAll();
   });
 
-  equal(r.container.querySelectorAll("rect").length, 1);
+  // the comet cue draws eight rects per key: rail, six tail layers, spark
+  equal(r.container.querySelectorAll("rect").length, 8);
 
   r.unmount();
 });
@@ -79,7 +80,8 @@ test("with modifiers", (ctx) => {
     ctx.mock.timers.runAll();
   });
 
-  equal(r.container.querySelectorAll("rect").length, 2);
+  // eight comet rects for the key, plus one ring on the shift modifier
+  equal(r.container.querySelectorAll("rect").length, 9);
 
   r.unmount();
 });

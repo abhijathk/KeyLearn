@@ -12,6 +12,7 @@ import {
   ZonesLayer,
 } from "@keybr/keyboard-ui";
 import { useSettings } from "@keybr/settings";
+import { ModifierState } from "@keybr/textinput-events";
 import { type CodePoint } from "@keybr/unicode";
 import { withDeferred } from "@keybr/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
@@ -40,6 +41,28 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
     readonly codePoint: number;
     readonly at: number;
   } | null>(null);
+  // Track Caps Lock reactively — reading the global on render alone leaves
+  // the board stale until the next unrelated re-render.
+  const [capsLock, setCapsLock] = useState(false);
+  useEffect(() => {
+    const sync = () => {
+      setCapsLock(ModifierState.capsLock);
+    };
+    window.addEventListener("keydown", sync);
+    window.addEventListener("keyup", sync);
+    return () => {
+      window.removeEventListener("keydown", sync);
+      window.removeEventListener("keyup", sync);
+    };
+  }, []);
+  const shift =
+    depressedKeys.includes("ShiftLeft") || depressedKeys.includes("ShiftRight");
+  // Shift or Caps Lock flips the glyphs to capitals (XOR, like the real
+  // board); the latched Caps Lock key also lights up.
+  const upper = capsLock !== shift;
+  const effectiveToggledKeys = capsLock
+    ? [...new Set([...toggledKeys, "CapsLock"])]
+    : toggledKeys.filter((id) => id !== "CapsLock");
   const [helpLevel, setHelpLevel] = useState(0);
   useEffect(() => {
     const onHelp = (ev: Event) => {
@@ -75,12 +98,13 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
     return undefined;
   }, [wrongKey]);
   return (
-    <VirtualKeyboard keyboard={keyboard} height="19rem">
-      <KeyLayer
-        depressedKeys={depressedKeys}
-        toggledKeys={toggledKeys}
-        showColors={colors}
-      />
+    <div style={{ display: "contents" }} data-kbd-upper={upper}>
+      <VirtualKeyboard keyboard={keyboard} height="19rem">
+        <KeyLayer
+          depressedKeys={depressedKeys}
+          toggledKeys={effectiveToggledKeys}
+          showColors={colors}
+        />
       <MasteryLayer keys={masteryKeys} depressedKeys={depressedKeys} />
       {wrongKey != null && (
         <WrongKeyLayer
@@ -104,8 +128,9 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
       {focus && lastLesson && (
         <TransitionsLayer histogram={lastLesson.hits2} modifier="h" />
       )}
-      {focus || <ZonesLayer />}
-    </VirtualKeyboard>
+        {focus || <ZonesLayer />}
+      </VirtualKeyboard>
+    </div>
   );
 });
 

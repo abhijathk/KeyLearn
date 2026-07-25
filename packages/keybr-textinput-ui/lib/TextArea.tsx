@@ -2,7 +2,6 @@ import { type LineList, type TextDisplaySettings } from "@keybr/textinput";
 import {
   type IInputEvent,
   type IKeyboardEvent,
-  ModifierState,
   TextEvents,
 } from "@keybr/textinput-events";
 import {
@@ -83,15 +82,6 @@ export function TextArea({
       setElementCursor(element, "default");
     }
   });
-  // Track Caps Lock reactively so the warning clears the instant it's turned
-  // off — reading the global on render alone leaves it stale until the next
-  // unrelated re-render.
-  const [capsLock, setCapsLock] = useState(false);
-  const syncCapsLock = () => {
-    setCapsLock(ModifierState.capsLock);
-  };
-  useWindowEvent("keydown", syncCapsLock);
-  useWindowEvent("keyup", syncCapsLock);
   useHotkeys({
     ["Enter"]: () => {
       innerRef.current?.focus();
@@ -139,16 +129,8 @@ export function TextArea({
         focus={demo || focus}
         colorOf={colorOf}
       />
-      {!demo && focus && capsLock && (
-        <div className={styles.messageArea}>
-          <div className={styles.messageText}>
-            <FormattedMessage
-              id="t_Caps_Lock_is_on"
-              defaultMessage="Heads up, Caps Lock is on"
-            />
-          </div>
-        </div>
-      )}
+      {/* No Caps Lock banner: the on-screen keyboard reports the state
+          itself — capital keycaps and a lit Caps Lock key. */}
       {demo || focus || hideStartHint || (
         <div className={styles.messageArea}>
           <div className={styles.messageText}>
