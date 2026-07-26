@@ -89,6 +89,8 @@ type Prefs = {
   /** Scene look: brightness (~0.7–1.3) and paleness (0 = full colour, 1 = pale). */
   brightness: number;
   paleness: number;
+  /** Ambient character motion: 1 = full liveliness, 0 = characters hold still. */
+  motion: number;
 };
 
 // Kids defaults: light mode, quiet sounds, a silent session, and the text
@@ -114,6 +116,7 @@ function defaultPrefs(): Prefs {
     night: false,
     brightness: 1,
     paleness: 0,
+    motion: 1,
   };
 }
 
@@ -686,10 +689,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   useEffect(() => {
     kidsAudio.setTheme(prefs.world === "hero" ? "hero" : "dino");
   }, [prefs.world]);
-  // Live brightness/paleness slider — apply to the running scene at once.
+  // Live brightness/paleness/motion sliders — apply to the running scene now.
   useEffect(() => {
     worldRef.current?.setLook(prefs.brightness, prefs.paleness);
   }, [prefs.brightness, prefs.paleness]);
+  useEffect(() => {
+    worldRef.current?.setMotion(prefs.motion);
+  }, [prefs.motion]);
   // Reflect the real keyboard's Caps/Shift/Tab/Enter/Backspace on the on-screen
   // full board (a separate listener so it never touches the typing hot path).
   useEffect(() => {
@@ -882,6 +888,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           world.setNight(true);
         }
         world.setLook(prefsRef.current.brightness, prefsRef.current.paleness);
+        world.setMotion(prefsRef.current.motion);
         // The runner carries its age (baby → adult, size and all) across
         // rebuilds and character swaps.
         world.setAge(dinoAgeOf(included, lesson.letters.length));
@@ -1778,6 +1785,7 @@ function SettingsCard({
   readonly onClose: () => void;
 }) {
   const pill = (on: boolean) => clsx(styles.pill, on && styles.pillOn);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
@@ -1922,53 +1930,6 @@ function SettingsCard({
           </div>
         </div>
         <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--sky)" }}>
-            <SunIcon size={20} color="#3d6b8a" />
-          </span>
-          <div>
-            <div className={styles.sl}>Brightness</div>
-            <div className={styles.sd}>how bright the world looks</div>
-          </div>
-          <div className={styles.ctl}>
-            <input
-              type="range"
-              className={styles.slider}
-              min={0.75}
-              max={1.25}
-              step={0.01}
-              value={prefs.brightness}
-              aria-label="Brightness"
-              onChange={(e) =>
-                savePrefs({ brightness: Number(e.target.value) })
-              }
-            />
-          </div>
-        </div>
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--seafoam)" }}>
-            <span className={styles.swatch} />
-          </span>
-          <div>
-            <div className={styles.sl}>Colour</div>
-            <div className={styles.sd}>soft and pale, or bright and bold</div>
-          </div>
-          <div className={styles.ctl}>
-            <input
-              type="range"
-              className={styles.slider}
-              min={0}
-              max={1}
-              step={0.02}
-              // Slider reads left = pale, right = full colour, so invert.
-              value={1 - prefs.paleness}
-              aria-label="Colour"
-              onChange={(e) =>
-                savePrefs({ paleness: 1 - Number(e.target.value) })
-              }
-            />
-          </div>
-        </div>
-        <div className={styles.srow}>
           <span className={styles.ri} style={{ background: "var(--rose)" }}>
             <HandIcon />
           </span>
@@ -2071,6 +2032,96 @@ function SettingsCard({
             </button>
           </div>
         </div>
+        <button
+          type="button"
+          className={clsx(styles.advToggle, advancedOpen && styles.advOpen)}
+          onClick={() => setAdvancedOpen((v) => !v)}
+          aria-expanded={advancedOpen}
+        >
+          <span className={styles.advLabel}>Advanced settings</span>
+          <span className={styles.advChevron} aria-hidden="true">
+            ▾
+          </span>
+        </button>
+        {advancedOpen && (
+          <div className={styles.advPanel}>
+            <div className={styles.srow}>
+              <span className={styles.ri} style={{ background: "var(--sky)" }}>
+                <SunIcon size={20} color="#3d6b8a" />
+              </span>
+              <div>
+                <div className={styles.sl}>Brightness</div>
+                <div className={styles.sd}>how bright the world looks</div>
+              </div>
+              <div className={styles.ctl}>
+                <input
+                  type="range"
+                  className={styles.slider}
+                  min={0.75}
+                  max={1.25}
+                  step={0.01}
+                  value={prefs.brightness}
+                  aria-label="Brightness"
+                  onChange={(e) =>
+                    savePrefs({ brightness: Number(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
+            <div className={styles.srow}>
+              <span
+                className={styles.ri}
+                style={{ background: "var(--seafoam)" }}
+              >
+                <span className={styles.swatch} />
+              </span>
+              <div>
+                <div className={styles.sl}>Colour</div>
+                <div className={styles.sd}>soft and pale, or bright and bold</div>
+              </div>
+              <div className={styles.ctl}>
+                <input
+                  type="range"
+                  className={styles.slider}
+                  min={0}
+                  max={1}
+                  step={0.02}
+                  // Slider reads left = pale, right = full colour, so invert.
+                  value={1 - prefs.paleness}
+                  aria-label="Colour"
+                  onChange={(e) =>
+                    savePrefs({ paleness: 1 - Number(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
+            <div className={styles.srow}>
+              <span className={styles.ri} style={{ background: "var(--sage)" }}>
+                <PawIcon size={20} color="#4a6b3a" />
+              </span>
+              <div>
+                <div className={styles.sl}>Movement</div>
+                <div className={styles.sd}>
+                  how lively the animals and heroes are
+                </div>
+              </div>
+              <div className={styles.ctl}>
+                <input
+                  type="range"
+                  className={styles.slider}
+                  min={0}
+                  max={1}
+                  step={0.02}
+                  value={prefs.motion}
+                  aria-label="Movement"
+                  onChange={(e) =>
+                    savePrefs({ motion: Number(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        )}
         <button type="button" className={styles.cta} onClick={onClose}>
           Back to the run!
         </button>

@@ -367,6 +367,9 @@ export type KidsWorld = {
   /** Live look control: `brightness` (~0.7–1.3) scales brightness, `paleness`
    * (0 = full colour, 1 = very pale) desaturates the whole scene. */
   setLook(brightness: number, paleness: number): void;
+  /** Ambient motion intensity for all companions/sheep: 1 = full liveliness,
+   * 0 = they hold still (a calmer, less busy scene). */
+  setMotion(intensity: number): void;
   resize(): void;
   dispose(): void;
 };
@@ -785,6 +788,7 @@ export function createKidsWorld(
   let playerGhostly = false; // skeleton hero: floats and glides like a ghost
   let stumbleT = 0;
   let pointerHitT = 0; // brief red flash on the hero pointer after a wrong key
+  let motionScale = 1; // 0 = characters hold still, 1 = full liveliness
   let beckonT = 0;
   let wasAirborne = false;
   let roarT = 0;
@@ -1335,7 +1339,9 @@ export function createKidsWorld(
     const heroX = player ? player.wrap.position.x : 0;
     const heroZ = player ? player.wrap.position.z : 0;
     for (const f of friends) {
-      f.mixer.update(dt);
+      // The "reduce movement" slider slows every companion's animation (and,
+      // below, their wandering) — right down to stillness at 0.
+      f.mixer.update(dt * motionScale);
       const ud = f.wrap.userData as {
         homeY?: number;
         homeX?: number;
@@ -1392,11 +1398,11 @@ export function createKidsWorld(
             ud.state = "graze";
             ud.stateT = 2 + Math.random() * 3.5;
           } else {
-            const step = Math.min(dist, 1.9 * dt); // brisk amble ~1.9 units/s
+            const step = Math.min(dist, 1.9 * dt * motionScale); // ~1.9 u/s
             const nx = f.wrap.position.x + (dx / dist) * step;
             const nz = f.wrap.position.z + (dz / dist) * step;
             // A clear gait bounce so the walk reads as stepping, not gliding.
-            const bob = Math.abs(Math.sin(t * 10 + ph)) * 0.1;
+            const bob = Math.abs(Math.sin(t * 10 + ph)) * 0.1 * motionScale;
             f.wrap.position.set(nx, terrainY(nx, nz) - 0.06 + bob, nz);
             const face = Math.atan2(dx, dz);
             let d = face - f.wrap.rotation.y;
@@ -1441,7 +1447,7 @@ export function createKidsWorld(
           f.mixer.timeScale = 1;
           const gz = ud.homeZ ?? f.wrap.position.z;
           const t = clock.elapsedTime * 0.5 + (ud.phase ?? 0);
-          const px = ud.homeX + Math.sin(t) * 3;
+          const px = ud.homeX + Math.sin(t) * 3 * motionScale;
           f.wrap.position.set(px, terrainY(px, gz), gz);
           const faceTarget = Math.cos(t) >= 0 ? Math.PI / 2 : -Math.PI / 2;
           let d = faceTarget - f.wrap.rotation.y;
@@ -1592,6 +1598,9 @@ export function createKidsWorld(
       userBright = brightness;
       userPale = paleness;
       applyLook();
+    },
+    setMotion(intensity) {
+      motionScale = Math.max(0, Math.min(1, intensity));
     },
     resize,
     dispose() {
