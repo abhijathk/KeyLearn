@@ -480,173 +480,262 @@ export function PrivacyPolicyPage() {
   );
 }
 
+
 // ── User guide ─────────────────────────────────────────────────────────────
 
+function Anchor({ children }: { readonly children: ReactNode }) {
+  return <li>{children}</li>;
+}
+
 export function GuidePage() {
-  const { formatMessage } = useIntl();
   return (
     <div className={styles.paper}>
       <Masthead
-        kicker={formatMessage({
-          id: "guide.kicker",
-          defaultMessage: "Everything in one place",
-        })}
-        title={formatMessage({
-          id: "guide.title",
-          defaultMessage: "User Guide",
-        })}
-        dateline={formatMessage({
-          id: "guide.dateline",
-          defaultMessage: "How KeyLearn works, start to finish",
-        })}
+        kicker="Everything you can do"
+        title="User Guide"
+        dateline="The complete guide to KeyLearn — from your first visit to signing out"
       />
 
       <div className={styles.glance}>
-        <div className={styles.glanceLab}>
-          <FormattedMessage id="guide.glance.label" defaultMessage="In short" />
-        </div>
+        <div className={styles.glanceLab}>What is inside</div>
         <ul>
-          <li>
-            <FormattedMessage
-              id="guide.glance.1"
-              defaultMessage="Practice a few minutes most days — KeyLearn adapts to you, so steady beats long."
-            />
-          </li>
-          <li>
-            <FormattedMessage
-              id="guide.glance.2"
-              defaultMessage="Give each person in the house their own profile; kids get their own playful world."
-            />
-          </li>
-          <li>
-            <FormattedMessage
-              id="guide.glance.3"
-              defaultMessage="Aim for accuracy first — speed follows on its own."
-            />
-          </li>
+          <Anchor>Getting in — with or without an account, and passwords.</Anchor>
+          <Anchor>Profiles for the whole household.</Anchor>
+          <Anchor>Practising: the screen, the lessons, the tools.</Anchor>
+          <Anchor>Choosing what you type, and the smart helpers.</Anchor>
+          <Anchor>Your keyboard, your progress, your data.</Anchor>
+          <Anchor>Kids mode, other practice modes, and making it yours.</Anchor>
         </ul>
       </div>
 
-      <Sect>
-        <FormattedMessage id="guide.start.h" defaultMessage="Getting started" />
-      </Sect>
+      <Sect>Do I need an account?</Sect>
       <p>
-        <FormattedMessage
-          id="guide.start.p"
-          defaultMessage="Just start typing on the practice screen. KeyLearn is <em>adaptive</em>: it begins with a small handful of letters and only adds a new one once you can type the current ones both quickly and accurately. That growing set is your journey — the difficulty rises exactly as fast as you do, never faster. Short, regular sessions work far better than the occasional long one."
-          values={{ em }}
-        />
+        No. You can start typing the moment you arrive, and your progress is
+        saved right here on this device. Create a free account only if you want
+        your history to follow you to other devices, keep a backup, or share a
+        profile link. Nothing useful is locked behind signing in.
       </p>
 
-      <Sect>
-        <FormattedMessage
-          id="guide.screen.h"
-          defaultMessage="Reading the practice screen"
-        />
-      </Sect>
+      <Sect>Signing up, logging in, and passwords</Sect>
       <p>
-        <FormattedMessage
-          id="guide.screen.p"
-          defaultMessage="The word line floats just above the on-screen keyboard. A glowing comet points to the key to press next, and the keys are tinted by finger zone so you learn which finger reaches where; the faint resting-hands guide shows where your fingers live between presses. The golden rule: keep your eyes on the words, not your hands."
-        />
+        Everything lives in the menu at the top-right. Choose <em>Register</em>{" "}
+        to make an account with an email and a password, or <em>Log In</em> if
+        you already have one. Forgotten your password? On the Log In screen pick
+        Forgot Password and we will email a reset link — open it and choose a new
+        one. You can log out from the menu at any time; your history stays put.
       </p>
 
-      <Sect>
-        <FormattedMessage
-          id="guide.profiles.h"
-          defaultMessage="Profiles and your household"
-        />
-      </Sect>
+      <Sect>Profiles for the whole household</Sect>
       <p>
-        <FormattedMessage
-          id="guide.profiles.p1"
-          defaultMessage="KeyLearn is built for the whole house. Each person gets their own profile — a grown-up or a kid — and each profile keeps its own separate history right here on this device. Nothing is mixed together."
-        />
+        KeyLearn is built like a household: one account holds up to four profiles
+        (eight with premium), grown-ups and children in any mix. Each profile
+        keeps its <em>own</em> separate progress on this device — nothing is ever
+        mixed together.
       </p>
       <p>
-        <FormattedMessage
-          id="guide.profiles.p2"
-          defaultMessage="To set one up, open the menu (top-right) and choose Account, then add a profile with a name and — for a child — a birth year. That birth year picks the right kids age band, which tunes the words, pacing and help to their age. Switch between learners any time from the menu; the app remembers where each one left off."
-        />
+        To add one, open the menu and choose Account (or “Set up profiles”), then
+        Add a profile. Give a first name, mark it as a Grown-up or a Kid, and pick
+        an avatar — a friendly icon, or a Photo from your device. For a child, add
+        a birth year; it is the only date we keep, and it simply tunes the words,
+        pacing and help to their age. You can edit or delete any profile later,
+        and deleting one frees a slot for another.
       </p>
-
-      <Sect>
-        <FormattedMessage id="guide.kids.h" defaultMessage="Kids mode" />
-      </Sect>
       <p>
-        <FormattedMessage
-          id="guide.kids.p"
-          defaultMessage="Children practise on a playful trail — Dino Run or Hero Trail — where every correct key walks their character a step closer home. Tap the gear to open the toy-box: pick the world and character, turn sounds on, choose a simple, full or hidden keyboard, show the letters right on the trail, and — under Advanced — dial the brightness, colour and how lively the world is. The youngest see big, friendly letters and forgiving pacing automatically."
-        />
+        To switch learner, open the menu and tap a face under Learners, or use the
+        “Who is practising” switch — the app remembers exactly where each person
+        left off. Kid profiles get a simplified, locked-down menu, and grown-up
+        actions sit behind a quick “what is A times B?” maths gate, so little ones
+        cannot wander into the settings.
       </p>
 
-      <Sect>
-        <FormattedMessage
-          id="guide.progress.h"
-          defaultMessage="Tracking your progress"
-        />
-      </Sect>
+      <Sect>The practice screen</Sect>
       <p>
-        <FormattedMessage
-          id="guide.progress.p"
-          defaultMessage="Your Profile page tells the whole story: Lifetime and Today stats up top, a map of every letter you have unlocked, how each individual key has sped up, and the key-pairs still holding you back. It is honest, not harsh — the point is to see steady progress. Clearing statistics resets only the profile you are looking at."
-        />
+        Just start typing. The word you need floats just above the on-screen
+        keyboard; a glowing comet points to the very next key; the keys are
+        tinted by finger zone so you learn which finger reaches where; and a faint
+        pair of resting hands shows where your fingers live between presses. The
+        whole skill is one habit: keep your eyes on the words, not your hands.
       </p>
 
-      <Sect>
-        <FormattedMessage id="guide.yours.h" defaultMessage="Make it yours" />
-      </Sect>
+      <Sect>How lessons grow — your journey</Sect>
       <p>
-        <FormattedMessage
-          id="guide.yours.p"
-          defaultMessage="From the menu you can switch the theme (light, dark or the KeyLearn look), change the site language, and choose your keyboard layout. On the practice screen, the small tools let you resize the text, restart or skip a lesson, hide the keyboard, and open a guided tour."
-        />
+        KeyLearn is <em>adaptive</em>. It measures how quickly and cleanly you hit
+        each key and only adds a new letter to your set once you can type the
+        current ones both fast and accurately. That growing set is your journey,
+        from a handful of letters to the whole alphabet — the difficulty rises
+        exactly as fast as you do, never faster, so you are always working right
+        at your edge.
       </p>
 
-      <Sect>
-        <FormattedMessage
-          id="guide.privacy.h"
-          defaultMessage="Account and privacy"
-        />
-      </Sect>
+      <Sect>The live readout</Sect>
       <p>
-        <FormattedMessage
-          id="guide.privacy.p"
-          defaultMessage="You can use KeyLearn entirely on this device without an account. Sign in only if you want your history to sync across devices or to share a profile link. Either way there are no ads and no trackers, and your data stays yours."
-        />
+        As you type, the floating panel shows your current speed and accuracy, a
+        little sparkline of recent runs, your goal tracks and your streak. It is
+        there to encourage you, not to nag.
       </p>
 
-      <Sect>
-        <FormattedMessage
-          id="guide.tips.h"
-          defaultMessage="Tips that actually help"
-        />
-      </Sect>
+      <Sect>Practice tools</Sect>
+      <p>
+        The small tools beside the text let you open a guided tour, restart the
+        current lesson (Ctrl + Left), skip to the next one (Ctrl + Right), show or
+        hide the on-screen keyboard, and resize the practice text. The gear opens
+        the full Settings, described next.
+      </p>
+
+      <Sect>Choosing what you type</Sect>
+      <p>
+        Open Settings and go to Practice Content to choose how your words are
+        made:
+      </p>
       <ul className={styles.tips}>
         <li>
-          <FormattedMessage
-            id="guide.tips.1"
-            defaultMessage="Accuracy before speed — clean typing is what sticks."
-          />
+          <em>Guided practice</em> — the adaptive default that grows your
+          alphabet key by key.
         </li>
         <li>
-          <FormattedMessage
-            id="guide.tips.2"
-            defaultMessage="Fix mistakes calmly; don't race to catch up."
-          />
+          <em>Classic course</em> — a fixed, ordered march through the keys.
         </li>
         <li>
-          <FormattedMessage
-            id="guide.tips.3"
-            defaultMessage="Rest your fingers on the home row (F and J have little bumps)."
-          />
+          <em>Frequent words</em> — the most common words in your language.
         </li>
         <li>
-          <FormattedMessage
-            id="guide.tips.4"
-            defaultMessage="A few minutes every day beats an hour once a week."
-          />
+          <em>Book Text</em> — type your way through real books built into the
+          app.
         </li>
+        <li>
+          <em>Your Own Text</em> — paste anything you like and practise on it.
+        </li>
+        <li>
+          <em>Code Snippets</em> — brackets, symbols and the rhythm of code.
+        </li>
+        <li>
+          <em>Number Drills</em> — the number row and the keypad.
+        </li>
+      </ul>
+      <p>
+        The same screen lets you set the size of your alphabet, a target speed, how
+        long each lesson runs, and a daily goal to aim for.
+      </p>
+
+      <Sect>Smart Practice helpers</Sect>
+      <p>
+        Under Settings, Smart Practice adds gentle helpers on top of guided
+        practice: a bottleneck drill that hunts down your slowest key-pairs,
+        spaced repetition, skill-decay refreshers that revisit rusty keys, smart
+        confidence, and key recovery. They are all on by default — switch any of
+        them off if you would rather keep things classic.
+      </p>
+
+      <Sect>Setting up your keyboard</Sect>
+      <p>
+        Settings, Keyboard Setup is where you pick your language and keyboard
+        layout — QWERTY, Dvorak, Colemak and many more. Turn on layout emulation
+        to practise a layout even when your computer is set to a different one,
+        choose the keyboard shape, colour the keys by finger zone, and spotlight
+        the next key while you are still learning where things are. A live preview
+        shows every change as you make it.
+      </p>
+
+      <Sect>Display and feel</Sect>
+      <p>
+        The Display and Text Input settings let you show your speed as words- or
+        characters-per-minute and fine-tune how typing feels. Restore Defaults is
+        always a click away if you want to start fresh.
+      </p>
+
+      <Sect>Your progress — the Profile page</Sect>
+      <p>
+        Open Profile from the menu to see your full record: Lifetime and Today
+        stats up top (time practised, lessons done, your best and typical speed
+        and accuracy, and how today compares); a map of every letter you have
+        unlocked; the story of how each individual key has sped up, with a
+        smoothing slider; the big picture of every key over time; and the slowest
+        transitions still holding you back. Filter the whole page by Letters,
+        Digits, Punctuation or Symbols. You can even race your own last run as a
+        ghost to feel the progress directly.
+      </p>
+
+      <Sect>Looking after your data</Sect>
+      <p>
+        Clearing statistics resets only the profile you are looking at, never the
+        others. You can download your data as a file at any time. Sign in if you
+        want your history to sync across devices and to share a public profile
+        link — and you can delete your data, or your whole account, whenever you
+        like.
+      </p>
+
+      <Sect>Kids mode</Sect>
+      <p>
+        Children practise on a playful trail — switch to Kids from the menu, or
+        pick a kid profile. Every correct key walks their character a step closer
+        home, and the character grows from a tiny baby into a fully-grown hero as
+        more letters unlock. A newly-learned key sets off a little celebration,
+        and each session ends at a cosy campfire.
+      </p>
+      <p>
+        There are two worlds to choose from — Dino Run, with a friendly dinosaur,
+        and Hero Trail, where a knight quests through a forest — and a character to
+        pick in each. Tap the gear to open the toy-box.
+      </p>
+
+      <Sect>The kids toy-box</Sect>
+      <p>
+        The toy-box gathers every kid setting in one friendly place: the world and
+        character, Big letters, Sounds, Helper hands (the glowing finger guide),
+        the Keyboard (hidden, simple, or the full grown-up board), Letters on the
+        trail (the words shown as blocks right in the game), a session Timer,
+        Cheers (encouraging little messages), and — tucked under Advanced —
+        sliders for Brightness, Colour and how lively the world feels. There is a
+        calm night look as well as the bright day one.
+      </p>
+
+      <Sect>Growing with your child</Sect>
+      <p>
+        KeyLearn quietly tunes itself to a child’s age. The youngest see big,
+        friendly letters, forgiving pacing, letter blocks right on the trail and
+        the gentlest help; older children graduate to longer words, the full
+        keyboard and a cleaner look. Just set the birth year on the profile and
+        the rest follows on its own.
+      </p>
+
+      <Sect>Other ways to practise</Sect>
+      <p>
+        Beyond your daily practice there is a <em>Speed Test</em> — a quick
+        one-off passage that reports your words-per-minute and accuracy with no
+        lesson attached; a <em>Layouts</em> explorer for comparing keyboard
+        layouts and their finger maps; <em>High Scores</em> to see how you stack
+        up; and <em>Multiplayer</em> races to push your speed against others in
+        real time. All of them live in the menu.
+      </p>
+
+      <Sect>Make it yours</Sect>
+      <p>
+        From the menu you can switch the theme — a clean light mode, a restful
+        dark mode, or the signature KeyLearn look — and change the site language
+        from a long list. On the practice screen you can resize the text and turn
+        sounds on or off whenever you please.
+      </p>
+
+      <Sect>Privacy, in a sentence</Sect>
+      <p>
+        No ads, and no trackers. A child’s profile never leaves your browser. Sign
+        in only if you want syncing or sharing; otherwise everything stays on this
+        device, and you are free to delete it at any time.
+      </p>
+
+      <Sect>Signing out</Sect>
+      <p>
+        Log out from the menu whenever you like. Your practice history stays
+        safely on this device — and on your account, if you made one — ready and
+        waiting for the next time you sit down to type.
+      </p>
+
+      <Sect>A few habits that really help</Sect>
+      <ul className={styles.tips}>
+        <li>Accuracy before speed — clean typing is what sticks.</li>
+        <li>Fix mistakes calmly; do not race to catch up.</li>
+        <li>Rest your fingers on the home row — F and J have little bumps.</li>
+        <li>A few minutes every day beats an hour once a week.</li>
       </ul>
 
       <div className={styles.foot}>keylearn · happy typing</div>
