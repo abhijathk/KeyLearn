@@ -1,13 +1,30 @@
 import { useTheme } from "@keybr/themes";
 import { IconButton, StrokeIcon } from "@keybr/widget";
-import { defineMessage, useIntl } from "react-intl";
 import * as styles from "./ThemeSwitcher.module.less";
 
-/** The single theme control in the header: toggles between night and day. */
+// The header theme control cycles through three modes: Auto (follow the
+// device's own light/dark setting, updating live with no refresh), Day, and
+// Night. Auto is the default for a fresh visit.
+const ORDER = ["auto", "keylearn-day", "keylearn"] as const;
+
+const LABEL: Record<(typeof ORDER)[number], string> = {
+  auto: "Auto — matches your device",
+  "keylearn-day": "Day",
+  keylearn: "Night",
+};
+
+const ICON = {
+  auto: "auto",
+  "keylearn-day": "sun",
+  keylearn: "moon",
+} as const;
+
 export function ThemeSwitcher() {
-  const { formatMessage } = useIntl();
   const { color, switchColor } = useTheme();
-  const night = color !== "keylearn-day";
+  const current = (ORDER as readonly string[]).includes(color)
+    ? (color as (typeof ORDER)[number])
+    : "keylearn";
+  const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
   return (
     <div
       className={styles.root}
@@ -18,15 +35,10 @@ export function ThemeSwitcher() {
       }}
     >
       <IconButton
-        icon={<StrokeIcon name="theme" />}
-        title={formatMessage(
-          defineMessage({
-            id: "theme.switchTheme.description",
-            defaultMessage: "Toggle light and dark mode.",
-          }),
-        )}
+        icon={<StrokeIcon name={ICON[current]} />}
+        title={`Theme: ${LABEL[current]}. Tap to switch — Auto, Day, Night.`}
         onClick={() => {
-          switchColor(night ? "keylearn-day" : "keylearn");
+          switchColor(next);
         }}
       />
     </div>
