@@ -318,75 +318,82 @@ function StatStrips({
   const speedDelta = today.count > 0 ? today.speed.avg - stats.speed.avg : 0;
   const accDelta =
     today.count > 0 ? today.accuracy.avg - stats.accuracy.avg : 0;
-  const strip = (
+  const cell = (
+    label: ReactNode,
+    value: ReactNode,
+    delta?: ReactNode,
+  ): ReactNode => (
+    <div className={styles.statCell}>
+      <span className={styles.statVal}>
+        {value}
+        {delta}
+      </span>
+      <span className={styles.statLab}>{label}</span>
+    </div>
+  );
+  const deltaChip = (d: number, fmt: (n: number) => string): ReactNode =>
+    d !== 0 ? (
+      <span className={clsx(styles.statDelta, d > 0 ? styles.up : styles.down)}>
+        {d > 0 ? "+" : "−"}
+        {fmt(Math.abs(d))}
+      </span>
+    ) : null;
+  const block = (
     label: ReactNode,
     s: SummaryStats,
-    deltas: boolean,
+    withDeltas: boolean,
   ): ReactNode => (
-    <div className={clsx(styles.whisper, deltas && styles.whisperTight)}>
-      <span className={clsx(styles.lab, styles.labAccent)}>{label}</span>
-      <span>
-        <span className={styles.lab}>
-          <FormattedMessage id="t_Time_spent" defaultMessage="Time spent" />
-        </span>
-        <b>{formatDuration(s.time)}</b>
-      </span>
-      <span>
-        <span className={styles.lab}>
-          <FormattedMessage id="t_Lessons_done" defaultMessage="Lessons done" />
-        </span>
-        <b>{formatNumber(s.count)}</b>
-      </span>
-      <span>
-        <span className={styles.lab}>
-          <FormattedMessage id="t_Top_speed" defaultMessage="Best speed" />
-        </span>
-        <b>{s.count > 0 ? formatSpeed(s.speed.max) : "—"}</b>
-      </span>
-      <span>
-        <span className={styles.lab}>
+    <section className={styles.statBlock}>
+      <div className={styles.statTitle}>{label}</div>
+      <div className={styles.statGrid}>
+        {cell(
+          <FormattedMessage id="t_Time_spent" defaultMessage="Time spent" />,
+          formatDuration(s.time),
+        )}
+        {cell(
+          <FormattedMessage
+            id="t_Lessons_done"
+            defaultMessage="Lessons done"
+          />,
+          formatNumber(s.count),
+        )}
+        {cell(
+          <FormattedMessage id="t_Top_speed" defaultMessage="Best speed" />,
+          s.count > 0 ? formatSpeed(s.speed.max) : "—",
+        )}
+        {cell(
           <FormattedMessage
             id="t_Average_speed"
             defaultMessage="Typical speed"
-          />
-        </span>
-        <b>{s.count > 0 ? formatSpeed(s.speed.avg) : "—"}</b>{" "}
-        {deltas && s.count > 0 && speedDelta !== 0 && (
-          <span className={speedDelta > 0 ? styles.up : styles.down}>
-            {speedDelta > 0 ? "+" : "−"}
-            {formatSpeed(Math.abs(speedDelta), { unit: false })}
-          </span>
+          />,
+          s.count > 0 ? formatSpeed(s.speed.avg) : "—",
+          withDeltas && s.count > 0
+            ? deltaChip(speedDelta, (n) => formatSpeed(n, { unit: false }))
+            : null,
         )}
-      </span>
-      <span>
-        <span className={styles.lab}>
+        {cell(
           <FormattedMessage
             id="t_Top_accuracy"
             defaultMessage="Best accuracy"
-          />
-        </span>
-        <b>{s.count > 0 ? formatPercents(s.accuracy.max) : "—"}</b>
-      </span>
-      <span>
-        <span className={styles.lab}>
+          />,
+          s.count > 0 ? formatPercents(s.accuracy.max) : "—",
+        )}
+        {cell(
           <FormattedMessage
             id="t_Average_accuracy"
             defaultMessage="Typical accuracy"
-          />
-        </span>
-        <b>{s.count > 0 ? formatPercents(s.accuracy.avg) : "—"}</b>{" "}
-        {deltas && s.count > 0 && accDelta !== 0 && (
-          <span className={accDelta > 0 ? styles.up : styles.down}>
-            {accDelta > 0 ? "+" : "−"}
-            {formatPercents(Math.abs(accDelta))}
-          </span>
+          />,
+          s.count > 0 ? formatPercents(s.accuracy.avg) : "—",
+          withDeltas && s.count > 0
+            ? deltaChip(accDelta, (n) => formatPercents(n))
+            : null,
         )}
-      </span>
-    </div>
+      </div>
+    </section>
   );
   return (
     <>
-      {strip(
+      {block(
         <FormattedMessage
           id="profile.overview.allTimeStats"
           defaultMessage="Lifetime Stats"
@@ -394,7 +401,7 @@ function StatStrips({
         stats,
         false,
       )}
-      {strip(
+      {block(
         <FormattedMessage
           id="profile.overview.todayStats"
           defaultMessage="Today's Stats"
