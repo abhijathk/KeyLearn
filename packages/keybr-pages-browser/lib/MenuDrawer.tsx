@@ -235,13 +235,6 @@ export function MenuDrawer({
               inert={kidLock}
             >
               <div className={styles.util}>
-                <RouterLink to={Pages.guide.path} onClick={onClose}>
-                  <StrokeIcon
-                    className={styles.utilIcon}
-                    name="presentation"
-                  />
-                  {formatMessage(Pages.guide.link.label)}
-                </RouterLink>
                 <RouterLink to={Pages.about.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="help" />
                   {formatMessage(Pages.about.link.label)}
@@ -274,6 +267,10 @@ export function MenuDrawer({
                     </RouterLink>
                   </>
                 )}
+                <RouterLink to={Pages.guide.path} onClick={onClose}>
+                  <StrokeIcon className={styles.utilIcon} name="doc" />
+                  {formatMessage(Pages.guide.link.label)}
+                </RouterLink>
                 <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="doc" />
                   {formatMessage(Pages.termsOfService.link.label)}
