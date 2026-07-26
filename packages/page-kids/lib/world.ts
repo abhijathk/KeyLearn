@@ -264,15 +264,13 @@ export const HERO_THEME: WorldTheme = {
   morphsBody: false,
   animationUrls: ["anims-move.glb", "anims-idle.glb"],
   lands: HERO_LANDS,
+  // A quieter trail — just a few fellow heroes spread out (the lone skeleton
+  // guard near the flag is added separately).
   herd: [
-    { model: "$friend", x: 6, z: -5, h: 3.2 },
-    { model: "Mage", x: 20, z: -7, h: 3.2 },
-    { model: "Rogue", x: 34, z: -9, h: 3.0 },
-    { model: "Barbarian", x: 44, z: -6, h: 3.4 },
-    { model: "$friend", x: 72, z: -7, h: 3.2 },
-    { model: "Ranger", x: 96, z: -5, h: 3.2 },
-    { model: "Rogue_Hooded", x: 122, z: -9, h: 3.0 },
-    { model: "Mage", x: 142, z: -6, h: 3.3 },
+    { model: "$friend", x: 10, z: -6, h: 3.2 },
+    { model: "Mage", x: 46, z: -8, h: 3.2 },
+    { model: "Ranger", x: 92, z: -6, h: 3.2 },
+    { model: "Rogue", x: 132, z: -8, h: 3.0 },
   ],
   // A lush tropical forest — a few big trees, lots of bushes, grass and rocks,
   // with the odd village building tucked into the treeline.
@@ -858,7 +856,9 @@ export function createKidsWorld(
   // Base pointer tints, and the angry red it flashes to on a wrong key.
   const RING_C = new THREE.Color(0x37c871);
   const PUMP_C = new THREE.Color(0xff7a1a);
-  const HIT_C = new THREE.Color(0xff2a2a);
+  // A slightly cool, deep red: ACES tone-mapping shifts saturated reds toward
+  // orange, so we bias it back so it reads as a true glowing red on screen.
+  const HIT_C = new THREE.Color(0xff0026);
   const ringMat = heroRing.material as THREE.MeshStandardMaterial;
   const pumpMat = pumpkinBody.material as THREE.MeshStandardMaterial;
 
@@ -1307,25 +1307,31 @@ export function createKidsWorld(
         heroPumpkin.visible = playerGhostly;
         // The pointer glows brighter while the hero is running, dims when idle,
         // and flares an angry red for a moment after a wrong key.
-        pointerHitT = Math.max(0, pointerHitT - dt * 1.8);
+        pointerHitT = Math.max(0, pointerHitT - dt * 1.3);
         const advancing = Math.abs(targetX - playerX) > 0.06;
         const pulse = advancing
           ? 1 + 0.35 * Math.sin(clock.elapsedTime * 9)
           : 0.4;
         const hit = pointerHitT;
+        // A deep, glowing red flush. Keep the emissive moderate — cranking it
+        // high blows out to pink/white under ACES tone-mapping; a fully
+        // saturated red at ~2x reads as a proper angry red glow instead.
         ringMat.color.copy(RING_C).lerp(HIT_C, hit);
         ringMat.emissive.copy(RING_C).lerp(HIT_C, hit);
-        ringMat.emissiveIntensity = 0.55 * pulse + hit * 1.6;
-        pumpMat.color.copy(PUMP_C).lerp(HIT_C, hit * 0.85);
+        ringMat.emissiveIntensity = 0.55 * pulse * (1 - hit) + hit * 1.15;
+        pumpMat.color.copy(PUMP_C).lerp(HIT_C, hit);
         pumpMat.emissive.copy(PUMP_C).lerp(HIT_C, hit);
-        pumpMat.emissiveIntensity = 0.3 * pulse + hit * 1.5;
+        pumpMat.emissiveIntensity = 0.3 * pulse * (1 - hit) + hit * 1.15;
+        // …and a quick side-to-side shake, fiercest right after the miss.
+        const shakeX = Math.sin(clock.elapsedTime * 60) * hit * 0.28;
+        const shakeY = Math.cos(clock.elapsedTime * 52) * hit * 0.12;
         if (playerGhostly) {
-          // Keep the carved face toward the camera, just a gentle sway.
-          heroPumpkin.position.set(p.x, py, p.z);
+          heroPumpkin.position.set(p.x + shakeX, py + shakeY, p.z);
           heroPumpkin.rotation.y = Math.sin(clock.elapsedTime * 1.5) * 0.15;
+          heroPumpkin.rotation.z = Math.sin(clock.elapsedTime * 55) * hit * 0.5;
         } else {
-          heroRing.position.set(p.x, py, p.z);
-          heroRing.rotation.z += 0.03;
+          heroRing.position.set(p.x + shakeX, py + shakeY, p.z);
+          heroRing.rotation.z += 0.03 + Math.sin(clock.elapsedTime * 55) * hit * 0.4;
         }
       }
       cam.position.x += (p.x - 2 - cam.position.x) * 0.06;
