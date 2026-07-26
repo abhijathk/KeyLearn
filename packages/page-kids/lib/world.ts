@@ -904,15 +904,30 @@ export function createKidsWorld(
     for (let i = 0; i < n; i++) {
       const base = new THREE.Mesh(
         new THREE.BoxGeometry(1.35, 1.35, 0.4),
-        new THREE.MeshStandardMaterial({ color: TILE_C, roughness: 0.85 }),
+        // Draw on top of the world (no depth test) so nothing — trees, bushes,
+        // sheep, the runner — can ever hide the letters; still casts a shadow
+        // so it reads as grounded.
+        new THREE.MeshStandardMaterial({
+          color: TILE_C,
+          roughness: 0.85,
+          depthTest: false,
+          depthWrite: false,
+        }),
       );
       base.castShadow = true;
       base.receiveShadow = true;
+      base.renderOrder = 20;
       const face = new THREE.Mesh(
         new THREE.PlaneGeometry(1.15, 1.15),
-        new THREE.MeshStandardMaterial({ transparent: true, roughness: 0.9 }),
+        new THREE.MeshStandardMaterial({
+          transparent: true,
+          roughness: 0.9,
+          depthTest: false,
+          depthWrite: false,
+        }),
       );
       face.position.z = 0.21;
+      face.renderOrder = 21;
       const grp = new THREE.Group();
       grp.add(base, face);
       // Left-aligned: the row starts at the group origin and runs to the right,
@@ -1458,7 +1473,9 @@ export function createKidsWorld(
           g.scale.x += (s - g.scale.x) * 0.2;
           g.scale.y = g.scale.z = g.scale.x;
           const lift = cur ? 0.35 + Math.sin(clock.elapsedTime * 3) * 0.12 : 0;
-          const targetY = terrainY(gx + g.position.x, gz) + 0.55 + lift;
+          // Hover clearly above the ground (still following its contour) so the
+          // row reads as floating, not resting on the dirt.
+          const targetY = terrainY(gx + g.position.x, gz) + 1.35 + lift;
           g.position.y += (targetY - g.position.y) * 0.25;
         }
       }
