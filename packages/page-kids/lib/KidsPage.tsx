@@ -586,6 +586,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [chapter, setChapter] = useState(1);
   const [landName, setLandName] = useState("");
   const [stuckHelp, setStuckHelp] = useState(false);
+  // On-screen full-board modifier state — mirrors the real keyboard so Caps and
+  // Shift flip the letters to capitals (lowercase by default) and Tab/Enter/
+  // Backspace light up when pressed, just like the grown-up board.
+  const [capsOn, setCapsOn] = useState(false);
+  const [shiftOn, setShiftOn] = useState(false);
+  const [specialKey, setSpecialKey] = useState<string | null>(null);
   const [draftName, setDraftName] = useState(() => loadPrefs().name);
 
   const [score, setScore] = useState(0);
@@ -684,6 +690,35 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   useEffect(() => {
     worldRef.current?.setLook(prefs.brightness, prefs.paleness);
   }, [prefs.brightness, prefs.paleness]);
+  // Reflect the real keyboard's Caps/Shift/Tab/Enter/Backspace on the on-screen
+  // full board (a separate listener so it never touches the typing hot path).
+  useEffect(() => {
+    const SPECIAL: Record<string, string> = {
+      Backspace: "back",
+      Tab: "tab",
+      Enter: "enter",
+    };
+    const sync = (ev: KeyboardEvent) => {
+      setCapsOn(ev.getModifierState?.("CapsLock") ?? false);
+      setShiftOn(ev.shiftKey);
+    };
+    const onDown = (ev: KeyboardEvent) => {
+      sync(ev);
+      const s = SPECIAL[ev.key];
+      if (s != null) setSpecialKey(s);
+    };
+    const onUp = (ev: KeyboardEvent) => {
+      sync(ev);
+      const s = SPECIAL[ev.key];
+      if (s != null) setSpecialKey((cur) => (cur === s ? null : cur));
+    };
+    window.addEventListener("keydown", onDown);
+    window.addEventListener("keyup", onUp);
+    return () => {
+      window.removeEventListener("keydown", onDown);
+      window.removeEventListener("keyup", onUp);
+    };
+  }, []);
   useEffect(() => {
     const onToggle = (ev: Event) => {
       const what = (ev as CustomEvent<string>).detail;
@@ -1360,6 +1395,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                         next={def.char != null && def.char === nextChar}
                         pressed={def.char != null && def.char === pressed}
                         stuck={stuckHelp}
+                        // The full board mirrors the real keyboard: lowercase by
+                        // default, capitals while Caps/Shift are on.
+                        upper={
+                          prefs.kbMode === "full"
+                            ? capsOn !== shiftOn
+                            : undefined
+                        }
+                        active={
+                          prefs.kbMode === "full" &&
+                          def.mod === true &&
+                          ((def.label === "caps" && capsOn) ||
+                            (def.label === "shift" && shiftOn) ||
+                            def.label === specialKey)
+                        }
                       />
                     ))}
                   </div>
@@ -1654,14 +1703,29 @@ function Key({
   pressed,
   space = false,
   stuck = false,
+  upper,
+  active = false,
 }: {
   readonly def: KeyDef;
   readonly next: boolean;
   readonly pressed: boolean;
   readonly space?: boolean;
   readonly stuck?: boolean;
+  /** Full board only: capitals when true, lowercase when false. */
+  readonly upper?: boolean;
+  /** A modifier key currently held/latched (Caps, Shift, Tab, …). */
+  readonly active?: boolean;
 }) {
   const zone = def.char != null ? ZONE_OF[def.char] : undefined;
+  // Letter keys follow the Caps/Shift state on the full board; everything else
+  // (symbols, modifiers) keeps its fixed legend.
+  const isLetter = def.char != null && /^[a-z]$/.test(def.char);
+  const face =
+    isLetter && upper != null
+      ? upper
+        ? def.char!.toUpperCase()
+        : def.char!
+      : def.label;
   return (
     <div
       className={clsx(
@@ -1675,6 +1739,7 @@ function Key({
         next && styles.keyNext,
         next && stuck && styles.keyStuck,
         pressed && styles.keyPressed,
+        active && styles.keyModOn,
       )}
       style={{
         ["--kz" as never]: zone != null ? `var(--${zone})` : "var(--clay)",
@@ -1686,7 +1751,7 @@ function Key({
           <span className={styles.kBot}>{def.label}</span>
         </>
       ) : (
-        def.label
+        face
       )}
       {def.bump && <span className={styles.bump} />}
     </div>
