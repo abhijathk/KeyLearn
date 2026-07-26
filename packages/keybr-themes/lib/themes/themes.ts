@@ -25,6 +25,12 @@ export class ThemeList implements Iterable<Theme> {
 
 export const COLORS = new ThemeList([
   {
+    // First = the default for a fresh visit: follow the device's light/dark
+    // setting (see theme-14-auto.less).
+    id: "auto",
+    name: "Auto",
+  },
+  {
     id: "keylearn",
     name: "Night",
   },

@@ -1,0 +1,21 @@
+@import (reference) "theme-12-keylearn.less"; // stylelint-disable-line
+@import (reference) "theme-13-keylearn-day.less"; // stylelint-disable-line
+
+// "Auto" follows the device's own light/dark setting: the KeyLearn Day theme
+// when the system is light, the Night theme when it is dark. This is the
+// default for a fresh visit, so the app matches whatever the user already runs.
+html[data-color="auto"] {
+  .keylearn-theme-props();
+}
+
+@media (prefers-color-scheme: light) {
+  html[data-color="auto"] {
+    .keylearn-day-theme-props();
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-color="auto"] {
+    .keylearn-theme-props();
+  }
+}
