@@ -925,7 +925,7 @@ export function createKidsWorld(
       // A soft shadow disc we can fade per-tile (the real shadow map can't be
       // dimmed per object), laid flat on the ground under the tile.
       const shadow = new THREE.Mesh(
-        new THREE.CircleGeometry(0.7, 18),
+        new THREE.PlaneGeometry(1.3, 1.3),
         new THREE.MeshBasicMaterial({
           color: 0x2c3a20,
           transparent: true,

@@ -91,6 +91,9 @@ type Prefs = {
   paleness: number;
   /** Ambient character motion: 1 = full liveliness, 0 = characters hold still. */
   motion: number;
+  /** Show the practice word as 3-D letter blocks in the world (older bands opt
+   * in; the youngest always get it). */
+  wordBlocks: boolean;
 };
 
 // Kids defaults: light mode, quiet sounds, a silent session, and the text
@@ -117,6 +120,7 @@ function defaultPrefs(): Prefs {
     brightness: 1,
     paleness: 0,
     motion: 1,
+    wordBlocks: false,
   };
 }
 
@@ -1216,9 +1220,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const pos = textInput?.pos ?? 0;
   const nextChar = passage[pos] ?? null;
   const nextFinger = nextChar != null ? FINGER_OF[nextChar] : undefined;
-  // The very youngest read the word as 3-D blocks in the world instead of the
-  // subtitle panel; everyone else keeps the panel.
-  const use3dWord = band === "5-6";
+  // The very youngest always read the word as 3-D blocks in the world instead
+  // of the subtitle panel; 7-8 and 9-10 can opt in from the toy-box; everyone
+  // else keeps the panel.
+  const use3dWord =
+    band === "5-6" ||
+    ((band === "7-8" || band === "9-10") && prefs.wordBlocks);
   useEffect(() => {
     // Feed the whole passage; the world lays it out as one gliding ribbon so
     // there is no jumpy per-word rebuild.
@@ -1797,6 +1804,10 @@ function SettingsCard({
 }) {
   const pill = (on: boolean) => clsx(styles.pill, on && styles.pillOn);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  // The in-world letters are the default for the youngest; 7-8 and 9-10 get a
+  // toggle to opt in.
+  const band = currentBand();
+  const canToggleWords = band === "7-8" || band === "9-10";
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
@@ -1922,6 +1933,28 @@ function SettingsCard({
             </button>
           </div>
         </div>
+        {canToggleWords && (
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--seafoam)" }}>
+              <span className={styles.aaIcon}>Ab</span>
+            </span>
+            <div>
+              <div className={styles.sl}>Letters on the trail</div>
+              <div className={styles.sd}>
+                show the words as blocks in the game, not a panel
+              </div>
+            </div>
+            <div className={styles.ctl}>
+              <button
+                type="button"
+                className={pill(prefs.wordBlocks)}
+                onClick={() => savePrefs({ wordBlocks: !prefs.wordBlocks })}
+              >
+                {prefs.wordBlocks ? "On" : "Off"}
+              </button>
+            </div>
+          </div>
+        )}
         <div className={styles.srow}>
           <span className={styles.ri} style={{ background: "var(--sand)" }}>
             <SoundIcon color="#7a5c00" size={20} />
