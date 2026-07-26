@@ -150,3 +150,84 @@
     margin-block: 0.3rem;
   }
 }
+
+.guideLayout {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr);
+  gap: 2.75rem;
+  margin-block-start: 2rem;
+  align-items: start;
+}
+
+.guideNav {
+  position: sticky;
+  top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.guideNavLab {
+  margin-block-end: 0.6rem;
+  color: var(--text-color-f2);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.guideNavItem {
+  padding-block: 0.3rem;
+  padding-inline-start: 0.75rem;
+  color: var(--text-color-f1);
+  font-size: 0.78rem;
+  line-height: 1.3;
+  text-decoration: none;
+  border-inline-start: 2px solid
+    color-mix(in oklab, var(--text-color) 12%, transparent);
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+
+.guideNavItem:hover {
+  color: var(--accent);
+  border-inline-start-color: var(--accent);
+}
+
+.gpart {
+  scroll-margin-top: 1.5rem;
+}
+
+.howLab {
+  margin-block: 1.1rem 0.35rem;
+  color: var(--text-color);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.steps {
+  margin-block: 0.3rem 0.6rem;
+  padding-inline-start: 1.35rem;
+  line-height: 1.7;
+
+  li {
+    margin-block: 0.25rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .guideLayout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .guideNav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.9rem;
+  }
+
+  .guideNavItem {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+}
