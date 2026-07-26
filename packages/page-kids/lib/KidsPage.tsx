@@ -131,19 +131,31 @@ function loadPrefs(): Prefs {
   }
 }
 
-/** The word around `pos` and how many of its letters are already typed — used
- * to drive the youngest kids' 3-D letter blocks. Skips spaces to the next word. */
-function wordInfo(passage: string, pos: number): { word: string; idx: number } {
-  let p = pos;
-  while (p < passage.length && passage[p] === " ") p++;
-  if (p >= passage.length) return { word: "", idx: 0 };
-  let start = p;
+/** The current word plus the next one (with the space between) around `pos`,
+ * and the index of the character to type next — used to drive the youngest
+ * kids' 3-D letter blocks. As each word finishes the window rolls forward, so a
+ * fresh word always follows. */
+function wordInfo(passage: string, pos: number): { text: string; index: number } {
+  // The "current word" is the one containing pos; if pos sits on the space just
+  // after a word, keep that word current (so the space is the next keystroke).
+  let start = pos;
+  if (passage[start] === " ") {
+    while (start > 0 && passage[start - 1] === " ") start--;
+  }
   while (start > 0 && passage[start - 1] !== " ") start--;
-  let end = p;
+  let end = start;
   while (end < passage.length && passage[end] !== " ") end++;
+  if (start >= passage.length) return { text: "", index: 0 };
+  const word1 = passage.slice(start, end);
+  // The following word, skipping the single space.
+  let n2s = end;
+  while (n2s < passage.length && passage[n2s] === " ") n2s++;
+  let n2e = n2s;
+  while (n2e < passage.length && passage[n2e] !== " ") n2e++;
+  const word2 = passage.slice(n2s, n2e);
   return {
-    word: passage.slice(start, end),
-    idx: Math.max(0, Math.min(end - start, pos - start)),
+    text: word2 ? `${word1} ${word2}` : word1,
+    index: Math.max(0, Math.min(word1.length, pos - start)),
   };
 }
 
@@ -905,6 +917,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         }
         world.setLook(prefsRef.current.brightness, prefsRef.current.paleness);
         world.setMotion(prefsRef.current.motion);
+        // Push the current word straight away so the 3-D letters appear on a
+        // fresh world (e.g. after switching games) without needing a refresh.
+        if (currentBand() === "5-6") {
+          const w = wordInfo(passageRef.current, textInputRef.current?.pos ?? 0);
+          world.setWord(w.text, w.index);
+        }
         // The runner carries its age (baby → adult, size and all) across
         // rebuilds and character swaps.
         world.setAge(dinoAgeOf(included, lesson.letters.length));
@@ -1230,7 +1248,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // The very youngest read the word as 3-D blocks in the world instead of the
   // subtitle panel; everyone else keeps the panel.
   const use3dWord = band === "5-6";
-  const { word: curWord, idx: curIdx } = wordInfo(passage, pos);
+  const { text: curWord, index: curIdx } = wordInfo(passage, pos);
   useEffect(() => {
     worldRef.current?.setWord(use3dWord ? curWord : "", curIdx);
   }, [use3dWord, curWord, curIdx, loaded, landNonce]);

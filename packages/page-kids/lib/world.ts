@@ -897,42 +897,55 @@ export function createKidsWorld(
   type WordTile = { grp: THREE.Group; base: THREE.Mesh; face: THREE.Mesh };
   let wordTiles: WordTile[] = [];
   let wordIdx = 0;
-  const TILE_GAP = 1.4;
+  const TILE_GAP = 1.6;
   const buildWordTiles = (n: number) => {
     for (const t of wordTiles) wordGroup.remove(t.grp);
     wordTiles = [];
     for (let i = 0; i < n; i++) {
       const base = new THREE.Mesh(
-        new THREE.BoxGeometry(1.1, 1.1, 0.34),
+        new THREE.BoxGeometry(1.35, 1.35, 0.4),
         new THREE.MeshStandardMaterial({ color: TILE_C, roughness: 0.85 }),
       );
       base.castShadow = true;
       base.receiveShadow = true;
       const face = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.94, 0.94),
+        new THREE.PlaneGeometry(1.15, 1.15),
         new THREE.MeshStandardMaterial({ transparent: true, roughness: 0.9 }),
       );
-      face.position.z = 0.18;
+      face.position.z = 0.21;
       const grp = new THREE.Group();
       grp.add(base, face);
-      grp.position.x = (i - (n - 1) / 2) * TILE_GAP;
+      // Left-aligned: the row starts at the group origin and runs to the right,
+      // the way the runner is heading.
+      grp.position.x = i * TILE_GAP;
       wordGroup.add(grp);
       wordTiles.push({ grp, base, face });
     }
   };
-  const setWordImpl = (word: string, index: number) => {
-    if (!word) {
+  // `text` is the current word + a space + the next word; `index` is the char
+  // to type next (which may be the space).
+  const setWordImpl = (text: string, index: number) => {
+    if (!text) {
       wordGroup.visible = false;
       return;
     }
     wordGroup.visible = true;
-    if (word.length !== wordTiles.length) buildWordTiles(word.length);
+    if (text.length !== wordTiles.length) buildWordTiles(text.length);
     wordIdx = index;
     for (let i = 0; i < wordTiles.length; i++) {
       const { base, face } = wordTiles[i];
-      const fm = face.material as THREE.MeshStandardMaterial;
-      fm.map = letterTexture(word[i] ?? " ");
-      fm.needsUpdate = true;
+      const ch = text[i] ?? " ";
+      const isSpace = ch === " ";
+      // The space between words is a small flat stone, so the gap is visible
+      // and the child learns to press it; letters are full cards.
+      face.visible = !isSpace;
+      if (!isSpace) {
+        const fm = face.material as THREE.MeshStandardMaterial;
+        fm.map = letterTexture(ch);
+        fm.needsUpdate = true;
+      }
+      base.scale.set(isSpace ? 0.5 : 1, isSpace ? 0.32 : 1, 1);
+      base.position.y = isSpace ? -0.42 : 0;
       const bm = base.material as THREE.MeshStandardMaterial;
       if (i === index) {
         bm.color.copy(TILE_CUR_C);
@@ -1427,12 +1440,16 @@ export function createKidsWorld(
       sun.target.position.x = cam.position.x;
       sun.target.updateMatrixWorld();
       player.mixer.update(dt);
-      // The 3-D word rides in the foreground just ahead of the runner, held
-      // steady on screen by tracking the camera; the current tile lifts + bobs.
+      // The 3-D word rides on the trail to the RIGHT of the runner — the way
+      // he's heading — held steady on screen by tracking the camera; the
+      // current tile lifts + bobs.
       if (wordGroup.visible) {
-        const gx = cam.position.x + 2;
-        const gz = 4.6;
-        wordGroup.position.set(gx, terrainY(gx, gz) + 0.75, gz);
+        // Sit the row in the open ground in FRONT of the trail (well below the
+        // path on screen) and a little to the right — clear of trees, rocks and
+        // the runner, so nothing overlaps the letters.
+        const gx = p.x + 3;
+        const gz = 8.5;
+        wordGroup.position.set(gx, terrainY(gx, gz) + 0.7, gz);
         for (let i = 0; i < wordTiles.length; i++) {
           const g = wordTiles[i].grp;
           const cur = i === wordIdx;
