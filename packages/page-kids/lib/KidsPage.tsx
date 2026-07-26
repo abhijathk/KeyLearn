@@ -1222,12 +1222,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
   return (
     <div
-      className={clsx(
-        styles.root,
-        prefs.night && styles.rootDark,
-        (band === "5-6" || band === "7-8") && styles.young,
-        (band === "9-10" || band === "11+") && styles.older,
-      )}
+      className={clsx(styles.root, prefs.night && styles.rootDark)}
       style={{ fontFamily: cfg.font }}
     >
       <div className={styles.sceneCard} ref={sceneCardRef}>

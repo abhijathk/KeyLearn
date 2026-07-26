@@ -56,7 +56,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     hands: true,
     kbMode: "simple",
     typicalWpm: [5, 8],
-    font: '"Shantell Sans", "Arial Rounded MT Bold", ui-rounded, sans-serif',
+    font: '"Andika Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "7-8": {
     baseWords: 6,
@@ -73,7 +73,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     hands: true,
     kbMode: "simple",
     typicalWpm: [8, 15],
-    font: '"Nunito", "Arial Rounded MT Bold", ui-rounded, sans-serif',
+    font: '"Andika Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "9-10": {
     baseWords: 7,
@@ -90,7 +90,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     hands: true,
     kbMode: "simple",
     typicalWpm: [15, 25],
-    font: '"Rubik", "Arial Rounded MT Bold", ui-rounded, sans-serif',
+    font: '"Nunito Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "11+": {
     baseWords: 7,
@@ -107,7 +107,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     hands: false,
     kbMode: "full",
     typicalWpm: [20, 35],
-    font: '"Open Sans", "Arial Rounded MT Bold", ui-rounded, sans-serif',
+    font: '"Nunito Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
 };
 
