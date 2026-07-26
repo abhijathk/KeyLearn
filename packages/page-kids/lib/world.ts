@@ -897,6 +897,8 @@ export function createKidsWorld(
   type WordTile = { grp: THREE.Group; base: THREE.Mesh; face: THREE.Mesh };
   let wordTiles: WordTile[] = [];
   let wordIdx = 0;
+  let wordText = ""; // the whole passage currently laid out as tiles
+  let wordSnap = false; // snap the ribbon into place (new passage) vs. glide
   const TILE_GAP = 1.6;
   const buildWordTiles = (n: number) => {
     for (const t of wordTiles) wordGroup.remove(t.grp);
@@ -937,31 +939,41 @@ export function createKidsWorld(
       wordTiles.push({ grp, base, face });
     }
   };
-  // `text` is the current word + a space + the next word; `index` is the char
-  // to type next (which may be the space).
+  // `text` is the whole practice passage; `index` is the character to type
+  // next. The passage is laid out once as a continuous ribbon of letter tiles
+  // (spaces between words shown as little stones) and simply GLIDES so the
+  // current letter stays put — new letters flow in from the right with no jumpy
+  // per-word rebuild. Only a fresh passage rebuilds the tiles.
   const setWordImpl = (text: string, index: number) => {
     if (!text) {
       wordGroup.visible = false;
+      wordText = "";
       return;
     }
     wordGroup.visible = true;
-    if (text.length !== wordTiles.length) buildWordTiles(text.length);
+    if (text !== wordText) {
+      if (text.length !== wordTiles.length) buildWordTiles(text.length);
+      for (let i = 0; i < wordTiles.length; i++) {
+        const { base, face } = wordTiles[i];
+        const ch = text[i] ?? " ";
+        const isSpace = ch === " ";
+        // Spaces are small flat stones so the gap is visible and the child
+        // learns to press it; letters are full cards.
+        face.visible = !isSpace;
+        if (!isSpace) {
+          const fm = face.material as THREE.MeshStandardMaterial;
+          fm.map = letterTexture(ch);
+          fm.needsUpdate = true;
+        }
+        base.scale.set(isSpace ? 0.5 : 1, isSpace ? 0.32 : 1, 1);
+        base.position.y = isSpace ? -0.42 : 0;
+      }
+      wordText = text;
+      wordSnap = true; // a new passage drops straight into place
+    }
     wordIdx = index;
     for (let i = 0; i < wordTiles.length; i++) {
-      const { base, face } = wordTiles[i];
-      const ch = text[i] ?? " ";
-      const isSpace = ch === " ";
-      // The space between words is a small flat stone, so the gap is visible
-      // and the child learns to press it; letters are full cards.
-      face.visible = !isSpace;
-      if (!isSpace) {
-        const fm = face.material as THREE.MeshStandardMaterial;
-        fm.map = letterTexture(ch);
-        fm.needsUpdate = true;
-      }
-      base.scale.set(isSpace ? 0.5 : 1, isSpace ? 0.32 : 1, 1);
-      base.position.y = isSpace ? -0.42 : 0;
-      const bm = base.material as THREE.MeshStandardMaterial;
+      const bm = wordTiles[i].base.material as THREE.MeshStandardMaterial;
       if (i === index) {
         bm.color.copy(TILE_CUR_C);
         bm.emissive.copy(TILE_CUR_C);
@@ -1459,13 +1471,20 @@ export function createKidsWorld(
       // he's heading — held steady on screen by tracking the camera; the
       // current tile lifts + bobs.
       if (wordGroup.visible) {
-        // Lay the row low in the pane, in front of the trail and a little to the
-        // right — clear of trees, rocks and the runner. Each tile follows the
-        // ground contour at its own x/z (a small hover above it), so the word
-        // sits ON the uneven pane like part of the world, not a flat banner.
-        const gx = p.x + 3;
+        // The ribbon glides so the current letter always sits at the same spot
+        // (just to the right of the runner, low in the pane); typed letters
+        // scroll off left, upcoming ones flow in from the right — no jump.
         const gz = 10;
-        wordGroup.position.set(gx, 0, gz);
+        const anchorX = p.x + 3;
+        const targetX = anchorX - wordIdx * TILE_GAP;
+        if (wordSnap) {
+          wordGroup.position.x = targetX;
+          wordSnap = false;
+        } else {
+          wordGroup.position.x += (targetX - wordGroup.position.x) * 0.18;
+        }
+        wordGroup.position.z = gz;
+        wordGroup.position.y = 0;
         for (let i = 0; i < wordTiles.length; i++) {
           const g = wordTiles[i].grp;
           const cur = i === wordIdx;
@@ -1475,7 +1494,8 @@ export function createKidsWorld(
           const lift = cur ? 0.35 + Math.sin(clock.elapsedTime * 3) * 0.12 : 0;
           // Hover clearly above the ground (still following its contour) so the
           // row reads as floating, not resting on the dirt.
-          const targetY = terrainY(gx + g.position.x, gz) + 1.35 + lift;
+          const tileX = wordGroup.position.x + g.position.x;
+          const targetY = terrainY(tileX, gz) + 1.35 + lift;
           g.position.y += (targetY - g.position.y) * 0.25;
         }
       }
