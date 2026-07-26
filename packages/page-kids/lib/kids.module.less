@@ -1,14 +1,23 @@
 // KeyLearn Kids: the locked mock, ported. A clean white kid system over the
 // Dino Run world — light by default, with its own playful night mode.
 
-// A soft, chunky, rounded storybook face for the youngest learners (age 5–8) —
-// far friendlier than the system rounded fallback. Bundled, OFL-licensed.
+// Age-tuned reading faces, both bundled and OFL-licensed:
+//  · Andika — designed for beginning readers (clear single-story a/g,
+//    un-confusable b/d/p/q) — for the youngest (5–8).
+//  · Nunito — rounded but cleaner and a touch more grown-up — for 9–11.
 @font-face {
-  font-family: "Baloo Kids";
+  font-family: "Andika Kids";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(baloo2-700.woff2) format("woff2");
+  src: url(andika-700.woff2) format("woff2");
+}
+@font-face {
+  font-family: "Nunito Kids";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(nunito-800.woff2) format("woff2");
 }
 
 .root {
@@ -49,10 +58,14 @@
   font-family: "Arial Rounded MT Bold", ui-rounded, "Trebuchet MS", sans-serif;
 }
 
-// The youngest learners get the chunky storybook face throughout.
+// Age 5–8: the beginning-reader face throughout.
 .young {
-  font-family: "Baloo Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif;
-  letter-spacing: 0.01em;
+  font-family: "Andika Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif;
+}
+
+// Age 9–11: cleaner and a little more grown-up.
+.older {
+  font-family: "Nunito Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif;
 }
 
 .rootDark {

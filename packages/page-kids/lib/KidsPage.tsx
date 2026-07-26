@@ -1226,6 +1226,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         styles.root,
         prefs.night && styles.rootDark,
         (band === "5-6" || band === "7-8") && styles.young,
+        (band === "9-10" || band === "11+") && styles.older,
       )}
       style={{ fontFamily: cfg.font }}
     >
