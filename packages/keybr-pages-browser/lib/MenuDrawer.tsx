@@ -268,7 +268,7 @@ export function MenuDrawer({
                   </>
                 )}
                 <RouterLink to={Pages.guide.path} onClick={onClose}>
-                  <StrokeIcon className={styles.utilIcon} name="doc" />
+                  <StrokeIcon className={styles.utilIcon} name="font" />
                   {formatMessage(Pages.guide.link.label)}
                 </RouterLink>
                 <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
