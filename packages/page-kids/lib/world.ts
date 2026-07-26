@@ -1444,21 +1444,22 @@ export function createKidsWorld(
       // he's heading — held steady on screen by tracking the camera; the
       // current tile lifts + bobs.
       if (wordGroup.visible) {
-        // Float the row low in the pane, in front of the trail and a little to
-        // the right — clear of trees, rocks and the runner. Hover it at a smooth
-        // height (trail level only, no per-point ground noise) so the word reads
-        // level instead of riding the bumpy foreground.
+        // Lay the row low in the pane, in front of the trail and a little to the
+        // right — clear of trees, rocks and the runner. Each tile follows the
+        // ground contour at its own x/z (a small hover above it), so the word
+        // sits ON the uneven pane like part of the world, not a flat banner.
         const gx = p.x + 3;
         const gz = 10;
-        wordGroup.position.set(gx, groundY(gx) + 1.75, gz);
+        wordGroup.position.set(gx, 0, gz);
         for (let i = 0; i < wordTiles.length; i++) {
           const g = wordTiles[i].grp;
           const cur = i === wordIdx;
           const s = cur ? 1.28 : 1;
           g.scale.x += (s - g.scale.x) * 0.2;
           g.scale.y = g.scale.z = g.scale.x;
-          const lift = cur ? 0.4 + Math.sin(clock.elapsedTime * 3) * 0.12 : 0;
-          g.position.y += (lift - g.position.y) * 0.2;
+          const lift = cur ? 0.35 + Math.sin(clock.elapsedTime * 3) * 0.12 : 0;
+          const targetY = terrainY(gx + g.position.x, gz) + 0.55 + lift;
+          g.position.y += (targetY - g.position.y) * 0.25;
         }
       }
     }
