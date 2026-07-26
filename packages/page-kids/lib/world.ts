@@ -912,6 +912,7 @@ export function createKidsWorld(
         new THREE.MeshStandardMaterial({
           color: TILE_C,
           roughness: 0.85,
+          transparent: true,
           depthTest: false,
           depthWrite: false,
         }),
@@ -974,14 +975,16 @@ export function createKidsWorld(
     wordIdx = index;
     for (let i = 0; i < wordTiles.length; i++) {
       const bm = wordTiles[i].base.material as THREE.MeshStandardMaterial;
+      const fm = wordTiles[i].face.material as THREE.MeshStandardMaterial;
+      // Already-typed letters fade right back to 20% so the eye lands on what
+      // is next.
+      const op = i < index ? 0.2 : 1;
+      bm.opacity = op;
+      fm.opacity = op;
       if (i === index) {
         bm.color.copy(TILE_CUR_C);
         bm.emissive.copy(TILE_CUR_C);
         bm.emissiveIntensity = 0.45;
-      } else if (i < index) {
-        bm.color.copy(TILE_C).multiplyScalar(0.72);
-        bm.emissive.setScalar(0);
-        bm.emissiveIntensity = 0;
       } else {
         bm.color.copy(TILE_C);
         bm.emissive.setScalar(0);
