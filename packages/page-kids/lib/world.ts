@@ -894,7 +894,12 @@ export function createKidsWorld(
   };
   const TILE_C = new THREE.Color(0xf3ead6); // warm stone card
   const TILE_CUR_C = new THREE.Color(0x53d98b); // mint — the current letter
-  type WordTile = { grp: THREE.Group; base: THREE.Mesh; face: THREE.Mesh };
+  type WordTile = {
+    grp: THREE.Group;
+    base: THREE.Mesh;
+    face: THREE.Mesh;
+    shadow: THREE.Mesh;
+  };
   let wordTiles: WordTile[] = [];
   let wordIdx = 0;
   let wordText = ""; // the whole passage currently laid out as tiles
@@ -917,8 +922,22 @@ export function createKidsWorld(
           depthWrite: false,
         }),
       );
-      base.castShadow = true;
-      base.receiveShadow = true;
+      // A soft shadow disc we can fade per-tile (the real shadow map can't be
+      // dimmed per object), laid flat on the ground under the tile.
+      const shadow = new THREE.Mesh(
+        new THREE.CircleGeometry(0.7, 18),
+        new THREE.MeshBasicMaterial({
+          color: 0x2c3a20,
+          transparent: true,
+          opacity: 0.32,
+          depthTest: false,
+          depthWrite: false,
+        }),
+      );
+      shadow.rotation.x = -Math.PI / 2;
+      shadow.renderOrder = 19;
+      base.castShadow = false;
+      base.receiveShadow = false;
       base.renderOrder = 20;
       const face = new THREE.Mesh(
         new THREE.PlaneGeometry(1.15, 1.15),
@@ -932,12 +951,12 @@ export function createKidsWorld(
       face.position.z = 0.21;
       face.renderOrder = 21;
       const grp = new THREE.Group();
-      grp.add(base, face);
+      grp.add(shadow, base, face);
       // Left-aligned: the row starts at the group origin and runs to the right,
       // the way the runner is heading.
       grp.position.x = i * TILE_GAP;
       wordGroup.add(grp);
-      wordTiles.push({ grp, base, face });
+      wordTiles.push({ grp, base, face, shadow });
     }
   };
   // `text` is the whole practice passage; `index` is the character to type
@@ -976,14 +995,15 @@ export function createKidsWorld(
     for (let i = 0; i < wordTiles.length; i++) {
       const bm = wordTiles[i].base.material as THREE.MeshStandardMaterial;
       const fm = wordTiles[i].face.material as THREE.MeshStandardMaterial;
-      // Already-typed letters fade right back to 20% so the eye lands on what
-      // is next — and drop their shadow so they don't sit heavier than they
-      // look.
+      // Already-typed letters fade back to 30% so the eye lands on what is
+      // next; the tile keeps a faded shadow to match.
       const typed = i < index;
-      const op = typed ? 0.2 : 1;
+      const op = typed ? 0.3 : 1;
       bm.opacity = op;
       fm.opacity = op;
-      wordTiles[i].base.castShadow = !typed;
+      (wordTiles[i].shadow.material as THREE.MeshBasicMaterial).opacity = typed
+        ? 0.1
+        : 0.32;
       if (i === index) {
         bm.color.copy(TILE_CUR_C);
         bm.emissive.copy(TILE_CUR_C);
@@ -1501,8 +1521,11 @@ export function createKidsWorld(
           // Hover clearly above the ground (still following its contour) so the
           // row reads as floating, not resting on the dirt.
           const tileX = wordGroup.position.x + g.position.x;
-          const targetY = terrainY(tileX, gz) + 1.35 + lift;
-          g.position.y += (targetY - g.position.y) * 0.25;
+          const groundH = terrainY(tileX, gz);
+          g.position.y += (groundH + 1.35 + lift - g.position.y) * 0.25;
+          // Pin the soft shadow to the actual ground beneath the floating tile.
+          wordTiles[i].shadow.position.y =
+            (groundH - g.position.y) / (g.scale.y || 1);
         }
       }
     }
