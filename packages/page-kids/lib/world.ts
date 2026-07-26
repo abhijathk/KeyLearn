@@ -4,6 +4,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
+import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
 const ASSETS = "/kids-assets";
@@ -34,7 +35,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xffe9c4,
     fog: 0xcdeec0,
     path: "stones",
-    trees: "MegaBroadleaf",
+    trees: "Trees",
     friend: "Triceratops",
   },
   {
@@ -47,7 +48,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xfff2d0,
     fog: 0xd9f0c4,
     path: "stones",
-    trees: "MegaBroadleaf",
+    trees: "BirchTrees",
     friend: "Stegosaurus",
   },
   {
@@ -60,7 +61,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xffe9c4,
     fog: 0xcbe8bc,
     path: "stones",
-    trees: "MegaPine",
+    trees: "PineTrees",
     friend: "Apatosaurus",
   },
   {
@@ -73,7 +74,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xffe2b0,
     fog: 0xf0e0b8,
     path: "sand",
-    trees: "MegaDead",
+    trees: "PalmTrees",
     friend: "Parasaurolophus",
   },
 ];
@@ -162,6 +163,13 @@ export type WorldTheme = {
   readonly flagGuard?: readonly string[];
   /** Show the floating game-style pointer ring over the hero (Hero Trail). */
   readonly pointerRing?: boolean;
+  /** Companions turn to watch the hero pass (Hero Trail). Off = they just
+   * carry on with their own idle, like the original dino herd. */
+  readonly companionsWatch?: boolean;
+  /** Scatter a flock of little sheep across the land (Dino Run). */
+  readonly sheep?: boolean;
+  /** Fraction of companions that patrol back and forth guarding their patch. */
+  readonly guardRate?: number;
   /** Photo-textured ground (dino) vs. flat stylized ground (cube/hero). */
   readonly floorTextured: boolean;
   /** Ground opacity — a see-through floor reads airier (1 = solid). */
@@ -180,6 +188,13 @@ export type WorldTheme = {
     readonly frustum: number;
     readonly topF: number;
     readonly botF: number;
+  };
+  /** Colour grade. Hero is punchy and kids-bright; dino is subtler. */
+  readonly grade?: {
+    readonly exposure: number;
+    readonly filter: string;
+    readonly sun: number;
+    readonly hemi: number;
   };
 };
 
@@ -200,30 +215,34 @@ export const DINO_THEME: WorldTheme = {
     name === "TRex" ? 3.1 : name === "Triceratops" ? 2.6 : 2.3,
   morphsBody: true,
   lands: LANDS,
+  // Fewer dinosaurs now — the flock of sheep fills out the meadow instead.
   herd: [
-    { model: "$friend", x: 6, z: -6, h: 2.6 },
-    { model: "Triceratops", x: 20, z: -8, h: 2.4 },
-    { model: "Apatosaurus", x: 34, z: -10, h: 3.4 },
-    { model: "Parasaurolophus", x: 44, z: -7, h: 2.4 },
-    { model: "$friend", x: 72, z: -8, h: 2.6 },
-    { model: "Stegosaurus", x: 96, z: -6, h: 2.4 },
-    { model: "Apatosaurus", x: 122, z: -10, h: 3.4 },
-    { model: "Triceratops", x: 142, z: -7, h: 2.4 },
+    { model: "$friend", x: 8, z: -7, h: 2.6 },
+    { model: "Apatosaurus", x: 40, z: -10, h: 3.4 },
+    { model: "$friend", x: 90, z: -8, h: 2.6 },
+    { model: "Stegosaurus", x: 134, z: -7, h: 2.4 },
   ],
   ground: [
-    ["MegaBushes", 18, 4, 18, "both"],
-    ["MegaRocks", 10, 5, 22, "back"],
-    ["MegaPebbles", 22, 2, 12, "both"],
-    ["MegaFlowers", 26, 2, 13, "both"],
-    ["MegaPlants", 30, 2, 15, "both"],
+    ["Bushes", 16, 4, 16, "both"],
+    ["Rocks", 12, 5, 22, "back"],
+    ["Flowers", 24, 3, 14, "both"],
   ],
   sceneryScale: 1,
-  // Modernised to match Hero Trail: flat stylized ground + gradient sky +
-  // brighter lighting, and a gentler, flatter camera.
+  sheep: true,
+  // A rare pacing "guard" here and there; commoner over on the Hero Trail.
+  guardRate: 0.1,
+  // Modernised like Hero Trail (flat ground + gradient sky + flatter camera),
+  // but with a SUBTLE grade — gentle saturation and contrast, not punchy.
   floorTextured: false,
   floorOpacity: 1,
   sky: "flat",
   view: { camY: 11, camZ: 30, lookY: 3.0, frustum: 13, topF: 0.66, botF: 1.34 },
+  grade: {
+    exposure: 1.36,
+    filter: "saturate(1.2) brightness(1.05)",
+    sun: 2.85,
+    hemi: 0.82,
+  },
 };
 
 // Hero Trail — a little band of adventurers questing home through the forest.
@@ -264,6 +283,9 @@ export const HERO_THEME: WorldTheme = {
   floorOpacity: 1,
   sky: "flat",
   pointerRing: true,
+  companionsWatch: true,
+  // More of the heroes patrol their stretch of the trail than the dinos do.
+  guardRate: 0.22,
   // Flatter and more horizontal than the dino 3/4 view, but still angled
   // enough to show the forest behind the trail. The runner sits high in the
   // frame (big botF) so the practice-text card never covers it.
@@ -280,6 +302,19 @@ const groundY = (x: number) =>
 /** The trail wanders a little, like feet chose it — never far from the lane. */
 const meander = (x: number) =>
   Math.sin(x * 0.07) * 0.7 + Math.sin(x * 0.023 + 2.1) * 0.4;
+const groundNoise = (x: number, z: number) =>
+  Math.sin(x * 0.7 + z * 1.3) * Math.cos(x * 0.31 - z * 0.7);
+/** The full terrain height at any (x, z) — matches the ground-mesh vertices,
+ * so props sit exactly on the surface (not just at the trail height). */
+const terrainY = (x: number, z: number) => {
+  let y = groundY(x);
+  const distLane = Math.max(0, Math.abs(z) - 2.6);
+  y += groundNoise(x * 0.35, z * 0.5) * 0.35 * Math.min(1, distLane / 3);
+  if (z < -10) {
+    y += (-z - 10) * (0.3 + 0.1 * Math.sin(x * 0.05));
+  }
+  return y;
+};
 
 type DinoRig = {
   readonly wrap: THREE.Group;
@@ -322,16 +357,20 @@ export function createKidsWorld(
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  // The cube world runs brighter and more saturated — kids-bright, sunny.
   const bright = theme.sky === "flat";
-  renderer.toneMappingExposure = bright ? 1.5 : 1.16;
+  // Hero Trail is punchy and kids-bright; the dino world is graded subtler so
+  // it doesn't sit at high contrast. Falls back to the classic HDR grade.
+  const grade =
+    theme.grade ??
+    (bright
+      ? { exposure: 1.5, filter: "saturate(1.5) brightness(1.12)", sun: 3.0, hemi: 1.0 }
+      : { exposure: 1.16, filter: "saturate(1.07) contrast(1.045)", sun: 2.4, hemi: 0.5 });
+  renderer.toneMappingExposure = grade.exposure;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  canvas.style.filter = bright
-    ? "saturate(1.5) brightness(1.12)"
-    : "saturate(1.07) contrast(1.045)";
+  canvas.style.filter = grade.filter;
 
   const scene = new THREE.Scene();
-  const sun = new THREE.DirectionalLight(land.sun, bright ? 3.0 : 2.4);
+  const sun = new THREE.DirectionalLight(land.sun, grade.sun);
   sun.position.set(-18, 30, 18);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -339,10 +378,8 @@ export function createKidsWorld(
   sun.shadow.camera.right = 50;
   sun.shadow.camera.top = 30;
   sun.shadow.camera.bottom = -30;
-  scene.add(
-    sun,
-    new THREE.HemisphereLight(0xffffff, land.grass, bright ? 1.0 : 0.5),
-  );
+  const hemi = new THREE.HemisphereLight(0xffffff, land.grass, grade.hemi);
+  scene.add(sun, hemi);
   // The cube world fogs in nearer so the ground dissolves into the flat sky
   // at the horizon — no hard grass/sky seam.
   scene.fog = bright
@@ -375,13 +412,18 @@ export function createKidsWorld(
   const pmrem = new THREE.PMREMGenerator(renderer);
   const rgbe = new RGBELoader();
   async function applySky(mood: string) {
+    // Day/night lighting: bright and warm by day, a touch darker and cool by
+    // night — the whole pane dims without moving the sun.
+    const night = mood === "night";
+    renderer.toneMappingExposure = grade.exposure * (night ? 0.8 : 1);
+    hemi.intensity = grade.hemi * (night ? 0.6 : 1);
+    hemi.color.set(night ? 0x8fa0d8 : 0xffffff);
     if (theme.sky === "flat") {
       // A 2D gradient sky drawn to a canvas — no orbiting camera means no
-      // skybox is needed, and a flat backdrop suits the blocky cube world.
-      const [top, bottom] =
-        mood === "night"
-          ? ["#232c52", "#3d4a7a"]
-          : ["#7ec5f2", "#d7f0d2"];
+      // skybox is needed, and a flat backdrop suits the stylized world.
+      const [top, bottom] = night
+        ? ["#232c52", "#3d4a7a"]
+        : ["#7ec5f2", "#d7f0d2"];
       const c = document.createElement("canvas");
       c.width = 16;
       c.height = 256;
@@ -400,11 +442,9 @@ export function createKidsWorld(
       scene.backgroundIntensity = 1;
       // Fog matches the sky's lower band so the ground fades straight into
       // the backdrop.
-      (scene.fog as THREE.Fog).color.set(
-        mood === "night" ? 0x3d4a7a : 0xd7f0d2,
-      );
-      sun.intensity = mood === "night" ? 2.0 : 2.7;
-      sun.color.set(mood === "night" ? 0xb8c8ec : land.sun);
+      (scene.fog as THREE.Fog).color.set(night ? 0x3d4a7a : 0xd7f0d2);
+      sun.intensity = grade.sun * (night ? 0.62 : 1);
+      sun.color.set(night ? 0x9fb2e6 : land.sun);
       return;
     }
     const tex = await rgbe.loadAsync(`${ASSETS}/env/${mood}.hdr`);
@@ -451,18 +491,11 @@ export function createKidsWorld(
     const cVar = new THREE.Color(land.grassVar);
     const cDirt = new THREE.Color(land.dirt);
     const tmp = new THREE.Color();
-    const noise2 = (x: number, z: number) =>
-      Math.sin(x * 0.7 + z * 1.3) * Math.cos(x * 0.31 - z * 0.7);
+    const noise2 = groundNoise;
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const z = pos.getZ(i);
-      let y = groundY(x);
-      const distLane = Math.max(0, Math.abs(z) - 2.6);
-      y += noise2(x * 0.35, z * 0.5) * 0.35 * Math.min(1, distLane / 3);
-      if (z < -10) {
-        y += (-z - 10) * (0.3 + 0.1 * Math.sin(x * 0.05));
-      }
-      pos.setY(i, y);
+      pos.setY(i, terrainY(x, z));
       const n = (noise2(x * 0.8, z * 0.9) + 1) / 2;
       // Textured ground stays pale (the photo map darkens it); flat cube
       // ground carries a softer, pastel grass so it melts into the sky
@@ -902,19 +935,35 @@ export function createKidsWorld(
         return; // a single missing companion never breaks the world
       }
       const wrap = fitToHeight(gltf.scene, h);
-      wrap.position.set(x, groundY(x), z);
+      wrap.position.set(x, terrainY(x, z), z);
       // A random home facing — the crowd looks every which way, not all one way.
       const homeY = Math.random() * Math.PI * 2;
       wrap.rotation.y = homeY;
+      // A rare few are "guards" who pace back and forth over their patch.
+      const guard = !scary && Math.random() < (theme.guardRate ?? 0);
       // Only some companions are "smilers" who give a happy bob; the rest just
       // stop and stare when the hero passes.
-      wrap.userData = { homeY, homeX: x, scary, smiler: Math.random() < 0.35 };
+      wrap.userData = {
+        homeY,
+        homeX: x,
+        homeZ: z,
+        scary,
+        guard,
+        phase: Math.random() * Math.PI * 2,
+        smiler: Math.random() < 0.35,
+      };
       scene.add(wrap);
       const mixer = new THREE.AnimationMixer(gltf.scene);
-      const clip = pickIdle(clipsFor(gltf), scary);
+      const clips = clipsFor(gltf);
+      // Guards get a walking loop so their legs move while patrolling; everyone
+      // else gets a calm, friendly idle.
+      const clip = guard
+        ? (clips.find((c) => /walk|run|gallop|march/i.test(c.name)) ??
+          pickIdle(clips, scary))
+        : pickIdle(clips, scary);
       if (clip) {
         const a = mixer.clipAction(clip);
-        a.timeScale = (scary ? 0.6 : 0.85) + Math.random() * 0.4;
+        a.timeScale = guard ? 0.9 : (scary ? 0.6 : 0.85) + Math.random() * 0.4;
         a.play();
         // Start each one at a random point in its loop so companions sharing
         // a clip are never bobbing in unison.
@@ -937,6 +986,75 @@ export function createKidsWorld(
           const gx = 24 + Math.random() * (TRAIL_END - 30);
           const gz = (Math.random() > 0.5 ? -1 : 1) * (3 + Math.random() * 6);
           await spawnCompanion(pickGuard(), gx, gz, 3.0, true);
+        }
+      }
+    }
+
+    // A real little flock grazing off the trail (Dino Run). White, brown and
+    // black sheep in a few clusters plus the odd loner, heads down eating.
+    if (theme.sheep) {
+      let sheepGltf: Awaited<ReturnType<typeof loadModel>> | null = null;
+      try {
+        sheepGltf = await loadModel(`${ASSETS}/models/${theme.sceneryDir}/Sheep.glb`);
+      } catch {
+        sheepGltf = null;
+      }
+      if (sheepGltf) {
+        const sheepScene = sheepGltf.scene;
+        const sheepClips = clipsFor(sheepGltf);
+        const idleClip =
+          sheepClips.find((c) => /idle|graze|eat/i.test(c.name)) ??
+          sheepClips[0] ??
+          null;
+        // White is the common coat; brown and black are the rarer ones.
+        const COATS = [0xf3efe6, 0xf3efe6, 0xf0ece1, 0x9c7550, 0x2e2a26];
+        const spawnSheep = (x: number, z: number) => {
+          const src = skinnedClone(sheepScene);
+          const coat = COATS[Math.floor(Math.random() * COATS.length)];
+          const isBlack = coat === 0x2e2a26;
+          src.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (!m.isMesh || !m.material) return;
+            // SkeletonUtils.clone shares materials — clone so each sheep tints
+            // independently. Primitive "White" is the wool; "Black" the face.
+            const mat = (m.material as THREE.MeshStandardMaterial).clone();
+            if (mat.name === "White") {
+              mat.color.setHex(coat);
+            } else if (isBlack) {
+              mat.color.setHex(0x201d1a);
+            }
+            mat.metalness = 0;
+            mat.roughness = 1;
+            m.material = mat;
+          });
+          const wrap = fitToHeight(src, 0.9 + Math.random() * 0.3);
+          wrap.position.set(x, terrainY(x, z), z);
+          wrap.rotation.y = Math.random() * Math.PI * 2;
+          scene.add(wrap);
+          const mixer = new THREE.AnimationMixer(src);
+          if (idleClip) {
+            const a = mixer.clipAction(idleClip);
+            a.timeScale = 0.6 + Math.random() * 0.5;
+            a.time = Math.random() * (idleClip.duration || 1);
+            a.play();
+          }
+          friends.push({ wrap, mixer, run: null, idle: null });
+        };
+        // Grazing clusters spread evenly down the trail (so some are always in
+        // view), each with a couple of loners nearby.
+        const CLUSTERS = 7;
+        const span = TRAIL_END + 24;
+        for (let g = 0; g < CLUSTERS; g++) {
+          const gx = -12 + (span / CLUSTERS) * (g + Math.random() * 0.8);
+          const gz = -(4 + Math.random() * 14);
+          const n = 2 + Math.floor(Math.random() * 3);
+          for (let i = 0; i < n; i++) {
+            spawnSheep(gx + (Math.random() - 0.5) * 5, gz + (Math.random() - 0.5) * 4);
+          }
+          // The odd loner grazing a little apart from the group.
+          if (Math.random() < 0.6) {
+            spawnSheep(gx + (Math.random() - 0.5) * 14, -(3 + Math.random() * 16));
+          }
         }
       }
     }
@@ -968,7 +1086,7 @@ export function createKidsWorld(
         const depth = minD + Math.random() * (maxD - minD);
         const z =
           side === "back" ? -depth : Math.random() > 0.65 ? depth : -depth;
-        wrap.position.set(x, groundY(x), z);
+        wrap.position.set(x, terrainY(x, z), z);
         wrap.rotation.y = Math.random() * Math.PI * 2;
         wrap.scale.setScalar(
           (0.8 + Math.random() * 0.8) * theme.sceneryScale * scaleMul,
@@ -1104,13 +1222,40 @@ export function createKidsWorld(
       const ud = f.wrap.userData as {
         homeY?: number;
         homeX?: number;
+        homeZ?: number;
         scary?: boolean;
+        guard?: boolean;
+        phase?: number;
         smiler?: boolean;
       };
-      if (ud.homeY == null || ud.homeX == null) {
+      // Sheep and other props carry no home — they just animate in place.
+      if (ud.homeX == null) {
         continue;
       }
       const near = player != null && Math.abs(heroX - ud.homeX) < 7;
+      // Guards pace back and forth over their patch (both worlds), pausing
+      // mid-stride whenever the hero draws alongside.
+      if (ud.guard) {
+        if (near) {
+          f.mixer.timeScale = 0;
+        } else {
+          f.mixer.timeScale = 1;
+          const gz = ud.homeZ ?? f.wrap.position.z;
+          const t = clock.elapsedTime * 0.5 + (ud.phase ?? 0);
+          const px = ud.homeX + Math.sin(t) * 3;
+          f.wrap.position.set(px, terrainY(px, gz), gz);
+          const faceTarget = Math.cos(t) >= 0 ? Math.PI / 2 : -Math.PI / 2;
+          let d = faceTarget - f.wrap.rotation.y;
+          while (d > Math.PI) d -= Math.PI * 2;
+          while (d < -Math.PI) d += Math.PI * 2;
+          f.wrap.rotation.y += d * 0.1;
+        }
+        continue;
+      }
+      // Dino companions just carry on with their own idle — no watching.
+      if (!theme.companionsWatch || ud.homeY == null) {
+        continue;
+      }
       const target = near
         ? Math.atan2(heroX - f.wrap.position.x, heroZ - f.wrap.position.z)
         : ud.homeY;
@@ -1118,7 +1263,7 @@ export function createKidsWorld(
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
       f.wrap.rotation.y += diff * (near ? 0.12 : 0.04);
-      const homeGY = groundY(ud.homeX);
+      const homeGY = terrainY(ud.homeX, ud.homeZ ?? 0);
       if (ud.scary) {
         // Skeletons act spooky when the hero is near — a shudder and a rise —
         // then settle back once it passes.
