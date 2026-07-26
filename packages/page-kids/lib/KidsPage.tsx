@@ -41,6 +41,7 @@ import {
   SoundIcon,
   SproutIcon,
   StarIcon,
+  SunIcon,
   TentIcon,
   TrophyIcon,
   WorldIcon,
@@ -57,9 +58,9 @@ import {
 import * as styles from "./kids.module.less";
 import {
   createKidsWorld,
-  HERO_THEME,
-  DINO_THEME,
   createLoaderScene,
+  DINO_THEME,
+  HERO_THEME,
   type KidsWorld,
   LANDS,
   pickLand,
@@ -85,6 +86,9 @@ type Prefs = {
   timerMin: number;
   cheers: boolean;
   night: boolean;
+  /** Scene look: brightness (~0.7–1.3) and paleness (0 = full colour, 1 = pale). */
+  brightness: number;
+  paleness: number;
 };
 
 // Kids defaults: light mode, quiet sounds, a silent session, and the text
@@ -108,6 +112,8 @@ function defaultPrefs(): Prefs {
     timerMin: cfg.timerMin,
     cheers: true,
     night: false,
+    brightness: 1,
+    paleness: 0,
   };
 }
 
@@ -669,6 +675,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       }),
     );
   }, [prefs.sounds, prefs.night, included]);
+  // Each world has its own voice: the dino arcade blips, the hero storybook
+  // chimes (and its bored idle babble).
+  useEffect(() => {
+    kidsAudio.setTheme(prefs.world === "hero" ? "hero" : "dino");
+  }, [prefs.world]);
+  // Live brightness/paleness slider — apply to the running scene at once.
+  useEffect(() => {
+    worldRef.current?.setLook(prefs.brightness, prefs.paleness);
+  }, [prefs.brightness, prefs.paleness]);
   useEffect(() => {
     const onToggle = (ev: Event) => {
       const what = (ev as CustomEvent<string>).detail;
@@ -831,6 +846,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         if (prefsRef.current.night) {
           world.setNight(true);
         }
+        world.setLook(prefsRef.current.brightness, prefsRef.current.paleness);
         // The runner carries its age (baby → adult, size and all) across
         // rebuilds and character swaps.
         world.setAge(dinoAgeOf(included, lesson.letters.length));
@@ -1116,6 +1132,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         beckonedRef.current = true;
         worldRef.current?.beckon();
         speak("idle");
+        if (prefsRef.current.sounds) {
+          kidsAudio.playIdle();
+        }
       }
     }, 1000);
     return () => clearInterval(id);
@@ -1161,7 +1180,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
   return (
     <div
-      className={clsx(styles.root, prefs.night && styles.rootDark)}
+      className={clsx(
+        styles.root,
+        prefs.night && styles.rootDark,
+        (band === "5-6" || band === "7-8") && styles.young,
+      )}
       style={{ fontFamily: cfg.font }}
     >
       <div className={styles.sceneCard} ref={sceneCardRef}>
@@ -1831,6 +1854,53 @@ function SettingsCard({
             >
               {prefs.sounds ? "On" : "Off"}
             </button>
+          </div>
+        </div>
+        <div className={styles.srow}>
+          <span className={styles.ri} style={{ background: "var(--sky)" }}>
+            <SunIcon size={20} color="#3d6b8a" />
+          </span>
+          <div>
+            <div className={styles.sl}>Brightness</div>
+            <div className={styles.sd}>how bright the world looks</div>
+          </div>
+          <div className={styles.ctl}>
+            <input
+              type="range"
+              className={styles.slider}
+              min={0.75}
+              max={1.25}
+              step={0.01}
+              value={prefs.brightness}
+              aria-label="Brightness"
+              onChange={(e) =>
+                savePrefs({ brightness: Number(e.target.value) })
+              }
+            />
+          </div>
+        </div>
+        <div className={styles.srow}>
+          <span className={styles.ri} style={{ background: "var(--seafoam)" }}>
+            <span className={styles.swatch} />
+          </span>
+          <div>
+            <div className={styles.sl}>Colour</div>
+            <div className={styles.sd}>soft and pale, or bright and bold</div>
+          </div>
+          <div className={styles.ctl}>
+            <input
+              type="range"
+              className={styles.slider}
+              min={0}
+              max={1}
+              step={0.02}
+              // Slider reads left = pale, right = full colour, so invert.
+              value={1 - prefs.paleness}
+              aria-label="Colour"
+              onChange={(e) =>
+                savePrefs({ paleness: 1 - Number(e.target.value) })
+              }
+            />
           </div>
         </div>
         <div className={styles.srow}>

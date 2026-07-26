@@ -189,13 +189,20 @@ export type WorldTheme = {
     readonly topF: number;
     readonly botF: number;
   };
-  /** Colour grade. Hero is punchy and kids-bright; dino is subtler. */
+  /** Colour grade. Hero is punchy and kids-bright; dino is subtler. `sat` and
+   * `bright` are the base CSS saturate()/brightness() amounts, scaled live by
+   * the in-game brightness/paleness slider. */
   readonly grade?: {
     readonly exposure: number;
-    readonly filter: string;
+    readonly sat: number;
+    readonly bright: number;
     readonly sun: number;
     readonly hemi: number;
   };
+  /** Saturation multiplier applied to the PLAYER's materials, to keep the main
+   * character vivid when the scene grade desaturates everything (Hero Trail is
+   * paled down, but the hero should still read at full colour). */
+  readonly playerVivid?: number;
 };
 
 const DEFAULT_VIEW = {
@@ -239,7 +246,8 @@ export const DINO_THEME: WorldTheme = {
   view: { camY: 11, camZ: 30, lookY: 3.0, frustum: 13, topF: 0.66, botF: 1.34 },
   grade: {
     exposure: 1.36,
-    filter: "saturate(1.2) brightness(1.05)",
+    sat: 1.2,
+    bright: 1.05,
     sun: 2.85,
     hemi: 0.82,
   },
@@ -290,6 +298,18 @@ export const HERO_THEME: WorldTheme = {
   // enough to show the forest behind the trail. The runner sits high in the
   // frame (big botF) so the practice-text card never covers it.
   view: { camY: 11, camZ: 33, lookY: 3.6, frustum: 12, topF: 0.6, botF: 1.28 },
+  // Softer grade — the default punchy look was too saturated and distracting.
+  // Just a gentle calm (a touch less saturation, a little more ambient fill),
+  // not washed out; the child can dial brightness/paleness further with the
+  // in-game slider. The hero keeps a small colour boost so it stays the focus.
+  grade: {
+    exposure: 1.42,
+    sat: 1.12,
+    bright: 1.04,
+    sun: 2.75,
+    hemi: 0.78,
+  },
+  playerVivid: 1.12,
 };
 
 /** How far one round carries the runner. The trail never rewinds — each new
@@ -344,6 +364,9 @@ export type KidsWorld = {
   burstAtPlayer(colors: readonly number[], count?: number, up?: number): void;
   playerScreenXY(): readonly [number, number] | null;
   setNight(night: boolean): void;
+  /** Live look control: `brightness` (~0.7–1.3) scales brightness, `paleness`
+   * (0 = full colour, 1 = very pale) desaturates the whole scene. */
+  setLook(brightness: number, paleness: number): void;
   resize(): void;
   dispose(): void;
 };
@@ -363,11 +386,20 @@ export function createKidsWorld(
   const grade =
     theme.grade ??
     (bright
-      ? { exposure: 1.5, filter: "saturate(1.5) brightness(1.12)", sun: 3.0, hemi: 1.0 }
-      : { exposure: 1.16, filter: "saturate(1.07) contrast(1.045)", sun: 2.4, hemi: 0.5 });
+      ? { exposure: 1.5, sat: 1.5, bright: 1.12, sun: 3.0, hemi: 1.0 }
+      : { exposure: 1.16, sat: 1.07, bright: 1.0, sun: 2.4, hemi: 0.5 });
   renderer.toneMappingExposure = grade.exposure;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  canvas.style.filter = grade.filter;
+  // The child's brightness/paleness slider scales the base grade live:
+  // brightness multiplies CSS brightness(); paleness (0..1) desaturates.
+  let userBright = 1;
+  let userPale = 0;
+  const applyLook = () => {
+    const sat = Math.max(0, grade.sat * (1 - userPale * 0.85));
+    const b = grade.bright * userBright;
+    canvas.style.filter = `saturate(${sat.toFixed(3)}) brightness(${b.toFixed(3)})`;
+  };
+  applyLook();
 
   const scene = new THREE.Scene();
   const sun = new THREE.DirectionalLight(land.sun, grade.sun);
@@ -752,6 +784,7 @@ export function createKidsWorld(
   let jumpCount = 0; // jumps used since last touchdown (max 2 = double jump)
   let playerGhostly = false; // skeleton hero: floats and glides like a ghost
   let stumbleT = 0;
+  let pointerHitT = 0; // brief red flash on the hero pointer after a wrong key
   let beckonT = 0;
   let wasAirborne = false;
   let roarT = 0;
@@ -818,6 +851,12 @@ export function createKidsWorld(
   heroPumpkin.add(pumpkinBody, pumpkinStem, eyeL, eyeR, mouth);
   heroPumpkin.visible = false;
   scene.add(heroPumpkin);
+  // Base pointer tints, and the angry red it flashes to on a wrong key.
+  const RING_C = new THREE.Color(0x37c871);
+  const PUMP_C = new THREE.Color(0xff7a1a);
+  const HIT_C = new THREE.Color(0xff2a2a);
+  const ringMat = heroRing.material as THREE.MeshStandardMaterial;
+  const pumpMat = pumpkinBody.material as THREE.MeshStandardMaterial;
 
   // Reshape the loaded skeleton by age: babies get an oversized head, stubby
   // legs, a short tail and a round belly (that reads as "cute"), maturing to
@@ -899,6 +938,23 @@ export function createKidsWorld(
     }
     player = rig;
     playerGhostly = /skeleton/i.test(name);
+    // Keep the main character at full colour when the scene grade desaturates
+    // the world (Hero Trail is paled): boost the player's own materials so it
+    // still pops as the focus, not the washed-out backdrop.
+    if (theme.playerVivid && theme.playerVivid !== 1) {
+      const v = theme.playerVivid;
+      const seen = new Set<THREE.Material>();
+      const hsl = { h: 0, s: 0, l: 0 };
+      rig.wrap.traverse((o) => {
+        const m = o as THREE.Mesh;
+        const mat = m.material as THREE.MeshStandardMaterial;
+        if (m.isMesh && mat && mat.color && !seen.has(mat)) {
+          seen.add(mat);
+          mat.color.getHSL(hsl);
+          mat.color.setHSL(hsl.h, Math.min(1, hsl.s * v), hsl.l);
+        }
+      });
+    }
     scene.add(rig.wrap);
     if (theme.morphsBody) {
       morphDino(rig, dinoAge);
@@ -1245,6 +1301,20 @@ export function createKidsWorld(
         const py = p.y + top + 0.7 + Math.sin(clock.elapsedTime * 2) * 0.12;
         heroRing.visible = !playerGhostly;
         heroPumpkin.visible = playerGhostly;
+        // The pointer glows brighter while the hero is running, dims when idle,
+        // and flares an angry red for a moment after a wrong key.
+        pointerHitT = Math.max(0, pointerHitT - dt * 1.8);
+        const advancing = Math.abs(targetX - playerX) > 0.06;
+        const pulse = advancing
+          ? 1 + 0.35 * Math.sin(clock.elapsedTime * 9)
+          : 0.4;
+        const hit = pointerHitT;
+        ringMat.color.copy(RING_C).lerp(HIT_C, hit);
+        ringMat.emissive.copy(RING_C).lerp(HIT_C, hit);
+        ringMat.emissiveIntensity = 0.55 * pulse + hit * 1.6;
+        pumpMat.color.copy(PUMP_C).lerp(HIT_C, hit * 0.85);
+        pumpMat.emissive.copy(PUMP_C).lerp(HIT_C, hit);
+        pumpMat.emissiveIntensity = 0.3 * pulse + hit * 1.5;
         if (playerGhostly) {
           // Keep the carved face toward the camera, just a gentle sway.
           heroPumpkin.position.set(p.x, py, p.z);
@@ -1465,11 +1535,14 @@ export function createKidsWorld(
     },
     stumble() {
       stumbleT = 1;
+      pointerHitT = 1; // flash the hero pointer red (Hero Trail)
       targetX = playerX; // a wrong key stops the run
     },
     roar() {
       roarT = 1;
-      if (player) {
+      // Dino Run keeps its little particle burst; Hero Trail says it through
+      // the pointer flaring red instead (no "blood splash").
+      if (player && !theme.pointerRing) {
         const p = player.wrap.position;
         burst(p.x + 1.2, p.y + 2.4, p.z, [0xff5c5c, 0xffd66b], 12, 0.28);
       }
@@ -1514,6 +1587,11 @@ export function createKidsWorld(
     },
     setNight(night) {
       applySky(night ? "night" : land.mood).catch(() => {});
+    },
+    setLook(brightness, paleness) {
+      userBright = brightness;
+      userPale = paleness;
+      applyLook();
     },
     resize,
     dispose() {
