@@ -1,5 +1,5 @@
 import { loadNgramStats } from "@keybr/pages-shared";
-import { type KeyStatsMap } from "@keybr/result";
+import { type KeyStatsMap, useResults } from "@keybr/result";
 import { Explainer } from "@keybr/widget";
 import { type ReactNode, useMemo } from "react";
 import { FormattedMessage } from "react-intl";
@@ -18,16 +18,21 @@ export function SlowTransitions({
 }: {
   readonly keyStatsMap: KeyStatsMap;
 }): ReactNode {
+  // Read the *displayed* profile's stats — the one the charts are scoped to,
+  // not merely the globally-active profile — so each learner tab shows (and
+  // clears) its own transitions.
+  const { namespace } = useResults();
   // Select the most problematic pairs by weakness (slowness + errors), but
   // display them slowest-first so the bars read as a clean descending chart.
   const rows = useMemo(
     () =>
-      loadNgramStats()
+      loadNgramStats(namespace)
         .topWeak(2, 8)
         .sort((a, b) => b.time - a.time),
     // Re-read the store when the results change, so "Clear statistics"
     // empties this chart immediately instead of showing stale pairs.
-    [keyStatsMap],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [keyStatsMap, namespace],
   );
 
   const labelOf = useMemo(() => {

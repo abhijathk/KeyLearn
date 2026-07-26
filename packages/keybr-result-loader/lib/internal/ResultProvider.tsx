@@ -6,10 +6,13 @@ import { type ResultStorage } from "./types.ts";
 export function ResultProvider({
   storage,
   initialResults,
+  namespace = null,
   children,
 }: {
   readonly storage: ResultStorage;
   readonly initialResults: readonly Result[];
+  /** The profile history namespace these results belong to (see context). */
+  readonly namespace?: string | null;
   readonly children: ReactNode;
 }): ReactNode {
   const [results, setResults] = useState(initialResults);
@@ -17,6 +20,7 @@ export function ResultProvider({
     <ResultContext.Provider
       value={{
         results,
+        namespace,
         appendResults: (newResults) => {
           setResults([...results, ...newResults]);
           storage.append(newResults).catch(catchError);

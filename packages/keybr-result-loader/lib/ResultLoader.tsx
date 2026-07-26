@@ -22,7 +22,11 @@ export function ResultLoader({
     return <LoadingProgress total={state.total} current={state.current} />;
   } else {
     return (
-      <ResultProvider storage={storage} initialResults={state.results}>
+      <ResultProvider
+        storage={storage}
+        initialResults={state.results}
+        namespace={namespace}
+      >
         {children}
       </ResultProvider>
     );

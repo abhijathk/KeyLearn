@@ -1001,7 +1001,7 @@ function DataRow(): ReactNode {
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
   const { copyText } = useClipboard();
-  const { results, clearResults } = useResultsSafe();
+  const { results, clearResults, namespace } = useResultsSafe();
   const [confirming, setConfirming] = useState(false);
   const named = "id" in publicUser && publicUser.id != null;
   const href = named
@@ -1132,8 +1132,9 @@ function DataRow(): ReactNode {
                   setConfirming(false);
                   clearResults();
                   // The n-gram weakness data (the "slowest transitions") has
-                  // its own per-profile store — wipe it with the history.
-                  clearNgramStats();
+                  // its own per-profile store — wipe the *displayed* profile's,
+                  // matching the history we just cleared.
+                  clearNgramStats(namespace);
                 }}
               >
                 <FormattedMessage

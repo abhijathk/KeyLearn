@@ -52,7 +52,7 @@ export function FooterSection() {
 
 function useCommands() {
   const { formatMessage } = useIntl();
-  const { results, clearResults } = useResults();
+  const { results, clearResults, namespace } = useResults();
   return {
     handleDownloadData: () => {
       const json = JSON.stringify(results);
@@ -69,8 +69,9 @@ function useCommands() {
       if (window.confirm(message)) {
         clearResults();
         // The n-gram weakness data (the "slowest transitions") lives in its
-        // own per-profile store — wipe it along with the typing history.
-        clearNgramStats();
+        // own per-profile store — wipe the displayed profile's along with the
+        // typing history.
+        clearNgramStats(namespace);
       }
     },
   };
