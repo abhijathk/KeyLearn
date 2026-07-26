@@ -474,6 +474,25 @@ export function createKidsWorld(
     geo.computeVertexNormals();
     return geo;
   }
+  // The finished ground mesh, kept so props can be dropped onto the exact
+  // rendered surface (raycast) rather than the analytic height — the two differ
+  // slightly between vertices, which is what made props hover.
+  let groundMesh: THREE.Mesh | null = null;
+  const _groundRay = new THREE.Raycaster();
+  const _rayFrom = new THREE.Vector3();
+  const _rayDir = new THREE.Vector3(0, -1, 0);
+  /** The real surface height at (x, z): raycast the ground mesh, falling back
+   * to the analytic terrain height off the mesh. `sink` plants feet a touch
+   * into the ground so nothing ever appears to float. */
+  const surfaceY = (x: number, z: number, sink = 0.06) => {
+    if (groundMesh) {
+      _rayFrom.set(x, 200, z);
+      _groundRay.set(_rayFrom, _rayDir);
+      const hit = _groundRay.intersectObject(groundMesh, false);
+      if (hit.length > 0) return hit[0].point.y - sink;
+    }
+    return terrainY(x, z) - sink;
+  };
   {
     const diff = tl.load(`${ASSETS}/textures/${land.tex}_diff.jpg`);
     diff.colorSpace = THREE.SRGBColorSpace;
@@ -541,6 +560,8 @@ export function createKidsWorld(
       }),
     );
     ground.receiveShadow = true;
+    ground.updateMatrixWorld(true);
+    groundMesh = ground;
     scene.add(ground);
 
     const dummy = new THREE.Object3D();
@@ -935,7 +956,7 @@ export function createKidsWorld(
         return; // a single missing companion never breaks the world
       }
       const wrap = fitToHeight(gltf.scene, h);
-      wrap.position.set(x, terrainY(x, z), z);
+      wrap.position.set(x, surfaceY(x, z), z);
       // A random home facing — the crowd looks every which way, not all one way.
       const homeY = Math.random() * Math.PI * 2;
       wrap.rotation.y = homeY;
@@ -1012,7 +1033,9 @@ export function createKidsWorld(
           const src = skinnedClone(sheepScene);
           const coat = COATS[Math.floor(Math.random() * COATS.length)];
           const isBlack = coat === 0x2e2a26;
+          let head: THREE.Object3D | null = null;
           src.traverse((o) => {
+            if (o.name === "Head") head = o;
             const m = o as THREE.Mesh;
             if (!m.isMesh || !m.material) return;
             // SkeletonUtils.clone shares materials — clone so each sheep tints
@@ -1027,9 +1050,25 @@ export function createKidsWorld(
             mat.roughness = 1;
             m.material = mat;
           });
+          const homeY = Math.random() * Math.PI * 2;
           const wrap = fitToHeight(src, 0.9 + Math.random() * 0.3);
-          wrap.position.set(x, terrainY(x, z), z);
-          wrap.rotation.y = Math.random() * Math.PI * 2;
+          wrap.position.set(x, surfaceY(x, z), z);
+          wrap.rotation.y = homeY;
+          // Each sheep grazes its own little patch: ambling a few steps, dipping
+          // its head to nibble, wandering on — never straying far from home.
+          wrap.userData = {
+            sheep: true,
+            head,
+            headBaseX: head ? (head as THREE.Object3D).rotation.x : 0,
+            baseX: x,
+            baseZ: z,
+            homeY,
+            phase: Math.random() * Math.PI * 2,
+            state: "graze",
+            stateT: Math.random() * 4, // stagger so they don't all move at once
+            tx: x,
+            tz: z,
+          };
           scene.add(wrap);
           const mixer = new THREE.AnimationMixer(src);
           if (idleClip) {
@@ -1040,20 +1079,28 @@ export function createKidsWorld(
           }
           friends.push({ wrap, mixer, run: null, idle: null });
         };
-        // Grazing clusters spread evenly down the trail (so some are always in
-        // view), each with a couple of loners nearby.
-        const CLUSTERS = 7;
+        // Sheep are meadow animals: most graze the open grass field in front
+        // of the trail, a few on the far side — and they keep clear of the
+        // treeline. Clusters are spread evenly down the trail so some are
+        // always in view.
+        const CLUSTERS = 8;
         const span = TRAIL_END + 24;
+        // The open near-field (z > 0) is grassy and tree-free; the far side
+        // has the odd shallow clearing between trail and trees.
+        const fieldZ = () => 5 + Math.random() * 12; // open grass, near side
+        const farZ = () => -(3.5 + Math.random() * 4); // shallow strip, far side
         for (let g = 0; g < CLUSTERS; g++) {
           const gx = -12 + (span / CLUSTERS) * (g + Math.random() * 0.8);
-          const gz = -(4 + Math.random() * 14);
+          // ~70% of clusters graze the open field, the rest the far side.
+          const gz = Math.random() < 0.7 ? fieldZ() : farZ();
           const n = 2 + Math.floor(Math.random() * 3);
           for (let i = 0; i < n; i++) {
             spawnSheep(gx + (Math.random() - 0.5) * 5, gz + (Math.random() - 0.5) * 4);
           }
-          // The odd loner grazing a little apart from the group.
+          // The odd loner grazing a little apart — usually out in the field.
           if (Math.random() < 0.6) {
-            spawnSheep(gx + (Math.random() - 0.5) * 14, -(3 + Math.random() * 16));
+            const lz = Math.random() < 0.75 ? fieldZ() : farZ();
+            spawnSheep(gx + (Math.random() - 0.5) * 14, lz);
           }
         }
       }
@@ -1086,7 +1133,7 @@ export function createKidsWorld(
         const depth = minD + Math.random() * (maxD - minD);
         const z =
           side === "back" ? -depth : Math.random() > 0.65 ? depth : -depth;
-        wrap.position.set(x, terrainY(x, z), z);
+        wrap.position.set(x, surfaceY(x, z), z);
         wrap.rotation.y = Math.random() * Math.PI * 2;
         wrap.scale.setScalar(
           (0.8 + Math.random() * 0.8) * theme.sceneryScale * scaleMul,
@@ -1227,8 +1274,90 @@ export function createKidsWorld(
         guard?: boolean;
         phase?: number;
         smiler?: boolean;
+        sheep?: boolean;
+        head?: THREE.Object3D | null;
+        headBaseX?: number;
+        baseX?: number;
+        baseZ?: number;
+        state?: "graze" | "walk";
+        stateT?: number;
+        tx?: number;
+        tz?: number;
       };
-      // Sheep and other props carry no home — they just animate in place.
+      // Grazing sheep live their own little life: nibble a patch for a while,
+      // then get up and amble several steps to fresh grass, and repeat.
+      if (ud.sheep) {
+        const t = clock.elapsedTime;
+        const ph = ud.phase ?? 0;
+        const homeX = ud.baseX ?? f.wrap.position.x;
+        const homeZ = ud.baseZ ?? f.wrap.position.z;
+        ud.stateT = (ud.stateT ?? 0) - dt;
+        if (ud.stateT <= 0) {
+          if (ud.state === "walk") {
+            // Reached the new patch — settle in and graze for a spell.
+            ud.state = "graze";
+            ud.stateT = 2 + Math.random() * 3.5;
+          } else {
+            // Pick a fresh patch several steps away, kept near home and off the
+            // trail, then walk to it.
+            const ang = Math.random() * Math.PI * 2;
+            const dist = 4 + Math.random() * 5;
+            let nx = f.wrap.position.x + Math.cos(ang) * dist;
+            let nz = f.wrap.position.z + Math.sin(ang) * dist;
+            nx = homeX + Math.max(-9, Math.min(9, nx - homeX));
+            nz = homeZ + Math.max(-7, Math.min(7, nz - homeZ));
+            // Keep to its own side of the trail — never wander onto the path.
+            nz = homeZ >= 0 ? Math.max(nz, 3.5) : Math.min(nz, -3.5);
+            ud.tx = nx;
+            ud.tz = nz;
+            ud.state = "walk";
+            ud.stateT = 9; // safety cap so it never walks forever
+          }
+        }
+        if (ud.state === "walk") {
+          const dx = (ud.tx ?? f.wrap.position.x) - f.wrap.position.x;
+          const dz = (ud.tz ?? f.wrap.position.z) - f.wrap.position.z;
+          const dist = Math.hypot(dx, dz);
+          if (dist < 0.2) {
+            ud.state = "graze";
+            ud.stateT = 2 + Math.random() * 3.5;
+          } else {
+            const step = Math.min(dist, 1.9 * dt); // brisk amble ~1.9 units/s
+            const nx = f.wrap.position.x + (dx / dist) * step;
+            const nz = f.wrap.position.z + (dz / dist) * step;
+            // A clear gait bounce so the walk reads as stepping, not gliding.
+            const bob = Math.abs(Math.sin(t * 10 + ph)) * 0.1;
+            f.wrap.position.set(nx, terrainY(nx, nz) - 0.06 + bob, nz);
+            const face = Math.atan2(dx, dz);
+            let d = face - f.wrap.rotation.y;
+            while (d > Math.PI) d -= Math.PI * 2;
+            while (d < -Math.PI) d += Math.PI * 2;
+            f.wrap.rotation.y += d * 0.16;
+            f.mixer.timeScale = 2; // livelier limbs while walking
+            // Head bobs with each step, carried a little forward.
+            if (ud.head) {
+              ud.head.rotation.x =
+                (ud.headBaseX ?? 0) + 0.1 + Math.sin(t * 10 + ph) * 0.12;
+            }
+          }
+        } else {
+          // Grazing: repeated head-dips to nibble the grass, then now and then
+          // a lift to look around — a clear, lively rhythm.
+          f.mixer.timeScale = 1;
+          f.wrap.position.y = terrainY(f.wrap.position.x, f.wrap.position.z) - 0.06;
+          f.wrap.rotation.y += Math.sin(t * 0.5 + ph) * 0.006;
+          if (ud.head) {
+            // A slow ~4s cycle: mostly head-down nibbling, briefly head-up.
+            const cyc = (Math.sin(t * 1.5 + ph) + 1) / 2; // 0..1
+            const lookUp = Math.sin(t * 0.35 + ph) > 0.8 ? 1 : 0;
+            ud.head.rotation.x = lookUp
+              ? (ud.headBaseX ?? 0) - 0.15
+              : (ud.headBaseX ?? 0) + 0.25 + cyc * 0.4;
+          }
+        }
+        continue;
+      }
+      // Other props carry no home — they just animate in place.
       if (ud.homeX == null) {
         continue;
       }
