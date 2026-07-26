@@ -977,10 +977,13 @@ export function createKidsWorld(
       const bm = wordTiles[i].base.material as THREE.MeshStandardMaterial;
       const fm = wordTiles[i].face.material as THREE.MeshStandardMaterial;
       // Already-typed letters fade right back to 20% so the eye lands on what
-      // is next.
-      const op = i < index ? 0.2 : 1;
+      // is next — and drop their shadow so they don't sit heavier than they
+      // look.
+      const typed = i < index;
+      const op = typed ? 0.2 : 1;
       bm.opacity = op;
       fm.opacity = op;
+      wordTiles[i].base.castShadow = !typed;
       if (i === index) {
         bm.color.copy(TILE_CUR_C);
         bm.emissive.copy(TILE_CUR_C);
