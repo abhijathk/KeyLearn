@@ -479,3 +479,177 @@ export function PrivacyPolicyPage() {
     </div>
   );
 }
+
+// ── User guide ─────────────────────────────────────────────────────────────
+
+export function GuidePage() {
+  const { formatMessage } = useIntl();
+  return (
+    <div className={styles.paper}>
+      <Masthead
+        kicker={formatMessage({
+          id: "guide.kicker",
+          defaultMessage: "Everything in one place",
+        })}
+        title={formatMessage({
+          id: "guide.title",
+          defaultMessage: "User Guide",
+        })}
+        dateline={formatMessage({
+          id: "guide.dateline",
+          defaultMessage: "How KeyLearn works, start to finish",
+        })}
+      />
+
+      <div className={styles.glance}>
+        <div className={styles.glanceLab}>
+          <FormattedMessage id="guide.glance.label" defaultMessage="In short" />
+        </div>
+        <ul>
+          <li>
+            <FormattedMessage
+              id="guide.glance.1"
+              defaultMessage="Practice a few minutes most days — KeyLearn adapts to you, so steady beats long."
+            />
+          </li>
+          <li>
+            <FormattedMessage
+              id="guide.glance.2"
+              defaultMessage="Give each person in the house their own profile; kids get their own playful world."
+            />
+          </li>
+          <li>
+            <FormattedMessage
+              id="guide.glance.3"
+              defaultMessage="Aim for accuracy first — speed follows on its own."
+            />
+          </li>
+        </ul>
+      </div>
+
+      <Sect>
+        <FormattedMessage id="guide.start.h" defaultMessage="Getting started" />
+      </Sect>
+      <p>
+        <FormattedMessage
+          id="guide.start.p"
+          defaultMessage="Just start typing on the practice screen. KeyLearn is <em>adaptive</em>: it begins with a small handful of letters and only adds a new one once you can type the current ones both quickly and accurately. That growing set is your journey — the difficulty rises exactly as fast as you do, never faster. Short, regular sessions work far better than the occasional long one."
+          values={{ em }}
+        />
+      </p>
+
+      <Sect>
+        <FormattedMessage
+          id="guide.screen.h"
+          defaultMessage="Reading the practice screen"
+        />
+      </Sect>
+      <p>
+        <FormattedMessage
+          id="guide.screen.p"
+          defaultMessage="The word line floats just above the on-screen keyboard. A glowing comet points to the key to press next, and the keys are tinted by finger zone so you learn which finger reaches where; the faint resting-hands guide shows where your fingers live between presses. The golden rule: keep your eyes on the words, not your hands."
+        />
+      </p>
+
+      <Sect>
+        <FormattedMessage
+          id="guide.profiles.h"
+          defaultMessage="Profiles and your household"
+        />
+      </Sect>
+      <p>
+        <FormattedMessage
+          id="guide.profiles.p1"
+          defaultMessage="KeyLearn is built for the whole house. Each person gets their own profile — a grown-up or a kid — and each profile keeps its own separate history right here on this device. Nothing is mixed together."
+        />
+      </p>
+      <p>
+        <FormattedMessage
+          id="guide.profiles.p2"
+          defaultMessage="To set one up, open the menu (top-right) and choose Account, then add a profile with a name and — for a child — a birth year. That birth year picks the right kids age band, which tunes the words, pacing and help to their age. Switch between learners any time from the menu; the app remembers where each one left off."
+        />
+      </p>
+
+      <Sect>
+        <FormattedMessage id="guide.kids.h" defaultMessage="Kids mode" />
+      </Sect>
+      <p>
+        <FormattedMessage
+          id="guide.kids.p"
+          defaultMessage="Children practise on a playful trail — Dino Run or Hero Trail — where every correct key walks their character a step closer home. Tap the gear to open the toy-box: pick the world and character, turn sounds on, choose a simple, full or hidden keyboard, show the letters right on the trail, and — under Advanced — dial the brightness, colour and how lively the world is. The youngest see big, friendly letters and forgiving pacing automatically."
+        />
+      </p>
+
+      <Sect>
+        <FormattedMessage
+          id="guide.progress.h"
+          defaultMessage="Tracking your progress"
+        />
+      </Sect>
+      <p>
+        <FormattedMessage
+          id="guide.progress.p"
+          defaultMessage="Your Profile page tells the whole story: Lifetime and Today stats up top, a map of every letter you have unlocked, how each individual key has sped up, and the key-pairs still holding you back. It is honest, not harsh — the point is to see steady progress. Clearing statistics resets only the profile you are looking at."
+        />
+      </p>
+
+      <Sect>
+        <FormattedMessage id="guide.yours.h" defaultMessage="Make it yours" />
+      </Sect>
+      <p>
+        <FormattedMessage
+          id="guide.yours.p"
+          defaultMessage="From the menu you can switch the theme (light, dark or the KeyLearn look), change the site language, and choose your keyboard layout. On the practice screen, the small tools let you resize the text, restart or skip a lesson, hide the keyboard, and open a guided tour."
+        />
+      </p>
+
+      <Sect>
+        <FormattedMessage
+          id="guide.privacy.h"
+          defaultMessage="Account and privacy"
+        />
+      </Sect>
+      <p>
+        <FormattedMessage
+          id="guide.privacy.p"
+          defaultMessage="You can use KeyLearn entirely on this device without an account. Sign in only if you want your history to sync across devices or to share a profile link. Either way there are no ads and no trackers, and your data stays yours."
+        />
+      </p>
+
+      <Sect>
+        <FormattedMessage
+          id="guide.tips.h"
+          defaultMessage="Tips that actually help"
+        />
+      </Sect>
+      <ul className={styles.tips}>
+        <li>
+          <FormattedMessage
+            id="guide.tips.1"
+            defaultMessage="Accuracy before speed — clean typing is what sticks."
+          />
+        </li>
+        <li>
+          <FormattedMessage
+            id="guide.tips.2"
+            defaultMessage="Fix mistakes calmly; don't race to catch up."
+          />
+        </li>
+        <li>
+          <FormattedMessage
+            id="guide.tips.3"
+            defaultMessage="Rest your fingers on the home row (F and J have little bumps)."
+          />
+        </li>
+        <li>
+          <FormattedMessage
+            id="guide.tips.4"
+            defaultMessage="A few minutes every day beats an hour once a week."
+          />
+        </li>
+      </ul>
+
+      <div className={styles.foot}>keylearn · happy typing</div>
+    </div>
+  );
+}

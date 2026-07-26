@@ -234,6 +234,19 @@ export class Controller {
     return this.renderPage(ctx, Pages.about, intl);
   }
 
+  @http.GET(`${Pages.guide.path}`)
+  async ["guide"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.guide);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.guide.path}`)
+  async ["guide-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.guide, intl);
+  }
+
   async pageData(
     ctx: Context<RouterState & AuthState>,
     { locale }: IntlShape,

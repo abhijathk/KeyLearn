@@ -386,6 +386,35 @@ export namespace Pages {
     meta,
   } satisfies PageInfo;
 
+  export const guide = {
+    path: "/guide",
+    title: defineMessage({
+      id: "guide.title",
+      defaultMessage: "User Guide",
+    }),
+    link: {
+      label: defineMessage({
+        id: "guide.title",
+        defaultMessage: "User Guide",
+      }),
+      title: defineMessage({
+        id: "guide.dateline",
+        defaultMessage: "How KeyLearn works, start to finish",
+      }),
+      icon: mdiHelpCircleOutline,
+    },
+    meta: [
+      ...meta,
+      {
+        name: "description",
+        content: defineMessage({
+          id: "guide.dateline",
+          defaultMessage: "How KeyLearn works, start to finish",
+        }),
+      },
+    ],
+  } satisfies PageInfo;
+
   export function profileOf(arg: string): string;
   export function profileOf(arg: NamedUser): string;
   export function profileOf(arg: AnonymousUser): null;

@@ -1,14 +1,14 @@
 # English
 
-Translated: 598 messages, 6786 words
+Translated: 624 messages, 7338 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 306 messages, 3986 words
+Translated: 305 messages, 3980 words
 
-Untranslated: 256 messages, 2454 words
+Untranslated: 283 messages, 3012 words
 
 * *or*
 * *Kid*
@@ -34,9 +34,9 @@ Untranslated: 256 messages, 2454 words
 
 # Arabic
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -62,9 +62,9 @@ Untranslated: 254 messages, 2452 words
 
 # Bulgarian
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -90,37 +90,37 @@ Untranslated: 254 messages, 2452 words
 
 # Bangla
 
-Translated: 551 messages, 5954 words
+Translated: 550 messages, 5945 words
 
-Untranslated: 42 messages, 703 words
+Untranslated: 69 messages, 1264 words
 
 * *About*
 * *Version*
+* *In short*
 * *Log out?*
 * *Settings*
+* *Kids mode*
 * *The maker*
+* *User Guide*
 * *Day or night*
 * *In a sentence*
 * *KeyLearn home*
+* *Make it yours*
 * *About KeyLearn*
 * *Classic course*
 * *Lower the goal*
 * *Raise the goal*
+* *Getting started*
 * *Sounds on or off*
 * *The story so far*
 * *What we stand for*
-* *Who's practising?*
-* *The KeyLearn story*
-* *New keys per stage:*
-* *Why KeyLearn exists*
-* *How the learning works*
 * ...
 
 # Catalan
 
-Translated: 278 messages, 3041 words
+Translated: 277 messages, 3035 words
 
-Untranslated: 282 messages, 3381 words
+Untranslated: 309 messages, 3939 words
 
 * *or*
 * *Kid*
@@ -146,9 +146,9 @@ Untranslated: 282 messages, 3381 words
 
 # Czech
 
-Translated: 305 messages, 3983 words
+Translated: 304 messages, 3977 words
 
-Untranslated: 257 messages, 2457 words
+Untranslated: 284 messages, 3015 words
 
 * *or*
 * *Kid*
@@ -174,9 +174,9 @@ Untranslated: 257 messages, 2457 words
 
 # Danish
 
-Translated: 298 messages, 3935 words
+Translated: 297 messages, 3929 words
 
-Untranslated: 262 messages, 2487 words
+Untranslated: 289 messages, 3045 words
 
 * *or*
 * *Kid*
@@ -202,9 +202,9 @@ Untranslated: 262 messages, 2487 words
 
 # German
 
-Translated: 306 messages, 3986 words
+Translated: 305 messages, 3980 words
 
-Untranslated: 256 messages, 2454 words
+Untranslated: 283 messages, 3012 words
 
 * *or*
 * *Kid*
@@ -230,9 +230,9 @@ Untranslated: 256 messages, 2454 words
 
 # Greek
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -260,7 +260,7 @@ Untranslated: 254 messages, 2452 words
 
 Translated: 52 messages, 692 words
 
-Untranslated: 504 messages, 5706 words
+Untranslated: 530 messages, 6258 words
 
 * *or*
 * *GO!*
@@ -286,9 +286,9 @@ Untranslated: 504 messages, 5706 words
 
 # Spanish
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -314,9 +314,9 @@ Untranslated: 254 messages, 2452 words
 
 # Estonian
 
-Translated: 305 messages, 3985 words
+Translated: 304 messages, 3979 words
 
-Untranslated: 257 messages, 2455 words
+Untranslated: 284 messages, 3013 words
 
 * *or*
 * *GO!*
@@ -342,9 +342,9 @@ Untranslated: 257 messages, 2455 words
 
 # Persian
 
-Translated: 263 messages, 2481 words
+Translated: 262 messages, 2475 words
 
-Untranslated: 297 messages, 3941 words
+Untranslated: 324 messages, 4499 words
 
 * *or*
 * *Kid*
@@ -370,9 +370,9 @@ Untranslated: 297 messages, 3941 words
 
 # Finnish
 
-Translated: 179 messages, 1837 words
+Translated: 178 messages, 1831 words
 
-Untranslated: 378 messages, 4564 words
+Untranslated: 405 messages, 5122 words
 
 * *or*
 * *GO!*
@@ -400,7 +400,7 @@ Untranslated: 378 messages, 4564 words
 
 Translated: 20 messages, 80 words
 
-Untranslated: 535 messages, 6307 words
+Untranslated: 561 messages, 6859 words
 
 * *or*
 * *GO!*
@@ -426,9 +426,9 @@ Untranslated: 535 messages, 6307 words
 
 # French
 
-Translated: 300 messages, 3810 words
+Translated: 299 messages, 3804 words
 
-Untranslated: 262 messages, 2630 words
+Untranslated: 289 messages, 3188 words
 
 * *or*
 * *Kid*
@@ -454,9 +454,9 @@ Untranslated: 262 messages, 2630 words
 
 # Irish
 
-Translated: 304 messages, 3976 words
+Translated: 303 messages, 3970 words
 
-Untranslated: 258 messages, 2464 words
+Untranslated: 285 messages, 3022 words
 
 * *or*
 * *Kid*
@@ -482,37 +482,37 @@ Untranslated: 258 messages, 2464 words
 
 # Gujarati
 
-Translated: 553 messages, 5973 words
+Translated: 552 messages, 5964 words
 
-Untranslated: 40 messages, 684 words
+Untranslated: 67 messages, 1245 words
 
 * *About*
 * *Version*
+* *In short*
 * *Settings*
+* *Kids mode*
 * *The maker*
+* *User Guide*
 * *Day or night*
 * *In a sentence*
 * *KeyLearn home*
+* *Make it yours*
 * *About KeyLearn*
 * *Classic course*
 * *Lower the goal*
 * *Raise the goal*
+* *Getting started*
 * *Sounds on or off*
 * *The story so far*
 * *What we stand for*
 * *Who's practising?*
-* *The KeyLearn story*
-* *New keys per stage:*
-* *Why KeyLearn exists*
-* *How the learning works*
-* *Open source, and yours*
 * ...
 
 # Hebrew
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -538,33 +538,37 @@ Untranslated: 254 messages, 2452 words
 
 # Hindi
 
-Translated: 580 messages, 6605 words
+Translated: 579 messages, 6596 words
 
-Untranslated: 17 messages, 175 words
+Untranslated: 44 messages, 736 words
 
 * *About*
+* *In short*
 * *Log out?*
 * *Settings*
+* *Kids mode*
+* *User Guide*
 * *Day or night*
 * *KeyLearn home*
+* *Make it yours*
 * *Classic course*
 * *Lower the goal*
 * *Raise the goal*
+* *Getting started*
 * *Sounds on or off*
 * *Who's practising?*
+* *Account and privacy*
 * *New keys per stage:*
-* *Live speed — the running average while you type.*
-* *Slowest transitions — the key-pairs holding you back*
-* *Practice history stays on this device and on your account. Y...*
-* *Two keys can each be quick alone yet slow as a pair — awkwar...*
-* *How many new keys the curriculum unlocks at a time once you’...*
-* *The classic touch-typing course: a fixed, finger-by-finger m...*
+* *Tracking your progress*
+* *Everything in one place*
+* *Tips that actually help*
+* ...
 
 # Croatian
 
-Translated: 304 messages, 3981 words
+Translated: 303 messages, 3975 words
 
-Untranslated: 258 messages, 2459 words
+Untranslated: 285 messages, 3017 words
 
 * *or*
 * *Kid*
@@ -590,9 +594,9 @@ Untranslated: 258 messages, 2459 words
 
 # Hungarian
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -618,9 +622,9 @@ Untranslated: 254 messages, 2452 words
 
 # Indonesian
 
-Translated: 306 messages, 3986 words
+Translated: 305 messages, 3980 words
 
-Untranslated: 256 messages, 2454 words
+Untranslated: 283 messages, 3012 words
 
 * *or*
 * *GO!*
@@ -648,7 +652,7 @@ Untranslated: 256 messages, 2454 words
 
 Translated: 71 messages, 1301 words
 
-Untranslated: 485 messages, 5097 words
+Untranslated: 511 messages, 5649 words
 
 * *or*
 * *GO!*
@@ -674,9 +678,9 @@ Untranslated: 485 messages, 5097 words
 
 # Italian
 
-Translated: 302 messages, 3981 words
+Translated: 301 messages, 3975 words
 
-Untranslated: 260 messages, 2459 words
+Untranslated: 287 messages, 3017 words
 
 * *or*
 * *Kid*
@@ -702,9 +706,9 @@ Untranslated: 260 messages, 2459 words
 
 # Japanese
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -730,37 +734,37 @@ Untranslated: 254 messages, 2452 words
 
 # Kannada
 
-Translated: 551 messages, 5954 words
+Translated: 550 messages, 5945 words
 
-Untranslated: 42 messages, 703 words
+Untranslated: 69 messages, 1264 words
 
 * *About*
 * *Version*
+* *In short*
 * *Log out?*
 * *Settings*
+* *Kids mode*
 * *The maker*
+* *User Guide*
 * *Day or night*
 * *In a sentence*
 * *KeyLearn home*
+* *Make it yours*
 * *About KeyLearn*
 * *Classic course*
 * *Lower the goal*
 * *Raise the goal*
+* *Getting started*
 * *Sounds on or off*
 * *The story so far*
 * *What we stand for*
-* *Who's practising?*
-* *The KeyLearn story*
-* *New keys per stage:*
-* *Why KeyLearn exists*
-* *How the learning works*
 * ...
 
 # Korean
 
 Translated: 117 messages, 882 words
 
-Untranslated: 443 messages, 5540 words
+Untranslated: 469 messages, 6092 words
 
 * *or*
 * *Kid*
@@ -786,9 +790,9 @@ Untranslated: 443 messages, 5540 words
 
 # Lithuanian
 
-Translated: 273 messages, 2796 words
+Translated: 272 messages, 2790 words
 
-Untranslated: 287 messages, 3626 words
+Untranslated: 314 messages, 4184 words
 
 * *or*
 * *Kid*
@@ -814,37 +818,37 @@ Untranslated: 287 messages, 3626 words
 
 # Malayalam
 
-Translated: 553 messages, 5973 words
+Translated: 552 messages, 5964 words
 
-Untranslated: 40 messages, 684 words
+Untranslated: 67 messages, 1245 words
 
 * *About*
 * *Version*
+* *In short*
 * *Settings*
+* *Kids mode*
 * *The maker*
+* *User Guide*
 * *Day or night*
 * *In a sentence*
 * *KeyLearn home*
+* *Make it yours*
 * *About KeyLearn*
 * *Classic course*
 * *Lower the goal*
 * *Raise the goal*
+* *Getting started*
 * *Sounds on or off*
 * *The story so far*
 * *What we stand for*
 * *Who's practising?*
-* *The KeyLearn story*
-* *New keys per stage:*
-* *Why KeyLearn exists*
-* *How the learning works*
-* *Open source, and yours*
 * ...
 
 # Mongolian
 
 Translated: 4 messages, 31 words
 
-Untranslated: 551 messages, 6356 words
+Untranslated: 577 messages, 6908 words
 
 * *or*
 * *GO!*
@@ -870,9 +874,9 @@ Untranslated: 551 messages, 6356 words
 
 # Norwegian Bokmål
 
-Translated: 182 messages, 1977 words
+Translated: 181 messages, 1971 words
 
-Untranslated: 376 messages, 4427 words
+Untranslated: 403 messages, 4985 words
 
 * *or*
 * *Kid*
@@ -898,9 +902,9 @@ Untranslated: 376 messages, 4427 words
 
 # Nepali
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -926,9 +930,9 @@ Untranslated: 254 messages, 2452 words
 
 # Dutch
 
-Translated: 301 messages, 3979 words
+Translated: 300 messages, 3973 words
 
-Untranslated: 261 messages, 2461 words
+Untranslated: 288 messages, 3019 words
 
 * *or*
 * *Kid*
@@ -954,9 +958,9 @@ Untranslated: 261 messages, 2461 words
 
 # Polish
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -982,9 +986,9 @@ Untranslated: 254 messages, 2452 words
 
 # Brazilian Portuguese
 
-Translated: 305 messages, 3984 words
+Translated: 304 messages, 3978 words
 
-Untranslated: 257 messages, 2456 words
+Untranslated: 284 messages, 3014 words
 
 * *or*
 * *Kid*
@@ -1010,9 +1014,9 @@ Untranslated: 257 messages, 2456 words
 
 # European Portuguese
 
-Translated: 286 messages, 3864 words
+Translated: 285 messages, 3858 words
 
-Untranslated: 274 messages, 2558 words
+Untranslated: 301 messages, 3116 words
 
 * *or*
 * *Kid*
@@ -1038,9 +1042,9 @@ Untranslated: 274 messages, 2558 words
 
 # Romanian
 
-Translated: 271 messages, 3088 words
+Translated: 270 messages, 3082 words
 
-Untranslated: 286 messages, 3317 words
+Untranslated: 313 messages, 3875 words
 
 * *or*
 * *Kid*
@@ -1066,9 +1070,9 @@ Untranslated: 286 messages, 3317 words
 
 # Russian
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -1094,9 +1098,9 @@ Untranslated: 254 messages, 2452 words
 
 # Slovak
 
-Translated: 307 messages, 3986 words
+Translated: 306 messages, 3980 words
 
-Untranslated: 255 messages, 2454 words
+Untranslated: 282 messages, 3012 words
 
 * *or*
 * *Kid*
@@ -1122,9 +1126,9 @@ Untranslated: 255 messages, 2454 words
 
 # Slovenian
 
-Translated: 307 messages, 3987 words
+Translated: 306 messages, 3981 words
 
-Untranslated: 255 messages, 2453 words
+Untranslated: 282 messages, 3011 words
 
 * *or*
 * *Kid*
@@ -1150,9 +1154,9 @@ Untranslated: 255 messages, 2453 words
 
 # Albanian
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -1178,9 +1182,9 @@ Untranslated: 254 messages, 2452 words
 
 # Swedish
 
-Translated: 305 messages, 3983 words
+Translated: 304 messages, 3977 words
 
-Untranslated: 257 messages, 2457 words
+Untranslated: 284 messages, 3015 words
 
 * *or*
 * *Kid*
@@ -1206,65 +1210,65 @@ Untranslated: 257 messages, 2457 words
 
 # Tamil
 
-Translated: 551 messages, 5954 words
+Translated: 550 messages, 5945 words
 
-Untranslated: 42 messages, 703 words
+Untranslated: 69 messages, 1264 words
 
 * *About*
 * *Version*
+* *In short*
 * *Log out?*
 * *Settings*
+* *Kids mode*
 * *The maker*
+* *User Guide*
 * *Day or night*
 * *In a sentence*
 * *KeyLearn home*
+* *Make it yours*
 * *About KeyLearn*
 * *Classic course*
 * *Lower the goal*
 * *Raise the goal*
+* *Getting started*
 * *Sounds on or off*
 * *The story so far*
 * *What we stand for*
-* *Who's practising?*
-* *The KeyLearn story*
-* *New keys per stage:*
-* *Why KeyLearn exists*
-* *How the learning works*
 * ...
 
 # Telugu
 
-Translated: 551 messages, 5954 words
+Translated: 550 messages, 5945 words
 
-Untranslated: 42 messages, 703 words
+Untranslated: 69 messages, 1264 words
 
 * *About*
 * *Version*
+* *In short*
 * *Log out?*
 * *Settings*
+* *Kids mode*
 * *The maker*
+* *User Guide*
 * *Day or night*
 * *In a sentence*
 * *KeyLearn home*
+* *Make it yours*
 * *About KeyLearn*
 * *Classic course*
 * *Lower the goal*
 * *Raise the goal*
+* *Getting started*
 * *Sounds on or off*
 * *The story so far*
 * *What we stand for*
-* *Who's practising?*
-* *The KeyLearn story*
-* *New keys per stage:*
-* *Why KeyLearn exists*
-* *How the learning works*
 * ...
 
 # Thai
 
-Translated: 296 messages, 3890 words
+Translated: 295 messages, 3884 words
 
-Untranslated: 264 messages, 2532 words
+Untranslated: 291 messages, 3090 words
 
 * *or*
 * *Kid*
@@ -1290,9 +1294,9 @@ Untranslated: 264 messages, 2532 words
 
 # Turkish
 
-Translated: 197 messages, 1688 words
+Translated: 196 messages, 1682 words
 
-Untranslated: 360 messages, 4705 words
+Untranslated: 387 messages, 5263 words
 
 * *or*
 * *Kid*
@@ -1318,9 +1322,9 @@ Untranslated: 360 messages, 4705 words
 
 # Ukrainian
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -1346,37 +1350,37 @@ Untranslated: 254 messages, 2452 words
 
 # Urdu
 
-Translated: 551 messages, 5954 words
+Translated: 550 messages, 5945 words
 
-Untranslated: 42 messages, 703 words
+Untranslated: 69 messages, 1264 words
 
 * *About*
 * *Version*
+* *In short*
 * *Log out?*
 * *Settings*
+* *Kids mode*
 * *The maker*
+* *User Guide*
 * *Day or night*
 * *In a sentence*
 * *KeyLearn home*
+* *Make it yours*
 * *About KeyLearn*
 * *Classic course*
 * *Lower the goal*
 * *Raise the goal*
+* *Getting started*
 * *Sounds on or off*
 * *The story so far*
 * *What we stand for*
-* *Who's practising?*
-* *The KeyLearn story*
-* *New keys per stage:*
-* *Why KeyLearn exists*
-* *How the learning works*
 * ...
 
 # Vietnamese
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -1402,9 +1406,9 @@ Untranslated: 254 messages, 2452 words
 
 # Simplified Chinese
 
-Translated: 307 messages, 3981 words
+Translated: 306 messages, 3975 words
 
-Untranslated: 255 messages, 2459 words
+Untranslated: 282 messages, 3017 words
 
 * *or*
 * *Kid*
@@ -1430,9 +1434,9 @@ Untranslated: 255 messages, 2459 words
 
 # Traditional Chinese
 
-Translated: 308 messages, 3988 words
+Translated: 307 messages, 3982 words
 
-Untranslated: 254 messages, 2452 words
+Untranslated: 281 messages, 3010 words
 
 * *or*
 * *Kid*
@@ -1458,9 +1462,9 @@ Untranslated: 254 messages, 2452 words
 
 # Chinese (Taiwan)
 
-Translated: 307 messages, 3987 words
+Translated: 306 messages, 3981 words
 
-Untranslated: 255 messages, 2453 words
+Untranslated: 282 messages, 3011 words
 
 * *or*
 * *GO!*

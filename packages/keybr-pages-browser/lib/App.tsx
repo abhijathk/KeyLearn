@@ -48,6 +48,7 @@ const TypingTestPage = lazy(() => import("./pages/typing-test.tsx"));
 const TermsOfServicePage = lazy(() => import("./pages/terms-of-service.tsx"));
 const PrivacyPolicyPage = lazy(() => import("./pages/privacy-policy.tsx"));
 const AboutPage = lazy(() => import("./pages/about.tsx"));
+const GuidePage = lazy(() => import("./pages/guide.tsx"));
 
 export function App() {
   return (
@@ -289,6 +290,17 @@ function PageRoutes() {
               <Title page={Pages.about} />
               <Suspense fallback={<LoadingProgress />}>
                 <AboutPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.guide.path}
+          element={
+            <Template path={Pages.guide.path}>
+              <Title page={Pages.guide} />
+              <Suspense fallback={<LoadingProgress />}>
+                <GuidePage />
               </Suspense>
             </Template>
           }
