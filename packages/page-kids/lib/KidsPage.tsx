@@ -131,6 +131,22 @@ function loadPrefs(): Prefs {
   }
 }
 
+/** The word around `pos` and how many of its letters are already typed — used
+ * to drive the youngest kids' 3-D letter blocks. Skips spaces to the next word. */
+function wordInfo(passage: string, pos: number): { word: string; idx: number } {
+  let p = pos;
+  while (p < passage.length && passage[p] === " ") p++;
+  if (p >= passage.length) return { word: "", idx: 0 };
+  let start = p;
+  while (start > 0 && passage[start - 1] !== " ") start--;
+  let end = p;
+  while (end < passage.length && passage[end] !== " ") end++;
+  return {
+    word: passage.slice(start, end),
+    idx: Math.max(0, Math.min(end - start, pos - start)),
+  };
+}
+
 function loadBest(): number {
   try {
     return Number(localStorage.getItem(BEST_KEY()) ?? 0) || 0;
@@ -1211,6 +1227,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const pos = textInput?.pos ?? 0;
   const nextChar = passage[pos] ?? null;
   const nextFinger = nextChar != null ? FINGER_OF[nextChar] : undefined;
+  // The very youngest read the word as 3-D blocks in the world instead of the
+  // subtitle panel; everyone else keeps the panel.
+  const use3dWord = band === "5-6";
+  const { word: curWord, idx: curIdx } = wordInfo(passage, pos);
+  useEffect(() => {
+    worldRef.current?.setWord(use3dWord ? curWord : "", curIdx);
+  }, [use3dWord, curWord, curIdx, loaded, landNonce]);
   // A sliding window keeps the current letter in view — real lessons are far
   // longer than the pane is wide.
   const winStart = Math.max(0, pos - 12);
@@ -1314,7 +1337,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             </div>
           </div>
         </div>
-        <div className={styles.words}>
+        {!use3dWord && (
+          <div className={styles.words}>
           {winChars.map((ch, i) => {
             const at = winStart + i;
             return (
@@ -1328,7 +1352,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               </span>
             );
           })}
-        </div>
+          </div>
+        )}
         <div
           key={growNonce}
           className={clsx(

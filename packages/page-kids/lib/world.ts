@@ -368,6 +368,9 @@ export type KidsWorld = {
   /** Ambient motion intensity for all companions/sheep: 1 = full liveliness,
    * 0 = they hold still (a calmer, less busy scene). */
   setMotion(intensity: number): void;
+  /** Lay the current practice word out as 3-D letter blocks on the trail
+   * (youngest kids). `index` is the letter to type next; empty word hides them. */
+  setWord(word: string, index: number): void;
   resize(): void;
   dispose(): void;
 };
@@ -862,6 +865,91 @@ export function createKidsWorld(
   const ringMat = heroRing.material as THREE.MeshStandardMaterial;
   const pumpMat = pumpkinBody.material as THREE.MeshStandardMaterial;
 
+  // ── word tiles ──────────────────────────────────────────────────────────
+  // For the youngest learners the practice word is laid out as real 3-D blocks
+  // resting on the trail ahead of the runner — lit and shadowed like the rest
+  // of the world — with the letter to type next glowing mint and bobbing.
+  const wordGroup = new THREE.Group();
+  wordGroup.visible = false;
+  scene.add(wordGroup);
+  const letterTexCache = new Map<string, THREE.Texture>();
+  const letterTexture = (ch: string): THREE.Texture => {
+    let t = letterTexCache.get(ch);
+    if (t != null) return t;
+    const c = document.createElement("canvas");
+    c.width = c.height = 160;
+    const g = c.getContext("2d")!;
+    g.clearRect(0, 0, 160, 160);
+    g.fillStyle = "#31405a";
+    g.font =
+      "700 122px 'Arial Rounded MT Bold', ui-rounded, 'Trebuchet MS', sans-serif";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillText(ch.toUpperCase(), 80, 94);
+    t = new THREE.CanvasTexture(c);
+    t.anisotropy = 8;
+    t.colorSpace = THREE.SRGBColorSpace;
+    letterTexCache.set(ch, t);
+    return t;
+  };
+  const TILE_C = new THREE.Color(0xf3ead6); // warm stone card
+  const TILE_CUR_C = new THREE.Color(0x53d98b); // mint — the current letter
+  type WordTile = { grp: THREE.Group; base: THREE.Mesh; face: THREE.Mesh };
+  let wordTiles: WordTile[] = [];
+  let wordIdx = 0;
+  const TILE_GAP = 1.4;
+  const buildWordTiles = (n: number) => {
+    for (const t of wordTiles) wordGroup.remove(t.grp);
+    wordTiles = [];
+    for (let i = 0; i < n; i++) {
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(1.1, 1.1, 0.34),
+        new THREE.MeshStandardMaterial({ color: TILE_C, roughness: 0.85 }),
+      );
+      base.castShadow = true;
+      base.receiveShadow = true;
+      const face = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.94, 0.94),
+        new THREE.MeshStandardMaterial({ transparent: true, roughness: 0.9 }),
+      );
+      face.position.z = 0.18;
+      const grp = new THREE.Group();
+      grp.add(base, face);
+      grp.position.x = (i - (n - 1) / 2) * TILE_GAP;
+      wordGroup.add(grp);
+      wordTiles.push({ grp, base, face });
+    }
+  };
+  const setWordImpl = (word: string, index: number) => {
+    if (!word) {
+      wordGroup.visible = false;
+      return;
+    }
+    wordGroup.visible = true;
+    if (word.length !== wordTiles.length) buildWordTiles(word.length);
+    wordIdx = index;
+    for (let i = 0; i < wordTiles.length; i++) {
+      const { base, face } = wordTiles[i];
+      const fm = face.material as THREE.MeshStandardMaterial;
+      fm.map = letterTexture(word[i] ?? " ");
+      fm.needsUpdate = true;
+      const bm = base.material as THREE.MeshStandardMaterial;
+      if (i === index) {
+        bm.color.copy(TILE_CUR_C);
+        bm.emissive.copy(TILE_CUR_C);
+        bm.emissiveIntensity = 0.45;
+      } else if (i < index) {
+        bm.color.copy(TILE_C).multiplyScalar(0.72);
+        bm.emissive.setScalar(0);
+        bm.emissiveIntensity = 0;
+      } else {
+        bm.color.copy(TILE_C);
+        bm.emissive.setScalar(0);
+        bm.emissiveIntensity = 0;
+      }
+    }
+  };
+
   // Reshape the loaded skeleton by age: babies get an oversized head, stubby
   // legs, a short tail and a round belly (that reads as "cute"), maturing to
   // lean adult proportions; the skin softens to a lighter green when little,
@@ -1339,6 +1427,22 @@ export function createKidsWorld(
       sun.target.position.x = cam.position.x;
       sun.target.updateMatrixWorld();
       player.mixer.update(dt);
+      // The 3-D word rides in the foreground just ahead of the runner, held
+      // steady on screen by tracking the camera; the current tile lifts + bobs.
+      if (wordGroup.visible) {
+        const gx = cam.position.x + 2;
+        const gz = 4.6;
+        wordGroup.position.set(gx, terrainY(gx, gz) + 0.75, gz);
+        for (let i = 0; i < wordTiles.length; i++) {
+          const g = wordTiles[i].grp;
+          const cur = i === wordIdx;
+          const s = cur ? 1.28 : 1;
+          g.scale.x += (s - g.scale.x) * 0.2;
+          g.scale.y = g.scale.z = g.scale.x;
+          const lift = cur ? 0.4 + Math.sin(clock.elapsedTime * 3) * 0.12 : 0;
+          g.position.y += (lift - g.position.y) * 0.2;
+        }
+      }
     }
     // Companions notice the runner: when it comes near they turn to watch it
     // pass, then drift back to their own random facing once it's gone.
@@ -1608,6 +1712,7 @@ export function createKidsWorld(
     setMotion(intensity) {
       motionScale = Math.max(0, Math.min(1, intensity));
     },
+    setWord: setWordImpl,
     resize,
     dispose() {
       disposed = true;
