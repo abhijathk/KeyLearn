@@ -34,6 +34,12 @@ export const Controls = memo(function Controls({
   const { setView } = useView(views);
   const [open, setOpen] = useState(false);
   const keyboardHidden = settings.get(uiProps.hideKeyboard);
+  // Picking a tool folds the menu back up; the text-size slider is the one
+  // exception — it stays open so you can keep dragging.
+  const pick = (run: () => void) => () => {
+    run();
+    setOpen(false);
+  };
   return (
     <div
       id={names.controls}
@@ -48,7 +54,7 @@ export const Controls = memo(function Controls({
               defaultMessage:
                 "Open a guided tour with helpful walkthrough slides.",
             })}
-            onClick={onHelp}
+            onClick={pick(onHelp)}
           />
           <Dir swap="icon">
             <IconButton
@@ -57,7 +63,7 @@ export const Controls = memo(function Controls({
                 id: "practice.widget.resetLesson.description",
                 defaultMessage: "Restart this lesson (Ctrl + Left Arrow).",
               })}
-              onClick={onResetLesson}
+              onClick={pick(onResetLesson)}
             />
             <IconButton
               icon={<StrokeIcon name="skip" />}
@@ -65,7 +71,7 @@ export const Controls = memo(function Controls({
                 id: "practice.widget.skipLesson.description",
                 defaultMessage: "Move to the next lesson (Ctrl + Right Arrow).",
               })}
-              onClick={onSkipLesson}
+              onClick={pick(onSkipLesson)}
             />
           </Dir>
           <IconButton
@@ -84,11 +90,11 @@ export const Controls = memo(function Controls({
                       "Hide the on-screen keyboard — practise typing without looking down.",
                   },
             )}
-            onClick={() => {
+            onClick={pick(() => {
               updateSettings(
                 settings.set(uiProps.hideKeyboard, !keyboardHidden),
               );
-            }}
+            })}
           />
           {onTextSize != null && (
             <label

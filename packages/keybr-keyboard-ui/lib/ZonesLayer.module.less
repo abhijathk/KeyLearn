@@ -26,3 +26,17 @@
     display: none;
   }
 }
+
+// On light themes the dark on-surface colour makes the resting hands read a
+// touch heavy — ease the lines back so they stay a quiet guide.
+:global(html[data-color="light"]) .hand path,
+:global(html[data-color="material-light"]) .hand path,
+:global(html[data-color="keylearn-day"]) .hand path,
+:global(html[data-color="kids"]) .hand path,
+:global(html[data-color="coffee"]) .hand path,
+:global(html[data-color="garden"]) .hand path,
+:global(html[data-color="honey"]) .hand path,
+:global(html[data-color="yellow"]) .hand path {
+  fill-opacity: 0.1;
+  stroke-opacity: 0.32;
+}
