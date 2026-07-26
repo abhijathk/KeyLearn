@@ -1444,12 +1444,13 @@ export function createKidsWorld(
       // he's heading — held steady on screen by tracking the camera; the
       // current tile lifts + bobs.
       if (wordGroup.visible) {
-        // Sit the row in the open ground in FRONT of the trail (well below the
-        // path on screen) and a little to the right — clear of trees, rocks and
-        // the runner, so nothing overlaps the letters.
+        // Float the row low in the pane, in front of the trail and a little to
+        // the right — clear of trees, rocks and the runner. Hover it at a smooth
+        // height (trail level only, no per-point ground noise) so the word reads
+        // level instead of riding the bumpy foreground.
         const gx = p.x + 3;
-        const gz = 8.5;
-        wordGroup.position.set(gx, terrainY(gx, gz) + 0.7, gz);
+        const gz = 10;
+        wordGroup.position.set(gx, groundY(gx) + 1.75, gz);
         for (let i = 0; i < wordTiles.length; i++) {
           const g = wordTiles[i].grp;
           const cur = i === wordIdx;
