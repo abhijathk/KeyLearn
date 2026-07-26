@@ -4,7 +4,14 @@ import { uiProps } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
 import { IconButton, StrokeIcon, useView } from "@keybr/widget";
 import { clsx } from "clsx";
-import { memo, type ReactNode, useState } from "react";
+import {
+  memo,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useIntl } from "react-intl";
 import { views } from "../views.tsx";
 import * as styles from "./Controls.module.less";
@@ -40,13 +47,57 @@ export const Controls = memo(function Controls({
     run();
     setOpen(false);
   };
+  // The menu tidies itself away: it auto-closes a few seconds after you stop
+  // touching it, and the moment you start typing — the one exception being the
+  // text-size slider, which keeps it open while you drag.
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const usingSlider = useRef(false);
+  const scheduleClose = useCallback((ms = 4000) => {
+    clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => {
+      if (!usingSlider.current) {
+        setOpen(false);
+      }
+    }, ms);
+  }, []);
+  useEffect(() => {
+    if (!open) {
+      clearTimeout(closeTimer.current);
+      return;
+    }
+    scheduleClose();
+    const onKeyDown = (ev: KeyboardEvent) => {
+      // Typing a character folds the menu away at once (unless the slider is
+      // being dragged with the keyboard).
+      if (!usingSlider.current && ev.key.length === 1) {
+        setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      clearTimeout(closeTimer.current);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, scheduleClose]);
+  const sliderGrab = () => {
+    usingSlider.current = true;
+    clearTimeout(closeTimer.current);
+  };
+  const sliderRelease = () => {
+    usingSlider.current = false;
+    scheduleClose();
+  };
   return (
     <div
       id={names.controls}
       className={clsx(styles.controls, open && styles.open)}
     >
       {open && (
-        <div className={styles.tools}>
+        <div
+          className={styles.tools}
+          onPointerDown={() => scheduleClose()}
+          onPointerMove={() => scheduleClose()}
+        >
           <IconButton
             icon={<StrokeIcon name="help" />}
             title={formatMessage({
@@ -111,8 +162,13 @@ export const Controls = memo(function Controls({
                 max={1.5}
                 step={0.05}
                 value={textSize ?? 1}
+                onPointerDown={sliderGrab}
+                onPointerUp={sliderRelease}
+                onFocus={sliderGrab}
+                onBlur={sliderRelease}
                 onChange={(ev) => {
                   onTextSize(Number(ev.target.value));
+                  scheduleClose();
                 }}
               />
             </label>
