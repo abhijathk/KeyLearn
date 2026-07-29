@@ -1282,6 +1282,9 @@ export function createKidsWorld(
             stateT: Math.random() * 4, // stagger so they don't all move at once
             tx: x,
             tz: z,
+            // Only ~40% ever wander; the rest are settled grazers that keep
+            // their heads down and nibble one patch, never walking.
+            roams: Math.random() < 0.4,
           };
           scene.add(wrap);
           const mixer = new THREE.AnimationMixer(src);
@@ -1554,6 +1557,7 @@ export function createKidsWorld(
         stateT?: number;
         tx?: number;
         tz?: number;
+        roams?: boolean;
       };
       // Grazing sheep live their own little life: nibble a patch for a while,
       // then get up and amble several steps to fresh grass, and repeat.
@@ -1568,6 +1572,10 @@ export function createKidsWorld(
             // Reached the new patch — settle in and graze for a spell.
             ud.state = "graze";
             ud.stateT = 2 + Math.random() * 3.5;
+          } else if (!ud.roams) {
+            // A settled grazer: never wanders — just keeps its head down,
+            // nibbling the same patch of grass.
+            ud.stateT = 3 + Math.random() * 4;
           } else {
             // Pick a fresh patch several steps away, kept near home and off the
             // trail, then walk to it.

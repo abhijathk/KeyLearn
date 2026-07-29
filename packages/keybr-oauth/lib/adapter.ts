@@ -41,7 +41,14 @@ export abstract class AbstractAdapter {
     this.profileUri = profileUri;
   }
 
-  getAuthorizationUrl({ state }: { state: string }): string {
+  getAuthorizationUrl({
+    state,
+    codeChallenge,
+  }: {
+    state: string;
+    // PKCE (RFC 7636): the S256 challenge derived from a per-request verifier.
+    codeChallenge?: string;
+  }): string {
     const url = new URL(this.authorizationUri);
     for (const [key, value] of Object.entries({
       response_type: "code",
@@ -49,6 +56,9 @@ export abstract class AbstractAdapter {
       scope: this.scope,
       redirect_uri: this.redirectUri,
       state,
+      ...(codeChallenge
+        ? { code_challenge: codeChallenge, code_challenge_method: "S256" }
+        : {}),
     })) {
       if (value) {
         url.searchParams.set(key, value);
@@ -57,21 +67,31 @@ export abstract class AbstractAdapter {
     return String(url);
   }
 
-  async getAccessToken({ code }: { code: string }): Promise<AccessToken> {
+  async getAccessToken({
+    code,
+    codeVerifier,
+  }: {
+    code: string;
+    // PKCE: the original verifier, proving this is the same client that started
+    // the flow.
+    codeVerifier?: string;
+  }): Promise<AccessToken> {
+    const params: [string, string][] = [
+      ["grant_type", "authorization_code"],
+      ["client_id", this.clientId],
+      ["client_secret", this.clientSecret],
+      ["redirect_uri", this.redirectUri],
+      ["code", code],
+    ];
+    if (codeVerifier) {
+      params.push(["code_verifier", codeVerifier]);
+    }
     const response = await request
       .use(this.handleErrors())
       .use(handleErrors())
       .use(expectType("application/json"))
       .POST(this.tokenUri)
-      .send(
-        new URLSearchParams([
-          ["grant_type", "authorization_code"],
-          ["client_id", this.clientId],
-          ["client_secret", this.clientSecret],
-          ["redirect_uri", this.redirectUri],
-          ["code", code],
-        ]),
-      );
+      .send(new URLSearchParams(params));
     return new AccessToken(await response.body.json());
   }
 

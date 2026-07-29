@@ -79,7 +79,9 @@ p {
   padding-inline: 0;
   padding-block: 0;
   line-height: 1.5;
-  text-align: justify;
+  // Justified text opens ragged “rivers” of whitespace in the narrow floating
+  // windows; align to the start edge (LTR: left) for even, readable spacing.
+  text-align: start;
 }
 
 p:not(:first-child) {

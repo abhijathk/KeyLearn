@@ -168,3 +168,103 @@
     background-color: var(--accent);
   }
 }
+
+// ---- Test tab: style + length ------------------------------------------
+.modePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.fieldLabel {
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.styleRow {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.styleCard {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 0.7rem;
+  color: var(--text-color);
+  background: transparent;
+  font-family: var(--value-font-family);
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+  }
+}
+
+.styleCardOn {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
+}
+
+.styleName {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.styleCardOn .styleName {
+  color: var(--accent);
+}
+
+.styleDesc {
+  color: var(--text-color-f2);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+// ---- custom length input -----------------------------------------------
+.lengthRow {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.customInput {
+  inline-size: 6rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 999px;
+  color: var(--text-color);
+  background: var(--primary-l1);
+  font-family: var(--value-font-family);
+  font-size: 0.78rem;
+  text-align: center;
+
+  &::placeholder {
+    color: var(--text-color-f2);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+}
+
+.customOn {
+  border-color: var(--accent);
+  color: var(--accent);
+}

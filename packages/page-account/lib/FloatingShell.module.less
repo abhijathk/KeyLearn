@@ -23,6 +23,7 @@
 
 .window {
   display: flex;
+  position: relative;
   flex-direction: column;
   inline-size: min(58rem, 100%);
   block-size: min(44rem, 100%);
@@ -97,6 +98,64 @@
   flex: 1;
   padding: 1.6rem 1.8rem 2rem;
   overflow-block: auto;
+}
+
+// Full-bleed body for the rail/pane account layout — the rail and pane manage
+// their own padding and scrolling.
+.windowBody.flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+// The signature mint tape strip across the top of the flush window.
+.tape {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 5;
+  block-size: 0.44rem;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent) 0 0.8rem,
+    transparent 0.8rem 1.6rem
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+// Close button floats over the pane's top-right corner.
+.floatClose {
+  display: grid;
+  position: absolute;
+  inset-block-start: 0.7rem;
+  inset-inline-end: 0.7rem;
+  z-index: 6;
+  place-items: center;
+  inline-size: 1.9rem;
+  block-size: 1.9rem;
+  padding: 0;
+  border: var(--separator-border);
+  border-radius: 0.5rem;
+  color: var(--text-color-f1);
+  background: color-mix(in oklab, var(--primary-l1) 70%, transparent);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent-d1);
+    color: var(--text-color);
+  }
+
+  svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+}
+
+// The account rail/pane window: compact, but with a roomy content pane —
+// the fixed-width rail keeps its size and the extra width goes to the pane.
+.window.flushWindow {
+  inline-size: min(47rem, 100%);
+  block-size: min(36rem, 92vb);
 }
 
 // A compact window hugs its content — auth forms and small notices.

@@ -6,179 +6,353 @@
   inset: 0;
   z-index: 120;
   place-items: center;
+  padding: 1.25rem;
   background-color: rgb(0 0 0 / 35%);
   backdrop-filter: blur(9px);
 }
 
 .card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  align-items: center;
-  inline-size: min(27rem, calc(100vi - 3rem));
-  padding: 1.75rem;
-  border: 1px solid color-mix(in oklab, var(--accent) 25%, var(--primary-d2));
+  position: relative;
+  inline-size: min(21rem, calc(100vi - 2.5rem));
+  border: 1px solid color-mix(in oklab, var(--accent) 22%, var(--primary-d2));
   border-radius: 1.25rem;
   background-color: var(--primary);
   box-shadow: 0 2rem 5rem var(--shadow-color);
-  text-align: center;
-  animation: goal-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  font-family: var(--value-font-family);
+  color: var(--text-color);
+  animation: goal-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @keyframes goal-in {
   0% {
     opacity: 0;
-    transform: translateY(-0.75rem) scale(0.95);
+    transform: translateY(0.9rem) scale(0.97);
   }
 }
 
-.eyebrow {
-  color: var(--text-color-f1);
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-// The goal ring fills itself on entry, then breathes a soft glow.
-.ring {
-  display: grid;
-  position: relative;
-  place-items: center;
-  inline-size: 5.5rem;
-  block-size: 5.5rem;
-  border-radius: 50%;
-  background: conic-gradient(
-    var(--accent) calc(var(--p) * 1%),
-    color-mix(in oklab, var(--accent) 18%, var(--primary-l1)) 0
+.tape {
+  block-size: 0.5rem;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent) 0 0.9rem,
+    transparent 0.9rem 1.8rem
   );
-  animation: goal-glow 2.2s ease-in-out 1.4s infinite;
+  opacity: 0.55;
 }
 
-@keyframes goal-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 0 6px color-mix(in oklab, var(--accent) 14%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 2rem 0.4rem
-      color-mix(in oklab, var(--accent) 45%, transparent);
-  }
+.inner {
+  padding: 1.4rem 1.5rem;
 }
 
-.ringHole {
-  display: grid;
-  place-items: center;
-  inline-size: 4.3rem;
-  block-size: 4.3rem;
-  border-radius: 50%;
-  background-color: var(--primary);
-}
-
-.ringCheck {
-  inline-size: 2rem;
-  block-size: 2rem;
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 2.2;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  stroke-dashoffset: 30;
-  stroke-dasharray: 30;
-  animation: goal-check 0.5s ease-out 1s forwards;
-}
-
-@keyframes goal-check {
-  100% {
-    stroke-dashoffset: 0;
-  }
+.rcHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .title {
-  color: var(--text-color);
-  font-size: 1.3rem;
+  margin: 0;
+  font-size: 1.25rem;
   font-weight: 750;
-}
-
-.subtitle {
-  color: var(--Name-color);
-  font-size: 0.85rem;
 
   b {
-    color: var(--text-color);
+    color: var(--accent);
   }
 }
 
-.stats {
+.stamp {
+  flex: none;
+  border: 2px solid var(--accent);
+  border-radius: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  transform: rotate(4deg);
+}
+
+.metaline {
+  margin-block-start: 0.5rem;
+  color: color-mix(in oklab, var(--text-color) 45%, var(--primary));
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rows {
+  margin: 1rem 0 0.35rem;
+}
+
+.lrow {
   display: flex;
-  align-items: stretch;
-  justify-content: center;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
 }
 
-.stat {
-  display: grid;
-  gap: 0.2rem;
-  padding-inline: 1.1rem;
-
-  & + & {
-    border-inline-start: var(--separator-border);
-  }
+.k {
+  color: var(--text-color-f1);
+  font-size: 0.78rem;
 }
 
-.statLabel {
-  color: var(--Name-color);
-  font-size: 0.6rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.pbBadge {
+  margin-inline-start: 0.5rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  color: var(--primary);
+  background: var(--accent);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 
-.statValue {
-  color: var(--text-color);
-  font-family: var(--value-font-family);
-  font-size: 1.1rem;
+.fill {
+  flex: 1;
+  border-block-end: 1px dotted color-mix(in oklab, var(--text-color) 22%, transparent);
+  transform: translateY(-0.2rem);
+}
+
+.val {
+  font-size: 0.9rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-.cta {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  margin-block-start: 0.4rem;
-  padding-inline: 1.5rem;
-  padding-block: 0.7rem;
+.pb .val {
+  color: var(--accent);
+}
+
+.dash {
+  margin: 0.75rem 0;
   border: none;
-  border-radius: 999px;
-  color: var(--primary);
-  background-color: var(--accent);
+  border-block-start: 1px dashed color-mix(in oklab, var(--text-color) 18%, transparent);
+}
+
+.barsCap {
+  display: flex;
+  justify-content: space-between;
+  color: color-mix(in oklab, var(--text-color) 45%, var(--primary));
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gain {
+  color: var(--accent);
+}
+
+.chart {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  margin: 0.4rem 0 0.2rem;
+}
+
+.chartBase {
+  stroke: color-mix(in oklab, var(--text-color) 8%, transparent);
+}
+
+.chartArea {
+  fill: color-mix(in oklab, var(--accent) 20%, transparent);
+}
+
+.chartLine {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chartDot {
+  fill: color-mix(in oklab, var(--text-color) 40%, var(--primary));
+}
+
+.chartDotGlow {
+  fill: var(--accent);
+  opacity: 0.22;
+}
+
+.chartDotLast {
+  fill: var(--accent);
+  stroke: var(--primary);
+  stroke-width: 1.4;
+}
+
+.focus {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  margin-block-start: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid color-mix(in oklab, var(--slow-key-color, var(--error-color)) 28%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--slow-key-color, var(--error-color)) 10%, transparent);
+}
+
+.focusIcon {
+  flex: none;
+  color: var(--slow-key-color, var(--error-color));
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+  }
+}
+
+.focusBody {
+  color: var(--text-color-f1);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.focusLead {
+  display: block;
+  margin-block-end: 0.2rem;
+  color: var(--slow-key-color, var(--error-color));
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.keycap {
+  display: inline-block;
+  min-inline-size: 1.1rem;
+  margin: 0 0.08rem;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid color-mix(in oklab, var(--text-color) 20%, transparent);
+  border-block-end-width: 2px;
+  border-radius: 0.3rem;
+  background: color-mix(in oklab, var(--text-color) 12%, var(--primary));
+  color: var(--text-color);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.encourage {
+  margin: 0.85rem 0.1rem 0.1rem;
+  color: var(--accent);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.encourageRest {
+  color: var(--slow-key-color, var(--error-color));
+}
+
+.encourageSub {
+  display: block;
+  margin-block-start: 0.2rem;
+  color: var(--text-color-f1);
+  font-size: 0.72rem;
+}
+
+.quote {
+  margin: 0.75rem 0.1rem 0.1rem;
+  color: var(--text-color-f1);
+  font-size: 0.78rem;
+  font-style: italic;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.who {
+  display: block;
+  margin-block-start: 0.3rem;
+  color: color-mix(in oklab, var(--text-color) 45%, var(--primary));
+  font-size: 0.65rem;
+  font-style: normal;
+}
+
+.actions {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  margin-block-start: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0.9rem;
+  border: none;
+  border-radius: 0.65rem;
   font-family: var(--value-font-family);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
 
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.primary {
+  flex: 1.5;
+  color: var(--primary);
+  background: var(--accent);
+
   &:hover {
-    box-shadow: 0 0.4rem 1.5rem
-      color-mix(in oklab, var(--accent) 40%, transparent);
+    box-shadow: 0 0.4rem 1.2rem color-mix(in oklab, var(--accent) 40%, transparent);
+  }
+}
+
+.ghost {
+  flex: 1;
+  border: 1px solid color-mix(in oklab, var(--text-color) 12%, transparent);
+  color: var(--text-color-f1);
+  background: transparent;
+
+  &:hover {
+    color: var(--text-color);
   }
 }
 
 .arrow {
-  inline-size: 1rem;
-  block-size: 1rem;
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
-  stroke-linejoin: round;
+  stroke-width: 2.2;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.ghost {
+.kbd {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
+  border-radius: 0.3rem;
+  background: color-mix(in oklab, var(--primary) 25%, transparent);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.linklike {
   border: none;
-  color: var(--text-color-f1);
-  background: transparent;
+  background: none;
+  color: color-mix(in oklab, var(--text-color) 45%, var(--primary));
   font-family: var(--value-font-family);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
 
   &:hover {
-    color: var(--text-color);
+    color: var(--text-color-f1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
   }
 }

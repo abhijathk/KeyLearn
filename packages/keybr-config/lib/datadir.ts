@@ -34,4 +34,19 @@ export class DataDir {
       s,
     );
   }
+
+  /**
+   * Returns the full path to a per-profile stats file: one file per learner
+   * profile, grouped under its owning account.
+   */
+  profileStatsFile(userId: number, profileId: number): string {
+    const s = String(userId).padStart(9, "0");
+    return this.dataPath(
+      "profile_stats", //
+      s.substring(0, 3),
+      s.substring(3, 6),
+      s,
+      String(profileId),
+    );
+  }
 }

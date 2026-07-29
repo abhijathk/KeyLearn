@@ -19,6 +19,12 @@ import {
   uniqueWords,
 } from "./text/words.ts";
 
+// A letter with at least this many recorded keystrokes counts as genuinely
+// practised. In guided mode locked letters never appear in the text, so they
+// sit at zero — this cleanly separates "really practised" (hundreds+ of hits,
+// including imported keybr history) from "never unlocked".
+const MIN_PRACTICE_HITS = 100;
+
 export class GuidedLesson extends Lesson {
   readonly dictionary: Dictionary;
 
@@ -77,6 +83,21 @@ export class GuidedLesson extends Lesson {
       if (includedKeys.length < maxSize) {
         // Meet the maximal required alphabet size.
         lessonKeys.force(lessonKey.letter);
+        continue;
+      }
+
+      // Keep any genuinely-practised letter in rotation — including keybr
+      // history imported into a profile — even if it sits past the frequency
+      // window or its confidence has since dipped. Without this, imported
+      // progress on letters that rank low in the default order (e.g. r, l)
+      // would never surface, so a migrated learner would "lose" letters they
+      // had already unlocked.
+      const practiceHits = lessonKey.samples.reduce(
+        (sum, s) => sum + s.hitCount,
+        0,
+      );
+      if (practiceHits >= MIN_PRACTICE_HITS) {
+        lessonKeys.include(lessonKey.letter);
         continue;
       }
 

@@ -6,7 +6,8 @@ import { AccountService, type PatchAccountRequest } from "./service.ts";
 
 export type AccountActions = {
   readonly patchAccount: (request: PatchAccountRequest) => void;
-  readonly deleteAccount: () => void;
+  readonly sendDeleteAccountCode: () => Promise<void>;
+  readonly deleteAccount: (code: string, keepStats: boolean) => Promise<void>;
   readonly logout: () => void;
   readonly checkout: () => void;
 };
@@ -25,15 +26,14 @@ export function useAccountActions(props: {
       .catch(catchError);
   };
 
-  // Confirmation now happens in a custom dialog on the account page, so these
-  // just perform the action.
-  const deleteAccount = () => {
-    AccountService.deleteAccount()
-      .then(() => {
-        reload("/");
-      })
-      .catch(catchError);
-  };
+  // Confirmation happens in a custom dialog on the account page (a code is
+  // emailed and entered there), so these just perform the action. deleteAccount
+  // returns its promise so the dialog can surface a wrong-code error.
+  const sendDeleteAccountCode = () => AccountService.sendDeleteAccountCode();
+  const deleteAccount = (code: string, keepStats: boolean) =>
+    AccountService.deleteAccount(code, keepStats).then(() => {
+      reload("/");
+    });
 
   const logout = () => {
     reload("/auth/logout");
@@ -48,6 +48,7 @@ export function useAccountActions(props: {
     publicUser,
     actions: {
       patchAccount,
+      sendDeleteAccountCode,
       deleteAccount,
       logout,
       checkout,

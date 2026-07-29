@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { views } from "../views.tsx";
 import * as styles from "./settings.module.less";
+import { TestModeSettings } from "./settings/TestModeSettings.tsx";
 import { TextGeneratorSettings } from "./settings/TextGeneratorSettings.tsx";
 
 export function SettingsScreen() {
@@ -26,6 +27,10 @@ export function SettingsScreen() {
     };
   }, [setView]);
   const tabs = [
+    formatMessage({
+      id: "typingTest.settings.testTab",
+      defaultMessage: "Test",
+    }),
     formatMessage({ id: "t_Text", defaultMessage: "Text" }),
     formatMessage({
       id: "typingTest.settings.typingTab",
@@ -87,8 +92,9 @@ export function SettingsScreen() {
         </div>
         <div className={styles.body}>
           <ExplainerBoundary defaultVisible={false}>
-            {tabIndex === 0 && <TextGeneratorSettings />}
-            {tabIndex === 1 && <TypingSettings />}
+            {tabIndex === 0 && <TestModeSettings />}
+            {tabIndex === 1 && <TextGeneratorSettings />}
+            {tabIndex === 2 && <TypingSettings />}
           </ExplainerBoundary>
         </div>
         <div className={styles.actions}>

@@ -26,6 +26,16 @@ export enum TextSourceType {
   Book = 3,
 }
 
+// How much the live run shows while you type — the psychological fork.
+export enum TestStyle {
+  /** Nothing but the words and a hairline of progress. */
+  Zen = 1,
+  /** A peripheral pace cue and a personal-best target. */
+  Coach = 2,
+  /** Live speed and a race against your best. */
+  Arcade = 3,
+}
+
 export type CommonWordsSource = {
   readonly type: TextSourceType.CommonWords;
   readonly language: Language;
@@ -71,6 +81,7 @@ export const typingTestProps = {
     type: enumProp("typingTest.duration.type", DurationType, DurationType.Time),
     value: numberProp("typingTest.duration.value", 0),
   } as const,
+  testStyle: enumProp("typingTest.testStyle", TestStyle, TestStyle.Coach),
 } as const;
 
 export function toDuration(settings: Settings): Duration {
@@ -109,6 +120,7 @@ export function toTextSource(settings: Settings): TextSource {
 
 export type CompositeSettings = {
   readonly duration: Duration;
+  readonly testStyle: TestStyle;
   readonly textSource: TextSource;
   readonly textInput: TextInputSettings;
   readonly textDisplay: TextDisplaySettings;
@@ -116,6 +128,7 @@ export type CompositeSettings = {
 
 export function toCompositeSettings(settings: Settings): CompositeSettings {
   const duration = toDuration(settings);
+  const testStyle = settings.get(typingTestProps.testStyle);
   const textSource = toTextSource(settings);
   const textInput = toTextInputSettings(settings);
   const textDisplay = {
@@ -124,6 +137,7 @@ export function toCompositeSettings(settings: Settings): CompositeSettings {
   };
   return {
     duration,
+    testStyle,
     textSource,
     textInput,
     textDisplay,

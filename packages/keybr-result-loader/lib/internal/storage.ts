@@ -1,7 +1,11 @@
 import { recoverResults, Result } from "@keybr/result";
 import { DatabaseError } from "../errors.ts";
 import { PersistentResultStorage } from "./local.ts";
-import { ResultSyncNamedUser, ResultSyncPublicUser } from "./remotesync.ts";
+import {
+  ResultSyncNamedUser,
+  ResultSyncProfile,
+  ResultSyncPublicUser,
+} from "./remotesync.ts";
 import {
   type LocalResultStorage,
   type ProgressListener,
@@ -51,9 +55,18 @@ function openRawResultStorage(
   switch (request.type) {
     case "private": {
       const { userId, kids = false, namespace = null } = request;
-      // A specific learner profile — always local, never synced.
+      // A specific learner profile. Signed in, its history syncs to the server
+      // (per-profile), so a learner's progress follows them across devices;
+      // signed out it stays local only.
       if (namespace != null) {
         const local = new PersistentResultStorage(`history-${namespace}`);
+        const profileId = namespace.startsWith("profile-")
+          ? namespace.slice("profile-".length)
+          : null;
+        if (userId != null && profileId != null) {
+          const remote = new ResultSyncProfile(profileId);
+          return new ResultStorageOfNamedUser(local, remote);
+        }
         return new ResultStorageOfAnonymousUser(local);
       }
       if (kids) {

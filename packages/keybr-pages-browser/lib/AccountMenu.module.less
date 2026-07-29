@@ -4,6 +4,99 @@
   display: inline-flex;
   gap: 0.45rem;
   align-items: center;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+// Signed-out log-in chip: mirrors the header control geometry (see
+// Header.module.less .controls button) so it sits flush with the focus / theme
+// / menu icons — a 2.3rem rounded square holding a 1.15rem glyph.
+.loginChip {
+  display: grid;
+  place-items: center;
+  inline-size: 2.3rem;
+  min-inline-size: 2.3rem;
+  block-size: 2.3rem;
+  min-block-size: 2.3rem;
+  padding: 0.4rem;
+  border-radius: 0.7rem;
+  background-color: var(--primary-l1);
+  color: var(--text-color);
+  text-decoration: none;
+  cursor: pointer;
+
+  svg {
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+  }
+}
+
+// ── Kids page variants ──
+// The kids header speaks in pastel rounded chips with a playful drop shadow and
+// a little hover wiggle (see Header.module.less .kidsChip). These match that
+// language so the account control never looks out of place among the toys.
+.kidsLoginChip {
+  display: grid;
+  place-items: center;
+  // 2.3rem to match the sibling kids <button> chips, which pick up the
+  // .controls button geometry (higher specificity than .kidsChip's 2.2rem).
+  inline-size: 2.3rem;
+  block-size: 2.3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.7rem;
+  // Warm pink, distinct from the yellow / green / blue / purple toy chips.
+  background-color: color-mix(in srgb, #ff7eb6 34%, #ffffff);
+  color: #b53a7d;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow:
+    0 2px 0 rgb(0 0 0 / 8%),
+    inset 0 -2px 0 rgb(0 0 0 / 5%);
+  transition: transform 0.12s ease;
+
+  svg {
+    inline-size: 1.2rem;
+    block-size: 1.2rem;
+  }
+
+  &:hover {
+    transform: scale(1.08) rotate(-4deg);
+  }
+
+  &:active {
+    transform: translateY(2px);
+  }
+}
+
+// Signed-in identity as a friendly rounded pill that sits beside the toy chips.
+.kidsIdentity {
+  padding: 0.2rem 0.7rem 0.2rem 0.25rem;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, #a06cff 20%, #ffffff);
+  box-shadow:
+    0 2px 0 rgb(0 0 0 / 8%),
+    inset 0 -2px 0 rgb(0 0 0 / 5%);
+}
+
+// A soft white ring around the avatar so it reads as a playful token.
+.kidsAvatar {
+  inline-size: 2rem;
+  block-size: 2rem;
+
+  & > :first-child {
+    inline-size: 2rem;
+    block-size: 2rem;
+    box-shadow: 0 0 0 2px #ffffff;
+  }
+}
+
+// The learner's name in the kids rounded typeface.
+.kidsName {
+  color: #5a3ea8;
+  font-family: "Arial Rounded MT Bold", ui-rounded, "Trebuchet MS", sans-serif;
+  font-weight: 800;
 }
 
 // The avatar matches the 1.8rem stroke icons in the header controls, and

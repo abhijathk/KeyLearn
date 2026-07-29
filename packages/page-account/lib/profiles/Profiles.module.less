@@ -17,6 +17,209 @@
   gap: 1rem;
 }
 
+// -------------------------------------------------------- learner rows (B5)
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+}
+
+.rowActive {
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  background: color-mix(in oklab, var(--accent) 9%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 10%, transparent);
+}
+
+.reorder {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.arrow {
+  display: grid;
+  place-items: center;
+  inline-size: 1.15rem;
+  block-size: 0.85rem;
+  padding: 0;
+  border: none;
+  color: var(--text-color-f2);
+  background: transparent;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  &:hover:not(:disabled) {
+    color: var(--accent-d1);
+  }
+
+  svg {
+    inline-size: 0.85rem;
+    block-size: 0.85rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.rowMain {
+  display: flex;
+  flex: 1;
+  gap: 0.6rem;
+  align-items: center;
+  min-inline-size: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rowInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-inline-size: 0;
+}
+
+.rowName {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.activeChip {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  color: var(--accent-d1);
+  font-family: var(--default-font-family);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  &::before {
+    content: "";
+    inline-size: 0.35rem;
+    block-size: 0.35rem;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent);
+  }
+}
+
+.rowMeta {
+  color: var(--text-color-f2);
+  font-size: 0.72rem;
+}
+
+.prog {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block-start: 0.3rem;
+}
+
+.pbar {
+  flex: none;
+  inline-size: 4.6rem;
+  block-size: 0.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-color) 14%, transparent);
+  overflow: hidden;
+
+  i {
+    display: block;
+    block-size: 100%;
+    border-radius: 999px;
+    background: var(--accent);
+    transition: inline-size 0.3s ease;
+  }
+}
+
+.pv {
+  color: var(--text-color-f2);
+  font-size: 0.66rem;
+}
+
+.kindBadge {
+  flex: none;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  // Fallback colours (photo avatars); icon avatars set bg/fg inline.
+  background: color-mix(in oklab, var(--accent) 20%, transparent);
+  color: var(--text-color);
+  font-family: var(--default-font-family);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rowEdit {
+  flex: none;
+  padding: 0;
+  border: none;
+  color: var(--accent-d1);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.addRow {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-self: flex-start;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-radius: 0.6rem;
+  color: var(--primary);
+  background: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--accent-d1);
+  }
+}
+
+.addPlus {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
 .tileWrap {
   display: flex;
   flex-direction: column;
@@ -115,6 +318,55 @@
   font-size: 0.78rem;
 }
 
+// A friendly card, not a bare link, for the keybr import entry point.
+.importCta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  inline-size: 100%;
+  margin-block-start: 0.3rem;
+  padding: 0.7rem 0.9rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+
+  &:hover {
+    border-color: var(--accent-d1);
+  }
+}
+
+.importCtaIcon {
+  flex: none;
+  inline-size: 1.3rem;
+  block-size: 1.3rem;
+  fill: none;
+  stroke: var(--accent-d1);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.importCtaText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.importCtaTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.importCtaSub {
+  color: var(--text-color-f2);
+  font-size: 0.75rem;
+}
+
 // ------------------------------------------------- overlays (gate + editor)
 
 .gate {
@@ -131,6 +383,7 @@
 .gateCard,
 .editor {
   display: flex;
+  position: relative;
   flex-direction: column;
   gap: 0.85rem;
   inline-size: min(31rem, 100%);
@@ -191,7 +444,6 @@
 .gateActions,
 .editorActions {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.6rem;
   align-items: center;
   justify-content: flex-end;
@@ -208,51 +460,185 @@
 
 // ----------------------------------------------------------- editor pieces
 
+// The signature tape strip across the top of the editor card.
+.editorTape {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: 0.4rem;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent) 0 0.8rem,
+    transparent 0.8rem 1.6rem
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.editorTitle {
+  margin: 0;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+
+.titleAccent {
+  color: var(--accent);
+}
+
+.actionGhost {
+  flex: 1;
+  padding: 0.7rem;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  background: transparent;
+  font-family: var(--value-font-family);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent-d1);
+    color: var(--text-color);
+  }
+}
+
+.actionPrimary {
+  flex: 1.4;
+  padding: 0.7rem;
+  border: none;
+  border-radius: 0.6rem;
+  color: var(--primary);
+  background: var(--accent);
+  font-family: var(--value-font-family);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--accent-d1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.editorLbl {
+  margin: 0 0 0.4rem;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.field2 {
+  display: flex;
+  flex-direction: column;
+}
+
+.two {
+  display: flex;
+  gap: 0.7rem;
+
+  > * {
+    flex: 1;
+    min-inline-size: 0;
+  }
+}
+
+.field {
+  inline-size: 100%;
+  padding: 0.65rem 0.8rem;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
+  color: var(--text-color);
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+  font-family: var(--value-font-family);
+  font-size: 0.9rem;
+
+  &::placeholder {
+    color: var(--text-color-f2);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-d1);
+  }
+}
+
+// Grown-up / Kid chooser: two bordered buttons with a person icon.
 .kindRow {
   display: flex;
-  gap: 0.3rem;
-  padding: 0.25rem;
-  border: var(--separator-border);
-  border-radius: 999px;
+  gap: 0.5rem;
 }
 
 .seg {
+  display: flex;
   flex: 1;
-  padding-block: 0.4rem;
-  border: none;
-  border-radius: 999px;
-  color: var(--text-color-f1);
-  background: transparent;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
+  color: var(--text-color-f2);
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
 }
 
+.segIcon {
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .segOn {
-  color: var(--primary);
-  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-d1);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
 }
 
-.avatarRow {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
+// A kid choice glows in the kid-violet accent, not the mint.
+.segKid.segOn {
+  border-color: #a58bf0;
+  color: #a58bf0;
+  background: color-mix(in srgb, #a58bf0 14%, transparent);
 }
 
-.presetGrid {
-  display: flex;
-  flex-wrap: wrap;
+.swatchGrid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
   gap: 0.4rem;
-  align-items: center;
 }
 
 .swatch {
-  inline-size: 1.75rem;
-  block-size: 1.75rem;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
   border: 2px solid transparent;
   border-radius: 50%;
+  font-family: var(--value-font-family);
+  font-size: 0.7rem;
+  font-weight: 800;
   cursor: pointer;
+  transition: transform 0.1s ease;
+
+  &:hover {
+    transform: scale(1.12);
+  }
 }
 
 .swatchOn {
@@ -260,6 +646,7 @@
   outline: 2px solid var(--accent);
 }
 
+// Used by the keybr-import panel's file picker.
 .uploadBtn {
   padding-inline: 0.75rem;
   padding-block: 0.3rem;
@@ -293,4 +680,212 @@
   &:hover {
     text-decoration: underline;
   }
+}
+
+/* Parental consent (kid profile creation) — bordered box + custom checkbox */
+.consentBox {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.cbox {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  margin-block-start: 0.05rem;
+  padding: 0;
+  border: 1.5px solid var(--accent);
+  border-radius: 0.3rem;
+  background: transparent;
+  cursor: pointer;
+
+  svg {
+    inline-size: 0.72rem;
+    block-size: 0.72rem;
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 3.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.cboxOn {
+  background: var(--accent);
+}
+
+.consentText {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-color-f1);
+}
+
+.consentRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-block: 0.3rem 0.2rem;
+}
+
+.consentCheck {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-color-f1);
+  cursor: pointer;
+}
+
+.consentCheck input {
+  margin-block-start: 0.15rem;
+  flex: none;
+}
+
+.consentLink {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-l1, var(--text-color));
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.consentOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(10, 20, 14, 0.55);
+}
+
+.consentModal {
+  inline-size: min(34rem, 100%);
+  max-block-size: 88vh;
+  overflow: auto;
+  padding: 1.4rem 1.6rem;
+  border-radius: 1rem;
+  color: var(--text-color);
+  background: var(--card, var(--primary, #fff));
+  box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.35);
+}
+
+.consentDoc h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.15rem;
+}
+
+.consentDoc h4 {
+  margin: 1rem 0 0.3rem;
+  font-size: 0.92rem;
+}
+
+.consentDoc p,
+.consentDoc li {
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--text-color-f1);
+}
+
+.consentDoc ul {
+  margin: 0.3rem 0;
+  padding-inline-start: 1.1rem;
+}
+
+.consentAffirm {
+  margin-block-start: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* keybr import panel */
+.helpSteps {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  color: var(--text-color-f1);
+  font-size: 0.8rem;
+  line-height: 1.6;
+
+  li {
+    margin-block: 0.15rem;
+  }
+}
+
+.optCards {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.optCard {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.8rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  text-align: start;
+  cursor: pointer;
+}
+
+.optCardOn {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+.optTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.optSub {
+  color: var(--text-color-f2);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.importField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-block: 0.5rem;
+}
+
+.importSelect {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--separator-color, currentColor);
+  border-radius: 0.5rem;
+  color: var(--text-color);
+  background: var(--card, var(--primary, #fff));
+  font: inherit;
+}
+
+.importOk {
+  margin: 0.6rem 0;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.fieldLab {
+  color: var(--text-color-f1);
+  font-size: 0.8rem;
+  font-weight: 600;
 }

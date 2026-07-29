@@ -119,7 +119,7 @@ function defaultPrefs(): Prefs {
     night: false,
     brightness: 1,
     paleness: 0,
-    motion: 1,
+    motion: 0.7,
     wordBlocks: false,
   };
 }
@@ -1270,7 +1270,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             </div>
           </div>
         )}
-        <div className={styles.hudRight}>
+        <div className={clsx(styles.hudRight, use3dWord && styles.hudBottom)}>
           {prefs.timerVisible && (
             <div className={styles.chip}>
               <span

@@ -1,5 +1,10 @@
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import {
+  type GuideBlock,
+  guideFor,
+  renderRich,
+} from "./guide-content.tsx";
 import * as styles from "./road.module.less";
 
 // The legal pages, written to be read: plain words, honest promises, and the
@@ -480,497 +485,62 @@ export function PrivacyPolicyPage() {
   );
 }
 
-
 // ── User guide ─────────────────────────────────────────────────────────────
 
-type GuideSection = {
-  readonly id: string;
-  readonly nav: string;
-  readonly heading: string;
-  readonly body: ReactNode;
-};
+// The guide content lives as structured data in ./guide-content.tsx, selected
+// per locale. Here we just render whichever localized doc applies.
 
-const GUIDE_SECTIONS: GuideSection[] = [
-  {
-    id: "account",
-    nav: "Do I need an account?",
-    heading: "Do I need an account?",
-    body: (
-      <p>
-        No. You can start typing the moment you arrive, and your progress is
-        saved right here on this device. Create a free account only if you want
-        your history to follow you to other devices, keep a backup, or share a
-        profile link. Nothing useful is locked behind signing in.
-      </p>
-    ),
-  },
-  {
-    id: "signin",
-    nav: "Sign in and passwords",
-    heading: "Signing up, logging in, and passwords",
-    body: (
-      <>
-        <p>Everything lives in the menu at the top-right.</p>
-        <div className={styles.howLab}>Create an account</div>
-        <ol className={styles.steps}>
-          <li>Open the menu (top-right).</li>
-          <li>Choose Register.</li>
-          <li>Enter an email and a password.</li>
-          <li>Confirm — you are in.</li>
-        </ol>
-        <div className={styles.howLab}>Log in</div>
-        <ol className={styles.steps}>
-          <li>Open the menu and choose Log In.</li>
-          <li>Enter your email and password.</li>
-        </ol>
-        <div className={styles.howLab}>Reset a forgotten password</div>
-        <ol className={styles.steps}>
-          <li>On the Log In screen, choose Forgot Password.</li>
-          <li>Enter your email address.</li>
-          <li>Open the reset link we send you.</li>
-          <li>Choose a new password and log in.</li>
-        </ol>
-      </>
-    ),
-  },
-  {
-    id: "profiles",
-    nav: "Profiles",
-    heading: "Profiles for the whole household",
-    body: (
-      <>
-        <p>
-          KeyLearn is built like a household: one account holds up to four
-          profiles (eight with premium), grown-ups and children in any mix. Each
-          profile keeps its <em>own</em> separate progress on this device —
-          nothing is ever mixed together.
-        </p>
-        <div className={styles.howLab}>Add a profile</div>
-        <ol className={styles.steps}>
-          <li>Open the menu and choose Account (or “Set up profiles”).</li>
-          <li>Select Add a profile.</li>
-          <li>Type a first name.</li>
-          <li>Mark it as a Grown-up or a Kid.</li>
-          <li>Pick an avatar — a friendly icon, or a Photo from your device.</li>
-          <li>
-            For a child, add a birth year (it only tunes the words and pacing to
-            their age).
-          </li>
-          <li>Save.</li>
-        </ol>
-        <div className={styles.howLab}>Switch to another learner</div>
-        <ol className={styles.steps}>
-          <li>Open the menu.</li>
-          <li>Tap a face under Learners — the app resumes where they left off.</li>
-        </ol>
-        <div className={styles.howLab}>Edit or remove a profile</div>
-        <ol className={styles.steps}>
-          <li>Open the menu and choose Account.</li>
-          <li>Select Edit on a profile, or delete it to free a slot.</li>
-        </ol>
-        <p>
-          Kid profiles get a simplified, locked-down menu, and grown-up actions
-          sit behind a quick “what is A times B?” maths gate, so little ones
-          cannot wander into the settings.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "screen",
-    nav: "The practice screen",
-    heading: "The practice screen",
-    body: (
-      <p>
-        Just start typing. The word you need floats just above the on-screen
-        keyboard; a glowing comet points to the very next key; the keys are
-        tinted by finger zone so you learn which finger reaches where; and a
-        faint pair of resting hands shows where your fingers live between
-        presses. The whole skill is one habit: keep your eyes on the words, not
-        your hands.
-      </p>
-    ),
-  },
-  {
-    id: "journey",
-    nav: "Your journey",
-    heading: "How lessons grow — your journey",
-    body: (
-      <p>
-        KeyLearn is <em>adaptive</em>. It measures how quickly and cleanly you
-        hit each key and only adds a new letter to your set once you can type the
-        current ones both fast and accurately. That growing set is your journey,
-        from a handful of letters to the whole alphabet — the difficulty rises
-        exactly as fast as you do, never faster, so you are always working right
-        at your edge.
-      </p>
-    ),
-  },
-  {
-    id: "readout",
-    nav: "Live stats",
-    heading: "The live readout",
-    body: (
-      <p>
-        As you type, the floating panel shows your current speed and accuracy, a
-        little sparkline of recent runs, your goal tracks and your streak. It is
-        there to encourage you, not to nag.
-      </p>
-    ),
-  },
-  {
-    id: "tools",
-    nav: "Practice tools",
-    heading: "Practice tools",
-    body: (
-      <p>
-        The small tools beside the text let you open a guided tour, restart the
-        current lesson (Ctrl + Left), skip to the next one (Ctrl + Right), show or
-        hide the on-screen keyboard, and resize the practice text. The gear opens
-        the full Settings, described next.
-      </p>
-    ),
-  },
-  {
-    id: "content",
-    nav: "What you type",
-    heading: "Choosing what you type",
-    body: (
-      <>
-        <p>
-          Open Settings and go to Practice Content to choose how your words are
-          made:
-        </p>
-        <ul className={styles.tips}>
-          <li>
-            <em>Guided practice</em> — the adaptive default that grows your
-            alphabet key by key.
-          </li>
-          <li>
-            <em>Classic course</em> — a fixed, ordered march through the keys.
-          </li>
-          <li>
-            <em>Frequent words</em> — the most common words in your language.
-          </li>
-          <li>
-            <em>Book Text</em> — type your way through real books built into the
-            app.
-          </li>
-          <li>
-            <em>Your Own Text</em> — paste anything you like and practise on it.
-          </li>
-          <li>
-            <em>Code Snippets</em> — brackets, symbols and the rhythm of code.
-          </li>
-          <li>
-            <em>Number Drills</em> — the number row and the keypad.
-          </li>
-        </ul>
-        <div className={styles.howLab}>Change what you type</div>
-        <ol className={styles.steps}>
-          <li>Open Settings (the gear near the practice text).</li>
-          <li>Go to Practice Content.</li>
-          <li>
-            Pick a mode — for Book Text choose a book, for Your Own Text paste
-            your words.
-          </li>
-          <li>Close Settings and keep typing.</li>
-        </ol>
-        <p>
-          The same screen sets your alphabet size, a target speed, how long each
-          lesson runs, and a daily goal.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "smart",
-    nav: "Smart Practice",
-    heading: "Smart Practice helpers",
-    body: (
-      <>
-        <p>
-          On top of guided practice, Smart Practice adds gentle helpers: a
-          bottleneck drill that hunts down your slowest key-pairs, spaced
-          repetition, skill-decay refreshers that revisit rusty keys, smart
-          confidence, and key recovery. They are all on by default.
-        </p>
-        <div className={styles.howLab}>Turn a helper on or off</div>
-        <ol className={styles.steps}>
-          <li>Open Settings.</li>
-          <li>Go to Smart Practice.</li>
-          <li>Toggle any helper you like — or leave them all on.</li>
-        </ol>
-      </>
-    ),
-  },
-  {
-    id: "keyboard",
-    nav: "Keyboard setup",
-    heading: "Setting up your keyboard",
-    body: (
-      <>
-        <p>
-          Settings, Keyboard Setup is where you match KeyLearn to your keyboard
-          and to the layout you want to learn.
-        </p>
-        <div className={styles.howLab}>Change your keyboard layout</div>
-        <ol className={styles.steps}>
-          <li>Open Settings.</li>
-          <li>Go to Keyboard Setup.</li>
-          <li>Pick your language, then your layout (QWERTY, Dvorak, Colemak and more).</li>
-          <li>
-            Leave “Simulate this layout” on so you can practise it whatever your
-            computer is set to.
-          </li>
-          <li>Watch the live preview to confirm.</li>
-        </ol>
-        <p>
-          On the same screen you can choose the keyboard shape, colour the keys
-          by finger zone, and spotlight the next key while you are still learning
-          where things are.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "display",
-    nav: "Display",
-    heading: "Display and feel",
-    body: (
-      <p>
-        The Display and Text Input settings let you show your speed as words- or
-        characters-per-minute and fine-tune how typing feels. Restore Defaults is
-        always a click away if you want to start fresh.
-      </p>
-    ),
-  },
-  {
-    id: "progress",
-    nav: "Your progress",
-    heading: "Your progress — the Profile page",
-    body: (
-      <>
-        <p>
-          The Profile page is your full record: Lifetime and Today stats up top
-          (time practised, lessons done, your best and typical speed and
-          accuracy, and how today compares); a map of every letter you have
-          unlocked; the story of how each individual key has sped up, with a
-          smoothing slider; the big picture of every key over time; and the
-          slowest transitions still holding you back. You can even race your own
-          last run as a ghost to feel the progress directly.
-        </p>
-        <div className={styles.howLab}>Open your progress</div>
-        <ol className={styles.steps}>
-          <li>Open the menu.</li>
-          <li>Choose Profile.</li>
-          <li>
-            Use the filter row to focus on Letters, Digits, Punctuation or
-            Symbols.
-          </li>
-        </ol>
-      </>
-    ),
-  },
-  {
-    id: "data",
-    nav: "Your data",
-    heading: "Looking after your data",
-    body: (
-      <>
-        <div className={styles.howLab}>Clear a profile’s statistics</div>
-        <ol className={styles.steps}>
-          <li>Open Profile for the learner you want to reset.</li>
-          <li>Scroll to the reset control at the bottom of the page.</li>
-          <li>Confirm “Erase everything” — only this profile is cleared.</li>
-        </ol>
-        <div className={styles.howLab}>Download your data</div>
-        <ol className={styles.steps}>
-          <li>Open Profile.</li>
-          <li>Use the download option to save your history as a file.</li>
-        </ol>
-        <p>
-          Sign in if you want your history to sync across devices and to share a
-          public profile link. There are no ads and no trackers, and you can
-          delete your data — or your whole account — whenever you like.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "kids",
-    nav: "Kids mode",
-    heading: "Kids mode",
-    body: (
-      <>
-        <p>
-          Children practise on a playful trail. Every correct key walks their
-          character a step closer home, and the character grows from a tiny baby
-          into a fully-grown hero as more letters unlock. A newly-learned key
-          sets off a little celebration, and each session ends at a cosy
-          campfire.
-        </p>
-        <div className={styles.howLab}>Switch to Kids</div>
-        <ol className={styles.steps}>
-          <li>Open the menu.</li>
-          <li>Choose Kids — or pick a kid profile under Learners.</li>
-        </ol>
-        <p>
-          There are two worlds to choose from — Dino Run, with a friendly
-          dinosaur, and Hero Trail, where a knight quests through a forest — each
-          with a character to pick.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "toybox",
-    nav: "Kids toy-box",
-    heading: "The kids toy-box",
-    body: (
-      <>
-        <div className={styles.howLab}>Open the toy-box</div>
-        <ol className={styles.steps}>
-          <li>On the kids screen, tap the gear at the top of the play area.</li>
-        </ol>
-        <p>
-          Inside you can set the world and character, Big letters, Sounds, Helper
-          hands (the glowing finger guide), the Keyboard (hidden, simple, or the
-          full grown-up board), Letters on the trail (the words shown as blocks
-          right in the game), a session Timer, Cheers (encouraging little
-          messages), and — tucked under Advanced — sliders for Brightness, Colour
-          and how lively the world feels. There is a calm night look as well as
-          the bright day one.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "ages",
-    nav: "Growing up",
-    heading: "Growing with your child",
-    body: (
-      <p>
-        KeyLearn quietly tunes itself to a child’s age. The youngest see big,
-        friendly letters, forgiving pacing, letter blocks right on the trail and
-        the gentlest help; older children graduate to longer words, the full
-        keyboard and a cleaner look. Just set the birth year on the profile and
-        the rest follows on its own.
-      </p>
-    ),
-  },
-  {
-    id: "modes",
-    nav: "Other modes",
-    heading: "Other ways to practise",
-    body: (
-      <>
-        <p>
-          Beyond your daily practice there is a <em>Speed Test</em> — a quick
-          one-off passage that reports your words-per-minute and accuracy with no
-          lesson attached; a <em>Layouts</em> explorer for comparing keyboard
-          layouts and their finger maps; <em>High Scores</em> to see how you stack
-          up; and <em>Multiplayer</em> races to push your speed against others in
-          real time.
-        </p>
-        <div className={styles.howLab}>Find them</div>
-        <ol className={styles.steps}>
-          <li>Open the menu.</li>
-          <li>Choose Speed Test, Layouts, High Scores or Multiplayer.</li>
-        </ol>
-      </>
-    ),
-  },
-  {
-    id: "yours",
-    nav: "Make it yours",
-    heading: "Make it yours",
-    body: (
-      <>
-        <div className={styles.howLab}>Change the theme</div>
-        <ol className={styles.steps}>
-          <li>Open the menu.</li>
-          <li>Use the theme switch — a light, dark, or the KeyLearn look.</li>
-        </ol>
-        <div className={styles.howLab}>Change the site language</div>
-        <ol className={styles.steps}>
-          <li>Open the menu.</li>
-          <li>Under Site language, pick your language.</li>
-        </ol>
-        <p>
-          On the practice screen you can also resize the text and turn sounds on
-          or off whenever you please.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "privacy",
-    nav: "Privacy",
-    heading: "Privacy, in a sentence",
-    body: (
-      <p>
-        No ads, and no trackers. A child’s profile never leaves your browser.
-        Sign in only if you want syncing or sharing; otherwise everything stays
-        on this device, and you are free to delete it at any time.
-      </p>
-    ),
-  },
-  {
-    id: "signout",
-    nav: "Signing out",
-    heading: "Signing out",
-    body: (
-      <>
-        <div className={styles.howLab}>Log out</div>
-        <ol className={styles.steps}>
-          <li>Open the menu.</li>
-          <li>Choose Log out and confirm.</li>
-        </ol>
-        <p>
-          Your practice history stays safely on this device — and on your
-          account, if you made one — ready for the next time you sit down to type.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "tips",
-    nav: "Tips",
-    heading: "A few habits that really help",
-    body: (
-      <ul className={styles.tips}>
-        <li>Accuracy before speed — clean typing is what sticks.</li>
-        <li>Fix mistakes calmly; do not race to catch up.</li>
-        <li>Rest your fingers on the home row — F and J have little bumps.</li>
-        <li>A few minutes every day beats an hour once a week.</li>
-      </ul>
-    ),
-  },
-];
+function GuideBlockView({ block }: { readonly block: GuideBlock }): ReactNode {
+  if ("p" in block) {
+    return <p>{renderRich(block.p)}</p>;
+  }
+  if ("lab" in block) {
+    return <div className={styles.howLab}>{renderRich(block.lab)}</div>;
+  }
+  if ("steps" in block) {
+    return (
+      <ol className={styles.steps}>
+        {block.steps.map((s, i) => (
+          <li key={i}>{renderRich(s)}</li>
+        ))}
+      </ol>
+    );
+  }
+  return (
+    <ul className={styles.tips}>
+      {block.tips.map((s, i) => (
+        <li key={i}>{renderRich(s)}</li>
+      ))}
+    </ul>
+  );
+}
 
 export function GuidePage() {
+  const { locale } = useIntl();
+  const doc = guideFor(locale);
   return (
     <div className={styles.paper}>
       <Masthead
-        kicker="Everything you can do"
-        title="User Guide"
-        dateline="The complete guide to KeyLearn — from your first visit to signing out"
+        kicker={doc.kicker}
+        title={doc.title}
+        dateline={doc.dateline}
       />
       <div className={styles.guideLayout}>
         <nav className={styles.guideNav}>
-          <div className={styles.guideNavLab}>On this page</div>
-          {GUIDE_SECTIONS.map((s) => (
+          <div className={styles.guideNavLab}>{doc.navLabel}</div>
+          {doc.sections.map((s) => (
             <a key={s.id} className={styles.guideNavItem} href={`#${s.id}`}>
               {s.nav}
             </a>
           ))}
         </nav>
         <div>
-          {GUIDE_SECTIONS.map((s) => (
+          {doc.sections.map((s) => (
             <section key={s.id} id={s.id} className={styles.gpart}>
               <Sect>{s.heading}</Sect>
-              {s.body}
+              {s.blocks.map((b, i) => (
+                <GuideBlockView key={i} block={b} />
+              ))}
             </section>
           ))}
           <div className={styles.foot}>keylearn · happy typing</div>

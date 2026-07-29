@@ -1,6 +1,6 @@
 import { injectable } from "@fastr/invert";
 import { DataDir } from "@keybr/config";
-import { type PublicId } from "@keybr/publicid";
+import { PublicId } from "@keybr/publicid";
 import { File } from "@sosimple/fsx-file";
 import { UserData } from "./userdata.ts";
 
@@ -18,5 +18,13 @@ export class UserDataFactory {
     } else {
       return new File(this.dataDir.userStatsFile(id.id));
     }
+  }
+
+  /** A learner profile's own stats file, under its owning account. */
+  loadProfile(userId: number, profileId: number): UserData {
+    return new UserData(
+      new PublicId(userId),
+      new File(this.dataDir.profileStatsFile(userId, profileId)),
+    );
   }
 }

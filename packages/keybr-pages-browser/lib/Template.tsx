@@ -1,3 +1,4 @@
+import { CompleteProfileGate } from "@keybr/page-account";
 import { AdBanner, adSenseClientId } from "@keybr/thirdparties";
 import { PortalContainer, Toaster } from "@keybr/widget";
 import { type ReactNode, useState } from "react";
@@ -73,6 +74,7 @@ export function Template({
         path={path}
       />
       <EnvName />
+      <CompleteProfileGate />
     </div>
   );
 }

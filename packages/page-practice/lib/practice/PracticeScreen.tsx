@@ -8,7 +8,7 @@ import { DailyStatsMap, type Result, useResults } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller } from "./Controller.tsx";
-import { GoalCeremony } from "./GoalCeremony.tsx";
+import { GoalCeremony, type GoalMode } from "./GoalCeremony.tsx";
 import { SessionAward } from "./SessionAward.tsx";
 import { type LessonEvent, Progress } from "./state/index.ts";
 import { UnlockCeremony } from "./UnlockCeremony.tsx";
@@ -34,27 +34,88 @@ type GoalStats = {
   readonly minutes: number;
   readonly lessons: number;
   readonly topSpeed: number;
+  readonly accuracy: number;
+  readonly weeklySpeeds: readonly number[];
+  readonly slowestKeys: readonly string[];
+  readonly isPersonalBest: boolean;
+  readonly mode: GoalMode;
 };
+
+// Research-backed healthy ceiling: past ~45 minutes of focused practice in a
+// day, extra typing buys little skill (micro-offline gains favour rest, and
+// fine-motor accuracy fatigues), so the window flips from "keep going" to
+// "time to rest". Kept as a single constant so it's easy to tune.
+const REST_CEILING_MINUTES = 45;
 
 // The goal ceremony fires once per calendar day, even across page reloads.
 const goalCelebratedKey = () => profileStorageKey("keylearn.goalCelebrated");
+// The rest nudge (crossing the healthy ceiling) also fires at most once a day.
+const restNudgedKey = () => profileStorageKey("keylearn.goalRestNudged");
 
-function goalAlreadyCelebrated(): boolean {
+function markedToday(key: string): boolean {
   try {
-    return (
-      localStorage.getItem(goalCelebratedKey()) === new Date().toDateString()
-    );
+    return localStorage.getItem(key) === new Date().toDateString();
   } catch {
     return false;
   }
 }
 
-function rememberGoalCelebrated(): void {
+function markToday(key: string): void {
   try {
-    localStorage.setItem(goalCelebratedKey(), new Date().toDateString());
+    localStorage.setItem(key, new Date().toDateString());
   } catch {
-    // Storage may be unavailable; celebrating twice is harmless.
+    // Storage may be unavailable; showing twice is harmless.
   }
+}
+
+function todayMinutes(results: readonly Result[]): number {
+  const today = new DailyStatsMap(results).today.results;
+  return Math.round(today.reduce((sum, { time }) => sum + time, 0) / 60000);
+}
+
+// Assemble everything the goal-report window shows from the full result set.
+function buildGoalStats(
+  allResults: readonly Result[],
+  progress: Progress,
+  goalMinutes: number,
+  mode: GoalMode,
+): GoalStats {
+  const map = new DailyStatsMap(allResults);
+  const today = map.today.results;
+  const minutes = Math.round(
+    today.reduce((sum, { time }) => sum + time, 0) / 60000,
+  );
+  const topSpeed =
+    today.length > 0 ? Math.max(...today.map(({ speed }) => speed)) : 0;
+  const accuracy =
+    today.length > 0
+      ? today.reduce((sum, { accuracy }) => sum + accuracy, 0) / today.length
+      : 0;
+  // Top speed for each of the last practice days (skipped days don't count).
+  const weeklySpeeds = [...map]
+    .sort((a, b) => (String(a.date) < String(b.date) ? -1 : 1))
+    .slice(-7)
+    .map((d) => Math.max(...d.results.map((r) => r.speed)));
+  // The slowest keys practised so far — highest filtered time-to-type.
+  const slowestKeys = [...progress.keyStatsMap]
+    .filter((k) => k.timeToType != null)
+    .sort((a, b) => (b.timeToType ?? 0) - (a.timeToType ?? 0))
+    .slice(0, 3)
+    .map((k) => k.letter.label.toUpperCase());
+  const allTimeMax =
+    allResults.length > 0 ? Math.max(...allResults.map((r) => r.speed)) : 0;
+  const isPersonalBest = today.length > 0 && topSpeed >= allTimeMax;
+  return {
+    goalMinutes,
+    minutes,
+    lessons: today.length,
+    topSpeed,
+    accuracy,
+    weeklySpeeds,
+    slowestKeys,
+    isPersonalBest,
+    mode,
+  };
 }
 
 function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
@@ -82,6 +143,8 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
             if (result.validate()) {
               const prev =
                 results.length > 0 ? results[results.length - 1] : null;
+              const all = [...results, result];
+              const goalMinutes = settings.get(lessonProps.dailyGoal);
               progress.append(result, (event) => {
                 if (event.type === "new-letter") {
                   // The unlock ceremony replaces the plain toast for new keys.
@@ -91,19 +154,21 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
                     prev,
                   });
                 } else if (event.type === "daily-goal") {
-                  // Crossing the daily goal earns the full ceremony window.
-                  if (!goalAlreadyCelebrated()) {
-                    rememberGoalCelebrated();
-                    const today = new DailyStatsMap([...results, result]).today
-                      .results;
-                    setGoal({
-                      goalMinutes: settings.get(lessonProps.dailyGoal),
-                      minutes: Math.round(
-                        today.reduce((sum, { time }) => sum + time, 0) / 60000,
+                  // Crossing the daily goal earns the full report window.
+                  if (!markedToday(goalCelebratedKey())) {
+                    markToday(goalCelebratedKey());
+                    const rest = todayMinutes(all) >= REST_CEILING_MINUTES;
+                    if (rest) {
+                      markToday(restNudgedKey());
+                    }
+                    setGoal(
+                      buildGoalStats(
+                        all,
+                        progress,
+                        goalMinutes,
+                        rest ? "rest" : "roll",
                       ),
-                      lessons: today.length,
-                      topSpeed: Math.max(...today.map(({ speed }) => speed)),
-                    });
+                    );
                   }
                 } else {
                   // Records celebrate at eye level, above the text.
@@ -111,6 +176,16 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
                 }
               });
               appendResults([result]);
+              // If they keep going past the healthy ceiling later in the day,
+              // resurface the report in "rest" mode (once) to steer toward a break.
+              if (
+                markedToday(goalCelebratedKey()) &&
+                !markedToday(restNudgedKey()) &&
+                todayMinutes(all) >= REST_CEILING_MINUTES
+              ) {
+                markToday(restNudgedKey());
+                setGoal(buildGoalStats(all, progress, goalMinutes, "rest"));
+              }
             }
           }}
         />
@@ -142,7 +217,15 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
             minutes={goal.minutes}
             lessons={goal.lessons}
             topSpeed={goal.topSpeed}
+            accuracy={goal.accuracy}
+            weeklySpeeds={goal.weeklySpeeds}
+            slowestKeys={goal.slowestKeys}
+            isPersonalBest={goal.isPersonalBest}
+            mode={goal.mode}
             onContinue={() => {
+              setGoal(null);
+            }}
+            onDone={() => {
               setGoal(null);
             }}
           />

@@ -11,6 +11,7 @@ const pageIcons: Record<string, StrokeIconName> = {
   [Pages.profile.path]: "chart",
   [Pages.typingTest.path]: "gauge",
   [Pages.layouts.path]: "grid",
+  [Pages.texts.path]: "book",
   [Pages.help.path]: "help",
 };
 
@@ -36,6 +37,10 @@ export function NavMenu({
 
       <MenuItem>
         <MenuItemLink page={Pages.layouts} onNavigate={onNavigate} />
+      </MenuItem>
+
+      <MenuItem>
+        <MenuItemLink page={Pages.texts} onNavigate={onNavigate} />
       </MenuItem>
 
       <MenuItem>

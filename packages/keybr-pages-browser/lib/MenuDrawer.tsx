@@ -86,6 +86,26 @@ export function MenuDrawer({
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onClose]);
+  // Lock the page scroll while the drawer is open, so the only scroller on
+  // screen is the drawer's own — not the page behind it. Compensate for the
+  // removed page scrollbar so the layout underneath doesn't jump.
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const { body, documentElement } = document;
+    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
+    const prevOverflow = body.style.overflow;
+    const prevPadding = body.style.paddingInlineEnd;
+    body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      body.style.paddingInlineEnd = `${scrollbarWidth}px`;
+    }
+    return () => {
+      body.style.overflow = prevOverflow;
+      body.style.paddingInlineEnd = prevPadding;
+    };
+  }, [open]);
   return (
     <>
       <div
@@ -112,13 +132,27 @@ export function MenuDrawer({
         </div>
         {open && (
           <>
+            <div className={styles.body}>
             {household.profiles.length > 0 ? (
               <>
-                <div className={styles.label}>
-                  <FormattedMessage
-                    id="nav.learners"
-                    defaultMessage="Learners"
-                  />
+                <div className={styles.labelRow}>
+                  <span>
+                    <FormattedMessage
+                      id="nav.learners"
+                      defaultMessage="Learners"
+                    />
+                  </span>
+                  <span className={styles.labelHairline} />
+                  <RouterLink
+                    className={styles.manage}
+                    to={`${Pages.account.path}#learners`}
+                    onClick={onClose}
+                  >
+                    <FormattedMessage
+                      id="nav.manageLearners"
+                      defaultMessage="Manage"
+                    />
+                  </RouterLink>
                 </div>
                 <div className={styles.learners}>
                   {household.profiles.map((p) => (
@@ -228,6 +262,7 @@ export function MenuDrawer({
                 />
               </div>
               <LanguagePanel currentPath={path} />
+            </div>
             </div>
             <div
               className={clsx(styles.account, kidLock && styles.locked)}

@@ -41,7 +41,8 @@ export type StrokeIconName =
   | "back"
   | "sun"
   | "moon"
-  | "auto";
+  | "auto"
+  | "book";
 
 const shapes: Record<StrokeIconName, ReactNode> = {
   keyboard: (
@@ -194,6 +195,10 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   moon: <path d="M20 14.4A8 8 0 0 1 9.6 4 8 8 0 1 0 20 14.4z" />,
   // Auto (follow the device): the letter A.
   auto: <path d="M6 19l6-14 6 14M8.7 14.4h6.6" />,
+  // An open book — the practice-texts library.
+  book: (
+    <path d="M12 6.4C10.4 5 7.9 4.6 4.5 4.9V17c3.4-.3 5.9.1 7.5 1.6M12 6.4c1.6-1.4 4.1-1.8 7.5-1.5V17c-3.4-.3-5.9.1-7.5 1.6M12 6.4V18.6" />
+  ),
   // The keyboard, struck through — "hide it".
   keyboardOff: (
     <>

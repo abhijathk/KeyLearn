@@ -11,6 +11,21 @@ export function connectSqlite(
     client: sqlite,
     connection: { ...config },
     useNullAsDefault: true,
+    // SQLite ignores foreign keys (and ON DELETE CASCADE) unless asked per
+    // connection — enable it so deleting an account cascades to its profiles.
+    pool: {
+      afterCreate: (
+        conn: { pragma: (sql: string) => void },
+        done: (err: Error | null, conn: unknown) => void,
+      ) => {
+        try {
+          conn.pragma("foreign_keys = ON");
+          done(null, conn);
+        } catch (err) {
+          done(err as Error, conn);
+        }
+      },
+    },
     debug: Boolean(process.env.KNEX_DEBUG),
     ...knexSnakeCaseMappers(),
     postProcessResponse: fixTimestamps,

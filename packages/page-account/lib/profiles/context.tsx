@@ -1,4 +1,11 @@
-import { isPremiumUser, usePageData } from "@keybr/pages-shared";
+import { catchError } from "@keybr/debug";
+import {
+  isPremiumUser,
+  loadActiveProfileId,
+  type ProfileDetails,
+  saveActiveProfileId,
+  usePageData,
+} from "@keybr/pages-shared";
 import {
   createContext,
   type ReactNode,
@@ -8,25 +15,20 @@ import {
   useMemo,
   useState,
 } from "react";
+import { AccountService, type ProfileInput } from "../service.ts";
 import {
   activeProfile,
-  addProfile,
   adultProfiles,
   historyNamespace,
   type Household,
-  loadHousehold,
   maxProfiles,
   type Profile,
-  removeProfile,
-  saveHousehold,
-  setActive,
-  updateProfile,
 } from "./store.ts";
 
 type ProfilesContextValue = {
   readonly household: Household;
   readonly active: Profile | null;
-  /** Local result-history namespace for the active profile, or null. */
+  /** Result-history namespace for the active profile, or null. */
   readonly namespace: string | null;
   /** How many profiles this account may hold (8 with premium, else 4). */
   readonly maxProfiles: number;
@@ -35,15 +37,55 @@ type ProfilesContextValue = {
    * app should ask who is practising with the profile picker.
    */
   readonly needsPick: boolean;
-  readonly add: (data: Omit<Profile, "id">) => void;
-  readonly update: (id: string, patch: Partial<Omit<Profile, "id">>) => void;
-  readonly remove: (id: string) => void;
+  readonly add: (data: ProfileInput) => Promise<void>;
+  readonly update: (id: string, patch: Partial<ProfileInput>) => Promise<void>;
+  readonly remove: (id: string) => Promise<void>;
   readonly select: (id: string | null) => void;
+  /** Move a profile one place up (-1) or down (+1) in the display order. */
+  readonly reorder: (id: string, dir: -1 | 1) => void;
   /** Dismiss the profile picker, staying on the admin account for now. */
   readonly dismissPick: () => void;
 };
 
 const ProfilesContext = createContext<ProfilesContextValue | null>(null);
+
+// The learner display order is a per-device preference, saved as an array of
+// profile ids. It is applied here in the context so every consumer (the
+// account list, the "who's practising?" picker, …) shows the same order.
+const ORDER_KEY = "keylearn.profileOrder";
+
+function loadOrder(): readonly string[] {
+  try {
+    const raw = localStorage.getItem(ORDER_KEY);
+    const parsed = raw != null ? JSON.parse(raw) : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((x) => typeof x === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOrder(ids: readonly string[]): void {
+  try {
+    localStorage.setItem(ORDER_KEY, JSON.stringify(ids));
+  } catch {
+    // Storage may be unavailable.
+  }
+}
+
+function applyOrder(
+  profiles: readonly Profile[],
+  order: readonly string[],
+): readonly Profile[] {
+  const byId = new Map(profiles.map((p) => [p.id, p]));
+  const known = order
+    .map((id) => byId.get(id))
+    .filter((p): p is Profile => p != null);
+  const knownIds = new Set(known.map((p) => p.id));
+  const rest = profiles.filter((p) => !knownIds.has(p.id));
+  return [...known, ...rest];
+}
 
 // The "who's practising?" prompt is shown once per browser session.
 const PICK_KEY = "keylearn.pickDismissed";
@@ -77,72 +119,134 @@ export function ProfilesProvider({
 }: {
   readonly children: ReactNode;
 }) {
-  const { publicUser } = usePageData();
+  const pageData = usePageData();
+  const { publicUser } = pageData;
   const signedIn = publicUser.id != null;
   const cap = maxProfiles(isPremiumUser(publicUser));
-  const [household, setHousehold] = useState<Household>(loadHousehold);
-  // "Who's practising?" is offered once per browser session for accounts with
-  // several grown-ups; the flag persists across reloads and is cleared on
-  // logout so the next sign-in asks again.
-  const [pickDismissed, setPickDismissed] = useState(pickDismissedInSession);
 
-  const commit = useCallback((next: Household) => {
-    saveHousehold(next);
-    setHousehold(next);
+  // Profiles come from the server: seeded from page data on first render, then
+  // replaced by the full list every mutation returns.
+  const [profiles, setProfiles] = useState<readonly Profile[]>(() =>
+    signedIn ? [...(pageData.profiles ?? [])] : [],
+  );
+  // Which learner is active is a per-device preference (localStorage).
+  const [activeId, setActiveIdState] = useState<string | null>(() =>
+    signedIn ? loadActiveProfileId() : null,
+  );
+  const [pickDismissed, setPickDismissed] = useState(pickDismissedInSession);
+  const [order, setOrder] = useState<readonly string[]>(loadOrder);
+
+  const setActiveId = useCallback((id: string | null) => {
+    saveActiveProfileId(id);
+    setActiveIdState(id);
   }, []);
   const markPicked = useCallback(() => {
     rememberPickDismissed();
     setPickDismissed(true);
   }, []);
 
-  // Profiles belong to the signed-in account. After a logout the household
-  // data stays on the device, but no profile may remain selected — the app
-  // falls back to the anonymous experience until someone logs back in.
+  // After a logout no profile may remain selected — the app falls back to the
+  // anonymous experience until someone logs back in.
   useEffect(() => {
     if (!signedIn) {
       forgetPickDismissed();
       setPickDismissed(false);
-      if (household.activeId != null) {
-        commit(setActive(household, null));
+      setProfiles([]);
+      if (activeId != null) {
+        setActiveId(null);
       }
     }
-  }, [signedIn, household, commit]);
+  }, [signedIn, activeId, setActiveId]);
 
   // On sign-in the default learner is always a grown-up, never a kid: with a
   // single grown-up profile it is selected automatically; with none, the app
-  // stays on the admin account (and nudges to create profiles). Several
-  // grown-ups are ambiguous, so the picker below asks who is practising.
+  // stays on the admin account. Several grown-ups are ambiguous, so the picker
+  // asks who is practising.
   useEffect(() => {
-    if (signedIn && household.activeId == null) {
-      const adults = adultProfiles(household);
+    if (signedIn && activeId == null) {
+      const adults = profiles.filter((p) => p.kind === "adult");
       if (adults.length === 1) {
-        commit(setActive(household, adults[0].id));
+        setActiveId(adults[0].id);
       }
     }
-  }, [signedIn, household, commit]);
+  }, [signedIn, activeId, profiles, setActiveId]);
 
   const value = useMemo<ProfilesContextValue>(() => {
+    const household: Household = {
+      profiles: signedIn ? applyOrder(profiles, order) : [],
+      activeId: signedIn ? activeId : null,
+    };
     const active = signedIn ? activeProfile(household) : null;
     const adults = adultProfiles(household);
+    // Adopt the server's returned list; auto-select the newly-created profile
+    // (the one whose id we didn't have before) when none is active yet.
+    const adopt = (list: readonly ProfileDetails[]) => {
+      setProfiles(list);
+      if (activeId == null) {
+        const fresh = list.find((p) => !profiles.some((o) => o.id === p.id));
+        if (fresh != null) {
+          setActiveId(fresh.id);
+        }
+      }
+    };
     return {
-      // Signed out, the household presents as empty — no tiles, no switcher.
-      household: signedIn ? household : { profiles: [], activeId: null },
+      household,
       active,
       namespace: historyNamespace(active),
       maxProfiles: cap,
-      // Ask even when a grown-up is already active from a previous session —
-      // several grown-ups share one account, so confirm who is here now.
       needsPick: signedIn && adults.length >= 2 && !pickDismissed,
-      add: (data) => commit(addProfile(household, data, cap)),
-      update: (id, patch) => commit(updateProfile(household, id, patch)),
-      remove: (id) => commit(removeProfile(household, id)),
+      add: async (data) => {
+        try {
+          adopt(await AccountService.createProfile(data));
+        } catch (err) {
+          catchError(err);
+        }
+      },
+      update: async (id, patch) => {
+        try {
+          setProfiles(await AccountService.updateProfile(id, patch));
+        } catch (err) {
+          catchError(err);
+        }
+      },
+      remove: async (id) => {
+        try {
+          const list = await AccountService.deleteProfile(id);
+          setProfiles(list);
+          if (activeId === id) {
+            setActiveId(list[0]?.id ?? null);
+          }
+        } catch (err) {
+          catchError(err);
+        }
+      },
       select: (id) => {
         markPicked();
-        commit(setActive(household, id));
+        setActiveId(id);
+      },
+      reorder: (id, dir) => {
+        const ids = household.profiles.map((p) => p.id);
+        const i = ids.indexOf(id);
+        const j = i + dir;
+        if (i < 0 || j < 0 || j >= ids.length) {
+          return;
+        }
+        [ids[i], ids[j]] = [ids[j], ids[i]];
+        saveOrder(ids);
+        setOrder(ids);
       },
       dismissPick: markPicked,
     };
-  }, [signedIn, household, commit, cap, pickDismissed, markPicked]);
+  }, [
+    signedIn,
+    profiles,
+    activeId,
+    order,
+    cap,
+    pickDismissed,
+    markPicked,
+    setActiveId,
+  ]);
 
   return (
     <ProfilesContext.Provider value={value}>

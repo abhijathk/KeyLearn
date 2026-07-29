@@ -70,7 +70,7 @@ export const ANSI_101: GeometryDict = {
   Backspace: {
     x: 13,
     y: 0,
-    w: 2,
+    w: 1.75,
     h: 1,
     labels: [{ text: "Backspace" }],
     zones: ["pinky", "right", "digit"],
@@ -146,7 +146,7 @@ export const ANSI_101: GeometryDict = {
   Backslash: {
     x: 13.5,
     y: 1,
-    w: 1.5,
+    w: 1.25,
     h: 1,
     zones: ["pinky", "right", "top"],
   },
@@ -218,7 +218,7 @@ export const ANSI_101: GeometryDict = {
   Enter: {
     x: 12.75,
     y: 2,
-    w: 2.25,
+    w: 2,
     h: 1,
     labels: [{ text: "Enter" }],
     zones: ["pinky", "right", "home"],
@@ -284,7 +284,7 @@ export const ANSI_101: GeometryDict = {
   ShiftRight: {
     x: 12.25,
     y: 3,
-    w: 2.75,
+    w: 2.5,
     h: 1,
     labels: [{ text: "Shift" }],
     zones: ["pinky", "right", "bottom"],

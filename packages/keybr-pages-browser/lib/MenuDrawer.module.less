@@ -26,11 +26,13 @@
   inset-block: 0;
   z-index: 101;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 0.5rem;
   inline-size: min(19.5rem, 86vi);
-  padding: 1.2rem 1.2rem 1.6rem;
+  padding: 0.85rem 1.2rem 1.2rem;
   border-inline-start: 1px solid var(--primary-d2);
-  overflow-block: auto;
+  // The header (tape + wordmark) and footer are pinned; only the middle
+  // scrolls — so the panel itself never scrolls.
+  overflow: hidden;
   color: var(--text-color);
   background-color: var(--primary);
   font-family: var(--value-font-family);
@@ -42,6 +44,20 @@
   }
 }
 
+// The scrolling middle region between the pinned header and footer.
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-block-size: 0;
+  overflow-block: auto;
+  // The panel's own (themed) scroller. The page behind is locked while the
+  // drawer is open, so this is the only scroller on screen.
+  margin-inline: -0.4rem;
+  padding-inline: 0.4rem;
+}
+
 [dir="rtl"] .panel {
   transform: translateX(-100%);
 
@@ -50,13 +66,58 @@
   }
 }
 
+// The signature mint tape strip across the top of the drawer.
+.tape {
+  flex: none;
+  block-size: 0.4rem;
+  margin: -0.85rem -1.2rem 0;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent) 0 0.75rem,
+    transparent 0.75rem 1.5rem
+  );
+  opacity: 0.5;
+}
+
 // ---- head: one whisper line ---------------------------------------------
 
 .head {
   display: flex;
   gap: 0.55rem;
   align-items: center;
-  margin-block-end: 0.4rem;
+  margin-block-end: 0.1rem;
+}
+
+// A section label with a "Manage" shortcut on the right (Learners).
+.labelRow {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block-start: 0.55rem;
+  color: var(--text-color-f2);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.labelHairline {
+  flex: 1;
+  block-size: 1px;
+  background-image: linear-gradient(to right, var(--primary-d2), transparent);
+}
+
+.manage {
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .headIcon {
@@ -80,7 +141,7 @@
   display: flex;
   gap: 0.7rem;
   align-items: center;
-  margin-block-start: 0.9rem;
+  margin-block-start: 0.55rem;
   color: var(--text-color-f2);
   font-size: 0.58rem;
   font-weight: 700;
@@ -149,19 +210,21 @@
 .utilIcon {
   inline-size: 1rem;
   block-size: 1rem;
-  transition: color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    filter 0.15s ease;
 }
 
 .util {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0;
 
   a {
     display: flex;
-    gap: 0.6rem;
+    gap: 0.55rem;
     align-items: center;
-    padding-block: 0.4rem;
+    padding-block: 0.27rem;
     color: var(--text-color-f2);
     font-size: 0.72rem;
     font-weight: 600;
@@ -170,8 +233,12 @@
     &:hover {
       color: var(--text-color);
 
+      // Green neon glow on the icon only.
       .utilIcon {
         color: var(--accent);
+        filter: drop-shadow(
+          0 0 5px color-mix(in oklab, var(--accent) 80%, transparent)
+        );
       }
     }
   }
@@ -264,8 +331,8 @@
 
 // Account / Log out sit in a footer pinned to the very bottom of the panel.
 .account {
-  margin-block-start: auto;
-  padding-block-start: 0.9rem;
+  flex: none;
+  padding-block-start: 0.65rem;
   border-block-start: 1px solid var(--primary-d2);
 }
 
@@ -277,6 +344,7 @@
 
   &:hover .utilIcon {
     color: var(--accent);
+    filter: drop-shadow(0 0 5px color-mix(in oklab, var(--accent) 80%, transparent));
   }
 }
 
@@ -285,6 +353,7 @@
 
   &:hover .utilIcon {
     color: #f0b400;
+    filter: drop-shadow(0 0 5px color-mix(in oklab, #f0b400 80%, transparent));
   }
 }
 
@@ -296,6 +365,9 @@
 
     .utilIcon {
       color: var(--error-color, #d0322e);
+      filter: drop-shadow(
+        0 0 5px color-mix(in oklab, var(--error-color, #d0322e) 80%, transparent)
+      );
     }
   }
 }

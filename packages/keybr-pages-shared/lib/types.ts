@@ -32,6 +32,42 @@ export type PageData = {
    * Serialized user settings.
    */
   readonly settings: unknown | null;
+  /**
+   * The signed-in account's household profiles (learners), stored server-side.
+   * Empty when signed out.
+   */
+  readonly profiles: readonly ProfileDetails[];
+  /**
+   * OAuth sign-in providers that are configured on this deployment (have
+   * client credentials set), in preferred display order — e.g. ["google",
+   * "microsoft"]. The sign-in UI only shows buttons for these.
+   */
+  readonly oauthProviders?: readonly string[];
+  /**
+   * Public Cloudflare Turnstile site key, present only when the adaptive CAPTCHA
+   * is configured on this deployment. The browser uses it to render a challenge
+   * when the server responds that one is required (HTTP 428).
+   */
+  readonly turnstileSiteKey?: string;
+};
+
+export type ProfileKind = "adult" | "kid";
+
+export type ProfileAvatar =
+  | { readonly type: "icon"; readonly id: string }
+  | { readonly type: "photo"; readonly dataUrl: string };
+
+export type ProfileDetails = {
+  readonly id: string;
+  readonly kind: ProfileKind;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly birthYear: number | null;
+  readonly avatar: ProfileAvatar | null;
+  /** Parental consent captured when a kid profile was created. */
+  readonly parentalConsent: boolean;
+  /** ISO timestamp the consent was recorded, or null. */
+  readonly consentAt: string | null;
 };
 
 export type UserDetails = {
@@ -59,6 +95,15 @@ export type UserDetails = {
    * Premium account order.
    */
   readonly order: OrderDetails | null;
+  /**
+   * The account owner's date of birth ("YYYY-MM-DD"), or null if never
+   * collected (e.g. an OAuth sign-up that hasn't completed the age gate yet).
+   */
+  readonly dateOfBirth: string | null;
+  /** Whether the account has a password set (vs. OAuth/passkey-only). */
+  readonly hasPassword: boolean;
+  /** Whether the account's email address has been verified. */
+  readonly emailVerified: boolean;
   /**
    * Timestamp.
    */

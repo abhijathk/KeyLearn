@@ -1,8 +1,9 @@
 import { body, controller, http, pathParam } from "@fastr/controller";
 import { Context } from "@fastr/core";
-import { BadRequestError } from "@fastr/errors";
+import { BadRequestError, ForbiddenError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
+import { Profile } from "@keybr/database";
 import { HighScoresFactory } from "@keybr/highscores";
 import { type NamedUser } from "@keybr/pages-shared";
 import { PublicId } from "@keybr/publicid";
@@ -50,6 +51,56 @@ export class Controller {
   async deleteData(ctx: Context<RouterState & AuthState>) {
     const { id } = ctx.state.requireUser();
     await this.userData.load(new PublicId(id!)).delete();
+    ctx.response.status = 204;
+  }
+
+  // ---- Per-profile history (each learner's own results). ----
+
+  @http.GET("/_/sync/data/profile/{pid:[0-9]+}")
+  async getProfileData(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+  ) {
+    const user = ctx.state.requireUser();
+    const profile = await Profile.findOwned(user.id!, Number(pid));
+    if (profile == null) {
+      throw new ForbiddenError();
+    }
+    await this.userData.loadProfile(user.id!, profile.id!).serve(ctx);
+  }
+
+  @http.POST("/_/sync/data/profile/{pid:[0-9]+}")
+  async postProfileData(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+    @body.binary(null, { maxLength: 1048576 }) value: Buffer,
+  ) {
+    const user = ctx.state.requireUser();
+    const profile = await Profile.findOwned(user.id!, Number(pid));
+    if (profile == null) {
+      throw new ForbiddenError();
+    }
+    const results = await parseResults(value);
+    await this.userData.loadProfile(user.id!, profile.id!).append(results);
+    // Only grown-up profiles count toward the account's leaderboard; kids are
+    // kept off the public high scores.
+    if (profile.kind === "adult") {
+      await this.highScores.append(user.id!, results);
+    }
+    ctx.response.status = 204;
+  }
+
+  @http.DELETE("/_/sync/data/profile/{pid:[0-9]+}")
+  async deleteProfileData(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+  ) {
+    const user = ctx.state.requireUser();
+    const profile = await Profile.findOwned(user.id!, Number(pid));
+    if (profile == null) {
+      throw new ForbiddenError();
+    }
+    await this.userData.loadProfile(user.id!, profile.id!).delete();
     ctx.response.status = 204;
   }
 }

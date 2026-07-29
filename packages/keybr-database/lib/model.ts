@@ -1,9 +1,13 @@
+import { createHash, randomInt } from "node:crypto";
 import { type ResourceOwner } from "@keybr/oauth";
 import {
   type AnonymousUser,
   type AnyUser,
   type NamedUser,
   type OrderDetails,
+  type ProfileAvatar,
+  type ProfileDetails,
+  type ProfileKind,
   type UserDetails,
   type UserExternalIdDetails,
 } from "@keybr/pages-shared";
@@ -44,6 +48,10 @@ export class User extends TimestampMixin(Model) {
       id: { type: "integer" },
       email: { type: "string", minLength: 1, maxLength: 64 },
       name: { type: "string", minLength: 1, maxLength: 32 },
+      // The account owner's date of birth (ISO "YYYY-MM-DD"), used for the
+      // age gate at sign-up. Null for accounts created before it was asked
+      // (e.g. OAuth sign-ups).
+      dateOfBirth: { type: ["string", "null"] },
     },
   } satisfies JSONSchema;
 
@@ -55,6 +63,13 @@ export class User extends TimestampMixin(Model) {
     table.boolean("anonymized").notNullable().defaultTo(false);
     // Null for OAuth / magic-link accounts; set only for email+password.
     table.string("password_hash", 128).nullable();
+    table.date("date_of_birth").nullable();
+    // Whether the account's email address has been proven. True for OAuth and
+    // magic-link sign-ups (email is inherently verified); email+password
+    // sign-ups start false and flip once the emailed code is entered.
+    table.boolean("email_verified").notNullable().defaultTo(false);
+    // Bumped to invalidate all existing sessions ("sign out everywhere").
+    table.integer("session_epoch").notNullable().defaultTo(0);
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.unique(["email"]);
     table.unique(["name"]);
@@ -65,6 +80,9 @@ export class User extends TimestampMixin(Model) {
   name?: string;
   anonymized?: number;
   passwordHash?: string | null;
+  dateOfBirth?: string | null;
+  emailVerified?: number | boolean;
+  sessionEpoch?: number;
   createdAt?: Date;
   externalIds?: UserExternalId[];
   order?: Order;
@@ -113,10 +131,12 @@ export class User extends TimestampMixin(Model) {
     let user = await User.findByEmail(email);
     if (user == null) {
       const name = await User.findUniqueName(email, email);
+      // Reaching this path means the visitor proved control of the address
+      // (a magic-login link), so the email counts as verified.
       user = await User.query()
         .withGraphFetched("externalIds")
         .withGraphFetched("order")
-        .insertAndFetch({ email, name });
+        .insertAndFetch({ email, name, emailVerified: true });
     }
     return user;
   }
@@ -127,6 +147,7 @@ export class User extends TimestampMixin(Model) {
     email: string,
     password: string,
     hint: string,
+    dateOfBirth: string | null = null,
   ): Promise<User> {
     const existing = await User.findByEmail(email);
     if (existing != null) {
@@ -137,7 +158,7 @@ export class User extends TimestampMixin(Model) {
     return await User.query()
       .withGraphFetched("externalIds")
       .withGraphFetched("order")
-      .insertAndFetch({ email, name, passwordHash });
+      .insertAndFetch({ email, name, passwordHash, dateOfBirth });
   }
 
   // Verifies an email+password pair. Returns null on any mismatch — the
@@ -267,6 +288,8 @@ export class User extends TimestampMixin(Model) {
       ...user,
       email: ro.email,
       name,
+      // The OAuth provider has already verified the address on its side.
+      emailVerified: true,
       externalIds: [...externalIds.values()],
     } as User;
   }
@@ -279,6 +302,9 @@ export class User extends TimestampMixin(Model) {
       anonymized: Boolean(this.anonymized!),
       externalId: this.externalIds!.map((id) => id.toDetails()),
       order: this.order?.toDetails() ?? null,
+      dateOfBirth: this.dateOfBirth ?? null,
+      hasPassword: this.passwordHash != null,
+      emailVerified: Boolean(this.emailVerified),
       createdAt: this.createdAt!,
     };
   }
@@ -437,6 +463,177 @@ export class Order extends TimestampMixin(Model) {
   }
 }
 
+// A household learner profile (grown-up or kid). Stored server-side and owned
+// by a User account, so profiles — and everything on them — follow the user
+// across devices. Kid profiles carry the parental consent captured at creation.
+export class Profile extends TimestampMixin(Model) {
+  static override readonly tableName = "profile";
+  static override readonly columnNameMappers = snakeCaseMappers();
+  static override jsonSchema = {
+    type: "object",
+    required: ["userId", "kind", "firstName"],
+    properties: {
+      id: { type: "integer" },
+      userId: { type: "integer" },
+      kind: { type: "string", enum: ["adult", "kid"] },
+      firstName: { type: "string", minLength: 1, maxLength: 32 },
+      lastName: { type: ["null", "string"], maxLength: 32 },
+      birthYear: { type: ["null", "integer"] },
+      // JSON blobs (avatar, and per-profile client prefs such as the kids
+      // toy-box settings that used to live in localStorage).
+      avatar: { type: ["null", "string"] },
+      prefs: { type: ["null", "string"] },
+      parentalConsent: { type: "boolean" },
+    },
+  } satisfies JSONSchema;
+
+  static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
+    table.increments("id").primary();
+    table.integer("user_id").unsigned().notNullable().index();
+    table.string("kind", 8).notNullable();
+    table.string("first_name", 32).notNullable();
+    table.string("last_name", 32).nullable();
+    table.integer("birth_year").nullable();
+    table.text("avatar").nullable();
+    table.text("prefs").nullable();
+    table.boolean("parental_consent").notNullable().defaultTo(false);
+    table.timestamp("consent_at").nullable();
+    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table
+      .foreign("user_id")
+      .references("id")
+      .inTable("user")
+      .onDelete("CASCADE");
+  }
+
+  readonly id?: number;
+  userId?: number;
+  kind?: string;
+  firstName?: string;
+  lastName?: string | null;
+  birthYear?: number | null;
+  avatar?: string | null;
+  prefs?: string | null;
+  parentalConsent?: number | boolean;
+  consentAt?: Date | string | null;
+  createdAt?: Date;
+
+  static async listForUser(userId: number): Promise<Profile[]> {
+    return await Profile.query().where("userId", userId).orderBy("id");
+  }
+
+  static async findOwned(userId: number, id: number): Promise<Profile | null> {
+    return (await Profile.query().findOne({ id, userId })) ?? null;
+  }
+
+  // All learning lives under a profile, never the bare account. So every
+  // signed-in account gets a default grown-up profile the first time it has
+  // none — created lazily here, so it covers every sign-in path (password,
+  // OAuth, magic-link) and backfills existing accounts. The learner can rename
+  // it or add more; deleting the last one just re-creates it on next load.
+  static async ensureDefault(user: User): Promise<void> {
+    const count = await Profile.query()
+      .where("userId", user.id!)
+      .resultSize();
+    if (count === 0) {
+      const seed = (user.email ?? "").split("@")[0].trim();
+      const firstName = (seed || "Me").slice(0, 32);
+      await Profile.query().insert({
+        userId: user.id!,
+        kind: "adult",
+        firstName,
+        parentalConsent: false,
+        consentAt: null,
+      });
+    }
+  }
+
+  toDetails(): ProfileDetails {
+    let avatar: ProfileAvatar | null = null;
+    if (this.avatar) {
+      try {
+        avatar = JSON.parse(this.avatar) as ProfileAvatar;
+      } catch {
+        avatar = null;
+      }
+    }
+    return {
+      id: String(this.id!),
+      kind: (this.kind === "kid" ? "kid" : "adult") as ProfileKind,
+      firstName: this.firstName!,
+      lastName: this.lastName ?? "",
+      birthYear: this.birthYear ?? null,
+      avatar,
+      parentalConsent: Boolean(this.parentalConsent),
+      consentAt:
+        this.consentAt != null ? new Date(this.consentAt).toISOString() : null,
+    };
+  }
+}
+
+// A registered WebAuthn passkey (public-key credential) for an account.
+export class Credential extends TimestampMixin(Model) {
+  static override readonly tableName = "credential";
+  static override readonly columnNameMappers = snakeCaseMappers();
+  static override jsonSchema = {
+    type: "object",
+    required: ["userId", "credentialId", "publicKey"],
+    properties: {
+      id: { type: "integer" },
+      userId: { type: "integer" },
+      credentialId: { type: "string", minLength: 1, maxLength: 512 },
+      publicKey: { type: "string" },
+      counter: { type: "integer" },
+      transports: { type: ["null", "string"] },
+      name: { type: ["null", "string"], maxLength: 64 },
+    },
+  } satisfies JSONSchema;
+
+  static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
+    table.increments("id").primary();
+    table.integer("user_id").unsigned().notNullable().index();
+    table.string("credential_id", 512).notNullable(); // base64url
+    table.text("public_key").notNullable(); // base64
+    table.integer("counter").notNullable().defaultTo(0);
+    table.text("transports").nullable(); // JSON array
+    table.string("name", 64).nullable();
+    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.unique(["credential_id"]);
+    table
+      .foreign("user_id")
+      .references("id")
+      .inTable("user")
+      .onDelete("CASCADE");
+  }
+
+  readonly id?: number;
+  userId?: number;
+  credentialId?: string;
+  publicKey?: string;
+  counter?: number;
+  transports?: string | null;
+  name?: string | null;
+  createdAt?: Date;
+
+  static async listForUser(userId: number): Promise<Credential[]> {
+    return await Credential.query().where("userId", userId).orderBy("id");
+  }
+
+  static async findByCredentialId(
+    credentialId: string,
+  ): Promise<Credential | null> {
+    return (await Credential.query().findOne({ credentialId })) ?? null;
+  }
+
+  toDetails(): { id: string; name: string; createdAt: string } {
+    return {
+      id: String(this.id!),
+      name: this.name ?? "Passkey",
+      createdAt: (this.createdAt ?? new Date()).toISOString?.() ?? "",
+    };
+  }
+}
+
 export class UserLoginRequest extends TimestampMixin(Model) {
   static override readonly tableName = "user_login_request";
   static override readonly columnNameMappers = snakeCaseMappers();
@@ -497,23 +694,35 @@ export class UserLoginRequest extends TimestampMixin(Model) {
     return (await UserLoginRequest.query().findOne({ accessToken })) ?? null;
   }
 
+  static #hash(token: string): string {
+    return createHash("sha256").update(token).digest("hex");
+  }
+
+  // Issues a fresh single-use token for an email. Only the SHA-256 *hash* is
+  // persisted, so a database leak never exposes a usable reset/login link; the
+  // plaintext token is returned once, to be emailed. Any prior token for the
+  // address is replaced.
   static async init(email: string): Promise<string> {
     await this.deleteExpired();
-    let request = await UserLoginRequest.findByEmail(email);
-    if (request == null) {
-      request = await UserLoginRequest.query().insertAndFetch({
-        email,
-        accessToken: Random.string(20),
-      });
-    }
-    return request.accessToken!;
+    await UserLoginRequest.query().where({ email }).delete();
+    const token = Random.string(20);
+    await UserLoginRequest.query().insert({
+      email,
+      accessToken: UserLoginRequest.#hash(token),
+    });
+    return token;
   }
 
   static async login(accessToken: string): Promise<User | null> {
     await this.deleteExpired();
-    const request = await UserLoginRequest.findByAccessToken(accessToken);
+    const request = await UserLoginRequest.findByAccessToken(
+      UserLoginRequest.#hash(accessToken),
+    );
     if (request != null) {
-      return User.login(request.email!);
+      const user = await User.login(request.email!);
+      // One-shot: consume the token so the magic-login link can't be replayed.
+      await UserLoginRequest.query().deleteById(request.id!);
+      return user;
     }
     return null;
   }
@@ -522,7 +731,9 @@ export class UserLoginRequest extends TimestampMixin(Model) {
   // returns the email it was issued for. For the password-reset flow.
   static async consume(accessToken: string): Promise<string | null> {
     await this.deleteExpired();
-    const request = await UserLoginRequest.findByAccessToken(accessToken);
+    const request = await UserLoginRequest.findByAccessToken(
+      UserLoginRequest.#hash(accessToken),
+    );
     if (request == null) {
       return null;
     }
@@ -579,3 +790,94 @@ Order.relationMappings = {
 };
 
 UserLoginRequest.relationMappings = {};
+
+// A short-lived email-verification code issued during email+password sign-up.
+// The 6-digit code is emailed to the address and stored only as a hash, so a
+// database read never reveals a live code. One row per email (the newest code
+// replaces any previous one); codes expire and lock out after a few tries.
+export class EmailVerification extends TimestampMixin(Model) {
+  static override readonly tableName = "email_verification";
+  static override readonly columnNameMappers = snakeCaseMappers();
+  static override jsonSchema = {
+    type: "object",
+    required: ["email", "codeHash"],
+    properties: {
+      id: { type: "integer" },
+      email: { type: "string", minLength: 1, maxLength: 64 },
+      codeHash: { type: "string", minLength: 1, maxLength: 64 },
+      attempts: { type: "integer" },
+    },
+  } satisfies JSONSchema;
+
+  static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
+    const { email, codeHash } = EmailVerification.jsonSchema.properties;
+    table.increments("id").primary();
+    table.string("email", email.maxLength).notNullable();
+    table.string("code_hash", codeHash.maxLength).notNullable();
+    table.integer("attempts").notNullable().defaultTo(0);
+    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.unique(["email"]);
+  }
+
+  static readonly expireTime = 15 * 60 * 1000;
+  static readonly maxAttempts = 5;
+  static readonly codeLength = 6;
+
+  readonly id?: number;
+  email?: string;
+  codeHash?: string;
+  attempts?: number;
+  createdAt?: Date;
+
+  static #hash(code: string): string {
+    return createHash("sha256").update(code).digest("hex");
+  }
+
+  // Issue a fresh code for an email, replacing any prior one. Returns the
+  // plaintext code (to be emailed) — it is never persisted in the clear.
+  static async issue(email: string): Promise<string> {
+    await this.deleteExpired();
+    const code = String(randomInt(0, 1_000_000)).padStart(
+      EmailVerification.codeLength,
+      "0",
+    );
+    const codeHash = EmailVerification.#hash(code);
+    const existing = await EmailVerification.query().findOne({ email });
+    if (existing != null) {
+      await existing
+        .$query()
+        .patch({ codeHash, attempts: 0, createdAt: new Date() });
+    } else {
+      await EmailVerification.query().insert({ email, codeHash, attempts: 0 });
+    }
+    return code;
+  }
+
+  // Check a submitted code. Consumes (deletes) the record on success. Counts
+  // failed tries and gives up after maxAttempts so a code can't be brute-forced.
+  static async verify(email: string, code: string): Promise<boolean> {
+    await this.deleteExpired();
+    const rec = await EmailVerification.query().findOne({ email });
+    if (rec == null) {
+      return false;
+    }
+    if ((rec.attempts ?? 0) >= EmailVerification.maxAttempts) {
+      await rec.$query().delete();
+      return false;
+    }
+    if (EmailVerification.#hash(code) === rec.codeHash) {
+      await rec.$query().delete();
+      return true;
+    }
+    await rec.$query().patch({ attempts: (rec.attempts ?? 0) + 1 });
+    return false;
+  }
+
+  static async deleteExpired(now: number = Date.now()): Promise<void> {
+    await EmailVerification.query()
+      .where("createdAt", "<", new Date(now - EmailVerification.expireTime))
+      .delete();
+  }
+}
+
+EmailVerification.relationMappings = {};

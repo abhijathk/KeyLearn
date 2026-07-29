@@ -3,6 +3,7 @@ import { Context } from "@fastr/core";
 import { inject, injectable } from "@fastr/invert";
 import { CanonicalHandler } from "@fastr/middleware-canonical";
 import { type RouterState } from "@fastr/middleware-router";
+import { Env } from "@keybr/config";
 import { defaultLocale, loadIntl, PreferredLocaleContext } from "@keybr/intl";
 import { Shell, View } from "@keybr/pages-server";
 import {
@@ -11,6 +12,7 @@ import {
   PageInfo,
   Pages,
 } from "@keybr/pages-shared";
+import { Profile } from "@keybr/database";
 import { SettingsDatabase } from "@keybr/settings-database";
 import { staticTheme, ThemeContext, ThemePrefs } from "@keybr/themes";
 import { type IntlShape, RawIntlProvider } from "react-intl";
@@ -76,9 +78,25 @@ export class Controller {
     return this.renderPage(ctx, Pages.login);
   }
 
+  @http.GET(`/{locale:${localePattern}}${Pages.login.path}`)
+  async ["login-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.login, intl);
+  }
+
   @http.GET(`${Pages.register.path}`)
   async ["register-page"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.register);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.register.path}`)
+  async ["register-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.register, intl);
   }
 
   @http.GET(`${Pages.forgotPassword.path}`)
@@ -86,9 +104,27 @@ export class Controller {
     return this.renderPage(ctx, Pages.forgotPassword);
   }
 
+  @http.GET(`/{locale:${localePattern}}${Pages.forgotPassword.path}`)
+  async ["forgot-password-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.forgotPassword, intl);
+  }
+
   @http.GET(`${Pages.resetPassword.path}/{token:[a-zA-Z0-9]+}`)
   async ["reset-password-page"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.resetPassword);
+  }
+
+  @http.GET(
+    `/{locale:${localePattern}}${Pages.resetPassword.path}/{token:[a-zA-Z0-9]+}`,
+  )
+  async ["reset-password-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.resetPassword, intl);
   }
 
   @http.GET(`${Pages.kids.path}`)
@@ -167,6 +203,19 @@ export class Controller {
     @pathParam("locale", pIntl) intl: IntlShape,
   ) {
     return this.renderPage(ctx, Pages.layouts, intl);
+  }
+
+  @http.GET(`${Pages.texts.path}`)
+  async ["texts"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.texts);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.texts.path}`)
+  async ["texts-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.texts, intl);
   }
 
   @http.GET(`${Pages.typingTest.path}`)
@@ -253,12 +302,34 @@ export class Controller {
   ): Promise<PageData> {
     const { user, publicUser } = ctx.state;
     const settings = user != null ? await this.database.get(user.id!) : null;
+    // Every signed-in account always has at least one (grown-up) profile.
+    if (user != null) {
+      await Profile.ensureDefault(user);
+    }
+    const profiles =
+      user != null
+        ? (await Profile.listForUser(user.id!)).map((p) => p.toDetails())
+        : [];
+    // Only advertise OAuth providers that actually have credentials configured,
+    // so the sign-in UI never shows a button that would fail on click.
+    const oauthProviders = (
+      [
+        ["google", "AUTH_GOOGLE_CLIENT_ID"],
+        ["microsoft", "AUTH_MICROSOFT_CLIENT_ID"],
+        ["facebook", "AUTH_FACEBOOK_CLIENT_ID"],
+      ] as const
+    ).flatMap(([name, key]) => (Env.getString(key, "") ? [name] : []));
     return {
       base: this.canonicalUrl,
       locale,
       user: user?.toDetails() ?? null,
       publicUser,
       settings: settings?.toJSON() ?? null,
+      oauthProviders,
+      profiles,
+      // Public Turnstile site key, present only when the CAPTCHA is configured;
+      // the browser needs it to render a challenge if the server asks for one.
+      turnstileSiteKey: Env.getString("TURNSTILE_SITE_KEY", "") || undefined,
     };
   }
 

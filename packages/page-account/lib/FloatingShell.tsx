@@ -16,10 +16,13 @@ export function FloatingShell({
   title,
   children,
   compact = false,
+  flush = false,
 }: {
   readonly title: ReactNode;
   readonly children: ReactNode;
   readonly compact?: boolean;
+  /** Remove the body padding so a full-bleed rail/pane layout can fill it. */
+  readonly flush?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
@@ -45,24 +48,50 @@ export function FloatingShell({
       }}
     >
       <div
-        className={clsx(styles.window, compact && styles.compact)}
+        className={clsx(
+          styles.window,
+          compact && styles.compact,
+          flush && styles.flushWindow,
+        )}
         role="dialog"
         aria-modal={true}
       >
-        <div className={styles.windowHead}>
-          <span className={styles.windowTitle}>{title}</span>
-          <button
-            className={styles.windowClose}
-            title={formatMessage({
-              id: "account.close",
-              defaultMessage: "Close and return to practice",
-            })}
-            onClick={close}
-          >
-            <StrokeIcon name="close" />
-          </button>
-        </div>
-        <div className={styles.windowBody}>{children}</div>
+        {flush ? (
+          // Full-bleed layout: a floating close button replaces the title bar
+          // so the rail can meet the top edge.
+          <>
+            <button
+              className={styles.floatClose}
+              title={formatMessage({
+                id: "account.close",
+                defaultMessage: "Close and return to practice",
+              })}
+              onClick={close}
+            >
+              <StrokeIcon name="close" />
+            </button>
+            <div className={clsx(styles.windowBody, styles.flush)}>
+              {children}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={styles.windowHead}>
+              <span className={styles.windowTitle}>{title}</span>
+              <button
+                className={styles.windowClose}
+                title={formatMessage({
+                  id: "account.close",
+                  defaultMessage: "Close and return to practice",
+                })}
+                onClick={close}
+              >
+                <StrokeIcon name="close" />
+              </button>
+            </div>
+            <div className={styles.windowBody}>{children}</div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { Identicon } from "@keybr/identicon";
 import { type ClassName } from "@keybr/widget";
 import { clsx } from "clsx";
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import * as styles from "./Avatar.module.less";
 import { type AnyUser } from "./types.ts";
 
@@ -14,6 +14,10 @@ export function Avatar({
   readonly size?: "normal" | "medium" | "large";
   readonly className?: ClassName;
 }): ReactNode {
+  // If a remote avatar image fails to load (offline, blocked, 404), fall back
+  // to the name-based identicon instead of a broken-image placeholder.
+  const [imageFailed, setImageFailed] = useState(false);
+
   const sizeClassName = {
     [styles.size_normal]: size === "normal",
     [styles.size_medium]: size === "medium",
@@ -34,9 +38,9 @@ export function Avatar({
   }
 
   const { name, imageUrl } = user;
-  if (imageUrl != null) {
+  if (imageUrl != null && !imageFailed) {
     return (
-      <CustomImage
+      <img
         className={clsx(
           styles.root,
           sizeClassName,
@@ -45,6 +49,7 @@ export function Avatar({
         )}
         src={imageUrl}
         alt="User image"
+        onError={() => setImageFailed(true)}
       />
     );
   }
@@ -70,16 +75,4 @@ function AnonymousImage({
       <path d="M 5.9 19.9 C 6.6 16.7 9 14.9 12 14.9 C 15 14.9 17.4 16.7 18.1 19.9" />
     </svg>
   );
-}
-
-function CustomImage({
-  src,
-  alt,
-  className,
-}: {
-  readonly src: string;
-  readonly alt?: string;
-  readonly className?: ClassName;
-}): ReactNode {
-  return <img src={src} alt={alt} className={className} />;
 }

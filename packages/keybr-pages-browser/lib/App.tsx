@@ -42,6 +42,7 @@ const HelpPage = lazy(() => import("./pages/help.tsx"));
 const ProfilesManagePage = lazy(() => import("./pages/profiles.tsx"));
 const KidsPage = lazy(() => import("./pages/kids.tsx"));
 const LayoutsPage = lazy(() => import("./pages/layouts.tsx"));
+const TextsPage = lazy(() => import("./pages/texts.tsx"));
 const PracticePage = lazy(() => import("./pages/practice.tsx"));
 const ProfilePage = lazy(() => import("./pages/profile.tsx"));
 const TypingTestPage = lazy(() => import("./pages/typing-test.tsx"));
@@ -224,6 +225,17 @@ function PageRoutes() {
               <Title page={Pages.layouts} />
               <Suspense fallback={<LoadingProgress />}>
                 <LayoutsPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.texts.path}
+          element={
+            <Template path={Pages.texts.path}>
+              <Title page={Pages.texts} />
+              <Suspense fallback={<LoadingProgress />}>
+                <TextsPage />
               </Suspense>
             </Template>
           }

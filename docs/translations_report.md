@@ -1,1489 +1,1489 @@
 # English
 
-Translated: 624 messages, 7338 words
+Translated: 863 messages, 8490 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 305 messages, 3980 words
+Translated: 574 messages, 6158 words
 
-Untranslated: 283 messages, 3012 words
+Untranslated: 249 messages, 2085 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Arabic
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Bulgarian
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Bangla
 
-Translated: 550 messages, 5945 words
+Translated: 744 messages, 7836 words
 
-Untranslated: 69 messages, 1264 words
+Untranslated: 104 messages, 552 words
 
-* *About*
-* *Version*
-* *In short*
-* *Log out?*
-* *Settings*
-* *Kids mode*
-* *The maker*
-* *User Guide*
-* *Day or night*
-* *In a sentence*
-* *KeyLearn home*
-* *Make it yours*
-* *About KeyLearn*
-* *Classic course*
-* *Lower the goal*
-* *Raise the goal*
-* *Getting started*
-* *Sounds on or off*
-* *The story so far*
-* *What we stand for*
+* *Mon*
+* *Sun*
+* *Zen*
+* *Auto*
+* *Best*
+* *Dark*
+* *Left*
+* *Test*
+* *Time*
+* *Coach*
+* *Light*
+* *Theme*
+* *Words*
+* *Words*
+* *Active*
+* *Arcade*
+* *Colour*
+* *Manage*
+* *Move up*
+* *Premium*
 * ...
 
 # Catalan
 
-Translated: 277 messages, 3035 words
+Translated: 546 messages, 5213 words
 
-Untranslated: 309 messages, 3939 words
+Untranslated: 275 messages, 3012 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Czech
 
-Translated: 304 messages, 3977 words
+Translated: 573 messages, 6155 words
 
-Untranslated: 284 messages, 3015 words
+Untranslated: 250 messages, 2088 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Danish
 
-Translated: 297 messages, 3929 words
+Translated: 565 messages, 6106 words
 
-Untranslated: 289 messages, 3045 words
+Untranslated: 256 messages, 2119 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # German
 
-Translated: 305 messages, 3980 words
+Translated: 572 messages, 6156 words
 
-Untranslated: 283 messages, 3012 words
+Untranslated: 251 messages, 2087 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Greek
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Esperanto
 
-Translated: 52 messages, 692 words
+Translated: 321 messages, 2870 words
 
-Untranslated: 530 messages, 6258 words
+Untranslated: 496 messages, 5331 words
 
-* *or*
 * *GO!*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Back*
 * *Best*
 * *Best*
+* *Best*
 * *Copy*
-* *Done*
-* *Edit*
+* *Dark*
 * *Help*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Open*
-* *Pace*
 * ...
 
 # Spanish
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Estonian
 
-Translated: 304 messages, 3979 words
+Translated: 573 messages, 6157 words
 
-Untranslated: 284 messages, 3013 words
+Untranslated: 250 messages, 2086 words
 
-* *or*
 * *GO!*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
-* *Time*
 * *Time*
 * ...
 
 # Persian
 
-Translated: 262 messages, 2475 words
+Translated: 531 messages, 4653 words
 
-Untranslated: 324 messages, 4499 words
+Untranslated: 290 messages, 3572 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Finnish
 
-Translated: 178 messages, 1831 words
+Translated: 447 messages, 4009 words
 
-Untranslated: 405 messages, 5122 words
+Untranslated: 371 messages, 4195 words
 
-* *or*
 * *GO!*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
-* *Time*
 * *Time*
 * ...
 
 # Faroese
 
-Translated: 20 messages, 80 words
+Translated: 289 messages, 2258 words
 
-Untranslated: 561 messages, 6859 words
+Untranslated: 527 messages, 5932 words
 
-* *or*
 * *GO!*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Back*
 * *Best*
 * *Best*
+* *Best*
 * *Copy*
-* *Done*
-* *Edit*
+* *Dark*
 * *Help*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Open*
-* *Pace*
 * ...
 
 # French
 
-Translated: 299 messages, 3804 words
+Translated: 567 messages, 5981 words
 
-Untranslated: 289 messages, 3188 words
+Untranslated: 256 messages, 2262 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Irish
 
-Translated: 303 messages, 3970 words
+Translated: 572 messages, 6148 words
 
-Untranslated: 285 messages, 3022 words
+Untranslated: 251 messages, 2095 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Gujarati
 
-Translated: 552 messages, 5964 words
+Translated: 744 messages, 7836 words
 
-Untranslated: 67 messages, 1245 words
+Untranslated: 104 messages, 552 words
 
-* *About*
-* *Version*
-* *In short*
-* *Settings*
-* *Kids mode*
-* *The maker*
-* *User Guide*
-* *Day or night*
-* *In a sentence*
-* *KeyLearn home*
-* *Make it yours*
-* *About KeyLearn*
-* *Classic course*
-* *Lower the goal*
-* *Raise the goal*
-* *Getting started*
-* *Sounds on or off*
-* *The story so far*
-* *What we stand for*
-* *Who's practising?*
+* *Mon*
+* *Sun*
+* *Zen*
+* *Auto*
+* *Best*
+* *Dark*
+* *Left*
+* *Test*
+* *Time*
+* *Coach*
+* *Light*
+* *Theme*
+* *Words*
+* *Words*
+* *Active*
+* *Arcade*
+* *Colour*
+* *Manage*
+* *Move up*
+* *Premium*
 * ...
 
 # Hebrew
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Hindi
 
-Translated: 579 messages, 6596 words
+Translated: 744 messages, 7836 words
 
-Untranslated: 44 messages, 736 words
+Untranslated: 104 messages, 552 words
 
-* *About*
-* *In short*
-* *Log out?*
-* *Settings*
-* *Kids mode*
-* *User Guide*
-* *Day or night*
-* *KeyLearn home*
-* *Make it yours*
-* *Classic course*
-* *Lower the goal*
-* *Raise the goal*
-* *Getting started*
-* *Sounds on or off*
-* *Who's practising?*
-* *Account and privacy*
-* *New keys per stage:*
-* *Tracking your progress*
-* *Everything in one place*
-* *Tips that actually help*
+* *Mon*
+* *Sun*
+* *Zen*
+* *Auto*
+* *Best*
+* *Dark*
+* *Left*
+* *Test*
+* *Time*
+* *Coach*
+* *Light*
+* *Theme*
+* *Words*
+* *Words*
+* *Active*
+* *Arcade*
+* *Colour*
+* *Manage*
+* *Move up*
+* *Premium*
 * ...
 
 # Croatian
 
-Translated: 303 messages, 3975 words
+Translated: 572 messages, 6153 words
 
-Untranslated: 285 messages, 3017 words
+Untranslated: 251 messages, 2090 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Hungarian
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Indonesian
 
-Translated: 305 messages, 3980 words
+Translated: 573 messages, 6157 words
 
-Untranslated: 283 messages, 3012 words
+Untranslated: 250 messages, 2086 words
 
-* *or*
 * *GO!*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
+* *Best*
+* *Dark*
 * *Edit*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
-* *Time*
-* *Time*
 * ...
 
 # Icelandic
 
-Translated: 71 messages, 1301 words
+Translated: 340 messages, 3479 words
 
-Untranslated: 511 messages, 5649 words
+Untranslated: 477 messages, 4722 words
 
-* *or*
 * *GO!*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Back*
 * *Best*
 * *Best*
+* *Best*
 * *Copy*
-* *Done*
-* *Edit*
+* *Dark*
 * *Help*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Open*
-* *Pace*
 * ...
 
 # Italian
 
-Translated: 301 messages, 3975 words
+Translated: 569 messages, 6152 words
 
-Untranslated: 287 messages, 3017 words
+Untranslated: 254 messages, 2091 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Japanese
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Kannada
 
-Translated: 550 messages, 5945 words
+Translated: 744 messages, 7836 words
 
-Untranslated: 69 messages, 1264 words
+Untranslated: 104 messages, 552 words
 
-* *About*
-* *Version*
-* *In short*
-* *Log out?*
-* *Settings*
-* *Kids mode*
-* *The maker*
-* *User Guide*
-* *Day or night*
-* *In a sentence*
-* *KeyLearn home*
-* *Make it yours*
-* *About KeyLearn*
-* *Classic course*
-* *Lower the goal*
-* *Raise the goal*
-* *Getting started*
-* *Sounds on or off*
-* *The story so far*
-* *What we stand for*
+* *Mon*
+* *Sun*
+* *Zen*
+* *Auto*
+* *Best*
+* *Dark*
+* *Left*
+* *Test*
+* *Time*
+* *Coach*
+* *Light*
+* *Theme*
+* *Words*
+* *Words*
+* *Active*
+* *Arcade*
+* *Colour*
+* *Manage*
+* *Move up*
+* *Premium*
 * ...
 
 # Korean
 
-Translated: 117 messages, 882 words
+Translated: 386 messages, 3060 words
 
-Untranslated: 469 messages, 6092 words
+Untranslated: 435 messages, 5165 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Back*
 * *Best*
 * *Best*
+* *Best*
 * *Copy*
-* *Done*
-* *Edit*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Open*
 * *Pace*
-* *Save*
-* *Text*
+* *Test*
 * ...
 
 # Lithuanian
 
-Translated: 272 messages, 2790 words
+Translated: 541 messages, 4968 words
 
-Untranslated: 314 messages, 4184 words
+Untranslated: 280 messages, 3257 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Malayalam
 
-Translated: 552 messages, 5964 words
+Translated: 744 messages, 7836 words
 
-Untranslated: 67 messages, 1245 words
+Untranslated: 104 messages, 552 words
 
-* *About*
-* *Version*
-* *In short*
-* *Settings*
-* *Kids mode*
-* *The maker*
-* *User Guide*
-* *Day or night*
-* *In a sentence*
-* *KeyLearn home*
-* *Make it yours*
-* *About KeyLearn*
-* *Classic course*
-* *Lower the goal*
-* *Raise the goal*
-* *Getting started*
-* *Sounds on or off*
-* *The story so far*
-* *What we stand for*
-* *Who's practising?*
+* *Mon*
+* *Sun*
+* *Zen*
+* *Auto*
+* *Best*
+* *Dark*
+* *Left*
+* *Test*
+* *Time*
+* *Coach*
+* *Light*
+* *Theme*
+* *Words*
+* *Words*
+* *Active*
+* *Arcade*
+* *Colour*
+* *Manage*
+* *Move up*
+* *Premium*
 * ...
 
 # Mongolian
 
-Translated: 4 messages, 31 words
+Translated: 274 messages, 2211 words
 
-Untranslated: 577 messages, 6908 words
+Untranslated: 542 messages, 5979 words
 
-* *or*
 * *GO!*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Back*
 * *Best*
 * *Best*
+* *Best*
 * *Copy*
-* *Done*
-* *Edit*
+* *Dark*
 * *Help*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Open*
-* *Pace*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 181 messages, 1971 words
+Translated: 450 messages, 4149 words
 
-Untranslated: 403 messages, 4985 words
+Untranslated: 369 messages, 4058 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *Help*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
-* *Time*
 * *Time*
 * ...
 
 # Nepali
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Dutch
 
-Translated: 300 messages, 3973 words
+Translated: 568 messages, 6150 words
 
-Untranslated: 288 messages, 3019 words
+Untranslated: 255 messages, 2093 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Polish
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Brazilian Portuguese
 
-Translated: 304 messages, 3978 words
+Translated: 573 messages, 6156 words
 
-Untranslated: 284 messages, 3014 words
+Untranslated: 250 messages, 2087 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # European Portuguese
 
-Translated: 285 messages, 3858 words
+Translated: 554 messages, 6036 words
 
-Untranslated: 301 messages, 3116 words
+Untranslated: 267 messages, 2189 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Romanian
 
-Translated: 270 messages, 3082 words
+Translated: 539 messages, 5260 words
 
-Untranslated: 313 messages, 3875 words
+Untranslated: 279 messages, 2948 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Russian
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Slovak
 
-Translated: 306 messages, 3980 words
+Translated: 575 messages, 6158 words
 
-Untranslated: 282 messages, 3012 words
+Untranslated: 248 messages, 2085 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Slovenian
 
-Translated: 306 messages, 3981 words
+Translated: 575 messages, 6159 words
 
-Untranslated: 282 messages, 3011 words
+Untranslated: 248 messages, 2084 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Albanian
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Swedish
 
-Translated: 304 messages, 3977 words
+Translated: 572 messages, 6154 words
 
-Untranslated: 284 messages, 3015 words
+Untranslated: 251 messages, 2089 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Tamil
 
-Translated: 550 messages, 5945 words
+Translated: 744 messages, 7836 words
 
-Untranslated: 69 messages, 1264 words
+Untranslated: 104 messages, 552 words
 
-* *About*
-* *Version*
-* *In short*
-* *Log out?*
-* *Settings*
-* *Kids mode*
-* *The maker*
-* *User Guide*
-* *Day or night*
-* *In a sentence*
-* *KeyLearn home*
-* *Make it yours*
-* *About KeyLearn*
-* *Classic course*
-* *Lower the goal*
-* *Raise the goal*
-* *Getting started*
-* *Sounds on or off*
-* *The story so far*
-* *What we stand for*
+* *Mon*
+* *Sun*
+* *Zen*
+* *Auto*
+* *Best*
+* *Dark*
+* *Left*
+* *Test*
+* *Time*
+* *Coach*
+* *Light*
+* *Theme*
+* *Words*
+* *Words*
+* *Active*
+* *Arcade*
+* *Colour*
+* *Manage*
+* *Move up*
+* *Premium*
 * ...
 
 # Telugu
 
-Translated: 550 messages, 5945 words
+Translated: 744 messages, 7836 words
 
-Untranslated: 69 messages, 1264 words
+Untranslated: 104 messages, 552 words
 
-* *About*
-* *Version*
-* *In short*
-* *Log out?*
-* *Settings*
-* *Kids mode*
-* *The maker*
-* *User Guide*
-* *Day or night*
-* *In a sentence*
-* *KeyLearn home*
-* *Make it yours*
-* *About KeyLearn*
-* *Classic course*
-* *Lower the goal*
-* *Raise the goal*
-* *Getting started*
-* *Sounds on or off*
-* *The story so far*
-* *What we stand for*
+* *Mon*
+* *Sun*
+* *Zen*
+* *Auto*
+* *Best*
+* *Dark*
+* *Left*
+* *Test*
+* *Time*
+* *Coach*
+* *Light*
+* *Theme*
+* *Words*
+* *Words*
+* *Active*
+* *Arcade*
+* *Colour*
+* *Manage*
+* *Move up*
+* *Premium*
 * ...
 
 # Thai
 
-Translated: 295 messages, 3884 words
+Translated: 564 messages, 6062 words
 
-Untranslated: 291 messages, 3090 words
+Untranslated: 257 messages, 2163 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Turkish
 
-Translated: 196 messages, 1682 words
+Translated: 465 messages, 3860 words
 
-Untranslated: 387 messages, 5263 words
+Untranslated: 353 messages, 4336 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Ukrainian
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Urdu
 
-Translated: 550 messages, 5945 words
+Translated: 744 messages, 7836 words
 
-Untranslated: 69 messages, 1264 words
+Untranslated: 104 messages, 552 words
 
-* *About*
-* *Version*
-* *In short*
-* *Log out?*
-* *Settings*
-* *Kids mode*
-* *The maker*
-* *User Guide*
-* *Day or night*
-* *In a sentence*
-* *KeyLearn home*
-* *Make it yours*
-* *About KeyLearn*
-* *Classic course*
-* *Lower the goal*
-* *Raise the goal*
-* *Getting started*
-* *Sounds on or off*
-* *The story so far*
-* *What we stand for*
+* *Mon*
+* *Sun*
+* *Zen*
+* *Auto*
+* *Best*
+* *Dark*
+* *Left*
+* *Test*
+* *Time*
+* *Coach*
+* *Light*
+* *Theme*
+* *Words*
+* *Words*
+* *Active*
+* *Arcade*
+* *Colour*
+* *Manage*
+* *Move up*
+* *Premium*
 * ...
 
 # Vietnamese
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Simplified Chinese
 
-Translated: 306 messages, 3975 words
+Translated: 575 messages, 6153 words
 
-Untranslated: 282 messages, 3017 words
+Untranslated: 248 messages, 2090 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Traditional Chinese
 
-Translated: 307 messages, 3982 words
+Translated: 576 messages, 6160 words
 
-Untranslated: 281 messages, 3010 words
+Untranslated: 247 messages, 2083 words
 
-* *or*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
 * *Time*
 * *Time*
-* *About*
 * ...
 
 # Chinese (Taiwan)
 
-Translated: 306 messages, 3981 words
+Translated: 575 messages, 6159 words
 
-Untranslated: 282 messages, 3011 words
+Untranslated: 248 messages, 2084 words
 
-* *or*
 * *GO!*
-* *Kid*
+* *Mon*
 * *now*
+* *Sun*
 * *you*
+* *Zen*
+* *Auto*
 * *Best*
 * *Best*
-* *Done*
-* *Edit*
+* *Best*
+* *Dark*
 * *hits*
 * *Kids*
-* *Kids*
-* *Kids*
 * *last*
+* *Left*
 * *Open*
 * *Pace*
-* *Save*
+* *Test*
 * *Text*
-* *Time*
 * *Time*
 * ...

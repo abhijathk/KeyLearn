@@ -279,3 +279,82 @@ export function TimeToTypeChart({
     </svg>
   );
 }
+
+/**
+ * Your recent tests as a small trajectory — a quiet mint line with the
+ * personal-best level as a faint dashed reference, for the report's
+ * "your last N tests" panel.
+ */
+export function RecentTrendChart({
+  values,
+  bestValue,
+  formatValue,
+}: {
+  readonly values: readonly number[];
+  readonly bestValue: number | null;
+  readonly formatValue: (value: number) => string;
+}): ReactNode {
+  const W = 400;
+  const H = 92;
+  const PAD = 14;
+  if (values.length < 2) {
+    return null;
+  }
+  const hi = Math.max(bestValue ?? 0, ...values) * 1.08 || 1;
+  const lo = Math.min(...values) * 0.9;
+  const span = hi - lo || 1;
+  const y = (v: number) => H - PAD - ((v - lo) / span) * (H - PAD * 2);
+  const pts = values.map(
+    (v, i) => [(i / (values.length - 1)) * W, y(v)] as const,
+  );
+  const bestY = bestValue != null ? y(bestValue) : null;
+  return (
+    <svg
+      className={styles.chart}
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      style={{ blockSize: "6.2rem" }}
+    >
+      {bestY != null && (
+        <>
+          <line
+            x1="0"
+            y1={bestY}
+            x2={W}
+            y2={bestY}
+            stroke="var(--text-color-f2)"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+          />
+          <text
+            x={W - 4}
+            y={bestY - 5}
+            fill="var(--text-color-f2)"
+            fontSize="9"
+            textAnchor="end"
+            style={{ fontFamily: "inherit" }}
+          >
+            {`best ${formatValue(bestValue as number)}`}
+          </text>
+        </>
+      )}
+      <path
+        d={pathOf(pts)}
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      {pts.map(([x, py], i) => (
+        <circle
+          key={i}
+          cx={x}
+          cy={py}
+          r={i === pts.length - 1 ? 3.5 : 2.2}
+          fill="var(--accent)"
+        />
+      ))}
+    </svg>
+  );
+}

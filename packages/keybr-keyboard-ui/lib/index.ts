@@ -1,5 +1,6 @@
 export * from "./custom/index.ts";
 export * from "./HeatmapLayer.tsx";
+export * from "./HeatRingLayer.tsx";
 export * from "./KeyboardStats.tsx";
 export * from "./KeyLayer.tsx";
 export * from "./MasteryLayer.tsx";

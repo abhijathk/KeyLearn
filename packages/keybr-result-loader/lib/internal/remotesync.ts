@@ -25,6 +25,26 @@ export class ResultSyncNamedUser implements RemoteResultSync {
   }
 }
 
+export class ResultSyncProfile implements RemoteResultSync {
+  readonly #path: string;
+
+  constructor(profileId: string) {
+    this.#path = `${url}/profile/${encodeURIComponent(profileId)}`;
+  }
+
+  receive(pl: ProgressListener): Promise<Result[]> {
+    return receive(this.#path, pl);
+  }
+
+  send(results: readonly Result[], pl: ProgressListener): Promise<void> {
+    return send(this.#path, results, pl);
+  }
+
+  clear(): Promise<void> {
+    return clear(this.#path);
+  }
+}
+
 export class ResultSyncPublicUser implements RemoteResultSync {
   readonly #userId: string;
 

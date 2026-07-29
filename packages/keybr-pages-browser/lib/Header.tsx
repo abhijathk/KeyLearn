@@ -73,6 +73,7 @@ export function Header({
   const [streak, setStreak] = useState(0);
   const [focusMode, setFocusMode] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const kidsState = useKidsControls();
   useEffect(() => {
     const onStreak = (ev: Event) => {
@@ -88,13 +89,20 @@ export function Header({
     const onTyping = (ev: Event) => {
       setTyping(Boolean((ev as CustomEvent<boolean>).detail));
     };
+    // Opt-in auto-hide: the practice presenter asks the header to slide away
+    // while typing and to return once the learner has been idle a while.
+    const onHide = (ev: Event) => {
+      setHidden(Boolean((ev as CustomEvent<boolean>).detail));
+    };
     window.addEventListener("keylearn:streak", onStreak);
     window.addEventListener("keylearn:focus-mode-state", onFocusMode);
     window.addEventListener("keylearn:typing", onTyping);
+    window.addEventListener("keylearn:header-hide", onHide);
     return () => {
       window.removeEventListener("keylearn:streak", onStreak);
       window.removeEventListener("keylearn:focus-mode-state", onFocusMode);
       window.removeEventListener("keylearn:typing", onTyping);
+      window.removeEventListener("keylearn:header-hide", onHide);
     };
   }, []);
 
@@ -127,7 +135,7 @@ export function Header({
   }
 
   return (
-    <header className={styles.header}>
+    <header className={clsx(styles.header, hidden && styles.hidden)}>
       <div className={styles.left}>
         {showBack && !kids && (
           <NavLink
@@ -146,6 +154,10 @@ export function Header({
         <NavLink
           to={kids ? "/kids" : "/"}
           className={styles.wordmark}
+          // "KeyLearn" is a brand wordmark built from two spans; pin it LTR so
+          // right-to-left locales (Arabic, Hebrew…) don't reorder it to
+          // "LearnKey".
+          dir="ltr"
           title={formatMessage(
             defineMessage({
               id: "nav.home",
@@ -185,7 +197,7 @@ export function Header({
             />
           </span>
         )}
-        <AccountMenu />
+        <AccountMenu kids={kids} />
         {kids && (
           <>
             <button

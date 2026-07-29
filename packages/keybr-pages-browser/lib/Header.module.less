@@ -7,6 +7,28 @@
   justify-content: space-between;
   padding-inline: 1.25rem;
   padding-block: 0.4rem;
+  // A slow, gentle glide so the header never snaps in or out and pulls the
+  // eye away from the practice text.
+  transition:
+    transform 0.9s cubic-bezier(0.33, 0, 0.2, 1),
+    opacity 0.9s ease;
+}
+
+// Auto-hide while typing: slide up out of view and fade, without taking the
+// header out of layout (so nothing below jumps).
+.hidden {
+  transform: translateY(-135%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header {
+    transition: opacity 0.2s ease;
+  }
+  .hidden {
+    transform: none;
+  }
 }
 
 // Focus mode: only the exit button remains, tucked to the trailing edge.

@@ -1,7 +1,8 @@
 @import "@keybr/widget/lib/index.less";
 
-// Matches the profile-editor overlays: theme surface, whisper title with a
-// hairline, value-font body.
+// The shared "report-card" confirmation: a mint tape across the top, a bold
+// title, and a balanced button row (ghost cancel + solid confirm). Matches the
+// goal-report window so every dialog feels like one family.
 
 .scrim {
   display: grid;
@@ -16,73 +17,147 @@
 
 .dialog {
   display: flex;
+  position: relative;
   flex-direction: column;
   gap: 0.85rem;
-  inline-size: min(26rem, 100%);
-  padding: 1.5rem;
-  border: var(--separator-border);
-  border-radius: 0.9rem;
+  inline-size: min(23rem, 100%);
+  padding: 1.5rem 1.5rem 1.4rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 22%, var(--primary-d2));
+  border-radius: 1.1rem;
+  overflow: hidden;
   color: var(--text-color);
-  background-color: var(--background-color);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  background-color: var(--primary);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
   font-family: var(--value-font-family);
-  animation: pop 0.18s ease-out;
+  animation: pop 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  // The mint tape.
+  &::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 0;
+    block-size: 0.5rem;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--accent) 0 0.9rem,
+      transparent 0.9rem 1.8rem
+    );
+    opacity: 0.55;
+  }
 }
 
 @keyframes pop {
   from {
     opacity: 0;
-    transform: scale(0.97);
+    transform: translateY(0.6rem) scale(0.97);
   }
 }
 
 .title {
-  display: flex;
-  gap: 0.7rem;
-  align-items: center;
-  margin: 0;
-  color: var(--text-color-f2);
-  font-family: var(--default-font-family);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-
-  &::after {
-    content: "";
-    flex: 1;
-    block-size: 1px;
-    background-image: linear-gradient(to right, var(--primary-d2), transparent);
-  }
+  margin: 0.2rem 0 0;
+  color: var(--text-color);
+  font-size: 1.15rem;
+  font-weight: 750;
 }
 
 .message {
   margin: 0;
   color: var(--text-color-f1);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   line-height: 1.55;
 }
 
 .actions {
   display: flex;
   gap: 0.6rem;
-  justify-content: flex-end;
-  margin-block-start: 0.4rem;
+  margin-block-start: 0.5rem;
 }
 
-.confirm {
-  padding-inline: 1.25rem;
-  padding-block: 0.5rem;
+.typeHint {
+  margin: -0.2rem 0 0;
+  color: var(--text-color-f1);
+  font-size: 0.82rem;
+}
+
+.typeField {
+  inline-size: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--text-color) 14%, transparent);
+  border-radius: 0.55rem;
+  color: var(--text-color);
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+  font-family: var(--value-font-family);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+
+  &::placeholder {
+    color: var(--text-color-f2);
+    letter-spacing: 0.08em;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--error-color, #d0322e);
+  }
+}
+
+.btn {
+  flex: 1;
+  padding-inline: 1rem;
+  padding-block: 0.7rem;
   border: none;
-  border-radius: 999px;
-  color: var(--primary);
-  background-color: var(--accent);
+  border-radius: 0.65rem;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+
+    &:active {
+      transform: none;
+    }
+  }
+}
+
+.cancel {
+  border: 1px solid color-mix(in oklab, var(--text-color) 12%, transparent);
+  color: var(--text-color-f1);
+  background: transparent;
+
+  &:hover {
+    color: var(--text-color);
+    border-color: color-mix(in oklab, var(--text-color) 25%, transparent);
+  }
+}
+
+.confirm {
+  color: var(--primary);
+  background-color: var(--accent);
+
+  &:hover {
+    box-shadow: 0 0.4rem 1.2rem color-mix(in oklab, var(--accent) 40%, transparent);
+  }
 }
 
 .confirmDanger {
   color: #fff;
   background-color: var(--error-color, #d0322e);
+
+  &:hover {
+    box-shadow: 0 0.4rem 1.2rem
+      color-mix(in oklab, var(--error-color, #d0322e) 40%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog {
+    animation: none;
+  }
 }

@@ -27,7 +27,13 @@
   line-height: 1.5;
 }
 
-.googleBtn {
+.social {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.oauthBtn {
   display: flex;
   gap: 0.6rem;
   align-items: center;
@@ -51,9 +57,127 @@
   }
 }
 
-.googleMark {
+.oauthMark {
   inline-size: 1.1rem;
   block-size: 1.1rem;
+}
+
+// Password field with an in-field reveal toggle.
+.pwWrap {
+  position: relative;
+  display: flex;
+}
+
+.pwWrap > * {
+  flex: 1;
+}
+
+.pwToggle {
+  position: absolute;
+  inset-inline-end: 0.35rem;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.4rem;
+  color: var(--text-color-f1);
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+  }
+}
+
+.eye {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+}
+
+.caps {
+  margin: -0.4rem 0 0;
+  color: var(--error-color, #d0322e);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+// Date-of-birth / age entry, with its own label (native date/number inputs
+// have no usable placeholder) and the "enter age instead" toggle beneath.
+.dobField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fieldLab {
+  color: var(--text-color-f1);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.dobField > .link {
+  align-self: flex-start;
+  font-size: 0.8rem;
+}
+
+// The under-13 "get a grown-up" gate that replaces the password + submit.
+.gate {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--separator-color, currentColor);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--error-color, #d0322e) 8%, transparent);
+}
+
+.gateTitle {
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.gateText {
+  margin: 0.3rem 0 0;
+  color: var(--text-color-f1);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+// Blocking full-screen gate that collects a missing date of birth.
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(10, 20, 14, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.overlayCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  inline-size: min(24rem, 100%);
+  max-block-size: 92vh;
+  overflow: auto;
+  padding: 1.4rem 1.5rem;
+  border-radius: 1rem;
+  color: var(--text-color);
+  background: var(--card, var(--primary, #fff));
+  box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.35);
+  font-family: var(--value-font-family);
+}
+
+.overlayTitle {
+  color: var(--text-color);
+  font-size: 1.15rem;
+  font-weight: 800;
 }
 
 .divider {
@@ -80,6 +204,36 @@
   color: var(--error-color, #d0322e);
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.6rem;
+  background-color: var(--primary-d1, rgba(88, 133, 245, 0.12));
+  color: var(--text-color-f0);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.turnstile {
+  display: flex;
+  justify-content: center;
+  min-block-size: 65px;
+}
+
+.spamHint {
+  margin: 0;
+  color: var(--text-color-f2);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.rememberRow {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-color-f1);
 }
 
 .links {

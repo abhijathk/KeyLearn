@@ -93,13 +93,19 @@ export function makeKeyComponent(
   const td = isCodePoint(d);
   const ab = ta && tb && letterName(a) === letterName(b);
   const cd = tc && td && letterName(c) === letterName(d);
+  // Keys with an AltGr layer (c/d) keep two columns (left a/b, right c/d);
+  // ordinary number / punctuation keys with only a base+shift pair are centred
+  // horizontally instead of hugging the left edge.
+  const hasAlt =
+    tc || td || isDead(c) || isDead(d) || isLigature(c) || isLigature(d);
+  const lx = hasAlt ? 10 : w / 2;
   // Letters get one centred glyph; keys whose shift layer differs (numbers,
   // punctuation) show both symbols stacked, like the original keyboard.
   if (ta && !ab) {
-    children.push(makeCodePointLabel(a, 10, 27, styles.secondarySymbol));
+    children.push(makeCodePointLabel(a, lx, 27, styles.secondarySymbol));
   }
   if (tb && !ab) {
-    children.push(makeCodePointLabel(b, 10, 12, styles.secondarySymbol));
+    children.push(makeCodePointLabel(b, lx, 12, styles.secondarySymbol));
   }
   if (tc && !cd) {
     children.push(makeCodePointLabel(c, 25, 27, styles.secondarySymbol));
@@ -116,10 +122,10 @@ export function makeKeyComponent(
     children.push(makeCodePointLabel(c, 25, 27, styles.primarySymbol));
   }
   if (isDead(a)) {
-    children.push(makeDeadLabel(a, 10, 27, styles.secondarySymbol));
+    children.push(makeDeadLabel(a, lx, 27, styles.secondarySymbol));
   }
   if (isDead(b)) {
-    children.push(makeDeadLabel(b, 10, 12, styles.secondarySymbol));
+    children.push(makeDeadLabel(b, lx, 12, styles.secondarySymbol));
   }
   if (isDead(c)) {
     children.push(makeDeadLabel(c, 25, 27, styles.secondarySymbol));
@@ -128,10 +134,10 @@ export function makeKeyComponent(
     children.push(makeDeadLabel(d, 25, 12, styles.secondarySymbol));
   }
   if (isLigature(a)) {
-    children.push(makeLigatureLabel(a, 10, 27, styles.secondarySymbol));
+    children.push(makeLigatureLabel(a, lx, 27, styles.secondarySymbol));
   }
   if (isLigature(b)) {
-    children.push(makeLigatureLabel(b, 10, 12, styles.secondarySymbol));
+    children.push(makeLigatureLabel(b, lx, 12, styles.secondarySymbol));
   }
   if (isLigature(c)) {
     children.push(makeLigatureLabel(c, 25, 27, styles.secondarySymbol));

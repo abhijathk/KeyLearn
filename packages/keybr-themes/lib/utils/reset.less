@@ -66,3 +66,30 @@ textarea,
 select {
   font: inherit;
 }
+
+// Thin, theme-aware scrollbars — the thumb is drawn from the current text
+// colour, so it reads well on both light and dark surfaces; hover tints it the
+// accent green.
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--text-color, #808080) 24%, transparent)
+    transparent;
+}
+
+*::-webkit-scrollbar {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--text-color, #808080) 22%, transparent);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--accent, #8fd9b6) 55%, transparent);
+}

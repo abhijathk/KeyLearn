@@ -11,6 +11,7 @@ import { type AnyEvent } from "@keybr/textinput-events";
 export enum DurationType {
   Time = 1,
   Length = 2,
+  Words = 3,
 }
 
 export type Duration = {

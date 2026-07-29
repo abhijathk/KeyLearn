@@ -1,28 +1,37 @@
-import { Pages } from "@keybr/pages-shared";
-import { Button, Icon, TextField } from "@keybr/widget";
+import { Pages, usePageData } from "@keybr/pages-shared";
+import { Button, CheckBox, Icon, TextField } from "@keybr/widget";
 import {
   mdiAccountPlus,
+  mdiCheckDecagramOutline,
   mdiEmailFastOutline,
   mdiKeyVariant,
   mdiLoginVariant,
 } from "@mdi/js";
 import { type ReactNode, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import {
+  defineMessage,
+  FormattedMessage,
+  type MessageDescriptor,
+  useIntl,
+} from "react-intl";
 import * as styles from "./AuthPage.module.less";
+import { DobEntry, type DobResult, GrownUpGate } from "./DobEntry.tsx";
 import { AnimatedHeight, FloatingShell } from "./FloatingShell.tsx";
 import { AccountService } from "./service.ts";
+import { PasswordStrength } from "./PasswordStrength.tsx";
+import { isCaptchaRequired, useCaptcha } from "./turnstile.tsx";
 
-export type AuthMode = "login" | "register" | "forgot" | "reset";
+export type AuthMode = "login" | "register" | "forgot" | "reset" | "magic";
 
 function reload(url: string) {
   window.location.href = url;
 }
 
 /**
- * All four auth screens live in one compact floating window. Switching
- * between them swaps the form in place (with the window gliding to the new
- * height) and rewrites the URL, so /login and /register stay deep-linkable
- * without a jarring page swap.
+ * All the auth screens live in one compact floating window. Switching between
+ * them swaps the form in place (with the window gliding to the new height) and
+ * rewrites the URL, so /login and /register stay deep-linkable without a
+ * jarring page swap.
  */
 export function AuthPage({
   mode: initialMode,
@@ -40,6 +49,7 @@ export function AuthPage({
   const toLogin = () => go("login", Pages.login.path);
   const toRegister = () => go("register", Pages.register.path);
   const toForgot = () => go("forgot", Pages.forgotPassword.path);
+  const toMagic = () => go("magic", Pages.login.path);
 
   return (
     <FloatingShell compact={true} title={<ModeTitle mode={mode} />}>
@@ -51,8 +61,14 @@ export function AuthPage({
             <ForgotForm toLogin={toLogin} />
           ) : mode === "reset" ? (
             <ResetForm token={token ?? ""} />
+          ) : mode === "magic" ? (
+            <MagicForm toLogin={toLogin} />
           ) : (
-            <LoginForm toRegister={toRegister} toForgot={toForgot} />
+            <LoginForm
+              toRegister={toRegister}
+              toForgot={toForgot}
+              toMagic={toMagic}
+            />
           )}
         </div>
       </AnimatedHeight>
@@ -83,6 +99,13 @@ function ModeTitle({ mode }: { readonly mode: AuthMode }): ReactNode {
           defaultMessage="Choose a new password"
         />
       );
+    case "magic":
+      return (
+        <FormattedMessage
+          id="auth.magic.title"
+          defaultMessage="Sign in with a link"
+        />
+      );
     default:
       return (
         <FormattedMessage id="auth.login.submit" defaultMessage="Log in" />
@@ -94,7 +117,7 @@ function ModeTitle({ mode }: { readonly mode: AuthMode }): ReactNode {
 // and never fetched from a CDN.
 function GoogleMark(): ReactNode {
   return (
-    <svg className={styles.googleMark} viewBox="0 0 48 48" aria-hidden={true}>
+    <svg className={styles.oauthMark} viewBox="0 0 48 48" aria-hidden={true}>
       <path
         fill="#EA4335"
         d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -115,18 +138,150 @@ function GoogleMark(): ReactNode {
   );
 }
 
-function GoogleButton({ label }: { readonly label: string }) {
+// The Microsoft four-square logo, drawn inline.
+function MicrosoftMark(): ReactNode {
+  return (
+    <svg className={styles.oauthMark} viewBox="0 0 21 21" aria-hidden={true}>
+      <rect x="1" y="1" width="9" height="9" fill="#f25022" />
+      <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+      <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
+      <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+    </svg>
+  );
+}
+
+// A passkey / fingerprint mark for the passkey sign-in button.
+function PasskeyMark(): ReactNode {
+  return (
+    <svg
+      className={styles.oauthMark}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={true}
+    >
+      <circle cx="10" cy="8" r="4" />
+      <path d="M3 20c0-3.3 3.1-5.5 7-5.5 1 0 1.9.1 2.7.4" />
+      <path d="M17 12.5a2.5 2.5 0 0 1 2.5 2.5v1.5m0 0v3l1.5-1.5M19.5 19.5 18 21" />
+    </svg>
+  );
+}
+
+// The Facebook "f" mark, drawn inline.
+function FacebookMark(): ReactNode {
+  return (
+    <svg className={styles.oauthMark} viewBox="0 0 24 24" aria-hidden={true}>
+      <path
+        fill="#1877f2"
+        d="M24 12a12 12 0 1 0-13.875 11.854v-8.385H7.078V12h3.047V9.356c0-3.007 1.792-4.669 4.533-4.669 1.313 0 2.686.235 2.686.235v2.953H15.83c-1.49 0-1.955.925-1.955 1.874V12h3.328l-.532 3.469h-2.796v8.385A12.003 12.003 0 0 0 24 12z"
+      />
+    </svg>
+  );
+}
+
+function OAuthButton({
+  mark,
+  label,
+  provider,
+  intent,
+}: {
+  readonly mark: ReactNode;
+  readonly label: string;
+  readonly provider: string;
+  readonly intent: "login" | "register";
+}) {
   return (
     <button
       type="button"
-      className={styles.googleBtn}
+      className={styles.oauthBtn}
       onClick={() => {
-        document.location = "/auth/oauth-init/google";
+        document.location = `/auth/oauth-init/${provider}?intent=${intent}`;
       }}
     >
-      <GoogleMark />
+      {mark}
       {label}
     </button>
+  );
+}
+
+// Provider metadata: logo mark + button wording. Keys match the OAuth adapter
+// names (/auth/oauth-init/{provider}).
+const PROVIDERS: Record<
+  string,
+  {
+    readonly mark: ReactNode;
+    readonly login: MessageDescriptor;
+    readonly register: MessageDescriptor;
+  }
+> = {
+  google: {
+    mark: <GoogleMark />,
+    login: defineMessage({
+      id: "auth.continueWithGoogle",
+      defaultMessage: "Continue with Google",
+    }),
+    register: defineMessage({
+      id: "auth.registerWithGoogle",
+      defaultMessage: "Sign up with Google",
+    }),
+  },
+  microsoft: {
+    mark: <MicrosoftMark />,
+    login: defineMessage({
+      id: "auth.continueWithMicrosoft",
+      defaultMessage: "Continue with Microsoft",
+    }),
+    register: defineMessage({
+      id: "auth.registerWithMicrosoft",
+      defaultMessage: "Sign up with Microsoft",
+    }),
+  },
+  facebook: {
+    mark: <FacebookMark />,
+    login: defineMessage({
+      id: "auth.continueWithFacebook",
+      defaultMessage: "Continue with Facebook",
+    }),
+    register: defineMessage({
+      id: "auth.registerWithFacebook",
+      defaultMessage: "Sign up with Facebook",
+    }),
+  },
+};
+
+// The stack of one-tap sign-in providers, shared by the log-in and register
+// forms. Only providers configured on this deployment (from page data) are
+// shown; `register` only changes the button wording. Renders nothing (and no
+// divider) when no provider is configured.
+function SocialButtons({ register }: { readonly register: boolean }) {
+  const { formatMessage } = useIntl();
+  const configured = usePageData().oauthProviders ?? ["google"];
+  const list = ["google", "microsoft", "facebook"].filter(
+    (p) => configured.includes(p) && PROVIDERS[p] != null,
+  );
+  if (list.length === 0) {
+    return null;
+  }
+  return (
+    <>
+      <div className={styles.social}>
+        {list.map((p) => (
+          <OAuthButton
+            key={p}
+            provider={p}
+            intent={register ? "register" : "login"}
+            mark={PROVIDERS[p].mark}
+            label={formatMessage(register ? PROVIDERS[p].register : PROVIDERS[p].login)}
+          />
+        ))}
+      </div>
+      <div className={styles.divider}>
+        <FormattedMessage id="auth.or" defaultMessage="or" />
+      </div>
+    </>
   );
 }
 
@@ -144,18 +299,118 @@ function LinkButton({
   );
 }
 
+function EyeIcon({ off }: { readonly off: boolean }): ReactNode {
+  return (
+    <svg
+      className={styles.eye}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={true}
+    >
+      {off ? (
+        <>
+          <path d="M3 3l18 18" />
+          <path d="M10.6 10.6a3 3 0 0 0 4.2 4.2" />
+          <path d="M9.9 5.2A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3 3.6M6.1 6.1A17.4 17.4 0 0 0 2 12s3.5 7 10 7a9.5 9.5 0 0 0 4-.9" />
+        </>
+      ) : (
+        <>
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+// A password input with a reveal toggle and a live Caps-Lock warning — small
+// touches that matter most for learners still hunting for keys.
+export function PasswordField({
+  value,
+  placeholder,
+  autoComplete,
+  onChange,
+}: {
+  readonly value: string;
+  readonly placeholder: string;
+  readonly autoComplete: string;
+  readonly onChange: (value: string) => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const [show, setShow] = useState(false);
+  const [caps, setCaps] = useState(false);
+  const track = (ev: { getModifierState?: (k: string) => boolean }) => {
+    setCaps(ev.getModifierState?.("CapsLock") ?? false);
+  };
+  return (
+    <>
+      <div className={styles.pwWrap}>
+        <TextField
+          size="full"
+          type={show ? "text" : "password"}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          autoComplete={autoComplete}
+          onKeyUp={track}
+          onKeyDown={track}
+          style={{ paddingInlineEnd: "2.6rem" }}
+        />
+        <button
+          type="button"
+          className={styles.pwToggle}
+          tabIndex={-1}
+          aria-label={formatMessage(
+            show
+              ? defineMessage({
+                  id: "auth.hidePassword",
+                  defaultMessage: "Hide password",
+                })
+              : defineMessage({
+                  id: "auth.showPassword",
+                  defaultMessage: "Show password",
+                }),
+          )}
+          onClick={() => {
+            setShow((v) => !v);
+          }}
+        >
+          <EyeIcon off={show} />
+        </button>
+      </div>
+      {caps && (
+        <p className={styles.caps}>
+          <FormattedMessage
+            id="auth.capsLock"
+            defaultMessage="Caps Lock is on"
+          />
+        </p>
+      )}
+    </>
+  );
+}
+
 function LoginForm({
   toRegister,
   toForgot,
+  toMagic,
 }: {
   readonly toRegister: () => void;
   readonly toForgot: () => void;
+  readonly toMagic: () => void;
 }) {
   const { formatMessage } = useIntl();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
+  const [remember, setRemember] = useState(true);
+  const captcha = useCaptcha();
 
   const submit = () => {
     if (email === "" || password === "" || busy) {
@@ -163,34 +418,77 @@ function LoginForm({
     }
     setBusy(true);
     setError(null);
-    AccountService.loginPassword({ email: email.trim(), password })
-      .then(() => reload("/"))
+    AccountService.loginPassword({
+      email: email.trim(),
+      password,
+      turnstileToken: captcha.token,
+      remember,
+    })
+      .then((result) => {
+        if ("verify" in result) {
+          setVerifyEmail(result.email);
+        } else {
+          reload("/");
+        }
+      })
       .catch((err) => {
-        setError(err.message);
+        if (isCaptchaRequired(err)) {
+          captcha.require();
+          setError(
+            formatMessage({
+              id: "auth.captcha.required",
+              defaultMessage:
+                "Please complete the verification below and try again.",
+            }),
+          );
+        } else {
+          setError(err.message);
+        }
         setBusy(false);
       });
   };
 
+  if (verifyEmail != null) {
+    return <VerifyCodeStep email={verifyEmail} onBack={() => setVerifyEmail(null)} />;
+  }
+
   return (
-    <div className={styles.form}>
+    <form
+      className={styles.form}
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        submit();
+      }}
+    >
       <p className={styles.intro}>
         <FormattedMessage
           id="auth.login.intro"
           defaultMessage="Log in to pick up your progress on any device."
         />
       </p>
-      <GoogleButton
-        label={formatMessage({
-          id: "auth.continueWithGoogle",
-          defaultMessage: "Continue with Google",
-        })}
-      />
-      <div className={styles.divider}>
-        <FormattedMessage id="auth.or" defaultMessage="or" />
-      </div>
+      <SocialButtons register={false} />
+      {AccountService.passkeysSupported() && (
+        <button
+          type="button"
+          className={styles.oauthBtn}
+          onClick={() => {
+            AccountService.loginPasskey()
+              .then(() => reload("/"))
+              .catch(() => {});
+          }}
+        >
+          <PasskeyMark />
+          <FormattedMessage
+            id="auth.signInWithPasskey"
+            defaultMessage="Sign in with a passkey"
+          />
+        </button>
+      )}
       <TextField
         size="full"
         type="email"
+        autoComplete="email"
+        autoFocus={true}
         placeholder={formatMessage({
           id: "t_Your_email_address",
           defaultMessage: "Email address",
@@ -198,9 +496,8 @@ function LoginForm({
         value={email}
         onChange={setEmail}
       />
-      <TextField
-        size="full"
-        type="password"
+      <PasswordField
+        autoComplete="current-password"
         placeholder={formatMessage({
           id: "auth.password",
           defaultMessage: "Password",
@@ -208,7 +505,18 @@ function LoginForm({
         value={password}
         onChange={setPassword}
       />
+      <div className={styles.rememberRow}>
+        <CheckBox
+          label={formatMessage({
+            id: "auth.keepSignedIn",
+            defaultMessage: "Keep me signed in",
+          })}
+          checked={remember}
+          onChange={setRemember}
+        />
+      </div>
       {error != null && <p className={styles.error}>{error}</p>}
+      {captcha.widget}
       <div className={styles.primary}>
         <Button
           size="full"
@@ -218,10 +526,15 @@ function LoginForm({
             defaultMessage: "Log in",
           })}
           disabled={busy}
-          onClick={submit}
         />
       </div>
       <div className={styles.links}>
+        <LinkButton onClick={toMagic}>
+          <FormattedMessage
+            id="auth.magicLink.link"
+            defaultMessage="Email me a sign-in link"
+          />
+        </LinkButton>
         <LinkButton onClick={toForgot}>
           <FormattedMessage
             id="auth.forgotLink"
@@ -238,7 +551,121 @@ function LoginForm({
           </LinkButton>
         </span>
       </div>
-    </div>
+    </form>
+  );
+}
+
+// Shown after a password sign-up (or a sign-in on an unverified account): the
+// account exists but is dormant until the emailed 6-digit code is entered.
+// Verifying signs the account in and lands on the home page.
+function VerifyCodeStep({
+  email,
+  onBack,
+  destination = "/",
+}: {
+  readonly email: string;
+  readonly onBack: () => void;
+  readonly destination?: string;
+}) {
+  const { formatMessage } = useIntl();
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
+
+  const submit = () => {
+    if (code.trim().length !== 6 || busy) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    AccountService.verifyEmail({ email: email.trim(), code: code.trim() })
+      .then(() => reload(destination))
+      .catch((err) => {
+        setError(err.message);
+        setBusy(false);
+      });
+  };
+
+  const resend = () => {
+    setResent(true);
+    setError(null);
+    AccountService.resendCode(email.trim()).catch(() => {});
+  };
+
+  return (
+    <form
+      className={styles.form}
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        submit();
+      }}
+    >
+      <p className={styles.intro}>
+        <FormattedMessage
+          id="auth.verify.intro"
+          defaultMessage="We've emailed a 6-digit code to <strong>{email}</strong>. Enter it below to finish setting up your account."
+          values={{
+            email,
+            strong: (chunks) => <strong>{chunks}</strong>,
+          }}
+        />
+      </p>
+      <p className={styles.spamHint}>
+        <FormattedMessage
+          id="auth.spamHint"
+          defaultMessage="Can't find it? Check your spam or junk folder."
+        />
+      </p>
+      <TextField
+        size="full"
+        type="text"
+        autoComplete="one-time-code"
+        autoFocus={true}
+        maxLength={6}
+        placeholder={formatMessage({
+          id: "auth.verify.codePlaceholder",
+          defaultMessage: "6-digit code",
+        })}
+        value={code}
+        onChange={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
+      />
+      {error != null && <p className={styles.error}>{error}</p>}
+      <div className={styles.primary}>
+        <Button
+          size="full"
+          icon={<Icon shape={mdiCheckDecagramOutline} />}
+          label={formatMessage({
+            id: "auth.verify.submit",
+            defaultMessage: "Verify email",
+          })}
+          disabled={code.trim().length !== 6 || busy}
+        />
+      </div>
+      <div className={styles.links}>
+        {resent ? (
+          <span className={styles.linkRow}>
+            <FormattedMessage
+              id="auth.verify.resent"
+              defaultMessage="A new code is on its way."
+            />
+          </span>
+        ) : (
+          <LinkButton onClick={resend}>
+            <FormattedMessage
+              id="auth.verify.resend"
+              defaultMessage="Didn't get it? Send a new code"
+            />
+          </LinkButton>
+        )}
+        <LinkButton onClick={onBack}>
+          <FormattedMessage
+            id="auth.backToLogin"
+            defaultMessage="Back to log in"
+          />
+        </LinkButton>
+      </div>
+    </form>
   );
 }
 
@@ -247,11 +674,41 @@ function RegisterForm({ toLogin }: { readonly toLogin: () => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [dob, setDob] = useState<DobResult>({
+    dateOfBirth: null,
+    tooYoung: false,
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
+  const captcha = useCaptcha();
+  // Set when an SSO *login* found no matching account and bounced here to
+  // register first.
+  const ssoNoAccount =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("sso") === "noaccount";
+
+  // Only flag a mismatch once they've started typing the confirmation.
+  const mismatch = confirm !== "" && confirm !== password;
 
   const submit = () => {
-    if (email === "" || password === "" || busy) {
+    if (
+      email === "" ||
+      password === "" ||
+      dob.dateOfBirth == null ||
+      dob.tooYoung ||
+      busy
+    ) {
+      return;
+    }
+    if (password !== confirm) {
+      setError(
+        formatMessage({
+          id: "auth.passwordMismatch",
+          defaultMessage: "The passwords don't match.",
+        }),
+      );
       return;
     }
     setBusy(true);
@@ -260,34 +717,71 @@ function RegisterForm({ toLogin }: { readonly toLogin: () => void }) {
       email: email.trim(),
       password,
       name: name.trim() || undefined,
+      dateOfBirth: dob.dateOfBirth,
+      turnstileToken: captcha.token,
     })
-      .then(() => reload("/"))
+      .then((result) => {
+        if ("verify" in result) {
+          setVerifyEmail(result.email);
+        } else {
+          reload("/");
+        }
+      })
       .catch((err) => {
-        setError(err.message);
+        if (isCaptchaRequired(err)) {
+          captcha.require();
+          setError(
+            formatMessage({
+              id: "auth.captcha.required",
+              defaultMessage:
+                "Please complete the verification below and try again.",
+            }),
+          );
+        } else {
+          setError(err.message);
+        }
         setBusy(false);
       });
   };
 
+  if (verifyEmail != null) {
+    // A fresh sign-up lands on the account page to add the first learner.
+    return (
+      <VerifyCodeStep
+        email={verifyEmail}
+        onBack={toLogin}
+        destination="/account"
+      />
+    );
+  }
+
   return (
-    <div className={styles.form}>
+    <form
+      className={styles.form}
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        submit();
+      }}
+    >
+      {ssoNoAccount && (
+        <p className={styles.notice}>
+          <FormattedMessage
+            id="auth.register.ssoNoAccount"
+            defaultMessage="We couldn't find a KeyLearn account for that sign-in. Create one below — it only takes a moment."
+          />
+        </p>
+      )}
       <p className={styles.intro}>
         <FormattedMessage
           id="auth.register.intro"
           defaultMessage="One account for the whole household — you'll add each learner's profile next."
         />
       </p>
-      <GoogleButton
-        label={formatMessage({
-          id: "auth.registerWithGoogle",
-          defaultMessage: "Sign up with Google",
-        })}
-      />
-      <div className={styles.divider}>
-        <FormattedMessage id="auth.or" defaultMessage="or" />
-      </div>
+      <SocialButtons register={true} />
       <TextField
         size="full"
         type="text"
+        autoComplete="name"
         placeholder={formatMessage({
           id: "auth.yourName",
           defaultMessage: "Your name (optional)",
@@ -298,6 +792,7 @@ function RegisterForm({ toLogin }: { readonly toLogin: () => void }) {
       <TextField
         size="full"
         type="email"
+        autoComplete="email"
         placeholder={formatMessage({
           id: "t_Your_email_address",
           defaultMessage: "Email address",
@@ -305,29 +800,53 @@ function RegisterForm({ toLogin }: { readonly toLogin: () => void }) {
         value={email}
         onChange={setEmail}
       />
-      <TextField
-        size="full"
-        type="password"
-        placeholder={formatMessage({
-          id: "auth.choosePassword",
-          defaultMessage: "Choose a password (8+ characters)",
-        })}
-        value={password}
-        onChange={setPassword}
-      />
-      {error != null && <p className={styles.error}>{error}</p>}
-      <div className={styles.primary}>
-        <Button
-          size="full"
-          icon={<Icon shape={mdiAccountPlus} />}
-          label={formatMessage({
-            id: "auth.register.submit",
-            defaultMessage: "Create account",
-          })}
-          disabled={busy}
-          onClick={submit}
-        />
-      </div>
+      <DobEntry onResult={setDob} />
+      {dob.tooYoung ? (
+        <GrownUpGate />
+      ) : (
+        <>
+          <PasswordField
+            autoComplete="new-password"
+            placeholder={formatMessage({
+              id: "auth.choosePassword",
+              defaultMessage: "Choose a password (8+ characters)",
+            })}
+            value={password}
+            onChange={setPassword}
+          />
+          <PasswordStrength password={password} />
+          <PasswordField
+            autoComplete="new-password"
+            placeholder={formatMessage({
+              id: "auth.confirmPassword",
+              defaultMessage: "Confirm password",
+            })}
+            value={confirm}
+            onChange={setConfirm}
+          />
+          {mismatch && (
+            <p className={styles.error}>
+              <FormattedMessage
+                id="auth.passwordMismatch"
+                defaultMessage="The passwords don't match."
+              />
+            </p>
+          )}
+          {error != null && <p className={styles.error}>{error}</p>}
+          {captcha.widget}
+          <div className={styles.primary}>
+            <Button
+              size="full"
+              icon={<Icon shape={mdiAccountPlus} />}
+              label={formatMessage({
+                id: "auth.register.submit",
+                defaultMessage: "Create account",
+              })}
+              disabled={busy || mismatch}
+            />
+          </div>
+        </>
+      )}
       <div className={styles.links}>
         <span className={styles.linkRow}>
           <FormattedMessage
@@ -339,7 +858,7 @@ function RegisterForm({ toLogin }: { readonly toLogin: () => void }) {
           </LinkButton>
         </span>
       </div>
-    </div>
+    </form>
   );
 }
 
@@ -348,17 +867,38 @@ function ForgotForm({ toLogin }: { readonly toLogin: () => void }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const captcha = useCaptcha();
 
   const submit = () => {
     if (email === "" || busy) {
       return;
     }
     setBusy(true);
-    // Always land on the same confirmation, whether or not the email exists.
-    AccountService.forgotPassword(email.trim()).finally(() => {
-      setSent(true);
-      setBusy(false);
-    });
+    setError(null);
+    AccountService.forgotPassword(email.trim(), captcha.token)
+      .then(() => {
+        setSent(true);
+        setBusy(false);
+      })
+      .catch((err) => {
+        if (isCaptchaRequired(err)) {
+          captcha.require();
+          setError(
+            formatMessage({
+              id: "auth.captcha.required",
+              defaultMessage:
+                "Please complete the verification below and try again.",
+            }),
+          );
+          setBusy(false);
+        } else {
+          // Any other outcome lands on the same confirmation, so the endpoint
+          // can't be used to probe which emails are registered.
+          setSent(true);
+          setBusy(false);
+        }
+      });
   };
 
   if (sent) {
@@ -374,6 +914,12 @@ function ForgotForm({ toLogin }: { readonly toLogin: () => void }) {
             }}
           />
         </p>
+        <p className={styles.spamHint}>
+          <FormattedMessage
+            id="auth.spamHint"
+            defaultMessage="Can't find it? Check your spam or junk folder."
+          />
+        </p>
         <div className={styles.links}>
           <LinkButton onClick={toLogin}>
             <FormattedMessage
@@ -387,7 +933,13 @@ function ForgotForm({ toLogin }: { readonly toLogin: () => void }) {
   }
 
   return (
-    <div className={styles.form}>
+    <form
+      className={styles.form}
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        submit();
+      }}
+    >
       <p className={styles.intro}>
         <FormattedMessage
           id="auth.forgot.intro"
@@ -397,6 +949,8 @@ function ForgotForm({ toLogin }: { readonly toLogin: () => void }) {
       <TextField
         size="full"
         type="email"
+        autoComplete="email"
+        autoFocus={true}
         placeholder={formatMessage({
           id: "t_Your_email_address",
           defaultMessage: "Email address",
@@ -404,6 +958,8 @@ function ForgotForm({ toLogin }: { readonly toLogin: () => void }) {
         value={email}
         onChange={setEmail}
       />
+      {error != null && <p className={styles.error}>{error}</p>}
+      {captcha.widget}
       <div className={styles.primary}>
         <Button
           size="full"
@@ -413,7 +969,6 @@ function ForgotForm({ toLogin }: { readonly toLogin: () => void }) {
             defaultMessage: "Send reset link",
           })}
           disabled={busy}
-          onClick={submit}
         />
       </div>
       <div className={styles.links}>
@@ -424,35 +979,172 @@ function ForgotForm({ toLogin }: { readonly toLogin: () => void }) {
           />
         </LinkButton>
       </div>
-    </div>
+    </form>
   );
 }
 
-function ResetForm({ token }: { readonly token: string }) {
+// Passwordless sign-in: we email a one-time link that logs you straight in —
+// no password to remember. Works to sign in an existing account or start a new
+// one.
+function MagicForm({ toLogin }: { readonly toLogin: () => void }) {
   const { formatMessage } = useIntl();
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = () => {
-    if (password === "" || busy) {
+    if (email === "" || busy) {
       return;
     }
     setBusy(true);
     setError(null);
-    AccountService.resetPassword({ token, password })
-      .then(() => reload("/"))
+    AccountService.registerEmail(email.trim())
+      .then(() => {
+        setSent(true);
+        setBusy(false);
+      })
       .catch((err) => {
         setError(err.message);
         setBusy(false);
       });
   };
 
+  if (sent) {
+    return (
+      <div className={styles.form}>
+        <p className={styles.intro}>
+          <FormattedMessage
+            id="auth.magic.sentText"
+            defaultMessage="We've emailed a sign-in link to <strong>{email}</strong>. It works once and expires in 24 hours."
+            values={{
+              email,
+              strong: (chunks) => <strong>{chunks}</strong>,
+            }}
+          />
+        </p>
+        <p className={styles.spamHint}>
+          <FormattedMessage
+            id="auth.spamHint"
+            defaultMessage="Can't find it? Check your spam or junk folder."
+          />
+        </p>
+        <div className={styles.links}>
+          <LinkButton onClick={toLogin}>
+            <FormattedMessage
+              id="auth.backToLogin"
+              defaultMessage="Back to log in"
+            />
+          </LinkButton>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.form}>
+    <form
+      className={styles.form}
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        submit();
+      }}
+    >
+      <p className={styles.intro}>
+        <FormattedMessage
+          id="auth.magic.intro"
+          defaultMessage="Enter your email and we'll send you a link to sign in — no password needed."
+        />
+      </p>
       <TextField
         size="full"
-        type="password"
+        type="email"
+        autoComplete="email"
+        autoFocus={true}
+        placeholder={formatMessage({
+          id: "t_Your_email_address",
+          defaultMessage: "Email address",
+        })}
+        value={email}
+        onChange={setEmail}
+      />
+      {error != null && <p className={styles.error}>{error}</p>}
+      <div className={styles.primary}>
+        <Button
+          size="full"
+          icon={<Icon shape={mdiEmailFastOutline} />}
+          label={formatMessage({
+            id: "auth.magic.submit",
+            defaultMessage: "Send sign-in link",
+          })}
+          disabled={busy}
+        />
+      </div>
+      <div className={styles.links}>
+        <LinkButton onClick={toLogin}>
+          <FormattedMessage
+            id="auth.backToLogin"
+            defaultMessage="Back to log in"
+          />
+        </LinkButton>
+      </div>
+    </form>
+  );
+}
+
+function ResetForm({ token }: { readonly token: string }) {
+  const { formatMessage } = useIntl();
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const captcha = useCaptcha();
+
+  const mismatch = confirm !== "" && confirm !== password;
+
+  const submit = () => {
+    if (password === "" || busy) {
+      return;
+    }
+    if (password !== confirm) {
+      setError(
+        formatMessage({
+          id: "auth.passwordMismatch",
+          defaultMessage: "The passwords don't match.",
+        }),
+      );
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    AccountService.resetPassword({ token, password, turnstileToken: captcha.token })
+      .then(() => reload("/"))
+      .catch((err) => {
+        if (isCaptchaRequired(err)) {
+          captcha.require();
+          setError(
+            formatMessage({
+              id: "auth.captcha.required",
+              defaultMessage:
+                "Please complete the verification below and try again.",
+            }),
+          );
+        } else {
+          setError(err.message);
+        }
+        setBusy(false);
+      });
+  };
+
+  return (
+    <form
+      className={styles.form}
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        submit();
+      }}
+    >
+      <PasswordField
+        autoComplete="new-password"
         placeholder={formatMessage({
           id: "auth.newPassword",
           defaultMessage: "New password (8+ characters)",
@@ -460,7 +1152,26 @@ function ResetForm({ token }: { readonly token: string }) {
         value={password}
         onChange={setPassword}
       />
+      <PasswordStrength password={password} />
+      <PasswordField
+        autoComplete="new-password"
+        placeholder={formatMessage({
+          id: "auth.confirmPassword",
+          defaultMessage: "Confirm password",
+        })}
+        value={confirm}
+        onChange={setConfirm}
+      />
+      {mismatch && (
+        <p className={styles.error}>
+          <FormattedMessage
+            id="auth.passwordMismatch"
+            defaultMessage="The passwords don't match."
+          />
+        </p>
+      )}
       {error != null && <p className={styles.error}>{error}</p>}
+      {captcha.widget}
       <div className={styles.primary}>
         <Button
           size="full"
@@ -469,10 +1180,23 @@ function ResetForm({ token }: { readonly token: string }) {
             id: "auth.reset.submit",
             defaultMessage: "Set new password",
           })}
-          disabled={busy}
-          onClick={submit}
+          disabled={busy || mismatch}
         />
       </div>
-    </div>
+      <div className={styles.links}>
+        <LinkButton onClick={() => reload(Pages.forgotPassword.path)}>
+          <FormattedMessage
+            id="auth.reset.newLink"
+            defaultMessage="Link expired? Request a new one"
+          />
+        </LinkButton>
+        <LinkButton onClick={() => reload(Pages.login.path)}>
+          <FormattedMessage
+            id="auth.backToLogin"
+            defaultMessage="Back to log in"
+          />
+        </LinkButton>
+      </div>
+    </form>
   );
 }

@@ -1,5 +1,91 @@
 import { type Mailer } from "../mail/index.ts";
 
+// ── Brand palette (matches the KeyLearn theme) ──
+const INK = "#141620";
+const ACCENT = "#37c871"; // CTA green
+const ACCENT_SOFT = "#eaf8f0";
+const PAGE_BG = "#eef0f4";
+const CARD_BG = "#ffffff";
+const MUTED = "#6b7280";
+const BORDER = "#e6e8ee";
+const FONT =
+  "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+
+// Minimal HTML escaping for values we interpolate into the markup.
+function esc(s: string): string {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+// A text wordmark — reliable across email clients (no external fonts/images):
+// "Key" in ink, "Learn" in the brand green.
+function wordmark(): string {
+  return (
+    `<span style="font-family:${FONT};font-size:22px;font-weight:800;letter-spacing:-0.02em;color:${INK}">` +
+    `Key<span style="color:${ACCENT}">Learn</span></span>`
+  );
+}
+
+// A "bulletproof" call-to-action button: a padded, rounded anchor that renders
+// as a real clickable button in every major client.
+function button(href: string, label: string): string {
+  return (
+    `<a href="${esc(href)}" ` +
+    `style="display:inline-block;background:${ACCENT};color:#ffffff;` +
+    `font-family:${FONT};font-size:16px;font-weight:700;text-decoration:none;` +
+    `padding:14px 30px;border-radius:10px;line-height:1">${esc(label)}</a>`
+  );
+}
+
+// Wraps the message body in the branded shell (header wordmark, white card,
+// muted footer). `inner` is trusted HTML built by the callers below.
+function shell(previewText: string, inner: string): string {
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+</head>
+<body style="margin:0;padding:0;background:${PAGE_BG}">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(previewText)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAGE_BG};padding:32px 12px">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px">
+<tr><td style="padding:4px 8px 20px">${wordmark()}</td></tr>
+<tr><td style="background:${CARD_BG};border:1px solid ${BORDER};border-radius:16px;padding:32px 28px">
+${inner}
+</td></tr>
+<tr><td style="padding:20px 8px;color:${MUTED};font-family:${FONT};font-size:12px;line-height:1.6">
+You're receiving this because someone used this address on KeyLearn. If it wasn't you, you can safely ignore this email.
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
+function heading(text: string): string {
+  return `<h1 style="margin:0 0 14px;font-family:${FONT};font-size:22px;font-weight:800;color:${INK}">${esc(text)}</h1>`;
+}
+
+function paragraph(text: string): string {
+  return `<p style="margin:0 0 18px;font-family:${FONT};font-size:15px;line-height:1.6;color:#374151">${esc(text)}</p>`;
+}
+
+// A small muted "or paste this link" fallback under a CTA button.
+function fallbackLink(link: string): string {
+  return (
+    `<p style="margin:20px 0 0;font-family:${FONT};font-size:13px;line-height:1.6;color:${MUTED}">` +
+    `Or paste this link into your browser:<br>` +
+    `<a href="${esc(link)}" style="color:${ACCENT};word-break:break-all">${esc(link)}</a></p>`
+  );
+}
+
 export function messageWithLink({
   email,
   link,
@@ -7,20 +93,63 @@ export function messageWithLink({
   readonly email: string;
   readonly link: string;
 }): Mailer.Message {
-  const subject = `Login link for KeyLearn`;
-  const text = `Hello, KeyLearn user!
+  const subject = `Sign in to KeyLearn`;
+  const text = `Hello!
 
-Here is the link to log you in into the web-site: ${link}
+Use this link to sign in to KeyLearn:
 
-Please keep this link secret and don't share it with anybody!
+${link}
 
-We wish you happy typing!
-`;
-  return {
-    to: email,
-    subject,
-    text,
-  };
+The link works once and expires in 24 hours. Please keep it secret and don't share it.
+
+If you didn't ask to sign in, you can safely ignore this email.
+
+Happy typing!`;
+  const html = shell(
+    "Your KeyLearn sign-in link",
+    heading("Sign in to KeyLearn") +
+      paragraph("Tap the button below to sign in. No password needed.") +
+      `<div style="margin:4px 0 4px">${button(link, "Sign in")}</div>` +
+      fallbackLink(link) +
+      `<p style="margin:22px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">This link works once and expires in 24 hours.</p>`,
+  );
+  return { to: email, subject, text, html };
+}
+
+export function messageWithCode({
+  email,
+  code,
+}: {
+  readonly email: string;
+  readonly code: string;
+}): Mailer.Message {
+  const subject = `Your KeyLearn verification code: ${code}`;
+  const text = `Hello!
+
+Your KeyLearn email verification code is:
+
+${code}
+
+Enter it on the sign-up screen to finish creating your account. The code expires in 15 minutes.
+
+If you didn't try to create a KeyLearn account, you can safely ignore this email.
+
+Happy typing!`;
+  const codeBlock =
+    `<div style="margin:6px 0 4px;background:${ACCENT_SOFT};border:1px solid ${BORDER};` +
+    `border-radius:12px;padding:18px 12px;text-align:center;` +
+    `font-family:'SF Mono',Menlo,Consolas,monospace;font-size:34px;font-weight:700;` +
+    `letter-spacing:0.4em;color:${INK}">${esc(code)}</div>`;
+  const html = shell(
+    `Your verification code is ${code}`,
+    heading("Verify your email") +
+      paragraph(
+        "Enter this code on the sign-up screen to finish creating your account:",
+      ) +
+      codeBlock +
+      `<p style="margin:20px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">This code expires in 15 minutes.</p>`,
+  );
+  return { to: email, subject, text, html };
 }
 
 export function messageWithResetLink({
@@ -31,19 +160,26 @@ export function messageWithResetLink({
   readonly link: string;
 }): Mailer.Message {
   const subject = `Reset your KeyLearn password`;
-  const text = `Hello, KeyLearn user!
+  const text = `Hello!
 
-We received a request to reset your password. Use the link below to choose a new one: ${link}
+We received a request to reset your KeyLearn password. Use this link to choose a new one:
 
-If you didn't ask to reset your password, you can safely ignore this email — your account is unchanged.
+${link}
 
 This link expires in 24 hours.
 
-We wish you happy typing!
-`;
-  return {
-    to: email,
-    subject,
-    text,
-  };
+If you didn't ask to reset your password, you can safely ignore this email — your account is unchanged.
+
+Happy typing!`;
+  const html = shell(
+    "Reset your KeyLearn password",
+    heading("Reset your password") +
+      paragraph(
+        "We received a request to reset your password. Tap the button below to choose a new one.",
+      ) +
+      `<div style="margin:4px 0 4px">${button(link, "Choose a new password")}</div>` +
+      fallbackLink(link) +
+      `<p style="margin:22px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">This link expires in 24 hours. If you didn't ask to reset your password, your account is unchanged.</p>`,
+  );
+  return { to: email, subject, text, html };
 }

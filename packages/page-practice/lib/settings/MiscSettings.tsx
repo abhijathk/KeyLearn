@@ -24,7 +24,41 @@ export function MiscSettings(): ReactNode {
       >
         <SpeedUnitProp />
         <GhostRaceProp />
+        <HideHeaderProp />
       </FieldSet>
+    </>
+  );
+}
+
+function HideHeaderProp(): ReactNode {
+  const { formatMessage } = useIntl();
+  const { settings, updateSettings } = useSettings();
+  return (
+    <>
+      <FieldList>
+        <Field>
+          <CheckBox
+            label={formatMessage({
+              id: "settings.hideHeaderWhileTyping.label",
+              defaultMessage: "Hide the header while typing",
+            })}
+            checked={settings.get(uiProps.hideHeaderWhileTyping)}
+            onChange={(value) => {
+              updateSettings(
+                settings.set(uiProps.hideHeaderWhileTyping, value),
+              );
+            }}
+          />
+        </Field>
+      </FieldList>
+      <Explainer>
+        <Description>
+          <FormattedMessage
+            id="settings.hideHeaderWhileTyping.description"
+            defaultMessage="Slides the page header out of the way the moment you start typing, so nothing competes with the practice text. It glides back in a few seconds after you stop."
+          />
+        </Description>
+      </Explainer>
     </>
   );
 }

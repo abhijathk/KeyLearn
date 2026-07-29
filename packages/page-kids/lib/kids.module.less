@@ -215,6 +215,22 @@
   align-items: flex-end;
 }
 
+// When the in-game practice text is on (3-D letters on the trail), the score
+// chips leave the top-right corner and line up sequentially along the bottom,
+// where the flat word strip used to sit.
+.hudBottom {
+  inset-inline: 0;
+  inset-inline-end: auto;
+  inset-block-start: auto;
+  inset-block-end: 0.9rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem 0.55rem;
+  padding-inline: 0.9rem;
+}
+
 .chip {
   display: flex;
   gap: 0.45rem;

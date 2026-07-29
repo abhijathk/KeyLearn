@@ -1,4 +1,4 @@
-import { type RefObject } from "react";
+import { type CSSProperties, type RefObject } from "react";
 import { type SizeName } from "../../styles/index.ts";
 import {
   type Focusable,
@@ -8,12 +8,22 @@ import {
   type Selectable,
 } from "../types.ts";
 
-export type TextFieldType = "text" | "textarea" | "email" | "url" | "password";
+export type TextFieldType =
+  | "text"
+  | "textarea"
+  | "email"
+  | "url"
+  | "password"
+  | "date"
+  | "number";
 
 export type TextFieldProps = {
+  readonly autoComplete?: string;
+  readonly autoFocus?: boolean;
   readonly error?: string | null;
   readonly maxLength?: number;
   readonly name?: string;
+  readonly style?: CSSProperties;
   readonly placeholder?: string;
   readonly readOnly?: boolean;
   readonly ref?: RefObject<TextFieldRef | null>;

@@ -23,6 +23,7 @@
     "@keybr/settings-database": "*",
     "@keybr/themes": "*",
     "@paddle/paddle-node-sdk": "^3.6.0",
+    "@simplewebauthn/server": "^13.3.2",
     "@types/ws": "^8.18.1",
     "nodemailer": "^7.0.0",
     "ws": "^8.20.0"

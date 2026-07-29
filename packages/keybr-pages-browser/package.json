@@ -4,8 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
+    "@keybr/content": "*",
     "@keybr/debug": "*",
     "@keybr/intl": "*",
+    "@keybr/lesson": "*",
     "@keybr/keyboard": "*",
     "@keybr/page-account": "*",
     "@keybr/page-help": "*",
@@ -20,6 +22,7 @@
     "@keybr/pages-shared": "*",
     "@keybr/request": "*",
     "@keybr/result-loader": "*",
+    "@keybr/settings": "*",
     "@keybr/settings-loader": "*",
     "@keybr/theme-designer": "*",
     "@keybr/themes": "*",

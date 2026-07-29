@@ -1,7 +1,8 @@
 import { keyboardProps, useKeyboard } from "@keybr/keyboard";
 import {
   flatten,
-  HeatmapLayer,
+  type HeatRing,
+  HeatRingLayer,
   KeyLayer,
   type MasteryKey,
   MasteryLayer,
@@ -117,21 +118,50 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
         <PointersLayer suffix={suffix} helpLevel={helpLevel} />
       )}
       {focus && lastLesson && (
-        <HeatmapLayer histogram={flatten(lastLesson.hits)} modifier="h" />
+        // Connections first (below), then the per-key rings on top.
+        <TransitionsLayer histogram={lastLesson.hits2} />
       )}
       {focus && lastLesson && (
-        <HeatmapLayer histogram={flatten(lastLesson.misses)} modifier="m" />
-      )}
-      {focus && lastLesson && (
-        <TransitionsLayer histogram={lastLesson.misses2} modifier="m" />
-      )}
-      {focus && lastLesson && (
-        <TransitionsLayer histogram={lastLesson.hits2} modifier="h" />
+        <HeatRingLayer rings={heatRingsOf(lastLesson, masteryKeys)} />
       )}
         {focus || <ZonesLayer />}
       </VirtualKeyboard>
     </div>
   );
 });
+
+// Build the per-key C4 rings for the just-finished round: colour by learning
+// confidence (speed), coral arc by the key's error share this round.
+function heatRingsOf(
+  lastLesson: LastLesson,
+  masteryKeys: readonly MasteryKey[],
+): HeatRing[] {
+  const hitMap = new Map<number, number>();
+  for (const [cp, f] of flatten(lastLesson.hits)) {
+    hitMap.set(cp, (hitMap.get(cp) ?? 0) + f);
+  }
+  const missMap = new Map<number, number>();
+  for (const [cp, f] of flatten(lastLesson.misses)) {
+    missMap.set(cp, (missMap.get(cp) ?? 0) + f);
+  }
+  const confMap = new Map(masteryKeys.map((k) => [k.codePoint, k.confidence]));
+  const rings: HeatRing[] = [];
+  for (const cp of hitMap.keys()) {
+    if (cp === 0x0020) {
+      continue;
+    }
+    const h = hitMap.get(cp) ?? 0;
+    const m = missMap.get(cp) ?? 0;
+    if (h + m <= 0) {
+      continue;
+    }
+    rings.push({
+      codePoint: cp,
+      confidence: confMap.get(cp) ?? 0,
+      errorFrac: m / (h + m),
+    });
+  }
+  return rings;
+}
 
 export const DeferredKeyboardPresenter = withDeferred(KeyboardPresenter);

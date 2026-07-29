@@ -1,26 +1,16 @@
-// Curved connections between keys: the strongest few pairs you typed, drawn as
-// clean glowing arcs — mint for smooth (correct) transitions, coral for the
-// fumbled ones. Thickness and opacity scale with how often the pair occurred
-// (set inline), so strong pairs read heavy and rare ones stay faint.
-.arc {
+// Curved connections between keys: the strongest few pairs you typed drawn as
+// solid mint arcs, plus a few of the weakest as thin dashed coral — each over a
+// soft cast shadow (in the layer) that grounds at the keys and fades under the
+// apex. Thickness scales with how often the pair occurred (set inline).
+.strong {
   fill: none;
+  stroke: var(--fast-key-color, #8fd9b6);
   stroke-linecap: round;
 }
 
-.h {
-  stroke: var(--fast-key-color);
-  filter: drop-shadow(
-    0 0 2.5px color-mix(in oklab, var(--fast-key-color) 60%, transparent)
-  );
-}
-
-.m {
-  stroke: var(--slow-key-color);
-  filter: drop-shadow(
-    0 0 2.5px color-mix(in oklab, var(--slow-key-color) 60%, transparent)
-  );
-}
-
-.f {
-  stroke: var(--text-color-f1);
+.weak {
+  fill: none;
+  stroke: var(--slow-key-color, #ff9166);
+  stroke-linecap: round;
+  stroke-dasharray: 3 4;
 }

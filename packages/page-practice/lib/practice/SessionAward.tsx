@@ -65,6 +65,9 @@ export function SessionAward({
           defaultMessage="You beat your last run!"
         />
       );
+      // How much better this round was, in effective speed (speed × accuracy),
+      // so the claim is concrete and trustworthy.
+      detail = `+${formatSpeed(event.score - event.previous)}`;
       break;
     case "near-last-run":
       icon = <StrokeIcon name="chart" />;
@@ -82,15 +85,8 @@ export function SessionAward({
         />
       );
       break;
-    case "daily-goal":
-      icon = <StrokeIcon name="crown" />;
-      title = (
-        <FormattedMessage
-          id="t_ev_Daily_goal_reached"
-          defaultMessage="You hit your daily goal!"
-        />
-      );
-      break;
+    // "daily-goal" is intentionally not handled here — it opens the full
+    // goal-report window instead of a transient toast.
     default:
       return null;
   }

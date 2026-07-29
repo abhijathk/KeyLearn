@@ -25,27 +25,15 @@
     color 0.15s ease,
     background-color 0.15s ease;
 
+  // Hover and selection are mint-tinted pills (matching the mock), not grey.
   &:hover {
     color: var(--text-color);
-    background-color: color-mix(in oklab, var(--primary-l1) 70%, transparent);
+    background-color: color-mix(in oklab, var(--accent) 8%, transparent);
   }
 
   &.isActive {
-    color: var(--text-color);
-
-    &::before {
-      content: "";
-      position: absolute;
-      inset-inline-start: -0.15rem;
-      inset-block-start: 50%;
-      inline-size: 7px;
-      block-size: 7px;
-      border-radius: 50%;
-      background-color: var(--accent);
-      box-shadow: 0 0 8px 2px
-        color-mix(in oklab, var(--accent) 55%, transparent);
-      transform: translateY(-50%);
-    }
+    color: var(--accent);
+    background-color: color-mix(in oklab, var(--accent) 14%, transparent);
   }
 }
 
@@ -53,15 +41,16 @@
   inline-size: 1.15rem;
   block-size: 1.15rem;
   color: var(--text-color-f2);
-  transition: color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    filter 0.15s ease;
 }
 
-.link.isActive .icon {
-  color: var(--accent);
-}
-
+// Green neon glow on the icon (only) when active or hovered — matches the app.
+.link.isActive .icon,
 .link:hover .icon {
   color: var(--accent);
+  filter: drop-shadow(0 0 6px color-mix(in oklab, var(--accent) 80%, transparent));
 }
 
 .label {

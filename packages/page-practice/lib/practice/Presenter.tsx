@@ -83,9 +83,12 @@ export class Presenter extends PureComponent<Props, State> {
   };
 
   #typingTimer: ReturnType<typeof setTimeout> | undefined;
+  #headerTimer: ReturnType<typeof setTimeout> | undefined;
+  #headerHidden = false;
 
   // Dim the chrome only while keys are actually landing: any keystroke turns
-  // it on, three quiet seconds turn it back off.
+  // it on, three quiet seconds turn it back off. When enabled, the same signal
+  // also slides the whole header away for a distraction-free focus on the text.
   #pokeTyping() {
     if (!this.state.typing) {
       this.setState({ typing: true });
@@ -97,6 +100,17 @@ export class Presenter extends PureComponent<Props, State> {
     this.#typingTimer = setTimeout(() => {
       this.#stopTyping();
     }, 5000);
+
+    // Header auto-hide (opt-in): hide on the first keystroke, and bring it back
+    // ~2 seconds after the last one — the timer resets on every keystroke, so
+    // it stays away through continuous typing and returns shortly after a pause.
+    if (this.props.state.settings.get(uiProps.hideHeaderWhileTyping)) {
+      this.#hideHeader();
+      clearTimeout(this.#headerTimer);
+      this.#headerTimer = setTimeout(() => {
+        this.#showHeader();
+      }, 2000);
+    }
   }
 
   #stopTyping() {
@@ -105,6 +119,25 @@ export class Presenter extends PureComponent<Props, State> {
       this.setState({ typing: false });
       window.dispatchEvent(
         new window.CustomEvent("keylearn:typing", { detail: false }),
+      );
+    }
+  }
+
+  #hideHeader() {
+    if (!this.#headerHidden) {
+      this.#headerHidden = true;
+      window.dispatchEvent(
+        new window.CustomEvent("keylearn:header-hide", { detail: true }),
+      );
+    }
+  }
+
+  #showHeader() {
+    clearTimeout(this.#headerTimer);
+    if (this.#headerHidden) {
+      this.#headerHidden = false;
+      window.dispatchEvent(
+        new window.CustomEvent("keylearn:header-hide", { detail: false }),
       );
     }
   }
@@ -137,6 +170,7 @@ export class Presenter extends PureComponent<Props, State> {
       this.handleToggleFocusMode,
     );
     this.#stopTyping();
+    this.#showHeader();
     this.#broadcastFocusMode(false);
   }
 

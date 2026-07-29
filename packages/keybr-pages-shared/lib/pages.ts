@@ -1,5 +1,6 @@
 import { defaultLocale } from "@keybr/intl";
 import {
+  mdiBookOpenPageVariantOutline,
   mdiCarSide,
   mdiChartAreaspline,
   mdiHelpCircleOutline,
@@ -336,6 +337,37 @@ export namespace Pages {
         content: defineMessage({
           id: "page.layouts.description",
           defaultMessage: "Compare keyboard layouts side by side.",
+        }),
+      },
+    ],
+  } satisfies PageInfo;
+
+  export const texts = {
+    path: "/texts",
+    title: defineMessage({
+      id: "t_Texts",
+      defaultMessage: "Texts",
+    }),
+    link: {
+      label: defineMessage({
+        id: "t_Texts",
+        defaultMessage: "Texts",
+      }),
+      title: defineMessage({
+        id: "page.texts.description",
+        defaultMessage:
+          "Browse the practice library — books, your own text, words, code and numbers.",
+      }),
+      icon: mdiBookOpenPageVariantOutline,
+    },
+    meta: [
+      ...meta,
+      {
+        name: "description",
+        content: defineMessage({
+          id: "page.texts.description",
+          defaultMessage:
+            "Browse the practice library — books, your own text, words, code and numbers.",
         }),
       },
     ],

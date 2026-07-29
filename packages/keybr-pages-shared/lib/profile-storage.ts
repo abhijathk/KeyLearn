@@ -1,63 +1,66 @@
-// Per-profile local storage namespacing. Each household profile behaves like
-// its own account: results, settings, kids-game scores and preferences are
-// all keyed by the active profile. The household itself is written by the
-// account page; this module only reads it.
+// Per-profile storage namespacing. The household profiles themselves now live
+// server-side (see PageData.profiles); only the *active selection* is a
+// per-device preference kept in localStorage, since which learner is at this
+// keyboard right now is a device fact, not account data.
 
 import { getPageData } from "./pagedata.tsx";
 
-/**
- * Households are stored under a per-account key, so one login can never see
- * another account's learner profiles on a shared device. Signed out there is
- * no household at all.
- */
-export function householdStorageKey(): string | null {
+/** localStorage key holding the active profile id, scoped per account. */
+function activeProfileKey(): string | null {
   try {
     const id = getPageData()?.publicUser?.id ?? null;
-    return id == null ? null : `keylearn.household.${id}`;
+    return id == null ? null : `keylearn.activeProfile.${id}`;
   } catch {
     return null;
   }
 }
 
-type StoredHousehold = {
-  profiles?: { id: string; birthYear?: number | null }[];
-  activeId?: string | null;
-};
-
-function readHousehold(): StoredHousehold | null {
+export function loadActiveProfileId(): string | null {
   try {
-    const key = householdStorageKey();
-    if (key == null) {
-      return null;
-    }
-    const raw = localStorage.getItem(key);
-    return raw == null ? null : (JSON.parse(raw) as StoredHousehold);
+    const key = activeProfileKey();
+    return key == null ? null : localStorage.getItem(key);
   } catch {
     return null;
   }
+}
+
+export function saveActiveProfileId(id: string | null): void {
+  try {
+    const key = activeProfileKey();
+    if (key == null) {
+      return;
+    }
+    if (id == null) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, id);
+    }
+  } catch {
+    // Storage may be unavailable.
+  }
+}
+
+/** The active profile from page data, validated against the current account. */
+function activeProfileFromPage(): {
+  readonly id: string;
+  readonly birthYear: number | null;
+} | null {
+  const id = loadActiveProfileId();
+  if (id == null) {
+    return null;
+  }
+  const profiles = getPageData()?.profiles ?? [];
+  return profiles.find((p) => p.id === id) ?? null;
 }
 
 /** The id of the active household profile, or null when none is selected. */
 export function activeProfileId(): string | null {
-  const parsed = readHousehold();
-  if (parsed == null) {
-    return null;
-  }
-  const id = parsed.activeId ?? null;
-  if (id != null && (parsed.profiles ?? []).some((p) => p.id === id)) {
-    return id;
-  }
-  return null;
+  return activeProfileFromPage()?.id ?? null;
 }
 
 /** The birth year of the active household profile, or null when unknown. */
 export function activeProfileBirthYear(): number | null {
-  const parsed = readHousehold();
-  if (parsed == null) {
-    return null;
-  }
-  const profile = (parsed.profiles ?? []).find((p) => p.id === parsed.activeId);
-  const year = profile?.birthYear;
+  const year = activeProfileFromPage()?.birthYear;
   return typeof year === "number" && Number.isFinite(year) ? year : null;
 }
 

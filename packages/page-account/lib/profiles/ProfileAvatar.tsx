@@ -8,11 +8,11 @@ export function ProfileAvatar({
   name,
   size = 64,
 }: {
-  readonly avatar: Avatar;
+  readonly avatar: Avatar | null;
   readonly name: string;
   readonly size?: number;
 }): ReactNode {
-  if (avatar.type === "photo") {
+  if (avatar != null && avatar.type === "photo") {
     return (
       <img
         className={styles.avatar}
@@ -22,7 +22,7 @@ export function ProfileAvatar({
       />
     );
   }
-  const preset = presetById(avatar.id);
+  const preset = presetById(avatar != null ? avatar.id : "");
   const initial = (name.trim()[0] ?? "?").toUpperCase();
   return (
     <span
@@ -41,6 +41,6 @@ export function ProfileAvatar({
   );
 }
 
-export function avatarOf(profile: Profile): Avatar {
+export function avatarOf(profile: Profile): Avatar | null {
   return profile.avatar;
 }
