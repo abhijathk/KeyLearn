@@ -1,7 +1,7 @@
 import { useEffort } from "@keybr/lesson-ui";
 import { type DailyStatsMap, LocalDate } from "@keybr/result";
 import { clsx } from "clsx";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./road.module.less";
 
@@ -20,6 +20,12 @@ export function CalendarHeat({
 }): ReactNode {
   const { formatDate } = useIntl();
   const effort = useEffort();
+  const [tip, setTip] = useState<{
+    left: number;
+    top: number;
+    date: string;
+    time: number;
+  } | null>(null);
   const { cells, months } = useMemo(() => {
     const timeByDay = new Map<string, number>();
     for (const { date, stats } of dailyStatsMap) {
@@ -69,7 +75,7 @@ export function CalendarHeat({
           <span />
           <span />
         </div>
-        <div>
+        <div className={styles.calcol}>
           <div className={styles.calmonths}>
             {months.map(({ column, label }) => (
               <span
@@ -80,7 +86,7 @@ export function CalendarHeat({
               </span>
             ))}
           </div>
-          <div className={styles.cal}>
+          <div className={styles.cal} onMouseLeave={() => setTip(null)}>
             {cells.map((cell, i) =>
               cell == null ? (
                 <span key={i} style={{ visibility: "hidden" }} />
@@ -97,11 +103,41 @@ export function CalendarHeat({
                         }
                       : undefined
                   }
-                  title={`${formatDate(cell.ms, { dateStyle: "medium" })} — ${Math.round(cell.time / 60000)}min`}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget;
+                    setTip({
+                      left: el.offsetLeft + el.offsetWidth / 2,
+                      top: el.offsetTop,
+                      date: formatDate(cell.ms, { dateStyle: "full" }),
+                      time: cell.time,
+                    });
+                  }}
                 />
               ),
             )}
           </div>
+          {tip != null && (
+            <div
+              className={styles.calTip}
+              style={{ left: tip.left, top: tip.top }}
+            >
+              <b>
+                {tip.time > 0 ? (
+                  <FormattedMessage
+                    id="profile.calendar.tip.practised"
+                    defaultMessage="{minutes} min practised"
+                    values={{ minutes: Math.round(tip.time / 60000) }}
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="profile.calendar.tip.rest"
+                    defaultMessage="No practice"
+                  />
+                )}
+              </b>
+              <span>{tip.date}</span>
+            </div>
+          )}
         </div>
       </div>
       <div className={styles.legendRow}>
