@@ -332,7 +332,6 @@ export function AllKeysChart({
   const { confidenceColor } = useKeyStyles();
   const { formatSpeed } = useFormatter();
   const W = 1000;
-  const H = 230;
   const X0 = 36;
   const series = keyStatsMap.letters
     .map((letter) => {
@@ -347,6 +346,13 @@ export function AllKeysChart({
   if (series.length === 0) {
     return null;
   }
+  // Grow the chart with the number of keys so the lines and their end-of-line
+  // labels stay legible as more letters unlock. Each label needs ~13 units of
+  // vertical room (see the anti-overlap pass below); a fixed height crammed
+  // them together — and pushed the lowest labels off the bottom — once a dozen
+  // or more keys were in play. The rendered height tracks the viewBox at a
+  // constant 20 units/rem so the vertical scale never stretches.
+  const H = Math.max(230, 40 + series.length * 13);
   const all = series.flatMap(({ speeds }) => speeds);
   const hi = Math.max(...all) * 1.08;
   const lo = Math.min(...all) * 0.85;
@@ -371,7 +377,7 @@ export function AllKeysChart({
       className={styles.chart}
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="none"
-      style={{ blockSize: "11.5rem" }}
+      style={{ blockSize: `${H / 20}rem` }}
     >
       {gridVals.map((v) => (
         <g key={v}>
