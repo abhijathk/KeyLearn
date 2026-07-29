@@ -8,7 +8,7 @@ import {
   useDialog,
 } from "@keybr/widget";
 import { useRef } from "react";
-import { themeExt, themeFileName } from "../io/constants.ts";
+import { themeAccept, themeFileName } from "../io/constants.ts";
 import { exportTheme, importTheme } from "../io/io.ts";
 import { customTheme, darkTheme, lightTheme } from "../themes/themes.ts";
 import { BackgroundImage } from "./BackgroundImage.tsx";
@@ -42,7 +42,7 @@ export function DesignPane() {
       <input
         ref={importRef}
         type="file"
-        accept={themeExt}
+        accept={themeAccept}
         hidden={true}
         style={{ inlineSize: 0, blockSize: 0, overflow: "hidden" }}
         onChange={() => {
