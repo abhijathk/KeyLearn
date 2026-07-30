@@ -6,880 +6,310 @@ Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 867 messages, 8533 words
+Translated: 1011 messages, 9734 words
 
-Untranslated: 61 messages, 513 words
+Untranslated: 5 messages, 5 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Arcade*
-* *steady*
 * *Letters*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* ...
 
 # Arabic
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Bulgarian
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Bangla
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Catalan
 
-Translated: 863 messages, 8529 words
+Translated: 1008 messages, 9731 words
 
-Untranslated: 65 messages, 517 words
+Untranslated: 8 messages, 8 words
 
 * *s*
-* *avg*
 * *Zen*
-* *Test*
 * *Text*
 * *Arcade*
 * *Errors*
 * *Errors*
 * *Recent*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* ...
 
 # Czech
 
-Translated: 867 messages, 8533 words
+Translated: 1011 messages, 9734 words
 
-Untranslated: 61 messages, 513 words
+Untranslated: 5 messages, 5 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Text*
 * *Trend*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* ...
 
 # Danish
 
-Translated: 861 messages, 8527 words
+Translated: 1005 messages, 9728 words
 
-Untranslated: 67 messages, 519 words
+Untranslated: 11 messages, 11 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Auto*
 * *Test*
 * *Layout*
-* *steady*
 * *Layouts*
 * *Passage*
 * *Premium*
 * *Version*
 * *Download*
 * *Position*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* ...
 
 # German
 
-Translated: 858 messages, 8526 words
+Translated: 1003 messages, 9727 words
 
-Untranslated: 71 messages, 523 words
+Untranslated: 13 messages, 13 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Text*
 * *Coach*
 * *Trend*
 * *Arcade*
-* *steady*
 * *Heatmap*
-* *Passage*
 * *Premium*
-* *Upgrade*
 * *Version*
 * *Passkeys*
 * *Position*
 * *Alphabet:*
-* *Coming up*
-* *improving*
-* *new best!*
-* ...
 
 # Greek
 
-Translated: 872 messages, 8540 words
+Translated: 1016 messages, 9741 words
 
-Untranslated: 57 messages, 509 words
+Untranslated: 1 messages, 1 words
 
-* *avg*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* ...
 
 # Esperanto
 
-Translated: 870 messages, 8536 words
+Translated: 1014 messages, 9737 words
 
-Untranslated: 58 messages, 510 words
+Untranslated: 2 messages, 2 words
 
 * *s*
-* *avg*
 * *Zen*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* ...
 
 # Spanish
 
-Translated: 868 messages, 8534 words
+Translated: 1012 messages, 9735 words
 
-Untranslated: 60 messages, 512 words
+Untranslated: 4 messages, 4 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Arcade*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* ...
 
 # Estonian
 
-Translated: 867 messages, 8533 words
+Translated: 1011 messages, 9734 words
 
-Untranslated: 61 messages, 513 words
+Untranslated: 5 messages, 5 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Trend*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* ...
 
 # Persian
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Finnish
 
-Translated: 869 messages, 8537 words
+Translated: 1013 messages, 9738 words
 
-Untranslated: 60 messages, 512 words
+Untranslated: 4 messages, 4 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Arcade*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* ...
 
 # Faroese
 
-Translated: 868 messages, 8536 words
+Translated: 1014 messages, 9739 words
 
-Untranslated: 61 messages, 513 words
+Untranslated: 3 messages, 3 words
 
-* *s*
-* *avg*
 * *Sun*
 * *Zen*
-* *Arcade*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* ...
 
 # French
 
-Translated: 862 messages, 8528 words
+Translated: 1006 messages, 9729 words
 
-Untranslated: 66 messages, 518 words
+Untranslated: 10 messages, 10 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Auto*
 * *Test*
 * *Coach*
 * *Arcade*
-* *steady*
 * *Passage*
 * *Premium*
 * *Version*
 * *Position*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* ...
 
 # Irish
 
-Translated: 869 messages, 8537 words
+Translated: 1013 messages, 9738 words
 
-Untranslated: 60 messages, 512 words
+Untranslated: 4 messages, 4 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Arcade*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* ...
 
 # Gujarati
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Hebrew
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Hindi
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Croatian
 
-Translated: 867 messages, 8533 words
+Translated: 1011 messages, 9734 words
 
-Untranslated: 61 messages, 513 words
+Untranslated: 5 messages, 5 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Trend*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* ...
 
 # Hungarian
 
-Translated: 872 messages, 8540 words
+Translated: 1016 messages, 9741 words
 
-Untranslated: 57 messages, 509 words
+Untranslated: 1 messages, 1 words
 
-* *avg*
 * *Zen*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* ...
 
 # Indonesian
 
-Translated: 869 messages, 8537 words
+Translated: 1015 messages, 9740 words
 
-Untranslated: 60 messages, 512 words
+Untranslated: 2 messages, 2 words
 
-* *avg*
 * *Zen*
-* *Edit*
-* *Arcade*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* ...
 
 # Icelandic
 
-Translated: 870 messages, 8538 words
+Translated: 1015 messages, 9740 words
 
-Untranslated: 59 messages, 511 words
+Untranslated: 2 messages, 2 words
 
-* *s*
-* *avg*
 * *Sun*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* ...
 
 # Italian
 
-Translated: 865 messages, 8531 words
+Translated: 1010 messages, 9733 words
 
-Untranslated: 63 messages, 515 words
+Untranslated: 6 messages, 6 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Arcade*
-* *steady*
 * *Account*
-* *Premium*
 * *Password*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* ...
 
 # Japanese
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Kannada
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Korean
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Lithuanian
 
-Translated: 869 messages, 8535 words
+Translated: 1013 messages, 9736 words
 
-Untranslated: 59 messages, 511 words
+Untranslated: 3 messages, 3 words
 
 * *s*
-* *avg*
 * *Zen*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* ...
 
 # Malayalam
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Mongolian
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Norwegian Bokmål
 
-Translated: 864 messages, 8532 words
+Translated: 1007 messages, 9731 words
 
-Untranslated: 65 messages, 517 words
+Untranslated: 9 messages, 9 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Auto*
 * *Best*
@@ -887,55 +317,21 @@ Untranslated: 65 messages, 517 words
 * *Best*
 * *Test*
 * *Trend*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* ...
 
 # Nepali
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Dutch
 
-Translated: 857 messages, 8523 words
+Translated: 1001 messages, 9724 words
 
-Untranslated: 71 messages, 523 words
+Untranslated: 15 messages, 15 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Coach*
@@ -943,547 +339,186 @@ Untranslated: 71 messages, 523 words
 * *Trend*
 * *Arcade*
 * *Recent*
-* *steady*
 * *Account*
 * *Heatmap*
 * *Letters*
 * *Passage*
 * *Premium*
 * *Passkeys*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* ...
+* *Multiplayer*
 
 # Polish
 
-Translated: 866 messages, 8532 words
+Translated: 1010 messages, 9733 words
 
-Untranslated: 62 messages, 514 words
+Untranslated: 6 messages, 6 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Trend*
 * *Arcade*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* ...
 
 # Brazilian Portuguese
 
-Translated: 866 messages, 8532 words
+Translated: 1010 messages, 9733 words
 
-Untranslated: 62 messages, 514 words
+Untranslated: 6 messages, 6 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Arcade*
 * *Layout*
-* *steady*
 * *Layouts*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* ...
 
 # European Portuguese
 
-Translated: 868 messages, 8534 words
+Translated: 1012 messages, 9735 words
 
-Untranslated: 60 messages, 512 words
+Untranslated: 4 messages, 4 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Arcade*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* ...
 
 # Romanian
 
-Translated: 864 messages, 8530 words
+Translated: 1009 messages, 9732 words
 
-Untranslated: 64 messages, 516 words
+Untranslated: 7 messages, 7 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Text*
 * *Arcade*
-* *Recent*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
 * *Multiplayer*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* ...
 
 # Russian
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Slovak
 
-Translated: 866 messages, 8532 words
+Translated: 1010 messages, 9733 words
 
-Untranslated: 62 messages, 514 words
+Untranslated: 6 messages, 6 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Text*
 * *Trend*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* ...
 
 # Slovenian
 
-Translated: 867 messages, 8533 words
+Translated: 1011 messages, 9734 words
 
-Untranslated: 61 messages, 513 words
+Untranslated: 5 messages, 5 words
 
 * *s*
-* *avg*
 * *Zen*
 * *Test*
 * *Trend*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* ...
 
 # Albanian
 
-Translated: 869 messages, 8535 words
+Translated: 1013 messages, 9736 words
 
-Untranslated: 59 messages, 511 words
+Untranslated: 3 messages, 3 words
 
 * *s*
-* *avg*
 * *Zen*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* ...
 
 # Swedish
 
-Translated: 862 messages, 8528 words
+Translated: 1007 messages, 9730 words
 
-Untranslated: 66 messages, 518 words
+Untranslated: 9 messages, 9 words
 
 * *s*
-* *avg*
 * *Zen*
-* *Auto*
 * *Test*
 * *Text*
 * *Coach*
 * *Trend*
 * *Layout*
-* *steady*
 * *Premium*
 * *Version*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* ...
 
 # Tamil
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Telugu
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Thai
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Turkish
 
-Translated: 869 messages, 8537 words
+Translated: 1014 messages, 9739 words
 
-Untranslated: 60 messages, 512 words
+Untranslated: 3 messages, 3 words
 
-* *avg*
 * *Zen*
 * *Test*
 * *Arcade*
-* *steady*
-* *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* ...
 
 # Ukrainian
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Urdu
 
-Translated: 872 messages, 8540 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 57 messages, 509 words
-
-* *s*
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Vietnamese
 
-Translated: 870 messages, 8538 words
+Translated: 1014 messages, 9739 words
 
-Untranslated: 59 messages, 511 words
+Untranslated: 3 messages, 3 words
 
-* *avg*
 * *Zen*
 * *Arcade*
-* *steady*
 * *Premium*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* ...
 
 # Simplified Chinese
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Traditional Chinese
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Chinese (Taiwan)
 
-Translated: 873 messages, 8541 words
+Translated: 1017 messages, 9742 words
 
-Untranslated: 56 messages, 508 words
-
-* *avg*
-* *steady*
-* *Coming up*
-* *improving*
-* *new best!*
-* *slight dip*
-* *Recent form*
-* *warming up…*
-* *This session*
-* *Record to beat*
-* *you set it this session*
-* *Show more about this session*
-* *keep going to reveal the forecast*
-* *a few lessons sets your first record*
-* *every key unlocked — chase your speed now*
-* *You've got the speed. Now spend it on accuracy.*
-* *Ease off and let accuracy do the scoring for you.*
-* *Right now, careful outscores fast. Choose careful.*
-* *Let precision lead; speed will catch up on its own.*
-* *Score more by missing less — ease the speed a notch.*
-* ...
+Untranslated: 0 messages, 0 words
