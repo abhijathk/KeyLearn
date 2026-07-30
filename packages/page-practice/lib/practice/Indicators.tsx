@@ -59,6 +59,7 @@ export const Indicators = memo(function Indicators({
         <Pulse
           summaryStats={summaryStats}
           speeds={speeds}
+          results={results}
           lessonKeys={lessonKeys}
           streakList={streakList}
           dailyGoal={dailyGoal}

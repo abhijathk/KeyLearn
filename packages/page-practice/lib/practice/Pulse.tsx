@@ -2,12 +2,14 @@ import { useIntlNumbers } from "@keybr/intl";
 import {
   type DailyGoal as DailyGoalType,
   LearningRate,
+  type LessonKey,
   type LessonKeys,
   lessonProps,
   Target,
 } from "@keybr/lesson";
 import { Key, type Names, useFormatter } from "@keybr/lesson-ui";
 import {
+  type Result,
   type StreakList as StreakListType,
   type SummaryStats,
   timeToSpeed,
@@ -23,6 +25,7 @@ import {
   useState,
 } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { pickCoachTip } from "./coach.ts";
 import * as styles from "./Pulse.module.less";
 
 /**
@@ -35,6 +38,7 @@ import * as styles from "./Pulse.module.less";
 export const Pulse = memo(function Pulse({
   summaryStats,
   speeds,
+  results,
   lessonKeys,
   streakList,
   dailyGoal,
@@ -42,6 +46,7 @@ export const Pulse = memo(function Pulse({
 }: {
   readonly summaryStats: SummaryStats;
   readonly speeds: readonly number[];
+  readonly results: readonly Result[];
   readonly lessonKeys: LessonKeys;
   readonly streakList: StreakListType;
   readonly dailyGoal: DailyGoalType;
@@ -54,6 +59,13 @@ export const Pulse = memo(function Pulse({
   const target = settings.get(lessonProps.targetSpeed);
   const { count, speed, accuracy, score } = summaryStats;
   const hasData = count > 0;
+  const [expanded, setExpanded] = useState(readExpanded);
+  const toggleExpanded = () => {
+    setExpanded((v) => {
+      writeExpanded(!v);
+      return !v;
+    });
+  };
   const live = useLiveSpeed();
   // While the learner is actively typing, the hero shows the live cumulative
   // speed with a pulsing dot; otherwise the recorded last-lesson speed.
@@ -78,11 +90,11 @@ export const Pulse = memo(function Pulse({
   const best = keyCalibrated
     ? Math.min(1, Math.max(0, focusedKey.bestConfidence!))
     : 0;
-  const learningRate =
+  const learningRateInfo =
     focusedKey != null
-      ? (LearningRate.from(focusedKey.samples, new Target(settings))
-          ?.learningRate ?? null)
+      ? LearningRate.from(focusedKey.samples, new Target(settings))
       : null;
+  const learningRate = learningRateInfo?.learningRate ?? null;
 
   return (
     <div className={styles.root}>
@@ -254,7 +266,23 @@ export const Pulse = memo(function Pulse({
         </div>
       </div>
 
-      <div className={styles.whisper}>
+      <div
+        className={clsx(styles.whisper, expanded && styles.whisperOpen)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        title={formatMessage({
+          id: "practice.pulse.expand",
+          defaultMessage: "Show more about this session",
+        })}
+        onClick={toggleExpanded}
+        onKeyDown={(ev) => {
+          if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            toggleExpanded();
+          }
+        }}
+      >
         <span
           id={names?.accuracy}
           title={formatMessage({
@@ -335,10 +363,390 @@ export const Pulse = memo(function Pulse({
         </span>
         <StreakWhisper streakList={streakList} />
         {dailyGoal.goal > 0 && <TodayWhisper dailyGoal={dailyGoal} />}
+        <svg
+          className={styles.chevron}
+          viewBox="0 0 12 12"
+          aria-hidden={true}
+        >
+          <path d="M2.5 4.5 6 8l3.5-3.5" />
+        </svg>
+      </div>
+
+      <div
+        className={clsx(styles.session, expanded && styles.sessionOpen)}
+        aria-hidden={!expanded}
+      >
+        <div className={styles.sessionClip}>
+          <div className={styles.sessionInner}>
+            <SessionRecap
+              results={results}
+              summaryStats={summaryStats}
+              lessonKeys={lessonKeys}
+              focusedKey={focusedKey}
+              forecast={learningRateInfo}
+              streakList={streakList}
+              dailyGoal={dailyGoal}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
 });
+
+// Whether the session panel is left open, remembered across visits so the
+// learner's choice sticks. Guarded for SSR / storage-blocked environments.
+const OPEN_KEY = "keylearn.pulse.open";
+function readExpanded(): boolean {
+  try {
+    return window.localStorage.getItem(OPEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function writeExpanded(open: boolean): void {
+  try {
+    window.localStorage.setItem(OPEN_KEY, open ? "1" : "0");
+  } catch {
+    // ignore — a closed session panel is a fine fallback
+  }
+}
+
+// The whole page module first evaluates roughly when the learner opens the
+// practice page, so this stamps the start of the current sitting. Kept at
+// module scope (like the goal tuner's clock) so it survives the brief remounts
+// that re-tuning the target speed causes.
+const SESSION_START_MS = Date.now();
+
+/**
+ * The expand-on-click panel beneath the whisper line: a calm, glanceable recap
+ * that deepens the session rather than repeating the last-lesson numbers above.
+ * Three cards, left to right:
+ *   • This session — lessons and minutes typed this sitting, plus the session's
+ *     best speed (starred when it beats the all-time record). Gives a sitting a
+ *     sense of closure and accumulates small wins.
+ *   • Recent form — average speed across the last lessons with an
+ *     improving / steady / dip read, and average accuracy. Makes progress (or a
+ *     plateau) visible so effort feels like it's compounding.
+ *   • Your alphabet — keys unlocked out of the whole set, with the next key up.
+ *     A visible finish line pulls the learner forward (the goal-gradient effect).
+ */
+function SessionRecap({
+  results,
+  summaryStats,
+  lessonKeys,
+  focusedKey,
+  forecast,
+  streakList,
+  dailyGoal,
+}: {
+  readonly results: readonly Result[];
+  readonly summaryStats: SummaryStats;
+  readonly lessonKeys: LessonKeys;
+  readonly focusedKey: LessonKey | null;
+  readonly forecast: LearningRate | null;
+  readonly streakList: StreakListType;
+  readonly dailyGoal: DailyGoalType;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const { formatPercents } = useIntlNumbers();
+  const { formatSpeed, speedUnit } = useFormatter();
+
+  const session = results.filter((r) => r.timeStamp >= SESSION_START_MS);
+  const sessionCount = session.length;
+  const sessionMinutes = Math.round(
+    session.reduce((sum, r) => sum + r.time, 0) / 60000,
+  );
+  const sessionBest = session.reduce((m, r) => Math.max(m, r.speed), 0);
+  const record = summaryStats.speed.max;
+  const beatRecord = sessionBest > 0 && sessionBest >= record;
+  // The gap to the all-time best, in whole display units (wpm/cpm).
+  const recordGap =
+    !beatRecord && record > 0 && sessionBest > 0
+      ? Math.max(1, Math.round(speedUnit.measure(record - sessionBest)))
+      : 0;
+  const recordFrac = record > 0 ? Math.min(1, sessionBest / record) : 0;
+
+  const recent = results.slice(-20);
+  const recentAvg =
+    recent.length > 0
+      ? recent.reduce((s, r) => s + r.speed, 0) / recent.length
+      : 0;
+  const recentAccuracy =
+    recent.length > 0
+      ? recent.reduce((s, r) => s + r.accuracy, 0) / recent.length
+      : 0;
+  const trend =
+    recent.length >= 2 ? recent[recent.length - 1].speed - recent[0].speed : 0;
+
+  const total = lessonKeys.letters.length;
+  const unlocked = lessonKeys.findIncludedKeys().length;
+  const unlockedFrac = total > 0 ? unlocked / total : 0;
+
+  // The forward hook: a forecast of how many more lessons until the current
+  // key unlocks. It's the number a learner returns to watch shrink — so it's
+  // only shown once the model is confident enough to name one.
+  const remaining =
+    forecast != null &&
+    Number.isFinite(forecast.remainingLessons) &&
+    forecast.remainingLessons > 0
+      ? Math.round(forecast.remainingLessons)
+      : null;
+  const nextKey =
+    focusedKey != null ? String(focusedKey.letter.label) : null;
+
+  // The adaptive coaching line: the engine reads the same live stats and
+  // returns the single most useful nudge, filled with real keys/numbers.
+  const goalMinutesLeft =
+    dailyGoal.goal > 0 && dailyGoal.value < 1
+      ? Math.ceil((1 - dailyGoal.value) * dailyGoal.goal)
+      : null;
+  const tip = pickCoachTip({
+    results,
+    summaryStats,
+    lessonKeys,
+    streakList,
+    sessionStartMs: SESSION_START_MS,
+    goalMinutesLeft,
+    formatWpmDelta: (cpm) => speedUnit.measure(cpm),
+  });
+
+  return (
+    <>
+      <div className={styles.cards}>
+      <div className={styles.card}>
+        <span className={styles.cardLab}>
+          <FormattedMessage
+            id="practice.session.thisSession"
+            defaultMessage="This session"
+          />
+        </span>
+        <span className={styles.cardMain}>
+          <FormattedMessage
+            id="practice.session.lessonsMinutes"
+            defaultMessage="{lessons} {lessons, plural, one {lesson} other {lessons}} · {minutes} min"
+            values={{ lessons: sessionCount, minutes: sessionMinutes }}
+          />
+        </span>
+        <span className={styles.cardSub}>
+          {sessionBest > 0 ? (
+            <>
+              <FormattedMessage
+                id="practice.session.best"
+                defaultMessage="best {speed}"
+                values={{ speed: formatSpeed(sessionBest) }}
+              />
+              {beatRecord && <span className={styles.flourish}> ✦</span>}
+            </>
+          ) : (
+            <FormattedMessage
+              id="practice.session.warmup"
+              defaultMessage="warming up…"
+            />
+          )}
+        </span>
+      </div>
+
+      <div className={styles.card}>
+        <span className={styles.cardLab}>
+          <FormattedMessage
+            id="practice.session.recentForm"
+            defaultMessage="Recent form"
+          />
+        </span>
+        <span className={styles.cardMain}>
+          {recent.length > 0 ? formatSpeed(recentAvg) : "—"}
+          <i className={styles.cardMainNote}>
+            {" "}
+            <FormattedMessage
+              id="practice.session.avg"
+              defaultMessage="avg"
+            />
+          </i>
+        </span>
+        <span className={styles.cardSub}>
+          {recent.length >= 2 && (
+            <span
+              className={clsx(
+                styles.trendTag,
+                trend > 0.5
+                  ? styles.trendUp
+                  : trend < -0.5
+                    ? styles.trendDown
+                    : styles.trendFlat,
+              )}
+            >
+              {trend > 0.5 ? (
+                <FormattedMessage
+                  id="practice.session.improving"
+                  defaultMessage="improving"
+                />
+              ) : trend < -0.5 ? (
+                <FormattedMessage
+                  id="practice.session.dip"
+                  defaultMessage="slight dip"
+                />
+              ) : (
+                <FormattedMessage
+                  id="practice.session.steady"
+                  defaultMessage="steady"
+                />
+              )}
+            </span>
+          )}
+          {recent.length > 0 && (
+            <>
+              {" · "}
+              <FormattedMessage
+                id="practice.session.accuracy"
+                defaultMessage="{value} clean"
+                values={{ value: formatPercents(recentAccuracy) }}
+              />
+            </>
+          )}
+        </span>
+      </div>
+
+      <div className={clsx(styles.card, styles.cardNext)}>
+        <span className={styles.cardLab}>
+          <FormattedMessage
+            id="practice.session.coming"
+            defaultMessage="Coming up"
+          />
+        </span>
+        {focusedKey != null ? (
+          <>
+            <span className={styles.cardMain}>
+              {remaining != null ? (
+                <FormattedMessage
+                  id="practice.session.forecast"
+                  defaultMessage="{key} in ~{n}"
+                  values={{
+                    key: <span className={styles.nextKey}>{nextKey}</span>,
+                    n: remaining,
+                  }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="practice.session.unlockNext"
+                  defaultMessage="unlock {key}"
+                  values={{
+                    key: <span className={styles.nextKey}>{nextKey}</span>,
+                  }}
+                />
+              )}
+            </span>
+            <span className={styles.cardSub}>
+              {remaining != null ? (
+                <FormattedMessage
+                  id="practice.session.forecastNote"
+                  defaultMessage="{n, plural, one {lesson to go} other {lessons to go}}"
+                  values={{ n: remaining }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="practice.session.keepGoing"
+                  defaultMessage="keep going to reveal the forecast"
+                />
+              )}
+              {" · "}
+              <FormattedMessage
+                id="practice.session.unlockedCount"
+                defaultMessage="{unlocked}/{total} keys"
+                values={{ unlocked, total }}
+              />
+            </span>
+            <span className={styles.alphaBar}>
+              <i style={{ inlineSize: `${Math.round(unlockedFrac * 100)}%` }} />
+            </span>
+          </>
+        ) : (
+          <>
+            <span className={styles.cardMain}>
+              <FormattedMessage
+                id="practice.session.allDone"
+                defaultMessage="all {total} keys"
+                values={{ total }}
+              />
+            </span>
+            <span className={styles.cardSub}>
+              <FormattedMessage
+                id="practice.session.complete"
+                defaultMessage="every key unlocked — chase your speed now"
+              />
+            </span>
+          </>
+        )}
+      </div>
+
+      <div className={styles.card}>
+        <span className={styles.cardLab}>
+          <FormattedMessage
+            id="practice.session.recordToBeat"
+            defaultMessage="Record to beat"
+          />
+        </span>
+        {beatRecord ? (
+          <>
+            <span className={styles.cardMain}>
+              <FormattedMessage
+                id="practice.session.newRecord"
+                defaultMessage="new best!"
+              />
+              <span className={styles.flourish}> ✦</span>
+            </span>
+            <span className={styles.cardSub}>
+              <FormattedMessage
+                id="practice.session.newRecordSub"
+                defaultMessage="you set it this session"
+              />
+            </span>
+          </>
+        ) : recordGap > 0 ? (
+          <>
+            <span className={styles.cardMain}>
+              {recordGap}
+              <i className={styles.cardMainNote}> {speedUnit.id}</i>
+            </span>
+            <span className={styles.cardSub}>
+              <FormattedMessage
+                id="practice.session.toTopBest"
+                defaultMessage="to top your {best} best"
+                values={{ best: formatSpeed(record) }}
+              />
+            </span>
+            <span className={styles.recordBar}>
+              <i style={{ inlineSize: `${Math.round(recordFrac * 100)}%` }} />
+            </span>
+          </>
+        ) : (
+          <>
+            <span className={styles.cardMain}>—</span>
+            <span className={styles.cardSub}>
+              <FormattedMessage
+                id="practice.session.noRecordYet"
+                defaultMessage="a few lessons sets your first record"
+              />
+            </span>
+          </>
+        )}
+      </div>
+      </div>
+
+      <div className={styles.coach}>
+        <span className={styles.coachBulb} aria-hidden={true}>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor"
+            strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7.5 15.5h5M8 18h4M10 2.5a5.5 5.5 0 0 1 3.4 9.8c-.5.4-.9 1-.9 1.7H7.5c0-.7-.4-1.3-.9-1.7A5.5 5.5 0 0 1 10 2.5Z" />
+          </svg>
+        </span>
+        <span className={styles.coachText}>
+          {formatMessage(tip.message, tip.values)}
+        </span>
+      </div>
+    </>
+  );
+}
 
 // A tuning "session" begins at the learner's FIRST nudge and lasts 30s. It's
 // kept at module scope on purpose: changing the target speed re-seeds the
