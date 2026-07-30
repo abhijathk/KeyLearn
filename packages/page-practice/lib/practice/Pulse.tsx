@@ -66,23 +66,6 @@ export const Pulse = memo(function Pulse({
       return !v;
     });
   };
-  // The expand affordance itself lives up in the top-right tools rail beside
-  // the gear (see Controls). It requests a toggle through a custom event, and
-  // we broadcast the panel's open state back so its little arrow stays in sync.
-  useEffect(() => {
-    const onToggle = () => {
-      toggleExpanded();
-    };
-    window.addEventListener("keylearn:session-toggle", onToggle);
-    return () => {
-      window.removeEventListener("keylearn:session-toggle", onToggle);
-    };
-  }, []);
-  useEffect(() => {
-    window.dispatchEvent(
-      new window.CustomEvent("keylearn:session-open", { detail: expanded }),
-    );
-  }, [expanded]);
   const live = useLiveSpeed();
   // While the learner is actively typing, the hero shows the live cumulative
   // speed with a pulsing dot; otherwise the recorded last-lesson speed.
@@ -284,7 +267,7 @@ export const Pulse = memo(function Pulse({
       </div>
 
       <div
-        className={styles.whisper}
+        className={clsx(styles.whisper, expanded && styles.whisperOpen)}
         role="button"
         tabIndex={0}
         aria-expanded={expanded}
@@ -380,6 +363,9 @@ export const Pulse = memo(function Pulse({
         </span>
         <StreakWhisper streakList={streakList} />
         {dailyGoal.goal > 0 && <TodayWhisper dailyGoal={dailyGoal} />}
+        <svg className={styles.chevron} viewBox="0 0 12 12" aria-hidden={true}>
+          <path d="M2.5 4.5 6 8l3.5-3.5" />
+        </svg>
       </div>
 
       <div

@@ -438,11 +438,14 @@
 
 .whisper {
   display: flex;
+  position: relative;
   flex-wrap: wrap;
   row-gap: 0.2rem;
   justify-content: center;
   margin-block-start: 0.9rem;
   padding-block-start: 0.7rem;
+  // leave room so centred metrics never slide under the pinned chevron
+  padding-inline-end: 1.4rem;
   border-block-start: 1px solid
     color-mix(in srgb, var(--primary-d2) 70%, transparent);
   color: var(--text-color-f1);
@@ -586,6 +589,29 @@
 }
 
 // ---- expand-on-click session panel --------------------------------------
+
+// The expand chevron is pinned to the far-right edge of the whisper row
+// (the metrics stay centred), and rotates when the panel opens.
+.chevron {
+  position: absolute;
+  inset-inline-end: 0.2rem;
+  inset-block-start: 50%;
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
+  translate: 0 -50%;
+  color: var(--text-color-f2);
+  transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.15s ease;
+}
+
+.whisper:hover .chevron {
+  color: var(--accent);
+}
+
+.whisperOpen .chevron {
+  transform: rotate(180deg);
+}
 
 // The panel slides open by animating grid-template-rows 0fr -> 1fr, which
 // gives a true height transition without a hard-coded pixel height. The clip

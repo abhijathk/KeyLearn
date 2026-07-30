@@ -28,7 +28,6 @@ export const Controls = memo(function Controls({
   onHelp,
   textSize,
   onTextSize,
-  sessionToggle = false,
 }: {
   readonly onChangeView?: () => void;
   readonly onResetLesson: () => void;
@@ -36,32 +35,11 @@ export const Controls = memo(function Controls({
   readonly onHelp: () => void;
   readonly textSize?: number;
   readonly onTextSize?: (value: number) => void;
-  /** Show the little arrow that opens the telemetry's session panel. */
-  readonly sessionToggle?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
   const { setView } = useView(views);
   const [open, setOpen] = useState(false);
-  // The session panel's open state lives in the telemetry island (Pulse); we
-  // mirror it here from the same stored flag and keep in sync via its event,
-  // so this arrow can sit on the gear's line and drive the panel from afar.
-  const [sessionOpen, setSessionOpen] = useState(() => {
-    try {
-      return window.localStorage.getItem("keylearn.pulse.open") === "1";
-    } catch {
-      return false;
-    }
-  });
-  useEffect(() => {
-    const onState = (ev: Event) => {
-      setSessionOpen(Boolean((ev as CustomEvent<boolean>).detail));
-    };
-    window.addEventListener("keylearn:session-open", onState);
-    return () => {
-      window.removeEventListener("keylearn:session-open", onState);
-    };
-  }, []);
   const keyboardHidden = settings.get(uiProps.hideKeyboard);
   // Picking a tool folds the menu back up; the text-size slider is the one
   // exception — it stays open so you can keep dragging.
@@ -114,29 +92,6 @@ export const Controls = memo(function Controls({
       id={names.controls}
       className={clsx(styles.controls, open && styles.open)}
     >
-      {sessionToggle && (
-        <button
-          type="button"
-          className={clsx(
-            styles.sessionArrow,
-            sessionOpen && styles.sessionArrowOpen,
-          )}
-          title={formatMessage({
-            id: "practice.session.toggle",
-            defaultMessage: "Show or hide your session summary",
-          })}
-          aria-expanded={sessionOpen}
-          onClick={() => {
-            window.dispatchEvent(
-              new window.CustomEvent("keylearn:session-toggle"),
-            );
-          }}
-        >
-          <svg viewBox="0 0 12 12" aria-hidden={true}>
-            <path d="M2.5 4.5 6 8l3.5-3.5" />
-          </svg>
-        </button>
-      )}
       {open && (
         <div
           className={styles.tools}
