@@ -4,7 +4,12 @@ import { type ReactNode, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import {
   type Duration,
+  duration_25_words,
+  duration_30_seconds,
+  duration_500_chars,
   DurationType,
+  lengthDuration,
+  lengthDurations,
   timeDuration,
   timeDurations,
   wordDurations,
@@ -14,8 +19,9 @@ import { TestStyle, typingTestProps } from "../../settings.ts";
 import * as styles from "../settings.module.less";
 
 /**
- * The Test tab of the settings modal: the test style (how much shows while you
- * type) and the test length (time or word count). Both apply to every style.
+ * The Test tab of the settings modal: the test style (how much shows while
+ * you type), the test mode (what ends the test — time, a word target, or a
+ * fixed passage) and the length presets for the chosen mode.
  */
 export function TestModeSettings(): ReactNode {
   const { settings, updateSettings } = useSettings();
@@ -29,6 +35,9 @@ export function TestModeSettings(): ReactNode {
   const isCustomWords =
     durType === DurationType.Words &&
     !wordDurations.some(({ duration }) => isDur(duration));
+  const isCustomChars =
+    durType === DurationType.Length &&
+    !lengthDurations.some(({ duration }) => isDur(duration));
   // Custom inputs keep their own text so typing "100" isn't interrupted when
   // the value momentarily passes a preset (10/25/50, 30s…).
   const [timeInput, setTimeInput] = useState(
@@ -37,22 +46,40 @@ export function TestModeSettings(): ReactNode {
   const [wordsInput, setWordsInput] = useState(
     isCustomWords ? String(durVal) : "",
   );
+  const [charsInput, setCharsInput] = useState(
+    isCustomChars ? String(durVal) : "",
+  );
   const setDur = (d: Duration) =>
     updateSettings(
       settings
         .set(typingTestProps.duration.type, d.type)
         .set(typingTestProps.duration.value, d.value),
     );
-  const pickTime = (d: Duration) => {
+  const pickPreset = (d: Duration) => {
     setTimeInput("");
-    setDur(d);
-  };
-  const pickWords = (d: Duration) => {
     setWordsInput("");
+    setCharsInput("");
     setDur(d);
   };
   const setStyle = (s: TestStyle) =>
     updateSettings(settings.set(typingTestProps.testStyle, s));
+  // Switching mode cards jumps to that mode's default preset.
+  const pickMode = (type: DurationType) => {
+    if (type === durType) {
+      return;
+    }
+    switch (type) {
+      case DurationType.Time:
+        pickPreset(duration_30_seconds);
+        break;
+      case DurationType.Words:
+        pickPreset(duration_25_words);
+        break;
+      case DurationType.Length:
+        pickPreset(duration_500_chars);
+        break;
+    }
+  };
 
   return (
     <div className={styles.modePanel}>
@@ -133,78 +160,235 @@ export function TestModeSettings(): ReactNode {
       <div className={styles.field}>
         <div className={styles.fieldLabel}>
           <FormattedMessage
-            id="typingTest.settings.time"
-            defaultMessage="Time"
+            id="typingTest.settings.testMode"
+            defaultMessage="Test mode"
           />
         </div>
-        <span className={styles.lengthRow}>
-          <span className={styles.seg}>
-            {timeDurations.map(({ duration, label }) => (
-              <button
-                key={label}
-                type="button"
-                className={clsx(styles.segItem, isDur(duration) && styles.segOn)}
-                onClick={() => pickTime(duration)}
-              >
-                {label}
-              </button>
-            ))}
-          </span>
-          <input
-            className={clsx(styles.customInput, isCustomTime && styles.customOn)}
-            type="text"
-            inputMode="numeric"
-            placeholder="custom s"
-            value={timeInput}
-            onChange={(ev) => {
-              const digits = ev.target.value.replace(/\D/g, "");
-              setTimeInput(digits);
-              const n = parseInt(digits, 10);
-              if (Number.isFinite(n) && n > 0) {
-                setDur(timeDuration(n * 1000));
-              }
-            }}
-          />
-        </span>
+        <div className={styles.styleRow}>
+          <button
+            type="button"
+            className={clsx(
+              styles.styleCard,
+              durType === DurationType.Time && styles.styleCardOn,
+            )}
+            onClick={() => pickMode(DurationType.Time)}
+          >
+            <span className={styles.styleName}>
+              <FormattedMessage
+                id="typingTest.mode.time"
+                defaultMessage="Time mode"
+              />
+            </span>
+            <span className={styles.styleDesc}>
+              <FormattedMessage
+                id="typingTest.mode.time.desc"
+                defaultMessage="Clock counts down from your pick. Ends at 0. The bar depletes."
+              />
+            </span>
+            <span className={styles.miniBar}>
+              <span className={styles.miniFill} style={{ inlineSize: "63%" }} />
+            </span>
+            <span className={styles.miniMeta}>
+              <span>0:19 left</span>
+              <span>30s</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            className={clsx(
+              styles.styleCard,
+              durType === DurationType.Words && styles.styleCardOn,
+            )}
+            onClick={() => pickMode(DurationType.Words)}
+          >
+            <span className={styles.styleName}>
+              <FormattedMessage
+                id="typingTest.mode.words"
+                defaultMessage="Words mode"
+              />
+            </span>
+            <span className={styles.styleDesc}>
+              <FormattedMessage
+                id="typingTest.mode.words.desc"
+                defaultMessage="Clock counts up. Ends when you hit the target. The bar fills."
+              />
+            </span>
+            <span className={styles.miniBar}>
+              <span className={styles.miniFill} style={{ inlineSize: "48%" }} />
+            </span>
+            <span className={styles.miniMeta}>
+              <span>12 of 25 words</span>
+              <span>0:14</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            className={clsx(
+              styles.styleCard,
+              durType === DurationType.Length && styles.styleCardOn,
+            )}
+            onClick={() => pickMode(DurationType.Length)}
+          >
+            <span className={styles.styleName}>
+              <FormattedMessage
+                id="typingTest.mode.passage"
+                defaultMessage="Passage mode"
+              />
+            </span>
+            <span className={styles.styleDesc}>
+              <FormattedMessage
+                id="typingTest.mode.passage.desc"
+                defaultMessage="A fixed length of text. Ends when you finish it. The bar shows % done."
+              />
+            </span>
+            <span className={styles.miniBar}>
+              <span className={styles.miniFill} style={{ inlineSize: "73%" }} />
+            </span>
+            <span className={styles.miniMeta}>
+              <span>73% of passage</span>
+              <span>0:28</span>
+            </span>
+          </button>
+        </div>
       </div>
 
-      <div className={styles.field}>
-        <div className={styles.fieldLabel}>
-          <FormattedMessage
-            id="typingTest.settings.words"
-            defaultMessage="Words"
-          />
-        </div>
-        <span className={styles.lengthRow}>
-          <span className={styles.seg}>
-            {wordDurations.map(({ duration, label }) => (
-              <button
-                key={label}
-                type="button"
-                className={clsx(styles.segItem, isDur(duration) && styles.segOn)}
-                onClick={() => pickWords(duration)}
-              >
-                {label}
-              </button>
-            ))}
+      {durType === DurationType.Time && (
+        <div className={styles.field}>
+          <div className={styles.fieldLabel}>
+            <FormattedMessage
+              id="typingTest.settings.time"
+              defaultMessage="Time"
+            />
+          </div>
+          <span className={styles.lengthRow}>
+            <span className={styles.seg}>
+              {timeDurations.map(({ duration, label }) => (
+                <button
+                  key={label}
+                  type="button"
+                  className={clsx(
+                    styles.segItem,
+                    isDur(duration) && styles.segOn,
+                  )}
+                  onClick={() => pickPreset(duration)}
+                >
+                  {label}
+                </button>
+              ))}
+            </span>
+            <input
+              className={clsx(
+                styles.customInput,
+                isCustomTime && styles.customOn,
+              )}
+              type="text"
+              inputMode="numeric"
+              placeholder="custom s"
+              value={timeInput}
+              onChange={(ev) => {
+                const digits = ev.target.value.replace(/\D/g, "");
+                setTimeInput(digits);
+                const n = parseInt(digits, 10);
+                if (Number.isFinite(n) && n > 0) {
+                  setDur(timeDuration(n * 1000));
+                }
+              }}
+            />
           </span>
-          <input
-            className={clsx(styles.customInput, isCustomWords && styles.customOn)}
-            type="text"
-            inputMode="numeric"
-            placeholder="custom"
-            value={wordsInput}
-            onChange={(ev) => {
-              const digits = ev.target.value.replace(/\D/g, "");
-              setWordsInput(digits);
-              const n = parseInt(digits, 10);
-              if (Number.isFinite(n) && n > 0) {
-                setDur(wordsDuration(n));
-              }
-            }}
-          />
-        </span>
-      </div>
+        </div>
+      )}
+
+      {durType === DurationType.Words && (
+        <div className={styles.field}>
+          <div className={styles.fieldLabel}>
+            <FormattedMessage
+              id="typingTest.settings.words"
+              defaultMessage="Words"
+            />
+          </div>
+          <span className={styles.lengthRow}>
+            <span className={styles.seg}>
+              {wordDurations.map(({ duration, label }) => (
+                <button
+                  key={label}
+                  type="button"
+                  className={clsx(
+                    styles.segItem,
+                    isDur(duration) && styles.segOn,
+                  )}
+                  onClick={() => pickPreset(duration)}
+                >
+                  {label}
+                </button>
+              ))}
+            </span>
+            <input
+              className={clsx(
+                styles.customInput,
+                isCustomWords && styles.customOn,
+              )}
+              type="text"
+              inputMode="numeric"
+              placeholder="custom"
+              value={wordsInput}
+              onChange={(ev) => {
+                const digits = ev.target.value.replace(/\D/g, "");
+                setWordsInput(digits);
+                const n = parseInt(digits, 10);
+                if (Number.isFinite(n) && n > 0) {
+                  setDur(wordsDuration(n));
+                }
+              }}
+            />
+          </span>
+        </div>
+      )}
+
+      {durType === DurationType.Length && (
+        <div className={styles.field}>
+          <div className={styles.fieldLabel}>
+            <FormattedMessage
+              id="typingTest.settings.passage"
+              defaultMessage="Passage length"
+            />
+          </div>
+          <span className={styles.lengthRow}>
+            <span className={styles.seg}>
+              {lengthDurations.map(({ duration, label }) => (
+                <button
+                  key={label}
+                  type="button"
+                  className={clsx(
+                    styles.segItem,
+                    isDur(duration) && styles.segOn,
+                  )}
+                  onClick={() => pickPreset(duration)}
+                >
+                  {label}
+                </button>
+              ))}
+            </span>
+            <input
+              className={clsx(
+                styles.customInput,
+                isCustomChars && styles.customOn,
+              )}
+              type="text"
+              inputMode="numeric"
+              placeholder="custom chars"
+              value={charsInput}
+              onChange={(ev) => {
+                const digits = ev.target.value.replace(/\D/g, "");
+                setCharsInput(digits);
+                const n = parseInt(digits, 10);
+                if (Number.isFinite(n) && n > 0) {
+                  setDur(lengthDuration(n));
+                }
+              }}
+            />
+          </span>
+        </div>
+      )}
     </div>
   );
 }

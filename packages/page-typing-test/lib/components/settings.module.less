@@ -235,6 +235,33 @@
   line-height: 1.4;
 }
 
+// A small illustrative progress bar inside the mode cards, echoing what the
+// real progress bar does in that mode (depletes / fills / % done).
+.miniBar {
+  display: block;
+  block-size: 0.3rem;
+  margin-block-start: 0.45rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--primary-d2);
+}
+
+.miniFill {
+  display: block;
+  block-size: 100%;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--accent) 75%, transparent);
+}
+
+.miniMeta {
+  display: flex;
+  justify-content: space-between;
+  margin-block-start: 0.25rem;
+  color: var(--text-color-f2);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+}
+
 // ---- custom length input -----------------------------------------------
 .lengthRow {
   display: inline-flex;

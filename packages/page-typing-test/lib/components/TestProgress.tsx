@@ -1,4 +1,3 @@
-import { useIntlNumbers } from "@keybr/intl";
 import { useFormatter } from "@keybr/lesson-ui";
 import { formatDuration, withDeferred } from "@keybr/widget";
 import { clsx } from "clsx";
@@ -24,7 +23,6 @@ export const TestProgress0 = memo(function TestProgress({
   bestCpm: number;
 }) {
   const { length, time, progress: raw, speed } = progress;
-  const { formatInteger } = useIntlNumbers();
   const { formatSpeed } = useFormatter();
   const pct = clamp01(raw);
 
@@ -66,11 +64,11 @@ export const TestProgress0 = memo(function TestProgress({
     <span>
       <span className={styles.lab}>
         <FormattedMessage
-          id="typingTest.progress.chars"
-          defaultMessage="Chars"
+          id="typingTest.progress.passage"
+          defaultMessage="Passage"
         />
       </span>
-      {formatInteger(length)}
+      {Math.round(pct * 100)}%
     </span>
   );
 

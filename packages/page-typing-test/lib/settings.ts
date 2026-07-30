@@ -79,7 +79,7 @@ export const typingTestProps = {
   }),
   duration: {
     type: enumProp("typingTest.duration.type", DurationType, DurationType.Time),
-    value: numberProp("typingTest.duration.value", 0),
+    value: numberProp("typingTest.duration.value", 15_000),
   } as const,
   testStyle: enumProp("typingTest.testStyle", TestStyle, TestStyle.Coach),
 } as const;

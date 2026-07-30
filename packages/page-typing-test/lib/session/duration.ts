@@ -29,8 +29,8 @@ export type NamedDuration = {
   readonly duration: Duration;
 };
 
-// Grouped for the settings picker: Time and Words. (Character-count durations
-// stay supported for back-compat but are no longer surfaced.)
+// Grouped for the settings picker: Time, Words and Passage (a fixed number of
+// characters — ends when you finish the text).
 export const timeDurations: readonly NamedDuration[] = [
   { label: "15s", duration: duration_15_seconds },
   { label: "30s", duration: duration_30_seconds },
@@ -44,9 +44,16 @@ export const wordDurations: readonly NamedDuration[] = [
   { label: "50 words", duration: duration_50_words },
 ];
 
+export const lengthDurations: readonly NamedDuration[] = [
+  { label: "100 chars", duration: duration_100_chars },
+  { label: "500 chars", duration: duration_500_chars },
+  { label: "1000 chars", duration: duration_1000_chars },
+];
+
 export const durations: readonly NamedDuration[] = [
   ...timeDurations,
   ...wordDurations,
+  ...lengthDurations,
 ];
 
 export function computeProgress(
