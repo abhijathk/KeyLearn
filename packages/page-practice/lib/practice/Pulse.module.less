@@ -587,24 +587,6 @@
 
 // ---- expand-on-click session panel --------------------------------------
 
-// The chevron at the tail of the whisper line; rotates when the panel opens.
-.chevron {
-  inline-size: 0.85rem;
-  block-size: 0.85rem;
-  color: var(--text-color-f2);
-  transition:
-    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.15s ease;
-}
-
-.whisper:hover .chevron {
-  color: var(--accent);
-}
-
-.whisperOpen .chevron {
-  transform: rotate(180deg);
-}
-
 // The panel slides open by animating grid-template-rows 0fr -> 1fr, which
 // gives a true height transition without a hard-coded pixel height. The clip
 // child must own the overflow so the collapsed state fully hides.

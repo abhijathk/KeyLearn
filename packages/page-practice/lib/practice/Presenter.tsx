@@ -209,6 +209,7 @@ export class Presenter extends PureComponent<Props, State> {
                 onHelp={handleHelp}
                 textSize={textSize}
                 onTextSize={handleTextSize}
+                sessionToggle={true}
               />
             }
             textInput={
@@ -243,6 +244,7 @@ export class Presenter extends PureComponent<Props, State> {
                 onResetLesson={handleResetLesson}
                 onSkipLesson={handleSkipLesson}
                 onHelp={handleHelp}
+                sessionToggle={true}
               />
             }
             textInput={
