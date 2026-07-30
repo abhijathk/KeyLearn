@@ -1,83 +1,46 @@
 # English
 
-Translated: 873 messages, 8542 words
+Translated: 873 messages, 8541 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 859 messages, 8487 words
+Translated: 867 messages, 8533 words
 
-Untranslated: 13 messages, 52 words
+Untranslated: 5 messages, 5 words
 
+* *s*
 * *Zen*
 * *Arcade*
 * *Letters*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Arabic
 
-Translated: 863 messages, 8488 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Bulgarian
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Bangla
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Catalan
 
-Translated: 855 messages, 8483 words
+Translated: 863 messages, 8529 words
 
-Untranslated: 17 messages, 56 words
+Untranslated: 9 messages, 9 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Text*
@@ -85,43 +48,27 @@ Untranslated: 17 messages, 56 words
 * *Errors*
 * *Errors*
 * *Recent*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Czech
 
-Translated: 859 messages, 8487 words
+Translated: 867 messages, 8533 words
 
-Untranslated: 13 messages, 52 words
+Untranslated: 5 messages, 5 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Text*
 * *Trend*
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Danish
 
-Translated: 854 messages, 8482 words
+Translated: 861 messages, 8527 words
 
-Untranslated: 18 messages, 57 words
+Untranslated: 11 messages, 11 words
 
+* *s*
 * *Zen*
 * *Auto*
 * *Test*
@@ -132,21 +79,14 @@ Untranslated: 18 messages, 57 words
 * *Version*
 * *Download*
 * *Position*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # German
 
-Translated: 851 messages, 8481 words
+Translated: 858 messages, 8526 words
 
-Untranslated: 22 messages, 61 words
+Untranslated: 15 messages, 15 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Text*
@@ -161,159 +101,83 @@ Untranslated: 22 messages, 61 words
 * *Passkeys*
 * *Position*
 * *Alphabet:*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* ...
 
 # Greek
 
-Translated: 861 messages, 8491 words
+Translated: 872 messages, 8540 words
 
-Untranslated: 12 messages, 51 words
+Untranslated: 1 messages, 1 words
 
-* *Zen*
-* *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Esperanto
 
-Translated: 862 messages, 8490 words
+Translated: 870 messages, 8536 words
 
-Untranslated: 10 messages, 49 words
+Untranslated: 2 messages, 2 words
 
+* *s*
 * *Zen*
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Spanish
 
-Translated: 576 messages, 6160 words
+Translated: 868 messages, 8534 words
 
-Untranslated: 256 messages, 2132 words
+Untranslated: 4 messages, 4 words
 
-* *Mon*
-* *now*
-* *Sun*
-* *you*
+* *s*
 * *Zen*
-* *Auto*
-* *Best*
-* *Best*
-* *Best*
-* *Dark*
-* *hits*
-* *Kids*
-* *last*
-* *Left*
-* *Open*
-* *Pace*
-* *Test*
-* *Text*
-* *Time*
-* *Time*
-* ...
+* *Arcade*
+* *Premium*
 
 # Estonian
 
-Translated: 859 messages, 8487 words
+Translated: 867 messages, 8533 words
 
-Untranslated: 13 messages, 52 words
+Untranslated: 5 messages, 5 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Trend*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Persian
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Finnish
 
-Translated: 861 messages, 8491 words
+Translated: 869 messages, 8537 words
 
-Untranslated: 12 messages, 51 words
+Untranslated: 4 messages, 4 words
 
+* *s*
 * *Zen*
 * *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Faroese
 
-Translated: 859 messages, 8487 words
+Translated: 868 messages, 8536 words
 
-Untranslated: 13 messages, 52 words
+Untranslated: 5 messages, 5 words
 
+* *s*
 * *Sun*
 * *Zen*
 * *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # French
 
-Translated: 855 messages, 8483 words
+Translated: 862 messages, 8528 words
 
-Untranslated: 17 messages, 56 words
+Untranslated: 10 messages, 10 words
 
+* *s*
 * *Zen*
 * *Auto*
 * *Test*
@@ -323,288 +187,138 @@ Untranslated: 17 messages, 56 words
 * *Premium*
 * *Version*
 * *Position*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Irish
 
-Translated: 861 messages, 8491 words
+Translated: 869 messages, 8537 words
 
-Untranslated: 12 messages, 51 words
+Untranslated: 4 messages, 4 words
 
+* *s*
 * *Zen*
 * *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Gujarati
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Hebrew
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Hindi
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Croatian
 
-Translated: 859 messages, 8487 words
+Translated: 867 messages, 8533 words
 
-Untranslated: 13 messages, 52 words
+Untranslated: 5 messages, 5 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Trend*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Hungarian
 
-Translated: 863 messages, 8493 words
+Translated: 872 messages, 8540 words
 
-Untranslated: 10 messages, 49 words
+Untranslated: 1 messages, 1 words
 
 * *Zen*
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Indonesian
 
-Translated: 860 messages, 8490 words
+Translated: 869 messages, 8537 words
 
-Untranslated: 13 messages, 52 words
+Untranslated: 4 messages, 4 words
 
 * *Zen*
 * *Edit*
 * *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Icelandic
 
-Translated: 857 messages, 8487 words
+Translated: 870 messages, 8538 words
 
-Untranslated: 16 messages, 55 words
+Untranslated: 3 messages, 3 words
 
+* *s*
 * *Sun*
-* *Zen*
-* *Best*
-* *Best*
-* *Best*
-* *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Italian
 
-Translated: 857 messages, 8485 words
+Translated: 865 messages, 8531 words
 
-Untranslated: 15 messages, 54 words
+Untranslated: 7 messages, 7 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Arcade*
 * *Account*
-* *Passage*
 * *Premium*
 * *Password*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Japanese
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Kannada
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Korean
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Lithuanian
 
-Translated: 861 messages, 8489 words
+Translated: 869 messages, 8535 words
 
-Untranslated: 11 messages, 50 words
+Untranslated: 3 messages, 3 words
 
+* *s*
 * *Zen*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Malayalam
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Mongolian
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Norwegian Bokmål
 
-Translated: 854 messages, 8482 words
+Translated: 864 messages, 8532 words
 
-Untranslated: 18 messages, 57 words
+Untranslated: 9 messages, 9 words
 
+* *s*
 * *Zen*
 * *Auto*
 * *Best*
@@ -612,40 +326,21 @@ Untranslated: 18 messages, 57 words
 * *Best*
 * *Test*
 * *Trend*
-* *Streak*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Nepali
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Dutch
 
-Translated: 850 messages, 8478 words
+Translated: 857 messages, 8523 words
 
-Untranslated: 22 messages, 61 words
+Untranslated: 15 messages, 15 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Coach*
@@ -659,183 +354,108 @@ Untranslated: 22 messages, 61 words
 * *Passage*
 * *Premium*
 * *Passkeys*
-* *Test mode*
-* *Time mode*
-* *Words mode*
 * *Multiplayer*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* ...
 
 # Polish
 
-Translated: 857 messages, 8351 words
+Translated: 866 messages, 8532 words
 
-Untranslated: 15 messages, 188 words
+Untranslated: 6 messages, 6 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Trend*
 * *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
-* *<h3>Confidence that watches accuracy, not just speed</h3><p>...*
 
 # Brazilian Portuguese
 
-Translated: 858 messages, 8486 words
+Translated: 866 messages, 8532 words
 
-Untranslated: 14 messages, 53 words
+Untranslated: 6 messages, 6 words
 
+* *s*
 * *Zen*
 * *Arcade*
 * *Layout*
 * *Layouts*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # European Portuguese
 
-Translated: 860 messages, 8488 words
+Translated: 868 messages, 8534 words
 
-Untranslated: 12 messages, 51 words
+Untranslated: 4 messages, 4 words
 
+* *s*
 * *Zen*
 * *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Romanian
 
-Translated: 856 messages, 8484 words
+Translated: 864 messages, 8530 words
 
-Untranslated: 16 messages, 55 words
+Untranslated: 8 messages, 8 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Text*
 * *Arcade*
 * *Recent*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
 * *Multiplayer*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Russian
 
-Translated: 863 messages, 8359 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 10 messages, 183 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
-* *<h3>Confidence that watches accuracy, not just speed</h3><p>...*
+Untranslated: 0 messages, 0 words
 
 # Slovak
 
-Translated: 858 messages, 8486 words
+Translated: 866 messages, 8532 words
 
-Untranslated: 14 messages, 53 words
+Untranslated: 6 messages, 6 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Text*
 * *Trend*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Slovenian
 
-Translated: 858 messages, 8352 words
+Translated: 867 messages, 8533 words
 
-Untranslated: 14 messages, 187 words
+Untranslated: 5 messages, 5 words
 
+* *s*
 * *Zen*
 * *Test*
 * *Trend*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
-* *<h3>Confidence that watches accuracy, not just speed</h3><p>...*
 
 # Albanian
 
-Translated: 861 messages, 8489 words
+Translated: 869 messages, 8535 words
 
-Untranslated: 11 messages, 50 words
+Untranslated: 3 messages, 3 words
 
+* *s*
 * *Zen*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Swedish
 
-Translated: 854 messages, 8482 words
+Translated: 862 messages, 8528 words
 
-Untranslated: 18 messages, 57 words
+Untranslated: 10 messages, 10 words
 
+* *s*
 * *Zen*
 * *Auto*
 * *Test*
@@ -843,217 +463,76 @@ Untranslated: 18 messages, 57 words
 * *Coach*
 * *Trend*
 * *Layout*
-* *Passage*
 * *Premium*
 * *Version*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Tamil
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Telugu
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Thai
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Turkish
 
-Translated: 860 messages, 8490 words
+Translated: 869 messages, 8537 words
 
-Untranslated: 13 messages, 52 words
+Untranslated: 4 messages, 4 words
 
 * *Zen*
 * *Test*
 * *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Ukrainian
 
-Translated: 864 messages, 8494 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 9 messages, 48 words
-
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+Untranslated: 0 messages, 0 words
 
 # Urdu
 
-Translated: 864 messages, 8494 words
+Translated: 872 messages, 8540 words
 
-Untranslated: 9 messages, 48 words
+Untranslated: 1 messages, 1 words
 
-* *Passage*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
+* *s*
 
 # Vietnamese
 
-Translated: 861 messages, 8491 words
+Translated: 870 messages, 8538 words
 
-Untranslated: 12 messages, 51 words
+Untranslated: 3 messages, 3 words
 
 * *Zen*
 * *Arcade*
-* *Passage*
 * *Premium*
-* *Test mode*
-* *Time mode*
-* *Words mode*
-* *Passage mode*
-* *Passage length*
-* *Clock counts up. Ends when you hit the target. The bar fills...*
-* *Clock counts down from your pick. Ends at 0. The bar deplete...*
-* *A fixed length of text. Ends when you finish it. The bar sho...*
 
 # Simplified Chinese
 
-Translated: 575 messages, 6153 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 257 messages, 2139 words
-
-* *Mon*
-* *now*
-* *Sun*
-* *you*
-* *Zen*
-* *Auto*
-* *Best*
-* *Best*
-* *Best*
-* *Dark*
-* *hits*
-* *Kids*
-* *last*
-* *Left*
-* *Open*
-* *Pace*
-* *Test*
-* *Text*
-* *Time*
-* *Time*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Traditional Chinese
 
-Translated: 576 messages, 6160 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 256 messages, 2132 words
-
-* *Mon*
-* *now*
-* *Sun*
-* *you*
-* *Zen*
-* *Auto*
-* *Best*
-* *Best*
-* *Best*
-* *Dark*
-* *hits*
-* *Kids*
-* *last*
-* *Left*
-* *Open*
-* *Pace*
-* *Test*
-* *Text*
-* *Time*
-* *Time*
-* ...
+Untranslated: 0 messages, 0 words
 
 # Chinese (Taiwan)
 
-Translated: 575 messages, 6159 words
+Translated: 873 messages, 8541 words
 
-Untranslated: 257 messages, 2133 words
-
-* *GO!*
-* *Mon*
-* *now*
-* *Sun*
-* *you*
-* *Zen*
-* *Auto*
-* *Best*
-* *Best*
-* *Best*
-* *Dark*
-* *hits*
-* *Kids*
-* *last*
-* *Left*
-* *Open*
-* *Pace*
-* *Test*
-* *Text*
-* *Time*
-* ...
+Untranslated: 0 messages, 0 words

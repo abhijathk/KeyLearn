@@ -1,11 +1,12 @@
 import { useSettings } from "@keybr/settings";
 import { clsx } from "clsx";
-import { type ReactNode, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { type ReactNode, useEffect, useState } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import {
   type Duration,
   duration_25_words,
   duration_30_seconds,
+  duration_60_seconds,
   duration_500_chars,
   DurationType,
   lengthDuration,
@@ -19,50 +20,117 @@ import { TestStyle, typingTestProps } from "../../settings.ts";
 import * as styles from "../settings.module.less";
 
 /**
+ * A number field with +/- buttons and a fixed unit suffix (e.g. "45 s"), so
+ * picking a custom length never requires guessing what unit the number is
+ * in or what format to type — you can always just tap the buttons.
+ */
+function Stepper({
+  value,
+  step,
+  min,
+  max,
+  unit,
+  onChange,
+}: {
+  value: number;
+  step: number;
+  min: number;
+  max: number;
+  unit: string;
+  onChange: (value: number) => void;
+}): ReactNode {
+  const [text, setText] = useState(String(value));
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
+  const clamp = (n: number) => Math.max(min, Math.min(max, n));
+  const commit = (n: number) => {
+    const c = clamp(n);
+    setText(String(c));
+    onChange(c);
+  };
+  const current = () => {
+    const n = parseInt(text, 10);
+    return Number.isFinite(n) ? n : value;
+  };
+  return (
+    <span className={styles.stepper}>
+      <button
+        type="button"
+        className={styles.stepBtn}
+        aria-label="Decrease"
+        onClick={() => commit(current() - step)}
+      >
+        −
+      </button>
+      <span className={styles.stepField}>
+        <input
+          className={styles.stepInput}
+          type="text"
+          inputMode="numeric"
+          value={text}
+          onChange={(ev) => {
+            setText(ev.target.value.replace(/\D/g, ""));
+          }}
+          onBlur={() => commit(current())}
+          onKeyDown={(ev) => {
+            if (ev.key === "Enter") {
+              ev.currentTarget.blur();
+            }
+          }}
+        />
+        <span className={styles.stepUnit}>{unit}</span>
+      </span>
+      <button
+        type="button"
+        className={styles.stepBtn}
+        aria-label="Increase"
+        onClick={() => commit(current() + step)}
+      >
+        +
+      </button>
+    </span>
+  );
+}
+
+/**
  * The Test tab of the settings modal: the test style (how much shows while
- * you type), the test mode (what ends the test — time, a word target, or a
- * fixed passage) and the length presets for the chosen mode.
+ * you type) and the test mode (what ends the test — time, a word target, or
+ * a fixed passage). Each mode card expands in place, once selected, to show
+ * its own length presets and a custom stepper — so the length setting always
+ * reads as part of the mode you picked it for, not a separate control.
  */
 export function TestModeSettings(): ReactNode {
+  const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
   const style = settings.get(typingTestProps.testStyle);
   const durType = settings.get(typingTestProps.duration.type);
   const durVal = settings.get(typingTestProps.duration.value);
   const isDur = (d: Duration) => d.type === durType && d.value === durVal;
-  const isCustomTime =
-    durType === DurationType.Time &&
-    !timeDurations.some(({ duration }) => isDur(duration));
-  const isCustomWords =
-    durType === DurationType.Words &&
-    !wordDurations.some(({ duration }) => isDur(duration));
-  const isCustomChars =
-    durType === DurationType.Length &&
-    !lengthDurations.some(({ duration }) => isDur(duration));
-  // Custom inputs keep their own text so typing "100" isn't interrupted when
-  // the value momentarily passes a preset (10/25/50, 30s…).
-  const [timeInput, setTimeInput] = useState(
-    isCustomTime ? String(Math.round(durVal / 1000)) : "",
-  );
-  const [wordsInput, setWordsInput] = useState(
-    isCustomWords ? String(durVal) : "",
-  );
-  const [charsInput, setCharsInput] = useState(
-    isCustomChars ? String(durVal) : "",
-  );
   const setDur = (d: Duration) =>
     updateSettings(
       settings
         .set(typingTestProps.duration.type, d.type)
         .set(typingTestProps.duration.value, d.value),
     );
-  const pickPreset = (d: Duration) => {
-    setTimeInput("");
-    setWordsInput("");
-    setCharsInput("");
-    setDur(d);
+  // Each style has the test mode that best suits it: Zen is an uninterrupted
+  // flow session (a longer stretch of time), Coach chases a concrete word
+  // target, and Arcade is a quick, punchy sprint. Picking a style opens that
+  // mode's card with its sensible defaults already filled in.
+  const setStyle = (s: TestStyle) => {
+    const styleDefault =
+      s === TestStyle.Zen
+        ? duration_60_seconds
+        : s === TestStyle.Coach
+          ? duration_25_words
+          : duration_30_seconds;
+    updateSettings(
+      settings
+        .set(typingTestProps.testStyle, s)
+        .set(typingTestProps.duration.type, styleDefault.type)
+        .set(typingTestProps.duration.value, styleDefault.value),
+    );
   };
-  const setStyle = (s: TestStyle) =>
-    updateSettings(settings.set(typingTestProps.testStyle, s));
   // Switching mode cards jumps to that mode's default preset.
   const pickMode = (type: DurationType) => {
     if (type === durType) {
@@ -70,16 +138,19 @@ export function TestModeSettings(): ReactNode {
     }
     switch (type) {
       case DurationType.Time:
-        pickPreset(duration_30_seconds);
+        setDur(duration_30_seconds);
         break;
       case DurationType.Words:
-        pickPreset(duration_25_words);
+        setDur(duration_25_words);
         break;
       case DurationType.Length:
-        pickPreset(duration_500_chars);
+        setDur(duration_500_chars);
         break;
     }
   };
+  const secondsUnit = formatMessage({ id: "typingTest.unit.seconds", defaultMessage: "s" });
+  const wordsUnit = formatMessage({ id: "typingTest.unit.words", defaultMessage: "words" });
+  const charsUnit = formatMessage({ id: "typingTest.unit.chars", defaultMessage: "chars" });
 
   return (
     <div className={styles.modePanel}>
@@ -164,231 +235,197 @@ export function TestModeSettings(): ReactNode {
             defaultMessage="Test mode"
           />
         </div>
-        <div className={styles.styleRow}>
-          <button
-            type="button"
+        <div className={clsx(styles.styleRow, styles.modeRow)}>
+          <div
             className={clsx(
               styles.styleCard,
               durType === DurationType.Time && styles.styleCardOn,
             )}
-            onClick={() => pickMode(DurationType.Time)}
           >
-            <span className={styles.styleName}>
-              <FormattedMessage
-                id="typingTest.mode.time"
-                defaultMessage="Time mode"
-              />
-            </span>
-            <span className={styles.styleDesc}>
-              <FormattedMessage
-                id="typingTest.mode.time.desc"
-                defaultMessage="Clock counts down from your pick. Ends at 0. The bar depletes."
-              />
-            </span>
-            <span className={styles.miniBar}>
-              <span className={styles.miniFill} style={{ inlineSize: "63%" }} />
-            </span>
-            <span className={styles.miniMeta}>
-              <span>0:19 left</span>
-              <span>30s</span>
-            </span>
-          </button>
-          <button
-            type="button"
+            <button
+              type="button"
+              className={styles.modeHead}
+              onClick={() => pickMode(DurationType.Time)}
+            >
+              <span className={styles.styleName}>
+                <FormattedMessage
+                  id="typingTest.mode.time"
+                  defaultMessage="Time mode"
+                />
+              </span>
+              <span className={styles.styleDesc}>
+                <FormattedMessage
+                  id="typingTest.mode.time.desc"
+                  defaultMessage="Clock counts down from your pick. Ends at 0. The bar depletes."
+                />
+              </span>
+              <span className={styles.miniBar}>
+                <span
+                  className={styles.miniFill}
+                  style={{ inlineSize: "63%" }}
+                />
+              </span>
+              <span className={styles.miniMeta}>
+                <span>0:19 left</span>
+                <span>30s</span>
+              </span>
+            </button>
+            {durType === DurationType.Time && (
+              <div className={styles.modeExpand}>
+                <span className={styles.seg}>
+                  {timeDurations.map(({ duration, label }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      className={clsx(
+                        styles.segItem,
+                        isDur(duration) && styles.segOn,
+                      )}
+                      onClick={() => setDur(duration)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </span>
+                <Stepper
+                  value={Math.round(durVal / 1000)}
+                  step={5}
+                  min={5}
+                  max={1800}
+                  unit={secondsUnit}
+                  onChange={(seconds) => setDur(timeDuration(seconds * 1000))}
+                />
+              </div>
+            )}
+          </div>
+
+          <div
             className={clsx(
               styles.styleCard,
               durType === DurationType.Words && styles.styleCardOn,
             )}
-            onClick={() => pickMode(DurationType.Words)}
           >
-            <span className={styles.styleName}>
-              <FormattedMessage
-                id="typingTest.mode.words"
-                defaultMessage="Words mode"
-              />
-            </span>
-            <span className={styles.styleDesc}>
-              <FormattedMessage
-                id="typingTest.mode.words.desc"
-                defaultMessage="Clock counts up. Ends when you hit the target. The bar fills."
-              />
-            </span>
-            <span className={styles.miniBar}>
-              <span className={styles.miniFill} style={{ inlineSize: "48%" }} />
-            </span>
-            <span className={styles.miniMeta}>
-              <span>12 of 25 words</span>
-              <span>0:14</span>
-            </span>
-          </button>
-          <button
-            type="button"
+            <button
+              type="button"
+              className={styles.modeHead}
+              onClick={() => pickMode(DurationType.Words)}
+            >
+              <span className={styles.styleName}>
+                <FormattedMessage
+                  id="typingTest.mode.words"
+                  defaultMessage="Words mode"
+                />
+              </span>
+              <span className={styles.styleDesc}>
+                <FormattedMessage
+                  id="typingTest.mode.words.desc"
+                  defaultMessage="Clock counts up. Ends when you hit the target. The bar fills."
+                />
+              </span>
+              <span className={styles.miniBar}>
+                <span
+                  className={styles.miniFill}
+                  style={{ inlineSize: "48%" }}
+                />
+              </span>
+              <span className={styles.miniMeta}>
+                <span>12 of 25 words</span>
+                <span>0:14</span>
+              </span>
+            </button>
+            {durType === DurationType.Words && (
+              <div className={styles.modeExpand}>
+                <span className={styles.seg}>
+                  {wordDurations.map(({ duration, label }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      className={clsx(
+                        styles.segItem,
+                        isDur(duration) && styles.segOn,
+                      )}
+                      onClick={() => setDur(duration)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </span>
+                <Stepper
+                  value={durVal}
+                  step={5}
+                  min={5}
+                  max={1000}
+                  unit={wordsUnit}
+                  onChange={(words) => setDur(wordsDuration(words))}
+                />
+              </div>
+            )}
+          </div>
+
+          <div
             className={clsx(
               styles.styleCard,
               durType === DurationType.Length && styles.styleCardOn,
             )}
-            onClick={() => pickMode(DurationType.Length)}
           >
-            <span className={styles.styleName}>
-              <FormattedMessage
-                id="typingTest.mode.passage"
-                defaultMessage="Passage mode"
-              />
-            </span>
-            <span className={styles.styleDesc}>
-              <FormattedMessage
-                id="typingTest.mode.passage.desc"
-                defaultMessage="A fixed length of text. Ends when you finish it. The bar shows % done."
-              />
-            </span>
-            <span className={styles.miniBar}>
-              <span className={styles.miniFill} style={{ inlineSize: "73%" }} />
-            </span>
-            <span className={styles.miniMeta}>
-              <span>73% of passage</span>
-              <span>0:28</span>
-            </span>
-          </button>
+            <button
+              type="button"
+              className={styles.modeHead}
+              onClick={() => pickMode(DurationType.Length)}
+            >
+              <span className={styles.styleName}>
+                <FormattedMessage
+                  id="typingTest.mode.passage"
+                  defaultMessage="Passage mode"
+                />
+              </span>
+              <span className={styles.styleDesc}>
+                <FormattedMessage
+                  id="typingTest.mode.passage.desc"
+                  defaultMessage="A fixed length of text. Ends when you finish it. The bar shows % done."
+                />
+              </span>
+              <span className={styles.miniBar}>
+                <span
+                  className={styles.miniFill}
+                  style={{ inlineSize: "73%" }}
+                />
+              </span>
+              <span className={styles.miniMeta}>
+                <span>73% of passage</span>
+                <span>0:28</span>
+              </span>
+            </button>
+            {durType === DurationType.Length && (
+              <div className={styles.modeExpand}>
+                <span className={styles.seg}>
+                  {lengthDurations.map(({ duration, label }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      className={clsx(
+                        styles.segItem,
+                        isDur(duration) && styles.segOn,
+                      )}
+                      onClick={() => setDur(duration)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </span>
+                <Stepper
+                  value={durVal}
+                  step={50}
+                  min={50}
+                  max={10000}
+                  unit={charsUnit}
+                  onChange={(chars) => setDur(lengthDuration(chars))}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {durType === DurationType.Time && (
-        <div className={styles.field}>
-          <div className={styles.fieldLabel}>
-            <FormattedMessage
-              id="typingTest.settings.time"
-              defaultMessage="Time"
-            />
-          </div>
-          <span className={styles.lengthRow}>
-            <span className={styles.seg}>
-              {timeDurations.map(({ duration, label }) => (
-                <button
-                  key={label}
-                  type="button"
-                  className={clsx(
-                    styles.segItem,
-                    isDur(duration) && styles.segOn,
-                  )}
-                  onClick={() => pickPreset(duration)}
-                >
-                  {label}
-                </button>
-              ))}
-            </span>
-            <input
-              className={clsx(
-                styles.customInput,
-                isCustomTime && styles.customOn,
-              )}
-              type="text"
-              inputMode="numeric"
-              placeholder="custom s"
-              value={timeInput}
-              onChange={(ev) => {
-                const digits = ev.target.value.replace(/\D/g, "");
-                setTimeInput(digits);
-                const n = parseInt(digits, 10);
-                if (Number.isFinite(n) && n > 0) {
-                  setDur(timeDuration(n * 1000));
-                }
-              }}
-            />
-          </span>
-        </div>
-      )}
-
-      {durType === DurationType.Words && (
-        <div className={styles.field}>
-          <div className={styles.fieldLabel}>
-            <FormattedMessage
-              id="typingTest.settings.words"
-              defaultMessage="Words"
-            />
-          </div>
-          <span className={styles.lengthRow}>
-            <span className={styles.seg}>
-              {wordDurations.map(({ duration, label }) => (
-                <button
-                  key={label}
-                  type="button"
-                  className={clsx(
-                    styles.segItem,
-                    isDur(duration) && styles.segOn,
-                  )}
-                  onClick={() => pickPreset(duration)}
-                >
-                  {label}
-                </button>
-              ))}
-            </span>
-            <input
-              className={clsx(
-                styles.customInput,
-                isCustomWords && styles.customOn,
-              )}
-              type="text"
-              inputMode="numeric"
-              placeholder="custom"
-              value={wordsInput}
-              onChange={(ev) => {
-                const digits = ev.target.value.replace(/\D/g, "");
-                setWordsInput(digits);
-                const n = parseInt(digits, 10);
-                if (Number.isFinite(n) && n > 0) {
-                  setDur(wordsDuration(n));
-                }
-              }}
-            />
-          </span>
-        </div>
-      )}
-
-      {durType === DurationType.Length && (
-        <div className={styles.field}>
-          <div className={styles.fieldLabel}>
-            <FormattedMessage
-              id="typingTest.settings.passage"
-              defaultMessage="Passage length"
-            />
-          </div>
-          <span className={styles.lengthRow}>
-            <span className={styles.seg}>
-              {lengthDurations.map(({ duration, label }) => (
-                <button
-                  key={label}
-                  type="button"
-                  className={clsx(
-                    styles.segItem,
-                    isDur(duration) && styles.segOn,
-                  )}
-                  onClick={() => pickPreset(duration)}
-                >
-                  {label}
-                </button>
-              ))}
-            </span>
-            <input
-              className={clsx(
-                styles.customInput,
-                isCustomChars && styles.customOn,
-              )}
-              type="text"
-              inputMode="numeric"
-              placeholder="custom chars"
-              value={charsInput}
-              onChange={(ev) => {
-                const digits = ev.target.value.replace(/\D/g, "");
-                setCharsInput(digits);
-                const n = parseInt(digits, 10);
-                if (Number.isFinite(n) && n > 0) {
-                  setDur(lengthDuration(n));
-                }
-              }}
-            />
-          </span>
-        </div>
-      )}
     </div>
   );
 }

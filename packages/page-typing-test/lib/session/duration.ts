@@ -20,9 +20,11 @@ export const duration_120_seconds = timeDuration(120_000);
 export const duration_10_words = wordsDuration(10);
 export const duration_25_words = wordsDuration(25);
 export const duration_50_words = wordsDuration(50);
+export const duration_100_words = wordsDuration(100);
 export const duration_100_chars = lengthDuration(100);
 export const duration_500_chars = lengthDuration(500);
 export const duration_1000_chars = lengthDuration(1000);
+export const duration_2000_chars = lengthDuration(2000);
 
 export type NamedDuration = {
   readonly label: string;
@@ -38,16 +40,24 @@ export const timeDurations: readonly NamedDuration[] = [
   { label: "2m", duration: duration_120_seconds },
 ];
 
+// Bare numbers, same reasoning as lengthDurations below: four "N words"
+// labels are too wide for the chip row inside a third-width mode card, and
+// the unit is already clear from the card title and the stepper beneath.
 export const wordDurations: readonly NamedDuration[] = [
-  { label: "10 words", duration: duration_10_words },
-  { label: "25 words", duration: duration_25_words },
-  { label: "50 words", duration: duration_50_words },
+  { label: "10", duration: duration_10_words },
+  { label: "25", duration: duration_25_words },
+  { label: "50", duration: duration_50_words },
+  { label: "100", duration: duration_100_words },
 ];
 
+// Bare numbers — the "chars" unit is already stated by the card title and
+// by the stepper directly beneath, and full "N chars" labels would be too
+// wide to fit the chip row inside a third-width mode card.
 export const lengthDurations: readonly NamedDuration[] = [
-  { label: "100 chars", duration: duration_100_chars },
-  { label: "500 chars", duration: duration_500_chars },
-  { label: "1000 chars", duration: duration_1000_chars },
+  { label: "100", duration: duration_100_chars },
+  { label: "500", duration: duration_500_chars },
+  { label: "1000", duration: duration_1000_chars },
+  { label: "2000", duration: duration_2000_chars },
 ];
 
 export const durations: readonly NamedDuration[] = [

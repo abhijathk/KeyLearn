@@ -262,36 +262,96 @@
   letter-spacing: 0.04em;
 }
 
-// ---- custom length input -----------------------------------------------
-.lengthRow {
-  display: inline-flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
+// The Test-mode row lets the selected card grow taller (its settings expand
+// in place) without stretching its unselected siblings to match.
+.modeRow {
+  align-items: flex-start;
 }
 
-.customInput {
-  inline-size: 6rem;
-  padding: 0.4rem 0.6rem;
+// Resets the mode card's clickable header back to plain block content —
+// the card itself is a div now so its expanded settings can sit below as a
+// sibling, not nested inside a <button>.
+.modeHead {
+  display: flex;
+  inline-size: 100%;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0;
+  border: none;
+  color: inherit;
+  background: none;
+  font: inherit;
+  font-family: var(--value-font-family);
+  text-align: start;
+  cursor: pointer;
+}
+
+.modeExpand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  margin-block-start: 0.75rem;
+  padding-block-start: 0.65rem;
+  border-block-start: 1px solid var(--primary-d2);
+}
+
+// ---- custom length stepper ----------------------------------------------
+// A +/- stepper with a fixed unit suffix, so a custom length never requires
+// guessing the expected format (seconds vs. words vs. characters).
+.stepper {
+  display: inline-flex;
+  align-self: center;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.stepBtn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
   border: 1px solid var(--primary-d2);
-  border-radius: 999px;
+  border-radius: 50%;
   color: var(--text-color);
   background: var(--primary-l1);
   font-family: var(--value-font-family);
-  font-size: 0.78rem;
-  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
 
-  &::placeholder {
-    color: var(--text-color-f2);
-  }
-
-  &:focus {
-    outline: none;
+  &:hover {
     border-color: var(--accent);
+    color: var(--accent);
   }
 }
 
-.customOn {
-  border-color: var(--accent);
-  color: var(--accent);
+.stepField {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: baseline;
+  padding: 0.32rem 0.7rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 999px;
+  background: var(--primary-l1);
+}
+
+.stepInput {
+  inline-size: 2.6rem;
+  border: none;
+  color: var(--text-color);
+  background: none;
+  font-family: var(--value-font-family);
+  font-size: 0.78rem;
+  text-align: end;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.stepUnit {
+  color: var(--text-color-f2);
+  font-size: 0.68rem;
 }
