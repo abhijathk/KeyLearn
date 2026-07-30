@@ -596,17 +596,25 @@
   position: absolute;
   inset-inline-end: 0.2rem;
   inset-block-start: 50%;
-  inline-size: 0.85rem;
-  block-size: 0.85rem;
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
   translate: 0 -50%;
-  color: var(--text-color-f2);
+  // Match the settings gear: same ink at the same quiet opacity, drawn as a
+  // thin round-capped stroke rather than a fill.
+  color: var(--text-color);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.55;
   transition:
     transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.15s ease;
+    opacity 0.15s ease;
 }
 
 .whisper:hover .chevron {
-  color: var(--accent);
+  opacity: 1;
 }
 
 .whisperOpen .chevron {
@@ -770,41 +778,37 @@
 }
 
 // The full-width adaptive coaching strip beneath the cards.
+// Matches the stat cards above it — same solid hairline, surface, and radius
+// — so it reads as part of the same set, just full-width. A small tinted bulb
+// is the only accent.
 .coach {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.65rem 0.85rem;
-  border: 1px dashed color-mix(in oklab, var(--accent) 50%, var(--primary-d2));
+  gap: 0.55rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--primary-d2) 70%, transparent);
   border-radius: 0.7rem;
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklab, var(--accent) 10%, var(--primary-l1)),
-    transparent 80%
-  );
+  background: var(--primary-l1);
 }
 
 .coachBulb {
   display: grid;
   flex: none;
   place-items: center;
-  inline-size: 1.7rem;
-  block-size: 1.7rem;
-  border-radius: 50%;
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
   color: color-mix(in oklab, var(--accent) 70%, var(--text-color));
-  background: var(--primary-l1);
-  border: 1px solid color-mix(in oklab, var(--accent) 45%, var(--primary-d2));
 }
 
 .coachBulb svg {
-  inline-size: 0.95rem;
-  block-size: 0.95rem;
+  inline-size: 1rem;
+  block-size: 1rem;
 }
 
 .coachText {
-  color: var(--text-color);
+  color: var(--text-color-f1);
   font-family: var(--default-font-family);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   line-height: 1.4;
 }
 
