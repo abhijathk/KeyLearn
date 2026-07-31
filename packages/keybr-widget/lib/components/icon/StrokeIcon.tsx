@@ -42,9 +42,13 @@ export type StrokeIconName =
   | "sun"
   | "moon"
   | "auto"
-  | "book";
+  | "book"
+  | "heart";
 
 const shapes: Record<StrokeIconName, ReactNode> = {
+  heart: (
+    <path d="M12 20s-7-4.5-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.5-7 9-7 9Z" />
+  ),
   keyboard: (
     <>
       <rect x="3" y="6" width="18" height="12" rx="2.5" />

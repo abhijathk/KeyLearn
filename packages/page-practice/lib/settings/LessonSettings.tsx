@@ -12,7 +12,7 @@ import {
 } from "@keybr/lesson";
 import { LessonLoader } from "@keybr/lesson-loader";
 import { type Settings, useSettings } from "@keybr/settings";
-import { clsx } from "clsx";
+import { SettingTiles } from "@keybr/widget";
 import { type ReactNode } from "react";
 import { useIntl } from "react-intl";
 import { BooksLessonSettings } from "./lesson/BooksLessonSettings.tsx";
@@ -29,60 +29,99 @@ import * as styles from "./SettingsScreen.module.less";
 export function LessonSettings(): ReactNode {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
-  const labels = [
-    formatMessage({
-      id: "t_Guided_lessons",
-      defaultMessage: "Guided practice",
-    }),
-    formatMessage({
-      id: "lessonType.curriculum.name",
-      defaultMessage: "Classic course",
-    }),
-    formatMessage({
-      id: "t_Common_words",
-      defaultMessage: "Frequent words",
-    }),
-    formatMessage({
-      id: "t_Books",
-      defaultMessage: "Book Text",
-    }),
-    formatMessage({
-      id: "t_Custom_text",
-      defaultMessage: "Your Own Text",
-    }),
-    formatMessage({
-      id: "t_Source_code",
-      defaultMessage: "Code Snippets",
-    }),
-    formatMessage({
-      id: "t_Numbers",
-      defaultMessage: "Number Drills",
-    }),
+  const sources = [
+    {
+      label: formatMessage({
+        id: "t_Guided_lessons",
+        defaultMessage: "Guided practice",
+      }),
+      description: formatMessage({
+        id: "lessonType.guided.summary",
+        defaultMessage:
+          "KeyLearn picks the letters and adds a new one as each is mastered.",
+      }),
+    },
+    {
+      label: formatMessage({
+        id: "lessonType.curriculum.name",
+        defaultMessage: "Classic course",
+      }),
+      description: formatMessage({
+        id: "lessonType.curriculum.summary",
+        defaultMessage:
+          "A fixed sequence of lessons, the same order for everyone.",
+      }),
+    },
+    {
+      label: formatMessage({
+        id: "t_Common_words",
+        defaultMessage: "Frequent words",
+      }),
+      description: formatMessage({
+        id: "lessonType.wordList.summary",
+        defaultMessage:
+          "The most common words in your language, most frequent first.",
+      }),
+    },
+    {
+      label: formatMessage({ id: "t_Books", defaultMessage: "Book Text" }),
+      description: formatMessage({
+        id: "lessonType.books.summary",
+        defaultMessage: "Real passages from public-domain books.",
+      }),
+    },
+    {
+      label: formatMessage({
+        id: "t_Custom_text",
+        defaultMessage: "Your Own Text",
+      }),
+      description: formatMessage({
+        id: "lessonType.customText.summary",
+        defaultMessage: "Paste in anything you would rather practise.",
+      }),
+    },
+    {
+      label: formatMessage({
+        id: "t_Source_code",
+        defaultMessage: "Code Snippets",
+      }),
+      description: formatMessage({
+        id: "lessonType.code.summary",
+        defaultMessage: "Source code, with its symbols and indentation.",
+      }),
+    },
+    {
+      label: formatMessage({
+        id: "t_Numbers",
+        defaultMessage: "Number Drills",
+      }),
+      description: formatMessage({
+        id: "lessonType.numbers.summary",
+        defaultMessage: "Digits and the number row on their own.",
+      }),
+    },
   ];
   const selected = LessonType.ALL.indexOf(settings.get(lessonProps.type));
   return (
     <>
-      <span className={styles.seg}>
-        {labels.map((label, index) => (
-          <button
-            key={label}
-            type="button"
-            className={clsx(styles.segItem, selected === index && styles.segOn)}
-            onClick={() => {
-              updateSettings(
-                settings.set(lessonProps.type, LessonType.ALL.at(index)),
-              );
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </span>
+      <SettingTiles
+        value={selected}
+        onChange={(index) => {
+          updateSettings(
+            settings.set(lessonProps.type, LessonType.ALL.at(index)),
+          );
+        }}
+        options={sources.map(({ label, description }, index) => ({
+          id: index,
+          label,
+          description,
+        }))}
+      />
       <LessonLoader>
         {(lesson) => (
           <>
-            {tabBody(settings, lesson)}
             <LessonPreview lesson={lesson} />
+            {tabBody(settings, lesson)}
             <DailyGoalSettings />
           </>
         )}

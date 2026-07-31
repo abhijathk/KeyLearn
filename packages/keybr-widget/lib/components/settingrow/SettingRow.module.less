@@ -1,0 +1,196 @@
+@import "../../styles/components.less";
+
+// The account page's settings grammar, shared by every settings pane:
+//
+//   a captioned card
+//     a row: what it is + what it does ......... its control
+//     a hairline
+//     another row .............................. its control
+//
+// The control column is right-aligned so the eye has one edge to follow. The
+// old layout put each control immediately after its label, which meant every
+// control started at a different x and nothing lined up down the pane.
+
+.card {
+  margin-block-end: 0.7rem;
+  padding: 0.7rem 1rem;
+  // Same recipe as the account page's cards: a wash of the text colour, which
+  // reads as a raised surface on every theme without hard-coding a colour.
+  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+}
+
+.caption {
+  margin-block-end: 0.35rem;
+  color: var(--accent-d1);
+  font-family: var(--default-font-family);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.row {
+  display: flex;
+  gap: 0.8rem 1.4rem;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 0.4rem;
+}
+
+// Narrow panes stack the control under the text rather than crushing both.
+@media (max-width: 40rem) {
+  .row {
+    flex-wrap: wrap;
+  }
+}
+
+.text {
+  min-inline-size: 0;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+// The short "what does this do" line. The long-form copy stays in the existing
+// Explainer, behind the tips toggle — this is the one-sentence version that is
+// always visible, because a setting nobody can interpret is not a setting.
+.description {
+  margin-block-start: 0.15rem;
+  color: var(--text-color-f2);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.control {
+  display: flex;
+  flex: none;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+// A value that follows its control (a slider's readout). Tabular figures stop
+// the row twitching sideways as the number changes under the thumb.
+.value {
+  min-inline-size: 4.4rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.hr {
+  block-size: 1px;
+  margin-block: 0.1rem;
+  background: var(--separator-color, rgba(128, 128, 128, 0.18));
+}
+
+// ------------------------------------------------------------- disclosure
+
+// Settings most people never touch, folded away. The summary says what is
+// inside and whether any of it has been changed, so folding can never hide a
+// setting someone has actually set.
+.disclosure {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  inline-size: 100%;
+  padding-inline: 0;
+  padding-block: 0.5rem;
+  border: none;
+  color: var(--text-color);
+  background: none;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+}
+
+.chevron {
+  flex: none;
+  inline-size: 0.8rem;
+  color: var(--accent);
+  transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.summary {
+  margin-inline-start: auto;
+  color: var(--text-color-f2);
+  font-size: 0.78rem;
+  font-weight: 400;
+  text-align: end;
+}
+
+.disclosure:hover .summary {
+  color: var(--text-color-f1);
+}
+
+// "2 changed" — the reason it is safe to fold these at all.
+.summaryChanged {
+  color: var(--accent);
+}
+
+.folded {
+  padding-inline-start: 0.1rem;
+}
+
+// ------------------------------------------------------------------ tiles
+
+// An exclusive choice between a handful of options that each need a sentence
+// of explanation — a lesson source, a test style. A row of pills cannot carry
+// that, so each option gets a tile that says what it is.
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem;
+  margin-block-end: 0.9rem;
+}
+
+.tile {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
+  border-radius: 0.6rem;
+  color: var(--text-color);
+  background: transparent;
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  &:hover {
+    border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  }
+}
+
+.tileOn {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.tileName {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.tileOn .tileName {
+  color: var(--accent);
+}
+
+.tileDesc {
+  display: block;
+  margin-block-start: 0.15rem;
+  color: var(--text-color-f2);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}

@@ -247,24 +247,24 @@
 .goalLit .flag {
   stroke: var(--accent);
   transform-origin: center;
-  transform-box: fill-box;
   animation: goalpulse 1.1s ease-in-out infinite;
+  transform-box: fill-box;
 }
 
 @keyframes goalpulse {
   0%,
   100% {
-    transform: scale(1);
     filter: drop-shadow(
       0 0 0.2rem color-mix(in oklab, var(--accent) 45%, transparent)
     );
+    transform: scale(1);
   }
 
   50% {
-    transform: scale(1.28);
     filter: drop-shadow(
       0 0 0.55rem color-mix(in oklab, var(--accent) 85%, transparent)
     );
+    transform: scale(1.28);
   }
 }
 
@@ -307,8 +307,8 @@
 
 // After the 30s window the control fades out gently instead of snapping away.
 .tunerLeaving {
-  animation: tunerout 0.9s ease both;
   pointer-events: none;
+  animation: tunerout 0.9s ease both;
 }
 
 @keyframes tunerout {
@@ -443,9 +443,9 @@
   row-gap: 0.2rem;
   justify-content: center;
   margin-block-start: 0.9rem;
-  padding-block-start: 0.7rem;
   // leave room so centred metrics never slide under the pinned chevron
   padding-inline-end: 1.4rem;
+  padding-block-start: 0.7rem;
   border-block-start: 1px solid
     color-mix(in srgb, var(--primary-d2) 70%, transparent);
   color: var(--text-color-f1);
@@ -598,27 +598,27 @@
   inset-block-start: 50%;
   inline-size: 0.9rem;
   block-size: 0.9rem;
-  translate: 0 -50%;
   // Match the settings gear: same ink at the same quiet opacity, drawn as a
   // thin round-capped stroke rather than a fill.
   color: var(--text-color);
   fill: none;
   stroke: currentColor;
   stroke-width: 1.4;
-  stroke-linecap: round;
   stroke-linejoin: round;
+  stroke-linecap: round;
   opacity: 0.55;
   transition:
     transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.15s ease;
-}
-
-.whisper:hover .chevron {
-  opacity: 1;
+  translate: 0 -50%;
 }
 
 .whisperOpen .chevron {
   transform: rotate(180deg);
+}
+
+.whisper:hover .chevron {
+  opacity: 1;
 }
 
 // The panel slides open by animating grid-template-rows 0fr -> 1fr, which
@@ -635,8 +635,8 @@
 }
 
 .sessionClip {
-  overflow: hidden;
   min-block-size: 0;
+  overflow: hidden;
 }
 
 .sessionInner {
@@ -645,10 +645,10 @@
   gap: 0.7rem;
   padding: 0.5rem 0.15rem 1rem;
   opacity: 0;
-  transform: translateY(-0.4rem);
   transition:
     opacity 0.28s ease 0.06s,
     transform 0.28s ease 0.06s;
+  transform: translateY(-0.4rem);
 }
 
 .sessionOpen .sessionInner {
@@ -693,8 +693,8 @@
 .cardMainNote {
   color: var(--text-color-f2);
   font-size: 0.72rem;
-  font-style: normal;
   font-weight: 600;
+  font-style: normal;
 }
 
 .cardSub {
@@ -738,15 +738,15 @@
 .nextKey {
   display: inline-grid;
   place-items: center;
+  vertical-align: -0.15rem;
   min-inline-size: 1.1rem;
   block-size: 1.1rem;
   padding-inline: 0.12rem;
-  border-radius: 0.28rem;
-  background: var(--primary-l1);
   border: 1px solid color-mix(in oklab, var(--accent) 55%, var(--primary-d2));
+  border-radius: 0.28rem;
   color: color-mix(in oklab, var(--accent) 70%, var(--text-color));
+  background: var(--primary-l1);
   font-weight: 700;
-  vertical-align: -0.15rem;
 }
 
 .alphaBar,
@@ -783,8 +783,8 @@
 // is the only accent.
 .coach {
   display: flex;
-  align-items: center;
   gap: 0.55rem;
+  align-items: center;
   padding: 0.65rem 0.8rem;
   border: 1px solid color-mix(in srgb, var(--primary-d2) 70%, transparent);
   border-radius: 0.7rem;

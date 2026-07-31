@@ -1,9 +1,19 @@
 .root {
   max-inline-size: 60rem;
   margin-inline: auto;
-  margin-block: 0;
+  margin-block: 0 0.7rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
 }
 
+// The preview renders at the learner's chosen practice font size, which is
+// sized for typing across the full window — far too large for a reference at
+// the top of a settings pane. `--text-scale` is the hook TextLines already
+// respects, so this shrinks the sample without touching the real setting.
 .text {
-  margin-block-start: 1rem;
+  --text-scale: 0.5;
+
+  margin-block-start: 0.5rem;
 }

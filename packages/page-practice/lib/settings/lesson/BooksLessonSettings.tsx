@@ -6,15 +6,7 @@ import {
 } from "@keybr/content";
 import { type BooksLesson, lessonProps } from "@keybr/lesson";
 import { useSettings } from "@keybr/settings";
-import {
-  CheckBox,
-  Description,
-  Explainer,
-  Field,
-  FieldList,
-  FieldSet,
-  Spacer,
-} from "@keybr/widget";
+import { CheckBox, Field, FieldList, FieldSet, Spacer } from "@keybr/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { LessonLengthProp } from "./LessonLengthProp.tsx";
@@ -30,14 +22,6 @@ export function BooksLessonSettings({
   const { book, content, paragraphs, paragraphIndex } = lesson;
   return (
     <>
-      <Explainer>
-        <Description>
-          <FormattedMessage
-            id="lessonType.books.description"
-            defaultMessage="Turn real book text into typing lessons. Every key is enabled from the start — built for experienced typists."
-          />
-        </Description>
-      </Explainer>
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",

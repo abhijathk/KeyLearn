@@ -1,41 +1,39 @@
 import { lessonProps } from "@keybr/lesson";
 import { useSettings } from "@keybr/settings";
-import { Description, Explainer, Field, FieldList, Range } from "@keybr/widget";
+import { Description, Explainer, Range, SettingRow } from "@keybr/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 
 export function LessonLengthProp(): ReactNode {
   const { settings, updateSettings } = useSettings();
+  const value = settings.get(lessonProps.length);
   return (
     <>
-      <FieldList>
-        <Field>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="t_Add_words_to_lessons:"
-            defaultMessage="Words per lesson:"
+            id="settings.lessonLength.label"
+            defaultMessage="Lesson length"
           />
-        </Field>
-        <Field>
-          <Range
-            size={16}
-            min={1}
-            max={100}
-            step={1}
-            value={Math.round(settings.get(lessonProps.length) * 100)}
-            onChange={(value) => {
-              updateSettings(settings.set(lessonProps.length, value / 100));
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+        }
+        description={
           <FormattedMessage
-            id="settings.lessonLength.description"
-            defaultMessage="Sets how many words appear in each lesson. Longer lessons can help you learn more effectively."
+            id="settings.lessonLength.short"
+            defaultMessage="How many words you type before a lesson ends and scores you."
           />
-        </Description>
-      </Explainer>
+        }
+      >
+        <Range
+          size={10}
+          min={1}
+          max={100}
+          step={1}
+          value={Math.round(value * 100)}
+          onChange={(next) => {
+            updateSettings(settings.set(lessonProps.length, next / 100));
+          }}
+        />
+      </SettingRow>
     </>
   );
 }

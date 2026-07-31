@@ -16,38 +16,39 @@ import { useSettings } from "@keybr/settings";
 import { ModifierState, useDepressedKeys } from "@keybr/textinput-events";
 import { type CodePoint } from "@keybr/unicode";
 import {
-  CheckBox,
-  Description,
-  Explainer,
-  Field,
-  FieldList,
-  FieldSet,
   OptionList,
+  RowSeparator,
+  SettingRow,
+  SettingsCard,
+  Switch,
 } from "@keybr/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 export function KeyboardSettings(): ReactNode {
-  const { formatMessage } = useIntl();
   return (
     <>
-      <FieldSet
-        legend={formatMessage({
-          id: "t_Options",
-          defaultMessage: "Settings",
-        })}
+      <SettingsCard
+        caption={
+          <FormattedMessage
+            id="settings.group.layout"
+            defaultMessage="Layout"
+          />
+        }
       >
         <LayoutProp />
-      </FieldSet>
-      <FieldSet
-        legend={formatMessage({
-          id: "t_Preview",
-          defaultMessage: "Live Preview",
-        })}
+      </SettingsCard>
+      <KeyboardPreview />
+      <SettingsCard
+        caption={
+          <FormattedMessage
+            id="settings.group.keyboardShape"
+            defaultMessage="Shape & guides"
+          />
+        }
       >
-        <KeyboardPreview />
         <GeometryProp />
-      </FieldSet>
+      </SettingsCard>
     </>
   );
 }
@@ -64,116 +65,145 @@ function LayoutProp(): ReactNode {
   const options = KeyboardOptions.from(settings);
   return (
     <>
-      <FieldList>
-        <Field>
-          <FormattedMessage id="t_Language:" defaultMessage="Language:" />
-        </Field>
-        <Field>
-          <OptionList
-            options={options
-              .selectableLanguages()
-              .map((item) => ({
-                value: item.id,
-                name: formatLanguageName(item),
-              }))
-              .sort((a, b) => compare(a.name, b.name))}
-            value={options.language.id}
-            onSelect={(id) => {
-              updateSettings(
-                options
-                  .withLanguage(Language.ALL.get(id))
-                  .withGeometry(options.geometry)
-                  .withZones(options.zones)
-                  .save(settings),
-              );
-            }}
+      <SettingRow
+        label={
+          <FormattedMessage
+            id="settings.language.label"
+            defaultMessage="Language"
           />
-        </Field>
-        <Field>
-          <FormattedMessage id="t_Layout:" defaultMessage="Keyboard layout:" />
-        </Field>
-        <Field>
-          <OptionList
-            options={options.selectableLayouts().map((item) => ({
+        }
+        description={
+          <FormattedMessage
+            id="settings.language.short"
+            defaultMessage="The language the practice words are drawn from."
+          />
+        }
+      >
+        <OptionList
+          options={options
+            .selectableLanguages()
+            .map((item) => ({
               value: item.id,
-              name:
-                item.language.id === options.language.id
-                  ? formatLayoutName(item)
-                  : formatFullLayoutName(item),
-            }))}
-            value={options.layout.id}
-            onSelect={(id) => {
-              updateSettings(
-                options
-                  .withLayout(Layout.ALL.get(id))
-                  .withGeometry(options.geometry)
-                  .withZones(options.zones)
-                  .save(settings),
-              );
-            }}
-          />
-        </Field>
-      </FieldList>
-      <FieldList>
-        <Field>
-          <CheckBox
-            checked={
-              settings.get(keyboardProps.emulation) === Emulation.Forward
-            }
-            disabled={!options.layout.emulate}
-            label={formatMessage({
-              id: "t_Emulate_layout",
-              defaultMessage: "Simulate this layout",
-            })}
-            onChange={(value) => {
-              updateSettings(
-                settings.set(
-                  keyboardProps.emulation,
-                  value ? Emulation.Forward : Emulation.None,
-                ),
-              );
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+              name: formatLanguageName(item),
+            }))
+            .sort((a, b) => compare(a.name, b.name))}
+          value={options.language.id}
+          onSelect={(id) => {
+            updateSettings(
+              options
+                .withLanguage(Language.ALL.get(id))
+                .withGeometry(options.geometry)
+                .withZones(options.zones)
+                .save(settings),
+            );
+          }}
+        />
+      </SettingRow>
+
+      <RowSeparator />
+
+      <SettingRow
+        label={
           <FormattedMessage
-            id="keyboard.emulation.forward.description"
-            defaultMessage="Layout emulation overrides your system’s keyboard layout, letting you practice the layout you picked here no matter how your OS is configured. It’s usually best to leave this turned on. When the option above is greyed out, that layout can’t be emulated — this mostly happens with layouts that rely on dead keys."
+            id="settings.layout.label"
+            defaultMessage="Keyboard layout"
           />
-        </Description>
-      </Explainer>
-      <FieldList>
-        <Field>
-          <CheckBox
-            checked={
-              settings.get(keyboardProps.emulation) === Emulation.Reverse
-            }
-            disabled={!options.layout.emulate}
-            label={formatMessage({
-              id: "t_Keyboard_hardware_emulates_",
-              defaultMessage: "My keyboard hardware already emulates this",
-            })}
-            onChange={(value) => {
-              updateSettings(
-                settings.set(
-                  keyboardProps.emulation,
-                  value ? Emulation.Reverse : Emulation.None,
-                ),
-              );
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+        }
+        description={
           <FormattedMessage
-            id="keyboard.emulation.reverse.description"
-            defaultMessage="Turn this on if your keyboard has a built-in layout switch and the virtual keyboard is highlighting the wrong keys."
+            id="settings.layout.short"
+            defaultMessage="Where the letters sit on the keys you are learning."
           />
-        </Description>
-      </Explainer>
+        }
+      >
+        <OptionList
+          options={options.selectableLayouts().map((item) => ({
+            value: item.id,
+            name:
+              item.language.id === options.language.id
+                ? formatLayoutName(item)
+                : formatFullLayoutName(item),
+          }))}
+          value={options.layout.id}
+          onSelect={(id) => {
+            updateSettings(
+              options
+                .withLayout(Layout.ALL.get(id))
+                .withGeometry(options.geometry)
+                .withZones(options.zones)
+                .save(settings),
+            );
+          }}
+        />
+      </SettingRow>
+
+      <RowSeparator />
+
+      <SettingRow
+        label={
+          <FormattedMessage
+            id="t_Emulate_layout"
+            defaultMessage="Simulate this layout"
+          />
+        }
+        description={
+          <FormattedMessage
+            id="keyboard.emulation.forward.short"
+            defaultMessage="Practise the layout chosen above whatever your system is set to. Best left on."
+          />
+        }
+      >
+        <Switch
+          label={formatMessage({
+            id: "t_Emulate_layout",
+            defaultMessage: "Simulate this layout",
+          })}
+          checked={settings.get(keyboardProps.emulation) === Emulation.Forward}
+          disabled={!options.layout.emulate}
+          onChange={(value) => {
+            updateSettings(
+              settings.set(
+                keyboardProps.emulation,
+                value ? Emulation.Forward : Emulation.None,
+              ),
+            );
+          }}
+        />
+      </SettingRow>
+
+      <RowSeparator />
+
+      <SettingRow
+        label={
+          <FormattedMessage
+            id="t_Keyboard_hardware_emulates_"
+            defaultMessage="My keyboard hardware already emulates this"
+          />
+        }
+        description={
+          <FormattedMessage
+            id="keyboard.emulation.reverse.short"
+            defaultMessage="Turn on if your keyboard switches layout itself and the wrong keys light up."
+          />
+        }
+      >
+        <Switch
+          label={formatMessage({
+            id: "t_Keyboard_hardware_emulates_",
+            defaultMessage: "My keyboard hardware already emulates this",
+          })}
+          checked={settings.get(keyboardProps.emulation) === Emulation.Reverse}
+          disabled={!options.layout.emulate}
+          onChange={(value) => {
+            updateSettings(
+              settings.set(
+                keyboardProps.emulation,
+                value ? Emulation.Reverse : Emulation.None,
+              ),
+            );
+          }}
+        />
+      </SettingRow>
     </>
   );
 }
@@ -184,89 +214,122 @@ function GeometryProp(): ReactNode {
   const options = KeyboardOptions.from(settings);
   return (
     <>
-      <FieldList>
-        <Field>
-          <FormattedMessage id="t_Geometry:" defaultMessage="Keyboard shape:" />
-        </Field>
-        <Field>
-          <OptionList
-            options={options.selectableGeometries().map((item) => ({
-              value: item.id,
-              name: item.name,
-            }))}
-            value={options.geometry.id}
-            onSelect={(id) => {
-              updateSettings(
-                options
-                  .withGeometry(Geometry.ALL.get(id))
-                  .withZones(options.zones)
-                  .save(settings),
-              );
-            }}
-          />
-        </Field>
-        <Field>
-          <FormattedMessage id="t_Zones:" defaultMessage="Finger zones:" />
-        </Field>
-        <Field>
-          <OptionList
-            options={options.selectableZones().map((item) => ({
-              value: item.id,
-              name: item.name,
-            }))}
-            value={options.zones.id}
-            onSelect={(id) => {
-              updateSettings(
-                options.withZones(ZoneMod.ALL.get(id)).save(settings),
-              );
-            }}
-          />
-        </Field>
-      </FieldList>
-      <FieldList>
-        <Field>
-          <CheckBox
-            label={formatMessage({
-              id: "t_Colored_keys",
-              defaultMessage: "Color-coded keys",
-            })}
-            checked={settings.get(keyboardProps.colors)}
-            onChange={(value) => {
-              updateSettings(settings.set(keyboardProps.colors, value));
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="settings.keyboardColors.description"
-            defaultMessage="Colors the keyboard by finger zone, so you can see at a glance which finger should press each key."
+            id="settings.geometry.label"
+            defaultMessage="Keyboard shape"
           />
-        </Description>
-      </Explainer>
-      <FieldList>
-        <Field>
-          <CheckBox
-            label={formatMessage({
-              id: "t_Highlight_keys",
-              defaultMessage: "Spotlight the next key",
-            })}
-            checked={settings.get(keyboardProps.pointers)}
-            onChange={(value) => {
-              updateSettings(settings.set(keyboardProps.pointers, value));
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+        }
+        description={
           <FormattedMessage
-            id="settings.keyboardPointers.description"
-            defaultMessage="Highlights the next key you need to press, so you can find it quickly if you’re still learning where the keys are."
+            id="settings.geometry.short"
+            defaultMessage="Which physical keyboard the preview should look like."
           />
-        </Description>
-      </Explainer>
+        }
+      >
+        <OptionList
+          options={options.selectableGeometries().map((item) => ({
+            value: item.id,
+            name: item.name,
+          }))}
+          value={options.geometry.id}
+          onSelect={(id) => {
+            updateSettings(
+              options
+                .withGeometry(Geometry.ALL.get(id))
+                .withZones(options.zones)
+                .save(settings),
+            );
+          }}
+        />
+      </SettingRow>
+
+      <RowSeparator />
+
+      <SettingRow
+        label={
+          <FormattedMessage
+            id="settings.zones.label"
+            defaultMessage="Finger zones"
+          />
+        }
+        description={
+          <FormattedMessage
+            id="settings.zones.short"
+            defaultMessage="How the keys are divided between your fingers."
+          />
+        }
+      >
+        <OptionList
+          options={options.selectableZones().map((item) => ({
+            value: item.id,
+            name: item.name,
+          }))}
+          value={options.zones.id}
+          onSelect={(id) => {
+            updateSettings(
+              options.withZones(ZoneMod.ALL.get(id)).save(settings),
+            );
+          }}
+        />
+      </SettingRow>
+
+      <RowSeparator />
+
+      <SettingRow
+        label={
+          <FormattedMessage
+            id="t_Colored_keys"
+            defaultMessage="Color-coded keys"
+          />
+        }
+        description={
+          <FormattedMessage
+            id="settings.keyboardColors.short"
+            defaultMessage="Tints each key by finger zone, so you can see which finger to use."
+          />
+        }
+      >
+        <Switch
+          label={formatMessage({
+            id: "t_Colored_keys",
+            defaultMessage: "Color-coded keys",
+          })}
+          checked={settings.get(keyboardProps.colors)}
+          onChange={(value) => {
+            updateSettings(settings.set(keyboardProps.colors, value));
+          }}
+        />
+      </SettingRow>
+
+      <RowSeparator />
+
+      <SettingRow
+        label={
+          <FormattedMessage
+            id="t_Highlight_keys"
+            defaultMessage="Spotlight the next key"
+          />
+        }
+        description={
+          <FormattedMessage
+            id="settings.keyboardPointers.short"
+            defaultMessage="Lights up the key you need next while you are still learning where they are."
+          />
+        }
+      >
+        <Switch
+          label={formatMessage({
+            id: "t_Highlight_keys",
+            defaultMessage: "Spotlight the next key",
+          })}
+          checked={settings.get(keyboardProps.pointers)}
+          onChange={(value) => {
+            updateSettings(settings.set(keyboardProps.pointers, value));
+          }}
+        />
+      </SettingRow>
     </>
   );
 }

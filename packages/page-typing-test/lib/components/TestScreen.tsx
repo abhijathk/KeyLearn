@@ -1,3 +1,4 @@
+import { useFormatter } from "@keybr/lesson-ui";
 import { Screen } from "@keybr/pages-shared";
 import { uiProps } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
@@ -6,7 +7,6 @@ import { useSoundPlayer } from "@keybr/textinput-sounds";
 import { TextArea } from "@keybr/textinput-ui";
 import { Box, type Focusable, Spacer, useView } from "@keybr/widget";
 import { useEffect, useRef, useState } from "react";
-import { useFormatter } from "@keybr/lesson-ui";
 import { FormattedMessage } from "react-intl";
 import {
   type TextGenerator,
@@ -127,7 +127,9 @@ function Controller({
           // Arcade puts the live speed centre-stage at the top; Coach/Zen keep
           // the top clear for focus.
           settings.testStyle === TestStyle.Arcade && (
-            <div className={road.arcadeSpeed}>{formatSpeed(progress.speed)}</div>
+            <div className={road.arcadeSpeed}>
+              {formatSpeed(progress.speed)}
+            </div>
           )
         ) : (
           <div className={road.readyBar}>
@@ -160,10 +162,7 @@ function Controller({
       </div>
       <Spacer size={10} />
       <Box alignItems="center" justifyContent="center">
-        <div
-          className={styles.text}
-          onBlur={() => setFocused(false)}
-        >
+        <div className={styles.text} onBlur={() => setFocused(false)}>
           {!focused && (
             <button
               type="button"

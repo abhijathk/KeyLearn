@@ -6,7 +6,6 @@
   align-items: center;
   vertical-align: middle;
   min-block-size: @field-height;
-  line-height: @field-height;
   cursor: default;
 
   input {
@@ -32,8 +31,12 @@
   }
 }
 
+// No fixed block-size: a pinned one-line height clips the second line of a
+// label that wraps (long translations, narrow panels) and spills it over the
+// row below. `align-items: center` on the root already centres it.
 .label {
-  block-size: @field-height;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .icon + .label {

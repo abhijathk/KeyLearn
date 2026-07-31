@@ -1,6 +1,11 @@
-import { Description, Explainer, FieldSet } from "@keybr/widget";
+import {
+  Description,
+  Explainer,
+  RowSeparator,
+  SettingsCard,
+} from "@keybr/widget";
 import { type ReactNode } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage } from "react-intl";
 import { BottleneckDrillProp } from "./lesson/BottleneckDrillProp.tsx";
 import { SkillDecayProp } from "./lesson/SkillDecayProp.tsx";
 import { SmartConfidenceProp } from "./lesson/SmartConfidenceProp.tsx";
@@ -11,28 +16,24 @@ import { SpacedRepetitionProp } from "./lesson/SpacedRepetitionProp.tsx";
  * instead of being scattered through the guided-lesson options.
  */
 export function SmartPracticeSettings(): ReactNode {
-  const { formatMessage } = useIntl();
   return (
     <>
-      <Explainer>
-        <Description>
+      <SettingsCard
+        caption={
           <FormattedMessage
-            id="settings.smartPractice.description"
-            defaultMessage="These helpers run on top of the core letter-by-letter algorithm during guided practice, quietly steering each session toward whatever pays off most. They're all on by default — switch any of them off if you'd rather keep things classic."
+            id="t_Adaptive_helpers"
+            defaultMessage="Adaptive helpers"
           />
-        </Description>
-      </Explainer>
-      <FieldSet
-        legend={formatMessage({
-          id: "t_Adaptive_helpers",
-          defaultMessage: "Adaptive helpers",
-        })}
+        }
       >
         <SmartConfidenceProp />
+        <RowSeparator />
         <SkillDecayProp />
+        <RowSeparator />
         <SpacedRepetitionProp />
+        <RowSeparator />
         <BottleneckDrillProp />
-      </FieldSet>
+      </SettingsCard>
     </>
   );
 }

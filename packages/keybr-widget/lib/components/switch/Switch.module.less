@@ -1,0 +1,70 @@
+@import "../../styles/components.less";
+
+// The app's pill toggle and segmented control. These were written for the
+// account page; they live here so every settings surface uses the same control
+// rather than each pane growing its own near-copy.
+
+.tog {
+  position: relative;
+  flex: none;
+  inline-size: 2.4rem;
+  block-size: 1.4rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-color) 18%, transparent);
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0.15rem;
+    inset-block-start: 0.15rem;
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+    border-radius: 50%;
+    background: var(--primary-l1);
+    transition: inset-inline-start 0.15s ease;
+  }
+}
+
+.togOn {
+  background: var(--accent);
+
+  &::after {
+    inset-inline-start: 1.15rem;
+    background: var(--primary);
+  }
+}
+
+.togOff {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.seg {
+  display: inline-flex;
+  flex: none;
+  padding: 0.2rem;
+  border: var(--separator-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+}
+
+.segBtn {
+  padding: 0.35rem 0.8rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-color-f2);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.segOn {
+  color: var(--primary);
+  background: var(--accent);
+}

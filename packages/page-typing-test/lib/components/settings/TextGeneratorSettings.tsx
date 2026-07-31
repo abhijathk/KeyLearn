@@ -1,9 +1,7 @@
 import { useSettings } from "@keybr/settings";
-import { FieldSet, Para } from "@keybr/widget";
-import { clsx } from "clsx";
-import { FormattedMessage, useIntl } from "react-intl";
+import { SettingTiles } from "@keybr/widget";
+import { useIntl } from "react-intl";
 import { TextSourceType, typingTestProps } from "../../settings.ts";
-import * as styles from "../settings.module.less";
 import { BookSettings } from "./text/BookSettings.tsx";
 import { CommonWordsSettings } from "./text/CommonWordsSettings.tsx";
 import { PseudoWordsSettings } from "./text/PseudoWordsSettings.tsx";
@@ -11,62 +9,54 @@ import { PseudoWordsSettings } from "./text/PseudoWordsSettings.tsx";
 export function TextGeneratorSettings() {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
+  // Three genuinely different kinds of text, each needing a sentence — the same
+  // reasoning as the practice modes, so the same tiles.
   const sources = [
     {
-      type: TextSourceType.CommonWords,
+      id: TextSourceType.CommonWords,
       label: formatMessage({
         id: "typingTest.source.commonWords",
         defaultMessage: "Common words",
       }),
+      description: formatMessage({
+        id: "typingTest.source.commonWords.summary",
+        defaultMessage: "The words you meet most often, in random order.",
+      }),
     },
     {
-      type: TextSourceType.PseudoWords,
+      id: TextSourceType.PseudoWords,
       label: formatMessage({
         id: "typingTest.source.pseudoWords",
         defaultMessage: "Pseudo words",
       }),
+      description: formatMessage({
+        id: "typingTest.source.pseudoWords.summary",
+        defaultMessage:
+          "Invented words that follow your language's patterns — no guessing ahead.",
+      }),
     },
     {
-      type: TextSourceType.Book,
+      id: TextSourceType.Book,
       label: formatMessage({
         id: "typingTest.source.book",
         defaultMessage: "Book paragraphs",
+      }),
+      description: formatMessage({
+        id: "typingTest.source.book.summary",
+        defaultMessage: "Real prose, with its punctuation and capitals.",
       }),
     },
   ];
   const selected = settings.get(typingTestProps.type);
   return (
     <>
-      <FieldSet
-        legend={formatMessage({
-          id: "typingTest.settings.textLegend",
-          defaultMessage: "Text settings",
-        })}
-      >
-        <Para>
-          <FormattedMessage
-            id="typingTest.settings.textIntro"
-            defaultMessage="Choose what text to type in the test."
-          />
-        </Para>
-        <span className={styles.seg}>
-          {sources.map(({ type, label }) => (
-            <button
-              key={label}
-              type="button"
-              className={clsx(
-                styles.segItem,
-                selected === type && styles.segOn,
-              )}
-              onClick={() => {
-                updateSettings(settings.set(typingTestProps.type, type));
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </span>
-      </FieldSet>
+      <SettingTiles
+        value={selected}
+        onChange={(type) => {
+          updateSettings(settings.set(typingTestProps.type, type));
+        }}
+        options={sources}
+      />
 
       {selected === TextSourceType.CommonWords && <CommonWordsSettings />}
       {selected === TextSourceType.PseudoWords && <PseudoWordsSettings />}

@@ -18,17 +18,15 @@ import {
   SoundTheme,
 } from "@keybr/textinput-sounds";
 import {
-  CheckBox,
-  Description,
-  Explainer,
-  Field,
-  FieldList,
-  FieldSet,
   Icon,
   IconButton,
   OptionList,
-  RadioBox,
   Range,
+  RowSeparator,
+  Segmented,
+  SettingRow,
+  SettingsCard,
+  Switch,
 } from "@keybr/widget";
 import { mdiPlayCircleOutline, mdiStopCircleOutline } from "@mdi/js";
 import { useEffect, useMemo, useState } from "react";
@@ -37,41 +35,51 @@ import { AnimatedText } from "./AnimatedText.tsx";
 import * as styles from "./TypingSettings.module.less";
 
 export function TypingSettings() {
-  const { formatMessage } = useIntl();
   return (
     <>
-      <FieldSet
-        legend={formatMessage({
-          id: "t_Typing_options",
-          defaultMessage: "Typing helpers",
-        })}
+      <SettingsCard
+        caption={
+          <FormattedMessage
+            id="t_Typing_options"
+            defaultMessage="Typing helpers"
+          />
+        }
       >
-        <Explainer>
-          <Description>
-            <FormattedMessage
-              id="settings.typingAssists.description"
-              defaultMessage="These typing assists help you stay in the flow by automatically smoothing over your mistakes."
-            />
-          </Description>
-        </Explainer>
         <StopOnErrorProp />
+        <RowSeparator />
         <ForgiveErrorsProp />
+        <RowSeparator />
         <SpaceSkipsWordsProp />
-      </FieldSet>
-      <FieldSet
-        legend={formatMessage({
-          id: "t_Text_appearance",
-          defaultMessage: "Display settings",
-        })}
+      </SettingsCard>
+
+      <ExampleText />
+
+      <SettingsCard
+        caption={
+          <FormattedMessage
+            id="t_Text_appearance"
+            defaultMessage="Display settings"
+          />
+        }
       >
-        <ExampleText />
         <FontProp />
+        <RowSeparator />
         <WhitespaceProp />
+        <RowSeparator />
         <CursorShapeProp />
+        <RowSeparator />
         <CursorMovementProp />
+      </SettingsCard>
+
+      <SettingsCard
+        caption={<FormattedMessage id="t_Sounds" defaultMessage="Sound" />}
+      >
         <SoundsProp />
+        <RowSeparator />
+        <SoundVolumeProp />
+        <RowSeparator />
         <SoundsThemeProp />
-      </FieldSet>
+      </SettingsCard>
     </>
   );
 }
@@ -94,28 +102,31 @@ function StopOnErrorProp() {
   const { settings, updateSettings } = useSettings();
   return (
     <>
-      <FieldList>
-        <Field>
-          <CheckBox
-            label={formatMessage({
-              id: "t_Stop_cursor_on_error",
-              defaultMessage: "Pause cursor on mistakes",
-            })}
-            checked={settings.get(textInputProps.stopOnError)}
-            onChange={(value) => {
-              updateSettings(settings.set(textInputProps.stopOnError, value));
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="settings.stopCursorOnError.description"
-            defaultMessage="When turned on, the cursor won't move forward until you type the correct key. When turned off, mistakes pile up in the text and you'll need to delete them yourself."
+            id="t_Stop_cursor_on_error"
+            defaultMessage="Pause cursor on mistakes"
           />
-        </Description>
-      </Explainer>
+        }
+        description={
+          <FormattedMessage
+            id="settings.stopCursorOnError.short"
+            defaultMessage="The cursor waits for the right key instead of letting mistakes pile up."
+          />
+        }
+      >
+        <Switch
+          label={formatMessage({
+            id: "t_Stop_cursor_on_error",
+            defaultMessage: "Pause cursor on mistakes",
+          })}
+          checked={settings.get(textInputProps.stopOnError)}
+          onChange={(value) => {
+            updateSettings(settings.set(textInputProps.stopOnError, value));
+          }}
+        />
+      </SettingRow>
     </>
   );
 }
@@ -125,28 +136,31 @@ function ForgiveErrorsProp() {
   const { settings, updateSettings } = useSettings();
   return (
     <>
-      <FieldList>
-        <Field>
-          <CheckBox
-            label={formatMessage({
-              id: "t_Forgive_errors:",
-              defaultMessage: "Auto-correct mistakes",
-            })}
-            checked={settings.get(textInputProps.forgiveErrors)}
-            onChange={(value) => {
-              updateSettings(settings.set(textInputProps.forgiveErrors, value));
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="settings.forgiveErrors.description"
-            defaultMessage="When turned on, common slip-ups like a wrong or skipped character are corrected for you automatically."
+            id="t_Forgive_errors"
+            defaultMessage="Auto-correct mistakes"
           />
-        </Description>
-      </Explainer>
+        }
+        description={
+          <FormattedMessage
+            id="settings.forgiveErrors.short"
+            defaultMessage="Small slips are fixed for you so a lesson is not derailed by one key."
+          />
+        }
+      >
+        <Switch
+          label={formatMessage({
+            id: "t_Forgive_errors",
+            defaultMessage: "Auto-correct mistakes",
+          })}
+          checked={settings.get(textInputProps.forgiveErrors)}
+          onChange={(value) => {
+            updateSettings(settings.set(textInputProps.forgiveErrors, value));
+          }}
+        />
+      </SettingRow>
     </>
   );
 }
@@ -156,30 +170,31 @@ function SpaceSkipsWordsProp() {
   const { settings, updateSettings } = useSettings();
   return (
     <>
-      <FieldList>
-        <Field>
-          <CheckBox
-            label={formatMessage({
-              id: "t_Space_skips_words",
-              defaultMessage: "Space jumps to next word",
-            })}
-            checked={settings.get(textInputProps.spaceSkipsWords)}
-            onChange={(value) => {
-              updateSettings(
-                settings.set(textInputProps.spaceSkipsWords, value),
-              );
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="settings.spaceSkipsWords.description"
-            defaultMessage="When turned on, pressing space mid-word jumps straight to the start of the next word, skipping whatever's left."
+            id="t_Space_skips_words"
+            defaultMessage="Space jumps to next word"
           />
-        </Description>
-      </Explainer>
+        }
+        description={
+          <FormattedMessage
+            id="settings.spaceSkipsWords.short"
+            defaultMessage="Pressing space moves on even if the word is not finished."
+          />
+        }
+      >
+        <Switch
+          label={formatMessage({
+            id: "t_Space_skips_words",
+            defaultMessage: "Space jumps to next word",
+          })}
+          checked={settings.get(textInputProps.spaceSkipsWords)}
+          onChange={(value) => {
+            updateSettings(settings.set(textInputProps.spaceSkipsWords, value));
+          }}
+        />
+      </SettingRow>
     </>
   );
 }
@@ -190,25 +205,28 @@ function FontProp() {
   const fonts = Font.select(language);
   const font = Font.find(fonts, settings.get(textDisplayProps.font));
   return (
-    <FieldList>
-      <Field size={10}>
-        <FormattedMessage id="t_Font:" defaultMessage="Typeface:" />
-      </Field>
-      <Field>
-        <OptionList
-          options={fonts.map((item) => ({
-            value: item.id,
-            name: <span style={item.cssProperties}>{item.name}</span>,
-          }))}
-          value={font.id}
-          onSelect={(id) => {
-            updateSettings(
-              settings.set(textDisplayProps.font, Font.ALL.get(id)),
-            );
-          }}
+    <SettingRow
+      label={
+        <FormattedMessage id="settings.font.label" defaultMessage="Typeface" />
+      }
+      description={
+        <FormattedMessage
+          id="settings.font.short"
+          defaultMessage="The face the practice text is set in."
         />
-      </Field>
-    </FieldList>
+      }
+    >
+      <OptionList
+        options={fonts.map((item) => ({
+          value: item.id,
+          name: <span style={item.cssProperties}>{item.name}</span>,
+        }))}
+        value={font.id}
+        onSelect={(id) => {
+          updateSettings(settings.set(textDisplayProps.font, Font.ALL.get(id)));
+        }}
+      />
+    </SettingRow>
   );
 }
 
@@ -216,170 +234,129 @@ function WhitespaceProp() {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
   return (
-    <FieldList>
-      <Field size={10}>
-        <FormattedMessage id="t_Whitespace:" defaultMessage="Show spaces as:" />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_ws_No_whitespace",
-            defaultMessage: "Hidden",
-          })}
-          name="whitespace-style"
-          checked={
-            settings.get(textDisplayProps.whitespaceStyle) ===
-            WhitespaceStyle.Space
-          }
-          onSelect={() => {
-            updateSettings(
-              settings.set(
-                textDisplayProps.whitespaceStyle,
-                WhitespaceStyle.Space,
-              ),
-            );
-          }}
+    <SettingRow
+      label={
+        <FormattedMessage
+          id="settings.whitespace.label"
+          defaultMessage="Show spaces as"
         />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_ws_Bar_whitespace",
-            defaultMessage: "As bars",
-          })}
-          name="whitespace-style"
-          checked={
-            settings.get(textDisplayProps.whitespaceStyle) ===
-            WhitespaceStyle.Bar
-          }
-          onSelect={() => {
-            updateSettings(
-              settings.set(
-                textDisplayProps.whitespaceStyle,
-                WhitespaceStyle.Bar,
-              ),
-            );
-          }}
+      }
+      description={
+        <FormattedMessage
+          id="settings.whitespace.short"
+          defaultMessage="Whether the gaps between words are marked."
         />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_ws_Bullet_whitespace",
-            defaultMessage: "As dots",
-          })}
-          name="whitespace-style"
-          checked={
-            settings.get(textDisplayProps.whitespaceStyle) ===
-            WhitespaceStyle.Bullet
-          }
-          onSelect={() => {
+      }
+    >
+      <Segmented
+        value={String(settings.get(textDisplayProps.whitespaceStyle))}
+        onChange={(id) => {
+          // Look the value back up by its own string form. The keys here must
+          // be whatever `String(WhitespaceStyle.X)` produces, not names picked
+          // by hand — guessing them silently made every option a no-op.
+          const found = [
+            WhitespaceStyle.Space,
+            WhitespaceStyle.Bar,
+            WhitespaceStyle.Bullet,
+          ].find((value) => String(value) === id);
+          if (found != null) {
             updateSettings(
-              settings.set(
-                textDisplayProps.whitespaceStyle,
-                WhitespaceStyle.Bullet,
-              ),
+              settings.set(textDisplayProps.whitespaceStyle, found),
             );
-          }}
-        />
-      </Field>
-    </FieldList>
+          }
+        }}
+        options={[
+          {
+            id: String(WhitespaceStyle.Space),
+            label: formatMessage({
+              id: "t_ws_No_whitespace",
+              defaultMessage: "Hidden",
+            }),
+          },
+          {
+            id: String(WhitespaceStyle.Bar),
+            label: formatMessage({
+              id: "t_ws_Bar",
+              defaultMessage: "As bars",
+            }),
+          },
+          {
+            id: String(WhitespaceStyle.Bullet),
+            label: formatMessage({
+              id: "t_ws_Bullet",
+              defaultMessage: "As dots",
+            }),
+          },
+        ]}
+      />
+    </SettingRow>
   );
 }
 
 function CursorShapeProp() {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
+  const shapes = [
+    {
+      value: CaretShapeStyle.Block,
+      name: formatMessage({
+        id: "t_cs_Block_shape",
+        defaultMessage: "Solid block",
+      }),
+    },
+    {
+      value: CaretShapeStyle.Box,
+      name: formatMessage({
+        id: "t_cs_Box_shape",
+        defaultMessage: "Outlined box",
+      }),
+    },
+    {
+      value: CaretShapeStyle.Line,
+      name: formatMessage({
+        id: "t_cs_Line_shape",
+        defaultMessage: "Thin line",
+      }),
+    },
+    {
+      value: CaretShapeStyle.Underline,
+      name: formatMessage({
+        id: "t_cs_Underline_shape",
+        defaultMessage: "Underline",
+      }),
+    },
+  ];
   return (
-    <FieldList>
-      <Field size={10}>
-        <FormattedMessage id="t_Cursor_shape:" defaultMessage="Cursor look:" />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_cur_Block_cursor",
-            defaultMessage: "Solid block",
-          })}
-          name="cursor-shape-style"
-          checked={
-            settings.get(textDisplayProps.caretShapeStyle) ===
-            CaretShapeStyle.Block
-          }
-          onSelect={() => {
-            updateSettings(
-              settings.set(
-                textDisplayProps.caretShapeStyle,
-                CaretShapeStyle.Block,
-              ),
-            );
-          }}
+    <SettingRow
+      label={
+        <FormattedMessage
+          id="settings.cursorShape.label"
+          defaultMessage="Cursor look"
         />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_cur_Box_cursor",
-            defaultMessage: "Outlined box",
-          })}
-          name="cursor-shape-style"
-          checked={
-            settings.get(textDisplayProps.caretShapeStyle) ===
-            CaretShapeStyle.Box
-          }
-          onSelect={() => {
-            updateSettings(
-              settings.set(
-                textDisplayProps.caretShapeStyle,
-                CaretShapeStyle.Box,
-              ),
-            );
-          }}
+      }
+      description={
+        <FormattedMessage
+          id="settings.cursorShape.short"
+          defaultMessage="The marker showing where you are in the text."
         />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_cur_Line_cursor",
-            defaultMessage: "Thin line",
-          })}
-          name="cursor-shape-style"
-          checked={
-            settings.get(textDisplayProps.caretShapeStyle) ===
-            CaretShapeStyle.Line
-          }
-          onSelect={() => {
+      }
+    >
+      <OptionList
+        options={shapes.map(({ value, name }) => ({
+          value: String(value),
+          name,
+        }))}
+        value={String(settings.get(textDisplayProps.caretShapeStyle))}
+        onSelect={(id) => {
+          const found = shapes.find(({ value }) => String(value) === id);
+          if (found != null) {
             updateSettings(
-              settings.set(
-                textDisplayProps.caretShapeStyle,
-                CaretShapeStyle.Line,
-              ),
+              settings.set(textDisplayProps.caretShapeStyle, found.value),
             );
-          }}
-        />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_cur_Underline_cursor",
-            defaultMessage: "Underline",
-          })}
-          name="cursor-shape-style"
-          checked={
-            settings.get(textDisplayProps.caretShapeStyle) ===
-            CaretShapeStyle.Underline
           }
-          onSelect={() => {
-            updateSettings(
-              settings.set(
-                textDisplayProps.caretShapeStyle,
-                CaretShapeStyle.Underline,
-              ),
-            );
-          }}
-        />
-      </Field>
-    </FieldList>
+        }}
+      />
+    </SettingRow>
   );
 }
 
@@ -387,170 +364,173 @@ function CursorMovementProp() {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
   return (
-    <FieldList>
-      <Field size={10}>
+    <SettingRow
+      label={
         <FormattedMessage
-          id="t_Cursor_movement:"
-          defaultMessage="Cursor motion:"
+          id="settings.cursorMovement.label"
+          defaultMessage="Cursor motion"
         />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_cur_Jumping_cursor",
-            defaultMessage: "Snap into place",
-          })}
-          name="cursor-movement-style"
-          checked={
-            settings.get(textDisplayProps.caretMovementStyle) ===
-            CaretMovementStyle.Jumping
-          }
-          onSelect={() => {
-            updateSettings(
-              settings.set(
-                textDisplayProps.caretMovementStyle,
-                CaretMovementStyle.Jumping,
-              ),
-            );
-          }}
+      }
+      description={
+        <FormattedMessage
+          id="settings.cursorMovement.short"
+          defaultMessage="Whether the marker jumps between letters or slides."
         />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_cur_Smooth_cursor",
-            defaultMessage: "Glide smoothly",
-          })}
-          name="cursor-movement-style"
-          checked={
-            settings.get(textDisplayProps.caretMovementStyle) ===
-            CaretMovementStyle.Smooth
-          }
-          onChange={() => {
-            updateSettings(
-              settings.set(
-                textDisplayProps.caretMovementStyle,
-                CaretMovementStyle.Smooth,
-              ),
-            );
-          }}
-        />
-      </Field>
-    </FieldList>
+      }
+    >
+      <Segmented
+        value={String(settings.get(textDisplayProps.caretMovementStyle))}
+        onChange={(id) => {
+          updateSettings(
+            settings.set(
+              textDisplayProps.caretMovementStyle,
+              id === String(CaretMovementStyle.Smooth)
+                ? CaretMovementStyle.Smooth
+                : CaretMovementStyle.Jumping,
+            ),
+          );
+        }}
+        options={[
+          {
+            id: String(CaretMovementStyle.Jumping),
+            label: formatMessage({
+              id: "t_cm_Jumping_movement",
+              defaultMessage: "Snap into place",
+            }),
+          },
+          {
+            id: String(CaretMovementStyle.Smooth),
+            label: formatMessage({
+              id: "t_cm_Smooth_movement",
+              defaultMessage: "Glide smoothly",
+            }),
+          },
+        ]}
+      />
+    </SettingRow>
   );
 }
 
 function SoundsProp() {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
+  const choices = [
+    {
+      value: PlaySounds.None,
+      name: formatMessage({ id: "t_No_sounds:", defaultMessage: "Sound off" }),
+    },
+    {
+      value: PlaySounds.ErrorsOnly,
+      name: formatMessage({
+        id: "t_Error_sounds_only:",
+        defaultMessage: "Errors only",
+      }),
+    },
+    {
+      value: PlaySounds.KeysOnly,
+      name: formatMessage({
+        id: "t_Key_sounds_only:",
+        defaultMessage: "Keystrokes only",
+      }),
+    },
+    {
+      value: PlaySounds.All,
+      name: formatMessage({
+        id: "t_All_sounds:",
+        defaultMessage: "Every sound",
+      }),
+    },
+  ];
   return (
-    <FieldList>
-      <Field size={10}>
-        <FormattedMessage id="t_Play_sounds:" defaultMessage="Sound effects:" />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_No_sounds:",
-            defaultMessage: "Sound off",
-          })}
-          name="play-sounds"
-          checked={settings.get(soundProps.playSounds) === PlaySounds.None}
-          onSelect={() => {
-            updateSettings(
-              settings.set(soundProps.playSounds, PlaySounds.None),
-            );
-          }}
+    <SettingRow
+      label={
+        <FormattedMessage
+          id="settings.playSounds.label"
+          defaultMessage="Sound effects"
         />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_Error_sounds_only:",
-            defaultMessage: "Errors only",
-          })}
-          name="play-sounds"
-          checked={
-            settings.get(soundProps.playSounds) === PlaySounds.ErrorsOnly
+      }
+      description={
+        <FormattedMessage
+          id="settings.playSounds.short"
+          defaultMessage="What KeyLearn makes a noise about while you type."
+        />
+      }
+    >
+      <OptionList
+        options={choices.map(({ value, name }) => ({
+          value: String(value),
+          name,
+        }))}
+        value={String(settings.get(soundProps.playSounds))}
+        onSelect={(id) => {
+          const found = choices.find(({ value }) => String(value) === id);
+          if (found != null) {
+            updateSettings(settings.set(soundProps.playSounds, found.value));
           }
-          onChange={() => {
-            updateSettings(
-              settings.set(soundProps.playSounds, PlaySounds.ErrorsOnly),
-            );
-          }}
+        }}
+      />
+    </SettingRow>
+  );
+}
+
+function SoundVolumeProp() {
+  const { settings, updateSettings } = useSettings();
+  const volume = settings.get(soundProps.soundVolume);
+  return (
+    <SettingRow
+      label={
+        <FormattedMessage
+          id="settings.soundVolume.label"
+          defaultMessage="Loudness"
         />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_Key_sounds_only:",
-            defaultMessage: "Keystrokes only",
-          })}
-          name="play-sounds"
-          checked={settings.get(soundProps.playSounds) === PlaySounds.KeysOnly}
-          onChange={() => {
-            updateSettings(
-              settings.set(soundProps.playSounds, PlaySounds.KeysOnly),
-            );
-          }}
-        />
-      </Field>
-      <Field>
-        <RadioBox
-          label={formatMessage({
-            id: "t_All_sounds:",
-            defaultMessage: "Every sound",
-          })}
-          name="play-sounds"
-          checked={settings.get(soundProps.playSounds) === PlaySounds.All}
-          onChange={() => {
-            updateSettings(settings.set(soundProps.playSounds, PlaySounds.All));
-          }}
-        />
-      </Field>
-      <Field>
-        <FormattedMessage id="t_Sound_volume:" defaultMessage="Loudness:" />
-      </Field>
-      <Field>
-        <Range
-          min={0}
-          max={100}
-          step={1}
-          value={Math.round(settings.get(soundProps.soundVolume) * 100)}
-          onChange={(value) => {
-            updateSettings(settings.set(soundProps.soundVolume, value / 100));
-          }}
-        />
-      </Field>
-    </FieldList>
+      }
+      value={`${Math.round(volume * 100)}%`}
+    >
+      <Range
+        size={10}
+        min={0}
+        max={100}
+        step={1}
+        value={Math.round(volume * 100)}
+        onChange={(value) => {
+          updateSettings(settings.set(soundProps.soundVolume, value / 100));
+        }}
+      />
+    </SettingRow>
   );
 }
 
 function SoundsThemeProp() {
   const { settings, updateSettings } = useSettings();
   return (
-    <FieldList>
-      <Field size={10}>
-        <FormattedMessage id="t_Sound_theme:" defaultMessage="Sound pack:" />
-      </Field>
-      <Field>
-        <OptionList
-          options={SoundTheme.ALL.map((item) => ({
-            value: item.id,
-            name: item.name,
-          }))}
-          value={settings.get(soundProps.soundTheme).id}
-          onSelect={(id) => {
-            updateSettings(
-              settings.set(soundProps.soundTheme, SoundTheme.ALL.get(id)),
-            );
-          }}
+    <SettingRow
+      label={
+        <FormattedMessage
+          id="settings.soundTheme.label"
+          defaultMessage="Sound pack"
         />
-      </Field>
-      <Field>
-        <SoundThemePreview />
-      </Field>
-    </FieldList>
+      }
+      description={
+        <FormattedMessage
+          id="settings.soundTheme.short"
+          defaultMessage="Which set of sounds to use. Press play to hear it."
+        />
+      }
+    >
+      <OptionList
+        options={SoundTheme.ALL.map((item) => ({
+          value: item.id,
+          name: item.name,
+        }))}
+        value={settings.get(soundProps.soundTheme).id}
+        onSelect={(id) => {
+          updateSettings(
+            settings.set(soundProps.soundTheme, SoundTheme.ALL.get(id)),
+          );
+        }}
+      />
+      <SoundThemePreview />
+    </SettingRow>
   );
 }
 

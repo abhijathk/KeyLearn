@@ -4,10 +4,9 @@ import { useSettings } from "@keybr/settings";
 import {
   Description,
   Explainer,
-  Field,
-  FieldList,
   Range,
-  Value,
+  RowSeparator,
+  SettingRow,
 } from "@keybr/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
@@ -15,74 +14,63 @@ import { FormattedMessage } from "react-intl";
 export function TextManglingProp(): ReactNode {
   const { formatPercents } = useIntlNumbers();
   const { settings, updateSettings } = useSettings();
+  const capitals = settings.get(lessonProps.capitals);
+  const punctuators = settings.get(lessonProps.punctuators);
   return (
     <>
-      <FieldList>
-        <Field>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="t_Add_capital_letters:"
-            defaultMessage="Capital letter frequency:"
+            id="settings.capitalLetters.label"
+            defaultMessage="Capital letters"
           />
-        </Field>
-        <Field>
-          <Range
-            size={16}
-            min={0}
-            max={100}
-            step={1}
-            value={Math.round(settings.get(lessonProps.capitals) * 100)}
-            onChange={(value) => {
-              updateSettings(settings.set(lessonProps.capitals, value / 100));
-            }}
-          />
-        </Field>
-        <Field>
-          <Value value={formatPercents(settings.get(lessonProps.capitals))} />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+        }
+        description={
           <FormattedMessage
-            id="settings.capitalLetters.description"
-            defaultMessage="Controls how many capital letters show up in the lesson text, so you can practice typing them. Raise this only once every letter is already above your target speed."
+            id="settings.capitalLetters.short"
+            defaultMessage="How often a word starts with a capital, so you practise the shift key."
           />
-        </Description>
-      </Explainer>
-      <FieldList>
-        <Field>
+        }
+        value={formatPercents(capitals)}
+      >
+        <Range
+          size={10}
+          min={0}
+          max={100}
+          step={1}
+          value={Math.round(capitals * 100)}
+          onChange={(next) => {
+            updateSettings(settings.set(lessonProps.capitals, next / 100));
+          }}
+        />
+      </SettingRow>
+      <RowSeparator />
+      <SettingRow
+        label={
           <FormattedMessage
-            id="t_Add_punctuation_characters:"
-            defaultMessage="Punctuation frequency:"
+            id="settings.punctuation.label"
+            defaultMessage="Punctuation"
           />
-        </Field>
-        <Field>
-          <Range
-            size={16}
-            min={0}
-            max={100}
-            step={1}
-            value={Math.round(settings.get(lessonProps.punctuators) * 100)}
-            onChange={(value) => {
-              updateSettings(
-                settings.set(lessonProps.punctuators, value / 100),
-              );
-            }}
-          />
-        </Field>
-        <Field>
-          <Value
-            value={formatPercents(settings.get(lessonProps.punctuators))}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+        }
+        description={
           <FormattedMessage
-            id="settings.punctuation.description"
-            defaultMessage="Controls how much basic punctuation shows up in the lesson text, so you can practice typing it. Raise this only once every letter is already above your target speed."
+            id="settings.punctuation.short"
+            defaultMessage="How often commas, full stops and quotes appear between the words."
           />
-        </Description>
-      </Explainer>
+        }
+        value={formatPercents(punctuators)}
+      >
+        <Range
+          size={10}
+          min={0}
+          max={100}
+          step={1}
+          value={Math.round(punctuators * 100)}
+          onChange={(next) => {
+            updateSettings(settings.set(lessonProps.punctuators, next / 100));
+          }}
+        />
+      </SettingRow>
     </>
   );
 }

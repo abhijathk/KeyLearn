@@ -8,8 +8,9 @@ import {
 } from "@keybr/content";
 import { BookContentLoader } from "@keybr/content-books";
 import { useSettings } from "@keybr/settings";
-import { FieldSet, Para } from "@keybr/widget";
+import { SettingsCard } from "@keybr/widget";
 import { useMemo } from "react";
+import { FormattedMessage } from "react-intl";
 import { typingTestProps } from "../../../settings.ts";
 
 export function BookSettings() {
@@ -30,9 +31,14 @@ function Content({ bookContent }: { bookContent: BookContent }) {
   const book = settings.get(typingTestProps.book);
   const paragraphIndex = settings.get(typingTestProps.bookParagraphIndex);
   return (
-    <FieldSet legend="Book paragraphs">
-      <Para>Type the content of a book.</Para>
-
+    <SettingsCard
+      caption={
+        <FormattedMessage
+          id="typingTest.source.book"
+          defaultMessage="Book paragraphs"
+        />
+      }
+    >
       <BookSelector
         book={book}
         onChange={(book) => {
@@ -60,6 +66,6 @@ function Content({ bookContent }: { bookContent: BookContent }) {
         paragraphs={paragraphs}
         paragraphIndex={paragraphIndex}
       />
-    </FieldSet>
+    </SettingsCard>
   );
 }

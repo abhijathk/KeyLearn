@@ -1,52 +1,48 @@
 import { useIntlNumbers } from "@keybr/intl";
 import { lessonProps } from "@keybr/lesson";
 import { useSettings } from "@keybr/settings";
-import {
-  Description,
-  Explainer,
-  Field,
-  FieldList,
-  Range,
-  Value,
-} from "@keybr/widget";
+import { Description, Explainer, Range, SettingRow } from "@keybr/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 
 export function RepeatWordsProp(): ReactNode {
-  const { formatPercents } = useIntlNumbers();
+  const { formatNumber } = useIntlNumbers();
   const { settings, updateSettings } = useSettings();
+  const value = settings.get(lessonProps.repeatWords);
   return (
     <>
-      <FieldList>
-        <Field>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="t_Repeat_each_word:"
-            defaultMessage="Word repetition count:"
+            id="settings.repeatWords.label"
+            defaultMessage="Repeat each word"
           />
-        </Field>
-        <Field>
-          <Range
-            min={lessonProps.repeatWords.min}
-            max={lessonProps.repeatWords.max}
-            step={1}
-            value={settings.get(lessonProps.repeatWords)}
-            onChange={(value) => {
-              updateSettings(settings.set(lessonProps.repeatWords, value));
-            }}
-          />
-        </Field>
-        <Field>
-          <Value value={settings.get(lessonProps.repeatWords)} />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+        }
+        description={
           <FormattedMessage
-            id="settings.repeatWords.description"
-            defaultMessage="Types each word several times in a row. The first pass builds your muscle memory, and each repeat after that should feel a bit easier."
+            id="settings.repeatWords.short"
+            defaultMessage="Type the same word more than once before moving on to the next."
           />
-        </Description>
-      </Explainer>
+        }
+        value={
+          <FormattedMessage
+            id="settings.repeatWords.value"
+            defaultMessage="{count}×"
+            values={{ count: formatNumber(value) }}
+          />
+        }
+      >
+        <Range
+          size={10}
+          min={lessonProps.repeatWords.min}
+          max={lessonProps.repeatWords.max}
+          step={1}
+          value={value}
+          onChange={(next) => {
+            updateSettings(settings.set(lessonProps.repeatWords, next));
+          }}
+        />
+      </SettingRow>
     </>
   );
 }

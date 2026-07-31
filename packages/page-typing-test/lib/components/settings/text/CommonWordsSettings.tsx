@@ -4,16 +4,15 @@ import { useIntlDisplayNames, useIntlNumbers } from "@keybr/intl";
 import { Language } from "@keybr/keyboard";
 import { useSettings } from "@keybr/settings";
 import {
-  Field,
-  FieldList,
-  FieldSet,
-  NameValue,
   OptionList,
   Para,
   Range,
+  RowSeparator,
+  SettingRow,
+  SettingsCard,
   TextField,
 } from "@keybr/widget";
-import { useIntl } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { typingTestProps } from "../../../settings.ts";
 
 export function CommonWordsSettings() {
@@ -39,56 +38,97 @@ function Content({ wordList }: { wordList: WordList }) {
   const { formatNumber } = useIntlNumbers();
   const { wordCount, avgWordLength } = wordListStats(wordList);
   return (
-    <FieldSet legend="Common words">
-      <Para>Type the common words.</Para>
+    <SettingsCard
+      caption={
+        <FormattedMessage
+          id="typingTest.source.commonWords"
+          defaultMessage="Common words"
+        />
+      }
+    >
+      <SettingRow
+        label={
+          <FormattedMessage
+            id="settings.language.label"
+            defaultMessage="Language"
+          />
+        }
+        description={
+          <FormattedMessage
+            id="typingTest.wordList.language.short"
+            defaultMessage="Which language's most-used words to draw from."
+          />
+        }
+      >
+        <OptionList
+          options={Language.ALL.map((item) => ({
+            value: item.id,
+            name: formatLanguageName(item.id),
+          }))}
+          value={String(settings.get(typingTestProps.language))}
+          onSelect={(id) => {
+            updateSettings(
+              settings.set(typingTestProps.language, Language.ALL.get(id)),
+            );
+          }}
+        />
+      </SettingRow>
 
-      <FieldList>
-        <Field>
-          {formatMessage({
-            id: "t_Language:",
-            defaultMessage: "Language:",
-          })}
-        </Field>
+      <RowSeparator />
 
-        <Field>
-          <OptionList
-            options={Language.ALL.map((item) => ({
-              value: item.id,
-              name: formatLanguageName(item.id),
-            }))}
-            value={String(settings.get(typingTestProps.language))}
-            onSelect={(id) => {
-              updateSettings(
-                settings.set(typingTestProps.language, Language.ALL.get(id)),
-              );
+      <SettingRow
+        label={
+          <FormattedMessage
+            id="typingTest.wordList.size.label"
+            defaultMessage="Size of the word list"
+          />
+        }
+        description={
+          <FormattedMessage
+            id="typingTest.wordList.size.short"
+            defaultMessage="A shorter list repeats sooner; a longer one is more varied."
+          />
+        }
+        value={formatNumber(
+          settings.get(typingTestProps.wordList.wordListSize),
+        )}
+      >
+        <Range
+          size={10}
+          min={typingTestProps.wordList.wordListSize.min}
+          max={typingTestProps.wordList.wordListSize.max}
+          step={1}
+          value={settings.get(typingTestProps.wordList.wordListSize)}
+          onChange={(value) => {
+            updateSettings(
+              settings.set(typingTestProps.wordList.wordListSize, value),
+            );
+          }}
+        />
+      </SettingRow>
+
+      <RowSeparator />
+
+      <SettingRow
+        label={
+          <FormattedMessage
+            id="typingTest.wordList.preview.label"
+            defaultMessage="The words themselves"
+          />
+        }
+        description={
+          <FormattedMessage
+            id="typingTest.wordList.preview.short"
+            defaultMessage="{words} distinct words, {length} letters long on average."
+            values={{
+              words: formatNumber(wordCount),
+              length: formatNumber(avgWordLength, 2),
             }}
           />
-        </Field>
-      </FieldList>
-
-      <FieldList>
-        <Field>
-          {formatMessage({
-            id: "t_Word_list_size:",
-            defaultMessage: "Number of words in the list:",
-          })}
-        </Field>
-        <Field>
-          <Range
-            size={16}
-            min={typingTestProps.wordList.wordListSize.min}
-            max={typingTestProps.wordList.wordListSize.max}
-            step={1}
-            value={settings.get(typingTestProps.wordList.wordListSize)}
-            onChange={(value) => {
-              updateSettings(
-                settings.set(typingTestProps.wordList.wordListSize, value),
-              );
-            }}
-          />
-        </Field>
-      </FieldList>
-
+        }
+      >
+        <span />
+      </SettingRow>
       <Para>
         <TextField
           type="textarea"
@@ -96,27 +136,6 @@ function Content({ wordList }: { wordList: WordList }) {
           readOnly={true}
         />
       </Para>
-
-      <FieldList>
-        <Field>
-          <NameValue
-            name={formatMessage({
-              id: "t_num_Unique_words",
-              defaultMessage: "Distinct words",
-            })}
-            value={formatNumber(wordCount)}
-          />
-        </Field>
-        <Field>
-          <NameValue
-            name={formatMessage({
-              id: "t_Average_word_length",
-              defaultMessage: "Mean word length",
-            })}
-            value={formatNumber(avgWordLength, 2)}
-          />
-        </Field>
-      </FieldList>
-    </FieldSet>
+    </SettingsCard>
   );
 }

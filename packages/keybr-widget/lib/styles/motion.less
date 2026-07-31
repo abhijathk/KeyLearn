@@ -1,0 +1,57 @@
+// Shared motion vocabulary.
+//
+// One place for durations and easings so windows, dialogs and pages move in the
+// same way. Scattered magic numbers are what makes an interface feel assembled
+// rather than designed — and what produced the jumpy, mismatched entrances this
+// replaces.
+//
+// The curve is a plain ease-out: content that overshoots and settles reads as
+// bouncy on a screen someone is about to type on. Nothing here draws attention
+// to itself.
+
+@motion-fast: 0.18s;
+@motion-base: 0.28s;
+@motion-slow: 0.42s;
+@motion-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+// The backdrop settles BEFORE the window arrives, so the eye has somewhere
+// quiet to land first rather than two things moving at once.
+@motion-stagger: 0.12s;
+
+.motion-fade-in(@duration: @motion-base, @delay: 0s) {
+  animation-name: motion-fade;
+  animation-duration: @duration;
+  animation-timing-function: @motion-ease;
+  animation-delay: @delay;
+  animation-fill-mode: both;
+}
+
+.motion-rise-in(@duration: @motion-base, @delay: 0s) {
+  animation-name: motion-rise;
+  animation-duration: @duration;
+  animation-timing-function: @motion-ease;
+  animation-delay: @delay;
+  animation-fill-mode: both;
+}
+
+@keyframes motion-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes motion-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.985);
+  }
+}
+
+// Anyone who has asked the system for less movement gets none of it. The
+// content still appears — only the travel is removed.
+.motion-respect-reduced() {
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    animation: none;
+  }
+}

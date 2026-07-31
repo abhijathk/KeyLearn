@@ -143,25 +143,6 @@
   padding: 0.9rem 1rem 0.4rem 2rem;
 }
 
-.tips {
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
-  border: none;
-  color: var(--text-color-f2);
-  background: none;
-  font-family: var(--value-font-family);
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--text-color);
-  }
-}
-
 .close {
   display: grid;
   flex: none;
@@ -192,9 +173,9 @@
   flex: 1 1 auto;
   min-block-size: 0;
   padding: 0.4rem 2rem 1.5rem;
-  overflow-inline: hidden;
-  overflow-block: auto;
   overscroll-behavior: contain;
+  overflow-x: hidden;
+  overflow-y: auto;
 
   // The shared widgets shed their boxes inside this dialog: fieldsets go
   // borderless and their legends whisper like every other section label.

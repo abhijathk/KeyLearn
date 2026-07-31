@@ -42,7 +42,16 @@ export default {
     ],
     "no-invalid-position-at-import-rule": null,
     "logical-css/require-logical-keywords": [true, { severity: "warning" }],
-    "logical-css/require-logical-properties": [true, { severity: "warning" }],
+    // `overflow-block` / `overflow-inline` are specified but not implemented —
+    // Chromium still reports CSS.supports("overflow-block", "auto") === false,
+    // and the declaration silently computes to `visible`, so a region that was
+    // meant to scroll simply does not. Physical `overflow-x` / `overflow-y` are
+    // the only working spelling, and since the block axis does not flip in RTL
+    // they are equivalent for every writing mode this app supports.
+    "logical-css/require-logical-properties": [
+      true,
+      { severity: "warning", ignore: ["overflow-x", "overflow-y"] },
+    ],
     "logical-css/require-logical-units": [true, { severity: "warning" }],
     "order/order": [
       [

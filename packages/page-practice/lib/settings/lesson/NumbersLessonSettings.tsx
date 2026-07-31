@@ -12,14 +12,6 @@ export function NumbersLessonSettings({
   const { formatMessage } = useIntl();
   return (
     <>
-      <Explainer>
-        <Description>
-          <FormattedMessage
-            id="lessonType.numbers.description"
-            defaultMessage="Practice typing numbers exclusively."
-          />
-        </Description>
-      </Explainer>
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",

@@ -4,8 +4,6 @@ import { lessonProps, type WordListLesson } from "@keybr/lesson";
 import { useSettings } from "@keybr/settings";
 import {
   CheckBox,
-  Description,
-  Explainer,
   Field,
   FieldList,
   FieldSet,
@@ -29,14 +27,6 @@ export function WordListLessonSettings({
   const { formatMessage } = useIntl();
   return (
     <>
-      <Explainer>
-        <Description>
-          <FormattedMessage
-            id="lessonType.wordList.description"
-            defaultMessage="Build lessons from your language’s most frequent words. Every key is enabled from the start — built for experienced typists."
-          />
-        </Description>
-      </Explainer>
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",

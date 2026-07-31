@@ -1,45 +1,41 @@
 import { lessonProps } from "@keybr/lesson";
 import { useSettings } from "@keybr/settings";
-import { Description, Explainer, Field, FieldList, Range } from "@keybr/widget";
+import { Description, Explainer, Range, SettingRow } from "@keybr/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 
 export function AlphabetSizeProp(): ReactNode {
   const { settings, updateSettings } = useSettings();
+  const value = settings.get(lessonProps.guided.alphabetSize);
   return (
     <>
-      <FieldList>
-        <Field>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="t_Unlock_more_letters:"
-            defaultMessage="Manually add letters:"
+            id="settings.alphabetSize.label"
+            defaultMessage="Unlock letters yourself"
           />
-        </Field>
-        <Field>
-          <Range
-            size={16}
-            min={1}
-            max={100}
-            step={1}
-            value={Math.round(
-              settings.get(lessonProps.guided.alphabetSize) * 100,
-            )}
-            onChange={(value) => {
-              updateSettings(
-                settings.set(lessonProps.guided.alphabetSize, value / 100),
-              );
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+        }
+        description={
           <FormattedMessage
-            id="settings.alphabetSize.description"
-            defaultMessage="Manually unlocks the rest of the letters, giving you access to a wider variety of words. Use this sparingly — it’s usually best to let the algorithm unlock letters for you."
+            id="settings.alphabetSize.short"
+            defaultMessage="Open up more of the alphabet than you have earned. Best left alone."
           />
-        </Description>
-      </Explainer>
+        }
+      >
+        <Range
+          size={10}
+          min={1}
+          max={100}
+          step={1}
+          value={Math.round(value * 100)}
+          onChange={(next) => {
+            updateSettings(
+              settings.set(lessonProps.guided.alphabetSize, next / 100),
+            );
+          }}
+        />
+      </SettingRow>
     </>
   );
 }

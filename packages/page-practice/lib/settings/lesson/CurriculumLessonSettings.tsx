@@ -16,14 +16,6 @@ export function CurriculumLessonSettings({
   const { formatMessage } = useIntl();
   return (
     <>
-      <Explainer>
-        <Description>
-          <FormattedMessage
-            id="lessonType.curriculum.description"
-            defaultMessage="The classic touch-typing course: a fixed, finger-by-finger march through the keyboard — home row first, then the top and bottom rows. Familiar if you learned on TypingClub or Mavis Beacon. The one twist is that it’s adaptive — the next stage unlocks only once you’ve mastered the keys you’re on."
-          />
-        </Description>
-      </Explainer>
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",

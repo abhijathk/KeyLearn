@@ -1,32 +1,33 @@
 import { SpeedUnit, uiProps } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
 import {
-  CheckBox,
   Description,
   Explainer,
-  Field,
-  FieldList,
-  FieldSet,
   OptionList,
+  RowSeparator,
+  SettingRow,
+  SettingsCard,
+  Switch,
 } from "@keybr/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 export function MiscSettings(): ReactNode {
-  const { formatMessage } = useIntl();
   return (
-    <>
-      <FieldSet
-        legend={formatMessage({
-          id: "t_Interface_options",
-          defaultMessage: "Display preferences",
-        })}
-      >
-        <SpeedUnitProp />
-        <GhostRaceProp />
-        <HideHeaderProp />
-      </FieldSet>
-    </>
+    <SettingsCard
+      caption={
+        <FormattedMessage
+          id="t_Interface_options"
+          defaultMessage="Display preferences"
+        />
+      }
+    >
+      <SpeedUnitProp />
+      <RowSeparator />
+      <GhostRaceProp />
+      <RowSeparator />
+      <HideHeaderProp />
+    </SettingsCard>
   );
 }
 
@@ -35,30 +36,31 @@ function HideHeaderProp(): ReactNode {
   const { settings, updateSettings } = useSettings();
   return (
     <>
-      <FieldList>
-        <Field>
-          <CheckBox
-            label={formatMessage({
-              id: "settings.hideHeaderWhileTyping.label",
-              defaultMessage: "Hide the header while typing",
-            })}
-            checked={settings.get(uiProps.hideHeaderWhileTyping)}
-            onChange={(value) => {
-              updateSettings(
-                settings.set(uiProps.hideHeaderWhileTyping, value),
-              );
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="settings.hideHeaderWhileTyping.description"
-            defaultMessage="Slides the page header out of the way the moment you start typing, so nothing competes with the practice text. It glides back in a few seconds after you stop."
+            id="settings.hideHeaderWhileTyping.label"
+            defaultMessage="Hide the header while typing"
           />
-        </Description>
-      </Explainer>
+        }
+        description={
+          <FormattedMessage
+            id="settings.hideHeaderWhileTyping.short"
+            defaultMessage="Slides the header away as you start, and back a few seconds after you stop."
+          />
+        }
+      >
+        <Switch
+          label={formatMessage({
+            id: "settings.hideHeaderWhileTyping.label",
+            defaultMessage: "Hide the header while typing",
+          })}
+          checked={settings.get(uiProps.hideHeaderWhileTyping)}
+          onChange={(value) => {
+            updateSettings(settings.set(uiProps.hideHeaderWhileTyping, value));
+          }}
+        />
+      </SettingRow>
     </>
   );
 }
@@ -68,28 +70,31 @@ function GhostRaceProp(): ReactNode {
   const { settings, updateSettings } = useSettings();
   return (
     <>
-      <FieldList>
-        <Field>
-          <CheckBox
-            label={formatMessage({
-              id: "t_Ghost_race",
-              defaultMessage: "Race against your last race",
-            })}
-            checked={settings.get(uiProps.ghostRace)}
-            onChange={(value) => {
-              updateSettings(settings.set(uiProps.ghostRace, value));
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="settings.ghostRace.description"
-            defaultMessage="Shows a slim lane above the text with a ghost marker that replays your last race. Stay ahead of it and your marker glows — a friendly race against your past self on every round."
+            id="t_Ghost_race"
+            defaultMessage="Race against your last race"
           />
-        </Description>
-      </Explainer>
+        }
+        description={
+          <FormattedMessage
+            id="settings.ghostRace.short"
+            defaultMessage="A marker replays your previous run above the text. Stay ahead of it and it glows."
+          />
+        }
+      >
+        <Switch
+          label={formatMessage({
+            id: "t_Ghost_race",
+            defaultMessage: "Race against your last race",
+          })}
+          checked={settings.get(uiProps.ghostRace)}
+          onChange={(value) => {
+            updateSettings(settings.set(uiProps.ghostRace, value));
+          }}
+        />
+      </SettingRow>
     </>
   );
 }
@@ -99,36 +104,33 @@ function SpeedUnitProp(): ReactNode {
   const { settings, updateSettings } = useSettings();
   return (
     <>
-      <FieldList>
-        <Field>
+      <SettingRow
+        label={
           <FormattedMessage
-            id="t_Measure_typing_speed_in:"
-            defaultMessage="Show typing speed as:"
+            id="settings.typingSpeedUnit.label"
+            defaultMessage="Show typing speed as"
           />
-        </Field>
-        <Field>
-          <OptionList
-            options={SpeedUnit.ALL.map((item) => ({
-              value: item.id,
-              name: formatMessage(item.name),
-            }))}
-            value={settings.get(uiProps.speedUnit).id}
-            onSelect={(id) => {
-              updateSettings(
-                settings.set(uiProps.speedUnit, SpeedUnit.ALL.get(id)),
-              );
-            }}
-          />
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+        }
+        description={
           <FormattedMessage
-            id="settings.typingSpeedUnit.description"
-            defaultMessage="When measuring typing speed, a word is standardized to five characters or keystrokes in English, counting spaces and punctuation."
+            id="settings.typingSpeedUnit.short"
+            defaultMessage="A word counts as five characters, including spaces and punctuation."
           />
-        </Description>
-      </Explainer>
+        }
+      >
+        <OptionList
+          options={SpeedUnit.ALL.map((item) => ({
+            value: item.id,
+            name: formatMessage(item.name),
+          }))}
+          value={settings.get(uiProps.speedUnit).id}
+          onSelect={(id) => {
+            updateSettings(
+              settings.set(uiProps.speedUnit, SpeedUnit.ALL.get(id)),
+            );
+          }}
+        />
+      </SettingRow>
     </>
   );
 }

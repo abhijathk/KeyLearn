@@ -15,6 +15,8 @@ export * from "./portal/index.ts";
 export * from "./progressbar/index.ts";
 export * from "./radiobox/index.ts";
 export * from "./range/index.ts";
+export * from "./settingrow/index.ts";
+export * from "./switch/index.ts";
 export * from "./tablist/index.ts";
 export * from "./text/index.ts";
 export * from "./textfield/index.ts";

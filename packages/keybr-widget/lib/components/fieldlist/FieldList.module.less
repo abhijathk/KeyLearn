@@ -2,8 +2,11 @@
 
 .root {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
+  // A minimum, not a fixed height: a row that wraps onto a second line has to
+  // be able to grow, or the wrapped items overlap the row beneath it.
   min-block-size: @field-height;
   margin-inline: 0;
   margin-block: 0;

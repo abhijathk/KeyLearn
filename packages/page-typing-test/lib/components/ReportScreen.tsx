@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import { makeAccuracyDistribution, makeSpeedDistribution } from "@keybr/chart";
 import { useIntlNumbers } from "@keybr/intl";
 import { useFormatter } from "@keybr/lesson-ui";
@@ -6,6 +5,7 @@ import { Screen } from "@keybr/pages-shared";
 import { useSettings } from "@keybr/settings";
 import { computeSpeed, type Step } from "@keybr/textinput";
 import { formatDuration, Kbd, useHotkeys, useView } from "@keybr/widget";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import {
   loadSummary,
@@ -14,7 +14,12 @@ import {
   type SpeedTestSummary,
   type TestMode,
 } from "../history.ts";
-import { type Duration, DurationType, durations, type TestResult } from "../session/index.ts";
+import {
+  type Duration,
+  durations,
+  DurationType,
+  type TestResult,
+} from "../session/index.ts";
 import { toCompositeSettings } from "../settings.ts";
 import { views } from "../views.tsx";
 import { Replay } from "./Replay.tsx";
@@ -80,7 +85,10 @@ export function ReportScreen({ result }: { result: TestResult }) {
   const isPersonalBest = cpm > (before.best?.cpm ?? 0);
   const delta = before.best != null ? cpm - before.best.cpm : null;
 
-  const consistency = useMemo(() => computeConsistency(result.steps), [result.steps]);
+  const consistency = useMemo(
+    () => computeConsistency(result.steps),
+    [result.steps],
+  );
   const insight = useMemo(() => computeInsight(result.steps), [result.steps]);
 
   const recent = trajectory?.recent ?? [];

@@ -3,8 +3,6 @@ import { type CodeLesson, lessonProps } from "@keybr/lesson";
 import { useSettings } from "@keybr/settings";
 import {
   CheckBox,
-  Description,
-  Explainer,
   Field,
   FieldList,
   FieldSet,
@@ -24,14 +22,6 @@ export function CodeLessonSettings({
   const flags = settings.get(lessonProps.code.flags);
   return (
     <>
-      <Explainer>
-        <Description>
-          <FormattedMessage
-            id="lessonType.code.description"
-            defaultMessage="Practice the punctuation symbols unique to a particular programming language’s syntax."
-          />
-        </Description>
-      </Explainer>
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",
@@ -40,7 +30,10 @@ export function CodeLessonSettings({
       >
         <FieldList>
           <Field>
-            <FormattedMessage id="t_Syntax:" defaultMessage="Language syntax:" />
+            <FormattedMessage
+              id="t_Syntax:"
+              defaultMessage="Language syntax:"
+            />
           </Field>
           <Field>
             <OptionList
@@ -78,14 +71,6 @@ export function CodeLessonSettings({
             );
           })}
         </FieldList>
-        <Explainer>
-          <Description>
-            <FormattedMessage
-              id="lessonType.syntax.description"
-              defaultMessage="Builds lessons that mimic the syntax of the programming language you choose."
-            />
-          </Description>
-        </Explainer>
       </FieldSet>
     </>
   );

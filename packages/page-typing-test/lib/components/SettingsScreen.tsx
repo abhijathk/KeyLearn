@@ -1,5 +1,5 @@
 import { TypingSettings } from "@keybr/textinput-ui";
-import { ExplainerBoundary, useView } from "@keybr/widget";
+import { StrokeIcon, type StrokeIconName, useView } from "@keybr/widget";
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -26,16 +26,27 @@ export function SettingsScreen() {
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [setView]);
-  const tabs = [
-    formatMessage({
-      id: "typingTest.settings.testTab",
-      defaultMessage: "Test",
-    }),
-    formatMessage({ id: "t_Text", defaultMessage: "Text" }),
-    formatMessage({
-      id: "typingTest.settings.typingTab",
-      defaultMessage: "Typing",
-    }),
+  // A rail rather than tabs, so this panel, Practice settings and the account
+  // all navigate the same way.
+  const sections: { label: string; icon: StrokeIconName }[] = [
+    {
+      label: formatMessage({
+        id: "typingTest.settings.testTab",
+        defaultMessage: "The test",
+      }),
+      icon: "gauge",
+    },
+    {
+      label: formatMessage({ id: "t_Text", defaultMessage: "Text" }),
+      icon: "font",
+    },
+    {
+      label: formatMessage({
+        id: "typingTest.settings.typingTab",
+        defaultMessage: "Typing",
+      }),
+      icon: "keyboard",
+    },
   ];
   return (
     <div className={styles.overlay}>
@@ -48,59 +59,64 @@ export function SettingsScreen() {
           defaultMessage: "Speed test settings",
         })}
       >
-        <div className={styles.head}>
-          <span className={styles.title}>
+        <div className={styles.rail}>
+          <div className={styles.railTitle}>
             <FormattedMessage
               id="typingTest.settings.title"
               defaultMessage="Speed test settings"
             />
-          </span>
-          <span className={styles.filler} />
-          <span className={styles.seg}>
-            {tabs.map((label, index) => (
-              <button
-                key={label}
-                type="button"
-                className={clsx(
-                  styles.segItem,
-                  tabIndex === index && styles.segOn,
-                )}
-                onClick={() => {
-                  setTabIndex(index);
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </span>
-          <button
-            type="button"
-            className={styles.close}
-            title={formatMessage({ id: "t_Close", defaultMessage: "Dismiss" })}
-            onClick={close}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
+          </div>
+          {sections.map(({ label, icon }, index) => (
+            <button
+              key={label}
+              type="button"
+              className={clsx(
+                styles.railItem,
+                tabIndex === index && styles.railItemActive,
+              )}
+              onClick={() => {
+                setTabIndex(index);
+              }}
             >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
+              <StrokeIcon className={styles.railIcon} name={icon} />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
-        <div className={styles.body}>
-          <ExplainerBoundary defaultVisible={false}>
+
+        <div className={styles.main}>
+          <div className={styles.head}>
+            <span className={styles.filler} />
+            <button
+              type="button"
+              className={styles.close}
+              title={formatMessage({
+                id: "t_Close",
+                defaultMessage: "Dismiss",
+              })}
+              onClick={close}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              >
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <div className={styles.body}>
             {tabIndex === 0 && <TestModeSettings />}
             {tabIndex === 1 && <TextGeneratorSettings />}
             {tabIndex === 2 && <TypingSettings />}
-          </ExplainerBoundary>
-        </div>
-        <div className={styles.actions}>
-          <button type="button" className={styles.save} onClick={close}>
-            <FormattedMessage id="t_Done" defaultMessage="Save & Close" />
-          </button>
+          </div>
+          <div className={styles.actions}>
+            <button type="button" className={styles.save} onClick={close}>
+              <FormattedMessage id="t_Done" defaultMessage="Save & Close" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

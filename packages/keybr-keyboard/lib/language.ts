@@ -574,7 +574,7 @@ export function getExampleText({ script }: Language): string {
     case "kannada":
       return "ಹೆಚ್ಚು ಸೇಬು ಮತ್ತು ಕಿತ್ತಳೆ ತಿನ್ನಿ.";
     case "latin":
-      return "Eat more apples and oranges.";
+      return "Every letter finds its rhythm.";
     case "malayalam":
       return "കൂടുതൽ ആപ്പിളും ഓറഞ്ചും കഴിക്കൂ.";
     case "tamil":

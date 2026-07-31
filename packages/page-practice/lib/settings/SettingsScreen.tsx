@@ -1,17 +1,11 @@
 import { KeyboardProvider } from "@keybr/keyboard";
 import { SettingsContext, useSettings } from "@keybr/settings";
 import { TypingSettings } from "@keybr/textinput-ui";
-import {
-  ExplainerBoundary,
-  StrokeIcon,
-  type StrokeIconName,
-  useView,
-} from "@keybr/widget";
+import { StrokeIcon, type StrokeIconName, useView } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { views } from "../views.tsx";
-import { ExplainSettings } from "./ExplainSettings.tsx";
 import { KeyboardSettings } from "./KeyboardSettings.tsx";
 import { LessonSettings } from "./LessonSettings.tsx";
 import { MiscSettings } from "./MiscSettings.tsx";
@@ -137,31 +131,26 @@ function SettingsWindow({
         </div>
 
         <div className={styles.main}>
-          {/* The boundary must enclose both the tips toggle and the section
-              content, or the toggle talks to a dead context. */}
-          <ExplainerBoundary>
-            <div className={styles.mainHeader}>
-              <ExplainSettings />
-              <button
-                type="button"
-                className={styles.close}
-                title={formatMessage({
-                  id: "t_Close",
-                  defaultMessage: "Dismiss",
-                })}
-                onClick={onCancel}
-              >
-                <StrokeIcon name="close" />
-              </button>
-            </div>
-            <div className={styles.mainBody}>
-              {section === "practice" && <LessonSettings />}
-              {section === "smart" && <SmartPracticeSettings />}
-              {section === "typing" && <TypingSettings />}
-              {section === "keyboard" && <KeyboardSettings />}
-              {section === "general" && <MiscSettings />}
-            </div>
-          </ExplainerBoundary>
+          <div className={styles.mainHeader}>
+            <button
+              type="button"
+              className={styles.close}
+              title={formatMessage({
+                id: "t_Close",
+                defaultMessage: "Dismiss",
+              })}
+              onClick={onCancel}
+            >
+              <StrokeIcon name="close" />
+            </button>
+          </div>
+          <div className={styles.mainBody}>
+            {section === "practice" && <LessonSettings />}
+            {section === "smart" && <SmartPracticeSettings />}
+            {section === "typing" && <TypingSettings />}
+            {section === "keyboard" && <KeyboardSettings />}
+            {section === "general" && <MiscSettings />}
+          </div>
           <div className={styles.actions}>
             <button
               type="button"

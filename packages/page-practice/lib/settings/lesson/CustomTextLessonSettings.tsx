@@ -5,8 +5,6 @@ import { useSettings } from "@keybr/settings";
 import { textStatsOf } from "@keybr/unicode";
 import {
   CheckBox,
-  Description,
-  Explainer,
   Field,
   FieldList,
   FieldSet,
@@ -30,15 +28,6 @@ export function CustomTextLessonSettings({
   const { settings } = useSettings();
   return (
     <>
-      <Explainer>
-        <Description>
-          <FormattedMessage
-            id="lessonType.customText.description"
-            defaultMessage="Create typing lessons from words in text that you supply. Every key is enabled from the start — built for experienced typists."
-          />
-        </Description>
-      </Explainer>
-
       <FieldSet
         legend={formatMessage({
           id: "t_Lesson_options",
@@ -195,7 +184,8 @@ function CustomTextProcessing(): ReactNode {
           })}
           title={formatMessage({
             id: "settings.customTextRandomize.description",
-            defaultMessage: "Shuffles the words from your text into a random sequence.",
+            defaultMessage:
+              "Shuffles the words from your text into a random sequence.",
           })}
           onChange={(value) => {
             updateSettings(

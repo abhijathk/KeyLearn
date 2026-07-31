@@ -171,11 +171,31 @@ export function LetterJourney({
             >
               {isFocused && (
                 <>
-                  {noted.has(i) && (
-                    <text className={styles.note} x={nx} y={y - CAP_H / 2 - 10}>
-                      {readinessNote(conf)}
-                    </text>
-                  )}
+                  {noted.has(i) &&
+                    (() => {
+                      // The note is wider than the chip it belongs to, and on
+                      // any row but the first it is drawn across the lane
+                      // above. A backing plate keeps it legible instead of
+                      // letting it tangle with the letters behind it.
+                      const note = readinessNote(conf);
+                      const w = note.length * 7.2 + 12;
+                      const ny = y - CAP_H / 2 - 10;
+                      return (
+                        <>
+                          <rect
+                            className={styles.notePlate}
+                            x={nx - w / 2}
+                            y={ny - 11}
+                            width={w}
+                            height={15}
+                            rx={4}
+                          />
+                          <text className={styles.note} x={nx} y={ny}>
+                            {note}
+                          </text>
+                        </>
+                      );
+                    })()}
                   <path
                     className={styles.pin}
                     d={`M ${nx - 5} ${y - CAP_H / 2 - 6} L ${nx + 5} ${y - CAP_H / 2 - 6} L ${nx} ${y - CAP_H / 2 - 1} Z`}

@@ -6,7 +6,6 @@
   align-items: center;
   vertical-align: middle;
   min-block-size: @field-height;
-  line-height: @field-height;
   cursor: pointer;
 
   input {
@@ -60,8 +59,9 @@
   }
 }
 
+// See RadioBox: a pinned one-line height clips wrapped labels.
 .label {
-  block-size: @field-height;
+  line-height: 1.2;
 }
 
 .track + .label {

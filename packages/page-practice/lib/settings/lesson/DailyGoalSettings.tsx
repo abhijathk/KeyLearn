@@ -4,11 +4,9 @@ import { useSettings } from "@keybr/settings";
 import {
   Description,
   Explainer,
-  Field,
-  FieldList,
-  FieldSet,
   Range,
-  Value,
+  SettingRow,
+  SettingsCard,
 } from "@keybr/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -17,50 +15,46 @@ export function DailyGoalSettings(): ReactNode {
   const { formatMessage } = useIntl();
   const { formatDuration } = useIntlDurations();
   const { settings, updateSettings } = useSettings();
+  const dailyGoal = settings.get(lessonProps.dailyGoal);
   return (
-    <FieldSet>
-      <FieldList>
-        <Field>
+    <SettingsCard
+      caption={
+        <FormattedMessage
+          id="settings.group.goal"
+          defaultMessage="Daily goal"
+        />
+      }
+    >
+      <SettingRow
+        label={
           <FormattedMessage
-            id="t_Daily_goal:"
-            defaultMessage="Daily practice goal:"
+            id="settings.dailyGoal.label"
+            defaultMessage="Practice each day for"
           />
-        </Field>
-        <Field>
-          <Range
-            size={16}
-            min={0}
-            max={24}
-            step={1}
-            value={Math.round(settings.get(lessonProps.dailyGoal) / 5)}
-            onChange={(value) => {
-              updateSettings(settings.set(lessonProps.dailyGoal, value * 5));
-            }}
-          />
-        </Field>
-        <Field>
-          {settings.get(lessonProps.dailyGoal) === 0 ? (
-            formatMessage({
-              id: "t_Not_set",
-              defaultMessage: "No goal set",
-            })
-          ) : (
-            <Value
-              value={formatDuration({
-                minutes: settings.get(lessonProps.dailyGoal),
-              })}
-            />
-          )}
-        </Field>
-      </FieldList>
-      <Explainer>
-        <Description>
+        }
+        description={
           <FormattedMessage
-            id="settings.dailyGoal.description"
-            defaultMessage="Choose how much time you’d like to spend practicing each day. It’s just a gentle reminder, not a limit — you can stop whenever you like."
+            id="settings.dailyGoal.short"
+            defaultMessage="A gentle reminder, never a limit — you can stop whenever you like."
           />
-        </Description>
-      </Explainer>
-    </FieldSet>
+        }
+        value={
+          dailyGoal === 0
+            ? formatMessage({ id: "t_Not_set", defaultMessage: "No goal set" })
+            : formatDuration({ minutes: dailyGoal })
+        }
+      >
+        <Range
+          size={10}
+          min={0}
+          max={24}
+          step={1}
+          value={Math.round(dailyGoal / 5)}
+          onChange={(value) => {
+            updateSettings(settings.set(lessonProps.dailyGoal, value * 5));
+          }}
+        />
+      </SettingRow>
+    </SettingsCard>
   );
 }
