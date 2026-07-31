@@ -50,7 +50,7 @@ function KidMenuIcon(): ReactNode {
       <path
         d="M5 7h14M5 12h14M5 17h14"
         fill="none"
-        stroke="#7a5cc0"
+        stroke="#3f7a1f"
         strokeWidth={2.2}
         strokeLinecap="round"
       />
@@ -281,7 +281,7 @@ export function Header({
           <button
             type="button"
             className={styles.kidsChip}
-            style={{ background: "color-mix(in srgb, #a06cff 26%, #ffffff)" }}
+            style={{ background: "color-mix(in srgb, #8bc34a 30%, #ffffff)" }}
             title={formatMessage(
               defineMessage({
                 id: "nav.openMenu",

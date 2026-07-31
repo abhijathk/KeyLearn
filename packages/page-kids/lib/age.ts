@@ -8,7 +8,8 @@ import { activeProfileBirthYear } from "@keybr/pages-shared";
 export type AgeBand = "5-6" | "7-8" | "9-10" | "11+";
 
 export type BandConfig = {
-  /** Words in the first sessions. */
+  /** Words in the first sessions. Long enough to find a rhythm, and to
+   * give each key enough samples that unlocking the next one means something. */
   readonly baseWords: number;
   /** Session-length ceiling as keys unlock. */
   readonly capWords: number;
@@ -42,8 +43,8 @@ export type BandConfig = {
 
 const CONFIGS: Record<AgeBand, BandConfig> = {
   "5-6": {
-    baseWords: 4,
-    capWords: 6,
+    baseWords: 6,
+    capWords: 9,
     maxWordLen: 4,
     fullPassageAt: Infinity,
     targetCpm: 75,
@@ -59,8 +60,8 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     font: '"Andika Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "7-8": {
-    baseWords: 6,
-    capWords: 8,
+    baseWords: 9,
+    capWords: 13,
     maxWordLen: 6,
     fullPassageAt: Infinity,
     targetCpm: 100,
@@ -76,8 +77,8 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     font: '"Andika Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "9-10": {
-    baseWords: 7,
-    capWords: 10,
+    baseWords: 11,
+    capWords: 16,
     maxWordLen: 8,
     fullPassageAt: Infinity,
     targetCpm: 125,
@@ -93,8 +94,8 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     font: '"Nunito Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "11+": {
-    baseWords: 7,
-    capWords: 10,
+    baseWords: 12,
+    capWords: 18,
     maxWordLen: Infinity,
     fullPassageAt: 20,
     targetCpm: 175,

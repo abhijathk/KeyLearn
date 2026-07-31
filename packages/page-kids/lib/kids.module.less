@@ -156,6 +156,20 @@
   block-size: 100%;
 }
 
+:global(body[data-kids="night"]) .sceneCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: radial-gradient(
+    ellipse at 50% 55%,
+    transparent 42%,
+    rgba(6, 9, 24, 0.34) 78%,
+    rgba(4, 6, 18, 0.62) 100%
+  );
+  pointer-events: none;
+}
+
 .loading {
   display: grid;
   position: absolute;

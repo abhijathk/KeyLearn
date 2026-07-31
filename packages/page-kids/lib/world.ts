@@ -311,10 +311,12 @@ export const HERO_THEME: WorldTheme = {
 };
 
 /** How far one round carries the runner. The trail never rewinds — each new
- * round plants the camp flag another stretch ahead. */
-const RUN_LEN = 40;
-/** Trail coverage: three rounds land-to-land, plus a margin. */
-const TRAIL_END = 150;
+ * round plants the camp flag another stretch ahead. Longer than it looks: a
+ * round ends when the passage does, so the distance is what turns a handful of
+ * words into a journey worth finishing. */
+const RUN_LEN = 64;
+/** Trail coverage: about four rounds land-to-land, plus a margin. */
+const TRAIL_END = 260;
 const groundY = (x: number) =>
   Math.sin(x * 0.045) * 1.6 + Math.sin(x * 0.011 + 1.7) * 2.4;
 /** The trail wanders a little, like feet chose it — never far from the lane. */
@@ -355,6 +357,8 @@ export type KidsWorld = {
   beckon(): void;
   stumble(): void;
   roar(): void;
+  /** The flag is reached: celebrate, in this world's own idiom. */
+  celebrate(): void;
   /** A celebratory size-pop when a new key unlocks. */
   grow(): void;
   /** Baby (0) → adult (1): reshapes the dino's body, size, colour and gait. */
@@ -415,7 +419,11 @@ export function createKidsWorld(
   sun.shadow.camera.top = 30;
   sun.shadow.camera.bottom = -30;
   const hemi = new THREE.HemisphereLight(0xffffff, land.grass, grade.hemi);
-  scene.add(sun, hemi);
+  const HERO_LIGHT_LAYER = 1;
+  const heroLamp = new THREE.PointLight(0xfff0d0, 0, 3.4, 2);
+  heroLamp.layers.set(HERO_LIGHT_LAYER);
+  heroLamp.position.set(-6, 4, 3);
+  scene.add(sun, hemi, heroLamp);
   // The cube world fogs in nearer so the ground dissolves into the flat sky
   // at the horizon — no hard grass/sky seam.
   scene.fog = bright
@@ -424,6 +432,7 @@ export function createKidsWorld(
 
   const V = theme.view ?? DEFAULT_VIEW;
   const cam = new THREE.OrthographicCamera();
+  cam.layers.enable(HERO_LIGHT_LAYER);
   function resize() {
     const w = canvas.clientWidth || 800;
     const h = canvas.clientHeight || 300;
@@ -451,14 +460,15 @@ export function createKidsWorld(
     // Day/night lighting: bright and warm by day, a touch darker and cool by
     // night — the whole pane dims without moving the sun.
     const night = mood === "night";
-    renderer.toneMappingExposure = grade.exposure * (night ? 0.8 : 1);
-    hemi.intensity = grade.hemi * (night ? 0.6 : 1);
-    hemi.color.set(night ? 0x8fa0d8 : 0xffffff);
+    heroLamp.intensity = night ? 3.2 : 0;
+    renderer.toneMappingExposure = grade.exposure * (night ? 0.56 : 1);
+    hemi.intensity = grade.hemi * (night ? 0.42 : 1);
+    hemi.color.set(night ? 0x5b6ba8 : 0xffffff);
     if (theme.sky === "flat") {
       // A 2D gradient sky drawn to a canvas — no orbiting camera means no
       // skybox is needed, and a flat backdrop suits the stylized world.
       const [top, bottom] = night
-        ? ["#232c52", "#3d4a7a"]
+        ? ["#141a35", "#2a3358"]
         : ["#7ec5f2", "#d7f0d2"];
       const c = document.createElement("canvas");
       c.width = 16;
@@ -478,9 +488,10 @@ export function createKidsWorld(
       scene.backgroundIntensity = 1;
       // Fog matches the sky's lower band so the ground fades straight into
       // the backdrop.
-      (scene.fog as THREE.Fog).color.set(night ? 0x3d4a7a : 0xd7f0d2);
-      sun.intensity = grade.sun * (night ? 0.62 : 1);
-      sun.color.set(night ? 0x9fb2e6 : land.sun);
+      // Fog closes in after dark, so the far trail fades into the blue.
+      (scene.fog as THREE.Fog).color.set(night ? 0x2a3358 : 0xd7f0d2);
+      sun.intensity = grade.sun * (night ? 0.46 : 1);
+      sun.color.set(night ? 0x7f92cc : land.sun);
       return;
     }
     const tex = await rgbe.loadAsync(`${ASSETS}/env/${mood}.hdr`);
@@ -488,11 +499,11 @@ export function createKidsWorld(
     scene.background = tex;
     scene.backgroundBlurriness = 0.06;
     scene.environment = pmrem.fromEquirectangular(tex).texture;
-    scene.environmentIntensity = mood === "night" ? 0.85 : 0.7;
-    scene.backgroundIntensity = mood === "night" ? 1.6 : 1.0;
-    (scene.fog as THREE.Fog).color.set(mood === "night" ? 0x4a5580 : land.fog);
-    sun.intensity = mood === "night" ? 1.9 : 2.4;
-    sun.color.set(mood === "night" ? 0xb8c8ec : land.sun);
+    scene.environmentIntensity = mood === "night" ? 0.4 : 0.7;
+    scene.backgroundIntensity = mood === "night" ? 0.75 : 1.0;
+    (scene.fog as THREE.Fog).color.set(mood === "night" ? 0x2c3560 : land.fog);
+    sun.intensity = mood === "night" ? 1.25 : 2.4;
+    sun.color.set(mood === "night" ? 0x8fa2d8 : land.sun);
   }
 
   // ── terrain, worn trail, stepping stones ───────────────────────────────
@@ -787,12 +798,119 @@ export function createKidsWorld(
   let jumpY = 0;
   let jumpCount = 0; // jumps used since last touchdown (max 2 = double jump)
   let playerGhostly = false; // skeleton hero: floats and glides like a ghost
+  // Every character root in the scene, so the dark can reach all of their eyes.
+  const characterRoots = new Set<THREE.Object3D>();
+  let nightNow = false;
+  // The spooky-guard gag. A skeleton's sockets flare a little as the hero
+  // passes; the pumpkin's reaction to it is the actual joke, so it gets the
+  // big movement. Fires once per run so it stays a moment rather than a tic.
+  let scareT = 0;
+  let scaredThisRun = false;
+
+  /**
+   * Skeleton eyes catch the light after dark.
+   *
+   * The KayKit rigs name their eye meshes and materials, so the sockets are
+   * found by name rather than by guessing at an index — and a model that has
+   * none simply keeps the eyes it was shipped with.
+   */
+  function applyEyeGlow(root: THREE.Object3D, on: boolean): void {
+    const skeletal = /skeleton|skull|undead/i.test(root.name);
+    if (skeletal) {
+      // Bright after dark, still clearly lit by day.
+      setEyeFlare(root, 1, on ? 3.2 : 1.2, 0x7fe3ff);
+    } else {
+      // Everyone else: a subtle catchlight, a touch warmer at night.
+      setEyeFlare(root, 1, on ? 0.5 : 0.28, 0xffe8b0);
+    }
+  }
+
+  const eyeScaleBase = new WeakMap<THREE.Object3D, number>();
+  const eyeOwned = new WeakSet<THREE.Object3D>();
+
+  /**
+   * Every eye mesh in a character, with its material cloned on first touch.
+   *
+   * Models are loaded once and reused, so two skeletons of the same kind share
+   * one material instance — and one of them writing "dim" cancelled the other
+   * writing "bright" in the very same frame. Each character owns its eyes now.
+   */
+  function eyeMeshes(root: THREE.Object3D): THREE.Mesh[] {
+    const out: THREE.Mesh[] = [];
+    root.traverse((node) => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh || !/eye|socket/i.test(node.name)) {
+        return;
+      }
+      if (/pumpkin/i.test(node.name)) {
+        return;
+      }
+      if (!eyeOwned.has(node)) {
+        eyeOwned.add(node);
+        mesh.material = Array.isArray(mesh.material)
+          ? mesh.material.map((m) => m.clone())
+          : mesh.material.clone();
+      }
+      out.push(mesh);
+    });
+    return out;
+  }
+
+  /** Lights a character's eyes: scale relative to normal, colour and strength. */
+  function setEyeFlare(
+    root: THREE.Object3D,
+    scale: number,
+    intensity: number,
+    color = 0x7fe3ff,
+  ) {
+    for (const mesh of eyeMeshes(root)) {
+      let base = eyeScaleBase.get(mesh);
+      if (base == null) {
+        base = mesh.scale.x;
+        eyeScaleBase.set(mesh, base);
+      }
+      mesh.scale.setScalar(base * scale);
+      const mats = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      for (const mat of mats) {
+        const m = mat as THREE.MeshStandardMaterial;
+        if (m?.emissive != null) {
+          m.emissive.setHex(intensity > 0 ? color : 0x000000);
+          m.emissiveIntensity = intensity;
+          m.needsUpdate = true;
+        }
+      }
+    }
+  }
+
+  /** Who is out on the trail right now. */
+  function refreshPopulation(): void {
+    for (const f of friends) {
+      const ud = f.wrap.userData as { nightOnly?: boolean; dayOnly?: boolean };
+      if (ud.nightOnly === true) {
+        f.wrap.visible = nightNow;
+      } else if (ud.dayOnly === true) {
+        f.wrap.visible = !nightNow;
+      }
+    }
+  }
+
+  function refreshEyeGlow(): void {
+    for (const root of characterRoots) {
+      applyEyeGlow(root, nightNow);
+    }
+  }
   let stumbleT = 0;
   let pointerHitT = 0; // brief red flash on the hero pointer after a wrong key
   let motionScale = 1; // 0 = characters hold still, 1 = full liveliness
   let beckonT = 0;
   let wasAirborne = false;
   let roarT = 0;
+  // Reaching the camp flag. Runs 1 -> 0; the dino spends the first half
+  // roaring and the second half hopping, the hero spins the whole way.
+  let celebT = 0;
+  let celebHops = 0;
   let growTarget = 1;
   // 0 = just-hatched baby, 1 = fully-grown adult. Drives real proportion,
   // colour and gait changes on top of the overall size growth.
@@ -846,7 +964,9 @@ export function createKidsWorld(
   const eyeL = new THREE.Mesh(eyeGeo, faceMat);
   eyeL.rotation.x = Math.PI / 2; // lay the triangle flat against the front
   eyeL.position.set(-0.12, 0.08, 0.33);
+  eyeL.name = "pumpkinEyeL";
   const eyeR = eyeL.clone();
+  eyeR.name = "pumpkinEyeR";
   eyeR.position.x = 0.12;
   const mouth = new THREE.Mesh(
     new THREE.BoxGeometry(0.24, 0.07, 0.06),
@@ -1020,6 +1140,25 @@ export function createKidsWorld(
   // legs, a short tail and a round belly (that reads as "cute"), maturing to
   // lean adult proportions; the skin softens to a lighter green when little,
   // and the whole gait quickens so the baby bounces along.
+  const jawBase = new WeakMap<THREE.Object3D, number>();
+  /** Opens the mouth, 0..1. Falls back to tipping the head back. */
+  function setJawOpen(rig: DinoRig, amount: number): void {
+    const wrap = rig.wrap;
+    const jaw =
+      wrap.getObjectByName("Jaw") ??
+      wrap.getObjectByName("jaw") ??
+      wrap.getObjectByName("Head");
+    if (jaw == null) {
+      return;
+    }
+    let base = jawBase.get(jaw);
+    if (base == null) {
+      base = jaw.rotation.x;
+      jawBase.set(jaw, base);
+    }
+    jaw.rotation.x = base + amount * 0.6;
+  }
+
   function morphDino(rig: DinoRig, age: number): void {
     const a = Math.max(0, Math.min(1, age));
     const L = (baby: number, adult: number) => baby + (adult - baby) * a;
@@ -1085,7 +1224,9 @@ export function createKidsWorld(
     0.72 + 0.66 * Math.max(0, Math.min(1, age));
 
   async function setPlayer(name: string) {
-    const gltf = await loadModel(`${ASSETS}/models/${theme.modelDir}/${name}.glb`);
+    const gltf = await loadModel(
+      `${ASSETS}/models/${theme.modelDir}/${name}.glb`,
+    );
     playerH = theme.playerHeight(name);
     const rig = rigOf(gltf, playerH);
     rig.wrap.position.set(playerX, groundY(playerX), 0);
@@ -1096,6 +1237,10 @@ export function createKidsWorld(
     }
     player = rig;
     playerGhostly = /skeleton/i.test(name);
+    // Only the player answers to the hero lamp.
+    player?.wrap.traverse((n) => {
+      n.layers.enable(HERO_LIGHT_LAYER);
+    });
     // Keep the main character at full colour when the scene grade desaturates
     // the world (Hero Trail is paled): boost the player's own materials so it
     // still pops as the focus, not the washed-out backdrop.
@@ -1114,6 +1259,8 @@ export function createKidsWorld(
       });
     }
     scene.add(rig.wrap);
+    characterRoots.add(rig.wrap);
+    applyEyeGlow(rig.wrap, nightNow);
     if (theme.morphsBody) {
       morphDino(rig, dinoAge);
     }
@@ -1124,7 +1271,9 @@ export function createKidsWorld(
     if (theme.animationUrls) {
       for (const url of theme.animationUrls) {
         try {
-          const g = await loader.loadAsync(`${ASSETS}/models/${theme.modelDir}/${url}`);
+          const g = await loader.loadAsync(
+            `${ASSETS}/models/${theme.modelDir}/${url}`,
+          );
           sharedClips = sharedClips.concat(
             (g.animations ?? []).filter(
               (c) => !/death|attack|bite|hit/i.test(c.name),
@@ -1165,7 +1314,9 @@ export function createKidsWorld(
     ) => {
       let gltf;
       try {
-        gltf = await loadModel(`${ASSETS}/models/${theme.modelDir}/${model}.glb`);
+        gltf = await loadModel(
+          `${ASSETS}/models/${theme.modelDir}/${model}.glb`,
+        );
       } catch {
         return; // a single missing companion never breaks the world
       }
@@ -1186,8 +1337,11 @@ export function createKidsWorld(
         guard,
         phase: Math.random() * Math.PI * 2,
         smiler: Math.random() < 0.35,
+        dayOnly: !scary && Math.random() < 0.4,
       };
       scene.add(wrap);
+      characterRoots.add(wrap);
+      applyEyeGlow(wrap, nightNow);
       const mixer = new THREE.AnimationMixer(gltf.scene);
       const clips = clipsFor(gltf);
       // Guards get a walking loop so their legs move while patrolling; everyone
@@ -1215,7 +1369,22 @@ export function createKidsWorld(
     if (theme.flagGuard && theme.flagGuard.length > 0) {
       const pickGuard = () =>
         theme.flagGuard![Math.floor(Math.random() * theme.flagGuard!.length)];
+      // One near the camp flag, and one close to the start so the encounter
+      // happens early in a run instead of only at the very end.
       await spawnCompanion(pickGuard(), runEnd - 3, -3, 3.0, true);
+      await spawnCompanion(pickGuard(), runStart + 10, -3.5, 3.0, true);
+      // The trail belongs to the skeletons after dark: a few more of them come
+      // out, and some of the daytime crowd has gone home.
+      for (let i = 0; i < 4; i++) {
+        const gx = 18 + Math.random() * (TRAIL_END - 26);
+        const gz = (Math.random() > 0.5 ? -1 : 1) * (3 + Math.random() * 6);
+        await spawnCompanion(pickGuard(), gx, gz, 3.0, true);
+        const last = friends[friends.length - 1];
+        if (last != null) {
+          last.wrap.userData.nightOnly = true;
+          last.wrap.visible = nightNow;
+        }
+      }
       if (new Date().getMonth() === 9) {
         for (let i = 0; i < 5; i++) {
           const gx = 24 + Math.random() * (TRAIL_END - 30);
@@ -1230,7 +1399,9 @@ export function createKidsWorld(
     if (theme.sheep) {
       let sheepGltf: Awaited<ReturnType<typeof loadModel>> | null = null;
       try {
-        sheepGltf = await loadModel(`${ASSETS}/models/${theme.sceneryDir}/Sheep.glb`);
+        sheepGltf = await loadModel(
+          `${ASSETS}/models/${theme.sceneryDir}/Sheep.glb`,
+        );
       } catch {
         sheepGltf = null;
       }
@@ -1287,6 +1458,12 @@ export function createKidsWorld(
             roams: Math.random() < 0.4,
           };
           scene.add(wrap);
+          characterRoots.add(wrap);
+          applyEyeGlow(wrap, nightNow);
+          characterRoots.add(wrap);
+          applyEyeGlow(wrap, nightNow);
+          characterRoots.add(wrap);
+          applyEyeGlow(wrap, nightNow);
           const mixer = new THREE.AnimationMixer(src);
           if (idleClip) {
             const a = mixer.clipAction(idleClip);
@@ -1312,7 +1489,10 @@ export function createKidsWorld(
           const gz = Math.random() < 0.7 ? fieldZ() : farZ();
           const n = 2 + Math.floor(Math.random() * 3);
           for (let i = 0; i < n; i++) {
-            spawnSheep(gx + (Math.random() - 0.5) * 5, gz + (Math.random() - 0.5) * 4);
+            spawnSheep(
+              gx + (Math.random() - 0.5) * 5,
+              gz + (Math.random() - 0.5) * 4,
+            );
           }
           // The odd loner grazing a little apart — usually out in the field.
           if (Math.random() < 0.6) {
@@ -1329,7 +1509,9 @@ export function createKidsWorld(
     ]) {
       let gltf;
       try {
-        gltf = await loadModel(`${ASSETS}/models/${theme.sceneryDir}/${file}.glb`);
+        gltf = await loadModel(
+          `${ASSETS}/models/${theme.sceneryDir}/${file}.glb`,
+        );
       } catch {
         continue; // skip a missing scenery set rather than break the build
       }
@@ -1356,6 +1538,10 @@ export function createKidsWorld(
           (0.8 + Math.random() * 0.8) * theme.sceneryScale * scaleMul,
         );
         scene.add(wrap);
+        characterRoots.add(wrap);
+        applyEyeGlow(wrap, nightNow);
+        characterRoots.add(wrap);
+        applyEyeGlow(wrap, nightNow);
       }
     }
 
@@ -1416,6 +1602,8 @@ export function createKidsWorld(
       jumpY = Math.max(0, jumpY + jumpV);
       jumpV -= 0.03;
       p.y = groundY(p.x) + jumpY;
+      // Keep the lamp just above and in front of the runner.
+      heroLamp.position.set(p.x + 0.9, p.y + 2.1, p.z + 1.6);
       // The skeleton hero still runs on its feet, but with a faint hover and
       // bob so it reads as a little spooky — not fully floating.
       if (playerGhostly) {
@@ -1440,7 +1628,31 @@ export function createKidsWorld(
       }
       const cur = player.wrap.scale.x;
       player.wrap.scale.setScalar(cur + (growTarget - cur) * 0.06);
-      if (roarT > 0) {
+      if (celebT > 0) {
+        celebT -= 0.012;
+        const t = 1 - Math.max(0, celebT); // 0 -> 1 across the celebration
+        if (theme.pointerRing) {
+          // A full turn on the spot, landing back where it started.
+          player.wrap.rotation.y = Math.PI / 2 + t * Math.PI * 2;
+          player.wrap.rotation.z = Math.sin(t * Math.PI) * 0.18;
+        } else if (t < 0.5) {
+          // Dino Run, first half: rear back and roar with the jaw wide.
+          const k = Math.sin((t / 0.5) * Math.PI);
+          player.wrap.rotation.z = k * 0.45;
+          player.wrap.rotation.y = Math.PI / 2;
+          setJawOpen(player, k);
+        } else {
+          // Second half: mouth shut, two small pleased hops.
+          setJawOpen(player, 0);
+          player.wrap.rotation.z = 0;
+          player.wrap.rotation.y = Math.PI / 2;
+          const want = t < 0.75 ? 1 : 2;
+          if (celebHops < want && jumpY <= 0.02) {
+            jumpV = 0.16;
+            celebHops = want;
+          }
+        }
+      } else if (roarT > 0) {
         roarT -= 0.02;
         player.wrap.rotation.z = Math.sin(Math.min(1, roarT) * Math.PI) * 0.5;
       } else if (stumbleT > 0) {
@@ -1462,6 +1674,27 @@ export function createKidsWorld(
         const py = p.y + top + 0.7 + Math.sin(clock.elapsedTime * 2) * 0.12;
         heroRing.visible = !playerGhostly;
         heroPumpkin.visible = playerGhostly;
+        if (scareT > 0) {
+          scareT -= dt * 0.9;
+          const k = Math.sin(Math.max(0, Math.min(1, scareT)) * Math.PI);
+          // Eyes clamped shut - flattened rather than hidden, so the face still
+          // reads at a glance.
+          eyeL.scale.y = eyeR.scale.y = 1 - k * 0.92;
+          // A flinch backwards and a shiver. The pumpkin keeps its size: it is
+          // still the marker showing where the hero is.
+          heroPumpkin.position.z = -k * 0.35;
+          heroPumpkin.rotation.z = Math.sin(clock.elapsedTime * 26) * 0.16 * k;
+          // The knight's ring has no face to pull, so it recoils and shivers
+          // instead — the same beat, told with the only vocabulary it has.
+          heroRing.position.z = -k * 0.3;
+          heroRing.rotation.z = Math.sin(clock.elapsedTime * 22) * 0.3 * k;
+        } else {
+          eyeL.scale.y = eyeR.scale.y = 1;
+          heroPumpkin.position.z = 0;
+          heroPumpkin.rotation.z = 0;
+          heroRing.position.z = 0;
+          heroRing.rotation.z = 0;
+        }
         // The pointer glows brighter while the hero is running, dims when idle,
         // and flares an angry red for a moment after a wrong key.
         pointerHitT = Math.max(0, pointerHitT - dt * 1.3);
@@ -1488,7 +1721,8 @@ export function createKidsWorld(
           heroPumpkin.rotation.z = Math.sin(clock.elapsedTime * 55) * hit * 0.5;
         } else {
           heroRing.position.set(p.x + shakeX, py + shakeY, p.z);
-          heroRing.rotation.z += 0.03 + Math.sin(clock.elapsedTime * 55) * hit * 0.4;
+          heroRing.rotation.z +=
+            0.03 + Math.sin(clock.elapsedTime * 55) * hit * 0.4;
         }
       }
       cam.position.x += (p.x - 2 - cam.position.x) * 0.06;
@@ -1545,6 +1779,12 @@ export function createKidsWorld(
         homeX?: number;
         homeZ?: number;
         scary?: boolean;
+        /** How lit this guard's sockets are, 1 on approach then fading. */
+        alert?: number;
+        /** Comes out only after dark. */
+        nightOnly?: boolean;
+        /** Turns in when the sun goes down. */
+        dayOnly?: boolean;
         guard?: boolean;
         phase?: number;
         smiler?: boolean;
@@ -1623,7 +1863,8 @@ export function createKidsWorld(
           // Grazing: repeated head-dips to nibble the grass, then now and then
           // a lift to look around — a clear, lively rhythm.
           f.mixer.timeScale = 1;
-          f.wrap.position.y = terrainY(f.wrap.position.x, f.wrap.position.z) - 0.06;
+          f.wrap.position.y =
+            terrainY(f.wrap.position.x, f.wrap.position.z) - 0.06;
           f.wrap.rotation.y += Math.sin(t * 0.5 + ph) * 0.006;
           if (ud.head) {
             // A slow ~4s cycle: mostly head-down nibbling, briefly head-up.
@@ -1679,9 +1920,28 @@ export function createKidsWorld(
           f.wrap.rotation.z = Math.sin(clock.elapsedTime * 9) * 0.14;
           f.wrap.position.y =
             homeGY + 0.15 + Math.abs(Math.sin(clock.elapsedTime * 4)) * 0.2;
+          ud.alert = 1;
+          if (!scaredThisRun) {
+            scaredThisRun = true;
+            scareT = 1;
+          }
         } else {
+          ud.alert = Math.max(0, (ud.alert ?? 0) - dt * 0.45);
           f.wrap.rotation.z *= 0.88;
           f.wrap.position.y += (homeGY - f.wrap.position.y) * 0.1;
+        }
+        const a = ud.alert ?? 0;
+        if (a > 0.001) {
+          const pulse = 0.5 + 0.5 * Math.sin(clock.elapsedTime * 5);
+          const base = nightNow ? 3.2 : 1.2;
+          setEyeFlare(
+            f.wrap,
+            1 + pulse * 0.35 * a,
+            base + pulse * 3 * a,
+            0x7fe3ff,
+          );
+        } else {
+          applyEyeGlow(f.wrap, nightNow);
         }
       } else {
         // Everyone else stops what they were doing and turns to watch. A
@@ -1722,6 +1982,7 @@ export function createKidsWorld(
       targetX = runStart + Math.max(0, Math.min(1, frac)) * (runEnd - runStart);
     },
     startRun() {
+      scaredThisRun = false;
       runStart = Math.min(targetX, TRAIL_END - RUN_LEN);
       runEnd = runStart + RUN_LEN;
       placeFlag();
@@ -1746,6 +2007,28 @@ export function createKidsWorld(
       stumbleT = 1;
       pointerHitT = 1; // flash the hero pointer red (Hero Trail)
       targetX = playerX; // a wrong key stops the run
+    },
+    celebrate() {
+      celebT = 1;
+      celebHops = 0;
+      if (player) {
+        const p = player.wrap.position;
+        burst(
+          p.x,
+          p.y + 2.2,
+          p.z,
+          theme.pointerRing
+            ? [0xffd66b, 0x8fd9b6, 0xffffff]
+            : [0xffd66b, 0xff9f43, 0x37c871],
+          22,
+          0.34,
+        );
+      }
+      if (theme.pointerRing) {
+        // Hero Trail: leap and spin at once, which is what joy looks like when
+        // you have arms.
+        jumpV = 0.36;
+      }
     },
     roar() {
       roarT = 1;
@@ -1795,7 +2078,10 @@ export function createKidsWorld(
       ];
     },
     setNight(night) {
+      nightNow = night;
       applySky(night ? "night" : land.mood).catch(() => {});
+      refreshEyeGlow();
+      refreshPopulation();
     },
     setLook(brightness, paleness) {
       userBright = brightness;
@@ -1852,9 +2138,7 @@ export function createLoaderScene(
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
   loader
-    .loadAsync(
-      `${ASSETS}/models/${theme.modelDir}/${theme.defaultPlayer}.glb`,
-    )
+    .loadAsync(`${ASSETS}/models/${theme.modelDir}/${theme.defaultPlayer}.glb`)
     .then((gltf) => {
       if (disposed) {
         return;
@@ -1889,7 +2173,9 @@ export function createLoaderScene(
       } else {
         // KayKit heroes: fetch the shared run clip and bind it by bone name.
         loader
-          .loadAsync(`${ASSETS}/models/${theme.modelDir}/${theme.animationUrls[0]}`)
+          .loadAsync(
+            `${ASSETS}/models/${theme.modelDir}/${theme.animationUrls[0]}`,
+          )
           .then((g) => {
             if (!disposed) {
               playRun(g.animations ?? []);

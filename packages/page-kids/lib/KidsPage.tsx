@@ -407,9 +407,7 @@ const HERO_SAYS = {
 } as const;
 
 const saysOf = (world: "dino" | "hero") =>
-  world === "hero"
-    ? (HERO_SAYS as unknown as typeof SAYS)
-    : SAYS;
+  world === "hero" ? (HERO_SAYS as unknown as typeof SAYS) : SAYS;
 
 // The dino grows from a just-hatched baby (few keys) to a full adult (whole
 // alphabet). Age is 0→1 across that span; the stage name is shown to the kid.
@@ -562,7 +560,13 @@ function KidsSettings({ children }: { readonly children: ReactNode }) {
         .set(lessonProps.guided.kidsWords, true)
         // New letters unlock at an age-appropriate speed, so a six-year-old
         // sees the trail grow at the same emotional pace as a ten-year-old.
-        .set(lessonProps.targetSpeed, bandConfig(currentBand()).targetCpm),
+        .set(lessonProps.targetSpeed, bandConfig(currentBand()).targetCpm)
+        // A new letter arrives only once EVERY letter already known is above
+        // target — and judged on current speed, not best-ever. Without this a
+        // single lucky keystroke pushes bestConfidence over the line and the
+        // next letter appears, which is why the trail kept growing faster than
+        // the child actually was.
+        .set(lessonProps.guided.recoverKeys, true),
     [settings],
   );
   return (
@@ -1060,6 +1064,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           );
         }
         if (textInput.completed) {
+          // Reaching the camp flag is the one moment the run is won; the world
+          // decides what that looks like for a dino and for a hero.
+          worldRef.current?.celebrate();
           setScore((s) => saveBest(s + 10));
           setWords((w) => w + 1);
           speak("camp");
@@ -1224,8 +1231,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // of the subtitle panel; 7-8 and 9-10 can opt in from the toy-box; everyone
   // else keeps the panel.
   const use3dWord =
-    band === "5-6" ||
-    ((band === "7-8" || band === "9-10") && prefs.wordBlocks);
+    band === "5-6" || ((band === "7-8" || band === "9-10") && prefs.wordBlocks);
   useEffect(() => {
     // Feed the whole passage; the world lays it out as one gliding ribbon so
     // there is no jumpy per-word rebuild.
@@ -1318,9 +1324,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               <SproutIcon />
             </span>
             <div>
-              <div className={styles.chipLab}>{prefs.world === "hero" ? "Hero level" : "Dino stage"}</div>
+              <div className={styles.chipLab}>
+                {prefs.world === "hero" ? "Hero level" : "Dino stage"}
+              </div>
               <div className={styles.chipVal}>
-                {(prefs.world === "hero" ? heroStage : dinoStage)(dinoAgeOf(included, lesson.letters.length))}
+                {(prefs.world === "hero" ? heroStage : dinoStage)(
+                  dinoAgeOf(included, lesson.letters.length),
+                )}
               </div>
             </div>
           </div>
@@ -1336,19 +1346,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </div>
         {!use3dWord && (
           <div className={styles.words}>
-          {winChars.map((ch, i) => {
-            const at = winStart + i;
-            return (
-              <span
-                key={at}
-                className={
-                  at < pos ? styles.hit : at === pos ? styles.cur : undefined
-                }
-              >
-                {ch === " " ? " " : prefs.bigLetters ? ch.toUpperCase() : ch}
-              </span>
-            );
-          })}
+            {winChars.map((ch, i) => {
+              const at = winStart + i;
+              return (
+                <span
+                  key={at}
+                  className={
+                    at < pos ? styles.hit : at === pos ? styles.cur : undefined
+                  }
+                >
+                  {ch === " " ? " " : prefs.bigLetters ? ch.toUpperCase() : ch}
+                </span>
+              );
+            })}
           </div>
         )}
         <div
@@ -1498,12 +1508,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 </div>
               </div>
               <div className={styles.fstat}>
-                <div className={styles.sd}>{prefs.world === "hero" ? "Hero level" : "Dino stage"}</div>
+                <div className={styles.sd}>
+                  {prefs.world === "hero" ? "Hero level" : "Dino stage"}
+                </div>
                 <div
                   className={styles.fstatVal}
                   style={{ color: "var(--leaf-d)" }}
                 >
-                  {(prefs.world === "hero" ? heroStage : dinoStage)(dinoAgeOf(included, lesson.letters.length))}
+                  {(prefs.world === "hero" ? heroStage : dinoStage)(
+                    dinoAgeOf(included, lesson.letters.length),
+                  )}
                 </div>
               </div>
             </div>
@@ -1935,7 +1949,10 @@ function SettingsCard({
         </div>
         {canToggleWords && (
           <div className={styles.srow}>
-            <span className={styles.ri} style={{ background: "var(--seafoam)" }}>
+            <span
+              className={styles.ri}
+              style={{ background: "var(--seafoam)" }}
+            >
               <span className={styles.aaIcon}>Ab</span>
             </span>
             <div>
@@ -2121,7 +2138,9 @@ function SettingsCard({
               </span>
               <div>
                 <div className={styles.sl}>Colour</div>
-                <div className={styles.sd}>soft and pale, or bright and bold</div>
+                <div className={styles.sd}>
+                  soft and pale, or bright and bold
+                </div>
               </div>
               <div className={styles.ctl}>
                 <input

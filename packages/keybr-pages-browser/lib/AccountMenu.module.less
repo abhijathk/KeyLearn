@@ -21,8 +21,8 @@
   min-block-size: 2.3rem;
   padding: 0.4rem;
   border-radius: 0.7rem;
-  background-color: var(--primary-l1);
   color: var(--text-color);
+  background-color: var(--primary-l1);
   text-decoration: none;
   cursor: pointer;
 
@@ -46,14 +46,15 @@
   padding: 0;
   border: 0;
   border-radius: 0.7rem;
-  // Warm pink, distinct from the yellow / green / blue / purple toy chips.
-  background-color: color-mix(in srgb, #ff7eb6 34%, #ffffff);
-  color: #b53a7d;
-  text-decoration: none;
-  cursor: pointer;
+  color: #b8511a;
+  // Warm orange, distinct from the yellow / mint / blue / leaf-green chips and
+  // free of the gendered reading that pink and violet carry.
+  background-color: color-mix(in srgb, #ff9052 34%, #ffffff);
   box-shadow:
     0 2px 0 rgb(0 0 0 / 8%),
     inset 0 -2px 0 rgb(0 0 0 / 5%);
+  text-decoration: none;
+  cursor: pointer;
   transition: transform 0.12s ease;
 
   svg {
@@ -74,7 +75,7 @@
 .kidsIdentity {
   padding: 0.2rem 0.7rem 0.2rem 0.25rem;
   border-radius: 999px;
-  background-color: color-mix(in srgb, #a06cff 20%, #ffffff);
+  background-color: color-mix(in srgb, #ff9052 20%, #ffffff);
   box-shadow:
     0 2px 0 rgb(0 0 0 / 8%),
     inset 0 -2px 0 rgb(0 0 0 / 5%);
@@ -159,5 +160,20 @@
 @media (width <= 34rem) {
   .name {
     display: none;
+  }
+}
+
+// ── Night variants ──
+// Same hues, mixed toward the dark ground instead of white, with labels lifted
+// so they stay legible rather than sinking into the chip.
+:global(body[data-kids="night"]) {
+  .kidsLoginChip {
+    color: #ffc8a3;
+    background-color: color-mix(in srgb, #ff9052 34%, #2a2f4d);
+  }
+
+  .kidsIdentity {
+    color: #ffd9c0;
+    background-color: color-mix(in srgb, #ff9052 24%, #2a2f4d);
   }
 }
