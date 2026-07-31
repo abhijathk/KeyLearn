@@ -1,10 +1,6 @@
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import {
-  type GuideBlock,
-  guideFor,
-  renderRich,
-} from "./guide-content.tsx";
+import { type GuideBlock, guideFor, renderRich } from "./guide-content.tsx";
 import * as styles from "./road.module.less";
 
 // The legal pages, written to be read: plain words, honest promises, and the
@@ -216,7 +212,7 @@ export function AboutPage() {
       <p>
         <FormattedMessage
           id="about.oss.p"
-          defaultMessage="KeyLearn is published under the GNU AGPL license: the whole source code is open for you to read, run, or improve. There is nothing to buy, no subscription, and no advertising. Your practice data belongs to you — export it or erase it whenever you like. <a>View the source on GitHub</a>."
+          defaultMessage="KeyLearn is published under the GNU AGPL license: the whole source code is open for you to read, run, or improve. Learning to type is free and always will be — every lesson, every learner in your household, no advertising. A paid tier adds tools for people who have already got there. Your practice data belongs to you either way: export it or erase it whenever you like. <a>View the source on GitHub</a>."
           values={{
             a: (chunks: ReactNode) => (
               <a
@@ -266,8 +262,9 @@ export function TermsOfServicePage() {
         <div className={styles.glanceLab}>The short version</div>
         <ul>
           <li>
-            KeyLearn is <em>free and open source</em>. There is nothing to buy,
-            no subscription, and no ads.
+            KeyLearn is <em>open source</em>, and learning to type is{" "}
+            <em>free</em> — every lesson, every learner, no ads. A paid tier
+            adds optional extras.
           </li>
           <li>
             Be a human, keep one account per person, and don&rsquo;t use
@@ -286,13 +283,30 @@ export function TermsOfServicePage() {
 
       <Sect>What KeyLearn is</Sect>
       <p>
-        KeyLearn is a free, open-source touch-typing tutor. The entire source
-        code is published under the GNU AGPL license, and you&rsquo;re welcome
-        to read it, run your own copy, or improve it. Because there is nothing
-        for sale here — no premium tier, no subscriptions, no advertising —
-        there are no payment or refund terms to agree to. Using the site means
-        you accept the terms on this page; if you ever disagree with them,
-        simply stop using the service.
+        KeyLearn is an open-source touch-typing tutor. The entire source code is
+        published under the GNU AGPL license, and you&rsquo;re welcome to read
+        it, run your own copy, or improve it. Learning to type is free: every
+        lesson and every learner in your household, with no advertising. An
+        optional paid tier adds extra tools, and you can support the project
+        voluntarily; where you pay us anything, the payment terms below apply.
+        Using the site means you accept the terms on this page; if you ever
+        disagree with them, simply stop using the service.
+      </p>
+
+      <Sect>Paying for KeyLearn</Sect>
+      <p>
+        Everything needed to learn to type is free. Where you choose to buy the
+        optional paid tier, or to support the project voluntarily, payment is
+        handled by our payment provider — we never see or store your card
+        details. Prices are shown before you confirm, including any tax that
+        applies where you live.
+      </p>
+      <p>
+        If a paid feature does not work as described, write to us and we will
+        put it right or refund you. Voluntary contributions are gifts rather
+        than purchases, so they buy no features and are not refundable. If we
+        ever retire a paid feature you have already bought, we will tell you
+        first and will not leave you out of pocket.
       </p>
 
       <Sect>Your account</Sect>
@@ -520,11 +534,7 @@ export function GuidePage() {
   const doc = guideFor(locale);
   return (
     <div className={styles.paper}>
-      <Masthead
-        kicker={doc.kicker}
-        title={doc.title}
-        dateline={doc.dateline}
-      />
+      <Masthead kicker={doc.kicker} title={doc.title} dateline={doc.dateline} />
       <div className={styles.guideLayout}>
         <nav className={styles.guideNav}>
           <div className={styles.guideNavLab}>{doc.navLabel}</div>

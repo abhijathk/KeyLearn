@@ -10,3 +10,8 @@ export const paddleToken = process.env.PADDLE_TOKEN || "0";
 export const paddlePriceId = process.env.PADDLE_PRICE_ID || "0";
 export const adSenseClientId = process.env.ADSENSE_CLIENT_ID || "0";
 export const adSenseSlotId = process.env.ADSENSE_SLOT_ID || "0";
+/**
+ * Where "buy me a coffee" points. Unset means no link is shown at all, so a
+ * self-hosted build never solicits money on someone else's behalf.
+ */
+export const supportUrl = process.env.SUPPORT_URL || "";
