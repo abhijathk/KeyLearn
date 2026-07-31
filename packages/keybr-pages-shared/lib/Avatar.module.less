@@ -1,8 +1,13 @@
+// Round applies to EVERY avatar, not only uploaded photos — the generated
+// identicon is what a learner sees when they hide their identity or have no
+// picture, and a square one there looks like a different kind of thing.
 .root {
   display: inline-block;
   vertical-align: middle;
   margin: 0;
   padding: 0;
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .customImage {

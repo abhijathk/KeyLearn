@@ -20,6 +20,7 @@ test("render", () => {
           imageUrl: null,
         },
         settings: null,
+        profiles: [],
       }}
     >
       <FakeIntlProvider>
@@ -53,6 +54,7 @@ test("render alt", () => {
           premium: true,
         },
         settings: null,
+        profiles: [],
       }}
     >
       <FakeIntlProvider>

@@ -20,6 +20,7 @@ test("render signed-out account page", () => {
           imageUrl: null,
         },
         settings: null,
+        profiles: [],
       }}
     >
       <MemoryRouter>
@@ -49,9 +50,15 @@ test("render signed-in account page", () => {
           email: "name@keybr.com",
           name: "name",
           anonymized: false,
+          publicProfile: false,
           externalId: [],
           order: null,
           createdAt: "2001-02-03T04:05:06.789Z",
+          dateOfBirth: null,
+          hasPassword: true,
+          twoFactorEnabled: false,
+          parentPinSet: false,
+          emailVerified: true,
         },
         publicUser: {
           id: "xyz",
@@ -62,6 +69,7 @@ test("render signed-in account page", () => {
           premium: true,
         },
         settings: null,
+        profiles: [],
       }}
     >
       <MemoryRouter>

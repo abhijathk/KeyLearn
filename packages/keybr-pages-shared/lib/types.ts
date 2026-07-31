@@ -2,6 +2,12 @@ import { type LocaleId } from "@keybr/intl";
 
 export type PageData = {
   /**
+   * Whether the leaderboard is worth showing yet. False until the community is
+   * large enough for a ranking to be meaningful — the navigation link is hidden
+   * until then, so nobody is sent to an empty or misleading board.
+   */
+  readonly leaderboard?: boolean;
+  /**
    * Base URL.
    */
   readonly base: string;
@@ -64,10 +70,22 @@ export type ProfileDetails = {
   readonly lastName: string;
   readonly birthYear: number | null;
   readonly avatar: ProfileAvatar | null;
+  /** Hide this learner's name on leaderboards and in multiplayer. */
+  readonly anonymized: boolean;
   /** Parental consent captured when a kid profile was created. */
   readonly parentalConsent: boolean;
   /** ISO timestamp the consent was recorded, or null. */
   readonly consentAt: string | null;
+};
+
+/** One entry in an account's security activity log. */
+export type SecurityEventDetails = {
+  readonly id: number;
+  readonly type: string;
+  readonly ip: string | null;
+  readonly userAgent: string | null;
+  readonly detail: string | null;
+  readonly createdAt: Date;
 };
 
 export type UserDetails = {
@@ -87,6 +105,8 @@ export type UserDetails = {
    * Whether the user name is anonymized.
    */
   readonly anonymized: boolean;
+  /** Whether this account's typing history is publicly viewable. */
+  readonly publicProfile: boolean;
   /**
    * Profiles from social networks.
    */
@@ -102,6 +122,10 @@ export type UserDetails = {
   readonly dateOfBirth: string | null;
   /** Whether the account has a password set (vs. OAuth/passkey-only). */
   readonly hasPassword: boolean;
+  /** Whether two-step verification is switched on. */
+  readonly twoFactorEnabled: boolean;
+  /** Whether a grown-up PIN guards profile management. */
+  readonly parentPinSet: boolean;
   /** Whether the account's email address has been verified. */
   readonly emailVerified: boolean;
   /**

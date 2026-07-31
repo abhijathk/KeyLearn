@@ -1,6 +1,6 @@
 import { Layout } from "@keybr/keyboard";
-import { openResultStorage } from "@keybr/result-loader";
 import { Result, TextType } from "@keybr/result";
+import { openResultStorage } from "@keybr/result-loader";
 import { Histogram } from "@keybr/textinput";
 import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
@@ -360,7 +360,10 @@ export function KeybrImport({
                     defaultMessage="Yes, replace"
                   />
                 ) : (
-                  <FormattedMessage id="import.import" defaultMessage="Import" />
+                  <FormattedMessage
+                    id="import.import"
+                    defaultMessage="Import"
+                  />
                 )}
               </button>
             </div>

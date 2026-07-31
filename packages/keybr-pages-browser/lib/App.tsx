@@ -50,6 +50,7 @@ const TermsOfServicePage = lazy(() => import("./pages/terms-of-service.tsx"));
 const PrivacyPolicyPage = lazy(() => import("./pages/privacy-policy.tsx"));
 const AboutPage = lazy(() => import("./pages/about.tsx"));
 const GuidePage = lazy(() => import("./pages/guide.tsx"));
+const HighScoresPage = lazy(() => import("./pages/high-scores.tsx"));
 
 export function App() {
   return (
@@ -214,6 +215,17 @@ function PageRoutes() {
               <Title page={Pages.kids} />
               <Suspense fallback={<LoadingProgress />}>
                 <KidsPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.highScores.path}
+          element={
+            <Template path={Pages.highScores.path}>
+              <Title page={Pages.highScores} />
+              <Suspense fallback={<LoadingProgress />}>
+                <HighScoresPage />
               </Suspense>
             </Template>
           }

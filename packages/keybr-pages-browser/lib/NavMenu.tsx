@@ -1,4 +1,4 @@
-import { type PageInfo, Pages } from "@keybr/pages-shared";
+import { type PageInfo, Pages, usePageData } from "@keybr/pages-shared";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
 import { useIntl } from "react-intl";
@@ -12,6 +12,7 @@ const pageIcons: Record<string, StrokeIconName> = {
   [Pages.typingTest.path]: "gauge",
   [Pages.layouts.path]: "grid",
   [Pages.texts.path]: "book",
+  [Pages.highScores.path]: "trophy",
   [Pages.help.path]: "help",
 };
 
@@ -21,6 +22,7 @@ export function NavMenu({
   readonly currentPath?: string;
   readonly onNavigate?: () => void;
 }) {
+  const { leaderboard } = usePageData();
   return (
     <div className={styles.root}>
       <MenuItem>
@@ -42,6 +44,14 @@ export function NavMenu({
       <MenuItem>
         <MenuItemLink page={Pages.texts} onNavigate={onNavigate} />
       </MenuItem>
+
+      {/* Only once there is a community to rank. Until then the link would lead
+          to a board that says "not yet", which is worse than no link. */}
+      {leaderboard && (
+        <MenuItem>
+          <MenuItemLink page={Pages.highScores} onNavigate={onNavigate} />
+        </MenuItem>
+      )}
 
       <MenuItem>
         <MenuItemLink page={Pages.help} onNavigate={onNavigate} />

@@ -1,9 +1,8 @@
+import { usePageData } from "@keybr/pages-shared";
 import { Button } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type CSSProperties, type ReactNode, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { useNavigate } from "react-router";
-import { usePageData } from "@keybr/pages-shared";
 import { ConfirmDialog } from "../ConfirmDialog.tsx";
 import { type ProfileInput } from "../service.ts";
 import { presetById, presetsFor } from "./avatars.ts";
@@ -12,13 +11,13 @@ import { useProfiles } from "./context.tsx";
 import { KeybrImport } from "./KeybrImport.tsx";
 import { ProfileAvatar } from "./ProfileAvatar.tsx";
 import * as styles from "./Profiles.module.less";
-import { type ProfileStats, useProfileStats } from "./useProfileStats.ts";
 import {
   adultProfiles,
   type Avatar,
   type Profile,
   type ProfileKind,
 } from "./store.ts";
+import { type ProfileStats, useProfileStats } from "./useProfileStats.ts";
 
 // The Kid / Grown-up badge takes its colour from the learner's own avatar,
 // so a row reads as one identity. Photo avatars fall back to the theme accent.
@@ -61,7 +60,12 @@ function ProgressLine({
     st.totalLetters > 0;
   const pct = Math.max(
     0,
-    Math.min(1, hasLetters ? st.unlockedLetters! / st.totalLetters! : Math.min(st.topSpeed / 350, 1)),
+    Math.min(
+      1,
+      hasLetters
+        ? st.unlockedLetters! / st.totalLetters!
+        : Math.min(st.topSpeed / 350, 1),
+    ),
   );
   return (
     <div className={styles.prog}>
@@ -99,18 +103,9 @@ type Editing =
  */
 export function ProfilesManager(): ReactNode {
   const { formatMessage } = useIntl();
-  const navigate = useNavigate();
   const { publicUser } = usePageData();
-  const {
-    household,
-    active,
-    maxProfiles,
-    add,
-    update,
-    remove,
-    select,
-    reorder,
-  } = useProfiles();
+  const { household, active, maxProfiles, add, update, remove, reorder } =
+    useProfiles();
   const [editing, setEditing] = useState<Editing>(null);
   const [importing, setImporting] = useState(false);
   const stats = useProfileStats(household.profiles);
@@ -119,11 +114,6 @@ export function ProfilesManager(): ReactNode {
 
   // Profiles arrive already in the saved display order from the context.
   const ordered = household.profiles;
-
-  const openProfile = (p: Profile) => {
-    select(p.id);
-    navigate(p.kind === "kid" ? "/kids" : "/");
-  };
 
   return (
     <div className={styles.manager}>
@@ -165,12 +155,8 @@ export function ProfilesManager(): ReactNode {
                   </button>
                 </span>
               )}
-              <button className={styles.rowMain} onClick={() => openProfile(p)}>
-                <ProfileAvatar
-                  avatar={p.avatar}
-                  name={p.firstName}
-                  size={34}
-                />
+              <div className={styles.rowMain}>
+                <ProfileAvatar avatar={p.avatar} name={p.firstName} size={34} />
                 <span className={styles.rowInfo}>
                   <span className={styles.rowName}>
                     {p.firstName}
@@ -185,7 +171,7 @@ export function ProfilesManager(): ReactNode {
                   </span>
                   <ProgressLine p={p} st={stats.get(p.id)} />
                 </span>
-              </button>
+              </div>
               <span className={styles.kindBadge} style={badgeStyle(p)}>
                 {p.kind === "kid" ? (
                   <FormattedMessage id="profiles.kid" defaultMessage="Kid" />
@@ -242,7 +228,11 @@ export function ProfilesManager(): ReactNode {
           className={styles.importCta}
           onClick={() => setImporting(true)}
         >
-          <svg className={styles.importCtaIcon} viewBox="0 0 24 24" aria-hidden={true}>
+          <svg
+            className={styles.importCtaIcon}
+            viewBox="0 0 24 24"
+            aria-hidden={true}
+          >
             <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4" />
           </svg>
           <span className={styles.importCtaText}>
@@ -377,7 +367,9 @@ function ProfileEditor({
       lastName: lastName.trim(),
       birthYear: year,
       avatar,
-      ...(kind === "kid" ? { parentalConsent: consent || profile != null } : {}),
+      ...(kind === "kid"
+        ? { parentalConsent: consent || profile != null }
+        : {}),
     });
   };
 
@@ -604,7 +596,10 @@ function ProfileEditor({
               <span className={styles.spacer} />
               <Button
                 size={16}
-                label={formatMessage({ id: "t_Close", defaultMessage: "Close" })}
+                label={formatMessage({
+                  id: "t_Close",
+                  defaultMessage: "Close",
+                })}
                 onClick={() => setShowConsent(false)}
               />
             </div>

@@ -2,6 +2,7 @@ import {
   type AnyUser,
   type ProfileAvatar,
   type ProfileDetails,
+  type SecurityEventDetails,
   type UserDetails,
 } from "@keybr/pages-shared";
 import { expectType, request } from "@keybr/request";
@@ -29,6 +30,7 @@ export type ProfileInput = {
 
 export type PatchAccountRequest = {
   readonly anonymized?: boolean;
+  readonly publicProfile?: boolean;
   readonly name?: string;
 };
 
@@ -53,6 +55,15 @@ export namespace AccountService {
     await request.use(expectType("application/json")).POST(path).send(data);
   }
 
+  /** As postAuth, but hands back the parsed response body. */
+  async function postAuthJson<T>(path: string, data: object): Promise<T> {
+    const response = await request
+      .use(expectType("application/json"))
+      .POST(path)
+      .send(data);
+    return (await response.json()) as T;
+  }
+
   /**
    * Either the account is ready ({ ok: true }) or the email still needs
    * verifying ({ verify: true, email }) so the caller shows the code step.
@@ -75,11 +86,29 @@ export namespace AccountService {
   export async function registerPassword(data: {
     readonly email: string;
     readonly password: string;
-    readonly name?: string;
+    readonly firstName: string;
+    readonly lastName: string;
     readonly dateOfBirth: string;
     readonly turnstileToken?: string;
   }): Promise<AuthResult> {
     return await postAuthResult("/auth/register-password", data);
+  }
+
+  export type Lookup =
+    | { readonly exists: false }
+    | {
+        readonly exists: true;
+        readonly hasPassword: boolean;
+        readonly twoFactor: boolean;
+        readonly providers: readonly string[];
+      };
+
+  /** Asks what this address needs next, before showing a password field. */
+  export async function lookup(data: {
+    readonly email: string;
+    readonly turnstileToken?: string;
+  }): Promise<Lookup> {
+    return await postAuthJson<Lookup>("/auth/lookup", data);
   }
 
   export async function loginPassword(data: {
@@ -175,12 +204,86 @@ export namespace AccountService {
     await postJson("/auth/passkey/login-verify", response);
   }
 
+  // ---- Two-step verification ----
+
+  /** Mint a secret and get the otpauth URI to show as a QR code. */
+  export async function twoFactorBegin(): Promise<{
+    secret: string;
+    uri: string;
+  }> {
+    return await postAuthJson<{ secret: string; uri: string }>(
+      "/_/account/2fa/begin",
+      {},
+    );
+  }
+
+  /** Confirm the app is set up, switching it on. Returns the recovery codes. */
+  export async function twoFactorEnable(code: string): Promise<string[]> {
+    const body = await postAuthJson<{ recoveryCodes: string[] }>(
+      "/_/account/2fa/enable",
+      { code },
+    );
+    return body.recoveryCodes;
+  }
+
+  export async function twoFactorDisable(data: {
+    readonly password?: string;
+    readonly code?: string;
+  }): Promise<void> {
+    await postAuth("/_/account/2fa/disable", data);
+  }
+
+  /** Second step of signing in. */
+  export async function twoFactorVerify(code: string): Promise<void> {
+    await postAuth("/auth/2fa/verify", { code });
+  }
+
+  // ---- Grown-up PIN ----
+
+  export async function setParentPin(data: {
+    readonly pin: string | null;
+    readonly currentPin?: string;
+    readonly password?: string;
+  }): Promise<void> {
+    await postAuth("/_/account/parent-pin", data);
+  }
+
+  export async function verifyParentPin(pin: string): Promise<void> {
+    await postAuth("/_/account/parent-pin/verify", { pin });
+  }
+
+  /** Downloads everything the account holds, as a JSON file. */
+  export async function exportData(): Promise<void> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/account/export")
+      .send();
+    const blob = new Blob([JSON.stringify(await response.json(), null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "keylearn-data.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  export async function listSecurityEvents(): Promise<SecurityEventDetails[]> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/account/security-events")
+      .send();
+    return ((await response.json()) as { events: SecurityEventDetails[] })
+      .events;
+  }
+
   export async function listPasskeys(): Promise<Passkey[]> {
     const response = await request
       .use(expectType("application/json"))
       .GET("/_/passkeys")
       .send();
-    return (await response.json()).passkeys;
+    return ((await response.json()) as { passkeys: Passkey[] }).passkeys;
   }
 
   export async function deletePasskey(id: string): Promise<Passkey[]> {
@@ -188,7 +291,7 @@ export namespace AccountService {
       .use(expectType("application/json"))
       .DELETE(`/_/passkeys/${id}`)
       .send();
-    return (await response.json()).passkeys;
+    return ((await response.json()) as { passkeys: Passkey[] }).passkeys;
   }
 
   export async function forgotPassword(
@@ -242,7 +345,10 @@ export namespace AccountService {
 
   export async function listProfiles(): Promise<ProfileDetails[]> {
     return await profilesOf(
-      await request.use(expectType("application/json")).GET("/_/profiles").send(),
+      await request
+        .use(expectType("application/json"))
+        .GET("/_/profiles")
+        .send(),
     );
   }
 

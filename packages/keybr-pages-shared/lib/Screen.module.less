@@ -1,7 +1,14 @@
+@import "@keybr/widget/lib/index.less";
+
 .screen {
   position: relative;
   min-inline-size: 60rem;
   max-inline-size: 70rem;
   margin-inline: auto;
   margin-block: 2rem;
+
+  // Routed content arrives rather than appearing. Short and small — this runs
+  // on every navigation, so anything longer would feel like waiting.
+  .motion-rise-in(@motion-base);
+  .motion-respect-reduced();
 }

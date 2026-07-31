@@ -1,5 +1,6 @@
 import { ConfirmDialog, ProfileAvatar, useProfiles } from "@keybr/page-account";
-import { Pages, usePageData } from "@keybr/pages-shared";
+import { logout, Pages, usePageData } from "@keybr/pages-shared";
+import { supportUrl } from "@keybr/thirdparties";
 import { IconButton, StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -133,136 +134,141 @@ export function MenuDrawer({
         {open && (
           <>
             <div className={styles.body}>
-            {household.profiles.length > 0 ? (
-              <>
-                <div className={styles.labelRow}>
-                  <span>
-                    <FormattedMessage
-                      id="nav.learners"
-                      defaultMessage="Learners"
-                    />
-                  </span>
-                  <span className={styles.labelHairline} />
+              {household.profiles.length > 0 ? (
+                <>
+                  <div className={styles.labelRow}>
+                    <span>
+                      <FormattedMessage
+                        id="nav.learners"
+                        defaultMessage="Learners"
+                      />
+                    </span>
+                    <span className={styles.labelHairline} />
+                    <RouterLink
+                      className={styles.manage}
+                      to={`${Pages.account.path}#learners`}
+                      onClick={onClose}
+                    >
+                      <FormattedMessage
+                        id="nav.manageLearners"
+                        defaultMessage="Manage"
+                      />
+                    </RouterLink>
+                  </div>
+                  <div className={styles.learners}>
+                    {household.profiles.map((p) => (
+                      <button
+                        key={p.id}
+                        className={clsx(
+                          styles.learner,
+                          active?.id === p.id && styles.learnerOn,
+                        )}
+                        title={p.firstName}
+                        onClick={() => switchTo(p.id, p.kind)}
+                      >
+                        <ProfileAvatar
+                          avatar={p.avatar}
+                          name={p.firstName}
+                          size={36}
+                        />
+                        <span className={styles.learnerName}>
+                          {p.firstName}
+                        </span>
+                        <span className={styles.learnerKind}>
+                          {p.kind === "kid" ? (
+                            <FormattedMessage
+                              id="profiles.kid"
+                              defaultMessage="Kid"
+                            />
+                          ) : (
+                            <FormattedMessage
+                              id="profiles.adult"
+                              defaultMessage="Grown-up"
+                            />
+                          )}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                signedIn && (
                   <RouterLink
-                    className={styles.manage}
-                    to={`${Pages.account.path}#learners`}
+                    className={styles.setupLink}
+                    to={Pages.account.path}
                     onClick={onClose}
                   >
                     <FormattedMessage
-                      id="nav.manageLearners"
-                      defaultMessage="Manage"
+                      id="nav.setUpProfiles"
+                      defaultMessage="Set up profiles"
                     />
                   </RouterLink>
-                </div>
-                <div className={styles.learners}>
-                  {household.profiles.map((p) => (
-                    <button
-                      key={p.id}
+                )
+              )}
+              {showModeSwitch && (
+                <>
+                  <div className={styles.label}>
+                    <FormattedMessage
+                      id="drawer.who"
+                      defaultMessage="Who's practicing"
+                    />
+                  </div>
+                  <div className={styles.seg}>
+                    <RouterLink
                       className={clsx(
-                        styles.learner,
-                        active?.id === p.id && styles.learnerOn,
+                        styles.segBtn,
+                        path !== Pages.kids.path && styles.segOn,
                       )}
-                      title={p.firstName}
-                      onClick={() => switchTo(p.id, p.kind)}
+                      to={Pages.practice.path}
+                      onClick={toGrownUps}
                     >
-                      <ProfileAvatar
-                        avatar={p.avatar}
-                        name={p.firstName}
-                        size={36}
+                      <FormattedMessage
+                        id="drawer.grownUps"
+                        defaultMessage="Grown-ups"
                       />
-                      <span className={styles.learnerName}>{p.firstName}</span>
-                      <span className={styles.learnerKind}>
-                        {p.kind === "kid" ? (
-                          <FormattedMessage
-                            id="profiles.kid"
-                            defaultMessage="Kid"
-                          />
-                        ) : (
-                          <FormattedMessage
-                            id="profiles.adult"
-                            defaultMessage="Grown-up"
-                          />
-                        )}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              signedIn && (
-                <RouterLink
-                  className={styles.setupLink}
-                  to={Pages.account.path}
-                  onClick={onClose}
-                >
+                    </RouterLink>
+                    <RouterLink
+                      className={clsx(
+                        styles.segBtn,
+                        path === Pages.kids.path && styles.segOn,
+                      )}
+                      to={Pages.kids.path}
+                      onClick={toKids}
+                    >
+                      <FormattedMessage
+                        id="drawer.kids"
+                        defaultMessage="Kids"
+                      />
+                    </RouterLink>
+                  </div>
+                </>
+              )}
+              {kidLock && (
+                <div className={styles.lockNote}>
                   <FormattedMessage
-                    id="nav.setUpProfiles"
-                    defaultMessage="Set up profiles"
+                    id="drawer.kidLock"
+                    defaultMessage="Grown-ups only — switch to a grown-up profile to use these."
                   />
-                </RouterLink>
-              )
-            )}
-            {showModeSwitch && (
-              <>
+                </div>
+              )}
+              <div
+                className={clsx(kidLock && styles.locked)}
+                aria-disabled={kidLock}
+                // Inert blocks clicks and keyboard focus for the whole zone.
+                inert={kidLock}
+              >
+                <div className={styles.label}>
+                  <FormattedMessage id="drawer.goTo" defaultMessage="Explore" />
+                </div>
+                <NavMenu currentPath={path} onNavigate={onClose} />
                 <div className={styles.label}>
                   <FormattedMessage
-                    id="drawer.who"
-                    defaultMessage="Who's practicing"
+                    id="drawer.language"
+                    defaultMessage="Site language"
                   />
                 </div>
-                <div className={styles.seg}>
-                  <RouterLink
-                    className={clsx(
-                      styles.segBtn,
-                      path !== Pages.kids.path && styles.segOn,
-                    )}
-                    to={Pages.practice.path}
-                    onClick={toGrownUps}
-                  >
-                    <FormattedMessage
-                      id="drawer.grownUps"
-                      defaultMessage="Grown-ups"
-                    />
-                  </RouterLink>
-                  <RouterLink
-                    className={clsx(
-                      styles.segBtn,
-                      path === Pages.kids.path && styles.segOn,
-                    )}
-                    to={Pages.kids.path}
-                    onClick={toKids}
-                  >
-                    <FormattedMessage id="drawer.kids" defaultMessage="Kids" />
-                  </RouterLink>
-                </div>
-              </>
-            )}
-            {kidLock && (
-              <div className={styles.lockNote}>
-                <FormattedMessage
-                  id="drawer.kidLock"
-                  defaultMessage="Grown-ups only — switch to a grown-up profile to use these."
-                />
+                <LanguagePanel currentPath={path} />
               </div>
-            )}
-            <div
-              className={clsx(kidLock && styles.locked)}
-              aria-disabled={kidLock}
-              // Inert blocks clicks and keyboard focus for the whole zone.
-              inert={kidLock}
-            >
-              <div className={styles.label}>
-                <FormattedMessage id="drawer.goTo" defaultMessage="Explore" />
-              </div>
-              <NavMenu currentPath={path} onNavigate={onClose} />
-              <div className={styles.label}>
-                <FormattedMessage
-                  id="drawer.language"
-                  defaultMessage="Site language"
-                />
-              </div>
-              <LanguagePanel currentPath={path} />
-            </div>
             </div>
             <div
               className={clsx(styles.account, kidLock && styles.locked)}
@@ -280,32 +286,38 @@ export function MenuDrawer({
                     {formatMessage(Pages.account.link.label)}
                   </RouterLink>
                 ) : (
-                  <>
-                    <RouterLink
-                      className={styles.loginLink}
-                      to={Pages.login.path}
-                      onClick={onClose}
-                    >
-                      <StrokeIcon className={styles.utilIcon} name="user" />
-                      <FormattedMessage id="t_Log_In" defaultMessage="Log In" />
-                    </RouterLink>
-                    <RouterLink
-                      className={styles.registerLink}
-                      to={Pages.register.path}
-                      onClick={onClose}
-                    >
-                      <StrokeIcon className={styles.utilIcon} name="people" />
-                      <FormattedMessage
-                        id="t_Register"
-                        defaultMessage="Register"
-                      />
-                    </RouterLink>
-                  </>
+                  // One door, matching the panel it opens: the email address
+                  // decides whether this is a sign-in or a sign-up.
+                  <RouterLink
+                    className={styles.loginLink}
+                    to={Pages.login.path}
+                    onClick={onClose}
+                  >
+                    <StrokeIcon className={styles.utilIcon} name="user" />
+                    <FormattedMessage
+                      id="nav.logInOrSignUp"
+                      defaultMessage="Log in or sign up"
+                    />
+                  </RouterLink>
                 )}
                 <RouterLink to={Pages.guide.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="font" />
                   {formatMessage(Pages.guide.link.label)}
                 </RouterLink>
+                {supportUrl !== "" && (
+                  <a
+                    href={supportUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    onClick={onClose}
+                  >
+                    <StrokeIcon className={styles.utilIcon} name="heart" />
+                    <FormattedMessage
+                      id="footer.supportLink.text"
+                      defaultMessage="Buy me a coffee"
+                    />
+                  </a>
+                )}
                 <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="doc" />
                   {formatMessage(Pages.termsOfService.link.label)}
@@ -317,7 +329,7 @@ export function MenuDrawer({
                 {signedIn && (
                   <a
                     className={styles.logout}
-                    href="/auth/logout"
+                    href="#"
                     onClick={(ev) => {
                       ev.preventDefault();
                       setConfirmLogout(true);
@@ -357,7 +369,7 @@ export function MenuDrawer({
             }),
           )}
           onConfirm={() => {
-            window.location.href = "/auth/logout";
+            void logout();
           }}
           onCancel={() => setConfirmLogout(false)}
         />

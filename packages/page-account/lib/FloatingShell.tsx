@@ -18,7 +18,8 @@ export function FloatingShell({
   compact = false,
   flush = false,
 }: {
-  readonly title: ReactNode;
+  /** Optional: the auth window carries no heading of its own. */
+  readonly title?: ReactNode;
   readonly children: ReactNode;
   readonly compact?: boolean;
   /** Remove the body padding so a full-bleed rail/pane layout can fill it. */
@@ -76,8 +77,12 @@ export function FloatingShell({
           </>
         ) : (
           <>
-            <div className={styles.windowHead}>
-              <span className={styles.windowTitle}>{title}</span>
+            <div
+              className={clsx(styles.windowHead, title == null && styles.bare)}
+            >
+              {title != null && (
+                <span className={styles.windowTitle}>{title}</span>
+              )}
               <button
                 className={styles.windowClose}
                 title={formatMessage({

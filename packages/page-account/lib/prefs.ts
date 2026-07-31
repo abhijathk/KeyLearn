@@ -11,10 +11,18 @@ import { booleanProp, stringProp } from "@keybr/settings";
 export const accountProps = {
   // Empty string means "follow this device's time zone".
   timeZone: stringProp("account.timeZone", "", { maxLength: 64 }),
-  // "mon" | "sun"
-  weekStart: stringProp("account.weekStart", "mon", { maxLength: 3 }),
+  // "mon" | "sun" — Sunday is the default.
+  weekStart: stringProp("account.weekStart", "sun", { maxLength: 3 }),
   emailReminders: booleanProp("account.emailReminders", true),
+  // "few-days" | "weekly" | "monthly" — how often a lapsed learner may be
+  // nudged. This is a ceiling, not a schedule: the sweep only writes when
+  // someone has actually stopped practising, so a daily user gets nothing.
+  reminderFrequency: stringProp("account.reminderFrequency", "weekly", {
+    maxLength: 16,
+  }),
   emailProductNews: booleanProp("account.emailProductNews", false),
+  // "major" | "all" — how much news counts as news.
+  newsLevel: stringProp("account.newsLevel", "major", { maxLength: 8 }),
   analytics: booleanProp("account.analytics", false),
 } as const;
 

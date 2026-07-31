@@ -158,7 +158,7 @@ function LanguageRegionCard(): ReactNode {
           </span>
         </div>
         <Segmented
-          value={weekStart === "sun" ? "sun" : "mon"}
+          value={weekStart === "mon" ? "mon" : "sun"}
           onChange={(id) =>
             updateSettings(settings.set(accountProps.weekStart, id))
           }
@@ -190,8 +190,10 @@ function LanguageRegionCard(): ReactNode {
 
 function NotificationsCard(): ReactNode {
   const { settings, updateSettings } = useSettings();
-  const set = (prop: (typeof accountProps)["emailReminders"], v: boolean) =>
-    updateSettings(settings.set(prop, v));
+  const reminders = settings.get(accountProps.emailReminders);
+  const news = settings.get(accountProps.emailProductNews);
+  const frequency = settings.get(accountProps.reminderFrequency);
+  const level = settings.get(accountProps.newsLevel);
 
   return (
     <div className={styles.prefCard}>
@@ -218,10 +220,62 @@ function NotificationsCard(): ReactNode {
           </span>
         </div>
         <Toggle
-          on={settings.get(accountProps.emailReminders)}
-          onChange={(v) => set(accountProps.emailReminders, v)}
+          on={reminders}
+          onChange={(v) =>
+            updateSettings(settings.set(accountProps.emailReminders, v))
+          }
         />
       </div>
+
+      {reminders && (
+        <div className={styles.subRow}>
+          <span className={styles.subLabel}>
+            <FormattedMessage
+              id="account.prefs.reminders.frequency"
+              defaultMessage="At most"
+            />
+          </span>
+          <Segmented
+            value={
+              frequency === "few-days" || frequency === "monthly"
+                ? frequency
+                : "weekly"
+            }
+            onChange={(id) =>
+              updateSettings(settings.set(accountProps.reminderFrequency, id))
+            }
+            options={[
+              {
+                id: "few-days",
+                label: (
+                  <FormattedMessage
+                    id="account.prefs.reminders.freq.days"
+                    defaultMessage="Every few days"
+                  />
+                ),
+              },
+              {
+                id: "weekly",
+                label: (
+                  <FormattedMessage
+                    id="account.prefs.reminders.freq.weekly"
+                    defaultMessage="Weekly"
+                  />
+                ),
+              },
+              {
+                id: "monthly",
+                label: (
+                  <FormattedMessage
+                    id="account.prefs.reminders.freq.monthly"
+                    defaultMessage="Monthly"
+                  />
+                ),
+              },
+            ]}
+          />
+        </div>
+      )}
 
       <div className={styles.hr} />
 
@@ -241,10 +295,49 @@ function NotificationsCard(): ReactNode {
           </span>
         </div>
         <Toggle
-          on={settings.get(accountProps.emailProductNews)}
-          onChange={(v) => set(accountProps.emailProductNews, v)}
+          on={news}
+          onChange={(v) =>
+            updateSettings(settings.set(accountProps.emailProductNews, v))
+          }
         />
       </div>
+
+      {news && (
+        <div className={styles.subRow}>
+          <span className={styles.subLabel}>
+            <FormattedMessage
+              id="account.prefs.news.level"
+              defaultMessage="Send me"
+            />
+          </span>
+          <Segmented
+            value={level === "all" ? "all" : "major"}
+            onChange={(id) =>
+              updateSettings(settings.set(accountProps.newsLevel, id))
+            }
+            options={[
+              {
+                id: "major",
+                label: (
+                  <FormattedMessage
+                    id="account.prefs.news.level.major"
+                    defaultMessage="Major updates only"
+                  />
+                ),
+              },
+              {
+                id: "all",
+                label: (
+                  <FormattedMessage
+                    id="account.prefs.news.level.all"
+                    defaultMessage="Everything"
+                  />
+                ),
+              },
+            ]}
+          />
+        </div>
+      )}
 
       <div className={styles.hr} />
 
@@ -290,7 +383,9 @@ function AppearanceCard(): ReactNode {
           </span>
         </div>
         <Segmented
-          value={THEME_IDS.includes(color as ThemeId) ? (color as ThemeId) : "auto"}
+          value={
+            THEME_IDS.includes(color as ThemeId) ? (color as ThemeId) : "auto"
+          }
           onChange={switchColor}
           options={THEME_OPTIONS}
         />
@@ -314,7 +409,9 @@ function AppearanceCard(): ReactNode {
           </span>
         </div>
         <Segmented
-          value={speedUnit === SpeedUnit.CPM.id ? SpeedUnit.CPM.id : SpeedUnit.WPM.id}
+          value={
+            speedUnit === SpeedUnit.CPM.id ? SpeedUnit.CPM.id : SpeedUnit.WPM.id
+          }
           onChange={(id) =>
             updateSettings(
               settings.set(uiProps.speedUnit, SpeedUnit.ALL.get(id)),
@@ -397,7 +494,7 @@ function PrivacyCard(): ReactNode {
             defaultMessage="Export my data"
           />
         </span>
-        <button className={styles.link} onClick={exportData}>
+        <button className={styles.subtleBtn} onClick={exportData}>
           <FormattedMessage
             id="account.prefs.export.action"
             defaultMessage="Download"

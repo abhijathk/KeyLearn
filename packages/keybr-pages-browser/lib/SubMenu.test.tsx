@@ -20,6 +20,7 @@ test("render", () => {
           premium: false,
         },
         settings: null,
+        profiles: [],
       }}
     >
       <PreferredLocaleContext.Provider value="pl">

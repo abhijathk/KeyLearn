@@ -4,16 +4,18 @@ import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
+import { ActivityLog } from "./ActivityLog.tsx";
 import { PasswordField } from "./AuthPage.tsx";
 import * as dlg from "./ConfirmDialog.module.less";
+import { ParentPinCard } from "./ParentPinCard.tsx";
 import { PasswordStrength } from "./PasswordStrength.tsx";
 import { AccountService, type Passkey } from "./service.ts";
+import { TwoFactorCard } from "./TwoFactorCard.tsx";
 
 // A friendly automatic name for a new passkey, derived from the current device
 // and browser — so the learner never has to think one up.
 function deviceName(): string {
-  const ua =
-    typeof navigator !== "undefined" ? navigator.userAgent : "";
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
   let os = "this device";
   if (/iPhone/.test(ua)) os = "iPhone";
   else if (/iPad/.test(ua)) os = "iPad";
@@ -33,8 +35,11 @@ function deviceName(): string {
 
 export function SecurityCard({
   user,
+  onChanged = () => {},
 }: {
   readonly user: UserDetails;
+  /** Re-fetches the account so toggles reflect what the server now holds. */
+  readonly onChanged?: () => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
 
@@ -119,7 +124,7 @@ export function SecurityCard({
           <div key={pk.id} className={styles.miniRow}>
             <span>{pk.name}</span>
             <button
-              className={clsx(styles.link, styles.linkDanger)}
+              className={styles.subtleBtnDanger}
               disabled={pkBusy}
               onClick={() => removePasskey(pk.id)}
             >
@@ -145,7 +150,7 @@ export function SecurityCard({
           passkeys.length === 0 && (
             <button
               type="button"
-              className={clsx(styles.link, styles.rightAction)}
+              className={clsx(styles.subtleBtn, styles.rightAction)}
               disabled={pkBusy}
               onClick={addPasskey}
             >
@@ -188,7 +193,7 @@ export function SecurityCard({
         </p>
         <button
           type="button"
-          className={clsx(styles.link, styles.rightAction)}
+          className={clsx(styles.subtleBtn, styles.rightAction)}
           onClick={() => {
             setPwDone(false);
             setPwOpen(true);
@@ -228,7 +233,7 @@ export function SecurityCard({
           <span>{user.email}</span>
           <button
             type="button"
-            className={styles.link}
+            className={styles.subtleBtn}
             onClick={() => {
               setEmDone(false);
               setEmOpen(true);
@@ -295,6 +300,33 @@ export function SecurityCard({
           }}
         />
       )}
+
+      <TwoFactorCard user={user} onChanged={onChanged} />
+
+      <ParentPinCard user={user} onChanged={onChanged} />
+
+      {/* Take a copy of everything held about the household. */}
+      <div className={styles.prefCard}>
+        <div className={styles.prefSect}>Your data</div>
+        <p className={styles.prefHint}>
+          Download everything this account holds — profiles, practice history,
+          sign-in methods and the activity below — as a single JSON file.
+        </p>
+        <button
+          type="button"
+          className={styles.subtleBtn}
+          onClick={() => {
+            void AccountService.exportData();
+          }}
+        >
+          Download my data
+        </button>
+      </div>
+
+      {/* Recent security activity — how an account owner spots a takeover. */}
+      <div className={styles.prefCard}>
+        <ActivityLog />
+      </div>
     </>
   );
 }
@@ -457,7 +489,9 @@ function ChangeEmailDialog({
                 defaultMessage: "6-digit code",
               })}
               value={identityCode}
-              onChange={(v) => setIdentityCode(v.replace(/\D/g, "").slice(0, 6))}
+              onChange={(v) =>
+                setIdentityCode(v.replace(/\D/g, "").slice(0, 6))
+              }
             />
           </>
         )}
@@ -494,9 +528,7 @@ function ChangeEmailDialog({
             <button
               className={`${dlg.btn} ${dlg.confirm}`}
               disabled={
-                email.trim() === "" ||
-                busy ||
-                (hasPassword && password === "")
+                email.trim() === "" || busy || (hasPassword && password === "")
               }
               onClick={proceedFromEmail}
             >
@@ -626,10 +658,7 @@ function PasswordDialog({
           />
         )}
         {hasPassword && (
-          <a
-            className={styles.forgotLink}
-            href={Pages.forgotPassword.path}
-          >
+          <a className={styles.forgotLink} href={Pages.forgotPassword.path}>
             <FormattedMessage
               id="security.password.forgot"
               defaultMessage="Forgot your current password?"

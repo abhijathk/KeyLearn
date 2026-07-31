@@ -1,4 +1,4 @@
-import { usePageData } from "@keybr/pages-shared";
+import { logout, usePageData } from "@keybr/pages-shared";
 import { Button, TextField } from "@keybr/widget";
 import { type ReactNode, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -124,8 +124,18 @@ function Gate({ name }: { readonly name: string }): ReactNode {
         )}
         {error != null && <p className={styles.error}>{error}</p>}
         <div className={styles.links}>
-          <a className={styles.link} href="/auth/logout">
-            <FormattedMessage id="auth.finish.logout" defaultMessage="Log out" />
+          <a
+            className={styles.link}
+            href="#"
+            onClick={(ev) => {
+              ev.preventDefault();
+              void logout();
+            }}
+          >
+            <FormattedMessage
+              id="auth.finish.logout"
+              defaultMessage="Log out"
+            />
           </a>
         </div>
       </div>

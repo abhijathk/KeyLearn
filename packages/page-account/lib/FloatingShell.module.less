@@ -11,13 +11,21 @@
   place-items: center;
   padding: 2rem;
   background-color: color-mix(in oklab, var(--primary-d2) 55%, transparent);
-  animation: overlay-in 0.2s ease;
+  // The dim and blur settle first, on their own, so the eye has somewhere quiet
+  // to land before the window arrives.
+  animation-name: overlay-in;
+  animation-duration: @motion-base;
+  animation-timing-function: @motion-ease;
+  animation-fill-mode: both;
   backdrop-filter: blur(6px);
+
+  .motion-respect-reduced();
 }
 
 @keyframes overlay-in {
-  0% {
+  from {
     opacity: 0;
+    backdrop-filter: blur(0);
   }
 }
 
@@ -33,13 +41,21 @@
   background-color: var(--primary-l1);
   box-shadow: 0 2rem 5rem var(--shadow-color);
   font-family: var(--value-font-family);
-  animation: window-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  // Follows the backdrop rather than racing it, and settles without overshoot —
+  // a window that bounces reads as jumpy on a screen you are about to type on.
+  animation-name: window-in;
+  animation-duration: @motion-slow;
+  animation-timing-function: @motion-ease;
+  animation-delay: @motion-stagger;
+  animation-fill-mode: both;
+
+  .motion-respect-reduced();
 }
 
 @keyframes window-in {
-  0% {
+  from {
     opacity: 0;
-    transform: translateY(-0.75rem) scale(0.97);
+    transform: translateY(0.6rem) scale(0.985);
   }
 }
 
@@ -49,6 +65,14 @@
   align-items: center;
   padding: 1.1rem 1.4rem 0.9rem;
   border-block-end: 1px solid var(--primary-d2);
+}
+
+// With no title the head is just a strip holding the close button, so the rule
+// beneath it separates nothing — it reads as a stray line above the heading.
+// Drop it and pull the content up to meet the top of the window.
+.windowHead.bare {
+  padding-block-end: 0;
+  border-block-end: none;
 }
 
 .windowTitle {
@@ -97,7 +121,7 @@
 .windowBody {
   flex: 1;
   padding: 1.6rem 1.8rem 2rem;
-  overflow-block: auto;
+  overflow-y: auto;
 }
 
 // Full-bleed body for the rail/pane account layout — the rail and pane manage
@@ -107,11 +131,15 @@
   overflow: hidden;
 }
 
+.windowHead.bare + .windowBody {
+  padding-block-start: 0.4rem;
+}
+
 // The signature mint tape strip across the top of the flush window.
 .tape {
   position: absolute;
-  inset-block-start: 0;
   inset-inline: 0;
+  inset-block-start: 0;
   z-index: 5;
   block-size: 0.44rem;
   background: repeating-linear-gradient(
@@ -127,8 +155,8 @@
 .floatClose {
   display: grid;
   position: absolute;
-  inset-block-start: 0.7rem;
   inset-inline-end: 0.7rem;
+  inset-block-start: 0.7rem;
   z-index: 6;
   place-items: center;
   inline-size: 1.9rem;

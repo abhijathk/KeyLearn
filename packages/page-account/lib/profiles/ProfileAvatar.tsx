@@ -3,6 +3,13 @@ import { presetById } from "./avatars.ts";
 import * as styles from "./Profiles.module.less";
 import { type Avatar, type Profile } from "./store.ts";
 
+const INLINE_IMAGE =
+  /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+function isInlineImage(value: unknown): value is string {
+  return typeof value === "string" && INLINE_IMAGE.test(value);
+}
+
 export function ProfileAvatar({
   avatar,
   name,
@@ -12,7 +19,14 @@ export function ProfileAvatar({
   readonly name: string;
   readonly size?: number;
 }): ReactNode {
-  if (avatar != null && avatar.type === "photo") {
+  // The server validates this on write, but rows predating that validation may
+  // still hold anything, so re-check before handing it to an <img src>: only an
+  // inline image is ever rendered, never a remote or scheme-bearing URL.
+  if (
+    avatar != null &&
+    avatar.type === "photo" &&
+    isInlineImage(avatar.dataUrl)
+  ) {
     return (
       <img
         className={styles.avatar}
@@ -22,7 +36,9 @@ export function ProfileAvatar({
       />
     );
   }
-  const preset = presetById(avatar != null ? avatar.id : "");
+  // Falls through to the lettered preset for an icon avatar, for no avatar, and
+  // for a photo whose data URL was rejected above.
+  const preset = presetById(avatar?.type === "icon" ? avatar.id : "");
   const initial = (name.trim()[0] ?? "?").toUpperCase();
   return (
     <span

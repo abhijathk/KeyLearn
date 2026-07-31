@@ -1,6 +1,6 @@
 import { useProfiles } from "@keybr/page-account";
-import { usePageData } from "@keybr/pages-shared";
 import { PracticePage } from "@keybr/page-practice";
+import { usePageData } from "@keybr/pages-shared";
 import { ResultLoader } from "@keybr/result-loader";
 import { FormattedMessage } from "react-intl";
 import { NavLink } from "react-router";

@@ -1,5 +1,5 @@
 import { catchError } from "@keybr/debug";
-import { type AnyUser, type UserDetails } from "@keybr/pages-shared";
+import { type AnyUser, logout, type UserDetails } from "@keybr/pages-shared";
 import { useState } from "react";
 import { checkoutProduct } from "./checkout.ts";
 import { AccountService, type PatchAccountRequest } from "./service.ts";
@@ -35,8 +35,8 @@ export function useAccountActions(props: {
       reload("/");
     });
 
-  const logout = () => {
-    reload("/auth/logout");
+  const doLogout = () => {
+    void logout();
   };
 
   const checkout = () => {
@@ -50,7 +50,7 @@ export function useAccountActions(props: {
       patchAccount,
       sendDeleteAccountCode,
       deleteAccount,
-      logout,
+      logout: doLogout,
       checkout,
     } as AccountActions,
   };

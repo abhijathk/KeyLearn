@@ -1,5 +1,5 @@
 import { Book } from "@keybr/content";
-import { LessonType, lessonProps } from "@keybr/lesson";
+import { lessonProps, LessonType } from "@keybr/lesson";
 import { Pages, Screen } from "@keybr/pages-shared";
 import { type Settings, useSettings } from "@keybr/settings";
 import { type ReactNode, useState } from "react";
@@ -18,15 +18,22 @@ const MODES: {
 }[] = [
   {
     type: LessonType.GUIDED,
-    name: defineMessage({ id: "texts.mode.guided", defaultMessage: "Guided practice" }),
+    name: defineMessage({
+      id: "texts.mode.guided",
+      defaultMessage: "Guided practice",
+    }),
     desc: defineMessage({
       id: "texts.mode.guided.desc",
-      defaultMessage: "The adaptive default — grows your alphabet one key at a time.",
+      defaultMessage:
+        "The adaptive default — grows your alphabet one key at a time.",
     }),
   },
   {
     type: LessonType.WORDLIST,
-    name: defineMessage({ id: "texts.mode.words", defaultMessage: "Frequent words" }),
+    name: defineMessage({
+      id: "texts.mode.words",
+      defaultMessage: "Frequent words",
+    }),
     desc: defineMessage({
       id: "texts.mode.words.desc",
       defaultMessage: "The most common words in your language.",
@@ -34,7 +41,10 @@ const MODES: {
   },
   {
     type: LessonType.CODE,
-    name: defineMessage({ id: "texts.mode.code", defaultMessage: "Code snippets" }),
+    name: defineMessage({
+      id: "texts.mode.code",
+      defaultMessage: "Code snippets",
+    }),
     desc: defineMessage({
       id: "texts.mode.code.desc",
       defaultMessage: "Brackets, symbols and the rhythm of code.",
@@ -42,7 +52,10 @@ const MODES: {
   },
   {
     type: LessonType.NUMBERS,
-    name: defineMessage({ id: "texts.mode.numbers", defaultMessage: "Number drills" }),
+    name: defineMessage({
+      id: "texts.mode.numbers",
+      defaultMessage: "Number drills",
+    }),
     desc: defineMessage({
       id: "texts.mode.numbers.desc",
       defaultMessage: "The number row and the keypad.",
@@ -50,7 +63,10 @@ const MODES: {
   },
   {
     type: LessonType.CURRICULUM,
-    name: defineMessage({ id: "texts.mode.curriculum", defaultMessage: "Classic course" }),
+    name: defineMessage({
+      id: "texts.mode.curriculum",
+      defaultMessage: "Classic course",
+    }),
     desc: defineMessage({
       id: "texts.mode.curriculum.desc",
       defaultMessage: "A fixed, ordered march through the keys.",
@@ -61,11 +77,13 @@ const MODES: {
 const BLURB: Record<string, MessageDescriptor> = {
   [Book.EN_WIZARD_OZ.id]: defineMessage({
     id: "texts.book.wizardOz",
-    defaultMessage: "A cyclone, a yellow-brick road, and friends made along the way.",
+    defaultMessage:
+      "A cyclone, a yellow-brick road, and friends made along the way.",
   }),
   [Book.EN_TREASURE_ISLAND.id]: defineMessage({
     id: "texts.book.treasureIsland",
-    defaultMessage: "Pirates, a treasure map, and a chest of gold on a far-off island.",
+    defaultMessage:
+      "Pirates, a treasure map, and a chest of gold on a far-off island.",
   }),
   [Book.EN_HOUND_BASKERVILLES.id]: defineMessage({
     id: "texts.book.hound",
@@ -77,7 +95,8 @@ const BLURB: Record<string, MessageDescriptor> = {
   }),
   [Book.EN_ANNE_GREEN_GABLES.id]: defineMessage({
     id: "texts.book.anne",
-    defaultMessage: "A bright, talkative orphan turns a quiet farm upside down.",
+    defaultMessage:
+      "A bright, talkative orphan turns a quiet farm upside down.",
   }),
 };
 
@@ -162,13 +181,17 @@ export default function TextsPage(): ReactNode {
             {MODES.map((m) => (
               <article key={m.name.id} className={styles.card}>
                 <div>
-                  <div className={styles.cardTitle}>{formatMessage(m.name)}</div>
+                  <div className={styles.cardTitle}>
+                    {formatMessage(m.name)}
+                  </div>
                   <p className={styles.cardDesc}>{formatMessage(m.desc)}</p>
                 </div>
                 <button
                   type="button"
                   className={styles.go}
-                  onClick={() => practise((s) => s.set(lessonProps.type, m.type))}
+                  onClick={() =>
+                    practise((s) => s.set(lessonProps.type, m.type))
+                  }
                 >
                   {practiseLabel}
                 </button>

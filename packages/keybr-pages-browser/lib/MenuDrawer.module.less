@@ -51,11 +51,11 @@
   flex-direction: column;
   gap: 0.5rem;
   min-block-size: 0;
-  overflow-block: auto;
   // The panel's own (themed) scroller. The page behind is locked while the
   // drawer is open, so this is the only scroller on screen.
   margin-inline: -0.4rem;
   padding-inline: 0.4rem;
+  overflow-y: auto;
 }
 
 [dir="rtl"] .panel {
@@ -112,8 +112,8 @@
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  text-transform: none;
   text-decoration: none;
+  text-transform: none;
 
   &:hover {
     text-decoration: underline;
@@ -344,7 +344,9 @@
 
   &:hover .utilIcon {
     color: var(--accent);
-    filter: drop-shadow(0 0 5px color-mix(in oklab, var(--accent) 80%, transparent));
+    filter: drop-shadow(
+      0 0 5px color-mix(in oklab, var(--accent) 80%, transparent)
+    );
   }
 }
 
@@ -366,7 +368,8 @@
     .utilIcon {
       color: var(--error-color, #d0322e);
       filter: drop-shadow(
-        0 0 5px color-mix(in oklab, var(--error-color, #d0322e) 80%, transparent)
+        0 0 5px
+          color-mix(in oklab, var(--error-color, #d0322e) 80%, transparent)
       );
     }
   }

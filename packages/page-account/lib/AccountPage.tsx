@@ -15,8 +15,8 @@ import { NavLink } from "react-router";
 import * as styles from "./AccountPage.module.less";
 import { AccountPricePreview } from "./AccountPricePreview.tsx";
 import { type AccountActions, useAccountActions } from "./actions.ts";
-import { ConfirmDialog } from "./ConfirmDialog.tsx";
 import * as dlg from "./ConfirmDialog.module.less";
+import { ConfirmDialog } from "./ConfirmDialog.tsx";
 import { Toggle } from "./controls.tsx";
 import { FloatingShell } from "./FloatingShell.tsx";
 import { PreferencesPane } from "./PreferencesPane.tsx";
@@ -56,7 +56,21 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   const { formatMessage } = useIntl();
   const { user, publicUser, actions } = useAccountActions(props);
   const premium = isPremiumUser(publicUser);
-  const [pane, setPane] = useState<Pane>(initialPane);
+  const [pane, setPaneState] = useState<Pane>(initialPane);
+  const setPane = (next: Pane) => {
+    setPaneState(next);
+    if (typeof window !== "undefined") {
+      window.history.replaceState({}, "", `${Pages.account.path}#${next}`);
+    }
+  };
+
+  // The browser's own back and forward buttons should move between panes too,
+  // since that is what the URL now implies.
+  useEffect(() => {
+    const onPop = () => setPaneState(initialPane());
+    window.addEventListener("hashchange", onPop);
+    return () => window.removeEventListener("hashchange", onPop);
+  }, []);
   const [confirm, setConfirm] = useState<
     "logout" | "delete" | "delete2" | "signout-all" | null
   >(null);
@@ -75,9 +89,10 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
             onClick={() => setPane("account")}
           >
             <Avatar user={publicUser} size="normal" />
+            {/* Name only here — the address is shown in the content pane, and
+                repeating it in a narrow rail just truncated it. */}
             <span className={styles.whoText}>
               <span className={styles.whoName}>{publicUser.name}</span>
-              <span className={styles.whoEmail}>{user.email}</span>
             </span>
           </button>
 
@@ -175,6 +190,9 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               onAnonymize={() =>
                 actions.patchAccount({ anonymized: !user.anonymized })
               }
+              onPublicProfile={() =>
+                actions.patchAccount({ publicProfile: !user.publicProfile })
+              }
               onLogout={() => setConfirm("logout")}
               onSignOutAll={() => setConfirm("signout-all")}
               onDelete={() => setConfirm("delete")}
@@ -202,7 +220,14 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
 
           {pane === "security" && (
             <div className={styles.paneScroll}>
-              <SecurityCard user={user} />
+              <SecurityCard
+                user={user}
+                onChanged={() => {
+                  // The 2FA and PIN flags live on the account record, so pull a
+                  // fresh copy rather than guessing the new state client-side.
+                  actions.patchAccount({});
+                }}
+              />
             </div>
           )}
 
@@ -300,6 +325,7 @@ function AccountPane({
   user,
   publicUser,
   onAnonymize,
+  onPublicProfile,
   onLogout,
   onSignOutAll,
   onDelete,
@@ -308,6 +334,7 @@ function AccountPane({
   readonly user: UserDetails;
   readonly publicUser: AnyUser;
   readonly onAnonymize: () => void;
+  readonly onPublicProfile: () => void;
   readonly onLogout: () => void;
   readonly onSignOutAll: () => void;
   readonly onDelete: () => void;
@@ -348,6 +375,24 @@ function AccountPane({
           </div>
           <Toggle on={user.anonymized} onChange={onAnonymize} />
         </div>
+
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowLabel}>
+              <FormattedMessage
+                id="account.publicProfile"
+                defaultMessage="Public profile page"
+              />
+            </span>
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.publicProfile.sub"
+                defaultMessage="Let anyone with your profile link see your typing history. Off by default — profile links are guessable, so this makes your history public to everyone."
+              />
+            </span>
+          </div>
+          <Toggle on={user.publicProfile} onChange={onPublicProfile} />
+        </div>
       </div>
 
       <div className={styles.prefCard}>
@@ -355,7 +400,7 @@ function AccountPane({
           <span>
             <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
           </span>
-          <button className={styles.link} onClick={onLogout}>
+          <button className={styles.subtleBtnWarn} onClick={onLogout}>
             <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
           </button>
         </div>
@@ -367,7 +412,7 @@ function AccountPane({
               defaultMessage="Log out of all other devices"
             />
           </span>
-          <button className={styles.link} onClick={onSignOutAll}>
+          <button className={styles.subtleBtnWarn} onClick={onSignOutAll}>
             <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
           </button>
         </div>
@@ -544,11 +589,7 @@ function DeleteAccountDialog({
         }
       }}
     >
-      <div
-        className={dlg.dialog}
-        role="alertdialog"
-        aria-modal={true}
-      >
+      <div className={dlg.dialog} role="alertdialog" aria-modal={true}>
         <h2 className={dlg.title}>
           <FormattedMessage
             id="account.delete.finalTitle"
