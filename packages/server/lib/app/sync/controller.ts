@@ -43,7 +43,8 @@ export class Controller {
     const { id } = ctx.state.requireUser();
     const results = await parseResults(value);
     await this.userData.load(new PublicId(id!)).append(results);
-    await this.highScores.append(id!, results);
+    // Account-level history has no learner attached to it.
+    await this.highScores.append(id!, null, results);
     ctx.response.status = 204;
   }
 
@@ -85,7 +86,8 @@ export class Controller {
     // Only grown-up profiles count toward the account's leaderboard; kids are
     // kept off the public high scores.
     if (profile.kind === "adult") {
-      await this.highScores.append(user.id!, results);
+      // Credited to the learner who typed it, not to the account holder.
+      await this.highScores.append(user.id!, profile.id!, results);
     }
     ctx.response.status = 204;
   }

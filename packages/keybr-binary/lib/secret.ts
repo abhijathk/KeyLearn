@@ -1,3 +1,15 @@
+// OBFUSCATION, NOT ENCRYPTION OR AUTHENTICATION.
+//
+// `scramble` XORs the payload with an LCG keystream and stores the seed in the
+// first four plaintext bytes, so anyone holding the output can reverse it — that
+// is by design, since both peers need to. The trailing CRC32 catches accidental
+// corruption, not deliberate tampering: an attacker who edits the payload can
+// simply recompute it.
+//
+// Nothing may treat a successful `unscramble` as evidence that the data came
+// from a trusted client. Anything that must be trustworthy has to be validated
+// on its own terms after decoding (see, for example, the plausibility bounds
+// applied to high-score submissions).
 import { crc32 } from "./crc32.ts";
 import { DataError } from "./errors.ts";
 

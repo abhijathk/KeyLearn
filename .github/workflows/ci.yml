@@ -2,6 +2,9 @@ name: CI
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -23,3 +26,43 @@ jobs:
         env:
           DATABASE_CLIENT: sqlite
           NODE_COMPILE_CACHE: /tmp/node-compile-cache
+
+  # Kept separate from the build so a newly-published advisory shows up as its
+  # own red check rather than as a confusing build failure — and so it can be
+  # read at a glance without digging through compile output.
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "npm"
+      - run: npm ci
+
+      # Production dependencies are the ones an attacker can reach at runtime,
+      # so they are the gate. A high or critical advisory fails the build.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      # Dev dependencies still matter (a compromised build tool is a supply
+      # chain problem) but should not block a release, so they are reported
+      # without failing.
+      - name: Audit all dependencies (report only)
+        if: always()
+        run: npm audit || true
+
+  secrets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Scan the whole history, not just the tip: a secret committed and
+          # later "removed" is still in the history and still compromised.
+          fetch-depth: 0
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

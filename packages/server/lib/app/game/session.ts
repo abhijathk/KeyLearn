@@ -67,6 +67,12 @@ export class SessionFactory {
         terminate,
       });
 
+      if (client == null) {
+        // At capacity. 1013 is "try again later".
+        close(1013, "Server is full");
+        return;
+      }
+
       const onClose = (code: number, reason: string) => {
         try {
           client.onClose(code, reason);

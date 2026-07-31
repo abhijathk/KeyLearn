@@ -1,3 +1,5 @@
+@import "@keybr/widget/lib/index.less";
+
 // Restyle the illustration into a light line-drawing: CSS overrides every
 // path's inline fill so the structural lines (fingers, nails, folds) become
 // thin strokes over a faint translucent body, and the darker mid-tone shapes
@@ -6,6 +8,18 @@
   // A soft frost: a gentle blur over the milky translucent body reads like
   // frosted glass while the key colours still show through underneath.
   filter: blur(0.6px);
+  // Held back, then eased in. These appear whenever focus leaves the typing
+  // area — including for the moment a dialog is opening or closing — and an
+  // instant appearance there reads as the whole keyboard flinching. The delay
+  // means a brief loss of focus never shows them at all; settle for a moment
+  // and they arrive quietly.
+  animation-name: motion-fade;
+  animation-duration: @motion-slow;
+  animation-timing-function: @motion-ease;
+  animation-delay: 0.45s;
+  animation-fill-mode: both;
+
+  .motion-respect-reduced();
 
   path {
     fill: var(--secondary);

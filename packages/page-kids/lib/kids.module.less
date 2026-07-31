@@ -7,15 +7,15 @@
 //  · Nunito — rounded but cleaner and a touch more grown-up — for 9–11.
 @font-face {
   font-family: "Andika Kids";
-  font-style: normal;
   font-weight: 700;
+  font-style: normal;
   font-display: swap;
   src: url(andika-700.woff2) format("woff2");
 }
 @font-face {
   font-family: "Nunito Kids";
-  font-style: normal;
   font-weight: 800;
+  font-style: normal;
   font-display: swap;
   src: url(nunito-800.woff2) format("woff2");
 }
@@ -225,9 +225,9 @@
   inset-block-end: 0.9rem;
   flex-direction: row;
   flex-wrap: wrap;
+  gap: 0.45rem 0.55rem;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem 0.55rem;
   padding-inline: 0.9rem;
 }
 
@@ -404,11 +404,11 @@
 // A subtle muted-sound marker in the bottom-right corner of the keyboard card,
 // shown only while sounds are off.
 .mutedMark {
-  position: absolute;
-  inset-block-end: 0.6rem;
-  inset-inline-end: 0.7rem;
-  z-index: 2;
   display: grid;
+  position: absolute;
+  inset-inline-end: 0.7rem;
+  inset-block-end: 0.6rem;
+  z-index: 2;
   place-items: center;
   opacity: 0.35;
   pointer-events: none;
@@ -420,9 +420,9 @@
 }
 
 .kbWrap {
-  position: relative;
   --ku: clamp(0.6rem, 1.12vi, 1rem);
   display: flex;
+  position: relative;
   flex: none;
   gap: 1.3em;
   align-items: stretch;
@@ -651,10 +651,10 @@
   max-block-size: 92vb;
   padding: 1.5rem 1.6rem 1.4rem;
   border-radius: 2rem;
-  overflow-block: auto;
   background: var(--card);
   box-shadow: 0 30px 70px rgba(20, 25, 50, 0.4);
   animation: pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow-y: auto;
 }
 
 @keyframes pop {
@@ -758,9 +758,9 @@
 .slider {
   inline-size: 8.5rem;
   block-size: 1.1rem;
+  cursor: pointer;
   // Match the yellow "On" pills.
   accent-color: var(--sunny);
-  cursor: pointer;
 }
 
 .swatch {

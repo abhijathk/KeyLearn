@@ -14,6 +14,43 @@ import {
   View,
 } from "@keybr/pages-server";
 
+// Headers that must never reach the log. `cookie` carries the session id, so
+// logging it turns any 500 into a stash of live credentials for whoever can read
+// the logs; `authorization` likewise.
+const REDACTED_HEADERS = new Set([
+  "cookie",
+  "set-cookie",
+  "authorization",
+  "proxy-authorization",
+  "paddle-signature",
+]);
+
+// URL path segments that ARE credentials: magic-login and password-reset links
+// carry their token in the path, so the raw URL cannot be logged verbatim.
+const TOKEN_PATHS = [
+  /^\/login\/[^/]+/,
+  /^(\/[a-z-]{2,10})?\/reset-password\/[^/]+/,
+];
+
+function scrubUrl(url: string): string {
+  let path = url;
+  for (const re of TOKEN_PATHS) {
+    path = path.replace(re, (m) => m.slice(0, m.lastIndexOf("/")) + "/<token>");
+  }
+  return path;
+}
+
+function describeRequest(ctx: Context) {
+  const { method, url, headers } = ctx.request.req;
+  const safe: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(headers)) {
+    safe[name] = REDACTED_HEADERS.has(name.toLowerCase())
+      ? "<redacted>"
+      : value;
+  }
+  return { method, url: scrubUrl(url ?? ""), headers: safe };
+}
+
 @injectable()
 export class ErrorHandler implements HandlerObject {
   constructor(readonly view: View) {}
@@ -48,8 +85,7 @@ export class ErrorHandler implements HandlerObject {
   }
 
   handleError(ctx: Context, err: Error) {
-    const { method, url, headers } = ctx.request.req;
-    const req = { method, url, headers };
+    const req = describeRequest(ctx);
     if (err instanceof ApplicationError) {
       Logger.debug(err, "Application error", req);
       const { status, body } = err;

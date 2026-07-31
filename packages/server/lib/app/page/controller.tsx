@@ -4,6 +4,8 @@ import { inject, injectable } from "@fastr/invert";
 import { CanonicalHandler } from "@fastr/middleware-canonical";
 import { type RouterState } from "@fastr/middleware-router";
 import { Env } from "@keybr/config";
+import { Profile } from "@keybr/database";
+import { HighScoresFactory } from "@keybr/highscores";
 import { defaultLocale, loadIntl, PreferredLocaleContext } from "@keybr/intl";
 import { Shell, View } from "@keybr/pages-server";
 import {
@@ -12,11 +14,11 @@ import {
   PageInfo,
   Pages,
 } from "@keybr/pages-shared";
-import { Profile } from "@keybr/database";
 import { SettingsDatabase } from "@keybr/settings-database";
 import { staticTheme, ThemeContext, ThemePrefs } from "@keybr/themes";
 import { type IntlShape, RawIntlProvider } from "react-intl";
 import { type AuthState } from "../auth/index.ts";
+import { leaderboardReady } from "../highscores/readiness.ts";
 import { localePattern, pIntl, preferredLocale } from "./intl.ts";
 
 @injectable()
@@ -27,6 +29,7 @@ export class Controller {
     @inject("canonicalUrl") readonly canonicalUrl: string,
     readonly view: View,
     readonly database: SettingsDatabase,
+    readonly highScores: HighScoresFactory,
   ) {}
 
   @http.GET("/")
@@ -321,6 +324,8 @@ export class Controller {
     ).flatMap(([name, key]) => (Env.getString(key, "") ? [name] : []));
     return {
       base: this.canonicalUrl,
+      // Drives whether the leaderboard link appears at all.
+      leaderboard: await this.#leaderboardReady(),
       locale,
       user: user?.toDetails() ?? null,
       publicUser,
@@ -331,6 +336,19 @@ export class Controller {
       // the browser needs it to render a challenge if the server asks for one.
       turnstileSiteKey: Env.getString("TURNSTILE_SITE_KEY", "") || undefined,
     };
+  }
+
+  // Cheap enough to call per render: the row count comes from an already-cached
+  // table and the account count is cached behind a TTL.
+  async #leaderboardReady(): Promise<boolean> {
+    try {
+      // The nav link follows the week, since that is the board a visitor lands
+      // on.
+      const table = await this.highScores.load();
+      return await leaderboardReady(table.size("week"));
+    } catch {
+      return false;
+    }
   }
 
   async renderPage(
@@ -345,6 +363,20 @@ export class Controller {
     const pageData = await this.pageData(ctx, intl);
 
     ctx.response.type = "text/html";
+
+    // Rendered pages embed __PAGE_DATA__, which for a signed-in visitor carries
+    // their email, date of birth and every household profile — including each
+    // child's name and birth year. A CDN, a school proxy or a shared-device
+    // back/forward cache holding that would cross-serve one family's data to
+    // another, so it must never be stored. `Vary: Cookie` keeps a signed-out
+    // response from being reused for a signed-in one.
+    ctx.response.headers.set(
+      "Cache-Control",
+      ctx.state.user != null
+        ? "private, no-store, max-age=0, must-revalidate"
+        : "private, no-cache",
+    );
+    ctx.response.headers.append("Vary", "Cookie");
 
     ctx.response.headers.append("Link", this.view.preloadHeaders);
 

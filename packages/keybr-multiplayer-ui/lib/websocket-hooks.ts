@@ -1,5 +1,6 @@
 import { Tasks } from "@keybr/lang";
 import { PLAYER_KICKED } from "@keybr/multiplayer-shared";
+import { loadActiveProfileId } from "@keybr/pages-shared";
 import { useEffect, useState } from "react";
 
 export function useWebSocket() {
@@ -84,5 +85,12 @@ function webSocketUrl() {
     default:
       throw new Error();
   }
-  return `${scheme}//${host}/_/game/server`;
+  // Tell the server which learner is at the keyboard, so a household of several
+  // grown-ups appears as several distinct players rather than one shared
+  // account. The server verifies the profile belongs to the session before
+  // trusting it, so a forged id gains nothing.
+  const profileId = loadActiveProfileId();
+  const query =
+    profileId != null ? `?profile=${encodeURIComponent(profileId)}` : "";
+  return `${scheme}//${host}/_/game/server${query}`;
 }
