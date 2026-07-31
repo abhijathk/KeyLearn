@@ -6,6 +6,7 @@ import { ConfigModule, Env } from "@keybr/config";
 import { Logger } from "@keybr/logger";
 import { Game } from "@keybr/multiplayer-server";
 import { ApplicationModule, kGame, kMain } from "./app/index.ts";
+import { ReminderSweep } from "./app/mail/index.ts";
 import { ServerModule } from "./server/module.ts";
 import { Service } from "./server/service.ts";
 
@@ -22,6 +23,10 @@ if (cluster.isPrimary) {
     canonicalUrl: container.get("canonicalUrl"),
   });
   process.title = "keybr master process";
+  // The primary process does nothing but supervise workers, which makes it the
+  // right home for the reminder sweep: once per deployment rather than once per
+  // worker, and never competing with a request.
+  container.get(ReminderSweep).start();
   fork({ args: ["http"] });
   fork({ args: ["http"] });
   fork({ args: ["http"] });
