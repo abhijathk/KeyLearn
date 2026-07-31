@@ -12,12 +12,31 @@ const buckets = new Map<string, Bucket>();
  * not a hard global cap. For production-grade limiting put a shared store
  * (Redis) or a proxy/WAF limiter in front. Throws HTTP 429 when exceeded.
  */
+/**
+ * How many HTTP workers share the load, so a per-process budget adds up to the
+ * limit that was actually asked for.
+ *
+ * These counters live in process memory, and the server runs several HTTP
+ * workers behind one port. Each worker therefore enforced the full limit on its
+ * own, and a round-robin attacker got the limit multiplied by the worker count
+ * — measured at 80 password attempts a minute against a configured 20. Giving
+ * each worker an equal share restores the intended total.
+ *
+ * A shared store (the database, or the cluster primary over IPC) would be
+ * exact rather than approximate; this keeps the check synchronous and free
+ * while removing the multiplier.
+ */
+const HTTP_WORKERS = Math.max(1, Env.getNumber("SERVER_HTTP_WORKERS", 4));
+
 export function rateLimit(
   ctx: Context,
   bucket: string,
   limit: number,
   windowMs: number,
 ): void {
+  // Round up so a limit smaller than the worker count still allows one attempt
+  // per worker rather than none at all.
+  limit = Math.max(1, Math.ceil(limit / HTTP_WORKERS));
   const key = `${bucket}:${clientIp(ctx)}`;
   const now = Date.now();
   const b = buckets.get(key);

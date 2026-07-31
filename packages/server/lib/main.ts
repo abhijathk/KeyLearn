@@ -27,10 +27,12 @@ if (cluster.isPrimary) {
   // right home for the reminder sweep: once per deployment rather than once per
   // worker, and never competing with a request.
   container.get(ReminderSweep).start();
-  fork({ args: ["http"] });
-  fork({ args: ["http"] });
-  fork({ args: ["http"] });
-  fork({ args: ["http"] });
+  // The auth rate limiter divides its budgets by this count, so the two must
+  // agree — see SERVER_HTTP_WORKERS in app/auth/ratelimit.ts.
+  const httpWorkers = Env.getNumber("SERVER_HTTP_WORKERS", 4);
+  for (let i = 0; i < httpWorkers; i++) {
+    fork({ args: ["http"] });
+  }
   fork({ args: ["ws"] });
 } else {
   const container = makeContainer();
