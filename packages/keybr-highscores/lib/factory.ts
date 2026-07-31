@@ -17,9 +17,13 @@ export class HighScoresFactory {
     return await readTable(this.#file);
   }
 
-  async append(userId: number, results: readonly Result[]): Promise<void> {
+  async append(
+    userId: number,
+    profileId: number | null,
+    results: readonly Result[],
+  ): Promise<void> {
     const table = await readTable(this.#file);
-    table.append(userId, results);
+    table.append(userId, profileId, results);
     if (table.dirty) {
       await writeTable(this.#file, table);
     }

@@ -1,0 +1,97 @@
+@import "@keybr/widget/lib/index.less";
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  font-family: var(--value-font-family);
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: baseline;
+  justify-content: flex-end;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ranges {
+  display: inline-flex;
+  border: var(--separator-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ranges button {
+  padding: 0.2rem 0.65rem;
+  border: none;
+  color: var(--text-color-f2);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.ranges button[aria-pressed="true"] {
+  color: var(--text-color);
+  background-color: color-mix(in srgb, var(--accent) 20%, transparent);
+  font-weight: 700;
+}
+
+.ranges button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.empty,
+.entry {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+// The closing line. A serif italic is the one warm note against the app's
+// otherwise technical voice — it reads as someone speaking rather than as
+// another data field.
+.quote {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  margin: 0;
+  padding-block-start: 1.1rem;
+  border-block-start: var(--separator-border);
+}
+
+.mark {
+  flex: none;
+  color: var(--accent);
+  opacity: 0.6;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.4rem;
+  line-height: 0.9;
+}
+
+.quote p {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.quote cite {
+  display: block;
+  margin-block-start: 0.35rem;
+  color: var(--text-color-f2);
+  font-size: 0.72rem;
+  font-style: normal;
+  letter-spacing: 0.05em;
+}

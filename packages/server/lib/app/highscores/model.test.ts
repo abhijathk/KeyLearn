@@ -14,6 +14,7 @@ test("map entries", async () => {
     await mapEntries([
       {
         user: 1,
+        profile: null,
         layout: { id: "en-us" } as any,
         timeStamp: now,
         time: 50000,
@@ -25,6 +26,7 @@ test("map entries", async () => {
       },
       {
         user: 999,
+        profile: null,
         layout: { id: "en-dvorak" } as any,
         timeStamp: now,
         time: 50000,

@@ -10,7 +10,8 @@
     "@keybr/keyboard": "*",
     "@keybr/pages-shared": "*",
     "@keybr/result": "*",
-    "@keybr/widget": "*"
+    "@keybr/widget": "*",
+    "@keybr/page-account": "*"
   },
   "devDependencies": {},
   "scripts": {

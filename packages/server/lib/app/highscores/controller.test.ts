@@ -35,8 +35,8 @@ test("get populated high scores entries", async (ctx) => {
 
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  await context.get(HighScoresFactory).append(1, [faker.nextResult()]);
-  await context.get(HighScoresFactory).append(999, [faker.nextResult()]);
+  await context.get(HighScoresFactory).append(1, null, [faker.nextResult()]);
+  await context.get(HighScoresFactory).append(999, null, [faker.nextResult()]);
 
   const request = startApp(context.get(Application, kMain));
 

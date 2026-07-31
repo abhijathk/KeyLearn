@@ -1,351 +1,159 @@
 import { test } from "node:test";
 import { Layout } from "@keybr/keyboard";
-import { deepEqual, equal, isFalse, isNull, isTrue } from "rich-assert";
-import { HighScores, type HighScoresRow } from "./highscores.ts";
+import { type Result } from "@keybr/result";
+import { equal, isTrue } from "rich-assert";
+import { BUFFER_MS, HighScores } from "./highscores.ts";
 
-const now = new Date("2001-02-03T04:05:06Z");
+const DAY = 24 * 3600 * 1000;
+const NOW = new Date("2026-06-15T12:00:00Z").getTime();
 
-const template = {
-  user: 0,
-  layout: Layout.EN_US,
-  timeStamp: now,
-  time: 0,
-  length: 0,
-  errors: 0,
-  complexity: 0,
-  speed: 0,
-  score: 0,
-} as const satisfies HighScoresRow;
+// A result that clears the plausibility filter: long enough, complex enough,
+// and a speed consistent with its own length and duration.
+function result(speed: number, daysAgo = 0, base = NOW): Result {
+  const length = 200;
+  return {
+    layout: Layout.EN_US,
+    timeStamp: base - daysAgo * DAY,
+    length,
+    time: (length / speed) * 60_000,
+    errors: 2,
+    complexity: 20,
+    speed,
+    score: speed * 84,
+  } as unknown as Result;
+}
 
-test("do not insert if result is old", (ctx) => {
-  // Arrange.
+test("ranks a learner by their best in the window", () => {
+  const t = new HighScores();
+  t.append(1, 10, [result(60, 1), result(80, 2), result(70, 3)], NOW);
 
-  ctx.mock.timers.enable({ apis: ["Date"], now });
-
-  const timeStamp = new Date(Number(now) - 1001);
-  const candidate = {
-    ...template,
-    timeStamp,
-    user: 1,
-    speed: 100,
-    score: 100,
-  };
-
-  const table = new HighScores([]);
-
-  // Act.
-
-  const position = table.insert(candidate, { maxSize: 1000, maxAge: 1000 });
-
-  // Assert.
-
-  deepEqual([...table], []);
-  isFalse(table.dirty);
-  isNull(position);
+  const rows = t.ranking("week", NOW);
+  equal(rows.length, 1, "one row per learner, not one per result");
+  equal(rows[0].speed, 80);
 });
 
-test("do not insert if result is low", (ctx) => {
-  // Arrange.
+test("each learner in a household ranks separately", () => {
+  const t = new HighScores();
+  t.append(1, 10, [result(60, 1)], NOW);
+  t.append(1, 11, [result(90, 1)], NOW);
 
-  ctx.mock.timers.enable({ apis: ["Date"], now });
-
-  const r0 = {
-    ...template,
-    user: 1,
-    speed: 300,
-    score: 300,
-  } satisfies HighScoresRow;
-  const r1 = {
-    ...template,
-    user: 2,
-    speed: 200,
-    score: 200,
-  } satisfies HighScoresRow;
-  const r2 = {
-    ...template,
-    user: 3,
-    speed: 100,
-    score: 100,
-  } satisfies HighScoresRow;
-  const candidate = {
-    ...template,
-    user: 9,
-    speed: 10,
-    score: 10,
-  };
-
-  const table = new HighScores([r0, r1, r2]);
-
-  // Act.
-
-  const position = table.insert(candidate, { maxSize: 3 });
-
-  // Assert.
-
-  deepEqual([...table], [r0, r1, r2]);
-  isFalse(table.dirty);
-  isNull(position);
+  const rows = t.ranking("week", NOW);
+  equal(rows.length, 2, "two grown-ups on one account are two entries");
+  equal(rows[0].profile, 11);
+  equal(rows[1].profile, 10);
 });
 
-test("do not insert if higher result exists ", (ctx) => {
-  // Arrange.
+test("the windows are genuinely different rankings", () => {
+  const t = new HighScores();
+  t.append(1, 10, [result(120, 21)], NOW); // three weeks ago
+  t.append(2, 20, [result(80, 1)], NOW); // yesterday
 
-  ctx.mock.timers.enable({ apis: ["Date"], now });
-
-  const r0 = {
-    ...template,
-    user: 1,
-    speed: 300,
-    score: 300,
-  } satisfies HighScoresRow;
-  const r1 = {
-    ...template,
-    user: 2,
-    speed: 200,
-    score: 200,
-  } satisfies HighScoresRow;
-  const r2 = {
-    ...template,
-    user: 3,
-    speed: 100,
-    score: 100,
-  } satisfies HighScoresRow;
-  const candidate = {
-    ...template,
-    user: 1,
-    speed: 10,
-    score: 10,
-  };
-
-  const table = new HighScores([r0, r1, r2]);
-
-  // Act.
-
-  const position = table.insert(candidate, { maxSize: 1000 });
-
-  // Assert.
-
-  deepEqual([...table], [r0, r1, r2]);
-  isFalse(table.dirty);
-  isNull(position);
+  equal(
+    t
+      .ranking("week", NOW)
+      .map((r) => r.user)
+      .join(),
+    "2",
+  );
+  equal(
+    t
+      .ranking("month", NOW)
+      .map((r) => r.user)
+      .join(),
+    "1,2",
+  );
+  equal(
+    t
+      .ranking("overall", NOW)
+      .map((r) => r.user)
+      .join(),
+    "1,2",
+  );
 });
 
-test("remove old results", (ctx) => {
-  // Arrange.
+test("an all-time best outlives the buffer", () => {
+  const t = new HighScores();
+  t.append(1, 10, [result(120, 0)], NOW);
 
-  ctx.mock.timers.enable({ apis: ["Date"], now });
+  // Long after the raw result has aged out of the 30-day buffer.
+  const later = NOW + BUFFER_MS + 5 * DAY;
+  t.append(2, 20, [result(50, 0, later)], later);
 
-  const timeStamp = new Date(Number(now) - 1001);
-
-  const r0 = {
-    ...template,
-    timeStamp,
-    user: 1,
-    speed: 300,
-    score: 300,
-  } satisfies HighScoresRow;
-  const r1 = {
-    ...template,
-    timeStamp,
-    user: 2,
-    speed: 200,
-    score: 200,
-  } satisfies HighScoresRow;
-  const r2 = {
-    ...template,
-    timeStamp,
-    user: 3,
-    speed: 100,
-    score: 100,
-  } satisfies HighScoresRow;
-  const candidate = {
-    ...template,
-    user: 9,
-    speed: 10,
-    score: 10,
-  };
-
-  const table = new HighScores([r0, r1, r2]);
-
-  // Act.
-
-  const position = table.insert(candidate, { maxSize: 1000, maxAge: 1000 });
-
-  // Assert.
-
-  deepEqual([...table], [candidate]);
-  equal(table.dirty, true);
-  equal(position, 0);
+  equal(t.ranking("week", later).length, 1, "the old result left the window");
+  const overall = t.ranking("overall", later);
+  equal(overall.length, 2, "but the all-time best is still ranked");
+  equal(overall[0].speed, 120);
 });
 
-test("remove lower results", (ctx) => {
-  // Arrange.
+test("the buffer drops results past 30 days", () => {
+  const t = new HighScores();
+  t.append(1, 10, [result(60, 0)], NOW);
+  equal(t.toJSON().recent.length, 1);
 
-  ctx.mock.timers.enable({ apis: ["Date"], now });
-
-  const r0 = {
-    ...template,
-    user: 1,
-    speed: 300,
-    score: 300,
-  } satisfies HighScoresRow;
-  const r1 = {
-    ...template,
-    user: 1,
-    speed: 200,
-    score: 200,
-  } satisfies HighScoresRow;
-  const r2 = {
-    ...template,
-    user: 1,
-    speed: 100,
-    score: 100,
-  } satisfies HighScoresRow;
-  const candidate = {
-    ...template,
-    user: 1,
-    speed: 1000,
-    score: 1000,
-  };
-
-  const table = new HighScores([r0, r1, r2]);
-
-  // Act.
-
-  const position = table.insert(candidate, { maxSize: 1000 });
-
-  // Assert.
-
-  deepEqual([...table], [candidate]);
-  equal(table.dirty, true);
-  equal(position, 0);
+  t.append(2, 20, [result(60, 0)], NOW + BUFFER_MS + DAY);
+  isTrue(
+    t.toJSON().recent.every((r) => r.user === 2),
+    "only the still-recent result stays buffered",
+  );
 });
 
-test("insert if result is high", (ctx) => {
-  // Arrange.
-
-  ctx.mock.timers.enable({ apis: ["Date"], now });
-
-  const r0 = {
-    ...template,
-    user: 1,
-    speed: 300,
-    score: 300,
-  } satisfies HighScoresRow;
-  const r1 = {
-    ...template,
-    user: 2,
-    speed: 200,
-    score: 200,
-  } satisfies HighScoresRow;
-  const r2 = {
-    ...template,
-    user: 3,
-    speed: 100,
-    score: 100,
-  } satisfies HighScoresRow;
-  const candidate = {
-    ...template,
-    user: 9,
-    speed: 1000,
-    score: 1000,
-  };
-
-  const table = new HighScores([r0, r1, r2]);
-
-  // Act.
-
-  const position = table.insert(candidate, { maxSize: 1000 });
-
-  // Assert.
-
-  deepEqual([...table], [candidate, r0, r1, r2]);
-  isTrue(table.dirty);
-  equal(position, 0);
+test("implausible results never reach the board", () => {
+  const t = new HighScores();
+  // Faster than any human; a lesson too short to count; more errors than
+  // characters. Each is rejected on its own terms.
+  t.append(1, 10, [result(2000)], NOW);
+  t.append(2, 20, [{ ...result(60), length: 10 } as Result], NOW);
+  t.append(3, 30, [{ ...result(60), errors: 999 } as Result], NOW);
+  equal(t.ranking("overall", NOW).length, 0);
 });
 
-test("insert if table is not full", (ctx) => {
-  // Arrange.
-
-  ctx.mock.timers.enable({ apis: ["Date"], now });
-
-  const r0 = {
-    ...template,
-    user: 1,
-    speed: 300,
-    score: 300,
-  } satisfies HighScoresRow;
-  const r1 = {
-    ...template,
-    user: 2,
-    speed: 200,
-    score: 200,
-  } satisfies HighScoresRow;
-  const r2 = {
-    ...template,
-    user: 3,
-    speed: 100,
-    score: 100,
-  } satisfies HighScoresRow;
-  const candidate = {
-    ...template,
-    user: 9,
-    speed: 10,
-    score: 10,
-  };
-
-  const table = new HighScores([r0, r1, r2]);
-
-  // Act.
-
-  const position = table.insert(candidate, { maxSize: 1000 });
-
-  // Assert.
-
-  deepEqual([...table], [r0, r1, r2, candidate]);
-  isTrue(table.dirty);
-  equal(position, 3);
+test("a future timestamp cannot camp at the top", () => {
+  const t = new HighScores();
+  t.append(1, 10, [result(90, -30)], NOW);
+  equal(t.ranking("overall", NOW).length, 0);
 });
 
-test("truncate to limit", (ctx) => {
-  // Arrange.
+test("survives the pre-split on-disk format", () => {
+  // Older files held a plain array of rows; those are read as all-time bests
+  // rather than discarded.
+  const legacy = [
+    {
+      user: 7,
+      profile: null,
+      layout: Layout.EN_US,
+      timeStamp: new Date(NOW),
+      time: 60_000,
+      length: 200,
+      errors: 1,
+      complexity: 20,
+      speed: 75,
+      score: 6300,
+    },
+  ];
+  const t = new HighScores(legacy as never);
+  const rows = t.ranking("overall", NOW);
+  equal(rows.length, 1);
+  equal(rows[0].user, 7);
+});
 
-  ctx.mock.timers.enable({ apis: ["Date"], now });
-
-  const r0 = {
-    ...template,
+test("one unrecognised layout does not empty the board", () => {
+  // A row whose layout no longer exists arrives with `layout: null` from the
+  // reviver. It is dropped on its own; everyone else still ranks.
+  const good = {
     user: 1,
-    speed: 300,
-    score: 300,
-  } satisfies HighScoresRow;
-  const r1 = {
-    ...template,
-    user: 2,
-    speed: 200,
-    score: 200,
-  } satisfies HighScoresRow;
-  const r2 = {
-    ...template,
-    user: 3,
-    speed: 100,
-    score: 100,
-  } satisfies HighScoresRow;
-  const candidate = {
-    ...template,
-    user: 9,
-    speed: 1000,
-    score: 1000,
+    profile: 10,
+    layout: Layout.EN_US,
+    timeStamp: new Date(NOW),
+    time: 60_000,
+    length: 200,
+    errors: 1,
+    complexity: 20,
+    speed: 80,
+    score: 6720,
   };
-
-  const table = new HighScores([r0, r1, r2]);
-
-  // Act.
-
-  const position = table.insert(candidate, { maxSize: 1 });
-
-  // Assert.
-
-  deepEqual([...table], [candidate]);
-  isTrue(table.dirty);
-  equal(position, 0);
+  const broken = { ...good, user: 2, profile: 20, layout: null };
+  const t = new HighScores({ best: [good, broken] as never, recent: [] });
+  const rows = t.ranking("overall", NOW);
+  equal(rows.length, 1);
+  equal(rows[0].user, 1);
 });

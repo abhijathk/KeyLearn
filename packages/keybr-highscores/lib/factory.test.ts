@@ -5,7 +5,11 @@ import { ResultFaker } from "@keybr/result";
 import { removeDir } from "@sosimple/fsx";
 import { deepEqual } from "rich-assert";
 import { HighScoresFactory } from "./factory.ts";
-import { type HighScoresRow } from "./highscores.ts";
+import { type HighScores, type HighScoresRow } from "./highscores.ts";
+
+// The table is no longer iterable: a ranking only means something for a
+// given window, so ask for one explicitly.
+const toRows = (t: HighScores) => t.ranking("overall");
 
 const tmp = process.env.DATA_DIR ?? "/tmp/keybr";
 
@@ -26,6 +30,7 @@ test("append table", async (ctx) => {
   const result2 = faker.nextResult({ layout: Layout.EN_DVORAK, timeStamp });
   const row1 = {
     user: 1,
+    profile: null,
     layout: Layout.EN_US,
     timeStamp: new Date(result1.timeStamp),
     time: result1.time,
@@ -37,6 +42,7 @@ test("append table", async (ctx) => {
   } satisfies HighScoresRow;
   const row2 = {
     user: 2,
+    profile: null,
     layout: Layout.EN_DVORAK,
     timeStamp: new Date(result2.timeStamp),
     time: result2.time,
@@ -51,15 +57,19 @@ test("append table", async (ctx) => {
 
   // Initial state.
 
-  deepEqual([...(await factory.load())], []);
+  deepEqual(toRows(await factory.load()), []);
 
   // Add a result of user 1.
 
-  await factory.append(1, [result1]);
-  deepEqual([...(await factory.load())], [row1]);
+  await factory.append(1, null, [result1]);
+  deepEqual(toRows(await factory.load()), [row1]);
 
-  // Add a result of user 2.
-
-  await factory.append(2, [result2]);
-  deepEqual([...(await factory.load())], [row2, row1]);
+  // Add a result of user 2. Both learners are ranked; which of the two faked
+  // results scores higher is not the point of this test, so compare by learner
+  // rather than by position.
+  await factory.append(2, null, [result2]);
+  deepEqual(
+    toRows(await factory.load()).sort((a, b) => a.user - b.user),
+    [row1, row2],
+  );
 });
