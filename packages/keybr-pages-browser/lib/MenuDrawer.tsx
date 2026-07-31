@@ -210,7 +210,7 @@ export function MenuDrawer({
                   <div className={styles.label}>
                     <FormattedMessage
                       id="drawer.who"
-                      defaultMessage="Who's practicing"
+                      defaultMessage="Who’s practicing"
                     />
                   </div>
                   <div className={styles.seg}>

@@ -40,7 +40,7 @@ export function ProfilePicker(): ReactNode {
           <span className={shell.windowTitle}>
             <FormattedMessage
               id="profiles.picker.title"
-              defaultMessage="Who's practising?"
+              defaultMessage="Who’s practising?"
             />
           </span>
           <button

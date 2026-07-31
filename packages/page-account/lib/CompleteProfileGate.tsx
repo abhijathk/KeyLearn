@@ -79,7 +79,7 @@ function Gate({ name }: { readonly name: string }): ReactNode {
         <p className={styles.intro}>
           <FormattedMessage
             id="auth.finish.intro2"
-            defaultMessage="Just one thing to keep KeyLearn safe for children — your date of birth. Next, you'll add a profile for each learner in your household."
+            defaultMessage="Just one thing to keep KeyLearn safe for children — your date of birth. Next, you’ll add a profile for each learner in your household."
           />
         </p>
         <TextField

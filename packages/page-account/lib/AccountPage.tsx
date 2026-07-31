@@ -253,7 +253,7 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
           message={formatMessage({
             id: "account.logout.confirmMessage",
             defaultMessage:
-              "You'll need to log back in to sync your progress. Learner profiles stay on this device.",
+              "You’ll need to log back in to sync your progress. Learner profiles stay on this device.",
           })}
           confirmLabel={formatMessage({
             id: "nav.logOut",
@@ -298,7 +298,7 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
           message={formatMessage({
             id: "account.deleteAccount.message",
             defaultMessage:
-              "This permanently erases your name and email from our servers and can't be undone. You're always welcome to create a new account later.",
+              "This permanently erases your name and email from our servers and can’t be undone. You’re always welcome to create a new account later.",
           })}
           confirmLabel={formatMessage({
             id: "account.delete.continue",
@@ -436,7 +436,7 @@ function AccountPane({
         <p className={styles.cardNote}>
           <FormattedMessage
             id="account.delete.note"
-            defaultMessage="Permanently erases your name and email from our servers. This can't be undone. Your learner profiles stay on this device."
+            defaultMessage="Permanently erases your name and email from our servers. This can’t be undone. Your learner profiles stay on this device."
           />
         </p>
         <button className={styles.dangerBtn} onClick={onDelete}>
@@ -544,7 +544,7 @@ function DeleteAccountDialog({
       setErr(
         formatMessage({
           id: "account.delete.sendError",
-          defaultMessage: "Couldn't send the code. Try again in a moment.",
+          defaultMessage: "Couldn’t send the code. Try again in a moment.",
         }),
       );
     });
@@ -638,7 +638,7 @@ function DeleteAccountDialog({
           <span>
             <FormattedMessage
               id="account.delete.keepStats"
-              defaultMessage="Help improve KeyLearn — keep my anonymous typing stats. No name, email, or child data; this can't identify you."
+              defaultMessage="Help improve KeyLearn — keep my anonymous typing stats. No name, email, or child data; this can’t identify you."
             />
           </span>
         </label>

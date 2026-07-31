@@ -141,7 +141,7 @@ export const DailyGoalRow = memo(function DailyGoalRow({
         className={styles.name}
         name={formatMessage({
           id: "t_Daily_goal",
-          defaultMessage: "Today's goal",
+          defaultMessage: "Today’s goal",
         })}
       />
       <DailyGoal

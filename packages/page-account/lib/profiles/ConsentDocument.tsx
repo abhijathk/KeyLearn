@@ -14,13 +14,13 @@ export function ConsentDocument(): ReactNode {
       <h3>
         <FormattedMessage
           id="consent.heading"
-          defaultMessage="Parental consent for a child's profile"
+          defaultMessage="Parental consent for a child’s profile"
         />
       </h3>
       <p>
         <FormattedMessage
           id="consent.intro"
-          defaultMessage="KeyLearn is used by families, and some learners are children under 13. Before you create a child's profile, please read and agree to the following."
+          defaultMessage="KeyLearn is used by families, and some learners are children under 13. Before you create a child’s profile, please read and agree to the following."
         />
       </p>
 
@@ -52,15 +52,12 @@ export function ConsentDocument(): ReactNode {
       </ul>
 
       <h4>
-        <FormattedMessage
-          id="consent.use.h"
-          defaultMessage="How we use it"
-        />
+        <FormattedMessage id="consent.use.h" defaultMessage="How we use it" />
       </h4>
       <p>
         <FormattedMessage
           id="consent.use.p"
-          defaultMessage="This information is used only to run the typing lessons and show progress. We do not sell it, we do not use it for advertising, and there are no third-party trackers. A child's profile is stored under your account."
+          defaultMessage="This information is used only to run the typing lessons and show progress. We do not sell it, we do not use it for advertising, and there are no third-party trackers. A child’s profile is stored under your account."
         />
       </p>
 
@@ -70,7 +67,7 @@ export function ConsentDocument(): ReactNode {
       <p>
         <FormattedMessage
           id="consent.rights.p"
-          defaultMessage="As the parent or guardian, you can view, edit or delete your child's profile and its data at any time from this Account page. Deleting the profile (or your account) permanently removes the child's data. You may withdraw consent at any time by deleting the profile."
+          defaultMessage="As the parent or guardian, you can view, edit or delete your child’s profile and its data at any time from this Account page. Deleting the profile (or your account) permanently removes the child’s data. You may withdraw consent at any time by deleting the profile."
         />
       </p>
 

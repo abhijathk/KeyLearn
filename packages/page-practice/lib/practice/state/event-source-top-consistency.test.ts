@@ -1,7 +1,7 @@
+import { test } from "node:test";
 import { Layout } from "@keybr/keyboard";
 import { Result, TextType } from "@keybr/result";
 import { Histogram } from "@keybr/textinput";
-import { test } from "node:test";
 import { deepEqual } from "rich-assert";
 import { TopConsistencyEvents } from "./event-source-top-consistency.ts";
 import { type LessonEvent } from "./event-types.ts";

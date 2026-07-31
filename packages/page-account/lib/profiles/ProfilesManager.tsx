@@ -512,8 +512,8 @@ function ProfileEditor({
             <span className={styles.consentText}>
               <FormattedMessage
                 id="profiles.consentLabel"
-                defaultMessage="I'm the parent or guardian and I consent to my child using KeyLearn. "
-              />
+                defaultMessage="I’m the parent or guardian and I consent to my child using KeyLearn."
+              />{" "}
               <button
                 type="button"
                 className={styles.consentLink}
@@ -565,7 +565,7 @@ function ProfileEditor({
             {
               id: "profiles.delete.confirmMessage",
               defaultMessage:
-                "This removes {name} and their practice progress from this device. This can't be undone.",
+                "This removes {name} and their practice progress from this device. This can’t be undone.",
             },
             { name: firstName.trim() || profile?.firstName || "" },
           )}

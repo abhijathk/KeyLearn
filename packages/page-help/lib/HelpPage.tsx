@@ -41,7 +41,7 @@ export function HelpPage() {
       body: (
         <FormattedMessage
           id="help.rule1.body"
-          defaultMessage="<p>The very first time you practice, KeyLearn has no data on your skills yet, so it sticks to a handful of the most frequent letters — things like ‘<em>E</em>’, ‘<em>N</em>’, ‘<em>I</em>’, ‘<em>A</em>’, ‘<em>R</em>’ and ‘<em>L</em>’ — to build your first words. Every word you see will be made only from this starter set; the rest of the alphabet stays out of play for now. Since there's no typing data yet for these letters, their indicators show up gray.</p>"
+          defaultMessage="<p>The very first time you practice, KeyLearn has no data on your skills yet, so it sticks to a handful of the most frequent letters — things like ‘<em>E</em>’, ‘<em>N</em>’, ‘<em>I</em>’, ‘<em>A</em>’, ‘<em>R</em>’ and ‘<em>L</em>’ — to build your first words. Every word you see will be made only from this starter set; the rest of the alphabet stays out of play for now. Since there’s no typing data yet for these letters, their indicators show up gray.</p>"
         />
       ),
     },
@@ -58,7 +58,7 @@ export function HelpPage() {
       body: (
         <FormattedMessage
           id="help.rule2.body"
-          defaultMessage="<p>Once you start typing the generated words, KeyLearn starts logging your performance, and you'll see the indicators shift from red toward green. Red marks a key you're typing slowly, while green marks one you're typing quickly. Your job at this stage is to turn every letter green by picking up speed. Notice that in this example, ‘<em>A</em>’ is called out because it has the slowest typing speed of the bunch, which makes it the target letter. That target letter shows up in every word you're given — worth remembering, because it means you're always drilling the exact key that's currently slowing you down.</p>"
+          defaultMessage="<p>Once you start typing the generated words, KeyLearn starts logging your performance, and you’ll see the indicators shift from red toward green. Red marks a key you’re typing slowly, while green marks one you’re typing quickly. Your job at this stage is to turn every letter green by picking up speed. Notice that in this example, ‘<em>A</em>’ is called out because it has the slowest typing speed of the bunch, which makes it the target letter. That target letter shows up in every word you’re given — worth remembering, because it means you’re always drilling the exact key that’s currently slowing you down.</p>"
         />
       ),
     },
@@ -75,7 +75,7 @@ export function HelpPage() {
       body: (
         <FormattedMessage
           id="help.rule3.body"
-          defaultMessage="<p>Once your speed picks up and every letter has turned green, a new letter — ‘<em>T</em>’ — joins the set, and the words you're given from now on are drawn from this larger pool. ‘<em>T</em>’ becomes the new target letter and appears in every word. As before, since there's no data on it yet, its indicator starts out gray.</p>"
+          defaultMessage="<p>Once your speed picks up and every letter has turned green, a new letter — ‘<em>T</em>’ — joins the set, and the words you’re given from now on are drawn from this larger pool. ‘<em>T</em>’ becomes the new target letter and appears in every word. As before, since there’s no data on it yet, its indicator starts out gray.</p>"
         />
       ),
     },
@@ -94,7 +94,7 @@ export function HelpPage() {
       body: (
         <FormattedMessage
           id="help.rule4.body"
-          defaultMessage="<p>Now your goal is to turn this newest letter green too, and once you do, another letter gets added and the whole cycle repeats. In practice, don't be surprised if the letters you'd already mastered slip back toward red for a while, as shown here — that's completely normal. Your focus doesn't change: get the current target letter to green so the next one unlocks.</p>"
+          defaultMessage="<p>Now your goal is to turn this newest letter green too, and once you do, another letter gets added and the whole cycle repeats. In practice, don’t be surprised if the letters you’d already mastered slip back toward red for a while, as shown here — that’s completely normal. Your focus doesn’t change: get the current target letter to green so the next one unlocks.</p>"
         />
       ),
     },
@@ -113,7 +113,7 @@ export function HelpPage() {
       body: (
         <FormattedMessage
           id="help.rule5.body"
-          defaultMessage="<p>Stick with it, and eventually every single letter will turn green. That's the main milestone, and you should feel great about reaching it! It doesn't have to be the end, though — keep practicing for as long as you'd like.</p>"
+          defaultMessage="<p>Stick with it, and eventually every single letter will turn green. That’s the main milestone, and you should feel great about reaching it! It doesn’t have to be the end, though — keep practicing for as long as you’d like.</p>"
         />
       ),
     },
@@ -196,7 +196,7 @@ export function HelpPage() {
 
       <FormattedMessage
         id="help.section4"
-        defaultMessage="<p>Here's exactly what each indicator color means, laid out in the legend below.</p>"
+        defaultMessage="<p>Here’s exactly what each indicator color means, laid out in the legend below.</p>"
       />
 
       <Figure>
@@ -312,7 +312,7 @@ export function HelpPage() {
         <li>
           <FormattedMessage
             id="help.example4"
-            defaultMessage="<a>Example 4</a> held steady at roughly 70 WPM (already quite fast) across 11 days and 2 hours 10 minutes of practice, while accuracy kept climbing — the BKT blend only marks a key mastered once it's both fast and clean, so the extra reps went straight into fewer mistakes."
+            defaultMessage="<a>Example 4</a> held steady at roughly 70 WPM (already quite fast) across 11 days and 2 hours 10 minutes of practice, while accuracy kept climbing — the BKT blend only marks a key mastered once it’s both fast and clean, so the extra reps went straight into fewer mistakes."
             values={{
               a: (chunks) => <ExampleLink index={4}>{chunks}</ExampleLink>,
             }}
@@ -322,7 +322,7 @@ export function HelpPage() {
         <li>
           <FormattedMessage
             id="help.example5"
-            defaultMessage="<a>Example 5</a> improved from 20 to 45 WPM over 22 days and about 10 hours of practice (progress isn't always fast, and that's okay) — and whenever older letters faded, the decay nudges surfaced them again for a quick refresh before they slipped for real."
+            defaultMessage="<a>Example 5</a> improved from 20 to 45 WPM over 22 days and about 10 hours of practice (progress isn’t always fast, and that’s okay) — and whenever older letters faded, the decay nudges surfaced them again for a quick refresh before they slipped for real."
             values={{
               a: (chunks) => <ExampleLink index={5}>{chunks}</ExampleLink>,
             }}

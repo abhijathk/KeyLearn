@@ -79,7 +79,7 @@ export function KeySpeedChartSection({
       <Figure.Legend>
         <FormattedMessage
           id="profile.chart.keySpeed.legend"
-          defaultMessage="X-axis: lesson number. Y-axis: {label1} – typing speed for the key you've selected, {label2} – the speed you're aiming for."
+          defaultMessage="X-axis: lesson number. Y-axis: {label1} – typing speed for the key you’ve selected, {label2} – the speed you’re aiming for."
           values={{
             label1: <Marker type="speed" />,
             label2: <Marker type="threshold" />,

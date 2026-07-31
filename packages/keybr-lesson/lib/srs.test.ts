@@ -1,6 +1,6 @@
+import { test } from "node:test";
 import { FakePhoneticModel } from "@keybr/phonetic-model";
 import { type KeyStatsMap } from "@keybr/result";
-import { test } from "node:test";
 import { equal, isNotNull, isNull } from "rich-assert";
 import { LessonKey } from "./key.ts";
 import { findDueKey, isUrgent } from "./srs.ts";

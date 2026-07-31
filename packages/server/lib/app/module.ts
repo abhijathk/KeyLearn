@@ -20,6 +20,7 @@ import { securityHeaders } from "./headers.ts";
 import { MailModule } from "./mail/index.ts";
 import { gameRoutes, mainRoutes } from "./routes.ts";
 import { SessionModule } from "./session.ts";
+import { trailingSlashRedirect } from "./trailing-slash.ts";
 
 export const kMain = Symbol();
 export const kGame = Symbol();
@@ -54,6 +55,7 @@ export class ApplicationModule implements Module {
         .use(ErrorHandler)
         // Ahead of the handlers so error pages carry the headers too.
         .use(securityHeaders())
+        .use(trailingSlashRedirect())
         .use(conditional())
         .use(compress())
         .use(staticFiles(publicDir, { cacheControl }))

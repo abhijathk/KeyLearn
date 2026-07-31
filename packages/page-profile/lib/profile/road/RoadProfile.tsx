@@ -84,7 +84,7 @@ export function RoadProfile({
       <div className={styles.sect}>
         <FormattedMessage
           id="profile.road.allKeys"
-          defaultMessage="All keys over time — every key's speed, lesson by lesson"
+          defaultMessage="All keys over time — every key’s speed, lesson by lesson"
         />
       </div>
       <Explainer>
@@ -92,7 +92,7 @@ export function RoadProfile({
           <span>
             <FormattedMessage
               id="profile.chart.progress.description"
-              defaultMessage="Gives you a bird's-eye view of your learning progress across every key."
+              defaultMessage="Gives you a bird’s-eye view of your learning progress across every key."
             />
           </span>
         </div>
@@ -140,7 +140,7 @@ export function RoadProfile({
           <span>
             <FormattedMessage
               id="profile.chart.calendar.description"
-              defaultMessage="Marks every day you've spent practicing."
+              defaultMessage="Marks every day you’ve spent practicing."
             />
           </span>
         </div>
@@ -404,7 +404,7 @@ function StatStrips({
       {block(
         <FormattedMessage
           id="profile.overview.todayStats"
-          defaultMessage="Today's Stats"
+          defaultMessage="Today’s Stats"
         />,
         today,
         true,
@@ -638,7 +638,7 @@ function OneKeyStory({
       <div className={styles.sect}>
         <FormattedMessage
           id="profile.road.oneKey"
-          defaultMessage="One key's story — pick a key"
+          defaultMessage="One key’s story — pick a key"
         />
       </div>
       <Explainer>
@@ -753,7 +753,7 @@ function OneKeyStory({
             </span>{" "}
             {formatMessage({
               id: "profile.road.aimLegend",
-              defaultMessage: "╌ ╌ the speed you're aiming for",
+              defaultMessage: "╌ ╌ the speed you’re aiming for",
             })}
           </span>
           <span className={styles.axis}>
@@ -1116,7 +1116,7 @@ function DataRow(): ReactNode {
             <p className={styles.confirmBody}>
               <FormattedMessage
                 id="profile.reset.message"
-                defaultMessage="Do you really want to erase all your data and reset your profile? This can't be undone once you confirm!"
+                defaultMessage="Do you really want to erase all your data and reset your profile? This can’t be undone once you confirm!"
               />
             </p>
             <div className={styles.confirmActions}>

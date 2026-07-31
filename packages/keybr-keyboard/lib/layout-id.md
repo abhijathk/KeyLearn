@@ -174,21 +174,21 @@
 - `0xb9`: English/Enthium V11 (Matrix)
 - `0xba`: English/Enthium V13 (Matrix)
 - `0xbb`: English/Enthium V14 (Matrix)
-- `0xbc`:
-- `0xbd`:
-- `0xbe`:
-- `0xbf`:
-- `0xc0`:
-- `0xc1`:
-- `0xc2`:
-- `0xc3`:
-- `0xc4`:
-- `0xc5`:
-- `0xc6`:
-- `0xc7`:
-- `0xc8`:
-- `0xc9`:
-- `0xca`:
+- `0xbc`: Hindi/Hindi InScript
+- `0xbd`: Hindi/Hindi Phonetic
+- `0xbe`: Malayalam/Malayalam InScript
+- `0xbf`: Malayalam/Malayalam Phonetic
+- `0xc0`: Tamil/Tamil InScript
+- `0xc1`: Telugu/Telugu InScript
+- `0xc2`: Telugu/Telugu Phonetic
+- `0xc3`: Kannada/Kannada InScript
+- `0xc4`: Kannada/Kannada Phonetic
+- `0xc5`: Gujarati/Gujarati InScript
+- `0xc6`: Gujarati/Gujarati Phonetic
+- `0xc7`: Bangla/Bengali InScript
+- `0xc8`: Bangla/Bengali Phonetic
+- `0xc9`: Urdu/Urdu InScript
+- `0xca`: Urdu/Urdu Phonetic
 - `0xcb`:
 - `0xcc`:
 - `0xcd`:
@@ -243,7 +243,7 @@
 - `0xfe`:
 - `0xff`:
 
-95 allocated identifiers
+110 allocated identifiers
 
-145 free identifiers
+130 free identifiers
 

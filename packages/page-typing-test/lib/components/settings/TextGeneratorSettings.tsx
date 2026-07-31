@@ -32,7 +32,7 @@ export function TextGeneratorSettings() {
       description: formatMessage({
         id: "typingTest.source.pseudoWords.summary",
         defaultMessage:
-          "Invented words that follow your language's patterns — no guessing ahead.",
+          "Invented words that follow your language’s patterns — no guessing ahead.",
       }),
     },
     {

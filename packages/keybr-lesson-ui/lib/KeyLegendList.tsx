@@ -13,7 +13,7 @@ export const KeyLegendList = () => {
         />{" "}
         <FormattedMessage
           id="lesson.indicator.notCalibrated"
-          defaultMessage="An uncalibrated key with an unknown confidence score — you haven't pressed it yet."
+          defaultMessage="An uncalibrated key with an unknown confidence score — you haven’t pressed it yet."
         />
       </li>
       <li>
@@ -49,7 +49,7 @@ export const KeyLegendList = () => {
         />{" "}
         <FormattedMessage
           id="lesson.indicator.focused"
-          defaultMessage="A key that shows up more often. It's the one slowing you down most, so the algorithm works it into every generated word."
+          defaultMessage="A key that shows up more often. It’s the one slowing you down most, so the algorithm works it into every generated word."
         />
       </li>
       <li>
@@ -73,7 +73,7 @@ export const KeyLegendList = () => {
         />{" "}
         <FormattedMessage
           id="lesson.indicator.notIncluded"
-          defaultMessage="A key that hasn't been added to your lessons yet."
+          defaultMessage="A key that hasn’t been added to your lessons yet."
         />
       </li>
     </ul>

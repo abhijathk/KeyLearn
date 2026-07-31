@@ -102,19 +102,13 @@ test("rgb / oklch", () => {
     h: 0.08120522299896633,
     alpha: 0.5,
   });
-  like(oklchToRgb(new OklchColor(0.6279553639214313, 0.25768330380536064, 0.08120522299896633, 0.5)), {
-    r: 0.9999999999999997,
-    g: 4.304625232653958e-15,
-    b: 0,
-    alpha: 0.5,
-  });
+  const red = oklchToRgb(new OklchColor(0.6279553639214313, 0.25768330380536064, 0.08120522299896633, 0.5));
+  like(red, { r: 0.9999999999999997, b: 0, alpha: 0.5 });
+  assertNearZero(red.g);
 
-  like(rgbToOklch(new RgbColor(1, 1, 1, 0.5)), {
-    l: 1,
-    c: 4.996003610813204e-16,
-    h: 0.5,
-    alpha: 0.5,
-  });
+  const white = rgbToOklch(new RgbColor(1, 1, 1, 0.5));
+  like(white, { l: 1, h: 0.5, alpha: 0.5 });
+  assertNearZero(white.c);
   like(oklchToRgb(new OklchColor(1, 0, 0.5, 0.5)), {
     r: 1,
     g: 0.9999999999999997,
@@ -122,3 +116,15 @@ test("rgb / oklch", () => {
     alpha: 0.5,
   });
 });
+
+/**
+ * A round trip through a colour space leaves residue a few ulps wide. The exact
+ * figure depends on the platform's libm, so the suite asserts what the maths
+ * promises - indistinguishable from zero - rather than the number one machine
+ * happened to produce.
+ */
+function assertNearZero(value: number): void {
+  if (!(Math.abs(value) < 1e-12)) {
+    throw new Error(`Expected ${value} to be indistinguishable from zero`);
+  }
+}

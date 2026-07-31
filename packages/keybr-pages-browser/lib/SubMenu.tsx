@@ -36,8 +36,7 @@ function MailLink() {
       target="email"
       title={formatMessage({
         id: "footer.emailLink.description",
-        defaultMessage:
-          "Share your feedback and ideas at abhijathka@gmail.com",
+        defaultMessage: "Share your feedback and ideas at abhijathka@gmail.com",
       })}
     >
       abhijathka@gmail.com
@@ -53,7 +52,7 @@ function GithubLink() {
       target="github"
       title={formatMessage({
         id: "footer.githubLink.description",
-        defaultMessage: "Browse KeyLearn's source code on GitHub.",
+        defaultMessage: "Browse KeyLearn’s source code on GitHub.",
       })}
     >
       Github

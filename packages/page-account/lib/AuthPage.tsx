@@ -761,7 +761,7 @@ function VerifyCodeStep({
       <p className={styles.intro}>
         <FormattedMessage
           id="auth.verify.intro"
-          defaultMessage="We've emailed a 6-digit code to <strong>{email}</strong>. Enter it below to finish setting up your account."
+          defaultMessage="We’ve emailed a 6-digit code to <strong>{email}</strong>. Enter it below to finish setting up your account."
           values={{
             email,
             strong: (chunks) => <strong>{chunks}</strong>,
@@ -771,7 +771,7 @@ function VerifyCodeStep({
       <p className={styles.spamHint}>
         <FormattedMessage
           id="auth.spamHint"
-          defaultMessage="Can't find it? Check your spam or junk folder."
+          defaultMessage="Can’t find it? Check your spam or junk folder."
         />
       </p>
       <TextField
@@ -811,7 +811,7 @@ function VerifyCodeStep({
           <LinkButton onClick={resend}>
             <FormattedMessage
               id="auth.verify.resend"
-              defaultMessage="Didn't get it? Send a new code"
+              defaultMessage="Didn’t get it? Send a new code"
             />
           </LinkButton>
         )}
@@ -871,7 +871,7 @@ function RegisterForm({
       setError(
         formatMessage({
           id: "auth.passwordMismatch",
-          defaultMessage: "The passwords don't match.",
+          defaultMessage: "The passwords don’t match.",
         }),
       );
       return;
@@ -933,7 +933,7 @@ function RegisterForm({
         <p className={styles.notice}>
           <FormattedMessage
             id="auth.register.ssoNoAccount"
-            defaultMessage="We couldn't find a KeyLearn account for that sign-in. Create one below — it only takes a moment."
+            defaultMessage="We couldn’t find a KeyLearn account for that sign-in. Create one below — it only takes a moment."
           />
         </p>
       )}
@@ -946,7 +946,7 @@ function RegisterForm({
       <p className={clsx(styles.intro, styles.introCentred)}>
         <FormattedMessage
           id="auth.register.intro"
-          defaultMessage="One account for the whole household — you'll add each learner's profile next."
+          defaultMessage="One account for the whole household — you’ll add each learner’s profile next."
         />
       </p>
       <div className={styles.nameRow}>
@@ -1010,7 +1010,7 @@ function RegisterForm({
             <p className={styles.error}>
               <FormattedMessage
                 id="auth.passwordMismatch"
-                defaultMessage="The passwords don't match."
+                defaultMessage="The passwords don’t match."
               />
             </p>
           )}
@@ -1033,8 +1033,8 @@ function RegisterForm({
         <span className={styles.linkRow}>
           <FormattedMessage
             id="auth.haveAccount"
-            defaultMessage="Already have an account? "
-          />
+            defaultMessage="Already have an account?"
+          />{" "}
           <LinkButton onClick={toLogin}>
             <FormattedMessage id="auth.login.submit" defaultMessage="Log in" />
           </LinkButton>
@@ -1099,7 +1099,7 @@ function ForgotForm({ toLogin }: { readonly toLogin: () => void }) {
         <p className={styles.spamHint}>
           <FormattedMessage
             id="auth.spamHint"
-            defaultMessage="Can't find it? Check your spam or junk folder."
+            defaultMessage="Can’t find it? Check your spam or junk folder."
           />
         </p>
         <div className={styles.links}>
@@ -1125,7 +1125,7 @@ function ForgotForm({ toLogin }: { readonly toLogin: () => void }) {
       <p className={styles.intro}>
         <FormattedMessage
           id="auth.forgot.intro"
-          defaultMessage="Enter your email and we'll send you a link to choose a new password."
+          defaultMessage="Enter your email and we’ll send you a link to choose a new password."
         />
       </p>
       <TextField
@@ -1198,7 +1198,7 @@ function MagicForm({ toLogin }: { readonly toLogin: () => void }) {
         <p className={styles.intro}>
           <FormattedMessage
             id="auth.magic.sentText"
-            defaultMessage="We've emailed a sign-in link to <strong>{email}</strong>. It works once and expires in 24 hours."
+            defaultMessage="We’ve emailed a sign-in link to <strong>{email}</strong>. It works once and expires in 24 hours."
             values={{
               email,
               strong: (chunks) => <strong>{chunks}</strong>,
@@ -1208,7 +1208,7 @@ function MagicForm({ toLogin }: { readonly toLogin: () => void }) {
         <p className={styles.spamHint}>
           <FormattedMessage
             id="auth.spamHint"
-            defaultMessage="Can't find it? Check your spam or junk folder."
+            defaultMessage="Can’t find it? Check your spam or junk folder."
           />
         </p>
         <div className={styles.links}>
@@ -1234,7 +1234,7 @@ function MagicForm({ toLogin }: { readonly toLogin: () => void }) {
       <p className={styles.intro}>
         <FormattedMessage
           id="auth.magic.intro"
-          defaultMessage="Enter your email and we'll send you a link to sign in — no password needed."
+          defaultMessage="Enter your email and we’ll send you a link to sign in — no password needed."
         />
       </p>
       <TextField
@@ -1291,7 +1291,7 @@ function ResetForm({ token }: { readonly token: string }) {
       setError(
         formatMessage({
           id: "auth.passwordMismatch",
-          defaultMessage: "The passwords don't match.",
+          defaultMessage: "The passwords don’t match.",
         }),
       );
       return;
@@ -1352,7 +1352,7 @@ function ResetForm({ token }: { readonly token: string }) {
         <p className={styles.error}>
           <FormattedMessage
             id="auth.passwordMismatch"
-            defaultMessage="The passwords don't match."
+            defaultMessage="The passwords don’t match."
           />
         </p>
       )}

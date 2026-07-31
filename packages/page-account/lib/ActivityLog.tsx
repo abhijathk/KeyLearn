@@ -138,7 +138,7 @@ export function ActivityLog(): ReactNode {
       <p className={styles.activityHint}>
         <FormattedMessage
           id="activity.hint"
-          defaultMessage="The last 30 days. If you don't recognise something here, change your password and sign out of all devices."
+          defaultMessage="The last 30 days. If you don’t recognise something here, change your password and sign out of all devices."
         />
       </p>
       {events == null ? (

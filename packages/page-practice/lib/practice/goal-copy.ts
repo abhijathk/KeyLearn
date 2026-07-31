@@ -7,7 +7,7 @@ import { defineMessages, type MessageDescriptor } from "react-intl";
 const roll = defineMessages({
   m1: {
     id: "goalReport.roll.1",
-    defaultMessage: "You're on a roll — one more while your hands are warm?",
+    defaultMessage: "You’re on a roll — one more while your hands are warm?",
   },
   m2: {
     id: "goalReport.roll.2",
@@ -23,11 +23,11 @@ const roll = defineMessages({
   },
   m5: {
     id: "goalReport.roll.5",
-    defaultMessage: "Great rhythm today. One more won't hurt.",
+    defaultMessage: "Great rhythm today. One more won’t hurt.",
   },
   m6: {
     id: "goalReport.roll.6",
-    defaultMessage: "You're in the zone — the best time for another.",
+    defaultMessage: "You’re in the zone — the best time for another.",
   },
   m7: {
     id: "goalReport.roll.7",
@@ -55,7 +55,7 @@ const roll = defineMessages({
   },
   m13: {
     id: "goalReport.roll.13",
-    defaultMessage: "You've got the touch today. Another round?",
+    defaultMessage: "You’ve got the touch today. Another round?",
   },
   m14: {
     id: "goalReport.roll.14",
@@ -66,11 +66,12 @@ const roll = defineMessages({
 const restMain = defineMessages({
   m1: {
     id: "goalReport.rest.main.1",
-    defaultMessage: "Over an hour today — nicely done. Time to rest your hands.",
+    defaultMessage:
+      "Over an hour today — nicely done. Time to rest your hands.",
   },
   m2: {
     id: "goalReport.rest.main.2",
-    defaultMessage: "That's a solid session. Your hands have earned a break.",
+    defaultMessage: "That’s a solid session. Your hands have earned a break.",
   },
   m3: {
     id: "goalReport.rest.main.3",
@@ -78,7 +79,7 @@ const restMain = defineMessages({
   },
   m4: {
     id: "goalReport.rest.main.4",
-    defaultMessage: "You've put in real work — give those fingers a breather.",
+    defaultMessage: "You’ve put in real work — give those fingers a breather.",
   },
   m5: {
     id: "goalReport.rest.main.5",
@@ -86,7 +87,7 @@ const restMain = defineMessages({
   },
   m6: {
     id: "goalReport.rest.main.6",
-    defaultMessage: "Step away while it still feels good — you've done plenty.",
+    defaultMessage: "Step away while it still feels good — you’ve done plenty.",
   },
   m7: {
     id: "goalReport.rest.main.7",
@@ -94,7 +95,7 @@ const restMain = defineMessages({
   },
   m8: {
     id: "goalReport.rest.main.8",
-    defaultMessage: "You've more than hit the mark — time to unwind.",
+    defaultMessage: "You’ve more than hit the mark — time to unwind.",
   },
   m9: {
     id: "goalReport.rest.main.9",
@@ -102,14 +103,14 @@ const restMain = defineMessages({
   },
   m10: {
     id: "goalReport.rest.main.10",
-    defaultMessage: "That's enough for one day — and it was a good one.",
+    defaultMessage: "That’s enough for one day — and it was a good one.",
   },
 });
 
 const restSub = defineMessages({
   m1: {
     id: "goalReport.rest.sub.1",
-    defaultMessage: "Come back fresh tomorrow — you'll be quicker for it.",
+    defaultMessage: "Come back fresh tomorrow — you’ll be quicker for it.",
   },
   m2: {
     id: "goalReport.rest.sub.2",

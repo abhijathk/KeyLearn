@@ -200,7 +200,7 @@ export const Pulse = memo(function Pulse({
             title={formatMessage({
               id: "practice.lane.road.description",
               defaultMessage:
-                "This key's road to unlocking: the glowing dot is where you are now, the hollow ring is your best so far, the star is the unlock.",
+                "This key’s road to unlocking: the glowing dot is where you are now, the hollow ring is your best so far, the star is the unlock.",
             })}
           >
             {focusedKey != null ? (
@@ -302,7 +302,7 @@ export const Pulse = memo(function Pulse({
           title={formatMessage({
             id: "metric.score.description",
             defaultMessage:
-              "Your last lesson's score, in points. " +
+              "Your last lesson’s score, in points. " +
               "You earn more by typing faster and cleaner.",
           })}
         >
@@ -488,8 +488,7 @@ function SessionRecap({
     forecast.remainingLessons > 0
       ? Math.round(forecast.remainingLessons)
       : null;
-  const nextKey =
-    focusedKey != null ? String(focusedKey.letter.label) : null;
+  const nextKey = focusedKey != null ? String(focusedKey.letter.label) : null;
 
   // The adaptive coaching line: the engine reads the same live stats and
   // returns the single most useful nudge, filled with real keys/numbers.
@@ -510,229 +509,237 @@ function SessionRecap({
   return (
     <>
       <div className={styles.cards}>
-      <div className={styles.card}>
-        <span className={styles.cardLab}>
-          <FormattedMessage
-            id="practice.session.thisSession"
-            defaultMessage="This session"
-          />
-        </span>
-        <span className={styles.cardMain}>
-          <FormattedMessage
-            id="practice.session.lessonsMinutes"
-            defaultMessage="{lessons} {lessons, plural, one {lesson} other {lessons}} · {minutes} min"
-            values={{ lessons: sessionCount, minutes: sessionMinutes }}
-          />
-        </span>
-        <span className={styles.cardSub}>
-          {sessionBest > 0 ? (
-            <>
+        <div className={styles.card}>
+          <span className={styles.cardLab}>
+            <FormattedMessage
+              id="practice.session.thisSession"
+              defaultMessage="This session"
+            />
+          </span>
+          <span className={styles.cardMain}>
+            <FormattedMessage
+              id="practice.session.lessonsMinutes"
+              defaultMessage="{lessons} {lessons, plural, one {lesson} other {lessons}} · {minutes} min"
+              values={{ lessons: sessionCount, minutes: sessionMinutes }}
+            />
+          </span>
+          <span className={styles.cardSub}>
+            {sessionBest > 0 ? (
+              <>
+                <FormattedMessage
+                  id="practice.session.best"
+                  defaultMessage="best {speed}"
+                  values={{ speed: formatSpeed(sessionBest) }}
+                />
+                {beatRecord && <span className={styles.flourish}> ✦</span>}
+              </>
+            ) : (
               <FormattedMessage
-                id="practice.session.best"
-                defaultMessage="best {speed}"
-                values={{ speed: formatSpeed(sessionBest) }}
+                id="practice.session.warmup"
+                defaultMessage="warming up…"
               />
-              {beatRecord && <span className={styles.flourish}> ✦</span>}
+            )}
+          </span>
+        </div>
+
+        <div className={styles.card}>
+          <span className={styles.cardLab}>
+            <FormattedMessage
+              id="practice.session.recentForm"
+              defaultMessage="Recent form"
+            />
+          </span>
+          <span className={styles.cardMain}>
+            {recent.length > 0 ? formatSpeed(recentAvg) : "—"}
+            <i className={styles.cardMainNote}>
+              {" "}
+              <FormattedMessage
+                id="practice.session.avg"
+                defaultMessage="avg"
+              />
+            </i>
+          </span>
+          <span className={styles.cardSub}>
+            {recent.length >= 2 && (
+              <span
+                className={clsx(
+                  styles.trendTag,
+                  trend > 0.5
+                    ? styles.trendUp
+                    : trend < -0.5
+                      ? styles.trendDown
+                      : styles.trendFlat,
+                )}
+              >
+                {trend > 0.5 ? (
+                  <FormattedMessage
+                    id="practice.session.improving"
+                    defaultMessage="improving"
+                  />
+                ) : trend < -0.5 ? (
+                  <FormattedMessage
+                    id="practice.session.dip"
+                    defaultMessage="slight dip"
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="practice.session.steady"
+                    defaultMessage="steady"
+                  />
+                )}
+              </span>
+            )}
+            {recent.length > 0 && (
+              <>
+                {" · "}
+                <FormattedMessage
+                  id="practice.session.accuracy"
+                  defaultMessage="{value} clean"
+                  values={{ value: formatPercents(recentAccuracy) }}
+                />
+              </>
+            )}
+          </span>
+        </div>
+
+        <div className={clsx(styles.card, styles.cardNext)}>
+          <span className={styles.cardLab}>
+            <FormattedMessage
+              id="practice.session.coming"
+              defaultMessage="Coming up"
+            />
+          </span>
+          {focusedKey != null ? (
+            <>
+              <span className={styles.cardMain}>
+                {remaining != null ? (
+                  <FormattedMessage
+                    id="practice.session.forecast"
+                    defaultMessage="{key} in ~{n}"
+                    values={{
+                      key: <span className={styles.nextKey}>{nextKey}</span>,
+                      n: remaining,
+                    }}
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="practice.session.unlockNext"
+                    defaultMessage="unlock {key}"
+                    values={{
+                      key: <span className={styles.nextKey}>{nextKey}</span>,
+                    }}
+                  />
+                )}
+              </span>
+              <span className={styles.cardSub}>
+                {remaining != null ? (
+                  <FormattedMessage
+                    id="practice.session.forecastNote"
+                    defaultMessage="{n, plural, one {lesson to go} other {lessons to go}}"
+                    values={{ n: remaining }}
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="practice.session.keepGoing"
+                    defaultMessage="keep going to reveal the forecast"
+                  />
+                )}
+                {" · "}
+                <FormattedMessage
+                  id="practice.session.unlockedCount"
+                  defaultMessage="{unlocked}/{total} keys"
+                  values={{ unlocked, total }}
+                />
+              </span>
+              <span className={styles.alphaBar}>
+                <i
+                  style={{ inlineSize: `${Math.round(unlockedFrac * 100)}%` }}
+                />
+              </span>
             </>
           ) : (
-            <FormattedMessage
-              id="practice.session.warmup"
-              defaultMessage="warming up…"
-            />
-          )}
-        </span>
-      </div>
-
-      <div className={styles.card}>
-        <span className={styles.cardLab}>
-          <FormattedMessage
-            id="practice.session.recentForm"
-            defaultMessage="Recent form"
-          />
-        </span>
-        <span className={styles.cardMain}>
-          {recent.length > 0 ? formatSpeed(recentAvg) : "—"}
-          <i className={styles.cardMainNote}>
-            {" "}
-            <FormattedMessage
-              id="practice.session.avg"
-              defaultMessage="avg"
-            />
-          </i>
-        </span>
-        <span className={styles.cardSub}>
-          {recent.length >= 2 && (
-            <span
-              className={clsx(
-                styles.trendTag,
-                trend > 0.5
-                  ? styles.trendUp
-                  : trend < -0.5
-                    ? styles.trendDown
-                    : styles.trendFlat,
-              )}
-            >
-              {trend > 0.5 ? (
-                <FormattedMessage
-                  id="practice.session.improving"
-                  defaultMessage="improving"
-                />
-              ) : trend < -0.5 ? (
-                <FormattedMessage
-                  id="practice.session.dip"
-                  defaultMessage="slight dip"
-                />
-              ) : (
-                <FormattedMessage
-                  id="practice.session.steady"
-                  defaultMessage="steady"
-                />
-              )}
-            </span>
-          )}
-          {recent.length > 0 && (
             <>
-              {" · "}
-              <FormattedMessage
-                id="practice.session.accuracy"
-                defaultMessage="{value} clean"
-                values={{ value: formatPercents(recentAccuracy) }}
-              />
+              <span className={styles.cardMain}>
+                <FormattedMessage
+                  id="practice.session.allDone"
+                  defaultMessage="all {total} keys"
+                  values={{ total }}
+                />
+              </span>
+              <span className={styles.cardSub}>
+                <FormattedMessage
+                  id="practice.session.complete"
+                  defaultMessage="every key unlocked — chase your speed now"
+                />
+              </span>
             </>
           )}
-        </span>
-      </div>
+        </div>
 
-      <div className={clsx(styles.card, styles.cardNext)}>
-        <span className={styles.cardLab}>
-          <FormattedMessage
-            id="practice.session.coming"
-            defaultMessage="Coming up"
-          />
-        </span>
-        {focusedKey != null ? (
-          <>
-            <span className={styles.cardMain}>
-              {remaining != null ? (
+        <div className={styles.card}>
+          <span className={styles.cardLab}>
+            <FormattedMessage
+              id="practice.session.recordToBeat"
+              defaultMessage="Record to beat"
+            />
+          </span>
+          {beatRecord ? (
+            <>
+              <span className={styles.cardMain}>
                 <FormattedMessage
-                  id="practice.session.forecast"
-                  defaultMessage="{key} in ~{n}"
-                  values={{
-                    key: <span className={styles.nextKey}>{nextKey}</span>,
-                    n: remaining,
-                  }}
+                  id="practice.session.newRecord"
+                  defaultMessage="new best!"
                 />
-              ) : (
+                <span className={styles.flourish}> ✦</span>
+              </span>
+              <span className={styles.cardSub}>
                 <FormattedMessage
-                  id="practice.session.unlockNext"
-                  defaultMessage="unlock {key}"
-                  values={{
-                    key: <span className={styles.nextKey}>{nextKey}</span>,
-                  }}
+                  id="practice.session.newRecordSub"
+                  defaultMessage="you set it this session"
                 />
-              )}
-            </span>
-            <span className={styles.cardSub}>
-              {remaining != null ? (
+              </span>
+            </>
+          ) : recordGap > 0 ? (
+            <>
+              <span className={styles.cardMain}>
+                {recordGap}
+                <i className={styles.cardMainNote}> {speedUnit.id}</i>
+              </span>
+              <span className={styles.cardSub}>
                 <FormattedMessage
-                  id="practice.session.forecastNote"
-                  defaultMessage="{n, plural, one {lesson to go} other {lessons to go}}"
-                  values={{ n: remaining }}
+                  id="practice.session.toTopBest"
+                  defaultMessage="to top your {best} best"
+                  values={{ best: formatSpeed(record) }}
                 />
-              ) : (
+              </span>
+              <span className={styles.recordBar}>
+                <i style={{ inlineSize: `${Math.round(recordFrac * 100)}%` }} />
+              </span>
+            </>
+          ) : (
+            <>
+              <span className={styles.cardMain}>—</span>
+              <span className={styles.cardSub}>
                 <FormattedMessage
-                  id="practice.session.keepGoing"
-                  defaultMessage="keep going to reveal the forecast"
+                  id="practice.session.noRecordYet"
+                  defaultMessage="a few lessons sets your first record"
                 />
-              )}
-              {" · "}
-              <FormattedMessage
-                id="practice.session.unlockedCount"
-                defaultMessage="{unlocked}/{total} keys"
-                values={{ unlocked, total }}
-              />
-            </span>
-            <span className={styles.alphaBar}>
-              <i style={{ inlineSize: `${Math.round(unlockedFrac * 100)}%` }} />
-            </span>
-          </>
-        ) : (
-          <>
-            <span className={styles.cardMain}>
-              <FormattedMessage
-                id="practice.session.allDone"
-                defaultMessage="all {total} keys"
-                values={{ total }}
-              />
-            </span>
-            <span className={styles.cardSub}>
-              <FormattedMessage
-                id="practice.session.complete"
-                defaultMessage="every key unlocked — chase your speed now"
-              />
-            </span>
-          </>
-        )}
-      </div>
-
-      <div className={styles.card}>
-        <span className={styles.cardLab}>
-          <FormattedMessage
-            id="practice.session.recordToBeat"
-            defaultMessage="Record to beat"
-          />
-        </span>
-        {beatRecord ? (
-          <>
-            <span className={styles.cardMain}>
-              <FormattedMessage
-                id="practice.session.newRecord"
-                defaultMessage="new best!"
-              />
-              <span className={styles.flourish}> ✦</span>
-            </span>
-            <span className={styles.cardSub}>
-              <FormattedMessage
-                id="practice.session.newRecordSub"
-                defaultMessage="you set it this session"
-              />
-            </span>
-          </>
-        ) : recordGap > 0 ? (
-          <>
-            <span className={styles.cardMain}>
-              {recordGap}
-              <i className={styles.cardMainNote}> {speedUnit.id}</i>
-            </span>
-            <span className={styles.cardSub}>
-              <FormattedMessage
-                id="practice.session.toTopBest"
-                defaultMessage="to top your {best} best"
-                values={{ best: formatSpeed(record) }}
-              />
-            </span>
-            <span className={styles.recordBar}>
-              <i style={{ inlineSize: `${Math.round(recordFrac * 100)}%` }} />
-            </span>
-          </>
-        ) : (
-          <>
-            <span className={styles.cardMain}>—</span>
-            <span className={styles.cardSub}>
-              <FormattedMessage
-                id="practice.session.noRecordYet"
-                defaultMessage="a few lessons sets your first record"
-              />
-            </span>
-          </>
-        )}
-      </div>
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className={styles.coach}>
         <span className={styles.coachBulb} aria-hidden={true}>
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor"
-            strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M7.5 15.5h5M8 18h4M10 2.5a5.5 5.5 0 0 1 3.4 9.8c-.5.4-.9 1-.9 1.7H7.5c0-.7-.4-1.3-.9-1.7A5.5 5.5 0 0 1 10 2.5Z" />
           </svg>
         </span>
@@ -1132,7 +1139,7 @@ function TodayWhisper({
       title={formatMessage({
         id: "practice.lane.today.description",
         defaultMessage:
-          "Today's practice time, out of your daily goal. Only time spent actually typing counts — pauses between lessons don't.",
+          "Today’s practice time, out of your daily goal. Only time spent actually typing counts — pauses between lessons don’t.",
       })}
     >
       <span
@@ -1147,7 +1154,7 @@ function TodayWhisper({
         />
       </b>{" "}
       <span className={styles.lab}>
-        <FormattedMessage id="t_Daily_goal" defaultMessage="Today's goal" />
+        <FormattedMessage id="t_Daily_goal" defaultMessage="Today’s goal" />
       </span>
     </span>
   );

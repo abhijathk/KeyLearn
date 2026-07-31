@@ -95,7 +95,7 @@ export function KeybrImport({
             formatMessage({
               id: "import.badFile",
               defaultMessage:
-                "That doesn't look like a keybr data export (expected a .json file).",
+                "That doesn’t look like a keybr data export — expected a JSON file.",
             }),
           );
           return;
@@ -191,7 +191,7 @@ export function KeybrImport({
         <p className={styles.hint}>
           <FormattedMessage
             id="import.intro"
-            defaultMessage="Upload the typing-data.json you downloaded from keybr. It's added to a grown-up profile, so your history and learned keys carry over."
+            defaultMessage="Upload the typing-data.json you downloaded from keybr. It’s added to a grown-up profile, so your history and learned keys carry over."
           />{" "}
           <button
             type="button"
@@ -221,7 +221,7 @@ export function KeybrImport({
             <li>
               <FormattedMessage
                 id="import.help.3"
-                defaultMessage="Save the .json file, then upload it below."
+                defaultMessage="Save the JSON file, then upload it below."
               />
             </li>
           </ol>
@@ -308,7 +308,7 @@ export function KeybrImport({
                 <span className={styles.optSub}>
                   <FormattedMessage
                     id="import.merge.sub"
-                    defaultMessage="Keep what's here and add the imported lessons."
+                    defaultMessage="Keep what’s here and add the imported lessons."
                   />
                 </span>
               </button>
@@ -329,7 +329,7 @@ export function KeybrImport({
                 <span className={styles.optSub}>
                   <FormattedMessage
                     id="import.replace.sub"
-                    defaultMessage="Erase this profile's history and use the file."
+                    defaultMessage="Erase this profile’s history and use the file."
                   />
                 </span>
               </button>

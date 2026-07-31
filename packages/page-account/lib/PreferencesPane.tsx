@@ -215,7 +215,7 @@ function NotificationsCard(): ReactNode {
           <span className={styles.rowSub}>
             <FormattedMessage
               id="account.prefs.reminders.sub"
-              defaultMessage="A nudge when you haven't practised in a while."
+              defaultMessage="A nudge when you haven’t practised in a while."
             />
           </span>
         </div>

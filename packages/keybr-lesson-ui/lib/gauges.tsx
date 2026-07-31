@@ -137,7 +137,7 @@ export const ScoreGauge = memo(function ScoreGauge({
       title={formatMessage({
         id: "metric.score.description",
         defaultMessage:
-          "Your last lesson's score, in points. " +
+          "Your last lesson’s score, in points. " +
           "You earn more by typing faster and cleaner.",
       })}
     />

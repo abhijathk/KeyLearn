@@ -56,7 +56,7 @@ function Content({ wordList }: { wordList: WordList }) {
         description={
           <FormattedMessage
             id="typingTest.wordList.language.short"
-            defaultMessage="Which language's most-used words to draw from."
+            defaultMessage="Which language’s most-used words to draw from."
           />
         }
       >

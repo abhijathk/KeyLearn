@@ -23,7 +23,7 @@ export function CalendarSection({
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.calendar.description"
-            defaultMessage="Marks every day you've spent practicing."
+            defaultMessage="Marks every day you’ve spent practicing."
           />
         </Figure.Description>
       </Explainer>

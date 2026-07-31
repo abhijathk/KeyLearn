@@ -90,7 +90,7 @@ export function TodaySummary({
       <Header level={2}>
         <FormattedMessage
           id="t_Statistics_for_Today"
-          defaultMessage="Today's Stats"
+          defaultMessage="Today’s Stats"
         />
       </Header>
 

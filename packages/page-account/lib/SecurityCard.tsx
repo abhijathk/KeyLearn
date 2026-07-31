@@ -141,7 +141,7 @@ export function SecurityCard({
           <p className={styles.note}>
             <FormattedMessage
               id="security.passkey.unsupported"
-              defaultMessage="This browser doesn't support passkeys."
+              defaultMessage="This browser doesn’t support passkeys."
             />
           </p>
         ) : (
@@ -435,12 +435,12 @@ function ChangeEmailDialog({
               {hasPassword ? (
                 <FormattedMessage
                   id="security.email.intro"
-                  defaultMessage="Enter your new email address — we'll send a code to it to confirm it's yours."
+                  defaultMessage="Enter your new email address — we’ll send a code to it to confirm it’s yours."
                 />
               ) : (
                 <FormattedMessage
                   id="security.email.introSso"
-                  defaultMessage="Enter your new email address. First we'll send a code to your current email to confirm it's you."
+                  defaultMessage="Enter your new email address. First we’ll send a code to your current email to confirm it’s you."
                 />
               )}
             </p>
@@ -546,7 +546,7 @@ function ChangeEmailDialog({
             >
               <FormattedMessage
                 id="security.email.verifyIdentity"
-                defaultMessage="Verify it's me"
+                defaultMessage="Verify it’s me"
               />
             </button>
           )}
@@ -606,7 +606,7 @@ function PasswordDialog({
       setErr(
         formatMessage({
           id: "auth.passwordMismatch",
-          defaultMessage: "The passwords don't match.",
+          defaultMessage: "The passwords don’t match.",
         }),
       );
       return;
@@ -688,7 +688,7 @@ function PasswordDialog({
           <p className={styles.secErr}>
             <FormattedMessage
               id="auth.passwordMismatch"
-              defaultMessage="The passwords don't match."
+              defaultMessage="The passwords don’t match."
             />
           </p>
         )}

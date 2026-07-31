@@ -71,14 +71,30 @@ function loadTranslations(locale: string): Record<string, string> {
 }
 
 function findPlaceholders(value: string): unknown {
-  const placeholders = new Set();
-  const regexp = /\{([a-z]+)[,}]/gu;
-  while (true) {
-    const match = regexp.exec(value);
-    if (match == null) {
-      break;
+  // A placeholder is an ICU argument, not any braced word. The plural and
+  // select branches are braced too — `one {lesson} other {lessons}` — and a
+  // correct translation replaces those words, so matching them made every
+  // properly translated plural message look like it had lost its arguments.
+  //
+  // Arguments are either typed (`{count, plural, ...}`, recognised by the
+  // comma at any depth) or simple (`{name}`, only counted at the top level,
+  // where a branch cannot reach).
+  const placeholders = new Set<string>();
+  let depth = 0;
+  for (let i = 0; i < value.length; i++) {
+    const ch = value[i];
+    if (ch === "}") {
+      depth = Math.max(0, depth - 1);
+      continue;
     }
-    placeholders.add(match[1]);
+    if (ch !== "{") {
+      continue;
+    }
+    const match = /^\{([a-z][a-z0-9]*)\s*([,}])/iu.exec(value.slice(i));
+    if (match != null && (match[2] === "," || depth === 0)) {
+      placeholders.add(match[1]);
+    }
+    depth += 1;
   }
   return [...placeholders].sort();
 }

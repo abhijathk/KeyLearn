@@ -22,7 +22,7 @@ export function ProgressOverviewSection({
         <Figure.Description>
           <FormattedMessage
             id="profile.chart.progressOverview.description"
-            defaultMessage="Gives you a bird's-eye view of your learning progress across every key."
+            defaultMessage="Gives you a bird’s-eye view of your learning progress across every key."
           />
         </Figure.Description>
       </Explainer>

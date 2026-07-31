@@ -42,7 +42,7 @@ export function LayoutsPage() {
       <p className={styles.para}>
         <FormattedMessage
           id="layouts.road.intro2"
-          defaultMessage="Typing is easiest when your most-used keys sit on the home row and your most common key pairs alternate between different fingers and hands. That's why an efficient layout has its biggest circles clustered on the home row, along with arcs spread evenly across the keyboard that run long and horizontal rather than short and diagonal — a sign that fingers and hands are switching off frequently."
+          defaultMessage="Typing is easiest when your most-used keys sit on the home row and your most common key pairs alternate between different fingers and hands. That’s why an efficient layout has its biggest circles clustered on the home row, along with arcs spread evenly across the keyboard that run long and horizontal rather than short and diagonal — a sign that fingers and hands are switching off frequently."
         />
       </p>
       <dl className={styles.defs}>
