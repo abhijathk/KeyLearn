@@ -19,13 +19,22 @@ import { randomString, type SessionState } from "@fastr/middleware-session";
 import {
   Credential,
   EmailVerification,
+  generateRecoveryCodes,
+  generateTotpSecret,
   Profile,
+  SecurityEvent,
+  type SecurityEventType,
+  totpUri,
   User,
   UserExistsError,
+  UserExternalId,
   UserLoginRequest,
+  type VerificationPurpose,
+  verifyTotp,
 } from "@keybr/database";
 import { Logger } from "@keybr/logger";
 import { type AbstractAdapter } from "@keybr/oauth";
+import { PublicId } from "@keybr/publicid";
 import { UserDataFactory } from "@keybr/result-userdata";
 import {
   generateAuthenticationOptions,
@@ -34,14 +43,15 @@ import {
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
 import { z } from "zod";
-import { Mailer } from "../mail/index.ts";
+import { Mailer, Notifier } from "../mail/index.ts";
+import { isBreached } from "./breached.ts";
 import {
   messageWithCode,
   messageWithLink,
   messageWithResetLink,
 } from "./email.ts";
 import { pAdapter } from "./pipe.ts";
-import { rateLimit } from "./ratelimit.ts";
+import { clientIp, rateLimit } from "./ratelimit.ts";
 import {
   clearFailures,
   recordFailure,
@@ -57,13 +67,46 @@ const profileJsonOpts = { maxLength: 3_000_000 };
 const MAX_PROFILES_FREE = 4;
 const MAX_PROFILES_PREMIUM = 8;
 
+// A photo avatar is produced by the client as canvas.toDataURL("image/jpeg"),
+// and its `dataUrl` is rendered straight into an <img src>. Accepting an
+// arbitrary string there would let a profile point at a remote URL (a tracking
+// beacon inside a children's app) or a `javascript:` URL, leaving the app
+// relying on React's URL handling rather than its own validation. So constrain
+// it to an inline image and nothing else.
+const DATA_URL = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+// ~1.5 MB of base64 ≈ 1.1 MB of image, comfortably above what the client's
+// downscaled JPEG produces.
+const MAX_DATA_URL = 1_500_000;
+
+const TAvatar = z.union([
+  z.object({
+    type: z.literal("icon"),
+    // Matched against a fixed preset table on render; keep it to a plain slug.
+    id: z
+      .string()
+      .max(32)
+      .regex(/^[a-z0-9-]*$/),
+  }),
+  z.object({
+    type: z.literal("photo"),
+    dataUrl: z.string().max(MAX_DATA_URL).regex(DATA_URL),
+  }),
+]);
+
+// Per-profile UI preferences. Bounded so a profile row cannot become a
+// megabyte-scale arbitrary blob.
+const TPrefs = z.record(
+  z.string().max(48),
+  z.union([z.string().max(256), z.number(), z.boolean(), z.null()]),
+);
+
 const TProfile = z.object({
   kind: z.enum(["adult", "kid"]),
   firstName: z.string().min(1).max(32),
   lastName: z.string().max(32).optional(),
   birthYear: z.number().int().min(1900).max(2200).nullable().optional(),
-  avatar: z.unknown().optional(),
-  prefs: z.unknown().optional(),
+  avatar: TAvatar.nullable().optional(),
+  prefs: TPrefs.nullable().optional(),
   parentalConsent: z.boolean().optional(),
 });
 type TProfile = z.infer<typeof TProfile>;
@@ -76,6 +119,11 @@ type TProfilePatch = z.infer<typeof TProfilePatch>;
 const PProfilePatch = zod(TProfilePatch, () => {
   throw new ApplicationError("Invalid profile");
 });
+
+// How long a proved grown-up PIN stands before it is asked for again. Long
+// enough to manage several profiles in one sitting, short enough that a tablet
+// left unattended does not stay unlocked.
+const PARENT_PIN_TTL_MS = 15 * 60 * 1000;
 
 const MIN_PASSWORD = 8;
 // COPPA: children under 13 may not create their own account. Whole years.
@@ -103,7 +151,10 @@ const PCreateToken = zod(TCreateToken, () => {
 const TRegister = z.object({
   email: z.string().min(1).email(),
   password: z.string().min(MIN_PASSWORD).max(128),
-  name: z.string().max(32).optional(),
+  // Both required. The account holder's real name seeds their learner profile,
+  // and a household of "Me" and "Me 2" is no use to anyone.
+  firstName: z.string().trim().min(1).max(32),
+  lastName: z.string().trim().min(1).max(32),
   // ISO "YYYY-MM-DD"; required so the age gate can run server-side.
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   turnstileToken: z.string().max(4096).optional(),
@@ -111,7 +162,7 @@ const TRegister = z.object({
 type TRegister = z.infer<typeof TRegister>;
 const PRegister = zod(TRegister, () => {
   throw new ApplicationError(
-    `Enter a valid email, a password of at least ${MIN_PASSWORD} characters, and your date of birth`,
+    `Enter your name, a valid email, a password of at least ${MIN_PASSWORD} characters, and your date of birth`,
   );
 });
 
@@ -137,7 +188,10 @@ const TChangeEmail = z.object({
   password: z.string().max(128).optional(),
   // For accounts without a password: a code sent to the CURRENT email proves
   // the request comes from the account owner, not a hijacked session.
-  identityCode: z.string().regex(/^\d{6}$/).optional(),
+  identityCode: z
+    .string()
+    .regex(/^\d{6}$/)
+    .optional(),
 });
 type TChangeEmail = z.infer<typeof TChangeEmail>;
 const PChangeEmail = zod(TChangeEmail, () => {
@@ -161,6 +215,15 @@ const TDeleteAccount = z.object({
 type TDeleteAccount = z.infer<typeof TDeleteAccount>;
 const PDeleteAccount = zod(TDeleteAccount, () => {
   throw new ApplicationError("Enter the 6-digit code from your email");
+});
+
+const TLookup = z.object({
+  email: z.string().min(1).email(),
+  turnstileToken: z.string().max(4096).optional(),
+});
+type TLookup = z.infer<typeof TLookup>;
+const PLookup = zod(TLookup, () => {
+  throw new ApplicationError("Enter a valid e-mail address");
 });
 
 const TLogin = z.object({
@@ -218,8 +281,60 @@ const PChangePassword = zod(TChangePassword, () => {
   );
 });
 
+const TTwoFactorEnable = z.object({
+  code: z.string().regex(/^\d{6}$/),
+});
+type TTwoFactorEnable = z.infer<typeof TTwoFactorEnable>;
+const PTwoFactorEnable = zod(TTwoFactorEnable, () => {
+  throw new ApplicationError("Enter the 6-digit code from your app");
+});
+
+const TTwoFactorDisable = z.object({
+  // Proof of possession: the current password, or a live code.
+  password: z.string().max(128).optional(),
+  code: z.string().max(32).optional(),
+});
+type TTwoFactorDisable = z.infer<typeof TTwoFactorDisable>;
+const PTwoFactorDisable = zod(TTwoFactorDisable, () => {
+  throw new ApplicationError("Invalid request");
+});
+
+const TTwoFactorLogin = z.object({
+  // Either a 6-digit app code or a recovery code.
+  code: z.string().min(6).max(32),
+});
+type TTwoFactorLogin = z.infer<typeof TTwoFactorLogin>;
+const PTwoFactorLogin = zod(TTwoFactorLogin, () => {
+  throw new ApplicationError("Enter the 6-digit code from your app");
+});
+
+const TParentPin = z.object({
+  // 4-8 digits: long enough not to be guessed over a child's shoulder in a few
+  // tries (attempts are rate-limited), short enough to be remembered.
+  pin: z
+    .string()
+    .regex(/^\d{4,8}$/)
+    .nullable(),
+  // Proof this is the account owner and not whoever is holding the tablet.
+  password: z.string().max(128).optional(),
+  currentPin: z.string().max(16).optional(),
+});
+type TParentPin = z.infer<typeof TParentPin>;
+const PParentPin = zod(TParentPin, () => {
+  throw new ApplicationError("Choose a PIN of 4 to 8 digits");
+});
+
+const TVerifyPin = z.object({
+  pin: z.string().max(16),
+});
+type TVerifyPin = z.infer<typeof TVerifyPin>;
+const PVerifyPin = zod(TVerifyPin, () => {
+  throw new ApplicationError("Enter the grown-up PIN");
+});
+
 const TPatchAccount = z.object({
   anonymized: z.boolean().optional(),
+  publicProfile: z.boolean().optional(),
   name: z.string().min(1).max(32).optional(),
 });
 type TPatchAccount = z.infer<typeof TPatchAccount>;
@@ -233,23 +348,71 @@ export class Controller {
   constructor(
     @inject("canonicalUrl") readonly canonicalUrl: string,
     readonly mailer: Mailer,
+    readonly notifier: Notifier,
     readonly userData: UserDataFactory,
   ) {}
+
+  // Tell the account holder that something changed. Always sent — the point of
+  // the notice is to reach someone who did NOT do it.
+  #alert(ctx: Context<any>, user: User, event: string): void {
+    this.notifier.securityAlert(user, event, {
+      ip: clientIp(ctx),
+      device: ctx.request.headers.get("user-agent"),
+    });
+  }
+
+  // Record a security-relevant event against the current request. Best-effort:
+  // SecurityEvent.record swallows its own failures, so this can never turn a
+  // successful action into a failed one.
+  #audit(
+    ctx: Context<any>,
+    type: SecurityEventType,
+    userId: number | null,
+    detail: string | null = null,
+  ): void {
+    void SecurityEvent.record({
+      userId,
+      type,
+      ip: clientIp(ctx),
+      userAgent: ctx.request.headers.get("user-agent"),
+      detail,
+    });
+  }
+
+  // Profile management is a grown-up action. When the household has set a PIN,
+  // the browser must have proved it recently — checked HERE, on the server,
+  // because the on-screen gate is only a speed bump and a curious child with
+  // devtools (or a direct fetch) walks straight past it.
+  #requireParentPin(ctx: Context<SessionState & AuthState>, user: User): void {
+    if (user.parentPinHash == null) {
+      return;
+    }
+    const at = Number(ctx.state.session.get("parentPinAt") ?? 0);
+    if (at === 0 || Date.now() - at > PARENT_PIN_TTL_MS) {
+      throw new ApplicationError("Enter the grown-up PIN to continue.", {
+        status: 428,
+        body: { error: { message: "Grown-up PIN required", parentPin: true } },
+      });
+    }
+  }
 
   // Remove a profile's on-disk typing history — its data files, separate from
   // the DB row. Best-effort; a missing file is fine.
   async #deleteProfileData(userId: number, profileId: number): Promise<void> {
     try {
       await this.userData.loadProfile(userId, profileId).delete();
-    } catch (err) {
+    } catch (err: any) {
       Logger.warn(err, "Could not delete stats for profile %d", profileId);
     }
   }
 
   // Issue a fresh verification code for an email and send it. Failing to send
   // is surfaced to the caller so the UI can tell the user to try again.
-  async #sendVerificationCode(email: string): Promise<void> {
-    const code = await EmailVerification.issue(email);
+  async #sendVerificationCode(
+    email: string,
+    purpose: VerificationPurpose,
+  ): Promise<void> {
+    const code = await EmailVerification.issue(email, purpose);
     try {
       await this.mailer.sendMail(messageWithCode({ email, code }));
     } catch (err: any) {
@@ -289,9 +452,11 @@ export class Controller {
   async oAuthCallback(
     ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("adapter", pAdapter) adapter: AbstractAdapter,
-    @queryParam("code", zod(z.string().min(1))) code: string,
-    @queryParam("state", zod(z.string().min(1))) state: string,
   ) {
+    const query = ctx.request.query;
+    const code = query.get("code");
+    const state = query.get("state");
+    const error = query.get("error");
     const authState = ctx.state.session.pull("authState");
     const codeVerifier = ctx.state.session.pull("codeVerifier") as
       | string
@@ -301,22 +466,62 @@ export class Controller {
       | "register"
       | undefined;
     ctx.state.session.destroy();
+
+    // Declining is a normal thing to do. Send them back to sign-in rather than
+    // showing an error page for a choice they made deliberately.
+    if (error != null || code == null) {
+      ctx.response.redirect("/login?sso=cancelled");
+      return;
+    }
+
     if (state === authState) {
       const token = await adapter.getAccessToken({ code, codeVerifier });
       const resourceOwner = await adapter.getProfile(token);
       if (resourceOwner.email != null) {
-        const existing = await User.findByEmail(resourceOwner.email);
-        // A login (not an explicit "sign up") with no matching account: don't
-        // silently create one — send them to register first. Registration is
-        // the only path that provisions a new SSO account.
-        if (existing == null && intent !== "register") {
-          ctx.response.redirect("/register?sso=noaccount");
-          return;
+        // A login (not an explicit "sign up") that matches no account and no
+        // known provider identity: don't silently create one — send them to
+        // register first. Registration is the only path that provisions a new
+        // SSO account.
+        if (intent !== "register") {
+          const known =
+            (await UserExternalId.findBySubject(
+              resourceOwner.provider,
+              resourceOwner.id,
+            )) != null || (await User.findByEmail(resourceOwner.email)) != null;
+          if (!known) {
+            ctx.response.redirect("/register?sso=noaccount");
+            return;
+          }
         }
-        const user = await User.ensure(resourceOwner);
-        ctx.state.session.start();
-        ctx.state.session.set("userId", user.id!);
-        ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
+        const result = await User.ensure(resourceOwner);
+        switch (result.kind) {
+          case "link-required":
+            this.#audit(ctx, "sso-link-refused", null, resourceOwner.provider);
+            // An account already holds this address but the provider never
+            // verified it, so we will not hand over the account. Ask the owner
+            // to sign in the way they registered and link from there.
+            ctx.response.redirect("/login?sso=linkrequired");
+            return;
+          case "verify":
+            // A fresh account from an address nobody vouched for: make them
+            // prove the mailbox before it becomes usable. No session yet.
+            await this.#sendVerificationCode(
+              result.email,
+              "verify-email",
+            ).catch((err: any) => {
+              Logger.warn(err, "Could not send SSO verification code");
+            });
+            ctx.response.redirect(
+              `/login?sso=verify&email=${encodeURIComponent(result.email)}`,
+            );
+            return;
+          case "ok":
+            ctx.state.session.start();
+            ctx.state.session.set("userId", result.user.id!);
+            ctx.state.session.set("epoch", result.user.sessionEpoch ?? 0);
+            this.#audit(ctx, "login", result.user.id!, resourceOwner.provider);
+            break;
+        }
       }
       ctx.response.redirect("/");
     } else {
@@ -330,7 +535,7 @@ export class Controller {
     @body.json(PCreateToken, jsonOpts) { email }: TCreateToken,
   ) {
     rateLimit(ctx, "email", 5, 300_000);
-    const token = String(await UserLoginRequest.init(email));
+    const token = String(await UserLoginRequest.init(email, "login"));
     const link = String(
       new URL(ctx.state.router.makePath("login", { token }), this.canonicalUrl),
     );
@@ -347,7 +552,14 @@ export class Controller {
   async registerWithPassword(
     ctx: Context<RouterState & SessionState & AuthState>,
     @body.json(PRegister, jsonOpts)
-    { email, password, name, dateOfBirth, turnstileToken }: TRegister,
+    {
+      email,
+      password,
+      firstName,
+      lastName,
+      dateOfBirth,
+      turnstileToken,
+    }: TRegister,
   ) {
     rateLimit(ctx, "register", 10, 60_000);
     await requireCaptchaIfSuspicious(ctx, turnstileToken);
@@ -359,9 +571,20 @@ export class Controller {
         "You need to be at least 13 to create an account. Ask a parent or guardian to create one and add you as a learner.",
       );
     }
+    if (await isBreached(password)) {
+      throw new ApplicationError(
+        "That password has appeared in a public data breach. Please pick a different one.",
+      );
+    }
     ctx.state.session.destroy();
     try {
-      await User.registerWithPassword(email, password, name ?? "", dateOfBirth);
+      await User.registerWithPassword(
+        email,
+        password,
+        firstName,
+        lastName,
+        dateOfBirth,
+      );
     } catch (err) {
       if (err instanceof UserExistsError) {
         throw new ApplicationError(
@@ -373,7 +596,7 @@ export class Controller {
     // The account exists but isn't usable until the email is verified: email a
     // one-time code and let the client collect it. No session is established
     // here, so an unverified account can't be signed in.
-    await this.#sendVerificationCode(email);
+    await this.#sendVerificationCode(email, "verify-email");
     ctx.response.body = { verify: true, email };
   }
 
@@ -383,7 +606,7 @@ export class Controller {
     @body.json(PVerifyEmail, jsonOpts) { email, code }: TVerifyEmail,
   ) {
     rateLimit(ctx, "verify", 20, 300_000);
-    const ok = await EmailVerification.verify(email, code);
+    const ok = await EmailVerification.verify(email, "verify-email", code);
     if (!ok) {
       throw new ForbiddenError(
         "That code is incorrect or has expired. Request a new one and try again.",
@@ -398,6 +621,8 @@ export class Controller {
     ctx.state.session.start();
     ctx.state.session.set("userId", user.id!);
     ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
+    // Completing sign-up also signs you in, so it belongs in the trail.
+    this.#audit(ctx, "login", user.id!, "sign-up");
     ctx.response.body = { ok: true };
   }
 
@@ -411,9 +636,45 @@ export class Controller {
     // answer the same way so the endpoint can't probe for registered emails.
     const user = await User.findByEmail(email);
     if (user != null && !user.emailVerified) {
-      await this.#sendVerificationCode(email);
+      await this.#sendVerificationCode(email, "verify-email");
     }
     ctx.response.body = { ok: true };
+  }
+
+  /**
+   * What to ask this address for next: a password, a second factor, a
+   * sign-in provider, or an invitation to register.
+   *
+   * This DOES tell a caller whether an address has an account — a deliberate
+   * trade for the far better sign-in flow, and the same one Google and most
+   * consumer apps make. It is why the endpoint is rate-limited per address as
+   * well as per client, and why it is behind the adaptive CAPTCHA: the answer is
+   * cheap for one address a person actually owns, and expensive at the scale
+   * enumeration would need.
+   */
+  @http.POST({ name: "lookup", path: "/auth/lookup" })
+  async lookup(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PLookup, jsonOpts) { email, turnstileToken }: TLookup,
+  ) {
+    rateLimit(ctx, "lookup", 30, 300_000);
+    await requireCaptchaIfSuspicious(ctx, turnstileToken);
+
+    const user = await User.findByEmail(email);
+    if (user == null) {
+      recordFailure(ctx);
+      ctx.response.body = { exists: false };
+      return;
+    }
+    ctx.response.body = {
+      exists: true,
+      hasPassword: user.passwordHash != null,
+      twoFactor: Boolean(user.totpEnabled),
+      // Which buttons to highlight, so someone who signed up with Google is
+      // pointed back at Google rather than at a password they never set.
+      providers: (user.externalIds ?? []).map((x) => x.provider),
+    };
+    ctx.response.headers.set("Cache-Control", "private, no-store");
   }
 
   @http.POST({ name: "login-password", path: "/auth/login-password" })
@@ -429,6 +690,10 @@ export class Controller {
     const user = await User.loginWithPassword(email, password);
     if (user == null) {
       recordFailure(ctx);
+      // Recorded against the account when the address is known, so the owner
+      // can see attempts against them even though the attempt failed.
+      const target = await User.findByEmail(email);
+      this.#audit(ctx, "login-failed", target?.id ?? null, "password");
       // One message for both cases — never reveal whether the email exists.
       throw new ForbiddenError("Invalid email or password");
     }
@@ -437,14 +702,28 @@ export class Controller {
     // entering the code): don't sign them in — reissue a code and route them
     // back to the verification step so they can finish.
     if (!user.emailVerified) {
-      await this.#sendVerificationCode(email);
+      await this.#sendVerificationCode(email, "verify-email");
       ctx.response.body = { verify: true, email };
       return;
     }
     ctx.state.session.destroy();
     ctx.state.session.start();
+    // Two-step verification: the password is only the first factor, so the
+    // session is marked PENDING rather than signed in. `loadUser` refuses to
+    // resolve a pending session to a user, so nothing is reachable until the
+    // second factor is supplied.
+    if (user.totpEnabled) {
+      ctx.state.session.set("pending2faUserId", user.id!);
+      ctx.state.session.set("pending2faAt", Date.now());
+      if (remember === false) {
+        ctx.state.session.set("shortLived", true);
+      }
+      ctx.response.body = { twoFactor: true };
+      return;
+    }
     ctx.state.session.set("userId", user.id!);
     ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
+    this.#audit(ctx, "login", user.id!, "password");
     // Shared/family device: mark the session short-lived so it lapses in a day.
     if (remember === false) {
       ctx.state.session.set("shortLived", true);
@@ -464,7 +743,7 @@ export class Controller {
     // same way so the endpoint can't be used to probe for registered emails.
     const user = await User.findByEmail(email);
     if (user != null) {
-      const token = String(await UserLoginRequest.init(email));
+      const token = String(await UserLoginRequest.init(email, "reset"));
       const link = String(
         new URL(`/reset-password/${token}`, this.canonicalUrl),
       );
@@ -495,7 +774,14 @@ export class Controller {
       throw new ForbiddenError("This reset link has expired or is invalid");
     }
     clearFailures(ctx);
+    if (await isBreached(password)) {
+      throw new ApplicationError(
+        "That password has appeared in a public data breach. Please pick a different one.",
+      );
+    }
     await user.setPassword(password);
+    this.#audit(ctx, "password-reset", user.id!);
+    this.#alert(ctx, user, "Your password was reset");
     // Recovery should also lock out anyone else: bump the epoch to invalidate
     // every existing session, then stamp this new one with the fresh epoch.
     const epoch = (user.sessionEpoch ?? 0) + 1;
@@ -530,10 +816,13 @@ export class Controller {
     }
   }
 
-  @http.GET({ name: "logout", path: "/auth/logout" })
+  // POST, not GET: `SameSite=Lax` sends the session cookie on top-level GET
+  // navigations, so a GET logout can be triggered by any page that embeds a
+  // link or image pointing at it.
+  @http.POST({ name: "logout", path: "/auth/logout" })
   async logout(ctx: Context<RouterState & SessionState & AuthState>) {
     ctx.state.session.destroy();
-    ctx.response.redirect("/");
+    ctx.response.body = { ok: true };
   }
 
   // Collects the date of birth for accounts that don't have one yet — chiefly
@@ -560,12 +849,16 @@ export class Controller {
   @http.PATCH({ name: "patch-account", path: "/_/account" })
   async patchAccount(
     ctx: Context<RouterState & SessionState & AuthState>,
-    @body.json(PPatchAccount, jsonOpts) { anonymized, name }: TPatchAccount,
+    @body.json(PPatchAccount, jsonOpts)
+    { anonymized, publicProfile, name }: TPatchAccount,
   ) {
     const user = ctx.state.requireUser();
     const patch: Record<string, unknown> = {};
     if (anonymized !== undefined) {
       patch.anonymized = Number(anonymized);
+    }
+    if (publicProfile !== undefined) {
+      patch.publicProfile = Number(publicProfile);
     }
     if (name !== undefined && name !== user.name) {
       // Names are unique across accounts.
@@ -598,7 +891,7 @@ export class Controller {
       throw new ApplicationError("Your account has no email address.");
     }
     rateLimit(ctx, "email", 5, 300_000);
-    await this.#sendVerificationCode(user.email);
+    await this.#sendVerificationCode(user.email, "delete-account");
     ctx.response.body = { ok: true };
   }
 
@@ -610,7 +903,11 @@ export class Controller {
     const user = ctx.state.requireUser();
     // Confirm the request with a code sent to the registered email.
     if (user.email != null) {
-      const ok = await EmailVerification.verify(user.email, code);
+      const ok = await EmailVerification.verify(
+        user.email,
+        "delete-account",
+        code,
+      );
       if (!ok) {
         throw new ForbiddenError(
           "That confirmation code is incorrect or has expired.",
@@ -632,6 +929,9 @@ export class Controller {
       await this.#deleteProfileData(user.id!, profile.id!);
     }
     await Profile.query().where("userId", user.id!).delete();
+    // The trail goes with the account: keeping it would retain personal data
+    // (addresses, device strings) about someone who asked to be erased.
+    await SecurityEvent.deleteForUser(user.id!);
     await user.$query().delete();
     ctx.state.session.destroy();
     ctx.response.body = { ok: true };
@@ -679,6 +979,8 @@ export class Controller {
     const epoch = (user.sessionEpoch ?? 0) + 1;
     await user.$query().patch({ sessionEpoch: epoch });
     ctx.state.session.set("epoch", epoch);
+    this.#audit(ctx, "signed-out-everywhere", user.id!);
+    this.#alert(ctx, user, "You were signed out of all devices");
     ctx.response.status = 204;
   }
 
@@ -699,7 +1001,14 @@ export class Controller {
         throw new ForbiddenError("Your current password is incorrect");
       }
     }
+    if (await isBreached(newPassword)) {
+      throw new ApplicationError(
+        "That password has appeared in a public data breach. Please pick a different one.",
+      );
+    }
     await user.setPassword(newPassword);
+    this.#audit(ctx, "password-changed", user.id!);
+    this.#alert(ctx, user, "Your password was changed");
     // Changing the password signs out every other device; re-stamp this session
     // so the current device stays in.
     const epoch = (user.sessionEpoch ?? 0) + 1;
@@ -724,7 +1033,7 @@ export class Controller {
     if (user.email == null) {
       throw new ApplicationError("Your account has no email address.");
     }
-    await this.#sendVerificationCode(user.email);
+    await this.#sendVerificationCode(user.email, "identity");
     ctx.response.body = { ok: true };
   }
 
@@ -749,7 +1058,7 @@ export class Controller {
       // Password-less (SSO) accounts: a code sent to the current email.
       const ok =
         identityCode != null &&
-        (await EmailVerification.verify(user.email!, identityCode));
+        (await EmailVerification.verify(user.email!, "identity", identityCode));
       if (!ok) {
         throw new ForbiddenError(
           "That confirmation code is incorrect or has expired.",
@@ -763,7 +1072,8 @@ export class Controller {
       throw new ApplicationError("That email address is already in use.");
     }
     // Prove control of the NEW address before switching to it.
-    await this.#sendVerificationCode(email);
+    await this.#sendVerificationCode(email, "change-email");
+    this.#audit(ctx, "email-change-requested", user.id!, email);
     ctx.state.session.set("pendingEmail", email);
     ctx.response.body = { ok: true };
   }
@@ -779,7 +1089,7 @@ export class Controller {
     if (pending == null) {
       throw new ForbiddenError("Start the email change again.");
     }
-    const ok = await EmailVerification.verify(pending, code);
+    const ok = await EmailVerification.verify(pending, "change-email", code);
     if (!ok) {
       throw new ForbiddenError(
         "That code is incorrect or has expired. Request a new one and try again.",
@@ -790,7 +1100,11 @@ export class Controller {
       ctx.state.session.delete("pendingEmail");
       throw new ApplicationError("That email address is now in use.");
     }
+    // Sent to the OLD address as well as recorded — otherwise the one person
+    // who needs to know an address was taken over never hears about it.
+    this.#alert(ctx, user, "Your email address was changed");
     await user.$query().patch({ email: pending, emailVerified: true });
+    this.#audit(ctx, "email-changed", user.id!, pending);
     ctx.state.session.delete("pendingEmail");
     ctx.response.body = { ok: true, email: pending };
   }
@@ -869,6 +1183,8 @@ export class Controller {
         : "Passkey"
       ).slice(0, 64),
     });
+    this.#audit(ctx, "passkey-added", user.id!);
+    this.#alert(ctx, user, "A passkey was added to your account");
     ctx.response.body = { ok: true };
   }
 
@@ -935,7 +1251,266 @@ export class Controller {
     ctx.state.session.start();
     ctx.state.session.set("userId", user.id!);
     ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
+    this.#audit(ctx, "login", user.id!, "passkey");
     ctx.response.body = { ok: true };
+  }
+
+  // Everything the account holds, as one JSON file. The deletion path was
+  // already thorough; this is the other half of the same obligation — a
+  // household can see and take what has been stored about them (GDPR art. 15
+  // and 20, and the equivalent parental right over a child's records).
+  @http.GET({ name: "export-account", path: "/_/account/export" })
+  async exportAccount(ctx: Context<RouterState & SessionState & AuthState>) {
+    const user = ctx.state.requireUser();
+    rateLimit(ctx, "export", 5, 3_600_000);
+    const profiles = await Profile.listForUser(user.id!);
+
+    const perProfile = [];
+    for (const profile of profiles) {
+      const store = this.userData.loadProfile(user.id!, profile.id!);
+      const results = [];
+      if (await store.exists()) {
+        for await (const result of store.read()) {
+          results.push(result.toJSON());
+        }
+      }
+      perProfile.push({ profile: profile.toDetails(), results });
+    }
+
+    // The account-level history, kept separately from the per-learner ones.
+    const accountResults = [];
+    const accountStore = this.userData.load(new PublicId(user.id!));
+    if (await accountStore.exists()) {
+      for await (const result of accountStore.read()) {
+        accountResults.push(result.toJSON());
+      }
+    }
+
+    ctx.response.body = {
+      exportedAt: new Date().toISOString(),
+      account: user.toDetails(),
+      // The security trail is part of what is held about them.
+      securityEvents: (await SecurityEvent.listForUser(user.id!, 200)).map(
+        (e) => e.toDetails(),
+      ),
+      passkeys: (await Credential.listForUser(user.id!)).map((c) =>
+        c.toDetails(),
+      ),
+      accountResults,
+      profiles: perProfile,
+    };
+    ctx.response.headers.set("Cache-Control", "private, no-store");
+    ctx.response.headers.set(
+      "Content-Disposition",
+      'attachment; filename="keylearn-data.json"',
+    );
+  }
+
+  // ---- Grown-up PIN ----
+
+  @http.POST({ name: "set-parent-pin", path: "/_/account/parent-pin" })
+  async setParentPin(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PParentPin, jsonOpts) { pin, password, currentPin }: TParentPin,
+  ) {
+    rateLimit(ctx, "pin", 10, 300_000);
+    const user = ctx.state.requireUser();
+    // Changing or removing an existing PIN needs the old one, or the account
+    // password — otherwise a child who gets to an unlocked session could simply
+    // set their own.
+    if (user.parentPinHash != null) {
+      const byPin =
+        currentPin != null && (await user.verifyParentPin(currentPin));
+      const byPassword =
+        user.passwordHash != null &&
+        password != null &&
+        (await User.loginWithPassword(user.email!, password)) != null;
+      if (!byPin && !byPassword) {
+        throw new ForbiddenError("That PIN is not right.");
+      }
+    }
+    await user.setParentPin(pin);
+    // Setting a PIN also proves it for this session, so the grown-up is not
+    // immediately asked for what they just typed.
+    if (pin != null) {
+      ctx.state.session.set("parentPinAt", Date.now());
+    } else {
+      ctx.state.session.delete("parentPinAt");
+    }
+    this.#audit(
+      ctx,
+      "parent-pin-set",
+      user.id!,
+      pin == null ? "removed" : null,
+    );
+    ctx.response.body = { ok: true, parentPinSet: pin != null };
+  }
+
+  @http.POST({
+    name: "verify-parent-pin",
+    path: "/_/account/parent-pin/verify",
+  })
+  async verifyParentPin(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PVerifyPin, jsonOpts) { pin }: TVerifyPin,
+  ) {
+    // A 4-digit PIN is only 10^4, so the limiter is what makes it meaningful.
+    rateLimit(ctx, "pin", 10, 300_000);
+    const user = ctx.state.requireUser();
+    if (user.parentPinHash == null) {
+      ctx.response.body = { ok: true };
+      return;
+    }
+    if (!(await user.verifyParentPin(pin))) {
+      recordFailure(ctx);
+      throw new ForbiddenError("That PIN is not right.");
+    }
+    clearFailures(ctx);
+    ctx.state.session.set("parentPinAt", Date.now());
+    ctx.response.body = { ok: true };
+  }
+
+  // ---- Two-step verification (TOTP) ----
+
+  // Step 1 of setup: mint a secret and hand back the otpauth URI to scan. The
+  // secret is stored but NOT yet active — an abandoned setup leaves the account
+  // exactly as it was.
+  @http.POST({ name: "2fa-begin", path: "/_/account/2fa/begin" })
+  async twoFactorBegin(ctx: Context<RouterState & SessionState & AuthState>) {
+    const user = ctx.state.requireUser();
+    rateLimit(ctx, "2fa", 10, 300_000);
+    if (user.totpEnabled) {
+      throw new ApplicationError("Two-step verification is already on.");
+    }
+    const secret = generateTotpSecret();
+    await user.$query().patch({ totpSecret: secret });
+    ctx.response.body = {
+      secret,
+      uri: totpUri(secret, user.email!),
+    };
+    ctx.response.headers.set("Cache-Control", "private, no-store");
+  }
+
+  // Step 2: prove the app is set up correctly before switching it on, so nobody
+  // locks themselves out with a mistyped secret. Returns the recovery codes,
+  // which are shown exactly once.
+  @http.POST({ name: "2fa-enable", path: "/_/account/2fa/enable" })
+  async twoFactorEnable(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PTwoFactorEnable, jsonOpts) { code }: TTwoFactorEnable,
+  ) {
+    rateLimit(ctx, "2fa", 10, 300_000);
+    const user = ctx.state.requireUser();
+    if (user.totpSecret == null) {
+      throw new ApplicationError("Start the setup again.");
+    }
+    if (!verifyTotp(user.totpSecret, code)) {
+      throw new ForbiddenError("That code is not right. Try the next one.");
+    }
+    const codes = generateRecoveryCodes();
+    await user.$query().patch({ totpEnabled: true });
+    await user.setRecoveryCodes(codes);
+    this.#audit(ctx, "two-factor-enabled", user.id!);
+    ctx.response.body = { ok: true, recoveryCodes: codes };
+    ctx.response.headers.set("Cache-Control", "private, no-store");
+  }
+
+  // Turning it off is itself a sensitive act — someone with a borrowed session
+  // should not be able to quietly remove the second factor — so it needs the
+  // password (or a live code) again.
+  @http.POST({ name: "2fa-disable", path: "/_/account/2fa/disable" })
+  async twoFactorDisable(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PTwoFactorDisable, jsonOpts)
+    { password, code }: TTwoFactorDisable,
+  ) {
+    rateLimit(ctx, "2fa", 10, 300_000);
+    const user = ctx.state.requireUser();
+    if (!user.totpEnabled) {
+      ctx.response.body = { ok: true };
+      return;
+    }
+    const byPassword =
+      user.passwordHash != null &&
+      password != null &&
+      (await User.loginWithPassword(user.email!, password)) != null;
+    const byCode =
+      code != null &&
+      user.totpSecret != null &&
+      verifyTotp(user.totpSecret, code);
+    if (!byPassword && !byCode) {
+      throw new ForbiddenError("Confirm with your password or a current code.");
+    }
+    await user.$query().patch({
+      totpEnabled: false,
+      totpSecret: null,
+      recoveryCodes: null,
+    });
+    this.#audit(ctx, "two-factor-disabled", user.id!);
+    this.#alert(ctx, user, "Two-step verification was turned off");
+    ctx.response.body = { ok: true };
+  }
+
+  // The second step of signing in. The session holds only a pending marker
+  // until this succeeds.
+  @http.POST({ name: "2fa-verify", path: "/auth/2fa/verify" })
+  async twoFactorVerify(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PTwoFactorLogin, jsonOpts) { code }: TTwoFactorLogin,
+  ) {
+    rateLimit(ctx, "2fa-login", 10, 300_000);
+    const pendingId = ctx.state.session.get("pending2faUserId");
+    const at = Number(ctx.state.session.get("pending2faAt") ?? 0);
+    // The half-finished sign-in is short-lived: leaving it open indefinitely
+    // would leave a password-only foothold sitting around.
+    if (pendingId == null || Date.now() - at > 10 * 60_000) {
+      ctx.state.session.destroy();
+      throw new ForbiddenError("Start signing in again.");
+    }
+    const user = await User.findById(Number(pendingId));
+    if (user == null || !user.totpEnabled) {
+      ctx.state.session.destroy();
+      throw new ForbiddenError("Start signing in again.");
+    }
+    const byTotp = user.totpSecret != null && verifyTotp(user.totpSecret, code);
+    const byRecovery = byTotp ? false : await user.useRecoveryCode(code);
+    if (!byTotp && !byRecovery) {
+      recordFailure(ctx);
+      this.#audit(ctx, "login-failed", user.id!, "two-factor");
+      throw new ForbiddenError("That code is not right.");
+    }
+    clearFailures(ctx);
+    const wasShortLived = ctx.state.session.get("shortLived") === true;
+    ctx.state.session.destroy();
+    ctx.state.session.start();
+    ctx.state.session.set("userId", user.id!);
+    ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
+    if (wasShortLived) {
+      ctx.state.session.set("shortLived", true);
+      ctx.state.session.set("loginAt", Date.now());
+    }
+    this.#audit(
+      ctx,
+      "login",
+      user.id!,
+      byRecovery ? "recovery code" : "two-factor",
+    );
+    ctx.response.body = {
+      ok: true,
+      // Surfaced so the UI can nudge for a fresh set before they run out.
+      recoveryCodesLeft: user.countRecoveryCodes(),
+    };
+  }
+
+  // The account's own security activity. Owner only — this is a record of when
+  // and from where the account was used, which is exactly what an attacker
+  // would like to read.
+  @http.GET({ name: "security-events", path: "/_/account/security-events" })
+  async securityEvents(ctx: Context<RouterState & SessionState & AuthState>) {
+    const user = ctx.state.requireUser();
+    const events = await SecurityEvent.listForUser(user.id!, 50);
+    ctx.response.body = { events: events.map((e) => e.toDetails()) };
+    ctx.response.headers.set("Cache-Control", "private, no-store");
   }
 
   @http.GET({ name: "list-passkeys", path: "/_/passkeys" })
@@ -962,6 +1537,7 @@ export class Controller {
       throw new ForbiddenError();
     }
     await cred.$query().delete();
+    this.#audit(ctx, "passkey-removed", user.id!, cred.name ?? null);
     ctx.response.body = {
       passkeys: (await Credential.listForUser(user.id!)).map((c) =>
         c.toDetails(),
@@ -983,14 +1559,14 @@ export class Controller {
     @body.json(PProfile, profileJsonOpts) data: TProfile,
   ) {
     const user = ctx.state.requireUser();
+    this.#requireParentPin(ctx, user);
     // COPPA: a child profile can't be created without the grown-up's consent.
     if (data.kind === "kid" && data.parentalConsent !== true) {
       throw new ApplicationError(
         "Parental consent is required to create a child profile.",
       );
     }
-    const cap =
-      user.order != null ? MAX_PROFILES_PREMIUM : MAX_PROFILES_FREE;
+    const cap = user.order != null ? MAX_PROFILES_PREMIUM : MAX_PROFILES_FREE;
     const count = await Profile.query().where("userId", user.id!).resultSize();
     if (count >= cap) {
       throw new ApplicationError(`You can have at most ${cap} profiles.`);
@@ -1017,6 +1593,7 @@ export class Controller {
     @body.json(PProfilePatch, profileJsonOpts) data: TProfilePatch,
   ) {
     const user = ctx.state.requireUser();
+    this.#requireParentPin(ctx, user);
     const profile = await Profile.findOwned(user.id!, Number(id));
     if (profile == null) {
       throw new ForbiddenError();
@@ -1041,12 +1618,14 @@ export class Controller {
     @pathParam("id") id: string,
   ) {
     const user = ctx.state.requireUser();
+    this.#requireParentPin(ctx, user);
     const profile = await Profile.findOwned(user.id!, Number(id));
     if (profile == null) {
       throw new ForbiddenError();
     }
     await this.#deleteProfileData(user.id!, profile.id!);
     await profile.$query().delete();
+    this.#audit(ctx, "profile-deleted", user.id!, profile.firstName ?? null);
     ctx.response.body = { profiles: await profileList(user.id!) };
   }
 }

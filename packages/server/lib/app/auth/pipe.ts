@@ -6,6 +6,7 @@ import { type AbstractAdapter } from "@keybr/oauth";
 import { type NamedUser } from "@keybr/pages-shared";
 import { PublicId } from "@keybr/publicid";
 import { AdapterFactory } from "./module.ts";
+import { type AuthState } from "./types.ts";
 
 export const pAdapter = (
   ctx: Context<RouterState>,
@@ -21,15 +22,30 @@ export const pAdapter = (
   throw new NotFoundError();
 };
 
+/**
+ * Resolves a public profile id to its owner.
+ *
+ * A public id is a reversible encoding of the account's row id, not a secret, so
+ * anyone can walk the whole range. The account must therefore have opted in to
+ * being publicly viewable — otherwise this reports "not found", the same answer
+ * as an id that does not exist, so the endpoint cannot be used to enumerate who
+ * has an account either.
+ *
+ * The owner viewing their own profile is always allowed.
+ */
 export const pProfileOwner = async (
-  ctx: Context<RouterState>,
+  ctx: Context<RouterState & Partial<AuthState>>,
   value: string,
 ): Promise<NamedUser> => {
   const publicId = PublicId.parse(value);
   if (publicId != null) {
-    const profileOwner = await User.loadProfileOwner(publicId);
-    if (profileOwner != null) {
-      return profileOwner;
+    const user = publicId.example ? null : await User.findById(publicId.id);
+    const isOwner = user != null && ctx.state.user?.id === user.id;
+    if (publicId.example || isOwner || Boolean(user?.publicProfile)) {
+      const profileOwner = await User.loadProfileOwner(publicId);
+      if (profileOwner != null) {
+        return profileOwner;
+      }
     }
   }
   throw new NotFoundError();

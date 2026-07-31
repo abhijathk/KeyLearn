@@ -14,6 +14,7 @@ export class FakeAdapter extends AbstractAdapter {
     provider: "fake",
     id: "abc",
     email: null,
+    emailVerified: null,
     name: null,
     imageUrl: null,
     url: null,

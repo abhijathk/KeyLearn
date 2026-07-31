@@ -48,6 +48,7 @@ test("load user profile", async () => {
     provider: "google",
     id: "id0",
     email: "email0",
+    emailVerified: true,
     name: "name0",
     url: null,
     imageUrl: "picture0",
@@ -74,6 +75,8 @@ test("load minimal user profile", async () => {
     provider: "google",
     id: "id0",
     email: null,
+    // Absent `email_verified` must never read as verified.
+    emailVerified: false,
     name: null,
     url: null,
     imageUrl: null,

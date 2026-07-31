@@ -93,20 +93,42 @@ async function verifyToken(
   if (secret == null || !token) {
     return false;
   }
+  const body = new URLSearchParams({ secret, response: token });
+  const ip = clientIp(ctx);
+  if (ip && ip !== "unknown") {
+    body.set("remoteip", ip);
+  }
+
+  let res: Response;
   try {
-    const body = new URLSearchParams({ secret, response: token });
-    const ip = clientIp(ctx);
-    if (ip && ip !== "unknown") {
-      body.set("remoteip", ip);
-    }
-    const res = await fetch(SITEVERIFY_URL, { method: "POST", body });
+    res = await fetch(SITEVERIFY_URL, {
+      method: "POST",
+      body,
+      // Bound the wait: without this a hung connection stalls the request, and
+      // an attacker who can slow siteverify would stall the whole gate.
+      signal: AbortSignal.timeout(Env.getNumber("TURNSTILE_TIMEOUT_MS", 5000)),
+    });
+  } catch (err: any) {
+    // Only a genuine transport failure (DNS, connection, timeout) fails open, so
+    // a Cloudflare outage cannot lock everyone out. The IP rate limit is the
+    // backstop, and it is now keyed on an address the client cannot forge.
+    Logger.warn(err, "Turnstile siteverify unreachable, allowing request");
+    return true;
+  }
+
+  // A response that arrived but is not a well-formed success is a REJECTION, not
+  // an outage. Parsing inside the same try as the fetch used to turn any 500,
+  // captive portal or HTML error page into a silent pass.
+  if (!res.ok) {
+    Logger.warn("Turnstile siteverify returned HTTP %d", res.status);
+    return false;
+  }
+  try {
     const data = (await res.json()) as { success?: boolean };
     return data.success === true;
-  } catch (err) {
-    Logger.warn(err, "Turnstile siteverify failed");
-    // Fail-open on an outage so a Cloudflare hiccup can't lock everyone out;
-    // the IP rate-limit still applies as a backstop.
-    return true;
+  } catch (err: any) {
+    Logger.warn(err, "Turnstile siteverify returned an unreadable body");
+    return false;
   }
 }
 

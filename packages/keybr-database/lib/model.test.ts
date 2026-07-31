@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { test } from "node:test";
 import { PublicId } from "@keybr/publicid";
 import { ValidationError } from "objection";
@@ -17,6 +18,21 @@ import { Random } from "./util.ts";
 useDatabase();
 
 const now = new Date("2001-02-03T04:05:06Z");
+
+// Login/reset tokens are persisted as a hash, never in the clear.
+const sha256 = (value: string) =>
+  createHash("sha256").update(value).digest("hex");
+
+// `User.ensure` returns a tagged outcome. The tests below exercise the
+// straightforward success path; this unwraps it and fails loudly otherwise, so
+// a test can never silently start asserting against the wrong branch.
+async function ensureOk(ro: Parameters<typeof User.ensure>[0]) {
+  const result = await User.ensure(ro);
+  if (result.kind !== "ok") {
+    throw new Error(`Expected an "ok" sign-in, got "${result.kind}"`);
+  }
+  return result.user;
+}
 
 test("validate models", (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
@@ -161,11 +177,12 @@ test("create user from resource owner with null values", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: email,
+        emailVerified: true,
         name: null,
         url: null,
         imageUrl: null,
@@ -177,6 +194,15 @@ test("create user from resource owner with null values", async (ctx) => {
       email: email,
       name: "example1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -189,6 +215,7 @@ test("create user from resource owner with null values", async (ctx) => {
           imageUrl: null,
         },
       ],
+      order: null,
     } as unknown,
   );
 });
@@ -200,11 +227,12 @@ test("create user from resource owner with non-null values", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: email,
+        emailVerified: true,
         name: "name1",
         url: "url1",
         imageUrl: "imageUrl1",
@@ -216,6 +244,15 @@ test("create user from resource owner with non-null values", async (ctx) => {
       email: email,
       name: "name1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -228,6 +265,7 @@ test("create user from resource owner with non-null values", async (ctx) => {
           imageUrl: "imageUrl1",
         },
       ],
+      order: null,
     } as unknown,
   );
 });
@@ -239,11 +277,12 @@ test("create user from resource owner with invalid values", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: email,
+        emailVerified: true,
         name: null,
         url: "x".repeat(1000),
         imageUrl: "x".repeat(1000),
@@ -255,6 +294,15 @@ test("create user from resource owner with invalid values", async (ctx) => {
       email: email,
       name: "example1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -267,6 +315,7 @@ test("create user from resource owner with invalid values", async (ctx) => {
           imageUrl: null,
         },
       ],
+      order: null,
     } as unknown,
   );
 });
@@ -284,11 +333,12 @@ test("update user from resource owner with null values", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: email,
+        emailVerified: true,
         name: null,
         url: null,
         imageUrl: null,
@@ -300,6 +350,15 @@ test("update user from resource owner with null values", async (ctx) => {
       email: email,
       name: "name1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -330,11 +389,12 @@ test("update user from resource owner with non-null values", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: email,
+        emailVerified: true,
         name: "name1",
         url: "url1",
         imageUrl: "imageUrl1",
@@ -346,6 +406,15 @@ test("update user from resource owner with non-null values", async (ctx) => {
       email: email,
       name: "name1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -364,11 +433,12 @@ test("update user from resource owner with non-null values", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: email,
+        emailVerified: true,
         name: "name1!",
         url: "url1!",
         imageUrl: "imageUrl1!",
@@ -378,8 +448,17 @@ test("update user from resource owner with non-null values", async (ctx) => {
       id: 4,
       createdAt: now,
       email: email,
-      name: "name1!",
+      name: "name1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -410,11 +489,12 @@ test("update user from resource owner with invalid values", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: email,
+        emailVerified: true,
         name: "name1",
         url: "url1",
         imageUrl: "imageUrl1",
@@ -426,6 +506,15 @@ test("update user from resource owner with invalid values", async (ctx) => {
       email: email,
       name: "name1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -444,11 +533,12 @@ test("update user from resource owner with invalid values", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: email,
+        emailVerified: true,
         name: "name1!",
         url: "x".repeat(1000),
         imageUrl: "x".repeat(1000),
@@ -458,8 +548,17 @@ test("update user from resource owner with invalid values", async (ctx) => {
       id: 4,
       createdAt: now,
       email: email,
-      name: "name1!",
+      name: "name1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -484,11 +583,12 @@ test("merge multiple resource owners", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: email,
+        emailVerified: true,
         name: "name1",
         url: "url1",
         imageUrl: "imageUrl1",
@@ -500,6 +600,15 @@ test("merge multiple resource owners", async (ctx) => {
       email: email,
       name: "name1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -512,17 +621,18 @@ test("merge multiple resource owners", async (ctx) => {
           imageUrl: "imageUrl1",
         },
       ],
-      // order: null,
+      order: null,
     } as unknown,
   );
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider2",
         id: "id2",
         email: email,
+        emailVerified: true,
         name: "name2",
         url: "url2",
         imageUrl: "imageUrl2",
@@ -532,8 +642,20 @@ test("merge multiple resource owners", async (ctx) => {
       id: 4,
       createdAt: now,
       email: email,
-      name: "name2",
+      // Linking a second provider does not rename the account — the handle set
+      // when it was created stands, and each provider's own display name lives
+      // on its externalIds row.
+      name: "name1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -566,11 +688,12 @@ test.skip("handle email change", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: "example1@keybr.com",
+        emailVerified: true,
         name: "name1",
         url: "url1",
         imageUrl: "imageUrl1",
@@ -599,11 +722,12 @@ test.skip("handle email change", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider1",
         id: "id1",
         email: "changed@keybr.com",
+        emailVerified: true,
         name: "name1",
         url: "url1",
         imageUrl: "imageUrl1",
@@ -642,11 +766,12 @@ test("generates unique name for resource owner", async (ctx) => {
 
   deepEqual(
     (
-      await User.ensure({
+      await ensureOk({
         raw: {},
         provider: "provider2",
         id: "id2",
         email: "example2@keybr.com",
+        emailVerified: true,
         name: "name",
         url: null,
         imageUrl: null,
@@ -658,6 +783,15 @@ test("generates unique name for resource owner", async (ctx) => {
       email: "example2@keybr.com",
       name: "name1",
       anonymized: 0,
+      publicProfile: 0,
+      emailVerified: 1,
+      passwordHash: null,
+      dateOfBirth: null,
+      sessionEpoch: 0,
+      totpSecret: null,
+      totpEnabled: 0,
+      recoveryCodes: null,
+      parentPinHash: null,
       externalIds: [
         {
           id: 4,
@@ -670,6 +804,7 @@ test("generates unique name for resource owner", async (ctx) => {
           imageUrl: null,
         },
       ],
+      order: null,
       // order: null,
     } as unknown,
   );
@@ -704,8 +839,8 @@ test("make premium user", async (ctx) => {
 test("create access token", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  // Should create a new access token.
-
+  // Should create a new access token. Only its SHA-256 hash is persisted, so a
+  // database read never yields a usable login/reset link.
   Random.string = () => "token1";
   equal(await UserLoginRequest.init("example1@keybr.com"), "token1");
   isNull(await User.findByEmail("example1@keybr.com"));
@@ -714,22 +849,24 @@ test("create access token", async (ctx) => {
     {
       id: 1,
       email: "example1@keybr.com",
-      accessToken: "token1",
+      purpose: "login",
+      accessToken: sha256("token1"),
       createdAt: now,
     },
   );
 
-  // Should reuse an existing access token.
-
+  // Should REPLACE, not reuse, the previous token: re-issuing rotates it so an
+  // older emailed link stops working.
   Random.string = () => "tokenX";
-  equal(await UserLoginRequest.init("example1@keybr.com"), "token1");
+  equal(await UserLoginRequest.init("example1@keybr.com"), "tokenX");
   equal(await User.findByEmail("example1@keybr.com"), null);
   deepEqual(
     (await UserLoginRequest.findByEmail("example1@keybr.com"))!.toJSON(),
     {
-      id: 1,
+      id: 2,
       email: "example1@keybr.com",
-      accessToken: "token1",
+      purpose: "login",
+      accessToken: sha256("tokenX"),
       createdAt: now,
     },
   );
@@ -742,14 +879,17 @@ test("delete expired access token", async (ctx) => {
   equal(await UserLoginRequest.init("example1@keybr.com"), "token1");
 
   isNotNull(await UserLoginRequest.findByEmail("example1@keybr.com"));
-  isNotNull(await UserLoginRequest.findByAccessToken("token1"));
+  // The finder takes the stored value, which is the hash — the plaintext token
+  // exists only in the emailed link.
+  isNotNull(await UserLoginRequest.findByAccessToken(sha256("token1")));
+  isNull(await UserLoginRequest.findByAccessToken("token1"));
 
   await UserLoginRequest.deleteExpired(
     now.getTime() + UserLoginRequest.expireTime + 1000,
   );
 
   isNull(await UserLoginRequest.findByEmail("example1@keybr.com"));
-  isNull(await UserLoginRequest.findByAccessToken("token1"));
+  isNull(await UserLoginRequest.findByAccessToken(sha256("token1")));
 });
 
 test("login with a valid access token", async (ctx) => {
@@ -774,31 +914,32 @@ test("login with a valid access token", async (ctx) => {
     email: "example1@keybr.com",
     name: "example1",
     anonymized: 0,
+    publicProfile: 0,
+    emailVerified: 1,
+    passwordHash: null,
+    dateOfBirth: null,
+    sessionEpoch: 0,
+    totpSecret: null,
+    totpEnabled: 0,
+    recoveryCodes: null,
+    parentPinHash: null,
     externalIds: [],
     order: null,
   } as unknown);
 
-  // Should create a new user after login.
+  // Should create a new user after login, and CONSUME the token: a magic-login
+  // link is single-use, so a leaked or forwarded link cannot be replayed.
 
   isNotNull(await User.findByEmail("example1@keybr.com"));
-  isNotNull(await UserLoginRequest.findByEmail("example1@keybr.com"));
+  isNull(await UserLoginRequest.findByEmail("example1@keybr.com"));
 
-  // Second login.
+  // Second attempt with the same token is refused.
 
-  deepEqual((await UserLoginRequest.login("token1"))!.toJSON(), {
-    id: 4,
-    createdAt: now,
-    email: "example1@keybr.com",
-    name: "example1",
-    anonymized: 0,
-    externalIds: [],
-    order: null,
-  } as unknown);
+  isNull(await UserLoginRequest.login("token1"));
 
-  // Should load an existing user after login.
+  // The account itself is of course still there.
 
   isNotNull(await User.findByEmail("example1@keybr.com"));
-  isNotNull(await UserLoginRequest.findByEmail("example1@keybr.com"));
 });
 
 test("ignore invalid access token", async (ctx) => {
@@ -850,6 +991,7 @@ test("convert to user details", async (ctx) => {
     email: "user1@keybr.com",
     name: "user1",
     anonymized: false,
+    publicProfile: false,
     externalId: [
       {
         provider: "provider1",
@@ -861,6 +1003,11 @@ test("convert to user details", async (ctx) => {
       },
     ],
     order: null,
+    dateOfBirth: null,
+    hasPassword: false,
+    twoFactorEnabled: false,
+    parentPinSet: false,
+    emailVerified: false,
     createdAt: now,
   });
 });
@@ -870,12 +1017,12 @@ test("make public user for anonymous", (ctx) => {
 
   deepEqual(User.toPublicUser(null, "hint1"), {
     id: null,
-    name: "Suspicious Silverfish",
+    name: "Gold Sparrowhawk",
     imageUrl: null,
   });
-  deepEqual(User.toPublicUser(null, "hint2"), {
+  deepEqual(User.toPublicUser(null, "hint4"), {
     id: null,
-    name: "Suspicious Skink",
+    name: "Gold Skink",
     imageUrl: null,
   });
 });
@@ -890,6 +1037,15 @@ test("make public user from user name", (ctx) => {
         email: "email",
         name: "somebody",
         anonymized: 0,
+        publicProfile: 0,
+        emailVerified: 1,
+        passwordHash: null,
+        dateOfBirth: null,
+        sessionEpoch: 0,
+        totpSecret: null,
+        totpEnabled: 0,
+        recoveryCodes: null,
+        parentPinHash: null,
         externalIds: [],
         createdAt: new Date(0),
       }),
@@ -914,6 +1070,15 @@ test("make public user from external user id", (ctx) => {
         email: "email",
         name: "somebody",
         anonymized: 0,
+        publicProfile: 0,
+        emailVerified: 1,
+        passwordHash: null,
+        dateOfBirth: null,
+        sessionEpoch: 0,
+        totpSecret: null,
+        totpEnabled: 0,
+        recoveryCodes: null,
+        parentPinHash: null,
         externalIds: [
           {
             id: 1,
@@ -925,6 +1090,7 @@ test("make public user from external user id", (ctx) => {
             createdAt: new Date(0),
           },
         ],
+        order: null,
         createdAt: new Date(0),
       }),
       0,
@@ -943,6 +1109,15 @@ test("make public user from external user id", (ctx) => {
         email: "email",
         name: "somebody",
         anonymized: 0,
+        publicProfile: 0,
+        emailVerified: 1,
+        passwordHash: null,
+        dateOfBirth: null,
+        sessionEpoch: 0,
+        totpSecret: null,
+        totpEnabled: 0,
+        recoveryCodes: null,
+        parentPinHash: null,
         externalIds: [
           {
             id: 1,
@@ -954,6 +1129,7 @@ test("make public user from external user id", (ctx) => {
             createdAt: new Date(0),
           },
         ],
+        order: null,
         createdAt: new Date(0),
       }),
       0,
@@ -984,7 +1160,7 @@ test("make public user with anonymous name", (ctx) => {
     ),
     {
       id: "55vdtk1",
-      name: "Distinctive Vulture",
+      name: "Gleaming Wolf",
       imageUrl: null,
       premium: false,
     },
@@ -993,7 +1169,7 @@ test("make public user with anonymous name", (ctx) => {
     User.toPublicUser(
       User.fromJson({
         id: 1,
-        email: "email2",
+        email: "email3",
         name: "somebody",
         anonymized: 1,
         externalIds: [],
@@ -1003,11 +1179,132 @@ test("make public user with anonymous name", (ctx) => {
     ),
     {
       id: "55vdtk1",
-      name: "Distinctive Wallaby",
+      name: "Gleaming Wombat",
       imageUrl: null,
       premium: false,
     },
   );
+});
+
+// ---- Federated identity must not be claimable by email address ----
+
+test("refuses to claim an existing account with an unverified email", async (ctx) => {
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  // A victim who registered with a password.
+  const victim = await User.query().insertGraph({
+    email: "victim@keybr.com",
+    name: "victim",
+    createdAt: now,
+  });
+
+  // An attacker signing in through a provider that will happily assert any
+  // address it likes (Microsoft's "common" authority, Facebook, ...).
+  const result = await User.ensure({
+    raw: {},
+    provider: "provider1",
+    id: "attacker-subject",
+    email: "victim@keybr.com",
+    emailVerified: null,
+    name: "attacker",
+    url: null,
+    imageUrl: null,
+  });
+
+  equal(result.kind, "link-required");
+  // The account was neither handed over nor linked to the attacker's subject.
+  isNull(await UserExternalId.findBySubject("provider1", "attacker-subject"));
+  const after = await User.findById(victim.id!);
+  deepEqual(after!.externalIds, []);
+});
+
+test("links an existing account only when the provider verified the email", async (ctx) => {
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const user = await User.query().insertGraph({
+    email: "owner@keybr.com",
+    name: "owner",
+    createdAt: now,
+  });
+
+  const result = await User.ensure({
+    raw: {},
+    provider: "provider1",
+    id: "subject1",
+    email: "owner@keybr.com",
+    emailVerified: true,
+    name: "owner",
+    url: null,
+    imageUrl: null,
+  });
+
+  equal(result.kind, "ok");
+  equal(result.kind === "ok" ? result.user.id : null, user.id);
+  isNotNull(await UserExternalId.findBySubject("provider1", "subject1"));
+});
+
+test("resolves a known subject even when the provider changes the email", async (ctx) => {
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const first = await User.ensure({
+    raw: {},
+    provider: "provider1",
+    id: "subject1",
+    email: "original@keybr.com",
+    emailVerified: true,
+    name: "person",
+    url: null,
+    imageUrl: null,
+  });
+  const userId = first.kind === "ok" ? first.user.id : null;
+  isNotNull(userId);
+
+  // A separate account the attacker would like to reach.
+  await User.query().insertGraph({
+    email: "target@keybr.com",
+    name: "target",
+    createdAt: now,
+  });
+
+  // The same subject now reports a different address. The subject wins, and the
+  // account's own email is left untouched — following the rename would move the
+  // account onto an address the provider does not own.
+  const second = await User.ensure({
+    raw: {},
+    provider: "provider1",
+    id: "subject1",
+    email: "target@keybr.com",
+    emailVerified: true,
+    name: "person",
+    url: null,
+    imageUrl: null,
+  });
+
+  equal(second.kind, "ok");
+  equal(second.kind === "ok" ? second.user.id : null, userId);
+  equal(second.kind === "ok" ? second.user.email : null, "original@keybr.com");
+});
+
+test("a brand-new account from an unverified email must verify first", async (ctx) => {
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const result = await User.ensure({
+    raw: {},
+    provider: "provider1",
+    id: "subject1",
+    email: "fresh@keybr.com",
+    emailVerified: null,
+    name: "fresh",
+    url: null,
+    imageUrl: null,
+  });
+
+  equal(result.kind, "verify");
+  // Created, but not usable until the emailed code is entered — otherwise a
+  // provider could pre-register an address its real owner has not reached yet.
+  const user = await User.findByEmail("fresh@keybr.com");
+  isNotNull(user);
+  equal(Boolean(user!.emailVerified), false);
 });
 
 test("parse resource owner", (ctx) => {
@@ -1019,6 +1316,7 @@ test("parse resource owner", (ctx) => {
       provider: "provider1",
       id: "id1",
       email: "email1",
+      emailVerified: null,
       name: "name1",
       url: "url1",
       imageUrl: "imageUrl",
@@ -1028,6 +1326,7 @@ test("parse resource owner", (ctx) => {
       provider: "provider1",
       id: "id1",
       email: "email1",
+      emailVerified: null,
       name: "name1",
       url: "url1",
       imageUrl: "imageUrl",
@@ -1039,6 +1338,7 @@ test("parse resource owner", (ctx) => {
       provider: "provider1",
       id: "id1",
       email: null,
+      emailVerified: null,
       name: null,
       url: null,
       imageUrl: null,
@@ -1048,6 +1348,7 @@ test("parse resource owner", (ctx) => {
       provider: "provider1",
       id: "id1",
       email: null,
+      emailVerified: null,
       name: null,
       url: null,
       imageUrl: null,
@@ -1059,6 +1360,7 @@ test("parse resource owner", (ctx) => {
       provider: "provider1",
       id: "id1",
       email: "x".repeat(67),
+      emailVerified: null,
       name: "x".repeat(33),
       url: "x".repeat(257),
       imageUrl: "x".repeat(257),
@@ -1068,6 +1370,7 @@ test("parse resource owner", (ctx) => {
       provider: "provider1",
       id: "id1",
       email: null,
+      emailVerified: null,
       name: "x".repeat(32),
       url: null,
       imageUrl: null,

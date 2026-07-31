@@ -15,8 +15,23 @@ import { PublicId } from "@keybr/publicid";
 import { type Knex } from "knex";
 import { type JSONSchema, Model, type Pojo, snakeCaseMappers } from "objection";
 import { anonymousName } from "./name.ts";
-import { hashPassword, verifyPassword } from "./password.ts";
+import { hashPassword, needsRehash, verifyPassword } from "./password.ts";
 import { Random } from "./util.ts";
+
+/**
+ * The outcome of resolving an OAuth sign-in to an account.
+ *
+ * - `ok` — signed in; start a session.
+ * - `verify` — a new account was created from an address the provider did not
+ *   vouch for; it must pass the emailed code before it can be used.
+ * - `link-required` — an account already holds this address, but the provider
+ *   did not verify it, so the identity cannot be attached automatically. The
+ *   owner must sign in another way and link it deliberately.
+ */
+export type SsoResult =
+  | { readonly kind: "ok"; readonly user: User }
+  | { readonly kind: "verify"; readonly user: User; readonly email: string }
+  | { readonly kind: "link-required"; readonly email: string };
 
 /** Thrown when a registration email is already in use. */
 export class UserExistsError extends Error {
@@ -24,6 +39,26 @@ export class UserExistsError extends Error {
     super("A user with this email address already exists");
     this.name = "UserExistsError";
   }
+}
+
+/**
+ * The provider's display fields, for writing onto a {@link UserExternalId}.
+ *
+ * A field the provider did not supply this time — absent, or dropped by
+ * {@link User.parseResourceOwner} for being over-long — is omitted rather than
+ * set to null, so one malformed profile response cannot wipe a good avatar or
+ * profile link that a previous sign-in recorded.
+ */
+function profileFields({
+  name,
+  url,
+  imageUrl,
+}: ResourceOwner): Partial<UserExternalId> {
+  return {
+    ...(name != null && { name }),
+    ...(url != null && { url }),
+    ...(imageUrl != null && { imageUrl }),
+  };
 }
 
 export function TimestampMixin(superClass: typeof Model): typeof Model {
@@ -61,6 +96,10 @@ export class User extends TimestampMixin(Model) {
     table.string("email", email.maxLength).notNullable();
     table.string("name", name.maxLength).notNullable();
     table.boolean("anonymized").notNullable().defaultTo(false);
+    // Whether this account's typing history is served to anyone who knows (or
+    // guesses) its public id. Off by default: the public id is a reversible
+    // encoding of the row id, so "public" here means enumerable by everyone.
+    table.boolean("public_profile").notNullable().defaultTo(false);
     // Null for OAuth / magic-link accounts; set only for email+password.
     table.string("password_hash", 128).nullable();
     table.date("date_of_birth").nullable();
@@ -70,6 +109,18 @@ export class User extends TimestampMixin(Model) {
     table.boolean("email_verified").notNullable().defaultTo(false);
     // Bumped to invalidate all existing sessions ("sign out everywhere").
     table.integer("session_epoch").notNullable().defaultTo(0);
+    // Two-step verification. The secret is only meaningful once `totp_enabled`
+    // is set — it is written first, then confirmed, so a half-finished setup
+    // can never lock anyone out.
+    table.string("totp_secret", 64).nullable();
+    table.boolean("totp_enabled").notNullable().defaultTo(false);
+    // Hashed one-time recovery codes, JSON array. Hashed because they are
+    // password-equivalent: each one alone completes a sign-in.
+    table.text("recovery_codes").nullable();
+    // A grown-up PIN gating profile management on a shared family device. The
+    // client-side arithmetic gate is a speed bump a child can walk around with
+    // devtools; this is checked by the server.
+    table.string("parent_pin_hash", 160).nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.unique(["email"]);
     table.unique(["name"]);
@@ -79,10 +130,16 @@ export class User extends TimestampMixin(Model) {
   email?: string;
   name?: string;
   anonymized?: number;
+  publicProfile?: number | boolean;
   passwordHash?: string | null;
   dateOfBirth?: string | null;
   emailVerified?: number | boolean;
   sessionEpoch?: number;
+  totpSecret?: string | null;
+  totpEnabled?: number | boolean;
+  recoveryCodes?: string | null;
+  parentPinHash?: string | null;
+  remindedAt?: Date | null;
   createdAt?: Date;
   externalIds?: UserExternalId[];
   order?: Order;
@@ -146,19 +203,35 @@ export class User extends TimestampMixin(Model) {
   static async registerWithPassword(
     email: string,
     password: string,
-    hint: string,
+    firstName: string,
+    lastName: string,
     dateOfBirth: string | null = null,
   ): Promise<User> {
     const existing = await User.findByEmail(email);
     if (existing != null) {
       throw new UserExistsError();
     }
-    const name = await User.findUniqueName(email, hint || email);
+    // `name` is the account's unique handle, seeded from the real first name;
+    // the full name lives on the learner profile created alongside it.
+    const name = await User.findUniqueName(email, firstName || email);
     const passwordHash = await hashPassword(password);
     return await User.query()
       .withGraphFetched("externalIds")
       .withGraphFetched("order")
-      .insertAndFetch({ email, name, passwordHash, dateOfBirth });
+      .insertAndFetch({ email, name, passwordHash, dateOfBirth })
+      .then(async (user) => {
+        // Give the account its own learner profile straight away, named
+        // properly — otherwise ensureDefault later invents one from the email.
+        await Profile.query().insert({
+          userId: user.id!,
+          kind: "adult",
+          firstName,
+          lastName,
+          parentalConsent: false,
+          consentAt: null,
+        });
+        return user;
+      });
   }
 
   // Verifies an email+password pair. Returns null on any mismatch — the
@@ -174,9 +247,76 @@ export class User extends TimestampMixin(Model) {
       return null;
     }
     if (await verifyPassword(password, user.passwordHash)) {
+      // A successful login is the only moment the plaintext is available, so it
+      // is the only chance to upgrade a hash made with weaker work factors.
+      if (needsRehash(user.passwordHash)) {
+        await user.setPassword(password);
+      }
       return user;
     }
     return null;
+  }
+
+  /**
+   * Replaces the account's recovery codes, storing only hashes. They are
+   * password-equivalent — each one alone completes a sign-in — so a database
+   * read must not yield usable ones. Returns the plaintext set, shown once.
+   */
+  async setRecoveryCodes(codes: readonly string[]): Promise<void> {
+    const hashes = codes.map((code) => User.hashRecoveryCode(code));
+    await this.$query().patch({ recoveryCodes: JSON.stringify(hashes) });
+  }
+
+  static hashRecoveryCode(code: string): string {
+    // Normalised so formatting differences (case, spaces, the dash) do not
+    // decide whether a correctly-transcribed code is accepted.
+    const normal = code.toUpperCase().replace(/[^0-9A-Z]/g, "");
+    return createHash("sha256").update(normal).digest("hex");
+  }
+
+  /**
+   * Consumes a recovery code if it matches an unused one. Single use: a code
+   * that has been spent is removed, so a written-down list cannot be replayed.
+   */
+  async useRecoveryCode(code: string): Promise<boolean> {
+    let hashes: string[];
+    try {
+      hashes = JSON.parse(this.recoveryCodes ?? "[]") as string[];
+    } catch {
+      return false;
+    }
+    const target = User.hashRecoveryCode(code);
+    const index = hashes.indexOf(target);
+    if (index === -1) {
+      return false;
+    }
+    hashes.splice(index, 1);
+    await this.$query().patch({ recoveryCodes: JSON.stringify(hashes) });
+    return true;
+  }
+
+  /** How many unused recovery codes remain. */
+  countRecoveryCodes(): number {
+    try {
+      return (JSON.parse(this.recoveryCodes ?? "[]") as string[]).length;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Sets (or clears) the grown-up PIN. Hashed with the same scrypt parameters as
+   * a password: a 4-6 digit PIN has a tiny keyspace, so a fast hash would make a
+   * leaked database trivially reversible.
+   */
+  async setParentPin(pin: string | null): Promise<void> {
+    await this.$query().patch({
+      parentPinHash: pin == null ? null : await hashPassword(pin),
+    });
+  }
+
+  async verifyParentPin(pin: string): Promise<boolean> {
+    return await verifyPassword(pin, this.parentPinHash);
   }
 
   async setPassword(password: string): Promise<void> {
@@ -227,15 +367,91 @@ export class User extends TimestampMixin(Model) {
     }
   }
 
-  static async ensure(ro: ResourceOwner): Promise<User> {
+  /**
+   * Resolves a completed OAuth sign-in to an account.
+   *
+   * Identity is the provider's subject (`provider` + `id`), never the email
+   * address: any identity provider can assert any address, so resolving by
+   * email lets a sign-in through one provider land on an account belonging to
+   * someone else (the nOAuth takeover). An email may only be used to *reach* an
+   * existing account when the provider states it verified it.
+   */
+  static async ensure(ro: ResourceOwner): Promise<SsoResult> {
     ro = User.parseResourceOwner(ro);
-    const { email } = ro;
+    const { provider, id: externalId, email } = ro;
     if (email == null) {
       throw new Error("No email address");
     }
-    const user = await User.findByEmail(email);
-    const model = await User.merge(user, ro, email);
-    return await User.query().upsertGraphAndFetch(model);
+
+    // A subject we've seen before: this IS the account, whatever address the
+    // provider is reporting today.
+    const link = await UserExternalId.findBySubject(provider, externalId);
+    if (link != null) {
+      const user = await User.findById(link.userId!);
+      if (user != null) {
+        // Refresh the provider's display fields only. The account's own email is
+        // deliberately left alone — following a renamed directory attribute
+        // would let a tenant move an account onto an address it doesn't own.
+        await link.$query().patch(profileFields(ro));
+        return { kind: "ok", user: (await User.findById(user.id!))! };
+      }
+      // The link outlived its account; drop it and continue as a fresh sign-in.
+      await link.$query().delete();
+    }
+
+    // First time this subject has signed in here.
+    const verified = ro.emailVerified === true;
+    const existing = await User.findByEmail(email);
+
+    if (existing != null) {
+      if (!verified) {
+        // Attaching a new provider to someone's account on the strength of an
+        // unverified address is exactly the takeover. Make them prove the
+        // account instead.
+        return { kind: "link-required", email };
+      }
+      const fields = { externalId, ...profileFields(ro) };
+      // The schema allows one identity per (account, provider), so re-linking
+      // the same provider under a new subject replaces the old row rather than
+      // colliding with it.
+      const prior = await UserExternalId.query().findOne({
+        userId: existing.id!,
+        provider,
+      });
+      if (prior != null) {
+        await prior.$query().patch(fields);
+      } else {
+        await existing
+          .$relatedQuery<UserExternalId>("externalIds")
+          .insert({ provider, ...fields } as UserExternalId);
+      }
+      if (!existing.emailVerified) {
+        await existing.$query().patch({ emailVerified: true });
+      }
+      return { kind: "ok", user: (await User.findById(existing.id!))! };
+    }
+
+    // Brand-new account. An unverified address may not belong to whoever is
+    // signing in, so the account starts unverified and has to pass the emailed
+    // code before it can be used — otherwise a provider could pre-register an
+    // address its real owner has not reached yet.
+    const name = await User.findUniqueName(email, ro.name ?? email);
+    const created = await User.query().insertGraphAndFetch({
+      email,
+      name,
+      emailVerified: verified,
+      externalIds: [
+        {
+          provider,
+          externalId,
+          name: ro.name ?? null,
+          url: ro.url ?? null,
+          imageUrl: ro.imageUrl ?? null,
+        } as UserExternalId,
+      ],
+    } as User);
+    const user = (await User.findById(created.id!))!;
+    return verified ? { kind: "ok", user } : { kind: "verify", user, email };
   }
 
   static parseResourceOwner(ro: ResourceOwner): ResourceOwner {
@@ -243,7 +459,7 @@ export class User extends TimestampMixin(Model) {
     const nameType = User.jsonSchema.properties.name;
     const urlType = UserExternalId.jsonSchema.properties.url;
     const imageUrlType = UserExternalId.jsonSchema.properties.imageUrl;
-    let { raw, provider, id, email, name, url, imageUrl } = ro;
+    let { raw, provider, id, email, emailVerified, name, url, imageUrl } = ro;
     if (email != null && email.length > emailType.maxLength) {
       email = null;
     }
@@ -256,42 +472,7 @@ export class User extends TimestampMixin(Model) {
     if (imageUrl != null && imageUrl.length > imageUrlType.maxLength) {
       imageUrl = null;
     }
-    return { raw, provider, id, email, name, url, imageUrl };
-  }
-
-  static async merge(
-    user: User | null,
-    ro: ResourceOwner,
-    email: string,
-  ): Promise<Partial<User>> {
-    let name: string;
-    if (user != null && ro.name == null) {
-      name = user.name!;
-    } else {
-      name = await User.findUniqueName(email, ro.name ?? email);
-    }
-
-    const externalIds = new Map(
-      (user?.externalIds ?? []).map((id) => [id.provider!, id]),
-    );
-
-    externalIds.set(ro.provider, {
-      ...externalIds.get(ro.provider),
-      provider: ro.provider,
-      externalId: ro.id,
-      name: ro.name ?? undefined,
-      url: ro.url ?? undefined,
-      imageUrl: ro.imageUrl ?? undefined,
-    } as UserExternalId);
-
-    return {
-      ...user,
-      email: ro.email,
-      name,
-      // The OAuth provider has already verified the address on its side.
-      emailVerified: true,
-      externalIds: [...externalIds.values()],
-    } as User;
+    return { raw, provider, id, email, emailVerified, name, url, imageUrl };
   }
 
   toDetails(): UserDetails {
@@ -300,10 +481,13 @@ export class User extends TimestampMixin(Model) {
       email: this.email!,
       name: this.name!,
       anonymized: Boolean(this.anonymized!),
+      publicProfile: Boolean(this.publicProfile),
       externalId: this.externalIds!.map((id) => id.toDetails()),
       order: this.order?.toDetails() ?? null,
       dateOfBirth: this.dateOfBirth ?? null,
       hasPassword: this.passwordHash != null,
+      twoFactorEnabled: Boolean(this.totpEnabled),
+      parentPinSet: this.parentPinHash != null,
       emailVerified: Boolean(this.emailVerified),
       createdAt: this.createdAt!,
     };
@@ -393,6 +577,7 @@ export class UserExternalId extends TimestampMixin(Model) {
   }
 
   readonly id?: number;
+  userId?: number;
   provider?: string;
   externalId?: string;
   name?: string | null;
@@ -400,6 +585,19 @@ export class UserExternalId extends TimestampMixin(Model) {
   imageUrl?: string | null;
   createdAt?: Date;
   user?: User;
+
+  /**
+   * Finds the account link for a provider's subject. This pair — not the email
+   * address — is the identity of a federated account.
+   */
+  static async findBySubject(
+    provider: string,
+    externalId: string,
+  ): Promise<UserExternalId | null> {
+    return (
+      (await UserExternalId.query().findOne({ provider, externalId })) ?? null
+    );
+  }
 
   toDetails(): UserExternalIdDetails {
     return {
@@ -484,6 +682,7 @@ export class Profile extends TimestampMixin(Model) {
       avatar: { type: ["null", "string"] },
       prefs: { type: ["null", "string"] },
       parentalConsent: { type: "boolean" },
+      anonymized: { type: "boolean" },
     },
   } satisfies JSONSchema;
 
@@ -497,6 +696,10 @@ export class Profile extends TimestampMixin(Model) {
     table.text("avatar").nullable();
     table.text("prefs").nullable();
     table.boolean("parental_consent").notNullable().defaultTo(false);
+    // Per-learner "hide my identity". Each grown-up in a household decides for
+    // themselves whether their own name shows on leaderboards and in
+    // multiplayer — it is their result, not the account holder's.
+    table.boolean("anonymized").notNullable().defaultTo(false);
     table.timestamp("consent_at").nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table
@@ -515,6 +718,7 @@ export class Profile extends TimestampMixin(Model) {
   avatar?: string | null;
   prefs?: string | null;
   parentalConsent?: number | boolean;
+  anonymized?: number | boolean;
   consentAt?: Date | string | null;
   createdAt?: Date;
 
@@ -532,9 +736,7 @@ export class Profile extends TimestampMixin(Model) {
   // OAuth, magic-link) and backfills existing accounts. The learner can rename
   // it or add more; deleting the last one just re-creates it on next load.
   static async ensureDefault(user: User): Promise<void> {
-    const count = await Profile.query()
-      .where("userId", user.id!)
-      .resultSize();
+    const count = await Profile.query().where("userId", user.id!).resultSize();
     if (count === 0) {
       const seed = (user.email ?? "").split("@")[0].trim();
       const firstName = (seed || "Me").slice(0, 32);
@@ -545,6 +747,54 @@ export class Profile extends TimestampMixin(Model) {
         parentalConsent: false,
         consentAt: null,
       });
+    }
+  }
+
+  /**
+   * How this learner appears to other people.
+   *
+   * Practice belongs to a profile, not to the account, so a household of two
+   * grown-ups shows two distinct people rather than one shared account name.
+   * `id` stays the ACCOUNT's public id — the public profile page is an
+   * account-level thing the owner opts into — while the name and picture come
+   * from the learner.
+   */
+  toPublicUser(account: User): NamedUser {
+    const premium = account.order != null;
+    const publicId = String(new PublicId(account.id!));
+    if (this.anonymized) {
+      // Deterministic per profile, so the same learner keeps the same alias
+      // across sessions instead of becoming a new stranger each time.
+      return Object.freeze<NamedUser>({
+        id: publicId,
+        name: anonymousName(`profile:${this.id}`),
+        imageUrl: null,
+        premium,
+      });
+    }
+    let imageUrl: string | null = null;
+    const avatar = this.parseAvatar();
+    // Only an inline image is usable as a picture here; a preset icon has no
+    // URL, so those fall through to the name-based identicon.
+    if (avatar?.type === "photo") {
+      imageUrl = avatar.dataUrl;
+    }
+    return Object.freeze<NamedUser>({
+      id: publicId,
+      name: this.firstName!,
+      imageUrl,
+      premium,
+    });
+  }
+
+  parseAvatar(): ProfileAvatar | null {
+    if (!this.avatar) {
+      return null;
+    }
+    try {
+      return JSON.parse(this.avatar) as ProfileAvatar;
+    } catch {
+      return null;
     }
   }
 
@@ -565,6 +815,7 @@ export class Profile extends TimestampMixin(Model) {
       birthYear: this.birthYear ?? null,
       avatar,
       parentalConsent: Boolean(this.parentalConsent),
+      anonymized: Boolean(this.anonymized),
       consentAt:
         this.consentAt != null ? new Date(this.consentAt).toISOString() : null,
     };
@@ -643,24 +894,37 @@ export class UserLoginRequest extends TimestampMixin(Model) {
     properties: {
       id: { type: "integer" },
       email: { type: "string", minLength: 1, maxLength: 64 },
+      purpose: { type: "string", minLength: 1, maxLength: 16 },
       accessToken: { type: "string", minLength: 1, maxLength: 64 },
     },
   } satisfies JSONSchema;
 
   static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
-    const { email, accessToken } = UserLoginRequest.jsonSchema.properties;
+    const { email, purpose, accessToken } =
+      UserLoginRequest.jsonSchema.properties;
     table.increments("id").primary();
     table.string("email", email.maxLength).notNullable();
+    table.string("purpose", purpose.maxLength).notNullable().defaultTo("login");
     table.binary("access_token", accessToken.maxLength).notNullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    table.unique(["email"]);
+    table.unique(["email", "purpose"]);
     table.unique(["access_token"]);
   }
 
+  /**
+   * A magic-login link is good for a day; a password reset is a far more
+   * sensitive capability and should not sit in an inbox that long.
+   */
+  static expireTimeFor(purpose: TokenPurpose): number {
+    return purpose === "reset" ? 60 * 60 * 1000 : 24 * 3600 * 1000;
+  }
+
+  /** Kept for the sweep of legacy rows; prefer {@link expireTimeFor}. */
   static readonly expireTime = 24 * 3600 * 1000;
 
   readonly id?: number;
   email?: string;
+  purpose?: string;
   accessToken?: string;
   createdAt?: Date;
 
@@ -698,50 +962,70 @@ export class UserLoginRequest extends TimestampMixin(Model) {
     return createHash("sha256").update(token).digest("hex");
   }
 
-  // Issues a fresh single-use token for an email. Only the SHA-256 *hash* is
-  // persisted, so a database leak never exposes a usable reset/login link; the
-  // plaintext token is returned once, to be emailed. Any prior token for the
-  // address is replaced.
-  static async init(email: string): Promise<string> {
+  // Issues a fresh single-use token for an email and purpose. Only the SHA-256
+  // *hash* is persisted, so a database leak never exposes a usable reset/login
+  // link; the plaintext token is returned once, to be emailed. Any prior token
+  // for the same address and purpose is replaced.
+  static async init(
+    email: string,
+    purpose: TokenPurpose = "login",
+  ): Promise<string> {
     await this.deleteExpired();
-    await UserLoginRequest.query().where({ email }).delete();
+    await UserLoginRequest.query().where({ email, purpose }).delete();
     const token = Random.string(20);
     await UserLoginRequest.query().insert({
       email,
+      purpose,
       accessToken: UserLoginRequest.#hash(token),
     });
     return token;
   }
 
-  static async login(accessToken: string): Promise<User | null> {
+  /**
+   * Redeems a token issued for a specific purpose, one shot.
+   *
+   * The purpose has to match. Otherwise the two flows share one token pool, and
+   * a "here is your sign-in link" email — which a user may reasonably forward or
+   * paste somewhere — doubles as authorisation to set a new password.
+   */
+  static async #take(
+    accessToken: string,
+    purpose: TokenPurpose,
+  ): Promise<UserLoginRequest | null> {
     await this.deleteExpired();
     const request = await UserLoginRequest.findByAccessToken(
       UserLoginRequest.#hash(accessToken),
     );
-    if (request != null) {
-      const user = await User.login(request.email!);
-      // One-shot: consume the token so the magic-login link can't be replayed.
-      await UserLoginRequest.query().deleteById(request.id!);
-      return user;
+    if (request == null || (request.purpose ?? "login") !== purpose) {
+      return null;
     }
-    return null;
-  }
-
-  // One-shot: validates a token, deletes it so it can't be reused, and
-  // returns the email it was issued for. For the password-reset flow.
-  static async consume(accessToken: string): Promise<string | null> {
-    await this.deleteExpired();
-    const request = await UserLoginRequest.findByAccessToken(
-      UserLoginRequest.#hash(accessToken),
-    );
-    if (request == null) {
+    const age = Date.now() - (request.createdAt?.getTime() ?? 0);
+    if (age > UserLoginRequest.expireTimeFor(purpose)) {
+      await UserLoginRequest.query().deleteById(request.id!);
       return null;
     }
     await UserLoginRequest.query().deleteById(request.id!);
-    return request.email!;
+    return request;
+  }
+
+  static async login(accessToken: string): Promise<User | null> {
+    const request = await UserLoginRequest.#take(accessToken, "login");
+    if (request == null) {
+      return null;
+    }
+    return await User.login(request.email!);
+  }
+
+  // One-shot: validates a reset token, deletes it so it can't be reused, and
+  // returns the email it was issued for.
+  static async consume(accessToken: string): Promise<string | null> {
+    const request = await UserLoginRequest.#take(accessToken, "reset");
+    return request?.email ?? null;
   }
 
   static async deleteExpired(now: number = Date.now()): Promise<void> {
+    // Sweeps at the longest lifetime; #take enforces the shorter per-purpose
+    // limit precisely.
     await UserLoginRequest.query()
       .where("createdAt", "<", new Date(now - UserLoginRequest.expireTime))
       .delete();
@@ -791,10 +1075,35 @@ Order.relationMappings = {
 
 UserLoginRequest.relationMappings = {};
 
-// A short-lived email-verification code issued during email+password sign-up.
-// The 6-digit code is emailed to the address and stored only as a hash, so a
-// database read never reveals a live code. One row per email (the newest code
-// replaces any previous one); codes expire and lock out after a few tries.
+/**
+ * What an emailed code authorises.
+ *
+ * A code is bound to exactly one of these. Without that binding there is a
+ * single code namespace per address, so a code the user was asked to request for
+ * one reason ("confirm your email") also satisfies an unrelated and destructive
+ * one ("delete my account"). It also keeps two concurrent flows from
+ * overwriting each other's code, since rows are keyed per purpose.
+ */
+/**
+ * What an emailed *link* authorises. Kept separate from the code purposes: a
+ * sign-in link and a password-reset link are very different capabilities, and
+ * sharing one token pool lets either be redeemed for the other.
+ */
+export type TokenPurpose = "login" | "reset";
+
+export type VerificationPurpose =
+  /** Prove a new sign-up's address. */
+  | "verify-email"
+  /** Prove control of an address the account is moving TO. */
+  | "change-email"
+  /** Prove the requester still reads the account's CURRENT address. */
+  | "identity"
+  /** Confirm permanent deletion of the account. */
+  | "delete-account";
+
+// A short-lived email-verification code. The 6-digit code is emailed and stored
+// only as a hash, so a database read never reveals a live code. One row per
+// (email, purpose); the newest code for a purpose replaces the previous one.
 export class EmailVerification extends TimestampMixin(Model) {
   static override readonly tableName = "email_verification";
   static override readonly columnNameMappers = snakeCaseMappers();
@@ -804,78 +1113,162 @@ export class EmailVerification extends TimestampMixin(Model) {
     properties: {
       id: { type: "integer" },
       email: { type: "string", minLength: 1, maxLength: 64 },
+      purpose: { type: "string", minLength: 1, maxLength: 24 },
       codeHash: { type: "string", minLength: 1, maxLength: 64 },
       attempts: { type: "integer" },
     },
   } satisfies JSONSchema;
 
   static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
-    const { email, codeHash } = EmailVerification.jsonSchema.properties;
+    const { email, purpose, codeHash } =
+      EmailVerification.jsonSchema.properties;
     table.increments("id").primary();
     table.string("email", email.maxLength).notNullable();
+    table
+      .string("purpose", purpose.maxLength)
+      .notNullable()
+      .defaultTo("verify-email");
     table.string("code_hash", codeHash.maxLength).notNullable();
+    // Cumulative failed guesses in the current window — deliberately NOT reset
+    // by issuing a new code (see `issue`).
     table.integer("attempts").notNullable().defaultTo(0);
+    table.timestamp("attempts_at").nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    table.unique(["email"]);
+    table.unique(["email", "purpose"]);
   }
 
+  /** How long a single code stays usable. */
   static readonly expireTime = 15 * 60 * 1000;
-  static readonly maxAttempts = 5;
+  /** Failed guesses allowed per address+purpose within {@link attemptWindow}. */
+  static readonly maxAttempts = 10;
+  /** The rolling window over which failures accumulate. */
+  static readonly attemptWindow = 60 * 60 * 1000;
   static readonly codeLength = 6;
 
   readonly id?: number;
   email?: string;
+  purpose?: string;
   codeHash?: string;
   attempts?: number;
+  attemptsAt?: Date | null;
   createdAt?: Date;
+
+  // SQLite hands timestamps back as numbers rather than Dates, so normalise
+  // here instead of type-testing at every read.
+  override $parseDatabaseJson(json: Pojo): Pojo {
+    json = super.$parseDatabaseJson(json);
+    for (const key of ["attemptsAt", "createdAt"]) {
+      const value = json[key];
+      if (value != null && !(value instanceof Date)) {
+        json[key] = new Date(value as string | number);
+      }
+    }
+    return json;
+  }
 
   static #hash(code: string): string {
     return createHash("sha256").update(code).digest("hex");
   }
 
-  // Issue a fresh code for an email, replacing any prior one. Returns the
-  // plaintext code (to be emailed) — it is never persisted in the clear.
-  static async issue(email: string): Promise<string> {
+  /**
+   * Issue a fresh code for an address and purpose, replacing any prior one.
+   * Returns the plaintext code (to be emailed) — never persisted in the clear.
+   *
+   * The failure counter survives reissue. Resetting it here would make the code
+   * brute-forceable: an attacker who can trigger a resend would earn a fresh
+   * budget of guesses each time, and a 6-digit code does not survive that.
+   */
+  static async issue(
+    email: string,
+    purpose: VerificationPurpose = "verify-email",
+  ): Promise<string> {
     await this.deleteExpired();
     const code = String(randomInt(0, 1_000_000)).padStart(
       EmailVerification.codeLength,
       "0",
     );
     const codeHash = EmailVerification.#hash(code);
-    const existing = await EmailVerification.query().findOne({ email });
+    const existing = await EmailVerification.query().findOne({
+      email,
+      purpose,
+    });
     if (existing != null) {
-      await existing
-        .$query()
-        .patch({ codeHash, attempts: 0, createdAt: new Date() });
+      await existing.$query().patch({ codeHash, createdAt: new Date() });
     } else {
-      await EmailVerification.query().insert({ email, codeHash, attempts: 0 });
+      await EmailVerification.query().insert({
+        email,
+        purpose,
+        codeHash,
+        attempts: 0,
+      });
     }
     return code;
   }
 
-  // Check a submitted code. Consumes (deletes) the record on success. Counts
-  // failed tries and gives up after maxAttempts so a code can't be brute-forced.
-  static async verify(email: string, code: string): Promise<boolean> {
+  /**
+   * Check a submitted code against an address AND the purpose it was issued for.
+   * Consumes the record on success.
+   *
+   * A code only ever authorises its own purpose, and failures accumulate across
+   * reissues within {@link attemptWindow}, so the 10^6 code space cannot be
+   * ground down by alternating resend-and-guess.
+   */
+  static async verify(
+    email: string,
+    purpose: VerificationPurpose,
+    code: string,
+  ): Promise<boolean> {
     await this.deleteExpired();
-    const rec = await EmailVerification.query().findOne({ email });
+    const rec = await EmailVerification.query().findOne({ email, purpose });
     if (rec == null) {
       return false;
     }
-    if ((rec.attempts ?? 0) >= EmailVerification.maxAttempts) {
-      await rec.$query().delete();
+    const now = Date.now();
+    // The code itself is short-lived, independently of the failure window that
+    // keeps the row alive.
+    if (
+      rec.createdAt != null &&
+      now - rec.createdAt.getTime() > EmailVerification.expireTime
+    ) {
+      return false;
+    }
+    // Roll the failure window over if it has elapsed.
+    let attempts = rec.attempts ?? 0;
+    const at = rec.attemptsAt?.getTime() ?? 0;
+    if (at > 0 && now - at > EmailVerification.attemptWindow) {
+      attempts = 0;
+    }
+    if (attempts >= EmailVerification.maxAttempts) {
       return false;
     }
     if (EmailVerification.#hash(code) === rec.codeHash) {
       await rec.$query().delete();
       return true;
     }
-    await rec.$query().patch({ attempts: (rec.attempts ?? 0) + 1 });
+    await rec.$query().patch({
+      attempts: attempts + 1,
+      // Start the window on the first failure of a new window.
+      attemptsAt:
+        attempts === 0 ? new Date(now) : (rec.attemptsAt ?? new Date(now)),
+    });
     return false;
   }
 
+  /**
+   * Drops rows whose code has expired AND whose failure window has elapsed.
+   * The row has to outlive the code, or deleting it would discard the failure
+   * count and hand out a fresh budget of guesses.
+   */
   static async deleteExpired(now: number = Date.now()): Promise<void> {
     await EmailVerification.query()
       .where("createdAt", "<", new Date(now - EmailVerification.expireTime))
+      .where((q) => {
+        q.whereNull("attemptsAt").orWhere(
+          "attemptsAt",
+          "<",
+          new Date(now - EmailVerification.attemptWindow),
+        );
+      })
       .delete();
   }
 }

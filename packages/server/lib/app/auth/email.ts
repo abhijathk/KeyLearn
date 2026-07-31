@@ -183,3 +183,153 @@ Happy typing!`;
   );
   return { to: email, subject, text, html };
 }
+
+// A small key/value block for stating the facts of an event — when, where,
+// from what. Tables rather than flex, because email clients are still 2003.
+function factList(rows: readonly (readonly [string, string])[]): string {
+  const cells = rows
+    .map(
+      ([k, v]) =>
+        `<tr><td style="padding:6px 0;font-family:${FONT};font-size:13px;color:${MUTED};white-space:nowrap">${esc(k)}</td>` +
+        `<td style="padding:6px 0 6px 16px;font-family:${FONT};font-size:13px;color:${INK}">${esc(v)}</td></tr>`,
+    )
+    .join("");
+  return (
+    `<table role="presentation" cellpadding="0" cellspacing="0" ` +
+    `style="margin:6px 0 4px;background:${ACCENT_SOFT};border:1px solid ${BORDER};` +
+    `border-radius:12px;padding:14px 18px;width:100%">${cells}</table>`
+  );
+}
+
+/**
+ * Tells an account holder that something security-relevant just happened.
+ *
+ * These are never optional. A takeover that arrives silently is one nobody can
+ * act on, and the whole value of the notice is that it reaches someone who did
+ * NOT perform the action.
+ */
+export function messageSecurityAlert({
+  email,
+  event,
+  when,
+  ip,
+  device,
+  manageLink,
+}: {
+  readonly email: string;
+  readonly event: string;
+  readonly when: string;
+  readonly ip: string | null;
+  readonly device: string | null;
+  readonly manageLink: string;
+}): Mailer.Message {
+  const subject = `KeyLearn security alert: ${event}`;
+  const facts: [string, string][] = [
+    ["What", event],
+    ["When", when],
+  ];
+  if (device) {
+    facts.push(["Device", device]);
+  }
+  if (ip) {
+    facts.push(["Address", ip]);
+  }
+  const text = `Hello!
+
+${event} on your KeyLearn account.
+
+When: ${when}
+${device ? `Device: ${device}\n` : ""}${ip ? `Address: ${ip}\n` : ""}
+If this was you, nothing more is needed.
+
+If it wasn't, change your password and sign out of all devices straight away:
+${manageLink}
+
+Happy typing!`;
+  const html = shell(
+    `${event} on your KeyLearn account`,
+    heading("Security alert") +
+      paragraph(`${event} on your KeyLearn account.`) +
+      factList(facts) +
+      paragraph("If this was you, there's nothing to do.") +
+      paragraph(
+        "If it wasn't, change your password and sign out of all devices now.",
+      ) +
+      `<div style="margin:4px 0 4px">${button(manageLink, "Review account security")}</div>` +
+      `<p style="margin:22px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">Security alerts can't be turned off — they're how you find out if someone else gets in.</p>`,
+  );
+  return { to: email, subject, text, html };
+}
+
+/**
+ * The practice nudge. Sent only to accounts that asked for it, and worded as an
+ * invitation rather than a scolding — this goes to households with children,
+ * and guilt is a poor teacher.
+ */
+export function messagePracticeReminder({
+  email,
+  name,
+  days,
+  practiceLink,
+  settingsLink,
+}: {
+  readonly email: string;
+  readonly name: string;
+  readonly days: number;
+  readonly practiceLink: string;
+  readonly settingsLink: string;
+}): Mailer.Message {
+  const subject = `A few minutes of typing today?`;
+  const text = `Hi ${name},
+
+It's been ${days} days since your last practice. Even five minutes keeps the muscle memory going.
+
+${practiceLink}
+
+Don't want these? Turn reminders off in your preferences:
+${settingsLink}
+
+Happy typing!`;
+  const html = shell(
+    "A few minutes of typing today?",
+    heading(`Ready for a few minutes, ${name}?`) +
+      paragraph(
+        `It's been ${days} days since your last session. Even five minutes keeps the muscle memory going — there's no streak to lose here.`,
+      ) +
+      `<div style="margin:4px 0 4px">${button(practiceLink, "Start practising")}</div>` +
+      `<p style="margin:22px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">Don't want these? <a href="${esc(settingsLink)}" style="color:${ACCENT}">Turn reminders off</a>.</p>`,
+  );
+  return { to: email, subject, text, html };
+}
+
+/** Product news. Only to accounts that opted in, and always unsubscribable. */
+export function messageProductNews({
+  email,
+  title,
+  body,
+  link,
+  settingsLink,
+}: {
+  readonly email: string;
+  readonly title: string;
+  readonly body: string;
+  readonly link: string | null;
+  readonly settingsLink: string;
+}): Mailer.Message {
+  const text = `${title}
+
+${body}
+${link ? `\n${link}\n` : ""}
+Don't want these? Turn product news off:
+${settingsLink}`;
+  const html = shell(
+    title,
+    heading(title) +
+      paragraph(body) +
+      (link
+        ? `<div style="margin:4px 0 4px">${button(link, "Take a look")}</div>`
+        : "") +
+      `<p style="margin:22px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">You're getting this because you turned on product news. <a href="${esc(settingsLink)}" style="color:${ACCENT}">Turn it off</a>.</p>`,
+  );
+  return { to: email, subject: title, text, html };
+}

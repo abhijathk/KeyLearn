@@ -1,0 +1,37 @@
+# The build context is copied wholesale by `COPY . .`, and anything included
+# here ends up in an image layer permanently — deleting it in a later step does
+# not remove it. Secrets must never enter the context.
+.env
+.env.*
+!.env.example
+id_*
+*.pem
+*.key
+
+# History and tooling — large, and .git can contain credentials in remotes.
+.git
+.github
+.husky
+.vscode
+.idea
+
+# Rebuilt inside the image; copying host artefacts risks a stale or
+# wrong-architecture build.
+node_modules
+**/node_modules
+root/lib
+root/public/assets
+packages/*/.types
+build
+out
+tmp
+sandbox
+*.tsbuildinfo
+
+# Local state and scratch.
+*.log
+*.bak
+*~
+.DS_Store
+**/.DS_Store
+deploy.sh

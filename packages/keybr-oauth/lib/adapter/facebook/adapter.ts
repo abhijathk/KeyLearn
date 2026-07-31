@@ -94,6 +94,9 @@ export class FacebookAdapter extends AbstractAdapter {
       provider: "facebook",
       id: id,
       email: email || null,
+      // The Graph /me edge reports no verification state for the address, so it
+      // may not be used to claim an existing account.
+      emailVerified: null,
       name: name || null,
       url: `https://www.facebook.com/${id}`,
       imageUrl: `https://graph.facebook.com/${id}/picture`,

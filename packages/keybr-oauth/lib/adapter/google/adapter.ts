@@ -15,12 +15,16 @@ export class GoogleAdapter extends AbstractAdapter {
   protected override parseProfileResponse(
     response: GoogleProfileResponse,
   ): ResourceOwner<GoogleProfileResponse> {
-    const { sub, name, picture, email } = response;
+    const { sub, name, picture, email, email_verified } = response;
     return {
       raw: response,
       provider: "google",
       id: sub,
       email: email || null,
+      // Google returns this on the OIDC userinfo endpoint. It is false for,
+      // among others, Workspace aliases the domain never confirmed, so it must
+      // be checked rather than assumed.
+      emailVerified: email_verified === true,
       name: name || null,
       url: null,
       imageUrl: picture || null,

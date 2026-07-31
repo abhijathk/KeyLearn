@@ -72,6 +72,7 @@ test.beforeEach(async () => {
     provider: "fake",
     id: "123",
     email: "fake@keybr.com",
+    emailVerified: true,
     name: "fake",
     url: "url",
     imageUrl: "imageUrl",
@@ -273,6 +274,7 @@ test("login an existing user", async () => {
 
   await User.query().insertGraph({
     email: "fake@keybr.com",
+    emailVerified: true,
     name: "fake name",
     externalIds: [
       {
