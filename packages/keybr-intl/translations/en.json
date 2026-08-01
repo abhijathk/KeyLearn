@@ -188,6 +188,7 @@
   "auth.verify.resent": "A new code is on its way.",
   "auth.verify.submit": "Verify email",
   "braille.audio.ready": "Braille practice. Press the slash key for controls, Enter to hear the word again.",
+  "braille.begin": "Press any key to begin — your browser keeps sound switched off until you do.",
   "braille.controls": "F D S and J K L are dots one to six. Space is a blank cell, and two low notes tell you one is due. Enter repeats the word. Left arrow reads the whole line. Up arrow spells the word. Down arrow gives the dots. Backspace deletes the last cell. Turn off your screen reader's keyboard echo — it announces the physical keys, not the braille.",
   "braille.echo": "Say each letter",
   "braille.mode.listening": "Listening",

@@ -13,6 +13,35 @@
  */
 
 let ctx: AudioContext | null = null;
+let unlocked = false;
+
+/**
+ * Browsers discard speech and keep an AudioContext suspended until the user has
+ * interacted with the page. Anything spoken on arrival is therefore thrown
+ * away — which for a blind learner is a deadlock: they wait for the app to
+ * speak, the app waits for them to press something.
+ *
+ * Called from the first key event, so the audio is live from the first thing
+ * they do.
+ */
+export function unlockAudio(): boolean {
+  const first = !unlocked;
+  unlocked = true;
+  try {
+    const c = audio();
+    if (c != null && c.state === "suspended") {
+      void c.resume();
+    }
+  } catch {
+    // Nothing to resume.
+  }
+  return first;
+}
+
+/** Whether the browser will actually let us make a sound yet. */
+export function audioReady(): boolean {
+  return unlocked;
+}
 
 function audio(): AudioContext | null {
   if (typeof window === "undefined") {

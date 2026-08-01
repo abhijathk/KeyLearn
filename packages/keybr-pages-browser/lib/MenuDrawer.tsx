@@ -38,12 +38,23 @@ export function MenuDrawer({
   const signedIn = publicUser.id != null;
   const kidLock = active?.kind === "kid";
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const visionSupport = active?.visionSupport === true;
 
   // Switching learners keeps the drawer open — parents often flip between
   // profiles to compare, and the panel survives the app remount underneath.
-  const switchTo = (id: string, kind: "adult" | "kid") => {
+  const switchTo = (
+    id: string,
+    kind: "adult" | "kid",
+    visionSupport = false,
+  ) => {
     select(id);
-    navigate(kind === "kid" ? Pages.kids.path : Pages.practice.path);
+    navigate(
+      visionSupport
+        ? Pages.braille.path
+        : kind === "kid"
+          ? Pages.kids.path
+          : Pages.practice.path,
+    );
   };
 
   // The Grown-ups / Kids switch is only relevant when signed out or when the
@@ -164,7 +175,7 @@ export function MenuDrawer({
                           active?.id === p.id && styles.learnerOn,
                         )}
                         title={p.firstName}
-                        onClick={() => switchTo(p.id, p.kind)}
+                        onClick={() => switchTo(p.id, p.kind, p.visionSupport)}
                       >
                         <ProfileAvatar
                           avatar={p.avatar}
@@ -261,13 +272,17 @@ export function MenuDrawer({
                   <FormattedMessage id="drawer.goTo" defaultMessage="Explore" />
                 </div>
                 <NavMenu currentPath={path} onNavigate={onClose} />
-                <div className={styles.label}>
-                  <FormattedMessage
-                    id="drawer.language"
-                    defaultMessage="Site language"
-                  />
-                </div>
-                <LanguagePanel currentPath={path} />
+                {!visionSupport && (
+                  <>
+                    <div className={styles.label}>
+                      <FormattedMessage
+                        id="drawer.language"
+                        defaultMessage="Site language"
+                      />
+                    </div>
+                    <LanguagePanel currentPath={path} />
+                  </>
+                )}
               </div>
             </div>
             <div

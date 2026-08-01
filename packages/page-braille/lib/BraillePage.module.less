@@ -473,3 +473,13 @@
 .barGap {
   flex: 1;
 }
+
+// Shown until the first key. The browser will not let the page speak before
+// then, so this is the only channel that reaches a blind learner — a screen
+// reader is their software, not ours, and is not gesture-blocked.
+.begin {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 700;
+}

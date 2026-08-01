@@ -31,10 +31,10 @@ import {
   chime,
   defaultVoice,
   fanfare,
-  hush,
   say,
   spaceCue,
   tick,
+  unlockAudio,
 } from "./sound.ts";
 import { loadProgress, saveProgress } from "./store.ts";
 
@@ -79,6 +79,7 @@ function Practice({
   const [voice, setVoice] = useState(defaultVoice);
   const [echoLetters, setEchoLetters] = useState(true);
   const [live, setLive] = useState("");
+  const [started, setStarted] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [rolloverLimit, setRolloverLimit] = useState(0);
 
@@ -87,6 +88,7 @@ function Practice({
   const progress = useRef<Progress>(loadProgress());
   const lastAt = useRef<number>(0);
   const reader = useRef(new ChordReader());
+  const greetRef = useRef<() => void>(() => {});
   // The key handler is attached once and reads current values through this ref,
   // so a chord in progress is never dropped by a re-render mid-cell.
   const state = useRef({
@@ -121,7 +123,12 @@ function Practice({
     [],
   );
 
-  useEffect(() => {
+  const greeted = useRef(false);
+  const greet = useCallback(() => {
+    if (greeted.current) {
+      return;
+    }
+    greeted.current = true;
     say(
       formatMessage({
         id: "braille.audio.ready",
@@ -318,6 +325,12 @@ function Practice({
       if (ev.metaKey || ev.ctrlKey || ev.altKey) {
         return;
       }
+      setStarted(true);
+      if (unlockAudio()) {
+        // First interaction: audio is live now, so say what was held back.
+        greetRef.current();
+        return;
+      }
       if (help(ev.code)) {
         ev.preventDefault();
         return;
@@ -327,7 +340,6 @@ function Practice({
         return;
       }
       ev.preventDefault();
-      hush(); // Typing always wins over speech in progress.
       if (event.type === "update") {
         setHeld(event.held);
       } else {
@@ -363,6 +375,8 @@ function Practice({
       window.removeEventListener("blur", onBlur);
     };
   }, [dictate, formatMessage]);
+
+  greetRef.current = greet;
 
   const step = lesson.steps[at];
   const word = wordAt(lesson, at);
@@ -454,6 +468,15 @@ function Practice({
         <Board lesson={lesson} at={at} shake={shake} wrong={wrong != null} />
       ) : (
         <p className={styles.dictated}>{word?.text ?? " "}</p>
+      )}
+
+      {!started && (
+        <p className={styles.begin} role="status" aria-live="assertive">
+          <FormattedMessage
+            id="braille.begin"
+            defaultMessage="Press any key to begin — your browser keeps sound switched off until you do."
+          />
+        </p>
       )}
 
       <p className={styles.prompt} role="status" aria-live="assertive">
