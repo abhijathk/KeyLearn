@@ -208,7 +208,7 @@ function Practice({
         chime();
       } else {
         tick();
-        if (s.echoLetters && s.mode === "listening") {
+        if (s.echoLetters) {
           const ch = s.lesson.text[step.at];
           say(ch === " " ? "space" : ch, s.voice);
         }
@@ -347,32 +347,13 @@ function Practice({
   const accuracy = total > 0 ? Math.round((hits / total) * 100) : 100;
   const minutes = startedAt != null ? (Date.now() - startedAt) / 60000 : 0;
   const cpm = minutes > 0.05 ? Math.round(hits / minutes) : 0;
+  const unlockedCount = progress.current.unlocked().length;
 
   return (
     <div className={styles.page}>
       <div className={styles.head}>
-        <h1 className={styles.title}>
-          <FormattedMessage
-            id="braille.title"
-            defaultMessage="Braille typing"
-          />
-        </h1>
         <ModeSwitch mode={mode} onChange={onModeChange} />
       </div>
-
-      <p className={styles.intro}>
-        {mode === "reading" ? (
-          <FormattedMessage
-            id="braille.intro.reading"
-            defaultMessage="Type each cell with F D S and J K L — press the dots together and let go. Print and braille are shown side by side; only the braille is scored."
-          />
-        ) : (
-          <FormattedMessage
-            id="braille.intro.listening"
-            defaultMessage="Each word is spoken; type its cells. Enter repeats it, up arrow spells it, down arrow gives the dots, slash reads the controls."
-          />
-        )}
-      </p>
 
       {rolloverLimit > 0 && rolloverLimit < REQUIRED_ROLLOVER && (
         <p className={styles.warn} role="status">
@@ -410,55 +391,94 @@ function Practice({
       </div>
 
       <div className={styles.stats}>
-        <span>
-          <FormattedMessage
-            id="braille.stat.speed"
-            defaultMessage="{cpm} cells/min"
-            values={{ cpm }}
-          />
-        </span>
-        <span>
-          <FormattedMessage
-            id="braille.stat.accuracy"
-            defaultMessage="{accuracy}% accurate"
-            values={{ accuracy }}
-          />
-        </span>
-        <button
-          type="button"
-          className={styles.soundBtn}
-          aria-pressed={voice.enabled}
-          onClick={() => setVoice({ ...voice, enabled: !voice.enabled })}
-        >
-          {voice.enabled ? (
+        <Metric
+          label={
+            <FormattedMessage id="braille.stat.speed" defaultMessage="Speed" />
+          }
+          value={`${cpm}`}
+          unit={
             <FormattedMessage
-              id="braille.sound.on"
-              defaultMessage="Speech on"
+              id="braille.stat.speedUnit"
+              defaultMessage="cells/min"
             />
-          ) : (
+          }
+        />
+        <Metric
+          label={
             <FormattedMessage
-              id="braille.sound.off"
-              defaultMessage="Speech off"
+              id="braille.stat.accuracy"
+              defaultMessage="Accuracy"
             />
-          )}
-        </button>
-        <button
-          type="button"
-          className={styles.soundBtn}
-          aria-pressed={echoLetters}
-          onClick={() => setEchoLetters(!echoLetters)}
-        >
-          <FormattedMessage
-            id="braille.echo"
-            defaultMessage="Say each letter"
-          />
-        </button>
+          }
+          value={`${accuracy}%`}
+        />
+        <Metric
+          label={
+            <FormattedMessage
+              id="braille.stat.cells"
+              defaultMessage="Cells learned"
+            />
+          }
+          value={`${unlockedCount}`}
+        />
+        <span className={styles.toggles}>
+          <button
+            type="button"
+            className={styles.soundBtn}
+            aria-pressed={voice.enabled}
+            onClick={() => setVoice({ ...voice, enabled: !voice.enabled })}
+          >
+            {voice.enabled ? (
+              <FormattedMessage
+                id="braille.sound.on"
+                defaultMessage="Speech on"
+              />
+            ) : (
+              <FormattedMessage
+                id="braille.sound.off"
+                defaultMessage="Speech off"
+              />
+            )}
+          </button>
+          <button
+            type="button"
+            className={styles.soundBtn}
+            aria-pressed={echoLetters}
+            onClick={() => setEchoLetters(!echoLetters)}
+          >
+            <FormattedMessage
+              id="braille.echo"
+              defaultMessage="Say each letter"
+            />
+          </button>
+        </span>
       </div>
 
       <p className={styles.sr} role="status" aria-live="polite">
         {live}
       </p>
     </div>
+  );
+}
+
+/** One figure, in the practice page's shape: caption above, value below. */
+function Metric({
+  label,
+  value,
+  unit,
+}: {
+  readonly label: ReactNode;
+  readonly value: string;
+  readonly unit?: ReactNode;
+}): ReactNode {
+  return (
+    <span className={styles.metric}>
+      <span className={styles.metricLabel}>{label}</span>
+      <span className={styles.metricValue}>
+        {value}
+        {unit != null && <span className={styles.metricUnit}>{unit}</span>}
+      </span>
+    </span>
   );
 }
 
@@ -496,7 +516,7 @@ function ModeSwitch({
   );
 }
 
-/** The two scripts, in step. Reading mode only. */
+/** The two scripts, in step and grouped by word. Reading mode only. */
 function Board({
   lesson,
   at,
@@ -504,29 +524,59 @@ function Board({
   readonly lesson: Lesson;
   readonly at: number;
 }): ReactNode {
+  const active = wordAt(lesson, at);
+  // Groups of steps that must not be split: each word, and each space between.
+  const groups: { from: number; to: number; word: boolean }[] = [];
+  let i = 0;
+  for (const w of lesson.words) {
+    if (w.from > i) {
+      groups.push({ from: i, to: w.from, word: false });
+    }
+    groups.push({ from: w.from, to: w.to, word: true });
+    i = w.to;
+  }
+  if (i < lesson.steps.length) {
+    groups.push({ from: i, to: lesson.steps.length, word: false });
+  }
+
   return (
     <div className={styles.board} aria-hidden={true}>
       <div className={styles.cols}>
-        {lesson.steps.map((s, i) => {
-          const ch = lesson.text[s.at];
-          // A prefix cell — capital sign, number sign — has no glyph of its
-          // own, so its column shows nothing above the cell rather than
-          // repeating the letter that follows.
-          const isPrefix = i > 0 && lesson.steps[i - 1].at === s.at;
-          return (
-            <span
-              key={i}
-              className={clsx(
-                styles.col,
-                i === at && styles.current,
-                i < at && styles.done,
-              )}
-            >
-              <span className={styles.print}>{isPrefix ? "" : ch}</span>
-              <span className={styles.cell}>{toUnicode(s.cell)}</span>
-            </span>
-          );
-        })}
+        {groups.map((g) => (
+          <span
+            key={g.from}
+            className={clsx(
+              styles.group,
+              g.word && styles.word,
+              active != null &&
+                g.word &&
+                g.from === active.from &&
+                styles.wordOn,
+            )}
+          >
+            {lesson.steps.slice(g.from, g.to).map((st, k) => {
+              const idx = g.from + k;
+              const ch = lesson.text[st.at];
+              // A prefix cell — capital or number sign — has no glyph of its
+              // own, so its column stays blank rather than repeating the
+              // letter that follows.
+              const isPrefix = idx > 0 && lesson.steps[idx - 1].at === st.at;
+              return (
+                <span
+                  key={idx}
+                  className={clsx(
+                    styles.col,
+                    idx === at && styles.current,
+                    idx < at && styles.done,
+                  )}
+                >
+                  <span className={styles.print}>{isPrefix ? "" : ch}</span>
+                  <span className={styles.cell}>{toUnicode(st.cell)}</span>
+                </span>
+              );
+            })}
+          </span>
+        ))}
       </div>
     </div>
   );

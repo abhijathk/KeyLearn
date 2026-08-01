@@ -70,7 +70,7 @@ export type VoiceSettings = {
   readonly enabled: boolean;
 };
 
-export const defaultVoice: VoiceSettings = { rate: 1.6, enabled: true };
+export const defaultVoice: VoiceSettings = { rate: 1, enabled: true };
 
 /**
  * Says something immediately, cancelling whatever was speaking.
