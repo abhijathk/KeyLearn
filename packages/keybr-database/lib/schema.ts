@@ -106,6 +106,13 @@ export async function createSchema(knex: Knex): Promise<void> {
     table.text("recovery_codes").nullable();
   });
 
+  // Recorded as a need, not a diagnosis: what the app must know is whether to
+  // lead with audio and offer braille entry, and a disability label would be
+  // special-category health data without answering that any better.
+  await addColumn("profile", "vision_support", (table) => {
+    table.boolean("vision_support").notNullable().defaultTo(false);
+  });
+
   await addColumn("profile", "anonymized", (table) => {
     table.boolean("anonymized").notNullable().defaultTo(false);
   });

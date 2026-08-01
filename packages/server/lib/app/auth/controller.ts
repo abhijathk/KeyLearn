@@ -107,6 +107,7 @@ const TProfile = z.object({
   birthYear: z.number().int().min(1900).max(2200).nullable().optional(),
   avatar: TAvatar.nullable().optional(),
   prefs: TPrefs.nullable().optional(),
+  visionSupport: z.boolean().optional(),
   parentalConsent: z.boolean().optional(),
 });
 type TProfile = z.infer<typeof TProfile>;
@@ -1580,6 +1581,7 @@ export class Controller {
       birthYear: data.birthYear ?? null,
       avatar: data.avatar != null ? JSON.stringify(data.avatar) : null,
       prefs: data.prefs != null ? JSON.stringify(data.prefs) : null,
+      visionSupport: data.visionSupport === true,
       parentalConsent: consented,
       consentAt: consented ? new Date() : null,
     });
@@ -1602,6 +1604,9 @@ export class Controller {
     if (data.firstName !== undefined) patch.firstName = data.firstName;
     if (data.lastName !== undefined) patch.lastName = data.lastName || null;
     if (data.birthYear !== undefined) patch.birthYear = data.birthYear ?? null;
+    if (data.visionSupport !== undefined) {
+      patch.visionSupport = data.visionSupport;
+    }
     if (data.avatar !== undefined) {
       patch.avatar = data.avatar != null ? JSON.stringify(data.avatar) : null;
     }

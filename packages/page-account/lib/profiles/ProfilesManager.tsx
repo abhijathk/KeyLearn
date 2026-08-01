@@ -309,6 +309,9 @@ function ProfileEditor({
     profile?.avatar ?? { type: "icon", id: presetsFor("kid")[0].id },
   );
   const [consent, setConsent] = useState(false);
+  const [visionSupport, setVisionSupport] = useState(
+    profile?.visionSupport ?? false,
+  );
   const [showConsent, setShowConsent] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -367,6 +370,7 @@ function ProfileEditor({
       lastName: lastName.trim(),
       birthYear: year,
       avatar,
+      visionSupport,
       ...(kind === "kid"
         ? { parentalConsent: consent || profile != null }
         : {}),
@@ -492,6 +496,31 @@ function ProfileEditor({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* A need, not a diagnosis. What the app has to know is whether to
+            lead with audio and offer braille entry — a disability label would
+            not answer that, and would be health data we do not want to hold. */}
+        <div className={styles.consentBox}>
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={visionSupport}
+            className={clsx(styles.cbox, visionSupport && styles.cboxOn)}
+            onClick={() => setVisionSupport(!visionSupport)}
+          >
+            {visionSupport && (
+              <svg viewBox="0 0 24 24" aria-hidden={true}>
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            )}
+          </button>
+          <span className={styles.consentText}>
+            <FormattedMessage
+              id="profiles.visionSupport"
+              defaultMessage="This learner uses KeyLearn without relying on sight, or finds it hard to see. Turns on spoken guidance and adds braille typing."
+            />
+          </span>
         </div>
 
         {needConsent && (

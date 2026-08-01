@@ -25,6 +25,8 @@ export type ProfileInput = {
   readonly birthYear?: number | null;
   readonly avatar?: ProfileAvatar | null;
   readonly prefs?: unknown;
+  /** Lead with audio and offer braille entry for this learner. */
+  readonly visionSupport?: boolean;
   readonly parentalConsent?: boolean;
 };
 

@@ -681,6 +681,7 @@ export class Profile extends TimestampMixin(Model) {
       // toy-box settings that used to live in localStorage).
       avatar: { type: ["null", "string"] },
       prefs: { type: ["null", "string"] },
+      visionSupport: { type: "boolean" },
       parentalConsent: { type: "boolean" },
       anonymized: { type: "boolean" },
     },
@@ -717,6 +718,7 @@ export class Profile extends TimestampMixin(Model) {
   birthYear?: number | null;
   avatar?: string | null;
   prefs?: string | null;
+  visionSupport?: number | boolean;
   parentalConsent?: number | boolean;
   anonymized?: number | boolean;
   consentAt?: Date | string | null;
@@ -814,6 +816,7 @@ export class Profile extends TimestampMixin(Model) {
       lastName: this.lastName ?? "",
       birthYear: this.birthYear ?? null,
       avatar,
+      visionSupport: Boolean(this.visionSupport),
       parentalConsent: Boolean(this.parentalConsent),
       anonymized: Boolean(this.anonymized),
       consentAt:

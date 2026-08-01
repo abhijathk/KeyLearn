@@ -43,9 +43,21 @@ export type StrokeIconName =
   | "moon"
   | "auto"
   | "book"
-  | "heart";
+  | "heart"
+  | "braille";
 
 const shapes: Record<StrokeIconName, ReactNode> = {
+  // The cell for "b": dots 1 and 2 raised, the other four empty.
+  braille: (
+    <>
+      <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="12" r="2" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="18" r="1.6" />
+      <circle cx="16" cy="6" r="1.6" />
+      <circle cx="16" cy="12" r="1.6" />
+      <circle cx="16" cy="18" r="1.6" />
+    </>
+  ),
   heart: (
     <path d="M12 20s-7-4.5-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.5-7 9-7 9Z" />
   ),

@@ -72,6 +72,16 @@ export type ProfileDetails = {
   readonly avatar: ProfileAvatar | null;
   /** Hide this learner's name on leaderboards and in multiplayer. */
   readonly anonymized: boolean;
+  /**
+   * This learner uses the app without relying on sight, or with difficulty
+   * seeing it.
+   *
+   * Recorded as a need rather than a diagnosis, deliberately: what the app has
+   * to know is what to do — announce things, lead with audio, offer braille
+   * entry — and a label would not tell it that. It also keeps this out of the
+   * special-category health data that a disability status would be.
+   */
+  readonly visionSupport: boolean;
   /** Parental consent captured when a kid profile was created. */
   readonly parentalConsent: boolean;
   /** ISO timestamp the consent was recorded, or null. */

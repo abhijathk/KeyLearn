@@ -1,3 +1,4 @@
+import { useProfiles } from "@keybr/page-account";
 import { type PageInfo, Pages, usePageData } from "@keybr/pages-shared";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
@@ -12,7 +13,7 @@ const pageIcons: Record<string, StrokeIconName> = {
   [Pages.typingTest.path]: "gauge",
   [Pages.layouts.path]: "grid",
   [Pages.texts.path]: "book",
-  [Pages.braille.path]: "grid",
+  [Pages.braille.path]: "braille",
   [Pages.highScores.path]: "trophy",
   [Pages.help.path]: "help",
 };
@@ -24,6 +25,8 @@ export function NavMenu({
   readonly onNavigate?: () => void;
 }) {
   const { leaderboard } = usePageData();
+  const { active } = useProfiles();
+  const visionSupport = active?.visionSupport === true;
   return (
     <div className={styles.root}>
       <MenuItem>
@@ -46,9 +49,14 @@ export function NavMenu({
         <MenuItemLink page={Pages.texts} onNavigate={onNavigate} />
       </MenuItem>
 
-      <MenuItem>
-        <MenuItemLink page={Pages.braille} onNavigate={onNavigate} />
-      </MenuItem>
+      {/* Only for a learner who has said they need it. Braille entry is a
+          specialised mode, and putting it in everyone's list would bury the
+          things they actually came for. */}
+      {visionSupport && (
+        <MenuItem>
+          <MenuItemLink page={Pages.braille} onNavigate={onNavigate} />
+        </MenuItem>
+      )}
 
       {/* Only once there is a community to rank. Until then the link would lead
           to a board that says "not yet", which is worse than no link. */}

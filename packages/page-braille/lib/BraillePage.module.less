@@ -34,27 +34,32 @@
   overflow-x: auto;
 }
 
-.line {
+// One column per cell, so the print glyph always sits directly above the cell
+// that writes it — including where one letter needs two cells.
+.cols {
   display: flex;
   font-family: var(--value-font-family), monospace;
   white-space: pre;
 }
 
-.print,
-.cell {
-  display: inline-block;
-  min-inline-size: 1.4rem;
-  text-align: center;
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  inline-size: 2.2rem;
+  border-radius: 0.3rem;
 }
 
 .print {
-  font-size: 1.5rem;
+  block-size: 1.9rem;
+  font-size: 1.4rem;
+  line-height: 1.9rem;
 }
 
-// Braille needs to be large enough to read the dots apart at a glance.
+// Braille needs to be large enough to tell the dots apart at a glance.
 .cell {
-  font-size: 2.1rem;
-  line-height: 1.1;
+  font-size: 2.2rem;
+  line-height: 1.15;
 }
 
 .done {
@@ -164,4 +169,114 @@
   overflow: hidden;
   white-space: nowrap;
   clip-path: inset(50%);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Listening mode shows the dictated word large, for a low-vision learner who
+// hears it but can still make out big text.
+.dictated {
+  margin: 0;
+  padding: 1.4rem 1.2rem;
+  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+  font-family: var(--value-font-family), monospace;
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.seg {
+  display: inline-flex;
+  flex: none;
+  padding: 0.2rem;
+  border: var(--separator-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+}
+
+.segBtn {
+  padding: 0.35rem 0.9rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-color-f2);
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.segOn {
+  color: var(--primary);
+  background: var(--accent);
+}
+
+// The six dot keys, in the app's key-cap language.
+.keys {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.hand {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.gap {
+  inline-size: 1.6rem;
+}
+
+.key {
+  display: grid;
+  place-items: center;
+  inline-size: 3.2rem;
+  block-size: 3.4rem;
+  border: 2px solid var(--separator-color, rgba(128, 128, 128, 0.3));
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--text-color) 12%, transparent);
+  transition: transform 0.07s ease;
+}
+
+.keyCode {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.keyDot {
+  color: var(--text-color-f2);
+  font-size: 0.6rem;
+}
+
+// The cell being asked for.
+.keyWanted {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.keyWanted .keyDot {
+  color: var(--accent);
+}
+
+// Physically down.
+.keyHeld {
+  color: var(--primary);
+  background: var(--accent);
+  box-shadow: none;
+  transform: translateY(3px);
+}
+
+.keyHeld .keyDot {
+  color: var(--primary);
 }
