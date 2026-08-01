@@ -55,6 +55,9 @@ export function MenuDrawer({
           ? Pages.kids.path
           : Pages.practice.path,
     );
+    if (visionSupport) {
+      onClose();
+    }
   };
 
   // The Grown-ups / Kids switch is only relevant when signed out or when the
