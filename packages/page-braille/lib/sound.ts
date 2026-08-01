@@ -104,3 +104,17 @@ export function hush(): void {
     // Nothing to stop.
   }
 }
+
+/**
+ * The gap between words.
+ *
+ * A learner finishing a word has nothing telling them a space is next — the
+ * dictation speaks words, not the spaces between them, and saying "space" every
+ * time would be chatty enough to grate within a minute. Two soft low notes
+ * instead: distinct from the tick, learned in about a minute, and out of the
+ * way once they are.
+ */
+export function spaceCue(): void {
+  beep(300, 60, 0.1);
+  setTimeout(() => beep(300, 60, 0.1), 95);
+}

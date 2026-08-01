@@ -33,6 +33,7 @@ import {
   fanfare,
   hush,
   say,
+  spaceCue,
   tick,
 } from "./sound.ts";
 import { loadProgress, saveProgress } from "./store.ts";
@@ -119,14 +120,11 @@ function Practice({
   );
 
   useEffect(() => {
-    if (mode !== "listening") {
-      return;
-    }
     say(
       formatMessage({
         id: "braille.audio.ready",
         defaultMessage:
-          "Listening mode. Press the slash key for controls, Enter to hear the word again.",
+          "Braille practice. Press the slash key for controls, Enter to hear the word again.",
       }),
       voice,
     );
@@ -136,9 +134,9 @@ function Practice({
       2400,
     );
     return () => window.clearTimeout(timer);
-    // Only when the mode itself changes; a re-render must not re-announce.
+    // Once on arrival; a re-render must not re-announce.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+  }, []);
 
   useEffect(() => {
     function commit(cell: Cell) {
@@ -216,9 +214,21 @@ function Practice({
 
       if (next < s.lesson.steps.length) {
         setAt(next);
-        if (s.mode === "listening" && finishedWord) {
-          // Let the chime land before the next word arrives.
-          window.setTimeout(() => dictate(s.lesson, next + 1, s.voice), 280);
+        // Read ahead: the next word is spoken while the current one is still
+        // being typed, so the voice stays a step in front of the hands instead
+        // of making them wait for it. That is how transcription actually
+        // works, and it removes the stutter of speak-then-type.
+        const remaining = word == null ? 0 : word.to - next;
+        if (word != null && remaining === 2) {
+          const upcoming = wordAt(s.lesson, word.to + 1);
+          if (upcoming != null) {
+            say(upcoming.text, s.voice);
+          }
+        }
+        if (finishedWord) {
+          // The space between words has nothing announcing it, so it gets its
+          // own cue rather than a spoken word every time.
+          window.setTimeout(spaceCue, 180);
         }
         return;
       }
@@ -243,10 +253,17 @@ function Practice({
       setLesson(fresh);
       setAt(0);
       window.setTimeout(() => {
-        say(summary, s.voice);
-        if (s.mode === "listening") {
-          window.setTimeout(() => dictate(fresh, 0, s.voice), 1900);
-        }
+        say(
+          `${summary} ${formatMessage(
+            {
+              id: "braille.newLine",
+              defaultMessage: "New line, {count} words.",
+            },
+            { count: fresh.words.length },
+          )}`,
+          s.voice,
+        );
+        window.setTimeout(() => dictate(fresh, 0, s.voice), 2600);
       }, 340);
     }
 
@@ -271,12 +288,15 @@ function Practice({
             say(describeCell(s.lesson.text, step), s.voice);
           }
           return true;
+        case "ArrowLeft":
+          say(s.lesson.text, s.voice);
+          return true;
         case "Slash":
           say(
             formatMessage({
               id: "braille.controls",
               defaultMessage:
-                "F D S and J K L are dots one to six. Space is a blank cell. Enter repeats the word. Up arrow spells it. Down arrow gives the dots. Backspace deletes the last cell.",
+                "F D S and J K L are dots one to six. Space is a blank cell, and two low notes tell you one is due. Enter repeats the word. Left arrow reads the whole line. Up arrow spells the word. Down arrow gives the dots. Backspace deletes the last cell. Turn off your screen reader's keyboard echo — it announces the physical keys, not the braille.",
             }),
             s.voice,
           );
