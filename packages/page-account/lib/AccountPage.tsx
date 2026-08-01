@@ -26,12 +26,24 @@ import { AccountService } from "./service.ts";
 
 type Pane = "account" | "learners" | "security" | "prefs" | "premium";
 
+/**
+ * Whether the premium pane and its upsell are shown.
+ *
+ * Off until the paid tier actually exists. What shipped here offered "no ads,
+ * no trackers, one-time, lifetime" — the app carries no advertising, the tier
+ * gated only extra learner profiles, and lifetime is no longer the plan. Rather
+ * than sell that, the entrance is closed until there is something behind it.
+ *
+ * See docs/premium-and-ai.md. Turn this on with F1 (tier structure).
+ */
+const PREMIUM_VISIBLE = false;
+
 const PANES: readonly Pane[] = [
   "account",
   "learners",
   "security",
   "prefs",
-  "premium",
+  ...(PREMIUM_VISIBLE ? (["premium"] as const) : []),
 ];
 
 // The window can be deep-linked to a pane via the URL hash, e.g.
@@ -130,47 +142,52 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
             }
           />
 
-          <div
-            className={clsx(styles.promo, pane === "premium" && styles.promoOn)}
-            role="button"
-            tabIndex={0}
-            onClick={() => setPane("premium")}
-            onKeyDown={(ev) => {
-              if (ev.key === "Enter" || ev.key === " ") {
-                setPane("premium");
-              }
-            }}
-          >
-            <span className={styles.promoTitle}>
-              {premium ? (
-                <FormattedMessage
-                  id="account.rail.premiumOn"
-                  defaultMessage="Premium"
-                />
-              ) : (
-                <FormattedMessage
-                  id="account.rail.premium"
-                  defaultMessage="Go Premium"
-                />
+          {PREMIUM_VISIBLE && (
+            <div
+              className={clsx(
+                styles.promo,
+                pane === "premium" && styles.promoOn,
               )}
-            </span>
-            {!premium && (
-              <>
-                <span className={styles.promoSub}>
+              role="button"
+              tabIndex={0}
+              onClick={() => setPane("premium")}
+              onKeyDown={(ev) => {
+                if (ev.key === "Enter" || ev.key === " ") {
+                  setPane("premium");
+                }
+              }}
+            >
+              <span className={styles.promoTitle}>
+                {premium ? (
                   <FormattedMessage
-                    id="account.rail.premiumSub"
-                    defaultMessage="No ads, no trackers. One-time, lifetime."
+                    id="account.rail.premiumOn"
+                    defaultMessage="Premium"
                   />
-                </span>
-                <span className={styles.promoBtn}>
+                ) : (
                   <FormattedMessage
-                    id="account.rail.upgrade"
-                    defaultMessage="Upgrade"
+                    id="account.rail.premium"
+                    defaultMessage="Go Premium"
                   />
-                </span>
-              </>
-            )}
-          </div>
+                )}
+              </span>
+              {!premium && (
+                <>
+                  <span className={styles.promoSub}>
+                    <FormattedMessage
+                      id="account.rail.premiumSub"
+                      defaultMessage="No ads, no trackers. One-time, lifetime."
+                    />
+                  </span>
+                  <span className={styles.promoBtn}>
+                    <FormattedMessage
+                      id="account.rail.upgrade"
+                      defaultMessage="Upgrade"
+                    />
+                  </span>
+                </>
+              )}
+            </div>
+          )}
 
           <button
             className={styles.railLogout}
@@ -233,7 +250,7 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
 
           {pane === "prefs" && <PreferencesPane />}
 
-          {pane === "premium" && (
+          {PREMIUM_VISIBLE && pane === "premium" && (
             <div className={styles.paneScroll}>
               <PremiumPane
                 premium={premium}
