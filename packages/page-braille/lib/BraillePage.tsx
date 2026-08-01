@@ -72,6 +72,8 @@ function Practice({
   const [at, setAt] = useState(0);
   const [held, setHeld] = useState<Cell>(0);
   const [wrong, setWrong] = useState<Cell | null>(null);
+  // Bumped on every wrong entry so the shake replays even for the same cell.
+  const [shake, setShake] = useState(0);
   const [hits, setHits] = useState(0);
   const [misses, setMisses] = useState(0);
   const [voice, setVoice] = useState(defaultVoice);
@@ -155,6 +157,7 @@ function Practice({
         }
         setMisses((n) => n + 1);
         setWrong(cell);
+        setShake((n) => n + 1);
         buzz();
         // Naming what they actually entered is the difference between a buzzer
         // and a teacher: they hear their own mistake rather than guess at it.
@@ -373,41 +376,37 @@ function Practice({
     <div className={styles.page}>
       <div className={styles.head}>
         <ModeSwitch mode={mode} onChange={onModeChange} />
-      </div>
-
-      {rolloverLimit > 0 && rolloverLimit < REQUIRED_ROLLOVER && (
-        <p className={styles.warn} role="status">
-          <FormattedMessage
-            id="braille.rolloverWarn"
-            defaultMessage="This keyboard seems to register only {best} keys at once, and this cell needs {need}. Cells with more dots than that may not come through — an external keyboard would fix it."
-            values={{ best: rolloverLimit, need: REQUIRED_ROLLOVER }}
-          />
-        </p>
-      )}
-
-      {mode === "reading" ? (
-        <Board lesson={lesson} at={at} />
-      ) : (
-        <p className={styles.dictated}>{word?.text ?? " "}</p>
-      )}
-
-      <p className={styles.prompt} role="status" aria-live="assertive">
-        {step != null && describeCell(lesson.text, step)}
-      </p>
-
-      {wrong != null && (
-        <p className={styles.wrong} role="status">
-          <FormattedMessage
-            id="braille.wrong"
-            defaultMessage="You entered dots {dots}."
-            values={{ dots: dotsOf(wrong).join(" ") || "none" }}
-          />
-        </p>
-      )}
-
-      <div className={styles.keyboardRow}>
-        <DotGrid held={held} expected={step?.cell ?? BLANK} />
-        <KeyRow held={held} expected={step?.cell ?? BLANK} />
+        <span className={styles.toggles}>
+          <button
+            type="button"
+            className={styles.soundBtn}
+            aria-pressed={voice.enabled}
+            onClick={() => setVoice({ ...voice, enabled: !voice.enabled })}
+          >
+            {voice.enabled ? (
+              <FormattedMessage
+                id="braille.sound.on"
+                defaultMessage="Speech on"
+              />
+            ) : (
+              <FormattedMessage
+                id="braille.sound.off"
+                defaultMessage="Speech off"
+              />
+            )}
+          </button>
+          <button
+            type="button"
+            className={styles.soundBtn}
+            aria-pressed={echoLetters}
+            onClick={() => setEchoLetters(!echoLetters)}
+          >
+            <FormattedMessage
+              id="braille.echo"
+              defaultMessage="Say each letter"
+            />
+          </button>
+        </span>
       </div>
 
       <div className={styles.stats}>
@@ -441,37 +440,31 @@ function Practice({
           }
           value={`${unlockedCount}`}
         />
-        <span className={styles.toggles}>
-          <button
-            type="button"
-            className={styles.soundBtn}
-            aria-pressed={voice.enabled}
-            onClick={() => setVoice({ ...voice, enabled: !voice.enabled })}
-          >
-            {voice.enabled ? (
-              <FormattedMessage
-                id="braille.sound.on"
-                defaultMessage="Speech on"
-              />
-            ) : (
-              <FormattedMessage
-                id="braille.sound.off"
-                defaultMessage="Speech off"
-              />
-            )}
-          </button>
-          <button
-            type="button"
-            className={styles.soundBtn}
-            aria-pressed={echoLetters}
-            onClick={() => setEchoLetters(!echoLetters)}
-          >
-            <FormattedMessage
-              id="braille.echo"
-              defaultMessage="Say each letter"
-            />
-          </button>
-        </span>
+      </div>
+
+      {rolloverLimit > 0 && rolloverLimit < REQUIRED_ROLLOVER && (
+        <p className={styles.warn} role="status">
+          <FormattedMessage
+            id="braille.rolloverWarn"
+            defaultMessage="This keyboard seems to register only {best} keys at once, and this cell needs {need}. Cells with more dots than that may not come through — an external keyboard would fix it."
+            values={{ best: rolloverLimit, need: REQUIRED_ROLLOVER }}
+          />
+        </p>
+      )}
+
+      {mode === "reading" ? (
+        <Board lesson={lesson} at={at} shake={shake} />
+      ) : (
+        <p className={styles.dictated}>{word?.text ?? " "}</p>
+      )}
+
+      <p className={styles.prompt} role="status" aria-live="assertive">
+        {step != null && describeCell(lesson.text, step)}
+      </p>
+
+      <div className={styles.keyboardRow}>
+        <DotGrid held={held} expected={step?.cell ?? BLANK} />
+        <KeyRow held={held} expected={step?.cell ?? BLANK} />
       </div>
 
       <p className={styles.sr} role="status" aria-live="polite">
@@ -540,9 +533,11 @@ function ModeSwitch({
 function Board({
   lesson,
   at,
+  shake,
 }: {
   readonly lesson: Lesson;
   readonly at: number;
+  readonly shake: number;
 }): ReactNode {
   const active = wordAt(lesson, at);
   // Groups of steps that must not be split: each word, and each space between.
@@ -583,7 +578,7 @@ function Board({
               const isPrefix = idx > 0 && lesson.steps[idx - 1].at === st.at;
               return (
                 <span
-                  key={idx}
+                  key={idx === at ? `${idx}-${shake}` : idx}
                   className={clsx(
                     styles.col,
                     idx === at && styles.current,
@@ -654,10 +649,20 @@ function KeyRow({
     );
   };
   return (
-    <div className={styles.keys} aria-hidden={true}>
-      <span className={styles.hand}>{left.map(cap)}</span>
-      <span className={styles.gap} />
-      <span className={styles.hand}>{right.map(cap)}</span>
+    <div className={styles.keyboard} aria-hidden={true}>
+      <div className={styles.keys}>
+        <span className={styles.hand}>{left.map(cap)}</span>
+        <span className={styles.gap} />
+        <span className={styles.hand}>{right.map(cap)}</span>
+      </div>
+      <div
+        className={clsx(
+          styles.spacebar,
+          expected === BLANK && styles.keyWanted,
+        )}
+      >
+        <FormattedMessage id="braille.spacebar" defaultMessage="space" />
+      </div>
     </div>
   );
 }

@@ -27,6 +27,19 @@ export function NavMenu({
   const { leaderboard } = usePageData();
   const { active } = useProfiles();
   const visionSupport = active?.visionSupport === true;
+  if (visionSupport) {
+    // Everything else on this list is a sighted surface — charts, layouts,
+    // leaderboards. Offering them to somebody who came to practise braille
+    // buries the one page that is for them.
+    return (
+      <div className={styles.root}>
+        <MenuItem>
+          <MenuItemLink page={Pages.braille} onNavigate={onNavigate} />
+        </MenuItem>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.root}>
       <MenuItem>

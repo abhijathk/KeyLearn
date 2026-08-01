@@ -1,6 +1,6 @@
 # English
 
-Translated: 1108 messages, 9466 words
+Translated: 1108 messages, 9463 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,12 +8,13 @@ Untranslated: 0 messages, 0 words
 
 Translated: 934 messages, 8341 words
 
-Untranslated: 163 messages, 1038 words
+Untranslated: 164 messages, 1039 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -29,17 +30,17 @@ Untranslated: 163 messages, 1038 words
 * *Reading*
 * *Send me*
 * *Accuracy*
-* *Alphabet*
 * ...
 
 # Arabic
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -56,7 +57,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -64,10 +64,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -84,7 +85,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -92,10 +92,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -113,20 +114,20 @@ Untranslated: 158 messages, 1033 words
 * *Language*
 * *Language*
 * *Loading…*
-* *Loading…*
 * ...
 
 # Catalan
 
 Translated: 931 messages, 8338 words
 
-Untranslated: 166 messages, 1041 words
+Untranslated: 167 messages, 1042 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Text*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Errors*
@@ -141,20 +142,20 @@ Untranslated: 166 messages, 1041 words
 * *Monthly*
 * *Overall*
 * *Premium*
-* *Reading*
 * ...
 
 # Czech
 
 Translated: 934 messages, 8340 words
 
-Untranslated: 163 messages, 1039 words
+Untranslated: 164 messages, 1040 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Text*
 * *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Layout*
@@ -169,20 +170,20 @@ Untranslated: 163 messages, 1039 words
 * *Send me*
 * *Accuracy*
 * *Alphabet*
-* *Continue*
 * ...
 
 # Danish
 
 Translated: 929 messages, 8335 words
 
-Untranslated: 168 messages, 1044 words
+Untranslated: 169 messages, 1045 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Auto*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -197,14 +198,13 @@ Untranslated: 168 messages, 1044 words
 * *Premium*
 * *Reading*
 * *Send me*
-* *Version*
 * ...
 
 # German
 
 Translated: 926 messages, 8333 words
 
-Untranslated: 171 messages, 1047 words
+Untranslated: 172 messages, 1048 words
 
 * *s*
 * *OR*
@@ -212,6 +212,7 @@ Untranslated: 171 messages, 1047 words
 * *Text*
 * *Coach*
 * *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Arcade*
@@ -225,17 +226,17 @@ Untranslated: 171 messages, 1047 words
 * *Monthly*
 * *Overall*
 * *Premium*
-* *Reading*
 * ...
 
 # Greek
 
 Translated: 939 messages, 8348 words
 
-Untranslated: 159 messages, 1034 words
+Untranslated: 160 messages, 1035 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -253,19 +254,19 @@ Untranslated: 159 messages, 1034 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * ...
 
 # Esperanto
 
 Translated: 937 messages, 8344 words
 
-Untranslated: 160 messages, 1035 words
+Untranslated: 161 messages, 1036 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -281,19 +282,19 @@ Untranslated: 160 messages, 1035 words
 * *Alphabet*
 * *Continue*
 * *Language*
-* *Language*
 * ...
 
 # Spanish
 
 Translated: 935 messages, 8342 words
 
-Untranslated: 162 messages, 1037 words
+Untranslated: 163 messages, 1038 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -309,19 +310,19 @@ Untranslated: 162 messages, 1037 words
 * *Send me*
 * *Accuracy*
 * *Alphabet*
-* *Continue*
 * ...
 
 # Estonian
 
 Translated: 934 messages, 8340 words
 
-Untranslated: 163 messages, 1039 words
+Untranslated: 164 messages, 1040 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Layout*
@@ -337,17 +338,17 @@ Untranslated: 163 messages, 1039 words
 * *Send me*
 * *Accuracy*
 * *Alphabet*
-* *Continue*
 * ...
 
 # Persian
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -365,19 +366,19 @@ Untranslated: 158 messages, 1033 words
 * *Language*
 * *Language*
 * *Loading…*
-* *Loading…*
 * ...
 
 # Finnish
 
 Translated: 936 messages, 8345 words
 
-Untranslated: 162 messages, 1037 words
+Untranslated: 163 messages, 1038 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -393,19 +394,19 @@ Untranslated: 162 messages, 1037 words
 * *Send me*
 * *Accuracy*
 * *Alphabet*
-* *Continue*
 * ...
 
 # Faroese
 
 Translated: 937 messages, 8346 words
 
-Untranslated: 161 messages, 1036 words
+Untranslated: 162 messages, 1037 words
 
 * *OR*
 * *Sun*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -421,14 +422,13 @@ Untranslated: 161 messages, 1036 words
 * *Accuracy*
 * *Alphabet*
 * *Continue*
-* *Language*
 * ...
 
 # French
 
 Translated: 928 messages, 8334 words
 
-Untranslated: 169 messages, 1045 words
+Untranslated: 170 messages, 1046 words
 
 * *s*
 * *OR*
@@ -436,6 +436,7 @@ Untranslated: 169 messages, 1045 words
 * *Auto*
 * *Coach*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -449,19 +450,19 @@ Untranslated: 169 messages, 1045 words
 * *Passage*
 * *Premium*
 * *Reading*
-* *Send me*
 * ...
 
 # Irish
 
 Translated: 936 messages, 8345 words
 
-Untranslated: 162 messages, 1037 words
+Untranslated: 163 messages, 1038 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -477,17 +478,17 @@ Untranslated: 162 messages, 1037 words
 * *Send me*
 * *Accuracy*
 * *Alphabet*
-* *Continue*
 * ...
 
 # Gujarati
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -504,7 +505,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -512,10 +512,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -532,7 +533,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -540,10 +540,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -561,19 +562,19 @@ Untranslated: 158 messages, 1033 words
 * *Language*
 * *Language*
 * *Loading…*
-* *Loading…*
 * ...
 
 # Croatian
 
 Translated: 934 messages, 8340 words
 
-Untranslated: 163 messages, 1039 words
+Untranslated: 164 messages, 1040 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Layout*
@@ -589,18 +590,18 @@ Untranslated: 163 messages, 1039 words
 * *Send me*
 * *Accuracy*
 * *Alphabet*
-* *Continue*
 * ...
 
 # Hungarian
 
 Translated: 939 messages, 8348 words
 
-Untranslated: 159 messages, 1034 words
+Untranslated: 160 messages, 1035 words
 
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -617,18 +618,18 @@ Untranslated: 159 messages, 1034 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * ...
 
 # Indonesian
 
 Translated: 938 messages, 8347 words
 
-Untranslated: 160 messages, 1035 words
+Untranslated: 161 messages, 1036 words
 
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -644,7 +645,6 @@ Untranslated: 160 messages, 1035 words
 * *Accuracy*
 * *Alphabet*
 * *Continue*
-* *Language*
 * *Language*
 * ...
 
@@ -652,11 +652,12 @@ Untranslated: 160 messages, 1035 words
 
 Translated: 938 messages, 8347 words
 
-Untranslated: 160 messages, 1035 words
+Untranslated: 161 messages, 1036 words
 
 * *OR*
 * *Sun*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -673,19 +674,19 @@ Untranslated: 160 messages, 1035 words
 * *Alphabet*
 * *Continue*
 * *Language*
-* *Language*
 * ...
 
 # Italian
 
 Translated: 933 messages, 8339 words
 
-Untranslated: 164 messages, 1040 words
+Untranslated: 165 messages, 1041 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -701,17 +702,17 @@ Untranslated: 164 messages, 1040 words
 * *Send me*
 * *Accuracy*
 * *Alphabet*
-* *Continue*
 * ...
 
 # Japanese
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -728,7 +729,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -736,10 +736,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -756,7 +757,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -764,10 +764,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -785,19 +786,19 @@ Untranslated: 158 messages, 1033 words
 * *Language*
 * *Language*
 * *Loading…*
-* *Loading…*
 * ...
 
 # Lithuanian
 
 Translated: 936 messages, 8343 words
 
-Untranslated: 161 messages, 1036 words
+Untranslated: 162 messages, 1037 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -813,17 +814,17 @@ Untranslated: 161 messages, 1036 words
 * *Accuracy*
 * *Alphabet*
 * *Continue*
-* *Language*
 * ...
 
 # Malayalam
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -840,7 +841,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -848,10 +848,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -869,14 +870,13 @@ Untranslated: 158 messages, 1033 words
 * *Language*
 * *Language*
 * *Loading…*
-* *Loading…*
 * ...
 
 # Norwegian Bokmål
 
 Translated: 930 messages, 8337 words
 
-Untranslated: 167 messages, 1043 words
+Untranslated: 168 messages, 1044 words
 
 * *s*
 * *OR*
@@ -886,6 +886,7 @@ Untranslated: 167 messages, 1043 words
 * *Best*
 * *Best*
 * *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Layout*
@@ -897,17 +898,17 @@ Untranslated: 167 messages, 1043 words
 * *Monthly*
 * *Overall*
 * *Premium*
-* *Reading*
 * ...
 
 # Nepali
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -925,14 +926,13 @@ Untranslated: 158 messages, 1033 words
 * *Language*
 * *Language*
 * *Loading…*
-* *Loading…*
 * ...
 
 # Dutch
 
 Translated: 924 messages, 8330 words
 
-Untranslated: 173 messages, 1049 words
+Untranslated: 174 messages, 1050 words
 
 * *s*
 * *OR*
@@ -940,6 +940,7 @@ Untranslated: 173 messages, 1049 words
 * *Coach*
 * *Score*
 * *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Arcade*
@@ -953,19 +954,19 @@ Untranslated: 173 messages, 1049 words
 * *Heatmap*
 * *Learner*
 * *Letters*
-* *Monthly*
 * ...
 
 # Polish
 
 Translated: 933 messages, 8339 words
 
-Untranslated: 164 messages, 1040 words
+Untranslated: 165 messages, 1041 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Arcade*
@@ -981,19 +982,19 @@ Untranslated: 164 messages, 1040 words
 * *Reading*
 * *Send me*
 * *Accuracy*
-* *Alphabet*
 * ...
 
 # Brazilian Portuguese
 
 Translated: 934 messages, 8341 words
 
-Untranslated: 163 messages, 1038 words
+Untranslated: 164 messages, 1039 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -1009,19 +1010,19 @@ Untranslated: 163 messages, 1038 words
 * *Reading*
 * *Send me*
 * *Accuracy*
-* *Alphabet*
 * ...
 
 # European Portuguese
 
 Translated: 935 messages, 8342 words
 
-Untranslated: 162 messages, 1037 words
+Untranslated: 163 messages, 1038 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -1037,12 +1038,67 @@ Untranslated: 162 messages, 1037 words
 * *Send me*
 * *Accuracy*
 * *Alphabet*
-* *Continue*
 * ...
 
 # Romanian
 
 Translated: 932 messages, 8338 words
+
+Untranslated: 166 messages, 1042 words
+
+* *s*
+* *OR*
+* *Zen*
+* *Text*
+* *Sound*
+* *space*
+* *Speed*
+* *Arcade*
+* *Layout*
+* *Weekly*
+* *As bars*
+* *As dots*
+* *At most*
+* *Learner*
+* *Monthly*
+* *Overall*
+* *Premium*
+* *Reading*
+* *Send me*
+* *Accuracy*
+* ...
+
+# Russian
+
+Translated: 940 messages, 8349 words
+
+Untranslated: 159 messages, 1034 words
+
+* *OR*
+* *Sound*
+* *space*
+* *Speed*
+* *Layout*
+* *Weekly*
+* *As bars*
+* *As dots*
+* *At most*
+* *Learner*
+* *Monthly*
+* *Overall*
+* *Reading*
+* *Send me*
+* *Accuracy*
+* *Alphabet*
+* *Continue*
+* *Language*
+* *Language*
+* *Loading…*
+* ...
+
+# Slovak
+
+Translated: 933 messages, 8339 words
 
 Untranslated: 165 messages, 1041 words
 
@@ -1051,62 +1107,7 @@ Untranslated: 165 messages, 1041 words
 * *Zen*
 * *Text*
 * *Sound*
-* *Speed*
-* *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* ...
-
-# Russian
-
-Translated: 940 messages, 8349 words
-
-Untranslated: 158 messages, 1033 words
-
-* *OR*
-* *Sound*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
-* *Loading…*
-* ...
-
-# Slovak
-
-Translated: 933 messages, 8339 words
-
-Untranslated: 164 messages, 1040 words
-
-* *s*
-* *OR*
-* *Zen*
-* *Text*
-* *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Layout*
@@ -1121,19 +1122,19 @@ Untranslated: 164 messages, 1040 words
 * *Reading*
 * *Send me*
 * *Accuracy*
-* *Alphabet*
 * ...
 
 # Slovenian
 
 Translated: 934 messages, 8340 words
 
-Untranslated: 163 messages, 1039 words
+Untranslated: 164 messages, 1040 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Layout*
@@ -1149,19 +1150,19 @@ Untranslated: 163 messages, 1039 words
 * *Send me*
 * *Accuracy*
 * *Alphabet*
-* *Continue*
 * ...
 
 # Albanian
 
 Translated: 936 messages, 8343 words
 
-Untranslated: 161 messages, 1036 words
+Untranslated: 162 messages, 1037 words
 
 * *s*
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -1177,14 +1178,13 @@ Untranslated: 161 messages, 1036 words
 * *Accuracy*
 * *Alphabet*
 * *Continue*
-* *Language*
 * ...
 
 # Swedish
 
 Translated: 931 messages, 8337 words
 
-Untranslated: 166 messages, 1042 words
+Untranslated: 167 messages, 1043 words
 
 * *s*
 * *OR*
@@ -1192,6 +1192,7 @@ Untranslated: 166 messages, 1042 words
 * *Text*
 * *Coach*
 * *Sound*
+* *space*
 * *Speed*
 * *Trend*
 * *Layout*
@@ -1205,17 +1206,17 @@ Untranslated: 166 messages, 1042 words
 * *Premium*
 * *Reading*
 * *Send me*
-* *Version*
 * ...
 
 # Tamil
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -1232,7 +1233,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -1240,10 +1240,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -1260,7 +1261,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -1268,10 +1268,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -1289,18 +1290,18 @@ Untranslated: 158 messages, 1033 words
 * *Language*
 * *Language*
 * *Loading…*
-* *Loading…*
 * ...
 
 # Turkish
 
 Translated: 937 messages, 8345 words
 
-Untranslated: 161 messages, 1037 words
+Untranslated: 162 messages, 1038 words
 
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -1317,17 +1318,17 @@ Untranslated: 161 messages, 1037 words
 * *Alphabet*
 * *Continue*
 * *Language*
-* *Language*
 * ...
 
 # Ukrainian
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -1344,7 +1345,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -1352,10 +1352,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -1373,18 +1374,18 @@ Untranslated: 158 messages, 1033 words
 * *Language*
 * *Language*
 * *Loading…*
-* *Loading…*
 * ...
 
 # Vietnamese
 
 Translated: 937 messages, 8346 words
 
-Untranslated: 161 messages, 1036 words
+Untranslated: 162 messages, 1037 words
 
 * *OR*
 * *Zen*
 * *Sound*
+* *space*
 * *Speed*
 * *Arcade*
 * *Layout*
@@ -1401,17 +1402,17 @@ Untranslated: 161 messages, 1036 words
 * *Accuracy*
 * *Alphabet*
 * *Continue*
-* *Language*
 * ...
 
 # Simplified Chinese
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -1428,7 +1429,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -1436,10 +1436,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -1456,7 +1457,6 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
 
@@ -1464,10 +1464,11 @@ Untranslated: 158 messages, 1033 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 158 messages, 1033 words
+Untranslated: 159 messages, 1034 words
 
 * *OR*
 * *Sound*
+* *space*
 * *Speed*
 * *Layout*
 * *Weekly*
@@ -1484,6 +1485,5 @@ Untranslated: 158 messages, 1033 words
 * *Continue*
 * *Language*
 * *Language*
-* *Loading…*
 * *Loading…*
 * ...
