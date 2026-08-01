@@ -374,7 +374,7 @@ function Practice({
 
   return (
     <div className={styles.page}>
-      <div className={styles.head}>
+      <div className={styles.bar}>
         <ModeSwitch mode={mode} onChange={onModeChange} />
         <span className={styles.toggles}>
           <button
@@ -407,9 +407,7 @@ function Practice({
             />
           </button>
         </span>
-      </div>
-
-      <div className={styles.stats}>
+        <span className={styles.barGap} />
         <Metric
           label={
             <FormattedMessage id="braille.stat.speed" defaultMessage="Speed" />
@@ -453,7 +451,7 @@ function Practice({
       )}
 
       {mode === "reading" ? (
-        <Board lesson={lesson} at={at} shake={shake} />
+        <Board lesson={lesson} at={at} shake={shake} wrong={wrong != null} />
       ) : (
         <p className={styles.dictated}>{word?.text ?? " "}</p>
       )}
@@ -534,10 +532,12 @@ function Board({
   lesson,
   at,
   shake,
+  wrong,
 }: {
   readonly lesson: Lesson;
   readonly at: number;
   readonly shake: number;
+  readonly wrong: boolean;
 }): ReactNode {
   const active = wordAt(lesson, at);
   // Groups of steps that must not be split: each word, and each space between.
@@ -578,10 +578,11 @@ function Board({
               const isPrefix = idx > 0 && lesson.steps[idx - 1].at === st.at;
               return (
                 <span
-                  key={idx === at ? `${idx}-${shake}` : idx}
+                  key={idx === at && wrong ? `${idx}-${shake}` : idx}
                   className={clsx(
                     styles.col,
                     idx === at && styles.current,
+                    idx === at && wrong && styles.wrongCell,
                     idx < at && styles.done,
                   )}
                 >

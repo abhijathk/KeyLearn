@@ -76,6 +76,11 @@
   border-radius: 0.25rem;
   color: var(--primary);
   background: var(--accent);
+}
+
+// Only a wrong entry shakes. Advancing to the next cell must not, which is why
+// this is its own class rather than part of .current.
+.wrongCell {
   animation: cell-shake 0.28s ease;
 }
 
@@ -207,6 +212,13 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+.soundBtn[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--primary);
+  background: var(--accent);
+  font-weight: 700;
 }
 
 .soundBtn,
@@ -442,4 +454,22 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+// Mode, sound and figures in one band, so the controls read as a single strip
+// above the text instead of three stacked rows competing for the eye.
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.6rem;
+  align-items: center;
+  inline-size: 100%;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+}
+
+.barGap {
+  flex: 1;
 }

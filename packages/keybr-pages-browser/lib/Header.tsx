@@ -3,7 +3,7 @@ import { IconButton, StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { NavLink } from "react-router";
+import { NavLink, useLocation } from "react-router";
 import { AccountMenu } from "./AccountMenu.tsx";
 import * as styles from "./Header.module.less";
 import { ThemeSwitcher } from "./themes/ThemeSwitcher.tsx";
@@ -70,6 +70,9 @@ export function Header({
   readonly kids?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
+  // The back button offers a return to practice, which is neither where a
+  // braille learner came from nor a page their profile lists.
+  const braille = useLocation().pathname.endsWith("/braille");
   const [streak, setStreak] = useState(0);
   const [focusMode, setFocusMode] = useState(false);
   const [typing, setTyping] = useState(false);
@@ -137,7 +140,7 @@ export function Header({
   return (
     <header className={clsx(styles.header, hidden && styles.hidden)}>
       <div className={styles.left}>
-        {showBack && !kids && (
+        {showBack && !kids && !braille && (
           <NavLink
             to="/"
             className={styles.back}

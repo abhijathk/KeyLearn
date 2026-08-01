@@ -24,9 +24,9 @@ export function ProfilePicker(): ReactNode {
     return null;
   }
 
-  const pick = (id: string, kind: "adult" | "kid") => {
+  const pick = (id: string, kind: "adult" | "kid", visionSupport = false) => {
     select(id);
-    navigate(kind === "kid" ? "/kids" : "/");
+    navigate(visionSupport ? "/braille" : kind === "kid" ? "/kids" : "/");
   };
 
   return (
@@ -56,7 +56,7 @@ export function ProfilePicker(): ReactNode {
               <button
                 key={p.id}
                 className={styles.tile}
-                onClick={() => pick(p.id, p.kind)}
+                onClick={() => pick(p.id, p.kind, p.visionSupport)}
               >
                 <ProfileAvatar avatar={p.avatar} name={p.firstName} size={72} />
                 <span className={styles.name}>{p.firstName}</span>
