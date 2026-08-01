@@ -3,6 +3,7 @@ import {
   mdiBookOpenPageVariantOutline,
   mdiCarSide,
   mdiChartAreaspline,
+  mdiDotsGrid,
   mdiHelpCircleOutline,
   mdiKeyboard,
   mdiKeyboardOutline,
@@ -250,6 +251,37 @@ export namespace Pages {
         content: defineMessage({
           id: "page.highScores.description",
           defaultMessage: "See how the fastest typists rank.",
+        }),
+      },
+    ],
+  } satisfies PageInfo;
+
+  export const braille = {
+    path: "/braille",
+    title: defineMessage({
+      id: "t_Braille",
+      defaultMessage: "Braille typing",
+    }),
+    link: {
+      label: defineMessage({
+        id: "t_Braille",
+        defaultMessage: "Braille typing",
+      }),
+      title: defineMessage({
+        id: "page.braille.description",
+        defaultMessage:
+          "Practise six-key braille entry on an ordinary keyboard.",
+      }),
+      icon: mdiDotsGrid,
+    },
+    meta: [
+      ...meta,
+      {
+        name: "description",
+        content: defineMessage({
+          id: "page.braille.description",
+          defaultMessage:
+            "Practise six-key braille entry on an ordinary keyboard.",
         }),
       },
     ],

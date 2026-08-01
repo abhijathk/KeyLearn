@@ -51,6 +51,7 @@ const PrivacyPolicyPage = lazy(() => import("./pages/privacy-policy.tsx"));
 const AboutPage = lazy(() => import("./pages/about.tsx"));
 const GuidePage = lazy(() => import("./pages/guide.tsx"));
 const HighScoresPage = lazy(() => import("./pages/high-scores.tsx"));
+const BraillePage = lazy(() => import("./pages/braille.tsx"));
 
 export function App() {
   return (
@@ -226,6 +227,17 @@ function PageRoutes() {
               <Title page={Pages.highScores} />
               <Suspense fallback={<LoadingProgress />}>
                 <HighScoresPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.braille.path}
+          element={
+            <Template path={Pages.braille.path}>
+              <Title page={Pages.braille} />
+              <Suspense fallback={<LoadingProgress />}>
+                <BraillePage />
               </Suspense>
             </Template>
           }

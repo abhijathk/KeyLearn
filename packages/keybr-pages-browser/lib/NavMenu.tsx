@@ -12,6 +12,7 @@ const pageIcons: Record<string, StrokeIconName> = {
   [Pages.typingTest.path]: "gauge",
   [Pages.layouts.path]: "grid",
   [Pages.texts.path]: "book",
+  [Pages.braille.path]: "grid",
   [Pages.highScores.path]: "trophy",
   [Pages.help.path]: "help",
 };
@@ -43,6 +44,10 @@ export function NavMenu({
 
       <MenuItem>
         <MenuItemLink page={Pages.texts} onNavigate={onNavigate} />
+      </MenuItem>
+
+      <MenuItem>
+        <MenuItemLink page={Pages.braille} onNavigate={onNavigate} />
       </MenuItem>
 
       {/* Only once there is a community to rank. Until then the link would lead

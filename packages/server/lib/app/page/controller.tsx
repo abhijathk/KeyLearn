@@ -195,6 +195,19 @@ export class Controller {
     return this.renderPage(ctx, Pages.highScores, intl);
   }
 
+  @http.GET(`${Pages.braille.path}`)
+  async ["braille"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.braille);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.braille.path}`)
+  async ["braille-18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.braille, intl);
+  }
+
   @http.GET(`${Pages.layouts.path}`)
   async ["layouts"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.layouts);
