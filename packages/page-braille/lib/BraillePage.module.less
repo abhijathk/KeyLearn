@@ -41,6 +41,9 @@
 // that writes it — including where one letter needs two cells.
 .cols {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.6rem;
+  justify-content: center;
   font-family: var(--value-font-family), monospace;
   white-space: pre;
 }
@@ -49,20 +52,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  inline-size: 2.2rem;
+  inline-size: 3rem;
   border-radius: 0.3rem;
 }
 
 .print {
-  block-size: 1.9rem;
-  font-size: 1.4rem;
-  line-height: 1.9rem;
+  block-size: 2.6rem;
+  font-size: 2rem;
+  line-height: 2.6rem;
 }
 
 // Braille needs to be large enough to tell the dots apart at a glance.
 .cell {
-  font-size: 2.2rem;
-  line-height: 1.15;
+  font-size: 3.1rem;
+  line-height: 1.1;
 }
 
 .done {
@@ -253,10 +256,15 @@
   block-size: 5.4rem;
   border-radius: 1rem;
   color: var(--text-color);
-  background: color-mix(in srgb, var(--text-color) 9%, var(--primary-l1));
+  background: color-mix(
+    in oklab,
+    var(--zone, var(--text-color)) 30%,
+    var(--primary-l1)
+  );
   box-shadow:
-    0 4px 0 color-mix(in srgb, var(--text-color) 18%, transparent),
-    inset 0 0 0 2px color-mix(in srgb, var(--text-color) 12%, transparent);
+    0 4px 0 color-mix(in oklab, var(--zone, var(--text-color)) 45%, transparent),
+    inset 0 0 0 2px
+      color-mix(in oklab, var(--zone, var(--text-color)) 55%, transparent);
   transition: transform 0.07s ease;
 }
 
@@ -297,4 +305,13 @@
 
 .keyHeld .keyDot {
   color: var(--primary);
+}
+
+// The cell and the fingers that make it, side by side and read left to right.
+.keyboardRow {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+  margin-block: 0.4rem;
 }

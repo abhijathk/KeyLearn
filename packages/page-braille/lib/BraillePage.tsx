@@ -404,9 +404,10 @@ function Practice({
         </p>
       )}
 
-      <KeyRow held={held} expected={step?.cell ?? BLANK} />
-
-      <DotGrid held={held} expected={step?.cell ?? BLANK} />
+      <div className={styles.keyboardRow}>
+        <DotGrid held={held} expected={step?.cell ?? BLANK} />
+        <KeyRow held={held} expected={step?.cell ?? BLANK} />
+      </div>
 
       <div className={styles.stats}>
         <span>
@@ -545,21 +546,32 @@ function KeyRow({
   readonly held: Cell;
   readonly expected: Cell;
 }): ReactNode {
+  // Keyboard order, left to right — S D F, then J K L. The dots run 3 2 1 on
+  // the left hand because dot 1 is the index finger, which sits on F.
   const left = [
-    { code: "F", dot: 1 },
-    { code: "D", dot: 2 },
-    { code: "S", dot: 3 },
+    { code: "S", dot: 3, zone: "ring" },
+    { code: "D", dot: 2, zone: "middle" },
+    { code: "F", dot: 1, zone: "left-index" },
   ];
   const right = [
-    { code: "J", dot: 4 },
-    { code: "K", dot: 5 },
-    { code: "L", dot: 6 },
+    { code: "J", dot: 4, zone: "right-index" },
+    { code: "K", dot: 5, zone: "middle" },
+    { code: "L", dot: 6, zone: "ring" },
   ];
-  const cap = ({ code, dot }: { code: string; dot: number }) => {
+  const cap = ({
+    code,
+    dot,
+    zone,
+  }: {
+    code: string;
+    dot: number;
+    zone: string;
+  }) => {
     const bit = 1 << (dot - 1);
     return (
       <span
         key={code}
+        style={{ "--zone": `var(--${zone}-zone-color)` } as React.CSSProperties}
         className={clsx(
           styles.key,
           (expected & bit) !== 0 && styles.keyWanted,
