@@ -1,5 +1,11 @@
-import { cellsForText, type CellStep, dotsOf, LETTERS } from "@keybr/braille";
-import { nextLine } from "./text.ts";
+import {
+  cellsForText,
+  type CellStep,
+  dotsOf,
+  generateLine,
+  LETTERS,
+  type Progress,
+} from "@keybr/braille";
 
 /**
  * A line of practice, described in the units each mode needs.
@@ -24,7 +30,8 @@ export type Lesson = {
   readonly words: readonly Word[];
 };
 
-export function makeLesson(text: string = nextLine()): Lesson {
+export function makeLesson(progress: Progress, count = 8): Lesson {
+  const text = generateLine(progress, { words: count });
   const steps = cellsForText(text);
   const words: Word[] = [];
   let from = 0;

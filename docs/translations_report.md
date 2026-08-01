@@ -1,6 +1,6 @@
 # English
 
-Translated: 1115 messages, 9558 words
+Translated: 1108 messages, 9485 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,7 +8,7 @@ Untranslated: 0 messages, 0 words
 
 Translated: 934 messages, 8341 words
 
-Untranslated: 168 messages, 1134 words
+Untranslated: 162 messages, 1056 words
 
 * *s*
 * *OR*
@@ -36,7 +36,7 @@ Untranslated: 168 messages, 1134 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -64,7 +64,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -92,7 +92,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -120,7 +120,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 931 messages, 8338 words
 
-Untranslated: 171 messages, 1137 words
+Untranslated: 165 messages, 1059 words
 
 * *s*
 * *OR*
@@ -148,7 +148,7 @@ Untranslated: 171 messages, 1137 words
 
 Translated: 934 messages, 8340 words
 
-Untranslated: 168 messages, 1135 words
+Untranslated: 162 messages, 1057 words
 
 * *s*
 * *OR*
@@ -176,7 +176,7 @@ Untranslated: 168 messages, 1135 words
 
 Translated: 929 messages, 8335 words
 
-Untranslated: 173 messages, 1140 words
+Untranslated: 167 messages, 1062 words
 
 * *s*
 * *OR*
@@ -204,7 +204,7 @@ Untranslated: 173 messages, 1140 words
 
 Translated: 926 messages, 8333 words
 
-Untranslated: 176 messages, 1143 words
+Untranslated: 170 messages, 1065 words
 
 * *s*
 * *OR*
@@ -232,7 +232,7 @@ Untranslated: 176 messages, 1143 words
 
 Translated: 939 messages, 8348 words
 
-Untranslated: 164 messages, 1130 words
+Untranslated: 158 messages, 1052 words
 
 * *OR*
 * *Sound*
@@ -260,7 +260,7 @@ Untranslated: 164 messages, 1130 words
 
 Translated: 937 messages, 8344 words
 
-Untranslated: 165 messages, 1131 words
+Untranslated: 159 messages, 1053 words
 
 * *s*
 * *OR*
@@ -288,7 +288,7 @@ Untranslated: 165 messages, 1131 words
 
 Translated: 935 messages, 8342 words
 
-Untranslated: 167 messages, 1133 words
+Untranslated: 161 messages, 1055 words
 
 * *s*
 * *OR*
@@ -316,7 +316,7 @@ Untranslated: 167 messages, 1133 words
 
 Translated: 934 messages, 8340 words
 
-Untranslated: 168 messages, 1135 words
+Untranslated: 162 messages, 1057 words
 
 * *s*
 * *OR*
@@ -344,7 +344,7 @@ Untranslated: 168 messages, 1135 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -372,7 +372,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 936 messages, 8345 words
 
-Untranslated: 167 messages, 1133 words
+Untranslated: 161 messages, 1055 words
 
 * *s*
 * *OR*
@@ -400,7 +400,7 @@ Untranslated: 167 messages, 1133 words
 
 Translated: 937 messages, 8346 words
 
-Untranslated: 166 messages, 1132 words
+Untranslated: 160 messages, 1054 words
 
 * *OR*
 * *Sun*
@@ -428,7 +428,7 @@ Untranslated: 166 messages, 1132 words
 
 Translated: 928 messages, 8334 words
 
-Untranslated: 174 messages, 1141 words
+Untranslated: 168 messages, 1063 words
 
 * *s*
 * *OR*
@@ -456,7 +456,7 @@ Untranslated: 174 messages, 1141 words
 
 Translated: 936 messages, 8345 words
 
-Untranslated: 167 messages, 1133 words
+Untranslated: 161 messages, 1055 words
 
 * *s*
 * *OR*
@@ -484,7 +484,7 @@ Untranslated: 167 messages, 1133 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -512,7 +512,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -540,7 +540,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -568,7 +568,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 934 messages, 8340 words
 
-Untranslated: 168 messages, 1135 words
+Untranslated: 162 messages, 1057 words
 
 * *s*
 * *OR*
@@ -596,7 +596,7 @@ Untranslated: 168 messages, 1135 words
 
 Translated: 939 messages, 8348 words
 
-Untranslated: 164 messages, 1130 words
+Untranslated: 158 messages, 1052 words
 
 * *OR*
 * *Zen*
@@ -624,7 +624,7 @@ Untranslated: 164 messages, 1130 words
 
 Translated: 938 messages, 8347 words
 
-Untranslated: 165 messages, 1131 words
+Untranslated: 159 messages, 1053 words
 
 * *OR*
 * *Zen*
@@ -652,7 +652,7 @@ Untranslated: 165 messages, 1131 words
 
 Translated: 938 messages, 8347 words
 
-Untranslated: 165 messages, 1131 words
+Untranslated: 159 messages, 1053 words
 
 * *OR*
 * *Sun*
@@ -680,7 +680,7 @@ Untranslated: 165 messages, 1131 words
 
 Translated: 933 messages, 8339 words
 
-Untranslated: 169 messages, 1136 words
+Untranslated: 163 messages, 1058 words
 
 * *s*
 * *OR*
@@ -708,7 +708,7 @@ Untranslated: 169 messages, 1136 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -736,7 +736,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -764,7 +764,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -792,7 +792,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 936 messages, 8343 words
 
-Untranslated: 166 messages, 1132 words
+Untranslated: 160 messages, 1054 words
 
 * *s*
 * *OR*
@@ -820,7 +820,7 @@ Untranslated: 166 messages, 1132 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -848,7 +848,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -876,7 +876,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 930 messages, 8337 words
 
-Untranslated: 172 messages, 1139 words
+Untranslated: 166 messages, 1061 words
 
 * *s*
 * *OR*
@@ -904,7 +904,7 @@ Untranslated: 172 messages, 1139 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -932,7 +932,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 924 messages, 8330 words
 
-Untranslated: 178 messages, 1145 words
+Untranslated: 172 messages, 1067 words
 
 * *s*
 * *OR*
@@ -960,7 +960,7 @@ Untranslated: 178 messages, 1145 words
 
 Translated: 933 messages, 8339 words
 
-Untranslated: 169 messages, 1136 words
+Untranslated: 163 messages, 1058 words
 
 * *s*
 * *OR*
@@ -988,7 +988,7 @@ Untranslated: 169 messages, 1136 words
 
 Translated: 934 messages, 8341 words
 
-Untranslated: 168 messages, 1134 words
+Untranslated: 162 messages, 1056 words
 
 * *s*
 * *OR*
@@ -1016,7 +1016,7 @@ Untranslated: 168 messages, 1134 words
 
 Translated: 935 messages, 8342 words
 
-Untranslated: 167 messages, 1133 words
+Untranslated: 161 messages, 1055 words
 
 * *s*
 * *OR*
@@ -1044,7 +1044,7 @@ Untranslated: 167 messages, 1133 words
 
 Translated: 932 messages, 8338 words
 
-Untranslated: 170 messages, 1137 words
+Untranslated: 164 messages, 1059 words
 
 * *s*
 * *OR*
@@ -1072,7 +1072,7 @@ Untranslated: 170 messages, 1137 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -1100,7 +1100,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 933 messages, 8339 words
 
-Untranslated: 169 messages, 1136 words
+Untranslated: 163 messages, 1058 words
 
 * *s*
 * *OR*
@@ -1128,7 +1128,7 @@ Untranslated: 169 messages, 1136 words
 
 Translated: 934 messages, 8340 words
 
-Untranslated: 168 messages, 1135 words
+Untranslated: 162 messages, 1057 words
 
 * *s*
 * *OR*
@@ -1156,7 +1156,7 @@ Untranslated: 168 messages, 1135 words
 
 Translated: 936 messages, 8343 words
 
-Untranslated: 166 messages, 1132 words
+Untranslated: 160 messages, 1054 words
 
 * *s*
 * *OR*
@@ -1184,7 +1184,7 @@ Untranslated: 166 messages, 1132 words
 
 Translated: 931 messages, 8337 words
 
-Untranslated: 171 messages, 1138 words
+Untranslated: 165 messages, 1060 words
 
 * *s*
 * *OR*
@@ -1212,7 +1212,7 @@ Untranslated: 171 messages, 1138 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -1240,7 +1240,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -1268,7 +1268,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -1296,7 +1296,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 937 messages, 8345 words
 
-Untranslated: 166 messages, 1133 words
+Untranslated: 160 messages, 1055 words
 
 * *OR*
 * *Zen*
@@ -1324,7 +1324,7 @@ Untranslated: 166 messages, 1133 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -1352,7 +1352,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 939 messages, 8342 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -1380,7 +1380,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 937 messages, 8346 words
 
-Untranslated: 166 messages, 1132 words
+Untranslated: 160 messages, 1054 words
 
 * *OR*
 * *Zen*
@@ -1408,7 +1408,7 @@ Untranslated: 166 messages, 1132 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -1436,7 +1436,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*
@@ -1464,7 +1464,7 @@ Untranslated: 163 messages, 1129 words
 
 Translated: 940 messages, 8349 words
 
-Untranslated: 163 messages, 1129 words
+Untranslated: 157 messages, 1051 words
 
 * *OR*
 * *Sound*

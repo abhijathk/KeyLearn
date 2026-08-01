@@ -4,7 +4,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  align-items: center;
   padding: 1rem 0;
+  text-align: center;
 }
 
 .title {
@@ -27,6 +29,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  inline-size: 100%;
   padding: 1.1rem 1.2rem;
   border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
   border-radius: 0.8rem;
@@ -103,6 +106,7 @@
   display: grid;
   grid-template-columns: repeat(2, 2.4rem);
   gap: 0.35rem;
+  justify-content: center;
   inline-size: 5.2rem;
 }
 
@@ -177,6 +181,7 @@
   gap: 1rem;
   align-items: center;
   justify-content: space-between;
+  inline-size: 100%;
 }
 
 // Listening mode shows the dictated word large, for a low-vision learner who
@@ -223,46 +228,59 @@
 // The six dot keys, in the app's key-cap language.
 .keys {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   align-items: center;
+  justify-content: center;
+  margin-block: 0.4rem;
 }
 
 .hand {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .gap {
-  inline-size: 1.6rem;
+  inline-size: 2.4rem;
 }
 
+// The key caps from the practice keyboard: soft rounded squares with a lip,
+// sized to be read across a room rather than squinted at.
 .key {
   display: grid;
+  position: relative;
   place-items: center;
-  inline-size: 3.2rem;
-  block-size: 3.4rem;
-  border: 2px solid var(--separator-color, rgba(128, 128, 128, 0.3));
-  border-radius: 0.6rem;
-  color: var(--text-color-f1);
-  background: color-mix(in srgb, var(--text-color) 4%, transparent);
-  box-shadow: 0 3px 0 color-mix(in srgb, var(--text-color) 12%, transparent);
+  inline-size: 5.4rem;
+  block-size: 5.4rem;
+  border-radius: 1rem;
+  color: var(--text-color);
+  background: color-mix(in srgb, var(--text-color) 9%, var(--primary-l1));
+  box-shadow:
+    0 4px 0 color-mix(in srgb, var(--text-color) 18%, transparent),
+    inset 0 0 0 2px color-mix(in srgb, var(--text-color) 12%, transparent);
   transition: transform 0.07s ease;
 }
 
 .keyCode {
-  font-size: 1.1rem;
+  font-size: 1.7rem;
   font-weight: 800;
 }
 
+// The dot number sits under the letter, the way the home-row bump does on a
+// real keyboard — a marker, not a label competing with the letter.
 .keyDot {
+  position: absolute;
+  inset-block-end: 0.55rem;
   color: var(--text-color-f2);
-  font-size: 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 // The cell being asked for.
 .keyWanted {
-  border-color: var(--accent);
   color: var(--accent);
+  box-shadow:
+    0 4px 0 color-mix(in srgb, var(--accent) 45%, transparent),
+    inset 0 0 0 2.5px var(--accent);
 }
 
 .keyWanted .keyDot {
@@ -273,8 +291,8 @@
 .keyHeld {
   color: var(--primary);
   background: var(--accent);
-  box-shadow: none;
-  transform: translateY(3px);
+  box-shadow: inset 0 0 0 2.5px var(--accent);
+  transform: translateY(4px);
 }
 
 .keyHeld .keyDot {

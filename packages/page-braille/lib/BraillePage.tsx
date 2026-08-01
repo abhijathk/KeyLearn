@@ -3,6 +3,8 @@ import {
   type Cell,
   ChordReader,
   dotsOf,
+  letterOfCell,
+  type Progress,
   REQUIRED_ROLLOVER,
   toUnicode,
 } from "@keybr/braille";
@@ -24,7 +26,6 @@ import {
   spellOut,
   wordAt,
 } from "./lesson.ts";
-import { RolloverCheck } from "./RolloverCheck.tsx";
 import {
   buzz,
   chime,
@@ -34,6 +35,7 @@ import {
   say,
   tick,
 } from "./sound.ts";
+import { loadProgress, saveProgress } from "./store.ts";
 
 /**
  * How the lesson is presented.
@@ -47,21 +49,10 @@ import {
 export type Mode = "reading" | "listening";
 
 export function BraillePage(): ReactNode {
-  const [checked, setChecked] = useState(false);
-  const [rollover, setRollover] = useState(0);
   const [mode, setMode] = useState<Mode>("reading");
   return (
     <Screen>
-      {checked ? (
-        <Practice mode={mode} onModeChange={setMode} rollover={rollover} />
-      ) : (
-        <RolloverCheck
-          onDone={(best) => {
-            setRollover(best);
-            setChecked(true);
-          }}
-        />
-      )}
+      <Practice mode={mode} onModeChange={setMode} />
     </Screen>
   );
 }
@@ -69,14 +60,14 @@ export function BraillePage(): ReactNode {
 function Practice({
   mode,
   onModeChange,
-  rollover,
 }: {
   readonly mode: Mode;
   readonly onModeChange: (mode: Mode) => void;
-  readonly rollover: number;
 }): ReactNode {
   const { formatMessage } = useIntl();
-  const [lesson, setLesson] = useState<Lesson>(() => makeLesson());
+  const [lesson, setLesson] = useState<Lesson>(() =>
+    makeLesson(loadProgress()),
+  );
   const [at, setAt] = useState(0);
   const [held, setHeld] = useState<Cell>(0);
   const [wrong, setWrong] = useState<Cell | null>(null);
@@ -86,7 +77,12 @@ function Practice({
   const [echoLetters, setEchoLetters] = useState(true);
   const [live, setLive] = useState("");
   const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [rolloverLimit, setRolloverLimit] = useState(0);
 
+  // Per-learner progress. Kept on the device for now: braille results do not
+  // yet flow through the account's result sync.
+  const progress = useRef<Progress>(loadProgress());
+  const lastAt = useRef<number>(0);
   const reader = useRef(new ChordReader());
   // The key handler is attached once and reads current values through this ref,
   // so a chord in progress is never dropped by a re-render mid-cell.
@@ -153,13 +149,26 @@ function Practice({
       }
       setStartedAt((t) => t ?? Date.now());
 
+      const letter = letterOfCell(step.cell);
       if (cell !== step.cell) {
+        if (letter != null) {
+          progress.current.miss(letter);
+          saveProgress(progress.current);
+        }
         setMisses((n) => n + 1);
         setWrong(cell);
         buzz();
         // Naming what they actually entered is the difference between a buzzer
         // and a teacher: they hear their own mistake rather than guess at it.
         const entered = dotsOf(cell);
+        const wanted = dotsOf(step.cell);
+        if (
+          wanted.length >= 4 &&
+          entered.length > 0 &&
+          entered.length < wanted.length
+        ) {
+          setRolloverLimit((n) => Math.max(n, entered.length));
+        }
         say(
           entered.length === 0
             ? formatMessage({
@@ -178,6 +187,17 @@ function Practice({
         return;
       }
 
+      const now = Date.now();
+      if (letter != null) {
+        // Time from the previous cell: what the engine measures is the join,
+        // because that is where the difficulty lives.
+        const gap = lastAt.current === 0 ? null : now - lastAt.current;
+        if (gap != null && gap < 10_000) {
+          progress.current.hit(letter, gap);
+          saveProgress(progress.current);
+        }
+      }
+      lastAt.current = now;
       setHits((n) => n + 1);
       setWrong(null);
       const next = s.at + 1;
@@ -219,7 +239,7 @@ function Practice({
         { cpm, accuracy },
       );
       setLive(summary);
-      const fresh = makeLesson();
+      const fresh = makeLesson(progress.current);
       setLesson(fresh);
       setAt(0);
       window.setTimeout(() => {
@@ -354,12 +374,12 @@ function Practice({
         )}
       </p>
 
-      {rollover > 0 && rollover < REQUIRED_ROLLOVER && (
+      {rolloverLimit > 0 && rolloverLimit < REQUIRED_ROLLOVER && (
         <p className={styles.warn} role="status">
           <FormattedMessage
             id="braille.rolloverWarn"
-            defaultMessage="This keyboard reported {best} keys at once; braille cells need {need}. Cells using more dots than that cannot be entered here."
-            values={{ best: rollover, need: REQUIRED_ROLLOVER }}
+            defaultMessage="This keyboard seems to register only {best} keys at once, and this cell needs {need}. Cells with more dots than that may not come through — an external keyboard would fix it."
+            values={{ best: rolloverLimit, need: REQUIRED_ROLLOVER }}
           />
         </p>
       )}
