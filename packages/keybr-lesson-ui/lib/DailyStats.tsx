@@ -1,4 +1,4 @@
-import { useIntlNumbers } from "@keybr/intl";
+import { useIntlDates, useIntlNumbers } from "@keybr/intl";
 import { type DailyStats as DailyStatsType } from "@keybr/result";
 import { formatDuration, NameValue, Para } from "@keybr/widget";
 import { useIntl } from "react-intl";
@@ -13,14 +13,13 @@ export function DailyStats({
   stats: DailyStatsType;
   effort: Effort;
 }) {
-  const { formatDate, formatMessage } = useIntl();
+  const { formatMessage } = useIntl();
+  const { formatDate } = useIntlDates();
   const { formatNumber, formatPercents } = useIntlNumbers();
   const { formatSpeed } = useFormatter();
   return (
     <div className={styles.root}>
-      <Para align="center">
-        {formatDate(Number(date), { dateStyle: "long" })}
-      </Para>
+      <Para align="center">{formatDate(Number(date), "long")}</Para>
       <div>
         <NameValue
           name={formatMessage({

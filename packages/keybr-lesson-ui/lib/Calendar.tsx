@@ -1,3 +1,4 @@
+import { useIntlDates } from "@keybr/intl";
 import { Tasks } from "@keybr/lang";
 import { type DailyStats, type DailyStatsMap, LocalDate } from "@keybr/result";
 import { Popup, Portal } from "@keybr/widget";
@@ -91,7 +92,11 @@ function BlockList({
   onCellClick?: (stats: DailyStats, elem: Element) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const blocks = useMemo(() => blockList(dailyStatsMap), [dailyStatsMap]);
+  const { firstDayOfWeek } = useIntlDates();
+  const blocks = useMemo(
+    () => blockList(dailyStatsMap, firstDayOfWeek),
+    [dailyStatsMap, firstDayOfWeek],
+  );
   return (
     <div
       ref={ref}
@@ -141,11 +146,19 @@ type BlockCells = {
 
 function Block({ block, effort }: { block: BlockCells; effort: Effort }) {
   const { formatMessage } = useIntl();
+  const { firstDayOfWeek } = useIntlDates();
 
-  const weekDayName = formatMessage({
+  // Names in the reader's own week order and language, rather than a fixed
+  // Monday-first list. The translated message is kept as the source of the
+  // one-letter forms and rotated to match.
+  const monFirst = formatMessage({
     id: "weekDayNames",
     defaultMessage: "M|T|W|T|F|S|S",
   }).split("|");
+  const weekDayName = Array.from(
+    { length: 7 },
+    (_, i) => monFirst[(firstDayOfWeek - 1 + i) % 7],
+  );
 
   return (
     <div className={styles.calendar}>
@@ -220,7 +233,7 @@ Cell.attached = (target: Element | null): DailyStats | null => {
   return (target as any)?.[attachment] ?? null;
 };
 
-function blockList(map: DailyStatsMap): BlockCells[] {
+function blockList(map: DailyStatsMap, firstDayOfWeek: number): BlockCells[] {
   const blocks = new Map<string, BlockCells>();
   for (const { date } of map) {
     addBlock(date);
@@ -241,7 +254,9 @@ function blockList(map: DailyStatsMap): BlockCells[] {
         [null, null, null, null, null, null, null],
       ];
       const a = new LocalDate(year, month, 1);
-      const offset = a.dayOfWeek - 1;
+      // How far into the week the 1st falls, counted from whichever day
+      // this reader's week begins on.
+      const offset = (a.dayOfWeek - firstDayOfWeek + 7) % 7;
       for (let i = 0; i < 6; i++) {
         for (let j = 0; j < 7; j++) {
           const b = a.plusDays(i * 7 + j - offset);

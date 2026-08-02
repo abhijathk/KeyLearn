@@ -1,3 +1,4 @@
+import { useIntlDates } from "@keybr/intl";
 import { Pages, type UserDetails } from "@keybr/pages-shared";
 import { TextField } from "@keybr/widget";
 import { clsx } from "clsx";
@@ -42,6 +43,7 @@ export function SecurityCard({
   readonly onChanged?: () => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
+  const { formatStamp } = useIntlDates();
 
   // ── Passkeys ──
   const [passkeys, setPasskeys] = useState<Passkey[]>([]);
@@ -316,7 +318,7 @@ export function SecurityCard({
           type="button"
           className={styles.subtleBtn}
           onClick={() => {
-            void AccountService.exportData();
+            void AccountService.exportData(user.name, formatStamp(Date.now()));
           }}
         >
           Download my data

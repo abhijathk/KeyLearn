@@ -1,4 +1,9 @@
-import { type UserDetails } from "@keybr/pages-shared";
+import { useIntlDates } from "@keybr/intl";
+import {
+  downloadBlob,
+  exportFilename,
+  type UserDetails,
+} from "@keybr/pages-shared";
 import { TextField } from "@keybr/widget";
 import { type ReactNode, useState } from "react";
 import * as styles from "./AccountPage.module.less";
@@ -20,6 +25,7 @@ export function TwoFactorCard({
   readonly user: UserDetails;
   readonly onChanged: () => void;
 }): ReactNode {
+  const { formatStamp } = useIntlDates();
   const [step, setStep] = useState<"idle" | "scan" | "codes">("idle");
   const [uri, setUri] = useState("");
   const [secret, setSecret] = useState("");
@@ -185,12 +191,17 @@ export function TwoFactorCard({
               const blob = new Blob([codes.join("\n") + "\n"], {
                 type: "text/plain",
               });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = "keylearn-recovery-codes.txt";
-              a.click();
-              URL.revokeObjectURL(url);
+              // Recovery codes are regenerated, so the date is what tells the
+              // current set from the one saved before it was rotated.
+              downloadBlob(
+                blob,
+                exportFilename(
+                  "recovery-codes",
+                  user.name,
+                  "txt",
+                  formatStamp(Date.now()),
+                ),
+              );
             }}
           >
             Download codes

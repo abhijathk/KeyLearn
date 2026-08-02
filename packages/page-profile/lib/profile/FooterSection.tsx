@@ -1,4 +1,9 @@
-import { clearNgramStats } from "@keybr/pages-shared";
+import { useIntlDates } from "@keybr/intl";
+import {
+  clearNgramStats,
+  downloadBlob,
+  exportFilename,
+} from "@keybr/pages-shared";
 import { useResults } from "@keybr/result";
 import { Button, Field, FieldList, Icon } from "@keybr/widget";
 import { mdiDeleteForever, mdiDownload } from "@mdi/js";
@@ -20,7 +25,8 @@ export function FooterSection() {
           })}
           title={formatMessage({
             id: "profile.download.description",
-            defaultMessage: "Get a full export of your typing history as a JSON file.",
+            defaultMessage:
+              "Get a full export of your typing history as a JSON file.",
           })}
           onClick={() => {
             handleDownloadData();
@@ -52,12 +58,23 @@ export function FooterSection() {
 
 function useCommands() {
   const { formatMessage } = useIntl();
-  const { results, clearResults, namespace } = useResults();
+  const { results, clearResults, namespace, profileName } = useResults();
+  const { formatStamp } = useIntlDates();
   return {
     handleDownloadData: () => {
       const json = JSON.stringify(results);
       const blob = new Blob([json], { type: "application/json" });
-      download(blob, "typing-data.json");
+      // Named for whose history it is and when it was taken, so a folder of
+      // these can be told apart — the old fixed name gave "typing-data (3)".
+      downloadBlob(
+        blob,
+        exportFilename(
+          "typing-data",
+          profileName,
+          "json",
+          formatStamp(Date.now()),
+        ),
+      );
     },
     handleResetData: () => {
       const message = formatMessage({
@@ -75,14 +92,4 @@ function useCommands() {
       }
     },
   };
-}
-
-function download(blob: Blob, name: string) {
-  const a = document.createElement("a");
-  a.setAttribute("href", URL.createObjectURL(blob));
-  a.setAttribute("download", name);
-  a.setAttribute("hidden", "");
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
 }

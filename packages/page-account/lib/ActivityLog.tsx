@@ -1,3 +1,4 @@
+import { useIntlDates } from "@keybr/intl";
 import { type SecurityEventDetails } from "@keybr/pages-shared";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
@@ -106,6 +107,7 @@ function device(userAgent: string | null): string | null {
  */
 export function ActivityLog(): ReactNode {
   const { formatMessage } = useIntl();
+  const { formatDateTime } = useIntlDates();
   const [events, setEvents] = useState<SecurityEventDetails[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -171,7 +173,7 @@ export function ActivityLog(): ReactNode {
                   {event.detail ? ` (${event.detail})` : ""}
                 </span>
                 <span className={styles.activityWhen}>
-                  {new Date(event.createdAt).toLocaleString()}
+                  {formatDateTime(event.createdAt)}
                   {where ? ` · ${where}` : ""}
                   {event.ip ? ` · ${event.ip}` : ""}
                 </span>

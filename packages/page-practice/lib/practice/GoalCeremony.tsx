@@ -1,3 +1,4 @@
+import { useIntlDates } from "@keybr/intl";
 import { useFormatter } from "@keybr/lesson-ui";
 import { Pages } from "@keybr/pages-shared";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -44,7 +45,8 @@ export function GoalCeremony({
   readonly onContinue: () => void;
   readonly onDone: () => void;
 }): ReactNode {
-  const { formatMessage, formatDate } = useIntl();
+  const { formatMessage } = useIntl();
+  const { format } = useIntlDates();
   const { formatSpeed } = useFormatter();
   const navigate = useNavigate();
   const doneRef = useRef<HTMLButtonElement>(null);
@@ -129,7 +131,7 @@ export function GoalCeremony({
               id="goalReport.meta"
               defaultMessage="{date} · Your goal: {minutes} min a day ✓"
               values={{
-                date: formatDate(new Date(), {
+                date: format(new Date(), {
                   weekday: "short",
                   month: "short",
                   day: "numeric",

@@ -1,5 +1,16 @@
-import { allLocales, defaultLocale, useIntlDisplayNames } from "@keybr/intl";
-import { isPremiumUser, Pages, usePageData } from "@keybr/pages-shared";
+import {
+  allLocales,
+  defaultLocale,
+  useIntlDates,
+  useIntlDisplayNames,
+} from "@keybr/intl";
+import {
+  downloadBlob,
+  exportFilename,
+  isPremiumUser,
+  Pages,
+  usePageData,
+} from "@keybr/pages-shared";
 import { SpeedUnit, uiProps } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
 import { useTheme } from "@keybr/themes";
@@ -158,11 +169,23 @@ function LanguageRegionCard(): ReactNode {
           </span>
         </div>
         <Segmented
-          value={weekStart === "mon" ? "mon" : "sun"}
+          value={weekStart === "mon" || weekStart === "sun" ? weekStart : ""}
           onChange={(id) =>
             updateSettings(settings.set(accountProps.weekStart, id))
           }
           options={[
+            {
+              // The default, and right for most people without their knowing:
+              // Monday across Europe and Australia, Sunday in the US and
+              // Japan, Saturday in much of the Middle East.
+              id: "",
+              label: (
+                <FormattedMessage
+                  id="account.prefs.weekStart.auto"
+                  defaultMessage="Automatic"
+                />
+              ),
+            },
             {
               id: "mon",
               label: (
@@ -428,6 +451,7 @@ function AppearanceCard(): ReactNode {
 }
 
 function PrivacyCard(): ReactNode {
+  const { formatStamp } = useIntlDates();
   const { settings, updateSettings } = useSettings();
   const { user, publicUser, profiles } = usePageData();
 
@@ -445,12 +469,15 @@ function PrivacyCard(): ReactNode {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: "application/json",
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "keylearn-data.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(
+      blob,
+      exportFilename(
+        "account",
+        publicUser.name,
+        "json",
+        formatStamp(Date.now()),
+      ),
+    );
   };
 
   return (

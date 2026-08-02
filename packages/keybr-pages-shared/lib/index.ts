@@ -1,4 +1,5 @@
 export * from "./Avatar.tsx";
+export * from "./download.ts";
 export * from "./LoadingProgress.tsx";
 export * from "./logout.ts";
 export * from "./ngram-store.ts";

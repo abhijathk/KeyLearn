@@ -1,5 +1,7 @@
 import {
   type AnyUser,
+  downloadBlob,
+  exportFilename,
   type ProfileAvatar,
   type ProfileDetails,
   type SecurityEventDetails,
@@ -255,7 +257,10 @@ export namespace AccountService {
   }
 
   /** Downloads everything the account holds, as a JSON file. */
-  export async function exportData(): Promise<void> {
+  export async function exportData(
+    who: string | null | undefined,
+    stamp: string,
+  ): Promise<void> {
     const response = await request
       .use(expectType("application/json"))
       .GET("/_/account/export")
@@ -263,12 +268,7 @@ export namespace AccountService {
     const blob = new Blob([JSON.stringify(await response.json(), null, 2)], {
       type: "application/json",
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "keylearn-data.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, exportFilename("account", who, "json", stamp));
   }
 
   export async function listSecurityEvents(): Promise<SecurityEventDetails[]> {

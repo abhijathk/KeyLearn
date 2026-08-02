@@ -1,4 +1,4 @@
-import { useIntlNumbers } from "@keybr/intl";
+import { useIntlDates, useIntlNumbers } from "@keybr/intl";
 import { useFormatter } from "@keybr/lesson-ui";
 import {
   makeSummaryStats,
@@ -53,7 +53,8 @@ export function AccuracyStreaksSection({
 }
 
 function StreakDetails({ streak }: { streak: Streak }) {
-  const { formatMessage, formatDate } = useIntl();
+  const { formatMessage } = useIntl();
+  const { formatDateTime } = useIntlDates();
   const { formatNumber, formatPercents } = useIntlNumbers();
   const { formatSpeed } = useFormatter();
   const { level, results } = streak;
@@ -105,10 +106,7 @@ function StreakDetails({ streak }: { streak: Streak }) {
             id: "t_Start_date",
             defaultMessage: "Streak started",
           })}
-          value={formatDate(results[0].timeStamp, {
-            dateStyle: "short",
-            timeStyle: "short",
-          })}
+          value={formatDateTime(results[0].timeStamp, "short")}
         />
       </dd>
     </>
