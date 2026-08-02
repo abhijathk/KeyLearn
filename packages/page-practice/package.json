@@ -9,6 +9,7 @@
     "@keybr/chart": "*",
     "@keybr/code": "*",
     "@keybr/content": "*",
+    "@keybr/content-snippets": "*",
     "@keybr/debug": "*",
     "@keybr/intl": "*",
     "@keybr/keyboard": "*",

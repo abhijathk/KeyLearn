@@ -12,6 +12,7 @@ const C = /* "c" */ 0x0063;
 const D = /* "d" */ 0x0064;
 const X = /* "x" */ 0x0078;
 const Space = /* SPACE */ 0x0020;
+const LineBreak = /* LINE FEED */ 0x000a;
 
 test("allow empty text", () => {
   const textInput = new TextInput("", {
@@ -645,3 +646,76 @@ function showChars({ chars }: TextInput) {
     })
     .join("|");
 }
+
+test("type a line break and step over the indentation that follows", () => {
+  // Code is the first lesson kind whose text has real lines in it. Enter used
+  // to be folded into a space, so a newline could be neither typed nor matched.
+  const textInput = new TextInput("a{\n    b\n}", {
+    stopOnError: true,
+    forgiveErrors: false,
+    spaceSkipsWords: false,
+  });
+
+  const type = (codePoint: number) => textInput.appendChar(0, codePoint, 100);
+
+  equal(type(A), Feedback.Succeeded);
+  equal(type(/* "{" */ 0x007b), Feedback.Succeeded);
+
+  // Enter now stops at the indentation rather than stepping over it, so there
+  // is something for Tab to do.
+  equal(type(LineBreak), Feedback.Succeeded);
+  equal(textInput.pos, 3);
+
+  // One Tab satisfies the whole indent, however deep it is.
+  equal(textInput.appendIndent(0, 100), Feedback.Succeeded);
+  equal(textInput.pos, 7);
+
+  equal(type(B), Feedback.Succeeded);
+  equal(type(LineBreak), Feedback.Succeeded);
+  equal(type(/* "}" */ 0x007d), Feedback.Succeeded);
+  isTrue(textInput.completed);
+});
+
+test("split typed text into the lines it has", () => {
+  const textInput = new TextInput("ab\ncd", {
+    stopOnError: true,
+    forgiveErrors: false,
+    spaceSkipsWords: false,
+  });
+
+  deepEqual(
+    textInput.lines.lines.map(({ text }) => text),
+    ["ab\n", "cd"],
+  );
+
+  const single = new TextInput("abc", {
+    stopOnError: true,
+    forgiveErrors: false,
+    spaceSkipsWords: false,
+  });
+
+  // Text without a newline stays one line, so every other lesson is unaffected.
+  deepEqual(
+    single.lines.lines.map(({ text }) => text),
+    ["abc"],
+  );
+});
+
+test("tab is ignored when the caret is not on indentation", () => {
+  const textInput = new TextInput("ab\n  cd", {
+    stopOnError: true,
+    forgiveErrors: false,
+    spaceSkipsWords: false,
+  });
+
+  // Mid-word: a stray Tab should cost nothing rather than score a mistake.
+  equal(textInput.appendChar(0, A, 100), Feedback.Succeeded);
+  equal(textInput.appendIndent(0, 100), Feedback.Succeeded);
+  equal(textInput.pos, 1);
+
+  equal(textInput.appendChar(0, B, 100), Feedback.Succeeded);
+  equal(textInput.appendChar(0, LineBreak, 100), Feedback.Succeeded);
+  // Now on the indent, so it advances past all of it.
+  equal(textInput.appendIndent(0, 100), Feedback.Succeeded);
+  equal(textInput.pos, 5);
+});

@@ -30,6 +30,7 @@ export const TextLines = memo(function TextLines({
   cursor,
   focus,
   colorOf,
+  lineNumbers = false,
 }: {
   readonly lines: LineList;
   readonly settings?: TextDisplaySettings;
@@ -39,6 +40,14 @@ export const TextLines = memo(function TextLines({
   readonly cursor: boolean;
   readonly focus: boolean;
   readonly colorOf?: (codePoint: number) => string | null;
+  /**
+   * A numbered gutter down the left, as an editor draws one.
+   *
+   * Only worth it for code: prose has no line numbers to refer to, and a
+   * column of digits beside a sentence is noise. For a snippet it is the thing
+   * that makes the block read as a file rather than as a paragraph.
+   */
+  readonly lineNumbers?: boolean;
 }): ReactNode {
   const className = clsx(
     styles.root,
@@ -75,9 +84,43 @@ export const TextLines = memo(function TextLines({
           ? styles.band_active
           : styles.band_next,
     );
+  const numbered = (index: number, line: ReactNode): ReactNode =>
+    lineNumbers ? (
+      // The focus filter goes on the wrapper so the gutter dims with the code
+      // it belongs to. On the line alone, the numbers stayed sharp beside
+      // blurred text and read as chrome rather than as part of the file.
+      <span
+        key={index}
+        className={clsx(styles.numbered, focus ? styles.focus : styles.blur)}
+      >
+        {/* aria-hidden: a screen reader reading "one" before every line would
+            bury the code it is there to announce. */}
+        <span className={styles.lineNumber} aria-hidden={true}>
+          {index + 1}
+        </span>
+        {line}
+      </span>
+    ) : (
+      line
+    );
   const children = lines.lines.map(({ text, chars, ...props }: Line, index) =>
     LineTemplate != null ? (
       <LineTemplate key={text} {...props}>
+        {numbered(
+          index,
+          <TextLine
+            key={text}
+            settings={settings}
+            chars={chars}
+            className={clsx(className, bandOf(index))}
+            style={settings.font.cssProperties}
+            colorOf={colorOf}
+          />,
+        )}
+      </LineTemplate>
+    ) : (
+      numbered(
+        index,
         <TextLine
           key={text}
           settings={settings}
@@ -85,17 +128,8 @@ export const TextLines = memo(function TextLines({
           className={clsx(className, bandOf(index))}
           style={settings.font.cssProperties}
           colorOf={colorOf}
-        />
-      </LineTemplate>
-    ) : (
-      <TextLine
-        key={text}
-        settings={settings}
-        chars={chars}
-        className={clsx(className, bandOf(index))}
-        style={settings.font.cssProperties}
-        colorOf={colorOf}
-      />
+        />,
+      )
     ),
   );
   return cursor ? <Cursor settings={settings}>{children}</Cursor> : children;

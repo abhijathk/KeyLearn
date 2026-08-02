@@ -6,9 +6,11 @@ import { findFlags } from "./find-flags.ts";
 import { flagSet } from "./flags.ts";
 import { Syntax } from "./syntax.ts";
 
-for (const syntax of Syntax.ALL) {
+// Only the grammar-backed ones generate. A snippet-backed syntax is text
+// somebody wrote; there is nothing here for it to produce or to check.
+for (const syntax of Syntax.ALL.filter(({ generated }) => generated)) {
   test(`syntax ${syntax.name}/check flags`, () => {
-    for (const flag of findFlags(syntax.grammar.rules)) {
+    for (const flag of findFlags(syntax.grammar!.rules)) {
       isTrue(Syntax.FLAGS.includes(flag));
     }
   });

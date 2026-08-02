@@ -18,6 +18,7 @@ export function OptionListButton({
   option,
   tabIndex,
   title,
+  elementRef,
   onClick,
   ...props
 }: {
@@ -27,6 +28,8 @@ export function OptionListButton({
   readonly open: boolean;
   readonly option: OptionListOption;
   readonly title?: string;
+  /** Reports the rendered element, so a portalled menu can be placed on it. */
+  readonly elementRef?: (element: HTMLSpanElement | null) => void;
 } & FocusProps &
   MouseProps &
   KeyboardProps): ReactNode {
@@ -34,7 +37,10 @@ export function OptionListButton({
   return (
     <span
       {...props}
-      ref={element}
+      ref={(node) => {
+        element.current = node;
+        elementRef?.(node);
+      }}
       className={clsx(
         styles.root,
         focused && styles.focused,

@@ -102,6 +102,17 @@ export class InputHandler implements Focusable {
     const mapped = mapEvent(event);
     if (isTextInput(mapped.modifiers) && event.key === "Tab") {
       event.preventDefault();
+      // Tab produces no input event of its own — the browser would have moved
+      // focus — so the indent has to be reported here.
+      if (event.type === "keydown") {
+        this.#callbacks.onInput?.({
+          type: "input",
+          timeStamp: timeStampOf(event),
+          inputType: "appendIndent",
+          codePoint: 0x0000,
+          timeToType: this.#timeToType.measure(mapped),
+        });
+      }
     }
     if (event.code) {
       this.#timeToType.add(mapped);

@@ -18,7 +18,11 @@ import { type LessonState } from "./state/index.ts";
  * There's no "you're losing" state — it's a pacer, not a scoreboard. Shows
  * only once there's a previous run to pace. Session-scoped; not persisted.
  */
-export function GhostTrack({ state }: { readonly state: LessonState }): ReactNode {
+export function GhostTrack({
+  state,
+}: {
+  readonly state: LessonState;
+}): ReactNode {
   const marks = state.lastRunMarks;
   const total = state.textInput.length;
   const typed = Math.max(0, total - state.suffix.length);

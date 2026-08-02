@@ -49,9 +49,7 @@ export function UnlockCeremony({
         </div>
         <div className={styles.stats}>
           <Stat
-            label={
-              <FormattedMessage id="t_Speed" defaultMessage="Speed" />
-            }
+            label={<FormattedMessage id="t_Speed" defaultMessage="Speed" />}
             value={formatSpeed(result.speed)}
             delta={prev != null ? result.speed - prev.speed : null}
             format={(v) => formatSpeed(Math.abs(v))}

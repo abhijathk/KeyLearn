@@ -1,8 +1,15 @@
+import { codeThemeFor, codeThemeVars } from "@keybr/content-snippets";
 import { type KeyId } from "@keybr/keyboard";
+import { lessonProps, LessonType } from "@keybr/lesson";
 import { names } from "@keybr/lesson-ui";
 import { Screen } from "@keybr/pages-shared";
 import { uiProps } from "@keybr/result";
-import { enumProp, numberProp, Preferences } from "@keybr/settings";
+import {
+  enumProp,
+  numberProp,
+  Preferences,
+  type Settings,
+} from "@keybr/settings";
 import { type LineList } from "@keybr/textinput";
 import {
   type IInputEvent,
@@ -65,6 +72,40 @@ function getNextView(view: View): View {
 }
 
 const propView = enumProp("prefs.practice.view", View, View.Normal);
+/**
+ * How much smaller code is drawn than prose, at the same size setting.
+ *
+ * A line of code is far longer than a line of words and carries punctuation
+ * that has to stay legible next to it, so the size that reads comfortably for
+ * "the quick brown fox" puts three tokens on a line and wraps the rest. This
+ * is a correction to the same setting rather than a second setting: the
+ * learner has already said how big they want text, and being asked twice for
+ * the same preference is how settings screens get long.
+ */
+const CODE_TEXT_SCALE = 0.68;
+
+/**
+ * The chosen editor palette, as custom properties on the text container.
+ *
+ * Scoped to that element rather than the document, so a colour scheme applies
+ * to the code being typed and to nothing else on the page.
+ */
+function codeStyle(settings: Settings): Record<string, string> {
+  if (settings.get(lessonProps.type) !== LessonType.CODE) {
+    return {};
+  }
+  const theme = codeThemeFor(settings.get(lessonProps.code.theme));
+  return theme != null ? codeThemeVars(theme) : {};
+}
+
+function hasCodeTheme(settings: Settings): boolean {
+  return (
+    settings.get(lessonProps.type) === LessonType.CODE &&
+    settings.get(lessonProps.code.themeBackground) &&
+    codeThemeFor(settings.get(lessonProps.code.theme)) != null
+  );
+}
+
 const propTextSize = numberProp("prefs.practice.textScale", 1, {
   min: 0.75,
   max: 1.5,
@@ -216,6 +257,9 @@ export class Presenter extends PureComponent<Props, State> {
                 focusRef={this.focusRef}
                 settings={state.textDisplaySettings}
                 lines={lines}
+                lineNumbers={
+                  state.settings.get(lessonProps.type) === LessonType.CODE
+                }
                 size="X0"
                 demo={tour}
                 hideStartHint={true}
@@ -251,6 +295,9 @@ export class Presenter extends PureComponent<Props, State> {
                   focusRef={this.focusRef}
                   settings={state.textDisplaySettings}
                   lines={lines}
+                  lineNumbers={
+                    state.settings.get(lessonProps.type) === LessonType.CODE
+                  }
                   size="X1"
                   demo={tour}
                   onFocus={handleFocus}
@@ -283,6 +330,9 @@ export class Presenter extends PureComponent<Props, State> {
                   focusRef={this.focusRef}
                   settings={state.textDisplaySettings}
                   lines={lines}
+                  lineNumbers={
+                    state.settings.get(lessonProps.type) === LessonType.CODE
+                  }
                   size="X2"
                   demo={tour}
                   onFocus={handleFocus}
@@ -445,8 +495,22 @@ function NormalLayout({
       )}
       <div
         id={names.textInput}
-        className={styles.textInput_normal}
-        style={{ "--text-scale": textSize } as CSSProperties}
+        className={clsx(
+          styles.textInput_normal,
+          state.settings.get(lessonProps.type) === LessonType.CODE &&
+            styles.textInput_code,
+          hasCodeTheme(state.settings) && styles.textInput_themed,
+        )}
+        style={
+          {
+            "--text-scale":
+              textSize *
+              (state.settings.get(lessonProps.type) === LessonType.CODE
+                ? CODE_TEXT_SCALE
+                : 1),
+            ...codeStyle(state.settings),
+          } as CSSProperties
+        }
       >
         {textInput}
       </div>
@@ -501,7 +565,14 @@ function NormalLayout({
 }
 
 function masteryKeysOf(state: LessonState) {
-  return [...state.lessonKeys]
+  const keys = [...state.lessonKeys];
+  // Code and number lessons start with every key in play, so a bar under each
+  // one draws a full row that never changes. An indicator that always says the
+  // same thing is decoration.
+  if (keys.every((key) => key.isIncluded)) {
+    return [];
+  }
+  return keys
     .filter((key) => key.isIncluded)
     .map(({ letter: { codePoint }, confidence }) => ({
       codePoint,

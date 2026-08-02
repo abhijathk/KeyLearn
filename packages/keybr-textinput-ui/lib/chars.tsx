@@ -102,7 +102,14 @@ export function renderChars(
         <span
           key={nodes.length}
           className={getClassName(span)}
-          style={styleFor(span, /* special= */ true)}
+          style={{
+            ...styleFor(span, /* special= */ true),
+            // The line-break marker says where Enter goes; it is a hint, not
+            // content. On a blank line it is the only thing there, so at full
+            // strength a snippet with a few blank lines reads as a column of
+            // stray symbols rather than as code with air in it.
+            ...(codePoint === 0x000a ? { opacity: 0.3 } : null),
+          }}
         >
           {specialChar(settings.whitespaceStyle, codePoint, attrs)}
         </span>,

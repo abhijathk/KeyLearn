@@ -101,7 +101,12 @@ export function GoalCeremony({
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.card} data-mode={mode} role="dialog" aria-modal="true">
+      <div
+        className={styles.card}
+        data-mode={mode}
+        role="dialog"
+        aria-modal="true"
+      >
         <div className={styles.tape} />
         <div className={styles.inner}>
           <div className={styles.rcHead}>
@@ -113,7 +118,10 @@ export function GoalCeremony({
               />
             </h1>
             <div className={styles.stamp}>
-              <FormattedMessage id="goalReport.stamp" defaultMessage="GOAL MET" />
+              <FormattedMessage
+                id="goalReport.stamp"
+                defaultMessage="GOAL MET"
+              />
             </div>
           </div>
           <div className={styles.metaline}>
@@ -182,7 +190,9 @@ export function GoalCeremony({
                     values={{ n: weeklySpeeds.length }}
                   />
                 </span>
-                {gain > 0 && <span className={styles.gain}>+{formatSpeed(gain)}</span>}
+                {gain > 0 && (
+                  <span className={styles.gain}>+{formatSpeed(gain)}</span>
+                )}
               </div>
               <SpeedChart speeds={weeklySpeeds} />
             </>
@@ -265,7 +275,10 @@ export function GoalCeremony({
                   className={`${styles.btn} ${styles.ghost}`}
                   onClick={done}
                 >
-                  <FormattedMessage id="goalReport.done" defaultMessage="Done" />
+                  <FormattedMessage
+                    id="goalReport.done"
+                    defaultMessage="Done"
+                  />
                 </button>
               </>
             ) : (
@@ -338,7 +351,8 @@ function SpeedChart({ speeds }: { speeds: readonly number[] }): ReactNode {
   const max = Math.max(...speeds);
   const span = max - min || 1;
   const x = (i: number) => padX + (i * (W - 2 * padX)) / (n - 1);
-  const y = (v: number) => padTop + (1 - (v - min) / span) * (H - padTop - padBot);
+  const y = (v: number) =>
+    padTop + (1 - (v - min) / span) * (H - padTop - padBot);
   const pts = speeds.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`);
   const line = pts.join(" ");
   const area = `M${pts.join(" L")} L${x(n - 1).toFixed(1)},${H - padBot} L${x(0).toFixed(1)},${H - padBot} Z`;
@@ -356,7 +370,13 @@ function SpeedChart({ speeds }: { speeds: readonly number[] }): ReactNode {
       <path className={styles.chartArea} d={area} />
       <polyline className={styles.chartLine} points={line} />
       {speeds.slice(0, -1).map((v, i) => (
-        <circle key={i} className={styles.chartDot} cx={x(i)} cy={y(v)} r={2.4} />
+        <circle
+          key={i}
+          className={styles.chartDot}
+          cx={x(i)}
+          cy={y(v)}
+          r={2.4}
+        />
       ))}
       <circle className={styles.chartDotGlow} cx={lastX} cy={lastY} r={6} />
       <circle className={styles.chartDotLast} cx={lastX} cy={lastY} r={3.4} />

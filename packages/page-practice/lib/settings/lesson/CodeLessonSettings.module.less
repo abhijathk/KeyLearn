@@ -1,0 +1,28 @@
+// The coding standard the snippets follow. Quiet on purpose: it is there to be
+// noticed once and then forgotten, because the teaching is done by the code
+// itself rather than by a label pointing at it.
+// The coding standard, as a chip beside the language it belongs to. A name,
+// not a sentence: it is there to be recognised once and then ignored, because
+// the teaching is done by code that already follows it.
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  font-family: var(--default-font-family);
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+// A grid rather than a row: seven of these flowed inline ran off the edge of
+// the panel. Columns size themselves to the longest label so the ticks line up
+// however the panel is resized and whatever the language calls its topics.
+.toggles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.55rem 1.2rem;
+  align-items: center;
+}

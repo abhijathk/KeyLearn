@@ -32,6 +32,7 @@ export type IInputEvent = {
   readonly inputType:
     | "appendChar"
     | "appendLineBreak"
+    | "appendIndent"
     | "clearChar"
     | "clearWord";
   readonly codePoint: CodePoint;

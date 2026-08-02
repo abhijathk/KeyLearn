@@ -1,23 +1,22 @@
 @import "../../styles/components.less";
 @import "../../styles/text.less";
 
+// Fixed and portalled: the position comes from the button's rectangle, so the
+// menu can sit over anything on the page and can be clamped to the room that
+// is actually left below it.
 .root {
   display: block;
-  position: absolute;
-  inset-inline-start: 0;
-  inset-inline-end: 0;
-  inset-block-start: 100%;
-  z-index: 1;
+  position: fixed;
+  z-index: 2000;
   list-style: none;
-  max-block-size: 20rem;
   margin: 0;
   padding: 0;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
   overflow: auto;
   scroll-behavior: smooth;
   overscroll-behavior: contain;
-  margin-block-start: 0.25rem;
-  border: var(--separator-border);
-  border-radius: 0.7rem;
+  background-color: var(--MenuItem__background-color);
   scrollbar-color: var(--MenuItem--selected__background-color)
     var(--MenuItem__background-color);
   scrollbar-width: auto;
@@ -51,4 +50,23 @@
 .item_selected:hover {
   color: var(--MenuItem--selected__color);
   background-color: var(--MenuItem--selected__background-color);
+}
+
+// A divider with a name on it. Quiet enough that the options stay the thing
+// being read, loud enough to be found when the list is long.
+.group {
+  margin-block-start: 0.3rem;
+  padding: 0.35rem 0.7rem 0.2rem;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+
+  &:not(:first-child) {
+    border-block-start: 1px solid
+      var(--separator-color, rgba(128, 128, 128, 0.2));
+  }
 }

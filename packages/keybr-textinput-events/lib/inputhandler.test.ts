@@ -177,10 +177,9 @@ test("handle the tab", () => {
   isTrue(keyDown.defaultPrevented);
   isTrue(keyUp.defaultPrevented);
 
-  deepEqual(target.trace, [
-    "100,keydown,Tab,Tab", //
-    "200,keyup,Tab,Tab",
-  ]);
+  // Tab is prevented so focus stays put, and reports an indent of its own —
+  // the browser emits no input event for it, so nothing else would.
+  deepEqual(target.trace, ["100,appendIndent,\u0000,100", "100,keydown,Tab,Tab", "200,keyup,Tab,Tab"]);
 });
 
 test("incomplete events", () => {

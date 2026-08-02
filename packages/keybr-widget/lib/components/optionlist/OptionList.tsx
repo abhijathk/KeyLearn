@@ -31,9 +31,14 @@ export function OptionList({
     value,
     onSelect,
   });
+  // The menu is portalled, so it needs the button's element to place itself
+  // against. State rather than a ref, so the first render after opening has a
+  // real rectangle to measure.
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   return (
     <OptionListButton
       {...props}
+      elementRef={setAnchor}
       focused={focused}
       open={open}
       option={option}
@@ -72,6 +77,7 @@ export function OptionList({
     >
       {open && (
         <OptionListMenu
+          anchor={anchor}
           options={options}
           selectedOption={selectedOption}
           onSelect={(option) => {

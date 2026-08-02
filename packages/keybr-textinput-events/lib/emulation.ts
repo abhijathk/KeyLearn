@@ -67,6 +67,7 @@ function forwardEmulation(
     onInput: (event) => {
       switch (event.inputType) {
         case "appendLineBreak":
+        case "appendIndent":
         case "clearChar":
         case "clearWord":
           target.onInput(event);

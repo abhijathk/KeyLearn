@@ -120,6 +120,40 @@ export function toLine(styledText: StyledText): Line {
   return { text, chars };
 }
 
+/**
+ * Breaks already-typed characters into the lines the text actually has.
+ *
+ * Code is the first lesson kind with real lines in it. Everything else is one
+ * line and comes back as one line, so this costs those nothing.
+ *
+ * The newline itself stays at the end of the line it terminates rather than
+ * being dropped: it is a character the learner has to type, and a line that
+ * did not show it would leave the caret with nowhere to sit while they did.
+ */
+export function toLines(text: string, chars: readonly Char[]): LineList {
+  if (!text.includes("\n")) {
+    return { text, lines: [{ text, chars }] };
+  }
+  const lines: Line[] = [];
+  let from = 0;
+  for (let i = 0; i < chars.length; i++) {
+    if (chars[i].codePoint === 0x000a) {
+      const slice = chars.slice(from, i + 1);
+      lines.push({ text: textOf(slice), chars: slice });
+      from = i + 1;
+    }
+  }
+  if (from < chars.length) {
+    const slice = chars.slice(from);
+    lines.push({ text: textOf(slice), chars: slice });
+  }
+  return { text, lines };
+}
+
+function textOf(chars: readonly Char[]): string {
+  return chars.map(({ codePoint }) => String.fromCodePoint(codePoint)).join("");
+}
+
 export function singleLine(styledText: StyledText): LineList {
   const text = flattenStyledText(styledText);
   const chars = splitStyledText(styledText);

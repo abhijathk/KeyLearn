@@ -7,8 +7,13 @@ import {
   type LineList,
   splitStyledText,
   type StyledText,
+  toLines,
 } from "./chars.ts";
 import { type TextInputSettings } from "./settings.ts";
+
+function isSpace(codePoint: CodePoint): boolean {
+  return codePoint === 0x0020 || codePoint === 0x0009;
+}
 
 export enum Feedback {
   Succeeded,
@@ -105,6 +110,7 @@ export class TextInput {
     readonly inputType:
       | "appendChar"
       | "appendLineBreak"
+      | "appendIndent"
       | "clearChar"
       | "clearWord";
     readonly codePoint: CodePoint;
@@ -114,7 +120,9 @@ export class TextInput {
       case "appendChar":
         return this.appendChar(timeStamp, codePoint, timeToType);
       case "appendLineBreak":
-        return this.appendChar(timeStamp, 0x0020, timeToType);
+        return this.appendChar(timeStamp, 0x000a, timeToType);
+      case "appendIndent":
+        return this.appendIndent(timeStamp, timeToType);
       case "clearChar":
         return this.clearChar();
       case "clearWord":
@@ -137,6 +145,54 @@ export class TextInput {
     return this.#return(Feedback.Succeeded);
   }
 
+  /**
+   * Satisfies the whitespace that opens a line, as Tab does in an editor.
+   *
+   * One press clears the whole indent rather than one level of it: the learner
+   * is practising code, not counting spaces, and a miscount would fail a line
+   * they had otherwise typed correctly. Space still works character by
+   * character for anyone who would rather.
+   *
+   * Does nothing when the caret is not sitting on indentation, so a stray Tab
+   * mid-line is ignored rather than scored as a mistake.
+   */
+  appendIndent(timeStamp: number, timeToType: number): Feedback {
+    if (this.completed || !this.#atIndent()) {
+      return this.#return(Feedback.Succeeded);
+    }
+    while (this.pos < this.length && isSpace(this.at(this.pos).codePoint)) {
+      this.#addStep(
+        {
+          timeStamp,
+          codePoint: this.at(this.pos).codePoint,
+          timeToType,
+          typo: false,
+        },
+        this.at(this.pos),
+      );
+    }
+    this.#garbage = [];
+    this.#typo = false;
+    return this.#return(Feedback.Succeeded);
+  }
+
+  /** Whether everything between the caret and the line start is whitespace. */
+  #atIndent(): boolean {
+    if (this.pos >= this.length || !isSpace(this.at(this.pos).codePoint)) {
+      return false;
+    }
+    for (let i = this.pos - 1; i >= 0; i--) {
+      const { codePoint } = this.at(i);
+      if (codePoint === 0x000a) {
+        return true;
+      }
+      if (!isSpace(codePoint)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   appendChar(
     timeStamp: number,
     codePoint: CodePoint,
@@ -148,6 +204,9 @@ export class TextInput {
 
     const { codePoint: expected } = this.at(this.pos);
 
+    // Enter against a line break, in text that has any. Code snippets are the
+    // only lessons with real lines in them; everywhere else the target has no
+    // newline, so Enter still reads as the space it always did.
     if (expected !== 0x0020 && codePoint === 0x0020) {
       if (
         this.spaceSkipsWords &&
@@ -167,23 +226,7 @@ export class TextInput {
         filterText.normalize(expected) === codePoint) &&
       (this.forgiveErrors || this.#garbage.length === 0)
     ) {
-      const typo = this.#typo;
-      this.#addStep(
-        {
-          timeStamp,
-          codePoint,
-          timeToType,
-          typo,
-        },
-        this.at(this.pos),
-      );
-      this.#garbage = [];
-      this.#typo = false;
-      if (typo) {
-        return this.#return(Feedback.Recovered);
-      } else {
-        return this.#return(Feedback.Succeeded);
-      }
+      return this.#accept(timeStamp, codePoint, timeToType);
     }
 
     this.#typo = true;
@@ -229,14 +272,29 @@ export class TextInput {
       const [head, ...tail] = remaining;
       chars.push({ ...head, attrs: Attr.Cursor }, ...tail);
     }
-    const lines = { text, lines: [{ text, chars }] };
-    this.#output = { chars, lines, remaining };
+    this.#output = { chars, lines: toLines(text, chars), remaining };
   }
 
   #addStep(step: Step, char: Char): void {
     const attrs = step.typo ? Attr.Miss : Attr.Hit;
     this.#steps.push({ ...step, char: { ...char, attrs } });
     this.onStep(step);
+  }
+
+  /** Records a matched character and reports how it went. */
+  #accept(
+    timeStamp: number,
+    codePoint: CodePoint,
+    timeToType: number,
+  ): Feedback {
+    const typo = this.#typo;
+    this.#addStep(
+      { timeStamp, codePoint, timeToType, typo },
+      this.at(this.pos),
+    );
+    this.#garbage = [];
+    this.#typo = false;
+    return this.#return(typo ? Feedback.Recovered : Feedback.Succeeded);
   }
 
   #skipWord(timeStamp: number): void {

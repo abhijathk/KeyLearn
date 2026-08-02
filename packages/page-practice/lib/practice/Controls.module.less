@@ -33,8 +33,8 @@
 .tools {
   display: flex;
   position: absolute;
-  inset-block-start: calc(100% + 0.4rem);
   inset-inline-end: 0;
+  inset-block-start: calc(100% + 0.4rem);
   z-index: 20;
   flex-direction: column;
   gap: 0.15rem;
@@ -44,8 +44,8 @@
   background-color: color-mix(in srgb, var(--primary-l1) 92%, transparent);
   box-shadow: 0 0.6rem 1.6rem
     color-mix(in srgb, var(--shadow-color) 50%, transparent);
-  backdrop-filter: blur(12px);
   animation: tools-in 0.2s ease;
+  backdrop-filter: blur(12px);
 }
 
 @keyframes tools-in {
@@ -76,10 +76,10 @@
   // The text-size slider stands upright in the drop-down; rtl puts the
   // larger size at the top, so dragging up grows the text.
   input {
-    writing-mode: vertical-lr;
-    direction: rtl;
     inline-size: auto;
     block-size: 5.5rem;
+    direction: rtl;
+    writing-mode: vertical-lr;
     accent-color: var(--accent);
   }
 }

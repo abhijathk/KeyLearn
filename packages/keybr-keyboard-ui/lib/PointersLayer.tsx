@@ -21,9 +21,18 @@ export const PointersLayer = memo(function PointersLayer({
   suffix,
   delay = 1000,
   helpLevel = 0,
+  capsLock = false,
 }: {
   readonly suffix: readonly CodePoint[];
   readonly delay?: number;
+  /**
+   * Whether Caps Lock is on, so the Shift hint can account for it.
+   *
+   * With it on, a capital needs no Shift and a lower-case letter does — the
+   * requirement inverts, but only for letters. Caps Lock does nothing for
+   * punctuation, so a brace still wants Shift either way.
+   */
+  readonly capsLock?: boolean;
   /** Escalating help: 2 = urgent pulse, 3 = finger guide over the key. */
   readonly helpLevel?: number;
 }): ReactNode {
@@ -58,16 +67,70 @@ export const PointersLayer = memo(function PointersLayer({
     combo != null && helpLevel >= 3 ? keyboard.getShape(combo.id) : null;
   return (
     <Surface ref={svgRef}>
-      {...pointers(keyboard, combo, helpLevel)}
+      {...pointers(
+        keyboard,
+        combo,
+        helpLevel,
+        capsLock && isLetter(suffix[0]),
+        // A whole word in capitals is what Caps Lock is for; one capital is
+        // what Shift is for. Suggesting the wrong one teaches a slower habit.
+        capsLock !== capsRun(suffix, !capsLock),
+      )}
       {mainShape != null && guideArrow(mainShape)}
     </Surface>
   );
 });
 
+/** Whether Caps Lock has any say over this character. */
+function isLetter(codePoint: CodePoint | undefined): boolean {
+  return (
+    codePoint != null && /\p{Letter}/u.test(String.fromCodePoint(codePoint))
+  );
+}
+
+function hasCase(codePoint: CodePoint, upper: boolean): boolean {
+  const ch = String.fromCodePoint(codePoint);
+  return upper ? /\p{Lu}/u.test(ch) : /\p{Ll}/u.test(ch);
+}
+
+/**
+ * How many characters Caps Lock has to stay held for.
+ *
+ * Turning it on and off again costs two keystrokes, so for two or three
+ * capitals holding Shift is simply faster and this should stay quiet. Four is
+ * where the arithmetic turns, and it is also where a run stops being a stray
+ * capital and starts being a word — SELECT, INNER JOIN, API_TOKEN.
+ */
+const CAPS_WORTH_IT = 4;
+
+/**
+ * Whether the run ahead is long enough that Caps Lock beats Shift.
+ *
+ * Reads through the coming characters counting those of the case being asked
+ * for, stopping at the first letter of the wrong case. Digits and punctuation
+ * neither help nor break the run: CAPS_LOCK_1 is still one word to a typist.
+ */
+function capsRun(suffix: readonly CodePoint[], upper: boolean): boolean {
+  let run = 0;
+  for (const codePoint of suffix) {
+    if (hasCase(codePoint, upper)) {
+      run += 1;
+      if (run >= CAPS_WORTH_IT) {
+        return true;
+      }
+    } else if (isLetter(codePoint)) {
+      return false;
+    }
+  }
+  return false;
+}
+
 function pointers(
   keyboard: Keyboard,
   combo: KeyCombo | null,
   helpLevel = 0,
+  capsLockApplies = false,
+  suggestCapsLock = false,
 ): ReactNode[] {
   const children = [];
   let main = true;
@@ -76,7 +139,19 @@ function pointers(
     if (shape != null) {
       children.unshift(cometPointer(shape, main && helpLevel >= 2));
       main = false;
-      if (combo.modifier.shift) {
+      if (suggestCapsLock) {
+        // The run ahead is long enough to be worth latching. Point at Caps
+        // Lock instead of Shift — including when it is already on and the
+        // coming word is lower-case, where the advice is to turn it off.
+        children.unshift(
+          pointer(keyboard.getShape("CapsLock"), styles.modifierPointer),
+        );
+      } else if (
+        // The same exclusive-or the keycaps use: Caps Lock and Shift each flip
+        // the case, so with Caps Lock on a capital needs no Shift and a
+        // lower-case letter does.
+        capsLockApplies ? !combo.modifier.shift : combo.modifier.shift
+      ) {
         const l = keyboard.getShape("ShiftLeft");
         const r = keyboard.getShape("ShiftRight");
         switch (shape.hand) {
@@ -177,9 +252,7 @@ function cometPointer(shape: KeyShape | null, urgent: boolean): ReactNode {
         className={styles.spark}
         {...rect}
         strokeDasharray={`${perimeter * 0.035} ${perimeter * 0.965}`}
-        style={
-          { "--dash-shift": `${perimeter * 0.035}px` } as CSSProperties
-        }
+        style={{ "--dash-shift": `${perimeter * 0.035}px` } as CSSProperties}
       />
       <animate
         attributeName="opacity"
@@ -230,10 +303,7 @@ function guideArrow(shape: KeyShape): ReactNode {
   return (
     <path
       className={styles.guide}
-      d={
-        `M ${cx - 2} ${top - 6} h 4 v 5 h 4 ` +
-        `l -6 7 l -6 -7 h 4 z`
-      }
+      d={`M ${cx - 2} ${top - 6} h 4 v 5 h 4 ` + `l -6 7 l -6 -7 h 4 z`}
     />
   );
 }

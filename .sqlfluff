@@ -1,0 +1,46 @@
+# The SQL house style for the practice corpus in @keybr/content-snippets.
+#
+# Stated rather than inferred. sqlfluff's capitalisation rules default to
+# "consistent", which means each file is judged against itself — so a corpus
+# could be internally consistent file by file and still teach three different
+# conventions. Pinning them makes the standard the same in every snippet.
+#
+# Read by `sqlfluff format` from anywhere in the repo; see the gate in
+# packages/keybr-content-snippets/lib/snippets.test.ts.
+
+[sqlfluff]
+# Plain SQL, not dbt: nothing here is templated, and the Jinja templater would
+# only find ways to misread a brace inside a regular expression.
+templater = raw
+max_line_length = 80
+
+[sqlfluff:indentation]
+indent_unit = space
+tab_space_size = 4
+
+# UPPER for the language, lower for the functions. The common modern
+# convention, and the one that keeps a long SELECT list readable: the keywords
+# form the skeleton and the calls sit quietly inside it.
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+# AS is optional in the language and mandatory here. "FROM payment p" and
+# "FROM payment AS p" differ by one word, and the second cannot be misread as
+# a missing comma.
+[sqlfluff:rules:aliasing.table]
+aliasing = explicit
+
+[sqlfluff:rules:aliasing.column]
+aliasing = explicit

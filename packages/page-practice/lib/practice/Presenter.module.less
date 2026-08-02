@@ -2,9 +2,9 @@
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
+  inline-size: 100%;
   min-inline-size: auto;
   max-inline-size: 84rem;
-  inline-size: 100%;
   // Fill the template's main column so the journey strip can sit pinned at
   // the very bottom of the viewport, as in the redesign mockup.
   margin-block: 0 0.25rem;
@@ -17,6 +17,60 @@
   margin-block-start: 3rem;
   padding-inline: 3rem;
   text-align: center;
+}
+
+// Code is read from the left margin, and indentation only means anything when
+// every line starts from the same place. Centred, each line floats to its own
+// horizontal position and the shape of the block — which is half of what a
+// coding standard is — disappears.
+.textInput_code {
+  text-align: start;
+  tab-size: 4;
+  font-variant-ligatures: none;
+}
+
+// Which half of a colour scheme is used. The app's light or dark mode is a
+// CSS fact — `html[data-color]`, and a media query for "auto" — so the choice
+// is made here rather than in TypeScript, where it would drift from this file
+// the day either changed.
+//
+// Dark is the default arm because the app's own default is dark.
+.textInput_code {
+  --syntax-keyword: var(--code-dark-keyword, var(--syntax-keyword));
+  --syntax-string: var(--code-dark-string, var(--syntax-string));
+  --syntax-number: var(--code-dark-number, var(--syntax-number));
+  --syntax-comment: var(--code-dark-comment, var(--syntax-comment));
+  --textinput__color: var(--code-dark-foreground, var(--textinput__color));
+  --code-background: var(--code-dark-background);
+}
+
+.light-code-vars() {
+  --syntax-keyword: var(--code-light-keyword, var(--syntax-keyword));
+  --syntax-string: var(--code-light-string, var(--syntax-string));
+  --syntax-number: var(--code-light-number, var(--syntax-number));
+  --syntax-comment: var(--code-light-comment, var(--syntax-comment));
+  --textinput__color: var(--code-light-foreground, var(--textinput__color));
+  --code-background: var(--code-light-background);
+}
+
+:global(html[data-color="keylearn-day"]) .textInput_code {
+  .light-code-vars();
+}
+
+@media (prefers-color-scheme: light) {
+  :global(html[data-color="auto"]) .textInput_code {
+    .light-code-vars();
+  }
+}
+
+// The scheme's own ground, on the code block alone, when the learner has asked
+// for it. Off by default: a coloured panel is a far bigger change to the page
+// than colouring the text, and with it off the pair above keeps the palette
+// legible on whatever background the app is already using.
+.textInput_themed {
+  padding: 1.5rem 1.75rem;
+  border-radius: 0.9rem;
+  background: var(--code-background);
 }
 
 .textInput_compact {

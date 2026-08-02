@@ -3,6 +3,10 @@
   font-kerning: none;
   font-variant: none;
   line-height: 1.2;
+  // Go indents with tabs, and gofmt will not be talked out of it. Left at the
+  // browser default of eight, a Go snippet marches off the right of the panel
+  // after three levels of nesting; four matches how every editor shows it.
+  tab-size: 4;
   user-select: none;
 }
 
@@ -63,4 +67,26 @@
   .band {
     transition: none;
   }
+}
+
+// A line and its number, side by side. Grid rather than flex so every gutter
+// is the same width and the code starts on one straight edge however many
+// digits the line count reaches.
+.numbered {
+  display: grid;
+  grid-template-columns: 2.5em 1fr;
+  gap: 1.5em;
+  align-items: baseline;
+}
+
+// Right-aligned and grey, the way every editor draws it. A fixed neutral
+// rather than the theme's comment colour: a gutter that turns green in one
+// scheme and pink in another reads as content, and the whole point of the
+// numbers is that they are not. Mid-grey sits legibly on a light background
+// and a dark one alike, so it needs no light/dark pair of its own.
+.lineNumber {
+  color: #858585;
+  text-align: end;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
 }

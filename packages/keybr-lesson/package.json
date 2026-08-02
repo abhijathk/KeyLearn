@@ -8,6 +8,7 @@
   "dependencies": {
     "@keybr/code": "*",
     "@keybr/content": "*",
+    "@keybr/content-snippets": "*",
     "@keybr/keyboard": "*",
     "@keybr/lang": "*",
     "@keybr/math": "*",

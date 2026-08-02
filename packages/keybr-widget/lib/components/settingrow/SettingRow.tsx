@@ -147,6 +147,8 @@ export function SettingTiles<T extends string | number>({
     id: T;
     label: ReactNode;
     description?: ReactNode;
+    /** A short mark on the tile, for the one or two worth pointing at. */
+    badge?: ReactNode;
   }[];
 }): ReactNode {
   return (
@@ -162,7 +164,12 @@ export function SettingTiles<T extends string | number>({
             onChange(o.id);
           }}
         >
-          <span className={styles.tileName}>{o.label}</span>
+          <span className={styles.tileName}>
+            {o.label}
+            {o.badge != null && (
+              <span className={styles.tileBadge}>{o.badge}</span>
+            )}
+          </span>
           {o.description != null && (
             <span className={styles.tileDesc}>{o.description}</span>
           )}

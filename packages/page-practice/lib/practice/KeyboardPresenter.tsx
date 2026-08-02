@@ -106,24 +106,28 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
           toggledKeys={effectiveToggledKeys}
           showColors={colors}
         />
-      <MasteryLayer keys={masteryKeys} depressedKeys={depressedKeys} />
-      {wrongKey != null && (
-        <WrongKeyLayer
-          key={wrongKey.at}
-          codePoint={wrongKey.codePoint}
-          depressedKeys={depressedKeys}
-        />
-      )}
-      {focus && pointers && (
-        <PointersLayer suffix={suffix} helpLevel={helpLevel} />
-      )}
-      {focus && lastLesson && (
-        // Connections first (below), then the per-key rings on top.
-        <TransitionsLayer histogram={lastLesson.hits2} />
-      )}
-      {focus && lastLesson && (
-        <HeatRingLayer rings={heatRingsOf(lastLesson, masteryKeys)} />
-      )}
+        <MasteryLayer keys={masteryKeys} depressedKeys={depressedKeys} />
+        {wrongKey != null && (
+          <WrongKeyLayer
+            key={wrongKey.at}
+            codePoint={wrongKey.codePoint}
+            depressedKeys={depressedKeys}
+          />
+        )}
+        {focus && pointers && (
+          <PointersLayer
+            suffix={suffix}
+            helpLevel={helpLevel}
+            capsLock={capsLock}
+          />
+        )}
+        {focus && lastLesson && (
+          // Connections first (below), then the per-key rings on top.
+          <TransitionsLayer histogram={lastLesson.hits2} />
+        )}
+        {focus && lastLesson && (
+          <HeatRingLayer rings={heatRingsOf(lastLesson, masteryKeys)} />
+        )}
         {focus || <ZonesLayer />}
       </VirtualKeyboard>
     </div>

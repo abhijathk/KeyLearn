@@ -16,11 +16,11 @@
   inline-size: min(21rem, calc(100vi - 2.5rem));
   border: 1px solid color-mix(in oklab, var(--accent) 22%, var(--primary-d2));
   border-radius: 1.25rem;
+  overflow: hidden;
+  color: var(--text-color);
   background-color: var(--primary);
   box-shadow: 0 2rem 5rem var(--shadow-color);
-  overflow: hidden;
   font-family: var(--value-font-family);
-  color: var(--text-color);
   animation: goal-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -47,9 +47,9 @@
 
 .rcHead {
   display: flex;
+  gap: 0.75rem;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
 }
 
 .title {
@@ -64,9 +64,9 @@
 
 .stamp {
   flex: none;
+  padding: 0.15rem 0.5rem;
   border: 2px solid var(--accent);
   border-radius: 0.5rem;
-  padding: 0.15rem 0.5rem;
   color: var(--accent);
   font-size: 0.62rem;
   font-weight: 700;
@@ -76,11 +76,11 @@
 
 .metaline {
   margin-block-start: 0.5rem;
+  overflow: hidden;
   color: color-mix(in oklab, var(--text-color) 45%, var(--primary));
   font-size: 0.68rem;
-  white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rows {
@@ -112,7 +112,8 @@
 
 .fill {
   flex: 1;
-  border-block-end: 1px dotted color-mix(in oklab, var(--text-color) 22%, transparent);
+  border-block-end: 1px dotted
+    color-mix(in oklab, var(--text-color) 22%, transparent);
   transform: translateY(-0.2rem);
 }
 
@@ -129,7 +130,8 @@
 .dash {
   margin: 0.75rem 0;
   border: none;
-  border-block-start: 1px dashed color-mix(in oklab, var(--text-color) 18%, transparent);
+  border-block-start: 1px dashed
+    color-mix(in oklab, var(--text-color) 18%, transparent);
 }
 
 .barsCap {
@@ -164,8 +166,8 @@
   fill: none;
   stroke: var(--accent);
   stroke-width: 2.4;
-  stroke-linecap: round;
   stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 .chartDot {
@@ -189,9 +191,18 @@
   align-items: flex-start;
   margin-block-start: 0.75rem;
   padding: 0.7rem 0.8rem;
-  border: 1px solid color-mix(in oklab, var(--slow-key-color, var(--error-color)) 28%, transparent);
+  border: 1px solid
+    color-mix(
+      in oklab,
+      var(--slow-key-color, var(--error-color)) 28%,
+      transparent
+    );
   border-radius: 0.75rem;
-  background: color-mix(in oklab, var(--slow-key-color, var(--error-color)) 10%, transparent);
+  background: color-mix(
+    in oklab,
+    var(--slow-key-color, var(--error-color)) 10%,
+    transparent
+  );
 }
 
 .focusIcon {
@@ -228,8 +239,8 @@
   border: 1px solid color-mix(in oklab, var(--text-color) 20%, transparent);
   border-block-end-width: 2px;
   border-radius: 0.3rem;
-  background: color-mix(in oklab, var(--text-color) 12%, var(--primary));
   color: var(--text-color);
+  background: color-mix(in oklab, var(--text-color) 12%, var(--primary));
   font-size: 0.72rem;
   font-weight: 700;
   text-align: center;
@@ -302,7 +313,8 @@
   background: var(--accent);
 
   &:hover {
-    box-shadow: 0 0.4rem 1.2rem color-mix(in oklab, var(--accent) 40%, transparent);
+    box-shadow: 0 0.4rem 1.2rem
+      color-mix(in oklab, var(--accent) 40%, transparent);
   }
 }
 
@@ -323,8 +335,8 @@
   fill: none;
   stroke: currentColor;
   stroke-width: 2.2;
-  stroke-linecap: round;
   stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 .kbd {
@@ -338,13 +350,13 @@
 
 .linklike {
   border: none;
-  background: none;
   color: color-mix(in oklab, var(--text-color) 45%, var(--primary));
+  background: none;
   font-family: var(--value-font-family);
   font-size: 0.72rem;
   text-decoration: underline;
-  text-underline-offset: 3px;
   cursor: pointer;
+  text-underline-offset: 3px;
 
   &:hover {
     color: var(--text-color-f1);

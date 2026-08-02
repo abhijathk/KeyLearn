@@ -17,3 +17,43 @@
 
   margin-block-start: 0.5rem;
 }
+
+// The palette's own ground, so the preview shows the scheme as it will be
+// typed rather than its colours floating on the settings panel.
+.themedText {
+  padding: 1rem 1.1rem;
+  border-radius: 0.7rem;
+  background: var(--code-background);
+}
+
+// The same light/dark pairing as the practice page, so the preview shows the
+// scheme the way it will actually be typed.
+.codeText {
+  --syntax-keyword: var(--code-dark-keyword, var(--syntax-keyword));
+  --syntax-string: var(--code-dark-string, var(--syntax-string));
+  --syntax-number: var(--code-dark-number, var(--syntax-number));
+  --syntax-comment: var(--code-dark-comment, var(--syntax-comment));
+  --textinput__color: var(--code-dark-foreground, var(--textinput__color));
+  --code-background: var(--code-dark-background);
+
+  text-align: start;
+}
+
+.light-preview-vars() {
+  --syntax-keyword: var(--code-light-keyword, var(--syntax-keyword));
+  --syntax-string: var(--code-light-string, var(--syntax-string));
+  --syntax-number: var(--code-light-number, var(--syntax-number));
+  --syntax-comment: var(--code-light-comment, var(--syntax-comment));
+  --textinput__color: var(--code-light-foreground, var(--textinput__color));
+  --code-background: var(--code-light-background);
+}
+
+:global(html[data-color="keylearn-day"]) .codeText {
+  .light-preview-vars();
+}
+
+@media (prefers-color-scheme: light) {
+  :global(html[data-color="auto"]) .codeText {
+    .light-preview-vars();
+  }
+}

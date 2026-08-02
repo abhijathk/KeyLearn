@@ -1,5 +1,6 @@
 import { Syntax } from "@keybr/code";
 import { Book } from "@keybr/content";
+import { HIDE_COMMENTS, SNIPPET_FLAGS } from "@keybr/content-snippets";
 import {
   booleanProp,
   flagsProp,
@@ -8,6 +9,14 @@ import {
   stringProp,
 } from "@keybr/settings";
 import { LessonType } from "./lessontype.ts";
+
+const CODE_FLAGS: readonly string[] = [...Syntax.FLAGS, ...SNIPPET_FLAGS];
+
+// Everything on to begin with, except the one that takes something away: a
+// learner who has never opened these settings should get the comments.
+const CODE_FLAGS_ON: readonly string[] = CODE_FLAGS.filter(
+  (flag) => flag !== HIDE_COMMENTS,
+);
 
 export const lessonProps = {
   type: itemProp("lesson.type", LessonType.ALL, LessonType.GUIDED),
@@ -69,8 +78,21 @@ export const lessonProps = {
     benford: booleanProp("lesson.numbers.benford", true),
   } as const,
   code: {
-    syntax: itemProp("lesson.code.syntax", Syntax.ALL, Syntax.HTML),
-    flags: flagsProp("lesson.code.flags", Syntax.FLAGS),
+    // TypeScript, and the written corpus rather than the grammar. It is the
+    // largest corpus here, the language most learners will be typing all day,
+    // and unlike a generated one it teaches something on the first lesson.
+    syntax: itemProp("lesson.code.syntax", Syntax.ALL, Syntax.TYPESCRIPT_CODE),
+    // Grammar flags and corpus topics share one setting, and it drops anything
+    // outside this list — so every topic has to be named here or it would turn
+    // itself back on at the next reload.
+    flags: flagsProp("lesson.code.flags", CODE_FLAGS, CODE_FLAGS_ON),
+    // The editor palette.
+    theme: stringProp("lesson.code.theme", "keylearn-bright"),
+    // Whether the scheme also brings its own ground. Off: a coloured panel is
+    // a big change to the page, and with it off the light or dark half of the
+    // scheme is chosen automatically to suit the app's own background, so the
+    // colours stay legible either way.
+    themeBackground: booleanProp("lesson.code.themeBackground", false),
   } as const,
   capitals: numberProp("lesson.capitals", 0, { min: 0, max: 1 }),
   punctuators: numberProp("lesson.punctuators", 0, { min: 0, max: 1 }),

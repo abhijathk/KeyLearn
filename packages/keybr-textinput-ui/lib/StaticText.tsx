@@ -9,6 +9,7 @@ export function StaticText({
   size,
   cursor = false,
   focus = true,
+  lineNumbers = false,
 }: {
   readonly settings?: TextDisplaySettings;
   readonly lines: LineList;
@@ -16,6 +17,7 @@ export function StaticText({
   readonly size?: TextLineSize;
   readonly cursor?: boolean;
   readonly focus?: boolean;
+  readonly lineNumbers?: boolean;
 }): ReactNode {
   return (
     <TextLines
@@ -25,6 +27,7 @@ export function StaticText({
       size={size}
       cursor={cursor}
       focus={focus}
+      lineNumbers={lineNumbers}
     />
   );
 }

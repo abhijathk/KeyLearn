@@ -19,6 +19,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -32,6 +33,7 @@ export function TextArea({
   wrap,
   size,
   lineTemplate,
+  lineNumbers,
   demo,
   moving,
   hideStartHint,
@@ -48,6 +50,7 @@ export function TextArea({
   readonly wrap?: boolean;
   readonly size?: TextLineSize;
   readonly lineTemplate?: ComponentType<any>;
+  readonly lineNumbers?: boolean;
   readonly demo?: boolean;
   readonly moving?: boolean;
   readonly hideStartHint?: boolean;
@@ -82,11 +85,20 @@ export function TextArea({
       setElementCursor(element, "default");
     }
   });
-  useHotkeys({
-    ["Enter"]: () => {
-      innerRef.current?.focus();
-    },
-  });
+  // Only while the lesson is waiting to start, when Enter means "begin". Once
+  // the text area has focus, Enter is a character being typed — a code snippet
+  // has real lines in it — and this handler's preventDefault would stop the
+  // browser ever producing the line break the engine is waiting for.
+  const startHotkey = useMemo(() => {
+    const map: Record<string, () => void> = {};
+    if (!focus) {
+      map["Enter"] = () => {
+        innerRef.current?.focus();
+      };
+    }
+    return map;
+  }, [focus]);
+  useHotkeys(startHotkey);
   const handleFocus = useCallback(() => {
     setFocus(true);
     onFocus?.();
@@ -125,6 +137,7 @@ export function TextArea({
         wrap={wrap}
         size={size}
         lineTemplate={lineTemplate}
+        lineNumbers={lineNumbers}
         cursor={!demo && focus}
         focus={demo || focus}
         colorOf={colorOf}

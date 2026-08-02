@@ -18,13 +18,19 @@ export function EventAlert({ event }: { readonly event: LessonEvent }) {
     case "top-speed":
       return (
         <Award icon={<TrophyIcon />}>
-          <FormattedMessage id="t_ev_Top_speed" defaultMessage="New top speed!" />
+          <FormattedMessage
+            id="t_ev_Top_speed"
+            defaultMessage="New top speed!"
+          />
         </Award>
       );
     case "top-score":
       return (
         <Award icon={<TrophyIcon />}>
-          <FormattedMessage id="t_ev_Top_score" defaultMessage="New top score!" />
+          <FormattedMessage
+            id="t_ev_Top_score"
+            defaultMessage="New top score!"
+          />
         </Award>
       );
     case "top-consistency":

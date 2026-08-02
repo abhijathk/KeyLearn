@@ -104,6 +104,12 @@ export const JourneyStrip = memo(function JourneyStrip({
       tasks.cancelAll();
     };
   }, [hover]);
+  // Code and number lessons put every key in play from the start, so the strip
+  // draws a full bar and "32/32" under every lesson and never changes again.
+  // Something that always says the same thing is not an indicator.
+  if (lessonKeys.findIncludedKeys().length >= lessonKeys.letters.length) {
+    return null;
+  }
   return (
     <div className={styles.journeyStrip}>
       <LetterJourney

@@ -9,13 +9,16 @@ export class LessonType implements EnumItem {
   static readonly CUSTOM = new LessonType("custom", TextType.NATURAL);
   static readonly CODE = new LessonType("code", TextType.CODE);
   static readonly NUMBERS = new LessonType("numbers", TextType.NUMBERS);
+  // Order here is the order the practice settings offer them in. Code sits
+  // straight after the classic course: for someone learning to type code it is
+  // the destination, not an afterthought filed between prose and numbers.
   static readonly ALL = new Enum<LessonType>(
     LessonType.GUIDED,
     LessonType.CURRICULUM,
+    LessonType.CODE,
     LessonType.WORDLIST,
     LessonType.BOOKS,
     LessonType.CUSTOM,
-    LessonType.CODE,
     LessonType.NUMBERS,
   );
 

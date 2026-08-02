@@ -35,6 +35,7 @@ export function LessonSettings(): ReactNode {
         id: "t_Guided_lessons",
         defaultMessage: "Guided practice",
       }),
+      badge: formatMessage({ id: "t_Pick", defaultMessage: "Pick" }),
       description: formatMessage({
         id: "lessonType.guided.summary",
         defaultMessage:
@@ -50,6 +51,18 @@ export function LessonSettings(): ReactNode {
         id: "lessonType.curriculum.summary",
         defaultMessage:
           "A fixed sequence of lessons, the same order for everyone.",
+      }),
+    },
+    {
+      label: formatMessage({
+        id: "t_Source_code",
+        defaultMessage: "Code craft",
+      }),
+      badge: formatMessage({ id: "t_Pick", defaultMessage: "Pick" }),
+      description: formatMessage({
+        id: "lessonType.code.summary",
+        defaultMessage:
+          "Real code from real frameworks, written to the language\u2019s own standard.",
       }),
     },
     {
@@ -82,16 +95,6 @@ export function LessonSettings(): ReactNode {
     },
     {
       label: formatMessage({
-        id: "t_Source_code",
-        defaultMessage: "Code Snippets",
-      }),
-      description: formatMessage({
-        id: "lessonType.code.summary",
-        defaultMessage: "Source code, with its symbols and indentation.",
-      }),
-    },
-    {
-      label: formatMessage({
         id: "t_Numbers",
         defaultMessage: "Number Drills",
       }),
@@ -111,10 +114,11 @@ export function LessonSettings(): ReactNode {
             settings.set(lessonProps.type, LessonType.ALL.at(index)),
           );
         }}
-        options={sources.map(({ label, description }, index) => ({
+        options={sources.map(({ label, description, badge }, index) => ({
           id: index,
           label,
           description,
+          badge,
         }))}
       />
       <LessonLoader>
