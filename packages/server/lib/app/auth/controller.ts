@@ -460,10 +460,10 @@ export class Controller {
     const code = query.get("code");
     const state = query.get("state");
     const error = query.get("error");
-    const authState = ctx.state.session.pull("authState");
+    const authState = ctx.state.session.pull("authState") as string | null;
     const codeVerifier = ctx.state.session.pull("codeVerifier") as
       | string
-      | undefined;
+      | null;
     const intent = ctx.state.session.pull("oauthIntent") as
       | "login"
       | "register"
@@ -477,7 +477,20 @@ export class Controller {
       return;
     }
 
-    if (state === authState) {
+    // The state has to exist as well as match. `pull` returns null for a key
+    // that was never set, and `query.get` returns null for a parameter that was
+    // never sent — so a bare `state === authState` is satisfied by null === null
+    // for any browser with no OAuth flow in progress. That is login CSRF: a
+    // third party redeems an authorization code they obtained for their own
+    // provider account inside somebody else's browser, and that browser is then
+    // signed in as them, quietly recording whatever the victim does next.
+    if (
+      typeof authState === "string" &&
+      authState !== "" &&
+      state === authState &&
+      typeof codeVerifier === "string" &&
+      codeVerifier !== ""
+    ) {
       const token = await adapter.getAccessToken({ code, codeVerifier });
       const resourceOwner = await adapter.getProfile(token);
       if (resourceOwner.email != null) {

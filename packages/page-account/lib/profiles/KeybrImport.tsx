@@ -175,7 +175,7 @@ export function KeybrImport({
   };
 
   return (
-    <Overlay>
+    <Overlay onClose={onClose}>
       <div className={styles.gate} onClick={onClose}>
         <div className={styles.editor} onClick={(ev) => ev.stopPropagation()}>
           <div className={styles.editorTape} aria-hidden={true} />

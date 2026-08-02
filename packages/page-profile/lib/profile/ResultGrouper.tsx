@@ -16,7 +16,7 @@ import {
 } from "@keybr/result";
 import { useSettings } from "@keybr/settings";
 import { clsx } from "clsx";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./road/road.module.less";
 
@@ -40,14 +40,85 @@ export function ResultGrouper({
       : [...resultsLayouts][0];
   const [selectedLayout, setSelectedLayout] = useState(defaultLayout);
   const [characterClass, setCharacterClass] = useState("letters");
-  const filter =
-    kidProfile && characterClass === "programming" ? "letters" : characterClass;
   if (!resultsLayouts.has(selectedLayout)) {
     setSelectedLayout(defaultLayout());
   }
   const layoutOptions = useLayoutOptions(resultsLayouts);
   const keyboard = loadKeyboard(selectedLayout);
   const group = groups.get(selectedLayout);
+
+  // Every character this profile has actually struck on this layout. The
+  // filters are drawn from it, the way the layout list is drawn from the
+  // layouts in the results: offering "Symbols" to somebody who has only ever
+  // typed words leads to an empty chart and the impression something is broken,
+  // when in truth there is simply nothing there yet.
+  const typed = useMemo(() => {
+    // Code points, as plain numbers — which is all a CodePoint is.
+    const set = new Set<number>();
+    for (const result of group) {
+      for (const { codePoint, hitCount } of result.histogram) {
+        if (hitCount > 0) {
+          set.add(codePoint);
+        }
+      }
+    }
+    return set;
+  }, [group]);
+  const practised = (letters: readonly Letter[]) =>
+    letters.some(({ codePoint }) => typed.has(codePoint));
+
+  const classes: (readonly [string, string])[] = [
+    // Always offered, and the fallback. Letters are what a first lesson is made
+    // of, so there is no state in which this one is the empty view — and with
+    // no results at all it is the only thing left to show.
+    [
+      "letters",
+      formatMessage({ id: "t_cc_Letters", defaultMessage: "Letters" }),
+    ],
+  ];
+  if (practised(Letter.digits)) {
+    classes.push([
+      "digits",
+      formatMessage({ id: "t_cc_Digits", defaultMessage: "Digits" }),
+    ]);
+  }
+  if (practised(Letter.punctuators)) {
+    classes.push([
+      "punctuators",
+      formatMessage({
+        id: "t_cc_Punctuation_characters",
+        defaultMessage: "Punctuation marks",
+      }),
+    ]);
+  }
+  if (practised(Letter.specials)) {
+    classes.push([
+      "specials",
+      formatMessage({
+        id: "t_cc_Special_characters",
+        defaultMessage: "Symbols",
+      }),
+    ]);
+  }
+  // The same set the Code craft lessons draw from, so the figures here answer
+  // "how am I doing at code" rather than making somebody read four filters and
+  // add them up. Never on a child's profile, whatever the results contain.
+  if (!kidProfile && practised(Letter.programming)) {
+    classes.push([
+      "programming",
+      formatMessage({
+        id: "profile.filter.codeCraft",
+        defaultMessage: "Code craft",
+      }),
+    ]);
+  }
+
+  // A class can stop being offered — switching layout, or a profile whose
+  // history was cleared. Falling back to letters keeps the selection on
+  // something that is actually on screen.
+  const filter = classes.some(([value]) => value === characterClass)
+    ? characterClass
+    : "letters";
 
   return (
     <>
@@ -74,49 +145,7 @@ export function ResultGrouper({
           </select>
         )}
         <span className={styles.seg}>
-          {[
-            [
-              "letters",
-              formatMessage({
-                id: "t_cc_Letters",
-                defaultMessage: "Letters",
-              }),
-            ],
-            [
-              "digits",
-              formatMessage({ id: "t_cc_Digits", defaultMessage: "Digits" }),
-            ],
-            [
-              "punctuators",
-              formatMessage({
-                id: "t_cc_Punctuation_characters",
-                defaultMessage: "Punctuation marks",
-              }),
-            ],
-            [
-              "specials",
-              formatMessage({
-                id: "t_cc_Special_characters",
-                defaultMessage: "Symbols",
-              }),
-            ],
-            // The same set the Code craft lessons draw from, so the figures
-            // here answer "how am I doing at code" rather than making somebody
-            // read four filters and add them up. Not offered on a child's
-            // profile: they do not practise it, so the view would always be
-            // empty.
-            ...(kidProfile
-              ? []
-              : [
-                  [
-                    "programming",
-                    formatMessage({
-                      id: "profile.filter.codeCraft",
-                      defaultMessage: "Code craft",
-                    }),
-                  ] as const,
-                ]),
-          ].map(([value, name]) => (
+          {classes.map(([value, name]) => (
             <button
               key={value}
               type="button"

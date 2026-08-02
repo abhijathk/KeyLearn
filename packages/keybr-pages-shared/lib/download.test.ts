@@ -65,3 +65,15 @@ test("caps a very long name", () => {
   const name = exportFilename("typing-data", "a".repeat(200), "json", at);
   equal(name, `keylearn-typing-data-${"a".repeat(40)}-02-08-2026-1432.json`);
 });
+
+test("does not leave a dash hanging when the name is cut", () => {
+  // The fortieth character lands on the separator, which used to survive the
+  // slice and give "…aaa--02-08-2026-1432.json".
+  const name = exportFilename(
+    "typing-data",
+    `${"a".repeat(39)} bcdef`,
+    "json",
+    at,
+  );
+  equal(name, `keylearn-typing-data-${"a".repeat(39)}-02-08-2026-1432.json`);
+});

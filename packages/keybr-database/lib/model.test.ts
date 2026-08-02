@@ -203,6 +203,7 @@ test("create user from resource owner with null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -253,6 +254,7 @@ test("create user from resource owner with non-null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -303,6 +305,7 @@ test("create user from resource owner with invalid values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -359,6 +362,7 @@ test("update user from resource owner with null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -415,6 +419,7 @@ test("update user from resource owner with non-null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -459,6 +464,7 @@ test("update user from resource owner with non-null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -515,6 +521,7 @@ test("update user from resource owner with invalid values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -559,6 +566,7 @@ test("update user from resource owner with invalid values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -609,6 +617,7 @@ test("merge multiple resource owners", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -656,6 +665,7 @@ test("merge multiple resource owners", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -792,6 +802,7 @@ test("generates unique name for resource owner", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      remindedAt: null,
       externalIds: [
         {
           id: 4,
@@ -923,6 +934,7 @@ test("login with a valid access token", async (ctx) => {
     totpEnabled: 0,
     recoveryCodes: null,
     parentPinHash: null,
+    remindedAt: null,
     externalIds: [],
     order: null,
   } as unknown);
@@ -1046,6 +1058,7 @@ test("make public user from user name", (ctx) => {
         totpEnabled: 0,
         recoveryCodes: null,
         parentPinHash: null,
+        remindedAt: null,
         externalIds: [],
         createdAt: new Date(0),
       }),
@@ -1079,6 +1092,7 @@ test("make public user from external user id", (ctx) => {
         totpEnabled: 0,
         recoveryCodes: null,
         parentPinHash: null,
+        remindedAt: null,
         externalIds: [
           {
             id: 1,
@@ -1118,6 +1132,7 @@ test("make public user from external user id", (ctx) => {
         totpEnabled: 0,
         recoveryCodes: null,
         parentPinHash: null,
+        remindedAt: null,
         externalIds: [
           {
             id: 1,

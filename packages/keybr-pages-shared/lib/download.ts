@@ -47,12 +47,17 @@ function slug(who: string | null | undefined): string {
   if (who == null) {
     return "";
   }
-  return who
-    .normalize("NFC")
-    .toLocaleLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40);
+  return (
+    who
+      .normalize("NFC")
+      .toLocaleLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, "-")
+      .slice(0, 40)
+      // Trimmed after the cut as well as before it: a name whose fortieth
+      // character lands on a separator would otherwise leave a dash hanging,
+      // and the join below turns that into a double dash.
+      .replace(/^-+|-+$/g, "")
+  );
 }
 
 /** Hand a blob to the browser to save, and let go of the object URL after. */

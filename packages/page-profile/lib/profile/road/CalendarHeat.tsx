@@ -12,6 +12,39 @@ const BRAILLE_DAY = 120;
 const DAY = 24 * 60 * 60 * 1000;
 
 /**
+ * Ten bands of progress towards the daily goal, plus the untouched day: eleven
+ * shades in all.
+ *
+ * The grid used to be tinted continuously while the legend named five steps, so
+ * the key did not describe the picture — two days a tenth of the goal apart drew
+ * as two shades no reader could name. Quantising to the same eleven levels the
+ * legend lists makes the two agree, and ten bands is about as fine a gradation
+ * as the eye can still separate at this cell size.
+ */
+const LEVELS = 10;
+
+/** Which band a 0..1 fraction of the goal falls in. */
+function levelOf(value: number): number {
+  if (value <= 0) {
+    return 0;
+  }
+  // ceil, so any practice at all reads as practice rather than as a rest day.
+  return Math.max(1, Math.min(LEVELS, Math.ceil(value * LEVELS)));
+}
+
+/**
+ * The fill for a band. Level 0 is the empty cell; the rest start well clear of
+ * it so that the lightest band is still plainly a mark on the grid.
+ */
+function shadeOf(level: number): string {
+  if (level === 0) {
+    return "var(--primary-l1)";
+  }
+  const mix = 20 + (level / LEVELS) * 80;
+  return `color-mix(in srgb, var(--accent) ${Math.round(mix)}%, var(--primary-l1))`;
+}
+
+/**
  * The practice calendar as a compact heat grid: one cell per day for the last
  * year, tinted by how much of the daily goal was met, with month and
  * weekday labels and the exact date and time on hover.
@@ -81,7 +114,7 @@ export function CalendarHeat({
           });
         }
       }
-      cells.push({ ms, time, value, cells: cellsDone });
+      cells.push({ ms, time, value, level: levelOf(value), cells: cellsDone });
     }
     return { cells, months };
     // formatMonth is stable per locale and zone, so this only recomputes
@@ -118,12 +151,8 @@ export function CalendarHeat({
                   key={i}
                   className={styles.cell}
                   style={
-                    cell.value > 0
-                      ? {
-                          backgroundColor: `color-mix(in srgb, var(--accent) ${Math.round(
-                            20 + cell.value * 80,
-                          )}%, var(--primary-l1))`,
-                        }
+                    cell.level > 0
+                      ? { backgroundColor: shadeOf(cell.level) }
                       : undefined
                   }
                   onMouseEnter={(e) => {
@@ -187,29 +216,20 @@ export function CalendarHeat({
           id="profile.calendar.goalLegend"
           defaultMessage="daily practice goal"
         />
-        <i style={{ backgroundColor: "var(--primary-l1)" }} /> 0%
-        <i
-          style={{
-            backgroundColor:
-              "color-mix(in srgb, var(--accent) 30%, var(--primary-l1))",
-          }}
-        />{" "}
-        25%
-        <i
-          style={{
-            backgroundColor:
-              "color-mix(in srgb, var(--accent) 55%, var(--primary-l1))",
-          }}
-        />{" "}
-        50%
-        <i
-          style={{
-            backgroundColor:
-              "color-mix(in srgb, var(--accent) 80%, var(--primary-l1))",
-          }}
-        />{" "}
-        75%
-        <i style={{ backgroundColor: "var(--accent)" }} /> 100%
+        {/*
+          One swatch per band, drawn as a continuous ramp so the eye reads it as
+          a scale rather than as eleven separate keys. Only every other step is
+          numbered — eleven labels in a row at this size would be unreadable, and
+          the unlabelled swatches sit between two numbers that bracket them.
+        */}
+        <span className={styles.calRamp}>
+          {Array.from({ length: LEVELS + 1 }, (_, level) => (
+            <span key={level} className={styles.calRampStep}>
+              <i style={{ backgroundColor: shadeOf(level) }} />
+              <em>{level % 2 === 0 ? `${level * 10}%` : ""}</em>
+            </span>
+          ))}
+        </span>
       </div>
     </>
   );

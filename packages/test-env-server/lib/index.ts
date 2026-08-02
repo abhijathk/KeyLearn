@@ -33,3 +33,11 @@ process.env.AUTH_FACEBOOK_CLIENT_SECRET = "secret";
 
 process.env.PADDLE_API_KEY = "apiKey";
 process.env.PADDLE_SECRET_KEY = "secretKey";
+
+// The app believes `X-Forwarded-Host` and `X-Forwarded-Proto` only when the
+// peer is a proxy it has been told to trust — otherwise anybody could claim any
+// host and bypass the rate limits keyed on the client address. Tests speak to
+// the app over a loopback socket and set those headers to stand in for a load
+// balancer, so trust loopback here; without it every page request is answered
+// with a canonical-URL 301 instead of the page.
+process.env.TRUSTED_PROXIES = "loopback";

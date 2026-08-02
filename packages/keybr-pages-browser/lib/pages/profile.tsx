@@ -94,21 +94,11 @@ function LearnerTabs(): ReactNode {
             ))}
           </div>
         </div>
-        <div className={styles.note}>
-          {selected.kind === "kid" ? (
-            <FormattedMessage
-              id="profile.tab.learnerKidNote"
-              defaultMessage="{name}’s progress on the dino trail, in the same charts."
-              values={{ name: selected.firstName }}
-            />
-          ) : (
-            <FormattedMessage
-              id="profile.tab.learnerNote"
-              defaultMessage="{name}’s typing progress on this device."
-              values={{ name: selected.firstName }}
-            />
-          )}
-        </div>
+        {/*
+          No caption under the tabs. The selected tab already says whose page
+          this is, and a line repeating the name on every switch was a caption
+          that told the reader nothing they had not just clicked.
+        */}
       </Screen>
       {/*
         Same page, same tabs, same chrome — the content is what differs. A
@@ -176,14 +166,6 @@ function ModeTabs(): ReactNode {
           <FormattedMessage id="profile.tab.kids" defaultMessage="Kids" />
         </button>
       </div>
-      {kids && (
-        <div className={styles.note}>
-          <FormattedMessage
-            id="profile.tab.kidsNote"
-            defaultMessage="Everything typed on the kids dino trail, in the same charts."
-          />
-        </div>
-      )}
       <ResultLoader
         key={kids ? "kids" : "me"}
         kids={kids}

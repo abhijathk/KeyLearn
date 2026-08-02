@@ -38,11 +38,14 @@ test("render", () => {
     "prefix": "og: http://ogp.me/ns#",
     "lang": "en",
     "dir": "ltr",
-    "data-color": "system",
+    "data-color": "auto",
     "data-font": "open-sans",
   });
-  isTrue(html.includes("google"));
-  isTrue(html.includes("cloudflare"));
+  // The ad and analytics injection was taken out deliberately (commit
+  // 2141f451). Asserting the absence keeps it out: a tracker reintroduced into
+  // the shell would otherwise reach every page, signed in or not, silently.
+  isFalse(html.includes("googletagmanager"));
+  isFalse(html.includes("cloudflareinsights"));
   equal($("nav").length, 0);
 });
 
@@ -77,7 +80,7 @@ test("render alt", () => {
     "prefix": "og: http://ogp.me/ns#",
     "lang": "en",
     "dir": "ltr",
-    "data-color": "system",
+    "data-color": "auto",
     "data-font": "open-sans",
   });
   isFalse(html.includes("google"));
@@ -118,7 +121,7 @@ test("render for a bot", () => {
     "prefix": "og: http://ogp.me/ns#",
     "lang": "en",
     "dir": "ltr",
-    "data-color": "system",
+    "data-color": "auto",
     "data-font": "open-sans",
   });
   equal($("nav").length, 1);

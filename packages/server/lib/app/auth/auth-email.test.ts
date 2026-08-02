@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { test } from "node:test";
 import { Application } from "@fastr/core";
 import { User, UserLoginRequest } from "@keybr/database";
@@ -8,6 +9,22 @@ import { TestContext } from "../test/context.ts";
 import { startApp } from "../test/request.ts";
 
 const context = new TestContext();
+
+/**
+ * Sign-in links are stored as a SHA-256 hash, never in the clear, so a database
+ * read yields nothing anybody can sign in with. These tests seed the hash and
+ * send the plaintext, which is the way the real flow works.
+ */
+function hashed(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+/** The token out of the sign-in link in an email. */
+function tokenFromLink(text: string): string {
+  const match = /\/login\/(\S+)/.exec(text);
+  isNotNull(match);
+  return match![1];
+}
 
 test("send a new access token", async () => {
   // Arrange.
@@ -43,7 +60,10 @@ test("send a new access token", async () => {
 
   const [message] = context.mailer.dump();
   equal(message.to, "test@keybr.com");
-  isTrue(message.text!.includes(userLoginRequest!.accessToken!));
+  // The link carries the plaintext token; the row carries only its hash.
+  const token = tokenFromLink(message.text!);
+  equal(userLoginRequest!.accessToken, hashed(token));
+  isTrue(!message.text!.includes(userLoginRequest!.accessToken!));
 });
 
 test("send an existing access token", async () => {
@@ -51,7 +71,7 @@ test("send an existing access token", async () => {
 
   await UserLoginRequest.query().insertGraph({
     email: "test@keybr.com",
-    accessToken: "xyz",
+    accessToken: hashed("xyz"),
     createdAt: new Date(),
   } as UserLoginRequest);
 
@@ -86,7 +106,11 @@ test("send an existing access token", async () => {
 
   const [message] = context.mailer.dump();
   equal(message.to, "test@keybr.com");
-  isTrue(message.text!.includes(userLoginRequest!.accessToken!));
+  const token = tokenFromLink(message.text!);
+  equal(userLoginRequest!.accessToken, hashed(token));
+  // Asking again replaces the outstanding token rather than mailing the old
+  // one a second time, so the superseded link stops working.
+  isTrue(token !== "xyz");
 });
 
 test("login with an access token / new user", async () => {
@@ -94,7 +118,7 @@ test("login with an access token / new user", async () => {
 
   await UserLoginRequest.query().insertGraph({
     email: "test@keybr.com",
-    accessToken: "xyz",
+    accessToken: hashed("xyz"),
     createdAt: new Date(),
   } as UserLoginRequest);
 
@@ -107,10 +131,11 @@ test("login with an access token / new user", async () => {
   // Assert.
 
   equal(response.status, 302);
-  equal(response.headers.get("Location"), "/account");
+  equal(response.headers.get("Location"), "/");
 
-  const userLoginRequest = await UserLoginRequest.findByEmail("test@keybr.com");
-  isNotNull(userLoginRequest);
+  // One shot: redeeming the link consumes it, so the same link in a forwarded
+  // email or a browser history is no longer a way in.
+  isNull(await UserLoginRequest.findByEmail("test@keybr.com"));
 
   const user = await User.findByEmail("test@keybr.com");
   isNotNull(user);
@@ -131,7 +156,7 @@ test("login with an access token / existing user", async () => {
 
   await UserLoginRequest.query().insertGraph({
     email: "test@keybr.com",
-    accessToken: "xyz",
+    accessToken: hashed("xyz"),
     createdAt: new Date(),
   } as UserLoginRequest);
 
@@ -144,10 +169,9 @@ test("login with an access token / existing user", async () => {
   // Assert.
 
   equal(response.status, 302);
-  equal(response.headers.get("Location"), "/account");
+  equal(response.headers.get("Location"), "/");
 
-  const userLoginRequest = await UserLoginRequest.findByEmail("test@keybr.com");
-  isNotNull(userLoginRequest);
+  isNull(await UserLoginRequest.findByEmail("test@keybr.com"));
 
   const user = await User.findByEmail("test@keybr.com");
   isNotNull(user);
@@ -155,6 +179,31 @@ test("login with an access token / existing user", async () => {
   equal(await request.who(), "test@keybr.com");
 
   deepEqual(context.mailer.dump(), []);
+});
+
+test("reject a token stolen from the database", async () => {
+  // Arrange.
+
+  // What a reader of the table actually has is the hash. Presenting it must not
+  // sign anybody in — that is the whole point of storing the hash.
+  const stored = hashed("xyz");
+  await UserLoginRequest.query().insertGraph({
+    email: "test@keybr.com",
+    accessToken: stored,
+    createdAt: new Date(),
+  } as UserLoginRequest);
+
+  const request = startApp(context.get(Application, kMain));
+
+  // Act.
+
+  const response = await request.GET(`/login/${stored}`).send();
+
+  // Assert.
+
+  equal(response.status, 403);
+  isNull(await request.who());
+  isNull(await User.findByEmail("test@keybr.com"));
 });
 
 test("ignore invalid access token", async () => {

@@ -230,11 +230,15 @@ function Practice({
         // Time from the previous cell: what the engine measures is the join,
         // because that is where the difficulty lives.
         const gap = lastAt.current === 0 ? null : now - lastAt.current;
-        if (gap != null && gap < 10_000) {
-          progress.current.hit(letter, gap);
+        const counted = gap != null && gap < 10_000 ? gap : null;
+        if (counted != null) {
+          progress.current.hit(letter, counted);
           saveProgress(progress.current, profileId);
         }
-        recordCell(profileId, { correct: true, ms: gap });
+        // The cell counts either way; the time only counts when the engine
+        // accepted it. Recording a two-minute pause as a join would put that
+        // pause into "time spent" and drag the pace down with it.
+        recordCell(profileId, { correct: true, ms: counted });
       }
       lastAt.current = now;
       setHits((n) => n + 1);

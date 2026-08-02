@@ -10,20 +10,41 @@ import { findSynth, MAX_TEXT } from "./synth.ts";
  * A phrase rendered to audio, kept because a drill says the same things over
  * and over: the same six letters, "try again", the dot names. Without this the
  * server would fork a synthesiser for every keystroke.
- *
- * Bounded, and evicted oldest-first — a Map iterates in insertion order, which
- * is all the ordering a cache this small needs.
  */
 const cache = new Map<string, Buffer>();
-const CACHE_MAX = 500;
+
+/**
+ * Budgeted in bytes rather than in entries.
+ *
+ * Counting entries looks like a bound and is not: a phrase may render up to
+ * the synthesiser's own 8 MB ceiling, so five hundred of them is four
+ * gigabytes — per worker. Distinct phrases are rate limited, but only per
+ * address and per window, so patience or a handful of addresses was enough to
+ * hold a server's memory hostage with nothing but GET requests.
+ */
+const CACHE_BYTES = 32 * 1024 * 1024;
+/** Beyond this a phrase is served but not kept; one clip must not evict the lot. */
+const CACHE_ITEM_BYTES = 1024 * 1024;
+let cachedBytes = 0;
 
 function remember(key: string, wav: Buffer): void {
+  if (wav.length > CACHE_ITEM_BYTES) {
+    return;
+  }
+  const had = cache.get(key);
+  if (had != null) {
+    cachedBytes -= had.length;
+  }
   cache.set(key, wav);
-  while (cache.size > CACHE_MAX) {
+  cachedBytes += wav.length;
+  // Oldest first — a Map iterates in insertion order, which is all the
+  // ordering a cache this small needs.
+  while (cachedBytes > CACHE_BYTES) {
     const oldest = cache.keys().next().value;
     if (oldest === undefined) {
       break;
     }
+    cachedBytes -= cache.get(oldest)?.length ?? 0;
     cache.delete(oldest);
   }
 }

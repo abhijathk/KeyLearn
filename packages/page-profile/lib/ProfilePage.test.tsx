@@ -29,9 +29,9 @@ test("render", async () => {
   );
 
   isNotNull(await r.findByText("Lifetime Stats"));
-  isNotNull(await r.findByText("Today's Stats"));
+  isNotNull(await r.findByText("Today’s Stats"));
   isNotNull(await r.findByText(/The speed story/));
-  isNotNull(await r.findByText(/One key's story/));
+  isNotNull(await r.findByText(/One key’s story/));
   isNotNull(await r.findByText("Your keys"));
   isNotNull(await r.findByText("Compared to everyone"));
   isNotNull(await r.findByText(/Practice calendar/));

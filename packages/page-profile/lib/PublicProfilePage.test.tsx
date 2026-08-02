@@ -38,7 +38,7 @@ test("render", async () => {
   // The named user's road profile renders with their identity band.
   isNotNull(await r.findByText("somebody"));
   isNotNull(await r.findByText(/The speed story/));
-  isNotNull(await r.findByText(/One key's story/));
+  isNotNull(await r.findByText(/One key’s story/));
 
   r.unmount();
 });

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { FakeIntlProvider } from "@keybr/intl";
 import { keyboardProps, Layout, useKeyboard } from "@keybr/keyboard";
-import { FakePhoneticModel } from "@keybr/phonetic-model";
+import { FakePhoneticModel, Letter } from "@keybr/phonetic-model";
 import { PhoneticModelLoader } from "@keybr/phonetic-model-loader";
 import {
   FakeResultContext,
@@ -11,7 +11,7 @@ import {
 } from "@keybr/result";
 import { FakeSettingsContext, Settings } from "@keybr/settings";
 import { fireEvent, render } from "@testing-library/react";
-import { equal } from "rich-assert";
+import { equal, isNotNull, isNull } from "rich-assert";
 import { ResultGrouper } from "./ResultGrouper.tsx";
 
 const faker = new ResultFaker();
@@ -81,7 +81,15 @@ test("select text type", async () => {
         initialSettings={new Settings().set(keyboardProps.layout, Layout.EN_US)}
       >
         <FakeResultContext
-          initialResults={[faker.nextResult({ layout: Layout.EN_US })]}
+          initialResults={[
+            faker.nextResult({ layout: Layout.EN_US }),
+            // A session that actually contained digits, which is what puts the
+            // Digits filter on screen.
+            faker.nextResult({
+              layout: Layout.EN_US,
+              histogram: faker.nextHistogram(Letter.digits),
+            }),
+          ]}
         >
           <ResultGrouper>
             {(keyStatsMap) => <TestChild keyStatsMap={keyStatsMap} />}
@@ -98,6 +106,37 @@ test("select text type", async () => {
   fireEvent.click(await r.findByText("Digits"));
 
   equal((await r.findByTitle("alphabet")).textContent, "0123456789");
+
+  r.unmount();
+});
+
+test("offer only the character classes that were practised", async () => {
+  PhoneticModelLoader.loader = FakePhoneticModel.loader;
+
+  const r = render(
+    <FakeIntlProvider>
+      <FakeSettingsContext
+        initialSettings={new Settings().set(keyboardProps.layout, Layout.EN_US)}
+      >
+        <FakeResultContext
+          initialResults={[faker.nextResult({ layout: Layout.EN_US })]}
+        >
+          <ResultGrouper>
+            {(keyStatsMap) => <TestChild keyStatsMap={keyStatsMap} />}
+          </ResultGrouper>
+        </FakeResultContext>
+      </FakeSettingsContext>
+    </FakeIntlProvider>,
+  );
+
+  // The faked session is letters only. A filter for a class this learner has
+  // never typed leads to an empty chart, which reads as a broken page rather
+  // than as "nothing here yet".
+  isNotNull(await r.findByText("Letters"));
+  isNull(r.queryByText("Digits"));
+  isNull(r.queryByText("Punctuation marks"));
+  isNull(r.queryByText("Symbols"));
+  isNull(r.queryByText("Code craft"));
 
   r.unmount();
 });

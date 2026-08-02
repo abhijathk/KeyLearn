@@ -63,7 +63,7 @@ test(`load custom theme from cookie`, async () => {
     .header("X-Forwarded-Proto", "https")
     .header(
       "Cookie",
-      new Cookie([["prefs", '{"color":"dark","font":"spectral"}']]),
+      new Cookie([["prefs", '{"color":"keylearn","font":"roboto"}']]),
     )
     .send();
 
@@ -74,8 +74,8 @@ test(`load custom theme from cookie`, async () => {
   deepEqual(response.headers.getAll("Set-Cookie"), []);
 
   const $ = load(await response.body.text());
-  equal($("html").attr("data-color"), "dark");
-  equal($("html").attr("data-font"), "spectral");
+  equal($("html").attr("data-color"), "keylearn");
+  equal($("html").attr("data-font"), "roboto");
 });
 
 test(`ignore invalid theme cookie`, async () => {
@@ -99,6 +99,6 @@ test(`ignore invalid theme cookie`, async () => {
   deepEqual(response.headers.getAll("Set-Cookie"), []);
 
   const $ = load(await response.body.text());
-  equal($("html").attr("data-color"), "system");
+  equal($("html").attr("data-color"), "auto");
   equal($("html").attr("data-font"), "open-sans");
 });

@@ -17,8 +17,16 @@ import { createPortal } from "react-dom";
  */
 export function Overlay({
   children,
+  onClose,
 }: {
   readonly children: ReactNode;
+  /**
+   * Dismisses the dialog. Given here so Escape closes it, which is what every
+   * dialog is expected to do and what somebody who cannot use a pointer has to
+   * rely on: the dialogs are dismissed by clicking their backdrop, and a
+   * `<div onClick>` is invisible to the keyboard.
+   */
+  readonly onClose?: () => void;
 }): ReactNode {
   // Portals need a real document, which the server render does not have. The
   // first client render matches the server's (nothing), then the effect mounts
@@ -27,5 +35,22 @@ export function Overlay({
   useEffect(() => {
     setHost(document.body);
   }, []);
+  useEffect(() => {
+    if (onClose == null) {
+      return;
+    }
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        ev.stopPropagation();
+        onClose();
+      }
+    };
+    // On the document, because focus may be anywhere inside the portal — or
+    // nowhere in particular, if the dialog opened without moving it.
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [onClose]);
   return host == null ? null : createPortal(children, host);
 }

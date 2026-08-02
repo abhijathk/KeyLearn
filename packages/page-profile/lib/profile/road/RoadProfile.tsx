@@ -18,7 +18,7 @@ import {
   timeToSpeed,
   useResults,
 } from "@keybr/result";
-import { booleanProp, Preferences, useSettings } from "@keybr/settings";
+import { useSettings } from "@keybr/settings";
 import {
   Explainer,
   formatDuration,
@@ -45,8 +45,6 @@ import {
 import { KeysViews } from "./KeysViews.tsx";
 import * as styles from "./road.module.less";
 import { SlowTransitions } from "./SlowTransitions.tsx";
-
-const propExplainSettings = booleanProp("prefs.profile.explain", true);
 
 /**
  * The Long Road: the profile page as the story of the whole journey, in the
@@ -173,9 +171,11 @@ function Identity({
   const { formatMessage } = useIntl();
   const { formatNumber } = useIntlNumbers();
   const { publicUser } = usePageData();
-  const { explainersVisible, toggleExplainers } = useExplainerState();
+  // The charts carry their own captions now, so there is nothing left for a
+  // global "explain everything" switch to reveal.
+  const { toggleExplainers } = useExplainerState();
   useLayoutEffect(() => {
-    toggleExplainers(Preferences.get(propExplainSettings));
+    toggleExplainers(false);
   });
   const streak = dailyStreak(results);
   const signedIn = user != null || publicUser.id != null;
@@ -235,21 +235,6 @@ function Identity({
             </>
           )}
         </i>
-      </span>
-      <span className={styles.idActions}>
-        <button
-          type="button"
-          onClick={() => {
-            toggleExplainers(!explainersVisible);
-            Preferences.set(propExplainSettings, !explainersVisible);
-          }}
-        >
-          {explainersVisible ? "▾ " : "▸ "}
-          <FormattedMessage
-            id="t_Explain_charts"
-            defaultMessage="Show chart explanations"
-          />
-        </button>
       </span>
     </div>
   );

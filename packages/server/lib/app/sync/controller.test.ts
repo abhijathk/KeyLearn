@@ -44,6 +44,10 @@ test("get public user data", async (ctx) => {
   const userData = factory.load(id);
   await userData.append([faker.nextResult()]);
 
+  // A profile is private unless its owner has published it, so the fixture has
+  // to opt in the way a real account does.
+  await user.$query().patch({ publicProfile: true });
+
   const request = startApp(context.get(Application, kMain));
 
   // Act.
@@ -59,6 +63,31 @@ test("get public user data", async (ctx) => {
   equal(response.headers.get("Cache-Control"), "private, no-cache");
   match(response.headers.get("ETag")!, /"[a-z0-9]+"/);
   isTrue((await response.body.buffer()).length > 0);
+});
+
+test("do not serve the data of a private profile", async (ctx) => {
+  // Arrange.
+
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const factory = context.get(UserDataFactory);
+  const user = await findUser("user1@keybr.com");
+  const id = new PublicId(user.id!);
+  await factory.load(id).append([faker.nextResult()]);
+
+  // Not published — which is the default for every account.
+
+  const request = startApp(context.get(Application, kMain));
+
+  // Act.
+
+  const response = await request.GET("/_/sync/data/" + id).send();
+
+  // Assert.
+
+  // Somebody else's typing history is not readable just because their public id
+  // can be guessed, and the 404 does not confirm the account exists either.
+  equal(response.status, 404);
 });
 
 test("get empty user data", async (ctx) => {

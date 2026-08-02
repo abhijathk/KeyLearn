@@ -175,6 +175,57 @@ test("validate state", async () => {
   isNull(await request.who());
 });
 
+test("reject a callback for a flow that was never started", async () => {
+  // Arrange.
+
+  const request = startApp(context.get(Application, kMain));
+
+  // No `/auth/oauth-init` first, so there is no state in the session, and no
+  // `state` parameter on the callback either. Both read back as null, and
+  // `state === authState` was therefore satisfied by null === null: anybody
+  // could redeem an authorization code obtained for their own provider account
+  // inside somebody else's browser and leave that browser signed in as them.
+
+  // Act.
+
+  const response = await request
+    .GET("/auth/oauth-callback/fake?" + new URLSearchParams([["code", "xyz"]]))
+    .send();
+
+  // Assert.
+
+  equal(response.status, 400);
+  isNull(await User.findByEmail("fake@keybr.com"));
+  isNull(await request.who());
+});
+
+test("reject a callback that carries a state but no session", async () => {
+  // Arrange.
+
+  const request = startApp(context.get(Application, kMain));
+
+  // The other half of the same hole: a state on the query string can never be
+  // right when the session holds none, however it was guessed.
+
+  // Act.
+
+  const response = await request
+    .GET(
+      "/auth/oauth-callback/fake?" +
+        new URLSearchParams([
+          ["code", "xyz"],
+          ["state", ""],
+        ]),
+    )
+    .send();
+
+  // Assert.
+
+  equal(response.status, 400);
+  isNull(await User.findByEmail("fake@keybr.com"));
+  isNull(await request.who());
+});
+
 test("require email", async () => {
   // Arrange.
 
@@ -218,7 +269,7 @@ test("require email", async () => {
       .GET("/auth/oauth-callback/fake?" + params)
       .send();
     equal(response.status, 302);
-    equal(response.headers.get("Location"), "/account");
+    equal(response.headers.get("Location"), "/");
   }
 
   // Assert.
@@ -227,7 +278,7 @@ test("require email", async () => {
   isNull(await request.who());
 });
 
-test("login a new user", async () => {
+test("register a new user", async () => {
   // Arrange.
 
   const request = startApp(context.get(Application, kMain));
@@ -237,11 +288,12 @@ test("login a new user", async () => {
     ["extra", "unknown"],
   ]);
 
-  // Act. Step 1: redirect from keybr to provider.
+  // Act. Step 1: redirect from keybr to provider. Signing UP, which is the only
+  // intent that provisions an account the visitor does not already have.
 
   {
     const response = await request //
-      .GET("/auth/oauth-init/fake")
+      .GET("/auth/oauth-init/fake?intent=register")
       .send();
     equal(response.status, 302);
     const url = new URL(response.headers.get("Location")!);
@@ -260,13 +312,52 @@ test("login a new user", async () => {
       .GET("/auth/oauth-callback/fake?" + params)
       .send();
     equal(response.status, 302);
-    equal(response.headers.get("Location"), "/account");
+    equal(response.headers.get("Location"), "/");
   }
 
   // Assert.
 
   isNotNull(await User.findByEmail("fake@keybr.com"));
   equal(await request.who(), "fake@keybr.com");
+});
+
+test("do not create an account from a login that matches none", async () => {
+  // Arrange.
+
+  const request = startApp(context.get(Application, kMain));
+
+  const params = new URLSearchParams([
+    ["code", "xyz"],
+    ["extra", "unknown"],
+  ]);
+
+  // Act. Step 1: "Sign in with …", not "Sign up with …". Anything other than an
+  // explicit register intent is a login, and a login must not quietly mint an
+  // account for whatever address a provider hands back.
+
+  {
+    const response = await request //
+      .GET("/auth/oauth-init/fake")
+      .send();
+    equal(response.status, 302);
+    const url = new URL(response.headers.get("Location")!);
+    params.set("state", url.searchParams.get("state")!);
+  }
+
+  // Act. Step 2: redirect from provider to keybr.
+
+  {
+    const response = await request //
+      .GET("/auth/oauth-callback/fake?" + params)
+      .send();
+    equal(response.status, 302);
+    equal(response.headers.get("Location"), "/register?sso=noaccount");
+  }
+
+  // Assert.
+
+  isNull(await User.findByEmail("fake@keybr.com"));
+  isNull(await request.who());
 });
 
 test("login an existing user", async () => {
@@ -316,7 +407,7 @@ test("login an existing user", async () => {
       .GET("/auth/oauth-callback/fake?" + params)
       .send();
     equal(response.status, 302);
-    equal(response.headers.get("Location"), "/account");
+    equal(response.headers.get("Location"), "/");
   }
 
   // Assert.

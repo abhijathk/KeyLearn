@@ -26,9 +26,8 @@
     "@mdi/js": "*",
     "@paddle/paddle-js": "^1.6.2",
     "@simplewebauthn/browser": "^13.3.0",
-    "react-router": "*"
+    "react-router": "^8.3.0"
   },
-  "devDependencies": {},
   "scripts": {
     "clean": "rm -fr .types",
     "compile": "tsc",

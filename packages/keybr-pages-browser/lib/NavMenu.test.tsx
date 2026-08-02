@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import { FakeIntlProvider, PreferredLocaleContext } from "@keybr/intl";
+import { ProfilesProvider } from "@keybr/page-account";
 import { PageDataContext } from "@keybr/pages-shared";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
@@ -26,7 +27,9 @@ test("render", () => {
       <PreferredLocaleContext.Provider value="pl">
         <FakeIntlProvider>
           <MemoryRouter>
-            <NavMenu currentPath="/page" />
+            <ProfilesProvider>
+              <NavMenu currentPath="/page" />
+            </ProfilesProvider>
           </MemoryRouter>
         </FakeIntlProvider>
       </PreferredLocaleContext.Provider>

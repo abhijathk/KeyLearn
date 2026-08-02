@@ -70,43 +70,6 @@
   }
 }
 
-.idActions {
-  display: flex;
-  gap: 1.2rem;
-  align-items: center;
-  margin-inline-start: auto;
-  color: var(--text-color-f2);
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-
-  button {
-    display: flex;
-    gap: 0.4rem;
-    align-items: center;
-    border: none;
-    color: inherit;
-    background: none;
-    font: inherit;
-    letter-spacing: inherit;
-    text-transform: inherit;
-    cursor: pointer;
-
-    &:hover {
-      color: var(--text-color);
-    }
-  }
-
-  svg {
-    inline-size: 1rem;
-    block-size: 1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-    stroke-linecap: round;
-  }
-}
-
 .filterRow {
   display: flex;
   flex-wrap: wrap;
@@ -481,6 +444,31 @@
     inline-size: 0.6rem;
     block-size: 0.6rem;
     border-radius: 0.15rem;
+  }
+}
+
+// The calendar's eleven-band key: one swatch per band in a tight row, so the
+// steps read as a single scale rather than as eleven separate keys, with the
+// numbers hanging below the steps they belong to.
+.calRamp {
+  display: flex;
+  gap: 0.15rem;
+  align-items: flex-start;
+}
+
+.calRampStep {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: center;
+
+  em {
+    // Zero width, so a label centres over its own step instead of pushing the
+    // ramp apart.
+    inline-size: 0;
+    overflow: visible;
+    font-style: normal;
+    white-space: nowrap;
   }
 }
 

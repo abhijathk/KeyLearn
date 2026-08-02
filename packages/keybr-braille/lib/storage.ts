@@ -85,8 +85,25 @@ function daysKey(profileId: string | null): string {
     : `${DAYS_KEY}.${profileId}`;
 }
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
+/**
+ * Today, as the learner's own calendar has it.
+ *
+ * Local rather than UTC, and deliberately the same arithmetic `LocalDate` in
+ * @keybr/result uses, because these keys are looked up with one: the practice
+ * calendar asks for `String(new LocalDate(ms))`, which is built from
+ * getFullYear/getMonth/getDate. Keyed in UTC the two disagreed for everybody
+ * outside it — a session at nine in the morning in Sydney is the previous day
+ * in UTC, so it lit the wrong square and could break a streak that had not
+ * been broken.
+ */
+function today(at: Date = new Date()): string {
+  return (
+    String(at.getFullYear()) +
+    "-" +
+    String(at.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(at.getDate()).padStart(2, "0")
+  );
 }
 
 function touch(profileId: string | null): void {
@@ -118,13 +135,28 @@ export type DayStats = {
   readonly hits: number;
   /** Cells entered wrongly. */
   readonly misses: number;
-  /** Sum of the join times behind those hits, in milliseconds. */
+  /** Sum of the join times that counted, in milliseconds. */
   readonly totalMs: number;
+  /**
+   * How many hits contributed a join time.
+   *
+   * Not every one does: the first cell of a session has nothing to be timed
+   * from, and a pause long enough to be somebody answering the door is thrown
+   * away rather than recorded as a very slow cell. Dividing totalMs by `hits`
+   * instead would understate the pace by exactly those cells.
+   */
+  readonly timed: number;
   /** Quickest join that day. */
   readonly bestMs: number | null;
 };
 
-const EMPTY_DAY: DayStats = { hits: 0, misses: 0, totalMs: 0, bestMs: null };
+const EMPTY_DAY: DayStats = {
+  hits: 0,
+  misses: 0,
+  totalMs: 0,
+  timed: 0,
+  bestMs: null,
+};
 
 const DAILY_KEY = "keylearn.braille.daily";
 
@@ -138,10 +170,36 @@ function readDaily(profileId: string | null): Record<string, DayStats> {
   try {
     const raw = window.localStorage.getItem(dailyKey(profileId));
     const value = raw == null ? {} : JSON.parse(raw);
-    return value != null && typeof value === "object" ? value : {};
+    if (value == null || typeof value !== "object") {
+      return {};
+    }
+    // Each entry is checked, not just the envelope. This is local storage: a
+    // half-written value or a hand-edited one would otherwise reach the
+    // profile page as undefined and render every figure as NaN.
+    const clean: Record<string, DayStats> = {};
+    for (const [day, stat] of Object.entries(value as object)) {
+      if (stat != null && typeof stat === "object") {
+        const it = stat as Partial<DayStats>;
+        clean[day] = {
+          hits: count(it.hits),
+          misses: count(it.misses),
+          totalMs: count(it.totalMs),
+          timed: count(it.timed),
+          bestMs:
+            typeof it.bestMs === "number" && it.bestMs > 0 ? it.bestMs : null,
+        };
+      }
+    }
+    return clean;
   } catch {
     return {};
   }
+}
+
+function count(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : 0;
 }
 
 /** Every day this learner practised, with what they did on it. */
@@ -178,6 +236,7 @@ export function recordCell(
       hits: was.hits + (correct ? 1 : 0),
       misses: was.misses + (correct ? 0 : 1),
       totalMs: was.totalMs + (correct && ms != null ? ms : 0),
+      timed: was.timed + (correct && ms != null ? 1 : 0),
       bestMs:
         correct && ms != null
           ? was.bestMs == null
@@ -255,7 +314,7 @@ export function brailleStats(profileId: string | null = null): BrailleStats {
   const days = practiceDays(profileId);
   let streakDays = 0;
   const cursor = new Date();
-  while (days.includes(cursor.toISOString().slice(0, 10))) {
+  while (days.includes(today(cursor))) {
     streakDays += 1;
     cursor.setDate(cursor.getDate() - 1);
   }

@@ -87,12 +87,16 @@ export function BrailleProfile({
   const working = cells.filter((c) => c.unlocked && !c.settled);
   const quickest = pick(cells, (c) => c.stat.bestMs ?? Infinity);
   const lifetimeMs = [...daily.values()].reduce((n, d) => n + d.totalMs, 0);
-  const todayPaceMs = today.hits === 0 ? null : today.totalMs / today.hits;
+  const todayPaceMs = today.timed === 0 ? null : today.totalMs / today.timed;
   const todayAttempts = today.hits + today.misses;
   const startedToday = todayAttempts > 0;
   const todayAccuracy =
     todayAttempts === 0 ? 0 : (today.hits / todayAttempts) * 100;
   const slowest = pick(cells, (c) => -(c.stat.bestMs ?? 0));
+  // The engine's own answer to which cell is holding the learner back, so the
+  // profile names the same one the lesson is drilling. It weighs accuracy as
+  // well as speed, which the slowest best-time alone does not.
+  const holdingUp = cells.find((c) => c.letter === weakest) ?? slowest;
 
   return (
     <div className={styles.col}>
@@ -348,8 +352,8 @@ export function BrailleProfile({
               values={{
                 fast: quickest.letter,
                 fastMs: secs(quickest.stat.bestMs),
-                slow: slowest?.letter ?? "",
-                slowMs: secs(slowest?.stat.bestMs),
+                slow: holdingUp?.letter ?? "",
+                slowMs: secs(holdingUp?.stat.bestMs),
                 target: secs(defaultTarget.msPerCell),
               }}
             />

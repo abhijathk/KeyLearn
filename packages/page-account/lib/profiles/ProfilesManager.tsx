@@ -478,7 +478,7 @@ function ProfileEditor({
   const initial = firstName.trim().slice(0, 1).toUpperCase();
 
   return (
-    <Overlay>
+    <Overlay onClose={onCancel}>
       <div className={styles.gate}>
         <div className={styles.editor}>
           <div className={styles.editorTape} aria-hidden={true} />

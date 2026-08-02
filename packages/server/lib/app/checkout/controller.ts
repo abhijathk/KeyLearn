@@ -52,9 +52,12 @@ export class Controller {
           break;
       }
     } catch (err: any) {
+      // The detail goes to the log, not down the wire. Whatever a failure here
+      // says — a driver message naming the database, a stack quoting a path —
+      // it describes our internals, and the caller only needs to know to retry.
       Logger.error(err, "Paddle notification processing error");
       ctx.response.status = 500;
-      ctx.response.body = String(err);
+      ctx.response.body = "Processing error";
       ctx.response.type = "text/plain";
       return;
     }
