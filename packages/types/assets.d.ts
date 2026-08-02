@@ -31,6 +31,11 @@ declare module "*.mp3" {
   export default path;
 }
 
+declare module "*.m4a" {
+  const path: string;
+  export default path;
+}
+
 declare module "*.wav" {
   const path: string;
   export default path;
