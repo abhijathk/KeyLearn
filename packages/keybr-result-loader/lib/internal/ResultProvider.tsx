@@ -7,12 +7,21 @@ export function ResultProvider({
   storage,
   initialResults,
   namespace = null,
+  profileName = null,
+  profileAvatar = null,
+  kidProfile = false,
   children,
 }: {
   readonly storage: ResultStorage;
   readonly initialResults: readonly Result[];
   /** The profile history namespace these results belong to (see context). */
   readonly namespace?: string | null;
+  /** Whose history it is, for the export filename (see context). */
+  readonly profileName?: string | null;
+  /** That learner's avatar, already rendered (see context). */
+  readonly profileAvatar?: ReactNode;
+  /** Whether this is a child's profile (see context). */
+  readonly kidProfile?: boolean;
   readonly children: ReactNode;
 }): ReactNode {
   const [results, setResults] = useState(initialResults);
@@ -21,6 +30,9 @@ export function ResultProvider({
       value={{
         results,
         namespace,
+        profileName,
+        profileAvatar,
+        kidProfile,
         appendResults: (newResults) => {
           setResults([...results, ...newResults]);
           storage.append(newResults).catch(catchError);

@@ -18,7 +18,11 @@ export function PublicResultLoader({
     return <LoadingProgress total={state.total} current={state.current} />;
   } else {
     return (
-      <ResultProvider storage={storage} initialResults={state.results}>
+      <ResultProvider
+        storage={storage}
+        initialResults={state.results}
+        profileName={user.name}
+      >
         {children}
       </ResultProvider>
     );

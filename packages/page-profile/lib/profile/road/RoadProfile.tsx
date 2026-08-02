@@ -1,9 +1,11 @@
 import { makeAccuracyDistribution, makeSpeedDistribution } from "@keybr/chart";
-import { useIntlNumbers } from "@keybr/intl";
+import { useIntlDates, useIntlNumbers } from "@keybr/intl";
 import { LearningRate, Target } from "@keybr/lesson";
 import { useFormatter, useKeyStyles } from "@keybr/lesson-ui";
 import {
   clearNgramStats,
+  downloadBlob,
+  exportFilename,
   type NamedUser,
   usePageData,
 } from "@keybr/pages-shared";
@@ -177,7 +179,8 @@ function Identity({
   });
   const streak = dailyStreak(results);
   const signedIn = user != null || publicUser.id != null;
-  const name =
+  const { profileName, profileAvatar } = useResultsSafe();
+  const account =
     user != null
       ? user.name
       : signedIn
@@ -186,15 +189,28 @@ function Identity({
             id: "profile.road.guest",
             defaultMessage: "Guest learner",
           });
+  // Whose progress this is, which is not the same as whose account it is. The
+  // band used to show the account holder's name on every tab, so Ada's page was
+  // headed with her parent's. The account holder is named in the tab row above.
+  const name = profileName ?? account;
   return (
     <div className={styles.id}>
-      <span className={styles.avatar}>
-        <svg viewBox="0 0 24 24" aria-hidden={true}>
-          <circle cx="12" cy="9" r="3.4" />
-          <path d="M5.5 19c1.2-3 3.6-4.5 6.5-4.5s5.3 1.5 6.5 4.5" />
-          <circle cx="12" cy="12" r="10.2" />
-        </svg>
-      </span>
+      {/*
+        The learner's own avatar where there is one. The outlined figure is the
+        fallback for a signed-out visitor and for the public profile, where
+        there is no household profile to draw.
+      */}
+      {profileAvatar != null ? (
+        <span className={styles.avatarPhoto}>{profileAvatar}</span>
+      ) : (
+        <span className={styles.avatar}>
+          <svg viewBox="0 0 24 24" aria-hidden={true}>
+            <circle cx="12" cy="9" r="3.4" />
+            <path d="M5.5 19c1.2-3 3.6-4.5 6.5-4.5s5.3 1.5 6.5 4.5" />
+            <circle cx="12" cy="12" r="10.2" />
+          </svg>
+        </span>
+      )}
       <span className={styles.who}>
         <b>{name}</b>
         <i>
@@ -869,7 +885,7 @@ function AccuracySection({
 }: {
   readonly results: KeyStatsMap["results"];
 }): ReactNode {
-  const { formatDate, formatTime } = useIntl();
+  const { formatDate, formatTime } = useIntlDates();
   const { formatNumber, formatPercents } = useIntlNumbers();
   const { formatSpeed } = useFormatter();
   const streaks = MutableStreakList.findLongest(results);
@@ -987,9 +1003,9 @@ function AccuracySection({
                       />
                     </span>
                     <b>
-                      {formatDate(run[0].timeStamp, { dateStyle: "short" })}
+                      {formatDate(run[0].timeStamp, "short")}
                       {", "}
-                      {formatTime(run[0].timeStamp, { timeStyle: "short" })}
+                      {formatTime(run[0].timeStamp, "short")}
                     </b>
                   </span>
                 </div>
@@ -1008,7 +1024,8 @@ function DataRow(): ReactNode {
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
   const { copyText } = useClipboard();
-  const { results, clearResults, namespace } = useResultsSafe();
+  const { results, clearResults, namespace, profileName } = useResultsSafe();
+  const { formatStamp } = useIntlDates();
   const [confirming, setConfirming] = useState(false);
   const named = "id" in publicUser && publicUser.id != null;
   const href = named
@@ -1063,13 +1080,15 @@ function DataRow(): ReactNode {
           onClick={() => {
             const json = JSON.stringify(results);
             const blob = new Blob([json], { type: "application/json" });
-            const a = document.createElement("a");
-            a.setAttribute("href", URL.createObjectURL(blob));
-            a.setAttribute("download", "typing-data.json");
-            a.setAttribute("hidden", "");
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            downloadBlob(
+              blob,
+              exportFilename(
+                "typing-data",
+                profileName,
+                "json",
+                formatStamp(Date.now()),
+              ),
+            );
           }}
         >
           ⬇{" "}

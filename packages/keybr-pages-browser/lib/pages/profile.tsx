@@ -1,10 +1,15 @@
 import {
+  BrailleAvatar,
+  BrailleBadge,
   historyNamespace,
-  ProfileAvatar,
   useProfiles,
 } from "@keybr/page-account";
-import { ProfilePage, PublicProfilePage } from "@keybr/page-profile";
-import { usePageData } from "@keybr/pages-shared";
+import {
+  BrailleProfileScreen,
+  ProfilePage,
+  PublicProfilePage,
+} from "@keybr/page-profile";
+import { Avatar, Screen, usePageData } from "@keybr/pages-shared";
 import { PublicResultLoader, ResultLoader } from "@keybr/result-loader";
 import { clsx } from "clsx";
 import { type ReactNode, useState } from "react";
@@ -36,6 +41,7 @@ function Profile(): ReactNode {
 }
 
 function LearnerTabs(): ReactNode {
+  const { publicUser } = usePageData();
   const { household, active } = useProfiles();
   const [selectedId, setSelectedId] = useState(
     active?.id ?? household.profiles[0].id,
@@ -45,39 +51,101 @@ function LearnerTabs(): ReactNode {
     household.profiles[0];
   return (
     <>
-      <div className={styles.tabs}>
-        {household.profiles.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            className={clsx(styles.tab, p.id === selected.id && styles.on)}
-            onClick={() => setSelectedId(p.id)}
-          >
-            <span className={styles.tabAvatar}>
-              <ProfileAvatar avatar={p.avatar} name={p.firstName} size={20} />
-            </span>
-            {p.firstName}
-          </button>
-        ))}
-      </div>
-      <div className={styles.note}>
-        {selected.kind === "kid" ? (
-          <FormattedMessage
-            id="profile.tab.learnerKidNote"
-            defaultMessage="{name}’s progress on the dino trail, in the same charts."
-            values={{ name: selected.firstName }}
-          />
-        ) : (
-          <FormattedMessage
-            id="profile.tab.learnerNote"
-            defaultMessage="{name}’s typing progress on this device."
-            values={{ name: selected.firstName }}
-          />
-        )}
-      </div>
-      <ResultLoader key={selected.id} namespace={historyNamespace(selected)}>
-        <ProfilePage />
-      </ResultLoader>
+      <Screen className={styles.tabScreen}>
+        <div className={styles.tabRow}>
+          {/*
+          Whose account this is, named beside the learners rather than nowhere.
+          On a household device the account holder is the only thing that says
+          which family's progress is on screen.
+        */}
+          <div className={styles.account}>
+            <Avatar user={publicUser} size="normal" />
+            <div>
+              <span className={styles.accountName}>{publicUser.name}</span>
+              <span className={styles.accountRole}>
+                <FormattedMessage
+                  id="profile.tab.accountHolder"
+                  defaultMessage="Account holder"
+                />
+              </span>
+            </div>
+          </div>
+          <div className={styles.tabs}>
+            {household.profiles.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={clsx(styles.tab, p.id === selected.id && styles.on)}
+                onClick={() => setSelectedId(p.id)}
+              >
+                {/*
+                No avatar on the tabs: at this size a lettered disc beside the
+                name is the same letter twice. The braille badge does stay,
+                because it is the one marker that says something the name does
+                not — that this learner gets a different page and a voice.
+              */}
+                {p.visionSupport && (
+                  <span className={styles.tabAvatar}>
+                    <BrailleBadge />
+                  </span>
+                )}
+                {p.firstName}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className={styles.note}>
+          {selected.kind === "kid" ? (
+            <FormattedMessage
+              id="profile.tab.learnerKidNote"
+              defaultMessage="{name}’s progress on the dino trail, in the same charts."
+              values={{ name: selected.firstName }}
+            />
+          ) : (
+            <FormattedMessage
+              id="profile.tab.learnerNote"
+              defaultMessage="{name}’s typing progress on this device."
+              values={{ name: selected.firstName }}
+            />
+          )}
+        </div>
+      </Screen>
+      {/*
+        Same page, same tabs, same chrome — the content is what differs. A
+        braille learner produces no typing results, so the ordinary charts
+        would every one read zero.
+      */}
+      {selected.visionSupport ? (
+        <BrailleProfileScreen
+          profileId={selected.id}
+          name={selected.firstName}
+          avatar={
+            <BrailleAvatar
+              avatar={selected.avatar}
+              name={selected.firstName}
+              size={42}
+              braille={selected.visionSupport}
+            />
+          }
+        />
+      ) : (
+        <ResultLoader
+          key={selected.id}
+          namespace={historyNamespace(selected)}
+          profileName={selected.firstName}
+          kidProfile={selected.kind === "kid"}
+          profileAvatar={
+            <BrailleAvatar
+              avatar={selected.avatar}
+              name={selected.firstName}
+              size={42}
+              braille={selected.visionSupport}
+            />
+          }
+        >
+          <ProfilePage />
+        </ResultLoader>
+      )}
     </>
   );
 }
@@ -85,6 +153,7 @@ function LearnerTabs(): ReactNode {
 // The kids trail keeps its own local history, so a grown-up can flip to the
 // Kids tab and read the child's progress with the exact same charts.
 function ModeTabs(): ReactNode {
+  const { publicUser } = usePageData();
   const [kids, setKids] = useState(false);
   return (
     <>
@@ -115,7 +184,11 @@ function ModeTabs(): ReactNode {
           />
         </div>
       )}
-      <ResultLoader key={kids ? "kids" : "me"} kids={kids}>
+      <ResultLoader
+        key={kids ? "kids" : "me"}
+        kids={kids}
+        profileName={kids ? "kids" : (publicUser.name ?? null)}
+      >
         <ProfilePage />
       </ResultLoader>
     </>

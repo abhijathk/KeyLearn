@@ -27,7 +27,7 @@ export function ResultGrouper({
 }) {
   const { formatMessage } = useIntl();
   const { settings } = useSettings();
-  const { results } = useResults();
+  const { results, kidProfile = false } = useResults();
   const groups = ResultGroups.byLayout(results);
   const resultsLayouts = new Set(groups.keys());
   const configuredLayout = settings.get(keyboardProps.layout);
@@ -40,6 +40,8 @@ export function ResultGrouper({
       : [...resultsLayouts][0];
   const [selectedLayout, setSelectedLayout] = useState(defaultLayout);
   const [characterClass, setCharacterClass] = useState("letters");
+  const filter =
+    kidProfile && characterClass === "programming" ? "letters" : characterClass;
   if (!resultsLayouts.has(selectedLayout)) {
     setSelectedLayout(defaultLayout());
   }
@@ -98,14 +100,27 @@ export function ResultGrouper({
                 defaultMessage: "Symbols",
               }),
             ],
+            // The same set the Code craft lessons draw from, so the figures
+            // here answer "how am I doing at code" rather than making somebody
+            // read four filters and add them up. Not offered on a child's
+            // profile: they do not practise it, so the view would always be
+            // empty.
+            ...(kidProfile
+              ? []
+              : [
+                  [
+                    "programming",
+                    formatMessage({
+                      id: "profile.filter.codeCraft",
+                      defaultMessage: "Code craft",
+                    }),
+                  ] as const,
+                ]),
           ].map(([value, name]) => (
             <button
               key={value}
               type="button"
-              className={clsx(
-                styles.segItem,
-                characterClass === value && styles.segOn,
-              )}
+              className={clsx(styles.segItem, filter === value && styles.segOn)}
               onClick={() => {
                 setCharacterClass(value);
               }}
@@ -119,7 +134,7 @@ export function ResultGrouper({
       <KeyboardContext.Provider value={keyboard}>
         <PhoneticModelLoader language={selectedLayout.language}>
           {({ letters }) => {
-            switch (characterClass) {
+            switch (filter) {
               case "letters":
                 return children(
                   makeKeyStatsMap(
@@ -133,6 +148,8 @@ export function ResultGrouper({
                 return children(makeKeyStatsMap(Letter.punctuators, group));
               case "specials":
                 return children(makeKeyStatsMap(Letter.specials, group));
+              case "programming":
+                return children(makeKeyStatsMap(Letter.programming, group));
               default:
                 throw new Error();
             }

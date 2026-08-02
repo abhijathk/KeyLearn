@@ -1,10 +1,54 @@
-// The Grown-up / Kids switch at the top of the profile page.
+// The row at the top of the profile page: whose account this is on the left,
+// the learners to switch between on the right.
+//
+// The pill group used to sit centred with nothing beside it, which left the
+// account holder unnamed anywhere on the page — on a household device that is
+// the one thing that says which family's progress is on screen.
+.tabRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+
+  // The same column the routed content sits in — road.module.less .col, which
+  // is narrower than the Screen that holds it. The filter row above the charts
+  // spans the full Screen, but nothing visible lines up with its left edge, so
+  // matching it put the account name an inch outside the identity band it
+  // belongs to. This matches what a reader can actually see.
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
+  margin-block-start: 0;
+}
+
+.account {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  margin-inline-end: auto;
+  color: var(--text-color-f1);
+}
+
+.accountName {
+  font-family: var(--value-font-family);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.15;
+}
+
+.accountRole {
+  display: block;
+  color: var(--text-color-f2, var(--text-color-f1));
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .tabs {
   display: flex;
   gap: 0.25rem;
-  justify-content: center;
+  justify-content: flex-end;
   inline-size: fit-content;
-  margin: 1rem auto 0;
+  margin-inline-start: auto;
   padding: 0.25rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--text-color) 7%, transparent);
@@ -28,14 +72,33 @@
 }
 
 .note {
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
   margin-block-start: 0.4rem;
   color: var(--text-color-f2, var(--text-color-f1));
   font-size: 0.68rem;
-  text-align: center;
+  text-align: end;
 }
 
 .tabAvatar {
   display: inline-flex;
   vertical-align: middle;
   margin-inline-end: 0.4rem;
+}
+
+// The tab row rides in the same Screen the routed content below uses, so the
+// two cannot disagree about where the column starts and ends — the earlier
+// hand-copied widths drifted the moment either changed. Only the block margins
+// are trimmed, because the row sits directly above its own content.
+.tabScreen {
+  // Screen sits in a flex column, and its `margin-inline: auto` cancels the
+  // default cross-axis stretch — so a Screen is shrink-to-fit, sized to its
+  // own content and then clamped by its min and max. The routed content below
+  // is wide enough to reach the 70rem ceiling; this row is not, so it fell to
+  // the 60rem floor and sat a good inch inside everything beneath it.
+  //
+  // Filling the container is what the content Screen achieves by accident;
+  // saying so explicitly is what makes the two edges agree.
+  inline-size: 100%;
+  margin-block: 1rem 0;
 }
