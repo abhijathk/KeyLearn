@@ -7,6 +7,7 @@ import {
   letterOfCell,
   loadProgress,
   type Progress,
+  recordCell,
   REQUIRED_ROLLOVER,
   saveProgress,
   toUnicode,
@@ -188,6 +189,9 @@ function Practice({
           progress.current.miss(letter);
           saveProgress(progress.current, profileId);
         }
+        // Against today as well as against the cell, so the profile can show
+        // what was done today rather than only a lifetime total.
+        recordCell(profileId, { correct: false });
         setMisses((n) => n + 1);
         setWrong(cell);
         setShake((n) => n + 1);
@@ -230,6 +234,7 @@ function Practice({
           progress.current.hit(letter, gap);
           saveProgress(progress.current, profileId);
         }
+        recordCell(profileId, { correct: true, ms: gap });
       }
       lastAt.current = now;
       setHits((n) => n + 1);

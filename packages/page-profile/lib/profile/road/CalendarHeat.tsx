@@ -1,3 +1,4 @@
+import { useIntlDates } from "@keybr/intl";
 import { useEffort } from "@keybr/lesson-ui";
 import { type DailyStatsMap, LocalDate } from "@keybr/result";
 import { clsx } from "clsx";
@@ -6,6 +7,8 @@ import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./road.module.less";
 
 const WEEKS = 52;
+/** Cells in a day that counts as a full one, for shading the grid. */
+const BRAILLE_DAY = 120;
 const DAY = 24 * 60 * 60 * 1000;
 
 /**
@@ -15,25 +18,39 @@ const DAY = 24 * 60 * 60 * 1000;
  */
 export function CalendarHeat({
   dailyStatsMap,
+  brailleDays,
 }: {
-  readonly dailyStatsMap: DailyStatsMap;
+  readonly dailyStatsMap?: DailyStatsMap;
+  /**
+   * A braille learner's day tallies, which count cells rather than minutes.
+   *
+   * The same grid, shaded against a day's-worth of cells instead of against
+   * the typing goal — braille records what was entered, not how long it took
+   * in total, so there is no minutes figure to hold it to.
+   */
+  readonly brailleDays?: ReadonlyMap<string, { readonly hits: number }>;
 }): ReactNode {
-  const { formatDate } = useIntl();
+  const { formatDate, formatMonth, firstDayOfWeek, weekDayNames } =
+    useIntlDates();
   const effort = useEffort();
   const [tip, setTip] = useState<{
     left: number;
     top: number;
     date: string;
     time: number;
+    value: number;
+    cells: number;
   } | null>(null);
   const { cells, months } = useMemo(() => {
     const timeByDay = new Map<string, number>();
-    for (const { date, stats } of dailyStatsMap) {
+    for (const { date, stats } of dailyStatsMap ?? []) {
       timeByDay.set(String(date), stats.time);
     }
     const now = Date.now();
-    // align the grid to end on the current week
-    const endDow = (new Date(now).getDay() + 6) % 7; // Monday = 0
+    // Align the grid to end on the current week. getDay() is Sunday = 0 and
+    // firstDayOfWeek is ISO (Monday = 1), so this converts both to "days
+    // since this reader's week began".
+    const endDow = (new Date(now).getDay() + 7 - (firstDayOfWeek % 7)) % 7;
     const total = (WEEKS - 1) * 7 + endDow + 1;
     const cells = [];
     const months: { column: number; label: string }[] = [];
@@ -46,8 +63,13 @@ export function CalendarHeat({
       }
       const ms = now - back * DAY;
       const date = new Date(ms);
-      const time = timeByDay.get(String(new LocalDate(ms))) ?? 0;
-      const value = Math.max(0, Math.min(1, effort.effort(time)));
+      const day = String(new LocalDate(ms));
+      const time = timeByDay.get(day) ?? 0;
+      const cellsDone = brailleDays?.get(day)?.hits ?? 0;
+      const value =
+        brailleDays != null
+          ? Math.max(0, Math.min(1, cellsDone / BRAILLE_DAY))
+          : Math.max(0, Math.min(1, effort.effort(time)));
       const column = Math.floor(i / 7);
       if (i % 7 === 0 && date.getMonth() !== lastMonth) {
         lastMonth = date.getMonth();
@@ -55,25 +77,26 @@ export function CalendarHeat({
         if (prev == null || column - prev.column >= 3) {
           months.push({
             column,
-            label: date.toLocaleString("en", { month: "short" }),
+            label: formatMonth(date),
           });
         }
       }
-      cells.push({ ms, time, value });
+      cells.push({ ms, time, value, cells: cellsDone });
     }
     return { cells, months };
-  }, [dailyStatsMap, effort]);
+    // formatMonth is stable per locale and zone, so this only recomputes
+    // when the reader actually changes one of them — which it must.
+  }, [dailyStatsMap, brailleDays, effort, formatMonth, firstDayOfWeek]);
   return (
     <>
       <div className={styles.calwrap}>
         <div className={styles.caldays}>
-          <span>Mon</span>
-          <span />
-          <span>Wed</span>
-          <span />
-          <span>Fri</span>
-          <span />
-          <span />
+          {/* Every other row is labelled, which is the convention for a heat
+              map this dense — and the names now follow the reader's language
+              and week order rather than being three English words. */}
+          {weekDayNames("short").map((name, i) => (
+            <span key={i}>{i % 2 === 0 ? name : ""}</span>
+          ))}
         </div>
         <div className={styles.calcol}>
           <div className={styles.calmonths}>
@@ -108,8 +131,10 @@ export function CalendarHeat({
                     setTip({
                       left: el.offsetLeft + el.offsetWidth / 2,
                       top: el.offsetTop,
-                      date: formatDate(cell.ms, { dateStyle: "full" }),
+                      date: formatDate(cell.ms, "full"),
                       time: cell.time,
+                      value: cell.value,
+                      cells: cell.cells,
                     });
                   }}
                 />
@@ -122,7 +147,20 @@ export function CalendarHeat({
               style={{ left: tip.left, top: tip.top }}
             >
               <b>
-                {tip.time > 0 ? (
+                {brailleDays != null ? (
+                  tip.cells > 0 ? (
+                    <FormattedMessage
+                      id="profile.calendar.tip.cells"
+                      defaultMessage="{cells} cells entered"
+                      values={{ cells: tip.cells }}
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="profile.calendar.tip.rest"
+                      defaultMessage="No practice"
+                    />
+                  )
+                ) : tip.time > 0 ? (
                   <FormattedMessage
                     id="profile.calendar.tip.practised"
                     defaultMessage="{minutes} min practised"
@@ -140,7 +178,11 @@ export function CalendarHeat({
           )}
         </div>
       </div>
-      <div className={styles.legendRow}>
+      <div
+        className={styles.legendRow}
+        hidden={brailleDays != null}
+        aria-hidden={brailleDays != null}
+      >
         <FormattedMessage
           id="profile.calendar.goalLegend"
           defaultMessage="daily practice goal"

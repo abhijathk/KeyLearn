@@ -6,6 +6,7 @@
   "main": "lib/index.ts",
   "types": ".types/index.d.ts",
   "dependencies": {
+    "@keybr/braille": "*",
     "@keybr/chart": "*",
     "@keybr/intl": "*",
     "@keybr/keyboard": "*",

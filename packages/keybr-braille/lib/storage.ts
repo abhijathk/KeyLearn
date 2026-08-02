@@ -101,6 +101,120 @@ function touch(profileId: string | null): void {
   );
 }
 
+/**
+ * What one learner did on one day.
+ *
+ * The cell stats say how well each cell is going and the day list says which
+ * days were practised, but neither says how much was done on a given day — so
+ * the profile could show a lifetime total and nothing for today, and the
+ * calendar could only ever be a row of identical squares.
+ *
+ * Kept per day rather than derived, because it cannot be reconstructed after
+ * the fact: a hit recorded into the cell stats loses the date the moment it
+ * lands there.
+ */
+export type DayStats = {
+  /** Cells entered correctly. */
+  readonly hits: number;
+  /** Cells entered wrongly. */
+  readonly misses: number;
+  /** Sum of the join times behind those hits, in milliseconds. */
+  readonly totalMs: number;
+  /** Quickest join that day. */
+  readonly bestMs: number | null;
+};
+
+const EMPTY_DAY: DayStats = { hits: 0, misses: 0, totalMs: 0, bestMs: null };
+
+const DAILY_KEY = "keylearn.braille.daily";
+
+function dailyKey(profileId: string | null): string {
+  return profileId == null || profileId === ""
+    ? DAILY_KEY
+    : `${DAILY_KEY}.${profileId}`;
+}
+
+function readDaily(profileId: string | null): Record<string, DayStats> {
+  try {
+    const raw = window.localStorage.getItem(dailyKey(profileId));
+    const value = raw == null ? {} : JSON.parse(raw);
+    return value != null && typeof value === "object" ? value : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Every day this learner practised, with what they did on it. */
+export function dailyStats(
+  profileId: string | null = null,
+): ReadonlyMap<string, DayStats> {
+  return new Map(Object.entries(readDaily(profileId)));
+}
+
+/** One day's tally, defaulting to today's. */
+export function dayStats(
+  profileId: string | null = null,
+  day: string = today(),
+): DayStats {
+  return readDaily(profileId)[day] ?? EMPTY_DAY;
+}
+
+/**
+ * Records one entered cell against today.
+ *
+ * Called from the practice page at the two points where a cell is judged, so
+ * the tally cannot drift from the cell stats: both are written from the same
+ * event.
+ */
+export function recordCell(
+  profileId: string | null,
+  { correct, ms }: { readonly correct: boolean; readonly ms?: number | null },
+): void {
+  try {
+    const all = readDaily(profileId);
+    const day = today();
+    const was = all[day] ?? EMPTY_DAY;
+    all[day] = {
+      hits: was.hits + (correct ? 1 : 0),
+      misses: was.misses + (correct ? 0 : 1),
+      totalMs: was.totalMs + (correct && ms != null ? ms : 0),
+      bestMs:
+        correct && ms != null
+          ? was.bestMs == null
+            ? ms
+            : Math.min(was.bestMs, ms)
+          : was.bestMs,
+    };
+    // Bounded like the day list: only the last year is ever drawn.
+    const kept = Object.keys(all).sort().slice(-DAYS_KEPT);
+    const trimmed: Record<string, DayStats> = {};
+    for (const key of kept) {
+      trimmed[key] = all[key];
+    }
+    window.localStorage.setItem(dailyKey(profileId), JSON.stringify(trimmed));
+  } catch {
+    // Storage unavailable; the session still works.
+  }
+}
+
+/**
+ * Wipes one learner's braille progress, cells and practice days alike.
+ *
+ * The counterpart to "Clear statistics" on every other profile. A braille
+ * learner's history is theirs to erase on the same terms as anyone else's, and
+ * leaving the day list behind would have kept a streak alive for progress that
+ * no longer exists.
+ */
+export function clearProgress(profileId: string | null = null): void {
+  try {
+    window.localStorage.removeItem(keyFor(profileId));
+    window.localStorage.removeItem(daysKey(profileId));
+    window.localStorage.removeItem(dailyKey(profileId));
+  } catch {
+    // Storage can be unavailable or full; there is nothing useful to do.
+  }
+}
+
 export function practiceDays(profileId: string | null = null): string[] {
   try {
     const raw = window.localStorage.getItem(daysKey(profileId));

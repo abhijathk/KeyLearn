@@ -600,22 +600,22 @@
 }
 
 .calTip {
+  display: flex;
   position: absolute;
   z-index: 10;
-  display: flex;
   flex-direction: column;
   gap: 1px;
   padding: 0.3rem 0.5rem;
   border-radius: 6px;
-  background-color: var(--text-color);
   color: var(--primary);
+  background-color: var(--text-color);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
   font-size: 0.6rem;
   line-height: 1.3;
-  white-space: nowrap;
   text-align: center;
+  white-space: nowrap;
   pointer-events: none;
   transform: translate(-50%, calc(-100% - 7px));
-  box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
 
   b {
     font-weight: 700;
@@ -624,8 +624,8 @@
   &::after {
     content: "";
     position: absolute;
-    inset-block-start: 100%;
     inset-inline-start: 50%;
+    inset-block-start: 100%;
     border: 5px solid transparent;
     border-block-start-color: var(--text-color);
     transform: translateX(-50%);
@@ -820,4 +820,88 @@
 .signInHint {
   color: var(--accent);
   font-weight: 700;
+}
+
+// ---- prose sections -------------------------------------------------------
+//
+// Where a sighted profile puts a chart, the braille profile puts a sentence:
+// a chart is not a thing that can be heard, and that page is heard. Set at the
+// same measure as the rest of the column so it reads as part of the same
+// document rather than as a note dropped into it.
+
+.prose {
+  max-inline-size: 58ch;
+  margin-block: 0.9rem 0;
+  color: var(--text-color-f1);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+// ---- footer actions -------------------------------------------------------
+//
+// The same two the typing profile ends with, in the same place and the same
+// words, so a braille learner's data is theirs to take and theirs to wipe on
+// exactly the terms everyone else has.
+
+.footActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+  margin-block-start: 2rem;
+  font-family: var(--default-font-family);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.footAction {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--text-color-f1);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+}
+
+.footActionDanger {
+  .footAction();
+
+  &:hover {
+    color: var(--error);
+  }
+}
+
+// Available to a screen reader and to nothing else. The braille profile uses
+// it to give each cell its full reading — "q, dots 1 2 3 4 5, working on it" —
+// without printing that beside every glyph.
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+// The learner's own avatar in the identity band. No ring of its own — the
+// avatar already carries its colour, and a second circle around it reads as a
+// status indicator rather than as a frame.
+.avatarPhoto {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
 }
