@@ -5,6 +5,7 @@ import { Histogram } from "@keybr/textinput";
 import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { Overlay } from "../Overlay.tsx";
 import * as styles from "./Profiles.module.less";
 import { type Profile } from "./store.ts";
 
@@ -57,7 +58,7 @@ export function KeybrImport({
   userId,
   onClose,
 }: {
-  /** Grown-up profiles only — kids are never import targets. */
+  /** See `importTargets`: grown-ups not on braille. */
   readonly profiles: readonly Profile[];
   readonly userId: string;
   readonly onClose: () => void;
@@ -174,202 +175,204 @@ export function KeybrImport({
   };
 
   return (
-    <div className={styles.gate} onClick={onClose}>
-      <div className={styles.editor} onClick={(ev) => ev.stopPropagation()}>
-        <div className={styles.editorTape} aria-hidden={true} />
-        <h2 className={styles.editorTitle}>
-          <FormattedMessage
-            id="import.title"
-            defaultMessage="Import your progress from <acc>keybr</acc>"
-            values={{
-              acc: (chunks) => (
-                <span className={styles.titleAccent}>{chunks}</span>
-              ),
-            }}
-          />
-        </h2>
-        <p className={styles.hint}>
-          <FormattedMessage
-            id="import.intro"
-            defaultMessage="Upload the typing-data.json you downloaded from keybr. It’s added to a grown-up profile, so your history and learned keys carry over."
-          />{" "}
-          <button
-            type="button"
-            className={styles.consentLink}
-            onClick={() => setShowHelp((v) => !v)}
-          >
+    <Overlay>
+      <div className={styles.gate} onClick={onClose}>
+        <div className={styles.editor} onClick={(ev) => ev.stopPropagation()}>
+          <div className={styles.editorTape} aria-hidden={true} />
+          <h2 className={styles.editorTitle}>
             <FormattedMessage
-              id="import.help.toggle"
-              defaultMessage="How do I get this file?"
+              id="import.title"
+              defaultMessage="Import your progress from <acc>keybr</acc>"
+              values={{
+                acc: (chunks) => (
+                  <span className={styles.titleAccent}>{chunks}</span>
+                ),
+              }}
             />
-          </button>
-        </p>
-        {showHelp && (
-          <ol className={styles.helpSteps}>
-            <li>
+          </h2>
+          <p className={styles.hint}>
+            <FormattedMessage
+              id="import.intro"
+              defaultMessage="Upload the typing-data.json you downloaded from keybr. It’s added to a grown-up profile, so your history and learned keys carry over."
+            />{" "}
+            <button
+              type="button"
+              className={styles.consentLink}
+              onClick={() => setShowHelp((v) => !v)}
+            >
               <FormattedMessage
-                id="import.help.1"
-                defaultMessage="Open your profile page on keybr.com."
+                id="import.help.toggle"
+                defaultMessage="How do I get this file?"
               />
-            </li>
-            <li>
-              <FormattedMessage
-                id="import.help.2"
-                defaultMessage="Scroll to the bottom of the page and click the Download data button."
-              />
-            </li>
-            <li>
-              <FormattedMessage
-                id="import.help.3"
-                defaultMessage="Save the JSON file, then upload it below."
-              />
-            </li>
-          </ol>
-        )}
-
-        {summary != null ? (
-          <>
-            <p className={styles.importOk}>{summary}</p>
-            <div className={styles.editorActions}>
-              <button className={styles.actionPrimary} onClick={onClose}>
-                <FormattedMessage id="t_Close" defaultMessage="Close" />
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <label className={styles.importField}>
-              <span className={styles.editorLbl}>
+            </button>
+          </p>
+          {showHelp && (
+            <ol className={styles.helpSteps}>
+              <li>
                 <FormattedMessage
-                  id="import.target"
-                  defaultMessage="Import into"
+                  id="import.help.1"
+                  defaultMessage="Open your profile page on keybr.com."
                 />
-              </span>
-              <select
-                className={styles.field}
-                value={targetId}
-                onChange={(ev) => setTargetId(ev.target.value)}
-              >
-                {profiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.firstName}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className={styles.importField}>
-              <button
-                type="button"
-                className={styles.uploadBtn}
-                onClick={() => fileRef.current?.click()}
-              >
+              </li>
+              <li>
                 <FormattedMessage
-                  id="import.choose"
-                  defaultMessage="Choose keybr file…"
+                  id="import.help.2"
+                  defaultMessage="Scroll to the bottom of the page and click the Download data button."
                 />
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".json,application/json"
-                style={{ display: "none" }}
-                onChange={(ev) => onFile(ev.target.files?.[0])}
-              />
-              {results != null && (
-                <p className={styles.hint}>
+              </li>
+              <li>
+                <FormattedMessage
+                  id="import.help.3"
+                  defaultMessage="Save the JSON file, then upload it below."
+                />
+              </li>
+            </ol>
+          )}
+
+          {summary != null ? (
+            <>
+              <p className={styles.importOk}>{summary}</p>
+              <div className={styles.editorActions}>
+                <button className={styles.actionPrimary} onClick={onClose}>
+                  <FormattedMessage id="t_Close" defaultMessage="Close" />
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <label className={styles.importField}>
+                <span className={styles.editorLbl}>
                   <FormattedMessage
-                    id="import.parsed"
-                    defaultMessage="Found {ok} valid lessons in this file ({total} records)."
-                    values={{ ok: results.length, total }}
+                    id="import.target"
+                    defaultMessage="Import into"
+                  />
+                </span>
+                <select
+                  className={styles.field}
+                  value={targetId}
+                  onChange={(ev) => setTargetId(ev.target.value)}
+                >
+                  {profiles.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.firstName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className={styles.importField}>
+                <button
+                  type="button"
+                  className={styles.uploadBtn}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <FormattedMessage
+                    id="import.choose"
+                    defaultMessage="Choose keybr file…"
+                  />
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".json,application/json"
+                  style={{ display: "none" }}
+                  onChange={(ev) => onFile(ev.target.files?.[0])}
+                />
+                {results != null && (
+                  <p className={styles.hint}>
+                    <FormattedMessage
+                      id="import.parsed"
+                      defaultMessage="Found {ok} valid lessons in this file ({total} records)."
+                      values={{ ok: results.length, total }}
+                    />
+                  </p>
+                )}
+              </div>
+
+              <div className={styles.optCards}>
+                <button
+                  type="button"
+                  className={clsx(
+                    styles.optCard,
+                    mode === "merge" && styles.optCardOn,
+                  )}
+                  onClick={() => {
+                    setMode("merge");
+                    setConfirmReplace(false);
+                  }}
+                >
+                  <span className={styles.optTitle}>
+                    <FormattedMessage
+                      id="import.merge.title"
+                      defaultMessage="Add to my progress"
+                    />
+                  </span>
+                  <span className={styles.optSub}>
+                    <FormattedMessage
+                      id="import.merge.sub"
+                      defaultMessage="Keep what’s here and add the imported lessons."
+                    />
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={clsx(
+                    styles.optCard,
+                    mode === "replace" && styles.optCardOn,
+                  )}
+                  onClick={() => setMode("replace")}
+                >
+                  <span className={styles.optTitle}>
+                    <FormattedMessage
+                      id="import.replace.title"
+                      defaultMessage="Start fresh"
+                    />
+                  </span>
+                  <span className={styles.optSub}>
+                    <FormattedMessage
+                      id="import.replace.sub"
+                      defaultMessage="Erase this profile’s history and use the file."
+                    />
+                  </span>
+                </button>
+              </div>
+
+              {confirmReplace && (
+                <p className={styles.gateWrong}>
+                  <FormattedMessage
+                    id="import.confirmReplace"
+                    defaultMessage="This profile already has progress. Replacing will permanently erase it. Click Import again to confirm."
                   />
                 </p>
               )}
-            </div>
+              {error != null && <p className={styles.gateWrong}>{error}</p>}
 
-            <div className={styles.optCards}>
-              <button
-                type="button"
-                className={clsx(
-                  styles.optCard,
-                  mode === "merge" && styles.optCardOn,
-                )}
-                onClick={() => {
-                  setMode("merge");
-                  setConfirmReplace(false);
-                }}
-              >
-                <span className={styles.optTitle}>
-                  <FormattedMessage
-                    id="import.merge.title"
-                    defaultMessage="Add to my progress"
-                  />
-                </span>
-                <span className={styles.optSub}>
-                  <FormattedMessage
-                    id="import.merge.sub"
-                    defaultMessage="Keep what’s here and add the imported lessons."
-                  />
-                </span>
-              </button>
-              <button
-                type="button"
-                className={clsx(
-                  styles.optCard,
-                  mode === "replace" && styles.optCardOn,
-                )}
-                onClick={() => setMode("replace")}
-              >
-                <span className={styles.optTitle}>
-                  <FormattedMessage
-                    id="import.replace.title"
-                    defaultMessage="Start fresh"
-                  />
-                </span>
-                <span className={styles.optSub}>
-                  <FormattedMessage
-                    id="import.replace.sub"
-                    defaultMessage="Erase this profile’s history and use the file."
-                  />
-                </span>
-              </button>
-            </div>
-
-            {confirmReplace && (
-              <p className={styles.gateWrong}>
-                <FormattedMessage
-                  id="import.confirmReplace"
-                  defaultMessage="This profile already has progress. Replacing will permanently erase it. Click Import again to confirm."
-                />
-              </p>
-            )}
-            {error != null && <p className={styles.gateWrong}>{error}</p>}
-
-            <div className={styles.editorActions}>
-              <button className={styles.actionGhost} onClick={onClose}>
-                <FormattedMessage id="t_Cancel" defaultMessage="Cancel" />
-              </button>
-              <button
-                className={styles.actionPrimary}
-                disabled={results == null || results.length === 0 || busy}
-                onClick={run}
-              >
-                {confirmReplace ? (
-                  <FormattedMessage
-                    id="import.confirmBtn"
-                    defaultMessage="Yes, replace"
-                  />
-                ) : (
-                  <FormattedMessage
-                    id="import.import"
-                    defaultMessage="Import"
-                  />
-                )}
-              </button>
-            </div>
-          </>
-        )}
+              <div className={styles.editorActions}>
+                <button className={styles.actionGhost} onClick={onClose}>
+                  <FormattedMessage id="t_Cancel" defaultMessage="Cancel" />
+                </button>
+                <button
+                  className={styles.actionPrimary}
+                  disabled={results == null || results.length === 0 || busy}
+                  onClick={run}
+                >
+                  {confirmReplace ? (
+                    <FormattedMessage
+                      id="import.confirmBtn"
+                      defaultMessage="Yes, replace"
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="import.import"
+                      defaultMessage="Import"
+                    />
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </Overlay>
   );
 }

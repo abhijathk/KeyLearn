@@ -113,11 +113,43 @@ function FirstRunRedirect(): ReactNode {
   return null;
 }
 
+// The sighted drills a learner on vision support cannot use. Each of them is
+// built around watching a line of text move under a caret; braille practice is
+// the same lesson engine reached by ear and by chord.
+const SIGHTED_DRILLS: readonly string[] = [
+  Pages.practice.path,
+  Pages.kids.path,
+  Pages.typingTest.path,
+];
+
+/**
+ * Keeps a learner on vision support out of the sighted drills.
+ *
+ * Every switcher already routes them to braille, but a bookmark, the back
+ * button, a nav link or a stale tab all bypass that — and landing on a page
+ * that is silent and unusable gives no clue what went wrong. The guard is on
+ * the route rather than on each entry point so there is one answer, not four.
+ */
+function BrailleOnlyRedirect(): ReactNode {
+  const { active } = useProfiles();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const blocked =
+    active?.visionSupport === true && SIGHTED_DRILLS.includes(pathname);
+  useEffect(() => {
+    if (blocked) {
+      navigate(Pages.braille.path, { replace: true });
+    }
+  }, [blocked, navigate]);
+  return null;
+}
+
 function PageRoutes() {
   const { locale } = useIntl();
   return (
     <BrowserRouter basename={Pages.intlBase(locale)}>
       <FirstRunRedirect />
+      <BrailleOnlyRedirect />
       <ProfilePicker />
       <Routes>
         <Route

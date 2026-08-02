@@ -1,4 +1,4 @@
-import { ProfileAvatar, useProfiles } from "@keybr/page-account";
+import { BrailleAvatar, useProfiles } from "@keybr/page-account";
 import { Avatar, Pages, usePageData } from "@keybr/pages-shared";
 import { StrokeIcon } from "@keybr/widget";
 import { clsx } from "clsx";
@@ -9,9 +9,15 @@ import * as styles from "./AccountMenu.module.less";
 
 /**
  * The header identity chip — a passive indicator of who is practising.
- * With an active learner it shows their avatar, first name and a K (kid) or
- * G (grown-up) badge; otherwise just the admin or anonymous avatar. Account,
- * Log out and the learner switcher all live in the menu drawer.
+ * With an active learner it shows their avatar and first name; otherwise just
+ * the admin or anonymous avatar. Account, Log out and the learner switcher all
+ * live in the menu drawer.
+ *
+ * The only badge left is a B for a learner on braille and audio. Kid and
+ * grown-up carried K / G bubbles here, but the profile list now sorts them and
+ * gives each their own colour chip, so repeating it in the header was noise on
+ * every page. Vision support changes how the app behaves, not just who is
+ * using it, so it stays visible.
  *
  * On the kids page the header speaks a different, playful visual language
  * (pastel rounded chips), so `kids` swaps in matching styles for both the
@@ -60,25 +66,12 @@ export function AccountMenu({
       {active != null ? (
         <>
           <span className={clsx(styles.avatarWrap, kids && styles.kidsAvatar)}>
-            <ProfileAvatar
+            <BrailleAvatar
               avatar={active.avatar}
               name={active.firstName}
               size={29}
+              braille={active.visionSupport}
             />
-            <span
-              className={styles.badge}
-              data-kind={active.kind}
-              title={
-                active.kind === "kid"
-                  ? formatMessage({ id: "profiles.kid", defaultMessage: "Kid" })
-                  : formatMessage({
-                      id: "profiles.adult",
-                      defaultMessage: "Grown-up",
-                    })
-              }
-            >
-              {active.kind === "kid" ? "K" : "G"}
-            </span>
           </span>
           <span className={clsx(styles.name, kids && styles.kidsName)}>
             {active.firstName}

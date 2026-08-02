@@ -69,15 +69,34 @@ export function wordAt(lesson: Lesson, step: number): Word | null {
  * for everyone else.
  */
 export function describeCell(text: string, step: CellStep): string {
+  const { name, dots } = readCell(text, step);
+  return dots.length === 0 ? name : `${name}, dots ${dots.join(" ")}`;
+}
+
+/**
+ * The same description, before it is flattened into a sentence.
+ *
+ * Speech needs the sentence; the on-screen prompt needs the parts, so it can
+ * set the letter and its dot numbers as separate things rather than printing
+ * the phrase written for a voice.
+ */
+export type CellDescription = {
+  /** What to call this cell: a letter, or the name of a signal cell. */
+  readonly name: string;
+  /** Which dots it is made of; empty for a cell that is not typed as dots. */
+  readonly dots: readonly number[];
+};
+
+export function readCell(text: string, step: CellStep): CellDescription {
   const ch = text[step.at];
   const dots = dotsOf(step.cell);
   if (ch === " ") {
-    return "space";
+    return { name: "space", dots: [] };
   }
   if (dots.length === 0) {
-    return "space bar";
+    return { name: "space bar", dots: [] };
   }
-  const prefix =
+  const name =
     LETTERS.get(ch.toLowerCase()) === step.cell
       ? ch
       : ch >= "0" && ch <= "9"
@@ -85,7 +104,7 @@ export function describeCell(text: string, step: CellStep): string {
         : ch !== ch.toLowerCase()
           ? "capital sign"
           : ch;
-  return `${prefix}, dots ${dots.join(" ")}`;
+  return { name, dots };
 }
 
 /** Spells a word for the "say it letter by letter" help level. */

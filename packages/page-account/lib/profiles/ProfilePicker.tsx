@@ -4,6 +4,7 @@ import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
 import { ConfirmDialog } from "../ConfirmDialog.tsx";
 import * as shell from "../FloatingShell.module.less";
+import { BrailleAvatar } from "./BrailleBadge.tsx";
 import { useProfiles } from "./context.tsx";
 import { ProfileAvatar } from "./ProfileAvatar.tsx";
 import * as styles from "./ProfilePicker.module.less";
@@ -58,7 +59,12 @@ export function ProfilePicker(): ReactNode {
                 className={styles.tile}
                 onClick={() => pick(p.id, p.kind, p.visionSupport)}
               >
-                <ProfileAvatar avatar={p.avatar} name={p.firstName} size={72} />
+                <BrailleAvatar
+                  avatar={p.avatar}
+                  name={p.firstName}
+                  size={72}
+                  braille={p.visionSupport}
+                />
                 <span className={styles.name}>{p.firstName}</span>
                 <span className={styles.kind}>
                   {p.kind === "kid" ? (

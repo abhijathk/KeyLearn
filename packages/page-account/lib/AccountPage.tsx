@@ -84,9 +84,11 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
     return () => window.removeEventListener("hashchange", onPop);
   }, []);
   const [confirm, setConfirm] = useState<
-    "logout" | "delete" | "delete2" | "signout-all" | null
+    "logout" | "delete" | "delete2" | null
   >(null);
-  const [signedOutAll, setSignedOutAll] = useState(false);
+  // Lifted, because the confirmation has to say which of the two logouts is
+  // about to happen — the wider one is not undoable by logging back in here.
+  const [alsoEverywhere, setAlsoEverywhere] = useState(false);
 
   return (
     <FloatingShell
@@ -210,10 +212,10 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               onPublicProfile={() =>
                 actions.patchAccount({ publicProfile: !user.publicProfile })
               }
+              alsoEverywhere={alsoEverywhere}
+              onAlsoEverywhere={setAlsoEverywhere}
               onLogout={() => setConfirm("logout")}
-              onSignOutAll={() => setConfirm("signout-all")}
               onDelete={() => setConfirm("delete")}
-              signedOutAll={signedOutAll}
             />
           )}
 
@@ -267,40 +269,30 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
             id: "account.logout.confirmTitle",
             defaultMessage: "Log out?",
           })}
-          message={formatMessage({
-            id: "account.logout.confirmMessage",
-            defaultMessage:
-              "You’ll need to log back in to sync your progress. Learner profiles stay on this device.",
-          })}
+          message={
+            alsoEverywhere
+              ? formatMessage({
+                  id: "account.logout.confirmMessageAll",
+                  defaultMessage:
+                    "This device and every other phone, tablet or computer logged in to this account will be logged out. You’ll need to log back in to sync your progress. Learner profiles stay on this device.",
+                })
+              : formatMessage({
+                  id: "account.logout.confirmMessage",
+                  defaultMessage:
+                    "You’ll need to log back in to sync your progress. Learner profiles stay on this device.",
+                })
+          }
           confirmLabel={formatMessage({
             id: "nav.logOut",
             defaultMessage: "Log out",
           })}
-          onConfirm={() => actions.logout()}
-          onCancel={() => setConfirm(null)}
-        />
-      )}
-
-      {confirm === "signout-all" && (
-        <ConfirmDialog
-          title={formatMessage({
-            id: "account.signOutAll.confirmTitle",
-            defaultMessage: "Log out of all other devices?",
-          })}
-          message={formatMessage({
-            id: "account.signOutAll.confirmMessage",
-            defaultMessage:
-              "Every other phone, tablet or computer logged in to this account will be logged out. This device stays logged in.",
-          })}
-          confirmLabel={formatMessage({
-            id: "account.signOutAll",
-            defaultMessage: "Log out of all other devices",
-          })}
-          onConfirm={() => {
-            AccountService.signOutEverywhere()
-              .then(() => setSignedOutAll(true))
-              .catch(() => {});
-            setConfirm(null);
+          onConfirm={async () => {
+            // Everywhere else first: once this device's session is gone the
+            // request that revokes the others has nothing left to authorise.
+            if (alsoEverywhere) {
+              await AccountService.signOutEverywhere().catch(() => {});
+            }
+            await actions.logout();
           }}
           onCancel={() => setConfirm(null)}
         />
@@ -343,19 +335,19 @@ function AccountPane({
   publicUser,
   onAnonymize,
   onPublicProfile,
+  alsoEverywhere,
+  onAlsoEverywhere,
   onLogout,
-  onSignOutAll,
   onDelete,
-  signedOutAll,
 }: {
   readonly user: UserDetails;
   readonly publicUser: AnyUser;
   readonly onAnonymize: () => void;
   readonly onPublicProfile: () => void;
+  readonly alsoEverywhere: boolean;
+  readonly onAlsoEverywhere: (on: boolean) => void;
   readonly onLogout: () => void;
-  readonly onSignOutAll: () => void;
   readonly onDelete: () => void;
-  readonly signedOutAll: boolean;
 }): ReactNode {
   return (
     <div className={styles.paneScroll}>
@@ -412,35 +404,29 @@ function AccountPane({
         </div>
       </div>
 
+      {/* One action, with the wider reach as an option on it. Two separate
+          "Log out" buttons a row apart, both labelled the same, asked the
+          reader to tell them apart by the sentence beside them — and the
+          worse mistake of the two was silent. */}
       <div className={styles.prefCard}>
         <div className={styles.miniRow}>
-          <span>
-            <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
-          </span>
+          <label className={styles.checkRow}>
+            <input
+              type="checkbox"
+              checked={alsoEverywhere}
+              onChange={(e) => onAlsoEverywhere(e.target.checked)}
+            />
+            <span>
+              <FormattedMessage
+                id="account.signOutAll"
+                defaultMessage="Log out of all other devices"
+              />
+            </span>
+          </label>
           <button className={styles.subtleBtnWarn} onClick={onLogout}>
             <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
           </button>
         </div>
-        <div className={styles.hr} />
-        <div className={styles.miniRow}>
-          <span>
-            <FormattedMessage
-              id="account.signOutAll"
-              defaultMessage="Log out of all other devices"
-            />
-          </span>
-          <button className={styles.subtleBtnWarn} onClick={onSignOutAll}>
-            <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
-          </button>
-        </div>
-        {signedOutAll && (
-          <p className={styles.cardNote}>
-            <FormattedMessage
-              id="account.signOutAll.done"
-              defaultMessage="Logged out everywhere else. This device is still logged in."
-            />
-          </p>
-        )}
       </div>
 
       <div className={clsx(styles.prefCard, styles.dangerCard)}>

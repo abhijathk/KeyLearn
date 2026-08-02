@@ -1,0 +1,44 @@
+// Deep indigo with white text: the darkest token the profile UI uses, so it
+// stays legible over any avatar colour it is pinned to, and reads as a marker
+// rather than as another pastel category chip.
+.small {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 0.95rem;
+  min-inline-size: 0.95rem;
+  block-size: 0.95rem;
+  border-radius: 50%;
+  color: #ffffff;
+  background-color: #33357a;
+  font-family: var(--default-font-family);
+  font-size: 0.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.large {
+  .small();
+
+  inline-size: 1.2rem;
+  min-inline-size: 1.2rem;
+  block-size: 1.2rem;
+  font-size: 0.6rem;
+}
+
+// Holds the badge in the avatar's corner. The ring is the surface behind it,
+// not a colour of its own, so the badge reads as sitting on top of the face
+// rather than as part of it whatever that face is coloured.
+.pin {
+  display: inline-block;
+  position: relative;
+  flex: none;
+  line-height: 0;
+
+  > .small,
+  > .large {
+    position: absolute;
+    inset-inline-end: -0.2rem;
+    inset-block-end: -0.2rem;
+    box-shadow: 0 0 0 1.5px var(--primary-l1, #ffffff);
+  }
+}

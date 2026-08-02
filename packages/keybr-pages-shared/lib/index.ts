@@ -5,6 +5,7 @@ export * from "./ngram-store.ts";
 export * from "./pagedata.tsx";
 export * from "./pages.ts";
 export * from "./profile-storage.ts";
+export * from "./profilecaps.ts";
 export * from "./Root.tsx";
 export * from "./Screen.tsx";
 export * from "./types.ts";

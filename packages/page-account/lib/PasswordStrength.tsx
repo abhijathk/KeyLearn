@@ -49,10 +49,9 @@ async function pwnedCount(pw: string, signal: AbortSignal): Promise<number> {
     .toUpperCase();
   const prefix = hex.slice(0, 5);
   const suffix = hex.slice(5);
-  const res = await fetch(
-    `https://api.pwnedpasswords.com/range/${prefix}`,
-    { signal },
-  );
+  const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+    signal,
+  });
   const text = await res.text();
   for (const line of text.split("\n")) {
     const [suf, count] = line.trim().split(":");
@@ -113,7 +112,12 @@ export function PasswordStrength({
         ))}
       </div>
       <div className={styles.row}>
-        <span className={clsx(styles.label, styles[`t${score}` as keyof typeof styles])}>
+        <span
+          className={clsx(
+            styles.label,
+            styles[`t${score}` as keyof typeof styles],
+          )}
+        >
           {formatMessage(label)}
         </span>
         {pwned != null && pwned > 0 && (

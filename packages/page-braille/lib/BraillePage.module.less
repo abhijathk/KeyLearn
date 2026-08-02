@@ -108,9 +108,87 @@
 }
 
 .prompt {
+  display: flex;
+  justify-content: center;
+  min-block-size: 3.4rem;
   margin: 0;
-  font-size: 1.2rem;
+}
+
+// The card the rest of the page is made of — the board's border, tint and
+// corner radius, at the size of a caption. Floating the letter and numbers
+// loose on the background made them read as leftover text between two panels;
+// inside a card they are plainly the instruction for the cell diagram below.
+.promptRow {
+  display: inline-flex;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.4rem 0.9rem 0.4rem 0.4rem;
+  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+}
+
+// The letter as the board draws the cell in play: the same filled accent tile,
+// so the caption and the highlighted column are visibly the same cell.
+.promptName {
+  display: grid;
+  place-items: center;
+  min-inline-size: 2.6rem;
+  block-size: 2.6rem;
+  padding-inline: 0.5rem;
+  border-radius: 0.55rem;
+  color: var(--primary);
+  background: var(--accent);
+  font-family: var(--value-font-family), monospace;
+  font-size: 1.6rem;
   font-weight: 700;
+  line-height: 1;
+}
+
+// A signal cell is named in words, which at letter size would burst the tile.
+.promptWord {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+
+// Labelled like the metrics above it, so "dots" reads as the name of the
+// numbers rather than as another word in a sentence.
+.promptDots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: flex-start;
+}
+
+.promptDotsLabel {
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.promptDotsRow {
+  display: flex;
+  gap: 0.3rem;
+}
+
+// The same round token the cell diagram uses for a wanted dot, at caption
+// size, so the number here and the circle below are recognisably one thing.
+.promptDot {
+  display: grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font-family: var(--value-font-family), monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .wrong {
@@ -410,9 +488,10 @@
 
 // The word in play. Highlighting the cell alone never said which WORD was
 // being typed, which is the thing a reader actually tracks.
+// The tint alone carries it — the underline that used to sit beneath read as a
+// second rule under the board rather than as part of the word.
 .wordOn {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
-  box-shadow: inset 0 -2px 0 var(--accent);
 }
 
 // Keys and the space bar together, so the whole hand position is one picture.

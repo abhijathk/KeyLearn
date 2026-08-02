@@ -34,6 +34,11 @@ import {
 } from "@keybr/database";
 import { Logger } from "@keybr/logger";
 import { type AbstractAdapter } from "@keybr/oauth";
+import {
+  countPlaces,
+  PLACES_BRAILLE,
+  sightedPlaces,
+} from "@keybr/pages-shared";
 import { PublicId } from "@keybr/publicid";
 import { UserDataFactory } from "@keybr/result-userdata";
 import {
@@ -63,9 +68,6 @@ import { zod } from "./zod.ts";
 const jsonOpts = { maxLength: 4096 };
 // Profiles may carry a photo avatar as a data URL, so allow a larger body.
 const profileJsonOpts = { maxLength: 3_000_000 };
-
-const MAX_PROFILES_FREE = 4;
-const MAX_PROFILES_PREMIUM = 8;
 
 // A photo avatar is produced by the client as canvas.toDataURL("image/jpeg"),
 // and its `dataUrl` is rendered straight into an <img src>. Accepting an
@@ -1567,10 +1569,20 @@ export class Controller {
         "Parental consent is required to create a child profile.",
       );
     }
-    const cap = user.order != null ? MAX_PROFILES_PREMIUM : MAX_PROFILES_FREE;
-    const count = await Profile.query().where("userId", user.id!).resultSize();
-    if (count >= cap) {
-      throw new ApplicationError(`You can have at most ${cap} profiles.`);
+    // Two allowances: a learner on braille and audio does not use up one of
+    // the ordinary places. See `profilecaps.ts` for why.
+    const premium = user.order != null;
+    const braille = data.visionSupport === true;
+    const counts = countPlaces(
+      await Profile.query().where("userId", user.id!),
+      premium,
+    );
+    if (braille ? counts.brailleFree === 0 : counts.sightedFree === 0) {
+      throw new ApplicationError(
+        braille
+          ? `You can have at most ${PLACES_BRAILLE} learners on braille and audio.`
+          : `You can have at most ${sightedPlaces(premium)} learners. Learners on braille and audio have their own places.`,
+      );
     }
     const consented = data.kind === "kid";
     await Profile.query().insert({
@@ -1605,6 +1617,22 @@ export class Controller {
     if (data.lastName !== undefined) patch.lastName = data.lastName || null;
     if (data.birthYear !== undefined) patch.birthYear = data.birthYear ?? null;
     if (data.visionSupport !== undefined) {
+      // Turning vision support off moves this learner out of the braille
+      // allowance and into the ordinary one. Without this check a household
+      // could fill both allowances and then clear the flag on each braille
+      // profile, ending up over the cap the create path enforces.
+      if (profile.visionSupport && !data.visionSupport) {
+        const premium = user.order != null;
+        const counts = countPlaces(
+          await Profile.query().where("userId", user.id!),
+          premium,
+        );
+        if (counts.sightedFree === 0) {
+          throw new ApplicationError(
+            `You can have at most ${sightedPlaces(premium)} learners who are not on braille and audio. Delete one first, or leave braille and audio switched on.`,
+          );
+        }
+      }
       patch.visionSupport = data.visionSupport;
     }
     if (data.avatar !== undefined) {

@@ -64,13 +64,13 @@ function LearnerTabs(): ReactNode {
         {selected.kind === "kid" ? (
           <FormattedMessage
             id="profile.tab.learnerKidNote"
-            defaultMessage="{name}'s progress on the dino trail, in the same charts."
+            defaultMessage="{name}’s progress on the dino trail, in the same charts."
             values={{ name: selected.firstName }}
           />
         ) : (
           <FormattedMessage
             id="profile.tab.learnerNote"
-            defaultMessage="{name}'s typing progress on this device."
+            defaultMessage="{name}’s typing progress on this device."
             values={{ name: selected.firstName }}
           />
         )}

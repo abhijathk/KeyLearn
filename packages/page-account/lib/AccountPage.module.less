@@ -337,7 +337,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  margin-block-start: auto;
   padding: 0.7rem 0.75rem;
   border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
   border-radius: 0.7rem;
@@ -368,12 +367,16 @@
   line-height: 1.35;
 }
 
+// Pushed to the foot of the rail rather than trailing the nav items: it is the
+// way out, not another destination, and sitting directly under Preferences it
+// read as one. `auto` rather than a fixed gap so it stays put whatever the
+// section list above it grows to.
 .railLogout {
   display: flex;
   gap: 0.6rem;
   align-items: center;
-  margin-block-start: 0.5rem;
-  padding: 0.6rem 0.7rem;
+  margin-block-start: auto;
+  padding: 1rem 0.7rem 0.6rem;
   border: none;
   border-radius: 0.6rem;
   color: var(--error-color, #d0322e);
@@ -960,5 +963,22 @@
   &:hover:not(:disabled) {
     border-color: var(--warn-color, #d19a3d);
     color: var(--text-color);
+  }
+}
+
+// The option that widens what Log out does, sitting on the same row as the
+// button so the two read as one action rather than as two settings.
+.checkRow {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  font-size: 0.92rem;
+  cursor: pointer;
+
+  input {
+    inline-size: 1rem;
+    block-size: 1rem;
+    cursor: pointer;
+    accent-color: var(--accent);
   }
 }

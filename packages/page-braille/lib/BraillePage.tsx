@@ -1,13 +1,17 @@
 import {
   BLANK,
   type Cell,
+  type CellStep,
   ChordReader,
   dotsOf,
   letterOfCell,
+  loadProgress,
   type Progress,
   REQUIRED_ROLLOVER,
+  saveProgress,
   toUnicode,
 } from "@keybr/braille";
+import { useProfiles } from "@keybr/page-account";
 import { Screen } from "@keybr/pages-shared";
 import { clsx } from "clsx";
 import {
@@ -23,6 +27,7 @@ import {
   describeCell,
   type Lesson,
   makeLesson,
+  readCell,
   spellOut,
   wordAt,
 } from "./lesson.ts";
@@ -31,12 +36,14 @@ import {
   chime,
   defaultVoice,
   fanfare,
+  onSpeechHealth,
   say,
   spaceCue,
+  speechHealth,
   tick,
   unlockAudio,
+  warmSpeech,
 } from "./sound.ts";
-import { loadProgress, saveProgress } from "./store.ts";
 
 /**
  * How the lesson is presented.
@@ -66,8 +73,11 @@ function Practice({
   readonly onModeChange: (mode: Mode) => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
+  // Braille progress is per learner, like every other kind. The page is inside
+  // ProfileScope, so a switch remounts this and reloads the right one.
+  const profileId = useProfiles().active?.id ?? null;
   const [lesson, setLesson] = useState<Lesson>(() =>
-    makeLesson(loadProgress()),
+    makeLesson(loadProgress(profileId)),
   );
   const [at, setAt] = useState(0);
   const [held, setHeld] = useState<Cell>(0);
@@ -82,10 +92,27 @@ function Practice({
   const [started, setStarted] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [rolloverLimit, setRolloverLimit] = useState(0);
+  const [health, setHealth] = useState(speechHealth);
+  useEffect(() => onSpeechHealth(setHealth), []);
+
+  // With the server speaking, the words of this line and the letters in them
+  // are fetched ahead of the hands reaching them, so the voice still leads.
+  useEffect(() => {
+    if (health !== "dead") {
+      return;
+    }
+    warmSpeech(
+      [
+        ...lesson.words.map((w) => w.text),
+        ...new Set([...lesson.text].filter((c) => c !== " ")),
+      ],
+      voice.rate,
+    );
+  }, [health, lesson, voice.rate]);
 
   // Per-learner progress. Kept on the device for now: braille results do not
   // yet flow through the account's result sync.
-  const progress = useRef<Progress>(loadProgress());
+  const progress = useRef<Progress>(loadProgress(profileId));
   const lastAt = useRef<number>(0);
   const reader = useRef(new ChordReader());
   const greetRef = useRef<() => void>(() => {});
@@ -129,6 +156,9 @@ function Practice({
       return;
     }
     greeted.current = true;
+    // The first word follows the greeting rather than racing a timer against
+    // it: the greeting runs past 2.4s at any normal rate, so the old timer
+    // cancelled it mid-sentence and the learner heard neither line whole.
     say(
       formatMessage({
         id: "braille.audio.ready",
@@ -136,13 +166,9 @@ function Practice({
           "Braille practice. Press the slash key for controls, Enter to hear the word again.",
       }),
       voice,
-    );
-    const timer = window.setTimeout(
       () =>
         dictate(state.current.lesson, state.current.at, state.current.voice),
-      2400,
     );
-    return () => window.clearTimeout(timer);
     // Once on arrival; a re-render must not re-announce.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -160,7 +186,7 @@ function Practice({
       if (cell !== step.cell) {
         if (letter != null) {
           progress.current.miss(letter);
-          saveProgress(progress.current);
+          saveProgress(progress.current, profileId);
         }
         setMisses((n) => n + 1);
         setWrong(cell);
@@ -202,7 +228,7 @@ function Practice({
         const gap = lastAt.current === 0 ? null : now - lastAt.current;
         if (gap != null && gap < 10_000) {
           progress.current.hit(letter, gap);
-          saveProgress(progress.current);
+          saveProgress(progress.current, profileId);
         }
       }
       lastAt.current = now;
@@ -272,8 +298,8 @@ function Practice({
             { count: fresh.words.length },
           )}`,
           s.voice,
+          () => dictate(fresh, 0, s.voice),
         );
-        window.setTimeout(() => dictate(fresh, 0, s.voice), 2600);
       }, 340);
     }
 
@@ -306,7 +332,7 @@ function Practice({
             formatMessage({
               id: "braille.controls",
               defaultMessage:
-                "F D S and J K L are dots one to six. Space is a blank cell, and two low notes tell you one is due. Enter repeats the word. Left arrow reads the whole line. Up arrow spells the word. Down arrow gives the dots. Backspace deletes the last cell. Turn off your screen reader's keyboard echo — it announces the physical keys, not the braille.",
+                "F D S and J K L are dots one to six. Space is a blank cell, and two low notes tell you one is due. Enter repeats the word. Left arrow reads the whole line. Up arrow spells the word. Down arrow gives the dots. Backspace deletes the last cell. Turn off your screen reader’s keyboard echo — it announces the physical keys, not the braille.",
             }),
             s.voice,
           );
@@ -374,7 +400,7 @@ function Practice({
       window.removeEventListener("keyup", onUp);
       window.removeEventListener("blur", onBlur);
     };
-  }, [dictate, formatMessage]);
+  }, [dictate, formatMessage, profileId]);
 
   greetRef.current = greet;
 
@@ -388,6 +414,22 @@ function Practice({
 
   return (
     <div className={styles.page}>
+      {/* The one thing the app cannot tell a learner in its own voice is that
+          its voice is switched off — the browser gate that silences it is the
+          gate this line explains. So it has to be read by their screen reader
+          instead, which means being first in the document and phrased as the
+          thing to do, not as a description of the screen. A live region would
+          not do it: content already present when the page loads is not an
+          announcement. It disappears the moment any key is pressed. */}
+      {!started && (
+        <p className={styles.begin}>
+          <FormattedMessage
+            id="braille.begin"
+            defaultMessage="Press any key to start. Sound stays off until you do — that is your browser, not this page."
+          />
+        </p>
+      )}
+
       <div className={styles.bar}>
         <ModeSwitch mode={mode} onChange={onModeChange} />
         <span className={styles.toggles}>
@@ -454,6 +496,28 @@ function Practice({
         />
       </div>
 
+      {/* Said plainly, and said as soon as it is known: a learner who cannot
+          see the board and hears nothing has no way to tell a broken browser
+          from a broken app, and will reasonably assume the app. The tones
+          survive a dead voice, so the drill is still usable — that is the part
+          worth saying first. */}
+      {health === "mute" && (
+        <p className={styles.warn} role="alert">
+          <FormattedMessage
+            id="braille.voiceDead"
+            defaultMessage="Your browser’s voice is not responding, so nothing is being spoken. The tones still work: a high tick for a correct cell, a low buzz for a wrong one, two low notes before a space. Restarting the browser usually brings the voice back."
+          />
+        </p>
+      )}
+      {health === "dead" && (
+        <p className={styles.warn} role="status">
+          <FormattedMessage
+            id="braille.voiceFallback"
+            defaultMessage="Your browser’s voice is not responding, so KeyLearn is speaking for it. The voice will sound different, and the first time a phrase is said there may be a short pause."
+          />
+        </p>
+      )}
+
       {rolloverLimit > 0 && rolloverLimit < REQUIRED_ROLLOVER && (
         <p className={styles.warn} role="status">
           <FormattedMessage
@@ -470,18 +534,9 @@ function Practice({
         <p className={styles.dictated}>{word?.text ?? " "}</p>
       )}
 
-      {!started && (
-        <p className={styles.begin} role="status" aria-live="assertive">
-          <FormattedMessage
-            id="braille.begin"
-            defaultMessage="Press any key to begin — your browser keeps sound switched off until you do."
-          />
-        </p>
-      )}
-
-      <p className={styles.prompt} role="status" aria-live="assertive">
-        {step != null && describeCell(lesson.text, step)}
-      </p>
+      <div className={styles.prompt} role="status" aria-live="assertive">
+        {step != null && <CellPrompt text={lesson.text} step={step} />}
+      </div>
 
       <div className={styles.keyboardRow}>
         <DotGrid held={held} expected={step?.cell ?? BLANK} />
@@ -492,6 +547,55 @@ function Practice({
         {live}
       </p>
     </div>
+  );
+}
+
+/**
+ * The cell to type, as a caption for the diagram below it.
+ *
+ * The same words a screen reader gets, but typeset rather than printed — the
+ * letter carried at the size the board uses, the dot numbers as the same round
+ * tokens the cell diagram draws them as, so the caption and the diagram read as
+ * one picture. The spoken phrase is what actually reaches the learners this
+ * page is built for, so it is kept verbatim and the typeset copy is hidden from
+ * assistive technology rather than being read out twice in two shapes.
+ */
+function CellPrompt({
+  text,
+  step,
+}: {
+  readonly text: string;
+  readonly step: CellStep;
+}): ReactNode {
+  const { name, dots } = readCell(text, step);
+  return (
+    <>
+      <span className={styles.sr}>{describeCell(text, step)}</span>
+      <span className={styles.promptRow} aria-hidden={true}>
+        <span
+          className={clsx(
+            styles.promptName,
+            name.length > 1 && styles.promptWord,
+          )}
+        >
+          {name}
+        </span>
+        {dots.length > 0 && (
+          <span className={styles.promptDots}>
+            <span className={styles.promptDotsLabel}>
+              <FormattedMessage id="braille.dots" defaultMessage="Dots" />
+            </span>
+            <span className={styles.promptDotsRow}>
+              {dots.map((d) => (
+                <span key={d} className={styles.promptDot}>
+                  {d}
+                </span>
+              ))}
+            </span>
+          </span>
+        )}
+      </span>
+    </>
   );
 }
 

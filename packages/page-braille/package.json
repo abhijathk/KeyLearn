@@ -8,6 +8,7 @@
   "dependencies": {
     "@keybr/braille": "*",
     "@keybr/intl": "*",
+    "@keybr/page-account": "*",
     "@keybr/pages-shared": "*",
     "@keybr/widget": "*"
   },

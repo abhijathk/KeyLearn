@@ -38,6 +38,19 @@ export function adultProfiles(h: Household): readonly Profile[] {
 }
 
 /**
+ * Learners a keybr history can be imported into.
+ *
+ * Grown-ups who are not on braille. Kids were never offered — the import is a
+ * grown-up's own typing history. Braille learners are excluded for a harder
+ * reason: their progress is measured in cells and does not come from the result
+ * store an import writes to, so choosing one would appear to work and then
+ * change nothing.
+ */
+export function importTargets(h: Household): readonly Profile[] {
+  return h.profiles.filter((p) => p.kind === "adult" && !p.visionSupport);
+}
+
+/**
  * The result-history namespace for a profile. Kept stable and distinct from
  * the default "history" store so each learner's progress is their own.
  */

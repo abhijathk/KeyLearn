@@ -1,7 +1,9 @@
 import { catchError } from "@keybr/debug";
 import {
+  countPlaces,
   isPremiumUser,
   loadActiveProfileId,
+  type PlaceCounts,
   type ProfileDetails,
   saveActiveProfileId,
   usePageData,
@@ -21,7 +23,6 @@ import {
   adultProfiles,
   historyNamespace,
   type Household,
-  maxProfiles,
   type Profile,
 } from "./store.ts";
 
@@ -30,8 +31,11 @@ type ProfilesContextValue = {
   readonly active: Profile | null;
   /** Result-history namespace for the active profile, or null. */
   readonly namespace: string | null;
-  /** How many profiles this account may hold (8 with premium, else 4). */
-  readonly maxProfiles: number;
+  /**
+   * How the household's two allowances stand: ordinary learner places, and the
+   * separate places for learners on braille and audio.
+   */
+  readonly places: PlaceCounts;
   /**
    * When true, the account has several grown-ups and none is chosen yet — the
    * app should ask who is practising with the profile picker.
@@ -122,7 +126,7 @@ export function ProfilesProvider({
   const pageData = usePageData();
   const { publicUser } = pageData;
   const signedIn = publicUser.id != null;
-  const cap = maxProfiles(isPremiumUser(publicUser));
+  const premium = isPremiumUser(publicUser);
 
   // Profiles come from the server: seeded from page data on first render, then
   // replaced by the full list every mutation returns.
@@ -193,7 +197,7 @@ export function ProfilesProvider({
       household,
       active,
       namespace: historyNamespace(active),
-      maxProfiles: cap,
+      places: countPlaces(profiles, premium),
       needsPick: signedIn && adults.length >= 2 && !pickDismissed,
       add: async (data) => {
         try {
@@ -242,7 +246,7 @@ export function ProfilesProvider({
     profiles,
     activeId,
     order,
-    cap,
+    premium,
     pickDismissed,
     markPicked,
     setActiveId,

@@ -1,4 +1,9 @@
-import { ConfirmDialog, ProfileAvatar, useProfiles } from "@keybr/page-account";
+import {
+  BrailleAvatar,
+  ConfirmDialog,
+  ProfileAvatar,
+  useProfiles,
+} from "@keybr/page-account";
 import { logout, Pages, usePageData } from "@keybr/pages-shared";
 import { supportUrl } from "@keybr/thirdparties";
 import { IconButton, StrokeIcon } from "@keybr/widget";
@@ -180,10 +185,11 @@ export function MenuDrawer({
                         title={p.firstName}
                         onClick={() => switchTo(p.id, p.kind, p.visionSupport)}
                       >
-                        <ProfileAvatar
+                        <BrailleAvatar
                           avatar={p.avatar}
                           name={p.firstName}
                           size={36}
+                          braille={p.visionSupport}
                         />
                         <span className={styles.learnerName}>
                           {p.firstName}

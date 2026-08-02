@@ -21,7 +21,11 @@ export function Toggle({
       aria-checked={on}
       aria-label={label}
       disabled={disabled}
-      className={clsx(styles.tog, on && styles.togOn, disabled && styles.togOff)}
+      className={clsx(
+        styles.tog,
+        on && styles.togOn,
+        disabled && styles.togOff,
+      )}
       onClick={() => {
         if (!disabled) {
           onChange(!on);
