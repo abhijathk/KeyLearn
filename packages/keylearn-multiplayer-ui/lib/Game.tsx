@@ -17,6 +17,7 @@ import { TextArea } from "@keylearn/textinput-ui";
 import { type Focusable, useScreenSize } from "@keylearn/widget";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type IntlShape, useIntl } from "react-intl";
+import { Chat } from "./Chat.tsx";
 import { Countdown } from "./Countdown.tsx";
 import * as styles from "./Game.module.less";
 import { DeferredRails } from "./Rails.tsx";
@@ -62,7 +63,8 @@ export const Game = ({
     [settings],
   );
   useScreenSize(); // Repaint on window resize.
-  const { gameState, countDown, players, lines, ticker } = worldState;
+  const { gameState, countDown, players, lines, ticker, chat, notice } =
+    worldState;
   // The ring covers the states it is drawn for; the ticker still carries what
   // the others have to say — "Race started!", the finishing place, and the
   // waiting-for-the-next-one line. Dropping it entirely lost information the
@@ -85,7 +87,15 @@ export const Game = ({
       {!counting && ticker !== "" && (
         <div className={styles.ticker}>{ticker}</div>
       )}
-      <DeferredRails players={players} />
+      <div className={styles.room}>
+        <DeferredRails players={players} />
+        <Chat
+          transport={transport}
+          players={players}
+          chat={chat}
+          notice={notice}
+        />
+      </div>
       <div className={styles.textArea}>
         <TextArea
           focusRef={focusRef}

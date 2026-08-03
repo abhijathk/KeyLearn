@@ -18,3 +18,19 @@
   font-weight: 600;
   text-align: center;
 }
+
+// Rails on the left, the conversation down the right. Below 56rem the chat
+// drops beneath the rails rather than shrinking into a column too narrow to
+// read.
+.room {
+  display: grid;
+  grid-template-columns: 1fr 17rem;
+  gap: 1.8rem;
+  align-items: start;
+}
+
+@media (max-width: 56rem) {
+  .room {
+    grid-template-columns: 1fr;
+  }
+}

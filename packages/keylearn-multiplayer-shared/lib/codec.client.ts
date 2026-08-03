@@ -3,6 +3,12 @@ import { type Codec } from "./codec.ts";
 import { readUser } from "./codec.user.ts";
 import { MessageError } from "./errors.ts";
 import {
+  CHAT_NOTICE_ID,
+  CHAT_POST_ID,
+  CHAT_SAY_ID,
+  type ChatNoticeMessage,
+  type ChatPostMessage,
+  type ChatSayMessage,
   type ClientMessage,
   GAME_CONFIG_ID,
   GAME_READY_ID,
@@ -38,6 +44,10 @@ export class ClientCodec implements Codec<ServerMessage, ClientMessage> {
         return readGameReady(reader);
       case GAME_WORLD_ID:
         return readGameWorld(reader);
+      case CHAT_POST_ID:
+        return readChatPost(reader);
+      case CHAT_NOTICE_ID:
+        return readChatNotice(reader);
       default:
         throw new MessageError("Unrecognized server message " + type);
     }
@@ -49,6 +59,8 @@ export class ClientCodec implements Codec<ServerMessage, ClientMessage> {
         return scramble(writePlayerAnnounce(message));
       case PLAYER_PROGRESS_ID:
         return scramble(writePlayerProgress(message));
+      case CHAT_SAY_ID:
+        return scramble(writeChatSay(message));
     }
   }
 }
@@ -122,5 +134,30 @@ function writePlayerProgress(message: PlayerProgressMessage): Uint8Array {
   writer.putUint8(PLAYER_PROGRESS_ID);
   writer.putUint32(message.elapsed);
   writer.putUint32(message.codePoint);
+  return writer.buffer();
+}
+
+function readChatPost(reader: Reader): ChatPostMessage {
+  const playerId = reader.getUint32();
+  const text = reader.getString();
+  const blurred: [number, number][] = [];
+  for (let count = reader.getUint8(); count > 0; count--) {
+    blurred.push([reader.getUint16(), reader.getUint16()]);
+  }
+  return { type: CHAT_POST_ID, playerId, text, blurred };
+}
+
+function readChatNotice(reader: Reader): ChatNoticeMessage {
+  const kind = reader.getString();
+  const untilMs = reader.getUint32();
+  // Seconds on the wire — a mute measured in milliseconds does not fit in
+  // thirty-two bits once it is a wall-clock stamp.
+  return { type: CHAT_NOTICE_ID, kind, untilMs: untilMs * 1000 };
+}
+
+function writeChatSay(message: ChatSayMessage): Uint8Array {
+  const writer = new Writer();
+  writer.putUint8(CHAT_SAY_ID);
+  writer.putString(message.text);
   return writer.buffer();
 }

@@ -109,6 +109,8 @@ test("update players", () => {
   const state0: WorldState = {
     gameState: GameState.RUNNING,
     countDown: 0,
+    chat: [],
+    notice: null,
     players: {
       all: [player1, player2],
       me: player1,

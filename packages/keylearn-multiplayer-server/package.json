@@ -8,6 +8,7 @@
   "dependencies": {
     "@keylearn/content-quotes": "*",
     "@keylearn/lang": "*",
+    "@keylearn/moderation": "*",
     "@keylearn/multiplayer-shared": "*",
     "@keylearn/pages-shared": "*",
     "@keylearn/textinput": "*"

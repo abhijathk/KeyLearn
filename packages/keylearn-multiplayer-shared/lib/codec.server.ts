@@ -3,6 +3,12 @@ import { type Codec } from "./codec.ts";
 import { writeUser } from "./codec.user.ts";
 import { MessageError } from "./errors.ts";
 import {
+  CHAT_NOTICE_ID,
+  CHAT_POST_ID,
+  CHAT_SAY_ID,
+  type ChatNoticeMessage,
+  type ChatPostMessage,
+  type ChatSayMessage,
   type ClientMessage,
   GAME_CONFIG_ID,
   GAME_READY_ID,
@@ -30,6 +36,8 @@ export class ServerCodec implements Codec<ClientMessage, ServerMessage> {
         return readPlayerAnnounce(reader);
       case PLAYER_PROGRESS_ID:
         return readPlayerProgress(reader);
+      case CHAT_SAY_ID:
+        return readChatSay(reader);
       default:
         throw new MessageError("Unrecognized client message " + type);
     }
@@ -47,6 +55,10 @@ export class ServerCodec implements Codec<ClientMessage, ServerMessage> {
         return writeGameReady(message);
       case GAME_WORLD_ID:
         return writeGameWorld(message);
+      case CHAT_POST_ID:
+        return writeChatPost(message);
+      case CHAT_NOTICE_ID:
+        return writeChatNotice(message);
     }
   }
 }
@@ -117,5 +129,32 @@ function writeGameWorld(message: GameWorldMessage): Uint8Array {
     writer.putUint16(player.speed);
     writer.putUint16(player.errors);
   }
+  return writer.buffer();
+}
+
+function readChatSay(reader: Reader): ChatSayMessage {
+  return { type: CHAT_SAY_ID, text: reader.getString() };
+}
+
+function writeChatPost(message: ChatPostMessage): Uint8Array {
+  const writer = new Writer();
+  writer.putUint8(CHAT_POST_ID);
+  writer.putUint32(message.playerId);
+  writer.putString(message.text);
+  // A message is capped well below 255 characters, so it can never carry more
+  // spans than a byte can count.
+  writer.putUint8(message.blurred.length);
+  for (const [start, end] of message.blurred) {
+    writer.putUint16(start);
+    writer.putUint16(end);
+  }
+  return writer.buffer();
+}
+
+function writeChatNotice(message: ChatNoticeMessage): Uint8Array {
+  const writer = new Writer();
+  writer.putUint8(CHAT_NOTICE_ID);
+  writer.putString(message.kind);
+  writer.putUint32(Math.round(message.untilMs / 1000));
   return writer.buffer();
 }

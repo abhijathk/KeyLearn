@@ -19,6 +19,23 @@ export type WorldState = {
   readonly lines: LineList;
   readonly timer: Timer;
   readonly ticker: string;
+  /** The room's conversation, oldest first and capped — chat is ephemeral. */
+  readonly chat: readonly ChatLine[];
+  /** A warning or mute aimed at this player, or null. */
+  readonly notice: ChatNotice | null;
+};
+
+export type ChatLine = {
+  readonly id: number;
+  readonly playerId: number;
+  readonly text: string;
+  /** Half-open ranges of `text` the server has told us to blur. */
+  readonly blurred: readonly (readonly [number, number])[];
+};
+
+export type ChatNotice = {
+  readonly kind: string;
+  readonly untilMs: number;
 };
 
 export type BasicPlayer = {

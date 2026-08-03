@@ -3,6 +3,8 @@ import { type AnyUser } from "@keylearn/pages-shared";
 import { TextInput } from "@keylearn/textinput";
 import { type IntlShape } from "react-intl";
 import {
+  CHAT_NOTICE_ID,
+  CHAT_POST_ID,
   GAME_CONFIG_ID,
   GAME_READY_ID,
   GAME_WORLD_ID,
@@ -23,6 +25,9 @@ import {
   type WorldState,
 } from "./types.ts";
 import { positionName } from "./util.ts";
+
+/** How much of the conversation is kept. Chat is ephemeral by design. */
+const CHAT_KEPT = 40;
 
 export const NOBODY = Object.freeze({
   id: 0,
@@ -54,6 +59,8 @@ export function makeWorldState(intl: IntlShape): WorldState {
   return {
     gameState: GameState.INITIALIZING,
     countDown: 0,
+    chat: [],
+    notice: null,
     players: {
       all: [],
       me: NOBODY,
@@ -98,6 +105,27 @@ export function updateWorldState(
       return handlePlayerLeaveMessage(worldState, message);
     case GAME_CONFIG_ID:
       return handleGameConfigMessage(worldState, message);
+    case CHAT_POST_ID:
+      return {
+        ...worldState,
+        // Oldest first, and only the last few kept: the room's conversation is
+        // ephemeral by design, and an unbounded log in a page built for typing
+        // latency is a leak with a nice name.
+        chat: [
+          ...worldState.chat,
+          {
+            id: worldState.chat.length,
+            playerId: message.playerId,
+            text: message.text,
+            blurred: message.blurred,
+          },
+        ].slice(-CHAT_KEPT),
+      };
+    case CHAT_NOTICE_ID:
+      return {
+        ...worldState,
+        notice: { kind: message.kind, untilMs: message.untilMs },
+      };
     case GAME_READY_ID:
       return handleGameReadyMessage(intl, worldState, message);
     case GAME_WORLD_ID:

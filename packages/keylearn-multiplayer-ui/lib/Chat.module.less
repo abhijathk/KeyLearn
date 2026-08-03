@@ -1,0 +1,199 @@
+// The room's conversation, down the right of the rails.
+
+.root {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  padding-inline-start: 1.4rem;
+  border-inline-start: 1px solid var(--primary-d2);
+}
+
+@media (max-width: 56rem) {
+  .root {
+    padding-inline-start: 0;
+    padding-block-start: 1.2rem;
+    border-inline-start: none;
+    border-block-start: 1px solid var(--primary-d2);
+  }
+}
+
+.label {
+  margin-block-end: 0.8rem;
+  color: var(--text-color-f2);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.log {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-block-size: 14rem;
+  overflow-y: auto;
+}
+
+.line {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.body {
+  min-inline-size: 0;
+}
+
+.who {
+  display: block;
+  color: var(--text-color-f1);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.text {
+  color: var(--text-color);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+// A word the server decided the room should not have to read. Deliberately no
+// way to reveal it and no way to select it: a reveal control turns a censored
+// word into a game, and a selectable one is just a slower way of reading it.
+.blur {
+  color: var(--text-color-f2);
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
+}
+
+// ---- what the sender is told, and nobody else ------------------------------
+
+.notice {
+  margin-block: 0.8rem 0;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.noticeWarn {
+  border-color: color-mix(in oklab, var(--slow-key-color) 40%, transparent);
+  color: var(--slow-key-color);
+  background-color: color-mix(in oklab, var(--slow-key-color) 8%, transparent);
+}
+
+.noticeStop {
+  border-color: color-mix(
+    in oklab,
+    var(--error-color, #d0322e) 40%,
+    transparent
+  );
+  color: var(--error-color, #d0322e);
+  background-color: color-mix(
+    in oklab,
+    var(--error-color, #d0322e) 8%,
+    transparent
+  );
+}
+
+// ---- the closed palette ----------------------------------------------------
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-block-start: 0.7rem;
+}
+
+.chip {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font-family: inherit;
+  font-size: 0.65rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  &:hover:enabled {
+    border-color: var(--accent);
+    color: var(--text-color);
+  }
+}
+
+.chipIcon {
+  inline-size: 0.8rem;
+  block-size: 0.8rem;
+}
+
+// ---- composer --------------------------------------------------------------
+
+.composer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block-start: 0.7rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 0.6rem;
+}
+
+.composerOff {
+  border-style: dashed;
+  opacity: 0.5;
+}
+
+.input {
+  flex: 1;
+  min-inline-size: 0;
+  border: none;
+  color: var(--text-color);
+  background: none;
+  font-family: inherit;
+  font-size: 0.78rem;
+
+  &::placeholder {
+    color: var(--text-color-f2);
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.send {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border: none;
+  border-radius: 0.35rem;
+  color: var(--accent);
+  background-color: color-mix(in oklab, var(--accent) 18%, transparent);
+  cursor: pointer;
+
+  &:disabled {
+    color: var(--text-color-f2);
+    background-color: var(--primary-d2);
+    cursor: default;
+  }
+}
+
+.sendIcon {
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
+}

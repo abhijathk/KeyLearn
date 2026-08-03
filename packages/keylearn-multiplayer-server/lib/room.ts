@@ -2,6 +2,10 @@ import assert from "node:assert";
 import { nextQuote } from "@keylearn/content-quotes";
 import { type Task, Tasks, Timer } from "@keylearn/lang";
 import {
+  CHAT_NOTICE_ID,
+  CHAT_POST_ID,
+  CHAT_SAY_ID,
+  type ChatSayMessage,
   type ClientMessage,
   GAME_CONFIG_ID,
   GAME_READY_ID,
@@ -25,6 +29,13 @@ import {
 import { computeSpeed, countErrors } from "@keylearn/textinput";
 import { type Game } from "./game.ts";
 import { type Player, ReadyState } from "./player.ts";
+import { ChatWarden } from "./warden.ts";
+
+/**
+ * One warden for the whole worker: standing has to outlive any single room,
+ * or stepping out and back in wipes a warning.
+ */
+const warden = new ChatWarden();
 
 export class Room {
   static nextQuote = nextQuote;
@@ -188,6 +199,35 @@ export class Room {
     }
   }
 
+  /**
+   * Somebody said something.
+   *
+   * Judged before it is broadcast, never after: the warden decides what the
+   * room sees and what the sender is told, and only then does anything leave
+   * this method. The client's blur draws that decision; it does not make it.
+   */
+  #onPlayerChat(player: Player, message: ChatSayMessage) {
+    const key = player.user.id ?? `anon:${player.id}`;
+    const { post, notice } = warden.say(key, message.text);
+    if (post != null) {
+      this.#broadcast({
+        type: CHAT_POST_ID,
+        playerId: player.id,
+        text: post.text,
+        blurred: post.blurred,
+      });
+    }
+    if (notice != null) {
+      // Only ever to the person it concerns. A room told that somebody has been
+      // warned learns nothing it needs and gains a spectacle.
+      player.send({
+        type: CHAT_NOTICE_ID,
+        kind: notice.kind,
+        untilMs: notice.untilMs,
+      });
+    }
+  }
+
   onPlayerMessage(player: Player, message: ClientMessage) {
     switch (message.type) {
       case PLAYER_ANNOUNCE_ID:
@@ -200,6 +240,13 @@ export class Room {
       case PLAYER_PROGRESS_ID:
         if (player.state === ReadyState.ANNOUNCED) {
           this.#onPlayerProgress(player, message);
+        } else {
+          this.#kick(player);
+        }
+        break;
+      case CHAT_SAY_ID:
+        if (player.state === ReadyState.ANNOUNCED) {
+          this.#onPlayerChat(player, message);
         } else {
           this.#kick(player);
         }
