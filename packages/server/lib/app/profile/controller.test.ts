@@ -11,7 +11,7 @@ const context = new TestContext();
 test("get a published profile", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   await user.$query().patch({ publicProfile: true });
 
   const request = startApp(context.get(Application, kMain));

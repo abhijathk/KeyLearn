@@ -1,9 +1,9 @@
 import { injectable } from "@fastr/invert";
-import { Env } from "@keybr/config";
-import { Profile, User } from "@keybr/database";
-import { Logger } from "@keybr/logger";
-import { PublicId } from "@keybr/publicid";
-import { UserDataFactory } from "@keybr/result-userdata";
+import { Env } from "@keylearn/config";
+import { Profile, User } from "@keylearn/database";
+import { Logger } from "@keylearn/logger";
+import { PublicId } from "@keylearn/publicid";
+import { UserDataFactory } from "@keylearn/result-userdata";
 import { Notifier } from "./notify.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;

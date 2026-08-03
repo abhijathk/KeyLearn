@@ -1,4 +1,4 @@
-# The SQL house style for the practice corpus in @keybr/content-snippets.
+# The SQL house style for the practice corpus in @keylearn/content-snippets.
 #
 # Stated rather than inferred. sqlfluff's capitalisation rules default to
 # "consistent", which means each file is judged against itself — so a corpus
@@ -6,7 +6,7 @@
 # conventions. Pinning them makes the standard the same in every snippet.
 #
 # Read by `sqlfluff format` from anywhere in the repo; see the gate in
-# packages/keybr-content-snippets/lib/snippets.test.ts.
+# packages/keylearn-content-snippets/lib/snippets.test.ts.
 
 [sqlfluff]
 # Plain SQL, not dbt: nothing here is templated, and the Jinja templater would

@@ -1,4 +1,4 @@
-import { StrokeIcon } from "@keybr/widget";
+import { StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useIntl } from "react-intl";

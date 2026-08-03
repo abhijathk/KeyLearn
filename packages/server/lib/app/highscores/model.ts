@@ -1,6 +1,6 @@
-import { Profile, User } from "@keybr/database";
-import { type HighScoresRow } from "@keybr/highscores";
-import { type AnyUser } from "@keybr/pages-shared";
+import { Profile, User } from "@keylearn/database";
+import { type HighScoresRow } from "@keylearn/highscores";
+import { type AnyUser } from "@keylearn/pages-shared";
 
 export type Entry = {
   readonly user: AnyUser | null;

@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "name": "@keylearn/multiplayer-ui",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "lib/index.ts",
+  "types": ".types/index.d.ts",
+  "dependencies": {
+    "@keylearn/intl": "*",
+    "@keylearn/lang": "*",
+    "@keylearn/multiplayer-shared": "*",
+    "@keylearn/pages-shared": "*",
+    "@keylearn/rand": "*",
+    "@keylearn/settings": "*",
+    "@keylearn/textinput": "*",
+    "@keylearn/textinput-events": "*",
+    "@keylearn/textinput-ui": "*",
+    "@keylearn/widget": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "clean": "rm -fr .types",
+    "compile": "tsc",
+    "test": "tstest --import=@keylearn/test-env-browser --import=@keylearn/test-env-bundler --test 'lib/**/*.test.{ts,tsx}'"
+  }
+}

@@ -5,8 +5,8 @@ import {
   type Step,
   type TextDisplaySettings,
   type TextInputSettings,
-} from "@keybr/textinput";
-import { type AnyEvent } from "@keybr/textinput-events";
+} from "@keylearn/textinput";
+import { type AnyEvent } from "@keylearn/textinput-events";
 
 export enum DurationType {
   Time = 1,

@@ -1,12 +1,12 @@
-import { type KeyId } from "@keybr/keyboard";
-import { Timer } from "@keybr/lang";
+import { type KeyId } from "@keylearn/keyboard";
+import { Timer } from "@keylearn/lang";
 import {
   computeSpeed,
   type Step,
   TextInput,
   type TextInputSettings,
-} from "@keybr/textinput";
-import { addKey, type AnyEvent, deleteKey } from "@keybr/textinput-events";
+} from "@keylearn/textinput";
+import { addKey, type AnyEvent, deleteKey } from "@keylearn/textinput-events";
 import { type Progress } from "./types.ts";
 
 export type State = "starting" | "running" | "finished";

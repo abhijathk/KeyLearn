@@ -1,4 +1,4 @@
-import { User } from "@keybr/database";
+import { User } from "@keylearn/database";
 
 export async function findUser(id: number | string) {
   let user = null;

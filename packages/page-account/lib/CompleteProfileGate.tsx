@@ -1,5 +1,5 @@
-import { logout, usePageData } from "@keybr/pages-shared";
-import { Button, TextField } from "@keybr/widget";
+import { logout, usePageData } from "@keylearn/pages-shared";
+import { Button, TextField } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AuthPage.module.less";

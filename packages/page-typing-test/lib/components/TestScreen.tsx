@@ -1,11 +1,11 @@
-import { useFormatter } from "@keybr/lesson-ui";
-import { Screen } from "@keybr/pages-shared";
-import { uiProps } from "@keybr/result";
-import { useSettings } from "@keybr/settings";
-import { type LineList, makeStats } from "@keybr/textinput";
-import { useSoundPlayer } from "@keybr/textinput-sounds";
-import { TextArea } from "@keybr/textinput-ui";
-import { Box, type Focusable, Spacer, useView } from "@keybr/widget";
+import { useFormatter } from "@keylearn/lesson-ui";
+import { Screen } from "@keylearn/pages-shared";
+import { uiProps } from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
+import { type LineList, makeStats } from "@keylearn/textinput";
+import { useSoundPlayer } from "@keylearn/textinput-sounds";
+import { TextArea } from "@keylearn/textinput-ui";
+import { Box, type Focusable, Spacer, useView } from "@keylearn/widget";
 import { useEffect, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import {

@@ -1,5 +1,5 @@
-import { KeyLegendList, names } from "@keybr/lesson-ui";
-import { Slide, Tour } from "@keybr/widget";
+import { KeyLegendList, names } from "@keylearn/lesson-ui";
+import { Slide, Tour } from "@keylearn/widget";
 import { memo } from "react";
 import { FormattedMessage } from "react-intl";
 import { KeyDetailsChartDemo } from "./KeyDetailsChartDemo.tsx";

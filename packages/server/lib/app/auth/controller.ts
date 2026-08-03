@@ -31,16 +31,16 @@ import {
   UserLoginRequest,
   type VerificationPurpose,
   verifyTotp,
-} from "@keybr/database";
-import { Logger } from "@keybr/logger";
-import { type AbstractAdapter } from "@keybr/oauth";
+} from "@keylearn/database";
+import { Logger } from "@keylearn/logger";
+import { type AbstractAdapter } from "@keylearn/oauth";
 import {
   countPlaces,
   PLACES_BRAILLE,
   sightedPlaces,
-} from "@keybr/pages-shared";
-import { PublicId } from "@keybr/publicid";
-import { UserDataFactory } from "@keybr/result-userdata";
+} from "@keylearn/pages-shared";
+import { PublicId } from "@keylearn/publicid";
+import { UserDataFactory } from "@keylearn/result-userdata";
 import {
   generateAuthenticationOptions,
   generateRegistrationOptions,

@@ -1,10 +1,10 @@
 import { type Context } from "@fastr/core";
 import { NotFoundError } from "@fastr/errors";
 import { type RouterState } from "@fastr/middleware-router";
-import { User } from "@keybr/database";
-import { type AbstractAdapter } from "@keybr/oauth";
-import { type NamedUser } from "@keybr/pages-shared";
-import { PublicId } from "@keybr/publicid";
+import { User } from "@keylearn/database";
+import { type AbstractAdapter } from "@keylearn/oauth";
+import { type NamedUser } from "@keylearn/pages-shared";
+import { PublicId } from "@keylearn/publicid";
 import { AdapterFactory } from "./module.ts";
 import { type AuthState } from "./types.ts";
 

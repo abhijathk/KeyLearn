@@ -1,6 +1,6 @@
-import { loadNgramStats } from "@keybr/pages-shared";
-import { type KeyStatsMap, useResults } from "@keybr/result";
-import { Explainer } from "@keybr/widget";
+import { loadNgramStats } from "@keylearn/pages-shared";
+import { type KeyStatsMap, useResults } from "@keylearn/result";
+import { Explainer } from "@keylearn/widget";
 import { type ReactNode, useMemo } from "react";
 import { FormattedMessage } from "react-intl";
 import * as road from "./road.module.less";

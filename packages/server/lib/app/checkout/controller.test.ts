@@ -1,8 +1,8 @@
 import { createHmac } from "node:crypto";
 import { test } from "node:test";
 import { Application } from "@fastr/core";
-import { User } from "@keybr/database";
-import { isPremiumUser } from "@keybr/pages-shared";
+import { User } from "@keylearn/database";
+import { isPremiumUser } from "@keylearn/pages-shared";
 import { equal, isFalse, isTrue, like } from "rich-assert";
 import { kMain } from "../module.ts";
 import { TestContext } from "../test/context.ts";

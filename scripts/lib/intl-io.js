@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { rootDir } from "../root.js";
 
-const outputDir = join(rootDir, "packages", "keybr-intl");
+const outputDir = join(rootDir, "packages", "keylearn-intl");
 
 export function translationsPath(locale) {
   return join(outputDir, `translations`, `${locale}.json`);

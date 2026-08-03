@@ -2,8 +2,8 @@ import {
   type BookContent,
   flattenContent,
   splitParagraph,
-} from "@keybr/content";
-import { clamp } from "@keybr/lang";
+} from "@keylearn/content";
+import { clamp } from "@keylearn/lang";
 import { type TextGenerator } from "./types.ts";
 
 type BookSettings = {

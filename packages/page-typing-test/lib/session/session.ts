@@ -3,12 +3,12 @@ import {
   splitStyledText,
   type Step,
   TextInput,
-} from "@keybr/textinput";
+} from "@keylearn/textinput";
 import {
   type AnyEvent,
   type IInputEvent,
   type IKeyboardEvent,
-} from "@keybr/textinput-events";
+} from "@keylearn/textinput-events";
 import { type TextGenerator } from "../generators/index.ts";
 import { computeProgress } from "./duration.ts";
 import {

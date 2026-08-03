@@ -1,20 +1,20 @@
-import { useCollator } from "@keybr/intl";
+import { useCollator } from "@keylearn/intl";
 import {
   KeyboardContext,
   keyboardProps,
   Layout,
   loadKeyboard,
   useFormattedNames,
-} from "@keybr/keyboard";
-import { Letter } from "@keybr/phonetic-model";
-import { PhoneticModelLoader } from "@keybr/phonetic-model-loader";
+} from "@keylearn/keyboard";
+import { Letter } from "@keylearn/phonetic-model";
+import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import {
   type KeyStatsMap,
   makeKeyStatsMap,
   ResultGroups,
   useResults,
-} from "@keybr/result";
-import { useSettings } from "@keybr/settings";
+} from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
 import { clsx } from "clsx";
 import { type ReactNode, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

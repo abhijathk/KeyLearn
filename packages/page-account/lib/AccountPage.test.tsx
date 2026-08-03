@@ -1,6 +1,6 @@
 import { test } from "node:test";
-import { FakeIntlProvider } from "@keybr/intl";
-import { PageDataContext } from "@keybr/pages-shared";
+import { FakeIntlProvider } from "@keylearn/intl";
+import { PageDataContext } from "@keylearn/pages-shared";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { isNotNull } from "rich-assert";
@@ -11,7 +11,7 @@ test("render signed-out account page", () => {
   const r = render(
     <PageDataContext.Provider
       value={{
-        base: "https://www.keybr.com/",
+        base: "https://www.keylearn.com/",
         locale: "en",
         user: null,
         publicUser: {
@@ -43,11 +43,11 @@ test("render signed-in account page", () => {
   const r = render(
     <PageDataContext.Provider
       value={{
-        base: "https://www.keybr.com/",
+        base: "https://www.keylearn.com/",
         locale: "en",
         user: {
           id: "xzy",
-          email: "name@keybr.com",
+          email: "name@keylearn.com",
           name: "name",
           anonymized: false,
           publicProfile: false,
@@ -82,7 +82,7 @@ test("render signed-in account page", () => {
     </PageDataContext.Provider>,
   );
 
-  isNotNull(r.queryByText("name@keybr.com", { exact: false }));
+  isNotNull(r.queryByText("name@keylearn.com", { exact: false }));
   isNotNull(r.queryByText("Hide my identity", { exact: false }));
 
   r.unmount();

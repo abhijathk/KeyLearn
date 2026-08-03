@@ -1,12 +1,12 @@
 import { join } from "node:path";
 import { test } from "node:test";
-import { ResultFaker } from "@keybr/result";
+import { ResultFaker } from "@keylearn/result";
 import { exists, removeDir } from "@sosimple/fsx";
 import { File } from "@sosimple/fsx-file";
 import { isFalse, isTrue } from "rich-assert";
 import { fixFile } from "./fix-file.ts";
 
-const tmp = process.env.DATA_DIR ?? "/tmp/keybr";
+const tmp = process.env.DATA_DIR ?? "/tmp/keylearn";
 
 test.beforeEach(async () => {
   await removeDir(tmp);

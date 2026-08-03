@@ -1,23 +1,23 @@
-import { codeThemeFor, codeThemeVars } from "@keybr/content-snippets";
-import { type KeyId } from "@keybr/keyboard";
-import { lessonProps, LessonType } from "@keybr/lesson";
-import { names } from "@keybr/lesson-ui";
-import { Screen } from "@keybr/pages-shared";
-import { uiProps } from "@keybr/result";
+import { codeThemeFor, codeThemeVars } from "@keylearn/content-snippets";
+import { type KeyId } from "@keylearn/keyboard";
+import { lessonProps, LessonType } from "@keylearn/lesson";
+import { names } from "@keylearn/lesson-ui";
+import { Screen } from "@keylearn/pages-shared";
+import { uiProps } from "@keylearn/result";
 import {
   enumProp,
   numberProp,
   Preferences,
   type Settings,
-} from "@keybr/settings";
-import { type LineList } from "@keybr/textinput";
+} from "@keylearn/settings";
+import { type LineList } from "@keylearn/textinput";
 import {
   type IInputEvent,
   type IKeyboardEvent,
   ModifierState,
-} from "@keybr/textinput-events";
-import { TextArea } from "@keybr/textinput-ui";
-import { type Focusable, Zoomer } from "@keybr/widget";
+} from "@keylearn/textinput-events";
+import { TextArea } from "@keylearn/textinput-ui";
+import { type Focusable, Zoomer } from "@keylearn/widget";
 import { clsx } from "clsx";
 import {
   createRef,

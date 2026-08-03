@@ -1,6 +1,6 @@
-import { AccuracyHistogram, makeAccuracyDistribution } from "@keybr/chart";
-import { useIntlNumbers } from "@keybr/intl";
-import { type SummaryStats } from "@keybr/result";
+import { AccuracyHistogram, makeAccuracyDistribution } from "@keylearn/chart";
+import { useIntlNumbers } from "@keylearn/intl";
+import { type SummaryStats } from "@keylearn/result";
 import {
   Explainer,
   Field,
@@ -9,7 +9,7 @@ import {
   Para,
   RadioBox,
   Value,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import React, { useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ChartWrapper } from "./ChartWrapper.tsx";

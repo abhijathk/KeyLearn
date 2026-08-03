@@ -6,7 +6,7 @@ import { type Application, type Context, type Middleware } from "@fastr/core";
 import { expectJson, type JsonBodyState } from "@fastr/middleware-body";
 import { Router } from "@fastr/middleware-router";
 import { type SessionState } from "@fastr/middleware-session";
-import { User } from "@keybr/database";
+import { User } from "@keylearn/database";
 import { findUser } from "./sql.ts";
 
 export type TestRequest = {

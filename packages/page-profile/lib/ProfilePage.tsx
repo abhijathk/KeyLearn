@@ -1,10 +1,10 @@
-import { Screen } from "@keybr/pages-shared";
+import { Screen } from "@keylearn/pages-shared";
 import {
   DailyStatsMap,
   type KeyStatsMap,
   makeSummaryStats,
-} from "@keybr/result";
-import { ExplainerBoundary } from "@keybr/widget";
+} from "@keylearn/result";
+import { ExplainerBoundary } from "@keylearn/widget";
 import { DataScript } from "./profile/DataScript.tsx";
 import { ResultGrouper } from "./profile/ResultGrouper.tsx";
 import { RoadProfile } from "./profile/road/RoadProfile.tsx";

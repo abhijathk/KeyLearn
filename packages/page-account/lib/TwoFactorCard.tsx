@@ -1,10 +1,10 @@
-import { useIntlDates } from "@keybr/intl";
+import { useIntlDates } from "@keylearn/intl";
 import {
   downloadBlob,
   exportFilename,
   type UserDetails,
-} from "@keybr/pages-shared";
-import { TextField } from "@keybr/widget";
+} from "@keylearn/pages-shared";
+import { TextField } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
 import * as styles from "./AccountPage.module.less";
 import { PasswordField } from "./AuthPage.tsx";

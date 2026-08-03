@@ -2,7 +2,7 @@ import { Server, ServerResponse } from "node:http";
 import { userInfo } from "node:os";
 import { type Application } from "@fastr/core";
 import { injectable } from "@fastr/invert";
-import { Logger } from "@keybr/logger";
+import { Logger } from "@keylearn/logger";
 import { WebSocketServer } from "ws";
 import { type Closer, createCloser } from "./closer.ts";
 

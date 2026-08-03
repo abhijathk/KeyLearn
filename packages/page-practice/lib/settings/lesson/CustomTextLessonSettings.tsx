@@ -1,8 +1,8 @@
-import { useIntlNumbers } from "@keybr/intl";
-import { type Language } from "@keybr/keyboard";
-import { type CustomTextLesson, lessonProps } from "@keybr/lesson";
-import { useSettings } from "@keybr/settings";
-import { textStatsOf } from "@keybr/unicode";
+import { useIntlNumbers } from "@keylearn/intl";
+import { type Language } from "@keylearn/keyboard";
+import { type CustomTextLesson, lessonProps } from "@keylearn/lesson";
+import { useSettings } from "@keylearn/settings";
+import { textStatsOf } from "@keylearn/unicode";
 import {
   CheckBox,
   Field,
@@ -12,7 +12,7 @@ import {
   NameValue,
   Para,
   TextField,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { type ReactNode, useMemo } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { exampleTexts } from "./example-texts.ts";

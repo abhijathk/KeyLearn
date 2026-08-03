@@ -1,6 +1,6 @@
-import { Calendar, EffortLegend, useEffort } from "@keybr/lesson-ui";
-import { type DailyStatsMap } from "@keybr/result";
-import { Explainer, Figure } from "@keybr/widget";
+import { Calendar, EffortLegend, useEffort } from "@keylearn/lesson-ui";
+import { type DailyStatsMap } from "@keylearn/result";
+import { Explainer, Figure } from "@keylearn/widget";
 import { FormattedMessage } from "react-intl";
 
 export function CalendarSection({

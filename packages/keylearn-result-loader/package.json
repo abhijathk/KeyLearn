@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "name": "@keylearn/result-loader",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "lib/index.ts",
+  "types": ".types/index.d.ts",
+  "dependencies": {
+    "@keylearn/debug": "*",
+    "@keylearn/pages-shared": "*",
+    "@keylearn/publicid": "*",
+    "@keylearn/request": "*",
+    "@keylearn/result": "*",
+    "@keylearn/result-io": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "clean": "rm -fr .types",
+    "compile": "tsc",
+    "test": "tstest --import=@keylearn/test-env-browser --import=@keylearn/test-env-bundler --test 'lib/**/*.test.{ts,tsx}'"
+  }
+}

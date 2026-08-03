@@ -1,4 +1,4 @@
-import { useCollator } from "@keybr/intl";
+import { useCollator } from "@keylearn/intl";
 import {
   Emulation,
   Geometry,
@@ -9,19 +9,23 @@ import {
   useFormattedNames,
   useKeyboard,
   ZoneMod,
-} from "@keybr/keyboard";
-import { KeyLayer, PointersLayer, VirtualKeyboard } from "@keybr/keyboard-ui";
-import { Tasks } from "@keybr/lang";
-import { useSettings } from "@keybr/settings";
-import { ModifierState, useDepressedKeys } from "@keybr/textinput-events";
-import { type CodePoint } from "@keybr/unicode";
+} from "@keylearn/keyboard";
+import {
+  KeyLayer,
+  PointersLayer,
+  VirtualKeyboard,
+} from "@keylearn/keyboard-ui";
+import { Tasks } from "@keylearn/lang";
+import { useSettings } from "@keylearn/settings";
+import { ModifierState, useDepressedKeys } from "@keylearn/textinput-events";
+import { type CodePoint } from "@keylearn/unicode";
 import {
   OptionList,
   RowSeparator,
   SettingRow,
   SettingsCard,
   Switch,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 

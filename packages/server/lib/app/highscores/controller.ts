@@ -2,12 +2,12 @@ import { controller, http } from "@fastr/controller";
 import { Context } from "@fastr/core";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
-import { Profile } from "@keybr/database";
+import { Profile } from "@keylearn/database";
 import {
   HighScoresFactory,
   type HighScoresRow,
   type Range,
-} from "@keybr/highscores";
+} from "@keylearn/highscores";
 import { type AuthState } from "../auth/index.ts";
 import { mapEntries } from "./model.ts";
 import { leaderboardReady } from "./readiness.ts";

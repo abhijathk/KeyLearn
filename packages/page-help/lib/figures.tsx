@@ -1,4 +1,4 @@
-import { LetterJourney } from "@keybr/lesson-ui";
+import { LetterJourney } from "@keylearn/lesson-ui";
 import { type ReactNode } from "react";
 import { makeExampleLesson } from "./examples.ts";
 

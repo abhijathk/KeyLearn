@@ -1,5 +1,5 @@
-import { Filter, type PhoneticModel } from "@keybr/phonetic-model";
-import { LCG, type RNGStream } from "@keybr/rand";
+import { Filter, type PhoneticModel } from "@keylearn/phonetic-model";
+import { LCG, type RNGStream } from "@keylearn/rand";
 import { type TextGenerator } from "./types.ts";
 
 type Mark = {

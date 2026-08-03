@@ -5,10 +5,10 @@ import {
   flattenContent,
   ParagraphPreview,
   ParagraphSelector,
-} from "@keybr/content";
-import { BookContentLoader } from "@keybr/content-books";
-import { useSettings } from "@keybr/settings";
-import { SettingsCard } from "@keybr/widget";
+} from "@keylearn/content";
+import { BookContentLoader } from "@keylearn/content-books";
+import { useSettings } from "@keylearn/settings";
+import { SettingsCard } from "@keylearn/widget";
 import { useMemo } from "react";
 import { FormattedMessage } from "react-intl";
 import { typingTestProps } from "../../../settings.ts";

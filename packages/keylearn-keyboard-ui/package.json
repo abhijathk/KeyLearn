@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "name": "@keylearn/keyboard-ui",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "lib/index.ts",
+  "types": ".types/index.d.ts",
+  "dependencies": {
+    "@keylearn/intl": "*",
+    "@keylearn/keyboard": "*",
+    "@keylearn/keyboard-io": "*",
+    "@keylearn/lang": "*",
+    "@keylearn/unicode": "*",
+    "@keylearn/widget": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "clean": "rm -fr .types",
+    "compile": "tsc",
+    "test": "tstest --import=@keylearn/test-env-browser --import=@keylearn/test-env-bundler --test 'lib/**/*.test.{ts,tsx}'"
+  }
+}

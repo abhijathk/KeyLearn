@@ -1,14 +1,17 @@
-import { makeAccuracyDistribution, makeSpeedDistribution } from "@keybr/chart";
-import { useIntlDates, useIntlNumbers } from "@keybr/intl";
-import { LearningRate, Target } from "@keybr/lesson";
-import { useFormatter, useKeyStyles } from "@keybr/lesson-ui";
+import {
+  makeAccuracyDistribution,
+  makeSpeedDistribution,
+} from "@keylearn/chart";
+import { useIntlDates, useIntlNumbers } from "@keylearn/intl";
+import { LearningRate, Target } from "@keylearn/lesson";
+import { useFormatter, useKeyStyles } from "@keylearn/lesson-ui";
 import {
   clearNgramStats,
   downloadBlob,
   exportFilename,
   type NamedUser,
   usePageData,
-} from "@keybr/pages-shared";
+} from "@keylearn/pages-shared";
 import {
   type DailyStatsMap,
   type KeyStatsMap,
@@ -17,14 +20,14 @@ import {
   type SummaryStats,
   timeToSpeed,
   useResults,
-} from "@keybr/result";
-import { useSettings } from "@keybr/settings";
+} from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
 import {
   Explainer,
   formatDuration,
   useClipboard,
   useExplainerState,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { clsx } from "clsx";
 import {
   type CSSProperties,

@@ -3,19 +3,23 @@ import { Context } from "@fastr/core";
 import { inject, injectable } from "@fastr/invert";
 import { CanonicalHandler } from "@fastr/middleware-canonical";
 import { type RouterState } from "@fastr/middleware-router";
-import { Env } from "@keybr/config";
-import { Profile } from "@keybr/database";
-import { HighScoresFactory } from "@keybr/highscores";
-import { defaultLocale, loadIntl, PreferredLocaleContext } from "@keybr/intl";
-import { Shell, View } from "@keybr/pages-server";
+import { Env } from "@keylearn/config";
+import { Profile } from "@keylearn/database";
+import { HighScoresFactory } from "@keylearn/highscores";
+import {
+  defaultLocale,
+  loadIntl,
+  PreferredLocaleContext,
+} from "@keylearn/intl";
+import { Shell, View } from "@keylearn/pages-server";
 import {
   type PageData,
   PageDataContext,
   PageInfo,
   Pages,
-} from "@keybr/pages-shared";
-import { SettingsDatabase } from "@keybr/settings-database";
-import { staticTheme, ThemeContext, ThemePrefs } from "@keybr/themes";
+} from "@keylearn/pages-shared";
+import { SettingsDatabase } from "@keylearn/settings-database";
+import { staticTheme, ThemeContext, ThemePrefs } from "@keylearn/themes";
 import { type IntlShape, RawIntlProvider } from "react-intl";
 import { type AuthState } from "../auth/index.ts";
 import { leaderboardReady } from "../highscores/readiness.ts";
@@ -337,6 +341,12 @@ export class Controller {
     ).flatMap(([name, key]) => (Env.getString(key, "") ? [name] : []));
     return {
       base: this.canonicalUrl,
+      // Empty in production, where nginx forwards `/_/game/` to the game
+      // worker and the page can simply talk to its own origin. Set it in
+      // development, where there is no proxy and the game worker is on its own
+      // port — without it the socket dials the HTTP worker, which has no game
+      // routes, and dies with a 1006 before it ever opens.
+      gameUrl: Env.getString("GAME_URL", ""),
       // Drives whether the leaderboard link appears at all.
       leaderboard: await this.#leaderboardReady(),
       locale,

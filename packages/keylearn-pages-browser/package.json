@@ -1,0 +1,39 @@
+{
+  "private": true,
+  "name": "@keylearn/pages-browser",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@keylearn/content": "*",
+    "@keylearn/debug": "*",
+    "@keylearn/intl": "*",
+    "@keylearn/keyboard": "*",
+    "@keylearn/lesson": "*",
+    "@keylearn/page-account": "*",
+    "@keylearn/page-braille": "*",
+    "@keylearn/page-help": "*",
+    "@keylearn/page-highscores": "*",
+    "@keylearn/page-kids": "*",
+    "@keylearn/page-layouts": "*",
+    "@keylearn/page-multiplayer": "*",
+    "@keylearn/page-practice": "*",
+    "@keylearn/page-profile": "*",
+    "@keylearn/page-static": "*",
+    "@keylearn/page-typing-test": "*",
+    "@keylearn/pages-shared": "*",
+    "@keylearn/request": "*",
+    "@keylearn/result-loader": "*",
+    "@keylearn/settings": "*",
+    "@keylearn/settings-loader": "*",
+    "@keylearn/theme-designer": "*",
+    "@keylearn/themes": "*",
+    "@keylearn/thirdparties": "*",
+    "@keylearn/widget": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "clean": "rm -fr .types",
+    "compile": "tsc",
+    "test": "tstest --import=@keylearn/test-env-browser --import=@keylearn/test-env-bundler --test 'lib/**/*.test.{ts,tsx}'"
+  }
+}

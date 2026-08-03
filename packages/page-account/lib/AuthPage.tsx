@@ -1,5 +1,5 @@
-import { Pages, usePageData } from "@keybr/pages-shared";
-import { Button, CheckBox, Icon, TextField } from "@keybr/widget";
+import { Pages, usePageData } from "@keylearn/pages-shared";
+import { Button, CheckBox, Icon, TextField } from "@keylearn/widget";
 import {
   mdiAccountPlus,
   mdiCheckDecagramOutline,

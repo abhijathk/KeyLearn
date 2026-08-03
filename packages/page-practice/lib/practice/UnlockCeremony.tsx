@@ -1,5 +1,5 @@
-import { useFormatter } from "@keybr/lesson-ui";
-import { type Result } from "@keybr/result";
+import { useFormatter } from "@keylearn/lesson-ui";
+import { type Result } from "@keylearn/result";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./UnlockCeremony.module.less";

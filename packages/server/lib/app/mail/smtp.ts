@@ -1,5 +1,5 @@
 import { injectable } from "@fastr/invert";
-import { Env } from "@keybr/config";
+import { Env } from "@keylearn/config";
 import { createTransport, type Transporter } from "nodemailer";
 import { Mailer } from "./types.ts";
 

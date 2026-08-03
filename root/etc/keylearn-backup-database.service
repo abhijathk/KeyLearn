@@ -1,0 +1,12 @@
+[Unit]
+Description=keylearn.com database backup service
+
+[Service]
+ExecStart=/bin/bash /opt/keylearn/etc/keylearn-backup-database.sh
+Type=oneshot
+WorkingDirectory=/opt/keylearn
+# User=www-data
+# Group=www-data
+
+[Install]
+WantedBy=multi-user.target

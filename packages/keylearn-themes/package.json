@@ -1,0 +1,23 @@
+{
+  "private": true,
+  "name": "@keylearn/themes",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "lib/index.ts",
+  "types": ".types/index.d.ts",
+  "browser": {
+    "./lib/themes/images.ts": "./lib/themes/images-browser.ts"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "@keylearn/color": "*",
+    "@keylearn/rand": "*",
+    "@keylearn/widget": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "clean": "rm -fr .types",
+    "compile": "tsc",
+    "test": "tstest --import=@keylearn/test-env-browser --import=@keylearn/test-env-bundler --test 'lib/**/*.test.{ts,tsx}'"
+  }
+}

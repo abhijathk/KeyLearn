@@ -5,9 +5,9 @@
 
 namespace fs = std::filesystem;
 
-namespace keybr {
+namespace keylearn {
 
-const char *DEFAULT_ROOT = "/var/lib/keybr/user_stats/";
+const char *DEFAULT_ROOT = "/var/lib/keylearn/user_stats/";
 
 bool parse_stats_file_name(const fs::path &path, stats_file_id &id) {
   const char *filename = path.filename().c_str();
@@ -48,4 +48,4 @@ bool parse_stats_file_name(const fs::path &path, stats_file_id &id) {
   return false;
 }
 
-} // namespace keybr
+} // namespace keylearn

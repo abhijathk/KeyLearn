@@ -1,7 +1,7 @@
-import { BookContentLoader } from "@keybr/content-books";
-import { WordListLoader } from "@keybr/content-words";
-import { PhoneticModelLoader } from "@keybr/phonetic-model-loader";
-import { LCG } from "@keybr/rand";
+import { BookContentLoader } from "@keylearn/content-books";
+import { WordListLoader } from "@keylearn/content-words";
+import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
+import { LCG } from "@keylearn/rand";
 import { type ReactNode } from "react";
 import { TextSourceType, useCompositeSettings } from "../settings.ts";
 import { BookParagraphsGenerator } from "./book.ts";

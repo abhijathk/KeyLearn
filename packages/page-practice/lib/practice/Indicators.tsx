@@ -1,8 +1,8 @@
-import { Tasks } from "@keybr/lang";
-import { type LessonKey } from "@keybr/lesson";
-import { LetterJourney, names } from "@keybr/lesson-ui";
-import { LocalDate, type Result } from "@keybr/result";
-import { Popup, Portal } from "@keybr/widget";
+import { Tasks } from "@keylearn/lang";
+import { type LessonKey } from "@keylearn/lesson";
+import { LetterJourney, names } from "@keylearn/lesson-ui";
+import { LocalDate, type Result } from "@keylearn/result";
+import { Popup, Portal } from "@keylearn/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
 import * as styles from "./Indicators.module.less";
 import { KeyExtendedDetails } from "./KeyExtendedDetails.tsx";

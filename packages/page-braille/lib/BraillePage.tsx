@@ -11,9 +11,9 @@ import {
   REQUIRED_ROLLOVER,
   saveProgress,
   toUnicode,
-} from "@keybr/braille";
-import { useProfiles } from "@keybr/page-account";
-import { Screen } from "@keybr/pages-shared";
+} from "@keylearn/braille";
+import { useProfiles } from "@keylearn/page-account";
+import { Screen } from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import {
   type ReactNode,

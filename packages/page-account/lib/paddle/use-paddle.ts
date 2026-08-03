@@ -1,4 +1,4 @@
-import { catchError } from "@keybr/debug";
+import { catchError } from "@keylearn/debug";
 import { type Paddle } from "@paddle/paddle-js";
 import { useEffect, useState } from "react";
 import { loadPaddle } from "./loader.ts";

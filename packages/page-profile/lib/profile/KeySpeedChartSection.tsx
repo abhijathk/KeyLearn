@@ -1,10 +1,10 @@
-import { KeySpeedChart, Marker } from "@keybr/chart";
-import { LessonKey, Target } from "@keybr/lesson";
-import { KeyDetails, KeySelector } from "@keybr/lesson-ui";
-import { hasData } from "@keybr/math";
-import { type KeyStatsMap } from "@keybr/result";
-import { useSettings } from "@keybr/settings";
-import { Explainer, Figure, Para } from "@keybr/widget";
+import { KeySpeedChart, Marker } from "@keylearn/chart";
+import { LessonKey, Target } from "@keylearn/lesson";
+import { KeyDetails, KeySelector } from "@keylearn/lesson-ui";
+import { hasData } from "@keylearn/math";
+import { type KeyStatsMap } from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
+import { Explainer, Figure, Para } from "@keylearn/widget";
 import { useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { ChartWrapper } from "./ChartWrapper.tsx";

@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "name": "@keylearn/phonetic-model-loader",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "lib/index.ts",
+  "types": ".types/index.d.ts",
+  "dependencies": {
+    "@keylearn/debug": "*",
+    "@keylearn/keyboard": "*",
+    "@keylearn/pages-shared": "*",
+    "@keylearn/phonetic-model": "*",
+    "@keylearn/request": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "clean": "rm -fr .types",
+    "compile": "tsc"
+  }
+}

@@ -1,4 +1,4 @@
-import { computeSpeed, type Step } from "@keybr/textinput";
+import { computeSpeed, type Step } from "@keylearn/textinput";
 import { type Duration, DurationType, type Progress } from "./types.ts";
 
 export function timeDuration(time: number): Duration {

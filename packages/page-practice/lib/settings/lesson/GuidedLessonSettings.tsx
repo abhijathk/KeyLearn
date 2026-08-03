@@ -1,12 +1,12 @@
-import { type GuidedLesson, lessonProps } from "@keybr/lesson";
-import { useSettings } from "@keybr/settings";
+import { type GuidedLesson, lessonProps } from "@keylearn/lesson";
+import { useSettings } from "@keylearn/settings";
 import {
   Description,
   Disclosure,
   Explainer,
   RowSeparator,
   SettingsCard,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import { AlphabetSizeProp } from "./AlphabetSizeProp.tsx";

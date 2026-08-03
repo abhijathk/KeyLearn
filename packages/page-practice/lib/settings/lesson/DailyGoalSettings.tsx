@@ -1,13 +1,13 @@
-import { useIntlDurations } from "@keybr/intl";
-import { lessonProps } from "@keybr/lesson";
-import { useSettings } from "@keybr/settings";
+import { useIntlDurations } from "@keylearn/intl";
+import { lessonProps } from "@keylearn/lesson";
+import { useSettings } from "@keylearn/settings";
 import {
   Description,
   Explainer,
   Range,
   SettingRow,
   SettingsCard,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 

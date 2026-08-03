@@ -1,0 +1,214 @@
+.button {
+  fill: var(--KeyboardKey-button__color);
+}
+
+// The visible 3d side of the keycap under the face. The edge colour is a
+// theme token (deep in night, pale in day) with the old neutral as fallback.
+.side {
+  fill: color-mix(
+    in oklab,
+    var(--KeyboardKey-button__color) 45%,
+    var(--KeyboardKey-edge__color, #666b7a)
+  );
+  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 28%));
+  transition: opacity 90ms ease;
+}
+
+.symbol {
+  fill: var(--KeyboardKey-symbol__color);
+  font-family: var(--monospace-font-family);
+  font-size: 10px;
+  cursor: default;
+  user-select: none;
+}
+
+.primarySymbol {
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: lowercase;
+}
+
+// While Shift is held or Caps Lock is latched, the letters go up-case —
+// the container broadcasts the state via a data attribute.
+:global([data-kbd-upper="true"]) .primarySymbol {
+  text-transform: uppercase;
+}
+
+.secondarySymbol {
+  font-size: 10px;
+}
+
+.modSymbol {
+  font-family: var(--default-font-family);
+  font-size: 9.5px;
+}
+
+// the whole face of a key; pushed down while the key is depressed
+.cap {
+  will-change: transform;
+  transition: transform 90ms ease;
+}
+
+.deadSymbol {
+  fill: var(--KeyboardKey-symbol--dead__color);
+  font-family: sans-serif;
+}
+
+.ligatureSymbol {
+  fill: var(--KeyboardKey-symbol--ligature__color);
+}
+
+.bump {
+  fill: var(--KeyboardKey-symbol__color);
+}
+
+.handLeft {
+  .button {
+    /* Empty. */
+  }
+}
+
+.handRight {
+  .button {
+    /* Empty. */
+  }
+}
+
+.fingerPinky {
+  .button {
+    fill: var(--pinky-zone-color);
+  }
+
+  .side {
+    fill: color-mix(
+      in oklab,
+      var(--pinky-zone-color) 45%,
+      var(--KeyboardKey-edge__color, #666b7a)
+    );
+  }
+}
+
+.fingerRing {
+  .button {
+    fill: var(--ring-zone-color);
+  }
+
+  .side {
+    fill: color-mix(
+      in oklab,
+      var(--ring-zone-color) 45%,
+      var(--KeyboardKey-edge__color, #666b7a)
+    );
+  }
+}
+
+.fingerMiddle {
+  .button {
+    fill: var(--middle-zone-color);
+  }
+
+  .side {
+    fill: color-mix(
+      in oklab,
+      var(--middle-zone-color) 45%,
+      var(--KeyboardKey-edge__color, #666b7a)
+    );
+  }
+}
+
+.fingerLeftIndex {
+  .button {
+    fill: var(--left-index-zone-color);
+  }
+
+  .side {
+    fill: color-mix(
+      in oklab,
+      var(--left-index-zone-color) 45%,
+      var(--KeyboardKey-edge__color, #666b7a)
+    );
+  }
+}
+
+.fingerRightIndex {
+  .button {
+    fill: var(--right-index-zone-color);
+  }
+
+  .side {
+    fill: color-mix(
+      in oklab,
+      var(--right-index-zone-color) 45%,
+      var(--KeyboardKey-edge__color, #666b7a)
+    );
+  }
+}
+
+.fingerThumb {
+  .button {
+    fill: var(--thumb-zone-color);
+  }
+
+  .side {
+    fill: color-mix(
+      in oklab,
+      var(--thumb-zone-color) 45%,
+      var(--KeyboardKey-edge__color, #666b7a)
+    );
+  }
+}
+
+.key {
+  .button {
+    /* Empty. */
+  }
+
+  .symbol {
+    /* Empty. */
+  }
+}
+
+.depressedKey {
+  .cap {
+    transform: translateY(3px);
+  }
+
+  // The side vanishes as the face drops onto it — reads as pressed flat.
+  .side {
+    opacity: 0;
+  }
+
+  .button {
+    fill: color-mix(
+      in oklab,
+      var(--KeyboardKey-pointer__color) 30%,
+      var(--KeyboardKey-button__color)
+    );
+    stroke: var(--KeyboardKey-pointer__color);
+    stroke-width: 1.5px;
+    // Glow while the key is held down.
+    filter: drop-shadow(0 0 6px var(--KeyboardKey-pointer__color));
+  }
+
+  .symbol {
+    fill: var(--KeyboardKey-symbol--depressed__color);
+  }
+}
+
+// A latched modifier (Caps Lock): the cap lights up in the pointer green so
+// the active state is unmissable at a glance.
+.toggledKey {
+  .button {
+    fill: color-mix(
+      in oklab,
+      var(--KeyboardKey-pointer__color) 16%,
+      var(--KeyboardKey-button__color)
+    );
+    stroke: var(--KeyboardKey-pointer__color);
+    stroke-width: 1.5px;
+  }
+
+  .symbol {
+    fill: var(--KeyboardKey-symbol__color);
+  }
+}

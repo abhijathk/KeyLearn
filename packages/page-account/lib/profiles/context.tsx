@@ -1,4 +1,4 @@
-import { catchError } from "@keybr/debug";
+import { catchError } from "@keylearn/debug";
 import {
   countPlaces,
   isPremiumUser,
@@ -7,7 +7,7 @@ import {
   type ProfileDetails,
   saveActiveProfileId,
   usePageData,
-} from "@keybr/pages-shared";
+} from "@keylearn/pages-shared";
 import {
   createContext,
   type ReactNode,

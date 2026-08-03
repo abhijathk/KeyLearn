@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@keybr/tsl",
+  "name": "@keylearn/tsl",
   "version": "0.0.0",
   "type": "module",
   "main": "index.js",

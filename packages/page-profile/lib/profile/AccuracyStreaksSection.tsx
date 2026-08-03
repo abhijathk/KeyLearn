@@ -1,12 +1,12 @@
-import { useIntlDates, useIntlNumbers } from "@keybr/intl";
-import { useFormatter } from "@keybr/lesson-ui";
+import { useIntlDates, useIntlNumbers } from "@keylearn/intl";
+import { useFormatter } from "@keylearn/lesson-ui";
 import {
   makeSummaryStats,
   MutableStreakList,
   type Result,
   type Streak,
-} from "@keybr/result";
-import { Explainer, Figure, NameValue, Para } from "@keybr/widget";
+} from "@keylearn/result";
+import { Explainer, Figure, NameValue, Para } from "@keylearn/widget";
 import { FormattedMessage, useIntl } from "react-intl";
 
 export function AccuracyStreaksSection({

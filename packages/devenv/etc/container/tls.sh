@@ -42,7 +42,7 @@ mkcert -key-file $KEY_FILE -cert-file $CERT_FILE \
 cat $CERT_FILE > $FULL_CHAIN_FILE
 cat "$(mkcert -CAROOT)/rootCA.pem" >> $FULL_CHAIN_FILE
 
-PREFIX=$ROOT/etc/letsencrypt/live/keybr.com
+PREFIX=$ROOT/etc/letsencrypt/live/keylearn.com
 sudo mkdir -p $PREFIX
 sudo cp $KEY_FILE $PREFIX/privkey.pem
 sudo cp $FULL_CHAIN_FILE $PREFIX/fullchain.pem

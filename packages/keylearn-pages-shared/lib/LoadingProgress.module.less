@@ -1,0 +1,117 @@
+@import "@keylearn/widget/lib/index.less";
+
+// Held back, then faded in. A chunk that loads in 120ms should never show a
+// loading state at all — the splash appearing and vanishing is what reads as a
+// flash. Only a wait long enough to notice earns one.
+.root {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation-name: motion-fade;
+  animation-duration: @motion-base;
+  animation-timing-function: @motion-ease;
+  animation-delay: 0.4s;
+  animation-fill-mode: both;
+
+  .motion-respect-reduced();
+}
+
+.loader {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.keys {
+  display: flex;
+  gap: 0.65rem;
+}
+
+// Larger keycaps, each tinted with a finger-zone colour from the keyboard.
+.key {
+  display: grid;
+  place-items: center;
+  inline-size: 4.25rem;
+  block-size: 4.25rem;
+  border: var(--separator-border);
+  border-radius: 0.9rem;
+  color: var(--text-color);
+  box-shadow: 0 5px 0 var(--primary-d2);
+  font-family: var(--monospace-font-family);
+  font-size: 1.75rem;
+  font-weight: 700;
+  // A crisp mechanical tap: the key snaps down (its raised edge collapses) and
+  // pops straight back, staggered across the three caps — not a soft pulse.
+  animation: key-typing 1.1s cubic-bezier(0.34, 0, 0.28, 1) infinite;
+
+  &:nth-child(2) {
+    animation-delay: 0.18s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.36s;
+  }
+}
+
+.k1 {
+  background-color: var(--middle-zone-color);
+}
+
+.k2 {
+  background-color: var(--ring-zone-color);
+}
+
+.k3 {
+  background-color: var(--left-index-zone-color);
+}
+
+@keyframes key-typing {
+  0%,
+  38%,
+  100% {
+    box-shadow: 0 5px 0 var(--primary-d2);
+    transform: translateY(0);
+  }
+
+  12% {
+    // Fully depressed: the raised bottom edge collapses to nothing and the cap
+    // sits flush — a real key-down, with just a hint of accent on the rim.
+    border-color: var(--accent);
+    box-shadow: 0 0 0 var(--primary-d2);
+    transform: translateY(5px);
+  }
+
+  24% {
+    // Pops back up.
+    box-shadow: 0 5px 0 var(--primary-d2);
+    transform: translateY(0);
+  }
+}
+
+.track {
+  position: relative;
+  inline-size: 12rem;
+  block-size: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  background-color: var(--primary-d2);
+
+  i {
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+    background-color: var(--accent);
+    transition: inline-size 0.2s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key {
+    animation: none;
+  }
+}

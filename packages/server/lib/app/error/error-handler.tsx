@@ -6,13 +6,13 @@ import {
   isServerError,
   statusMessage as statusMessageOf,
 } from "@fastr/status";
-import { Logger } from "@keybr/logger";
+import { Logger } from "@keylearn/logger";
 import {
   type ErrorDetails,
   ErrorPage,
   inspectError,
   View,
-} from "@keybr/pages-server";
+} from "@keylearn/pages-server";
 
 // Headers that must never reach the log. `cookie` carries the session id, so
 // logging it turns any 500 into a stash of live credentials for whoever can read

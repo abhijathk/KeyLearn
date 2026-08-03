@@ -1,5 +1,5 @@
-import { useIntlDates } from "@keybr/intl";
-import { type SecurityEventDetails } from "@keybr/pages-shared";
+import { useIntlDates } from "@keylearn/intl";
+import { type SecurityEventDetails } from "@keylearn/pages-shared";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";

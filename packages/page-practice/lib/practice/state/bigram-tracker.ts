@@ -1,5 +1,5 @@
-import { type Step } from "@keybr/textinput";
-import { type CodePoint } from "@keybr/unicode";
+import { type Step } from "@keylearn/textinput";
+import { type CodePoint } from "@keylearn/unicode";
 
 // Only count transitions whose flight time is plausibly a real keystroke gap.
 const MIN_TIME = 40;
@@ -28,12 +28,7 @@ export class BigramTracker {
       const prev = steps[i - 1];
       const cur = steps[i];
       const { timeToType, typo, codePoint } = cur;
-      if (
-        typo ||
-        prev.typo ||
-        timeToType < MIN_TIME ||
-        timeToType > MAX_TIME
-      ) {
+      if (typo || prev.typo || timeToType < MIN_TIME || timeToType > MAX_TIME) {
         continue;
       }
       const id = `${prev.codePoint}>${codePoint}`;

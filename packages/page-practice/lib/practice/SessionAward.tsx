@@ -1,5 +1,5 @@
-import { useFormatter } from "@keybr/lesson-ui";
-import { StrokeIcon } from "@keybr/widget";
+import { useFormatter } from "@keylearn/lesson-ui";
+import { StrokeIcon } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./SessionAward.module.less";

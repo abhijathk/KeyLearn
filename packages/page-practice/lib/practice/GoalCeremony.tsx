@@ -1,6 +1,6 @@
-import { useIntlDates } from "@keybr/intl";
-import { useFormatter } from "@keybr/lesson-ui";
-import { Pages } from "@keybr/pages-shared";
+import { useIntlDates } from "@keylearn/intl";
+import { useFormatter } from "@keylearn/lesson-ui";
+import { Pages } from "@keylearn/pages-shared";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";

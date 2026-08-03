@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import { Application } from "@fastr/core";
-import { User } from "@keybr/database";
-import { PublicId } from "@keybr/publicid";
-import { ResultFaker } from "@keybr/result";
-import { UserDataFactory } from "@keybr/result-userdata";
+import { User } from "@keylearn/database";
+import { PublicId } from "@keylearn/publicid";
+import { ResultFaker } from "@keylearn/result";
+import { UserDataFactory } from "@keylearn/result-userdata";
 import { equal, isNotNull, isNull, like } from "rich-assert";
 import { kMain } from "../module.ts";
 import { TestContext } from "../test/context.ts";
@@ -15,7 +15,7 @@ const context = new TestContext();
 test("logout", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
 
   const request = startApp(context.get(Application, kMain));
 
@@ -34,7 +34,7 @@ test("logout", async () => {
 test("do not log out on a GET", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
 
   const request = startApp(context.get(Application, kMain));
 
@@ -50,13 +50,13 @@ test("do not log out on a GET", async () => {
   // Assert.
 
   equal(response.status, 405);
-  equal(await request.who(), "user1@keybr.com");
+  equal(await request.who(), "user1@keylearn.com");
 });
 
 test("patch account", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
 
   const request = startApp(context.get(Application, kMain));
 
@@ -122,7 +122,7 @@ test("delete account", async () => {
   // Arrange.
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const userData = factory.load(new PublicId(user.id!));
   const faker = new ResultFaker();
   await userData.append([faker.nextResult()]);
@@ -141,7 +141,7 @@ test("delete account", async () => {
   }
 
   const [message] = context.mailer.dump();
-  equal(message.to, "user1@keybr.com");
+  equal(message.to, "user1@keylearn.com");
   const code = /\b(\d{6})\b/.exec(message.text!)![1];
 
   const response = await request.POST("/_/account/delete").send({ code });
@@ -156,7 +156,7 @@ test("delete account", async () => {
 test("do not delete an account without the emailed code", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
 
   const request = startApp(context.get(Application, kMain));
 
@@ -172,5 +172,5 @@ test("do not delete an account without the emailed code", async () => {
 
   equal(response.status, 403);
   isNotNull(await User.findById(user.id!));
-  equal(await request.who(), "user1@keybr.com");
+  equal(await request.who(), "user1@keylearn.com");
 });

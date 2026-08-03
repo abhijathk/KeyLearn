@@ -1,4 +1,4 @@
-import type { DailyStatsMap, SummaryStats } from "@keybr/result";
+import type { DailyStatsMap, SummaryStats } from "@keylearn/result";
 
 export function DataScript({
   stats,

@@ -1,7 +1,7 @@
-import { LearningRate, type LessonKey, Target } from "@keybr/lesson";
-import { useFormatter, useKeyStyles } from "@keybr/lesson-ui";
-import { type KeyStats } from "@keybr/result";
-import { useSettings } from "@keybr/settings";
+import { LearningRate, type LessonKey, Target } from "@keylearn/lesson";
+import { useFormatter, useKeyStyles } from "@keylearn/lesson-ui";
+import { type KeyStats } from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
 import { type CSSProperties, type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./KeyExtendedDetails.module.less";

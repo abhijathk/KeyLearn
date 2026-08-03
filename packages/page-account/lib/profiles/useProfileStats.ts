@@ -1,17 +1,21 @@
-import { type Keyboard, KeyboardOptions, loadKeyboard } from "@keybr/keyboard";
-import { GuidedLesson } from "@keybr/lesson";
-import { usePageData } from "@keybr/pages-shared";
-import { type PhoneticModel } from "@keybr/phonetic-model";
-import { PhoneticModelLoader } from "@keybr/phonetic-model-loader";
+import {
+  type Keyboard,
+  KeyboardOptions,
+  loadKeyboard,
+} from "@keylearn/keyboard";
+import { GuidedLesson } from "@keylearn/lesson";
+import { usePageData } from "@keylearn/pages-shared";
+import { type PhoneticModel } from "@keylearn/phonetic-model";
+import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import {
   DailyStatsMap,
   LocalDate,
   makeKeyStatsMap,
   makeSummaryStats,
   type Result,
-} from "@keybr/result";
-import { openResultStorage } from "@keybr/result-loader";
-import { type Settings, useSettings } from "@keybr/settings";
+} from "@keylearn/result";
+import { openResultStorage } from "@keylearn/result-loader";
+import { type Settings, useSettings } from "@keylearn/settings";
 import { useEffect, useState } from "react";
 import { historyNamespace, type Profile } from "./store.ts";
 

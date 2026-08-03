@@ -1,5 +1,5 @@
-import { TypingSettings } from "@keybr/textinput-ui";
-import { StrokeIcon, type StrokeIconName, useView } from "@keybr/widget";
+import { TypingSettings } from "@keylearn/textinput-ui";
+import { StrokeIcon, type StrokeIconName, useView } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

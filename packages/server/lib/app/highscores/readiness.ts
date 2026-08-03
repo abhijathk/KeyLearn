@@ -1,5 +1,5 @@
-import { Env } from "@keybr/config";
-import { User } from "@keybr/database";
+import { Env } from "@keylearn/config";
+import { User } from "@keylearn/database";
 
 /**
  * Whether there is enough of a community for a leaderboard to mean anything.

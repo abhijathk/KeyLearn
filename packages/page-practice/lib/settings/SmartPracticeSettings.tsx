@@ -3,7 +3,7 @@ import {
   Explainer,
   RowSeparator,
   SettingsCard,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import { BottleneckDrillProp } from "./lesson/BottleneckDrillProp.tsx";

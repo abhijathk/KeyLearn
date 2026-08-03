@@ -1,7 +1,7 @@
 import { controller, http, pathParam } from "@fastr/controller";
 import { Context } from "@fastr/core";
 import { injectable } from "@fastr/invert";
-import { type NamedUser } from "@keybr/pages-shared";
+import { type NamedUser } from "@keylearn/pages-shared";
 import { pProfileOwner } from "../auth/index.ts";
 
 @injectable()

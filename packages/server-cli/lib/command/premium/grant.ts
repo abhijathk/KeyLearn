@@ -1,5 +1,5 @@
 import { injectable } from "@fastr/invert";
-import { User } from "@keybr/database";
+import { User } from "@keylearn/database";
 import { Argument, Command, InvalidArgumentError } from "commander";
 
 @injectable()

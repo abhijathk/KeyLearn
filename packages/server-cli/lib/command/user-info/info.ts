@@ -1,5 +1,5 @@
-import { type Order, type User, type UserExternalId } from "@keybr/database";
-import { PublicId } from "@keybr/publicid";
+import { type Order, type User, type UserExternalId } from "@keylearn/database";
+import { PublicId } from "@keylearn/publicid";
 
 export function userToInfo(model?: User | null): unknown {
   if (model == null) {

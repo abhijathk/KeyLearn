@@ -1,0 +1,79 @@
+import { useIntlDates, useIntlNumbers } from "@keylearn/intl";
+import { type DailyStats as DailyStatsType } from "@keylearn/result";
+import { formatDuration, NameValue, Para } from "@keylearn/widget";
+import { useIntl } from "react-intl";
+import * as styles from "./DailyStats.module.less";
+import { type Effort } from "./effort.ts";
+import { useFormatter } from "./format.ts";
+
+export function DailyStats({
+  stats: { date, results, stats },
+  effort,
+}: {
+  stats: DailyStatsType;
+  effort: Effort;
+}) {
+  const { formatMessage } = useIntl();
+  const { formatDate } = useIntlDates();
+  const { formatNumber, formatPercents } = useIntlNumbers();
+  const { formatSpeed } = useFormatter();
+  return (
+    <div className={styles.root}>
+      <Para align="center">{formatDate(Number(date), "long")}</Para>
+      <div>
+        <NameValue
+          name={formatMessage({
+            id: "t_Daily_goal",
+            defaultMessage: "Today’s goal",
+          })}
+          value={formatPercents(effort.effort(stats.time))}
+        />
+      </div>
+      <div>
+        <NameValue
+          name={formatMessage({
+            id: "t_Time",
+            defaultMessage: "Time spent",
+          })}
+          value={formatDuration(stats.time)}
+        />
+      </div>
+      <div>
+        <NameValue
+          name={formatMessage({
+            id: "t_num_Lessons",
+            defaultMessage: "Lessons done",
+          })}
+          value={formatNumber(results.length)}
+        />
+      </div>
+      <div>
+        <NameValue
+          name={formatMessage({
+            id: "t_Top_speed",
+            defaultMessage: "Best speed",
+          })}
+          value={formatSpeed(stats.speed.max)}
+        />
+      </div>
+      <div>
+        <NameValue
+          name={formatMessage({
+            id: "t_Average_speed",
+            defaultMessage: "Typical speed",
+          })}
+          value={formatSpeed(stats.speed.avg)}
+        />
+      </div>
+      <div>
+        <NameValue
+          name={formatMessage({
+            id: "t_Average_accuracy",
+            defaultMessage: "Typical accuracy",
+          })}
+          value={formatPercents(stats.accuracy.avg)}
+        />
+      </div>
+    </div>
+  );
+}

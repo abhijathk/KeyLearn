@@ -1,4 +1,4 @@
-import { useSettings } from "@keybr/settings";
+import { useSettings } from "@keylearn/settings";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -148,9 +148,18 @@ export function TestModeSettings(): ReactNode {
         break;
     }
   };
-  const secondsUnit = formatMessage({ id: "typingTest.unit.seconds", defaultMessage: "s" });
-  const wordsUnit = formatMessage({ id: "typingTest.unit.words", defaultMessage: "words" });
-  const charsUnit = formatMessage({ id: "typingTest.unit.chars", defaultMessage: "chars" });
+  const secondsUnit = formatMessage({
+    id: "typingTest.unit.seconds",
+    defaultMessage: "s",
+  });
+  const wordsUnit = formatMessage({
+    id: "typingTest.unit.words",
+    defaultMessage: "words",
+  });
+  const charsUnit = formatMessage({
+    id: "typingTest.unit.chars",
+    defaultMessage: "chars",
+  });
 
   return (
     <div className={styles.modePanel}>

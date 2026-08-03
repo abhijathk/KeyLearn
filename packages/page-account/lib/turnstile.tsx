@@ -1,4 +1,4 @@
-import { usePageData } from "@keybr/pages-shared";
+import { usePageData } from "@keylearn/pages-shared";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import * as styles from "./AuthPage.module.less";
 

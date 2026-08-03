@@ -1,5 +1,5 @@
-import { LessonKey, LessonKeys } from "@keybr/lesson";
-import { Letter } from "@keybr/phonetic-model";
+import { LessonKey, LessonKeys } from "@keylearn/lesson";
+import { Letter } from "@keylearn/phonetic-model";
 import { letters } from "./english.ts";
 
 export function makeExampleLesson(

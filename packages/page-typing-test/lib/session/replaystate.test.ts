@@ -1,7 +1,7 @@
 import { test } from "node:test";
-import { Timer } from "@keybr/lang";
-import { type Step, textInputSettings } from "@keybr/textinput";
-import { type AnyEvent } from "@keybr/textinput-events";
+import { Timer } from "@keylearn/lang";
+import { type Step, textInputSettings } from "@keylearn/textinput";
+import { type AnyEvent } from "@keylearn/textinput-events";
 import { equal, like } from "rich-assert";
 import { ReplayProgress, ReplayState } from "./replaystate.ts";
 

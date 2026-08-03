@@ -1,0 +1,12 @@
+[Unit]
+Description=keylearn.com stale session removal service
+
+[Service]
+ExecStart=/bin/bash /opt/keylearn/etc/keylearn-remove-sessions.sh
+Type=oneshot
+WorkingDirectory=/opt/keylearn
+# User=www-data
+# Group=www-data
+
+[Install]
+WantedBy=multi-user.target

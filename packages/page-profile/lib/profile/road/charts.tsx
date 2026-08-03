@@ -1,6 +1,6 @@
-import { useFormatter, useKeyStyles } from "@keybr/lesson-ui";
-import { type Distribution } from "@keybr/math";
-import { type KeyStatsMap, type Result, timeToSpeed } from "@keybr/result";
+import { useFormatter, useKeyStyles } from "@keylearn/lesson-ui";
+import { type Distribution } from "@keylearn/math";
+import { type KeyStatsMap, type Result, timeToSpeed } from "@keylearn/result";
 import { type ReactNode } from "react";
 import * as styles from "./road.module.less";
 

@@ -1,10 +1,13 @@
-import { makeAccuracyDistribution, makeSpeedDistribution } from "@keybr/chart";
-import { useIntlNumbers } from "@keybr/intl";
-import { useFormatter } from "@keybr/lesson-ui";
-import { Screen } from "@keybr/pages-shared";
-import { useSettings } from "@keybr/settings";
-import { computeSpeed, type Step } from "@keybr/textinput";
-import { formatDuration, Kbd, useHotkeys, useView } from "@keybr/widget";
+import {
+  makeAccuracyDistribution,
+  makeSpeedDistribution,
+} from "@keylearn/chart";
+import { useIntlNumbers } from "@keylearn/intl";
+import { useFormatter } from "@keylearn/lesson-ui";
+import { Screen } from "@keylearn/pages-shared";
+import { useSettings } from "@keylearn/settings";
+import { computeSpeed, type Step } from "@keylearn/textinput";
+import { formatDuration, Kbd, useHotkeys, useView } from "@keylearn/widget";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import {

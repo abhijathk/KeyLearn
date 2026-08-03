@@ -1,7 +1,7 @@
 #include <cinttypes>
 #include <filesystem>
 
-namespace keybr {
+namespace keylearn {
 
 extern const char *DEFAULT_ROOT;
 
@@ -25,4 +25,4 @@ public:
 
 void check_stats_file(const std::filesystem::path &path, check_status &status);
 
-} // namespace keybr
+} // namespace keylearn

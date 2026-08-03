@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 function getDataDir() {
-  return resolve(tmpdir(), `keybr-tests-${randomBytes(6).toString("hex")}`);
+  return resolve(tmpdir(), `keylearn-tests-${randomBytes(6).toString("hex")}`);
 }
 
 function getPublicDir() {
@@ -16,8 +16,8 @@ process.env.PUBLIC_DIR ??= getPublicDir();
 process.env.DATABASE_CLIENT ??= "mysql";
 process.env.DATABASE_HOST ??= "127.0.0.1";
 process.env.DATABASE_PORT ??= "3306";
-process.env.DATABASE_DATABASE ??= "keybr_tests";
-process.env.DATABASE_USERNAME ??= "keybr";
+process.env.DATABASE_DATABASE ??= "keylearn_tests";
+process.env.DATABASE_USERNAME ??= "keylearn";
 process.env.DATABASE_PASSWORD ??= "";
 process.env.DATABASE_FILENAME ??= ":memory:";
 

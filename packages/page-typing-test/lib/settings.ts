@@ -1,18 +1,18 @@
-import { Book } from "@keybr/content";
-import { Language } from "@keybr/keyboard";
+import { Book } from "@keylearn/content";
+import { Language } from "@keylearn/keyboard";
 import {
   enumProp,
   itemProp,
   numberProp,
   type Settings,
   useSettings,
-} from "@keybr/settings";
+} from "@keylearn/settings";
 import {
   type TextDisplaySettings,
   type TextInputSettings,
   toTextDisplaySettings,
   toTextInputSettings,
-} from "@keybr/textinput";
+} from "@keylearn/textinput";
 import { useMemo } from "react";
 import {
   type Duration,

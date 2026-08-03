@@ -1,0 +1,38 @@
+@import "@keylearn/widget/lib/index.less";
+
+.body {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100vb;
+}
+
+.main {
+  display: flex;
+  z-index: 1;
+  flex: 1 1 auto;
+  flex-direction: column;
+
+  // The whole page body fades up on first paint, so the app never flashes its
+  // layout in before the content settles.
+  .motion-fade-in(@motion-slow);
+  .motion-respect-reduced();
+}
+
+// A single quiet ad slot at the very bottom of the page flow — it reserves
+// no space and loads nothing unless ads are configured, never overlaps the
+// content, and never appears in kids mode.
+.adSlot {
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
+  margin-block: 2rem 1rem;
+  padding-inline: 1rem;
+}
+
+.adLabel {
+  margin-block-end: 0.4rem;
+  color: var(--text-color-f2);
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+}

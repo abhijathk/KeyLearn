@@ -1,4 +1,4 @@
-import { activeProfileBirthYear } from "@keybr/pages-shared";
+import { activeProfileBirthYear } from "@keylearn/pages-shared";
 
 // Everything on the kids page that should feel different for a five-year-old
 // than for a ten-year-old is a knob in this table. The band is derived from

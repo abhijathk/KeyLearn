@@ -1,6 +1,6 @@
-import { Marker, ProgressOverviewChart } from "@keybr/chart";
-import { type KeyStatsMap } from "@keybr/result";
-import { Explainer, Figure } from "@keybr/widget";
+import { Marker, ProgressOverviewChart } from "@keylearn/chart";
+import { type KeyStatsMap } from "@keylearn/result";
+import { Explainer, Figure } from "@keylearn/widget";
 import { FormattedMessage } from "react-intl";
 import { ChartWrapper } from "./ChartWrapper.tsx";
 

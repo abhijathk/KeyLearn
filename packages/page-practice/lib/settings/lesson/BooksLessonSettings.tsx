@@ -3,10 +3,10 @@ import {
   BookSelector,
   ParagraphPreview,
   ParagraphSelector,
-} from "@keybr/content";
-import { type BooksLesson, lessonProps } from "@keybr/lesson";
-import { useSettings } from "@keybr/settings";
-import { CheckBox, Field, FieldList, FieldSet, Spacer } from "@keybr/widget";
+} from "@keylearn/content";
+import { type BooksLesson, lessonProps } from "@keylearn/lesson";
+import { useSettings } from "@keylearn/settings";
+import { CheckBox, Field, FieldList, FieldSet, Spacer } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { LessonLengthProp } from "./LessonLengthProp.tsx";

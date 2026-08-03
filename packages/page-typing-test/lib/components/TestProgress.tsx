@@ -1,9 +1,13 @@
-import { useFormatter } from "@keybr/lesson-ui";
-import { formatDuration, withDeferred } from "@keybr/widget";
+import { useFormatter } from "@keylearn/lesson-ui";
+import { formatDuration, withDeferred } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { memo } from "react";
 import { FormattedMessage } from "react-intl";
-import { type Duration, DurationType, type Progress } from "../session/index.ts";
+import {
+  type Duration,
+  DurationType,
+  type Progress,
+} from "../session/index.ts";
 import { TestStyle } from "../settings.ts";
 import * as styles from "./road.module.less";
 
@@ -30,7 +34,10 @@ export const TestProgress0 = memo(function TestProgress({
   if (testStyle === TestStyle.Zen) {
     return (
       <div className={styles.zenTrack}>
-        <div className={styles.zenFill} style={{ inlineSize: `${pct * 100}%` }} />
+        <div
+          className={styles.zenFill}
+          style={{ inlineSize: `${pct * 100}%` }}
+        />
       </div>
     );
   }
@@ -75,7 +82,10 @@ export const TestProgress0 = memo(function TestProgress({
   const road = (
     <div className={styles.proad}>
       <div className={styles.pdone} style={{ inlineSize: `${pct * 100}%` }} />
-      <div className={styles.pdot} style={{ insetInlineStart: `${pct * 100}%` }} />
+      <div
+        className={styles.pdot}
+        style={{ insetInlineStart: `${pct * 100}%` }}
+      />
     </div>
   );
 

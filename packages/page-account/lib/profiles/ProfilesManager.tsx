@@ -1,11 +1,11 @@
-import { brailleStats } from "@keybr/braille";
+import { brailleStats } from "@keylearn/braille";
 import {
   isPremiumUser,
   PLACES_BRAILLE,
   sightedPlaces,
   usePageData,
-} from "@keybr/pages-shared";
-import { Button } from "@keybr/widget";
+} from "@keylearn/pages-shared";
+import { Button } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";

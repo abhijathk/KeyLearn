@@ -1,0 +1,21 @@
+{
+  "private": true,
+  "name": "@keylearn/phonetic-model",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "lib/index.ts",
+  "types": ".types/index.d.ts",
+  "dependencies": {
+    "@keylearn/binary": "*",
+    "@keylearn/keyboard": "*",
+    "@keylearn/rand": "*",
+    "@keylearn/unicode": "*",
+    "@keylearn/widget": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "clean": "rm -fr .types",
+    "compile": "tsc",
+    "test": "tstest --test 'lib/**/*.test.{ts,tsx}'"
+  }
+}

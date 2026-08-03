@@ -1,4 +1,4 @@
-import { SpeedUnit } from "@keybr/result";
+import { SpeedUnit } from "@keylearn/result";
 import { InvalidArgumentError } from "commander";
 import { parseISO, parseJSON } from "date-fns";
 import { UserIdRange, type UserIdRangeItem } from "./userid-range.ts";

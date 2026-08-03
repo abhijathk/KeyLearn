@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.34, for Linux (x86_64)
 --
--- Host: localhost    Database: keybr
+-- Host: localhost    Database: keylearn
 -- ------------------------------------------------------
 -- Server version	8.0.34-0ubuntu0.22.04.1
 

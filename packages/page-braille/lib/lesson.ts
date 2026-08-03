@@ -5,7 +5,7 @@ import {
   generateLine,
   LETTERS,
   type Progress,
-} from "@keybr/braille";
+} from "@keylearn/braille";
 
 /**
  * A line of practice, described in the units each mode needs.

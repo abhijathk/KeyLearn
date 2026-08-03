@@ -1,7 +1,7 @@
-import { KeyFrequencyHeatmap, Marker } from "@keybr/chart";
-import { useKeyboard } from "@keybr/keyboard";
-import { type KeyStatsMap } from "@keybr/result";
-import { Explainer, Figure } from "@keybr/widget";
+import { KeyFrequencyHeatmap, Marker } from "@keylearn/chart";
+import { useKeyboard } from "@keylearn/keyboard";
+import { type KeyStatsMap } from "@keylearn/result";
+import { Explainer, Figure } from "@keylearn/widget";
 import { FormattedMessage } from "react-intl";
 
 export function KeyFrequencyHeatmapSection({

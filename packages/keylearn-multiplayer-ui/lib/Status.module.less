@@ -1,0 +1,102 @@
+// The states before a race: connecting, offline, removed. Same night ground,
+// mint accent and whisper typography as the rest of the app — the old markup
+// was a bare <h1> and a paragraph, which read like a server error page dropped
+// into the middle of the product.
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  align-items: center;
+  inline-size: min(30rem, 100%);
+  margin-inline: auto;
+  margin-block-start: 4rem;
+  padding: 2.2rem 1.6rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 0.9rem;
+  text-align: center;
+}
+
+.warn {
+  border-color: color-mix(in oklab, var(--error) 30%, transparent);
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  inline-size: 3.2rem;
+  block-size: 3.2rem;
+  border-radius: 50%;
+  background-color: color-mix(in oklab, var(--accent) 10%, transparent);
+
+  svg {
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    color: var(--accent);
+  }
+}
+
+.warn .mark {
+  background-color: color-mix(in oklab, var(--error) 10%, transparent);
+
+  svg {
+    color: var(--error);
+  }
+}
+
+.title {
+  margin: 0;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+
+.body {
+  margin: 0;
+  color: var(--text-color-f2);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  text-wrap: balance;
+}
+
+// Three dots breathing in turn — a quieter "working on it" than a spinner,
+// and it matches the countdown's resting state.
+.dots {
+  display: flex;
+  gap: 0.35rem;
+
+  i {
+    inline-size: 0.4rem;
+    block-size: 0.4rem;
+    border-radius: 50%;
+    background-color: var(--accent);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dots i {
+    opacity: 0.6;
+    animation: none;
+  }
+}

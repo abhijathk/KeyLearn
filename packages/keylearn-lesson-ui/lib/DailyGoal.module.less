@@ -1,0 +1,63 @@
+@import "@keylearn/widget/lib/index.less";
+
+.root {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.ring {
+  position: relative;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) var(--p, 0%), var(--primary-d2) 0);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background-color: var(--primary);
+  }
+}
+
+.ringDone {
+  background: conic-gradient(
+    var(--Value--more__color) 100%,
+    var(--primary-d2) 0
+  );
+}
+
+.ringLabel {
+  display: grid;
+  position: relative;
+  z-index: 1;
+  place-items: center;
+  block-size: 100%;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.ringDone .ringLabel {
+  color: var(--Value--more__color);
+}
+
+.check {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.text {
+  color: var(--Value-color);
+  font-family: var(--value-font-family);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}

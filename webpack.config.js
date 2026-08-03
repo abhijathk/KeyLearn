@@ -1,8 +1,8 @@
 /* eslint-disable n/no-extraneous-import */
 
 import { join } from "node:path";
-import { intlTransformer } from "@keybr/scripts/intl-transformer.js";
-import { ENV } from "@keybr/thirdparties/webpack-env.js";
+import { intlTransformer } from "@keylearn/scripts/intl-transformer.js";
+import { ENV } from "@keylearn/thirdparties/webpack-env.js";
 import CompressionPlugin from "compression-webpack-plugin";
 import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
@@ -106,7 +106,7 @@ export default [
     context: import.meta.dirname,
     entry: {
       index: "./packages/server/lib/main.ts",
-      keybr: "./packages/server-cli/lib/main.ts",
+      keylearn: "./packages/server-cli/lib/main.ts",
     },
     output: {
       path: join(import.meta.dirname, "root", "lib"),
@@ -161,8 +161,8 @@ export default [
     mode,
     context: import.meta.dirname,
     entry: {
-      browser: "./packages/keybr-pages-browser/lib/entry.ts",
-      server: "./packages/keybr-pages-server/lib/entry.ts",
+      browser: "./packages/keylearn-pages-browser/lib/entry.ts",
+      server: "./packages/keylearn-pages-server/lib/entry.ts",
     },
     output: {
       path: join(import.meta.dirname, "root", "public", "assets"),
@@ -193,12 +193,12 @@ export default [
             name: "shared-vendor",
           },
           widget: {
-            test: /\/keybr-widget\//,
+            test: /\/keylearn-widget\//,
             chunks: "all",
             name: "shared-widget",
           },
           keyboard: {
-            test: /\/keybr-keyboard\//,
+            test: /\/keylearn-keyboard\//,
             chunks: "all",
             name: "shared-keyboard",
           },

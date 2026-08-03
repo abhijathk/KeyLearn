@@ -1,7 +1,7 @@
 import { test } from "node:test";
-import { FakeIntlProvider } from "@keybr/intl";
-import { Layout, loadKeyboard } from "@keybr/keyboard";
-import { FakePhoneticModel } from "@keybr/phonetic-model";
+import { FakeIntlProvider } from "@keylearn/intl";
+import { Layout, loadKeyboard } from "@keylearn/keyboard";
+import { FakePhoneticModel } from "@keylearn/phonetic-model";
 import { render } from "@testing-library/react";
 import { KeyFrequencyHeatmap } from "./KeyFrequencyHeatmap.tsx";
 

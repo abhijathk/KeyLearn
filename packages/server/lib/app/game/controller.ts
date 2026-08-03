@@ -4,8 +4,8 @@ import { ForbiddenError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { websocket } from "@fastr/middleware-websocket";
-import { Env } from "@keybr/config";
-import { Profile } from "@keybr/database";
+import { Env } from "@keylearn/config";
+import { Profile } from "@keylearn/database";
 import { WebSocketServer } from "ws";
 import { type AuthState, clientIp } from "../auth/index.ts";
 import { SessionFactory } from "./session.ts";
@@ -85,6 +85,22 @@ export class Controller {
         this.sessions.connect(webSocket, { id: sessionId, user: publicUser });
       },
     })(ctx, () => Promise.reject());
+  }
+
+  /**
+   * Who is in the room a newcomer would join.
+   *
+   * The one part of multiplayer that cannot use the socket: it has to be
+   * answerable before a socket exists, so that somebody can decide whether to
+   * join — and under what name — while still outside. Cheap, cached for a few
+   * seconds, and it names only people any visitor would see a moment later.
+   */
+  @http.GET("/_/game/rooms")
+  async rooms(ctx: Context<RouterState & AuthState>) {
+    ctx.response.body = this.sessions.peek();
+    // Short enough to feel live while the dialog is open, long enough that a
+    // page left sitting on it does not poll the room list at full rate.
+    ctx.response.headers.set("Cache-Control", "public, max-age=3");
   }
 
   @http.GET("/_/game/stats")

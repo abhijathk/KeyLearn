@@ -1,5 +1,5 @@
-import { singleLine, type TextDisplaySettings } from "@keybr/textinput";
-import { StaticText } from "@keybr/textinput-ui";
+import { singleLine, type TextDisplaySettings } from "@keylearn/textinput";
+import { StaticText } from "@keylearn/textinput-ui";
 import { memo, useMemo } from "react";
 import {
   generateExample,

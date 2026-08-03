@@ -3,6 +3,6 @@
 **/sandbox/
 **/tmp/
 root/
-packages/keybr-code/lib/parser.js
-packages/keybr-code/lib/syntax/_*.ts
-packages/keybr-code/lib/syntax/lang_*.ts
+packages/keylearn-code/lib/parser.js
+packages/keylearn-code/lib/syntax/_*.ts
+packages/keylearn-code/lib/syntax/lang_*.ts

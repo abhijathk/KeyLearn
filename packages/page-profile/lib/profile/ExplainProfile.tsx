@@ -1,5 +1,5 @@
-import { booleanProp, Preferences } from "@keybr/settings";
-import { Button, Field, FieldList, useExplainerState } from "@keybr/widget";
+import { booleanProp, Preferences } from "@keylearn/settings";
+import { Button, Field, FieldList, useExplainerState } from "@keylearn/widget";
 import { useLayoutEffect } from "react";
 import { useIntl } from "react-intl";
 

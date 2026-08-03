@@ -1,0 +1,146 @@
+// The small pictures in the session recap. Every one is sized so its card keeps
+// the same height whether there is data to draw or not — the panel must not
+// jump about as the first lessons arrive.
+
+// ---- one mark per lesson --------------------------------------------------
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.22rem;
+}
+
+.mark {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 1px;
+  background-color: var(--primary-d2);
+}
+
+.markOn {
+  background-color: var(--accent);
+}
+
+// Not an error — just a run where accuracy slipped. Coral says "look here",
+// which is all it should say.
+.markMiss {
+  background-color: color-mix(
+    in oklab,
+    var(--slow-key-color) 70%,
+    var(--primary-d2)
+  );
+}
+
+// ---- today's goal ---------------------------------------------------------
+
+.ring {
+  flex: none;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+}
+
+.ringTrack {
+  fill: none;
+  stroke: var(--primary-d2);
+  stroke-width: 3.5;
+}
+
+.ringArc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+
+// ---- recent speed ---------------------------------------------------------
+
+.spark {
+  inline-size: 100%;
+  block-size: 2.1rem;
+  overflow: visible;
+}
+
+.sparkLine {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sparkFill {
+  fill: color-mix(in oklab, var(--accent) 13%, transparent);
+  stroke: none;
+}
+
+// The reader's own average, so the shape is read against something rather than
+// floating in the box.
+.sparkBase {
+  stroke: var(--primary-d2);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.sparkEmpty {
+  stroke: var(--primary-d2);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.sparkEnd {
+  fill: var(--accent);
+  stroke: none;
+}
+
+// ---- the alphabet ---------------------------------------------------------
+
+.alpha {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 0.16rem;
+  inline-size: 100%;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border-radius: 1px;
+  background-color: var(--primary-d2);
+}
+
+.cellGot {
+  background-color: color-mix(in oklab, var(--accent) 62%, transparent);
+}
+
+// Outlined rather than filled: this is the one about to be filled in, and an
+// outline reads as a space waiting rather than as another finished square.
+.cellNext {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+// ---- slowest keys ---------------------------------------------------------
+
+.chips {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.chip {
+  display: grid;
+  place-items: center;
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  border-radius: 0.25rem;
+  color: var(--text-color);
+  background-color: color-mix(
+    in oklab,
+    var(--slow-key-color) 22%,
+    var(--primary-l1)
+  );
+  font-family: var(--value-font-family);
+  font-size: 0.6rem;
+  font-weight: 700;
+}

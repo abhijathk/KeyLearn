@@ -1,4 +1,4 @@
-import { ViewSwitch } from "@keybr/widget";
+import { ViewSwitch } from "@keylearn/widget";
 import { views } from "./views.tsx";
 
 export function TypingTestPage() {

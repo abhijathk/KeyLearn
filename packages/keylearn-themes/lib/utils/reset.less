@@ -1,0 +1,99 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+}
+
+// The whole UI is sized in rem, so stepping the root font size up with the
+// viewport keeps the site comfortably readable on retina / 4K displays,
+// where the browser-default 16px renders small.
+@media (min-width: 1280px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+@media (min-width: 1600px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 2000px) {
+  html {
+    font-size: 19.5px;
+  }
+}
+
+@media (min-width: 2600px) {
+  html {
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 3400px) {
+  html {
+    font-size: 26px;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+textarea {
+  resize: block;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-inline-size: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+// Thin, theme-aware scrollbars — the thumb is drawn from the current text
+// colour, so it reads well on both light and dark surfaces; hover tints it the
+// accent green.
+* {
+  scrollbar-color: color-mix(
+      in oklab,
+      var(--text-color, #808080) 24%,
+      transparent
+    )
+    transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--text-color, #808080) 22%, transparent);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--accent, #8fd9b6) 55%, transparent);
+}

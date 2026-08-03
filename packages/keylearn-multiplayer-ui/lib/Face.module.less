@@ -1,0 +1,18 @@
+// One player's avatar. The accent ring is the only marker of "this is you"
+// once every name in the room might be a pseudonym.
+.face {
+  flex: none;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+}
+
+.small {
+  inline-size: 1.35rem;
+  block-size: 1.35rem;
+}
+
+.me {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0 4px color-mix(in oklab, var(--accent) 18%, transparent);
+}

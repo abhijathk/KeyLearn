@@ -1,14 +1,14 @@
 {
   "private": true,
-  "name": "@keybr/devenv",
+  "name": "@keylearn/devenv",
   "version": "0.0.0",
   "type": "module",
   "main": "lib/index.ts",
   "types": ".types/index.d.ts",
   "dependencies": {
-    "@keybr/config": "*",
-    "@keybr/database": "*",
-    "@keybr/logger": "*"
+    "@keylearn/config": "*",
+    "@keylearn/database": "*",
+    "@keylearn/logger": "*"
   },
   "devDependencies": {},
   "scripts": {

@@ -1,11 +1,11 @@
 import { type Binder, inject, type Module, provides } from "@fastr/invert";
-import { Env } from "@keybr/config";
+import { Env } from "@keylearn/config";
 import {
   type AbstractAdapter,
   FacebookAdapter,
   GoogleAdapter,
   MicrosoftAdapter,
-} from "@keybr/oauth";
+} from "@keylearn/oauth";
 
 export abstract class AdapterFactory {
   abstract makeAdapter(redirectUri: string): AbstractAdapter;

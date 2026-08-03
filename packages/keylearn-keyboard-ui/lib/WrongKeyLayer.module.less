@@ -1,0 +1,26 @@
+.flash {
+  fill: color-mix(in oklab, var(--error) 55%, var(--KeyboardKey-button__color));
+  transition: transform 90ms ease;
+  animation: wrong-flash 0.45s ease-out forwards;
+}
+
+.pressed {
+  transform: translateY(3px);
+}
+
+@keyframes wrong-flash {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flash {
+    opacity: 0;
+    animation: none;
+  }
+}

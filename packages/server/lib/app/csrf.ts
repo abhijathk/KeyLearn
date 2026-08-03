@@ -1,6 +1,6 @@
 import { type Context, type Middleware, type Next } from "@fastr/core";
 import { ForbiddenError } from "@fastr/errors";
-import { Logger } from "@keybr/logger";
+import { Logger } from "@keylearn/logger";
 
 // Requests that must not change state, and so need no origin proof.
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);

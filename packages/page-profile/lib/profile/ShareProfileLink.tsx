@@ -1,4 +1,4 @@
-import { type NamedUser } from "@keybr/pages-shared";
+import { type NamedUser } from "@keylearn/pages-shared";
 import {
   Button,
   Field,
@@ -7,7 +7,7 @@ import {
   TextField,
   type TextFieldRef,
   useClipboard,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { mdiContentCopy, mdiOpenInNew } from "@mdi/js";
 import { useRef } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

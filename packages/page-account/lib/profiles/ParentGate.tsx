@@ -1,4 +1,4 @@
-import { Button, Field, FieldList, TextField } from "@keybr/widget";
+import { Button, Field, FieldList, TextField } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./Profiles.module.less";

@@ -1,20 +1,20 @@
-import { keyboardProps, KeyboardProvider } from "@keybr/keyboard";
-import { Lesson, lessonProps, LessonType } from "@keybr/lesson";
-import { LessonLoader } from "@keybr/lesson-loader";
+import { keyboardProps, KeyboardProvider } from "@keylearn/keyboard";
+import { Lesson, lessonProps, LessonType } from "@keylearn/lesson";
+import { LessonLoader } from "@keylearn/lesson-loader";
 import {
   loadNgramStats,
   profileStorageKey,
   saveNgramStats,
-} from "@keybr/pages-shared";
-import { MutableKeyStatsMap, Result, useResults } from "@keybr/result";
-import { SettingsContext, useSettings } from "@keybr/settings";
+} from "@keylearn/pages-shared";
+import { MutableKeyStatsMap, Result, useResults } from "@keylearn/result";
+import { SettingsContext, useSettings } from "@keylearn/settings";
 import {
   Feedback,
   flattenStyledText,
   makeStats,
   TextInput,
   toTextInputSettings,
-} from "@keybr/textinput";
+} from "@keylearn/textinput";
 import { clsx } from "clsx";
 import {
   type ReactNode,

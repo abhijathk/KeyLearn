@@ -1,6 +1,6 @@
-import { Writer } from "@keybr/binary";
-import { type Result } from "@keybr/result";
-import { HEADER, writeResult } from "@keybr/result-io";
+import { Writer } from "@keylearn/binary";
+import { type Result } from "@keylearn/result";
+import { HEADER, writeResult } from "@keylearn/result-io";
 import { rename } from "@sosimple/fsx";
 import { type File } from "@sosimple/fsx-file";
 

@@ -1,5 +1,5 @@
-import { type NumbersLesson } from "@keybr/lesson";
-import { Description, Explainer, FieldSet } from "@keybr/widget";
+import { type NumbersLesson } from "@keylearn/lesson";
+import { Description, Explainer, FieldSet } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { BenfordProp } from "./BenfordProp.tsx";

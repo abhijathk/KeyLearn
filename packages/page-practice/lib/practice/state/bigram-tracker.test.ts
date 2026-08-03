@@ -1,5 +1,5 @@
 import { test } from "node:test";
-import { type Step } from "@keybr/textinput";
+import { type Step } from "@keylearn/textinput";
 import { equal, isNull } from "rich-assert";
 import { BigramTracker } from "./bigram-tracker.ts";
 

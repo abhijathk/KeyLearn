@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import { Application } from "@fastr/core";
-import { PublicId } from "@keybr/publicid";
-import { ResultFaker } from "@keybr/result";
-import { formatMessage } from "@keybr/result-io";
-import { UserDataFactory } from "@keybr/result-userdata";
+import { PublicId } from "@keylearn/publicid";
+import { ResultFaker } from "@keylearn/result";
+import { formatMessage } from "@keylearn/result-io";
+import { UserDataFactory } from "@keylearn/result-userdata";
 import { equal, isFalse, isTrue, match } from "rich-assert";
 import { kMain } from "../module.ts";
 import { TestContext } from "../test/context.ts";
@@ -39,7 +39,7 @@ test("get public user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const id = new PublicId(user.id!);
   const userData = factory.load(id);
   await userData.append([faker.nextResult()]);
@@ -71,7 +71,7 @@ test("do not serve the data of a private profile", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const id = new PublicId(user.id!);
   await factory.load(id).append([faker.nextResult()]);
 
@@ -96,7 +96,7 @@ test("get empty user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const userData = factory.load(new PublicId(user.id!));
   await userData.delete();
 
@@ -125,7 +125,7 @@ test("get existing user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const userData = factory.load(new PublicId(user.id!));
   await userData.append([faker.nextResult()]);
 
@@ -155,7 +155,7 @@ test("validate content type on post", async (ctx) => {
 
   const request = startApp(context.get(Application, kMain));
 
-  await request.become("user1@keybr.com");
+  await request.become("user1@keylearn.com");
 
   // Act.
 
@@ -176,7 +176,7 @@ test("validate format on post", async (ctx) => {
 
   const request = startApp(context.get(Application, kMain));
 
-  await request.become("user1@keybr.com");
+  await request.become("user1@keylearn.com");
 
   // Act.
 
@@ -193,13 +193,13 @@ test("validate data on post", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const userData = factory.load(new PublicId(user.id!));
   await userData.delete();
 
   const request = startApp(context.get(Application, kMain));
 
-  await request.become("user1@keybr.com");
+  await request.become("user1@keylearn.com");
 
   // Act.
 
@@ -218,7 +218,7 @@ test("post to user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const userData = factory.load(new PublicId(user.id!));
   await userData.delete();
 
@@ -243,7 +243,7 @@ test("delete empty user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const userData = factory.load(new PublicId(user.id!));
   await userData.delete();
 
@@ -273,7 +273,7 @@ test("delete existing user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const userData = factory.load(new PublicId(user.id!));
   await userData.append([faker.nextResult()]);
 

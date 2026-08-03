@@ -2,7 +2,7 @@
 
 #include <cinttypes>
 
-namespace keybr {
+namespace keylearn {
 
 bool stats_sample::validate() const { return true; }
 
@@ -10,4 +10,4 @@ bool stats_histogram::validate() const { return true; }
 
 bool stats_result::validate() const { return true; }
 
-} // namespace keybr
+} // namespace keylearn

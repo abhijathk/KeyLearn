@@ -1,12 +1,12 @@
-import { Syntax } from "@keybr/code";
+import { Syntax } from "@keylearn/code";
 import {
   CODE_THEMES,
   frameworkOf,
   HIDE_COMMENTS,
   snippetSetFor,
-} from "@keybr/content-snippets";
-import { type CodeLesson, lessonProps } from "@keybr/lesson";
-import { useSettings } from "@keybr/settings";
+} from "@keylearn/content-snippets";
+import { type CodeLesson, lessonProps } from "@keylearn/lesson";
+import { useSettings } from "@keylearn/settings";
 import {
   CheckBox,
   Field,
@@ -14,7 +14,7 @@ import {
   FieldSet,
   OptionList,
   RadioBox,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./CodeLessonSettings.module.less";

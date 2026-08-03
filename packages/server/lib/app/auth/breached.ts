@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { Env } from "@keybr/config";
-import { Logger } from "@keybr/logger";
+import { Env } from "@keylearn/config";
+import { Logger } from "@keylearn/logger";
 
 /**
  * Checks a password against Have I Been Pwned's breach corpus.

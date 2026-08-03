@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@keybr/test-env-bundler",
+  "name": "@keylearn/test-env-bundler",
   "version": "0.0.0",
   "type": "module",
   "main": "lib/index.ts",

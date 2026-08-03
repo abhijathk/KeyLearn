@@ -1,5 +1,5 @@
-import { type CurriculumLesson } from "@keybr/lesson";
-import { Description, Explainer, FieldSet } from "@keybr/widget";
+import { type CurriculumLesson } from "@keylearn/lesson";
+import { Description, Explainer, FieldSet } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { LessonLengthProp } from "./LessonLengthProp.tsx";

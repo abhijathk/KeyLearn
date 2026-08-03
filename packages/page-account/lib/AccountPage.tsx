@@ -5,8 +5,8 @@ import {
   Pages,
   usePageData,
   type UserDetails,
-} from "@keybr/pages-shared";
-import { Button, Icon, TextField } from "@keybr/widget";
+} from "@keylearn/pages-shared";
+import { Button, Icon, TextField } from "@keylearn/widget";
 import { mdiCreditCard } from "@mdi/js";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";

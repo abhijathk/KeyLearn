@@ -2,7 +2,7 @@ import { controller, http } from "@fastr/controller";
 import { Context } from "@fastr/core";
 import { HttpError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
-import { allLocales } from "@keybr/intl";
+import { allLocales } from "@keylearn/intl";
 import { rateLimit } from "../auth/ratelimit.ts";
 import { findSynth, MAX_TEXT } from "./synth.ts";
 

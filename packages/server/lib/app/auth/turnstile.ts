@@ -1,7 +1,7 @@
 import { type Context } from "@fastr/core";
 import { ApplicationError } from "@fastr/errors";
-import { Env } from "@keybr/config";
-import { Logger } from "@keybr/logger";
+import { Env } from "@keylearn/config";
+import { Logger } from "@keylearn/logger";
 import { clientIp } from "./ratelimit.ts";
 
 // Cloudflare Turnstile — a modern, privacy-preserving CAPTCHA (no user

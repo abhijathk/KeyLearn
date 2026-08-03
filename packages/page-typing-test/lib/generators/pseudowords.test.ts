@@ -1,6 +1,6 @@
 import { test } from "node:test";
-import { FakePhoneticModel } from "@keybr/phonetic-model";
-import { FakeRNGStream, LCG } from "@keybr/rand";
+import { FakePhoneticModel } from "@keylearn/phonetic-model";
+import { FakeRNGStream, LCG } from "@keylearn/rand";
 import { equal } from "rich-assert";
 import { PseudoWordsGenerator } from "./pseudowords.ts";
 

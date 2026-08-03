@@ -1,4 +1,4 @@
-import { keyboardProps, useKeyboard } from "@keybr/keyboard";
+import { keyboardProps, useKeyboard } from "@keylearn/keyboard";
 import {
   flatten,
   type HeatRing,
@@ -11,11 +11,11 @@ import {
   VirtualKeyboard,
   WrongKeyLayer,
   ZonesLayer,
-} from "@keybr/keyboard-ui";
-import { useSettings } from "@keybr/settings";
-import { ModifierState } from "@keybr/textinput-events";
-import { type CodePoint } from "@keybr/unicode";
-import { withDeferred } from "@keybr/widget";
+} from "@keylearn/keyboard-ui";
+import { useSettings } from "@keylearn/settings";
+import { ModifierState } from "@keylearn/textinput-events";
+import { type CodePoint } from "@keylearn/unicode";
+import { withDeferred } from "@keylearn/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
 import { type LastLesson } from "./state/index.ts";
 

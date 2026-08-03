@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@keybr/thirdparties",
+  "name": "@keylearn/thirdparties",
   "version": "0.0.0",
   "type": "module",
   "main": "lib/index.ts",

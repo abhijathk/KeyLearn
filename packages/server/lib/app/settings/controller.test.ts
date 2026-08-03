@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { Application } from "@fastr/core";
-import { Settings, stringProp } from "@keybr/settings";
-import { SettingsDatabase } from "@keybr/settings-database";
+import { Settings, stringProp } from "@keylearn/settings";
+import { SettingsDatabase } from "@keylearn/settings-database";
 import { deepEqual, equal, like } from "rich-assert";
 import { kMain } from "../module.ts";
 import { TestContext } from "../test/context.ts";
@@ -25,7 +25,7 @@ test("handle unauthenticated user", async () => {
 test("get empty settings", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const request = startApp(context.get(Application, kMain));
   await request.become(user.id!);
 
@@ -47,7 +47,7 @@ test("get empty settings", async () => {
 test("get existing settings", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const request = startApp(context.get(Application, kMain));
   await request.become(user.id!);
 
@@ -78,7 +78,7 @@ test("validate content type on put settings", async () => {
   // Arrange.
 
   const request = startApp(context.get(Application, kMain));
-  await request.become("user1@keybr.com");
+  await request.become("user1@keylearn.com");
 
   // Act.
 
@@ -96,7 +96,7 @@ test("validate format on put settings", async () => {
   // Arrange.
 
   const request = startApp(context.get(Application, kMain));
-  await request.become("user1@keybr.com");
+  await request.become("user1@keylearn.com");
 
   // Act.
 
@@ -113,7 +113,7 @@ test("validate format on put settings", async () => {
 test("handle put settings", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const request = startApp(context.get(Application, kMain));
   await request.become(user.id!);
 
@@ -137,7 +137,7 @@ test("handle put settings", async () => {
 test("handle delete settings", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keybr.com");
+  const user = await findUser("user1@keylearn.com");
   const request = startApp(context.get(Application, kMain));
   await request.become(user.id!);
 

@@ -10,7 +10,7 @@ import { compress } from "@fastr/middleware-compress";
 import { conditional } from "@fastr/middleware-conditional";
 import { SessionHandler } from "@fastr/middleware-session";
 import { staticFiles } from "@fastr/middleware-static-files";
-import { Env } from "@keybr/config";
+import { Env } from "@keylearn/config";
 import { ManifestModule } from "./assets.ts";
 import { AuthModule, loadUser } from "./auth/index.ts";
 import { cacheControl } from "./cachecontrol.ts";

@@ -17,7 +17,7 @@ RUN npm run compile && npm run build
 # Drop privileges. The node images ship an unprivileged `node` user; running the
 # server as root means a process compromise starts as root inside the container.
 # Own the app directory and the default data dir so both stay writable.
-RUN mkdir -p /home/node/.local/state/keybr \
+RUN mkdir -p /home/node/.local/state/keylearn \
   && chown -R node:node /usr/src/app /home/node/.local
 USER node
 

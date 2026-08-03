@@ -1,5 +1,5 @@
 import { test } from "node:test";
-import { ResultFaker } from "@keybr/result";
+import { ResultFaker } from "@keylearn/result";
 import { deepEqual } from "rich-assert";
 import { TopAccuracyEvents } from "./event-source-top-accuracy.ts";
 import { type LessonEvent } from "./event-types.ts";

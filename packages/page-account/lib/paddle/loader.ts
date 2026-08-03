@@ -1,4 +1,4 @@
-import { paddleToken } from "@keybr/thirdparties";
+import { paddleToken } from "@keylearn/thirdparties";
 import { getPaddleInstance, type Paddle } from "@paddle/paddle-js";
 
 let promise: Promise<Paddle> | null = null;

@@ -1,8 +1,8 @@
-import { type WordList, wordListStats } from "@keybr/content";
-import { WordListLoader } from "@keybr/content-words";
-import { useIntlDisplayNames, useIntlNumbers } from "@keybr/intl";
-import { Language } from "@keybr/keyboard";
-import { useSettings } from "@keybr/settings";
+import { type WordList, wordListStats } from "@keylearn/content";
+import { WordListLoader } from "@keylearn/content-words";
+import { useIntlDisplayNames, useIntlNumbers } from "@keylearn/intl";
+import { Language } from "@keylearn/keyboard";
+import { useSettings } from "@keylearn/settings";
 import {
   OptionList,
   Para,
@@ -11,7 +11,7 @@ import {
   SettingRow,
   SettingsCard,
   TextField,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { FormattedMessage, useIntl } from "react-intl";
 import { typingTestProps } from "../../../settings.ts";
 

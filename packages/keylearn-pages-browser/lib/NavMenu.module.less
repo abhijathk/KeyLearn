@@ -1,0 +1,62 @@
+@import "@keylearn/widget/lib/index.less";
+
+// Borderless nav rows: a stroke icon, a mono label, and a glowing accent dot
+// marking where you are — no separators, no boxes.
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.link {
+  display: flex;
+  position: relative;
+  align-items: center;
+  block-size: 2.4rem;
+  padding-inline: 0.9rem 0.75rem;
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 2.4rem;
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  // Hover and selection are mint-tinted pills (matching the mock), not grey.
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--accent) 8%, transparent);
+  }
+
+  &.isActive {
+    color: var(--accent);
+    background-color: color-mix(in oklab, var(--accent) 14%, transparent);
+  }
+}
+
+.icon {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  color: var(--text-color-f2);
+  transition:
+    color 0.15s ease,
+    filter 0.15s ease;
+}
+
+// Green neon glow on the icon (only) when active or hovered — matches the app.
+.link.isActive .icon,
+.link:hover .icon {
+  color: var(--accent);
+  filter: drop-shadow(
+    0 0 6px color-mix(in oklab, var(--accent) 80%, transparent)
+  );
+}
+
+.label {
+  .text-truncate();
+  display: inline-block;
+  margin-inline-start: 0.75rem;
+}

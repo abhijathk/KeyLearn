@@ -6,7 +6,7 @@ import {
   loadIntl,
   type LocaleId,
   selectLocale,
-} from "@keybr/intl";
+} from "@keylearn/intl";
 import { type IntlShape } from "react-intl";
 
 export const localePattern = `(${allLocales

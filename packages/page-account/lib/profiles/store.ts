@@ -6,7 +6,7 @@ import {
   type ProfileAvatar,
   type ProfileDetails,
   type ProfileKind,
-} from "@keybr/pages-shared";
+} from "@keylearn/pages-shared";
 
 export type { ProfileKind };
 export type Avatar = ProfileAvatar;
@@ -38,7 +38,7 @@ export function adultProfiles(h: Household): readonly Profile[] {
 }
 
 /**
- * Learners a keybr history can be imported into.
+ * Learners a keylearn history can be imported into.
  *
  * Grown-ups who are not on braille. Kids were never offered — the import is a
  * grown-up's own typing history. Braille learners are excluded for a harder

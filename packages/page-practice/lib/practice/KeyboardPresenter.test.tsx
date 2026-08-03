@@ -1,6 +1,6 @@
 import { test } from "node:test";
-import { KeyboardProvider } from "@keybr/keyboard";
-import { FakeSettingsContext } from "@keybr/settings";
+import { KeyboardProvider } from "@keylearn/keyboard";
+import { FakeSettingsContext } from "@keylearn/settings";
 import { act, render } from "@testing-library/react";
 import { DeferredKeyboardPresenter } from "./KeyboardPresenter.tsx";
 

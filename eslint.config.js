@@ -1,7 +1,7 @@
 /* eslint-disable n/no-extraneous-import */
 
 import js from "@eslint/js";
-import keybr from "@keybr/scripts/eslint-plugin-keybr.js";
+import keylearn from "@keylearn/scripts/eslint-plugin-keylearn.js";
 import confusingBrowserGlobals from "confusing-browser-globals";
 import formatjs from "eslint-plugin-formatjs";
 import node from "eslint-plugin-n";
@@ -22,9 +22,9 @@ export default [
       "**/sandbox/",
       "**/tmp/",
       "root/",
-      "packages/keybr-code/lib/parser.js",
-      "packages/keybr-code/lib/syntax/_*.ts",
-      "packages/keybr-code/lib/syntax/lang_*.ts",
+      "packages/keylearn-code/lib/parser.js",
+      "packages/keylearn-code/lib/syntax/_*.ts",
+      "packages/keylearn-code/lib/syntax/lang_*.ts",
     ],
   },
   js.configs["recommended"],
@@ -32,7 +32,7 @@ export default [
   react.configs.flat["recommended"],
   react.configs.flat["jsx-runtime"],
   node.configs["flat/recommended-module"],
-  keybr.configs["recommended"],
+  keylearn.configs["recommended"],
   {
     ignores: [
       "packages/server/**",

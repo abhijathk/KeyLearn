@@ -1,8 +1,8 @@
 {
   "private": true,
-  "name": "@keybr/server",
+  "name": "@keylearn/server",
   "version": "0.0.0",
   "bin": {
-    "keybr": "./keybr.js"
+    "keylearn": "./keylearn.js"
   }
 }

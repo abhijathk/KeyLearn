@@ -1,0 +1,119 @@
+// Progress rails: the profile page's road-and-dot figure, one per player.
+
+.root {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+}
+
+.rail {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr 4.4rem;
+  gap: 0.8rem;
+  align-items: center;
+  // Ten of these stack up, so the row is as tight as the avatar allows: any
+  // more breathing room and a full room runs off the bottom of the screen,
+  // which is exactly when you most want to see everybody.
+  padding-block: 0.3rem;
+}
+
+.who {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  min-inline-size: 0;
+
+  b {
+    overflow: hidden;
+    color: var(--text-color);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.tag {
+  color: var(--text-color-f2);
+  font-size: 0.55rem;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.finished {
+  flex: none;
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
+  color: var(--accent);
+}
+
+.track {
+  display: flex;
+  position: relative;
+  align-items: center;
+  block-size: 10px;
+}
+
+// The road ahead, dashed — the same treatment the profile page gives the part
+// of a goal that has not been reached.
+.base {
+  position: absolute;
+  inset-inline: 0;
+  block-size: 2px;
+  border-radius: 999px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--primary-d2) 0 2px,
+    transparent 2px 8px
+  );
+}
+
+.done {
+  position: absolute;
+  inset-inline-start: 0;
+  block-size: 2px;
+  border-radius: 999px;
+  background-image: linear-gradient(
+    to right,
+    color-mix(in oklab, var(--accent) 25%, transparent),
+    var(--accent)
+  );
+}
+
+.dot {
+  position: absolute;
+  inline-size: 9px;
+  block-size: 9px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent),
+    0 0 10px 2px color-mix(in oklab, var(--accent) 45%, transparent);
+  transform: translateX(-4px);
+}
+
+.speed {
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+
+  em {
+    display: block;
+    color: var(--text-color-f2);
+    font-size: 0.48rem;
+    font-style: normal;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+}
+
+@media (max-width: 34rem) {
+  .rail {
+    grid-template-columns: 6.5rem 1fr 3.4rem;
+    gap: 0.5rem;
+  }
+}

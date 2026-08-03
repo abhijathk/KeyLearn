@@ -1,5 +1,5 @@
-import { Key } from "@keybr/lesson-ui";
-import { Award, toast } from "@keybr/widget";
+import { Key } from "@keylearn/lesson-ui";
+import { Award, toast } from "@keylearn/widget";
 import { FormattedMessage } from "react-intl";
 import { DailyGoalIcon, TrophyIcon } from "./event-icons.tsx";
 import { type LessonEvent } from "./event-types.ts";

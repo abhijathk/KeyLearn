@@ -1,0 +1,140 @@
+.wrap {
+  max-inline-size: 62rem;
+  margin-inline: auto;
+  padding-block: 1rem 3rem;
+}
+
+.head {
+  margin-block-end: 2.4rem;
+}
+
+.kicker {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin-block: 0.35rem 0.6rem;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 2.4rem;
+  line-height: 1.1;
+}
+
+.sub {
+  max-inline-size: 52ch;
+  color: var(--text-color-f2);
+  line-height: 1.55;
+}
+
+.section {
+  margin-block-start: 2.4rem;
+}
+
+.h2 {
+  margin-block-end: 1rem;
+  color: var(--text-color-f1);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  // min(...) lets a card shrink to the container width instead of forcing its
+  // 15.5rem minimum — so the grid never overflows a narrow viewport.
+  grid-template-columns: repeat(auto-fill, minmax(min(15.5rem, 100%), 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  justify-content: space-between;
+  padding: 1.15rem 1.25rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 8%, transparent);
+  border-radius: 1rem;
+  background: var(--primary-l1);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1.4rem var(--shadow-color);
+  transform: translateY(-2px);
+}
+
+.cardTitle {
+  color: var(--text-color);
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cardMeta {
+  margin-block-start: 0.15rem;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.cardDesc {
+  margin-block-start: 0.55rem;
+  color: var(--text-color-f2);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.go {
+  align-self: flex-start;
+  padding: 0.5rem 1.1rem;
+  border: 0;
+  border-radius: 999px;
+  color: var(--primary);
+  background: var(--accent);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.12s ease;
+}
+
+.go:hover {
+  filter: brightness(1.08);
+}
+
+.go:disabled {
+  opacity: 0.45;
+  filter: none;
+  cursor: default;
+}
+
+.textarea {
+  inline-size: 100%;
+  margin-block: 0.4rem 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 14%, transparent);
+  border-radius: 0.85rem;
+  color: var(--text-color);
+  background: var(--primary-l1);
+  font: inherit;
+  line-height: 1.5;
+  resize: block;
+}
+
+.textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@media (max-width: 40rem) {
+  .title {
+    font-size: 1.9rem;
+  }
+}

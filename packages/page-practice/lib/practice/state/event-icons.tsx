@@ -1,4 +1,4 @@
-import { type ClassName } from "@keybr/widget";
+import { type ClassName } from "@keylearn/widget";
 import { mdiAlarmCheck, mdiTrophy } from "@mdi/js";
 import { clsx } from "clsx";
 import * as styles from "./event-icons.module.less";

@@ -1,6 +1,6 @@
-import { KeyboardOptions, Layout } from "@keybr/keyboard";
-import { Settings } from "@keybr/settings";
-import { ViewContext, type ViewName } from "@keybr/widget";
+import { KeyboardOptions, Layout } from "@keylearn/keyboard";
+import { Settings } from "@keylearn/settings";
+import { ViewContext, type ViewName } from "@keylearn/widget";
 import { useState } from "react";
 import { PracticeScreen } from "./practice/PracticeScreen.tsx";
 import { SettingsScreen } from "./settings/SettingsScreen.tsx";

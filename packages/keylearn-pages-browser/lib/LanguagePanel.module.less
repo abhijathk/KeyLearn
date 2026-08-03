@@ -1,0 +1,212 @@
+@import "@keylearn/widget/lib/index.less";
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.search {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  block-size: 2.1rem;
+  padding-inline: 0.85rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 999px;
+  background-color: var(--primary-l1);
+  transition: border-color 0.15s ease;
+
+  &:focus-within {
+    border-color: var(--accent);
+  }
+
+  input {
+    flex: 1;
+    min-inline-size: 0;
+    border: none;
+    color: var(--text-color);
+    background: transparent;
+    outline: none;
+    font-family: var(--value-font-family);
+    font-size: 0.78rem;
+
+    &::placeholder {
+      color: var(--text-color-f2);
+    }
+  }
+}
+
+.searchIcon {
+  flex: none;
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
+  fill: none;
+  stroke: var(--text-color-f2);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+// Wraps the scrollable list so a fade and a chevron can signal more below.
+.listWrap {
+  position: relative;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  // Tall enough to show about five languages before scrolling.
+  max-block-size: 10rem;
+  overflow-y: auto;
+}
+
+// A soft fade at the bottom edge hinting that the list scrolls.
+.listWrap::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 1.7rem;
+  background: linear-gradient(to bottom, transparent, var(--primary));
+  pointer-events: none;
+}
+
+// A small downward chevron under the fade — "there are more languages".
+.more {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0.15rem;
+  block-size: 0.5rem;
+  pointer-events: none;
+
+  &::after {
+    content: "";
+    display: block;
+    inline-size: 0.4rem;
+    block-size: 0.4rem;
+    margin-inline: auto;
+    border-inline-end: 2px solid var(--accent);
+    border-block-end: 2px solid var(--accent);
+    transform: rotate(45deg);
+    animation: more-blink 1.1s ease-in-out infinite;
+  }
+}
+
+@keyframes more-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .more::after {
+    animation: none;
+  }
+}
+
+// At the end of the list there is nothing more to reveal — drop both cues.
+.listWrap.atEnd::after {
+  display: none;
+}
+
+.atEnd .more {
+  display: none;
+}
+
+.row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 0.75rem;
+  padding-block: 0.4rem;
+  border: none;
+  border-radius: 0.5rem;
+  color: var(--text-color-f1);
+  background: transparent;
+  font-family: var(--value-font-family);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--primary-l1) 70%, transparent);
+  }
+}
+
+.name {
+  .text-truncate();
+}
+
+.meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.code {
+  color: var(--text-color-f2);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.check {
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.variant,
+.variantOn {
+  padding-inline: 0.7rem;
+  padding-block: 0.28rem;
+  border: 1px solid var(--primary-d2);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  font-family: var(--value-font-family);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--text-color);
+  }
+}
+
+.variantOn {
+  border-color: var(--accent);
+  color: var(--primary);
+  background-color: var(--accent);
+
+  &:hover {
+    color: var(--primary);
+  }
+}
+
+.suggest {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+}

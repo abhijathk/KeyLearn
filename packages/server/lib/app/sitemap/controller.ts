@@ -1,8 +1,8 @@
 import { controller, http } from "@fastr/controller";
 import { Context } from "@fastr/core";
 import { inject, injectable } from "@fastr/invert";
-import { allLocales, defaultLocale } from "@keybr/intl";
-import { Pages } from "@keybr/pages-shared";
+import { allLocales, defaultLocale } from "@keylearn/intl";
+import { Pages } from "@keylearn/pages-shared";
 import { js2xml } from "xml-js";
 
 @injectable()

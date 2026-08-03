@@ -1,7 +1,7 @@
 import { inject, injectable } from "@fastr/invert";
-import { User } from "@keybr/database";
-import { Logger } from "@keybr/logger";
-import { SettingsDatabase } from "@keybr/settings-database";
+import { User } from "@keylearn/database";
+import { Logger } from "@keylearn/logger";
+import { SettingsDatabase } from "@keylearn/settings-database";
 import {
   messagePracticeReminder,
   messageProductNews,

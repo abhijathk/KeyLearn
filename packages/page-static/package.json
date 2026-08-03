@@ -1,13 +1,13 @@
 {
   "private": true,
-  "name": "@keybr/page-static",
+  "name": "@keylearn/page-static",
   "version": "0.0.0",
   "type": "module",
   "main": "lib/index.ts",
   "types": ".types/index.d.ts",
   "dependencies": {
-    "@keybr/thirdparties": "*",
-    "@keybr/widget": "*"
+    "@keylearn/thirdparties": "*",
+    "@keylearn/widget": "*"
   },
   "devDependencies": {},
   "scripts": {

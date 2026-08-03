@@ -1,6 +1,6 @@
-import { useIntlNumbers } from "@keybr/intl";
-import { type LearningRate, type LessonKey } from "@keybr/lesson";
-import { Name, Para, Value } from "@keybr/widget";
+import { useIntlNumbers } from "@keylearn/intl";
+import { type LearningRate, type LessonKey } from "@keylearn/lesson";
+import { Name, Para, Value } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 

@@ -1,6 +1,6 @@
-import { useIntlDates } from "@keybr/intl";
-import { useEffort } from "@keybr/lesson-ui";
-import { type DailyStatsMap, LocalDate } from "@keybr/result";
+import { useIntlDates } from "@keylearn/intl";
+import { useEffort } from "@keylearn/lesson-ui";
+import { type DailyStatsMap, LocalDate } from "@keylearn/result";
 import { clsx } from "clsx";
 import { type ReactNode, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

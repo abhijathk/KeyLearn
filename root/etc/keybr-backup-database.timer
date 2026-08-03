@@ -1,8 +1,0 @@
-[Unit]
-Description=keybr.com database backup service timer
-
-[Timer]
-OnCalendar=*-*-* 00:30:00
-
-[Install]
-WantedBy=multi-user.target

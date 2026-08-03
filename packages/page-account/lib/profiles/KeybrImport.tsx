@@ -1,7 +1,7 @@
-import { Layout } from "@keybr/keyboard";
-import { Result, TextType } from "@keybr/result";
-import { openResultStorage } from "@keybr/result-loader";
-import { Histogram } from "@keybr/textinput";
+import { Layout } from "@keylearn/keyboard";
+import { Result, TextType } from "@keylearn/result";
+import { openResultStorage } from "@keylearn/result-loader";
+import { Histogram } from "@keylearn/textinput";
 import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

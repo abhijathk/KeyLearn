@@ -1,6 +1,6 @@
 import { type Context } from "@fastr/core";
 import { HttpError } from "@fastr/errors";
-import { Env } from "@keybr/config";
+import { Env } from "@keylearn/config";
 
 type Bucket = { count: number; resetAt: number };
 

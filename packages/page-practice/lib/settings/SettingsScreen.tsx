@@ -1,7 +1,7 @@
-import { KeyboardProvider } from "@keybr/keyboard";
-import { SettingsContext, useSettings } from "@keybr/settings";
-import { TypingSettings } from "@keybr/textinput-ui";
-import { StrokeIcon, type StrokeIconName, useView } from "@keybr/widget";
+import { KeyboardProvider } from "@keylearn/keyboard";
+import { SettingsContext, useSettings } from "@keylearn/settings";
+import { TypingSettings } from "@keylearn/textinput-ui";
+import { StrokeIcon, type StrokeIconName, useView } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

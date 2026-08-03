@@ -1,0 +1,97 @@
+@import "@keylearn/widget/lib/index.less";
+
+// The resting hands. The artwork arrives as a mask, so its own modelling —
+// knuckles, nails, the folds across the fingers — is already carried as
+// opacity; all this has to supply is the colour and how far the whole thing is
+// held back. That is what keeps one drawing usable on a night ground and a
+// daylight one.
+// Hand and watch fade in together. Held back, then eased in: these appear
+// whenever focus leaves the typing area — including for the moment a dialog is
+// opening or closing — and an instant appearance there reads as the whole
+// keyboard flinching. The delay means a brief loss of focus never shows them at
+// all; settle for a moment and they arrive quietly.
+//
+// The animation sits on the group rather than on the hand, or the time is
+// painted at full strength over a hand that has not arrived yet.
+.figure {
+  animation-name: motion-fade;
+  animation-duration: @motion-slow;
+  animation-timing-function: @motion-ease;
+  animation-delay: 0.45s;
+  animation-fill-mode: both;
+
+  .motion-respect-reduced();
+}
+
+.hand {
+  fill: var(--secondary);
+  fill-opacity: 0.58;
+}
+
+// On light themes the hands are painted in the on-surface colour, which is dark
+// there rather than pale — so the same opacity reads very differently. Held
+// back from the night value, but with enough weight to be plainly a pair of
+// hands rather than a suggestion of one.
+:global(html[data-color="light"]) .hand,
+:global(html[data-color="material-light"]) .hand,
+:global(html[data-color="keylearn-day"]) .hand,
+:global(html[data-color="kids"]) .hand,
+:global(html[data-color="coffee"]) .hand,
+:global(html[data-color="garden"]) .hand,
+:global(html[data-color="honey"]) .hand,
+:global(html[data-color="yellow"]) .hand {
+  fill-opacity: 0.5;
+}
+
+// The time. Only a little brighter than the hand it sits on — enough to read
+// as lit rather than printed, but sunk into the face rather than laid over it.
+// It is a detail you notice when you look down, not something competing with
+// the passage you are supposed to be typing.
+.watch {
+  fill: var(--secondary);
+  fill-opacity: 0.18;
+  font-family: var(--value-font-family);
+  font-weight: 650;
+  // Tight, because the digits are already squeezed narrow — any tracking on
+  // top of that and the time runs off the face.
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+// Same reasoning on a light ground, where the ink is dark: a shade more than
+// the hand, so the time still reads as the lit part.
+:global(html[data-color="light"]) .watch,
+:global(html[data-color="material-light"]) .watch,
+:global(html[data-color="keylearn-day"]) .watch,
+:global(html[data-color="kids"]) .watch,
+:global(html[data-color="coffee"]) .watch,
+:global(html[data-color="garden"]) .watch,
+:global(html[data-color="honey"]) .watch,
+:global(html[data-color="yellow"]) .watch {
+  fill-opacity: 0.16;
+}
+
+// The colon breathes once a second, the way a watch face does. Seconds as
+// digits would be a thing moving in the corner of your eye while you are
+// trying to read.
+.tick {
+  animation: watch-tick 1s steps(1, end) infinite;
+}
+
+@keyframes watch-tick {
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tick {
+    animation: none;
+  }
+}

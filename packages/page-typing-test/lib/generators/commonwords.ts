@@ -1,5 +1,5 @@
-import { type WordList } from "@keybr/content";
-import { LCG, randomSample, type RNGStream } from "@keybr/rand";
+import { type WordList } from "@keylearn/content";
+import { LCG, randomSample, type RNGStream } from "@keylearn/rand";
 import { type TextGenerator } from "./types.ts";
 
 type CommonWordsSettings = {

@@ -1,4 +1,4 @@
-import { useIntlNumbers } from "@keybr/intl";
+import { useIntlNumbers } from "@keylearn/intl";
 import {
   type DailyGoal as DailyGoalType,
   LearningRate,
@@ -6,16 +6,16 @@ import {
   type LessonKeys,
   lessonProps,
   Target,
-} from "@keybr/lesson";
-import { Key, type Names, useFormatter } from "@keybr/lesson-ui";
+} from "@keylearn/lesson";
+import { Key, type Names, useFormatter } from "@keylearn/lesson-ui";
 import {
   type Result,
   type StreakList as StreakListType,
   type SummaryStats,
   timeToSpeed,
-} from "@keybr/result";
-import { useSettings } from "@keybr/settings";
-import { StrokeIcon } from "@keybr/widget";
+} from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
+import { StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import {
   type CSSProperties,
@@ -25,8 +25,14 @@ import {
   useState,
 } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { pickCoachTip } from "./coach.ts";
 import * as styles from "./Pulse.module.less";
+import {
+  AlphabetGrid,
+  GoalRing,
+  SessionMarks,
+  SlowKeys,
+  SpeedSpark,
+} from "./RecapCharts.tsx";
 
 /**
  * The one-band telemetry: everything in a single composition with strict
@@ -490,22 +496,6 @@ function SessionRecap({
       : null;
   const nextKey = focusedKey != null ? String(focusedKey.letter.label) : null;
 
-  // The adaptive coaching line: the engine reads the same live stats and
-  // returns the single most useful nudge, filled with real keys/numbers.
-  const goalMinutesLeft =
-    dailyGoal.goal > 0 && dailyGoal.value < 1
-      ? Math.ceil((1 - dailyGoal.value) * dailyGoal.goal)
-      : null;
-  const tip = pickCoachTip({
-    results,
-    summaryStats,
-    lessonKeys,
-    streakList,
-    sessionStartMs: SESSION_START_MS,
-    goalMinutesLeft,
-    formatWpmDelta: (cpm) => speedUnit.measure(cpm),
-  });
-
   return (
     <>
       <div className={styles.cards}>
@@ -540,6 +530,27 @@ function SessionRecap({
               />
             )}
           </span>
+          <SessionMarks session={session} />
+          {dailyGoal.goal > 0 && (
+            <span className={styles.goalRow}>
+              <GoalRing value={dailyGoal.value} />
+              <span className={styles.cardSub}>
+                <FormattedMessage
+                  id="practice.session.goalRing"
+                  defaultMessage="{done} of {goal} min"
+                  values={{
+                    done: Math.round(dailyGoal.value * dailyGoal.goal),
+                    goal: dailyGoal.goal,
+                  }}
+                />
+                <br />
+                <FormattedMessage
+                  id="practice.session.goalRingNote"
+                  defaultMessage="today’s goal"
+                />
+              </span>
+            </span>
+          )}
         </div>
 
         <div className={styles.card}>
@@ -600,61 +611,48 @@ function SessionRecap({
               </>
             )}
           </span>
+          <SpeedSpark speeds={recent.map((r) => r.speed)} />
         </div>
 
         <div className={clsx(styles.card, styles.cardNext)}>
           <span className={styles.cardLab}>
             <FormattedMessage
-              id="practice.session.coming"
-              defaultMessage="Coming up"
+              id="practice.session.alphabet"
+              defaultMessage="Your alphabet"
             />
           </span>
           {focusedKey != null ? (
             <>
               <span className={styles.cardMain}>
-                {remaining != null ? (
+                {unlocked}
+                <i className={styles.cardMainNote}>
+                  {" "}
                   <FormattedMessage
-                    id="practice.session.forecast"
-                    defaultMessage="{key} in ~{n}"
-                    values={{
-                      key: <span className={styles.nextKey}>{nextKey}</span>,
-                      n: remaining,
-                    }}
+                    id="practice.session.ofKeys"
+                    defaultMessage="of {total} keys"
+                    values={{ total }}
                   />
-                ) : (
-                  <FormattedMessage
-                    id="practice.session.unlockNext"
-                    defaultMessage="unlock {key}"
-                    values={{
-                      key: <span className={styles.nextKey}>{nextKey}</span>,
-                    }}
-                  />
-                )}
+                </i>
               </span>
+              <AlphabetGrid keys={[...lessonKeys]} focused={focusedKey} />
               <span className={styles.cardSub}>
-                {remaining != null ? (
-                  <FormattedMessage
-                    id="practice.session.forecastNote"
-                    defaultMessage="{n, plural, one {lesson to go} other {lessons to go}}"
-                    values={{ n: remaining }}
-                  />
-                ) : (
-                  <FormattedMessage
-                    id="practice.session.keepGoing"
-                    defaultMessage="keep going to reveal the forecast"
-                  />
-                )}
-                {" · "}
                 <FormattedMessage
-                  id="practice.session.unlockedCount"
-                  defaultMessage="{unlocked}/{total} keys"
-                  values={{ unlocked, total }}
+                  id="practice.session.nextUp"
+                  defaultMessage="next up {key}"
+                  values={{
+                    key: <span className={styles.nextKey}>{nextKey}</span>,
+                  }}
                 />
-              </span>
-              <span className={styles.alphaBar}>
-                <i
-                  style={{ inlineSize: `${Math.round(unlockedFrac * 100)}%` }}
-                />
+                {remaining != null && (
+                  <>
+                    {" — "}
+                    <FormattedMessage
+                      id="practice.session.awayLessons"
+                      defaultMessage="about {n} {n, plural, one {lesson} other {lessons}} away"
+                      values={{ n: remaining }}
+                    />
+                  </>
+                )}
               </span>
             </>
           ) : (
@@ -715,6 +713,15 @@ function SessionRecap({
               <span className={styles.recordBar}>
                 <i style={{ inlineSize: `${Math.round(recordFrac * 100)}%` }} />
               </span>
+              <span className={styles.slowRow}>
+                <SlowKeys keys={lessonKeys.findIncludedKeys()} />
+                <span className={styles.cardSub}>
+                  <FormattedMessage
+                    id="practice.session.slowest"
+                    defaultMessage="slowest keys"
+                  />
+                </span>
+              </span>
             </>
           ) : (
             <>
@@ -728,24 +735,6 @@ function SessionRecap({
             </>
           )}
         </div>
-      </div>
-
-      <div className={styles.coach}>
-        <span className={styles.coachBulb} aria-hidden={true}>
-          <svg
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M7.5 15.5h5M8 18h4M10 2.5a5.5 5.5 0 0 1 3.4 9.8c-.5.4-.9 1-.9 1.7H7.5c0-.7-.4-1.3-.9-1.7A5.5 5.5 0 0 1 10 2.5Z" />
-          </svg>
-        </span>
-        <span className={styles.coachText}>
-          {formatMessage(tip.message, tip.values)}
-        </span>
       </div>
     </>
   );

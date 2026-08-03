@@ -1,7 +1,7 @@
 import { test } from "node:test";
-import { FakeIntlProvider } from "@keybr/intl";
-import { ResultFaker } from "@keybr/result";
-import { FakeSettingsContext } from "@keybr/settings";
+import { FakeIntlProvider } from "@keylearn/intl";
+import { ResultFaker } from "@keylearn/result";
+import { FakeSettingsContext } from "@keylearn/settings";
 import { render } from "@testing-library/react";
 import { isNotNull, isNull } from "rich-assert";
 import { AccuracyStreaksSection } from "./AccuracyStreaksSection.tsx";

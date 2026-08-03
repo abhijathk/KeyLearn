@@ -1,8 +1,0 @@
-@font-face {
-  font-family: "Noto Sans Gujarati";
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  src: url(../../assets/noto-sans-gujarati-400.gujarati.woff2) format("woff2");
-  unicode-range: U+0951-0952, U+0964-0965, U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839;
-}

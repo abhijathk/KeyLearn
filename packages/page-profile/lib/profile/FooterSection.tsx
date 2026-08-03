@@ -1,11 +1,11 @@
-import { useIntlDates } from "@keybr/intl";
+import { useIntlDates } from "@keylearn/intl";
 import {
   clearNgramStats,
   downloadBlob,
   exportFilename,
-} from "@keybr/pages-shared";
-import { useResults } from "@keybr/result";
-import { Button, Field, FieldList, Icon } from "@keybr/widget";
+} from "@keylearn/pages-shared";
+import { useResults } from "@keylearn/result";
+import { Button, Field, FieldList, Icon } from "@keylearn/widget";
 import { mdiDeleteForever, mdiDownload } from "@mdi/js";
 import { useIntl } from "react-intl";
 

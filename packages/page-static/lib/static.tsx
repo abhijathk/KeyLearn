@@ -103,7 +103,7 @@ export function AboutPage() {
       <p>
         <FormattedMessage
           id="about.why.p"
-          defaultMessage="Typing well is a quiet superpower — it takes the friction out of every message, essay, and line of code you’ll ever write. KeyLearn was built to teach that skill in the most encouraging way we could manage: short sessions, honest feedback, and a sense of steady progress you can actually feel. It’s a fork of the open-source keybr engine, reworked around families and rebuilt to be warm rather than clinical."
+          defaultMessage="Typing well is a quiet superpower — it takes the friction out of every message, essay, and line of code you’ll ever write. KeyLearn was built to teach that skill in the most encouraging way we could manage: short sessions, honest feedback, and a sense of steady progress you can actually feel. It’s a fork of the open-source keylearn engine, reworked around families and rebuilt to be warm rather than clinical."
         />
       </p>
 
@@ -116,7 +116,7 @@ export function AboutPage() {
       <p>
         <FormattedMessage
           id="about.story.p"
-          defaultMessage="KeyLearn began in 2026 as a simple wish: a typing tutor good enough for a grown-up to sharpen on, yet gentle enough for a five-year-old to love. The best open-source engine around — keybr — already nailed the hard part, the adaptive lesson algorithm, so KeyLearn started there and grew outward: a playful dino-run world for children, per-learner household profiles, age-aware pacing, a friendlier interface, and support for many languages. Version <em>{version}</em> is the first public release — the foundation the rest of the journey is built on."
+          defaultMessage="KeyLearn began in 2026 as a simple wish: a typing tutor good enough for a grown-up to sharpen on, yet gentle enough for a five-year-old to love. The best open-source engine around — keylearn — already nailed the hard part, the adaptive lesson algorithm, so KeyLearn started there and grew outward: a playful dino-run world for children, per-learner household profiles, age-aware pacing, a friendlier interface, and support for many languages. Version <em>{version}</em> is the first public release — the foundation the rest of the journey is built on."
           values={{ em, version: APP_VERSION }}
         />
       </p>

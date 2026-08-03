@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { Application } from "@fastr/core";
-import { HighScoresFactory } from "@keybr/highscores";
-import { ResultFaker } from "@keybr/result";
+import { HighScoresFactory } from "@keylearn/highscores";
+import { ResultFaker } from "@keylearn/result";
 import { deepEqual, equal, isTrue, like } from "rich-assert";
 import { kMain } from "../module.ts";
 import { TestContext } from "../test/context.ts";

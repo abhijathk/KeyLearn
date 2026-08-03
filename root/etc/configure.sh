@@ -6,7 +6,7 @@ if [[ "$(id -u)" != "0" ]]; then
 fi
 
 function install_service() {
-    cp /opt/keybr/etc/$1 /etc/systemd/system/$1
+    cp /opt/keylearn/etc/$1 /etc/systemd/system/$1
     systemctl enable $1
 }
 
@@ -17,31 +17,31 @@ function report_service() {
 function configure_nginx() {
     rm -fr /etc/nginx/*
     mkdir -p /etc/nginx/{conf.d,modules-{available,enabled},sites-{available,enabled}}
-    cp -r /opt/keybr/etc/nginx/* /etc/nginx/
+    cp -r /opt/keylearn/etc/nginx/* /etc/nginx/
 }
 
 function install_binary() {
-    ln -s -f /opt/keybr/keybr.js /usr/bin/keybr
+    ln -s -f /opt/keylearn/keylearn.js /usr/bin/keylearn
 }
 
 install_binary
 
-install_service keybr.service
-install_service keybr-backup-database.service
-install_service keybr-backup-database.timer
-install_service keybr-remove-sessions.service
-install_service keybr-remove-sessions.timer
+install_service keylearn.service
+install_service keylearn-backup-database.service
+install_service keylearn-backup-database.timer
+install_service keylearn-remove-sessions.service
+install_service keylearn-remove-sessions.timer
 
 configure_nginx
 
 systemctl restart mysql.service
 systemctl restart nginx.service
-systemctl restart keybr.service
+systemctl restart keylearn.service
 
 report_service mysql.service
 report_service nginx.service
-report_service keybr.service
-report_service keybr-backup-database.service
-report_service keybr-backup-database.timer
-report_service keybr-remove-sessions.service
-report_service keybr-remove-sessions.timer
+report_service keylearn.service
+report_service keylearn-backup-database.service
+report_service keylearn-backup-database.timer
+report_service keylearn-remove-sessions.service
+report_service keylearn-remove-sessions.timer

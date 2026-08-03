@@ -1,15 +1,15 @@
-import { useIntlDisplayNames } from "@keybr/intl";
-import { Language } from "@keybr/keyboard";
-import { Alphabet, Filter, type PhoneticModel } from "@keybr/phonetic-model";
-import { PhoneticModelLoader } from "@keybr/phonetic-model-loader";
-import { useSettings } from "@keybr/settings";
+import { useIntlDisplayNames } from "@keylearn/intl";
+import { Language } from "@keylearn/keyboard";
+import { Alphabet, Filter, type PhoneticModel } from "@keylearn/phonetic-model";
+import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
+import { useSettings } from "@keylearn/settings";
 import {
   OptionList,
   Para,
   RowSeparator,
   SettingRow,
   SettingsCard,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { FormattedMessage } from "react-intl";
 import { typingTestProps } from "../../../settings.ts";
 

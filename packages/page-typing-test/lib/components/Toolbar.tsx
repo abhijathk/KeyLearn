@@ -1,4 +1,4 @@
-import { useSettings } from "@keybr/settings";
+import { useSettings } from "@keylearn/settings";
 import { clsx } from "clsx";
 import { memo } from "react";
 import { durations } from "../session/index.ts";

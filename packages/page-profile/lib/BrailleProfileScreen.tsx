@@ -1,4 +1,4 @@
-import { Screen } from "@keybr/pages-shared";
+import { Screen } from "@keylearn/pages-shared";
 import { type ReactNode } from "react";
 import { BrailleProfile } from "./profile/BrailleProfile.tsx";
 

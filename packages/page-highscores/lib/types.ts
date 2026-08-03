@@ -1,5 +1,5 @@
-import { type Layout } from "@keybr/keyboard";
-import { type AnyUser } from "@keybr/pages-shared";
+import { type Layout } from "@keylearn/keyboard";
+import { type AnyUser } from "@keylearn/pages-shared";
 
 /** Which window a board covers. */
 export type Range = "week" | "month" | "overall";

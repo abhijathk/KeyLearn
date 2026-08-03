@@ -1,5 +1,5 @@
-import { makeStats, type Step } from "@keybr/textinput";
-import { type AnyEvent } from "@keybr/textinput-events";
+import { makeStats, type Step } from "@keylearn/textinput";
+import { type AnyEvent } from "@keylearn/textinput-events";
 import { type TestResult } from "./session/index.ts";
 
 export function mockResult(): TestResult {

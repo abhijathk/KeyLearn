@@ -1,7 +1,7 @@
-import { useIntlNumbers } from "@keybr/intl";
-import { useFormattedNames } from "@keybr/keyboard";
-import { Pages, UserName } from "@keybr/pages-shared";
-import { SpeedUnit } from "@keybr/result";
+import { useIntlNumbers } from "@keylearn/intl";
+import { useFormattedNames } from "@keylearn/keyboard";
+import { Pages, UserName } from "@keylearn/pages-shared";
+import { SpeedUnit } from "@keylearn/result";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./HighScoresTable.module.less";

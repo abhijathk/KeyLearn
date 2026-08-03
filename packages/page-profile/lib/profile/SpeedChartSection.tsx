@@ -1,7 +1,7 @@
-import { Marker, SpeedChart } from "@keybr/chart";
-import { hasData } from "@keybr/math";
-import { type Result } from "@keybr/result";
-import { Explainer, Figure } from "@keybr/widget";
+import { Marker, SpeedChart } from "@keylearn/chart";
+import { hasData } from "@keylearn/math";
+import { type Result } from "@keylearn/result";
+import { Explainer, Figure } from "@keylearn/widget";
 import { useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { ChartWrapper } from "./ChartWrapper.tsx";

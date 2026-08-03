@@ -1,8 +1,0 @@
-[Unit]
-Description=keybr.com stale session removal service timer
-
-[Timer]
-OnCalendar=*-*-* *:15:00
-
-[Install]
-WantedBy=multi-user.target

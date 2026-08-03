@@ -1,4 +1,4 @@
-import { Field, FieldList, Range } from "@keybr/widget";
+import { Field, FieldList, Range } from "@keylearn/widget";
 import { defineMessage, useIntl } from "react-intl";
 
 export function SmoothnessRange({
@@ -36,7 +36,8 @@ export function SmoothnessRange({
           title={formatMessage(
             defineMessage({
               id: "profile.smoothness.description",
-              defaultMessage: "Filters out the noise so you can see the long-term trend more clearly.",
+              defaultMessage:
+                "Filters out the noise so you can see the long-term trend more clearly.",
             }),
           )}
           onChange={(value) => {

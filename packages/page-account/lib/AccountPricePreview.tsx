@@ -1,6 +1,6 @@
-import { Tasks } from "@keybr/lang";
-import { paddlePriceId } from "@keybr/thirdparties";
-import { Para } from "@keybr/widget";
+import { Tasks } from "@keylearn/lang";
+import { paddlePriceId } from "@keylearn/thirdparties";
+import { Para } from "@keylearn/widget";
 import { type PricePreviewResponse } from "@paddle/paddle-js";
 import { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";

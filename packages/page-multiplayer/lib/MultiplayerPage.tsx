@@ -1,4 +1,4 @@
-import { Connector } from "@keybr/multiplayer-ui";
+import { Connector } from "@keylearn/multiplayer-ui";
 
 export function MultiplayerPage() {
   return <Connector />;

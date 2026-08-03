@@ -1,4 +1,4 @@
-import { type Result } from "@keybr/result";
+import { type Result } from "@keylearn/result";
 import {
   type LessonEventListener,
   type LessonEventSource,

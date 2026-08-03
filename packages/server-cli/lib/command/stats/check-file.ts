@@ -1,6 +1,6 @@
-import { Reader } from "@keybr/binary";
-import { type Filter, type Result } from "@keybr/result";
-import { readResult, validateHeader } from "@keybr/result-io";
+import { Reader } from "@keylearn/binary";
+import { type Filter, type Result } from "@keylearn/result";
+import { readResult, validateHeader } from "@keylearn/result-io";
 
 export type FileStatus =
   | {

@@ -1,4 +1,4 @@
-import { profileStorageKey } from "@keybr/pages-shared";
+import { profileStorageKey } from "@keylearn/pages-shared";
 import * as THREE from "three";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";

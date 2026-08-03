@@ -1,5 +1,5 @@
 import { test } from "node:test";
-import { useDatabase } from "@keybr/database/lib/testing.ts";
+import { useDatabase } from "@keylearn/database/lib/testing.ts";
 import { deepEqual } from "rich-assert";
 import { mapEntries } from "./model.ts";
 

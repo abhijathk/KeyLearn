@@ -1,0 +1,43 @@
+@import "@keylearn/widget/lib/index.less";
+
+.root {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.num {
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 1.3rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  position: relative;
+  inline-size: 4.5rem;
+  block-size: 4px;
+  border-radius: 3px;
+  overflow: hidden;
+  background-color: var(--primary-d2);
+}
+
+.bar i {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--Value--more__color));
+}
+
+.caption {
+  color: var(--Value-color);
+  font-family: var(--value-font-family);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.empty {
+  color: var(--Name-color);
+  font-size: 0.85rem;
+}

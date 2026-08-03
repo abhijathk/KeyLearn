@@ -27,3 +27,6 @@ deploy.sh
 
 # Formatters for the snippet gates; see scripts/install-formatters.sh
 .tools/
+
+# macOS Finder leaves these in every directory it is asked to display.
+.DS_Store

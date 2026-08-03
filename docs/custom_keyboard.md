@@ -11,15 +11,15 @@ It contains the scripts which take keyboard layout definitions in various format
 To start the generator, run the following shell commands:
 
 ```sh
-cd packages/keybr-generators
+cd packages/keylearn-generators
 npm run generate-layouts
 ```
 
-The generator will write files to <nobr>`packages/keybr-keyboard/lib/layout`</nobr>. You should not modify the generated files, as your changes will be lost if the generator is run again.
+The generator will write files to <nobr>`packages/keylearn-keyboard/lib/layout`</nobr>. You should not modify the generated files, as your changes will be lost if the generator is run again.
 
 ## Adding a custom keyboard layout
 
-Custom keyboard layout definition files are located in <nobr>`packages/keybr-keyboard-generator/layout`</nobr>.
+Custom keyboard layout definition files are located in <nobr>`packages/keylearn-keyboard-generator/layout`</nobr>.
 
 You can add your own keyboard layout by copying and modifying an existing one. The configuration format is straightforward, each physical key location (like `"KeyA"`, `"KeyB"`, etc.) is mapped to a list of up to four code points.
 The four code points are given for the following key modifiers:
@@ -74,7 +74,7 @@ We do not support dead keys which switch between different alphabets, produce no
 The generated layout files contain only mappings to code points.
 Each layout must also have an id and a name, and these are configured elsewhere.
 
-To complete a layout configuration, add a new entry to the `Layout` class defined in `packages/keybr-keyboard/lib/layout.ts`.
+To complete a layout configuration, add a new entry to the `Layout` class defined in `packages/keylearn-keyboard/lib/layout.ts`.
 
 ```typescript
 static readonly EN_CUSTOM = new Layout(

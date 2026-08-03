@@ -1,4 +1,4 @@
-import { logout as doLogout } from "@keybr/pages-shared";
+import { logout as doLogout } from "@keylearn/pages-shared";
 import { type ReactNode, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";

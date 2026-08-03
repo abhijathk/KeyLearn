@@ -1,7 +1,7 @@
 import { type Binder, type Module, provides } from "@fastr/invert";
 import { type SessionOptions } from "@fastr/middleware-session";
 import { FileStore } from "@fastr/middleware-session-file-store";
-import { DataDir, Env } from "@keybr/config";
+import { DataDir, Env } from "@keylearn/config";
 
 export class SessionModule implements Module {
   configure(binder: Binder) {}
@@ -15,7 +15,7 @@ export class SessionModule implements Module {
       rolling: true,
       key: Env.getString("COOKIE_NAME", "session"),
       maxAge: Env.getNumber("COOKIE_MAX_AGE", 1209600), // 14 days in seconds
-      domain: Env.getString("COOKIE_DOMAIN", ".www.keybr.com"),
+      domain: Env.getString("COOKIE_DOMAIN", ".www.keylearn.com"),
       path: Env.getString("COOKIE_PATH", "/"),
       httpOnly: Env.getBoolean("COOKIE_HTTP_ONLY", true),
       secure: Env.getBoolean("COOKIE_SECURE", true),

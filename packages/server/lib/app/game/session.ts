@@ -1,7 +1,7 @@
 import { injectable } from "@fastr/invert";
-import { Game } from "@keybr/multiplayer-server";
-import { ServerCodec, type ServerMessage } from "@keybr/multiplayer-shared";
-import { type AnyUser } from "@keybr/pages-shared";
+import { Game } from "@keylearn/multiplayer-server";
+import { ServerCodec, type ServerMessage } from "@keylearn/multiplayer-shared";
+import { type AnyUser } from "@keylearn/pages-shared";
 import WebSocket from "ws";
 
 export type ClientInfo = {
@@ -113,6 +113,10 @@ export class SessionFactory {
     } catch (err) {
       onError(err as Error);
     }
+  }
+
+  peek() {
+    return this.game.peek();
   }
 
   collectStats() {

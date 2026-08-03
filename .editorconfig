@@ -11,8 +11,8 @@ trim_trailing_whitespace = true
 
 # Kotlin's official style is four spaces and 100 columns, which is not this
 # repository's TypeScript style. There is no Kotlin source here — only the
-# practice corpus in @keybr/content-snippets, which ktlint checks through this
-# section. See packages/keybr-content-snippets/lib/snippets/kotlin-lang.ts.
+# practice corpus in @keylearn/content-snippets, which ktlint checks through this
+# section. See packages/keylearn-content-snippets/lib/snippets/kotlin-lang.ts.
 [*.kt]
 indent_size = 4
 max_line_length = 100

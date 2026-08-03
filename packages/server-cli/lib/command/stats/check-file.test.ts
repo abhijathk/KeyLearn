@@ -1,7 +1,7 @@
 import { test } from "node:test";
-import { Writer } from "@keybr/binary";
-import { ResultFaker } from "@keybr/result";
-import { HEADER, writeResult } from "@keybr/result-io";
+import { Writer } from "@keylearn/binary";
+import { ResultFaker } from "@keylearn/result";
+import { HEADER, writeResult } from "@keylearn/result-io";
 import { deepEqual } from "rich-assert";
 import { checkFile, type FileStatus } from "./check-file.ts";
 

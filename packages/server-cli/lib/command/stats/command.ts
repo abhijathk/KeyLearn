@@ -1,7 +1,7 @@
 import { injectable } from "@fastr/invert";
-import { PublicId } from "@keybr/publicid";
-import { Result } from "@keybr/result";
-import { UserDataFactory } from "@keybr/result-userdata";
+import { PublicId } from "@keylearn/publicid";
+import { Result } from "@keylearn/result";
+import { UserDataFactory } from "@keylearn/result-userdata";
 import { Argument, Command, Option } from "commander";
 import { parseSpeed, parseTimestamp, parseUserIdRange } from "./argument.ts";
 import { checkFile } from "./check-file.ts";

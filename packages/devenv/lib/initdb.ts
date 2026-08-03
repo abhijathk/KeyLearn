@@ -1,9 +1,9 @@
 #!/usr/bin/env -S npx tsnode
 
 import { Container } from "@fastr/invert";
-import { ConfigModule, Env } from "@keybr/config";
-import { createSchema, UserLoginRequest } from "@keybr/database";
-import { Logger } from "@keybr/logger";
+import { ConfigModule, Env } from "@keylearn/config";
+import { createSchema, UserLoginRequest } from "@keylearn/database";
+import { Logger } from "@keylearn/logger";
 import Knex from "knex";
 
 const email = "user@localhost";

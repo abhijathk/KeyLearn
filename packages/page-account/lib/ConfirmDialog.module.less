@@ -1,4 +1,4 @@
-@import "@keybr/widget/lib/index.less";
+@import "@keylearn/widget/lib/index.less";
 
 // The shared "report-card" confirmation: a mint tape across the top, a bold
 // title, and a balanced button row (ghost cancel + solid confirm). Matches the
@@ -97,8 +97,8 @@
   }
 
   &:focus {
-    outline: none;
     border-color: var(--error-color, #d0322e);
+    outline: none;
   }
 }
 
@@ -132,8 +132,8 @@
   background: transparent;
 
   &:hover {
-    color: var(--text-color);
     border-color: color-mix(in oklab, var(--text-color) 25%, transparent);
+    color: var(--text-color);
   }
 }
 
@@ -142,7 +142,8 @@
   background-color: var(--accent);
 
   &:hover {
-    box-shadow: 0 0.4rem 1.2rem color-mix(in oklab, var(--accent) 40%, transparent);
+    box-shadow: 0 0.4rem 1.2rem
+      color-mix(in oklab, var(--accent) 40%, transparent);
   }
 }
 

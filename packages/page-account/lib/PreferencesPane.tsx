@@ -3,17 +3,17 @@ import {
   defaultLocale,
   useIntlDates,
   useIntlDisplayNames,
-} from "@keybr/intl";
+} from "@keylearn/intl";
 import {
   downloadBlob,
   exportFilename,
   isPremiumUser,
   Pages,
   usePageData,
-} from "@keybr/pages-shared";
-import { SpeedUnit, uiProps } from "@keybr/result";
-import { useSettings } from "@keybr/settings";
-import { useTheme } from "@keybr/themes";
+} from "@keylearn/pages-shared";
+import { SpeedUnit, uiProps } from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
+import { useTheme } from "@keylearn/themes";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./AccountPage.module.less";

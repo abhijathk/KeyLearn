@@ -2,8 +2,8 @@ import { body, controller, http } from "@fastr/controller";
 import { Context } from "@fastr/core";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
-import { Settings } from "@keybr/settings";
-import { SettingsDatabase } from "@keybr/settings-database";
+import { Settings } from "@keylearn/settings";
+import { SettingsDatabase } from "@keylearn/settings-database";
 import { type AuthState } from "../auth/index.ts";
 
 @injectable()

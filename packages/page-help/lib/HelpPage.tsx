@@ -1,10 +1,10 @@
-import { Layout, loadKeyboard } from "@keybr/keyboard";
-import { KeyLayer, VirtualKeyboard, ZonesLayer } from "@keybr/keyboard-ui";
-import { KeyLegendList } from "@keybr/lesson-ui";
-import { useSettings } from "@keybr/settings";
-import { singleLine, toTextDisplaySettings } from "@keybr/textinput";
-import { StaticText } from "@keybr/textinput-ui";
-import { Article, Figure } from "@keybr/widget";
+import { Layout, loadKeyboard } from "@keylearn/keyboard";
+import { KeyLayer, VirtualKeyboard, ZonesLayer } from "@keylearn/keyboard-ui";
+import { KeyLegendList } from "@keylearn/lesson-ui";
+import { useSettings } from "@keylearn/settings";
+import { singleLine, toTextDisplaySettings } from "@keylearn/textinput";
+import { StaticText } from "@keylearn/textinput-ui";
+import { Article, Figure } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import { alphabet } from "./english.ts";

@@ -1,5 +1,5 @@
-import { dateProps, deviceTimeZone } from "@keybr/intl";
-import { booleanProp, stringProp } from "@keybr/settings";
+import { dateProps, deviceTimeZone } from "@keylearn/intl";
+import { booleanProp, stringProp } from "@keylearn/settings";
 
 /**
  * Account-level preferences. Unlike per-session Practice settings these apply
@@ -10,11 +10,11 @@ import { booleanProp, stringProp } from "@keybr/settings";
  * the scheduled job that actually sends reminder emails is a separate feature.
  */
 export const accountProps = {
-  // Declared in @keybr/intl, where the date formatters read it, so the
+  // Declared in @keylearn/intl, where the date formatters read it, so the
   // settings screen and every date on every page cannot disagree about which
   // key holds the zone. Empty means "follow this device".
   timeZone: dateProps.timeZone,
-  // Declared in @keybr/intl beside the time zone, because the calendars read
+  // Declared in @keylearn/intl beside the time zone, because the calendars read
   // it from there. Empty means "follow the locale".
   weekStart: dateProps.weekStart,
   emailReminders: booleanProp("account.emailReminders", true),

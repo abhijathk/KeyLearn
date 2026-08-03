@@ -1,16 +1,16 @@
-import { useIntlNumbers } from "@keybr/intl";
+import { useIntlNumbers } from "@keylearn/intl";
 import {
   computeStats,
   type Keyboard,
   useFormattedNames,
-} from "@keybr/keyboard";
+} from "@keylearn/keyboard";
 import {
   HeatmapLayer,
   KeyLayer,
   TransitionsLayer,
   VirtualKeyboard,
-} from "@keybr/keyboard-ui";
-import { type PhoneticModel } from "@keybr/phonetic-model";
+} from "@keylearn/keyboard-ui";
+import { type PhoneticModel } from "@keylearn/phonetic-model";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./road.module.less";

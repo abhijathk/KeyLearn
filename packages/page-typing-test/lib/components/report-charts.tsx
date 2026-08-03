@@ -1,5 +1,5 @@
-import { type Distribution } from "@keybr/math";
-import { type Step } from "@keybr/textinput";
+import { type Distribution } from "@keylearn/math";
+import { type Step } from "@keylearn/textinput";
 import { type ReactNode } from "react";
 import * as styles from "./road.module.less";
 

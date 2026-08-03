@@ -1,7 +1,7 @@
-import { useIntlNumbers } from "@keybr/intl";
-import { lessonProps } from "@keybr/lesson";
-import { useSettings } from "@keybr/settings";
-import { Description, Explainer, Range, SettingRow } from "@keybr/widget";
+import { useIntlNumbers } from "@keylearn/intl";
+import { lessonProps } from "@keylearn/lesson";
+import { useSettings } from "@keylearn/settings";
+import { Description, Explainer, Range, SettingRow } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 

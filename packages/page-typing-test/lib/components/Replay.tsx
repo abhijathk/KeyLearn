@@ -1,14 +1,14 @@
-import { type KeyId, useKeyboard } from "@keybr/keyboard";
-import { KeyLayer, VirtualKeyboard } from "@keybr/keyboard-ui";
-import { Tasks } from "@keybr/lang";
+import { type KeyId, useKeyboard } from "@keylearn/keyboard";
+import { KeyLayer, VirtualKeyboard } from "@keylearn/keyboard-ui";
+import { Tasks } from "@keylearn/lang";
 import {
   type LineList,
   type Step,
   type TextInputSettings,
-} from "@keybr/textinput";
-import { type AnyEvent } from "@keybr/textinput-events";
-import { StaticText } from "@keybr/textinput-ui";
-import { Box, useDocumentVisibility } from "@keybr/widget";
+} from "@keylearn/textinput";
+import { type AnyEvent } from "@keylearn/textinput-events";
+import { StaticText } from "@keylearn/textinput-ui";
+import { Box, useDocumentVisibility } from "@keylearn/widget";
 import { useEffect, useMemo, useState } from "react";
 import { ReplayState, Session, type TestResult } from "../session/index.ts";
 import { useCompositeSettings } from "../settings.ts";

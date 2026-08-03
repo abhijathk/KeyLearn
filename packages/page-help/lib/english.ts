@@ -1,4 +1,4 @@
-import { Letter } from "@keybr/phonetic-model";
+import { Letter } from "@keylearn/phonetic-model";
 
 // Relative letter frequencies taken from KeyLearn's actual English phonetic
 // model, so the help-page illustrations unlock letters in the same order the

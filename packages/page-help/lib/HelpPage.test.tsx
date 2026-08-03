@@ -1,6 +1,6 @@
 import { test } from "node:test";
-import { FakeIntlProvider } from "@keybr/intl";
-import { FakeSettingsContext } from "@keybr/settings";
+import { FakeIntlProvider } from "@keylearn/intl";
+import { FakeSettingsContext } from "@keylearn/settings";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { isNotNull } from "rich-assert";

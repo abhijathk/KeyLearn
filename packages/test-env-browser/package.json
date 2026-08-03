@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@keybr/test-env-browser",
+  "name": "@keylearn/test-env-browser",
   "version": "0.0.0",
   "type": "module",
   "main": "lib/index.ts",

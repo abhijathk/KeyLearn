@@ -1,5 +1,5 @@
-import { type SummaryStats } from "@keybr/result";
-import { Tab, TabList } from "@keybr/widget";
+import { type SummaryStats } from "@keylearn/result";
+import { Tab, TabList } from "@keylearn/widget";
 import React, { useState } from "react";
 import { useIntl } from "react-intl";
 import { AccuracyHistogramSection } from "./AccuracyHistogramSection.tsx";

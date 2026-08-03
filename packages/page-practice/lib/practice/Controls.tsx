@@ -1,8 +1,8 @@
-import { Dir } from "@keybr/intl";
-import { names } from "@keybr/lesson-ui";
-import { uiProps } from "@keybr/result";
-import { useSettings } from "@keybr/settings";
-import { IconButton, StrokeIcon, useView } from "@keybr/widget";
+import { Dir } from "@keylearn/intl";
+import { names } from "@keylearn/lesson-ui";
+import { uiProps } from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
+import { IconButton, StrokeIcon, useView } from "@keylearn/widget";
 import { clsx } from "clsx";
 import {
   memo,

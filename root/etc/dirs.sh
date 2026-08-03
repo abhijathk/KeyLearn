@@ -5,15 +5,15 @@ if [[ "$(id -u)" != "0" ]]; then
     exit 1
 fi
 
-mkdir -p /etc/keybr
+mkdir -p /etc/keylearn
 
-chown -R root:root /etc/keybr
+chown -R root:root /etc/keylearn
 
-mkdir -p /var/lib/keybr
-mkdir -p /var/lib/keybr/backups
-mkdir -p /var/lib/keybr/sessions
-mkdir -p /var/lib/keybr/user_settings
-mkdir -p /var/lib/keybr/user_stats
+mkdir -p /var/lib/keylearn
+mkdir -p /var/lib/keylearn/backups
+mkdir -p /var/lib/keylearn/sessions
+mkdir -p /var/lib/keylearn/user_settings
+mkdir -p /var/lib/keylearn/user_stats
 
-chown -R www-data:www-data /var/lib/keybr
-chmod -R u=rwX,g=rX,o=rX /var/lib/keybr
+chown -R www-data:www-data /var/lib/keylearn
+chmod -R u=rwX,g=rX,o=rX /var/lib/keylearn

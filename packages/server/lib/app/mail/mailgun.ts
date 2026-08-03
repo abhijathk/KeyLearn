@@ -1,6 +1,6 @@
 import { authenticate, request } from "@fastr/client";
 import { injectable } from "@fastr/invert";
-import { Env } from "@keybr/config";
+import { Env } from "@keylearn/config";
 import { Mailer } from "./types.ts";
 
 @injectable({ singleton: true })
@@ -12,8 +12,8 @@ export class MailgunConfig {
   constructor() {
     this.domain = Env.getString("MAIL_DOMAIN");
     this.key = Env.getString("MAIL_KEY");
-    const fromAddress = Env.getString("MAIL_FROM_ADDRESS", "k@keybr.com");
-    const fromName = Env.getString("MAIL_FROM_NAME", "keybr.com");
+    const fromAddress = Env.getString("MAIL_FROM_ADDRESS", "k@keylearn.com");
+    const fromName = Env.getString("MAIL_FROM_NAME", "keylearn.com");
     this.from = `${fromName} <${fromAddress}>`;
   }
 }

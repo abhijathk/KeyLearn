@@ -1,5 +1,5 @@
-import { type User } from "@keybr/database";
-import { type AnyUser } from "@keybr/pages-shared";
+import { type User } from "@keylearn/database";
+import { type AnyUser } from "@keylearn/pages-shared";
 
 export type AuthState = {
   readonly sessionId: string;

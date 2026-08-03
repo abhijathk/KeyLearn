@@ -1,5 +1,5 @@
 import { type Context, type Middleware, type Next } from "@fastr/core";
-import { Env } from "@keybr/config";
+import { Env } from "@keylearn/config";
 
 // Third-party origins the app actually loads code or frames from. Everything
 // else is denied by the policy below, so adding an integration means adding it

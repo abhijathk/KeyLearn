@@ -1,5 +1,5 @@
 import { type Binder, type Module } from "@fastr/invert";
-import { Env } from "@keybr/config";
+import { Env } from "@keylearn/config";
 import { LogMailer } from "./log.ts";
 import { MailgunMailer } from "./mailgun.ts";
 import { SmtpMailer } from "./smtp.ts";

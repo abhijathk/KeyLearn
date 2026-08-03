@@ -3,9 +3,9 @@ import {
   Layout,
   loadKeyboard,
   useFormattedNames,
-} from "@keybr/keyboard";
-import { Alphabet } from "@keybr/phonetic-model";
-import { PhoneticModelLoader } from "@keybr/phonetic-model-loader";
+} from "@keylearn/keyboard";
+import { Alphabet } from "@keylearn/phonetic-model";
+import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { CustomLayoutDesignerToggler } from "./custom/CustomLayoutDesignerToggler.tsx";

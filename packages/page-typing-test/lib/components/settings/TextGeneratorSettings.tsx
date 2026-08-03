@@ -1,5 +1,5 @@
-import { useSettings } from "@keybr/settings";
-import { SettingTiles } from "@keybr/widget";
+import { useSettings } from "@keylearn/settings";
+import { SettingTiles } from "@keylearn/widget";
 import { useIntl } from "react-intl";
 import { TextSourceType, typingTestProps } from "../../settings.ts";
 import { BookSettings } from "./text/BookSettings.tsx";

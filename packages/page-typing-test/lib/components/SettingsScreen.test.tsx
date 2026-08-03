@@ -1,9 +1,9 @@
 import { test } from "node:test";
-import { FakeIntlProvider } from "@keybr/intl";
-import { KeyboardProvider } from "@keybr/keyboard";
-import { FakePhoneticModel } from "@keybr/phonetic-model";
-import { PhoneticModelLoader } from "@keybr/phonetic-model-loader";
-import { FakeSettingsContext } from "@keybr/settings";
+import { FakeIntlProvider } from "@keylearn/intl";
+import { KeyboardProvider } from "@keylearn/keyboard";
+import { FakePhoneticModel } from "@keylearn/phonetic-model";
+import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
+import { FakeSettingsContext } from "@keylearn/settings";
 import { fireEvent, render } from "@testing-library/react";
 import { SettingsScreen } from "./SettingsScreen.tsx";
 

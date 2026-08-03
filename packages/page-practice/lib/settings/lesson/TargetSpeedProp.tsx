@@ -1,7 +1,7 @@
-import { Dir } from "@keybr/intl";
-import { lessonProps } from "@keybr/lesson";
-import { useFormatter } from "@keybr/lesson-ui";
-import { useSettings } from "@keybr/settings";
+import { Dir } from "@keylearn/intl";
+import { lessonProps } from "@keylearn/lesson";
+import { useFormatter } from "@keylearn/lesson-ui";
+import { useSettings } from "@keylearn/settings";
 import {
   Description,
   Explainer,
@@ -9,7 +9,7 @@ import {
   IconButton,
   Range,
   SettingRow,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { mdiSkipNext, mdiSkipPrevious } from "@mdi/js";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";

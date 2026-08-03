@@ -1,16 +1,16 @@
-import { codeThemeFor, codeThemeVars } from "@keybr/content-snippets";
-import { type Lesson, lessonProps, LessonType } from "@keybr/lesson";
-import { CurrentKeyRow, LetterJourney } from "@keybr/lesson-ui";
-import { LCG } from "@keybr/rand";
-import { makeKeyStatsMap, useResults } from "@keybr/result";
-import { type Settings, useSettings } from "@keybr/settings";
+import { codeThemeFor, codeThemeVars } from "@keylearn/content-snippets";
+import { type Lesson, lessonProps, LessonType } from "@keylearn/lesson";
+import { CurrentKeyRow, LetterJourney } from "@keylearn/lesson-ui";
+import { LCG } from "@keylearn/rand";
+import { makeKeyStatsMap, useResults } from "@keylearn/result";
+import { type Settings, useSettings } from "@keylearn/settings";
 import {
   TextInput,
   toTextDisplaySettings,
   toTextInputSettings,
-} from "@keybr/textinput";
-import { StaticText } from "@keybr/textinput-ui";
-import { FieldSet } from "@keybr/widget";
+} from "@keylearn/textinput";
+import { StaticText } from "@keylearn/textinput-ui";
+import { FieldSet } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type CSSProperties, type ReactNode, useMemo } from "react";
 import { useIntl } from "react-intl";

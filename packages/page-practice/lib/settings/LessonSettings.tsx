@@ -9,10 +9,10 @@ import {
   LessonType,
   type NumbersLesson,
   type WordListLesson,
-} from "@keybr/lesson";
-import { LessonLoader } from "@keybr/lesson-loader";
-import { type Settings, useSettings } from "@keybr/settings";
-import { SettingTiles } from "@keybr/widget";
+} from "@keylearn/lesson";
+import { LessonLoader } from "@keylearn/lesson-loader";
+import { type Settings, useSettings } from "@keylearn/settings";
+import { SettingTiles } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { useIntl } from "react-intl";
 import { BooksLessonSettings } from "./lesson/BooksLessonSettings.tsx";

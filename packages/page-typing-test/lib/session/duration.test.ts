@@ -1,5 +1,5 @@
 import { test } from "node:test";
-import { type Step } from "@keybr/textinput";
+import { type Step } from "@keylearn/textinput";
 import { like } from "rich-assert";
 import { computeProgress, duration_100_chars } from "./duration.ts";
 

@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "name": "@keylearn/widget",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "lib/index.ts",
+  "types": ".types/index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@keylearn/color": "*",
+    "@keylearn/lang": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "clean": "rm -fr .types",
+    "compile": "tsc",
+    "test": "tstest --import=@keylearn/test-env-browser --import=@keylearn/test-env-bundler --test 'lib/**/*.test.{ts,tsx}'"
+  }
+}

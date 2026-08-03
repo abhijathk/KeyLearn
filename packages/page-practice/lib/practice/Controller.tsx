@@ -1,15 +1,15 @@
-import { type KeyId, useKeyboard } from "@keybr/keyboard";
-import { type Result } from "@keybr/result";
-import { type LineList } from "@keybr/textinput";
-import { Feedback } from "@keybr/textinput";
-import { addKey, deleteKey, emulateLayout } from "@keybr/textinput-events";
-import { makeSoundPlayer } from "@keybr/textinput-sounds";
+import { type KeyId, useKeyboard } from "@keylearn/keyboard";
+import { type Result } from "@keylearn/result";
+import { type LineList } from "@keylearn/textinput";
+import { Feedback } from "@keylearn/textinput";
+import { addKey, deleteKey, emulateLayout } from "@keylearn/textinput-events";
+import { makeSoundPlayer } from "@keylearn/textinput-sounds";
 import {
   useDocumentEvent,
   useHotkeys,
   useTimeout,
   useWindowEvent,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { memo, type ReactNode, useMemo, useRef, useState } from "react";
 import { Presenter } from "./Presenter.tsx";
 import {

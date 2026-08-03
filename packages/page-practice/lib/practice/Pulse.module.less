@@ -777,41 +777,6 @@
   background: var(--accent);
 }
 
-// The full-width adaptive coaching strip beneath the cards.
-// Matches the stat cards above it — same solid hairline, surface, and radius
-// — so it reads as part of the same set, just full-width. A small tinted bulb
-// is the only accent.
-.coach {
-  display: flex;
-  gap: 0.55rem;
-  align-items: center;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--primary-d2) 70%, transparent);
-  border-radius: 0.7rem;
-  background: var(--primary-l1);
-}
-
-.coachBulb {
-  display: grid;
-  flex: none;
-  place-items: center;
-  inline-size: 1.05rem;
-  block-size: 1.05rem;
-  color: color-mix(in oklab, var(--accent) 70%, var(--text-color));
-}
-
-.coachBulb svg {
-  inline-size: 1rem;
-  block-size: 1rem;
-}
-
-.coachText {
-  color: var(--text-color-f1);
-  font-family: var(--default-font-family);
-  font-size: 0.78rem;
-  line-height: 1.4;
-}
-
 @media (max-width: 40rem) {
   .cards {
     grid-template-columns: repeat(2, 1fr);
@@ -824,4 +789,13 @@
   .chevron {
     transition: none;
   }
+}
+
+// Goal ring beside its caption, and the slowest-key caps beside theirs.
+.goalRow,
+.slowRow {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  margin-block-start: 0.1rem;
 }

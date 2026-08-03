@@ -1,7 +1,7 @@
 import { type Context, type Middleware, type Next } from "@fastr/core";
 import { ForbiddenError } from "@fastr/errors";
 import { randomString, type SessionState } from "@fastr/middleware-session";
-import { User } from "@keybr/database";
+import { User } from "@keylearn/database";
 import { type AuthState } from "./types.ts";
 
 // How long a "don't keep me signed in" session lasts before it lapses.

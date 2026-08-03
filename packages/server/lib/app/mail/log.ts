@@ -1,5 +1,5 @@
 import { injectable } from "@fastr/invert";
-import { Logger } from "@keybr/logger";
+import { Logger } from "@keylearn/logger";
 import { Mailer } from "./types.ts";
 
 /**

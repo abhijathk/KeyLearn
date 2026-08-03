@@ -1,6 +1,6 @@
-import { useIntlNumbers } from "@keybr/intl";
-import { useFormatter, useKeyStyles } from "@keybr/lesson-ui";
-import { type KeyStatsMap, timeToSpeed } from "@keybr/result";
+import { useIntlNumbers } from "@keylearn/intl";
+import { useFormatter, useKeyStyles } from "@keylearn/lesson-ui";
+import { type KeyStatsMap, timeToSpeed } from "@keylearn/result";
 import { clsx } from "clsx";
 import { type ReactNode, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

@@ -1,10 +1,10 @@
 import { test } from "node:test";
-import { FakeIntlProvider } from "@keybr/intl";
-import { type PageData, PageDataContext } from "@keybr/pages-shared";
-import { FakePhoneticModel } from "@keybr/phonetic-model";
-import { PhoneticModelLoader } from "@keybr/phonetic-model-loader";
-import { FakeResultContext, ResultFaker } from "@keybr/result";
-import { FakeSettingsContext } from "@keybr/settings";
+import { FakeIntlProvider } from "@keylearn/intl";
+import { type PageData, PageDataContext } from "@keylearn/pages-shared";
+import { FakePhoneticModel } from "@keylearn/phonetic-model";
+import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
+import { FakeResultContext, ResultFaker } from "@keylearn/result";
+import { FakeSettingsContext } from "@keylearn/settings";
 import { render } from "@testing-library/react";
 import { isNotNull } from "rich-assert";
 import { ProfilePage } from "./ProfilePage.tsx";

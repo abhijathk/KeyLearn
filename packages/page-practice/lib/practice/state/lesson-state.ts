@@ -1,18 +1,18 @@
-import { keyboardProps, type KeyId } from "@keybr/keyboard";
+import { keyboardProps, type KeyId } from "@keylearn/keyboard";
 import {
   type DailyGoal,
   GuidedLesson,
   Lesson,
   type LessonKeys,
   lessonProps,
-} from "@keybr/lesson";
+} from "@keylearn/lesson";
 import {
   type KeyStatsMap,
   Result,
   type StreakList,
   type SummaryStats,
-} from "@keybr/result";
-import { type Settings } from "@keybr/settings";
+} from "@keylearn/result";
+import { type Settings } from "@keylearn/settings";
 import {
   type Feedback,
   type LineList,
@@ -23,9 +23,9 @@ import {
   type TextInputSettings,
   toTextDisplaySettings,
   toTextInputSettings,
-} from "@keybr/textinput";
-import { type IInputEvent } from "@keybr/textinput-events";
-import { type CodePoint } from "@keybr/unicode";
+} from "@keylearn/textinput";
+import { type IInputEvent } from "@keylearn/textinput-events";
+import { type CodePoint } from "@keylearn/unicode";
 import { type LastLesson } from "./last-lesson.ts";
 import { type Progress } from "./progress.ts";
 

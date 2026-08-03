@@ -6,8 +6,8 @@ import {
   type ProfileDetails,
   type SecurityEventDetails,
   type UserDetails,
-} from "@keybr/pages-shared";
-import { expectType, request } from "@keybr/request";
+} from "@keylearn/pages-shared";
+import { expectType, request } from "@keylearn/request";
 import {
   browserSupportsWebAuthn,
   startAuthentication,

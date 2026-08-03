@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@keybr/scripts",
+  "name": "@keylearn/scripts",
   "version": "0.0.0",
   "type": "module"
 }

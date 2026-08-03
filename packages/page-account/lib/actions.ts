@@ -1,5 +1,5 @@
-import { catchError } from "@keybr/debug";
-import { type AnyUser, logout, type UserDetails } from "@keybr/pages-shared";
+import { catchError } from "@keylearn/debug";
+import { type AnyUser, logout, type UserDetails } from "@keylearn/pages-shared";
 import { useState } from "react";
 import { checkoutProduct } from "./checkout.ts";
 import { AccountService, type PatchAccountRequest } from "./service.ts";

@@ -1,5 +1,5 @@
 import { test } from "node:test";
-import { FakeRNGStream } from "@keybr/rand";
+import { FakeRNGStream } from "@keylearn/rand";
 import { equal } from "rich-assert";
 import { CommonWordsGenerator } from "./commonwords.ts";
 

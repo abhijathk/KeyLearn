@@ -2,7 +2,7 @@
 
 #include <cinttypes>
 
-namespace keybr {
+namespace keylearn {
 
 const std::uint32_t HEADER_SIGNATURE = 0x4b455942;
 const std::uint32_t HEADER_VERSION = 2;
@@ -79,4 +79,4 @@ bool stats_data::read_result(stats_result &result) {
   return true;
 }
 
-} // namespace keybr
+} // namespace keylearn

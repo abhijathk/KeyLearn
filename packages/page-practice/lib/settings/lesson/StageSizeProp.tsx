@@ -1,6 +1,6 @@
-import { lessonProps } from "@keybr/lesson";
-import { useSettings } from "@keybr/settings";
-import { Field, FieldList, Range, Value } from "@keybr/widget";
+import { lessonProps } from "@keylearn/lesson";
+import { useSettings } from "@keylearn/settings";
+import { Field, FieldList, Range, Value } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 

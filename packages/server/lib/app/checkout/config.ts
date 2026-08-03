@@ -1,5 +1,5 @@
 import { injectable } from "@fastr/invert";
-import { Env } from "@keybr/config";
+import { Env } from "@keylearn/config";
 import { Environment, LogLevel, Paddle } from "@paddle/paddle-node-sdk";
 
 @injectable({ singleton: true })

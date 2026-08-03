@@ -1,5 +1,5 @@
-import type { UserDetails } from "@keybr/pages-shared";
-import { paddlePriceId } from "@keybr/thirdparties";
+import type { UserDetails } from "@keylearn/pages-shared";
+import { paddlePriceId } from "@keylearn/thirdparties";
 import { loadPaddle } from "./paddle/loader.ts";
 
 export function checkoutProduct({ id, email }: UserDetails) {

@@ -1,10 +1,10 @@
 import cluster, { type ClusterSettings } from "node:cluster";
 import { Application } from "@fastr/core";
 import { Container } from "@fastr/invert";
-import { Manifest } from "@keybr/assets";
-import { ConfigModule, Env } from "@keybr/config";
-import { Logger } from "@keybr/logger";
-import { Game } from "@keybr/multiplayer-server";
+import { Manifest } from "@keylearn/assets";
+import { ConfigModule, Env } from "@keylearn/config";
+import { Logger } from "@keylearn/logger";
+import { Game } from "@keylearn/multiplayer-server";
 import { ApplicationModule, kGame, kMain } from "./app/index.ts";
 import { ReminderSweep } from "./app/mail/index.ts";
 import { ServerModule } from "./server/module.ts";
@@ -22,7 +22,7 @@ if (cluster.isPrimary) {
     publicDir: container.get("publicDir"),
     canonicalUrl: container.get("canonicalUrl"),
   });
-  process.title = "keybr master process";
+  process.title = "keylearn master process";
   // The primary process does nothing but supervise workers, which makes it the
   // right home for the reminder sweep: once per deployment rather than once per
   // worker, and never competing with a request.
@@ -39,14 +39,14 @@ if (cluster.isPrimary) {
   const service = container.get(Service);
   switch (process.argv[2]) {
     case "http":
-      process.title = "keybr server worker process";
+      process.title = "keylearn server worker process";
       service.start({
         app: container.get(Application, kMain),
         port: Env.getPort("SERVER_PORT", 3000),
       });
       break;
     case "ws":
-      process.title = "keybr game server worker process";
+      process.title = "keylearn game server worker process";
       service.start({
         app: container.get(Application, kGame),
         port: Env.getPort("SERVER_PORT_WS", 3001),

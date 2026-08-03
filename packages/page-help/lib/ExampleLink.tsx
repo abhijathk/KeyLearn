@@ -1,4 +1,4 @@
-import { Pages } from "@keybr/pages-shared";
+import { Pages } from "@keylearn/pages-shared";
 import { type ReactNode } from "react";
 import { Link } from "react-router";
 

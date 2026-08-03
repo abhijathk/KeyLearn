@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { type Binder, inject, type Module, provides } from "@fastr/invert";
-import { loadManifestSync, Manifest } from "@keybr/assets";
+import { loadManifestSync, Manifest } from "@keylearn/assets";
 
 export class ManifestModule implements Module {
   configure(binder: Binder) {}

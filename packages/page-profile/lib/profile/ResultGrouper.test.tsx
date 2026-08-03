@@ -1,15 +1,15 @@
 import { test } from "node:test";
-import { FakeIntlProvider } from "@keybr/intl";
-import { keyboardProps, Layout, useKeyboard } from "@keybr/keyboard";
-import { FakePhoneticModel, Letter } from "@keybr/phonetic-model";
-import { PhoneticModelLoader } from "@keybr/phonetic-model-loader";
+import { FakeIntlProvider } from "@keylearn/intl";
+import { keyboardProps, Layout, useKeyboard } from "@keylearn/keyboard";
+import { FakePhoneticModel, Letter } from "@keylearn/phonetic-model";
+import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import {
   FakeResultContext,
   type KeyStatsMap,
   ResultFaker,
   useResults,
-} from "@keybr/result";
-import { FakeSettingsContext, Settings } from "@keybr/settings";
+} from "@keylearn/result";
+import { FakeSettingsContext, Settings } from "@keylearn/settings";
 import { fireEvent, render } from "@testing-library/react";
 import { equal, isNotNull, isNull } from "rich-assert";
 import { ResultGrouper } from "./ResultGrouper.tsx";

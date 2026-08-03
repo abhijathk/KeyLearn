@@ -1,7 +1,7 @@
-import { wordListStats } from "@keybr/content";
-import { useIntlNumbers } from "@keybr/intl";
-import { lessonProps, type WordListLesson } from "@keybr/lesson";
-import { useSettings } from "@keybr/settings";
+import { wordListStats } from "@keylearn/content";
+import { useIntlNumbers } from "@keylearn/intl";
+import { lessonProps, type WordListLesson } from "@keylearn/lesson";
+import { useSettings } from "@keylearn/settings";
 import {
   CheckBox,
   Field,
@@ -11,7 +11,7 @@ import {
   Para,
   Range,
   TextField,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { LessonLengthProp } from "./LessonLengthProp.tsx";

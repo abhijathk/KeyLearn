@@ -1,12 +1,12 @@
 {
   "private": true,
-  "name": "@keybr/page-multiplayer",
+  "name": "@keylearn/page-multiplayer",
   "version": "0.0.0",
   "type": "module",
   "main": "lib/index.ts",
   "types": ".types/index.d.ts",
   "dependencies": {
-    "@keybr/multiplayer-ui": "*"
+    "@keylearn/multiplayer-ui": "*"
   },
   "devDependencies": {},
   "scripts": {

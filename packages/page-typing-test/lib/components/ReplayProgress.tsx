@@ -1,6 +1,6 @@
-import { useIntlNumbers } from "@keybr/intl";
-import { useFormatter } from "@keybr/lesson-ui";
-import { AnimationFrames, formatDuration } from "@keybr/widget";
+import { useIntlNumbers } from "@keylearn/intl";
+import { useFormatter } from "@keylearn/lesson-ui";
+import { AnimationFrames, formatDuration } from "@keylearn/widget";
 import { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { type ReplayState } from "../session/index.ts";

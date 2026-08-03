@@ -1,4 +1,4 @@
-import { TextField } from "@keybr/widget";
+import { TextField } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AuthPage.module.less";

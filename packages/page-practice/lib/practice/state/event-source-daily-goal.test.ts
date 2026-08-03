@@ -1,7 +1,7 @@
 import { test } from "node:test";
-import { lessonProps, MutableDailyGoal } from "@keybr/lesson";
-import { LocalDate, ResultFaker, Today } from "@keybr/result";
-import { Settings } from "@keybr/settings";
+import { lessonProps, MutableDailyGoal } from "@keylearn/lesson";
+import { LocalDate, ResultFaker, Today } from "@keylearn/result";
+import { Settings } from "@keylearn/settings";
 import { deepEqual } from "rich-assert";
 import { DailyGoalEvents } from "./event-source-daily-goal.ts";
 import { type LessonEvent } from "./event-types.ts";

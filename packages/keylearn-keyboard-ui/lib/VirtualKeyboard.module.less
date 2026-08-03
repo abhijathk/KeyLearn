@@ -1,0 +1,19 @@
+.keyboard {
+  // Layout/style containment for perf, but NOT paint — paint containment
+  // would clip the resting hands' forearms where they flow below the board.
+  contain: layout style;
+  display: block;
+  // The hands overflow below the board. Without a stacking context of its own
+  // the next thing on the page — the letters strip — paints over the forearms.
+  position: relative;
+  z-index: 1;
+  inline-size: 100%;
+  margin-inline: auto;
+  margin-block: 0;
+  overflow: visible;
+}
+
+.frame {
+  // KeyLearn design: the keys float directly on the page, no backing panel.
+  fill: transparent;
+}

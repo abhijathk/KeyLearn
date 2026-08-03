@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
-import { FakeRNGStream } from "@keybr/rand";
-import { textDisplaySettings, textInputSettings } from "@keybr/textinput";
-import { type IInputEvent } from "@keybr/textinput-events";
+import { FakeRNGStream } from "@keylearn/rand";
+import { textDisplaySettings, textInputSettings } from "@keylearn/textinput";
+import { type IInputEvent } from "@keylearn/textinput-events";
 import { equal, like } from "rich-assert";
 import { CommonWordsGenerator } from "../generators/index.ts";
 import { Session } from "./session.ts";

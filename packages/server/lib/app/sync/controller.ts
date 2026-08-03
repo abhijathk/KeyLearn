@@ -3,13 +3,13 @@ import { Context } from "@fastr/core";
 import { BadRequestError, ForbiddenError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
-import { Profile } from "@keybr/database";
-import { HighScoresFactory } from "@keybr/highscores";
-import { type NamedUser } from "@keybr/pages-shared";
-import { PublicId } from "@keybr/publicid";
-import { type Result } from "@keybr/result";
-import { parseMessage } from "@keybr/result-io";
-import { UserDataFactory } from "@keybr/result-userdata";
+import { Profile } from "@keylearn/database";
+import { HighScoresFactory } from "@keylearn/highscores";
+import { type NamedUser } from "@keylearn/pages-shared";
+import { PublicId } from "@keylearn/publicid";
+import { type Result } from "@keylearn/result";
+import { parseMessage } from "@keylearn/result-io";
+import { UserDataFactory } from "@keylearn/result-userdata";
 import { type AuthState, pProfileOwner } from "../auth/index.ts";
 
 @injectable()

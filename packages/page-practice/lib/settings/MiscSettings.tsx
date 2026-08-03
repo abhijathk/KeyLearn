@@ -1,5 +1,5 @@
-import { SpeedUnit, uiProps } from "@keybr/result";
-import { useSettings } from "@keybr/settings";
+import { SpeedUnit, uiProps } from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
 import {
   Description,
   Explainer,
@@ -8,7 +8,7 @@ import {
   SettingRow,
   SettingsCard,
   Switch,
-} from "@keybr/widget";
+} from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 

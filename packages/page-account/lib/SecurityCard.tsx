@@ -1,6 +1,6 @@
-import { useIntlDates } from "@keybr/intl";
-import { Pages, type UserDetails } from "@keybr/pages-shared";
-import { TextField } from "@keybr/widget";
+import { useIntlDates } from "@keylearn/intl";
+import { Pages, type UserDetails } from "@keylearn/pages-shared";
+import { TextField } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

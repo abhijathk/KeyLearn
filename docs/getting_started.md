@@ -24,8 +24,8 @@ with your own version on NodeJS.
 Clone this repository:
 
 ```shell
-git clone https://github.com/aradzie/keybr.com.git
-cd keybr.com
+git clone https://github.com/abhijathk/KeyLearn.git
+cd KeyLearn
 ```
 
 Install dependencies:
@@ -34,11 +34,11 @@ Install dependencies:
 npm install
 ```
 
-Create your own config file by copying `.env.example` to either `.env` or to a global location `/etc/keybr/env`. The latter is better because it allows you to run scripts from any location, not only from the root directory of the repository.
+Create your own config file by copying `.env.example` to either `.env` or to a global location `/etc/keylearn/env`. The latter is better because it allows you to run scripts from any location, not only from the root directory of the repository.
 
 ```shell
-sudo mkdir -p /etc/keybr
-sudo cp .env.example /etc/keybr/env
+sudo mkdir -p /etc/keylearn
+sudo cp .env.example /etc/keylearn/env
 ```
 
 Run basic sanity checks, compile, bundle and test the application:

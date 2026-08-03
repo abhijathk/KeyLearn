@@ -1,15 +1,15 @@
-import { type LoadingEventListener } from "@keybr/lang";
-import { type Lesson, MutableDailyGoal } from "@keybr/lesson";
-import { loadNgramStats, saveNgramStats } from "@keybr/pages-shared";
+import { type LoadingEventListener } from "@keylearn/lang";
+import { type Lesson, MutableDailyGoal } from "@keylearn/lesson";
+import { loadNgramStats, saveNgramStats } from "@keylearn/pages-shared";
 import {
   MutableKeyStatsMap,
   MutableStreakList,
   MutableSummaryStats,
   type NgramStats,
   type Result,
-} from "@keybr/result";
-import { type Settings } from "@keybr/settings";
-import { type Step } from "@keybr/textinput";
+} from "@keylearn/result";
+import { type Settings } from "@keylearn/settings";
+import { type Step } from "@keylearn/textinput";
 import { DailyGoalEvents } from "./event-source-daily-goal.ts";
 import { LastRunEvents } from "./event-source-last-run.ts";
 import { LetterEvents } from "./event-source-letter.ts";

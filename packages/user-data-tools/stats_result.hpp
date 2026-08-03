@@ -2,7 +2,7 @@
 
 #include <cinttypes>
 
-namespace keybr {
+namespace keylearn {
 
 enum text_type_id { generated_text_id = 1, normal_text_id = 2, numbers_id = 3 };
 
@@ -39,4 +39,4 @@ public:
   bool validate() const;
 };
 
-} // namespace keybr
+} // namespace keylearn

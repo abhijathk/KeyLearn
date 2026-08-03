@@ -3,7 +3,7 @@
 #include "buffer.hpp"
 #include "stats_result.hpp"
 
-namespace keybr {
+namespace keylearn {
 
 class stats_data {
 public:
@@ -22,4 +22,4 @@ private:
   util::buffer &_buf;
 };
 
-} // namespace keybr
+} // namespace keylearn

@@ -1,6 +1,6 @@
 #include <cstddef>
 
-namespace keybr {
+namespace keylearn {
 
 template <class T, std::size_t N> class circ_buffer {
 private:
@@ -35,4 +35,4 @@ public:
   }
 };
 
-} // namespace keybr
+} // namespace keylearn

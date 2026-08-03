@@ -1,0 +1,28 @@
+{
+  "private": true,
+  "name": "@keylearn/lesson",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "lib/index.ts",
+  "types": ".types/index.d.ts",
+  "dependencies": {
+    "@keylearn/code": "*",
+    "@keylearn/content": "*",
+    "@keylearn/content-snippets": "*",
+    "@keylearn/keyboard": "*",
+    "@keylearn/lang": "*",
+    "@keylearn/math": "*",
+    "@keylearn/phonetic-model": "*",
+    "@keylearn/rand": "*",
+    "@keylearn/result": "*",
+    "@keylearn/settings": "*",
+    "@keylearn/textinput": "*",
+    "@keylearn/unicode": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "clean": "rm -fr .types",
+    "compile": "tsc",
+    "test": "tstest --import=@keylearn/test-env-bundler --test 'lib/**/*.test.{ts,tsx}'"
+  }
+}

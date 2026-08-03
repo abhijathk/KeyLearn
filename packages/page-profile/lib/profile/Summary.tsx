@@ -1,7 +1,7 @@
-import { useIntlNumbers } from "@keybr/intl";
-import { useFormatter } from "@keybr/lesson-ui";
-import { type SummaryStats } from "@keybr/result";
-import { formatDuration, Header, Para } from "@keybr/widget";
+import { useIntlNumbers } from "@keylearn/intl";
+import { useFormatter } from "@keylearn/lesson-ui";
+import { type SummaryStats } from "@keylearn/result";
+import { formatDuration, Header, Para } from "@keylearn/widget";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./Summary.module.less";
 

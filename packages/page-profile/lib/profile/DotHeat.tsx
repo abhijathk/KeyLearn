@@ -1,5 +1,5 @@
-import { dotsOf } from "@keybr/braille";
-import { useIntlNumbers } from "@keybr/intl";
+import { dotsOf } from "@keylearn/braille";
+import { useIntlNumbers } from "@keylearn/intl";
 import { clsx } from "clsx";
 import { type ReactNode, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

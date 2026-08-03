@@ -11,10 +11,10 @@ import {
   practiceDays,
   TEACHING_ORDER,
   toUnicode,
-} from "@keybr/braille";
-import { useIntlDates, useIntlNumbers } from "@keybr/intl";
-import { downloadBlob, exportFilename } from "@keybr/pages-shared";
-import { formatDuration } from "@keybr/widget";
+} from "@keylearn/braille";
+import { useIntlDates, useIntlNumbers } from "@keylearn/intl";
+import { downloadBlob, exportFilename } from "@keylearn/pages-shared";
+import { formatDuration } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";

@@ -1,5 +1,5 @@
 import { test } from "node:test";
-import { Book } from "@keybr/content";
+import { Book } from "@keylearn/content";
 import { equal } from "rich-assert";
 import { BookParagraphsGenerator } from "./book.ts";
 
