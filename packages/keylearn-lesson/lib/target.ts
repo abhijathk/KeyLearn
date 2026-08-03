@@ -41,6 +41,10 @@ export class Target {
    * *alongside* the current algorithm rather than replacing it. With no samples
    * yet there is nothing to trace, so the classic ratio is used unblended.
    *
+   * The blend touches `confidence` only. `bestConfidence` — the unlock gate —
+   * stays the pure speed ratio, because it asserts one thing: this key was once
+   * typed at the target speed. See below.
+   *
    * Real-time forgetting is deliberately NOT applied here. It used to be: the
    * confidence was multiplied by a recall factor, which meant a key you were
    * still learning — and so one with misses in its history, and therefore the
@@ -58,9 +62,15 @@ export class Target {
     let confidence = this.confidence(keyStats.timeToType);
     let bestConfidence = this.confidence(keyStats.bestTimeToType);
     if (this.smartConfidence && keyStats.samples.length > 0) {
-      const { pL, pLMax } = bktMastery(keyStats.samples, this.targetSpeed);
+      const { pL } = bktMastery(keyStats.samples, this.targetSpeed);
       confidence = blend(confidence, pL / bktMasteryThreshold);
-      bestConfidence = blend(bestConfidence, pLMax / bktMasteryThreshold);
+      // NOT bestConfidence. That is the unlock gate, and it means one specific
+      // thing: this key was once typed at the target speed. Blending a
+      // current-mastery posterior into a historical peak of speed mixes two
+      // different claims, and the arithmetic bites — with the posterior at 0.5
+      // the gate quietly starts demanding 1.19x the target instead of 1.0x, so
+      // a learner practising steadily is never given a new letter. Accuracy
+      // still shapes `confidence`, which is what drives focus and colour.
     }
     return { confidence, bestConfidence };
   }

@@ -2,6 +2,12 @@
 
 .journey {
   display: flex;
+  // The keyboard above overflows its own box — the resting hands reach well
+  // down past the board and across this row. Claiming a layer keeps the letters
+  // drawn on top of them and, more importantly, keeps them hoverable: without
+  // it the overflowing artwork sat between the pointer and these chips.
+  position: relative;
+  z-index: 1;
   gap: 0.8rem;
   align-items: center;
   justify-content: center;

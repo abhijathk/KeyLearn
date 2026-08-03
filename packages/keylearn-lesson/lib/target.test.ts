@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import { FakePhoneticModel } from "@keylearn/phonetic-model";
-import { type KeyStats } from "@keylearn/result";
+import { type KeyStats, speedToTime } from "@keylearn/result";
 import { Settings } from "@keylearn/settings";
 import { equal, isTrue, throws } from "rich-assert";
 import { lessonProps } from "./settings.ts";
@@ -167,3 +167,34 @@ function sample({
     filteredTimeToType: timeToType,
   };
 }
+
+test("the unlock gate asks for the target speed, and nothing more", () => {
+  // `bestConfidence` gates whether a new letter is introduced, and it means one
+  // thing: this key was once typed at the target speed. Blending the accuracy
+  // posterior into it used to raise that bar without saying so — at a posterior
+  // of 0.5 the gate silently wanted 1.19x the target — so a learner practising
+  // steadily but not brilliantly was never given a new letter.
+  const settings = new Settings()
+    .set(lessonProps.targetSpeed, 250)
+    .set(lessonProps.guided.smartConfidence, true);
+  // Reached the target exactly, with enough misses to keep the posterior low.
+  const samples = Array.from({ length: 8 }, () =>
+    sample({ timeStamp: 0, timeToType: 240, hitCount: 8, missCount: 4 }),
+  );
+  const atTarget = speedToTime(250);
+  const stats = keyStats({
+    timeToType: 240,
+    bestTimeToType: atTarget,
+    samples,
+  });
+  const { confidence, bestConfidence } = new Target(settings, 0).keyConfidence(
+    stats,
+  );
+  isTrue(
+    (bestConfidence ?? 0) >= 1,
+    `hit the target but the gate said ${bestConfidence}`,
+  );
+  // Accuracy still has a say in the live figure, which is what drives which key
+  // is focused and how it is coloured.
+  isTrue((confidence ?? 0) < (bestConfidence ?? 0));
+});

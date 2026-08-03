@@ -414,11 +414,23 @@ function writeExpanded(open: boolean): void {
   }
 }
 
-// The whole page module first evaluates roughly when the learner opens the
-// practice page, so this stamps the start of the current sitting. Kept at
-// module scope (like the goal tuner's clock) so it survives the brief remounts
-// that re-tuning the target speed causes.
-const SESSION_START_MS = Date.now();
+/**
+ * Midnight this morning, in the reader's own timezone.
+ *
+ * This card used to count from whenever the page module first evaluated — a
+ * genuine "sitting", but one that reset on every reload, so a learner who had
+ * practised for twenty minutes and refreshed was told they had done nothing.
+ * Worse, it sat directly beside a goal ring counting the same day's minutes,
+ * so the card contradicted itself: "0 lessons · 0 min" next to "23 of 30 min".
+ *
+ * Today is the honest window. It matches the ring, it matches what a learner
+ * means when they ask how much they have done, and it survives a reload.
+ */
+function startOfToday(now: number = Date.now()): number {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
 
 /**
  * The expand-on-click panel beneath the whisper line: a calm, glanceable recap
@@ -454,7 +466,8 @@ function SessionRecap({
   const { formatPercents } = useIntlNumbers();
   const { formatSpeed, speedUnit } = useFormatter();
 
-  const session = results.filter((r) => r.timeStamp >= SESSION_START_MS);
+  const dayStart = startOfToday();
+  const session = results.filter((r) => r.timeStamp >= dayStart);
   const sessionCount = session.length;
   const sessionMinutes = Math.round(
     session.reduce((sum, r) => sum + r.time, 0) / 60000,
@@ -502,8 +515,8 @@ function SessionRecap({
         <div className={styles.card}>
           <span className={styles.cardLab}>
             <FormattedMessage
-              id="practice.session.thisSession"
-              defaultMessage="This session"
+              id="practice.session.today"
+              defaultMessage="Today"
             />
           </span>
           <span className={styles.cardMain}>
@@ -546,7 +559,7 @@ function SessionRecap({
                 <br />
                 <FormattedMessage
                   id="practice.session.goalRingNote"
-                  defaultMessage="today’s goal"
+                  defaultMessage="daily goal"
                 />
               </span>
             </span>

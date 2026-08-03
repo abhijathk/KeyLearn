@@ -14,6 +14,9 @@
 // The animation sits on the group rather than on the hand, or the time is
 // painted at full strength over a hand that has not arrived yet.
 .figure {
+  // A backdrop, never a target. The hands overflow well past the board and
+  // would otherwise sit between the pointer and whatever is underneath them.
+  pointer-events: none;
   animation-name: motion-fade;
   animation-duration: @motion-slow;
   animation-timing-function: @motion-ease;

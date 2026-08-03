@@ -79,6 +79,18 @@ export function LetterJourney({
     return { x: PAD + (i - row * per) * STEP, y: PAD_TOP + row * ROW_H, row };
   };
   const confOf = (k: LessonKey) => Math.max(0, Math.min(1, k.confidence ?? 0));
+  /**
+   * How close this key is to letting the next letter through.
+   *
+   * Deliberately the BEST confidence, not the current one, because that is what
+   * the unlock gate actually reads: a new letter arrives once every key in play
+   * has *at some point* been typed at the target speed. Showing the live figure
+   * here meant "64% ready" could sit beside a key that had already cleared the
+   * bar, and a learner watching that number had no way to tell what was holding
+   * them up.
+   */
+  const readyOf = (k: LessonKey) =>
+    Math.max(0, Math.min(1, k.bestConfidence ?? 0));
   // Readiness notes need breathing room: when several focused keys sit close
   // together their labels would overlap, so only keys at least three stops
   // apart (left to right) get the text — the rest keep just their pin.
@@ -177,7 +189,7 @@ export function LetterJourney({
                       // any row but the first it is drawn across the lane
                       // above. A backing plate keeps it legible instead of
                       // letting it tangle with the letters behind it.
-                      const note = readinessNote(conf);
+                      const note = readinessNote(readyOf(key));
                       const w = note.length * 7.2 + 12;
                       const ny = y - CAP_H / 2 - 10;
                       return (
