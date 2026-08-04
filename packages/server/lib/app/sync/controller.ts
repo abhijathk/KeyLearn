@@ -6,6 +6,7 @@ import { type RouterState } from "@fastr/middleware-router";
 import { DataDir } from "@keylearn/config";
 import { Profile } from "@keylearn/database";
 import { HighScoresFactory } from "@keylearn/highscores";
+import { Logger } from "@keylearn/logger";
 import { type NamedUser } from "@keylearn/pages-shared";
 import { PublicId } from "@keylearn/publicid";
 import { type Result } from "@keylearn/result";
@@ -13,6 +14,7 @@ import { parseMessage } from "@keylearn/result-io";
 import { UserDataFactory } from "@keylearn/result-userdata";
 import { File } from "@sosimple/fsx-file";
 import { type AuthState, pProfileOwner } from "../auth/index.ts";
+import { partitionPlausible } from "./plausible.ts";
 
 @injectable()
 @controller()
@@ -47,7 +49,7 @@ export class Controller {
     const results = await parseResults(value);
     await this.userData.load(new PublicId(id!)).append(results);
     // Account-level history has no learner attached to it.
-    await this.highScores.append(id!, null, results);
+    await this.highScores.append(id!, null, creditable(results, id!));
     ctx.response.status = 204;
   }
 
@@ -90,7 +92,11 @@ export class Controller {
     // kept off the public high scores.
     if (profile.kind === "adult") {
       // Credited to the learner who typed it, not to the account holder.
-      await this.highScores.append(user.id!, profile.id!, results);
+      await this.highScores.append(
+        user.id!,
+        profile.id!,
+        creditable(results, user.id!),
+      );
     }
     ctx.response.status = 204;
   }
@@ -168,6 +174,27 @@ export class Controller {
     }
     return new File(this.dataDir.brailleProgressFile(user.id!, profile.id!));
   }
+}
+
+/**
+ * The results fit to go on the leaderboard.
+ *
+ * Everything the client sends is kept in the learner's own history — it is
+ * theirs, and inflating it only costs them their own unlocks. The board is
+ * shared, so only what could physically have been typed reaches it. A refusal
+ * is logged rather than silent: if a bound ever starts catching real people,
+ * that has to be visible.
+ */
+function creditable(results: readonly Result[], userId: number): Result[] {
+  const { credited, refused } = partitionPlausible(results);
+  for (const { reason } of refused) {
+    Logger.warn(
+      "Implausible result from user [%d] not credited: %s",
+      userId,
+      reason,
+    );
+  }
+  return credited;
 }
 
 // TODO Parse asynchronously in batches.

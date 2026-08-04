@@ -5,6 +5,7 @@ import { Manifest } from "@keylearn/assets";
 import { ConfigModule, Env } from "@keylearn/config";
 import { Logger } from "@keylearn/logger";
 import { Game } from "@keylearn/multiplayer-server";
+import { serveRateLimits } from "./app/auth/ratelimit.ts";
 import { ApplicationModule, kGame, kMain } from "./app/index.ts";
 import { ReminderSweep } from "./app/mail/index.ts";
 import { ServerModule } from "./server/module.ts";
@@ -27,8 +28,9 @@ if (cluster.isPrimary) {
   // right home for the reminder sweep: once per deployment rather than once per
   // worker, and never competing with a request.
   container.get(ReminderSweep).start();
-  // The auth rate limiter divides its budgets by this count, so the two must
-  // agree — see SERVER_HTTP_WORKERS in app/auth/ratelimit.ts.
+  // The primary owns the rate-limit counters, which is what makes a limit a
+  // cluster-wide number instead of one each worker enforces alone.
+  serveRateLimits();
   const httpWorkers = Env.getNumber("SERVER_HTTP_WORKERS", 4);
   for (let i = 0; i < httpWorkers; i++) {
     fork({ args: ["http"] });
