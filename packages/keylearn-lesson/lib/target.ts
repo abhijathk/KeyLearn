@@ -20,6 +20,14 @@ import { lessonProps } from "./settings.ts";
  * long before they understood why.
  *
  * Asking for four fifths per key makes the goal mean what it appears to mean.
+ *
+ * One case is deliberately left alone: a goal set above what some key can
+ * currently reach at all. That key blocks, and the answer is to lower the
+ * goal — which is what the tuner beside it is for. A prompt suggesting a
+ * number was built and removed; it read as the app negotiating its own
+ * standard down, and a bar that argues with you is worse than one you have to
+ * meet. The goal is honest now, so somebody whose goal is beyond their hands
+ * is being told something true.
  */
 export const KEY_PASS_RATIO = 0.8;
 
