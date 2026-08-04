@@ -173,24 +173,11 @@ html[data-font="cursive"] {
 
 html {
   font-family: var(--default-font-family);
-  font-size: 8px;
   line-height: 1.5;
 }
 
-.font-size(1280px, 10px); // ratio=128
-.font-size(1440px, 11px); // ratio=131
-.font-size(1600px, 12px); // ratio=133
-.font-size(1920px, 15px); // ratio=128
-.font-size(2560px, 18px); // ratio=142
-.font-size(3840px, 24px); // ratio=160
-
-.font-size(@width, @size) {
-  // Please note that the "device-width" query is deprecated, however the
-  // "width" query reports browser window size, not screen size.
-  // stylelint-disable-next-line media-query-no-invalid
-  @media (min-width: @width), (min-device-width: @width) {
-    html {
-      font-size: @size;
-    }
-  }
-}
+// The root font size lives in utils/reset.less — one ladder only. The old
+// keybr ladder that used to sit here stepped 8px..24px on "min-device-width"
+// queries, so a Retina laptop (device-width 1440+) was pinned to an 11px root
+// whenever the window was narrower than 1280px, shrinking the whole rem-sized
+// UI underneath the newer ladder.

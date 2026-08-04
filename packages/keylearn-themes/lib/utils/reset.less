@@ -7,11 +7,17 @@
 html {
   margin: 0;
   padding: 0;
+  // The whole UI is sized in rem against this single ladder (there must be no
+  // other root font-size rule anywhere — a second ladder loses or wins by
+  // cascade accident depending on the media query that happens to match).
+  // 16px is the explicit floor for narrow windows; the steps below only ever
+  // raise it.
+  font-size: 16px;
 }
 
-// The whole UI is sized in rem, so stepping the root font size up with the
-// viewport keeps the site comfortably readable on retina / 4K displays,
-// where the browser-default 16px renders small.
+// Stepping the root font size up with the viewport keeps the site comfortably
+// readable on retina / 4K displays, where the browser-default 16px renders
+// small.
 @media (min-width: 1280px) {
   html {
     font-size: 17px;
