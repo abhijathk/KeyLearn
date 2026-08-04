@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { type Context, type Middleware, type Next } from "@fastr/core";
 import { Env } from "@keylearn/config";
 
@@ -31,16 +32,37 @@ const CONNECT_HOSTS = [
  * can be framed; without nosniff a user-supplied blob can be re-interpreted as
  * HTML.
  */
+/**
+ * Where the per-request nonce is left for the renderer to find.
+ *
+ * A nonce is only worth anything if the inline scripts we mean to allow can
+ * carry it, so it is generated here — before the handler runs — and read back
+ * out by the page controller when it renders the shell.
+ */
+export const CSP_NONCE = "cspNonce";
+
+/** The nonce for this request, or "" outside a request that has one. */
+export function cspNonce(ctx: Context): string {
+  return (ctx.state as Record<string, unknown>)[CSP_NONCE] as string;
+}
+
 export function securityHeaders(): Middleware {
   return async (ctx: Context, next: Next): Promise<void> => {
+    // 128 bits, fresh per request. Anything less, or anything reused across
+    // requests, and an attacker who can read one page can sign their own
+    // script into the next.
+    const nonce = randomBytes(16).toString("base64");
+    (ctx.state as Record<string, unknown>)[CSP_NONCE] = nonce;
+
     await next();
 
     const { headers } = ctx.response;
 
-    // Inline <script> is still used for the bootstrap page data and the GTM
-    // snippet, so 'unsafe-inline' is required until those carry a nonce. Note
-    // that a modern browser ignores 'unsafe-inline' when a nonce or hash is
-    // present, so this stays honest about what is actually enforced.
+    // The one inline script left is the bootstrap page data, and it now carries
+    // this request's nonce — so 'unsafe-inline' is gone from script-src and an
+    // injected <script> no longer runs. 'unsafe-inline' stays on style-src:
+    // React writes element style attributes, which a nonce cannot cover, and
+    // an injected style is a far smaller prize than an injected script.
     const csp = [
       "default-src 'self'",
       // 'wasm-unsafe-eval' permits WebAssembly and NOTHING else — the kids
@@ -48,7 +70,7 @@ export function securityHeaders(): Middleware {
       // default. It is deliberately not 'unsafe-eval': that would also re-enable
       // eval() of strings and hand any future injection a code-execution
       // primitive, which is most of what this policy exists to prevent.
-      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${SCRIPT_HOSTS.join(" ")}`,
+      `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval' ${SCRIPT_HOSTS.join(" ")}`,
       "style-src 'self' 'unsafe-inline'",
       // Avatars are stored as data: URLs; ad and provider images are remote.
       "img-src 'self' data: blob: https:",

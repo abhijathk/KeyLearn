@@ -13,6 +13,7 @@ import {
 } from "@keylearn/intl";
 import { Shell, View } from "@keylearn/pages-server";
 import {
+  NonceContext,
   type PageData,
   PageDataContext,
   PageInfo,
@@ -22,6 +23,7 @@ import { SettingsDatabase } from "@keylearn/settings-database";
 import { staticTheme, ThemeContext, ThemePrefs } from "@keylearn/themes";
 import { type IntlShape, RawIntlProvider } from "react-intl";
 import { type AuthState } from "../auth/index.ts";
+import { cspNonce } from "../headers.ts";
 import { leaderboardReady } from "../highscores/readiness.ts";
 import { localePattern, pIntl, preferredLocale } from "./intl.ts";
 
@@ -408,11 +410,16 @@ export class Controller {
     return this.view.renderPage(
       <RawIntlProvider value={intl}>
         <PreferredLocaleContext.Provider value={preferredLocale(ctx)}>
-          <PageDataContext.Provider value={pageData}>
-            <ThemeContext.Provider value={staticTheme(themePrefs(ctx))}>
-              <Shell page={page} headers={ctx.request.headers} />
-            </ThemeContext.Provider>
-          </PageDataContext.Provider>
+          {/* The nonce the CSP for this very response names, so the page-data
+              script is allowed by name rather than by allowing every inline
+              script on the page. */}
+          <NonceContext.Provider value={cspNonce(ctx)}>
+            <PageDataContext.Provider value={pageData}>
+              <ThemeContext.Provider value={staticTheme(themePrefs(ctx))}>
+                <Shell page={page} headers={ctx.request.headers} />
+              </ThemeContext.Provider>
+            </PageDataContext.Provider>
+          </NonceContext.Provider>
         </PreferredLocaleContext.Provider>
       </RawIntlProvider>,
     );
