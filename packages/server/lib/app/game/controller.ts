@@ -8,6 +8,7 @@ import { Env } from "@keylearn/config";
 import { Profile } from "@keylearn/database";
 import { WebSocketServer } from "ws";
 import { type AuthState, clientIp } from "../auth/index.ts";
+import { allowWebSocketOrigin } from "./origin.ts";
 import { SessionFactory } from "./session.ts";
 
 // Live game connections per client address.
@@ -69,8 +70,23 @@ export class Controller {
     // HTTP response to deliver, and the socket would sit open — a worse leak
     // than the flood being prevented.
     const ip = clientIp(ctx);
+    // Who opened this socket. An upgrade is a GET, so the CSRF guard never
+    // sees it, and the game server has its own middleware chain anyway —
+    // without this, any page on the web could open game sockets from its
+    // visitors' browsers (see origin.ts).
+    const originOk = allowWebSocketOrigin(
+      ctx.request.headers.get("origin"),
+      ctx.request.origin,
+    );
     await websocket(this.server, {
       callback: (webSocket) => {
+        if (!originOk) {
+          // Refused after the upgrade for the same reason the connection cap
+          // is: the HTTP response is already gone, so a close frame is the
+          // only way left to tell the client anything. 1008 = policy violation.
+          webSocket.close(1008, "Cross-site connection refused");
+          return;
+        }
         if (!acquire(ip)) {
           // 1013 = "try again later".
           webSocket.close(1013, "Too many connections");
