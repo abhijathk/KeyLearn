@@ -16,5 +16,6 @@ export * from "./lessontype.ts";
 export * from "./numbers.ts";
 export * from "./quotes.ts";
 export * from "./settings.ts";
+export * from "./stamp.ts";
 export * from "./target.ts";
 export * from "./wordlist.ts";

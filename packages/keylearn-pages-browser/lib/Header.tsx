@@ -1,4 +1,6 @@
+import { lessonStamp, type StampMode } from "@keylearn/lesson";
 import { GearIcon, MoonIcon, SoundIcon, SunIcon } from "@keylearn/page-kids";
+import { useSettings } from "@keylearn/settings";
 import { IconButton, StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -11,6 +13,88 @@ import { ThemeSwitcher } from "./themes/ThemeSwitcher.tsx";
 const toggleFocusMode = () => {
   window.dispatchEvent(new window.CustomEvent("keylearn:focus-mode"));
 };
+
+/**
+ * What you are practising, stamped beside the wordmark.
+ *
+ * The lesson type is chosen once and then never restated on the page, so a
+ * learner who set Book Text last week opens practice to prose with no idea
+ * why it is not the guided course — and the setting that explains it is two
+ * clicks deep. It rides here rather than in the telemetry island for the
+ * same reason the "Kids" mark does: this is where the page says what it is,
+ * and the island is for numbers.
+ *
+ * The header sits outside the practice page's view context, so the click
+ * asks for the settings screen by event, the way the kids controls do.
+ */
+function PracticeStamp(): ReactNode {
+  const { formatMessage } = useIntl();
+  const { settings } = useSettings();
+  const { mode, detail, detailIsMessage } = lessonStamp(settings);
+  // Every id spelled out: the message extractor reads these literally, and a
+  // computed one silently drops the string from the catalogue. The names are
+  // the same ones the settings tiles use, so the stamp and the screen it
+  // opens always agree.
+  const names: Record<StampMode, string> = {
+    guided: formatMessage({
+      id: "t_Guided_lessons",
+      defaultMessage: "Guided practice",
+    }),
+    curriculum: formatMessage({
+      id: "lessonType.curriculum.name",
+      defaultMessage: "Classic course",
+    }),
+    code: formatMessage({ id: "t_Source_code", defaultMessage: "Code craft" }),
+    wordlist: formatMessage({
+      id: "t_Common_words",
+      defaultMessage: "Frequent words",
+    }),
+    books: formatMessage({ id: "t_Books", defaultMessage: "Book Text" }),
+    quotes: formatMessage({
+      id: "lessonType.quotes.name",
+      defaultMessage: "Quotes",
+    }),
+    custom: formatMessage({
+      id: "t_Custom_text",
+      defaultMessage: "Your Own Text",
+    }),
+    numbers: formatMessage({
+      id: "t_Numbers",
+      defaultMessage: "Number Drills",
+    }),
+  };
+  return (
+    <button
+      type="button"
+      className={styles.stamp}
+      title={formatMessage({
+        id: "practice.stamp.description",
+        defaultMessage: "What you are practising. Click to change it.",
+      })}
+      onClick={() => {
+        window.dispatchEvent(
+          new window.CustomEvent("keylearn:practice-settings"),
+        );
+      }}
+    >
+      <span className={styles.stampName}>{names[mode]}</span>
+      {detail != null && (
+        // A long book title ellipsises in the pill; the tooltip keeps it whole.
+        <span
+          className={styles.stampDetail}
+          title={detailIsMessage ? undefined : detail}
+        >
+          {detailIsMessage
+            ? formatMessage({
+                id: "practice.stamp.ownWords",
+                defaultMessage: "your words",
+              })
+            : detail}
+        </span>
+      )}
+    </button>
+  );
+}
 
 // The kids page moved its sound / day-night / settings controls up into the
 // header. It publishes their state via keylearn:kids-state and acts on the
@@ -80,11 +164,14 @@ export function Header({
   showFocus = false,
   showBack = false,
   kids = false,
+  practice = false,
 }: {
   readonly onOpenMenu: () => void;
   readonly showFocus?: boolean;
   readonly showBack?: boolean;
   readonly kids?: boolean;
+  /** On the practice page the wordmark is followed by the lesson stamp. */
+  readonly practice?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
   // The back button offers a return to practice, which is neither where a
@@ -190,6 +277,7 @@ export function Header({
           <span className={styles.markAlt}>Learn</span>
           {kids && <span className={styles.kidsMark}>Kids</span>}
         </NavLink>
+        {practice && <PracticeStamp />}
       </div>
       <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
         {streak > 0 && (

@@ -730,6 +730,8 @@
   "practice.session.toTopBest": "to top your {best} best",
   "practice.session.today": "Today",
   "practice.session.warmup": "warming up…",
+  "practice.stamp.description": "What you are practising. Click to change it.",
+  "practice.stamp.ownWords": "your words",
   "practice.streak.days": "{days} {days, plural, =1 {day} other {days}}",
   "practice.tour.chartLegend": "past lessons — the dotted road ahead is the forecast to the goal",
   "practice.trend.label": "Past {count} lessons",

@@ -56,6 +56,7 @@ export function Template({
         showFocus={path === "/"}
         showBack={path !== "/"}
         kids={path === "/kids"}
+        practice={path === "/"}
       />
       <main className={styles.main}>
         {children}

@@ -159,6 +159,57 @@
 
 // "Kids" reads as part of the logo — same size/weight as "Key", in the accent,
 // with a hairline separator dot after "Learn".
+// The lesson stamp: what the practice page is serving, pressed in beside the
+// wordmark. Quiet enough to ignore while typing, legible enough to answer
+// "why is this prose and not the guided course?" without opening anything.
+.stamp {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 0.1rem;
+  align-items: flex-start;
+  max-inline-size: 10.5rem;
+  margin-inline-start: 0.35rem;
+  padding-inline: 0.6rem;
+  padding-block: 0.3rem 0.32rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 22%, transparent);
+  border-radius: 0.7rem;
+  color: var(--text-color-f1);
+  background: none;
+  font-family: var(--value-font-family);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--text-color);
+  }
+}
+
+.stampName {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+// The book, the language — the choice inside the mode. Left in its own case,
+// since it is a title and not a label.
+.stampDetail {
+  max-inline-size: 100%;
+  overflow: hidden;
+  color: var(--text-color-f2);
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .kidsMark {
   margin-inline-start: 0.45rem;
   color: var(--accent);
