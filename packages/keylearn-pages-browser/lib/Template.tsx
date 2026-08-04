@@ -1,21 +1,23 @@
-import { CompleteProfileGate } from "@keylearn/page-account";
+import { CompleteProfileGate, useProfiles } from "@keylearn/page-account";
 import { AdBanner, adSenseClientId } from "@keylearn/thirdparties";
 import { PortalContainer, Toaster } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
+import { showAds } from "./ads.ts";
 import { Header } from "./Header.tsx";
 import { MenuDrawer } from "./MenuDrawer.tsx";
 import * as styles from "./Template.module.less";
 
-// Ads only ever appear in grown-ups mode; kids mode (and any unconfigured
-// build) stays completely ad-free.
-function showAds(): boolean {
-  if (adSenseClientId === "0") {
-    return false;
-  }
+// The household's remembered grown-ups/kids preference. Absent for most of
+// them — it is only written when somebody uses the drawer's switch — which is
+// exactly why it cannot be the only thing the ad gate consults (see ads.ts).
+function storedMode(): string | null {
   try {
-    return localStorage.getItem("keylearn.mode") !== "kids";
+    return localStorage.getItem("keylearn.mode");
   } catch {
-    return true;
+    // Storage unavailable (private mode, an embedded webview). Unknown, which
+    // showAds() already treats as a reason for caution rather than a green
+    // light.
+    return null;
   }
 }
 
@@ -49,6 +51,13 @@ export function Template({
     saveMenuOpen(open);
     setMenuOpenState(open);
   };
+  const { active } = useProfiles();
+  const ads = showAds({
+    adNetworkConfigured: adSenseClientId !== "0",
+    path,
+    activeProfileKind: active?.kind ?? null,
+    storedMode: storedMode(),
+  });
   return (
     <div className={styles.body}>
       <Header
@@ -63,7 +72,7 @@ export function Template({
         <PortalContainer />
         <Toaster />
       </main>
-      {showAds() && (
+      {ads && (
         <div className={styles.adSlot}>
           <div className={styles.adLabel}>Advertisement</div>
           <AdBanner />
