@@ -85,8 +85,12 @@ function buildGoalStats(
   const minutes = Math.round(
     today.reduce((sum, { time }) => sum + time, 0) / 60000,
   );
-  const topSpeed =
-    today.length > 0 ? Math.max(...today.map(({ speed }) => speed)) : 0;
+  let topSpeed = 0;
+  for (const { speed } of today) {
+    if (speed > topSpeed) {
+      topSpeed = speed;
+    }
+  }
   const accuracy =
     today.length > 0
       ? today.reduce((sum, { accuracy }) => sum + accuracy, 0) / today.length
@@ -95,15 +99,23 @@ function buildGoalStats(
   const weeklySpeeds = [...map]
     .sort((a, b) => (String(a.date) < String(b.date) ? -1 : 1))
     .slice(-7)
-    .map((d) => Math.max(...d.results.map((r) => r.speed)));
+    .map((d) => d.results.reduce((m, r) => Math.max(m, r.speed), 0));
   // The slowest keys practised so far — highest filtered time-to-type.
   const slowestKeys = [...progress.keyStatsMap]
     .filter((k) => k.timeToType != null)
     .sort((a, b) => (b.timeToType ?? 0) - (a.timeToType ?? 0))
     .slice(0, 3)
     .map((k) => k.letter.label.toUpperCase());
-  const allTimeMax =
-    allResults.length > 0 ? Math.max(...allResults.map((r) => r.speed)) : 0;
+  // Looped rather than spread. `Math.max(...results)` puts every result on the
+  // call stack as an argument, which is fine at a few hundred lessons and
+  // overflows at tens of thousands — a limit a committed learner reaches, and
+  // reaches by doing exactly what the app asked of them.
+  let allTimeMax = 0;
+  for (const { speed } of allResults) {
+    if (speed > allTimeMax) {
+      allTimeMax = speed;
+    }
+  }
   const isPersonalBest = today.length > 0 && topSpeed >= allTimeMax;
   return {
     goalMinutes,

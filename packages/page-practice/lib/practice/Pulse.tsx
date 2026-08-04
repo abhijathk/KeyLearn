@@ -5,6 +5,8 @@ import {
   type LessonKey,
   type LessonKeys,
   lessonProps,
+  LessonType,
+  suggestTarget,
   Target,
 } from "@keylearn/lesson";
 import { Key, type Names, useFormatter } from "@keylearn/lesson-ui";
@@ -22,6 +24,7 @@ import {
   memo,
   type ReactNode,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -49,6 +52,7 @@ export const Pulse = memo(function Pulse({
   lessonKeys,
   streakList,
   dailyGoal,
+  bottleneck,
   names,
 }: {
   readonly summaryStats: SummaryStats;
@@ -57,6 +61,8 @@ export const Pulse = memo(function Pulse({
   readonly lessonKeys: LessonKeys;
   readonly streakList: StreakListType;
   readonly dailyGoal: DailyGoalType;
+  /** The slow key-pair this round is aimed at, if any. */
+  readonly bottleneck: { readonly from: number; readonly to: number } | null;
   readonly names?: Names;
 }): ReactNode {
   const { formatMessage } = useIntl();
@@ -73,6 +79,17 @@ export const Pulse = memo(function Pulse({
       return !v;
     });
   };
+  // A sitting starts when the gap since the previous lesson is long enough
+  // that the hands have gone cold. Half an hour is generous — a tea break is
+  // not a new sitting, an evening away is.
+  const warmingUp = (() => {
+    if (results.length < 2) {
+      return results.length === 1;
+    }
+    const last = results[results.length - 1];
+    const before = results[results.length - 2];
+    return last.timeStamp - before.timeStamp > 30 * 60000;
+  })();
   const live = useLiveSpeed();
   // While the learner is actively typing, the hero shows the live cumulative
   // speed with a pulsing dot; otherwise the recorded last-lesson speed.
@@ -102,6 +119,21 @@ export const Pulse = memo(function Pulse({
       ? LearningRate.from(focusedKey.samples, new Target(settings))
       : null;
   const learningRate = learningRateInfo?.learningRate ?? null;
+
+  // Only while something is actually blocked — once every key is through, the
+  // target is not what is holding anybody up.
+  const suggestion = useMemo(
+    () =>
+      focusedKey == null
+        ? null
+        : suggestTarget(
+            lessonKeys.findIncludedKeys(),
+            target,
+            results.length,
+            lessonProps.targetSpeed,
+          ),
+    [focusedKey, lessonKeys, target, results.length],
+  );
 
   return (
     <div className={styles.root}>
@@ -147,7 +179,28 @@ export const Pulse = memo(function Pulse({
             <i className={styles.speedUnit}>{speedUnit.id}</i>
           </span>
         </div>
-        {hasData && <Chip delta={speed.delta} text={formatSpeed} />}
+        {hasData &&
+          (warmingUp ? (
+            // Cold hands. The first round after a break is reliably slower
+            // than the last round of the previous sitting, so the delta beside
+            // it is a comparison against a different pair of hands — and it
+            // greeted every returning learner with a red number.
+            <span
+              className={styles.warmup}
+              title={formatMessage({
+                id: "practice.pulse.warmup.description",
+                defaultMessage:
+                  "The first round back is always slower. This one is not being compared against your last sitting.",
+              })}
+            >
+              <FormattedMessage
+                id="practice.pulse.warmup"
+                defaultMessage="warm-up"
+              />
+            </span>
+          ) : (
+            <Chip delta={speed.delta} text={formatSpeed} />
+          ))}
 
         <div className={styles.roads}>
           <div
@@ -198,6 +251,38 @@ export const Pulse = memo(function Pulse({
                   updateSettings(settings.set(lessonProps.targetSpeed, next))
                 }
               />
+              {/*
+                The opposite case to the tuner above, which only appears once
+                the goal has been *reached*: this is for a learner stuck the
+                other side of it. One slow key holds the whole alphabet, so a
+                target set above what that key can manage stops the trail
+                entirely — and nothing here connected "no new letters lately"
+                to "your target", leaving the reasonable conclusion that they
+                had stopped improving.
+              */}
+              {suggestion != null && (
+                <button
+                  type="button"
+                  className={styles.suggest}
+                  onClick={() =>
+                    updateSettings(
+                      settings.set(lessonProps.targetSpeed, suggestion.target),
+                    )
+                  }
+                >
+                  <FormattedMessage
+                    id="practice.pulse.suggestTarget"
+                    defaultMessage="{key} is your slowest at {speed} — try a {target} goal to get moving again"
+                    values={{
+                      key: suggestion.blocker.letter.label.toUpperCase(),
+                      speed: formatSpeed(
+                        timeToSpeed(suggestion.blocker.timeToType!),
+                      ),
+                      target: formatSpeed(suggestion.target),
+                    }}
+                  />
+                </button>
+              )}
             </span>
           </div>
 
@@ -239,6 +324,29 @@ export const Pulse = memo(function Pulse({
                     >
                       <path d="M7 1.2 8.5 5l3.9.2-3 2.5 1 3.8L7 9.3l-3.4 2.2 1-3.8-3-2.5L5.5 5Z" />
                     </svg>
+                    {bottleneck != null && (
+                      <span
+                        className={styles.joinTag}
+                        title={formatMessage({
+                          id: "practice.pulse.join.description",
+                          defaultMessage:
+                            "Past the first weeks the drag is rarely a letter — it is the join between two of them. This round is aimed at yours.",
+                        })}
+                      >
+                        <FormattedMessage
+                          id="practice.pulse.join"
+                          defaultMessage="slow join {pair}"
+                          values={{
+                            pair: (
+                              <b>
+                                {String.fromCodePoint(bottleneck.from)}
+                                {String.fromCodePoint(bottleneck.to)}
+                              </b>
+                            ),
+                          }}
+                        />
+                      </span>
+                    )}
                     <span className={styles.microVal}>
                       {formatSpeed(timeToSpeed(focusedKey.timeToType!))}
                       <i>
@@ -261,12 +369,19 @@ export const Pulse = memo(function Pulse({
                 )}
               </>
             ) : (
+              // Finishing the alphabet used to be a trophy and a full stop.
+              // It is the point at which somebody has done the hard part and
+              // is most likely to keep going — and the app had capitals,
+              // punctuation, numbers and code all sitting there, and mentioned
+              // none of them. A finish line with nothing past it is where
+              // people stop.
               <span className={styles.microNote}>
                 <StrokeIcon className={styles.trophy} name="trophy" />
                 <FormattedMessage
                   id="t_All_keys_are_unlocked"
                   defaultMessage="Every key is unlocked."
                 />
+                <NextChallenge />
               </span>
             )}
           </div>
@@ -774,6 +889,76 @@ let tuneSpent = false; // a session already elapsed during the current reach
  * current speed. Steps snap to fives, exactly like the settings control, and
  * stay clamped to the target-speed bounds.
  */
+/**
+ * Where to go once the alphabet is finished.
+ *
+ * One suggestion at a time, in the order that keeps the most of what was just
+ * learned: capitals first (the same letters, one new motion), then
+ * punctuation, then the modes that are a different sport altogether. Each is a
+ * single press, because the whole failure here is a door the learner never
+ * knew was there.
+ */
+function NextChallenge(): ReactNode {
+  const { settings, updateSettings } = useSettings();
+  const capitals = settings.get(lessonProps.capitals);
+  const punctuators = settings.get(lessonProps.punctuators);
+
+  if (capitals === 0) {
+    return (
+      <button
+        type="button"
+        className={styles.suggest}
+        onClick={() =>
+          updateSettings(settings.set(lessonProps.capitals, DEFAULT_MANGLE))
+        }
+      >
+        <FormattedMessage
+          id="practice.next.capitals"
+          defaultMessage="Ready for more? Add capitals — same letters, one new motion."
+        />
+      </button>
+    );
+  }
+  if (punctuators === 0) {
+    return (
+      <button
+        type="button"
+        className={styles.suggest}
+        onClick={() =>
+          updateSettings(settings.set(lessonProps.punctuators, DEFAULT_MANGLE))
+        }
+      >
+        <FormattedMessage
+          id="practice.next.punctuation"
+          defaultMessage="Next: add punctuation, and you are typing real sentences."
+        />
+      </button>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={styles.suggest}
+      onClick={() =>
+        updateSettings(settings.set(lessonProps.type, LessonType.CODE))
+      }
+    >
+      <FormattedMessage
+        id="practice.next.code"
+        defaultMessage="You have the whole keyboard. Try Code craft, or Numbers, for a different sport."
+      />
+    </button>
+  );
+}
+
+/**
+ * How much of the text a newly-added mangling touches.
+ *
+ * A fifth: enough that it turns up in every lesson, few enough that the first
+ * one does not read as a punctuation drill.
+ */
+const DEFAULT_MANGLE = 0.2;
+
 function GoalTuner({
   target,
   reached,

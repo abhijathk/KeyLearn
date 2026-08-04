@@ -284,6 +284,57 @@
   white-space: nowrap;
 }
 
+// The stalled-learner hint: offered when the target, not the practice, is what
+// is stopping the next letter. Deliberately quiet and deliberately a button —
+// it is one press to act on, because the whole failure it addresses is a lever
+// the learner did not know existed.
+// The join this round is aimed at. A whisper beside the focused key, because
+// it explains the lesson rather than scoring it.
+.joinTag {
+  margin-inline-start: 0.35rem;
+  color: var(--text-color-f2);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+
+  b {
+    color: var(--text-color-f1);
+    font-family: var(--value-font-family);
+  }
+}
+
+// Stands where the delta chip would, on the first round after a break.
+.warmup {
+  color: var(--text-color-f2);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.suggest {
+  display: block;
+  max-inline-size: 22rem;
+  margin-block-start: 0.25rem;
+  padding: 0;
+  border: 0;
+  color: var(--text-color-f2);
+  background: none;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: start;
+  text-decoration: underline;
+  cursor: pointer;
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
 // The −/+ retune control that surfaces once the goal is reached: two tiny
 // accent chips that fade in beside the pulsing flag.
 .tuner {

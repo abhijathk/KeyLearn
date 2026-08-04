@@ -42,6 +42,17 @@ export class LessonState {
   readonly lessonKeys: LessonKeys;
   /** The previous run's ghost timeline captured before this round, if any. */
   readonly lastRunMarks: readonly number[] | null;
+  /**
+   * The slow key-pair this round is steering toward, if any.
+   *
+   * Kept rather than discarded because it is the one thing a plateaued learner
+   * most needs told: past the first weeks the drag is almost never a letter,
+   * it is a join between two of them. The tracker computed it, used it to aim
+   * the lesson, and then threw it away — so the insight existed and only the
+   * profile page ever showed it.
+   */
+  // Set during construction, alongside the focus it drives.
+  bottleneck: { readonly from: number; readonly to: number } | null = null;
 
   lastLesson: LastLesson | null = null;
 
@@ -83,6 +94,7 @@ export class LessonState {
     const among = new Set(included.map(({ letter }) => letter.codePoint));
     const worst = progress.bigrams.worst(among);
     if (worst != null) {
+      this.bottleneck = { from: worst.from, to: worst.to };
       const target = included.find(
         ({ letter }) => letter.codePoint === worst.to,
       );
