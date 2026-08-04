@@ -982,3 +982,20 @@
     accent-color: var(--accent);
   }
 }
+
+// The worked example under the time-zone note: the same date, clock, price and
+// phone number the drill will serve, for the zone currently chosen. Tabular
+// figures so it does not reflow as the selection changes.
+.rowExample {
+  margin-block-start: 0.35rem;
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+
+  b {
+    color: var(--text-color);
+    font-weight: 600;
+  }
+}

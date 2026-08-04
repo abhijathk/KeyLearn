@@ -1,5 +1,6 @@
 import { stringProp, useSettings } from "@keylearn/settings";
 import { useIntl } from "react-intl";
+import { formattingLocale } from "./region.ts";
 
 /**
  * Dates and times, in the reader's own terms.
@@ -134,8 +135,13 @@ export function intlDates(
   // A zone the runtime rejects would otherwise throw on every render, so an
   // unknown one falls back to the device rather than taking the page down.
   const zone = usable(timeZone) ? timeZone : deviceTimeZone();
+  // The zone names a country, and the country — not the interface language —
+  // decides whether 07/08 is July the eighth. A family in Sydney reading the
+  // app in English gets Australian dates; the same page in Chicago gets
+  // American ones. See region.ts.
+  const formatLocale = formattingLocale(locale, zone);
   const of = (options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(locale, { ...options, timeZone: zone });
+    new Intl.DateTimeFormat(formatLocale, { ...options, timeZone: zone });
 
   const dates = new Map<string, Intl.DateTimeFormat>();
   const formatter = (options: Intl.DateTimeFormatOptions, id: string) => {
@@ -179,7 +185,8 @@ export function intlDates(
     };
   };
 
-  const firstDay = resolveFirstDay(locale, weekStart);
+  // Regional too: Monday across Europe and Australia, Sunday in the US.
+  const firstDay = resolveFirstDay(formatLocale, weekStart);
 
   const value: IntlDates = {
     timeZone: zone,
@@ -213,7 +220,7 @@ export function intlDates(
       const { year, month, day, hour, minute } = partsOf(value);
       // The locale's own order, so an Australian reader gets 02-08-2026 and
       // an American 08-02-2026 — matching every other date they are shown.
-      const order = dateOrder(locale);
+      const order = dateOrder(formatLocale);
       const ymd = order
         .map((part) => (part === "y" ? year : part === "m" ? month : day))
         .join("-");

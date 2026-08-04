@@ -8,3 +8,4 @@ export * from "./intl.ts";
 export * from "./locale.ts";
 export * from "./messages.ts";
 export * from "./numbers.ts";
+export * from "./region.ts";

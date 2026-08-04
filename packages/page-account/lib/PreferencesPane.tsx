@@ -1,6 +1,7 @@
 import {
   allLocales,
   defaultLocale,
+  formatsForTimeZone,
   useIntlDates,
   useIntlDisplayNames,
 } from "@keylearn/intl";
@@ -49,6 +50,37 @@ const THEME_OPTIONS: readonly { id: ThemeId; label: ReactNode }[] = [
  * Account-level Preferences: theme, speed unit, language, region, email
  * notifications and privacy — distinct from the per-profile Practice settings.
  */
+/**
+ * What this time zone's country actually writes, on one line.
+ *
+ * A worked example rather than a description: the same date, clock, price and
+ * phone number the drill will serve, rendered for the zone currently chosen.
+ * Changing the select changes this line, which is the fastest way to see that
+ * the setting does something beyond streaks.
+ */
+function regionSample(timeZone: string): string {
+  const f = formatsForTimeZone(timeZone);
+  const date =
+    f.dateOrder === "MDY"
+      ? ["08", "07", "2026"]
+      : f.dateOrder === "YMD"
+        ? ["2026", "08", "07"]
+        : ["07", "08", "2026"];
+  const time = f.hour12 ? "2:32 pm" : "14:32";
+  // 1234567.89 in this country's grouping, so the sample shows the shape a
+  // large amount takes and not just the symbol.
+  const digits = "1234567";
+  const whole = f.southAsianGrouping
+    ? `${digits.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, f.groupSep)}${f.groupSep}${digits.slice(-3)}`
+    : digits.replace(/\B(?=(\d{3})+(?!\d))/g, f.groupSep);
+  const amount = `${whole}${f.decimalSep}89`;
+  const money = f.currencyBefore
+    ? `${f.currencySymbol}${amount}`
+    : `${amount} ${f.currencySymbol}`;
+  const phone = f.phonePattern.replace(/#/g, () => "5");
+  return [date.join(f.dateSep), time, money, phone].join("  ·  ");
+}
+
 export function PreferencesPane(): ReactNode {
   return (
     <div className={styles.paneScroll}>
@@ -138,7 +170,17 @@ function LanguageRegionCard(): ReactNode {
           <span className={styles.rowSub}>
             <FormattedMessage
               id="account.prefs.timezone.sub"
-              defaultMessage="Sets when your day rolls over for streaks and goals."
+              defaultMessage="More than when your day rolls over for streaks and goals: this is how KeyLearn knows which country you are in. Dates, times, prices and phone numbers are written your country’s way because of this, and the number drills practise those local shapes rather than another country’s. Your language stays whatever you chose above — only the local conventions follow the zone."
+            />
+          </span>
+          {/* Prose can describe the effect; showing it is quicker to read and
+              impossible to misunderstand. This is exactly what the drill will
+              serve for the zone currently selected. */}
+          <span className={styles.rowExample}>
+            <FormattedMessage
+              id="account.prefs.timezone.example"
+              defaultMessage="Here that looks like: {sample}"
+              values={{ sample: <b>{regionSample(timeZone)}</b> }}
             />
           </span>
         </div>

@@ -10,6 +10,7 @@
     "@keylearn/content": "*",
     "@keylearn/content-quotes": "*",
     "@keylearn/content-snippets": "*",
+    "@keylearn/intl": "*",
     "@keylearn/keyboard": "*",
     "@keylearn/lang": "*",
     "@keylearn/math": "*",
