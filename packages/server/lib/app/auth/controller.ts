@@ -106,7 +106,18 @@ const TProfile = z.object({
   kind: z.enum(["adult", "kid"]),
   firstName: z.string().min(1).max(32),
   lastName: z.string().max(32).optional(),
-  birthYear: z.number().int().min(1900).max(2200).nullable().optional(),
+  birthYear: z
+    .number()
+    .int()
+    .min(1900)
+    .max(2200)
+    // Five is the app's minimum age; the client says it kindly, this makes
+    // sure it stays true whatever posts the form.
+    .refine((year) => new Date().getFullYear() - year >= 5, {
+      message: "KeyLearn is designed for learners aged 5 and up",
+    })
+    .nullable()
+    .optional(),
   avatar: TAvatar.nullable().optional(),
   prefs: TPrefs.nullable().optional(),
   visionSupport: z.boolean().optional(),

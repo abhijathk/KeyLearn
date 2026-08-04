@@ -460,6 +460,19 @@ function ProfileEditor({
             ? raw
             : null
         : null;
+    // Five is the youngest KeyLearn is built for: every age band, reward and
+    // coach line starts there, and a younger child would meet a game that is
+    // silently wrong for them everywhere. Said plainly instead.
+    if (year != null && new Date().getFullYear() - year < 5) {
+      setError(
+        formatMessage({
+          id: "profiles.tooYoung",
+          defaultMessage:
+            "KeyLearn is designed for learners aged 5 and up. You can create the profile once they turn five.",
+        }),
+      );
+      return;
+    }
     onSave({
       kind,
       firstName: firstName.trim(),
