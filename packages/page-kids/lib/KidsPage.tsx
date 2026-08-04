@@ -31,6 +31,7 @@ import {
   earn,
   type Hatchling,
   HATCHLINGS,
+  kidsStreak,
   loadAlbum,
   nextHatchling,
   practiceDays,
@@ -875,6 +876,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           sounds: prefs.sounds,
           night: prefs.night,
           keys: included,
+          streak: kidsStreak(),
         },
       }),
     );
@@ -884,6 +886,17 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   useEffect(() => {
     kidsAudio.setTheme(prefs.world === "hero" ? "hero" : "dino");
   }, [prefs.world]);
+  // The night, heard: a far-off cricket now and then, only on the hero
+  // world's real night and only with sound on. Quiet enough to be the night
+  // being there rather than a soundtrack.
+  useEffect(() => {
+    if (prefs.world === "hero" && prefs.night && prefs.sounds) {
+      kidsAudio.startCrickets();
+      return () => kidsAudio.stopCrickets();
+    }
+    kidsAudio.stopCrickets();
+    return undefined;
+  }, [prefs.world, prefs.night, prefs.sounds]);
   // Live brightness/paleness/motion sliders — apply to the running scene now.
   useEffect(() => {
     worldRef.current?.setLook(prefs.brightness, prefs.paleness);
@@ -2439,152 +2452,154 @@ function SettingsCard({
           </span>
           Your game, your way
         </div>
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--seafoam)" }}>
-            <WorldIcon size={24} color="#12664a" />
-          </span>
-          <div>
-            <div className={styles.sl}>Pick your world</div>
-            <div className={styles.sd}>where you run</div>
-          </div>
-          <div className={styles.ctl}>
-            <button
-              type="button"
-              className={pill(prefs.world === "dino")}
-              onClick={() => savePrefs({ world: "dino" })}
-            >
-              Dino Run
-            </button>
-            <button
-              type="button"
-              className={pill(prefs.world === "hero")}
-              onClick={() => savePrefs({ world: "hero" })}
-            >
-              Hero Trail
-            </button>
-          </div>
-        </div>
         {/*
+          The rows scroll; the title above and the button below do not. The
+          card had grown past a screen, and the way back to the game was
+          buried at the bottom of a scroll a five-year-old had to find.
+        */}
+        <div className={styles.cardScroll}>
+          <div className={styles.sectionLabel}>Your world</div>
+          <div className={styles.srow}>
+            <span
+              className={styles.ri}
+              style={{ background: "var(--seafoam)" }}
+            >
+              <WorldIcon size={24} color="#12664a" />
+            </span>
+            <div>
+              <div className={styles.sl}>Pick your world</div>
+              <div className={styles.sd}>where you run</div>
+            </div>
+            <div className={styles.ctl}>
+              <button
+                type="button"
+                className={pill(prefs.world === "dino")}
+                onClick={() => savePrefs({ world: "dino" })}
+              >
+                Dino Run
+              </button>
+              <button
+                type="button"
+                className={pill(prefs.world === "hero")}
+                onClick={() => savePrefs({ world: "hero" })}
+              >
+                Hero Trail
+              </button>
+            </div>
+          </div>
+          {/*
           Hero Trail only: what the dark means. By age unless a grown-up says
           otherwise — the youngest get a starry quiet night with no Lost
           Travellers, and this is where a parent moves a child up or down.
         */}
-        {prefs.world === "hero" && (
-          <div className={styles.srow}>
-            <span className={styles.ri} style={{ background: "var(--sky)" }}>
-              <MoonIcon size={20} color="#2d3f6b" />
-            </span>
-            <div>
-              <div className={styles.sl}>Night on the trail</div>
-              <div className={styles.sd}>who is out after dark</div>
+          {prefs.world === "hero" && (
+            <div className={styles.srow}>
+              <span className={styles.ri} style={{ background: "var(--sky)" }}>
+                <MoonIcon size={20} color="#2d3f6b" />
+              </span>
+              <div>
+                <div className={styles.sl}>Night on the trail</div>
+                <div className={styles.sd}>who is out after dark</div>
+              </div>
+              <div className={styles.ctl}>
+                {(
+                  [
+                    ["auto", "By age"],
+                    ["quiet", "Quiet"],
+                    ["mild", "Spooky"],
+                    ["full", "Extra spooky"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={pill(prefs.nightStyle === value)}
+                    onClick={() => savePrefs({ nightStyle: value })}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className={styles.ctl}>
-              {(
-                [
-                  ["auto", "By age"],
-                  ["quiet", "Quiet"],
-                  ["mild", "Spooky"],
-                  ["full", "Extra spooky"],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={pill(prefs.nightStyle === value)}
-                  onClick={() => savePrefs({ nightStyle: value })}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        {/*
+          )}
+          {/*
           Only offered once the alphabet is done. Before that it would be a
           harder mode dangled in front of a child still learning where D is.
         */}
-        {included >= totalLetters && (
-          <div className={styles.srow}>
-            <span className={styles.ri} style={{ background: "var(--coral)" }}>
-              <span className={styles.aaIcon}>A!</span>
-            </span>
-            <div>
-              <div className={styles.sl}>Grown-up keys</div>
-              <div className={styles.sd}>
-                capital letters, then full stops and commas
+          {included >= totalLetters && (
+            <div className={styles.srow}>
+              <span
+                className={styles.ri}
+                style={{ background: "var(--coral)" }}
+              >
+                <span className={styles.aaIcon}>A!</span>
+              </span>
+              <div>
+                <div className={styles.sl}>Grown-up keys</div>
+                <div className={styles.sd}>
+                  capital letters, then full stops and commas
+                </div>
+              </div>
+              <div className={styles.ctl}>
+                {(
+                  [
+                    ["off", "Off"],
+                    ["caps", "Capitals"],
+                    ["punct", "And marks"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={pill(prefs.grownupKeys === value)}
+                    onClick={() => savePrefs({ grownupKeys: value })}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
+          )}
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--sand)" }}>
+              <StarIcon size={22} color="#7a5c00" />
+            </span>
+            <div>
+              <div className={styles.sl}>Sticker album</div>
+              <div className={styles.sd}>everything you have collected</div>
+            </div>
             <div className={styles.ctl}>
-              {(
-                [
-                  ["off", "Off"],
-                  ["caps", "Capitals"],
-                  ["punct", "And marks"],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={pill(prefs.grownupKeys === value)}
-                  onClick={() => savePrefs({ grownupKeys: value })}
-                >
-                  {label}
-                </button>
-              ))}
+              <button
+                type="button"
+                className={styles.pill}
+                onClick={onOpenAlbum}
+              >
+                Open
+              </button>
             </div>
           </div>
-        )}
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--sand)" }}>
-            <StarIcon size={22} color="#7a5c00" />
-          </span>
-          <div>
-            <div className={styles.sl}>Sticker album</div>
-            <div className={styles.sd}>everything you have collected</div>
-          </div>
-          <div className={styles.ctl}>
-            <button type="button" className={styles.pill} onClick={onOpenAlbum}>
-              Open
-            </button>
-          </div>
-        </div>
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--sage)" }}>
-            <PawIcon size={24} color="#3d6b2e" />
-          </span>
-          <div>
-            <div className={styles.sl}>
-              {prefs.name !== "" ? prefs.name : "Your buddy"}
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--sage)" }}>
+              <PawIcon size={24} color="#3d6b2e" />
+            </span>
+            <div>
+              <div className={styles.sl}>
+                {prefs.name !== "" ? prefs.name : "Your buddy"}
+              </div>
+              <div className={styles.sd}>who runs with you</div>
             </div>
-            <div className={styles.sd}>who runs with you</div>
-          </div>
-          {/*
+            {/*
             Both worlds work the same way now: a couple of starters, then a
             companion earned every four keys. The hero world used to hand out
             both of its characters for free and have nothing after them, which
             left the default world for the youngest bands with no rewards at
             all.
           */}
-          <div className={styles.ctl}>
-            {(prefs.world === "hero"
-              ? HERO_CHARACTERS
-              : ([{ id: "TRex", label: "Rex" }] as const)
-            ).map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className={pill(
-                  (prefs.world === "hero" ? prefs.hero : prefs.dino) === id,
-                )}
-                onClick={() =>
-                  prefs.world === "hero" ? onPickHero(id) : onPickDino(id)
-                }
-              >
-                {label}
-              </button>
-            ))}
-            {HATCHLINGS[prefs.world].map(({ id, label, at }) =>
-              included >= at ? (
+            <div className={styles.ctl}>
+              {(prefs.world === "hero"
+                ? HERO_CHARACTERS
+                : ([{ id: "TRex", label: "Rex" }] as const)
+              ).map(({ id, label }) => (
                 <button
                   key={id}
                   type="button"
@@ -2597,319 +2612,346 @@ function SettingsCard({
                 >
                   {label}
                 </button>
-              ) : (
-                <button
-                  key={id}
-                  type="button"
-                  className={clsx(styles.pill, styles.pillEgg)}
-                  disabled={true}
-                  title={`This egg hatches at ${at} keys`}
-                >
-                  <EggIcon size={14} color="currentColor" /> {at} keys
-                </button>
-              ),
-            )}
-            <button type="button" className={styles.pill} onClick={onRename}>
-              Rename
-            </button>
+              ))}
+              {HATCHLINGS[prefs.world].map(({ id, label, at }) =>
+                included >= at ? (
+                  <button
+                    key={id}
+                    type="button"
+                    className={pill(
+                      (prefs.world === "hero" ? prefs.hero : prefs.dino) === id,
+                    )}
+                    onClick={() =>
+                      prefs.world === "hero" ? onPickHero(id) : onPickDino(id)
+                    }
+                  >
+                    {label}
+                  </button>
+                ) : (
+                  <button
+                    key={id}
+                    type="button"
+                    className={clsx(styles.pill, styles.pillEgg)}
+                    disabled={true}
+                    title={`This egg hatches at ${at} keys`}
+                  >
+                    <EggIcon size={14} color="currentColor" /> {at} keys
+                  </button>
+                ),
+              )}
+              <button type="button" className={styles.pill} onClick={onRename}>
+                Rename
+              </button>
+            </div>
           </div>
-        </div>
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--sky)" }}>
-            <span className={styles.aaIcon}>Aa</span>
-          </span>
-          <div>
-            <div className={styles.sl}>Big letters</div>
-            <div className={styles.sd}>show the words in CAPITALS</div>
-          </div>
-          <div className={styles.ctl}>
-            <button
-              type="button"
-              className={pill(prefs.bigLetters)}
-              onClick={() => savePrefs({ bigLetters: !prefs.bigLetters })}
-            >
-              {prefs.bigLetters ? "On" : "Off"}
-            </button>
-          </div>
-        </div>
-        {canToggleWords && (
+          <div className={styles.sectionLabel}>Help while you type</div>
           <div className={styles.srow}>
-            <span
-              className={styles.ri}
-              style={{ background: "var(--seafoam)" }}
-            >
-              <span className={styles.aaIcon}>Ab</span>
+            <span className={styles.ri} style={{ background: "var(--sky)" }}>
+              <span className={styles.aaIcon}>Aa</span>
             </span>
             <div>
-              <div className={styles.sl}>Letters on the trail</div>
-              <div className={styles.sd}>
-                show the words as blocks in the game, not a panel
-              </div>
+              <div className={styles.sl}>Big letters</div>
+              <div className={styles.sd}>show the words in CAPITALS</div>
             </div>
             <div className={styles.ctl}>
               <button
                 type="button"
-                className={pill(prefs.wordBlocks)}
-                onClick={() => savePrefs({ wordBlocks: !prefs.wordBlocks })}
+                className={pill(prefs.bigLetters)}
+                onClick={() => savePrefs({ bigLetters: !prefs.bigLetters })}
               >
-                {prefs.wordBlocks ? "On" : "Off"}
+                {prefs.bigLetters ? "On" : "Off"}
               </button>
             </div>
           </div>
-        )}
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--sand)" }}>
-            <SoundIcon color="#7a5c00" size={20} />
-          </span>
-          <div>
-            <div className={styles.sl}>Sounds</div>
-            <div className={styles.sd}>beeps, jumps and level-up tunes</div>
-          </div>
-          <div className={styles.ctl}>
-            <button
-              type="button"
-              className={pill(prefs.sounds)}
-              onClick={() => savePrefs({ sounds: !prefs.sounds })}
-            >
-              {prefs.sounds ? "On" : "Off"}
-            </button>
-          </div>
-        </div>
-        {/*
-          On by default for the bands who cannot read the coach, and still a
-          knob: a classroom of eight children is a very different room from a
-          bedroom, and a child who has learned to read wants it gone.
-        */}
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--sand)" }}>
-            <SoundIcon color="#7a5c00" size={20} />
-          </span>
-          <div>
-            <div className={styles.sl}>Read it out loud</div>
-            <div className={styles.sd}>
-              {prefs.sounds
-                ? "the coach says the important bits"
-                : "needs sounds switched on"}
-            </div>
-          </div>
-          <div className={styles.ctl}>
-            <button
-              type="button"
-              className={pill(prefs.readAloud && prefs.sounds)}
-              disabled={!prefs.sounds}
-              onClick={() => {
-                const on = !prefs.readAloud;
-                savePrefs({ readAloud: on });
-                if (on) {
-                  unlockVoice();
-                  speakLine(
-                    "Hello! I will read the important bits.",
-                    cfg.speechRate,
-                  );
-                } else {
-                  stopSpeaking();
-                }
-              }}
-            >
-              {prefs.readAloud && prefs.sounds ? "On" : "Off"}
-            </button>
-          </div>
-        </div>
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--rose)" }}>
-            <HandIcon />
-          </span>
-          <div>
-            <div className={styles.sl}>Helper hands</div>
-            <div className={styles.sd}>the glowing finger guide</div>
-          </div>
-          <div className={styles.ctl}>
-            <button
-              type="button"
-              className={pill(prefs.hands)}
-              onClick={() => savePrefs({ hands: !prefs.hands })}
-            >
-              {prefs.hands ? "On" : "Off"}
-            </button>
-          </div>
-        </div>
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--seafoam)" }}>
-            <KeysIcon />
-          </span>
-          <div>
-            <div className={styles.sl}>Keyboard</div>
-            <div className={styles.sd}>
-              simple letters, the full grown-up board, or hidden
-            </div>
-          </div>
-          <div className={styles.ctl}>
-            {(
-              [
-                ["off", "Hidden"],
-                ["simple", "Simple"],
-                ["full", "Full"],
-              ] as const
-            ).map(([mode, label]) => (
-              <button
-                key={mode}
-                type="button"
-                className={pill(prefs.kbMode === mode)}
-                onClick={() =>
-                  // The full board needs the room — hands step aside
-                  // (turn them back on anytime).
-                  savePrefs(
-                    mode === "full"
-                      ? { kbMode: mode, hands: false }
-                      : { kbMode: mode },
-                  )
-                }
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--sage)" }}>
-            <ClockIcon />
-          </span>
-          <div>
-            <div className={styles.sl}>Timer</div>
-            <div className={styles.sd}>
-              pick a session — the run ends at the campfire
-            </div>
-          </div>
-          <div className={styles.ctl}>
-            <button
-              type="button"
-              className={pill(!prefs.timerVisible)}
-              onClick={() => savePrefs({ timerVisible: !prefs.timerVisible })}
-            >
-              {prefs.timerVisible ? "Shown" : "Hidden"}
-            </button>
-            {[5, 10, 15, 20, 25, 30].map((min) => (
-              <button
-                key={min}
-                type="button"
-                className={pill(prefs.timerMin === min)}
-                onClick={() => onPickTimer(min)}
-              >
-                {min}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className={styles.srow}>
-          <span className={styles.ri} style={{ background: "var(--rose)" }}>
-            <ChatIcon />
-          </span>
-          <div>
-            <div className={styles.sl}>Cheers</div>
-            <div className={styles.sd}>dino messages while you type</div>
-          </div>
-          <div className={styles.ctl}>
-            <button
-              type="button"
-              className={pill(prefs.cheers)}
-              onClick={() => savePrefs({ cheers: !prefs.cheers })}
-            >
-              {prefs.cheers ? "On" : "Off"}
-            </button>
-          </div>
-        </div>
-        <button
-          type="button"
-          className={clsx(styles.advToggle, advancedOpen && styles.advOpen)}
-          onClick={() => setAdvancedOpen((v) => !v)}
-          aria-expanded={advancedOpen}
-        >
-          <span className={styles.advLabel}>Advanced settings</span>
-          <span className={styles.advChevron} aria-hidden="true">
-            ▾
-          </span>
-        </button>
-        {advancedOpen && (
-          <div className={styles.advPanel}>
-            <div className={styles.srow}>
-              <span className={styles.ri} style={{ background: "var(--sky)" }}>
-                <SunIcon size={20} color="#3d6b8a" />
-              </span>
-              <div>
-                <div className={styles.sl}>Brightness</div>
-                <div className={styles.sd}>how bright the world looks</div>
-              </div>
-              <div className={styles.ctl}>
-                <input
-                  type="range"
-                  className={styles.slider}
-                  min={0.75}
-                  max={1.25}
-                  step={0.01}
-                  value={prefs.brightness}
-                  aria-label="Brightness"
-                  onChange={(e) =>
-                    savePrefs({ brightness: Number(e.target.value) })
-                  }
-                />
-              </div>
-            </div>
+          {canToggleWords && (
             <div className={styles.srow}>
               <span
                 className={styles.ri}
                 style={{ background: "var(--seafoam)" }}
               >
-                <span className={styles.swatch} />
+                <span className={styles.aaIcon}>Ab</span>
               </span>
               <div>
-                <div className={styles.sl}>Colour</div>
+                <div className={styles.sl}>Letters on the trail</div>
                 <div className={styles.sd}>
-                  soft and pale, or bright and bold
+                  show the words as blocks in the game, not a panel
                 </div>
               </div>
               <div className={styles.ctl}>
-                <input
-                  type="range"
-                  className={styles.slider}
-                  min={0}
-                  max={1}
-                  step={0.02}
-                  // Slider reads left = pale, right = full colour, so invert.
-                  value={1 - prefs.paleness}
-                  aria-label="Colour"
-                  onChange={(e) =>
-                    savePrefs({ paleness: 1 - Number(e.target.value) })
-                  }
-                />
+                <button
+                  type="button"
+                  className={pill(prefs.wordBlocks)}
+                  onClick={() => savePrefs({ wordBlocks: !prefs.wordBlocks })}
+                >
+                  {prefs.wordBlocks ? "On" : "Off"}
+                </button>
               </div>
             </div>
-            <div className={styles.srow}>
-              <span className={styles.ri} style={{ background: "var(--sage)" }}>
-                <PawIcon size={20} color="#4a6b3a" />
-              </span>
-              <div>
-                <div className={styles.sl}>Movement</div>
-                <div className={styles.sd}>
-                  how lively the animals and heroes are
-                </div>
-              </div>
-              <div className={styles.ctl}>
-                <input
-                  type="range"
-                  className={styles.slider}
-                  min={0}
-                  max={1}
-                  step={0.02}
-                  value={prefs.motion}
-                  aria-label="Movement"
-                  onChange={(e) =>
-                    savePrefs({ motion: Number(e.target.value) })
-                  }
-                />
-              </div>
+          )}
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--sand)" }}>
+              <SoundIcon color="#7a5c00" size={20} />
+            </span>
+            <div>
+              <div className={styles.sl}>Sounds</div>
+              <div className={styles.sd}>beeps, jumps and level-up tunes</div>
+            </div>
+            <div className={styles.ctl}>
+              <button
+                type="button"
+                className={pill(prefs.sounds)}
+                onClick={() => savePrefs({ sounds: !prefs.sounds })}
+              >
+                {prefs.sounds ? "On" : "Off"}
+              </button>
             </div>
           </div>
-        )}
+          {/*
+          On by default for the bands who cannot read the coach, and still a
+          knob: a classroom of eight children is a very different room from a
+          bedroom, and a child who has learned to read wants it gone.
+        */}
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--sand)" }}>
+              <SoundIcon color="#7a5c00" size={20} />
+            </span>
+            <div>
+              <div className={styles.sl}>Read it out loud</div>
+              <div className={styles.sd}>
+                {prefs.sounds
+                  ? "the coach says the important bits"
+                  : "needs sounds switched on"}
+              </div>
+            </div>
+            <div className={styles.ctl}>
+              <button
+                type="button"
+                className={pill(prefs.readAloud && prefs.sounds)}
+                disabled={!prefs.sounds}
+                onClick={() => {
+                  const on = !prefs.readAloud;
+                  savePrefs({ readAloud: on });
+                  if (on) {
+                    unlockVoice();
+                    speakLine(
+                      "Hello! I will read the important bits.",
+                      cfg.speechRate,
+                    );
+                  } else {
+                    stopSpeaking();
+                  }
+                }}
+              >
+                {prefs.readAloud && prefs.sounds ? "On" : "Off"}
+              </button>
+            </div>
+          </div>
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--rose)" }}>
+              <HandIcon />
+            </span>
+            <div>
+              <div className={styles.sl}>Helper hands</div>
+              <div className={styles.sd}>the glowing finger guide</div>
+            </div>
+            <div className={styles.ctl}>
+              <button
+                type="button"
+                className={pill(prefs.hands)}
+                onClick={() => savePrefs({ hands: !prefs.hands })}
+              >
+                {prefs.hands ? "On" : "Off"}
+              </button>
+            </div>
+          </div>
+          <div className={styles.srow}>
+            <span
+              className={styles.ri}
+              style={{ background: "var(--seafoam)" }}
+            >
+              <KeysIcon />
+            </span>
+            <div>
+              <div className={styles.sl}>Keyboard</div>
+              <div className={styles.sd}>
+                simple letters, the full grown-up board, or hidden
+              </div>
+            </div>
+            <div className={styles.ctl}>
+              {(
+                [
+                  ["off", "Hidden"],
+                  ["simple", "Simple"],
+                  ["full", "Full"],
+                ] as const
+              ).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={pill(prefs.kbMode === mode)}
+                  onClick={() =>
+                    // The full board needs the room — hands step aside
+                    // (turn them back on anytime).
+                    savePrefs(
+                      mode === "full"
+                        ? { kbMode: mode, hands: false }
+                        : { kbMode: mode },
+                    )
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.sectionLabel}>The session</div>
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--sage)" }}>
+              <ClockIcon />
+            </span>
+            <div>
+              <div className={styles.sl}>Timer</div>
+              <div className={styles.sd}>
+                pick a session — the run ends at the campfire
+              </div>
+            </div>
+            <div className={styles.ctl}>
+              <button
+                type="button"
+                className={pill(!prefs.timerVisible)}
+                onClick={() => savePrefs({ timerVisible: !prefs.timerVisible })}
+              >
+                {prefs.timerVisible ? "Shown" : "Hidden"}
+              </button>
+              {[5, 10, 15, 20, 25, 30].map((min) => (
+                <button
+                  key={min}
+                  type="button"
+                  className={pill(prefs.timerMin === min)}
+                  onClick={() => onPickTimer(min)}
+                >
+                  {min}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--rose)" }}>
+              <ChatIcon />
+            </span>
+            <div>
+              <div className={styles.sl}>Cheers</div>
+              <div className={styles.sd}>dino messages while you type</div>
+            </div>
+            <div className={styles.ctl}>
+              <button
+                type="button"
+                className={pill(prefs.cheers)}
+                onClick={() => savePrefs({ cheers: !prefs.cheers })}
+              >
+                {prefs.cheers ? "On" : "Off"}
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={clsx(styles.advToggle, advancedOpen && styles.advOpen)}
+            onClick={() => setAdvancedOpen((v) => !v)}
+            aria-expanded={advancedOpen}
+          >
+            <span className={styles.advLabel}>Advanced settings</span>
+            <span className={styles.advChevron} aria-hidden="true">
+              ▾
+            </span>
+          </button>
+          {advancedOpen && (
+            <div className={styles.advPanel}>
+              <div className={styles.srow}>
+                <span
+                  className={styles.ri}
+                  style={{ background: "var(--sky)" }}
+                >
+                  <SunIcon size={20} color="#3d6b8a" />
+                </span>
+                <div>
+                  <div className={styles.sl}>Brightness</div>
+                  <div className={styles.sd}>how bright the world looks</div>
+                </div>
+                <div className={styles.ctl}>
+                  <input
+                    type="range"
+                    className={styles.slider}
+                    min={0.75}
+                    max={1.25}
+                    step={0.01}
+                    value={prefs.brightness}
+                    aria-label="Brightness"
+                    onChange={(e) =>
+                      savePrefs({ brightness: Number(e.target.value) })
+                    }
+                  />
+                </div>
+              </div>
+              <div className={styles.srow}>
+                <span
+                  className={styles.ri}
+                  style={{ background: "var(--seafoam)" }}
+                >
+                  <span className={styles.swatch} />
+                </span>
+                <div>
+                  <div className={styles.sl}>Colour</div>
+                  <div className={styles.sd}>
+                    soft and pale, or bright and bold
+                  </div>
+                </div>
+                <div className={styles.ctl}>
+                  <input
+                    type="range"
+                    className={styles.slider}
+                    min={0}
+                    max={1}
+                    step={0.02}
+                    // Slider reads left = pale, right = full colour, so invert.
+                    value={1 - prefs.paleness}
+                    aria-label="Colour"
+                    onChange={(e) =>
+                      savePrefs({ paleness: 1 - Number(e.target.value) })
+                    }
+                  />
+                </div>
+              </div>
+              <div className={styles.srow}>
+                <span
+                  className={styles.ri}
+                  style={{ background: "var(--sage)" }}
+                >
+                  <PawIcon size={20} color="#4a6b3a" />
+                </span>
+                <div>
+                  <div className={styles.sl}>Movement</div>
+                  <div className={styles.sd}>
+                    how lively the animals and heroes are
+                  </div>
+                </div>
+                <div className={styles.ctl}>
+                  <input
+                    type="range"
+                    className={styles.slider}
+                    min={0}
+                    max={1}
+                    step={0.02}
+                    value={prefs.motion}
+                    aria-label="Movement"
+                    onChange={(e) =>
+                      savePrefs({ motion: Number(e.target.value) })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         <button type="button" className={styles.cta} onClick={onClose}>
           Back to the run!
         </button>

@@ -114,6 +114,15 @@ export type NightPlan = {
   readonly deadScatter: number;
   /** Fraction of the leafy day trees hidden after dark, 0..1. */
   readonly treeThin: number;
+  /**
+   * The share of day companions who turn out to be Lost Travellers by night.
+   *
+   * The change happens in place: the villager thins to a ghost and a matched
+   * skeleton rises exactly where they stood — the same mage, the same spot,
+   * a different hour. On the full night everyone ordinary turns; on the mild
+   * night about half do; on the quiet night nobody does.
+   */
+  readonly transformShare: number;
 };
 
 /**
@@ -132,13 +141,14 @@ export function nightPlan(style: NightStyle, tier: DeviceTier): NightPlan {
       travellers: 0,
       eyePairs: 0,
       fireflies: Math.max(8, Math.round(24 * scale)),
-      mist: 0.22,
+      mist: 0.3,
       keepDistance: Infinity,
       // A couple of bare trunks read as winter; a dense dead forest reads as
       // spooky, and the quiet night promises there is none of that.
       deadGroves: 0,
       deadScatter: 2,
       treeThin: 0.1,
+      transformShare: 0,
     };
   }
   if (style === "mild") {
@@ -146,22 +156,24 @@ export function nightPlan(style: NightStyle, tier: DeviceTier): NightPlan {
       travellers: Math.max(2, Math.round(4 * scale)),
       eyePairs: Math.max(3, Math.round(6 * scale)),
       fireflies: Math.max(6, Math.round(14 * scale)),
-      mist: 0.3,
+      mist: 0.45,
       // Far enough that a Traveller is always something seen, never met.
       keepDistance: 7,
       deadGroves: Math.max(1, Math.round(2 * scale)),
       deadScatter: Math.max(3, Math.round(6 * scale)),
       treeThin: 0.3,
+      transformShare: 0.5,
     };
   }
   return {
     travellers: Math.max(3, Math.round(9 * scale)),
     eyePairs: Math.max(4, Math.round(12 * scale)),
     fireflies: Math.max(6, Math.round(10 * scale)),
-    mist: 0.38,
+    mist: 0.6,
     keepDistance: 4.5,
     deadGroves: Math.max(2, Math.round(4 * scale)),
     deadScatter: Math.max(4, Math.round(10 * scale)),
     treeThin: 0.45,
+    transformShare: 1,
   };
 }

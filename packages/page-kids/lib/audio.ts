@@ -234,6 +234,56 @@ class KidsAudio {
       setTimeout(() => this.#beep(720, 0.09, "square", 0.05), 90);
     }
   }
+
+  // ── the night, heard ─────────────────────────────────────────────────
+  #cricketTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * A cricket, far off. Three to five tiny pulses make one chirp; chirps come
+   * at lazy, uneven intervals so it never reads as a loop. Very quiet on
+   * purpose — it is the sound of the night being there, not a soundtrack.
+   */
+  #chirp() {
+    const ctx = this.#ctx;
+    if (ctx == null) {
+      return;
+    }
+    const pulses = 3 + Math.floor(Math.random() * 3);
+    const freq = 4100 + Math.random() * 400;
+    for (let i = 0; i < pulses; i++) {
+      const at = ctx.currentTime + i * 0.062;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, at);
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(0.016, at + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.03);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(at);
+      osc.stop(at + 0.04);
+    }
+  }
+
+  /** Starts the night chorus. Harmless to call twice. */
+  startCrickets() {
+    if (this.#cricketTimer != null) {
+      return;
+    }
+    const loop = () => {
+      this.#chirp();
+      this.#cricketTimer = setTimeout(loop, 1400 + Math.random() * 2600);
+    };
+    this.#cricketTimer = setTimeout(loop, 600);
+  }
+
+  stopCrickets() {
+    if (this.#cricketTimer != null) {
+      clearTimeout(this.#cricketTimer);
+      this.#cricketTimer = null;
+    }
+  }
 }
 
 export const kidsAudio = new KidsAudio();

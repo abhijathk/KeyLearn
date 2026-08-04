@@ -19,6 +19,8 @@ type KidsControlState = {
   readonly sounds: boolean;
   readonly night: boolean;
   readonly keys: number;
+  /** Days practised in a row, for the little flame chip. */
+  readonly streak?: number;
 };
 
 function useKidsControls(): KidsControlState {
@@ -40,6 +42,21 @@ function useKidsControls(): KidsControlState {
 function kidsToggle(what: "sound" | "night" | "settings"): void {
   window.dispatchEvent(
     new window.CustomEvent("keylearn:kids-toggle", { detail: what }),
+  );
+}
+
+// A tiny flame for the streak chip, drawn in the same hand as the rest.
+function KidFlameIcon(): ReactNode {
+  return (
+    <svg viewBox="0 0 24 24" width={17} height={17} aria-hidden={true}>
+      <path
+        d="M12 3.5c1.2 2.4 4.8 4.6 4.8 8.6a4.8 4.8 0 0 1-9.6 0c0-1.6.7-2.9 1.6-4.2.2 1 .7 1.8 1.6 2.3-.3-2.5.4-4.9 1.6-6.7Z"
+        fill="none"
+        stroke="#b3541e"
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -203,6 +220,26 @@ export function Header({
         <AccountMenu kids={kids} />
         {kids && (
           <>
+            {(kidsState.streak ?? 0) > 1 && (
+              // Days in a row, said the way the other chips say things. Not a
+              // button — there is nothing to press about having turned up.
+              <span
+                className={clsx(styles.kidsChip, styles.kidsChipWide)}
+                style={{
+                  background: "color-mix(in srgb, #ff9d5c 30%, #ffffff)",
+                }}
+                title={formatMessage(
+                  defineMessage({
+                    id: "kids.header.streak",
+                    defaultMessage: "{days} days of practice in a row",
+                  }),
+                  { days: kidsState.streak },
+                )}
+              >
+                <KidFlameIcon />
+                <span className={styles.kidsChipCount}>{kidsState.streak}</span>
+              </span>
+            )}
             <button
               type="button"
               className={styles.kidsChip}

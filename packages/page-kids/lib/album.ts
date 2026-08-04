@@ -214,3 +214,35 @@ export function nextHatchling(
 ): Hatchling | null {
   return HATCHLINGS[world].find(({ at }) => included < at) ?? null;
 }
+
+/**
+ * Days practised in a row, ending today or yesterday.
+ *
+ * Yesterday still counts as alive — a child who practised every evening has
+ * not broken their streak at breakfast — but today is what keeps it growing.
+ */
+export function kidsStreak(): number {
+  try {
+    const raw = localStorage.getItem(DAYS_KEY());
+    const parsed: unknown = raw == null ? null : JSON.parse(raw);
+    const days = new Set(
+      Array.isArray(parsed)
+        ? parsed.filter((d): d is string => typeof d === "string")
+        : [],
+    );
+    const cursor = new Date();
+    const key = () =>
+      `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
+    if (!days.has(key())) {
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    let n = 0;
+    while (days.has(key())) {
+      n += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return n;
+  } catch {
+    return 0;
+  }
+}

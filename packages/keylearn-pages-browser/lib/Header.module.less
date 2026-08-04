@@ -197,6 +197,34 @@
   }
 }
 
+// The streak chip holds two things side by side, and is not a button — it
+// keeps the family look without pretending to be pressable.
+.kidsChipWide {
+  display: inline-flex;
+  gap: 0.18rem;
+  align-items: center;
+  justify-content: center;
+  inline-size: auto;
+  padding-inline: 0.55rem;
+  cursor: default;
+
+  &:hover {
+    transform: none;
+  }
+
+  &:active {
+    transform: none;
+  }
+}
+
+// The number riding beside the flame on the streak chip.
+.kidsChipCount {
+  color: #7a3d12;
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 :global(body[data-kids="day"]) .header {
   --background-color: #fdfcf9;
   --primary: #fdfcf9;

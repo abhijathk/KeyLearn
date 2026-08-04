@@ -78,3 +78,11 @@ test("a weak machine keeps its groves, just smaller", () => {
   isTrue(low.deadGroves >= 2, "the dense stretches are the feature itself");
   isTrue(low.deadScatter >= 4);
 });
+
+test("by night the villagers themselves are the Travellers", () => {
+  // The change happens in place — same figure's spot, a matched skeleton —
+  // and how many turn is the style's decision, never the quiet night's.
+  equal(nightPlan("quiet", "high").transformShare, 0);
+  equal(nightPlan("mild", "high").transformShare, 0.5);
+  equal(nightPlan("full", "high").transformShare, 1);
+});
