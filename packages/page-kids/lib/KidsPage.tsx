@@ -118,6 +118,15 @@ type Prefs = {
    */
   readAloud: boolean;
   /**
+   * Whether somebody actually chose the read-aloud setting.
+   *
+   * Without this the band default gets baked into storage on the first save
+   * and follows the child for ever — a five-year-old's "on" would still be
+   * on at ten, not because anyone wanted it but because nobody ever asked
+   * again. Until the toggle is pressed, the default tracks the band.
+   */
+  readAloudChosen: boolean;
+  /**
    * How far past the alphabet the trail goes.
    *
    * The page used to simply stop: the twenty-sixth letter was the last thing
@@ -168,6 +177,7 @@ function defaultPrefs(): Prefs {
     night: false,
     soundAsked: false,
     readAloud: cfg.readAloud,
+    readAloudChosen: false,
     grownupKeys: "off",
     nightStyle: "auto",
     brightness: 1,
@@ -187,6 +197,12 @@ function loadPrefs(): Prefs {
     // than lingering invisibly — the pill it belonged to is not on screen.
     if (currentBand() === "5-6" && prefs.nightStyle === "full") {
       prefs.nightStyle = "auto";
+    }
+    // The voice follows the band until somebody says otherwise: on for the
+    // bands who cannot yet read the coach, off for the big kids — including
+    // a child who has aged out of needing it since the pref was written.
+    if (!prefs.readAloudChosen) {
+      prefs.readAloud = bandConfig(currentBand()).readAloud;
     }
     return prefs;
   } catch {
@@ -2751,7 +2767,7 @@ function SettingsCard({
                 disabled={!prefs.sounds}
                 onClick={() => {
                   const on = !prefs.readAloud;
-                  savePrefs({ readAloud: on });
+                  savePrefs({ readAloud: on, readAloudChosen: true });
                   if (on) {
                     unlockVoice();
                     speakLine(
