@@ -1129,6 +1129,7 @@ export function createKidsWorld(
     to: 0 | 1,
     delay: number,
     rise: number,
+    dur = 0.9,
   ): void {
     prepFade(root);
     setFadeShadow(root, false);
@@ -1143,7 +1144,7 @@ export function createKidsWorld(
       root,
       from: to === 1 ? 0 : 1,
       to,
-      dur: 0.9,
+      dur,
       rise,
       baseY: root.position.y,
       delay,
@@ -1317,12 +1318,26 @@ export function createKidsWorld(
         handled.add(ud.twinWrap);
         continue;
       }
-      if (want) {
-        // Arrivals wait for the leavers to thin, then come up a few at a
-        // time. Characters rise out of the ground; trees simply gather.
-        startFade(root, 1, 0.5 + arriving++ * 0.12, character ? 0.35 : 0);
+      if (character) {
+        // The cast is few, so it can afford choreography: leavers thin one
+        // after another, arrivals rise a beat behind them.
+        if (want) {
+          startFade(root, 1, 0.5 + arriving++ * 0.12, 0.35);
+        } else {
+          startFade(root, 0, leaving++ * 0.08, 0.55);
+        }
       } else {
-        startFade(root, 0, leaving++ * 0.08, character ? 0.55 : 0);
+        // The forest is many, so it breathes as one: every tree dissolves
+        // into the dark over the same long moment, each offset by no more
+        // than a blink. An accumulating stagger here had trees popping one by
+        // one for seconds after the night had already arrived.
+        startFade(
+          root,
+          want ? 1 : 0,
+          (want ? 0.35 : 0) + Math.random() * 0.4,
+          0,
+          1.4,
+        );
       }
     }
   }
