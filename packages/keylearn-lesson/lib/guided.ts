@@ -18,6 +18,7 @@ import {
   randomWords,
   uniqueWords,
 } from "./text/words.ts";
+import { canUnlock } from "./unlock.ts";
 
 // A letter with at least this many recorded keystrokes counts as genuinely
 // practised. In guided mode locked letters never appear in the text, so they
@@ -57,6 +58,24 @@ export class GuidedLesson extends Lesson {
 
   override get letters() {
     return this.model.letters;
+  }
+
+  /**
+   * Lessons since the last new letter arrived.
+   *
+   * Read off the newest key's first sample rather than tracked separately, so
+   * it needs no state of its own and cannot drift from the truth.
+   */
+  #lessonsSinceUnlock(keyStatsMap: KeyStatsMap, keys: LessonKeys): number {
+    const total = keyStatsMap.results.length;
+    let newest = 0;
+    for (const key of keys.findIncludedKeys()) {
+      const first = keyStatsMap.get(key.letter).samples[0];
+      if (first != null && first.index > newest) {
+        newest = first.index;
+      }
+    }
+    return Math.max(0, total - newest);
   }
 
   override update(keyStatsMap: KeyStatsMap) {
@@ -105,26 +124,28 @@ export class GuidedLesson extends Lesson {
         continue;
       }
 
-      if ((lessonKey.bestConfidence ?? 0) >= 1) {
+      if (Target.passes(lessonKey.bestConfidence)) {
         // Must include all confident keys.
         lessonKeys.include(lessonKey.letter);
         continue;
       }
 
-      if (recoverKeys) {
-        if (includedKeys.every((key) => (key.confidence ?? 0) >= 1)) {
-          // Include a new key only when all the previous keys
-          // are now above the target speed.
-          lessonKeys.include(lessonKey.letter);
-          continue;
-        }
-      } else {
-        if (includedKeys.every((key) => (key.bestConfidence ?? 0) >= 1)) {
-          // Include a new key only when all the previous keys
-          // were once above the target speed.
-          lessonKeys.include(lessonKey.letter);
-          continue;
-        }
+      // A new key arrives when the keys already in play are at the target —
+      // all of them at first, and all but a small allowance once the set is
+      // big enough that requiring every one at once becomes a trap rather than
+      // a standard. See `unlock.ts`.
+      const passed = includedKeys.filter((key) =>
+        Target.passes(recoverKeys ? key.confidence : key.bestConfidence),
+      ).length;
+      if (
+        canUnlock({
+          passed,
+          inPlay: includedKeys.length,
+          lessonsSinceUnlock: this.#lessonsSinceUnlock(keyStatsMap, lessonKeys),
+        })
+      ) {
+        lessonKeys.include(lessonKey.letter);
+        continue;
       }
     }
 
@@ -134,7 +155,7 @@ export class GuidedLesson extends Lesson {
     };
     const includedKeys = lessonKeys.findIncludedKeys();
     const weakestKeys = includedKeys
-      .filter((key) => confidenceOf(key) < 1)
+      .filter((key) => !Target.passes(confidenceOf(key)))
       .sort((a, b) => confidenceOf(a) - confidenceOf(b));
     let focusLetter = weakestKeys.length > 0 ? weakestKeys[0].letter : null;
 

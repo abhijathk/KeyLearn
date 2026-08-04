@@ -1,5 +1,6 @@
 import { type KeyStatsMap } from "@keylearn/result";
 import { type LessonKey } from "./key.ts";
+import { Target } from "./target.ts";
 
 // Rounds of practice after which a just-learned key becomes due for review.
 // The interval scales with how well the key is known, so solid keys resurface
@@ -26,7 +27,7 @@ export function findDueKey(
   let best: DueKey | null = null;
   for (const key of includedKeys) {
     const confidence = key.bestConfidence ?? 0;
-    if (confidence < 1) {
+    if (!Target.passes(confidence)) {
       continue; // Only review keys that were actually learned.
     }
     const { samples } = keyStatsMap.get(key.letter);

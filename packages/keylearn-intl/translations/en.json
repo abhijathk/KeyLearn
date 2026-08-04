@@ -689,7 +689,6 @@
   "practice.pulse.perLesson": "{value}/lesson",
   "practice.pulse.progress": "{percent}% of the way",
   "practice.pulse.streak": "Streak",
-  "practice.pulse.suggestTarget": "{key} is your slowest at {speed} — try a {target} goal to get moving again",
   "practice.pulse.warmup": "warm-up",
   "practice.pulse.warmup.description": "The first round back is always slower. This one is not being compared against your last sitting.",
   "practice.pulse.you.description": "You are here — your latest speed on the way to the goal.",

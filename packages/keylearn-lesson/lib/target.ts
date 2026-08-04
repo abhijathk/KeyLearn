@@ -4,6 +4,70 @@ import { bktMastery, bktMasteryThreshold } from "./bkt.ts";
 import { recallProbability } from "./decay.ts";
 import { lessonProps } from "./settings.ts";
 
+/**
+ * How fast one key must be, as a fraction of the goal, to count as learned.
+ *
+ * The goal is an *overall* speed — it is what the page shows, what the road
+ * measures, and what somebody means when they say they type at fifty. But
+ * overall speed is the average across every key, and the slowest key always
+ * sits in the tail below it: for a normal spread of per-key speeds the worst
+ * one lands around four fifths of the average.
+ *
+ * The gate used to demand that *every* key reach the full goal, which is a
+ * quite different and much harder thing. A learner who set fifty was in fact
+ * being asked for about sixty-two overall before their last letter cleared, so
+ * the number they had chosen did not mean what it said and the trail stopped
+ * long before they understood why.
+ *
+ * Asking for four fifths per key makes the goal mean what it appears to mean.
+ */
+export const KEY_PASS_RATIO = 0.8;
+
+/**
+ * Lessons the current estimate of a key's speed is drawn from.
+ *
+ * Five, taken as a median. That is deliberately both robust and quick:
+ *
+ * The stored `timeToType` is exponentially smoothed at alpha 0.1, which has a
+ * time constant of about ten lessons and no resistance to outliers at all.
+ * Measured, that meant a learner who genuinely improved from 500ms to 300ms on
+ * a key was still being read as 480ms after one lesson, 418ms after five, and
+ * 370ms after ten — so the engine did not notice real progress for twenty or
+ * thirty rounds. And because the unlock gate takes the best of that *smoothed*
+ * value, the improvement did not count until the smoothing had caught up.
+ *
+ * Worse in the other direction: one bad lesson shifted it by 60ms and took
+ * twenty-nine good lessons to work back out. With every key needing to be
+ * above the bar at once, a single off round could set the next letter back by
+ * weeks of practice.
+ *
+ * A median of five moves within three lessons and ignores up to two bad ones
+ * outright — a bad run has to become a habit before it counts against you.
+ */
+const RECENT_LESSONS = 5;
+
+/**
+ * The learner's current speed on a key, in milliseconds, or null when there is
+ * nothing to go on.
+ *
+ * The median of the raw recent samples rather than the smoothed running value:
+ * the smoothing is what made both progress and mistakes take tens of lessons
+ * to register.
+ */
+function recentTime(keyStats: KeyStats): number | null {
+  const recent: number[] = [];
+  for (const sample of keyStats.samples.slice(-RECENT_LESSONS)) {
+    if (sample.timeToType > 0) {
+      recent.push(sample.timeToType);
+    }
+  }
+  if (recent.length === 0) {
+    return null;
+  }
+  recent.sort((a, b) => a - b);
+  return recent[Math.floor(recent.length / 2)];
+}
+
 export class Target {
   readonly targetSpeed: number;
   readonly smartConfidence: boolean;
@@ -59,8 +123,21 @@ export class Target {
     confidence: number | null;
     bestConfidence: number | null;
   } {
-    let confidence = this.confidence(keyStats.timeToType);
-    let bestConfidence = this.confidence(keyStats.bestTimeToType);
+    let confidence = this.confidence(
+      recentTime(keyStats) ?? keyStats.timeToType,
+    );
+    // The best the learner has *shown*, not the best the smoothing has caught
+    // up with. Taking the lifetime best alone meant a genuine improvement was
+    // not credited until the running average had crawled to it, twenty or
+    // thirty lessons later; a key typed at the bar for three of the last five
+    // rounds has demonstrably reached it.
+    const historicBest = this.confidence(keyStats.bestTimeToType);
+    let bestConfidence =
+      historicBest == null
+        ? confidence
+        : confidence == null
+          ? historicBest
+          : Math.max(historicBest, confidence);
     if (this.smartConfidence && keyStats.samples.length > 0) {
       const { pL } = bktMastery(keyStats.samples, this.targetSpeed);
       confidence = blend(confidence, pL / bktMasteryThreshold);
@@ -73,6 +150,17 @@ export class Target {
       // still shapes `confidence`, which is what drives focus and colour.
     }
     return { confidence, bestConfidence };
+  }
+
+  /**
+   * Whether a key is quick enough to count as learned.
+   *
+   * Confidence is still the plain ratio to the goal, so a key at the goal
+   * reads as 1 and the number keeps its meaning everywhere it is shown. Only
+   * the bar is lower — see {@link KEY_PASS_RATIO}.
+   */
+  static passes(confidence: number | null): boolean {
+    return (confidence ?? 0) >= KEY_PASS_RATIO;
   }
 
   /**

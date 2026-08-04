@@ -57,23 +57,42 @@ test("smartConfidence withholds mastery from a fast-but-sloppy history", () => {
   isTrue((confidence ?? 1) < 1);
 });
 
-test("smartConfidence blends BKT into the speed ratio 2:1 (classic stays dominant)", () => {
+test("smartConfidence lets accuracy separate two learners of equal speed", () => {
+  // What the blend is actually for. Both of these type the key at exactly the
+  // target speed, so the classic ratio cannot tell them apart at all — one is
+  // clean and the other misses one press in four.
+  //
+  // This used to be tested by handing the key a stored average that disagreed
+  // with its own samples (400ms stored, 180ms in every sample), which is not a
+  // state a real learner can be in — and reading that stale average instead of
+  // the samples was the bug that made progress take thirty lessons to register.
   const settings = new Settings()
     .set(lessonProps.targetSpeed, 250)
     .set(lessonProps.guided.smartConfidence, true)
     .set(lessonProps.guided.skillDecay, false);
   const target = new Target(settings);
-  // Classic ratio is 240ms/400ms = 0.6 (slow); BKT posterior is high from a
-  // fast+accurate sample history. The 2:1 blend must lift confidence above the
-  // classic 0.6 but stay closer to it than to the ~1.05 BKT value.
-  const samples = Array.from({ length: 8 }, () =>
-    sample({ timeStamp: 0, timeToType: 180, hitCount: 10, missCount: 0 }),
-  );
-  const { confidence } = target.keyConfidence(
-    keyStats({ timeToType: 400, samples }),
-  );
-  isTrue((confidence ?? 0) > 0.6);
-  isTrue((confidence ?? 1) < 0.85);
+  const atTarget = speedToTime(250);
+  const history = (missCount: number) =>
+    Array.from({ length: 8 }, () =>
+      sample({
+        timeStamp: 0,
+        timeToType: atTarget,
+        hitCount: 30,
+        missCount,
+      }),
+    );
+
+  const clean = target.keyConfidence(
+    keyStats({ timeToType: atTarget, samples: history(0) }),
+  ).confidence;
+  const sloppy = target.keyConfidence(
+    keyStats({ timeToType: atTarget, samples: history(10) }),
+  ).confidence;
+
+  isTrue((clean ?? 0) > (sloppy ?? 0), "accuracy has to count for something");
+  // And the speed ratio stays dominant: missing presses costs the sloppy one
+  // real confidence, but does not erase a key they can genuinely type.
+  isTrue((sloppy ?? 0) > 0.5, `a third of the way down, not wiped out`);
 });
 
 const day = 24 * 60 * 60 * 1000;

@@ -1,12 +1,12 @@
 import { useIntlNumbers } from "@keylearn/intl";
 import {
   type DailyGoal as DailyGoalType,
+  KEY_PASS_RATIO,
   LearningRate,
   type LessonKey,
   type LessonKeys,
   lessonProps,
   LessonType,
-  suggestTarget,
   Target,
 } from "@keylearn/lesson";
 import { Key, type Names, useFormatter } from "@keylearn/lesson-ui";
@@ -108,32 +108,19 @@ export const Pulse = memo(function Pulse({
     focusedKey.bestTimeToType != null &&
     focusedKey.confidence != null &&
     focusedKey.bestConfidence != null;
-  const conf = keyCalibrated
-    ? Math.min(1, Math.max(0, focusedKey.confidence!))
-    : 0;
-  const best = keyCalibrated
-    ? Math.min(1, Math.max(0, focusedKey.bestConfidence!))
-    : 0;
+  // The road runs to the unlock, not to the goal. A key clears at four fifths
+  // of the goal (see KEY_PASS_RATIO), so measuring the road against the goal
+  // itself would leave the dot short of the star at the moment the key
+  // actually unlocked — the picture would contradict what just happened.
+  const road = (confidence: number) =>
+    Math.min(1, Math.max(0, confidence / KEY_PASS_RATIO));
+  const conf = keyCalibrated ? road(focusedKey.confidence!) : 0;
+  const best = keyCalibrated ? road(focusedKey.bestConfidence!) : 0;
   const learningRateInfo =
     focusedKey != null
       ? LearningRate.from(focusedKey.samples, new Target(settings))
       : null;
   const learningRate = learningRateInfo?.learningRate ?? null;
-
-  // Only while something is actually blocked — once every key is through, the
-  // target is not what is holding anybody up.
-  const suggestion = useMemo(
-    () =>
-      focusedKey == null
-        ? null
-        : suggestTarget(
-            lessonKeys.findIncludedKeys(),
-            target,
-            results.length,
-            lessonProps.targetSpeed,
-          ),
-    [focusedKey, lessonKeys, target, results.length],
-  );
 
   return (
     <div className={styles.root}>
@@ -251,38 +238,6 @@ export const Pulse = memo(function Pulse({
                   updateSettings(settings.set(lessonProps.targetSpeed, next))
                 }
               />
-              {/*
-                The opposite case to the tuner above, which only appears once
-                the goal has been *reached*: this is for a learner stuck the
-                other side of it. One slow key holds the whole alphabet, so a
-                target set above what that key can manage stops the trail
-                entirely — and nothing here connected "no new letters lately"
-                to "your target", leaving the reasonable conclusion that they
-                had stopped improving.
-              */}
-              {suggestion != null && (
-                <button
-                  type="button"
-                  className={styles.suggest}
-                  onClick={() =>
-                    updateSettings(
-                      settings.set(lessonProps.targetSpeed, suggestion.target),
-                    )
-                  }
-                >
-                  <FormattedMessage
-                    id="practice.pulse.suggestTarget"
-                    defaultMessage="{key} is your slowest at {speed} — try a {target} goal to get moving again"
-                    values={{
-                      key: suggestion.blocker.letter.label.toUpperCase(),
-                      speed: formatSpeed(
-                        timeToSpeed(suggestion.blocker.timeToType!),
-                      ),
-                      target: formatSpeed(suggestion.target),
-                    }}
-                  />
-                </button>
-              )}
             </span>
           </div>
 

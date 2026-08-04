@@ -382,12 +382,12 @@ describe("unlock keys", () => {
           printLessonKeys(
             lesson.update(
               fakeKeyStatsMap(settings, [
-                [letter1, 0.9, 1], // A
-                [letter2, 0.9, 1], // B
-                [letter3, 0.9, 1], // C
-                [letter4, 0.9, 1], // D
-                [letter5, 0.9, 1], // E
-                [letter6, 0.9, 1], // F
+                [letter1, 0.6, 1], // A
+                [letter2, 0.6, 1], // B
+                [letter3, 0.6, 1], // C
+                [letter4, 0.6, 1], // D
+                [letter5, 0.6, 1], // E
+                [letter6, 0.6, 1], // F
                 [letter7, null, null], // G
                 [letter8, null, null], // H
                 [letter9, null, null], // I
@@ -406,12 +406,12 @@ describe("unlock keys", () => {
           printLessonKeys(
             lesson.update(
               fakeKeyStatsMap(settings, [
-                [letter1, 0.9, 1], // A
-                [letter2, 0.9, 1], // B
-                [letter3, 0.9, 1], // C
-                [letter4, 0.9, 1], // D
-                [letter5, 0.9, 1], // E
-                [letter6, 0.9, 1], // F
+                [letter1, 0.6, 1], // A
+                [letter2, 0.6, 1], // B
+                [letter3, 0.6, 1], // C
+                [letter4, 0.6, 1], // D
+                [letter5, 0.6, 1], // E
+                [letter6, 0.6, 1], // F
                 [letter7, null, null], // G
                 [letter8, null, null], // H
                 [letter9, null, null], // I
@@ -484,12 +484,12 @@ describe("unlock keys", () => {
           printLessonKeys(
             lesson.update(
               fakeKeyStatsMap(settings, [
-                [letter1, 0.9, 1], // A
-                [letter2, 0.9, 1], // B
-                [letter3, 0.9, 1], // C
-                [letter4, 0.9, 1], // D
-                [letter5, 0.9, 1], // E
-                [letter6, 0.9, 1], // F
+                [letter1, 0.6, 1], // A
+                [letter2, 0.6, 1], // B
+                [letter3, 0.6, 1], // C
+                [letter4, 0.6, 1], // D
+                [letter5, 0.6, 1], // E
+                [letter6, 0.6, 1], // F
                 [letter7, 0.5, 0.5], // G
                 [letter8, 0.5, 0.5], // H
                 [letter9, null, null], // I
@@ -508,12 +508,12 @@ describe("unlock keys", () => {
           printLessonKeys(
             lesson.update(
               fakeKeyStatsMap(settings, [
-                [letter1, 0.9, 1], // A
-                [letter2, 0.9, 1], // B
-                [letter3, 0.9, 1], // C
-                [letter4, 0.9, 1], // D
-                [letter5, 0.9, 1], // E
-                [letter6, 0.9, 1], // F
+                [letter1, 0.6, 1], // A
+                [letter2, 0.6, 1], // B
+                [letter3, 0.6, 1], // C
+                [letter4, 0.6, 1], // D
+                [letter5, 0.6, 1], // E
+                [letter6, 0.6, 1], // F
                 [letter7, 0.5, 0.5], // G
                 [letter8, 0.5, 0.5], // H
                 [letter9, null, null], // I
@@ -545,7 +545,7 @@ describe("unlock keys", () => {
                 [letter7, 1, 1], // G
                 [letter8, 1, 1], // H
                 [letter9, 1, 1], // I
-                [letter10, 0.9, 1], // J
+                [letter10, 0.6, 1], // J
               ]),
             ),
           ),
@@ -569,7 +569,7 @@ describe("unlock keys", () => {
                 [letter7, 1, 1], // G
                 [letter8, 1, 1], // H
                 [letter9, 1, 1], // I
-                [letter10, 0.9, 1], // J
+                [letter10, 0.6, 1], // J
               ]),
             ),
           ),
