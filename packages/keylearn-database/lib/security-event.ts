@@ -167,7 +167,7 @@ export class SecurityEvent extends TimestampMixin(Model) {
       ip: this.ip ?? null,
       userAgent: this.userAgent ?? null,
       detail: this.detail ?? null,
-      createdAt: this.createdAt!,
+      createdAt: new Date(this.createdAt!).toISOString(),
     };
   }
 }

@@ -10,6 +10,7 @@ export function ResultProvider({
   profileName = null,
   profileAvatar = null,
   kidProfile = false,
+  profileBirthYear = null,
   children,
 }: {
   readonly storage: ResultStorage;
@@ -22,6 +23,8 @@ export function ResultProvider({
   readonly profileAvatar?: ReactNode;
   /** Whether this is a child's profile (see context). */
   readonly kidProfile?: boolean;
+  /** That learner's birth year (see context). */
+  readonly profileBirthYear?: number | null;
   readonly children: ReactNode;
 }): ReactNode {
   const [results, setResults] = useState(initialResults);
@@ -33,6 +36,7 @@ export function ResultProvider({
         profileName,
         profileAvatar,
         kidProfile,
+        profileBirthYear,
         appendResults: (newResults) => {
           setResults([...results, ...newResults]);
           storage.append(newResults).catch(catchError);

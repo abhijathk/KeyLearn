@@ -8,6 +8,16 @@ export type PageData = {
    */
   readonly leaderboard?: boolean;
   /**
+   * Whether live practice is offered yet.
+   *
+   * The page works, but the room it opens onto is half a feature: there is no
+   * join dialog, so nobody can choose a name before walking in, and no way to
+   * land in the same room as someone you know. A link to that is a promise the
+   * product cannot keep, so it stays off until the rest is built. The route is
+   * still reachable by URL for anyone testing it.
+   */
+  readonly multiplayer?: boolean;
+  /**
    * Base URL.
    */
   readonly base: string;
@@ -105,7 +115,15 @@ export type SecurityEventDetails = {
   readonly ip: string | null;
   readonly userAgent: string | null;
   readonly detail: string | null;
-  readonly createdAt: Date;
+  /**
+   * When it happened, as an ISO timestamp.
+   *
+   * A string, not a Date. This type describes what arrives over the wire, and
+   * JSON has no date — so declaring it a Date made every consumer believe it
+   * had one, and handing that string to `Intl.DateTimeFormat.format` throws
+   * "Invalid time value" and takes the whole activity log down with it.
+   */
+  readonly createdAt: string;
 };
 
 export type UserDetails = {

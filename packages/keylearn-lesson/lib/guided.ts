@@ -6,7 +6,7 @@ import { type KeyStatsMap } from "@keylearn/result";
 import { type Settings } from "@keylearn/settings";
 import { Dictionary, filterWordList } from "./dictionary.ts";
 import { LessonKey, LessonKeys } from "./key.ts";
-import { filterKidsWords } from "./kids-words.ts";
+import { filterKidsWords, kidsLetterOrder } from "./kids-words.ts";
 import { Lesson } from "./lesson.ts";
 import { lessonProps } from "./settings.ts";
 import { findDueKey, isUrgent } from "./srs.ts";
@@ -44,9 +44,13 @@ export class GuidedLesson extends Lesson {
         wordList = kids;
       }
     }
+    // Two-letter words are excluded for grown-ups, where they add nothing. For
+    // a child "at", "in", "on", "go" and "me" are among the first things worth
+    // being able to type, and they widen the early pool when it is thinnest.
+    const shortest = settings.get(lessonProps.guided.kidsWords) ? 2 : 3;
     this.dictionary = new Dictionary(
       filterWordList(wordList, this.codePoints).filter(
-        (word) => word.length > 2,
+        (word) => word.length >= shortest,
       ),
     );
   }
@@ -175,6 +179,10 @@ export class GuidedLesson extends Lesson {
   #getLetters() {
     const { letters } = this.model;
     const { codePoints } = this;
+    if (this.settings.get(lessonProps.guided.kidsWords)) {
+      // Children unlock in an order that spells things. See kidsLetterOrder.
+      return kidsLetterOrder(Letter.frequencyOrder(letters));
+    }
     if (this.settings.get(lessonProps.guided.keyboardOrder)) {
       return Letter.weightedFrequencyOrder(letters, ({ codePoint }) =>
         codePoints.weight(codePoint),
@@ -188,7 +196,13 @@ export class GuidedLesson extends Lesson {
     const pseudoWords = phoneticWords(this.model, filter, rng);
     if (this.settings.get(lessonProps.guided.naturalWords)) {
       const words = this.dictionary.find(filter).slice(0, 1000);
-      while (words.length < 15) {
+      // For a child, repeating three real words beats padding out to fifteen
+      // with invented ones: "cat dog cat sun dog" is practice, "cat tege dog
+      // nene" teaches them that the words here do not mean anything.
+      const floor = this.settings.get(lessonProps.guided.kidsWords)
+        ? Math.min(words.length, 1)
+        : 15;
+      while (words.length < floor) {
         const word = pseudoWords();
         if (word != null) {
           words.push(word);

@@ -86,3 +86,27 @@ test("the rollover probe records the deepest simultaneous press", () => {
   for (const c of ["KeyK", "KeyL", "KeyS"]) p.keyDown(c);
   equal(p.best, REQUIRED_ROLLOVER);
 });
+
+test("the rollover probe counts keys held together, not keys pressed", () => {
+  const probe = new RolloverProbe();
+  // Six presses one after another is not six-key rollover.
+  for (const code of ["KeyF", "KeyD", "KeyS", "KeyJ", "KeyK", "KeyL"]) {
+    probe.keyDown(code);
+    probe.keyUp(code);
+  }
+  equal(probe.best, 1, "one at a time proves nothing about rollover");
+
+  probe.reset();
+  for (const code of ["KeyF", "KeyD", "KeyS", "KeyJ"]) probe.keyDown(code);
+  equal(probe.best, 4);
+  for (const code of ["KeyF", "KeyD", "KeyS", "KeyJ"]) probe.keyUp(code);
+  equal(probe.best, 4, "the high-water mark survives the release");
+});
+
+test("the probe ignores keys that are not dots", () => {
+  const probe = new RolloverProbe();
+  probe.keyDown("KeyF");
+  probe.keyDown("Space");
+  probe.keyDown("ShiftLeft");
+  equal(probe.best, 1);
+});

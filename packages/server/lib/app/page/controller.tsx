@@ -349,6 +349,8 @@ export class Controller {
       gameUrl: Env.getString("GAME_URL", ""),
       // Drives whether the leaderboard link appears at all.
       leaderboard: await this.#leaderboardReady(),
+      // Off until live practice is finished — see PageData.multiplayer.
+      multiplayer: Env.getBoolean("MULTIPLAYER_ENABLED", false),
       locale,
       user: user?.toDetails() ?? null,
       publicUser,

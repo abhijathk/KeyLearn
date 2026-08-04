@@ -124,6 +124,7 @@ function LearnerTabs(): ReactNode {
           namespace={historyNamespace(selected)}
           profileName={selected.firstName}
           kidProfile={selected.kind === "kid"}
+          profileBirthYear={selected.birthYear}
           profileAvatar={
             <BrailleAvatar
               avatar={selected.avatar}

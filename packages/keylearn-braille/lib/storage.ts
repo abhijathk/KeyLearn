@@ -1,5 +1,5 @@
 import { LETTERS } from "./cell.ts";
-import { Progress } from "./progress.ts";
+import { Progress, TEACHING_ORDER } from "./progress.ts";
 
 const PREFIX = "keylearn.braille.progress";
 
@@ -287,9 +287,18 @@ export function practiceDays(profileId: string | null = null): string[] {
 export type BrailleStats = {
   /** Cells entered correctly, all time. */
   readonly hits: number;
-  /** Cells confidently learned, out of the alphabet. */
+  /** Cells in play, out of the whole curriculum. */
   readonly learned: number;
+  /**
+   * Every cell there is to learn.
+   *
+   * The curriculum, not the alphabet: it carries on past `w` into punctuation,
+   * the capital sign and the digits, so counting only letters here read as
+   * "31 of 26" the moment anybody got there.
+   */
   readonly totalCells: number;
+  /** Of those, the ones that are letters — for anything phrased as letters. */
+  readonly totalLetters: number;
   /** Consecutive days of practice ending today. */
   readonly streakDays: number;
 };
@@ -308,8 +317,8 @@ export function brailleStats(profileId: string | null = null): BrailleStats {
   // has it adopted here rather than only when they next open the page.
   const progress = loadProgress(profileId);
   let hits = 0;
-  for (const letter of LETTERS.keys()) {
-    hits += progress.statOf(letter).hits;
+  for (const key of TEACHING_ORDER) {
+    hits += progress.statOf(key).hits;
   }
   const days = practiceDays(profileId);
   let streakDays = 0;
@@ -321,7 +330,51 @@ export function brailleStats(profileId: string | null = null): BrailleStats {
   return {
     hits,
     learned: progress.unlocked().length,
-    totalCells: LETTERS.size,
+    totalCells: TEACHING_ORDER.length,
+    totalLetters: LETTERS.size,
     streakDays,
   };
+}
+
+// ── moving a learner's braille between devices ─────────────────────────────
+
+/**
+ * Everything one learner's braille progress consists of.
+ *
+ * Three separate keys in storage, because they answer three different
+ * questions and are written at different moments — but they only ever travel
+ * together, and a device that had the cells without the days would show a
+ * learner a full alphabet and an empty calendar.
+ */
+export type Snapshot = {
+  readonly progress: unknown;
+  readonly days: readonly string[];
+  readonly daily: Record<string, DayStats>;
+  /** When this was last written, for deciding which side is newer. */
+  readonly savedAt: number;
+};
+
+export function snapshot(profileId: string | null = null): Snapshot {
+  return {
+    progress: loadProgress(profileId).toJSON(),
+    days: practiceDays(profileId),
+    daily: readDaily(profileId),
+    savedAt: Date.now(),
+  };
+}
+
+export function restore(snap: Snapshot, profileId: string | null = null): void {
+  try {
+    window.localStorage.setItem(
+      keyFor(profileId),
+      JSON.stringify(snap.progress),
+    );
+    window.localStorage.setItem(daysKey(profileId), JSON.stringify(snap.days));
+    window.localStorage.setItem(
+      dailyKey(profileId),
+      JSON.stringify(snap.daily),
+    );
+  } catch {
+    // Storage unavailable; the session still works from what is in memory.
+  }
 }

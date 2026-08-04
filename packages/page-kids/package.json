@@ -15,10 +15,11 @@
     "@keylearn/rand": "*",
     "@keylearn/result": "*",
     "@keylearn/settings": "*",
+    "@keylearn/speech": "*",
     "@keylearn/textinput": "*",
     "@keylearn/widget": "*",
-    "three": "^0.185.1",
-    "clsx": "^2.1.1"
+    "clsx": "^2.1.1",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@types/three": "^0.185.0"

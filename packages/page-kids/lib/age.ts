@@ -1,4 +1,4 @@
-import { activeProfileBirthYear } from "@keylearn/pages-shared";
+import { activeProfileAge, typicalWpmForAge } from "@keylearn/pages-shared";
 
 // Everything on the kids page that should feel different for a five-year-old
 // than for a ten-year-old is a knob in this table. The band is derived from
@@ -17,8 +17,16 @@ export type BandConfig = {
   readonly maxWordLen: number;
   /** Unlocked-key count that graduates to full grown-up passages. */
   readonly fullPassageAt: number;
-  /** Unlock target speed, in characters per minute. */
-  readonly targetCpm: number;
+  /**
+   * Floor and ceiling for the unlock target, in characters per minute.
+   *
+   * The target itself follows the child (see `pace.ts`); these only stop it
+   * running away in either direction. The floor is deliberately at the BOTTOM
+   * of the band's typical range, not the top — the old single figure sat above
+   * what the band itself called normal for the age, and children stalled.
+   */
+  readonly paceFloor: number;
+  readonly paceCeil: number;
   /** The dino hops every N-key clean streak. */
   readonly hopEvery: number;
   /** Chance of a cheer line per correct key. */
@@ -35,7 +43,25 @@ export type BandConfig = {
   readonly hands: boolean;
   /** Default keyboard guide. */
   readonly kbMode: "off" | "simple" | "full";
-  /** Realistic words-per-minute range for the band, for grown-ups. */
+  /**
+   * Whether the coach reads its lines out loud by default.
+   *
+   * The page coaches entirely in prose, at a reading level the youngest bands
+   * do not have — a five-year-old learning where the letters are is not also
+   * reading "the trail is quiet… one glowing key starts it again". Every warm
+   * word written for them lands on somebody who cannot yet read it, so for the
+   * bands below reading fluency the coach speaks.
+   */
+  readonly readAloud: boolean;
+  /** Speech rate for that voice. Younger listeners need it slower. */
+  readonly speechRate: number;
+  /**
+   * Realistic words-per-minute range for the band, for grown-ups.
+   *
+   * Taken from `@keylearn/pages-shared` rather than written here, because the
+   * profile page shows a parent the same figure next to the big average-speed
+   * number, and two copies of it would drift.
+   */
   readonly typicalWpm: readonly [number, number];
   /** A playful font stack, chosen to fit the age; falls back to rounded sans. */
   readonly font: string;
@@ -47,7 +73,8 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     capWords: 9,
     maxWordLen: 4,
     fullPassageAt: Infinity,
-    targetCpm: 75,
+    paceFloor: 25,
+    paceCeil: 60,
     hopEvery: 5,
     cheerChance: 0.3,
     rescueMisses: 2,
@@ -56,7 +83,9 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     bigLetters: true,
     hands: true,
     kbMode: "simple",
-    typicalWpm: [5, 8],
+    readAloud: true,
+    speechRate: 0.85,
+    typicalWpm: typicalWpmForAge(6)!,
     font: '"Andika Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "7-8": {
@@ -64,7 +93,8 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     capWords: 13,
     maxWordLen: 6,
     fullPassageAt: Infinity,
-    targetCpm: 100,
+    paceFloor: 40,
+    paceCeil: 90,
     hopEvery: 10,
     cheerChance: 0.2,
     rescueMisses: 3,
@@ -73,7 +103,9 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     bigLetters: false,
     hands: true,
     kbMode: "simple",
-    typicalWpm: [8, 15],
+    readAloud: true,
+    speechRate: 0.95,
+    typicalWpm: typicalWpmForAge(8)!,
     font: '"Andika Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "9-10": {
@@ -81,7 +113,8 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     capWords: 16,
     maxWordLen: 8,
     fullPassageAt: Infinity,
-    targetCpm: 125,
+    paceFloor: 75,
+    paceCeil: 140,
     hopEvery: 10,
     cheerChance: 0.15,
     rescueMisses: 3,
@@ -90,7 +123,9 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     bigLetters: false,
     hands: true,
     kbMode: "simple",
-    typicalWpm: [15, 25],
+    readAloud: false,
+    speechRate: 1,
+    typicalWpm: typicalWpmForAge(10)!,
     font: '"Nunito Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
   "11+": {
@@ -98,7 +133,8 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     capWords: 18,
     maxWordLen: Infinity,
     fullPassageAt: 20,
-    targetCpm: 175,
+    paceFloor: 100,
+    paceCeil: 190,
     hopEvery: 10,
     cheerChance: 0.12,
     rescueMisses: 3,
@@ -107,20 +143,15 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     bigLetters: false,
     hands: false,
     kbMode: "full",
-    typicalWpm: [20, 35],
+    readAloud: false,
+    speechRate: 1,
+    typicalWpm: typicalWpmForAge(12)!,
     font: '"Nunito Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif',
   },
 };
 
 /** The active learner's age this calendar year, or null when unknown. */
-export function currentAge(): number | null {
-  const year = activeProfileBirthYear();
-  if (year == null) {
-    return null;
-  }
-  const age = new Date().getFullYear() - year;
-  return age >= 0 && age < 120 ? age : null;
-}
+export const currentAge = activeProfileAge;
 
 /** Age band for the active profile; the middle band when age is unknown. */
 export function currentBand(): AgeBand {

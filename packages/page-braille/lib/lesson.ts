@@ -1,9 +1,10 @@
 import {
   cellsForText,
   type CellStep,
+  describeKey,
   dotsOf,
   generateLine,
-  LETTERS,
+  keyOfCell,
   type Progress,
 } from "@keylearn/braille";
 
@@ -96,15 +97,26 @@ export function readCell(text: string, step: CellStep): CellDescription {
   if (dots.length === 0) {
     return { name: "space bar", dots: [] };
   }
-  const name =
-    LETTERS.get(ch.toLowerCase()) === step.cell
-      ? ch
-      : ch >= "0" && ch <= "9"
-        ? "number sign"
-        : ch !== ch.toLowerCase()
-          ? "capital sign"
-          : ch;
-  return { name, dots };
+  // Named from the cell rather than from the character it helps write.
+  //
+  // Working from the character got two things wrong. A digit is two cells and
+  // both of them read back the same digit, so the number sign and the letter
+  // after it were both announced as "number sign" — the learner was told to
+  // press the same thing twice. And punctuation, which the curriculum now
+  // teaches, came out as the bare mark: the prompt showed "." and the voice
+  // was asked to pronounce a full stop, which a speech engine renders as a
+  // pause or as nothing at all.
+  const key = keyOfCell(step.cell);
+  if (key != null) {
+    const { name, kind } = describeKey(key);
+    // A capital keeps its printed form — "A" is what is being written, and
+    // saying "a" for it would lose exactly the distinction being practised.
+    return {
+      name: kind === "letter" && ch !== ch.toLowerCase() ? ch : name,
+      dots,
+    };
+  }
+  return { name: ch, dots };
 }
 
 /** Spells a word for the "say it letter by letter" help level. */

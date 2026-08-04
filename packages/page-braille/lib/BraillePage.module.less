@@ -5,6 +5,10 @@
   flex-direction: column;
   gap: 0.9rem;
   align-items: center;
+  // Tall enough that the settings, which push themselves to the end, actually
+  // reach the foot of the screen on a short lesson instead of floating in the
+  // middle of the page.
+  min-block-size: calc(100vb - 12rem);
   padding: 1rem 0;
   text-align: center;
 }
@@ -240,32 +244,19 @@
   background: var(--accent);
 }
 
-// The metrics strip, in the practice page's shape: a quiet band above the text
-// that can be read between lines without leaving the line.
-.stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2.6rem;
-  align-items: center;
-  justify-content: center;
-  inline-size: 100%;
-  padding: 0.7rem 1.2rem;
-  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
-  border-radius: 0.8rem;
-  background: color-mix(in srgb, var(--text-color) 4%, transparent);
-}
-
+// Label beside the figure rather than above it: the chip is a single line, and
+// stacked captions would make it three times as tall as it needs to be.
 .metric {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  align-items: center;
+  gap: 0.4rem;
+  align-items: baseline;
+  white-space: nowrap;
 }
 
 .metricLabel {
   color: var(--text-color-f2);
   font-family: var(--default-font-family);
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -273,50 +264,174 @@
 
 .metricValue {
   display: flex;
-  gap: 0.3rem;
+  gap: 0.22rem;
   align-items: baseline;
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .metricUnit {
   color: var(--text-color-f2);
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 400;
 }
 
-.toggles {
+// ── the control bar ────────────────────────────────────────────────────────
+//
+// One height, one radius, one type size for everything in the row. The
+// controls had grown up separately — a segmented switch, three text buttons of
+// three different widths and a labelled select — so the bar read as four
+// unrelated things that happened to be next to each other.
+//
+// `--control-h` is the whole alignment story: every control is exactly that
+// tall, so they line up on both edges without anybody nudging padding.
+// The figures, at the top, on their own. What is happening, with nothing to
+// operate — every control now lives at the foot.
+//
+// Right-aligned, because the board and the prompt below it are the page and
+// this is a readout beside them, not a heading over them.
+.bar {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  justify-content: flex-end;
+  inline-size: 100%;
 }
 
-.soundBtn[aria-pressed="true"] {
+// One chip holding the lot, so it reads as a single instrument panel rather
+// than five labels loose on the page.
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--separator-color, rgb(128 128 128 / 20%));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+}
+
+// The settings, at the foot and pinned there.
+//
+// Sticky rather than fixed: it belongs to the page, so it scrolls with the
+// content until it reaches the bottom of the viewport and then stays. A fixed
+// bar would sit over the board on a short screen and cover the very thing the
+// learner is reading.
+.settings {
+  --control-h: 2rem;
+
+  display: flex;
+  position: sticky;
+  inset-block-end: 0;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.4rem;
+  align-items: flex-end;
+  inline-size: 100%;
+  margin-block-start: auto;
+  padding: 0.75rem 1.1rem;
+  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
+  border-radius: 0.8rem;
+  // Opaque, or the board scrolls through it.
+  background: var(--primary);
+  box-shadow: 0 -6px 18px -12px rgb(0 0 0 / 45%);
+}
+
+.settingsTitle {
+  align-self: center;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+// The stack of label-above-control, so a caption never pushes its control out
+// of line with the ones beside it.
+.control {
+  display: inline-flex;
+  flex: none;
+  flex-direction: column;
+  gap: 0.28rem;
+  align-items: flex-start;
+}
+
+.controlLabel {
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+// A toggle sits where a labelled control's *control* sits, not where its label
+// does — hence the top margin, which is the label's height plus its gap.
+.toggle {
+  block-size: var(--control-h);
+  margin-block-start: calc(0.56rem * 1.2 + 0.28rem);
+  padding-inline: 0.95rem;
+  border: var(--separator-border);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  &:hover:enabled {
+    border-color: var(--accent);
+    color: var(--text-color);
+  }
+}
+
+.toggleOn {
   border-color: var(--accent);
   color: var(--primary);
   background: var(--accent);
   font-weight: 700;
 }
 
-.soundBtn,
-.startBtn {
-  padding: 0.4rem 1rem;
-  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.3));
+// The select carries its own border, so its label sits above a control of
+// exactly the same height as the toggles beside it.
+.rateSelect {
+  block-size: var(--control-h);
+  padding-inline: 0.6rem 0.3rem;
+  border: var(--separator-border);
   border-radius: 999px;
   color: var(--text-color);
-  background: transparent;
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
 }
 
+// The one call to action, and the only filled button outside the bar. It used
+// to share its shape with the bar's buttons, which no longer exist.
 .startBtn {
   align-self: flex-start;
-  border-color: var(--accent);
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
   color: var(--primary);
   background: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .bigCount {
@@ -363,27 +478,37 @@
 .seg {
   display: inline-flex;
   flex: none;
-  padding: 0.2rem;
+  gap: 0.15rem;
+  align-items: center;
+  block-size: var(--control-h, 2rem);
+  padding-inline: 0.2rem;
   border: var(--separator-border);
   border-radius: 999px;
   background: color-mix(in srgb, var(--text-color) 5%, transparent);
 }
 
 .segBtn {
-  padding: 0.35rem 0.9rem;
+  block-size: calc(var(--control-h, 2rem) - 0.5rem);
+  padding-inline: 0.75rem;
   border: none;
   border-radius: 999px;
   color: var(--text-color-f2);
   background: transparent;
   font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+  }
 }
 
 .segOn {
   color: var(--primary);
   background: var(--accent);
+  font-weight: 700;
 }
 
 // The six dot keys, in the app's key-cap language.
@@ -537,22 +662,6 @@
 
 // Mode, sound and figures in one band, so the controls read as a single strip
 // above the text instead of three stacked rows competing for the eye.
-.bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem 1.6rem;
-  align-items: center;
-  inline-size: 100%;
-  padding: 0.6rem 1.1rem;
-  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
-  border-radius: 0.8rem;
-  background: color-mix(in srgb, var(--text-color) 4%, transparent);
-}
-
-.barGap {
-  flex: 1;
-}
-
 // Shown until the first key. The browser will not let the page speak before
 // then, so this is the only channel that reaches a blind learner — a screen
 // reader is their software, not ours, and is not gesture-blocked.

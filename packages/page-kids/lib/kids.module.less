@@ -312,6 +312,13 @@
   color: #e0442e;
 }
 
+// The clock is stopped because nobody is typing. It has to read as held
+// rather than broken — a parent watching a frozen number assumes the page
+// has crashed, and a child watching one learns nothing from it.
+.timerHeld {
+  opacity: 0.45;
+}
+
 .scorePop {
   position: absolute;
   color: #fff;
@@ -938,6 +945,284 @@
     border-color: var(--sunny);
     outline: none;
   }
+}
+
+// ── graduation ─────────────────────────────────────────────────────────
+
+.gradRibbon {
+  margin-block-end: 0.5rem;
+  color: var(--leaf-d);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.gradLetters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.12rem;
+  justify-content: center;
+  margin-block-end: 0.9rem;
+}
+
+// Each letter arrives in turn — the child earned them one at a time, and
+// seeing them land one at a time is the whole ceremony.
+.gradLetter {
+  display: grid;
+  place-items: center;
+  inline-size: 1.35rem;
+  block-size: 1.35rem;
+  border-radius: 0.35rem;
+  color: #3d3a2e;
+  background: var(--sunny);
+  font-size: 0.72rem;
+  font-weight: 800;
+  animation: gradPop 0.42s backwards cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes gradPop {
+  from {
+    opacity: 0;
+    transform: scale(0.2) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradLetter {
+    animation: none;
+  }
+}
+
+.gradChoices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  align-items: center;
+
+  .cta {
+    inline-size: auto;
+    margin-block-start: 0;
+  }
+}
+
+.gradLink {
+  color: var(--kink2);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: var(--leaf-d);
+  }
+}
+
+// ── the hatch, and the album ───────────────────────────────────────────
+
+.hatchBadge {
+  animation: hatchWobble 1.6s ease-in-out 3;
+}
+
+@keyframes hatchWobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-9deg);
+  }
+
+  75% {
+    transform: rotate(9deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hatchBadge {
+    animation: none;
+  }
+}
+
+.hatchName {
+  margin-block: 0.1rem 0.6rem;
+  color: var(--leaf-d);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.hatchRow {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
+
+  .cta {
+    inline-size: auto;
+    margin-block-start: 0;
+  }
+}
+
+// The end-of-session line: what they hold, and how far the next one is. The
+// second half is the part that gives tomorrow a shape.
+.albumStrip {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  inline-size: 100%;
+  margin-block-start: 0.9rem;
+  padding: 0.6rem 0.8rem;
+  border: 3px dotted color-mix(in srgb, var(--kline) 45%, transparent);
+  border-radius: 1.2rem;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    border-style: solid;
+    border-color: var(--sunny-d);
+  }
+}
+
+.albumStripIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.1rem;
+  block-size: 2.1rem;
+  border-radius: 50%;
+  background: var(--sand);
+}
+
+.albumStripText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  color: var(--kink);
+  font-size: 0.85rem;
+}
+
+.albumStripNext {
+  color: var(--kink2);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.albumCount {
+  margin-block-end: 0.7rem;
+  color: var(--kink2);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.albumGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr));
+  gap: 0.5rem;
+  max-block-size: 20rem;
+  margin-block-end: 0.4rem;
+  overflow-y: auto;
+}
+
+.sticker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.6rem 0.35rem;
+  border: 3px solid var(--kline);
+  border-radius: 1rem;
+  text-align: center;
+}
+
+// An outline, and it says how to earn it — a locked box with no label is a
+// tease, not an invitation.
+.stickerOff {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--kline) 40%, transparent);
+  opacity: 0.6;
+}
+
+.stickerIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+}
+
+.stickerLabel {
+  color: var(--kink);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+// ── the once-only sound question ───────────────────────────────────────
+// Asked on the naming card and nowhere else. Two big targets rather than a
+// switch, because a five-year-old reads pictures and taps things, and because
+// tapping one is the gesture the browser needs before it will play anything.
+
+.askSound {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block-start: 1.1rem;
+  padding-block-start: 1rem;
+  border-block-start: 3px dotted
+    color-mix(in srgb, var(--kline) 45%, transparent);
+}
+
+.askSoundTitle {
+  color: var(--kink2);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.askSoundRow {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.askSoundBtn {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.55rem 0.9rem;
+  border: 3px solid var(--kline);
+  border-radius: 999px;
+  color: var(--kink2);
+  background: var(--paper);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:active {
+    transform: translateY(2px);
+  }
+}
+
+.askSoundOn {
+  border-color: var(--leaf);
+  color: var(--leaf-d);
+  background: color-mix(in srgb, var(--leaf) 16%, var(--paper));
+}
+
+.askSoundNote {
+  color: var(--kink2);
+  opacity: 0.75;
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 
 // ── the new-letter ceremony ────────────────────────────────────────────

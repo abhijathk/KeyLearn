@@ -2,10 +2,11 @@
 //
 // Regenerate after changing the vocabulary in that script; the audio
 // files beside it are committed so a build needs no recording tools.
-import c40 from "../assets/voice/blank.m4a";
-import c45 from "../assets/voice/cells-a-minute.m4a";
+import c48 from "../assets/voice/alphabet-done.m4a";
+import c56 from "../assets/voice/blank.m4a";
+import c61 from "../assets/voice/cells-a-minute.m4a";
 import c37 from "../assets/voice/controls.m4a";
-import c47 from "../assets/voice/correct.m4a";
+import c63 from "../assets/voice/correct.m4a";
 import c26 from "../assets/voice/digit-0.m4a";
 import c27 from "../assets/voice/digit-1.m4a";
 import c28 from "../assets/voice/digit-2.m4a";
@@ -16,7 +17,10 @@ import c32 from "../assets/voice/digit-6.m4a";
 import c33 from "../assets/voice/digit-7.m4a";
 import c34 from "../assets/voice/digit-8.m4a";
 import c35 from "../assets/voice/digit-9.m4a";
-import c38 from "../assets/voice/dots.m4a";
+import c54 from "../assets/voice/dots.m4a";
+import c51 from "../assets/voice/goal-halfway.m4a";
+import c53 from "../assets/voice/goal-of.m4a";
+import c52 from "../assets/voice/goal-passed.m4a";
 import c0 from "../assets/voice/letter-a.m4a";
 import c1 from "../assets/voice/letter-b.m4a";
 import c2 from "../assets/voice/letter-c.m4a";
@@ -43,13 +47,25 @@ import c22 from "../assets/voice/letter-w.m4a";
 import c23 from "../assets/voice/letter-x.m4a";
 import c24 from "../assets/voice/letter-y.m4a";
 import c25 from "../assets/voice/letter-z.m4a";
-import c44 from "../assets/voice/line-done.m4a";
-import c42 from "../assets/voice/new-line.m4a";
-import c46 from "../assets/voice/percent-accurate.m4a";
+import c60 from "../assets/voice/line-done.m4a";
+import c41 from "../assets/voice/mark-apostrophe.m4a";
+import c45 from "../assets/voice/mark-colon.m4a";
+import c39 from "../assets/voice/mark-comma.m4a";
+import c42 from "../assets/voice/mark-exclamation-mark.m4a";
+import c38 from "../assets/voice/mark-full-stop.m4a";
+import c43 from "../assets/voice/mark-hyphen.m4a";
+import c40 from "../assets/voice/mark-question-mark.m4a";
+import c44 from "../assets/voice/mark-semicolon.m4a";
+import c50 from "../assets/voice/minutes-to-go.m4a";
+import c49 from "../assets/voice/minutes-today.m4a";
+import c58 from "../assets/voice/new-line.m4a";
+import c62 from "../assets/voice/percent-accurate.m4a";
 import c36 from "../assets/voice/ready.m4a";
-import c39 from "../assets/voice/space.m4a";
-import c41 from "../assets/voice/try-again.m4a";
-import c43 from "../assets/voice/words.m4a";
+import c46 from "../assets/voice/sign-capital.m4a";
+import c47 from "../assets/voice/sign-number.m4a";
+import c55 from "../assets/voice/space.m4a";
+import c57 from "../assets/voice/try-again.m4a";
+import c59 from "../assets/voice/words.m4a";
 
 export const VOICE_CLIPS: Readonly<Record<string, string>> = {
   "letter-a": c0,
@@ -90,14 +106,30 @@ export const VOICE_CLIPS: Readonly<Record<string, string>> = {
   "digit-9": c35,
   "ready": c36,
   "controls": c37,
-  "dots": c38,
-  "space": c39,
-  "blank": c40,
-  "try-again": c41,
-  "new-line": c42,
-  "words": c43,
-  "line-done": c44,
-  "cells-a-minute": c45,
-  "percent-accurate": c46,
-  "correct": c47,
+  "mark-full-stop": c38,
+  "mark-comma": c39,
+  "mark-question-mark": c40,
+  "mark-apostrophe": c41,
+  "mark-exclamation-mark": c42,
+  "mark-hyphen": c43,
+  "mark-semicolon": c44,
+  "mark-colon": c45,
+  "sign-capital": c46,
+  "sign-number": c47,
+  "alphabet-done": c48,
+  "minutes-today": c49,
+  "minutes-to-go": c50,
+  "goal-halfway": c51,
+  "goal-passed": c52,
+  "goal-of": c53,
+  "dots": c54,
+  "space": c55,
+  "blank": c56,
+  "try-again": c57,
+  "new-line": c58,
+  "words": c59,
+  "line-done": c60,
+  "cells-a-minute": c61,
+  "percent-accurate": c62,
+  "correct": c63,
 };

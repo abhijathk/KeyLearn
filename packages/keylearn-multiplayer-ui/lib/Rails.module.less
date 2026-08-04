@@ -33,6 +33,18 @@
   }
 }
 
+// Your own rail. Ten rails look alike at a glance, and the one that matters
+// during a race is the one you are on.
+.mine {
+  border-radius: 0.4rem;
+  background-color: color-mix(in oklab, var(--accent) 7%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.mine .who b {
+  font-weight: 750;
+}
+
 .tag {
   color: var(--text-color-f2);
   font-size: 0.55rem;

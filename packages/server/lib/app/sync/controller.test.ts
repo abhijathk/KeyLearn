@@ -1,10 +1,11 @@
 import { test } from "node:test";
 import { Application } from "@fastr/core";
+import { Profile } from "@keylearn/database";
 import { PublicId } from "@keylearn/publicid";
 import { ResultFaker } from "@keylearn/result";
 import { formatMessage } from "@keylearn/result-io";
 import { UserDataFactory } from "@keylearn/result-userdata";
-import { equal, isFalse, isTrue, match } from "rich-assert";
+import { deepEqual, equal, isFalse, isTrue, match } from "rich-assert";
 import { kMain } from "../module.ts";
 import { TestContext } from "../test/context.ts";
 import { startApp } from "../test/request.ts";
@@ -295,4 +296,112 @@ test("delete existing user data", async (ctx) => {
   );
 
   isFalse(await userData.exists());
+});
+
+// ---- braille progress ------------------------------------------------------
+
+test("braille progress is stored and returned per learner", async (ctx) => {
+  // Arrange.
+
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const user = await findUser("user1@keylearn.com");
+  await Profile.ensureDefault(user);
+  const [profile] = await Profile.listForUser(user.id!);
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(user.id!);
+
+  // Act, Assert.
+
+  // A learner who has done none is not an error — it is the ordinary answer
+  // on the first visit, and the client would have to special-case a 404.
+  const empty = await request
+    .GET(`/_/sync/braille/profile/${profile.id!}`)
+    .send();
+  equal(empty.status, 200);
+  deepEqual(await empty.body.json(), {});
+
+  const snapshot = {
+    progress: { a: { hits: 12, misses: 1, bestMs: 480, recentMs: [500] } },
+    days: ["2026-08-02"],
+    daily: {},
+    savedAt: 1,
+  };
+  equal(
+    (
+      await request
+        .POST(`/_/sync/braille/profile/${profile.id!}`)
+        .type("application/json")
+        .send(JSON.stringify(snapshot))
+    ).status,
+    204,
+  );
+
+  deepEqual(
+    await (
+      await request.GET(`/_/sync/braille/profile/${profile.id!}`).send()
+    ).body.json(),
+    snapshot,
+  );
+
+  // And it can be taken away again, which is what "clear my statistics" needs.
+  equal(
+    (await request.DELETE(`/_/sync/braille/profile/${profile.id!}`).send())
+      .status,
+    204,
+  );
+  deepEqual(
+    await (
+      await request.GET(`/_/sync/braille/profile/${profile.id!}`).send()
+    ).body.json(),
+    {},
+  );
+});
+
+test("braille progress is refused for somebody else's learner", async (ctx) => {
+  // One account must not be able to read or overwrite another's child.
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const owner = await findUser("user2@keylearn.com");
+  await Profile.ensureDefault(owner);
+  const [theirs] = await Profile.listForUser(owner.id!);
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become((await findUser("user1@keylearn.com")).id!);
+
+  equal(
+    (await request.GET(`/_/sync/braille/profile/${theirs.id!}`).send()).status,
+    403,
+  );
+  equal(
+    (
+      await request
+        .POST(`/_/sync/braille/profile/${theirs.id!}`)
+        .type("application/json")
+        .send("{}")
+    ).status,
+    403,
+  );
+});
+
+test("braille progress that is not JSON is refused", async (ctx) => {
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const user = await findUser("user1@keylearn.com");
+  await Profile.ensureDefault(user);
+  const [profile] = await Profile.listForUser(user.id!);
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(user.id!);
+
+  equal(
+    (
+      await request
+        .POST(`/_/sync/braille/profile/${profile.id!}`)
+        .type("application/json")
+        .send("garbage")
+    ).status,
+    400,
+  );
 });

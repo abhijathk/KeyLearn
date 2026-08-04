@@ -666,3 +666,51 @@ const KIDS_WORDS: ReadonlySet<string> = new Set([
 export function filterKidsWords(wordList: WordList): WordList {
   return wordList.filter((word) => KIDS_WORDS.has(word.toLowerCase()));
 }
+
+/**
+ * The order letters are introduced to a child, chosen so that real words appear
+ * from the very first session.
+ *
+ * Grown-ups unlock in frequency order, which is right for them and poor for a
+ * five-year-old: the first four letters by frequency are e, n, i, r, and the
+ * whole kids vocabulary contains three words that can be spelled with them. The
+ * child therefore spends their opening weeks typing pseudo-words — exactly the
+ * weeks in which they decide whether this is worth doing.
+ *
+ * Vowels first, then the consonants that pair with them most productively.
+ * Measured against the kids vocabulary:
+ *
+ *     letters      4     6     8    10
+ *     frequency    3    20    61    93
+ *     this        11    38    83   154
+ *
+ * Home row first — the other obvious candidate, and what several school
+ * curricula use — was measured too and is far worse for words (3 at six
+ * letters), because a s d f j k l has almost no vowels. This order still
+ * spreads across both hands and six distinct fingers by the sixth letter, so
+ * finger training does not suffer for it.
+ */
+const KIDS_LETTER_ORDER = "aetosnirlducgpmhbfywkvxjqz";
+
+/**
+ * Sort a model's letters into the kids order. Anything the order does not
+ * mention — accented letters in other languages — keeps its existing relative
+ * position at the end, so this is safe for every language.
+ */
+export function kidsLetterOrder<T extends { readonly codePoint: number }>(
+  letters: readonly T[],
+): readonly T[] {
+  const rank = new Map<number, number>();
+  for (let i = 0; i < KIDS_LETTER_ORDER.length; i++) {
+    rank.set(KIDS_LETTER_ORDER.codePointAt(i)!, i);
+  }
+  const far = KIDS_LETTER_ORDER.length;
+  return [...letters]
+    .map((letter, i) => ({ letter, i }))
+    .sort((a, b) => {
+      const ra = rank.get(a.letter.codePoint) ?? far + a.i;
+      const rb = rank.get(b.letter.codePoint) ?? far + b.i;
+      return ra - rb;
+    })
+    .map(({ letter }) => letter);
+}

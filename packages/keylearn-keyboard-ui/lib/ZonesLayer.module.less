@@ -53,12 +53,28 @@
 .watch {
   fill: var(--secondary);
   fill-opacity: 0.18;
-  font-family: var(--value-font-family);
+  // Its own stack rather than the theme's value font. That one is a coding
+  // mono on most themes — JetBrains Mono, Roboto Mono — and every coding mono
+  // cuts its zero with a slash or a dot so that it cannot be mistaken for a
+  // capital O. On a watch face there is no O to confuse it with, and a cut
+  // zero just looks broken. These are the system UI faces, which draw a plain
+  // round 0, and they are what a real watch face uses anyway.
+  font-family:
+    ui-sans-serif,
+    -apple-system,
+    "SF Pro Text",
+    "Segoe UI",
+    "Helvetica Neue",
+    arial,
+    sans-serif;
   font-weight: 650;
   // Tight, because the digits are already squeezed narrow — any tracking on
   // top of that and the time runs off the face.
   letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
+  // Belt and braces: if a platform substitutes a face whose zero is slashed by
+  // default, this switches the slash back off.
+  font-feature-settings: "zero" 0;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 // Same reasoning on a light ground, where the ink is dark: a shade more than

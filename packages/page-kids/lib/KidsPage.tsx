@@ -25,6 +25,17 @@ import {
   useState,
 } from "react";
 import { type AgeBand, bandConfig, currentAge, currentBand } from "./age.ts";
+import {
+  type Album,
+  catalogue,
+  earn,
+  type Hatchling,
+  HATCHLINGS,
+  loadAlbum,
+  nextHatchling,
+  practiceDays,
+  type Sticker,
+} from "./album.ts";
 import { kidsAudio } from "./audio.ts";
 import {
   BranchIcon,
@@ -56,6 +67,8 @@ import {
   ZONE_OF,
 } from "./keyboard-data.ts";
 import * as styles from "./kids.module.less";
+import { paceTarget } from "./pace.ts";
+import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
 import {
   createKidsWorld,
   createLoaderScene,
@@ -86,6 +99,31 @@ type Prefs = {
   timerMin: number;
   cheers: boolean;
   night: boolean;
+  /**
+   * Whether the child has ever been ASKED about sound.
+   *
+   * Distinct from `sounds` itself, which starts off. Off-by-default plus never
+   * asking is how the entire audio design — every cheer, every hatch, and the
+   * spoken coaching the youngest bands depend on — reached almost nobody: the
+   * setting is buried in a toy-box a five-year-old cannot read.
+   */
+  soundAsked: boolean;
+  /**
+   * Whether the coach reads its lines aloud. Defaults from the age band —
+   * on for the bands who cannot yet read them — and stays a knob because a
+   * classroom of eight children is a different room from a bedroom.
+   */
+  readAloud: boolean;
+  /**
+   * How far past the alphabet the trail goes.
+   *
+   * The page used to simply stop: the twenty-sixth letter was the last thing
+   * that ever happened, and a child who got there had a game with nothing left
+   * in it and no idea that a grown-up page existed. Offered at the graduation
+   * and changeable here afterwards, because Shift is genuinely harder and a
+   * child who is not ready should be able to say so.
+   */
+  grownupKeys: "off" | "caps" | "punct";
   /** Scene look: brightness (~0.7–1.3) and paleness (0 = full colour, 1 = pale). */
   brightness: number;
   paleness: number;
@@ -117,6 +155,9 @@ function defaultPrefs(): Prefs {
     timerMin: cfg.timerMin,
     cheers: true,
     night: false,
+    soundAsked: false,
+    readAloud: cfg.readAloud,
+    grownupKeys: "off",
     brightness: 1,
     paleness: 0,
     motion: 0.7,
@@ -224,9 +265,9 @@ const SAYS = {
     "The earth trembles as mighty {name} grows again!",
   ],
   hatch: [
-    "An egg hatched — {dino} joined the herd! (see settings)",
-    "Crack… crack… {dino} hatched! Say hi in settings!",
-    "A wild egg wobbled and out popped {dino}! (find them in settings)",
+    "An egg hatched — {dino} joined the herd!",
+    "Crack… crack… out popped {dino}!",
+    "A wild egg wobbled, and there was {dino}!",
   ],
   streak: [
     "{name} is SO proud — 10 in a row!",
@@ -278,6 +319,11 @@ const SAYS = {
     "Chapter {chapter}! New trees, new stones, same brave typist.",
     "The herd crossed over — welcome to {land}!",
     "New land, new adventure — the flag is waiting ahead!",
+  ],
+  graduate: [
+    "You know every single letter! {name} has never been so proud.",
+    "That's the WHOLE alphabet — every letter on the trail is yours.",
+    "Twenty-six letters, all of them learned by you. What a day!",
   ],
   timerEnd: [
     "The herd makes camp. Wonderful typing today!",
@@ -506,12 +552,6 @@ function agedPool(
   return base;
 }
 
-/** Dinos hatch from eggs as the trail grows — they are earned, not picked. */
-const HATCHLINGS = [
-  { id: "Velociraptor", label: "Vela", at: 8 },
-  { id: "Triceratops", label: "Tops", at: 10 },
-] as const;
-
 // The Hero Trail heroes you can BE — reserved for the main character so the
 // trail companions never look like you.
 const HERO_CHARACTERS = [
@@ -527,6 +567,19 @@ function peekNextLandName(): string {
     return LANDS[0].name;
   }
 }
+
+/**
+ * How long a gap in typing may be before the child counts as "not playing".
+ *
+ * Ten seconds, which is the same moment the runner turns around and beckons —
+ * so the rule has one visible meaning: when your buddy is waiting for you, the
+ * clock is waiting too.
+ *
+ * It has to be generous. A five-year-old hunting for a letter they met last
+ * week can take six or seven seconds over a single key, and that is the child
+ * this page exists for; pausing on them would be worse than not pausing at all.
+ */
+const IDLE_MS = 10_000;
 
 const FINISH_MSGS = [
   "Your fingers are getting SO fast — the herd can barely keep up!",
@@ -553,21 +606,44 @@ export function KidsPage() {
  */
 function KidsSettings({ children }: { readonly children: ReactNode }) {
   const { settings, updateSettings } = useSettings();
+  const { results } = useResults();
+  // The target follows the child: the middle of their recent sessions plus a
+  // small stretch, held inside the band's floor and ceiling. A fixed number per
+  // band asked a five-year-old for roughly double what five-year-olds do, and
+  // measured on a real profile that meant twenty-seven sessions without a
+  // single new letter.
+  const target = useMemo(
+    () => paceTarget(results, bandConfig(currentBand())),
+    [results],
+  );
+  // How far past the alphabet this child has chosen to go. Read from the same
+  // prefs the game writes, and re-read when it says it has changed.
+  const [grownupKeys, setGrownupKeys] = useState(() => loadPrefs().grownupKeys);
+  useEffect(() => {
+    const reread = () => setGrownupKeys(loadPrefs().grownupKeys);
+    window.addEventListener("keylearn:kids-prefs", reread);
+    return () => window.removeEventListener("keylearn:kids-prefs", reread);
+  }, []);
+
   const kids = useMemo(
     () =>
       settings
         .set(lessonProps.type, LessonType.GUIDED)
         .set(lessonProps.guided.kidsWords, true)
-        // New letters unlock at an age-appropriate speed, so a six-year-old
-        // sees the trail grow at the same emotional pace as a ten-year-old.
-        .set(lessonProps.targetSpeed, bandConfig(currentBand()).targetCpm)
+        .set(lessonProps.targetSpeed, target)
+        // Past the alphabet the trail carries on into the keys grown-ups use.
+        // Sparse on purpose: a capital costs two hands and a whole new motion,
+        // and one in seven words is enough to learn it without the passage
+        // turning into a Shift drill.
+        .set(lessonProps.capitals, grownupKeys === "off" ? 0 : 0.15)
+        .set(lessonProps.punctuators, grownupKeys === "punct" ? 0.1 : 0)
         // A new letter arrives only once EVERY letter already known is above
         // target — and judged on current speed, not best-ever. Without this a
         // single lucky keystroke pushes bestConfidence over the line and the
         // next letter appears, which is why the trail kept growing faster than
         // the child actually was.
         .set(lessonProps.guided.recoverKeys, true),
-    [settings],
+    [settings, target, grownupKeys],
   );
   return (
     <SettingsContext.Provider value={{ settings: kids, updateSettings }}>
@@ -604,6 +680,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [shiftOn, setShiftOn] = useState(false);
   const [specialKey, setSpecialKey] = useState<string | null>(null);
   const [draftName, setDraftName] = useState(() => loadPrefs().name);
+  // The album, and the creature currently coming out of its egg.
+  const [album, setAlbum] = useState<Album>(loadAlbum);
+  const [hatched, setHatched] = useState<Hatchling | null>(null);
+  const [albumOpen, setAlbumOpen] = useState(false);
+  const [graduated, setGraduated] = useState(false);
+  // Pre-selected yes, because the audio is the point: sounds off and never
+  // mentioned is how the whole design stayed unheard.
+  const [draftSounds, setDraftSounds] = useState(true);
 
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(loadBest);
@@ -648,6 +732,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [pressed, setPressed] = useState<string | null>(null);
   const pressedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  /**
+   * Adds a sticker to the album, silently if it was already there.
+   *
+   * Every milestone runs through here rather than tracking its own flag, so
+   * "have they got this one" has exactly one answer and re-earning cannot
+   * re-fire a ceremony.
+   */
+  const collect = (id: string) => {
+    const next = earn(id);
+    if (next != null) {
+      setAlbum(next);
+    }
+  };
+
   const savePrefs = (patch: Partial<Prefs>) => {
     setPrefs((old) => {
       const next = { ...old, ...patch };
@@ -656,8 +754,41 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       } catch {
         // Storage may be unavailable.
       }
+      // The lesson settings live in a component above this one and cannot see
+      // this state, but they decide whether Shift and punctuation are in play.
+      try {
+        window.dispatchEvent(new CustomEvent("keylearn:kids-prefs"));
+      } catch {
+        // Not a browser.
+      }
       return next;
     });
+  };
+
+  /**
+   * Close the naming card, keeping the sound answer if this was the first run.
+   *
+   * The card reopens from the toy-box for renaming, and that visit must not
+   * silently re-answer a question it never asked.
+   */
+  const finishNaming = () => {
+    const name = draftName.trim() || "Rexy";
+    savePrefs(
+      prefs.soundAsked
+        ? { name }
+        : { name, sounds: draftSounds, soundAsked: true },
+    );
+    setNameOpen(false);
+    // This click is a user gesture, which is the only kind of moment a browser
+    // will start audio in — and the greeting is the one line worth saying
+    // before any typing has happened.
+    if (draftSounds && cfg.readAloud) {
+      unlockVoice();
+      speakLine(
+        fillSay(pickSay(saysOf(prefs.world).start), { name }),
+        cfg.speechRate,
+      );
+    }
   };
 
   // ── the adaptive engine: same stats, same unlock rules ─────────────────
@@ -775,15 +906,58 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           setCeremony({ letter, presses: 0 });
         }
       }
-      // Did the trail reach an egg?
-      for (const { id, label, at } of HATCHLINGS) {
+      // Did the trail reach an egg? The creature arrives here, in the scene
+      // the child is looking at — the old line told them to go and find it in
+      // a settings menu, which is not a reward, it is an errand.
+      const world = prefsRef.current.world;
+      for (const hatchling of HATCHLINGS[world]) {
+        const { id, label, at } = hatchling;
         if (prevIncluded.current < at && included >= at) {
           speak("hatch", { dino: label });
           if (prefsRef.current.sounds) {
             kidsAudio.playSuccess();
           }
+          worldRef.current?.burstAtPlayer(
+            [0xffd94a, 0xfff3c4, 0x8ecb64],
+            40,
+            1,
+          );
+          collect(id);
+          setHatched(hatchling);
         }
       }
+      // Letter-count milestones, kept for good.
+      for (const n of [10, 20]) {
+        if (prevIncluded.current < n && included >= n) {
+          collect(`keys-${n}`);
+        }
+      }
+    }
+    // The last letter. Everything on this page has been building to it and
+    // nothing marked it — the trail simply had no more moves in it, and a child
+    // who finished the alphabet was never told that a grown-up page existed,
+    // let alone shown the door to it.
+    //
+    // Outside the "did it just go up" branch on purpose: a child can arrive
+    // here already knowing every letter, having earned them on the grown-up
+    // page, and that child has graduated too.
+    if (
+      included > 0 &&
+      included >= lesson.letters.length &&
+      !("alphabet" in loadAlbum())
+    ) {
+      collect("alphabet");
+      worldRef.current?.celebrate();
+      worldRef.current?.burstAtPlayer(
+        [0xffd94a, 0x8ecb64, 0xff8fa3, 0x8ecfff],
+        90,
+        1.4,
+      );
+      if (prefsRef.current.sounds) {
+        kidsAudio.playWin();
+      }
+      speak("graduate");
+      setGraduated(true);
     }
     prevIncluded.current = included;
     prevLettersRef.current = letters;
@@ -799,13 +973,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const speak = (key: keyof typeof SAYS, vars: Record<string, string> = {}) => {
     const age = dinoAgeRef.current;
     const world = prefsRef.current.world;
-    setSay(
-      fillSay(pickSay(agedPool(saysOf(world), key, age)), {
-        name: dinoName(),
-        stage: (world === "hero" ? heroStage : dinoStage)(age),
-        ...vars,
-      }),
-    );
+    const line = fillSay(pickSay(agedPool(saysOf(world), key, age)), {
+      name: dinoName(),
+      stage: (world === "hero" ? heroStage : dinoStage)(age),
+      ...vars,
+    });
+    setSay(line);
+    // And read it out, for the bands who cannot read it themselves. Only the
+    // moments — see `voice.ts` for why the cheers are excluded.
+    if (
+      prefsRef.current.readAloud &&
+      prefsRef.current.sounds &&
+      isSpoken(key)
+    ) {
+      speakLine(line, cfg.speechRate);
+    }
   };
 
   // A fresh passage whenever the lesson or the stats move on. Kids runs are
@@ -885,6 +1067,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     const world = createKidsWorld(canvas, pickLand(theme.lands), theme);
     worldRef.current = world;
     setLandName(world.land.name);
+    // Walking into a land is what earns it, including the one the session
+    // opens in — otherwise the very first land is the one land nobody gets.
+    collect(`land:${world.land.name}`);
     world.startRun();
     const loader =
       loaderRef.current != null
@@ -957,6 +1142,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     sessionOver ||
     nameOpen ||
     mapOpen ||
+    albumOpen ||
+    graduated ||
+    hatched != null ||
     ceremony != null;
 
   useEffect(() => {
@@ -996,6 +1184,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         return;
       }
       kidsAudio.init(); // browsers unlock audio on first input
+      unlockVoice(); // and speech, which is gated the same way
+      // Typing wins over talking. A coach line still playing over the child's
+      // own keys is noise: they cannot hear their rhythm and the sentence is
+      // about a moment that has already passed.
+      stopSpeaking();
       const now = performance.now();
       if (now - lastKeyAtRef.current < 25) {
         return; // synthetic double-dispatch guard
@@ -1035,6 +1228,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         if (streakRef.current % cfg.hopEvery === 0) {
           worldRef.current?.hop();
           speak("streak");
+          collect("streak-10");
         }
         comboRunRef.current += 1;
         if (comboRunRef.current >= 5) {
@@ -1070,6 +1264,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           setScore((s) => saveBest(s + 10));
           setWords((w) => w + 1);
           speak("camp");
+          // Reaching a flag is what counts as having practised, not running
+          // the timer to zero — most children close the tab long before it
+          // gets there, and none of them should lose the day for it.
+          collect("first-run");
+          if (practiceDays() >= 7) {
+            collect("week");
+          }
           if (sounds) {
             kidsAudio.playPoint();
           }
@@ -1154,10 +1355,29 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     };
   }, [settings, appendResults]);
 
-  // ── the session timer (runs even when hidden) ──────────────────────────
+  // ── the session timer ─────────────────────────────────────────────────
+  //
+  // Counts time spent PLAYING, not time spent with the tab open. It used to
+  // run on the wall clock, so a page left open on a table burned a child's
+  // whole session without a key being pressed — and the "practised N min"
+  // figure shown to a parent, along with the words-per-minute derived from it,
+  // was measuring how long the browser had been idle.
+  //
+  // This matches the grown-up page, where a lesson's time runs from the first
+  // keystroke to the last and the gaps between lessons cost nothing.
+  const [timerIdle, setTimerIdle] = useState(true);
   useEffect(() => {
     const id = setInterval(() => {
       if (blockedRef.current) {
+        return;
+      }
+      // Nothing typed yet this session, or nothing for a while: the clock
+      // holds. `lastKeyAtRef` is 0 until the very first key, which is exactly
+      // the "opened it and walked away" case.
+      const last = lastKeyAtRef.current;
+      const idle = last === 0 || performance.now() - last > IDLE_MS;
+      setTimerIdle(idle);
+      if (idle) {
         return;
       }
       setSessionSecs((secs) => {
@@ -1186,7 +1406,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         return;
       }
       const last = lastKeyAtRef.current;
-      if (performance.now() - (last || 0) > 10000) {
+      if (performance.now() - (last || 0) > IDLE_MS) {
         beckonedRef.current = true;
         worldRef.current?.beckon();
         speak("idle");
@@ -1200,10 +1420,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
   const crossIntoNextLand = () => {
     setMapOpen(false);
-    speak("crossed", {
-      chapter: String(chapter + 1),
-      land: peekNextLandName(),
-    });
+    const land = peekNextLandName();
+    speak("crossed", { chapter: String(chapter + 1), land });
+    collect(`land:${land}`);
     setChapter((c) => c + 1);
     setLoaded(false);
     setLandNonce((n) => n + 1);
@@ -1213,6 +1432,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     setFinishOpen(false);
     setSessionOver(false);
     setSessionSecs(prefs.timerMin * 60);
+    // Or the new session would run for up to IDLE_MS on the strength of a key
+    // pressed in the old one.
+    lastKeyAtRef.current = 0;
+    setTimerIdle(true);
     setScore(0);
     setWords(0);
     setCombo(1);
@@ -1288,11 +1511,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 }}
               />
               <div>
-                <div className={styles.chipLab}>Timer</div>
+                <div className={styles.chipLab}>
+                  {timerIdle && !sessionOver ? "Waiting…" : "Timer"}
+                </div>
                 <div
                   className={clsx(
                     styles.chipVal,
                     sessionSecs <= 60 && !sessionOver && styles.timerLow,
+                    timerIdle && !sessionOver && styles.timerHeld,
                   )}
                 >
                   {Math.floor(sessionSecs / 60)}:
@@ -1526,6 +1752,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 ? "NEW BEST SCORE — WOW!!"
                 : `your best ever: ${best}`}
             </div>
+
+            {/*
+              The album at the end of every session, not buried behind a gear
+              icon. A score resets; this is the thing that accumulates, and it
+              is what makes the next four keys worth walking to.
+            */}
+            <AlbumStrip
+              album={album}
+              world={prefs.world}
+              included={included}
+              onOpen={() => setAlbumOpen(true)}
+            />
+
             <button type="button" className={styles.cta} onClick={playAgain}>
               Run again!
             </button>
@@ -1568,19 +1807,61 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               onChange={(ev) => setDraftName(ev.target.value)}
               onKeyDown={(ev) => {
                 if (ev.key === "Enter") {
-                  savePrefs({ name: draftName.trim() || "Rexy" });
-                  setNameOpen(false);
+                  finishNaming();
                 }
               }}
             />
-            <button
-              type="button"
-              className={styles.cta}
-              onClick={() => {
-                savePrefs({ name: draftName.trim() || "Rexy" });
-                setNameOpen(false);
-              }}
-            >
+
+            {/*
+              Asked here, once, and never again — this card is the only moment
+              before the session starts when somebody is looking at the screen
+              and not yet typing. Tapping a choice is also the gesture browsers
+              require before any audio may play at all, so the answer takes
+              effect immediately instead of on some later click.
+            */}
+            {!prefs.soundAsked && (
+              <div className={styles.askSound}>
+                <span className={styles.askSoundTitle}>
+                  Shall {draftName.trim() || "Rexy"} make noises?
+                </span>
+                <div className={styles.askSoundRow}>
+                  <button
+                    type="button"
+                    className={clsx(
+                      styles.askSoundBtn,
+                      draftSounds && styles.askSoundOn,
+                    )}
+                    onClick={() => {
+                      setDraftSounds(true);
+                      // Let them hear what they just agreed to. This click is
+                      // the user gesture that unlocks audio.
+                      kidsAudio.init();
+                      unlockVoice();
+                      kidsAudio.playPoint();
+                    }}
+                  >
+                    <SoundIcon size={20} color="currentColor" />
+                    Yes please
+                  </button>
+                  <button
+                    type="button"
+                    className={clsx(
+                      styles.askSoundBtn,
+                      !draftSounds && styles.askSoundOn,
+                    )}
+                    onClick={() => setDraftSounds(false)}
+                  >
+                    <SoundIcon size={20} color="currentColor" muted={true} />
+                    Keep it quiet
+                  </button>
+                </div>
+                <span className={styles.askSoundNote}>
+                  You can change this any time with the speaker button up top.
+                </span>
+              </div>
+            )}
+
+            <button type="button" className={styles.cta} onClick={finishNaming}>
               Say hello!
             </button>
           </div>
@@ -1618,6 +1899,127 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 </span>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/*
+        The hatch, here rather than in a settings menu.
+
+        The creature is offered right now, while the child is still looking at
+        the moment it arrived in — and taking it swaps the runner in the scene
+        behind this card. The old flow printed "(see settings)" and left a
+        five-year-old to go and find a gear icon, which is not a reward.
+      */}
+      {hatched != null && ceremony == null && (
+        <div className={styles.overlay}>
+          <div className={clsx(styles.card, styles.finishCard)}>
+            <div className={clsx(styles.finishBadge, styles.hatchBadge)}>
+              <EggIcon size={34} color="#5c4500" />
+            </div>
+            <div className={styles.cerEyebrow}>AN EGG HATCHED!</div>
+            <div className={styles.hatchName}>{hatched.label}</div>
+            <div className={styles.finishMsg}>
+              {hatched.label} is yours to keep. Run together, or stay with{" "}
+              {prefs.name || "your buddy"} — you can swap any time.
+            </div>
+            <div className={styles.hatchRow}>
+              <button
+                type="button"
+                className={styles.cta}
+                onClick={() => {
+                  savePrefs(
+                    prefs.world === "hero"
+                      ? { hero: hatched.id }
+                      : { dino: hatched.id },
+                  );
+                  worldRef.current?.setPlayer(hatched.id).catch(() => {});
+                  setHatched(null);
+                }}
+              >
+                Run with {hatched.label}!
+              </button>
+              <button
+                type="button"
+                className={styles.pill}
+                onClick={() => setHatched(null)}
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/*
+        Graduation. Three things have to happen here and none of them used to:
+        the moment is marked, the trail is given somewhere to go next, and the
+        grown-up page is named out loud — a child who has typed the whole
+        alphabet has outgrown a game about eggs, and until now nobody told them
+        there was anywhere else.
+      */}
+      {graduated && (
+        <div className={styles.overlay}>
+          <div className={clsx(styles.card, styles.finishCard)}>
+            <div className={styles.gradRibbon}>THE WHOLE ALPHABET</div>
+            <div className={styles.gradLetters}>
+              {[..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].map((ch, i) => (
+                <span
+                  key={ch}
+                  className={styles.gradLetter}
+                  style={{ animationDelay: `${i * 40}ms` }}
+                >
+                  {ch}
+                </span>
+              ))}
+            </div>
+            <div className={styles.finishMsg}>
+              Every single letter, {prefs.name || "friend"} — you did that.
+              There are bigger keys out there now.
+            </div>
+            <div className={styles.gradChoices}>
+              <button
+                type="button"
+                className={styles.cta}
+                onClick={() => {
+                  savePrefs({ grownupKeys: "caps" });
+                  setGraduated(false);
+                }}
+              >
+                Add the BIG letters
+              </button>
+              <a className={styles.gradLink} href="/practice">
+                or move up to the grown-up page
+              </a>
+              <button
+                type="button"
+                className={styles.pill}
+                onClick={() => setGraduated(false)}
+              >
+                Just letters for now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {albumOpen && (
+        <div className={styles.overlay}>
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>
+              <span className={styles.hIcon}>
+                <StarIcon size={20} color="#5c4500" />
+              </span>
+              Your sticker album
+            </div>
+            <AlbumGrid album={album} world={prefs.world} />
+            <button
+              type="button"
+              className={styles.cta}
+              onClick={() => setAlbumOpen(false)}
+            >
+              Back to the trail
+            </button>
           </div>
         </div>
       )}
@@ -1716,6 +2118,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             setDraftName(prefs.name);
             setNameOpen(true);
           }}
+          totalLetters={lesson.letters.length}
+          onOpenAlbum={() => {
+            setSettingsOpen(false);
+            setAlbumOpen(true);
+          }}
           onPickDino={(dino) => {
             savePrefs({ dino });
             worldRef.current?.setPlayer(dino).catch(() => {});
@@ -1797,11 +2204,126 @@ function Key({
   );
 }
 
+/**
+ * The album.
+ *
+ * Unearned stickers are drawn as faded outlines with the words for how to get
+ * them, and that is the whole point of showing them: a child who can see three
+ * empty slots knows there is more trail ahead, where a child who only sees what
+ * they already hold has arrived at the end of the game.
+ */
+/**
+ * The album, in one line, at the end of a session.
+ *
+ * Two things a child needs to see here: how many they hold, and — the part the
+ * page never had — how far the next one is. "Two more keys" is a reason to come
+ * back; a score that resets to zero is not.
+ */
+function AlbumStrip({
+  album,
+  world,
+  included,
+  onOpen,
+}: {
+  readonly album: Album;
+  readonly world: "dino" | "hero";
+  readonly included: number;
+  readonly onOpen: () => void;
+}) {
+  const all = catalogue(world);
+  const got = all.filter(({ id }) => id in album).length;
+  const next = nextHatchling(world, included);
+  return (
+    <button type="button" className={styles.albumStrip} onClick={onOpen}>
+      <span className={styles.albumStripIcon}>
+        <StarIcon size={20} color="#5c4500" />
+      </span>
+      <span className={styles.albumStripText}>
+        <b>
+          {got} of {all.length} stickers
+        </b>
+        {next != null && (
+          <span className={styles.albumStripNext}>
+            {next.at - included === 1
+              ? `1 more key and ${next.label} hatches`
+              : `${next.at - included} more keys and ${next.label} hatches`}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+}
+
+function AlbumGrid({
+  album,
+  world,
+}: {
+  readonly album: Album;
+  readonly world: "dino" | "hero";
+}) {
+  const all = catalogue(world);
+  const got = all.filter(({ id }) => id in album).length;
+  return (
+    <>
+      <div className={styles.albumCount}>
+        {got} of {all.length} collected
+      </div>
+      <div className={styles.albumGrid}>
+        {all.map((sticker) => (
+          <StickerTile
+            key={sticker.id}
+            sticker={sticker}
+            on={sticker.id in album}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function StickerTile({
+  sticker,
+  on,
+}: {
+  readonly sticker: Sticker;
+  readonly on: boolean;
+}) {
+  const { label, hint, kind } = sticker;
+  const colour = on
+    ? {
+        companion: "var(--sage)",
+        land: "var(--seafoam)",
+        milestone: "var(--sand)",
+      }[kind]
+    : "transparent";
+  const ink = on ? "#3d3a2e" : "var(--kink2)";
+  return (
+    <div
+      className={clsx(styles.sticker, !on && styles.stickerOff)}
+      style={{ background: colour }}
+      title={on ? label : hint}
+    >
+      <span className={styles.stickerIcon}>
+        {kind === "companion" ? (
+          <EggIcon size={20} color={ink} />
+        ) : kind === "land" ? (
+          <FlagIcon size={20} color={ink} />
+        ) : (
+          <StarIcon size={20} color={ink} />
+        )}
+      </span>
+      <span className={styles.stickerLabel}>{on ? label : hint}</span>
+    </div>
+  );
+}
+
 function SettingsCard({
   prefs,
   included,
+  totalLetters,
   savePrefs,
   onRename,
+  onOpenAlbum,
   onPickDino,
   onPickHero,
   onPickTimer,
@@ -1809,8 +2331,11 @@ function SettingsCard({
 }: {
   readonly prefs: Prefs;
   readonly included: number;
+  /** Letters in this layout's alphabet, so "all of them" is not hardcoded. */
+  readonly totalLetters: number;
   readonly savePrefs: (patch: Partial<Prefs>) => void;
   readonly onRename: () => void;
+  readonly onOpenAlbum: () => void;
   readonly onPickDino: (dino: string) => void;
   readonly onPickHero: (hero: string) => void;
   readonly onPickTimer: (min: number) => void;
@@ -1821,6 +2346,7 @@ function SettingsCard({
   // The in-world letters are the default for the youngest; 7-8 and 9-10 get a
   // toggle to opt in.
   const band = currentBand();
+  const cfg = bandConfig(band);
   const canToggleWords = band === "7-8" || band === "9-10";
   return (
     <div className={styles.overlay}>
@@ -1856,6 +2382,55 @@ function SettingsCard({
             </button>
           </div>
         </div>
+        {/*
+          Only offered once the alphabet is done. Before that it would be a
+          harder mode dangled in front of a child still learning where D is.
+        */}
+        {included >= totalLetters && (
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--coral)" }}>
+              <span className={styles.aaIcon}>A!</span>
+            </span>
+            <div>
+              <div className={styles.sl}>Grown-up keys</div>
+              <div className={styles.sd}>
+                capital letters, then full stops and commas
+              </div>
+            </div>
+            <div className={styles.ctl}>
+              {(
+                [
+                  ["off", "Off"],
+                  ["caps", "Capitals"],
+                  ["punct", "And marks"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={pill(prefs.grownupKeys === value)}
+                  onClick={() => savePrefs({ grownupKeys: value })}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className={styles.srow}>
+          <span className={styles.ri} style={{ background: "var(--sand)" }}>
+            <StarIcon size={22} color="#7a5c00" />
+          </span>
+          <div>
+            <div className={styles.sl}>Sticker album</div>
+            <div className={styles.sd}>everything you have collected</div>
+          </div>
+          <div className={styles.ctl}>
+            <button type="button" className={styles.pill} onClick={onOpenAlbum}>
+              Open
+            </button>
+          </div>
+        </div>
         <div className={styles.srow}>
           <span className={styles.ri} style={{ background: "var(--sage)" }}>
             <PawIcon size={24} color="#3d6b2e" />
@@ -1866,67 +2441,60 @@ function SettingsCard({
             </div>
             <div className={styles.sd}>who runs with you</div>
           </div>
+          {/*
+            Both worlds work the same way now: a couple of starters, then a
+            companion earned every four keys. The hero world used to hand out
+            both of its characters for free and have nothing after them, which
+            left the default world for the youngest bands with no rewards at
+            all.
+          */}
           <div className={styles.ctl}>
-            {prefs.world === "hero" ? (
-              <>
-                {HERO_CHARACTERS.map(({ id, label }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className={pill(prefs.hero === id)}
-                    onClick={() => onPickHero(id)}
-                  >
-                    {label}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  className={styles.pill}
-                  onClick={onRename}
-                >
-                  Rename
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className={pill(prefs.dino === "TRex")}
-                  onClick={() => onPickDino("TRex")}
-                >
-                  Rex
-                </button>
-                {HATCHLINGS.map(({ id, label, at }) =>
-                  included >= at ? (
-                    <button
-                      key={id}
-                      type="button"
-                      className={pill(prefs.dino === id)}
-                      onClick={() => onPickDino(id)}
-                    >
-                      {label}
-                    </button>
-                  ) : (
-                    <button
-                      key={id}
-                      type="button"
-                      className={clsx(styles.pill, styles.pillEgg)}
-                      disabled={true}
-                      title={`This egg hatches at ${at} keys`}
-                    >
-                      <EggIcon size={14} color="currentColor" /> {at} keys
-                    </button>
-                  ),
+            {(prefs.world === "hero"
+              ? HERO_CHARACTERS
+              : ([{ id: "TRex", label: "Rex" }] as const)
+            ).map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className={pill(
+                  (prefs.world === "hero" ? prefs.hero : prefs.dino) === id,
                 )}
+                onClick={() =>
+                  prefs.world === "hero" ? onPickHero(id) : onPickDino(id)
+                }
+              >
+                {label}
+              </button>
+            ))}
+            {HATCHLINGS[prefs.world].map(({ id, label, at }) =>
+              included >= at ? (
                 <button
+                  key={id}
                   type="button"
-                  className={styles.pill}
-                  onClick={onRename}
+                  className={pill(
+                    (prefs.world === "hero" ? prefs.hero : prefs.dino) === id,
+                  )}
+                  onClick={() =>
+                    prefs.world === "hero" ? onPickHero(id) : onPickDino(id)
+                  }
                 >
-                  Rename
+                  {label}
                 </button>
-              </>
+              ) : (
+                <button
+                  key={id}
+                  type="button"
+                  className={clsx(styles.pill, styles.pillEgg)}
+                  disabled={true}
+                  title={`This egg hatches at ${at} keys`}
+                >
+                  <EggIcon size={14} color="currentColor" /> {at} keys
+                </button>
+              ),
             )}
+            <button type="button" className={styles.pill} onClick={onRename}>
+              Rename
+            </button>
           </div>
         </div>
         <div className={styles.srow}>
@@ -1987,6 +2555,46 @@ function SettingsCard({
               onClick={() => savePrefs({ sounds: !prefs.sounds })}
             >
               {prefs.sounds ? "On" : "Off"}
+            </button>
+          </div>
+        </div>
+        {/*
+          On by default for the bands who cannot read the coach, and still a
+          knob: a classroom of eight children is a very different room from a
+          bedroom, and a child who has learned to read wants it gone.
+        */}
+        <div className={styles.srow}>
+          <span className={styles.ri} style={{ background: "var(--sand)" }}>
+            <SoundIcon color="#7a5c00" size={20} />
+          </span>
+          <div>
+            <div className={styles.sl}>Read it out loud</div>
+            <div className={styles.sd}>
+              {prefs.sounds
+                ? "the coach says the important bits"
+                : "needs sounds switched on"}
+            </div>
+          </div>
+          <div className={styles.ctl}>
+            <button
+              type="button"
+              className={pill(prefs.readAloud && prefs.sounds)}
+              disabled={!prefs.sounds}
+              onClick={() => {
+                const on = !prefs.readAloud;
+                savePrefs({ readAloud: on });
+                if (on) {
+                  unlockVoice();
+                  speakLine(
+                    "Hello! I will read the important bits.",
+                    cfg.speechRate,
+                  );
+                } else {
+                  stopSpeaking();
+                }
+              }}
+            >
+              {prefs.readAloud && prefs.sounds ? "On" : "Off"}
             </button>
           </div>
         </div>

@@ -10,6 +10,7 @@
     "@keylearn/intl": "*",
     "@keylearn/page-account": "*",
     "@keylearn/pages-shared": "*",
+    "@keylearn/speech": "*",
     "@keylearn/widget": "*"
   },
   "devDependencies": {},

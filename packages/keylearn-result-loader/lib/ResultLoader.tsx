@@ -12,6 +12,7 @@ export function ResultLoader({
   profileName = null,
   profileAvatar = null,
   kidProfile = false,
+  profileBirthYear = null,
 }: {
   readonly children: ReactNode;
   /** Load the kids trail history instead of the grown-up history. */
@@ -24,6 +25,8 @@ export function ResultLoader({
   readonly profileAvatar?: ReactNode;
   /** Whether this is a child's profile, for what gets offered. */
   readonly kidProfile?: boolean;
+  /** That learner's birth year, for age-appropriate notes. */
+  readonly profileBirthYear?: number | null;
 }): ReactNode {
   const storage = useResultStorage(kids, namespace);
   const state = useLoader(storage);
@@ -38,6 +41,7 @@ export function ResultLoader({
         profileName={profileName}
         profileAvatar={profileAvatar}
         kidProfile={kidProfile}
+        profileBirthYear={profileBirthYear}
       >
         {children}
       </ResultProvider>

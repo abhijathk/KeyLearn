@@ -2,9 +2,11 @@ import {
   brailleStats,
   type CellStat,
   clearProgress,
+  clearRemoteProgress,
   dailyStats,
   dayStats,
   defaultTarget,
+  describeKey,
   dotsOf,
   LETTERS,
   loadProgress,
@@ -53,18 +55,29 @@ export function BrailleProfile({
   const { formatInteger, formatNumber } = useIntlNumbers();
   const { formatStamp } = useIntlDates();
   const [generation, setGeneration] = useState(0);
+  const [filterId, setFilterId] = useState("letters");
 
   const view = useMemo(() => {
     void generation; // re-read after a clear
     const progress = loadProgress(profileId);
     const unlocked = new Set(progress.unlocked());
-    const cells = TEACHING_ORDER.map((letter) => ({
-      letter,
-      cell: LETTERS.get(letter) ?? 0,
-      stat: progress.statOf(letter),
-      unlocked: unlocked.has(letter),
-      settled: progress.isSettled(letter),
-    }));
+    const cells = TEACHING_ORDER.map((key) => {
+      const info = describeKey(key);
+      return {
+        letter: key,
+        // What to print and what to read aloud, which for everything past the
+        // alphabet are not the key itself: a bare "." in a list of cells is a
+        // full stop pretending to be a character, and "A" and "1" stand in for
+        // the capital and number signs rather than for themselves.
+        glyph: info.glyph,
+        name: info.name,
+        kind: info.kind,
+        cell: info.cell,
+        stat: progress.statOf(key),
+        unlocked: unlocked.has(key),
+        settled: progress.isSettled(key),
+      };
+    });
     return {
       stats: brailleStats(profileId),
       cells,
@@ -75,7 +88,37 @@ export function BrailleProfile({
     };
   }, [profileId, generation]);
 
-  const { stats, cells, days, daily, today, weakest } = view;
+  const { stats, cells: allCells, days, daily, today, weakest } = view;
+
+  /**
+   * Which part of the curriculum the figures below describe.
+   *
+   * The same control every other profile carries, for the same reason: the
+   * curriculum is no longer only letters, and one accuracy figure spanning
+   * a–z, the punctuation and the number sign answers no question anybody has.
+   * A class is offered only once the learner has actually met it, so a
+   * beginner still sees a page about letters and nothing else.
+   */
+  const CLASSES = [
+    { id: "letters", kind: "letter" as const, label: "Letters" },
+    { id: "punctuation", kind: "punctuation" as const, label: "Punctuation" },
+    { id: "capitals", kind: "capital" as const, label: "Capitals" },
+    { id: "numbers", kind: "number" as const, label: "Numbers" },
+  ];
+  const offered = CLASSES.filter(({ kind }) =>
+    allCells.some((c) => c.kind === kind && c.unlocked),
+  );
+  // A class can stop being offered — a cleared history, above all. Falling
+  // back keeps the selection on something that is actually on screen.
+  const active = offered.some(({ id }) => id === filterId)
+    ? filterId
+    : "letters";
+  const cells =
+    offered.length <= 1
+      ? allCells
+      : allCells.filter(
+          (c) => c.kind === CLASSES.find(({ id }) => id === active)!.kind,
+        );
   const samples = cells.flatMap((c) => [...c.stat.recentMs]);
   const typicalMs = median(samples);
   const bestMs = Math.min(
@@ -96,7 +139,11 @@ export function BrailleProfile({
   // The engine's own answer to which cell is holding the learner back, so the
   // profile names the same one the lesson is drilling. It weighs accuracy as
   // well as speed, which the slowest best-time alone does not.
-  const holdingUp = cells.find((c) => c.letter === weakest) ?? slowest;
+  // From the whole curriculum, not the filtered view: the engine's answer to
+  // "which cell is holding you back" is a single global one, and naming the
+  // slowest letter while a full stop is actually the blocker would be telling
+  // the learner something untrue about their own practice.
+  const holdingUp = allCells.find((c) => c.letter === weakest) ?? slowest;
 
   return (
     <div className={styles.col}>
@@ -117,7 +164,7 @@ export function BrailleProfile({
           <i>
             <FormattedMessage
               id="braille.profile.subline"
-              defaultMessage="{cells} cells entered · {learned} of {total} letters · {streak} day streak"
+              defaultMessage="{cells} cells entered · {learned} of {total} cells · {streak} day streak"
               values={{
                 cells: formatInteger(stats.hits),
                 learned: stats.learned,
@@ -128,6 +175,34 @@ export function BrailleProfile({
           </i>
         </span>
       </div>
+
+      {/*
+        Only once there is more than one thing to choose between. A learner on
+        their first week has met nothing but letters, and a row of buttons where
+        three of the four do nothing is a worse page than no row at all.
+      */}
+      {offered.length > 1 && (
+        <div className={styles.filterRow}>
+          <span className={styles.axis}>
+            <FormattedMessage
+              id="t_Show_statistics_for:"
+              defaultMessage="Filter statistics by:"
+            />
+          </span>
+          <span className={styles.seg}>
+            {offered.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className={clsx(styles.segItem, active === id && styles.segOn)}
+                onClick={() => setFilterId(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </span>
+        </div>
+      )}
 
       <div className={styles.liferoad}>
         <div className={styles.hero}>
@@ -192,7 +267,7 @@ export function BrailleProfile({
             value={`${stats.learned} / ${stats.totalCells}`}
             label={formatMessage({
               id: "braille.profile.stat.letters",
-              defaultMessage: "letters known",
+              defaultMessage: "cells known",
             })}
           />
           <Stat
@@ -294,7 +369,7 @@ export function BrailleProfile({
         />
       </h2>
       <ol className={braille.journey} aria-hidden={true}>
-        {cells.map(({ letter, unlocked, settled }) => (
+        {allCells.map(({ letter, glyph, unlocked, settled }) => (
           <li
             key={letter}
             className={clsx(
@@ -304,7 +379,7 @@ export function BrailleProfile({
             )}
           >
             <i className={braille.jdot} />
-            <span className={braille.jltr}>{letter}</span>
+            <span className={braille.jltr}>{glyph}</span>
           </li>
         ))}
       </ol>
@@ -352,7 +427,7 @@ export function BrailleProfile({
               values={{
                 fast: quickest.letter,
                 fastMs: secs(quickest.stat.bestMs),
-                slow: holdingUp?.letter ?? "",
+                slow: holdingUp?.name ?? "",
                 slowMs: secs(holdingUp?.stat.bestMs),
                 target: secs(defaultTarget.msPerCell),
               }}
@@ -371,9 +446,9 @@ export function BrailleProfile({
         <div key={from} className={braille.decade}>
           <p className={styles.prose}>{note}</p>
           <ul className={braille.cellRow}>
-            {cells
+            {allCells
               .slice(from, to)
-              .map(({ letter, cell, stat, unlocked, settled }) => (
+              .map(({ letter, glyph, name, cell, stat, unlocked, settled }) => (
                 <li
                   key={letter}
                   className={clsx(
@@ -391,13 +466,13 @@ export function BrailleProfile({
                   <span className={braille.cellDots} aria-hidden={true}>
                     {toUnicode(cell)}
                   </span>
-                  <span className={braille.cellLtr}>{letter}</span>
+                  <span className={braille.cellLtr}>{glyph}</span>
                   <span className={styles.srOnly}>
                     <FormattedMessage
                       id="braille.profile.cellReading"
                       defaultMessage="{letter}, dots {dots}, {state}"
                       values={{
-                        letter,
+                        letter: name,
                         dots: dotsOf(cell).join(" "),
                         state: stateOf(formatMessage, unlocked, settled),
                       }}
@@ -480,6 +555,9 @@ export function BrailleProfile({
               )
             ) {
               clearProgress(profileId);
+              // And the account's copy, or the next visit on any device pulls
+              // it straight back.
+              void clearRemoteProgress(profileId);
               setGeneration((n) => n + 1);
             }
           }}
@@ -505,6 +583,13 @@ const DECADES = [
   { from: 0, to: 10, note: "First decade, a–j: the base pattern." },
   { from: 10, to: 20, note: "Second decade, k–t: the same ten, plus dot 3." },
   { from: 20, to: 26, note: "Third decade, u–z: plus dots 3 and 6." },
+  {
+    from: 26,
+    to: 36,
+    note:
+      "Beyond the alphabet: the marks that turn letters into writing, and " +
+      "the two signs that change how the cell after them is read.",
+  },
 ] as const;
 
 function Stat({

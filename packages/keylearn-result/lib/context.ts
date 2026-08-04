@@ -33,6 +33,15 @@ export type ResultContextProps = {
    * which selects which history is opened.
    */
   readonly kidProfile?: boolean;
+  /**
+   * That learner's birth year, or null when unknown or not a named profile.
+   *
+   * Here rather than read from the active profile, for the same reason
+   * `namespace` is: the profile page's tabs choose whose history is on screen
+   * WITHOUT changing who is at the keyboard, so the globally-active profile is
+   * routinely a different person from the one whose charts are being read.
+   */
+  readonly profileBirthYear?: number | null;
 };
 
 export const ResultContext = createContext<ResultContextProps>(null!);

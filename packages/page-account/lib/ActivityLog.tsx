@@ -105,9 +105,25 @@ function device(userAgent: string | null): string | null {
  * Preventing a takeover is only half the job — this is how someone notices one
  * that got through, and reconstructs what was changed.
  */
+/**
+ * One event's timestamp, or nothing.
+ *
+ * A log is the one screen that must survive its own contents: this is a record
+ * of what happened to an account, read by somebody who may be checking whether
+ * they were broken into, and a single unparseable row must not be able to
+ * replace the entire page with an error boundary.
+ */
+function useWhen() {
+  const { formatDateTime } = useIntlDates();
+  return (at: string): string => {
+    const date = new Date(at);
+    return Number.isNaN(date.getTime()) ? "" : formatDateTime(date);
+  };
+}
+
 export function ActivityLog(): ReactNode {
   const { formatMessage } = useIntl();
-  const { formatDateTime } = useIntlDates();
+  const when = useWhen();
   const [events, setEvents] = useState<SecurityEventDetails[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -173,7 +189,7 @@ export function ActivityLog(): ReactNode {
                   {event.detail ? ` (${event.detail})` : ""}
                 </span>
                 <span className={styles.activityWhen}>
-                  {formatDateTime(event.createdAt)}
+                  {when(event.createdAt)}
                   {where ? ` · ${where}` : ""}
                   {event.ip ? ` · ${event.ip}` : ""}
                 </span>

@@ -1,3 +1,4 @@
+export * from "./age-norms.ts";
 export * from "./Avatar.tsx";
 export * from "./download.ts";
 export * from "./LoadingProgress.tsx";

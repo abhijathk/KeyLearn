@@ -67,6 +67,32 @@ const CLIPS = {
     "reads the whole line. Up arrow spells the word. Down arrow gives the " +
     "dots. Backspace deletes the last cell.",
 
+  // The cells past the alphabet, named. The mark itself is no use to a speech
+  // engine — a full stop is rendered as a pause, or as nothing at all.
+  "mark-full-stop": "full stop",
+  "mark-comma": "comma",
+  "mark-question-mark": "question mark",
+  "mark-apostrophe": "apostrophe",
+  "mark-exclamation-mark": "exclamation mark",
+  "mark-hyphen": "hyphen",
+  "mark-semicolon": "semicolon",
+  "mark-colon": "colon",
+  "sign-capital": "capital sign",
+  "sign-number": "number sign",
+
+  // Finishing the alphabet, which is now the halfway mark rather than the end.
+  "alphabet-done":
+    "That is the whole alphabet, every letter, a to z. From here the lines " +
+    "start using punctuation, capitals and numbers.",
+
+  // The daily goal. Fragments, because the numbers in it are not knowable in
+  // advance and the digits are already recorded.
+  "minutes-today": "minutes of practice today.",
+  "minutes-to-go": "minutes to go.",
+  "goal-halfway": "Halfway to today's goal:",
+  "goal-passed": "That is your goal passed. Anything more is a bonus.",
+  "goal-of": "of",
+
   // Fragments the templated messages are assembled from.
   dots: "dots",
   space: "space",

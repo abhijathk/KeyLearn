@@ -25,7 +25,7 @@ export function NavMenu({
   readonly currentPath?: string;
   readonly onNavigate?: () => void;
 }) {
-  const { leaderboard } = usePageData();
+  const { leaderboard, multiplayer } = usePageData();
   const { active } = useProfiles();
   const visionSupport = active?.visionSupport === true;
   if (visionSupport) {
@@ -47,7 +47,11 @@ export function NavMenu({
 
       <MenuItemLink page={Pages.typingTest} onNavigate={onNavigate} />
 
-      <MenuItemLink page={Pages.multiplayer} onNavigate={onNavigate} />
+      {/* Off until live practice is finished: a link into a half-built room is
+          worse than no link. */}
+      {multiplayer && (
+        <MenuItemLink page={Pages.multiplayer} onNavigate={onNavigate} />
+      )}
 
       <MenuItemLink page={Pages.layouts} onNavigate={onNavigate} />
 

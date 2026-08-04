@@ -6,10 +6,12 @@ import { useIntlDates, useIntlNumbers } from "@keylearn/intl";
 import { LearningRate, Target } from "@keylearn/lesson";
 import { useFormatter, useKeyStyles } from "@keylearn/lesson-ui";
 import {
+  ageFromBirthYear,
   clearNgramStats,
   downloadBlob,
   exportFilename,
   type NamedUser,
+  typicalWpmForAge,
   usePageData,
 } from "@keylearn/pages-shared";
 import {
@@ -76,6 +78,8 @@ export function RoadProfile({
     <div className={styles.col}>
       <Identity stats={stats} results={results} user={user} />
       <LifeRoad stats={stats} />
+      {/* Own profile only: somebody else's child's age is not ours to show. */}
+      {user == null && <ChildPace stats={stats} />}
       <StatStrips stats={stats} today={dailyStatsMap.today.stats} />
       <Journey keyStatsMap={keyStatsMap} confidenceOf={confidenceOf} />
       <SpeedStory results={results} target={target} />
@@ -263,6 +267,302 @@ function dailyStreak(
     now -= dayMs;
   }
   return streak;
+}
+
+// ---- the note for a parent -----------------------------------------------
+
+/**
+ * What is normal for a child of this age, said next to the number.
+ *
+ * The big figure above is an adult-shaped statistic, and adult typing speeds
+ * are quoted everywhere: 40 wpm "average", 60 wpm "good". A six-year-old typing
+ * a perfectly normal 7 wpm therefore reads as being far behind, and the person
+ * who decides that is a parent looking at this page — and the child is the one
+ * who hears about it.
+ *
+ * The age comes from the profile whose charts are ON SCREEN, not the globally
+ * active one. The tabs above choose whose history to read without changing who
+ * is at the keyboard, so a parent reading their five-year-old's page is
+ * themselves the active profile — which is exactly the case that has to work.
+ *
+ * Nothing is shown without an age, or for a profile over twelve.
+ *
+ * Every sentence of it is drawn fresh. A fixed paragraph under a number a
+ * parent checks weekly is read once and is wallpaper ever after — and this is
+ * the one thing on the page worth actually reading, because acting on it
+ * wrongly lands on the child rather than on the reader. The two halves are
+ * picked independently, so the same advice arrives beside a different framing
+ * of the norm and the whole thing keeps reading like something written rather
+ * than something printed.
+ */
+function ChildPace({ stats }: { readonly stats: SummaryStats }): ReactNode {
+  const { formatSpeed } = useFormatter();
+  const { profileBirthYear = null } = useResults();
+  // Drawn once per visit, not per render: a paragraph that reshuffled under
+  // somebody mid-sentence would be worse than one that never changed at all.
+  // Switching tabs remounts this, so each look at a child's page is a fresh
+  // pair.
+  const [seed] = useState(() => [Math.random(), Math.random()] as const);
+  const age = ageFromBirthYear(profileBirthYear);
+  const typical = typicalWpmForAge(age);
+  if (typical == null || age == null) {
+    return null;
+  }
+  const [lo, hi] = typical;
+  const speed = formatSpeed(stats.speed.avg);
+  const pick = (list: readonly ReactNode[], at: number): ReactNode =>
+    list[Math.min(list.length - 1, Math.floor(at * list.length))];
+
+  // Three situations, and they need different words. Leading with "0.0wpm" at
+  // a parent whose child has not started yet is the page telling them their
+  // five-year-old is failing at something they have not done.
+  const lines =
+    stats.count === 0
+      ? startingLines()
+      : stats.speed.avg / 5 >= lo
+        ? onTrackLines(speed)
+        : buildingLines(speed);
+
+  return (
+    <div className={styles.childPace}>
+      <span className={styles.childPaceTitle}>
+        <FormattedMessage
+          id="profile.road.childPace.title"
+          defaultMessage="A note for grown-ups"
+        />
+      </span>
+      {/*
+        One paragraph, in the order a parent reads it: where their child is
+        now, what that means for what to do, and only then the norm. Leading
+        with the norm made the whole thing read as a verdict delivered before
+        the child was even mentioned.
+      */}
+      <p>
+        {pick(lines, seed[0])} {pick(contextLines(age, lo, hi), seed[1])}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * How to frame the normal range for the age.
+ *
+ * All eight carry the same two facts — the band, and that adult figures are
+ * the wrong yardstick. Only the framing moves.
+ */
+function contextLines(
+  age: number,
+  lo: number,
+  hi: number,
+): readonly ReactNode[] {
+  return [
+    <FormattedMessage
+      key="a"
+      id="profile.road.childPace.context.1"
+      defaultMessage="For context, {lo}–{hi} words a minute is typical at age {age} — and please don’t measure this against adult speeds, which are quoted everywhere and belong to grown-ups who have typed for years."
+      values={{ age, lo, hi }}
+    />,
+    <FormattedMessage
+      key="b"
+      id="profile.road.childPace.context.2"
+      defaultMessage="Children of {age} usually land somewhere between {lo} and {hi} words a minute. The figures you will find online are adult ones, and they are not the right yardstick here."
+      values={{ age, lo, hi }}
+    />,
+    <FormattedMessage
+      key="c"
+      id="profile.road.childPace.context.3"
+      defaultMessage="As a rough guide, {lo}–{hi} words a minute is ordinary at {age}. Adult benchmarks are a different sport altogether."
+      values={{ age, lo, hi }}
+    />,
+    <FormattedMessage
+      key="d"
+      id="profile.road.childPace.context.4"
+      defaultMessage="Most {age}-year-olds sit around {lo}–{hi} words a minute, and it is worth remembering that very nearly every number quoted online is an adult’s."
+      values={{ age, lo, hi }}
+    />,
+    <FormattedMessage
+      key="e"
+      id="profile.road.childPace.context.5"
+      defaultMessage="At {age}, anything from {lo} to {hi} words a minute is perfectly ordinary. The adult averages you may have read are twenty years of practice away."
+      values={{ age, lo, hi }}
+    />,
+    <FormattedMessage
+      key="f"
+      id="profile.road.childPace.context.6"
+      defaultMessage="The usual band at {age} is {lo}–{hi} words a minute — a long way below the adult figures, and rightly so."
+      values={{ age, lo, hi }}
+    />,
+    <FormattedMessage
+      key="g"
+      id="profile.road.childPace.context.7"
+      defaultMessage="For a child of {age}, {lo}–{hi} words a minute is the normal range. Setting that beside an adult’s speed is comparing two quite different things."
+      values={{ age, lo, hi }}
+    />,
+    <FormattedMessage
+      key="h"
+      id="profile.road.childPace.context.8"
+      defaultMessage="Typical for {age} is {lo}–{hi} words a minute. That is the number worth holding in mind, rather than the 40 or 60 wpm written for grown-ups."
+      values={{ age, lo, hi }}
+    />,
+  ];
+}
+
+/** Before there is anything to measure. No speed is quoted, because none of it
+ * would mean anything yet and a leading zero reads as a verdict. */
+function startingLines(): readonly ReactNode[] {
+  return [
+    <FormattedMessage
+      key="a"
+      id="profile.road.childPace.starting.1"
+      defaultMessage="Nothing on this profile yet. The first few sessions are the ones where a keyboard stops being a puzzle, and they are slow going for everybody."
+    />,
+    <FormattedMessage
+      key="b"
+      id="profile.road.childPace.starting.2"
+      defaultMessage="No practice recorded here so far. When they begin, expect it to feel slow for a while — that slowness is the learning, not a problem with it."
+    />,
+    <FormattedMessage
+      key="c"
+      id="profile.road.childPace.starting.3"
+      defaultMessage="This page fills in once they start. Short, regular sessions are what make it move; length matters far less than coming back."
+    />,
+    <FormattedMessage
+      key="d"
+      id="profile.road.childPace.starting.4"
+      defaultMessage="The charts wake up after the first session. A few minutes at a time is plenty to begin with, and more than enough to build the habit."
+    />,
+    <FormattedMessage
+      key="e"
+      id="profile.road.childPace.starting.5"
+      defaultMessage="Nothing to show just yet. The thing to watch for early on is which fingers they use — that decides far more than how quickly they get going."
+    />,
+    <FormattedMessage
+      key="f"
+      id="profile.road.childPace.starting.6"
+      defaultMessage="No lessons on this profile yet. Whenever they start is soon enough; there is no age at which this gets harder to pick up."
+    />,
+  ];
+}
+
+/**
+ * What to say when the child is at or above the typical range.
+ *
+ * All eight say one thing: the number is fine, and the number is not the point.
+ * They are separate messages rather than one sentence with a swappable clause
+ * so each can be translated whole.
+ */
+function onTrackLines(speed: string): readonly ReactNode[] {
+  return [
+    <FormattedMessage
+      key="a"
+      id="profile.road.childPace.onTrack.1"
+      defaultMessage="At {speed} they are right where they should be. What matters at this age is turning up regularly and using the right fingers; speed follows on its own, over years."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="b"
+      id="profile.road.childPace.onTrack.2"
+      defaultMessage="{speed} is a healthy pace for this age, and the thing worth protecting now is the habit rather than the number."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="c"
+      id="profile.road.childPace.onTrack.3"
+      defaultMessage="{speed} — comfortably in the normal range. Keep the sessions short and regular and this part rather looks after itself."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="d"
+      id="profile.road.childPace.onTrack.4"
+      defaultMessage="They are doing well at {speed}. There is little to gain from pushing for more; at this age the progress comes from accuracy, and from each finger doing its own job."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="e"
+      id="profile.road.childPace.onTrack.5"
+      defaultMessage="Right on track at {speed}. Children’s typing climbs in steps over years, with long flat stretches in between — and the flat stretches are normal, not a sign that something has stalled."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="f"
+      id="profile.road.childPace.onTrack.6"
+      defaultMessage="{speed} says the habit is working. Doing much the same again tomorrow is the whole strategy from here."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="g"
+      id="profile.road.childPace.onTrack.7"
+      defaultMessage="No concerns at {speed}. The most useful thing you can do now is keep it enjoyable — a child who likes practising will out-type one who is made to."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="h"
+      id="profile.road.childPace.onTrack.8"
+      defaultMessage="{speed} is good going. If you would like to help, watch which fingers they use rather than the clock; that is what decides where they end up."
+      values={{ speed }}
+    />,
+  ];
+}
+
+/**
+ * What to say when the child is below the typical range.
+ *
+ * The hardest paragraph on the page to get right: it is read by somebody who
+ * has just seen a small number beside their child's name. Every line has to be
+ * true, none may be consolation dressed as encouragement, and all of them point
+ * at the same action — practise regularly, and do not push for speed.
+ */
+function buildingLines(speed: string): readonly ReactNode[] {
+  return [
+    <FormattedMessage
+      key="a"
+      id="profile.road.childPace.building.1"
+      defaultMessage="{speed} today, and every session builds on it. What matters at this age is turning up regularly and using the right fingers; speed follows on its own, over years, and pushing for it now mostly teaches habits that are hard to undo."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="b"
+      id="profile.road.childPace.building.2"
+      defaultMessage="{speed} at the moment, and slow is completely normal here. What is being built is the map of which finger goes where — and once that is automatic, pace arrives without anyone chasing it."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="c"
+      id="profile.road.childPace.building.3"
+      defaultMessage="{speed} so far, and this is the patient part. A few minutes on most days, with the right fingers, does more than any amount of trying to go faster."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="d"
+      id="profile.road.childPace.building.4"
+      defaultMessage="{speed} for now. Speed is the last thing to arrive and the least worth pushing; accuracy and finger habits come first, and they keep paying back for years afterwards."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="e"
+      id="profile.road.childPace.building.5"
+      defaultMessage="{speed} today, and nothing here needs fixing. Children learn where the keys are long before they build any pace at all, and learning where the keys are is exactly what this practice is for."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="f"
+      id="profile.road.childPace.building.6"
+      defaultMessage="{speed} so far, and regular beats long. Ten minutes a day teaches far more than an hour at the weekend, and it keeps the whole thing something they will come back to."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="g"
+      id="profile.road.childPace.building.7"
+      defaultMessage="{speed} at present. If they are still hunting for letters, that hunting is the work rather than a sign of falling behind — every letter found is one they will not have to look for again."
+      values={{ speed }}
+    />,
+    <FormattedMessage
+      key="h"
+      id="profile.road.childPace.building.8"
+      defaultMessage="{speed} today, and it is worth not timing them. Racing a child at this stage tends to produce quick two-finger typing, which is far harder to unlearn later than slow, correct typing is to speed up."
+      values={{ speed }}
+    />,
+  ];
 }
 
 // ---- the lifetime road ---------------------------------------------------
