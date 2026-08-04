@@ -48,6 +48,7 @@ import {
   GearIcon,
   HandIcon,
   KeysIcon,
+  MoonIcon,
   PawIcon,
   SoundIcon,
   SproutIcon,
@@ -67,6 +68,7 @@ import {
   ZONE_OF,
 } from "./keyboard-data.ts";
 import * as styles from "./kids.module.less";
+import { deviceTier, type NightOverride, resolveNightStyle } from "./night.ts";
 import { paceTarget } from "./pace.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
 import {
@@ -124,6 +126,14 @@ type Prefs = {
    * child who is not ready should be able to say so.
    */
   grownupKeys: "off" | "caps" | "punct";
+  /**
+   * Who is out after dark on the Hero Trail — see night.ts.
+   *
+   * "auto" follows the age band: the youngest get the quiet night, and the
+   * Lost Travellers only appear for children old enough to enjoy them. The
+   * override exists so a grown-up can move a child either way.
+   */
+  nightStyle: NightOverride;
   /** Scene look: brightness (~0.7–1.3) and paleness (0 = full colour, 1 = pale). */
   brightness: number;
   paleness: number;
@@ -158,6 +168,7 @@ function defaultPrefs(): Prefs {
     soundAsked: false,
     readAloud: cfg.readAloud,
     grownupKeys: "off",
+    nightStyle: "auto",
     brightness: 1,
     paleness: 0,
     motion: 0.7,
@@ -336,6 +347,40 @@ const SAYS = {
 // Hero Trail voice: the same warm, effort-first coaching, re-flavoured for a
 // little band of adventurers questing home. Only the world-specific lines are
 // overridden; the key/finger help (stuck, wake, …) is shared with SAYS.
+/**
+ * Lines only the night says.
+ *
+ * The story is never told outright — no card, no narrator. It is implied
+ * through what the world does and the few things the coach says after dark:
+ * the party keeps a watch, the lanterns matter, and the Lost Travellers out
+ * in the mist are lost rather than frightening. Merged into the hero pools
+ * when it is night; the Traveller lines only once the night style has any.
+ */
+const HERO_NIGHT_SAYS: Partial<Record<string, readonly string[]>> = {
+  start: [
+    "The lanterns are lit — the party walks on through the night.",
+    "It is dark, but the road is the same road. One letter, one step.",
+    "Night on the trail. Stay close to the light and keep walking.",
+  ],
+  idle: [
+    "The mist curls round the lanterns while {name} waits for you.",
+    "The fire crackles. The party waits. One glowing key walks us on.",
+    "It is very quiet out there. Your next key keeps the lanterns bright.",
+  ],
+};
+
+const HERO_NIGHT_TRAVELLER_SAYS: Partial<Record<string, readonly string[]>> = {
+  start: [
+    "The Lost Travellers are out tonight. They walked this road once too.",
+    "Eyes in the mist — just the Lost Travellers, watching the lanterns go by.",
+  ],
+  idle: [
+    "A Lost Traveller waves from the treeline. {name} waves back.",
+    "The Lost Travellers keep their distance. They only want to watch.",
+    "Far off, two pale eyes blink. Lost, not scary. Walk on.",
+  ],
+};
+
 const HERO_SAYS = {
   ...SAYS,
   start: [
@@ -581,13 +626,24 @@ function peekNextLandName(): string {
  */
 const IDLE_MS = 10_000;
 
-const FINISH_MSGS = [
+// Each world ends the day in its own voice: the herd on its long migration to
+// the green valley, the party on the road home. They used to share one pool,
+// which had dinosaurs walking home and heroes in a herd.
+const DINO_FINISH = [
   "Your fingers are getting SO fast — the herd can barely keep up!",
   "Your dino grew because of YOU. Amazing typing today!",
-  "Every letter you typed was a step home. Brilliant run!",
+  "Every letter marched the herd closer to the green valley!",
   "The whole herd is cheering around the campfire. You did that!",
   "Super steady fingers today — see you on the trail tomorrow!",
 ];
+const HERO_FINISH = [
+  "Every letter you typed was a step home. Brilliant walking!",
+  "The party makes camp — a whole day's road behind you!",
+  "The lanterns are warm and the village is closer. Wonderful typing!",
+  "Steady steps the whole way — heroes rest well tonight.",
+];
+const finishPool = (world: "dino" | "hero") =>
+  world === "hero" ? HERO_FINISH : DINO_FINISH;
 
 export function KidsPage() {
   return (
@@ -706,7 +762,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [sessionOver, setSessionOver] = useState(false);
   const [regenNonce, setRegenNonce] = useState(0);
   const [landNonce, setLandNonce] = useState(0);
-  const [finishMsg, setFinishMsg] = useState(FINISH_MSGS[0]);
+  const [finishMsg, setFinishMsg] = useState(DINO_FINISH[0]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const loaderRef = useRef<HTMLCanvasElement>(null);
@@ -973,7 +1029,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const speak = (key: keyof typeof SAYS, vars: Record<string, string> = {}) => {
     const age = dinoAgeRef.current;
     const world = prefsRef.current.world;
-    const line = fillSay(pickSay(agedPool(saysOf(world), key, age)), {
+    let pool = agedPool(saysOf(world), key, age);
+    if (world === "hero" && prefsRef.current.night) {
+      const extra = [
+        ...(HERO_NIGHT_SAYS[key] ?? []),
+        ...(resolveNightStyle(band, prefsRef.current.nightStyle) !== "quiet"
+          ? (HERO_NIGHT_TRAVELLER_SAYS[key] ?? [])
+          : []),
+      ];
+      if (extra.length > 0) {
+        // Half night lines, half the usual pool, so the dark changes the
+        // voice without replacing it.
+        pool = [...pool, ...extra, ...extra];
+      }
+    }
+    const line = fillSay(pickSay(pool), {
       name: dinoName(),
       stage: (world === "hero" ? heroStage : dinoStage)(age),
       ...vars,
@@ -1064,7 +1134,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       prefsRef.current.world === "hero"
         ? prefsRef.current.hero
         : prefsRef.current.dino;
-    const world = createKidsWorld(canvas, pickLand(theme.lands), theme);
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const world = createKidsWorld(canvas, pickLand(theme.lands), theme, {
+      nightStyle: resolveNightStyle(band, prefsRef.current.nightStyle),
+      tier: deviceTier({
+        memoryGb: nav.deviceMemory,
+        cores: navigator.hardwareConcurrency,
+        dpr: window.devicePixelRatio,
+      }),
+    });
     worldRef.current = world;
     setLandName(world.land.name);
     // Walking into a land is what earns it, including the one the session
@@ -1107,7 +1185,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       world.dispose();
       worldRef.current = null;
     };
-  }, [landNonce, prefs.world]);
+    // The style override rebuilds the world: the plan decides what was
+    // planted, which is not a thing that can be re-lit in place.
+  }, [landNonce, prefs.world, prefs.nightStyle, band]);
 
   // The world pane never grows more than 50% taller than the helper card.
   useEffect(() => {
@@ -1239,12 +1319,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             return next;
           });
         }
+        // One point per right key, space included, and nothing else. The word
+        // bonus used to add five more on the space itself, which made space
+        // the most valuable key on the board — a child could watch the score
+        // leap on every gap and learn that the gaps are where the points are.
+        // Finishing a word still counts and still chimes; it just is not paid.
         setScore((s) => saveBest(s + 1));
         if (sounds && key !== " ") {
           kidsAudio.playMove();
         }
         if (pos > 0 && passage[pos - 1] === " ") {
-          setScore((s) => saveBest(s + 5));
           setWords((w) => w + 1);
           if (sounds) {
             kidsAudio.playPoint();
@@ -1383,9 +1467,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       setSessionSecs((secs) => {
         if (secs <= 1) {
           setSessionOver(true);
-          setFinishMsg(
-            FINISH_MSGS[Math.floor(Math.random() * FINISH_MSGS.length)],
-          );
+          setFinishMsg(pickSay(finishPool(prefsRef.current.world)));
           speak("timerEnd");
           if (prefsRef.current.sounds) {
             kidsAudio.playSuccess();
@@ -2382,6 +2464,41 @@ function SettingsCard({
             </button>
           </div>
         </div>
+        {/*
+          Hero Trail only: what the dark means. By age unless a grown-up says
+          otherwise — the youngest get a starry quiet night with no Lost
+          Travellers, and this is where a parent moves a child up or down.
+        */}
+        {prefs.world === "hero" && (
+          <div className={styles.srow}>
+            <span className={styles.ri} style={{ background: "var(--sky)" }}>
+              <MoonIcon size={20} color="#2d3f6b" />
+            </span>
+            <div>
+              <div className={styles.sl}>Night on the trail</div>
+              <div className={styles.sd}>who is out after dark</div>
+            </div>
+            <div className={styles.ctl}>
+              {(
+                [
+                  ["auto", "By age"],
+                  ["quiet", "Quiet"],
+                  ["mild", "Spooky"],
+                  ["full", "Extra spooky"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={pill(prefs.nightStyle === value)}
+                  onClick={() => savePrefs({ nightStyle: value })}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {/*
           Only offered once the alphabet is done. Before that it would be a
           harder mode dangled in front of a child still learning where D is.

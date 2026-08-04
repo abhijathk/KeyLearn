@@ -5,6 +5,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
+import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
 const ASSETS = "/kids-assets";
@@ -166,6 +167,15 @@ export type WorldTheme = {
   /** Companions turn to watch the hero pass (Hero Trail). Off = they just
    * carry on with their own idle, like the original dino herd. */
   readonly companionsWatch?: boolean;
+  /**
+   * What the dark toggle means in this world.
+   *
+   * "night" is a real nightfall: deep sky, mist, moon, the Lost Travellers.
+   * "dusk" is only a gentler light — Dino Run is not a night game, and
+   * dressing it in the hero world's darkness read as a broken renderer
+   * rather than an evening.
+   */
+  readonly nightMode?: "night" | "dusk";
   /** Scatter a flock of little sheep across the land (Dino Run). */
   readonly sheep?: boolean;
   /** Fraction of companions that patrol back and forth guarding their patch. */
@@ -290,6 +300,7 @@ export const HERO_THEME: WorldTheme = {
   sky: "flat",
   pointerRing: true,
   companionsWatch: true,
+  nightMode: "night",
   // More of the heroes patrol their stretch of the trail than the dinos do.
   guardRate: 0.22,
   // Flatter and more horizontal than the dino 3/4 view, but still angled
@@ -383,7 +394,15 @@ export function createKidsWorld(
   canvas: HTMLCanvasElement,
   land: Land,
   theme: WorldTheme = DINO_THEME,
+  opts: {
+    /** Which night this learner gets; see night.ts. Hero world only. */
+    readonly nightStyle?: NightStyle;
+    readonly tier?: DeviceTier;
+  } = {},
 ): KidsWorld {
+  // Whether dark here means night, and what tonight holds if it does.
+  const trueNight = (theme.nightMode ?? "dusk") === "night";
+  const plan = nightPlan(opts.nightStyle ?? "full", opts.tier ?? "mid");
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -457,19 +476,25 @@ export function createKidsWorld(
   const pmrem = new THREE.PMREMGenerator(renderer);
   const rgbe = new RGBELoader();
   async function applySky(mood: string) {
-    // Day/night lighting: bright and warm by day, a touch darker and cool by
-    // night — the whole pane dims without moving the sun.
-    const night = mood === "night";
+    // What "dark" means depends on the world. Hero Trail gets a real night —
+    // deep and blue, lit by the lantern. Dino Run gets a dusk: a gentler,
+    // warmer dimming, because it is not a night game and the full darkness
+    // read as a broken renderer rather than an evening.
+    const dark = mood === "night";
+    const night = dark && trueNight;
     heroLamp.intensity = night ? 3.2 : 0;
-    renderer.toneMappingExposure = grade.exposure * (night ? 0.56 : 1);
-    hemi.intensity = grade.hemi * (night ? 0.42 : 1);
-    hemi.color.set(night ? 0x5b6ba8 : 0xffffff);
+    renderer.toneMappingExposure =
+      grade.exposure * (dark ? (night ? 0.56 : 0.84) : 1);
+    hemi.intensity = grade.hemi * (dark ? (night ? 0.42 : 0.78) : 1);
+    hemi.color.set(dark ? (night ? 0x5b6ba8 : 0xbdc4de) : 0xffffff);
     if (theme.sky === "flat") {
       // A 2D gradient sky drawn to a canvas — no orbiting camera means no
       // skybox is needed, and a flat backdrop suits the stylized world.
       const [top, bottom] = night
         ? ["#141a35", "#2a3358"]
-        : ["#7ec5f2", "#d7f0d2"];
+        : dark
+          ? ["#5a6a9e", "#a9a2c0"]
+          : ["#7ec5f2", "#d7f0d2"];
       const c = document.createElement("canvas");
       c.width = 16;
       c.height = 256;
@@ -489,21 +514,235 @@ export function createKidsWorld(
       // Fog matches the sky's lower band so the ground fades straight into
       // the backdrop.
       // Fog closes in after dark, so the far trail fades into the blue.
-      (scene.fog as THREE.Fog).color.set(night ? 0x2a3358 : 0xd7f0d2);
-      sun.intensity = grade.sun * (night ? 0.46 : 1);
-      sun.color.set(night ? 0x7f92cc : land.sun);
+      (scene.fog as THREE.Fog).color.set(
+        night ? 0x2a3358 : dark ? 0xa9a2c0 : 0xd7f0d2,
+      );
+      sun.intensity = grade.sun * (dark ? (night ? 0.46 : 0.8) : 1);
+      sun.color.set(night ? 0x7f92cc : dark ? 0xe8c8a0 : land.sun);
       return;
     }
-    const tex = await rgbe.loadAsync(`${ASSETS}/env/${mood}.hdr`);
+    // A dusk keeps the day sky, only dimmed and warmed — the night HDR under
+    // a dusk grade looked like a renderer fault, not an evening.
+    const skyFile = dark && !night ? land.mood : mood;
+    const tex = await rgbe.loadAsync(`${ASSETS}/env/${skyFile}.hdr`);
     tex.mapping = THREE.EquirectangularReflectionMapping;
     scene.background = tex;
     scene.backgroundBlurriness = 0.06;
     scene.environment = pmrem.fromEquirectangular(tex).texture;
-    scene.environmentIntensity = mood === "night" ? 0.4 : 0.7;
-    scene.backgroundIntensity = mood === "night" ? 0.75 : 1.0;
-    (scene.fog as THREE.Fog).color.set(mood === "night" ? 0x2c3560 : land.fog);
-    sun.intensity = mood === "night" ? 1.25 : 2.4;
-    sun.color.set(mood === "night" ? 0x8fa2d8 : land.sun);
+    scene.environmentIntensity = dark ? (night ? 0.4 : 0.56) : 0.7;
+    scene.backgroundIntensity = dark ? (night ? 0.75 : 0.9) : 1.0;
+    (scene.fog as THREE.Fog).color.set(
+      night ? 0x2c3560 : dark ? 0x6a7396 : land.fog,
+    );
+    sun.intensity = dark ? (night ? 1.25 : 1.9) : 2.4;
+    sun.color.set(night ? 0x8fa2d8 : dark ? 0xe3c49e : land.sun);
+  }
+
+  // ── the night itself ───────────────────────────────────────────────────
+  //
+  // Everything in this section exists only in the hero world and only after
+  // dark, and every piece of it obeys the Lost Travellers' rule from
+  // night.ts: nothing approaches, nothing chases, nothing is sudden. The
+  // atmosphere is carried by the cheapest things in the scene — mist, a moon,
+  // pairs of far-off eyes — so it survives being scaled down on a weak
+  // machine, and `nightBlend` fades the whole layer in over a couple of
+  // seconds so nightfall is an event rather than a switch.
+  const nightLayer = new THREE.Group();
+  nightLayer.visible = false;
+  scene.add(nightLayer);
+  let nightBlend = 0; // 0 = day, 1 = full night; eased in tick()
+
+  // The moon and stars ride on the camera, so they are always in frame
+  // however far along the trail the hero is.
+  const skyRig = new THREE.Group();
+  skyRig.visible = false;
+  cam.add(skyRig);
+  scene.add(cam);
+
+  type EyePair = {
+    readonly group: THREE.Group;
+    readonly mats: readonly THREE.SpriteMaterial[];
+    readonly x0: number;
+    readonly phase: number;
+    readonly speed: number;
+    readonly drift: number;
+    readonly baseO: number;
+  };
+  const eyePairs: EyePair[] = [];
+  let fireflies: {
+    readonly points: THREE.Points;
+    readonly mat: THREE.PointsMaterial;
+    readonly base: Float32Array;
+    readonly phase: Float32Array;
+  } | null = null;
+  const mistMats: THREE.ShaderMaterial[] = [];
+  let starsMat: THREE.PointsMaterial | null = null;
+  let moonMat: THREE.SpriteMaterial | null = null;
+
+  /** A soft radial dot, for eyes, moon and fireflies alike. */
+  function glowTexture(inner: string, outer: string): THREE.Texture {
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const g = c.getContext("2d")!;
+    const grad = g.createRadialGradient(32, 32, 2, 32, 32, 30);
+    grad.addColorStop(0, inner);
+    grad.addColorStop(1, outer);
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  if (trueNight) {
+    // Ground mist: one wide plane (two on stronger machines) of scrolling
+    // value noise, fading at its own edges. A shader plane, not particles —
+    // this is the single biggest mood for the smallest cost.
+    const mistShader = {
+      uniforms: {
+        uTime: { value: 0 },
+        uOpacity: { value: 0 },
+        uColor: { value: new THREE.Color(0xaebcd8) },
+      },
+      vertexShader:
+        "varying vec2 vUv; void main(){ vUv = uv; " +
+        "gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }",
+      fragmentShader: `
+        uniform float uTime; uniform float uOpacity; uniform vec3 uColor;
+        varying vec2 vUv;
+        float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
+        float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+          return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),
+                     mix(h(i+vec2(0.,1.)),h(i+vec2(1.,1.)),f.x), f.y); }
+        void main(){
+          vec2 p = vUv * vec2(26., 5.);
+          float m = n(p + vec2(uTime*.05, uTime*.02)) * .62
+                  + n(p*2.1 - vec2(uTime*.08, 0.)) * .38;
+          float edge = smoothstep(0.,.18,vUv.y) * smoothstep(1.,.72,vUv.y)
+                     * smoothstep(0.,.05,vUv.x) * smoothstep(1.,.95,vUv.x);
+          gl_FragColor = vec4(uColor, m * edge * uOpacity);
+        }`,
+    };
+    const mistLayers = (opts.tier ?? "mid") === "low" ? 1 : 2;
+    for (let i = 0; i < mistLayers; i++) {
+      const mat = new THREE.ShaderMaterial({
+        ...mistShader,
+        uniforms: THREE.UniformsUtils.clone(mistShader.uniforms),
+        transparent: true,
+        depthWrite: false,
+      });
+      const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(TRAIL_END + 100, 46),
+        mat,
+      );
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.set(TRAIL_END / 2, 0.7 + i * 0.9, -4);
+      nightLayer.add(plane);
+      mistMats.push(mat);
+    }
+
+    // Stars and a moon, camera-fixed so they never scroll out of the sky.
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = (opts.tier ?? "mid") === "low" ? 140 : 260;
+    const pos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 46;
+      pos[i * 3 + 1] = 1.5 + Math.random() * 6;
+      pos[i * 3 + 2] = -40;
+    }
+    starGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    starsMat = new THREE.PointsMaterial({
+      color: 0xdfe8ff,
+      size: 1.6,
+      sizeAttenuation: false,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    skyRig.add(new THREE.Points(starGeo, starsMat));
+
+    moonMat = new THREE.SpriteMaterial({
+      map: glowTexture("rgba(250,247,230,1)", "rgba(250,247,230,0)"),
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    const moon = new THREE.Sprite(moonMat);
+    moon.scale.setScalar(4.2);
+    // Inside the orthographic frustum, which only reaches topF x frustum
+    // (~7.2 units) above the look-at line — the first placement sat at 9.5
+    // and the moon was clipped out of every frame it was meant to own.
+    moon.position.set(8, 5.2, -39);
+    skyRig.add(moon);
+
+    // Fireflies: a handful of warm dots that bob near the trail. The quiet
+    // night gets the most of them — they are its whole cast.
+    if (plan.fireflies > 0) {
+      const n = plan.fireflies;
+      const base = new Float32Array(n * 3);
+      const phase = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        base[i * 3] = 6 + Math.random() * (TRAIL_END - 12);
+        base[i * 3 + 1] = 0.8 + Math.random() * 1.8;
+        base[i * 3 + 2] = -2 - Math.random() * 9;
+        phase[i] = Math.random() * Math.PI * 2;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(base.slice(), 3));
+      const mat = new THREE.PointsMaterial({
+        color: 0xffd98a,
+        size: 3.2,
+        sizeAttenuation: false,
+        map: glowTexture("rgba(255,220,150,1)", "rgba(255,220,150,0)"),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      fireflies = { points: new THREE.Points(geo, mat), mat, base, phase };
+      nightLayer.add(fireflies.points);
+    }
+
+    // The eyes in the fog: pairs of pale dots deep in the treeline. They
+    // blink, they drift a little, and they are fixed at their distance — a
+    // Lost Traveller too far off to see is something watched, never met.
+    if (plan.eyePairs > 0) {
+      const eyeTex = glowTexture("rgba(180,230,255,1)", "rgba(180,230,255,0)");
+      for (let i = 0; i < plan.eyePairs; i++) {
+        const group = new THREE.Group();
+        const mats: THREE.SpriteMaterial[] = [];
+        for (const dx of [-0.22, 0.22]) {
+          const mat = new THREE.SpriteMaterial({
+            map: eyeTex,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+          });
+          const eye = new THREE.Sprite(mat);
+          eye.scale.setScalar(0.5);
+          eye.position.x = dx;
+          group.add(eye);
+          mats.push(mat);
+        }
+        const x0 = 14 + Math.random() * (TRAIL_END - 24);
+        group.position.set(
+          x0,
+          1.1 + Math.random() * 1.6,
+          -(17 + Math.random() * 13),
+        );
+        nightLayer.add(group);
+        eyePairs.push({
+          group,
+          mats,
+          x0,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.35 + Math.random() * 0.5,
+          drift: 1.5 + Math.random() * 2.5,
+          baseO: 0.5 + Math.random() * 0.35,
+        });
+      }
+    }
   }
 
   // ── terrain, worn trail, stepping stones ───────────────────────────────
@@ -800,7 +1039,118 @@ export function createKidsWorld(
   let playerGhostly = false; // skeleton hero: floats and glides like a ghost
   // Every character root in the scene, so the dark can reach all of their eyes.
   const characterRoots = new Set<THREE.Object3D>();
+  /** Scenery that comes and goes with the light — thinned trees, dead groves. */
+  const moodScenery: THREE.Object3D[] = [];
   let nightNow = false;
+
+  // ── the nightfall cross-fade ───────────────────────────────────────────
+  //
+  // Flipping the light used to snap the cast: villagers gone, skeletons
+  // there, one frame to the next. Now the day folk fade like ghosts — thin to
+  // nothing and drift gently upward — and the Lost Travellers rise out of the
+  // ground from transparent to solid, staggered a few at a time, so nightfall
+  // is a scene and not a switch. Materials are cloned per character on first
+  // fade, because the models share materials and one character's fade would
+  // otherwise thin every twin it has.
+  type Fade = {
+    readonly root: THREE.Object3D;
+    readonly from: number;
+    readonly to: number;
+    readonly dur: number;
+    readonly rise: number;
+    readonly baseY: number;
+    delay: number;
+    t: number;
+  };
+  const fades: Fade[] = [];
+  const fadeReady = new WeakSet<THREE.Object3D>();
+
+  function prepFade(root: THREE.Object3D): void {
+    if (fadeReady.has(root)) {
+      return;
+    }
+    fadeReady.add(root);
+    root.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
+        const mats = Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material];
+        const clones = mats.map((m) => {
+          const c = m.clone();
+          c.transparent = true;
+          c.userData.o0 = c.opacity;
+          return c;
+        });
+        mesh.material = Array.isArray(mesh.material) ? clones : clones[0];
+      }
+    });
+  }
+
+  function applyFadeOpacity(root: THREE.Object3D, v: number): void {
+    root.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
+        const mats = Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material];
+        for (const m of mats) {
+          m.opacity = v * ((m.userData.o0 as number) ?? 1);
+        }
+      }
+    });
+  }
+
+  function startFade(
+    root: THREE.Object3D,
+    to: 0 | 1,
+    delay: number,
+    rise: number,
+  ): void {
+    prepFade(root);
+    // A fade already in flight for this root is superseded, not stacked.
+    const at = fades.findIndex((f) => f.root === root);
+    if (at !== -1) {
+      fades.splice(at, 1);
+    }
+    root.visible = true;
+    applyFadeOpacity(root, to === 1 ? 0 : 1);
+    fades.push({
+      root,
+      from: to === 1 ? 0 : 1,
+      to,
+      dur: 0.9,
+      rise,
+      baseY: root.position.y,
+      delay,
+      t: 0,
+    });
+  }
+
+  function stepFades(dt: number): void {
+    for (let i = fades.length - 1; i >= 0; i--) {
+      const f = fades[i];
+      if (f.delay > 0) {
+        f.delay -= dt;
+        continue;
+      }
+      f.t = Math.min(1, f.t + dt / f.dur);
+      const e = f.t * f.t * (3 - 2 * f.t); // smoothstep
+      applyFadeOpacity(f.root, f.from + (f.to - f.from) * e);
+      f.root.position.y =
+        f.to === 0
+          ? f.baseY + f.rise * e // the day folk drift up as they thin
+          : f.baseY - f.rise * (1 - e); // the Travellers rise from the ground
+      if (f.t >= 1) {
+        if (f.to === 0) {
+          f.root.visible = false;
+          applyFadeOpacity(f.root, 1);
+        }
+        f.root.position.y = f.baseY;
+        fades.splice(i, 1);
+      }
+    }
+  }
   // The spooky-guard gag. A skeleton's sockets flare a little as the hero
   // passes; the pumpkin's reaction to it is the actual joke, so it gets the
   // big movement. Fires once per run so it stays a moment rather than a tic.
@@ -885,13 +1235,41 @@ export function createKidsWorld(
   }
 
   /** Who is out on the trail right now. */
-  function refreshPopulation(): void {
-    for (const f of friends) {
-      const ud = f.wrap.userData as { nightOnly?: boolean; dayOnly?: boolean };
-      if (ud.nightOnly === true) {
-        f.wrap.visible = nightNow;
-      } else if (ud.dayOnly === true) {
-        f.wrap.visible = !nightNow;
+  function refreshPopulation(dramatic = false): void {
+    const roots: {
+      root: THREE.Object3D;
+      character: boolean;
+    }[] = [
+      ...friends.map((f) => ({ root: f.wrap, character: true })),
+      ...moodScenery.map((root) => ({ root, character: false })),
+    ];
+    // The drama costs material clones and per-frame traversals, so it is only
+    // paid in the world whose night deserves it, and never for somebody who
+    // asked for a calm scene.
+    const fade = dramatic && trueNight && motionScale >= 0.15;
+    let leaving = 0;
+    let arriving = 0;
+    for (const { root, character } of roots) {
+      const ud = root.userData as { nightOnly?: boolean; dayOnly?: boolean };
+      const want =
+        ud.nightOnly === true
+          ? nightNow
+          : ud.dayOnly === true
+            ? !nightNow
+            : root.visible;
+      if (want === root.visible) {
+        continue;
+      }
+      if (!fade) {
+        root.visible = want;
+        continue;
+      }
+      if (want) {
+        // Arrivals wait for the leavers to thin, then come up a few at a
+        // time. Characters rise out of the ground; trees simply gather.
+        startFade(root, 1, 0.5 + arriving++ * 0.12, character ? 0.35 : 0);
+      } else {
+        startFade(root, 0, leaving++ * 0.08, character ? 0.55 : 0);
       }
     }
   }
@@ -1364,33 +1742,33 @@ export function createKidsWorld(
       const model = spot.model === "$friend" ? land.friend : spot.model;
       await spawnCompanion(model, spot.x, spot.z, spot.h);
     }
-    // A lone skeleton keeps watch near the camp flag every session — and a
-    // whole spooky crew shows up around Halloween (October).
-    if (theme.flagGuard && theme.flagGuard.length > 0) {
+    // The Lost Travellers. Night only, every one of them — by day the road
+    // is clean and pleasant, and the two that used to stand watch in full
+    // sunlight are gone. How many come out, and how close to the trail they
+    // may stand, is the night plan's decision: none at all on a quiet night,
+    // a few far-off ones on a mild one, the full watch otherwise. They stand,
+    // they sway, they turn to look as the hero passes. They never approach.
+    if (theme.flagGuard && theme.flagGuard.length > 0 && plan.travellers > 0) {
       const pickGuard = () =>
         theme.flagGuard![Math.floor(Math.random() * theme.flagGuard!.length)];
-      // One near the camp flag, and one close to the start so the encounter
-      // happens early in a run instead of only at the very end.
-      await spawnCompanion(pickGuard(), runEnd - 3, -3, 3.0, true);
-      await spawnCompanion(pickGuard(), runStart + 10, -3.5, 3.0, true);
-      // The trail belongs to the skeletons after dark: a few more of them come
-      // out, and some of the daytime crowd has gone home.
-      for (let i = 0; i < 4; i++) {
-        const gx = 18 + Math.random() * (TRAIL_END - 26);
-        const gz = (Math.random() > 0.5 ? -1 : 1) * (3 + Math.random() * 6);
+      const near = Math.max(3, plan.keepDistance);
+      const spawnTraveller = async (gx: number, gz: number) => {
         await spawnCompanion(pickGuard(), gx, gz, 3.0, true);
         const last = friends[friends.length - 1];
         if (last != null) {
           last.wrap.userData.nightOnly = true;
           last.wrap.visible = nightNow;
         }
-      }
-      if (new Date().getMonth() === 9) {
-        for (let i = 0; i < 5; i++) {
-          const gx = 24 + Math.random() * (TRAIL_END - 30);
-          const gz = (Math.random() > 0.5 ? -1 : 1) * (3 + Math.random() * 6);
-          await spawnCompanion(pickGuard(), gx, gz, 3.0, true);
-        }
+      };
+      // One near the camp flag and one near the start, so the watch is met
+      // early in a run; the rest are spread along the road.
+      await spawnTraveller(runEnd - 3, -near);
+      await spawnTraveller(runStart + 10, -(near + 0.5));
+      const extra = plan.travellers - 2 + (new Date().getMonth() === 9 ? 3 : 0);
+      for (let i = 0; i < extra; i++) {
+        const gx = 18 + Math.random() * (TRAIL_END - 26);
+        const gz = (Math.random() > 0.5 ? -1 : 1) * (near + Math.random() * 6);
+        await spawnTraveller(gx, gz);
       }
     }
 
@@ -1503,6 +1881,33 @@ export function createKidsWorld(
       }
     }
 
+    const placeVariant = (
+      variants: readonly THREE.Object3D[],
+      i: number,
+      x: number,
+      z: number,
+      scaleMul: number,
+    ): THREE.Group => {
+      const v = variants[i % variants.length].clone();
+      const box = new THREE.Box3().setFromObject(v);
+      v.position.sub(
+        new THREE.Vector3(
+          (box.min.x + box.max.x) / 2,
+          box.min.y,
+          (box.min.z + box.max.z) / 2,
+        ),
+      );
+      const wrap = new THREE.Group();
+      wrap.add(v);
+      wrap.position.set(x, surfaceY(x, z), z);
+      wrap.rotation.y = Math.random() * Math.PI * 2;
+      wrap.scale.setScalar(
+        (0.8 + Math.random() * 0.8) * theme.sceneryScale * scaleMul,
+      );
+      scene.add(wrap);
+      return wrap;
+    };
+
     for (const [file, count, minD, maxD, side, scaleMul = 1] of [
       [land.trees, theme.treeCount ?? 30, 6, 26, "back"] as const,
       ...theme.ground,
@@ -1540,8 +1945,54 @@ export function createKidsWorld(
         scene.add(wrap);
         characterRoots.add(wrap);
         applyEyeGlow(wrap, nightNow);
-        characterRoots.add(wrap);
-        applyEyeGlow(wrap, nightNow);
+        // After dark a share of the leafy forest goes with the daylight, so
+        // the woods themselves change and not merely the light on them. The
+        // bare trees that stand in their place are planted below.
+        if (trueNight && file === land.trees && Math.random() < plan.treeThin) {
+          wrap.userData.dayOnly = true;
+          wrap.visible = !nightNow;
+          moodScenery.push(wrap);
+        }
+      }
+    }
+
+    // The skeleton forest. Bare, leafless trees from the nature set: a few
+    // dense stands along stretches of the road where the woods close in, and
+    // the odd lone trunk between them. Night only, like the Travellers.
+    if (trueNight && plan.deadGroves + plan.deadScatter > 0) {
+      try {
+        const dead = await loadModel(`${ASSETS}/models/nature/MegaDead.glb`);
+        const variants = [...dead.scene.children];
+        const plant = (x: number, z: number, big: boolean) => {
+          const wrap = placeVariant(
+            variants,
+            Math.floor(Math.random() * variants.length),
+            x,
+            z,
+            (big ? 1.15 : 0.9) * (theme.sceneryScale > 1 ? 1 : 1.1),
+          );
+          wrap.userData.nightOnly = true;
+          wrap.visible = nightNow;
+          moodScenery.push(wrap);
+        };
+        for (let g = 0; g < plan.deadGroves; g++) {
+          // A stretch of trail where the dead wood crowds in on both sides.
+          const cx = 26 + Math.random() * (TRAIL_END - 60);
+          const trees = 7 + Math.floor(Math.random() * 6);
+          for (let i = 0; i < trees; i++) {
+            const gx = cx + (Math.random() - 0.5) * 22;
+            const back = Math.random() < 0.7;
+            const gz = back ? -(7 + Math.random() * 14) : 6 + Math.random() * 6;
+            plant(gx, gz, true);
+          }
+        }
+        for (let i = 0; i < plan.deadScatter; i++) {
+          const x = 8 + Math.random() * (TRAIL_END - 16);
+          const z = (Math.random() > 0.7 ? 1 : -1) * (6 + Math.random() * 16);
+          plant(x, z, false);
+        }
+      } catch {
+        // The night stands without its dead wood rather than failing to fall.
       }
     }
 
@@ -1594,6 +2045,63 @@ export function createKidsWorld(
       return;
     }
     const dt = clock.getDelta();
+
+    // ── the night, breathing ─────────────────────────────────────────────
+    // One eased blend drives the whole layer — mist, stars, moon, fireflies,
+    // eyes — so nightfall arrives over a couple of seconds as the cast
+    // cross-fades, instead of everything snapping at once.
+    stepFades(dt);
+    if (trueNight) {
+      const target = nightNow ? 1 : 0;
+      nightBlend +=
+        Math.sign(target - nightBlend) *
+        Math.min(Math.abs(target - nightBlend), dt / 1.8);
+      const on = nightBlend > 0.001;
+      nightLayer.visible = on;
+      skyRig.visible = on;
+      if (on) {
+        const calm = 0.25 + 0.75 * motionScale;
+        const t = clock.elapsedTime * calm;
+        for (const m of mistMats) {
+          m.uniforms.uTime.value = t;
+          m.uniforms.uOpacity.value = plan.mist * nightBlend;
+        }
+        if (starsMat != null) {
+          starsMat.opacity = 0.9 * nightBlend;
+        }
+        if (moonMat != null) {
+          moonMat.opacity = 0.95 * nightBlend;
+        }
+        if (fireflies != null) {
+          fireflies.mat.opacity = 0.9 * nightBlend;
+          const pos = fireflies.points.geometry.getAttribute(
+            "position",
+          ) as THREE.BufferAttribute;
+          for (let i = 0; i < fireflies.phase.length; i++) {
+            const ph = fireflies.phase[i];
+            pos.setX(i, fireflies.base[i * 3] + Math.sin(t * 0.4 + ph) * 1.6);
+            pos.setY(
+              i,
+              fireflies.base[i * 3 + 1] + Math.sin(t * 0.9 + ph * 2) * 0.5,
+            );
+          }
+          pos.needsUpdate = true;
+        }
+        for (const pair of eyePairs) {
+          // A slow blink with a long dark beat between — watching, not
+          // signalling. The pair drifts a little along the treeline and
+          // never leaves it.
+          const w = Math.sin(t * pair.speed + pair.phase);
+          const open = Math.max(0, w) ** 1.6;
+          for (const m of pair.mats) {
+            m.opacity = pair.baseO * open * nightBlend;
+          }
+          pair.group.position.x =
+            pair.x0 + Math.sin(t * 0.06 + pair.phase) * pair.drift;
+        }
+      }
+    }
+
     if (player) {
       const p = player.wrap.position;
       const dx = targetX - p.x;
@@ -2081,7 +2589,7 @@ export function createKidsWorld(
       nightNow = night;
       applySky(night ? "night" : land.mood).catch(() => {});
       refreshEyeGlow();
-      refreshPopulation();
+      refreshPopulation(true);
     },
     setLook(brightness, paleness) {
       userBright = brightness;
