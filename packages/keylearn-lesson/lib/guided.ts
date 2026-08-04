@@ -18,7 +18,6 @@ import {
   randomWords,
   uniqueWords,
 } from "./text/words.ts";
-import { canUnlock } from "./unlock.ts";
 
 // A letter with at least this many recorded keystrokes counts as genuinely
 // practised. In guided mode locked letters never appear in the text, so they
@@ -58,24 +57,6 @@ export class GuidedLesson extends Lesson {
 
   override get letters() {
     return this.model.letters;
-  }
-
-  /**
-   * Lessons since the last new letter arrived.
-   *
-   * Read off the newest key's first sample rather than tracked separately, so
-   * it needs no state of its own and cannot drift from the truth.
-   */
-  #lessonsSinceUnlock(keyStatsMap: KeyStatsMap, keys: LessonKeys): number {
-    const total = keyStatsMap.results.length;
-    let newest = 0;
-    for (const key of keys.findIncludedKeys()) {
-      const first = keyStatsMap.get(key.letter).samples[0];
-      if (first != null && first.index > newest) {
-        newest = first.index;
-      }
-    }
-    return Math.max(0, total - newest);
   }
 
   override update(keyStatsMap: KeyStatsMap) {
@@ -130,19 +111,23 @@ export class GuidedLesson extends Lesson {
         continue;
       }
 
-      // A new key arrives when the keys already in play are at the target —
-      // all of them at first, and all but a small allowance once the set is
-      // big enough that requiring every one at once becomes a trap rather than
-      // a standard. See `unlock.ts`.
-      const passed = includedKeys.filter((key) =>
-        Target.passes(recoverKeys ? key.confidence : key.bestConfidence),
-      ).length;
+      // A new key arrives only when every key already in play has passed the
+      // bar — keybr's rule, which is monotonic (recoverKeys off banks the
+      // best-ever pass, so nothing earned is ever taken away) and fits in a
+      // sentence. The fairness lives in where the bar sits, not in bending
+      // it: a key passes at four fifths of the goal, because the goal is an
+      // overall speed and the slowest key of a normal hand sits about there.
+      //
+      // A per-learner adaptive bar was tried and measured in closed loop, and
+      // rejected: deriving the bar from the learner's own key-speed spread
+      // punishes exactly the practice being asked for — evening out your weak
+      // keys tightens the spread and raises your own bar — and two learners
+      // of identical average ability finished 1298 vs 1971 lessons apart, the
+      // sloppier one first.
       if (
-        canUnlock({
-          passed,
-          inPlay: includedKeys.length,
-          lessonsSinceUnlock: this.#lessonsSinceUnlock(keyStatsMap, lessonKeys),
-        })
+        includedKeys.every((key) =>
+          Target.passes(recoverKeys ? key.confidence : key.bestConfidence),
+        )
       ) {
         lessonKeys.include(lessonKey.letter);
         continue;
