@@ -9,6 +9,7 @@ import * as styles from "./NavMenu.module.less";
 
 const pageIcons: Record<string, StrokeIconName> = {
   [Pages.practice.path]: "keyboard",
+  [Pages.kids.path]: "keyboard",
   [Pages.profile.path]: "chart",
   [Pages.typingTest.path]: "gauge",
   [Pages.multiplayer.path]: "people",
@@ -35,6 +36,19 @@ export function NavMenu({
     return (
       <div className={styles.root}>
         <MenuItemLink page={Pages.braille} onNavigate={onNavigate} />
+      </div>
+    );
+  }
+
+  if (active?.kind === "kid") {
+    // A kid practises on the kids page and nowhere else — the adult drills
+    // are guarded off anyway, so listing them here would only offer links
+    // that bounce. Progress and help still belong to everyone.
+    return (
+      <div className={styles.root}>
+        <MenuItemLink page={Pages.kids} onNavigate={onNavigate} />
+        <MenuItemLink page={Pages.profile} onNavigate={onNavigate} />
+        <MenuItemLink page={Pages.help} onNavigate={onNavigate} />
       </div>
     );
   }

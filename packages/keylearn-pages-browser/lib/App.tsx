@@ -25,6 +25,7 @@ import {
   useNavigate,
 } from "react-router";
 import { IntlLoader } from "./loader/IntlLoader.tsx";
+import { practiceRedirect } from "./surface.ts";
 import { Template } from "./Template.tsx";
 import { ThemeProvider } from "./themes/ThemeProvider.tsx";
 import { Title } from "./Title.tsx";
@@ -114,34 +115,28 @@ function FirstRunRedirect(): ReactNode {
   return null;
 }
 
-// The sighted drills a learner on vision support cannot use. Each of them is
-// built around watching a line of text move under a caret; braille practice is
-// the same lesson engine reached by ear and by chord.
-const SIGHTED_DRILLS: readonly string[] = [
-  Pages.practice.path,
-  Pages.kids.path,
-  Pages.typingTest.path,
-];
-
 /**
- * Keeps a learner on vision support out of the sighted drills.
+ * Keeps every learner on their own practice surface: a kid never reaches the
+ * adult drills, a grown-up never lands in the kids game, and a learner on
+ * vision support only ever sees braille — in every direction.
  *
- * Every switcher already routes them to braille, but a bookmark, the back
- * button, a nav link or a stale tab all bypass that — and landing on a page
- * that is silent and unusable gives no clue what went wrong. The guard is on
- * the route rather than on each entry point so there is one answer, not four.
+ * Every switcher already routes each profile to the right page, but a
+ * bookmark, the back button, a typed URL or a stale tab all bypass that — and
+ * landing on the wrong drill either shows a page that is unusable or quietly
+ * writes progress into the wrong curriculum. The guard is on the route rather
+ * than on each entry point so there is one answer, not four. (The rules live
+ * in surface.ts.)
  */
-function BrailleOnlyRedirect(): ReactNode {
+function PracticeSurfaceGuard(): ReactNode {
   const { active } = useProfiles();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const blocked =
-    active?.visionSupport === true && SIGHTED_DRILLS.includes(pathname);
+  const home = practiceRedirect(active, pathname);
   useEffect(() => {
-    if (blocked) {
-      navigate(Pages.braille.path, { replace: true });
+    if (home != null) {
+      navigate(home, { replace: true });
     }
-  }, [blocked, navigate]);
+  }, [home, navigate]);
   return null;
 }
 
@@ -150,7 +145,7 @@ function PageRoutes() {
   return (
     <BrowserRouter basename={Pages.intlBase(locale)}>
       <FirstRunRedirect />
-      <BrailleOnlyRedirect />
+      <PracticeSurfaceGuard />
       <ProfilePicker />
       <Routes>
         <Route
