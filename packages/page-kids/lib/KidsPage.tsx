@@ -2515,16 +2515,22 @@ function SettingsCard({
                     ["mild", "Spooky"],
                     ["full", "Extra spooky"],
                   ] as const
-                ).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    className={pill(prefs.nightStyle === value)}
-                    onClick={() => savePrefs({ nightStyle: value })}
-                  >
-                    {label}
-                  </button>
-                ))}
+                )
+                  // No Extra spooky at five, not even for a grown-up — the
+                  // resolver refuses the value anyway (see night.ts), so
+                  // offering the pill would be offering a button that does
+                  // not do what it says.
+                  .filter(([value]) => !(band === "5-6" && value === "full"))
+                  .map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={pill(prefs.nightStyle === value)}
+                      onClick={() => savePrefs({ nightStyle: value })}
+                    >
+                      {label}
+                    </button>
+                  ))}
               </div>
             </div>
           )}
@@ -2651,24 +2657,33 @@ function SettingsCard({
             </div>
           </div>
           <div className={styles.sectionLabel}>Help while you type</div>
-          <div className={styles.srow}>
-            <span className={styles.ri} style={{ background: "var(--sky)" }}>
-              <span className={styles.aaIcon}>Aa</span>
-            </span>
-            <div>
-              <div className={styles.sl}>Big letters</div>
-              <div className={styles.sd}>show the words in CAPITALS</div>
+          {/*
+            Only while the words are actually in a panel. The in-world letter
+            blocks are capitals by their nature, so whenever a child is on
+            them — always at 5-6, by choice at 7-10 — a CAPITALS toggle
+            changes nothing, and a toggle that changes nothing is worse than
+            no toggle.
+          */}
+          {!(band === "5-6" || (canToggleWords && prefs.wordBlocks)) && (
+            <div className={styles.srow}>
+              <span className={styles.ri} style={{ background: "var(--sky)" }}>
+                <span className={styles.aaIcon}>Aa</span>
+              </span>
+              <div>
+                <div className={styles.sl}>Big letters</div>
+                <div className={styles.sd}>show the words in CAPITALS</div>
+              </div>
+              <div className={styles.ctl}>
+                <button
+                  type="button"
+                  className={pill(prefs.bigLetters)}
+                  onClick={() => savePrefs({ bigLetters: !prefs.bigLetters })}
+                >
+                  {prefs.bigLetters ? "On" : "Off"}
+                </button>
+              </div>
             </div>
-            <div className={styles.ctl}>
-              <button
-                type="button"
-                className={pill(prefs.bigLetters)}
-                onClick={() => savePrefs({ bigLetters: !prefs.bigLetters })}
-              >
-                {prefs.bigLetters ? "On" : "Off"}
-              </button>
-            </div>
-          </div>
+          )}
           {canToggleWords && (
             <div className={styles.srow}>
               <span

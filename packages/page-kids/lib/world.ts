@@ -1291,8 +1291,11 @@ export function createKidsWorld(
       // On the extra-spooky night the road belongs entirely to the watch: no
       // villagers, no fellow heroes — only the hero's own lantern, the eyes,
       // and the Lost Travellers. Everyone ordinary goes home at dark.
+      // Hero world only: Dino Run's dark is a dusk, and dusk empties nothing —
+      // without this guard a child whose age resolves to the full night was
+      // losing every dinosaur and sheep the moment the light dimmed.
       const banishedAfterDark =
-        character && nightStyle === "full" && ud.scary !== true;
+        trueNight && character && nightStyle === "full" && ud.scary !== true;
       const want =
         ud.nightOnly === true
           ? nightNow
@@ -1787,7 +1790,9 @@ export function createKidsWorld(
         guard,
         phase: Math.random() * Math.PI * 2,
         smiler: Math.random() < 0.35,
-        dayOnly: !scary && Math.random() < 0.4,
+        // "Some of the crowd goes home after dark" is a night idea; at a
+        // dusk everyone stays out.
+        dayOnly: trueNight && !scary && Math.random() < 0.4,
       };
       scene.add(wrap);
       characterRoots.add(wrap);
