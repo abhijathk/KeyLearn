@@ -257,7 +257,9 @@ class KidsAudio {
       osc.type = "sine";
       osc.frequency.setValueAtTime(freq, at);
       gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.exponentialRampToValueAtTime(0.016, at + 0.008);
+      // Feeble on purpose: a cricket is at the edge of hearing, and a chirp
+      // anyone notices as a sound has already failed at being the night.
+      gain.gain.exponentialRampToValueAtTime(0.006, at + 0.008);
       gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.03);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -273,7 +275,7 @@ class KidsAudio {
     }
     const loop = () => {
       this.#chirp();
-      this.#cricketTimer = setTimeout(loop, 1400 + Math.random() * 2600);
+      this.#cricketTimer = setTimeout(loop, 2000 + Math.random() * 3400);
     };
     this.#cricketTimer = setTimeout(loop, 600);
   }

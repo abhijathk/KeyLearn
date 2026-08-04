@@ -154,7 +154,7 @@ export function nightPlan(style: NightStyle, tier: DeviceTier): NightPlan {
   if (style === "mild") {
     return {
       travellers: Math.max(2, Math.round(4 * scale)),
-      eyePairs: Math.max(3, Math.round(6 * scale)),
+      eyePairs: Math.max(4, Math.round(9 * scale)),
       fireflies: Math.max(6, Math.round(14 * scale)),
       mist: 0.45,
       // Far enough that a Traveller is always something seen, never met.
