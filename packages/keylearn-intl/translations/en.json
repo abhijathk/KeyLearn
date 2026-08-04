@@ -685,6 +685,8 @@
   "practice.pulse.progress": "{percent}% of the way",
   "practice.pulse.streak": "Streak",
   "practice.pulse.you.description": "You are here — your latest speed on the way to the goal.",
+  "practice.reset.away": "Line restarted while you were away — so the speed stays honest.",
+  "practice.reset.idle": "Line restarted after a pause — so the speed stays honest.",
   "practice.session.accuracy": "{value} clean",
   "practice.session.allDone": "all {total} keys",
   "practice.session.alphabet": "Your alphabet",

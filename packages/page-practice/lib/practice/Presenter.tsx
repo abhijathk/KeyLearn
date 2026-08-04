@@ -24,6 +24,8 @@ import {
   type CSSProperties,
   PureComponent,
   type ReactNode,
+  useEffect,
+  useState,
 } from "react";
 import { FormattedMessage } from "react-intl";
 import { Controls } from "./Controls.tsx";
@@ -518,6 +520,7 @@ function NormalLayout({
         {focus && !focusMode && state.settings.get(uiProps.ghostRace) && (
           <GhostTrack state={state} />
         )}
+        <ResetNotice />
         {focus || (
           // The invitation as a self-pressing Enter keycap in the app's own
           // key style, with the message riding under it as a micro-label.
@@ -561,6 +564,51 @@ function NormalLayout({
       )}
       {tour}
     </Screen>
+  );
+}
+
+/**
+ * Says that the line was restarted, and why.
+ *
+ * The restart itself is right — a lesson clock that kept running while you
+ * were in another tab would record a speed you never typed at — but it used to
+ * happen in silence, so somebody who looked away came back to their work gone
+ * and nothing to explain it. One quiet line, gone after a moment, is the whole
+ * fix: the behaviour was never the problem.
+ */
+function ResetNotice(): ReactNode {
+  const [reason, setReason] = useState<string | null>(null);
+  useEffect(() => {
+    const onReset = (ev: Event) => {
+      setReason((ev as CustomEvent<string>).detail);
+    };
+    window.addEventListener("keylearn:lesson-reset", onReset);
+    return () => window.removeEventListener("keylearn:lesson-reset", onReset);
+  }, []);
+  useEffect(() => {
+    if (reason == null) {
+      return;
+    }
+    const timer = setTimeout(() => setReason(null), 4000);
+    return () => clearTimeout(timer);
+  }, [reason]);
+  if (reason == null) {
+    return null;
+  }
+  return (
+    <p className={styles.resetNotice} role="status">
+      {reason === "idle" ? (
+        <FormattedMessage
+          id="practice.reset.idle"
+          defaultMessage="Line restarted after a pause — so the speed stays honest."
+        />
+      ) : (
+        <FormattedMessage
+          id="practice.reset.away"
+          defaultMessage="Line restarted while you were away — so the speed stays honest."
+        />
+      )}
+    </p>
   );
 }
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import { lessonProps, MutableDailyGoal } from "@keylearn/lesson";
-import { LocalDate, ResultFaker, Today } from "@keylearn/result";
+import { LocalDate, ResultFaker } from "@keylearn/result";
 import { Settings } from "@keylearn/settings";
 import { deepEqual } from "rich-assert";
 import { DailyGoalEvents } from "./event-source-daily-goal.ts";
@@ -13,7 +13,7 @@ test("generate events", () => {
   const faker = new ResultFaker({ timeStamp: today.timeStamp });
   const dailyGoal = new MutableDailyGoal(
     new Settings().set(lessonProps.dailyGoal, 1),
-    new Today(today),
+    () => today.timeStamp,
   );
   const source = new DailyGoalEvents(dailyGoal);
   const events = new Set<LessonEvent>();

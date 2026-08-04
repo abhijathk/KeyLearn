@@ -109,6 +109,37 @@
 // gently presses itself, with the message as a micro-label under it. Shown
 // only at rest, floating just above the top edge of the keyboard (so it never
 // clashes with the ghost lane, which only shows while focused).
+// Said when a restart actually cost something, and gone a moment later. It
+// sits over the keyboard rather than in the flow so nothing below it moves.
+.resetNotice {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: -1.6rem;
+  margin: 0;
+  color: var(--text-color-f2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  animation: resetFade 0.25s ease both;
+}
+
+@keyframes resetFade {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resetNotice {
+    animation: none;
+  }
+}
+
 .startHint {
   display: inline-flex;
   position: absolute;

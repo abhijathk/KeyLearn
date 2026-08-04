@@ -35,19 +35,23 @@ export const Controller = memo(function Controller({
     handleInput,
   } = useLessonState(progress, onResult);
   useHotkeys({
-    ["Ctrl+ArrowLeft"]: handleResetLesson,
+    // Asked for, so nothing is announced — they know, they pressed it.
+    ["Ctrl+ArrowLeft"]: () => handleResetLesson(),
     ["Ctrl+ArrowRight"]: handleSkipLesson,
-    ["Escape"]: handleResetLesson,
+    ["Escape"]: () => handleResetLesson(),
   });
-  useWindowEvent("focus", handleResetLesson);
-  useWindowEvent("blur", handleResetLesson);
-  useDocumentEvent("visibilitychange", handleResetLesson);
+  // Leaving the page is the one worth naming; coming back to a line that is
+  // already blank needs no announcement of its own, and `visibilitychange`
+  // fires alongside blur so it would otherwise say it twice.
+  useWindowEvent("focus", () => handleResetLesson());
+  useWindowEvent("blur", () => handleResetLesson("away"));
+  useDocumentEvent("visibilitychange", () => handleResetLesson());
   return (
     <Presenter
       state={state}
       lines={state.lines}
       depressedKeys={state.depressedKeys}
-      onResetLesson={handleResetLesson}
+      onResetLesson={() => handleResetLesson()}
       onSkipLesson={handleSkipLesson}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
@@ -82,8 +86,28 @@ function useLessonState(
     state.lastLesson = lastLessonRef.current;
     setLines(state.lines);
     setDepressedKeys(state.depressedKeys);
-    const handleResetLesson = () => {
+    /**
+     * Restart the current text.
+     *
+     * Announced when it actually costs something. Four separate things call
+     * this — losing focus, regaining it, the tab being hidden, and ten seconds
+     * of silence — and all four did it without a word, so somebody who
+     * alt-tabbed to read a message came back to their typing gone and no
+     * explanation. That reads as a bug to the person it happens to, even
+     * though the timing is right: a lesson clock that kept running while you
+     * were elsewhere would record a speed you never typed at.
+     *
+     * Nothing is said when the line had not been started, because then there
+     * is nothing to have lost.
+     */
+    const handleResetLesson = (reason?: string) => {
+      const lost = state.textInput.steps.length > 0;
       state.resetLesson();
+      if (lost && reason != null) {
+        window.dispatchEvent(
+          new window.CustomEvent("keylearn:lesson-reset", { detail: reason }),
+        );
+      }
       setLines(state.lines);
       setDepressedKeys((state.depressedKeys = []));
       timeout.cancel();
@@ -152,7 +176,7 @@ function useLessonState(
               detail: { level: Math.min(3, helpMisses) },
             }),
           );
-          timeout.schedule(handleResetLesson, 10000);
+          timeout.schedule(() => handleResetLesson("idle"), 10000);
         },
       },
     );

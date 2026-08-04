@@ -30,8 +30,11 @@ test("render", async () => {
   isNotNull(await r.findByText("Keyboard Setup"));
   isNotNull(await r.findByText("Display"));
 
-  // Practice content is the default section.
-  isNotNull(await r.findByText("Lesson settings"));
+  // Practice content is the default section. Asserted on the lesson sources it
+  // offers rather than on a heading: the heading has been renamed twice and the
+  // test went red both times, which is how a suite stops meaning anything.
+  isNotNull(await r.findByText("Guided practice"));
+  isNotNull(await r.findByText("Code craft"));
   isNotNull(r.queryByText("Preview of your lesson"));
 
   fireEvent.click(r.getByText("Smart Practice"));
@@ -44,7 +47,7 @@ test("render", async () => {
 
   fireEvent.click(r.getByText("Keyboard Setup"));
 
-  isNotNull(await r.findByText("Live Preview"));
+  isNotNull(await r.findByText("Keyboard layout"));
 
   fireEvent.click(r.getByText("Display"));
 

@@ -1,6 +1,7 @@
 import { type Layout } from "@keylearn/keyboard";
 import { LocalDate } from "./localdate.ts";
 import { type Result } from "./result.ts";
+import { type TextType } from "./texttype.ts";
 
 export type Group<T> = {
   readonly key: T;
@@ -15,6 +16,10 @@ const layoutKey = (): KeyOf<Layout> => {
 
 const layoutFamilyKey = (): KeyOf<string> => {
   return ({ layout }) => layout.family;
+};
+
+const textTypeKey = (): KeyOf<TextType> => {
+  return ({ textType }) => textType;
 };
 
 const dateKey = (): KeyOf<LocalDate> => {
@@ -37,6 +42,10 @@ export class ResultGroups<T> implements Iterable<Group<T>> {
 
   static readonly byLayoutFamily = (results: Iterable<Result>) => {
     return new ResultGroups(layoutFamilyKey()).addAll(results);
+  };
+
+  static readonly byTextType = (results: Iterable<Result>) => {
+    return new ResultGroups(textTypeKey()).addAll(results);
   };
 
   static readonly byDate = (results: Iterable<Result>) => {

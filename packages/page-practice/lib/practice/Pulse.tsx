@@ -33,6 +33,7 @@ import {
   SlowKeys,
   SpeedSpark,
 } from "./RecapCharts.tsx";
+import { speedTrend } from "./trend.ts";
 
 /**
  * The one-band telemetry: everything in a single composition with strict
@@ -491,8 +492,10 @@ function SessionRecap({
     recent.length > 0
       ? recent.reduce((s, r) => s + r.accuracy, 0) / recent.length
       : 0;
-  const trend =
-    recent.length >= 2 ? recent[recent.length - 1].speed - recent[0].speed : 0;
+  // Fitted across the whole window rather than read off its two endpoints —
+  // see `trend.ts`. "Steady" is the honest answer far more often than the old
+  // rule admitted.
+  const trend = speedTrend(recent.map((r) => r.speed));
 
   const total = lessonKeys.letters.length;
   const unlocked = lessonKeys.findIncludedKeys().length;
@@ -588,19 +591,19 @@ function SessionRecap({
               <span
                 className={clsx(
                   styles.trendTag,
-                  trend > 0.5
+                  trend === "improving"
                     ? styles.trendUp
-                    : trend < -0.5
+                    : trend === "dip"
                       ? styles.trendDown
                       : styles.trendFlat,
                 )}
               >
-                {trend > 0.5 ? (
+                {trend === "improving" ? (
                   <FormattedMessage
                     id="practice.session.improving"
                     defaultMessage="improving"
                   />
-                ) : trend < -0.5 ? (
+                ) : trend === "dip" ? (
                   <FormattedMessage
                     id="practice.session.dip"
                     defaultMessage="slight dip"
