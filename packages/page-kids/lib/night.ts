@@ -45,6 +45,14 @@ export function resolveNightStyle(
   override: NightOverride = "auto",
 ): NightStyle {
   if (override !== "auto") {
+    // The override lets a grown-up move a child up or down — but the full
+    // night is simply not offered for the youngest band, and enforcing that
+    // here rather than only in the settings row means no stale preference or
+    // hand-edited storage can reach it either. Five is five, whatever the
+    // toy-box was told.
+    if (band === "5-6" && override === "full") {
+      return "mild";
+    }
     return override;
   }
   switch (band) {
@@ -162,7 +170,7 @@ export function nightPlan(style: NightStyle, tier: DeviceTier): NightPlan {
       deadGroves: Math.max(1, Math.round(2 * scale)),
       deadScatter: Math.max(3, Math.round(6 * scale)),
       treeThin: 0.3,
-      transformShare: 0.5,
+      transformShare: 1,
     };
   }
   return {

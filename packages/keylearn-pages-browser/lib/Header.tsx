@@ -52,7 +52,7 @@ function KidFlameIcon(): ReactNode {
       <path
         d="M12 3.5c1.2 2.4 4.8 4.6 4.8 8.6a4.8 4.8 0 0 1-9.6 0c0-1.6.7-2.9 1.6-4.2.2 1 .7 1.8 1.6 2.3-.3-2.5.4-4.9 1.6-6.7Z"
         fill="none"
-        stroke="#b3541e"
+        stroke="#6f675b"
         strokeWidth={2}
         strokeLinejoin="round"
       />
@@ -226,7 +226,7 @@ export function Header({
               <span
                 className={clsx(styles.kidsChip, styles.kidsChipWide)}
                 style={{
-                  background: "color-mix(in srgb, #ff9d5c 30%, #ffffff)",
+                  background: "color-mix(in srgb, #b8b2a6 38%, #ffffff)",
                 }}
                 title={formatMessage(
                   defineMessage({

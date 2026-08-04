@@ -1106,6 +1106,24 @@ export function createKidsWorld(
     });
   }
 
+  /**
+   * Shadow maps ignore opacity, so a character thinned to nothing still threw
+   * a full shadow until the moment it vanished — a shadow outliving its owner.
+   * Ghosts cast no shadows: it cuts out the moment a fade begins, and comes
+   * back only once a body is fully solid.
+   */
+  function setFadeShadow(root: THREE.Object3D, on: boolean): void {
+    root.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (mesh.isMesh) {
+        if (mesh.userData.hadShadow == null) {
+          mesh.userData.hadShadow = mesh.castShadow;
+        }
+        mesh.castShadow = on && mesh.userData.hadShadow === true;
+      }
+    });
+  }
+
   function startFade(
     root: THREE.Object3D,
     to: 0 | 1,
@@ -1113,6 +1131,7 @@ export function createKidsWorld(
     rise: number,
   ): void {
     prepFade(root);
+    setFadeShadow(root, false);
     // A fade already in flight for this root is superseded, not stacked.
     const at = fades.findIndex((f) => f.root === root);
     if (at !== -1) {
@@ -1150,6 +1169,8 @@ export function createKidsWorld(
         if (f.to === 0) {
           f.root.visible = false;
           applyFadeOpacity(f.root, 1);
+        } else {
+          setFadeShadow(f.root, true);
         }
         f.root.position.y = f.baseY;
         fades.splice(i, 1);
@@ -1254,11 +1275,17 @@ export function createKidsWorld(
     const fade = dramatic && trueNight && motionScale >= 0.15;
     let leaving = 0;
     let arriving = 0;
+    let morphing = 0;
+    const handled = new Set<THREE.Object3D>();
     for (const { root, character } of roots) {
+      if (handled.has(root)) {
+        continue;
+      }
       const ud = root.userData as {
         nightOnly?: boolean;
         dayOnly?: boolean;
         scary?: boolean;
+        twinWrap?: THREE.Object3D;
       };
       // On the extra-spooky night the road belongs entirely to the watch: no
       // villagers, no fellow heroes — only the hero's own lantern, the eyes,
@@ -1276,6 +1303,18 @@ export function createKidsWorld(
       }
       if (!fade) {
         root.visible = want;
+        continue;
+      }
+      // A linked pair morphs in place: the villager dissolves exactly as the
+      // skeleton condenses, same spot, same stance, no drift — one figure
+      // changing, not one leaving and another arriving. Choreographing them
+      // separately read as a gap where the person used to be.
+      if (ud.twinWrap != null) {
+        const delay = morphing++ * 0.14;
+        startFade(root, want ? 1 : 0, delay, 0);
+        startFade(ud.twinWrap, want ? 0 : 1, delay, 0);
+        handled.add(root);
+        handled.add(ud.twinWrap);
         continue;
       }
       if (want) {
@@ -1703,6 +1742,7 @@ export function createKidsWorld(
       z: number,
       h: number,
       scary = false,
+      forceGuard?: boolean,
     ) => {
       let gltf;
       try {
@@ -1718,7 +1758,10 @@ export function createKidsWorld(
       const homeY = Math.random() * Math.PI * 2;
       wrap.rotation.y = homeY;
       // A rare few are "guards" who pace back and forth over their patch.
-      const guard = !scary && Math.random() < (theme.guardRate ?? 0);
+      // A twin inherits its villager's duty, so a pacing guard morphs into a
+      // pacing skeleton rather than a stander who forgot the job.
+      const guard =
+        forceGuard ?? (!scary && Math.random() < (theme.guardRate ?? 0));
       // Only some companions are "smilers" who give a happy bob; the rest just
       // stop and stare when the hero passes.
       wrap.userData = {
@@ -1788,6 +1831,7 @@ export function createKidsWorld(
           spot.z,
           spot.h,
           true,
+          day.wrap.userData.guard === true,
         );
         const twin = friends[friends.length - 1];
         if (twin != null && twin !== day) {
@@ -1797,6 +1841,18 @@ export function createKidsWorld(
           // change of cast.
           twin.wrap.rotation.y = day.wrap.rotation.y;
           twin.wrap.userData.homeY = day.wrap.userData.homeY;
+          // And the same point in the patrol, so a guard pair morphs at the
+          // same spot on the beat instead of two places along it.
+          twin.wrap.userData.phase = day.wrap.userData.phase;
+          // Linked both ways, so the population swap can morph the pair in
+          // place instead of choreographing them separately.
+          day.wrap.userData.twinWrap = twin.wrap;
+          twin.wrap.userData.twinWrap = day.wrap;
+          // Somebody the hero KNOWS turning out to be a skeleton is the one
+          // who gets to be frightening; the strangers out in the dark only
+          // watch. See the loom in the tick.
+          twin.wrap.userData.scarer = true;
+          twin.wrap.userData.baseScale = twin.wrap.scale.x;
         }
       }
     }
@@ -2375,6 +2431,10 @@ export function createKidsWorld(
         scary?: boolean;
         /** How lit this guard's sockets are, 1 on approach then fading. */
         alert?: number;
+        /** A morphed twin: it looms at the hero; strangers only stare. */
+        scarer?: boolean;
+        loom?: number;
+        baseScale?: number;
         /** Comes out only after dark. */
         nightOnly?: boolean;
         /** Turns in when the sun goes down. */
@@ -2508,41 +2568,38 @@ export function createKidsWorld(
       f.wrap.rotation.y += diff * (near ? 0.12 : 0.04);
       const homeGY = terrainY(ud.homeX, ud.homeZ ?? 0);
       if (ud.scary) {
-        // Skeletons act spooky when the hero is near — a shudder and a rise —
-        // then settle back once it passes.
-        if (near) {
-          f.wrap.rotation.z = Math.sin(clock.elapsedTime * 9) * 0.14;
-          f.wrap.position.y =
-            homeGY + 0.15 + Math.abs(Math.sin(clock.elapsedTime * 4)) * 0.2;
-          ud.alert = 1;
-          if (!scaredThisRun) {
-            scaredThisRun = true;
-            scareT = 1;
-          }
-        } else {
-          ud.alert = Math.max(0, (ud.alert ?? 0) - dt * 0.45);
-          f.wrap.rotation.z *= 0.88;
-          f.wrap.position.y += (homeGY - f.wrap.position.y) * 0.1;
-        }
-        // A slow, continuous sway, out of phase with every neighbour — the
-        // whole watch rocking gently on the spot, no two together. Small on
-        // purpose: creepy is quiet.
+        // Two kinds of skeleton, two manners. The strangers out in the dark
+        // only watch: they stand, sway almost imperceptibly, and turn to
+        // follow the hero like any villager — the turning is shared above.
+        // But a villager the hero KNOWS who turned out to be a skeleton gets
+        // to be frightening: as the hero comes close it LOOMS — rises a
+        // little, grows a little, eyes brightening — slowly, and slowly back
+        // down. Slow is what makes it scary; the old shudder was slapstick.
         f.wrap.rotation.z =
           Math.sin(clock.elapsedTime * 0.45 + (ud.phase ?? 0)) *
           0.045 *
           motionScale;
-        const a = ud.alert ?? 0;
-        if (a > 0.001) {
-          const pulse = 0.5 + 0.5 * Math.sin(clock.elapsedTime * 5);
-          const base = nightNow ? 3.2 : 1.2;
-          setEyeFlare(
-            f.wrap,
-            1 + pulse * 0.35 * a,
-            base + pulse * 3 * a,
-            0x7fe3ff,
-          );
+        if (ud.scarer === true) {
+          const want = near ? 1 : 0;
+          ud.loom =
+            (ud.loom ?? 0) + (want - (ud.loom ?? 0)) * Math.min(1, dt * 1.6);
+          const loom = (ud.loom ?? 0) * motionScale;
+          f.wrap.position.y = homeGY + 0.24 * loom;
+          const base = ud.baseScale ?? f.wrap.scale.x;
+          f.wrap.scale.setScalar(base * (1 + 0.08 * loom));
+          // And a tremble riding on the loom — the rise says it noticed you,
+          // the shiver says it is barely holding itself together.
+          f.wrap.rotation.z +=
+            Math.sin(clock.elapsedTime * 8.5 + (ud.phase ?? 0)) * 0.05 * loom;
+          setEyeFlare(f.wrap, 1 + 0.35 * loom, 3.2 + 3.2 * loom, 0x7fe3ff);
         } else {
+          f.wrap.position.y += (homeGY - f.wrap.position.y) * 0.1;
           applyEyeGlow(f.wrap, nightNow);
+        }
+        // The pumpkin's jump is still the joke, so the trigger survives.
+        if (near && !scaredThisRun) {
+          scaredThisRun = true;
+          scareT = 1;
         }
       } else {
         // Everyone else stops what they were doing and turns to watch. A

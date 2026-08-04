@@ -20,9 +20,17 @@ test("the night grows up with the child", () => {
 });
 
 test("a grown-up's override wins over the band", () => {
-  equal(resolveNightStyle("5-6", "full"), "full");
+  equal(resolveNightStyle("7-8", "full"), "full");
   equal(resolveNightStyle("11+", "quiet"), "quiet");
   equal(resolveNightStyle("7-8", "auto"), "mild");
+});
+
+test("no path reaches the full night at five, override or not", () => {
+  // The settings row does not offer it for this band; the resolver refuses it
+  // anyway, so a stale stored preference cannot smuggle it back in.
+  equal(resolveNightStyle("5-6", "full"), "mild");
+  equal(resolveNightStyle("5-6", "mild"), "mild", "spooky is the ceiling");
+  equal(resolveNightStyle("5-6", "quiet"), "quiet");
 });
 
 test("the Travellers keep their distance, and more so for younger eyes", () => {
@@ -83,6 +91,6 @@ test("by night the villagers themselves are the Travellers", () => {
   // The change happens in place — same figure's spot, a matched skeleton —
   // and how many turn is the style's decision, never the quiet night's.
   equal(nightPlan("quiet", "high").transformShare, 0);
-  equal(nightPlan("mild", "high").transformShare, 0.5);
+  equal(nightPlan("mild", "high").transformShare, 1);
   equal(nightPlan("full", "high").transformShare, 1);
 });

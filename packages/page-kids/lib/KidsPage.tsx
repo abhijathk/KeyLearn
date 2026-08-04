@@ -179,10 +179,16 @@ function defaultPrefs(): Prefs {
 
 function loadPrefs(): Prefs {
   try {
-    return {
+    const prefs: Prefs = {
       ...defaultPrefs(),
       ...JSON.parse(localStorage.getItem(PREFS_KEY()) ?? "{}"),
     };
+    // A stored override the band no longer offers loads as "by age" rather
+    // than lingering invisibly — the pill it belonged to is not on screen.
+    if (currentBand() === "5-6" && prefs.nightStyle === "full") {
+      prefs.nightStyle = "auto";
+    }
+    return prefs;
   } catch {
     return defaultPrefs();
   }
