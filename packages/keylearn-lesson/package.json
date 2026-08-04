@@ -8,6 +8,7 @@
   "dependencies": {
     "@keylearn/code": "*",
     "@keylearn/content": "*",
+    "@keylearn/content-quotes": "*",
     "@keylearn/content-snippets": "*",
     "@keylearn/keyboard": "*",
     "@keylearn/lang": "*",

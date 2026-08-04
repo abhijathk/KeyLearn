@@ -2,9 +2,10 @@ import { Book } from "@keylearn/content";
 import { lessonProps, LessonType } from "@keylearn/lesson";
 import { Pages, Screen } from "@keylearn/pages-shared";
 import { type Settings, useSettings } from "@keylearn/settings";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { defineMessage, type MessageDescriptor, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
+import { recentPractice } from "../library-recent.ts";
 import * as styles from "./texts.module.less";
 
 // The Practice Library: a browsable home for choosing WHAT you type. Each
@@ -37,6 +38,18 @@ const MODES: {
     desc: defineMessage({
       id: "texts.mode.words.desc",
       defaultMessage: "The most common words in your language.",
+    }),
+  },
+  {
+    type: LessonType.QUOTES,
+    name: defineMessage({
+      id: "texts.mode.quotes",
+      defaultMessage: "Quotes",
+    }),
+    desc: defineMessage({
+      id: "texts.mode.quotes.desc",
+      defaultMessage:
+        "Short, complete thoughts — real capitals and punctuation, a fresh set every lesson.",
     }),
   },
   {
@@ -74,6 +87,37 @@ const MODES: {
   },
 ];
 
+// Names for the "recently practised" cards — every lesson type, including the
+// ones that have no card of their own in MODES.
+const TYPE_NAMES: Record<string, MessageDescriptor> = {
+  guided: defineMessage({
+    id: "texts.mode.guided",
+    defaultMessage: "Guided practice",
+  }),
+  curriculum: defineMessage({
+    id: "texts.mode.curriculum",
+    defaultMessage: "Classic course",
+  }),
+  wordlist: defineMessage({
+    id: "texts.mode.words",
+    defaultMessage: "Frequent words",
+  }),
+  books: defineMessage({ id: "t_Books", defaultMessage: "Book Text" }),
+  quotes: defineMessage({ id: "texts.mode.quotes", defaultMessage: "Quotes" }),
+  custom: defineMessage({
+    id: "t_Custom_text",
+    defaultMessage: "Your Own Text",
+  }),
+  code: defineMessage({
+    id: "texts.mode.code",
+    defaultMessage: "Code snippets",
+  }),
+  numbers: defineMessage({
+    id: "texts.mode.numbers",
+    defaultMessage: "Number drills",
+  }),
+};
+
 const BLURB: Record<string, MessageDescriptor> = {
   [Book.EN_WIZARD_OZ.id]: defineMessage({
     id: "texts.book.wizardOz",
@@ -99,6 +143,134 @@ const BLURB: Record<string, MessageDescriptor> = {
       "A bright, talkative orphan turns a quiet farm upside down.",
   }),
 };
+
+/**
+ * The library's memory: pick up where you left off.
+ *
+ * A "continue reading" card whenever a book has a saved position, then the
+ * learner's recent practice choices — each one click back into that lesson.
+ * Renders nothing on a fresh profile, so the library opens exactly as before.
+ */
+function JumpBackIn({
+  practise,
+  practiseLabel,
+}: {
+  readonly practise: (mutate: (s: Settings) => Settings) => void;
+  readonly practiseLabel: string;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const { settings } = useSettings();
+  const recent = useMemo(() => recentPractice(), []);
+  const book = settings.get(lessonProps.books.book);
+  const paragraph = settings.get(lessonProps.books.paragraphIndex);
+  const continueReading = paragraph > 0;
+  // The continue-reading card already covers the current book; a "Book Text"
+  // recent card next to it would be the same click twice.
+  const cards = recent.filter(
+    (e) => !(continueReading && e.type === "books" && e.detail === book.id),
+  );
+  if (!continueReading && cards.length === 0) {
+    return null;
+  }
+  return (
+    <section className={styles.section}>
+      <div className={styles.h2}>
+        {formatMessage({
+          id: "texts.jumpBackIn",
+          defaultMessage: "Jump back in",
+        })}
+      </div>
+      <div className={styles.grid}>
+        {continueReading && (
+          <article className={styles.card}>
+            <div>
+              <div className={styles.cardTitle}>
+                {formatMessage({
+                  id: "texts.continueReading",
+                  defaultMessage: "Continue reading",
+                })}
+              </div>
+              <div className={styles.cardMeta}>{book.title}</div>
+              <p className={styles.cardDesc}>
+                {formatMessage(
+                  {
+                    id: "texts.continueReading.desc",
+                    defaultMessage: "You are at paragraph {paragraph}.",
+                  },
+                  { paragraph: paragraph + 1 },
+                )}
+              </p>
+            </div>
+            <button
+              type="button"
+              className={styles.go}
+              onClick={() =>
+                practise((s) => s.set(lessonProps.type, LessonType.BOOKS))
+              }
+            >
+              {practiseLabel}
+            </button>
+          </article>
+        )}
+        {cards.map((entry) => {
+          const name = TYPE_NAMES[entry.type];
+          if (name == null) {
+            return null;
+          }
+          return (
+            <article
+              key={`${entry.type}:${entry.detail}`}
+              className={styles.card}
+            >
+              <div>
+                <div className={styles.cardTitle}>{formatMessage(name)}</div>
+                {entry.label != null && (
+                  <div className={styles.cardMeta}>{entry.label}</div>
+                )}
+                <p className={styles.cardDesc}>
+                  {formatMessage({
+                    id: "texts.recent.desc",
+                    defaultMessage: "Recently practised.",
+                  })}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.go}
+                onClick={() =>
+                  practise((s) => {
+                    let next = s.set(
+                      lessonProps.type,
+                      LessonType.ALL.get(entry.type, LessonType.GUIDED),
+                    );
+                    if (entry.type === "books" && entry.detail != null) {
+                      next = next.set(
+                        lessonProps.books.book,
+                        lessonProps.books.book.all.get(entry.detail, book),
+                      );
+                    }
+                    if (entry.type === "code" && entry.detail != null) {
+                      next = next.set(
+                        lessonProps.code.syntax,
+                        lessonProps.code.syntax.all.get(
+                          entry.detail,
+                          s.get(lessonProps.code.syntax),
+                        ),
+                      );
+                    }
+                    return next;
+                  })
+                }
+              >
+                {practiseLabel}
+              </button>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 export default function TextsPage(): ReactNode {
   const { formatMessage } = useIntl();
@@ -137,6 +309,8 @@ export default function TextsPage(): ReactNode {
             })}
           </p>
         </header>
+
+        <JumpBackIn practise={practise} practiseLabel={practiseLabel} />
 
         <section className={styles.section}>
           <div className={styles.h2}>
@@ -224,7 +398,7 @@ export default function TextsPage(): ReactNode {
             })}
             rows={5}
           />
-          <div>
+          <div className={styles.buttonRow}>
             <button
               type="button"
               className={styles.go}
@@ -238,6 +412,27 @@ export default function TextsPage(): ReactNode {
               }
             >
               {practiseLabel}
+            </button>
+            {/* The same paste, a different drill: the words shuffled and
+                repeated by the word-list engine instead of typed in order —
+                a spelling list rather than an article. */}
+            <button
+              type="button"
+              className={styles.go}
+              disabled={text.trim().length === 0}
+              onClick={() =>
+                practise((s) =>
+                  s
+                    .set(lessonProps.type, LessonType.WORDLIST)
+                    .set(lessonProps.wordList.useCustom, true)
+                    .set(lessonProps.wordList.custom, text.trim()),
+                )
+              }
+            >
+              {formatMessage({
+                id: "texts.drillAsWords",
+                defaultMessage: "Drill as words",
+              })}
             </button>
           </div>
         </section>

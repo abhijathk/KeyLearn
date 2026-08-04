@@ -8,6 +8,7 @@ import {
   lessonProps,
   LessonType,
   type NumbersLesson,
+  type QuotesLesson,
   type WordListLesson,
 } from "@keylearn/lesson";
 import { LessonLoader } from "@keylearn/lesson-loader";
@@ -23,6 +24,7 @@ import { DailyGoalSettings } from "./lesson/DailyGoalSettings.tsx";
 import { GuidedLessonSettings } from "./lesson/GuidedLessonSettings.tsx";
 import { LessonPreview } from "./lesson/LessonPreview.tsx";
 import { NumbersLessonSettings } from "./lesson/NumbersLessonSettings.tsx";
+import { QuotesLessonSettings } from "./lesson/QuotesLessonSettings.tsx";
 import { WordListLessonSettings } from "./lesson/WordListLessonSettings.tsx";
 import * as styles from "./SettingsScreen.module.less";
 
@@ -81,6 +83,17 @@ export function LessonSettings(): ReactNode {
       description: formatMessage({
         id: "lessonType.books.summary",
         defaultMessage: "Real passages from public-domain books.",
+      }),
+    },
+    {
+      label: formatMessage({
+        id: "lessonType.quotes.name",
+        defaultMessage: "Quotes",
+      }),
+      description: formatMessage({
+        id: "lessonType.quotes.summary",
+        defaultMessage:
+          "Short, complete thoughts with their real capitals and punctuation.",
       }),
     },
     {
@@ -144,6 +157,8 @@ function tabBody(settings: Settings, lesson: Lesson): ReactNode {
       return <WordListLessonSettings lesson={lesson as WordListLesson} />;
     case LessonType.BOOKS:
       return <BooksLessonSettings lesson={lesson as BooksLesson} />;
+    case LessonType.QUOTES:
+      return <QuotesLessonSettings lesson={lesson as QuotesLesson} />;
     case LessonType.CUSTOM:
       return <CustomTextLessonSettings lesson={lesson as CustomTextLesson} />;
     case LessonType.CODE:

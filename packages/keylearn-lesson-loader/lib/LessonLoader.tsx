@@ -12,6 +12,7 @@ import {
   lessonProps,
   LessonType,
   NumbersLesson,
+  QuotesLesson,
   WordListLesson,
 } from "@keylearn/lesson";
 import { LoadingProgress } from "@keylearn/pages-shared";
@@ -91,6 +92,12 @@ function useLoader(model: PhoneticModel): Lesson | null {
             setResult(
               new BooksLesson(settings, keyboard, model, { book, content }),
             );
+          }
+          break;
+        }
+        case LessonType.QUOTES: {
+          if (!didCancel) {
+            setResult(new QuotesLesson(settings, keyboard, model));
           }
           break;
         }

@@ -12,6 +12,15 @@ import { LessonType } from "./lessontype.ts";
 
 const CODE_FLAGS: readonly string[] = [...Syntax.FLAGS, ...SNIPPET_FLAGS];
 
+/** The number-drill shapes, in the order the settings offer them. */
+export const NUMBER_FORMATS: readonly string[] = [
+  "plain",
+  "dates",
+  "times",
+  "currency",
+  "phone",
+];
+
 // Everything on to begin with, except the one that takes something away: a
 // learner who has never opened these settings should get the comments.
 const CODE_FLAGS_ON: readonly string[] = CODE_FLAGS.filter(
@@ -54,6 +63,12 @@ export const lessonProps = {
       max: 1000,
     }),
     longWordsOnly: booleanProp("lesson.wordList.longWordsOnly", false),
+    // A learner's own vocabulary — a spelling list, domain terms — drilled by
+    // the same engine. While it is on, the pasted words replace the common
+    // words entirely; the size and length filters are for trimming a
+    // frequency list and are not applied to words someone chose by hand.
+    useCustom: booleanProp("lesson.wordList.useCustom", false),
+    custom: stringProp("lesson.wordList.custom", "", { maxLength: 10_000 }),
   } as const,
   books: {
     book: itemProp("lesson.books.book", Book.ALL, Book.EN_WIZARD_OZ),
@@ -74,8 +89,22 @@ export const lessonProps = {
     lowercase: booleanProp("lesson.customText.lowercase", true),
     randomize: booleanProp("lesson.customText.randomize", false),
   } as const,
+  quotes: {
+    // "— Author" after each quote. On by default: the names are part of the
+    // charm, and they bring capitals and unusual letter pairs with them.
+    attribution: booleanProp("lesson.quotes.attribution", true),
+  } as const,
   numbers: {
     benford: booleanProp("lesson.numbers.benford", true),
+    // Real-world shapes alongside the plain digit drills. Everything on by
+    // default except phone numbers, whose bracket-heavy shape is the most
+    // layout-dependent; a learner who never opens these settings still gets
+    // numbers as they actually occur — in dates, prices and timestamps.
+    formats: flagsProp(
+      "lesson.numbers.formats",
+      NUMBER_FORMATS,
+      NUMBER_FORMATS.filter((f) => f !== "phone"),
+    ),
   } as const,
   code: {
     // TypeScript, and the written corpus rather than the grammar. It is the

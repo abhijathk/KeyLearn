@@ -33,6 +33,7 @@ export function WordListLessonSettings({
           defaultMessage: "Lesson settings",
         })}
       >
+        <CustomWordsInput />
         <WordListPreview lesson={lesson} />
         <WordListStats lesson={lesson} />
         <TargetSpeedProp />
@@ -44,6 +45,48 @@ export function WordListLessonSettings({
   );
 }
 
+function CustomWordsInput(): ReactNode {
+  const { formatMessage } = useIntl();
+  const { settings, updateSettings } = useSettings();
+  const useCustom = settings.get(lessonProps.wordList.useCustom);
+  return (
+    <>
+      <FieldList>
+        <Field>
+          <CheckBox
+            label={formatMessage({
+              id: "lesson.wordList.useCustom",
+              defaultMessage: "Use my own words",
+            })}
+            checked={useCustom}
+            onChange={(value) => {
+              updateSettings(
+                settings.set(lessonProps.wordList.useCustom, value),
+              );
+            }}
+          />
+        </Field>
+      </FieldList>
+      {useCustom && (
+        <Para>
+          <TextField
+            type="textarea"
+            placeholder={formatMessage({
+              id: "lesson.wordList.custom.placeholder",
+              defaultMessage:
+                "Paste your words here — a spelling list, vocabulary, anything. Spaces, commas or new lines between them.",
+            })}
+            value={settings.get(lessonProps.wordList.custom)}
+            onChange={(value) => {
+              updateSettings(settings.set(lessonProps.wordList.custom, value));
+            }}
+          />
+        </Para>
+      )}
+    </>
+  );
+}
+
 function WordListPreview({
   lesson,
 }: {
@@ -51,6 +94,19 @@ function WordListPreview({
 }): ReactNode {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
+  if (settings.get(lessonProps.wordList.useCustom)) {
+    // The size and length filters trim a ranked frequency list; while the
+    // learner's own words are on, only the resulting list is shown.
+    return (
+      <Para>
+        <TextField
+          type="textarea"
+          value={[...lesson.wordList].join(", ")}
+          readOnly={true}
+        />
+      </Para>
+    );
+  }
   return (
     <>
       <FieldList>
