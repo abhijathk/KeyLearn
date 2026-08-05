@@ -1698,7 +1698,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                     at < pos ? styles.hit : at === pos ? styles.cur : undefined
                   }
                 >
-                  {ch === " " ? " " : prefs.bigLetters ? ch.toUpperCase() : ch}
+                  {/* A real space, not a non-breaking one. The gaps used to be
+                      U+00A0, so the line had no break opportunity at any word
+                      and simply ran off the edge of the card — and once it
+                      could wrap, the only place left to break was around the
+                      highlighted letter, which split the word being typed. */}
+                  {ch === " " ? " " : prefs.bigLetters ? ch.toUpperCase() : ch}
                 </span>
               );
             })}

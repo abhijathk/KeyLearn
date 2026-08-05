@@ -371,10 +371,16 @@
 // the practice line floats over the world like subtitles
 .words {
   position: absolute;
-  inset-inline-start: 50%;
+  // Spans the stage and centres itself, rather than being pinned at the
+  // half-way mark. Anchored at 50% the box shrink-to-fits against only the
+  // half of the stage to its right, so a line that would sit comfortably on
+  // one line wrapped into three.
+  inset-inline: 0;
   inset-block-end: 1rem;
   z-index: 5;
+  inline-size: fit-content;
   max-inline-size: 94%;
+  margin-inline: auto;
   padding: 0.5rem 1.6rem 0.6rem;
   border-radius: 1.2rem;
   color: var(--kink);
@@ -382,9 +388,20 @@
   box-shadow: 0 8px 26px rgba(40, 60, 30, 0.22);
   font-size: clamp(1.7rem, 3.1vi, 3.4rem);
   font-weight: 800;
+  line-height: 1.25;
   letter-spacing: 0.04em;
-  white-space: nowrap;
-  transform: translateX(-50%);
+  text-align: center;
+  // Wraps rather than runs off the card. It used to be `nowrap`, which keeps
+  // the line looking like a subtitle right up until the line is wider than
+  // the card — and then the last words hang outside it in mid-air. Clipping
+  // instead would be worse: the letters that vanish are the ones the child
+  // still has to type. A short line still sits on one line; a long one grows
+  // the card upwards, which is away from the keyboard and the hands.
+  // Breaks between words only. `break-word` here would split the word the
+  // child is mid-way through — the highlighted letter ends up alone on one
+  // line and the rest of its word on the next — and `balance` makes that
+  // more likely by evening the lines out.
+  white-space: normal;
   backdrop-filter: blur(8px);
 }
 

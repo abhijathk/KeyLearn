@@ -2788,6 +2788,14 @@ export function createKidsWorld(
     resize,
     dispose() {
       disposed = true;
+      // Caches first. A letter drawn once is kept so the next word that needs
+      // it is free, but a tile can leave the scene while its texture stays in
+      // here — and then a traversal of the scene never reaches it.
+      for (const texture of letterTexCache.values()) {
+        texture.dispose();
+        (texture.image as { close?: () => void } | undefined)?.close?.();
+      }
+      letterTexCache.clear();
       // The scene first — the renderer's own dispose does not reach into it.
       disposeScene(scene);
       // Then the parsed models, which were never in it.
@@ -2950,6 +2958,20 @@ function disposeScene(root: THREE.Object3D): void {
   }
   for (const texture of textures) {
     texture.dispose();
+    // `dispose()` gives back the GPU handle and nothing else. The decoded
+    // image behind it is a separate allocation — an ImageBitmap holds its
+    // pixels outside the JS heap and is only released by closing it — so
+    // without this the picture data for every model survives the world that
+    // loaded it.
+    const image = (texture as { image?: unknown }).image as
+      | { close?: () => void }
+      | undefined;
+    image?.close?.();
+    const source = (texture as { source?: { data?: { close?: () => void } } })
+      .source;
+    if (source?.data !== image) {
+      source?.data?.close?.();
+    }
   }
   root.clear();
 }
