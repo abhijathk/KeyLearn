@@ -759,6 +759,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [shiftOn, setShiftOn] = useState(false);
   const [specialKey, setSpecialKey] = useState<string | null>(null);
   const [draftName, setDraftName] = useState(() => loadPrefs().name);
+  // What to call the companion before the child names it. Each world has its
+  // own, so the placeholder and the sound question agree with the card above
+  // them.
+  const companionName = prefs.world === "hero" ? "Robin" : "Rexy";
   // The album, and the creature currently coming out of its egg.
   const [album, setAlbum] = useState<Album>(loadAlbum);
   const [hatched, setHatched] = useState<Hatchling | null>(null);
@@ -1907,23 +1911,34 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       {nameOpen && (
         <div className={styles.overlay}>
           <div className={clsx(styles.card, styles.finishCard)}>
+            {/* The companion is whatever this world has. On the Hero Trail
+                nothing hatches — somebody falls in beside you — and a card
+                announcing a dino over a picture of a knight is the first
+                thing a new child sees. */}
             <div className={styles.finishBadge}>
-              <EggIcon size={34} color="#5c4500" />
+              {prefs.world === "hero" ? (
+                <TentIcon size={34} color="#5c4500" />
+              ) : (
+                <EggIcon size={34} color="#5c4500" />
+              )}
             </div>
             <div
               className={styles.cardTitle}
               style={{ justifyContent: "center" }}
             >
-              Your dino hatched!
+              {prefs.world === "hero"
+                ? "Someone joined your trail!"
+                : "Your dino hatched!"}
             </div>
             <div className={styles.finishMsg}>
-              It will run every step of the trail with you. What will you call
-              it?
+              {prefs.world === "hero"
+                ? "They will walk every step of the trail with you. What will you call them?"
+                : "It will run every step of the trail with you. What will you call it?"}
             </div>
             <input
               className={styles.nameInput}
               maxLength={12}
-              placeholder="Rexy"
+              placeholder={companionName}
               value={draftName}
               autoFocus={true}
               onChange={(ev) => setDraftName(ev.target.value)}
@@ -1944,7 +1959,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             {!prefs.soundAsked && (
               <div className={styles.askSound}>
                 <span className={styles.askSoundTitle}>
-                  Shall {draftName.trim() || "Rexy"} make noises?
+                  Shall {draftName.trim() || companionName} make noises?
                 </span>
                 <div className={styles.askSoundRow}>
                   <button
