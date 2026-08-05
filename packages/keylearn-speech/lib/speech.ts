@@ -267,6 +267,27 @@ const clips = new Map<string, AudioBuffer>();
 const CLIPS_MAX = 200;
 let playing: AudioBufferSourceNode | null = null;
 
+/**
+ * Fetches already in the air, by the same key the cache uses.
+ *
+ * The cache only fills once a response has come back, so without this a burst
+ * of drill input asks the server for the same phrase several times over — and
+ * for several different phrases at once. Every uncached phrase costs the
+ * server a synthesiser subprocess, so a child holding down a chord could
+ * spawn dozens, and the page froze waiting on them. Sharing the promise means
+ * one request per phrase however many callers want it.
+ */
+const inFlight = new Map<string, Promise<AudioBuffer | null>>();
+
+/**
+ * Aborts the request for an utterance nobody is waiting for any more.
+ *
+ * This module's rule is that the newest utterance is the only one that
+ * matters, and that has to hold for the server voice too: without it the
+ * abandoned requests still arrive, still cost a subprocess, and still decode.
+ */
+let pendingClip: AbortController | null = null;
+
 /** The server takes words per minute; a learner sets a multiplier. */
 function wpmOf(rate: number): number {
   return Math.max(80, Math.min(450, Math.round(175 * rate)));
@@ -293,23 +314,42 @@ async function clipFor(
   if (ctx == null) {
     return null;
   }
+  const already = inFlight.get(key);
+  if (already != null) {
+    return await already;
+  }
   const url =
     `/_/speech.wav?text=${encodeURIComponent(text)}` +
     `&lang=${encodeURIComponent(lang)}&wpm=${wpm}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    return null;
-  }
-  const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
-  clips.set(key, buffer);
-  while (clips.size > CLIPS_MAX) {
-    const oldest = clips.keys().next().value;
-    if (oldest === undefined) {
-      break;
+  // The previous phrase is no longer wanted the moment this one is asked for.
+  pendingClip?.abort();
+  const controller = new AbortController();
+  pendingClip = controller;
+  const work = (async () => {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) {
+      return null;
     }
-    clips.delete(oldest);
+    const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+    clips.set(key, buffer);
+    while (clips.size > CLIPS_MAX) {
+      const oldest = clips.keys().next().value;
+      if (oldest === undefined) {
+        break;
+      }
+      clips.delete(oldest);
+    }
+    return buffer;
+  })();
+  inFlight.set(key, work);
+  try {
+    return await work;
+  } finally {
+    inFlight.delete(key);
+    if (pendingClip === controller) {
+      pendingClip = null;
+    }
   }
-  return buffer;
 }
 
 function stopPlaying(): void {
