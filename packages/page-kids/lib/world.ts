@@ -936,8 +936,19 @@ export function createKidsWorld(
   // ── model loading, engine-style de-facet, kid-safe clips ───────────────
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
+  /**
+   * Every model this world parsed.
+   *
+   * Most of what is loaded is used as a clone SOURCE — `variants` holds the
+   * GLTF's own children and the scene only ever receives copies — so the
+   * parsed originals are never part of the scene graph and disposing the
+   * scene does not reach them. They are the largest thing the page allocates,
+   * so they are tracked here and released with everything else.
+   */
+  const loaded: THREE.Object3D[] = [];
   async function loadModel(url: string) {
     const gltf = await loader.loadAsync(url);
+    loaded.push(gltf.scene);
     // Kids app: death, attack and bite clips never make it in.
     gltf.animations = (gltf.animations ?? []).filter(
       (c) => !/death|attack|bite/i.test(c.name),
@@ -946,8 +957,12 @@ export function createKidsWorld(
       const m = o as THREE.Mesh;
       if (m.isMesh && m.geometry) {
         try {
+          const before = m.geometry;
           m.geometry = mergeVertices(m.geometry, 1e-4);
           m.geometry.computeVertexNormals();
+          // Welding returns a new geometry; without this the parsed one is
+          // orphaned still holding its buffers, once per mesh per load.
+          before.dispose();
         } catch {
           // Keep the original geometry if welding fails.
         }
@@ -2773,8 +2788,19 @@ export function createKidsWorld(
     resize,
     dispose() {
       disposed = true;
-      renderer.dispose();
+      // The scene first — the renderer's own dispose does not reach into it.
+      disposeScene(scene);
+      // Then the parsed models, which were never in it.
+      for (const model of loaded) {
+        disposeScene(model);
+      }
+      loaded.length = 0;
+      (scene.background as THREE.Texture | null)?.dispose?.();
+      (scene.environment as THREE.Texture | null)?.dispose?.();
+      scene.background = null;
+      scene.environment = null;
       pmrem.dispose();
+      renderer.dispose();
     },
   };
 }
@@ -2876,9 +2902,56 @@ export function createLoaderScene(
   return {
     dispose() {
       disposed = true;
+      disposeScene(scene);
       renderer.dispose();
     },
   };
+}
+
+/**
+ * Give back everything a scene holds.
+ *
+ * `renderer.dispose()` frees the renderer's own caches and nothing else: every
+ * geometry, material and texture the world built stays allocated. This world
+ * builds a great many — a GLTF cast, ground and sky textures, and a cloned
+ * material for every figure that fades at nightfall — so each visit to the
+ * kids page cost about twelve megabytes that never came back. Twelve trips
+ * between the trail and the progress page is most of a low-end Chromebook's
+ * tab budget, and this page is built for exactly those machines.
+ *
+ * Materials and textures are collected before disposing because they are
+ * shared: the same material is on many meshes, and disposing it once per mesh
+ * would be wasted work at best.
+ */
+function disposeScene(root: THREE.Object3D): void {
+  const materials = new Set<THREE.Material>();
+  const textures = new Set<THREE.Texture>();
+  root.traverse((node) => {
+    const mesh = node as Partial<THREE.Mesh> & THREE.Object3D;
+    mesh.geometry?.dispose?.();
+    const material = (mesh as { material?: unknown }).material;
+    for (const one of Array.isArray(material)
+      ? material
+      : material != null
+        ? [material]
+        : []) {
+      materials.add(one as THREE.Material);
+    }
+  });
+  for (const material of materials) {
+    // A material's maps are ordinary properties, so this is how three.js
+    // itself finds them — anything carrying `isTexture` is one.
+    for (const value of Object.values(material)) {
+      if ((value as THREE.Texture | null)?.isTexture) {
+        textures.add(value as THREE.Texture);
+      }
+    }
+    material.dispose();
+  }
+  for (const texture of textures) {
+    texture.dispose();
+  }
+  root.clear();
 }
 
 export function pickLand(lands: readonly Land[] = LANDS): Land {

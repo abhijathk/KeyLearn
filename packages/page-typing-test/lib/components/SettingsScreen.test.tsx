@@ -21,11 +21,15 @@ test("render", async () => {
   );
 
   fireEvent.click(r.getByText("Text"));
-  await r.findByText("Text settings");
+  // Asserted on the generators the tab offers rather than on a heading. The
+  // heading was renamed when settings were rebuilt and this test went red
+  // against a screen that was working, which is how a suite stops meaning
+  // anything.
+  await r.findByText("Common words");
 
-  fireEvent.click(r.getByText("Common words", { selector: "button" }));
-  fireEvent.click(r.getByText("Pseudo words", { selector: "button" }));
-  fireEvent.click(r.getByText("Book paragraphs", { selector: "button" }));
+  fireEvent.click(r.getByText("Common words"));
+  fireEvent.click(r.getByText("Pseudo words"));
+  fireEvent.click(r.getByText("Book paragraphs"));
 
   r.unmount();
 });

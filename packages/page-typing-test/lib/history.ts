@@ -1,6 +1,9 @@
-// Lightweight, per-device history for the Speed Test, so we can show a personal
-// best, a recent trajectory and a day streak. Stored in localStorage (the test
-// results are deliberately kept out of the practice/guided-lesson history).
+import { profileStorageKey } from "@keylearn/pages-shared";
+
+// Lightweight, per-learner history for the Speed Test, so we can show a
+// personal best, a recent trajectory and a day streak. Stored in localStorage
+// (the test results are deliberately kept out of the practice/guided-lesson
+// history, which is a different measurement of a different thing).
 
 export type TestMode = "time" | "words" | "passage";
 
@@ -31,9 +34,23 @@ export type SpeedTestSummary = {
 const KEY = "keylearn.speedtest.history";
 const MAX = 200;
 
+/**
+ * This learner's slot.
+ *
+ * Namespaced by profile, like every other thing a learner accumulates. Without
+ * it one household shares a single history: a child's run sets the parent's
+ * personal best, a new learner opens the Speed Test already holding somebody
+ * else's record, and the day streak counts days nobody in particular
+ * practised. Falls back to the bare key when no profile is selected, which is
+ * the anonymous case and is that visitor's own.
+ */
+function storageKey(): string {
+  return profileStorageKey(KEY);
+}
+
 function load(): SpeedTestRecord[] {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(storageKey());
     const parsed = raw != null ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? (parsed as SpeedTestRecord[]) : [];
   } catch {
@@ -43,7 +60,7 @@ function load(): SpeedTestRecord[] {
 
 function save(list: readonly SpeedTestRecord[]): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(list.slice(-MAX)));
+    localStorage.setItem(storageKey(), JSON.stringify(list.slice(-MAX)));
   } catch {
     // Storage may be unavailable.
   }
