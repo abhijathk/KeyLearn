@@ -1,0 +1,128 @@
+// Checking a certificate. Plain, because whoever is here wants one answer.
+
+.root {
+  max-inline-size: 34rem;
+  margin-inline: auto;
+  padding-block: 1.5rem 3rem;
+}
+
+.title {
+  margin: 0 0 0.4rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  margin: 0 0 1.4rem;
+  color: var(--text-color-f1);
+}
+
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.field {
+  flex: 1 1 12rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--text-color-f2);
+  border-radius: 0.5rem;
+  color: var(--text-color);
+  background: none;
+  font-family: var(--value-font-family);
+  font-size: 1.15rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.go {
+  padding: 0.55rem 1.2rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.5rem;
+  color: var(--accent-ink);
+  background-color: var(--accent);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+
+  &[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.card {
+  margin-block-start: 1.4rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--text-color-f2);
+  border-radius: 0.6rem;
+}
+
+.good {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.bad {
+  border-color: color-mix(
+    in srgb,
+    var(--error-color, #e0555f) 45%,
+    transparent
+  );
+  background-color: color-mix(
+    in srgb,
+    var(--error-color, #e0555f) 6%,
+    transparent
+  );
+}
+
+.verdict {
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 1.2rem;
+  margin: 0.8rem 0 0;
+}
+
+.facts dt {
+  align-self: center;
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.mono {
+  font-family: var(--value-font-family);
+  letter-spacing: 0.14em;
+  text-transform: none !important;
+}
+
+.hint {
+  margin: 0.8rem 0 0;
+  color: var(--text-color-f2);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.small {
+  margin-block-start: 2rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--text-color-f2);
+  color: var(--text-color-f2);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}

@@ -82,6 +82,16 @@ export class Controller {
     return this.renderPage(ctx, Pages.profiles);
   }
 
+  @http.GET(`${Pages.verify.path}`)
+  async ["verify-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.verify);
+  }
+
+  @http.GET(`${Pages.verify.path}/{number:[A-Za-z0-9]+}`)
+  async ["verify-page-number"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.verify);
+  }
+
   @http.GET(`${Pages.design.path}`)
   async ["design-page"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.design);

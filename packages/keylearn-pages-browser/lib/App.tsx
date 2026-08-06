@@ -36,6 +36,7 @@ export function main() {
 
 const AccountPage = lazy(() => import("./pages/account.tsx"));
 const DesignPage = lazy(() => import("./pages/design.tsx"));
+const VerifyPage = lazy(() => import("./pages/verify.tsx"));
 const LoginPage = lazy(() => import("./pages/login.tsx"));
 const RegisterPage = lazy(() => import("./pages/register.tsx"));
 const ForgotPasswordPage = lazy(() => import("./pages/forgot-password.tsx"));
@@ -172,6 +173,22 @@ function PageRoutes() {
             </Template>
           }
         />
+        {/* Two routes for one page: the bare form, and a link somebody was
+            handed with the number already in it. */}
+        {[Pages.verify.path, `${Pages.verify.path}/:number`].map((path) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              <Template path={Pages.verify.path}>
+                <Title page={Pages.verify} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <VerifyPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        ))}
         <Route
           path={Pages.design.path}
           element={

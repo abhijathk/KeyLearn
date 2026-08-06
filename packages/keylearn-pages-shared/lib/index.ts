@@ -1,6 +1,7 @@
 export * from "./accent-storage.ts";
 export * from "./age-norms.ts";
 export * from "./Avatar.tsx";
+export * from "./certificate-client.ts";
 export * from "./download.ts";
 export * from "./LoadingProgress.tsx";
 export * from "./logout.ts";

@@ -6,6 +6,7 @@
   "main": "lib/index.ts",
   "types": ".types/index.d.ts",
   "dependencies": {
+    "@keylearn/certificate": "*",
     "@keylearn/identicon": "*",
     "@keylearn/intl": "*",
     "@keylearn/result": "*",

@@ -13,6 +13,7 @@ for (const path of [
   "/",
   "/account",
   "/design",
+  "/verify",
   "/help",
   "/high-scores",
   "/layouts",

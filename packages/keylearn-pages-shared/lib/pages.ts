@@ -76,6 +76,27 @@ export namespace Pages {
     meta: [{ name: "robots", content: "noindex" }],
   } satisfies PageInfo;
 
+  /**
+   * Checking a certificate number.
+   *
+   * Public and unauthenticated on purpose — the person who needs to check one
+   * is usually not the person who holds it, and often has no account at all.
+   */
+  export const verify = {
+    path: "/verify",
+    title: defineMessage({
+      id: "t_VerifyCertificate",
+      defaultMessage: "Check a certificate",
+    }),
+    link: {
+      label: defineMessage({
+        id: "t_VerifyCertificate",
+        defaultMessage: "Check a certificate",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
   export const practice = {
     path: "/",
     title: defineMessage({
