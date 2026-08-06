@@ -144,6 +144,25 @@ export class Controller {
   }
 
   /**
+   * Every certificate this household holds.
+   *
+   * Signed in only, and scoped to the caller's own account — a list of who has
+   * what is exactly the sort of thing that should never be reachable by
+   * guessing a user id.
+   */
+  @http.GET("/_/certificate/mine")
+  async mine(ctx: Context<RouterState & AuthState>) {
+    const user = ctx.state.requireUser();
+    const rows = await Certificate.query()
+      .where({ userId: user.id! })
+      .orderBy("created_at", "asc");
+    ctx.response.body = rows.map((row) => ({
+      ...toDetails(row),
+      profileId: row.profileId,
+    }));
+  }
+
+  /**
    * Check a number.
    *
    * Public on purpose — a certificate nobody can check is decoration. It says

@@ -94,6 +94,27 @@ export async function issueCertificate(
   }
 }
 
+/**
+ * The household's certificates, keyed by nothing — the caller matches them to
+ * learners itself, because a profile can hold more than one.
+ */
+export async function myCertificates(): Promise<
+  readonly (IssuedCertificate & { readonly profileId: number })[]
+> {
+  try {
+    const response = await fetch("/_/certificate/mine");
+    if (!response.ok) {
+      return [];
+    }
+    return (await response.json()) as readonly (IssuedCertificate & {
+      readonly profileId: number;
+    })[];
+  } catch {
+    // Signed out, or offline. A learner row simply shows no medals.
+    return [];
+  }
+}
+
 export async function verifyCertificate(number: string): Promise<VerifyResult> {
   try {
     const response = await fetch(
