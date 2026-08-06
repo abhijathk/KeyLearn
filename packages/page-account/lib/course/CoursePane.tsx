@@ -23,6 +23,8 @@ import specimenKid from "./assets/specimen-kid.jpg";
 import specimenYoung from "./assets/specimen-young.jpg";
 import * as styles from "./CoursePane.module.less";
 import { brailleEvidence, typingEvidence } from "./evidence.ts";
+import { medalFor } from "./Medal.tsx";
+import { ReadyDialog } from "./ReadyDialog.tsx";
 
 /**
  * How far each learner is from a certificate, and what is left.
@@ -218,6 +220,7 @@ function Row({
   readonly evidence: CertificateEvidence;
   readonly language?: string;
 }): ReactNode {
+  const [ready, setReady] = useState(false);
   const verdict = assess(evidence);
   const state = verdict.eligible ? "ready" : "going";
   const [bronze, silver, gold] = bandFor(evidence.age, evidence.kind);
@@ -240,10 +243,22 @@ function Row({
       </div>
       <div className={styles.next}>
         {verdict.eligible ? (
-          <FormattedMessage
-            id="account.course.ready"
-            defaultMessage="Everything the practice has to prove is proved. The assessment is what decides it."
-          />
+          <>
+            <FormattedMessage
+              id="account.course.ready"
+              defaultMessage="Everything the practice has to prove is proved. The assessment is what decides it."
+            />{" "}
+            <button
+              type="button"
+              className={styles.linkBtn}
+              onClick={() => setReady(true)}
+            >
+              <FormattedMessage
+                id="account.course.sit"
+                defaultMessage="Sit the assessment"
+              />
+            </button>
+          </>
         ) : (
           <FormattedMessage
             id="account.course.outstanding"
@@ -252,6 +267,18 @@ function Row({
           />
         )}
       </div>
+      {ready && (
+        <ReadyDialog
+          name={profile.firstName}
+          evidence={evidence}
+          medal={medalFor(
+            evidence.audience === "kid" ? "gold" : "completion",
+            evidence.kind,
+          )}
+          onClose={() => setReady(false)}
+          onStart={() => setReady(false)}
+        />
+      )}
     </div>
   );
 }

@@ -304,3 +304,344 @@
   font-size: 0.66rem;
   line-height: 1.4;
 }
+
+// ── the ready-to-sit and guide windows ────────────────────────────────────
+// The app's dialog chrome, not a second one: same border, radius, dividers
+// and pill buttons as dialog.module.less on the profile side.
+
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  place-items: center;
+  padding: 1.25rem;
+  overflow: auto;
+  background-color: rgb(0 0 0 / 0.62);
+}
+
+.dialog {
+  inline-size: min(33rem, 100%);
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 30%, transparent);
+  border-radius: 0.65rem;
+  overflow: hidden;
+  background-color: var(--background-color);
+  box-shadow: 0 28px 70px rgb(0 0 0 / 0.5);
+}
+
+.dialogHead {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.85rem 1.1rem;
+  border-block-end: 1px solid
+    color-mix(in srgb, var(--text-color-f2) 22%, transparent);
+  font-size: 0.95rem;
+  font-weight: 680;
+}
+
+.dialogSpacer {
+  flex: 1;
+}
+
+.dialogClose {
+  display: grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 38%, transparent);
+  border-radius: 0.35rem;
+  color: var(--text-color-f1);
+  background: none;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dialogBody {
+  padding: 1.1rem;
+}
+
+.dialogFoot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.8rem 1.1rem;
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--text-color-f2) 22%, transparent);
+}
+
+.btn {
+  padding: 0.34rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 40%, transparent);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font: inherit;
+  font-size: 0.775rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnGo {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.linkBtn {
+  padding: 0;
+  border: 0;
+  color: var(--accent);
+  background: none;
+  font: inherit;
+  font-size: 0.775rem;
+  font-weight: 620;
+  text-decoration: underline;
+  cursor: pointer;
+  text-underline-offset: 0.2em;
+}
+
+.readyHero {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.95rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 0.55rem;
+  background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.readyName {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.readySub {
+  margin: 0.25rem 0 0;
+  color: var(--text-color-f1);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.readyFigs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.readyFig {
+  padding: 0.55rem 0.3rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 30%, transparent);
+  border-radius: 0.5rem;
+  text-align: center;
+
+  b {
+    display: block;
+    font-size: 1.02rem;
+    font-weight: 740;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  i {
+    color: var(--text-color-f2);
+    font-size: 0.55rem;
+    font-style: normal;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+}
+
+.readyPlan {
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.5rem;
+  color: var(--text-color-f1);
+  background-color: color-mix(in srgb, var(--text-color-f2) 10%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.5;
+
+  ul {
+    margin: 0;
+    padding-inline-start: 1rem;
+  }
+
+  li {
+    margin-block: 0.2rem;
+  }
+
+  b {
+    color: var(--text-color);
+    font-weight: 640;
+  }
+}
+
+.guideP {
+  margin: 0 0 0.5rem;
+  color: var(--text-color-f1);
+  font-size: 0.83rem;
+  line-height: 1.55;
+}
+
+.guideFlag {
+  display: flex;
+  gap: 0.6rem;
+  margin-block-end: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.5rem;
+  color: var(--text-color-f1);
+  background-color: color-mix(in srgb, var(--text-color-f2) 10%, transparent);
+  font-size: 0.81rem;
+  line-height: 1.5;
+
+  i {
+    flex: none;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    margin-block-start: 0.42rem;
+    border-radius: 50%;
+    background-color: var(--accent);
+  }
+}
+
+.listen {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block-end: 0.9rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 0.5rem;
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.shape {
+  margin-block-end: 0.9rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.5rem;
+  background-color: color-mix(in srgb, var(--text-color-f2) 12%, transparent);
+  font-size: 0.84rem;
+}
+
+.qa {
+  padding-block: 0.6rem;
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--text-color-f2) 20%, transparent);
+}
+
+.q {
+  margin: 0 0 0.18rem;
+  font-size: 0.83rem;
+  font-weight: 650;
+}
+
+.a {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+// ── the kid variants, in the kids page's own language ──
+
+.dialogKid {
+  .dialogBody,
+  .dialogHead,
+  .dialogFoot {
+    color: #3a3a4e;
+    background-color: #fdfcf9;
+  }
+
+  .dialogHead {
+    border-block-end-color: #f2f2ea;
+    font-size: 1.05rem;
+    font-weight: 840;
+  }
+
+  .dialogFoot {
+    border-block-start-color: #f2f2ea;
+  }
+
+  .dialogClose {
+    border-color: #e4e4d8;
+    color: #8f8fa3;
+  }
+
+  .btnGo {
+    border-color: transparent;
+    color: #1d5a3f;
+    background-color: #8fd9b6;
+    box-shadow: 0 3px 0 #6fc79b;
+    font-weight: 820;
+  }
+
+  .btn {
+    border-color: transparent;
+    color: #8f8fa3;
+    background-color: #fff;
+    box-shadow: 0 3px 0 #e4e4d8;
+    font-weight: 780;
+  }
+
+  .linkBtn {
+    color: #2f8a5d;
+  }
+
+  .readyPlan {
+    border-radius: 1rem;
+    color: #8f8fa3;
+    background-color: #fff;
+    box-shadow: 0 3px 0 #f2f2ea;
+  }
+}
+
+.readyHeroKid {
+  border: 0;
+  border-radius: 1.2rem;
+  background-color: #fff;
+  box-shadow: 0 3px 0 #f2f2ea;
+
+  .readyName {
+    font-size: 1.2rem;
+    font-weight: 880;
+    line-height: 1.14;
+  }
+
+  .readySub {
+    color: #8f8fa3;
+    font-weight: 700;
+  }
+}
+
+.kidRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-block-end: 0.45rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 1.2rem;
+  background-color: #fff;
+  box-shadow: 0 3px 0 #f2f2ea;
+}
+
+.kidIcon {
+  flex: none;
+  inline-size: 2.3rem;
+  block-size: 2.3rem;
+  border-radius: 0.85rem;
+  box-shadow: inset 0 -2.5px 0 rgb(0 0 0 / 0.12);
+}
+
+.kidTitle {
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.kidSub {
+  color: #8f8fa3;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.45;
+}

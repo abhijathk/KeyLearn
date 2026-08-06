@@ -995,3 +995,15 @@
   opacity: 0.75;
   cursor: default;
 }
+
+// Earned medals on a learner row. Two overlap slightly so they read as a set
+// rather than as two unrelated marks.
+.medals {
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+
+.medals img + img {
+  margin-inline-start: -0.55rem;
+}

@@ -13,11 +13,19 @@ import {
   sightedPlaces,
   usePageData,
 } from "@keylearn/pages-shared";
+import { myCertificates } from "@keylearn/pages-shared";
 import { Button } from "@keylearn/widget";
 import { clsx } from "clsx";
-import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { ConfirmDialog } from "../ConfirmDialog.tsx";
+import { Medal, medalFor } from "../course/Medal.tsx";
 import { Overlay } from "../Overlay.tsx";
 import { type ProfileInput } from "../service.ts";
 import { familyNames } from "./art-names.tsx";
@@ -170,6 +178,41 @@ type Editing =
  * learner tiles to switch between, plus add / edit / delete behind a
  * grown-ups-only gate. The caller only shows it to a signed-in admin.
  */
+/**
+ * The medals one learner has earned.
+ *
+ * Two of the same medal means two languages, not two attempts. A higher level
+ * in a language the learner already holds replaces the lower one rather than
+ * sitting beside it — the earlier certificate stays valid, and reissuing would
+ * only crowd the row.
+ */
+type HeldCertificate = Awaited<ReturnType<typeof myCertificates>>[number];
+
+function ProfileMedals({
+  profileId,
+  certificates,
+}: {
+  readonly profileId: string;
+  readonly certificates: readonly HeldCertificate[];
+}): ReactNode {
+  const mine = certificates.filter((c) => String(c.profileId) === profileId);
+  if (mine.length === 0) {
+    return null;
+  }
+  return (
+    <span className={styles.medals}>
+      {mine.map((c) => (
+        <Medal
+          key={c.number}
+          kind={medalFor(c.level, c.kind)}
+          size="pin"
+          title={`${c.language} · ${c.level}`}
+        />
+      ))}
+    </span>
+  );
+}
+
 export function ProfilesManager(): ReactNode {
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
@@ -177,6 +220,22 @@ export function ProfilesManager(): ReactNode {
     useProfiles();
   const sighted = sightedPlaces(isPremiumUser(publicUser));
   const [editing, setEditing] = useState<Editing>(null);
+  // Fetched once for the whole list rather than per row: this is one request
+  // for a household, and a row is not worth its own.
+  const [certificates, setCertificates] = useState<readonly HeldCertificate[]>(
+    [],
+  );
+  useEffect(() => {
+    let cancelled = false;
+    void myCertificates().then((list) => {
+      if (!cancelled) {
+        setCertificates(list);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [importing, setImporting] = useState(false);
   const stats = useProfileStats(household.profiles);
 
@@ -247,6 +306,13 @@ export function ProfilesManager(): ReactNode {
                   <ProgressLine p={p} st={stats.get(p.id)} />
                 </span>
               </div>
+              {/* Earned certificates, right before the braille mark and the
+                  category chip, so the eye finds them in the same place on
+                  every row. A learner with none shows nothing at all — no
+                  greyed silhouette and no "0 certificates", because an empty
+                  trophy cabinet drawn for a child every time a parent opens
+                  this page is worse than the absence. */}
+              <ProfileMedals profileId={p.id} certificates={certificates} />
               {p.visionSupport && <BrailleBadge />}
               <span className={styles.kindBadge} style={badgeStyle(p)}>
                 {p.kind === "kid" ? (
