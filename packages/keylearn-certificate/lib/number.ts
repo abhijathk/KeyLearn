@@ -95,6 +95,39 @@ export function normalizeCertificateNumber(value: string): string {
   return value.toUpperCase().replace(/[\s\-–—]/g, "");
 }
 
+/**
+ * The sequence a number came from, or null if it is not a valid number.
+ *
+ * The scramble is a bijection, so it inverts — which means verification is an
+ * indexed lookup by sequence rather than a scan comparing every issued
+ * certificate against the string. Multiplying by the modular inverse of the
+ * stride undoes the multiplication exactly.
+ */
+export function sequenceOf(value: string): number | null {
+  const s = normalizeCertificateNumber(value);
+  if (!isCertificateNumber(s)) {
+    return null;
+  }
+  const N = BigInt(CAPACITY);
+  let x = 0n;
+  for (let i = 0; i < WIDTH; i++) {
+    x = x * BigInt(BASE) + BigInt(ALPHABET.indexOf(s[i]));
+  }
+  return Number((((((x - OFFSET) % N) + N) % N) * inverse(STRIDE, N)) % N);
+}
+
+/** Modular inverse by the extended Euclidean algorithm. */
+function inverse(a: bigint, m: bigint): bigint {
+  let [old_r, r] = [a % m, m];
+  let [old_s, s] = [1n, 0n];
+  while (r !== 0n) {
+    const q = old_r / r;
+    [old_r, r] = [r, old_r - q * r];
+    [old_s, s] = [s, old_s - q * s];
+  }
+  return ((old_s % m) + m) % m;
+}
+
 /** Grouped in fours for printing and reading aloud. Stored ungrouped. */
 export function formatCertificateNumber(value: string): string {
   return `${value.slice(0, 4)} ${value.slice(4)}`;

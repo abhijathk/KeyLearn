@@ -1277,3 +1277,148 @@ export class EmailVerification extends TimestampMixin(Model) {
 }
 
 EmailVerification.relationMappings = {};
+
+/**
+ * A sitting of the certificate assessment.
+ *
+ * Held server-side rather than on the device because the standard is three
+ * consistent sittings, and a household that switches devices must not have to
+ * start that count again. It also means the server can judge the sittings it
+ * was actually told about, rather than being handed a verdict by the client.
+ *
+ * These never touch the practice statistics. If a poor sitting dragged down
+ * the medians that decide eligibility, failing once would lock a learner out
+ * by their own failure — which is the opposite of what an assessment is for.
+ */
+export class CertificateSitting extends Model {
+  static override readonly tableName = "certificate_sitting";
+  static override readonly columnNameMappers = snakeCaseMappers();
+  static override jsonSchema = {
+    type: "object",
+    required: ["profileId", "kind", "language", "speed", "accuracy"],
+    properties: {
+      id: { type: "integer" },
+      profileId: { type: "integer" },
+      kind: { type: "string", enum: ["typing", "braille"] },
+      // The alphabet this was sat in. Finishing English says nothing about
+      // Russian, so a sitting belongs to one language and only counts there.
+      language: { type: "string", minLength: 1, maxLength: 32 },
+      /** Words per minute for typing, cells per minute for braille. */
+      speed: { type: "number" },
+      accuracy: { type: "number" },
+      runs: { type: "integer" },
+      seconds: { type: "integer" },
+    },
+  } satisfies JSONSchema;
+
+  static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
+    table.increments("id").primary();
+    table
+      .integer("profile_id")
+      .unsigned()
+      .notNullable()
+      .references("id")
+      .inTable("profile")
+      .onDelete("CASCADE")
+      .onUpdate("CASCADE");
+    table.string("kind", 8).notNullable();
+    table.string("language", 32).notNullable();
+    table.float("speed").notNullable();
+    table.float("accuracy").notNullable();
+    table.integer("runs").notNullable().defaultTo(1);
+    table.integer("seconds").notNullable().defaultTo(0);
+    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    // The verdict reads the most recent sittings for one learner in one
+    // language, which is exactly this index.
+    table.index(["profile_id", "language", "created_at"]);
+  }
+
+  readonly id?: number;
+  profileId?: number;
+  kind?: string;
+  language?: string;
+  speed?: number;
+  accuracy?: number;
+  runs?: number;
+  seconds?: number;
+  createdAt?: Date;
+}
+
+/**
+ * An issued certificate.
+ *
+ * The number is derived from `sequence`, which is this row's own identity —
+ * that is what makes duplicates impossible rather than merely unlikely. The
+ * figures are copied in rather than referenced: a certificate states what was
+ * true on the day it was issued, and later practice must not silently rewrite
+ * a document somebody has already printed.
+ */
+export class Certificate extends Model {
+  static override readonly tableName = "certificate";
+  static override readonly columnNameMappers = snakeCaseMappers();
+  static override jsonSchema = {
+    type: "object",
+    required: ["profileId", "kind", "language", "level", "speed", "accuracy"],
+    properties: {
+      id: { type: "integer" },
+      sequence: { type: "integer" },
+      profileId: { type: "integer" },
+      userId: { type: "integer" },
+      kind: { type: "string", enum: ["typing", "braille"] },
+      audience: { type: "string", enum: ["adult", "kid"] },
+      language: { type: "string", minLength: 1, maxLength: 32 },
+      level: {
+        type: "string",
+        enum: ["completion", "bronze", "silver", "gold"],
+      },
+      speed: { type: "number" },
+      accuracy: { type: "number" },
+      /** The holder's name, as printed. Never shown by verification for a kid. */
+      name: { type: "string", minLength: 1, maxLength: 80 },
+      /** Whether verification may name the holder. Off unless asked for. */
+      nameVisible: { type: "boolean" },
+    },
+  } satisfies JSONSchema;
+
+  static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
+    table.increments("id").primary();
+    // Distinct from the primary key so the numbering space cannot be disturbed
+    // by anything that renumbers rows.
+    table.bigInteger("sequence").notNullable().unique();
+    table
+      .integer("profile_id")
+      .unsigned()
+      .notNullable()
+      .references("id")
+      .inTable("profile")
+      .onDelete("CASCADE")
+      .onUpdate("CASCADE");
+    table.integer("user_id").unsigned().notNullable().index();
+    table.string("kind", 8).notNullable();
+    table.string("audience", 8).notNullable();
+    table.string("language", 32).notNullable();
+    table.string("level", 12).notNullable();
+    table.float("speed").notNullable();
+    table.float("accuracy").notNullable();
+    table.string("name", 80).notNullable();
+    table.boolean("name_visible").notNullable().defaultTo(false);
+    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    // One certificate per learner per language per level: sitting again at the
+    // same level reissues nothing, but reaching a higher one does.
+    table.unique(["profile_id", "language", "level"]);
+  }
+
+  readonly id?: number;
+  sequence?: number;
+  profileId?: number;
+  userId?: number;
+  kind?: string;
+  audience?: string;
+  language?: string;
+  level?: string;
+  speed?: number;
+  accuracy?: number;
+  name?: string;
+  nameVisible?: boolean;
+  createdAt?: Date;
+}

@@ -1,5 +1,7 @@
 import { type Knex } from "knex";
 import {
+  Certificate,
+  CertificateSitting,
   Credential,
   EmailVerification,
   Order,
@@ -34,6 +36,8 @@ export async function createSchema(knex: Knex): Promise<void> {
   await createTable(Credential);
   await createTable(EmailVerification);
   await createTable(SecurityEvent);
+  await createTable(CertificateSitting);
+  await createTable(Certificate);
 
   // Additive column migrations for databases created before the column
   // existed — createTable above only runs when the table is missing.

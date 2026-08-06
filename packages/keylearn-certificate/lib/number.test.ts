@@ -1,5 +1,5 @@
 import { test } from "node:test";
-import { equal, isFalse,isTrue } from "rich-assert";
+import { equal, isFalse, isTrue } from "rich-assert";
 import {
   ALPHABET,
   CERTIFICATE_NUMBER_LENGTH,
@@ -7,6 +7,7 @@ import {
   formatCertificateNumber,
   isCertificateNumber,
   normalizeCertificateNumber,
+  sequenceOf,
 } from "./number.ts";
 
 test("uses only unambiguous glyphs", () => {
@@ -99,4 +100,13 @@ test("rejects rubbish", () => {
   // Contains glyphs the alphabet excludes on purpose.
   isFalse(isCertificateNumber("OOOOOOOO"));
   isFalse(isCertificateNumber("11111111"));
+});
+
+test("inverts, so verification is a lookup and not a scan", () => {
+  for (const seq of [0, 1, 2, 999, 123_456, 20_000_000]) {
+    equal(sequenceOf(certificateNumber(seq)), seq);
+  }
+  // A number that is not one of ours yields nothing to look up.
+  equal(sequenceOf("ABCDEFGH"), null);
+  equal(sequenceOf("nonsense"), null);
 });

@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@keylearn/assets": "*",
+    "@keylearn/certificate": "*",
     "@keylearn/config": "*",
     "@keylearn/database": "*",
     "@keylearn/highscores": "*",
