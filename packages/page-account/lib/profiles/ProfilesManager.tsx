@@ -432,6 +432,7 @@ function ProfileEditor({
   const [visionSupport, setVisionSupport] = useState(
     brailleOnly || (profile?.visionSupport ?? false),
   );
+  const [confirmVision, setConfirmVision] = useState<"on" | "off" | null>(null);
   const [showConsent, setShowConsent] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -439,6 +440,10 @@ function ProfileEditor({
   // A brand-new child profile needs the grown-up's consent; an existing kid
   // already has it recorded, so we don't re-ask on edit.
   const needConsent = profile == null && kind === "kid";
+  // An existing child profile shows the consent already on record.
+  const shownAsGivenConsent =
+    profile != null && kind === "kid" && profile.parentalConsent !== false;
+  const [confirmConsent, setConfirmConsent] = useState(false);
 
   // Grown-ups and children have entirely different families, so switching
   // kind has to move the avatar to one that exists in the set it just landed
@@ -701,7 +706,17 @@ function ProfileEditor({
               aria-checked={visionSupport}
               className={clsx(styles.cbox, visionSupport && styles.cboxOn)}
               disabled={brailleOnly}
-              onClick={() => setVisionSupport(!visionSupport)}
+              // Turning this on is not a preference — it hands the learner a
+              // different curriculum, a different page and a voice, and it is
+              // one stray click away from the name field. Turning it back off
+              // is confirmed too: for somebody already learning braille, an
+              // accidental click there takes their page away.
+              onClick={() => {
+                if (brailleOnly) {
+                  return;
+                }
+                setConfirmVision(visionSupport ? "off" : "on");
+              }}
             >
               {visionSupport && (
                 <svg viewBox="0 0 24 24" aria-hidden={true}>
@@ -727,16 +742,35 @@ function ProfileEditor({
             </span>
           </div>
 
-          {needConsent && (
+          {/* On a new child profile this is the consent being given; on an
+              existing one it is the consent already on record, shown ticked
+              and fixed. A parent editing a name should be able to see that
+              they consented — but a consent that can be silently un-ticked
+              while nothing else changes is not a record of anything. */}
+          {(needConsent || shownAsGivenConsent) && (
             <div className={styles.consentBox}>
               <button
                 type="button"
                 role="checkbox"
-                aria-checked={consent}
-                className={clsx(styles.cbox, consent && styles.cboxOn)}
-                onClick={() => setConsent(!consent)}
+                aria-checked={shownAsGivenConsent ? true : consent}
+                aria-disabled={shownAsGivenConsent}
+                className={clsx(
+                  styles.cbox,
+                  (shownAsGivenConsent || consent) && styles.cboxOn,
+                  shownAsGivenConsent && styles.cboxFixed,
+                )}
+                disabled={shownAsGivenConsent}
+                // Ticking it is a statement, not a preference, so it is
+                // confirmed the same way braille is.
+                onClick={() => {
+                  if (consent) {
+                    setConsent(false);
+                  } else {
+                    setConfirmConsent(true);
+                  }
+                }}
               >
-                {consent && (
+                {(shownAsGivenConsent || consent) && (
                   <svg viewBox="0 0 24 24" aria-hidden={true}>
                     <path d="M20 6 9 17l-5-5" />
                   </svg>
@@ -757,6 +791,14 @@ function ProfileEditor({
                     defaultMessage="Read the policy"
                   />
                 </button>
+                {shownAsGivenConsent && (
+                  <span className={styles.consentWhy}>
+                    <FormattedMessage
+                      id="profiles.consentGiven"
+                      defaultMessage="Given when this learner was added. To withdraw it, delete the learner."
+                    />
+                  </span>
+                )}
               </span>
             </div>
           )}
@@ -790,6 +832,74 @@ function ProfileEditor({
             </button>
           </div>
         </div>
+
+        {confirmConsent && (
+          <ConfirmDialog
+            title={formatMessage({
+              id: "profiles.consent.confirmTitle",
+              defaultMessage: "Confirm you are the parent or guardian",
+            })}
+            message={formatMessage({
+              id: "profiles.consent.confirmMessage",
+              defaultMessage:
+                "This is recorded against the child's profile as the consent under which their practice is kept. Only tick it if you are their parent or guardian and have read the policy.",
+            })}
+            confirmLabel={formatMessage({
+              id: "profiles.consent.confirmLabel",
+              defaultMessage: "I confirm",
+            })}
+            onConfirm={() => {
+              setConsent(true);
+              setConfirmConsent(false);
+            }}
+            onCancel={() => setConfirmConsent(false)}
+          />
+        )}
+
+        {confirmVision != null && (
+          <ConfirmDialog
+            title={formatMessage(
+              confirmVision === "on"
+                ? {
+                    id: "profiles.vision.onTitle",
+                    defaultMessage: "Braille and audio for this learner?",
+                  }
+                : {
+                    id: "profiles.vision.offTitle",
+                    defaultMessage: "Turn braille and audio off?",
+                  },
+            )}
+            message={formatMessage(
+              confirmVision === "on"
+                ? {
+                    id: "profiles.vision.onMessage",
+                    defaultMessage:
+                      "They will get the braille page instead of the ordinary one: six-key typing, spoken guidance, and a different curriculum. Choose this because it is what they need, not to try it out — you can change it back, but their practice does not carry across.",
+                  }
+                : {
+                    id: "profiles.vision.offMessage",
+                    defaultMessage:
+                      "They will go back to the ordinary typing page. Their braille progress is kept, but they will not see it until braille is turned on again.",
+                  },
+            )}
+            confirmLabel={formatMessage(
+              confirmVision === "on"
+                ? {
+                    id: "profiles.vision.onConfirm",
+                    defaultMessage: "Yes, braille and audio",
+                  }
+                : {
+                    id: "profiles.vision.offConfirm",
+                    defaultMessage: "Turn it off",
+                  },
+            )}
+            onConfirm={() => {
+              setVisionSupport(confirmVision === "on");
+              setConfirmVision(null);
+            }}
+            onCancel={() => setConfirmVision(null)}
+          />
+        )}
 
         {confirmDelete && onDelete != null && (
           <ConfirmDialog

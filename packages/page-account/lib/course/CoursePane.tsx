@@ -5,7 +5,7 @@ import {
   type CertificateEvidence,
 } from "@keylearn/certificate";
 import { artKindOf, ArtMotif } from "@keylearn/identicon";
-import { loadKeyboard } from "@keylearn/keyboard";
+import { Layout, loadKeyboard } from "@keylearn/keyboard";
 import { type ProfileDetails, usePageData } from "@keylearn/pages-shared";
 import { Letter } from "@keylearn/phonetic-model";
 import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
@@ -168,7 +168,12 @@ function CourseRow({
       </div>
     );
   }
-  const layout = results[0]?.layout ?? loadKeyboard(undefined as never).layout;
+  // A learner with no practice yet still has a row, and it still has to name
+  // an alphabet — so fall back to the default layout rather than asking the
+  // keyboard loader for one that does not exist. The first version passed it
+  // `undefined`, which threw and took the whole pane down the moment a new
+  // profile was added.
+  const layout = results[0]?.layout ?? Layout.EN_US;
   return (
     <PhoneticModelLoader language={layout.language}>
       {({ letters }) => (
