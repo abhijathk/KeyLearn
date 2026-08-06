@@ -8,7 +8,7 @@
 // exact moment somebody is most nervous, and the only thing that needs to
 // change is what the page will show them while they type.
 
-import { ADULT_BRAILLE, ADULT_TYPING,bandFor } from "./criteria.ts";
+import { ADULT_BRAILLE, ADULT_TYPING, bandFor, RETENTION } from "./criteria.ts";
 import {
   type CertificateAudience,
   type CertificateEvidence,
@@ -90,6 +90,9 @@ const WINDOW = 3;
 export type AssessmentVerdict = {
   readonly sittings: number;
   readonly remaining: number;
+  /** What fraction of their practice pace they held. Null before the window. */
+  readonly retained: number | null;
+  readonly retentionRequired: number;
   /** Median speed across the window, or null before there are enough. */
   readonly speed: number | null;
   readonly accuracy: number | null;
@@ -128,6 +131,16 @@ export function scoreSitting(sitting: Sitting): Run | null {
 export function judge(
   sittings: readonly Sitting[],
   evidence: Pick<CertificateEvidence, "audience" | "age" | "kind">,
+  /**
+   * The pace this learner sustains in ordinary practice.
+   *
+   * The assessment is judged against it as well as against the standard. An
+   * absolute figure alone cannot separate somebody typing by touch from
+   * somebody typing fast while glancing at the keyboard — the first barely
+   * slows when the picture is taken away, the second collapses. Passing zero
+   * makes the ratio moot, which is the right behaviour when it is unknown.
+   */
+  practiceSpeed = 0,
 ): AssessmentVerdict {
   const bar =
     evidence.audience === "kid"
@@ -145,10 +158,15 @@ export function judge(
     .sort((a, b) => a.at - b.at);
   const window = scored.slice(-WINDOW);
 
+  const retentionRequired =
+    evidence.audience === "kid" ? RETENTION.kid : RETENTION.adult;
+
   if (scored.length < MIN_SITTINGS) {
     return {
       sittings: scored.length,
       remaining: MIN_SITTINGS - scored.length,
+      retained: null,
+      retentionRequired,
       speed: null,
       accuracy: null,
       required: bar,
@@ -159,10 +177,16 @@ export function judge(
 
   const speed = median(window.map((r) => r.speed));
   const accuracy = median(window.map((r) => r.accuracy));
-  const passed = speed >= bar.speed && accuracy >= bar.accuracy;
+  const retained = practiceSpeed > 0 ? speed / practiceSpeed : null;
+  const passed =
+    speed >= bar.speed &&
+    accuracy >= bar.accuracy &&
+    (retained == null || retained >= retentionRequired);
   return {
     sittings: scored.length,
     remaining: 0,
+    retained,
+    retentionRequired,
     speed,
     accuracy,
     required: bar,
@@ -206,10 +230,20 @@ export function outcomeMessage(
           : `${verdict.remaining} more ${verdict.remaining === 1 ? "sitting" : "sittings"} before this can be judged — the standard is a consistent one.`,
     };
   }
-  return audience === "kid"
-    ? { tone: "again", text: "Not yet — a few more runs on the trail." }
-    : {
-        tone: "again",
-        text: `Not this time: ${verdict.speed?.toFixed(1)} against ${verdict.required.speed}. Sit it again whenever you like.`,
-      };
+  if (audience === "kid") {
+    return { tone: "again", text: "Not yet — a few more runs on the trail." };
+  }
+  // Falling short of your own practice pace means something different from
+  // falling short of the standard, and it deserves a different sentence: it is
+  // the keyboard you were leaning on, not the speed you can reach.
+  const short =
+    verdict.retained != null && verdict.retained < verdict.retentionRequired;
+  return {
+    tone: "again",
+    text: short
+      ? `Not this time: ${verdict.speed?.toFixed(1)} against the ${Math.round(
+          verdict.retentionRequired * 100,
+        )}% of your practice pace this asks for. That gap is usually the keyboard — more practice with it hidden is what closes it.`
+      : `Not this time: ${verdict.speed?.toFixed(1)} against ${verdict.required.speed}. Sit it again whenever you like.`,
+  };
 }

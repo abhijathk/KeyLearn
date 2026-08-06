@@ -8,9 +8,25 @@ import {
   scoreSitting,
   type Sitting,
 } from "./assessment.ts";
+import { ADULT_TYPING, assess, PRACTICE_MARGIN } from "./criteria.ts";
+import { type CertificateEvidence } from "./types.ts";
 
 const adult = { audience: "adult", age: null, kind: "typing" } as const;
 const kid9 = { audience: "kid", age: 9, kind: "typing" } as const;
+
+const adultEv = (): CertificateEvidence => ({
+  kind: "typing",
+  audience: "adult",
+  age: null,
+  learned: 26,
+  total: 26,
+  settled: 26,
+  volume: 200,
+  daysPractised: 20,
+  elapsedDays: 21,
+  speed: 38,
+  accuracy: 0.95,
+});
 
 const sitting = (at: number, ...speeds: number[]): Sitting => ({
   at,
@@ -125,4 +141,65 @@ test("a child is never told they failed", () => {
 
 test("the minimum is a stated constant, not a magic number", () => {
   equal(MIN_SITTINGS, 3);
+});
+
+// ── the retention rule ─────────────────────────────────────────────────────
+
+const three = (speed: number): readonly Sitting[] =>
+  [1, 2, 3].map((n) => ({
+    at: n,
+    kind: "typing" as const,
+    runs: [{ at: n, speed, accuracy: 0.97, seconds: 60 }],
+  }));
+
+test("holding your own practice pace is part of passing", () => {
+  // 40 in practice, 38 in the test: a small drop, which is what touch typing
+  // looks like when the keyboard picture goes away.
+  isTrue(judge(three(38), adult, 40).passed);
+});
+
+test("a collapse against your own pace fails, however fast the number", () => {
+  // 60 in practice and 38 in the test clears the standard easily, and is
+  // exactly the shape of somebody who had been reading the keyboard.
+  const v = judge(three(38), adult, 60);
+  isFalse(v.passed);
+  isTrue(v.speed! > v.required.speed, "the absolute figure was fine");
+  equal(Math.round(v.retained! * 100), 63);
+});
+
+test("the standard still has to be met, retention or not", () => {
+  // Perfect retention of a slow pace is still slow.
+  const v = judge(three(20), adult, 20);
+  isFalse(v.passed);
+  equal(v.retained, 1);
+});
+
+test("children are judged more gently than grown-ups", () => {
+  // The same 82% passes a child and fails an adult: a tired seven-year-old is
+  // the wrong person to be strict with.
+  isTrue(judge(three(82), { ...kid9, age: 9 }, 100).retained! > 0.8);
+  isTrue(judge(three(24.6), kid9, 30).passed);
+  isFalse(judge(three(38), adult, 46).passed);
+});
+
+test("an unknown practice pace does not block anybody", () => {
+  // Passing nothing means the ratio is unknown, and unknown must not fail.
+  const v = judge(three(40), adult);
+  isTrue(v.passed);
+  equal(v.retained, null);
+});
+
+test("the wording says which of the two was missed", () => {
+  const collapsed = outcomeMessage(judge(three(38), adult, 60), "adult");
+  isTrue(collapsed.text.includes("keyboard"), collapsed.text);
+  const tooSlow = outcomeMessage(judge(three(20), adult, 20), "adult");
+  isFalse(tooSlow.text.includes("keyboard"), tooSlow.text);
+});
+
+test("practice must sit above the standard, not on it", () => {
+  // Otherwise eligibility and the assessment are the same bar and the
+  // assessment is a rubber stamp on work the gate already did.
+  const at = (speed: number) => assess({ ...adultEv(), speed });
+  isFalse(at(ADULT_TYPING.speed).eligible, "35 in practice should not qualify");
+  isTrue(at(ADULT_TYPING.speed + PRACTICE_MARGIN.typing).eligible);
 });

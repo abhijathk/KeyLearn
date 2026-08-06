@@ -16,7 +16,9 @@ const adult = (
   volume: 200,
   daysPractised: 20,
   elapsedDays: 21,
-  speed: 35,
+  // The practice gate is the standard plus its margin, so clearing it means
+  // being comfortably at the standard rather than exactly on it.
+  speed: 38,
   accuracy: 0.95,
   ...over,
 });
@@ -28,7 +30,7 @@ const kid = (over: Partial<CertificateEvidence> = {}): CertificateEvidence =>
     volume: 60,
     daysPractised: 15,
     elapsedDays: 14,
-    speed: 18,
+    speed: 21,
     accuracy: 0.9,
     ...over,
   });
@@ -64,7 +66,7 @@ test("the cram is refused", () => {
 });
 
 test("adults are never banded", () => {
-  for (const speed of [35, 60, 120]) {
+  for (const speed of [38, 60, 120]) {
     equal(assess(adult({ speed })).level, "completion");
   }
 });
@@ -72,10 +74,10 @@ test("adults are never banded", () => {
 test("children are banded by age", () => {
   // A nine-year-old at 18 wpm has done well; the same speed at twelve has not
   // yet reached bronze.
-  equal(assess(kid({ age: 9, speed: 18 })).level, "bronze");
+  equal(assess(kid({ age: 9, speed: 21 })).level, "bronze");
   equal(assess(kid({ age: 9, speed: 24 })).level, "silver");
   equal(assess(kid({ age: 9, speed: 30 })).level, "gold");
-  isFalse(assess(kid({ age: 12, speed: 18 })).eligible);
+  isFalse(assess(kid({ age: 12, speed: 21 })).eligible);
 });
 
 test("gold at the top of childhood equals the adult bar", () => {
@@ -96,12 +98,14 @@ test("braille is judged on its own metric and its own curriculum", () => {
     total: 36,
     settled: 36,
     volume: 2500,
-    speed: 50,
+    speed: 55,
   });
   isTrue(assess(braille).eligible);
   // 40 cells per minute is the pace the app already demands to unlock the
   // next cell, so it cannot also be the certificate standard.
   isFalse(assess({ ...braille, speed: 40 }).eligible);
+  // And the standard itself is not the gate: practice has to be above it.
+  isFalse(assess({ ...braille, speed: ADULT_BRAILLE.speed }).eligible);
 });
 
 test("children's braille is as hard as children's typing, not harder", () => {

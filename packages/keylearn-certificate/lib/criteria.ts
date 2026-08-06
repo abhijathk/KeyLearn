@@ -33,6 +33,34 @@ export const ADULT_TYPING = { speed: 35, accuracy: 0.95 } as const;
  */
 export const ADULT_BRAILLE = { speed: 50, accuracy: 0.95 } as const;
 
+/**
+ * How far above the standard practice has to sit before the assessment is
+ * offered.
+ *
+ * Without this the two bars were the same number, and anyone who became
+ * eligible passed almost by definition — the assessment was a rubber stamp on
+ * work the gate had already done. It is also backwards to ask for the same
+ * figure under harder conditions: the assessment hides the keyboard and uses
+ * unseen text, so a learner will type slower there than in practice, not
+ * faster.
+ */
+export const PRACTICE_MARGIN = { typing: 3, braille: 5 } as const;
+
+/**
+ * How much of their own practice pace a learner must hold in the assessment.
+ *
+ * This is the rule that actually tells touch typing from fast hunting, and it
+ * does what no absolute number can: somebody genuinely typing by touch barely
+ * drops when the keyboard picture disappears, while somebody who has been
+ * glancing at it falls off a cliff. It also calibrates itself, so the same
+ * rule works for a twelve-word-a-minute six-year-old and a sixty-word-a-minute
+ * adult without three separate tables.
+ *
+ * Children get the gentler figure: they vary more from one sitting to the
+ * next, and failing a tired child is the worse mistake.
+ */
+export const RETENTION = { adult: 0.85, kid: 0.8 } as const;
+
 type Band = {
   readonly maxAge: number;
   readonly typing: readonly [number, number, number];
@@ -109,7 +137,11 @@ export function assess(evidence: CertificateEvidence): CertificateVerdict {
   const volume = kind === "braille" ? shape.brailleVolume : shape.volume;
   const [bronze, silver, gold] = bandFor(age, kind);
   const adultBar = kind === "braille" ? ADULT_BRAILLE : ADULT_TYPING;
-  const speedBar = audience === "kid" ? bronze : adultBar.speed;
+  const margin =
+    kind === "braille" ? PRACTICE_MARGIN.braille : PRACTICE_MARGIN.typing;
+  // Practice must sit above the standard, not on it, so that clearing the gate
+  // means being comfortably there rather than exactly there.
+  const speedBar = (audience === "kid" ? bronze : adultBar.speed) + margin;
   const accuracyBar = audience === "kid" ? KID_ACCURACY : adultBar.accuracy;
   const unit = kind === "braille" ? "cells" : "letters";
 
