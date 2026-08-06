@@ -276,7 +276,8 @@ function Row({
             evidence.kind,
           )}
           onClose={() => setReady(false)}
-          onStart={() => setReady(false)}
+          // Null until the timed runs exist. See ReadyDialog.
+          onStart={null}
         />
       )}
     </div>

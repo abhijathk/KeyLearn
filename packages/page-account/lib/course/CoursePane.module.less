@@ -321,7 +321,13 @@
 }
 
 .dialog {
+  display: flex;
+  flex-direction: column;
   inline-size: min(33rem, 100%);
+  // Never taller than the window. The guide runs long on a short screen, and
+  // without this the footer — and the close button in it — end up below the
+  // fold with nothing to scroll.
+  max-block-size: calc(100dvb - 2.5rem);
   border: 1px solid color-mix(in srgb, var(--text-color-f2) 30%, transparent);
   border-radius: 0.65rem;
   overflow: hidden;
@@ -331,6 +337,7 @@
 
 .dialogHead {
   display: flex;
+  flex: none;
   gap: 0.6rem;
   align-items: center;
   padding: 0.85rem 1.1rem;
@@ -358,12 +365,17 @@
   cursor: pointer;
 }
 
+// The only part that scrolls, so the title and the buttons stay put.
 .dialogBody {
+  flex: 1 1 auto;
   padding: 1.1rem;
+  overscroll-behavior: contain;
+  overflow-y: auto;
 }
 
 .dialogFoot {
   display: flex;
+  flex: none;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
@@ -644,4 +656,15 @@
   font-size: 0.66rem;
   font-weight: 700;
   line-height: 1.45;
+}
+
+// Said out loud rather than left for somebody to discover by clicking.
+.notReady {
+  color: var(--text-color-f2);
+  font-size: 0.72rem;
+}
+
+.btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

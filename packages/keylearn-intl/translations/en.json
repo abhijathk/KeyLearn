@@ -986,6 +986,7 @@
   "ready.hero.kid": "{name}, you learned every letter!",
   "ready.later": "Not now",
   "ready.later.kid": "Later",
+  "ready.notBuilt": "The timed runs are not built yet.",
   "ready.plan": "What the assessment is",
   "ready.plan.hints": "The keyboard picture and the hand guide are off",
   "ready.plan.hints2": "and cannot be turned back on.",
