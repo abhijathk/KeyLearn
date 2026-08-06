@@ -9,7 +9,6 @@ import { ExplainerBoundary } from "@keylearn/widget";
 import { DataScript } from "./profile/DataScript.tsx";
 import { ResultGrouper } from "./profile/ResultGrouper.tsx";
 import { RoadProfile } from "./profile/road/RoadProfile.tsx";
-import { PostcardDialog } from "./report/PostcardDialog.tsx";
 import { ReportDialog } from "./report/ReportDialog.tsx";
 import { ShareDialog, type ShareFacts } from "./report/ShareDialog.tsx";
 
@@ -41,7 +40,6 @@ function Content({ keyStatsMap }: { keyStatsMap: KeyStatsMap }) {
           this provider and so reaches it by event rather than by prop. */}
       <ReportDialog keyStatsMap={keyStatsMap} />
       <ShareDialog facts={facts} />
-      <PostcardDialog facts={facts} formatDate={formatDate} />
       <RoadProfile
         keyStatsMap={keyStatsMap}
         dailyStatsMap={dailyStatsMap}

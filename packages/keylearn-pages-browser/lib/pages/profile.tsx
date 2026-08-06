@@ -6,7 +6,6 @@ import {
 } from "@keylearn/page-account";
 import {
   BrailleProfileScreen,
-  openPostcard,
   openReport,
   openShare,
   ProfilePage,
@@ -87,16 +86,6 @@ function LearnerTabs(): ReactNode {
                 <FormattedMessage
                   id="profile.saveReport"
                   defaultMessage="⤓ Save a report"
-                />
-              </button>
-              <button
-                type="button"
-                className={styles.miniAction}
-                onClick={() => openPostcard()}
-              >
-                <FormattedMessage
-                  id="profile.postcard"
-                  defaultMessage="▤ Postcard"
                 />
               </button>
               <button

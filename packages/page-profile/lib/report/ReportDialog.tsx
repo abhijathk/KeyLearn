@@ -1,5 +1,7 @@
 import {
   activeProfileId,
+  downloadBlob,
+  exportFilename,
   loadNgramStats,
   usePageData,
 } from "@keylearn/pages-shared";
@@ -12,6 +14,7 @@ import { openResultStorage } from "@keylearn/result-loader";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
+import { csvBlob, resultsToCsv } from "./csv.ts";
 import * as dialog from "./dialog.module.less";
 import { type Period, reportData } from "./report-data.ts";
 import {
@@ -58,7 +61,7 @@ export function ReportDialog({
   // change its own dates while the print sheet is being drawn.
   const [now, setNow] = useState(() => Date.now());
 
-  const profiles = pageData?.profiles ?? [];
+  const profiles = useMemo(() => pageData?.profiles ?? [], [pageData]);
   // "Who" defaults to the learner whose tab is open, which is the one the page
   // behind the dialog is already showing.
   const [who, setWho] = useState<string | null>(null);
@@ -137,9 +140,12 @@ export function ReportDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, who, pageData, profileName]);
+  }, [open, who, profiles, pageData, profileName]);
 
-  const shown = who == null ? results : (other?.results ?? []);
+  const shown = useMemo(
+    () => (who == null ? results : (other?.results ?? [])),
+    [who, results, other],
+  );
   const shownName =
     who == null ? (profileName ?? "Typing") : (other?.name ?? "");
   const shownNamespace = who == null ? namespace : (other?.namespace ?? null);
@@ -173,7 +179,7 @@ export function ReportDialog({
           ? median
           : Math.min(...rows.map((r) => r.time), 1),
     };
-  }, [shownNamespace, shownKeys]);
+  }, [shownNamespace]);
 
   const formatDate = useMemo(() => {
     const fmt = new Intl.DateTimeFormat(undefined, {
@@ -428,6 +434,27 @@ export function ReportDialog({
               />
             </span>
             <span className={dialog.spacer} />
+            <button
+              type="button"
+              className={dialog.btn}
+              disabled={shown.length === 0}
+              onClick={() => {
+                downloadBlob(
+                  csvBlob(resultsToCsv(shown)),
+                  exportFilename(
+                    "lessons",
+                    shownName,
+                    "csv",
+                    new Date(now).toISOString().slice(0, 10),
+                  ),
+                );
+              }}
+            >
+              <FormattedMessage
+                id="report.csv"
+                defaultMessage="⤓ Lessons as CSV"
+              />
+            </button>
             <button
               type="button"
               className={dialog.btn}

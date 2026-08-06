@@ -2,7 +2,6 @@ import { brailleStats, practiceDays } from "@keylearn/braille";
 import { Screen } from "@keylearn/pages-shared";
 import { type ReactNode, useMemo } from "react";
 import { BrailleProfile } from "./profile/BrailleProfile.tsx";
-import { PostcardDialog } from "./report/PostcardDialog.tsx";
 import { ShareDialog, type ShareFacts } from "./report/ShareDialog.tsx";
 
 /**
@@ -42,7 +41,6 @@ export function BrailleProfileScreen({
     <Screen>
       <BrailleProfile profileId={profileId} name={name} avatar={avatar} />
       <ShareDialog facts={facts} />
-      <PostcardDialog facts={facts} formatDate={brailleDate} />
     </Screen>
   );
 }
