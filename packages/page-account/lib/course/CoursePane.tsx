@@ -3,6 +3,8 @@ import {
   bandFor,
   type CertificateCheck,
   type CertificateEvidence,
+  type CertificateTemplate,
+  certificateTemplate,
 } from "@keylearn/certificate";
 import { artKindOf, ArtMotif } from "@keylearn/identicon";
 import { Layout, loadKeyboard } from "@keylearn/keyboard";
@@ -18,6 +20,7 @@ import { BrailleBadge } from "../profiles/BrailleBadge.tsx";
 import { useProfiles } from "../profiles/context.tsx";
 import specimenAdult from "./assets/specimen-adult.jpg";
 import specimenKid from "./assets/specimen-kid.jpg";
+import specimenYoung from "./assets/specimen-young.jpg";
 import * as styles from "./CoursePane.module.less";
 import { brailleEvidence, typingEvidence } from "./evidence.ts";
 
@@ -37,8 +40,17 @@ export function CoursePane(): ReactNode {
   const { publicUser } = usePageData();
   const signedIn = publicUser.id != null;
   const profiles = household.profiles;
-  const anyKid = profiles.some((p) => p.kind === "kid");
-  const anyAdult = profiles.some((p) => p.kind !== "kid");
+  // Which of the three sheets this household would actually be handed. A home
+  // of eleven-year-olds sees only the middle one; nobody is shown a specimen
+  // nobody there could earn.
+  const sheets = new Set<CertificateTemplate>(
+    profiles.map((p) =>
+      certificateTemplate(
+        p.birthYear == null ? null : new Date().getFullYear() - p.birthYear,
+        p.kind === "kid" ? "kid" : "adult",
+      ),
+    ),
+  );
 
   return (
     <>
@@ -77,7 +89,7 @@ export function CoursePane(): ReactNode {
         </p>
       )}
 
-      {(anyAdult || anyKid) && (
+      {sheets.size > 0 && (
         <div className={styles.samples}>
           <h3 className={styles.subTitle}>
             <FormattedMessage
@@ -88,20 +100,26 @@ export function CoursePane(): ReactNode {
           <p className={styles.note}>
             <FormattedMessage
               id="account.course.samples.note"
-              defaultMessage="Shown only for the kinds of learner this household has. A braille learner gets whichever of these their profile is set to — the only difference is their name repeated in grade 1 beneath it, and cells per minute where the speed goes."
+              defaultMessage="Shown only for the ages this household actually has. The sheet is chosen by age — under nine, nine to thirteen, and fourteen and over — while the standard is chosen by whether the learner is a child or a grown-up. A braille learner gets whichever of the three matches their age; the only difference is their name repeated in grade 1 beneath it, and cells per minute where the speed goes."
             />
           </p>
           <div className={styles.sampleRow}>
-            {anyAdult && (
+            {sheets.has("adult") && (
               <Specimen
                 kind="adult"
-                caption="Grown-ups — speed and accuracy printed, no grade."
+                caption="Fourteen and over — speed and accuracy printed, no grade."
               />
             )}
-            {anyKid && (
+            {sheets.has("young") && (
               <Specimen
-                kind="kid"
-                caption="Kids — Bronze, Silver or Gold for their age."
+                kind="young"
+                caption="Nine to thirteen — the same standard, on a sheet that suits the age."
+              />
+            )}
+            {sheets.has("child") && (
+              <Specimen
+                kind="child"
+                caption="Under nine — Bronze, Silver or Gold for their age."
               />
             )}
           </div>
@@ -336,21 +354,28 @@ function Check({ check }: { readonly check: CertificateCheck }): ReactNode {
  * name into it and it is indistinguishable from a real one. It also never
  * carries a certificate number.
  */
+const SHEET: Readonly<Record<CertificateTemplate, string>> = {
+  adult: specimenAdult,
+  young: specimenYoung,
+  child: specimenKid,
+};
+
 function Specimen({
   kind,
   caption,
 }: {
-  readonly kind: "adult" | "kid";
+  readonly kind: CertificateTemplate;
   readonly caption: string;
 }): ReactNode {
+  // A div, not a <figure>. The global stylesheet claims `figure` for document
+  // figures — a border, a rem of padding, and a rem of margin on every one
+  // after the first — which boxed each specimen and pushed two of the three
+  // down out of line with the first. These are cards in a grid, so they should
+  // not be asking for that styling in the first place.
   return (
-    <figure className={styles.specimen}>
-      <div className={clsx(styles.sheet, kind === "kid" && styles.sheetKid)}>
-        <img
-          className={styles.sheetImage}
-          src={kind === "kid" ? specimenKid : specimenAdult}
-          alt=""
-        />
+    <div className={styles.specimen}>
+      <div className={clsx(styles.sheet, kind === "child" && styles.sheetKid)}>
+        <img className={styles.sheetImage} src={SHEET[kind]} alt="" />
         <span className={styles.stamp}>
           <FormattedMessage
             id="account.course.specimen"
@@ -358,7 +383,7 @@ function Specimen({
           />
         </span>
       </div>
-      <figcaption>{caption}</figcaption>
-    </figure>
+      <div className={styles.specimenCaption}>{caption}</div>
+    </div>
   );
 }

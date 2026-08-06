@@ -227,18 +227,25 @@
     color-mix(in srgb, var(--text-color-f2) 40%, transparent);
 }
 
+// All three on one line, whatever the pane width. They are a reminder of what
+// is coming rather than something to read, so they give up size before they
+// give up sitting together.
+// All three on one line, in equal columns, whatever the pane width. They are
+// a reminder of what is coming rather than something to read, so they give up
+// size before they give up sitting together.
 .sampleRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.9rem;
-  // Start, not stretch: the two templates are different shapes, and stretching
-  // them to a common height leaves the shorter one's caption stranded.
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
   align-items: start;
   margin-block-start: 0.9rem;
 }
 
+// Two rows, so every caption starts on the same line however long it runs.
 .specimen {
-  inline-size: 11rem;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-inline-size: 0;
   margin: 0;
 }
 
@@ -248,6 +255,9 @@
   display: grid;
   position: relative;
   place-items: center;
+  // One shape for all three, so they line up: the two portrait sheets keep
+  // their proportion and the landscape one is cropped to match rather than
+  // dragging the row out of alignment.
   aspect-ratio: 17 / 22;
   border: 1px solid color-mix(in srgb, var(--text-color-f2) 50%, transparent);
   border-radius: 0.3rem;
@@ -267,27 +277,30 @@
   filter: saturate(0.85);
 }
 
+// No shape of its own. The under-nine sheet is landscape, and letting it keep
+// that made its column shorter than the other two and stranded its caption
+// half a line up. `object-fit: cover` crops it to the common shape instead.
 .sheetKid {
-  aspect-ratio: 22 / 17;
+  aspect-ratio: 17 / 22;
 }
 
 .stamp {
   position: relative;
-  padding: 0.2rem 0.6rem;
+  padding: 0.16rem 0.45rem;
   border: 1.5px solid rgb(255 255 255 / 0.85);
   border-radius: 0.25rem;
   color: #fff;
   background-color: rgb(0 0 0 / 0.42);
   font-family: var(--value-font-family);
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
+  font-size: 0.52rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   rotate: -8deg;
 }
 
-.specimen figcaption {
+.specimenCaption {
   padding-block-start: 0.4rem;
   color: var(--text-color-f2);
-  font-size: 0.72rem;
-  line-height: 1.35;
+  font-size: 0.66rem;
+  line-height: 1.4;
 }

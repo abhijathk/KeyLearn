@@ -1,7 +1,13 @@
 import { test } from "node:test";
 import { equal, isFalse, isTrue } from "rich-assert";
 import { brailleCells, mirrorCells } from "./braille.ts";
-import { ADULT_BRAILLE, ADULT_TYPING, assess, bandFor } from "./criteria.ts";
+import {
+  ADULT_BRAILLE,
+  ADULT_TYPING,
+  assess,
+  bandFor,
+  certificateTemplate,
+} from "./criteria.ts";
 import { type CertificateEvidence } from "./types.ts";
 
 const adult = (
@@ -157,4 +163,30 @@ test("mirrors for a slate, swapping columns as well as order", () => {
     JSON.stringify(mirrorCells([[1], [2, 4]])),
     JSON.stringify([[1, 5], [4]]),
   );
+});
+
+test("the paper is chosen by age, the standard by audience", () => {
+  // A twelve-year-old handed the same sheet as a six-year-old notices.
+  equal(certificateTemplate(6, "kid"), "child");
+  equal(certificateTemplate(8, "kid"), "child");
+  equal(certificateTemplate(9, "kid"), "young");
+  equal(certificateTemplate(13, "kid"), "young");
+  equal(certificateTemplate(14, "kid"), "adult");
+  equal(certificateTemplate(34, "adult"), "adult");
+});
+
+test("braille is no exception — the age decides the sheet", () => {
+  for (const [age, want] of [
+    [7, "child"],
+    [11, "young"],
+    [40, "adult"],
+  ] as const) {
+    equal(certificateTemplate(age, age > 13 ? "adult" : "kid"), want);
+  }
+});
+
+test("an unknown age falls to the middle sheet for a child", () => {
+  // Neither babyish for a twelve-year-old nor over-formal for an eight-year-old.
+  equal(certificateTemplate(null, "kid"), "young");
+  equal(certificateTemplate(null, "adult"), "adult");
 });

@@ -106,6 +106,40 @@ export function bandFor(
   return kind === "braille" ? band.braille : band.typing;
 }
 
+/**
+ * Which of the three certificates gets printed.
+ *
+ * Separate from the audience on purpose. The audience decides the *standard* —
+ * a child is judged against their age band, a grown-up against the adult bar —
+ * but the paper is about who will hold it, and a twelve-year-old handed the
+ * same sheet as a six-year-old will notice. Braille learners are no exception:
+ * they get whichever of the three matches their age, and only the figure on it
+ * differs.
+ */
+export type CertificateTemplate = "child" | "young" | "adult";
+
+/** Below this age, the playful sheet. */
+export const YOUNG_FROM = 9;
+/** Above this age, the grown-up sheet. */
+export const YOUNG_TO = 13;
+
+export function certificateTemplate(
+  age: number | null,
+  audience: CertificateAudience,
+): CertificateTemplate {
+  if (age == null) {
+    // Nothing to go on. A child of unknown age gets the middle sheet: it is
+    // neither babyish for a twelve-year-old nor over-formal for an eight-year-old,
+    // which is the least bad guess when the only alternative is to guess wrong
+    // in one direction for everybody.
+    return audience === "kid" ? "young" : "adult";
+  }
+  if (age < YOUNG_FROM) {
+    return "child";
+  }
+  return age <= YOUNG_TO ? "young" : "adult";
+}
+
 /** The volume, days and span a certificate needs, by who it is for. */
 const SHAPE = {
   adult: { volume: 200, brailleVolume: 2500, days: 20, elapsed: 21 },

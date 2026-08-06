@@ -43,7 +43,7 @@
   "account.course.ready": "Everything the practice has to prove is proved. The assessment is what decides it.",
   "account.course.readyTag": "Ready to sit",
   "account.course.samples": "What they look like",
-  "account.course.samples.note": "Shown only for the kinds of learner this household has. A braille learner gets whichever of these their profile is set to — the only difference is their name repeated in grade 1 beneath it, and cells per minute where the speed goes.",
+  "account.course.samples.note": "Shown only for the ages this household actually has. The sheet is chosen by age — under nine, nine to thirteen, and fourteen and over — while the standard is chosen by whether the learner is a child or a grown-up. A braille learner gets whichever of the three matches their age; the only difference is their name repeated in grade 1 beneath it, and cells per minute where the speed goes.",
   "account.course.specimen": "Specimen",
   "account.course.title": "Course & certificates",
   "account.delete.codeError": "That code is incorrect or has expired.",
