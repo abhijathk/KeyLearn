@@ -7,6 +7,7 @@
   "types": ".types/index.d.ts",
   "dependencies": {
     "@keylearn/braille": "*",
+    "@keylearn/certificate": "*",
     "@keylearn/debug": "*",
     "@keylearn/identicon": "*",
     "@keylearn/intl": "*",

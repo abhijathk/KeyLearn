@@ -18,6 +18,7 @@ import { type AccountActions, useAccountActions } from "./actions.ts";
 import * as dlg from "./ConfirmDialog.module.less";
 import { ConfirmDialog } from "./ConfirmDialog.tsx";
 import { Toggle } from "./controls.tsx";
+import { CoursePane } from "./course/CoursePane.tsx";
 import { FloatingShell } from "./FloatingShell.tsx";
 import { AppearancePane, PreferencesPane } from "./PreferencesPane.tsx";
 import { ProfilesManager } from "./profiles/ProfilesManager.tsx";
@@ -27,6 +28,7 @@ import { AccountService } from "./service.ts";
 type Pane =
   | "account"
   | "learners"
+  | "course"
   | "security"
   | "appearance"
   | "prefs"
@@ -47,6 +49,7 @@ const PREMIUM_VISIBLE = false;
 const PANES: readonly Pane[] = [
   "account",
   "learners",
+  "course",
   "security",
   "appearance",
   "prefs",
@@ -125,6 +128,17 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               <FormattedMessage
                 id="account.rail.learners"
                 defaultMessage="Learners"
+              />
+            }
+          />
+          <RailItem
+            on={pane === "course"}
+            onClick={() => setPane("course")}
+            icon={<CourseIcon />}
+            label={
+              <FormattedMessage
+                id="account.rail.course"
+                defaultMessage="Course"
               />
             }
           />
@@ -265,6 +279,12 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
                   actions.patchAccount({});
                 }}
               />
+            </div>
+          )}
+
+          {pane === "course" && (
+            <div className={styles.paneScroll}>
+              <CoursePane />
             </div>
           )}
 
@@ -721,6 +741,17 @@ function PaletteIcon(): ReactNode {
       <circle cx="9.5" cy="8" r="1.2" fill="currentColor" />
       <circle cx="14" cy="7" r="1.2" fill="currentColor" />
       <circle cx="17.5" cy="10" r="1.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** A mortarboard, in the same hairline stroke as the rest of the rail. */
+function CourseIcon() {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <path d="M12 4 22 9l-10 5L2 9z" />
+      <path d="M6 11.5V16c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4.5" />
+      <path d="M22 9v5" />
     </svg>
   );
 }
