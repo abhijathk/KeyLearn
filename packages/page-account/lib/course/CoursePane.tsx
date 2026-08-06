@@ -4,7 +4,7 @@ import {
   type CertificateCheck,
   type CertificateEvidence,
 } from "@keylearn/certificate";
-import { artKindOf,ArtMotif } from "@keylearn/identicon";
+import { artKindOf, ArtMotif } from "@keylearn/identicon";
 import { loadKeyboard } from "@keylearn/keyboard";
 import { type ProfileDetails, usePageData } from "@keylearn/pages-shared";
 import { Letter } from "@keylearn/phonetic-model";
@@ -14,6 +14,7 @@ import { openResultStorage } from "@keylearn/result-loader";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
+import { BrailleBadge } from "../profiles/BrailleBadge.tsx";
 import { useProfiles } from "../profiles/context.tsx";
 import specimenAdult from "./assets/specimen-adult.jpg";
 import specimenKid from "./assets/specimen-kid.jpg";
@@ -258,17 +259,22 @@ function Head({
         />
       )}
       <span className={styles.name}>{profile.firstName}</span>
+      {/* The same compact mark the picker and the learner tabs use, so a
+          braille learner is recognised the same way everywhere. The kind badge
+          stays beside it: braille says which page they get, not whether they
+          are a child. */}
+      {braille && (
+        <span className={styles.brailleMark}>
+          <BrailleBadge />
+        </span>
+      )}
       <span
         className={clsx(
           styles.badge,
-          braille
-            ? styles.brl
-            : profile.kind === "kid"
-              ? styles.kid
-              : styles.adult,
+          profile.kind === "kid" ? styles.kid : styles.adult,
         )}
       >
-        {braille ? "braille" : profile.kind === "kid" ? "kid" : "grown-up"}
+        {profile.kind === "kid" ? "kid" : "grown-up"}
       </span>
       <span className={styles.meta}>
         {braille ? "Unified English Braille · grade 1" : (language ?? "")}

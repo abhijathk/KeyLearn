@@ -39,30 +39,38 @@
 .head {
   display: flex;
   position: relative;
-  flex-wrap: wrap;
+  // One line, always. A learner's row wrapping to two lines is the difference
+  // between scanning a household and reading it.
+  flex-wrap: nowrap;
   gap: 0.5rem;
   align-items: center;
-  margin: -0.45rem -0.6rem 0;
-  padding: 0.45rem 0.6rem;
-  border-radius: 0.5rem;
+  margin: -0.95rem -1.05rem 0;
+  padding: 0.55rem 1.05rem;
+  border-start-start-radius: 0.65rem;
+  border-start-end-radius: 0.65rem;
   overflow: hidden;
+  // Set once here and inherited by every part of the row. The band's text
+  // belongs to the picture behind it rather than to the page theme: at night
+  // the painting is still light, so the ink must still be dark.
+  color: #23201a;
 }
 
-// The learner's own painting, faint enough to be a tint rather than a picture
-// and feathered so it has no edge of its own against the card.
+/**
+ * The learner's own painting, at full strength across the whole header.
+ *
+ * Every palette in the set — grown-up and kid alike — is built on a light
+ * ground, which is what makes one fixed dark ink readable on all of them. That
+ * is also why the header does not follow the page theme: at night the band
+ * stays light and the text stays dark, because the picture underneath is the
+ * thing deciding contrast, not the theme.
+ */
 .headArt {
   position: absolute;
   inset-inline: 0;
-  inset-block: -40%;
+  inset-block: -60%;
   inline-size: 100%;
-  opacity: 0.16;
+  opacity: 0.92;
   pointer-events: none;
-  mask-image: linear-gradient(
-    to right,
-    #000 0%,
-    rgb(0 0 0 / 0.55) 45%,
-    transparent 88%
-  );
 }
 
 .head > *:not(.headArt) {
@@ -70,11 +78,15 @@
 }
 
 .name {
+  flex: none;
+  color: inherit;
   font-size: 0.95rem;
   font-weight: 680;
+  white-space: nowrap;
 }
 
 .badge {
+  flex: none;
   padding: 0.04rem 0.45rem;
   border: 1px solid currentcolor;
   border-radius: 999px;
@@ -82,41 +94,56 @@
   font-size: 0.58rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .adult {
-  color: var(--text-color-f2);
+  color: inherit;
+  opacity: 0.72;
 }
 .kid {
-  color: #b8791f;
+  color: #7a4a06;
 }
 .brl {
   color: #6d6ad8;
 }
 
+// The one part that gives way. "Unified English Braille · grade 1" is longer
+// than the row at a narrow width, and it is also the least important thing on
+// it — so it truncates rather than pushing the state chip onto a second line.
 .meta {
-  color: var(--text-color-f2);
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  color: inherit;
+  opacity: 0.72;
   font-family: var(--value-font-family);
   font-size: 0.68rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .state {
+  flex: none;
   margin-inline-start: auto;
   padding: 0.12rem 0.55rem;
   border-radius: 999px;
-  color: var(--text-color-f2);
-  background-color: color-mix(in srgb, var(--text-color-f2) 14%, transparent);
+  // Its own fill, because it sits over whatever part of the painting happens
+  // to be at the right-hand end.
+  color: #23201a;
+  background-color: rgb(255 255 255 / 0.62);
   font-family: var(--value-font-family);
   font-size: 0.62rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .stateReady {
-  color: var(--accent);
-  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: #0d3f2a;
+  background-color: rgb(255 255 255 / 0.82);
 }
 
 .stateGoing {
