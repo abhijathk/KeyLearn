@@ -1,0 +1,30 @@
+// Sizes are heights, not widths: a medal is taller than it is wide because of
+// the loop, and it is the disc that has to match the things beside it.
+
+.root {
+  display: block;
+  object-fit: contain;
+  inline-size: auto;
+  // The shadow belongs to the medal, not to the page, so it travels with it
+  // onto the light card and the dark one alike.
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
+}
+
+// Pinned to an avatar. Small enough to be a mark rather than a decoration.
+.pin {
+  block-size: 1.35rem;
+}
+
+.small {
+  block-size: 2rem;
+}
+
+.normal {
+  block-size: 3rem;
+}
+
+// The ready-to-sit card, where it is the first thing seen.
+.hero {
+  block-size: 4.5rem;
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 0.4));
+}
