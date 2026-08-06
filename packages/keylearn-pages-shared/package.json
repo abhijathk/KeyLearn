@@ -9,6 +9,7 @@
     "@keylearn/identicon": "*",
     "@keylearn/intl": "*",
     "@keylearn/result": "*",
+    "@keylearn/themes": "*",
     "@keylearn/widget": "*"
   },
   "devDependencies": {},

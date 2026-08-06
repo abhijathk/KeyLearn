@@ -1,0 +1,259 @@
+// The share card preview. What is on screen here is exactly what leaves —
+// there is no second renderer for the exported image, because a preview that
+// only approximates the result is worse than no preview at all.
+
+// No frame around the preview. The card has its own edges, and a box drawn
+// around them reads as a second card.
+.stage {
+  display: grid;
+  place-items: center;
+  padding-block-end: 0.4rem;
+}
+
+.card {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1.4rem 1.5rem;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  font-family: var(--text-font-family);
+  // So the headline scales with the card rather than with the window: the
+  // three shapes are very different widths.
+  container-type: inline-size;
+}
+
+// Link card, square and story: the three shapes anything unfurls or posts at.
+.wide {
+  inline-size: min(30rem, 100%);
+  aspect-ratio: 1200 / 630;
+}
+
+.square {
+  inline-size: min(21rem, 100%);
+  aspect-ratio: 1 / 1;
+}
+
+.story {
+  inline-size: min(15rem, 100%);
+  aspect-ratio: 9 / 16;
+}
+
+/**
+ * The generated painting, bled off the right of the card.
+ *
+ * It is oversized and runs past three edges on purpose — cropping is what
+ * makes a motif read as artwork rather than as a sticker in a corner — and
+ * those three edges are hidden by the card's own overflow. Only the inner
+ * edge is visible, so only that one is feathered, and the fade is long:
+ * it starts before the halfway mark and does not finish until well past it,
+ * which is what keeps the eye from finding a line to call an edge.
+ */
+.motif {
+  position: absolute;
+  inset-inline-start: 26%;
+  inset-block-start: -14%;
+  inline-size: 104%;
+  block-size: 128%;
+  pointer-events: none;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgb(0 0 0 / 0.06) 18%,
+    rgb(0 0 0 / 0.22) 32%,
+    rgb(0 0 0 / 0.55) 46%,
+    rgb(0 0 0 / 0.85) 60%,
+    #000 74%
+  );
+}
+
+.card > *:not(.motif) {
+  position: relative;
+  inline-size: min(100%, 58%);
+}
+
+.story > *:not(.motif),
+.square > *:not(.motif) {
+  inline-size: 100%;
+}
+
+// On the taller shapes the artwork belongs below the text, not beside it, so
+// the long fade runs the other way.
+.story .motif,
+.square .motif {
+  inset-inline-start: -4%;
+  inset-block-start: auto;
+  inset-block-end: -18%;
+  inline-size: 108%;
+  block-size: 74%;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.06) 18%,
+    rgb(0 0 0 / 0.22) 32%,
+    rgb(0 0 0 / 0.55) 46%,
+    rgb(0 0 0 / 0.85) 60%,
+    #000 74%
+  );
+}
+
+// Tight line boxes, so centring the row centres what is actually drawn rather
+// than the leading above and below it.
+.top {
+  display: flex;
+  gap: 0.42rem;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+/**
+ * The mark's icon, taking the artwork's colour (set inline by the card).
+ *
+ * The icon is sized here rather than left to the widget's own `1em`: inside a
+ * fixed box that leaves it smaller than its container and parked at the top,
+ * which is the misalignment against the wordmark.
+ */
+.glyph {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+
+  svg {
+    vertical-align: baseline;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}
+
+.mark {
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.005em;
+
+  em {
+    font-weight: 200;
+    font-style: normal;
+  }
+}
+
+.who {
+  opacity: 0.75;
+
+  &::before {
+    content: "·";
+    margin-inline: 0.35rem;
+  }
+}
+
+.big {
+  font-size: clamp(1.3rem, 4.2cqi, 2rem);
+  font-weight: 760;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+
+  em {
+    font-style: normal;
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.1rem;
+  font-size: 0.75rem;
+
+  b {
+    margin-inline-end: 0.28rem;
+    color: inherit;
+    font-size: 1.06rem;
+    font-weight: 740;
+    font-variant-numeric: tabular-nums;
+  }
+
+  span {
+    color: inherit;
+  }
+}
+
+// A free-text field inside the options column — nickname, own words.
+.field {
+  display: block;
+  inline-size: min(100%, 18rem);
+  margin-block-start: 0.45rem;
+  padding: 0.32rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 40%, transparent);
+  border-radius: 0.4rem;
+  color: var(--text-color-f0);
+  background: none;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.area {
+  display: block;
+  inline-size: 100%;
+  margin-block-start: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 40%, transparent);
+  border-radius: 0.5rem;
+  color: var(--text-color-f0);
+  background: none;
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  resize: block;
+}
+
+.strong span {
+  font-weight: 640;
+}
+
+// Shown but unavailable, with the reason attached. A control that is simply
+// absent invites the question; one that is visibly refused answers it.
+.off {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/**
+ * The consent block for a child's card.
+ *
+ * Deliberately the loudest thing in the window. Nothing above it is a
+ * decision that cannot be undone; both of these are.
+ */
+.consent {
+  margin-block-start: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid
+    color-mix(in srgb, var(--error-color, #e0555f) 32%, transparent);
+  border-radius: 0.6rem;
+  background-color: color-mix(
+    in srgb,
+    var(--error-color, #e0555f) 5%,
+    transparent
+  );
+}
+
+.consentHead {
+  margin-block-end: 0.4rem;
+  color: var(--error-color, #e0555f);
+  font-size: 0.85rem;
+  font-weight: 680;
+}
+
+.spark {
+  display: block;
+  inline-size: 9rem;
+  block-size: 1.5rem;
+  margin-block-start: 0.5rem;
+}

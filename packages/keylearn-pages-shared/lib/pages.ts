@@ -59,6 +59,23 @@ export namespace Pages {
     meta: [{ name: "robots", content: "noindex" }],
   } satisfies PageInfo;
 
+  // The theme designer: a colour of your own, when none of the shipped ones
+  // is the one you want. Reached from the Custom chip in Account → Appearance.
+  export const design = {
+    path: "/design",
+    title: defineMessage({
+      id: "t_ThemeDesigner",
+      defaultMessage: "Theme designer",
+    }),
+    link: {
+      label: defineMessage({
+        id: "t_ThemeDesigner",
+        defaultMessage: "Theme designer",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
   export const practice = {
     path: "/",
     title: defineMessage({

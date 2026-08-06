@@ -24,6 +24,14 @@ export function loadActiveProfileId(): string | null {
   }
 }
 
+/**
+ * Fired whenever the learner at the keyboard changes. Anything keyed by
+ * profile — the accent theme is the first — listens for this rather than
+ * being wired to the profiles provider, so no package has to depend on
+ * another just to notice a switch.
+ */
+export const PROFILE_CHANGED_EVENT = "keylearn:profile-changed";
+
 export function saveActiveProfileId(id: string | null): void {
   try {
     const key = activeProfileKey();
@@ -38,11 +46,17 @@ export function saveActiveProfileId(id: string | null): void {
   } catch {
     // Storage may be unavailable.
   }
+  try {
+    window.dispatchEvent(new CustomEvent(PROFILE_CHANGED_EVENT));
+  } catch {
+    // No window during server rendering.
+  }
 }
 
 /** The active profile from page data, validated against the current account. */
 function activeProfileFromPage(): {
   readonly id: string;
+  readonly kind: "adult" | "kid";
   readonly birthYear: number | null;
 } | null {
   const id = loadActiveProfileId();
@@ -58,7 +72,29 @@ export function activeProfileId(): string | null {
   return activeProfileFromPage()?.id ?? null;
 }
 
+/** The kind of the active household profile, or null when none is selected. */
+export function activeProfileKind(): "adult" | "kid" | null {
+  return activeProfileFromPage()?.kind ?? null;
+}
+
 /** The birth year of the active household profile, or null when unknown. */
+/**
+ * The active learner's generated painting, when they have one. The share card
+ * draws the same family and seed as a bleed behind its text, so the card is
+ * recognisably theirs without their name being on it.
+ */
+export function activeProfileArt(): {
+  readonly family: string;
+  readonly seed: number;
+} | null {
+  const id = loadActiveProfileId();
+  const profile = (getPageData()?.profiles ?? []).find((p) => p.id === id);
+  const avatar = profile?.avatar ?? null;
+  return avatar != null && avatar.type === "art"
+    ? { family: avatar.family, seed: avatar.seed }
+    : null;
+}
+
 export function activeProfileBirthYear(): number | null {
   const year = activeProfileFromPage()?.birthYear;
   return typeof year === "number" && Number.isFinite(year) ? year : null;
@@ -70,6 +106,17 @@ export function activeProfileBirthYear(): number | null {
  * otherwise — so the no-profile experience is unchanged.
  */
 export function profileStorageKey(base: string): string {
-  const id = activeProfileId();
-  return id == null ? base : `profile-${id}.${base}`;
+  return profileStorageKeyFor(activeProfileId(), base);
+}
+
+/**
+ * The same namespacing for a named profile rather than the active one. A
+ * parent setting a child's theme is editing a profile they are not currently
+ * using, so the key cannot come from the active selection.
+ */
+export function profileStorageKeyFor(
+  profileId: string | null,
+  base: string,
+): string {
+  return profileId == null ? base : `profile-${profileId}.${base}`;
 }

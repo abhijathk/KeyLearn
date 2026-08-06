@@ -18,7 +18,9 @@ export function PreviewPane({ children }: { readonly children: ReactNode }) {
   const backgroundImage = useBackgroundImage();
   return (
     <ThemeContext.Provider
-      value={staticTheme({ color: "*", font: "*" }, theme.hash())}
+      // The designer paints its own complete palette, so the preview must not
+      // carry an accent theme that would fight it.
+      value={staticTheme({ color: "*", font: "*", accent: "*" }, theme.hash())}
     >
       <div
         ref={ref}

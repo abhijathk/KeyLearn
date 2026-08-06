@@ -93,6 +93,18 @@ const TAvatar = z.union([
     type: z.literal("photo"),
     dataUrl: z.string().max(MAX_DATA_URL).regex(DATA_URL),
   }),
+  // A generated avatar is a family and a seed. Both are checked against the
+  // shipped family table on render, so the only job here is to keep anything
+  // unbounded out of the row.
+  z.object({
+    type: z.literal("art"),
+    family: z
+      .string()
+      .max(32)
+      .regex(/^[a-z][a-z-]*$/),
+    seed: z.number().int().min(0).max(0x7fffffff),
+    letter: z.boolean().optional(),
+  }),
 ]);
 
 // Per-profile UI preferences. Bounded so a profile row cannot become a

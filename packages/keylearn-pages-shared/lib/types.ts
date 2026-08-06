@@ -81,7 +81,19 @@ export type ProfileKind = "adult" | "kid";
 
 export type ProfileAvatar =
   | { readonly type: "icon"; readonly id: string }
-  | { readonly type: "photo"; readonly dataUrl: string };
+  | { readonly type: "photo"; readonly dataUrl: string }
+  /**
+   * A generated abstract painting: a family and one integer, from which the
+   * palette and every coordinate are derived. Two small values instead of an
+   * image, so it renders identically everywhere and costs nothing to store.
+   */
+  | {
+      readonly type: "art";
+      readonly family: string;
+      readonly seed: number;
+      /** Ink the learner's initial over the top. Off unless asked for. */
+      readonly letter?: boolean;
+    };
 
 export type ProfileDetails = {
   readonly id: string;

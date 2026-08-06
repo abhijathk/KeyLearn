@@ -6,6 +6,8 @@ import {
 } from "@keylearn/page-account";
 import {
   BrailleProfileScreen,
+  openReport,
+  openShare,
   ProfilePage,
   PublicProfilePage,
 } from "@keylearn/page-profile";
@@ -58,16 +60,44 @@ function LearnerTabs(): ReactNode {
           On a household device the account holder is the only thing that says
           which family's progress is on screen.
         */}
-          <div className={styles.account}>
-            <Avatar user={publicUser} size="normal" />
-            <div>
-              <span className={styles.accountName}>{publicUser.name}</span>
-              <span className={styles.accountRole}>
+          <div className={styles.accountBlock}>
+            <div className={styles.account}>
+              <Avatar user={publicUser} size="normal" />
+              <div>
+                <span className={styles.accountName}>{publicUser.name}</span>
+                <span className={styles.accountRole}>
+                  <FormattedMessage
+                    id="profile.tab.accountHolder"
+                    defaultMessage="Account holder"
+                  />
+                </span>
+              </div>
+            </div>
+            {/* Under the whole block rather than inside the name column: putting
+              them beside the name shifted the avatar and the name out of the
+              alignment they already had. Small on purpose — these are
+              occasional actions, and the learner tabs are the navigation. */}
+            <div className={styles.accountActions}>
+              <button
+                type="button"
+                className={styles.miniAction}
+                onClick={() => openReport()}
+              >
                 <FormattedMessage
-                  id="profile.tab.accountHolder"
-                  defaultMessage="Account holder"
+                  id="profile.saveReport"
+                  defaultMessage="⤓ Save a report"
                 />
-              </span>
+              </button>
+              <button
+                type="button"
+                className={styles.miniAction}
+                onClick={() => openShare()}
+              >
+                <FormattedMessage
+                  id="profile.shareProgress"
+                  defaultMessage="↗ Share progress"
+                />
+              </button>
             </div>
           </div>
           <div className={styles.tabs}>
@@ -109,6 +139,7 @@ function LearnerTabs(): ReactNode {
         <BrailleProfileScreen
           profileId={selected.id}
           name={selected.firstName}
+          kid={selected.kind === "kid"}
           avatar={
             <BrailleAvatar
               avatar={selected.avatar}

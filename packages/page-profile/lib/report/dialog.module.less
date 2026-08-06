@@ -1,0 +1,259 @@
+// The window both the report and the share card are configured in.
+//
+// One stylesheet for both on purpose: they are the same kind of thing — a
+// short form on the way to something leaving the device — and two stylesheets
+// would have drifted the moment either was touched.
+
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  place-items: center;
+  padding: 1.25rem;
+  overflow: auto;
+  background-color: rgb(0 0 0 / 0.62);
+}
+
+.win {
+  inline-size: min(44rem, 100%);
+  // Quiet edges. The window is already separated from the page by the dim
+  // behind it; a bright outline on top of that is a second announcement of
+  // the same thing.
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 30%, transparent);
+  border-radius: 0.65rem;
+  overflow: hidden;
+  background-color: var(--background-color);
+  box-shadow: 0 28px 70px rgb(0 0 0 / 0.5);
+}
+
+// The share window carries a card preview, which needs the extra column.
+.wide {
+  inline-size: min(50rem, 100%);
+}
+
+.head {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.85rem 1.1rem;
+  border-block-end: 1px solid
+    color-mix(in srgb, var(--text-color-f2) 22%, transparent);
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 680;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 38%, transparent);
+  border-radius: 0.35rem;
+  color: var(--text-color-f1);
+  background: none;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--text-color-f1);
+    color: var(--text-color);
+  }
+}
+
+.body {
+  padding: 1.1rem;
+}
+
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6rem;
+  align-items: start;
+}
+
+@media (max-width: 42rem) {
+  .cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Section headings. Small, spaced and quiet — they name a group of controls
+// rather than competing with them.
+.label {
+  margin-block: 1.05rem 0.5rem;
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.label:first-child {
+  margin-block-start: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  padding: 0.3rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 40%, transparent);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font: inherit;
+  font-size: 0.775rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover:not([disabled]) {
+    border-color: var(--text-color-f1);
+    color: var(--text-color);
+  }
+}
+
+.chip[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.check {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding-block: 0.33rem;
+  color: var(--text-color);
+  font-size: 0.845rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+/**
+ * A filled square rather than a tick.
+ *
+ * At this size a glyph is a smudge; a block of colour reads as on from across
+ * a room, which is the only distance at which anybody checks whether they
+ * turned their own name off.
+ */
+.check input[type="checkbox"] {
+  flex: none;
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
+  margin: 0.17rem 0 0;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 55%, transparent);
+  border-radius: 0.25rem;
+  background: none;
+  cursor: pointer;
+  appearance: none;
+
+  &:checked {
+    border-color: var(--accent);
+    background-color: var(--accent);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.check small {
+  display: block;
+  margin-block-start: 0.1rem;
+  color: var(--text-color-f2);
+  font-size: 0.735rem;
+  line-height: 1.4;
+}
+
+.hint {
+  margin: 0.5rem 0 0;
+  color: var(--text-color-f2);
+  font-size: 0.755rem;
+  line-height: 1.5;
+}
+
+.empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  color: var(--text-color-f1);
+  text-align: center;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.8rem 1.1rem;
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--text-color-f2) 22%, transparent);
+}
+
+.privacy {
+  color: var(--text-color-f2);
+  font-size: 0.735rem;
+}
+
+.btn {
+  padding: 0.34rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 40%, transparent);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font: inherit;
+  font-size: 0.775rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not([disabled]) {
+    border-color: var(--text-color-f1);
+    color: var(--text-color);
+  }
+}
+
+.go {
+  border-color: var(--accent);
+  color: var(--accent);
+
+  &:hover:not([disabled]) {
+    border-color: var(--accent);
+    color: var(--accent);
+    background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+}
+
+.btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+// The window itself must never reach the printer — only the sheet does.
+@media print {
+  .overlay {
+    display: none !important;
+  }
+}

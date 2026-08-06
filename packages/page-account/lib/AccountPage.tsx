@@ -19,12 +19,18 @@ import * as dlg from "./ConfirmDialog.module.less";
 import { ConfirmDialog } from "./ConfirmDialog.tsx";
 import { Toggle } from "./controls.tsx";
 import { FloatingShell } from "./FloatingShell.tsx";
-import { PreferencesPane } from "./PreferencesPane.tsx";
+import { AppearancePane, PreferencesPane } from "./PreferencesPane.tsx";
 import { ProfilesManager } from "./profiles/ProfilesManager.tsx";
 import { SecurityCard } from "./SecurityCard.tsx";
 import { AccountService } from "./service.ts";
 
-type Pane = "account" | "learners" | "security" | "prefs" | "premium";
+type Pane =
+  | "account"
+  | "learners"
+  | "security"
+  | "appearance"
+  | "prefs"
+  | "premium";
 
 /**
  * Whether the premium pane and its upsell are shown.
@@ -42,6 +48,7 @@ const PANES: readonly Pane[] = [
   "account",
   "learners",
   "security",
+  "appearance",
   "prefs",
   ...(PREMIUM_VISIBLE ? (["premium"] as const) : []),
 ];
@@ -129,6 +136,17 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               <FormattedMessage
                 id="account.rail.security"
                 defaultMessage="Security"
+              />
+            }
+          />
+          <RailItem
+            on={pane === "appearance"}
+            onClick={() => setPane("appearance")}
+            icon={<PaletteIcon />}
+            label={
+              <FormattedMessage
+                id="account.rail.appearance"
+                defaultMessage="Appearance"
               />
             }
           />
@@ -249,6 +267,8 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               />
             </div>
           )}
+
+          {pane === "appearance" && <AppearancePane />}
 
           {pane === "prefs" && <PreferencesPane />}
 
@@ -684,6 +704,23 @@ function VerifiedBadge(): ReactNode {
         className={styles.verifiedCheck}
         d="M9.8 17.3l-4.2-4.1L7 11.8l2.8 2.7L17 7.4l1.4 1.5z"
       />
+    </svg>
+  );
+}
+
+function PaletteIcon(): ReactNode {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={styles.railIcon}>
+      <path
+        d="M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.1 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-4-4-7.3-9-7.3Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <circle cx="7.5" cy="12" r="1.2" fill="currentColor" />
+      <circle cx="9.5" cy="8" r="1.2" fill="currentColor" />
+      <circle cx="14" cy="7" r="1.2" fill="currentColor" />
+      <circle cx="17.5" cy="10" r="1.2" fill="currentColor" />
     </svg>
   );
 }

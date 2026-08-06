@@ -1,3 +1,4 @@
+import { ProfileArt } from "@keylearn/identicon";
 import { type ReactNode } from "react";
 import { presetById } from "./avatars.ts";
 import * as styles from "./Profiles.module.less";
@@ -14,11 +15,26 @@ export function ProfileAvatar({
   avatar,
   name,
   size = 64,
+  kind = "adult",
 }: {
   readonly avatar: Avatar | null;
   readonly name: string;
   readonly size?: number;
+  /** Decides which family list and palette set the avatar is read against. */
+  readonly kind?: "adult" | "kid";
 }): ReactNode {
+  if (avatar != null && avatar.type === "art") {
+    return (
+      <ProfileArt
+        className={styles.avatar}
+        family={avatar.family}
+        seed={avatar.seed}
+        kind={kind}
+        size={size}
+        letter={avatar.letter === true ? (name.trim()[0] ?? "") : null}
+      />
+    );
+  }
   // The server validates this on write, but rows predating that validation may
   // still hold anything, so re-check before handing it to an <img src>: only an
   // inline image is ever rendered, never a remote or scheme-bearing URL.

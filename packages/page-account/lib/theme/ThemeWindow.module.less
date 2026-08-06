@@ -1,0 +1,344 @@
+// The theme window: a list of every theme, and the maker that edits one.
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding-block-end: 0.6rem;
+  border-block-end: 1px solid var(--secondary-f2);
+}
+
+.seg {
+  display: flex;
+  border: 1px solid var(--secondary-f2);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.segBtn {
+  padding: 0.34rem 0.6rem;
+  border: none;
+  color: var(--secondary-l2);
+  background: none;
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.segOn {
+  color: var(--primary);
+  background-color: var(--accent);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.btn {
+  padding: 0.34rem 0.62rem;
+  border: 1px solid var(--secondary-f2);
+  border-radius: 0.5rem;
+  color: var(--secondary-l2);
+  background: none;
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btnGo {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rows {
+  display: block;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 0.8rem;
+  align-items: stretch;
+  min-block-size: 3.1rem;
+  padding-inline-end: 0.2rem;
+  border-block-end: 1px solid var(--secondary-f2);
+}
+
+.row > :not(.rowBands) {
+  align-self: center;
+}
+
+.row:last-child {
+  border-block-end: none;
+}
+
+.rowCurrent {
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+// Flush to the leading edge and the full height of the row: the trailing edge
+// belongs to the operations, so the colour takes the side that is free.
+.rowBands {
+  display: flex;
+  align-self: stretch;
+}
+
+.rowBands i {
+  display: block;
+  flex: none;
+  inline-size: 0.52rem;
+  block-size: 100%;
+}
+
+.rowBands i:first-child {
+  inline-size: 1.55rem;
+}
+
+.rowName {
+  font-size: 0.9rem;
+  font-weight: 620;
+}
+
+.rowMeta {
+  display: block;
+  color: var(--secondary-l2);
+  font-size: 0.66rem;
+}
+
+.badge {
+  vertical-align: 0.1em;
+  margin-inline-start: 0.4rem;
+  padding: 0.14rem 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bCore {
+  color: var(--accent);
+}
+
+.bAcademic {
+  color: var(--secondary-l1);
+}
+
+.bKids {
+  color: var(--fast-key-color);
+}
+
+.bMine {
+  color: var(--slow-key-color);
+}
+
+.current {
+  color: var(--accent);
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+.ops {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.ops button {
+  inline-size: 1.7rem;
+  block-size: 1.7rem;
+  padding: 0;
+  border: 1px solid var(--secondary-f2);
+  border-radius: 0.35rem;
+  color: var(--secondary-l2);
+  background: none;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.ops button[disabled] {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.empty {
+  padding: 1.4rem 0.4rem;
+  color: var(--secondary-l2);
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+// ── the maker ───────────────────────────────────────────────────────────────
+
+.maker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+@media (max-width: 40rem) {
+  .maker {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fields {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+}
+
+.field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.fieldLabel {
+  color: var(--secondary-l2);
+  font-size: 0.6rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.textbox {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--secondary-f2);
+  border-radius: 0.5rem;
+  color: var(--secondary);
+  background-color: var(--primary-l2);
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.hexRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.hexDot {
+  flex: none;
+  inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.45rem;
+  cursor: pointer;
+}
+
+.hexBox {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.ratio {
+  padding: 0.2rem 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+.ratioOk {
+  color: var(--accent);
+}
+
+.ratioBad {
+  color: var(--error);
+}
+
+.preview {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  font-size: 0.78rem;
+}
+
+.previewNight {
+  border-color: #2b3040;
+  color: #e6e8ee;
+  background-color: #191c28;
+}
+
+.previewDay {
+  border-color: #e3e6ef;
+  color: #1f2433;
+  background-color: #fff;
+}
+
+.caret {
+  padding-inline: 0.1rem;
+  border-radius: 0.15rem;
+}
+
+.dim {
+  opacity: 0.45;
+}
+
+.keys {
+  display: flex;
+  gap: 0.3rem;
+  margin-block-start: 0.45rem;
+}
+
+.keys b {
+  display: grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: 0.3rem;
+  font-size: 0.68rem;
+}
+
+.zones {
+  display: flex;
+  gap: 0.3rem;
+  margin-block-start: 0.5rem;
+}
+
+.zoneBar {
+  display: block;
+  inline-size: 1.15rem;
+  block-size: 0.5rem;
+  border-radius: 999px;
+}
+
+.previewTag {
+  margin-block-start: 0.4rem;
+  opacity: 0.65;
+  font-size: 0.62rem;
+}
+
+.refuse {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-block-start: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--error) 45%, transparent);
+  border-radius: 0.55rem;
+  color: var(--error);
+  background-color: color-mix(in srgb, var(--error) 12%, transparent);
+  font-size: 0.76rem;
+}
+
+.note {
+  margin: 0.7rem 0 0;
+  color: var(--secondary-l2);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.foot {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block-start: 0.9rem;
+  padding-block-start: 0.7rem;
+  border-block-start: 1px solid var(--secondary-f2);
+}

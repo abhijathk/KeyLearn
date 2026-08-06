@@ -1,5 +1,13 @@
 import { brailleStats } from "@keylearn/braille";
 import {
+  artFamilies,
+  artSeedFromName,
+  defaultArtFamily,
+  isArtFamily,
+  newArtSeed,
+  ProfileArt,
+} from "@keylearn/identicon";
+import {
   isPremiumUser,
   PLACES_BRAILLE,
   sightedPlaces,
@@ -12,6 +20,7 @@ import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { ConfirmDialog } from "../ConfirmDialog.tsx";
 import { Overlay } from "../Overlay.tsx";
 import { type ProfileInput } from "../service.ts";
+import { familyNames } from "./art-names.tsx";
 import { presetById, presetsFor } from "./avatars.ts";
 import { BrailleBadge } from "./BrailleBadge.tsx";
 import { ConsentDocument } from "./ConsentDocument.tsx";
@@ -217,7 +226,12 @@ export function ProfilesManager(): ReactNode {
                 </span>
               )}
               <div className={styles.rowMain}>
-                <ProfileAvatar avatar={p.avatar} name={p.firstName} size={34} />
+                <ProfileAvatar
+                  avatar={p.avatar}
+                  name={p.firstName}
+                  size={34}
+                  kind={p.kind}
+                />
                 <span className={styles.rowInfo}>
                   <span className={styles.rowName}>
                     {p.firstName}
@@ -401,8 +415,18 @@ function ProfileEditor({
   const [birthYear, setBirthYear] = useState(
     profile?.birthYear != null ? String(profile.birthYear) : "",
   );
-  const [avatar, setAvatar] = useState<Avatar>(
-    profile?.avatar ?? { type: "icon", id: presetsFor("kid")[0].id },
+  // The editor always edits a generated painting. A learner who still carries
+  // one of the old lettered avatars is shown a painting seeded from their name
+  // — already theirs, and stable until somebody presses shuffle — and it is
+  // saved as one when they save.
+  const [avatar, setAvatar] = useState<Avatar>(() =>
+    profile?.avatar?.type === "art"
+      ? profile.avatar
+      : {
+          type: "art",
+          family: defaultArtFamily(profile?.kind ?? "kid"),
+          seed: artSeedFromName(profile?.firstName ?? ""),
+        },
   );
   const [consent, setConsent] = useState(false);
   const [visionSupport, setVisionSupport] = useState(
@@ -416,10 +440,14 @@ function ProfileEditor({
   // already has it recorded, so we don't re-ask on edit.
   const needConsent = profile == null && kind === "kid";
 
-  // Switching between Kid and Grown-up swaps the palette; carry a selected
-  // swatch over to the same colour slot in the other palette.
+  // Grown-ups and children have entirely different families, so switching
+  // kind has to move the avatar to one that exists in the set it just landed
+  // in. The seed is kept: the shuffle is theirs, only the shapes change.
   const switchKind = (next: ProfileKind) => {
     setKind(next);
+    if (avatar.type === "art" && !isArtFamily(avatar.family, next)) {
+      setAvatar({ ...avatar, family: defaultArtFamily(next) });
+    }
     if (avatar.type === "icon") {
       const index = presetsFor(kind).findIndex((p) => p.id === avatar.id);
       if (index >= 0) {
@@ -489,6 +517,16 @@ function ProfileEditor({
   // Swatches echo the learner's initial once a name is typed; before that they
   // stay as plain colour chips rather than showing a placeholder glyph.
   const initial = firstName.trim().slice(0, 1).toUpperCase();
+  // The block below only ever edits a painting; the state is guaranteed to be
+  // one (see the initialiser), and this narrows it for the renderer.
+  const art =
+    avatar.type === "art"
+      ? avatar
+      : {
+          type: "art" as const,
+          family: defaultArtFamily(kind),
+          seed: artSeedFromName(firstName),
+        };
 
   return (
     <Overlay onClose={onCancel}>
@@ -589,25 +627,67 @@ function ProfileEditor({
 
           <div className={styles.field2}>
             <p className={styles.editorLbl}>
-              <FormattedMessage id="profiles.colour" defaultMessage="Colour" />
+              <FormattedMessage id="profiles.avatar" defaultMessage="Avatar" />
             </p>
-            <div className={styles.swatchGrid}>
-              {presetsFor(kind).map((p) => (
+            <div className={styles.artRow}>
+              <div className={styles.artArt}>
+                <ProfileArt
+                  family={art.family}
+                  seed={art.seed}
+                  kind={kind}
+                  size={84}
+                  letter={art.letter === true ? initial : null}
+                />
                 <button
-                  key={p.id}
-                  className={clsx(
-                    styles.swatch,
-                    avatar.type === "icon" &&
-                      avatar.id === p.id &&
-                      styles.swatchOn,
-                  )}
-                  style={{ background: p.bg, color: p.fg }}
-                  onClick={() => setAvatar({ type: "icon", id: p.id })}
-                  aria-label={p.id}
+                  type="button"
+                  className={styles.shuffleBtn}
+                  onClick={() => setAvatar({ ...art, seed: newArtSeed() })}
                 >
-                  {initial}
+                  <FormattedMessage
+                    id="profiles.avatar.shuffle"
+                    defaultMessage="↻ Shuffle"
+                  />
                 </button>
-              ))}
+              </div>
+              <div className={styles.artPick}>
+                <div className={styles.familyGrid}>
+                  {artFamilies(kind).map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      className={clsx(
+                        styles.familyBtn,
+                        f.id === art.family && styles.familyOn,
+                      )}
+                      aria-pressed={f.id === art.family}
+                      onClick={() => setAvatar({ ...art, family: f.id })}
+                    >
+                      <ProfileArt
+                        family={f.id}
+                        seed={art.seed}
+                        kind={kind}
+                        size={30}
+                      />
+                      <span>{familyNames[f.id] ?? f.name}</span>
+                    </button>
+                  ))}
+                </div>
+                <label className={styles.letterRow}>
+                  <input
+                    type="checkbox"
+                    checked={art.letter === true}
+                    onChange={(ev) =>
+                      setAvatar({ ...art, letter: ev.target.checked })
+                    }
+                  />
+                  <span>
+                    <FormattedMessage
+                      id="profiles.avatar.letter"
+                      defaultMessage="Put my initial on it"
+                    />
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
 

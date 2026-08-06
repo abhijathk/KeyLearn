@@ -15,6 +15,7 @@ import {
   TextInput,
   toTextInputSettings,
 } from "@keylearn/textinput";
+import { accentsFor, useTheme } from "@keylearn/themes";
 import { clsx } from "clsx";
 import {
   type ReactNode,
@@ -739,6 +740,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const band = useMemo(currentBand, []);
   const cfg = bandConfig(band);
 
+  const { accent } = useTheme();
   const [prefs, setPrefs] = useState(loadPrefs);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
@@ -930,6 +932,18 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   useEffect(() => {
     worldRef.current?.setMotion(prefs.motion);
   }, [prefs.motion]);
+
+  // The letter tile on the trail wears the learner's colour. It is read from
+  // the live custom property rather than the accent id, so a theme the
+  // household mixed itself works with no extra case.
+  useEffect(() => {
+    const hex = getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent")
+      .trim();
+    if (hex !== "") {
+      worldRef.current?.setAccent(hex);
+    }
+  }, [accent, prefs.world]);
   // Reflect the real keyboard's Caps/Shift/Tab/Enter/Backspace on the on-screen
   // full board (a separate listener so it never touches the typing hot path).
   useEffect(() => {
@@ -1199,6 +1213,17 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         }
         world.setLook(prefsRef.current.brightness, prefsRef.current.paleness);
         world.setMotion(prefsRef.current.motion);
+        // The world is built asynchronously, so the accent effect below has
+        // usually already run and found no world to talk to. Apply it here as
+        // well, or a fresh scene starts on the built-in colour.
+        {
+          const hex = getComputedStyle(document.documentElement)
+            .getPropertyValue("--accent")
+            .trim();
+          if (hex !== "") {
+            world.setAccent(hex);
+          }
+        }
         // Push the passage straight away so the 3-D letters appear on a fresh
         // world (e.g. after switching games) without needing a refresh.
         if (currentBand() === "5-6") {
@@ -2949,6 +2974,7 @@ function SettingsCard({
                   />
                 </div>
               </div>
+              <KidsThemeRow />
               <div className={styles.srow}>
                 <span
                   className={styles.ri}
@@ -2957,7 +2983,7 @@ function SettingsCard({
                   <span className={styles.swatch} />
                 </span>
                 <div>
-                  <div className={styles.sl}>Colour</div>
+                  <div className={styles.sl}>Brightness of colour</div>
                   <div className={styles.sd}>
                     soft and pale, or bright and bold
                   </div>
@@ -3012,6 +3038,48 @@ function SettingsCard({
         <button type="button" className={styles.cta} onClick={onClose}>
           Back to the run!
         </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The four kids colours, in the toy-box beside brightness and movement.
+ *
+ * The same stored value the grown-up picker writes — this is a second door
+ * onto it, not a second setting. A seven-year-old should not need to fetch a
+ * grown-up to change their colour, and a parent should not have to become
+ * their child to set one.
+ */
+function KidsThemeRow(): ReactNode {
+  const { accent, switchAccent } = useTheme();
+  const choices = accentsFor("kid");
+  return (
+    <div className={styles.srow}>
+      <span className={styles.ri} style={{ background: "var(--blush)" }}>
+        <span className={styles.swatch} />
+      </span>
+      <div>
+        <div className={styles.sl}>Your colour</div>
+        <div className={styles.sd}>picks the buttons and the next letter</div>
+      </div>
+      <div className={styles.ctl}>
+        <div className={styles.themeRow}>
+          {choices.map((choice) => (
+            <button
+              key={choice.id}
+              type="button"
+              className={clsx(
+                styles.themeDot,
+                choice.id === accent && styles.themeDotOn,
+              )}
+              style={{ background: choice.night }}
+              aria-label={choice.name}
+              aria-pressed={choice.id === accent}
+              onClick={() => switchAccent(choice.id)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

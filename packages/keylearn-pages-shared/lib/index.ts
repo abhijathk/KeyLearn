@@ -1,3 +1,4 @@
+export * from "./accent-storage.ts";
 export * from "./age-norms.ts";
 export * from "./Avatar.tsx";
 export * from "./download.ts";

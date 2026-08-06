@@ -12,3 +12,6 @@ export * from "./profiles/ProfileAvatar.tsx";
 export * from "./profiles/ProfilePicker.tsx";
 export * from "./profiles/ProfilesManager.tsx";
 export * from "./profiles/store.ts";
+export * from "./theme/accent-names.tsx";
+export * from "./theme/ThemePicker.tsx";
+export * from "./theme/ThemeWindow.tsx";

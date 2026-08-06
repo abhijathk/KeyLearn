@@ -25,6 +25,7 @@ test.beforeEach(() => {
 test.afterEach(() => {
   document.documentElement.dataset["color"] = "";
   document.documentElement.dataset["font"] = "";
+  document.documentElement.dataset["accent"] = "";
 });
 
 test("mount and switch styles", async () => {
@@ -49,7 +50,8 @@ test("mount and switch styles", async () => {
 
   equal(
     document.cookie,
-    "prefs=%7B%22color%22%3A%22keylearn-day%22%2C%22font%22%3A%22spectral%22%7D",
+    "prefs=%7B%22color%22%3A%22keylearn-day%22%2C%22font%22%3A%22spectral%22" +
+      "%2C%22accent%22%3A%22keylearn%22%7D",
   );
   equal(document.documentElement.dataset["color"], "keylearn-day");
   equal(document.documentElement.dataset["font"], "spectral");
@@ -62,10 +64,35 @@ test("mount and switch styles", async () => {
 
   equal(
     document.cookie,
-    "prefs=%7B%22color%22%3A%22keylearn-day%22%2C%22font%22%3A%22open-sans%22%7D",
+    "prefs=%7B%22color%22%3A%22keylearn-day%22%2C%22font%22%3A%22open-sans%22" +
+      "%2C%22accent%22%3A%22keylearn%22%7D",
   );
   equal(document.documentElement.dataset["color"], "keylearn-day");
   equal(document.documentElement.dataset["font"], "open-sans");
+  // A signed-out visitor has one accent and no way to change it.
+  equal(document.documentElement.dataset["accent"], "keylearn");
+
+  // Cleanup.
+
+  r.unmount();
+});
+
+test("a signed-out visitor cannot wear another accent", async () => {
+  // Arrange.
+
+  const r = render(
+    <ThemeProvider>
+      <Switcher />
+    </ThemeProvider>,
+  );
+
+  // Act.
+
+  await userEvent.click(r.getByText("sepia"));
+
+  // Assert. The offer is visible in the account panel, but nothing is stored
+  // and nothing repaints until there is an account to store it against.
+  equal(document.documentElement.dataset["accent"], "keylearn");
 
   // Cleanup.
 
@@ -95,7 +122,7 @@ test("ignore invalid cookie value", () => {
 });
 
 function Switcher() {
-  const { switchColor, switchFont } = useTheme();
+  const { switchColor, switchFont, switchAccent } = useTheme();
   return (
     <div>
       <button
@@ -125,6 +152,13 @@ function Switcher() {
         }}
       >
         spectral
+      </button>
+      <button
+        onClick={() => {
+          switchAccent("sepia");
+        }}
+      >
+        sepia
       </button>
     </div>
   );

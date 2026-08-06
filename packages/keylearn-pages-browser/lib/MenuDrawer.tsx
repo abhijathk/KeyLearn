@@ -14,6 +14,7 @@ import { Link as RouterLink, useNavigate } from "react-router";
 import { LanguagePanel } from "./LanguagePanel.tsx";
 import * as styles from "./MenuDrawer.module.less";
 import { NavMenu } from "./NavMenu.tsx";
+import { PaletteStrip } from "./PaletteStrip.tsx";
 
 // Remembered so the ad slot (grown-ups only) and future visits know which
 // side of the app the household uses.
@@ -368,6 +369,11 @@ export function MenuDrawer({
                 )}
               </div>
             </div>
+            {/* Outside the kid lock on purpose: the strip is not a control, it
+                only says which colour is in use, and dimming it with the
+                grown-up links would make it look like something a child had
+                been shut out of. */}
+            <PaletteStrip />
           </>
         )}
       </aside>

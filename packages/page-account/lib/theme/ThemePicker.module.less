@@ -1,0 +1,236 @@
+// The theme picker, as drawn in the design mock: a learner chooser, then a
+// list of chips that follows that learner's kind.
+
+.picker {
+  display: block;
+}
+
+// ── who am I dressing ───────────────────────────────────────────────────────
+
+.who {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 0.35rem;
+}
+
+.whoBtn {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+  border: 2px solid var(--secondary-f2);
+  border-radius: 999px;
+  color: inherit;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--secondary-f1);
+  }
+}
+
+.whoOn {
+  border-color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.whoText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.whoName {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.whoKind {
+  color: var(--secondary-l2);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.caption {
+  margin-block: 0.2rem 0.9rem;
+  color: var(--secondary-l2);
+  font-size: 0.8rem;
+}
+
+// ── the theme in use ────────────────────────────────────────────────────────
+
+.hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-block-end: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--secondary-f2);
+  border-radius: 0.8rem;
+  background-color: var(--primary-l2);
+}
+
+.heroSwatch {
+  flex: none;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  border-radius: 999px;
+}
+
+.heroText {
+  display: block;
+  min-inline-size: 0;
+}
+
+.heroName {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.heroSub {
+  display: block;
+  color: var(--secondary-l2);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+// ── the chips ───────────────────────────────────────────────────────────────
+
+.groupLabel {
+  margin-block-end: 0.5rem;
+  color: var(--secondary-l2);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.group + .groupLabel {
+  margin-block-start: 1rem;
+}
+
+.group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.4rem, 1fr));
+  gap: 0.7rem;
+}
+
+.chip {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
+  // A button carries the browser's own padding (1px 6px), which would inset
+  // the colour bands from the edge they are supposed to be flush against.
+  padding: 0;
+  border: 2px solid var(--secondary-f2);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  color: inherit;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.chipOn {
+  border-color: var(--chip-accent);
+  background-color: color-mix(in srgb, var(--chip-accent) 12%, transparent);
+}
+
+.chipText {
+  display: block;
+  min-inline-size: 0;
+  padding: 0.62rem 0.7rem;
+}
+
+.chipName {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 640;
+  line-height: 1.3;
+}
+
+.chipHue {
+  display: block;
+  color: var(--secondary-l2);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+// The accent is the theme; its two shades are supporting cast, so the accent
+// band is three times the width. Equal thirds would read as a stripe pattern
+// rather than as "the citron one".
+.bands {
+  display: flex;
+  align-self: stretch;
+}
+
+.bands i {
+  display: block;
+  flex: none;
+  inline-size: 0.62rem;
+  block-size: 100%;
+}
+
+.bands i:first-child {
+  inline-size: 1.9rem;
+}
+
+// ── signed out ──────────────────────────────────────────────────────────────
+
+// Out of focus, not hidden. A locked feature only tempts if you can see it,
+// and a padlock on every chip makes a panel look like a paywall. What carries
+// is how many and how varied; which one is called what is the part you sign in
+// for — so the only crisp text in the block is the invitation above it.
+.lockedChip {
+  cursor: default;
+
+  &:hover {
+    border-color: var(--secondary-f2);
+    transform: none;
+  }
+}
+
+.lockedChip .chipText,
+.lockedChip .bands {
+  filter: blur(4px) saturate(0.92);
+  user-select: none;
+}
+
+.lockedCap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: baseline;
+  margin-block-end: 0.6rem;
+}
+
+.lockedCapText {
+  font-size: 0.92rem;
+  font-weight: 640;
+}
+
+.lockedCapSub {
+  color: var(--secondary-l2);
+  font-size: 0.72rem;
+}
+
+// One band, the whole width of the colour block: "a colour of your own" is not
+// a palette yet, so showing three shades of nothing would be a lie.
+.customBand {
+  align-self: stretch;
+  inline-size: 3.14rem;
+  background: linear-gradient(135deg, #8fd9b6, #8b8bec, #e28fc8, #c9d94f);
+}

@@ -8,6 +8,7 @@
   "dependencies": {
     "@keylearn/braille": "*",
     "@keylearn/debug": "*",
+    "@keylearn/identicon": "*",
     "@keylearn/intl": "*",
     "@keylearn/keyboard": "*",
     "@keylearn/lang": "*",

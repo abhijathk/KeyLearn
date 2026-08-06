@@ -383,6 +383,8 @@ export type KidsWorld = {
   /** Ambient motion intensity for all companions/sheep: 1 = full liveliness,
    * 0 = they hold still (a calmer, less busy scene). */
   setMotion(intensity: number): void;
+  /** The learner's accent, for the tile marking the letter to type next. */
+  setAccent(hex: string): void;
   /** Lay the current practice word out as 3-D letter blocks on the trail
    * (youngest kids). `index` is the letter to type next; empty word hides them. */
   setWord(word: string, index: number): void;
@@ -1477,7 +1479,35 @@ export function createKidsWorld(
     return t;
   };
   const TILE_C = new THREE.Color(0xf3ead6); // warm stone card
-  const TILE_CUR_C = new THREE.Color(0x53d98b); // mint — the current letter
+  // The current letter wears the learner's colour, paled towards the stone it
+  // is carved into: full-strength accent reads as a UI chip dropped into the
+  // scene, where the trail wants something that looks weathered.
+  const TILE_CUR_C = new THREE.Color(0x53d98b);
+  // The scene renders through ACES filmic tone mapping at an exposure above 1,
+  // which desaturates and rolls off anything bright — a colour handed to it
+  // unchanged comes back noticeably paler than it went in. So the tile colour
+  // is pushed the other way first: saturation up, and lightness pulled back
+  // where the accent is already light, which is exactly the case the roll-off
+  // hurts most. Paling it towards the stone as well (an earlier attempt) only
+  // compounded the problem, so that is gone.
+  const setTileAccent = (hex: string) => {
+    try {
+      TILE_CUR_C.set(hex);
+      const hsl = { h: 0, s: 0, l: 0 };
+      TILE_CUR_C.getHSL(hsl);
+      TILE_CUR_C.setHSL(
+        hsl.h,
+        Math.min(1, hsl.s * 1.45),
+        Math.min(0.62, hsl.l * 0.86),
+      );
+      // …then a whisper back towards the stone, so the tile still belongs to
+      // the trail rather than sitting on it. Small on purpose: the saturation
+      // boost above is doing the work, and this only takes the edge off.
+      TILE_CUR_C.lerp(TILE_C, 0.08);
+    } catch {
+      // An unparseable colour leaves the tile as it was.
+    }
+  };
   type WordTile = {
     grp: THREE.Group;
     base: THREE.Mesh;
@@ -1548,7 +1578,11 @@ export function createKidsWorld(
   // (spaces between words shown as little stones) and simply GLIDES so the
   // current letter stays put — new letters flow in from the right with no jumpy
   // per-word rebuild. Only a fresh passage rebuilds the tiles.
+  let lastWord = "";
+  let lastIndex = 0;
   const setWordImpl = (text: string, index: number) => {
+    lastWord = text;
+    lastIndex = index;
     if (!text) {
       wordGroup.visible = false;
       wordText = "";
@@ -1591,7 +1625,11 @@ export function createKidsWorld(
       if (i === index) {
         bm.color.copy(TILE_CUR_C);
         bm.emissive.copy(TILE_CUR_C);
-        bm.emissiveIntensity = 0.45;
+        // Enough glow to lift the tile off the trail, and no more: emissive
+        // adds light *before* tone mapping, so pushing it hard drives the
+        // whole tile into the highlight roll-off and it comes out white.
+        // Saturation, not brightness, is what makes this read.
+        bm.emissiveIntensity = 0.3;
       } else {
         bm.color.copy(TILE_C);
         bm.emissive.setScalar(0);
@@ -2783,6 +2821,11 @@ export function createKidsWorld(
     },
     setMotion(intensity) {
       motionScale = Math.max(0, Math.min(1, intensity));
+    },
+    setAccent(hex) {
+      setTileAccent(hex);
+      // Re-lay the word so the tile already on screen takes the new colour.
+      setWordImpl(lastWord, lastIndex);
     },
     setWord: setWordImpl,
     resize,

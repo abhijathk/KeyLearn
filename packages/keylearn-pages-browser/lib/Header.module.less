@@ -286,9 +286,6 @@
   --text-color: #3a3a4e;
   --text-color-f1: #6a6a7e;
   --text-color-f2: #9a9aae;
-  --accent: #f0b400;
-  --accent-d1: #d89e00;
-  --accent-l1: #ffcf3f;
   --separator-color: #e4dfd0;
   --separator-border: 1px solid #e4dfd0;
   --shadow-color: rgba(70, 90, 50, 0.12);
@@ -306,12 +303,28 @@
   --text-color: #f2f2fc;
   --text-color-f1: #c7cbe6;
   --text-color-f2: #a2a8cc;
-  --accent: #6fe3c0;
-  --accent-d1: #2fae86;
-  --accent-l1: #8ff0d4;
   --separator-color: #3a4064;
   --separator-border: 1px solid #3a4064;
   --shadow-color: rgba(0, 0, 10, 0.45);
 
   background-color: #1d2136;
+}
+
+// The kids header borrows the game's warm paper and its night sky, but it must
+// not borrow an accent: these three lines used to pin it to the old amber and
+// mint, which is why the learner's colour appeared for a frame on load and was
+// then overwritten the moment body[data-kids] was set.
+//
+// The accent is inherited instead, and blended towards the header's own ink so
+// it stays readable whichever way the app's day/night and the game's day/night
+// happen to be combined — the two are set independently, so a light accent can
+// land on the warm paper and a deep one on the night sky.
+:global(body[data-kids="day"]) .glyph,
+:global(body[data-kids="day"]) .kidsMark {
+  color: color-mix(in srgb, var(--accent) 74%, #3a3a4e);
+}
+
+:global(body[data-kids="night"]) .glyph,
+:global(body[data-kids="night"]) .kidsMark {
+  color: color-mix(in srgb, var(--accent) 88%, #f2f2fc);
 }

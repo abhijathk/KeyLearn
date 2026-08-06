@@ -64,6 +64,7 @@ export function ProfilePicker(): ReactNode {
                   name={p.firstName}
                   size={72}
                   braille={p.visionSupport}
+                  kind={p.kind}
                 />
                 <span className={styles.name}>{p.firstName}</span>
                 <span className={styles.kind}>

@@ -20,11 +20,20 @@
   margin-block-start: 0;
 }
 
+// The identity and the actions beneath it, as one column in the tab row. The
+// `margin-inline-end: auto` that used to push the tabs away moves out here, or
+// the actions row would sit beside the avatar rather than under it.
+.accountBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-inline-end: auto;
+}
+
 .account {
   display: flex;
   gap: 0.55rem;
   align-items: center;
-  margin-inline-end: auto;
   color: var(--text-color-f1);
 }
 
@@ -101,4 +110,31 @@
   // saying so explicitly is what makes the two edges agree.
   inline-size: 100%;
   margin-block: 1rem 0;
+}
+
+// Occasional actions beside the identity block. Small on purpose: the learner
+// tabs below are the page's navigation and must stay the loudest thing here.
+.accountActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-block-start: 0.35rem;
+}
+
+.miniAction {
+  padding: 0.18rem 0.5rem;
+  border: 1px solid var(--text-color-f2);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 }

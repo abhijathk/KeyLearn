@@ -911,3 +911,76 @@
   font-size: 0.8rem;
   font-weight: 600;
 }
+
+// ── the generated avatar, on the create and edit form ──────────────────────
+
+.artRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.artArt {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+}
+
+.shuffleBtn {
+  padding-inline: 0.7rem;
+  padding-block: 0.28rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  background: none;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.artPick {
+  display: grid;
+  gap: 0.6rem;
+  min-inline-size: 0;
+}
+
+.familyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  gap: 0.4rem;
+}
+
+// Each family is shown as itself, drawn on the learner's current seed — the
+// label alone would mean nothing, since these are shapes rather than words.
+.familyBtn {
+  display: grid;
+  gap: 0.2rem;
+  justify-items: center;
+  padding-inline: 0.2rem;
+  padding-block: 0.35rem;
+  border: 2px solid transparent;
+  border-radius: 0.55rem;
+  color: var(--text-color-f1);
+  background: none;
+  font-size: 0.6rem;
+  cursor: pointer;
+}
+
+.familyBtn svg {
+  border-radius: 50%;
+}
+
+.familyOn {
+  border-color: var(--accent);
+  color: var(--text-color);
+}
+
+.letterRow {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  font-size: 0.78rem;
+  cursor: pointer;
+}

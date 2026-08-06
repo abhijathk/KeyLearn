@@ -1,0 +1,94 @@
+@import "palettes.less";
+
+// Accent themes.
+//
+// These rules override the accent-derived custom properties and nothing else.
+// `--primary` — the ground — is never written here, which is what makes the
+// finger colours safe: every zone is `mix(@primary, @zone-*, @mix)` in
+// palettes.less, so a zone cannot move unless the ground moves. The guarantee
+// is structural rather than a rule someone has to keep in mind.
+//
+// Selectors carry both attributes, so they outrank the ground themes that set
+// the same properties (0,2,1 against 0,1,1) whatever the import order.
+//
+// `data-color="custom"` is deliberately absent: the theme designer writes its
+// own complete palette and an accent must not fight it.
+
+.accent-props(@accent, @d2, @d1, @l1, @l2) {
+  --accent-d2: @d2;
+  --accent-d1: @d1;
+  --accent: @accent;
+  --accent-l1: @l1;
+  --accent-l2: @l2;
+  // The accent's other faces around the app: the effort heat scale, the caret,
+  // the cued key on the board, selected menu items, and the small controls.
+  --effort-color: @accent;
+  --control-color: @accent;
+  --textinput-cursor__background-color: @accent;
+  --MenuItem--selected__background-color: @accent;
+  --KeyboardKey-pointer__color: @accent;
+  --syntax-keyword: @accent;
+}
+
+// The night ground is dark, so the shades step outward from a light accent.
+.accent-night(@a) {
+  .accent-props(@a, darken(@a, 14), darken(@a, 7), lighten(@a, 7),
+    lighten(@a, 14));
+}
+
+// The day ground is near-white, so the accent starts deeper and steps further.
+.accent-day(@a) {
+  .accent-props(@a, darken(@a, 16), darken(@a, 8), lighten(@a, 8),
+    lighten(@a, 16));
+}
+
+// night, day — kept in step with ACCENTS in accents.ts, which accents.test.ts
+// checks against this file so the two cannot drift apart.
+@accents: {
+  keylearn: #8fd9b6 #2f8a5d;
+  home-row: #c9d94f #6f7d1a;
+  top-row: #8b8bec #4b4bc4;
+  bottom-row: #e28fc8 #b03d8e;
+  space-bar: #9aa8bd #5a6478;
+  persimmon: #ff6f00 #c25400;
+  crimson: #e04a60 #c41230;
+  amethyst: #b44fcc #9b26b6;
+  cerulean: #5fa3c4 #3b7ea1;
+  sepia: #a98274 #6d4c41;
+  trail-green: #6ec97e #369149;
+  sunbeam: #f2c93f #8f7000;
+  dino-blue: #64b0e2 #2f87bf;
+  bubblegum: #f083b8 #c9457f;
+  ember: #f28a66 #b0431c;
+  grape: #b28ef0 #6b3fc4;
+};
+
+each(@accents, {
+  @night: extract(@value, 1);
+  @day: extract(@value, 2);
+
+  html[data-color="keylearn"][data-accent="@{key}"] {
+    .accent-night(@night);
+  }
+
+  html[data-color="keylearn-day"][data-accent="@{key}"] {
+    .accent-day(@day);
+  }
+
+  //  Auto  follows the device, so it needs both faces.
+  html[data-color="auto"][data-accent="@{key}"] {
+    .accent-night(@night);
+  }
+
+  @media (prefers-color-scheme: light) {
+    html[data-color="auto"][data-accent="@{key}"] {
+      .accent-day(@day);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html[data-color="auto"][data-accent="@{key}"] {
+      .accent-night(@night);
+    }
+  }
+});

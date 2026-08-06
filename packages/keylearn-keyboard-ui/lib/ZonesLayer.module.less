@@ -71,6 +71,10 @@
   // Tight, because the digits are already squeezed narrow — any tracking on
   // top of that and the time runs off the face.
   letter-spacing: -0.02em;
+  pointer-events: none;
+  // Backdrop, not content: dragging across the board to select the practice
+  // text would otherwise pick up the time along with it.
+  user-select: none;
   // Belt and braces: if a platform substitutes a face whose zero is slashed by
   // default, this switches the slash back off.
   font-feature-settings: "zero" 0;
@@ -93,7 +97,14 @@
 // The colon breathes once a second, the way a watch face does. Seconds as
 // digits would be a thing moving in the corner of your eye while you are
 // trying to read.
+// The one live thing on the face, so it wears the learner's colour rather than
+// the same ink as the numerals. Carried stronger than the rest of the watch —
+// at the face's own 0.18 the accent would not read as a colour at all, just as
+// slightly warmer grey — but still well short of solid, because a watch on a
+// hand behind the keyboard is a backdrop and must not compete with the words.
 .tick {
+  fill: var(--accent);
+  fill-opacity: 0.3;
   animation: watch-tick 1s steps(1, end) infinite;
 }
 

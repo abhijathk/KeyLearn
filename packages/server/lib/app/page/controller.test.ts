@@ -12,6 +12,7 @@ const context = new TestContext();
 for (const path of [
   "/",
   "/account",
+  "/design",
   "/help",
   "/high-scores",
   "/layouts",

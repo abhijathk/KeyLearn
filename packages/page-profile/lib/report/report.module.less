@@ -1,0 +1,394 @@
+// The printed report.
+//
+// It lives in the page but is invisible on screen; the print rules at the
+// bottom hide the app and show only this. That is the whole trick behind
+// "Save PDF" with no library — the browser's print pipeline paginates it and
+// keeps the text selectable, which nothing drawn to a canvas can manage.
+
+.sheet {
+  display: none;
+}
+
+// ── the document ────────────────────────────────────────────────────────────
+
+.page {
+  color: #1f2433;
+  background: #fff;
+  font-size: 10pt;
+  line-height: 1.5;
+  break-after: page;
+}
+
+.page:last-child {
+  break-after: auto;
+}
+
+.head {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-block-end: 0.5rem;
+  border-block-end: 2px solid #1f2433;
+}
+
+.title {
+  font-size: 15pt;
+  font-weight: 700;
+}
+
+.sub {
+  color: #5d6377;
+  font-size: 9pt;
+}
+
+.meta {
+  color: #5d6377;
+  font-family: var(--value-font-family);
+  font-size: 8pt;
+  line-height: 1.5;
+  text-align: end;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-block: 0.8rem;
+}
+
+.stat {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #d8dbe6;
+  border-radius: 3pt;
+}
+
+.stat b {
+  display: block;
+  font-size: 14pt;
+  font-weight: 700;
+}
+
+.stat span {
+  display: block;
+  color: #5d6377;
+  font-family: var(--value-font-family);
+  font-size: 7pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.delta {
+  margin-inline-start: 0.3rem;
+  color: #2f8a5d;
+  font-size: 8pt;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.sect {
+  margin-block: 0.9rem 0.3rem;
+  padding-block-start: 0.4rem;
+  border-block-start: 1px solid #d8dbe6;
+  color: #5d6377;
+  font-family: var(--value-font-family);
+  font-size: 7pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.p {
+  max-inline-size: 46em;
+  margin-block: 0.25rem;
+  font-size: 9.5pt;
+}
+
+.legend {
+  margin-block-start: 0.2rem;
+  color: #8a90a0;
+  font-family: var(--value-font-family);
+  font-size: 7pt;
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  margin-block-start: 1rem;
+  padding-block-start: 0.4rem;
+  border-block-start: 1px solid #d8dbe6;
+  color: #8a90a0;
+  font-family: var(--value-font-family);
+  font-size: 7pt;
+}
+
+// ── charts ──────────────────────────────────────────────────────────────────
+
+.chart {
+  inline-size: 100%;
+}
+
+.grid {
+  stroke: #e4e7ef;
+}
+
+.tick {
+  fill: #8a90a0;
+  font-family: var(--value-font-family);
+  font-size: 7px;
+}
+
+.dot {
+  fill: #9fb8ac;
+}
+
+.line {
+  fill: none;
+  stroke: #2f8a5d;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.hist {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  block-size: 3.4rem;
+}
+
+.hist i {
+  display: block;
+  flex: 1;
+  border-radius: 1px 1px 0 0;
+  background: #2f8a5d;
+  opacity: 0.7;
+}
+
+.histAxis {
+  display: flex;
+  justify-content: space-between;
+  color: #8a90a0;
+  font-family: var(--value-font-family);
+  font-size: 7pt;
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 3px;
+}
+
+.keys i {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 2px;
+  font-family: var(--value-font-family);
+  font-size: 7pt;
+  font-style: normal;
+}
+
+.keyOn {
+  color: #fff;
+  background: #2f8a5d;
+}
+
+.keyOff {
+  color: #b6bcc9;
+  background: #f0f2f6;
+}
+
+.cal {
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  gap: 2px;
+}
+
+.cal i {
+  display: block;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 1px;
+}
+
+.calOn {
+  background: #2f8a5d;
+}
+
+.calOff {
+  background: #eef0f4;
+}
+
+.table {
+  inline-size: 100%;
+  margin-block-start: 0.3rem;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+
+.table th,
+.table td {
+  padding: 0.25rem 0.5rem;
+  border-block-end: 1px solid #d8dbe6;
+  text-align: start;
+}
+
+.table th {
+  color: #5d6377;
+  font-family: var(--value-font-family);
+  font-size: 7pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+// Ink is cheaper than colour and an office printer is the likeliest
+// destination, so nothing may depend on hue to be readable.
+.grey .line,
+.grey .keyOn,
+.grey .calOn,
+.grey .hist i {
+  background: #444;
+  fill: #444;
+  stroke: #444;
+}
+
+.grey .dot {
+  fill: #999;
+}
+
+.grey .delta {
+  color: #444;
+}
+
+// ── print ───────────────────────────────────────────────────────────────────
+
+@media print {
+  // The sheet is portalled to be a direct child of <body>, so "hide everything
+  // that is not the sheet" can be written as a sibling rule. Doing it this way
+  // rather than opening a print window keeps the CSS modules, the fonts and
+  // the learner's data exactly where they already are.
+  :global(body > *:not([data-print-sheet])) {
+    display: none !important;
+  }
+
+  :global([data-print-sheet]) {
+    display: block !important;
+  }
+
+  .sheet {
+    display: block;
+  }
+
+  .page {
+    padding: 0;
+  }
+}
+
+// ── the wordmark, and the pieces the mock draws ─────────────────────────────
+
+.brand {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  justify-content: flex-end;
+  color: #1f2433;
+}
+
+.brandGlyph {
+  inline-size: 12pt;
+  block-size: 12pt;
+}
+
+.brand b {
+  font-size: 11pt;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.brand b em {
+  font-weight: 300;
+  font-style: normal;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+// Bars carry their own count, so the shape and the numbers are both readable
+// without a second axis.
+.hist span {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  block-size: 100%;
+}
+
+.hist span b {
+  color: #8a90a0;
+  font-family: var(--value-font-family);
+  font-size: 6pt;
+  font-weight: 400;
+  text-align: center;
+}
+
+.keySecure {
+  color: #fff;
+  background: #2f8a5d;
+}
+
+.keySteady {
+  color: #fff;
+  background: #7fbb9b;
+}
+
+.keyNew {
+  color: #4a5a52;
+  background: #cfe4d8;
+}
+
+.keyLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-block-start: 0.35rem;
+  color: #5d6377;
+  font-family: var(--value-font-family);
+  font-size: 7pt;
+}
+
+.keyLegend span {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.keyLegend i {
+  inline-size: 7pt;
+  block-size: 7pt;
+  border-radius: 1.5pt;
+}
+
+.calMonths {
+  display: grid;
+  grid-auto-flow: column;
+  color: #8a90a0;
+  font-family: var(--value-font-family);
+  font-size: 6pt;
+}
+
+.grey .keySecure {
+  background: #444;
+}
+
+.grey .keySteady {
+  background: #8c8c8c;
+}
+
+.grey .keyNew {
+  color: #444;
+  background: #d8d8d8;
+}

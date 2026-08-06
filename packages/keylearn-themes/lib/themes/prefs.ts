@@ -1,14 +1,19 @@
+import { findAccent } from "./accents.ts";
 import { COLORS, FONTS } from "./themes.ts";
 
 export class ThemePrefs {
   static colorAttrName = "data-color";
   static fontAttrName = "data-font";
+  static accentAttrName = "data-accent";
   static cookieKey = "prefs";
 
-  static dataAttributes({ color, font }: ThemePrefs) {
+  static dataAttributes({ color, font, accent }: ThemePrefs) {
     return {
       [ThemePrefs.colorAttrName]: COLORS.find(color).id,
       [ThemePrefs.fontAttrName]: FONTS.find(font).id,
+      // Mirrored into the server-rendered markup so the first paint already
+      // carries the right accent — otherwise every page load flashes mint.
+      [ThemePrefs.accentAttrName]: findAccent(accent).id,
     };
   }
 
@@ -30,10 +35,15 @@ export class ThemePrefs {
 
   readonly color: string;
   readonly font: string;
+  readonly accent: string;
 
   constructor(o: unknown) {
-    const { color, font } = Object(o);
+    const { color, font, accent } = Object(o);
     this.color = COLORS.find(String(color)).id;
     this.font = FONTS.find(String(font)).id;
+    // Cookies written before accents shipped simply have no `accent`, and
+    // findAccent falls back to the signature mint — which is what those
+    // visitors were already seeing.
+    this.accent = findAccent(String(accent)).id;
   }
 }

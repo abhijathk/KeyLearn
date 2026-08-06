@@ -20,6 +20,7 @@ import { FormattedMessage } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { Segmented, Toggle } from "./controls.tsx";
 import { accountProps, allTimeZones, deviceTimeZone } from "./prefs.ts";
+import { ThemePicker } from "./theme/ThemePicker.tsx";
 
 // The three interface themes, mapped to the mock's Light / Dark / System.
 const THEME_IDS = ["keylearn-day", "keylearn", "auto"] as const;
@@ -99,8 +100,34 @@ export function PreferencesPane(): ReactNode {
 
       <LanguageRegionCard />
       <NotificationsCard />
-      <AppearanceCard />
       <PrivacyCard />
+    </div>
+  );
+}
+
+/**
+ * Appearance has a section of its own rather than a card inside Preferences:
+ * it now carries a colour for every learner in the household, which is more
+ * than a card's worth of panel and more than a settings list wants to scroll
+ * past to reach the privacy switches.
+ */
+export function AppearancePane(): ReactNode {
+  return (
+    <div className={styles.paneScroll}>
+      <h2 className={styles.paneTitle}>
+        <FormattedMessage
+          id="account.appearance.title"
+          defaultMessage="Appearance"
+        />
+      </h2>
+      <p className={styles.note}>
+        <FormattedMessage
+          id="account.appearance.note"
+          defaultMessage="Light or dark is a setting for this device. The colour is a setting for each learner, and follows them to any device they sign in on."
+        />
+      </p>
+
+      <AppearanceCard />
     </div>
   );
 }
@@ -111,6 +138,7 @@ function LanguageRegionCard(): ReactNode {
   const { settings, updateSettings } = useSettings();
   const timeZone = settings.get(accountProps.timeZone) || deviceTimeZone();
   const weekStart = settings.get(accountProps.weekStart);
+  const speedUnit = settings.get(uiProps.speedUnit).id;
 
   const switchLocale = (next: string) => {
     const base = Pages.intlBase(locale);
@@ -246,6 +274,39 @@ function LanguageRegionCard(): ReactNode {
                 />
               ),
             },
+          ]}
+        />
+      </div>
+
+      <div className={styles.hr} />
+
+      <div className={styles.row}>
+        <div className={styles.rowText}>
+          <span className={styles.rowLabel}>
+            <FormattedMessage
+              id="account.prefs.speedUnit"
+              defaultMessage="Typing speed shown as"
+            />
+          </span>
+          <span className={styles.rowSub}>
+            <FormattedMessage
+              id="account.prefs.speedUnit.sub"
+              defaultMessage="Words or characters per minute, everywhere across your account."
+            />
+          </span>
+        </div>
+        <Segmented
+          value={
+            speedUnit === SpeedUnit.CPM.id ? SpeedUnit.CPM.id : SpeedUnit.WPM.id
+          }
+          onChange={(id) =>
+            updateSettings(
+              settings.set(uiProps.speedUnit, SpeedUnit.ALL.get(id)),
+            )
+          }
+          options={[
+            { id: SpeedUnit.WPM.id, label: "WPM" },
+            { id: SpeedUnit.CPM.id, label: "CPM" },
           ]}
         />
       </div>
@@ -429,15 +490,13 @@ function NotificationsCard(): ReactNode {
 
 function AppearanceCard(): ReactNode {
   const { color, switchColor } = useTheme();
-  const { settings, updateSettings } = useSettings();
-  const speedUnit = settings.get(uiProps.speedUnit).id;
 
   return (
     <div className={styles.prefCard}>
       <div className={styles.prefSect}>
         <FormattedMessage
           id="account.prefs.appearance"
-          defaultMessage="Appearance"
+          defaultMessage="Light and dark"
         />
       </div>
 
@@ -462,32 +521,19 @@ function AppearanceCard(): ReactNode {
         <div className={styles.rowText}>
           <span className={styles.rowLabel}>
             <FormattedMessage
-              id="account.prefs.speedUnit"
-              defaultMessage="Typing speed shown as"
+              id="account.prefs.accent"
+              defaultMessage="Colour"
             />
           </span>
           <span className={styles.rowSub}>
             <FormattedMessage
-              id="account.prefs.speedUnit.sub"
-              defaultMessage="Words or characters per minute, everywhere across your account."
+              id="account.prefs.accent.sub"
+              defaultMessage="One colour per learner. Choose who you are dressing, then pick their colour — the list follows whether they are a grown-up or a kid."
             />
           </span>
         </div>
-        <Segmented
-          value={
-            speedUnit === SpeedUnit.CPM.id ? SpeedUnit.CPM.id : SpeedUnit.WPM.id
-          }
-          onChange={(id) =>
-            updateSettings(
-              settings.set(uiProps.speedUnit, SpeedUnit.ALL.get(id)),
-            )
-          }
-          options={[
-            { id: SpeedUnit.WPM.id, label: "WPM" },
-            { id: SpeedUnit.CPM.id, label: "CPM" },
-          ]}
-        />
       </div>
+      <ThemePicker />
     </div>
   );
 }

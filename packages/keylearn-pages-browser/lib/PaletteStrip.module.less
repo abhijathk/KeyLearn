@@ -1,0 +1,57 @@
+// The colour in use, under the drawer's small print. Shorter than a chip in
+// the picker on purpose: one line reads as status, two lines read as "pick me".
+
+// Pinned to the very bottom of the drawer and run edge to edge: the negative
+// inline margins cancel the panel's own padding, so the colour reaches both
+// sides the way a status bar does rather than floating as one more card.
+.strip {
+  display: grid;
+  flex: none;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
+  margin-inline: -1.2rem;
+  margin-block-start: 0.7rem;
+  margin-block-end: -1.2rem;
+  border-block-start: 1px solid var(--secondary-f2);
+  overflow: hidden;
+}
+
+// Kept low on purpose: a status line at the foot of the drawer, not a control,
+// so it should read as a caption rather than as one more row to press.
+.text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: baseline;
+  min-inline-size: 0;
+  padding: 0.24rem 1.2rem;
+  line-height: 1.25;
+}
+
+.name {
+  font-size: 0.78rem;
+  font-weight: 640;
+}
+
+.learner {
+  color: var(--secondary-l2);
+  font-size: 0.65rem;
+}
+
+// Wider than the picker's bands: with no label competing for the row, the
+// colour is the only thing here worth saying, so it gets the space.
+.bands {
+  display: flex;
+  align-self: stretch;
+}
+
+.bands i {
+  display: block;
+  flex: none;
+  inline-size: 0.95rem;
+  block-size: 100%;
+}
+
+.bands i:first-child {
+  inline-size: 2.9rem;
+}

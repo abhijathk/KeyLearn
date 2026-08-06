@@ -52,18 +52,22 @@ export function BrailleAvatar({
   name,
   size = 64,
   braille,
+  kind = "adult",
 }: {
   readonly avatar: Avatar | null;
   readonly name: string;
   readonly size?: number;
   readonly braille: boolean;
+  readonly kind?: "adult" | "kid";
 }): ReactNode {
   if (!braille) {
-    return <ProfileAvatar avatar={avatar} name={name} size={size} />;
+    return (
+      <ProfileAvatar avatar={avatar} name={name} size={size} kind={kind} />
+    );
   }
   return (
     <span className={styles.pin} style={{ inlineSize: size, blockSize: size }}>
-      <ProfileAvatar avatar={avatar} name={name} size={size} />
+      <ProfileAvatar avatar={avatar} name={name} size={size} kind={kind} />
       <BrailleBadge size={size >= 56 ? "large" : "small"} />
     </span>
   );

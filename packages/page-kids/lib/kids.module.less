@@ -25,10 +25,14 @@
   --card: #ffffff;
   --kink: #3a3a4e;
   --kink2: #8f8fa3;
-  --leaf: #58b947;
-  --leaf-d: #3f9e30;
-  --sunny: #ffcf3f;
-  --sunny-d: #f0b400;
+  // Every cue on this page is the learner's own colour: the caret, the next
+  // key, the glowing finger dots, the progress ring, the buttons. The scene's
+  // greens and sands below are the *world* and stay put, and so do the
+  // keyboard's finger zones — those are the one thing no theme may move.
+  --leaf: var(--accent);
+  --leaf-d: var(--accent-d1);
+  --sunny: var(--accent);
+  --sunny-d: var(--accent-d1);
   --sky: #3aa0ff;
   --coral: #ff7d68;
   --rose: #f5a8b8;
@@ -67,8 +71,16 @@
   --kline: #3a4064;
   --glass: #2a2f4dee;
   --disc: #3a4064;
-  --nail: #6fe3c0;
-  --nail-d: #2fae86;
+  // The night scene is its own dark ground, and it does not follow the app's
+  // day/night — so a learner on the Day theme would otherwise get a deep
+  // accent painted on a deep scene. One step lighter keeps every cue readable
+  // whichever way the two are combined.
+  --leaf: var(--accent-l1);
+  --leaf-d: var(--accent);
+  --sunny: var(--accent-l1);
+  --sunny-d: var(--accent);
+  --nail: var(--accent-l1);
+  --nail-d: var(--accent);
   --kshadow: 0 10px 26px rgba(0, 0, 10, 0.45), 0 2px 6px rgba(0, 0, 10, 0.3);
 }
 
@@ -342,7 +354,7 @@
   border-radius: 999px;
   color: #fff;
   background: var(--leaf);
-  box-shadow: 0 10px 30px rgba(63, 158, 48, 0.45);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--leaf-d) 45%, transparent);
   font-size: 1.35rem;
   font-weight: 800;
   transform: translate(-50%, -50%) scale(0);
@@ -425,11 +437,14 @@
   }
 }
 
+// The coach's line is narration, not a cue: at full accent strength it
+// competed with the glowing key for the same attention. Softened towards the
+// muted ink, it reads as somebody talking rather than as something flashing.
 .say {
   min-block-size: 1.3em;
-  color: var(--leaf-d);
+  color: color-mix(in srgb, var(--leaf-d) 55%, var(--kink2));
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 // ── the helper card: hands + keyboard ──────────────────────────────────
@@ -627,7 +642,7 @@
 @keyframes nextpulse {
   50% {
     box-shadow:
-      0 6px 20px rgba(240, 180, 0, 0.55),
+      0 6px 20px color-mix(in srgb, var(--sunny-d) 55%, transparent),
       0 3.5px 0 var(--sunny-d);
     transform: scale(1.14);
   }
@@ -951,7 +966,7 @@
 @keyframes stuckpulse {
   50% {
     box-shadow:
-      0 8px 26px rgba(240, 180, 0, 0.7),
+      0 8px 26px color-mix(in srgb, var(--sunny-d) 70%, transparent),
       0 3.5px 0 var(--sunny-d);
     transform: scale(1.35);
   }
@@ -1393,4 +1408,27 @@
   color: #2d5a8a;
   font-size: 1rem;
   font-weight: 800;
+}
+
+// The four kids colours, as dots in the toy-box. Round and small: this is a
+// child picking a favourite, not a grown-up comparing palettes.
+.themeRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.themeDot {
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12) inset;
+  cursor: pointer;
+}
+
+.themeDotOn {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgb(0 0 0 / 0.35);
 }

@@ -8,6 +8,7 @@
   "dependencies": {
     "@keylearn/braille": "*",
     "@keylearn/chart": "*",
+    "@keylearn/identicon": "*",
     "@keylearn/intl": "*",
     "@keylearn/keyboard": "*",
     "@keylearn/lesson": "*",
@@ -17,6 +18,7 @@
     "@keylearn/phonetic-model": "*",
     "@keylearn/phonetic-model-loader": "*",
     "@keylearn/result": "*",
+    "@keylearn/result-loader": "*",
     "@keylearn/settings": "*",
     "@keylearn/widget": "*"
   },

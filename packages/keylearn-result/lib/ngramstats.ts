@@ -211,6 +211,37 @@ export class NgramStats {
     return out.slice(0, limit);
   }
 
+  /**
+   * The typical time for a well-sampled sequence of this order — the middle
+   * of the learner's own distribution, not an average, so a handful of very
+   * slow pairs cannot drag it.
+   *
+   * The profile's transitions chart measures against this rather than against
+   * the slowest pair: "300 ms" means nothing on its own, where "twice as long
+   * as you usually take" is a thing a learner can act on, and it tightens as
+   * they improve.
+   */
+  medianTime(order: 2 | 3): number | null {
+    const map = order === 2 ? this.#bi : this.#tri;
+    const times: number[] = [];
+    for (const [id, cell] of map) {
+      if (cell.count >= MIN_SAMPLES) {
+        const ngram = this.#toNgram(id.split(">").map(Number), cell);
+        if (ngram.time > 0) {
+          times.push(ngram.time);
+        }
+      }
+    }
+    if (times.length === 0) {
+      return null;
+    }
+    times.sort((a, b) => a - b);
+    const mid = times.length >> 1;
+    return times.length % 2 === 1
+      ? times[mid]
+      : Math.round((times[mid - 1] + times[mid]) / 2);
+  }
+
   /** Whether there is any usable, well-sampled data yet. */
   get hasData(): boolean {
     for (const cell of this.#bi.values()) {
