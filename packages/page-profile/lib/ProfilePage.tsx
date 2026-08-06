@@ -9,8 +9,9 @@ import { ExplainerBoundary } from "@keylearn/widget";
 import { DataScript } from "./profile/DataScript.tsx";
 import { ResultGrouper } from "./profile/ResultGrouper.tsx";
 import { RoadProfile } from "./profile/road/RoadProfile.tsx";
+import { PostcardDialog } from "./report/PostcardDialog.tsx";
 import { ReportDialog } from "./report/ReportDialog.tsx";
-import { ShareDialog,type ShareFacts } from "./report/ShareDialog.tsx";
+import { ShareDialog, type ShareFacts } from "./report/ShareDialog.tsx";
 
 export function ProfilePage() {
   return (
@@ -32,6 +33,7 @@ function Content({ keyStatsMap }: { keyStatsMap: KeyStatsMap }) {
   const stats = makeSummaryStats(results);
   const dailyStatsMap = new DailyStatsMap(results);
   const facts = shareFacts(keyStatsMap, profileName ?? null, kidProfile);
+  const formatDate = dateFormatter();
   return (
     <>
       <DataScript stats={stats} dailyStatsMap={dailyStatsMap} />
@@ -39,6 +41,7 @@ function Content({ keyStatsMap }: { keyStatsMap: KeyStatsMap }) {
           this provider and so reaches it by event rather than by prop. */}
       <ReportDialog keyStatsMap={keyStatsMap} />
       <ShareDialog facts={facts} />
+      <PostcardDialog facts={facts} formatDate={formatDate} />
       <RoadProfile
         keyStatsMap={keyStatsMap}
         dailyStatsMap={dailyStatsMap}
@@ -85,5 +88,18 @@ function shareFacts(
     points: [...results]
       .sort((a, b) => a.timeStamp - b.timeStamp)
       .map((r) => ({ at: r.timeStamp, speed: r.speed })),
+    minutes: Math.round(results.reduce((sum, r) => sum + r.time, 0) / 60000),
+    from,
+    to,
   };
+}
+
+/** One formatter, reused: building an Intl formatter per render is not free. */
+function dateFormatter(): (at: number) => string {
+  const fmt = new Intl.DateTimeFormat(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  return (at) => fmt.format(new Date(at));
 }

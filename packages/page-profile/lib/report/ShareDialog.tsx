@@ -3,13 +3,24 @@ import {
   artKindOf,
   ArtMotif,
   artPaletteOf,
+  brighten,
   newArtSeed,
 } from "@keylearn/identicon";
-import { activeProfileArt } from "@keylearn/pages-shared";
+import {
+  activeProfileArt,
+  downloadBlob,
+  exportFilename,
+} from "@keylearn/pages-shared";
 import { StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
+import {
+  CARD_SIZES,
+  type CardLook,
+  type CardModel,
+  renderCard,
+} from "./card-image.ts";
 import * as dialog from "./dialog.module.less";
 import { type Point, smooth } from "./report-data.ts";
 import * as styles from "./share.module.less";
@@ -43,38 +54,49 @@ export type ShareFacts = {
   readonly accuracy: number | null;
   readonly best: number | null;
   readonly points: readonly Point[];
+  /** Total time at the keyboard, in minutes. */
+  readonly minutes: number;
+  /** Period covered, as timestamps; both zero when there is nothing yet. */
+  readonly from: number;
+  readonly to: number;
 };
 
 type CardShape = "wide" | "square" | "story";
 type Look = "night" | "day" | "bold" | "paper";
 
-const LOOKS: Readonly<
-  Record<
-    Look,
-    { readonly bg: string; readonly fg: string; readonly dim: string }
-  >
-> = {
+const LOOKS: Readonly<Record<Look, CardLook>> = {
   night: {
-    bg: "linear-gradient(150deg,#1a1f30,#141620 60%)",
+    angle: 150,
+    from: "#1a1f30",
+    to: "#141620",
     fg: "#e6e8ee",
     dim: "#9aa0b4",
   },
   day: {
-    bg: "linear-gradient(150deg,#ffffff,#eef1f7 60%)",
+    angle: 150,
+    from: "#ffffff",
+    to: "#eef1f7",
     fg: "#1f2433",
     dim: "#5d6377",
   },
   bold: {
-    bg: "linear-gradient(140deg,#0f2f24,#06120e 70%)",
+    angle: 140,
+    from: "#0f2f24",
+    to: "#06120e",
     fg: "#ffffff",
     dim: "#7fc9a8",
   },
   paper: {
-    bg: "linear-gradient(150deg,#f6f1e6,#ece3d2 70%)",
+    angle: 150,
+    from: "#f6f1e6",
+    to: "#ece3d2",
     fg: "#3a3327",
     dim: "#8a7f6b",
   },
 };
+
+const bg = (l: CardLook) =>
+  `linear-gradient(${l.angle}deg,${l.from},${l.to} 62%)`;
 
 /** Relative luminance, good enough to sort three colours by lightness. */
 function lum(hex: string): number {
@@ -113,6 +135,9 @@ export function ShareDialog({
   const [ownWords, setOwnWords] = useState("");
   const [caption, setCaption] = useState("");
   const [captionEdited, setCaptionEdited] = useState(false);
+  // What the last action actually did. A share that silently does nothing is
+  // the failure this exists to prevent.
+  const [note, setNote] = useState<string | null>(null);
   const [opts, setOpts] = useState({
     name: false,
     speed: true,
@@ -159,6 +184,7 @@ export function ShareDialog({
       setIsGuardian(false);
       setUnderstands(false);
       setCaptionEdited(false);
+      setNote(null);
       setOpen(true);
     };
     window.addEventListener(SHARE_OPEN_EVENT, onOpen);
@@ -261,7 +287,15 @@ export function ShareDialog({
   // The card takes its colour from the artwork rather than from a picker.
   // There is no combination to get wrong that way, and the headline is
   // guaranteed to belong to the same painting as the corner.
-  const palette = artPaletteOf(art?.family ?? "flow", art?.seed ?? 1);
+  // The grown-up palettes are mixed for a 28px avatar; at card size they read
+  // as washed out. The lift keeps every hue and only raises intensity, and it
+  // is applied to the headline colour from the same palette so the two cannot
+  // disagree. The kid set is already bright and is left alone.
+  const vivid = kidProfile ? 0 : 0.45;
+  const palette = brighten(
+    artPaletteOf(art?.family ?? "flow", art?.seed ?? 1),
+    vivid,
+  );
   const pale = look === "day" || look === "paper";
   const washes = [...palette.wash].sort((a, b) => lum(a) - lum(b));
   const A = pale ? palette.ink : washes[washes.length - 1];
@@ -271,25 +305,163 @@ export function ShareDialog({
     : `${days} ${plural(days, "day", "days")} of typing practice.${wpm != null ? ` ${wpm} wpm and climbing.` : ""} #KeyLearn`;
   const captionText = captionEdited ? caption : autoCaption;
 
+  /**
+   * The figures, built once and read by both the preview and the exported
+   * PNG. Two lists would have drifted the first time either was edited, and
+   * the drift would show up as a file that does not match what was approved.
+   */
+  const stats: readonly { readonly value: string; readonly label: string }[] =
+    kidProfile
+      ? [
+          {
+            value: `${letters}`,
+            label: plural(letters, " letter", " letters"),
+          },
+          { value: `${weeks}`, label: plural(weeks, " week", " weeks") },
+        ]
+      : [
+          ...(opts.speed && wpm != null
+            ? [{ value: `${wpm}`, label: " wpm" }]
+            : []),
+          ...(opts.speed && accuracy != null
+            ? [{ value: `${(accuracy * 100).toFixed(1)}%`, label: " accurate" }]
+            : []),
+          ...(opts.streak
+            ? [
+                {
+                  value: `${days}`,
+                  label: `${plural(days, " day", " days")} practised`,
+                },
+              ]
+            : []),
+          ...(opts.keys
+            ? [{ value: `${letters}`, label: ` of ${alphabet} learned` }]
+            : []),
+          ...(opts.dates
+            ? [{ value: `${weeks}`, label: plural(weeks, " week", " weeks") }]
+            : []),
+        ];
+
   const canShare = !kidProfile || (isGuardian && understands);
 
-  const doShare = () => {
-    void navigator
-      .share?.({
-        title: "KeyLearn",
-        text: captionText,
-        url: "https://keylearn.com",
-      })
-      .catch(() => {
+  /**
+   * Everything the exported PNG needs, from the same values the preview is
+   * drawing from. The typeface is read off the live card so the file is set in
+   * the app's own face rather than whatever the rasteriser falls back to.
+   */
+  const model = (): CardModel => ({
+    shape,
+    look: L,
+    accent: A,
+    line1,
+    line2,
+    who: shownName,
+    stats,
+    art,
+    artKind: kidProfile ? "kid" : "adult",
+    artVivid: vivid,
+    artOpacity: pale ? 0.92 : 0.82,
+    spark: opts.line && points.length > 2 ? smooth(points, 7) : null,
+    fontFamily:
+      typeof document === "undefined"
+        ? "sans-serif"
+        : getComputedStyle(document.body).fontFamily || "sans-serif",
+  });
+
+  const filename = () =>
+    exportFilename(
+      "card",
+      profileName,
+      "png",
+      new Date().toISOString().slice(0, 10),
+    );
+
+  const saveImage = async (): Promise<Blob | null> => {
+    setNote(null);
+    try {
+      const blob = await renderCard(model());
+      if (blob == null) {
+        setNote("This browser would not produce an image.");
+        return null;
+      }
+      downloadBlob(blob, filename());
+      return blob;
+    } catch {
+      setNote("The image could not be drawn.");
+      return null;
+    }
+  };
+
+  const copyText = () => {
+    // Not a link to a shared page — there is no such page yet. This copies
+    // what somebody would write around the image, and says so on the button.
+    const text = `${captionText}\nhttps://keylearn.com`;
+    void navigator.clipboard
+      ?.writeText(text)
+      .then(() => setNote("Copied."))
+      .catch(() => setNote("The clipboard was not available."));
+  };
+
+  /**
+   * Share the picture, not a link.
+   *
+   * `navigator.share` is absent on most desktop browsers and refuses files on
+   * several that do have it, so every branch here ends somewhere real: the
+   * last one saves the image and copies the words, which is the same result by
+   * hand.
+   */
+  const doShare = async () => {
+    setNote(null);
+    const blob = await (async () => {
+      try {
+        return await renderCard(model());
+      } catch {
+        return null;
+      }
+    })();
+    const file =
+      blob == null ? null : new File([blob], filename(), { type: "image/png" });
+    if (
+      file != null &&
+      navigator.canShare?.({ files: [file] }) === true &&
+      navigator.share != null
+    ) {
+      try {
+        await navigator.share({ text: captionText, files: [file] });
+        return;
+      } catch {
         // A dismissed share sheet is a normal outcome, not a fault.
-      });
+        return;
+      }
+    }
+    if (navigator.share != null) {
+      try {
+        await navigator.share({
+          title: "KeyLearn",
+          text: captionText,
+          url: "https://keylearn.com",
+        });
+        return;
+      } catch {
+        return;
+      }
+    }
+    if (blob != null) {
+      downloadBlob(blob, filename());
+    }
+    void navigator.clipboard?.writeText(captionText).catch(() => {});
+    setNote(
+      blob == null
+        ? "This browser cannot share from a page. Copy the words and post them yourself."
+        : "This browser cannot share from a page, so the image was saved and the words copied.",
+    );
   };
 
   const card = (
     <div className={styles.stage}>
       <div
         className={clsx(styles.card, styles[shape])}
-        style={{ background: L.bg, color: L.fg }}
+        style={{ background: bg(L), color: L.fg }}
       >
         {art != null && (
           <ArtMotif
@@ -297,7 +469,8 @@ export function ShareDialog({
             family={art.family}
             seed={art.seed}
             kind={kidProfile ? "kid" : "adult"}
-            opacity={pale ? 0.9 : 0.72}
+            vivid={vivid}
+            opacity={pale ? 0.92 : 0.82}
           />
         )}
         {/* The app's own mark, not a coloured square. The icon takes the
@@ -323,48 +496,12 @@ export function ShareDialog({
         </div>
         <div>
           <div className={styles.row} style={{ color: L.dim }}>
-            {kidProfile ? (
-              <>
-                <span>
-                  <b>{letters}</b>
-                  {plural(letters, "letter", "letters")}
-                </span>
-                <span>
-                  <b>{weeks}</b>
-                  {plural(weeks, "week", "weeks")}
-                </span>
-              </>
-            ) : (
-              <>
-                {opts.speed && wpm != null && (
-                  <span>
-                    <b>{wpm}</b>wpm
-                  </span>
-                )}
-                {opts.speed && accuracy != null && (
-                  <span>
-                    <b>{(accuracy * 100).toFixed(1)}%</b>accurate
-                  </span>
-                )}
-                {opts.streak && (
-                  <span>
-                    <b>{days}</b>
-                    {plural(days, "day", "days")} practised
-                  </span>
-                )}
-                {opts.keys && (
-                  <span>
-                    <b>{letters}</b>of {alphabet} learned
-                  </span>
-                )}
-                {opts.dates && (
-                  <span>
-                    <b>{weeks}</b>
-                    {plural(weeks, "week", "weeks")}
-                  </span>
-                )}
-              </>
-            )}
+            {stats.map(({ value, label }) => (
+              <span key={label}>
+                <b>{value}</b>
+                {label}
+              </span>
+            ))}
           </div>
           {opts.line && points.length > 2 && (
             <Spark points={points} colour={A} />
@@ -697,10 +834,13 @@ export function ShareDialog({
         </div>
 
         <div className={dialog.foot}>
+          {note != null && <span className={dialog.privacy}>{note}</span>}
           <button
             type="button"
             className={dialog.btn}
-            onClick={() => window.print()}
+            onClick={() => {
+              void saveImage();
+            }}
           >
             <FormattedMessage
               id="share.saveImage"
@@ -708,20 +848,10 @@ export function ShareDialog({
             />
           </button>
           {!kidProfile && (
-            <button
-              type="button"
-              className={dialog.btn}
-              onClick={() => {
-                void navigator.clipboard
-                  ?.writeText(`${captionText}\nhttps://keylearn.com`)
-                  .catch(() => {
-                    // Clipboard access can be refused; nothing is lost.
-                  });
-              }}
-            >
+            <button type="button" className={dialog.btn} onClick={copyText}>
               <FormattedMessage
-                id="share.copyLink"
-                defaultMessage="⧉ Copy link"
+                id="share.copyText"
+                defaultMessage="⧉ Copy the words"
               />
             </button>
           )}
@@ -739,7 +869,9 @@ export function ShareDialog({
             type="button"
             className={clsx(dialog.btn, dialog.go)}
             disabled={!canShare}
-            onClick={doShare}
+            onClick={() => {
+              void doShare();
+            }}
           >
             <FormattedMessage id="share.share" defaultMessage="↗ Share…" />
           </button>

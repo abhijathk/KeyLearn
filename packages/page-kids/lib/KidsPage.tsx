@@ -15,7 +15,7 @@ import {
   TextInput,
   toTextInputSettings,
 } from "@keylearn/textinput";
-import { accentsFor, useTheme } from "@keylearn/themes";
+import { useTheme } from "@keylearn/themes";
 import { clsx } from "clsx";
 import {
   type ReactNode,
@@ -2974,7 +2974,6 @@ function SettingsCard({
                   />
                 </div>
               </div>
-              <KidsThemeRow />
               <div className={styles.srow}>
                 <span
                   className={styles.ri}
@@ -3038,48 +3037,6 @@ function SettingsCard({
         <button type="button" className={styles.cta} onClick={onClose}>
           Back to the run!
         </button>
-      </div>
-    </div>
-  );
-}
-
-/**
- * The four kids colours, in the toy-box beside brightness and movement.
- *
- * The same stored value the grown-up picker writes — this is a second door
- * onto it, not a second setting. A seven-year-old should not need to fetch a
- * grown-up to change their colour, and a parent should not have to become
- * their child to set one.
- */
-function KidsThemeRow(): ReactNode {
-  const { accent, switchAccent } = useTheme();
-  const choices = accentsFor("kid");
-  return (
-    <div className={styles.srow}>
-      <span className={styles.ri} style={{ background: "var(--blush)" }}>
-        <span className={styles.swatch} />
-      </span>
-      <div>
-        <div className={styles.sl}>Your colour</div>
-        <div className={styles.sd}>picks the buttons and the next letter</div>
-      </div>
-      <div className={styles.ctl}>
-        <div className={styles.themeRow}>
-          {choices.map((choice) => (
-            <button
-              key={choice.id}
-              type="button"
-              className={clsx(
-                styles.themeDot,
-                choice.id === accent && styles.themeDotOn,
-              )}
-              style={{ background: choice.night }}
-              aria-label={choice.name}
-              aria-pressed={choice.id === accent}
-              onClick={() => switchAccent(choice.id)}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );

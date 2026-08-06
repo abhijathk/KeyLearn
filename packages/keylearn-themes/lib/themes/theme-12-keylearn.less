@@ -26,6 +26,14 @@
   --accent: @colors[@accent];
   --accent-l1: lighten(@colors[@accent], 7);
   --accent-l2: lighten(@colors[@accent], 14);
+  --accent-ink: contrast(@colors[@accent], #241a12, #ffffff, 21%);
+  --accent-l1-ink: contrast(
+    lighten(@colors[@accent], 7),
+    #241a12,
+    #ffffff,
+    21%
+  );
+  --accent-d1-ink: contrast(darken(@colors[@accent], 7), #241a12, #ffffff, 21%);
   --error-d1: lighten(@colors[@error], 10);
   --error: @colors[@error];
   --error-l1: darken(@colors[@error], 10);

@@ -2,7 +2,8 @@ import { brailleStats, practiceDays } from "@keylearn/braille";
 import { Screen } from "@keylearn/pages-shared";
 import { type ReactNode, useMemo } from "react";
 import { BrailleProfile } from "./profile/BrailleProfile.tsx";
-import { ShareDialog,type ShareFacts } from "./report/ShareDialog.tsx";
+import { PostcardDialog } from "./report/PostcardDialog.tsx";
+import { ShareDialog, type ShareFacts } from "./report/ShareDialog.tsx";
 
 /**
  * The braille profile, in the same shell the typing profile uses.
@@ -41,6 +42,7 @@ export function BrailleProfileScreen({
     <Screen>
       <BrailleProfile profileId={profileId} name={name} avatar={avatar} />
       <ShareDialog facts={facts} />
+      <PostcardDialog facts={facts} formatDate={brailleDate} />
     </Screen>
   );
 }
@@ -81,5 +83,15 @@ function brailleShareFacts(
     accuracy: null,
     best: null,
     points: [],
+    minutes: 0,
+    from: times[0] ?? 0,
+    to: times[times.length - 1] ?? 0,
   };
 }
+
+const brailleDate = (at: number) =>
+  new Intl.DateTimeFormat(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(at));

@@ -219,3 +219,56 @@ export function artSeedFromName(name: string): number {
   }
   return (h >>> 0) % 0x7fffffff;
 }
+
+/**
+ * The same colour, more vivid.
+ *
+ * The grown-up palettes are deliberately muted: an avatar is 28px in a drawer
+ * beside a name, and saturated paint there is noise. A share card is the
+ * opposite situation — it is large, it is on somebody else's feed, and the
+ * same colours read as washed out. This lifts saturation and holds lightness
+ * near where it was, so the hue is unchanged and only the intensity moves.
+ *
+ * `amount` is 0 for the palette as stored and 1 for fully saturated.
+ */
+export function vividHex(hex: string, amount: number): string {
+  if (amount <= 0) {
+    return hex;
+  }
+  const n = Number.parseInt(hex.slice(1), 16);
+  const r = ((n >> 16) & 255) / 255;
+  const g = ((n >> 8) & 255) / 255;
+  const b = (n & 255) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) {
+      h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    } else if (max === g) {
+      h = ((b - r) / d + 2) / 6;
+    } else {
+      h = ((r - g) / d + 4) / 6;
+    }
+  }
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  const s2 = Math.min(1, s + (1 - s) * amount * 0.72);
+  // A touch away from the middle rather than always lighter: brightening a
+  // colour that is already pale only washes it out further.
+  const l2 = Math.min(0.72, Math.max(0.3, l + (0.52 - l) * amount * 0.45));
+  return hslHex(h, s2, l2);
+}
+
+function hslHex(h: number, s: number, l: number): string {
+  const f = (n: number) => {
+    const k = (n + h * 12) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const v = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return Math.round(v * 255);
+  };
+  return `#${[f(0), f(8), f(4)]
+    .map((c) => c.toString(16).padStart(2, "0"))
+    .join("")}`;
+}

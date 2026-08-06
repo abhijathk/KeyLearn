@@ -1628,8 +1628,13 @@ export function createKidsWorld(
         // Enough glow to lift the tile off the trail, and no more: emissive
         // adds light *before* tone mapping, so pushing it hard drives the
         // whole tile into the highlight roll-off and it comes out white.
-        // Saturation, not brightness, is what makes this read.
-        bm.emissiveIntensity = 0.3;
+        // Saturation, not brightness, is what makes this read by day.
+        //
+        // After dark there is no daylight competing with it, so the same
+        // figure reads as flat. A small lift is all it takes for the tile to
+        // glow rather than merely be a lighter grey — and it has to stay
+        // small for the reason above: the roll-off is unforgiving.
+        bm.emissiveIntensity = nightBlend > 0.5 ? 0.62 : 0.3;
       } else {
         bm.color.copy(TILE_C);
         bm.emissive.setScalar(0);

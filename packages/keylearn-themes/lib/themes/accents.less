@@ -20,6 +20,18 @@
   --accent: @accent;
   --accent-l1: @l1;
   --accent-l2: @l2;
+  /**
+   * Ink for text drawn *on* the accent, chosen from the accent's own
+   * luminance rather than from the theme's.
+   *
+   * A filled pill is a small ground of its own: a dark accent needs light
+   * text even in a light theme, and a pale accent needs dark text even at
+   * night. Hardcoding one ink per component is what left letters unreadable
+   * on the darker palettes.
+   */
+  --accent-ink: contrast(@accent, #241a12, #ffffff, 21%);
+  --accent-l1-ink: contrast(@l1, #241a12, #ffffff, 21%);
+  --accent-d1-ink: contrast(@d1, #241a12, #ffffff, 21%);
   // The accent's other faces around the app: the effort heat scale, the caret,
   // the cued key on the board, selected menu items, and the small controls.
   --effort-color: @accent;

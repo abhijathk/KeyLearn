@@ -1,0 +1,201 @@
+// Whether somebody has earned a certificate.
+//
+// Pure, and deliberately so: the same function answers "am I eligible?" on the
+// profile page and "was this genuinely earned?" on the server before a number
+// is issued. Two implementations of a standard is two standards.
+
+import {
+  type CertificateAudience,
+  type CertificateCheck,
+  type CertificateEvidence,
+  type CertificateKind,
+  type CertificateLevel,
+  type CertificateVerdict,
+} from "./types.ts";
+
+/**
+ * The adult bar: 35 words per minute at 95%.
+ *
+ * Roughly "competent", and meant to be hard. A certificate most people clear
+ * on the way past is not worth printing, and the figure is the one an employer
+ * or a school would recognise.
+ */
+export const ADULT_TYPING = { speed: 35, accuracy: 0.95 } as const;
+
+/**
+ * The adult braille bar: 50 cells per minute at 95%.
+ *
+ * Anchored to the curriculum's own `defaultTarget` of 1500 ms per cell — the
+ * pace the app already demands before it will introduce another cell, which is
+ * 40 cells per minute. A certificate has to ask for more than the floor, so
+ * this is a quarter faster, sustained across every cell rather than the
+ * handful currently in play.
+ */
+export const ADULT_BRAILLE = { speed: 50, accuracy: 0.95 } as const;
+
+type Band = {
+  readonly maxAge: number;
+  readonly typing: readonly [number, number, number];
+  readonly braille: readonly [number, number, number];
+};
+
+/**
+ * Bronze, Silver and Gold by age.
+ *
+ * A single bar across childhood would be trivial for a twelve-year-old and
+ * unreachable for a six-year-old. These sit at the top of each band in
+ * `age-norms.ts`, so a level means "doing well for your age" measured against
+ * the same figures the profile page already shows a parent.
+ *
+ * The braille column is scaled from the adult braille figure in the same
+ * proportions the typing column uses, so a child's braille certificate is
+ * exactly as hard to earn as a child's typing one. Gold at 11–12 lands on the
+ * adult bar in both columns; Silver at 11–12 lands on the app's own 1500 ms
+ * target. Those figures are anchored rather than sourced — published norms for
+ * six-key chorded entry by children barely exist — and should be revisited
+ * once there is real data.
+ */
+const BANDS: readonly Band[] = [
+  { maxAge: 6, typing: [8, 11, 14], braille: [12, 16, 20] },
+  { maxAge: 8, typing: [12, 16, 20], braille: [17, 23, 29] },
+  { maxAge: 10, typing: [18, 24, 30], braille: [26, 34, 42] },
+  { maxAge: 12, typing: [22, 28, 35], braille: [31, 40, 50] },
+];
+
+/** Used when no birth year is recorded: neither the easiest nor the hardest. */
+const NEUTRAL: Band = {
+  maxAge: 99,
+  typing: [15, 20, 25],
+  braille: [22, 29, 36],
+};
+
+export function bandFor(
+  age: number | null,
+  kind: CertificateKind,
+): readonly [number, number, number] {
+  const band =
+    age == null ? NEUTRAL : (BANDS.find((b) => age <= b.maxAge) ?? NEUTRAL);
+  return kind === "braille" ? band.braille : band.typing;
+}
+
+/** The volume, days and span a certificate needs, by who it is for. */
+const SHAPE = {
+  adult: { volume: 200, brailleVolume: 2500, days: 20, elapsed: 21 },
+  kid: { volume: 60, brailleVolume: 1200, days: 15, elapsed: 14 },
+} as const;
+
+const KID_ACCURACY = 0.9;
+
+function check(
+  id: string,
+  label: string,
+  required: number,
+  actual: number,
+  unit: CertificateCheck["unit"],
+): CertificateCheck {
+  return { id, label, required, actual, met: actual >= required, unit };
+}
+
+/**
+ * Judge the evidence.
+ *
+ * Note what this does *not* do: it never looks at a best figure. Every speed
+ * and accuracy here is a median over a window, because one exceptional lesson
+ * among hundreds is not a standard — it is a good day.
+ */
+export function assess(evidence: CertificateEvidence): CertificateVerdict {
+  const { kind, audience, age } = evidence;
+  const shape = SHAPE[audience];
+  const volume = kind === "braille" ? shape.brailleVolume : shape.volume;
+  const [bronze, silver, gold] = bandFor(age, kind);
+  const adultBar = kind === "braille" ? ADULT_BRAILLE : ADULT_TYPING;
+  const speedBar = audience === "kid" ? bronze : adultBar.speed;
+  const accuracyBar = audience === "kid" ? KID_ACCURACY : adultBar.accuracy;
+  const unit = kind === "braille" ? "cells" : "letters";
+
+  const checks: readonly CertificateCheck[] = [
+    check(
+      "coverage",
+      `Every one of the ${evidence.total} ${unit} introduced`,
+      evidence.total,
+      evidence.learned,
+      "count",
+    ),
+    check(
+      "settled",
+      `Every ${unit.slice(0, -1)} reliable, not merely met`,
+      evidence.total,
+      evidence.settled,
+      "count",
+    ),
+    check(
+      "volume",
+      kind === "braille"
+        ? "Cells entered correctly"
+        : "Course lessons completed",
+      volume,
+      evidence.volume,
+      "count",
+    ),
+    check("days", "Days practised", shape.days, evidence.daysPractised, "days"),
+    check(
+      "elapsed",
+      "Days from the first lesson to the last",
+      shape.elapsed,
+      evidence.elapsedDays,
+      "days",
+    ),
+    check("speed", "Sustained speed", speedBar, evidence.speed, "speed"),
+    check(
+      "accuracy",
+      "Sustained accuracy",
+      accuracyBar,
+      evidence.accuracy,
+      "percent",
+    ),
+  ];
+
+  const eligible = checks.every((c) => c.met);
+  return {
+    eligible,
+    checks,
+    level: eligible ? levelFor(evidence, bronze, silver, gold) : null,
+    outstanding: checks.filter((c) => !c.met),
+  };
+}
+
+function levelFor(
+  evidence: CertificateEvidence,
+  bronze: number,
+  silver: number,
+  gold: number,
+): CertificateLevel {
+  // Adults are not banded. The printed speed and accuracy say precisely how
+  // well somebody did; a word like "Distinction" compresses that into a claim
+  // the reader cannot check, and an unproctored app has not earned the right
+  // to grade.
+  if (evidence.audience === "adult") {
+    return "completion";
+  }
+  if (evidence.speed >= gold) {
+    return "gold";
+  }
+  // Bronze needs no test: this is only reached when the evidence is eligible,
+  // and eligibility already required the speed to clear the bronze bar.
+  void bronze;
+  return evidence.speed >= silver ? "silver" : "bronze";
+}
+
+/** English fallback; the UI renders a translated name. */
+export function levelName(level: CertificateLevel): string {
+  switch (level) {
+    case "gold":
+      return "Gold";
+    case "silver":
+      return "Silver";
+    case "bronze":
+      return "Bronze";
+    case "completion":
+      return "Completion";
+  }
+}

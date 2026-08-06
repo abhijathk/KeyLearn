@@ -1,4 +1,8 @@
-import { loadNgramStats, usePageData } from "@keylearn/pages-shared";
+import {
+  activeProfileId,
+  loadNgramStats,
+  usePageData,
+} from "@keylearn/pages-shared";
 import {
   type KeyStatsMap,
   makeKeyStatsMap,
@@ -228,7 +232,11 @@ export function ReportDialog({
                     </div>
                     <div className={dialog.chips}>
                       {profiles.map((p) => {
-                        const mine = p.firstName === profileName && who == null;
+                        // By id, never by name. Two learners in one household
+                        // can share a first name, and matching on it lit both
+                        // chips and reported one learner's figures under the
+                        // other's heading.
+                        const mine = who == null && p.id === activeProfileId();
                         return (
                           <button
                             key={p.id}

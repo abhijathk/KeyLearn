@@ -33,6 +33,11 @@
   --leaf-d: var(--accent-d1);
   --sunny: var(--accent);
   --sunny-d: var(--accent-d1);
+  // Text drawn on those fills. It follows the accent's own lightness, so a
+  // deep palette gets pale letters and a bright one gets dark ones — a fixed
+  // ink left the letter on the next key unreadable on half the themes.
+  --leaf-ink: var(--accent-ink);
+  --sunny-ink: var(--accent-ink);
   --sky: #3aa0ff;
   --coral: #ff7d68;
   --rose: #f5a8b8;
@@ -81,6 +86,8 @@
   --sunny-d: var(--accent);
   --nail: var(--accent-l1);
   --nail-d: var(--accent);
+  --leaf-ink: var(--accent-l1-ink);
+  --sunny-ink: var(--accent-l1-ink);
   --kshadow: 0 10px 26px rgba(0, 0, 10, 0.45), 0 2px 6px rgba(0, 0, 10, 0.3);
 }
 
@@ -352,7 +359,7 @@
   align-items: center;
   padding: 0.6rem 1.5rem;
   border-radius: 999px;
-  color: #fff;
+  color: var(--leaf-ink);
   background: var(--leaf);
   box-shadow: 0 10px 30px color-mix(in srgb, var(--leaf-d) 45%, transparent);
   font-size: 1.35rem;
@@ -425,7 +432,7 @@
   display: inline-block;
   padding: 0 0.1em;
   border-radius: 0.45rem;
-  color: var(--kink);
+  color: var(--sunny-ink);
   background: var(--sunny);
   box-shadow: 0 3px 0 var(--sunny-d);
   animation: bcur 0.8s infinite;
@@ -632,6 +639,7 @@
 
 .keyNext {
   z-index: 1;
+  color: var(--sunny-ink);
   background: var(--sunny);
   box-shadow:
     0 3.5px 0 var(--sunny-d),
@@ -828,7 +836,7 @@
 }
 
 .pillOn {
-  color: #5c4500;
+  color: var(--sunny-ink);
   background: var(--sunny);
   box-shadow: 0 3px 0 var(--sunny-d);
 }
@@ -892,7 +900,7 @@
   padding: 0.85rem;
   border: 0;
   border-radius: 999px;
-  color: #fff;
+  color: var(--leaf-ink);
   background: var(--leaf);
   box-shadow: 0 5px 0 var(--leaf-d);
   font: inherit;
@@ -1030,7 +1038,7 @@
   inline-size: 1.35rem;
   block-size: 1.35rem;
   border-radius: 0.35rem;
-  color: #3d3a2e;
+  color: var(--sunny-ink);
   background: var(--sunny);
   font-size: 0.72rem;
   font-weight: 800;

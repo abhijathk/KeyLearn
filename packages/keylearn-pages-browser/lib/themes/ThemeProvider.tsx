@@ -139,6 +139,9 @@ const ACCENT_PROPS = [
   "--accent",
   "--accent-l1",
   "--accent-l2",
+  "--accent-ink",
+  "--accent-l1-ink",
+  "--accent-d1-ink",
   "--effort-color",
   "--control-color",
   "--textinput-cursor__background-color",
@@ -146,6 +149,25 @@ const ACCENT_PROPS = [
   "--KeyboardKey-pointer__color",
   "--syntax-keyword",
 ] as const;
+
+/**
+ * Ink for text drawn on a given fill, matching the `contrast()` the shipped
+ * themes use. A custom accent has no stylesheet rule to inherit it from, so
+ * without this a household's own colour is the one place the readable-text
+ * guarantee would not hold.
+ */
+function ink(hex: string): string {
+  const n = Number.parseInt(hex.slice(1), 16);
+  const lin = (c: number) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  const l =
+    0.2126 * lin((n >> 16) & 255) +
+    0.7152 * lin((n >> 8) & 255) +
+    0.0722 * lin(n & 255);
+  return l < 0.216 ? "#ffffff" : "#241a12";
+}
 
 function shade(hex: string, amount: number): string {
   const n = Number.parseInt(hex.slice(1), 16);
@@ -181,6 +203,9 @@ function applyAccent(accent: string, day: boolean) {
     "--accent": base,
     "--accent-l1": shade(base, 0.16),
     "--accent-l2": shade(base, 0.32),
+    "--accent-ink": ink(base),
+    "--accent-l1-ink": ink(shade(base, 0.16)),
+    "--accent-d1-ink": ink(shade(base, day ? -0.16 : -0.14)),
     "--effort-color": base,
     "--control-color": base,
     "--textinput-cursor__background-color": base,

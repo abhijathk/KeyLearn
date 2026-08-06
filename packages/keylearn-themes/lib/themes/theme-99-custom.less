@@ -24,6 +24,19 @@ html[data-color="custom"] {
   --accent: @colors[@accent];
   --accent-l1: lighten(@colors[@accent], 10);
   --accent-l2: lighten(@colors[@accent], 20);
+  --accent-ink: contrast(@colors[@accent], #241a12, #ffffff, 21%);
+  --accent-l1-ink: contrast(
+    lighten(@colors[@accent], 10),
+    #241a12,
+    #ffffff,
+    21%
+  );
+  --accent-d1-ink: contrast(
+    darken(@colors[@accent], 10),
+    #241a12,
+    #ffffff,
+    21%
+  );
   --error-d1: darken(@colors[@error], 10);
   --error: @colors[@error];
   --error-l1: lighten(@colors[@error], 10);
