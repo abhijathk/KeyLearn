@@ -32,6 +32,14 @@ export function CertificateDialog({
 }): ReactNode {
   const [busy, setBusy] = useState<"png" | "pdf" | null>(null);
   const [failed, setFailed] = useState(false);
+  // The real host, not the production domain. A self-hosted copy — or this
+  // one, on localhost — would otherwise print a link to somebody else's site
+  // and send the person checking to a number that is not there.
+  const origin =
+    typeof window === "undefined"
+      ? "https://www.keylearn.com"
+      : window.location.origin;
+  const verifyUrl = `${origin}/verify/${certificate.number}`;
 
   const printed = useMemo(
     () =>
@@ -112,8 +120,20 @@ export function CertificateDialog({
           <p className={styles.certNote}>
             <FormattedMessage
               id="assess.cert.number"
-              defaultMessage="Number {number}. Anyone can check it at keylearn.com/verify — it says the level and the date, and never who holds it unless that was asked for."
-              values={{ number: printed.values.at(-1) }}
+              defaultMessage="Number {number}. <a>Anyone can check it</a> — the page gives the level and the date, and never who holds it unless that was asked for."
+              values={{
+                number: printed.values.at(-1),
+                a: (chunks) => (
+                  <a
+                    className={styles.certLink}
+                    href={verifyUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {chunks}
+                  </a>
+                ),
+              }}
             />
           </p>
           {/* Grown-ups only. Everything else about a child's record here is
@@ -122,14 +142,7 @@ export function CertificateDialog({
               somebody sends the PDF, which goes to a person rather than to an
               audience. */}
           {!kid && (
-            <CertificateShare
-              certificate={certificate}
-              origin={
-                typeof window === "undefined"
-                  ? "https://www.keylearn.com"
-                  : window.location.origin
-              }
-            />
+            <CertificateShare certificate={certificate} origin={origin} />
           )}
           {failed && (
             <p className={styles.certWarn}>

@@ -15,10 +15,10 @@ import {
   updateCustomAccent,
   useTheme,
 } from "@keylearn/themes";
+import { ConfirmDialog } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { ConfirmDialog } from "../ConfirmDialog.tsx";
 import { FloatingShell } from "../FloatingShell.tsx";
 import { accentNames } from "./accent-names.tsx";
 import * as styles from "./ThemeWindow.module.less";

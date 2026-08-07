@@ -325,6 +325,16 @@ export function MenuDrawer({
                     />
                   </RouterLink>
                 )}
+                {/* Between the account and the guide, because the person who
+                    needs it is usually not the person holding the certificate
+                    — a school office, an employer — and often has no account
+                    at all. Without an entry here their only way in is a link
+                    somebody sent them, which is the very thing they came to
+                    check. */}
+                <RouterLink to={Pages.verify.path} onClick={onClose}>
+                  <StrokeIcon className={styles.utilIcon} name="shield" />
+                  {formatMessage(Pages.verify.link.label)}
+                </RouterLink>
                 <RouterLink to={Pages.guide.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="font" />
                   {formatMessage(Pages.guide.link.label)}

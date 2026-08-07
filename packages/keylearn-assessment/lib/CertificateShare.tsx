@@ -2,6 +2,7 @@ import {
   type IssuedCertificate,
   setCertificateNamed,
 } from "@keylearn/pages-shared";
+import { ConfirmDialog } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -32,6 +33,10 @@ export function CertificateShare({
   const [named, setNamed] = useState(certificate.nameVisible);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
+  // What the tick would do, held until it is confirmed. Both directions ask:
+  // turning it on publishes a name to anybody holding the number, and turning
+  // it off quietly breaks a link somebody may already have given an employer.
+  const [asking, setAsking] = useState<boolean | null>(null);
 
   const url = `${origin}/verify/${certificate.number}`;
   const issued = new Date(certificate.issued);
@@ -65,8 +70,11 @@ export function CertificateShare({
     window.open(href, "_blank", "noopener,noreferrer");
   };
 
-  const toggleNamed = async () => {
-    const next = !named;
+  // Saved the moment it is confirmed — there is no second button to press,
+  // because a confirmation that then needs saving is two decisions dressed as
+  // one, and the one people forget is the second.
+  const applyNamed = async (next: boolean) => {
+    setAsking(null);
     setBusy(true);
     // Optimistic, then corrected. This is a preference rather than a
     // transaction, and a checkbox that lags a round trip feels broken.
@@ -171,7 +179,7 @@ export function CertificateShare({
           checked={named}
           disabled={busy}
           onChange={() => {
-            void toggleNamed();
+            setAsking(!named);
           }}
         />
         <span>
@@ -195,6 +203,24 @@ export function CertificateShare({
           />
         )}
       </p>
+
+      {asking != null && (
+        <ConfirmDialog
+          title={asking ? "Show your name?" : "Stop showing your name?"}
+          message={
+            asking
+              ? `Anyone who types ${certificate.number} into the check page will see ${certificate.name}, along with the level and the date. Use this when you are sharing the certificate with somebody who needs to confirm it is yours.`
+              : `The check page will stop naming you. The number stays valid, but anybody you have already given it to — an employer checking a CV — will no longer see who it belongs to.`
+          }
+          confirmLabel={asking ? "Show my name" : "Hide my name"}
+          onConfirm={() => {
+            void applyNamed(asking);
+          }}
+          onCancel={() => {
+            setAsking(null);
+          }}
+        />
+      )}
     </div>
   );
 }

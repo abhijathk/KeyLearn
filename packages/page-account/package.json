@@ -22,6 +22,7 @@
     "@keylearn/result": "*",
     "@keylearn/result-loader": "*",
     "@keylearn/settings": "*",
+    "@keylearn/speech": "*",
     "@keylearn/textinput": "*",
     "@keylearn/themes": "*",
     "@keylearn/thirdparties": "*",

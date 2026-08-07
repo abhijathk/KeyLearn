@@ -1,8 +1,8 @@
 import { logout as doLogout } from "@keylearn/pages-shared";
+import { ConfirmDialog } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { useLocation, useNavigate } from "react-router";
-import { ConfirmDialog } from "../ConfirmDialog.tsx";
 import * as shell from "../FloatingShell.module.less";
 import { BrailleAvatar } from "./BrailleBadge.tsx";
 import { useProfiles } from "./context.tsx";

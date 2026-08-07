@@ -30,3 +30,18 @@ export function millis(value: Date | string | number | undefined): number {
   // than letting it masquerade as the newest.
   return 0;
 }
+
+/**
+ * A stored flag as a boolean, whatever the database returned.
+ *
+ * SQLite has no boolean type: it hands back the integer 1 or 0, so a strict
+ * `=== true` is false for a row that is plainly true. That is what made the
+ * name-visibility switch look as though it never saved — the value was
+ * written and read back correctly, and only the comparison was wrong.
+ *
+ * The same shape as `millis`, and for the same reason: MySQL and SQLite
+ * disagree about types, and the disagreement is silent.
+ */
+export function flag(value: unknown): boolean {
+  return value === true || value === 1 || value === "1";
+}

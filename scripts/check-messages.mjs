@@ -25,7 +25,7 @@ const SKIP = new Set(["node_modules", ".types", "lib/messages"]);
  * regex sound rather than a guess.
  */
 const PAIR =
-  /\bid[=:]\s*\{?["']([^"']+)["']\}?[,\s]*\n?\s*defaultMessage[=:]\s*\{?["']/g;
+  /\bid[=:]\s*\{?["']([^"']+)["']\}?[,\s]*\n?\s*defaultMessage[=:]\s*\{?["']((?:[^"'\\]|\\.)*)["']/g;
 
 function* sources(dir) {
   for (const entry of readdirSync(dir)) {
@@ -43,14 +43,41 @@ function* sources(dir) {
 
 const catalogue = readJsonSync(translationsPath(defaultLocale));
 const missing = new Map();
+/** id -> Map(defaultMessage -> Set(file)). */
+const uses = new Map();
 
 for (const file of sources(ROOT)) {
   const text = readFileSync(file, "utf8");
-  for (const [, id] of text.matchAll(PAIR)) {
+  for (const [, id, message] of text.matchAll(PAIR)) {
     if (!(id in catalogue)) {
       missing.set(id, file.slice(ROOT.length + 1));
     }
+    if (!uses.has(id)) {
+      uses.set(id, new Map());
+    }
+    const seen = uses.get(id);
+    if (!seen.has(message)) {
+      seen.set(message, new Set());
+    }
+    seen.get(message).add(file.slice(ROOT.length + 1));
   }
+}
+
+// Two places using one id for different things is not a translation problem —
+// it is one screen silently renaming another. The User Guide's menu entry
+// became "About the assessment" this way, because a new dialog reused
+// `guide.title`. Reported rather than fatal: a handful of long-standing ones
+// differ only in wording ("Close" / "Dismiss") and are harmless.
+const clashes = [...uses].filter(([, seen]) => seen.size > 1);
+if (clashes.length > 0) {
+  console.warn(`${clashes.length} id(s) are used with conflicting text:`);
+  for (const [id, seen] of clashes.sort()) {
+    console.warn(`  ${id}`);
+    for (const [message, files] of seen) {
+      console.warn(`    "${message.slice(0, 60)}"  —  ${[...files].join(", ")}`);
+    }
+  }
+  console.warn("");
 }
 
 if (missing.size > 0) {

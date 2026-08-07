@@ -1,13 +1,13 @@
 import { useIntlDates } from "@keylearn/intl";
 import { Pages, type UserDetails } from "@keylearn/pages-shared";
 import { TextField } from "@keylearn/widget";
+import { confirmStyles as dlg } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { ActivityLog } from "./ActivityLog.tsx";
 import { PasswordField } from "./AuthPage.tsx";
-import * as dlg from "./ConfirmDialog.module.less";
 import { ParentPinCard } from "./ParentPinCard.tsx";
 import { PasswordStrength } from "./PasswordStrength.tsx";
 import { AccountService, type Passkey } from "./service.ts";

@@ -7,6 +7,8 @@ import {
   type UserDetails,
 } from "@keylearn/pages-shared";
 import { Button, Icon, TextField } from "@keylearn/widget";
+import { confirmStyles as dlg } from "@keylearn/widget";
+import { ConfirmDialog } from "@keylearn/widget";
 import { mdiCreditCard } from "@mdi/js";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -15,8 +17,6 @@ import { NavLink } from "react-router";
 import * as styles from "./AccountPage.module.less";
 import { AccountPricePreview } from "./AccountPricePreview.tsx";
 import { type AccountActions, useAccountActions } from "./actions.ts";
-import * as dlg from "./ConfirmDialog.module.less";
-import { ConfirmDialog } from "./ConfirmDialog.tsx";
 import { Toggle } from "./controls.tsx";
 import { CoursePane } from "./course/CoursePane.tsx";
 import { FloatingShell } from "./FloatingShell.tsx";

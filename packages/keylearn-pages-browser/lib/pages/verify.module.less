@@ -1,21 +1,16 @@
-// Checking a certificate. Plain, because whoever is here wants one answer.
+// Checking a certificate. Plain, because whoever is here wants one answer —
+// and inside a window rather than on a page, because the question is eight
+// characters long and a full-width column around it overstates it.
 
 .root {
-  max-inline-size: 34rem;
-  margin-inline: auto;
-  padding-block: 1.5rem 3rem;
-}
-
-.title {
-  margin: 0 0 0.4rem;
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  display: flex;
+  flex-direction: column;
 }
 
 .lede {
-  margin: 0 0 1.4rem;
+  margin: 0 0 1.1rem;
   color: var(--text-color-f1);
+  font-size: 0.88rem;
 }
 
 .form {

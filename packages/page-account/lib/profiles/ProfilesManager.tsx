@@ -16,6 +16,7 @@ import {
 } from "@keylearn/pages-shared";
 import { myCertificates } from "@keylearn/pages-shared";
 import { Button } from "@keylearn/widget";
+import { ConfirmDialog } from "@keylearn/widget";
 import { clsx } from "clsx";
 import {
   type CSSProperties,
@@ -25,7 +26,6 @@ import {
   useState,
 } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { ConfirmDialog } from "../ConfirmDialog.tsx";
 import { Medal, medalFor } from "../course/Medal.tsx";
 import { Overlay } from "../Overlay.tsx";
 import { type ProfileInput } from "../service.ts";

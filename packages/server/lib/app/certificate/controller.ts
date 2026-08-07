@@ -15,8 +15,8 @@ import {
   type Sitting,
 } from "@keylearn/certificate";
 import { Certificate, CertificateSitting, Profile } from "@keylearn/database";
-import { type AuthState } from "../auth/index.ts";
-import { millis } from "./timestamp.ts";
+import { type AuthState, rateLimit } from "../auth/index.ts";
+import { flag, millis } from "./timestamp.ts";
 
 /**
  * Issuing and checking certificates.
@@ -45,6 +45,10 @@ export class Controller {
     @pathParam("pid") pid: string,
     @body.json(null, { maxLength: 4096 }) value: unknown,
   ) {
+    // A sitting is a minute of typing at least, so anything near this is a
+    // script rather than a learner, and each row is a row in the table the
+    // verdict reads.
+    rateLimit(ctx, "certificate-sitting", 20, 60_000);
     const profile = await this.owned(ctx, pid);
     const sitting = readSitting(value);
     await CertificateSitting.query().insert({
@@ -76,6 +80,9 @@ export class Controller {
     @pathParam("pid") pid: string,
     @body.json(null, { maxLength: 8192 }) value: unknown,
   ) {
+    // Issuing re-judges over every stored sitting, so it is the most expensive
+    // thing here and the one most worth repeating blindly.
+    rateLimit(ctx, "certificate-issue", 10, 60_000);
     const user = ctx.state.requireUser();
     const profile = await this.owned(ctx, pid);
     const { evidence, language, nameVisible } = readClaim(value, profile);
@@ -179,6 +186,7 @@ export class Controller {
     @pathParam("number") number: string,
     @body.json(null, { maxLength: 256 }) value: unknown,
   ) {
+    rateLimit(ctx, "certificate-named", 20, 60_000);
     const user = ctx.state.requireUser();
     const sequence = sequenceOf(number);
     if (sequence == null) {
@@ -233,6 +241,12 @@ export class Controller {
    */
   @http.GET("/_/certificate/verify/{number:[A-Za-z0-9]+}")
   async verify(ctx: Context, @pathParam("number") number: string) {
+    // The only endpoint here a stranger can reach, so the only one that can be
+    // hammered by somebody without an account. Thirty a minute is far above
+    // what a person checking a certificate does — a school office with a stack
+    // of them is still one every few seconds — and far below what walking the
+    // register would need.
+    rateLimit(ctx, "certificate-verify", 30, 60_000);
     // The check character rejects a mistyped number before any lookup, which
     // also keeps this from being a way to enumerate what exists. Inverting the
     // scramble turns the rest into an indexed read rather than a scan over
@@ -253,7 +267,10 @@ export class Controller {
       language: found.language,
       kind: found.kind,
       issued: new Date(millis(found.createdAt)).toISOString(),
-      name: found.audience === "kid" || !found.nameVisible ? null : found.name,
+      name:
+        found.audience === "kid" || !flag(found.nameVisible)
+          ? null
+          : found.name,
     };
   }
 
@@ -281,7 +298,7 @@ function toDetails(row: Certificate) {
     speed: row.speed,
     accuracy: row.accuracy,
     name: row.name,
-    nameVisible: row.nameVisible === true,
+    nameVisible: flag(row.nameVisible),
     // Always ISO. SQLite hands back "2026-08-07 02:00:09", which is not a
     // format `new Date()` is required to parse and which browsers disagree
     // about — so the wire format is pinned here rather than left to whichever

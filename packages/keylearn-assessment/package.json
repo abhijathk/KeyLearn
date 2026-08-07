@@ -11,7 +11,8 @@
     "@keylearn/keyboard": "*",
     "@keylearn/pages-shared": "*",
     "@keylearn/result": "*",
-    "@keylearn/settings": "*"
+    "@keylearn/settings": "*",
+    "@keylearn/widget": "*"
   },
   "devDependencies": {},
   "scripts": {

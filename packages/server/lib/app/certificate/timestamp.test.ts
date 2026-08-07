@@ -1,6 +1,6 @@
 import { test } from "node:test";
-import { equal } from "rich-assert";
-import { millis } from "./timestamp.ts";
+import { equal, isFalse, isTrue } from "rich-assert";
+import { flag, millis } from "./timestamp.ts";
 
 const UTC = Date.UTC(2026, 7, 7, 2, 0, 9);
 
@@ -30,4 +30,17 @@ test("an unreadable timestamp sorts oldest rather than newest", () => {
   // recent sitting and displace a real one from the window.
   equal(millis(undefined), 0);
   equal(millis("not a date"), 0);
+});
+
+test("a stored flag is read as a boolean on either database", () => {
+  // SQLite has no boolean type and returns the integer. A strict `=== true`
+  // reported the name-visibility switch as off for a row that was plainly on,
+  // which looked exactly like a setting that would not save.
+  isTrue(flag(true));
+  isTrue(flag(1));
+  isTrue(flag("1"));
+  isFalse(flag(false));
+  isFalse(flag(0));
+  isFalse(flag(null));
+  isFalse(flag(undefined));
 });

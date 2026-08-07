@@ -4,11 +4,8 @@ import {
   isCertificateNumber,
   normalizeCertificateNumber,
 } from "@keylearn/certificate";
-import {
-  Screen,
-  verifyCertificate,
-  type VerifyResult,
-} from "@keylearn/pages-shared";
+import { FloatingShell } from "@keylearn/page-account";
+import { verifyCertificate, type VerifyResult } from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -52,15 +49,20 @@ export default function Page(): ReactNode {
   const tidy = normalizeCertificateNumber(typed);
   const wellFormed = isCertificateNumber(tidy);
 
+  // A window rather than a page. Whoever is here has one eight-character
+  // question and wants one answer; a full page of empty column either side of
+  // a short form says the answer is bigger than it is.
   return (
-    <Screen>
+    <FloatingShell
+      compact={true}
+      title={
+        <FormattedMessage
+          id="verify.title"
+          defaultMessage="Check a certificate"
+        />
+      }
+    >
       <div className={styles.root}>
-        <h1 className={styles.title}>
-          <FormattedMessage
-            id="verify.title"
-            defaultMessage="Check a certificate"
-          />
-        </h1>
         <p className={styles.lede}>
           <FormattedMessage
             id="verify.lede"
@@ -191,6 +193,6 @@ export default function Page(): ReactNode {
           />
         </p>
       </div>
-    </Screen>
+    </FloatingShell>
   );
 }
