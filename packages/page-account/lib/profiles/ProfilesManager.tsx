@@ -1,5 +1,6 @@
 import { brailleStats } from "@keylearn/braille";
 import { alphabetName } from "@keylearn/certificate";
+import { Medal, medalFor } from "@keylearn/certificate-ui";
 import {
   artFamilies,
   artSeedFromName,
@@ -11,6 +12,7 @@ import {
 import {
   isPremiumUser,
   PLACES_BRAILLE,
+  PROFILE_NAME_MAX,
   sightedPlaces,
   usePageData,
 } from "@keylearn/pages-shared";
@@ -26,7 +28,6 @@ import {
   useState,
 } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { Medal, medalFor } from "../course/Medal.tsx";
 import { Overlay } from "../Overlay.tsx";
 import { type ProfileInput } from "../service.ts";
 import { familyNames } from "./art-names.tsx";
@@ -293,15 +294,32 @@ export function ProfilesManager(): ReactNode {
                   kind={p.kind}
                 />
                 <span className={styles.rowInfo}>
+                  {/* Full name here and nowhere else in the app. This is the
+                      household's own register — the one place a parent is
+                      distinguishing between people rather than greeting one —
+                      and it is the name the certificate will carry. A child
+                      with no surname simply shows their first name. */}
                   <span className={styles.rowName}>
-                    {p.firstName}
+                    <span className={styles.rowNameText}>
+                      {[p.firstName, p.lastName].filter(Boolean).join(" ")}
+                    </span>
+                    {/* A dot, not a word. "Active" was the widest thing on
+                        the line and it repeated the highlighted row it sat
+                        inside; a lit dot says the same thing and leaves the
+                        space to the name. The label stays for anyone who
+                        cannot see the colour. */}
                     {isActive && (
-                      <span className={styles.activeChip}>
-                        <FormattedMessage
-                          id="profiles.active"
-                          defaultMessage="Active"
-                        />
-                      </span>
+                      <span
+                        className={styles.activeDot}
+                        title={formatMessage({
+                          id: "profiles.active",
+                          defaultMessage: "Active",
+                        })}
+                        aria-label={formatMessage({
+                          id: "profiles.active",
+                          defaultMessage: "Active",
+                        })}
+                      />
                     )}
                   </span>
                   <ProgressLine p={p} st={stats.get(p.id)} />
@@ -477,8 +495,7 @@ function ProfileEditor({
   const { formatMessage } = useIntl();
   const [kind, setKind] = useState<ProfileKind>(profile?.kind ?? "kid");
   const [firstName, setFirstName] = useState(profile?.firstName ?? "");
-  // Last name is preserved on edit but no longer part of the simplified form.
-  const [lastName] = useState(profile?.lastName ?? "");
+  const [lastName, setLastName] = useState(profile?.lastName ?? "");
   const [birthYear, setBirthYear] = useState(
     profile?.birthYear != null ? String(profile.birthYear) : "",
   );
@@ -515,6 +532,22 @@ function ProfileEditor({
   // Grown-ups and children have entirely different families, so switching
   // kind has to move the avatar to one that exists in the set it just landed
   // in. The seed is kept: the shuffle is theirs, only the shapes change.
+  /**
+   * Whether this learner may still change kind. Only before they exist.
+   *
+   * A grown-up and a child are not two settings of one learner: they practise
+   * on different surfaces, against different curricula, under different
+   * consent and age rules, and their history is written per surface. Switching
+   * an existing profile would leave all of that behind and produce a learner
+   * whose record belongs to somebody they no longer are.
+   */
+  const locked = profile != null;
+  const lockedWhy = formatMessage({
+    id: "profiles.kindLocked",
+    defaultMessage:
+      "A learner stays a grown-up or a kid. Add a new learner if you need the other kind.",
+  });
+
   const switchKind = (next: ProfileKind) => {
     setKind(next);
     if (avatar.type === "art" && !isArtFamily(avatar.family, next)) {
@@ -534,6 +567,16 @@ function ProfileEditor({
         formatMessage({
           id: "profiles.needName",
           defaultMessage: "Please enter a first name.",
+        }),
+      );
+      return;
+    }
+    if (kind === "adult" && lastName.trim() === "") {
+      setError(
+        formatMessage({
+          id: "profiles.needLastName",
+          defaultMessage:
+            "Please enter a last name. A grown-up’s certificate carries their full name.",
         }),
       );
       return;
@@ -639,6 +682,8 @@ function ProfileEditor({
             <div className={styles.kindRow}>
               <button
                 className={clsx(styles.seg, kind === "adult" && styles.segOn)}
+                disabled={locked}
+                title={locked ? lockedWhy : undefined}
                 onClick={() => switchKind("adult")}
               >
                 <AdultIcon />
@@ -653,6 +698,8 @@ function ProfileEditor({
                   styles.segKid,
                   kind === "kid" && styles.segOn,
                 )}
+                disabled={locked}
+                title={locked ? lockedWhy : undefined}
                 onClick={() => switchKind("kid")}
               >
                 <KidIcon />
@@ -672,6 +719,7 @@ function ProfileEditor({
               <input
                 className={styles.field}
                 type="text"
+                maxLength={PROFILE_NAME_MAX}
                 value={firstName}
                 onChange={(ev) => setFirstName(ev.target.value)}
               />
@@ -695,6 +743,41 @@ function ProfileEditor({
                 onChange={(ev) => setBirthYear(ev.target.value)}
               />
             </div>
+          </div>
+
+          <div className={styles.field2}>
+            <p className={styles.editorLbl}>
+              <FormattedMessage
+                id="profiles.lastName"
+                defaultMessage="Last name"
+              />
+              {kind === "kid" && (
+                <span className={styles.editorOptional}>
+                  <FormattedMessage
+                    id="profiles.optional"
+                    defaultMessage="optional"
+                  />
+                </span>
+              )}
+            </p>
+            <input
+              className={styles.field}
+              type="text"
+              maxLength={PROFILE_NAME_MAX}
+              value={lastName}
+              onChange={(ev) => setLastName(ev.target.value)}
+            />
+            {/* Only while it is empty. Once there is a surname the reminder
+                has done its job, and a hint that stays put after it has been
+                acted on reads as a warning about something still wrong. */}
+            {kind === "kid" && lastName.trim() === "" && (
+              <p className={styles.editorHint}>
+                <FormattedMessage
+                  id="profiles.lastName.hint"
+                  defaultMessage="Leave it blank if you prefer. A last name here is the one their certificate would carry."
+                />
+              </p>
+            )}
           </div>
 
           <div className={styles.field2}>

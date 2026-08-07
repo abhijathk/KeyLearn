@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import { equal, isTrue } from "rich-assert";
+import { fitName } from "./criteria.ts";
 import { CELL, nameCapacity, type SheetName, SHEETS } from "./layout.ts";
 import {
   alphabetName,
@@ -163,4 +164,29 @@ test("an alphabet is named, not coded", () => {
   }
   equal(alphabetName("ru"), "Russian");
   equal(alphabetName(BRAILLE_ALPHABET), "Unified English Braille · grade 1");
+});
+
+test("the printed name is decided once, at issue", () => {
+  // A certificate is a document, not a view of a profile. Renaming a learner
+  // afterwards — or giving them the surname they did not have when they sat
+  // it — must not rewrite a sheet somebody may already have printed and hung
+  // on a wall. The server stores the fitted name and every reader takes it
+  // from the record; this pins the shortening it stores.
+  const capacity = nameCapacity("adult", "typing");
+  const atIssue = fitName("Abhijath", "Kottikkal", capacity);
+  equal(atIssue, "Abhijath Kottikkal");
+
+  // The same learner, renamed. Nothing about the stored string depends on it.
+  const printed = printedFields({
+    sheet: "adult",
+    kind: "typing",
+    level: "completion",
+    name: atIssue,
+    languageLine: "English",
+    speed: 51.6,
+    accuracy: 0.981,
+    number: "WM2FRJ2B",
+    issued: new Date(Date.UTC(2026, 7, 7)),
+  });
+  equal(printed.name, "Abhijath Kottikkal");
 });

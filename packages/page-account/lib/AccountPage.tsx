@@ -3,6 +3,7 @@ import {
   Avatar,
   isPremiumUser,
   Pages,
+  PROFILE_NAME_MAX,
   usePageData,
   type UserDetails,
 } from "@keylearn/pages-shared";
@@ -248,6 +249,7 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               onAlsoEverywhere={setAlsoEverywhere}
               onLogout={() => setConfirm("logout")}
               onDelete={() => setConfirm("delete")}
+              onRename={(name) => actions.patchAccount({ name })}
             />
           )}
 
@@ -379,6 +381,7 @@ function AccountPane({
   onAlsoEverywhere,
   onLogout,
   onDelete,
+  onRename,
 }: {
   readonly user: UserDetails;
   readonly publicUser: AnyUser;
@@ -388,20 +391,22 @@ function AccountPane({
   readonly onAlsoEverywhere: (on: boolean) => void;
   readonly onLogout: () => void;
   readonly onDelete: () => void;
+  readonly onRename: (name: string) => void;
 }): ReactNode {
   return (
     <div className={styles.paneScroll}>
       <div className={styles.identity}>
         <Avatar user={publicUser} size="large" />
         <div className={styles.identityText}>
-          <span className={styles.displayName}>
-            {publicUser.name}
-            {/* SSO accounts are verified by the provider, so treat a connected
-                sign-in method as verified too. */}
-            {(user.emailVerified || user.externalId.length > 0) && (
-              <VerifiedBadge />
-            )}
-          </span>
+          {/* The handle leaderboards, a public profile and the wordmark
+              show. It was set once at sign-up — and for an account created
+              through a provider it was set to whatever that provider called
+              them, surname and all, with no way back to it. */}
+          <NameEditor
+            name={publicUser.name}
+            onRename={onRename}
+            verified={user.emailVerified || user.externalId.length > 0}
+          />
           <span className={styles.email}>{user.email}</span>
         </div>
       </div>
@@ -840,5 +845,102 @@ function SignedOut(): ReactNode {
         </div>
       </div>
     </FloatingShell>
+  );
+}
+
+/**
+ * Change the handle the app shows publicly.
+ *
+ * Inline rather than a window: it is one short field, and a dialog for a
+ * rename is more ceremony than the decision deserves. Empty is refused
+ * silently by not offering the save — an account with no name has nowhere
+ * sensible to fall back to, and an error message for a field somebody has
+ * simply not finished typing is noise.
+ */
+function NameEditor({
+  name,
+  verified,
+  onRename,
+}: {
+  readonly name: string;
+  readonly verified: boolean;
+  readonly onRename: (name: string) => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const tidy = draft.trim();
+  const changed = tidy !== "" && tidy !== name;
+
+  if (!editing) {
+    return (
+      <span className={styles.displayName}>
+        {name}
+        {/* SSO accounts are verified by the provider, so treat a connected
+            sign-in method as verified too. */}
+        {verified && <VerifiedBadge />}
+        <button
+          type="button"
+          className={styles.renameIcon}
+          title={formatMessage({
+            id: "account.rename.action",
+            defaultMessage: "Change display name",
+          })}
+          aria-label={formatMessage({
+            id: "account.rename.action",
+            defaultMessage: "Change display name",
+          })}
+          onClick={() => {
+            setDraft(name);
+            setEditing(true);
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden={true}>
+            <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
+            <path d="M14.5 7.5 16.5 9.5" />
+          </svg>
+        </button>
+      </span>
+    );
+  }
+
+  return (
+    <span className={styles.renameRow}>
+      <input
+        className={styles.renameField}
+        type="text"
+        autoFocus={true}
+        maxLength={PROFILE_NAME_MAX}
+        value={draft}
+        onChange={(ev) => setDraft(ev.target.value)}
+        onKeyDown={(ev) => {
+          if (ev.key === "Enter" && changed) {
+            onRename(tidy);
+            setEditing(false);
+          }
+          if (ev.key === "Escape") {
+            setEditing(false);
+          }
+        }}
+      />
+      <button
+        type="button"
+        className={styles.subtleBtn}
+        disabled={!changed}
+        onClick={() => {
+          onRename(tidy);
+          setEditing(false);
+        }}
+      >
+        <FormattedMessage id="account.rename.save" defaultMessage="Save" />
+      </button>
+      <button
+        type="button"
+        className={styles.subtleBtn}
+        onClick={() => setEditing(false)}
+      >
+        <FormattedMessage id="account.rename.cancel" defaultMessage="Cancel" />
+      </button>
+    </span>
   );
 }

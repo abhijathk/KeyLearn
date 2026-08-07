@@ -8,6 +8,7 @@
   "dependencies": {
     "@keylearn/braille": "*",
     "@keylearn/certificate": "*",
+    "@keylearn/certificate-ui": "*",
     "@keylearn/chart": "*",
     "@keylearn/identicon": "*",
     "@keylearn/intl": "*",

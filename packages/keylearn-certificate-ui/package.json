@@ -6,7 +6,9 @@
   "main": "lib/index.ts",
   "types": ".types/index.d.ts",
   "dependencies": {
-    "@keylearn/certificate": "*"
+    "@keylearn/certificate": "*",
+    "@keylearn/pages-shared": "*",
+    "@keylearn/widget": "*"
   },
   "devDependencies": {},
   "scripts": {

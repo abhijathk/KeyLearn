@@ -117,6 +117,11 @@ const TPrefs = z.record(
 const TProfile = z.object({
   kind: z.enum(["adult", "kid"]),
   firstName: z.string().min(1).max(32),
+  // Required for a grown-up, optional for a child — enforced below, because a
+  // field's presence depends on a sibling field's value. A grown-up's
+  // certificate is a document they may hand to an employer and it carries
+  // their full name; a child's surname is a privacy decision that belongs to
+  // the parent, and nothing the app prints for a child needs one.
   lastName: z.string().max(32).optional(),
   birthYear: z
     .number()
@@ -136,7 +141,21 @@ const TProfile = z.object({
   parentalConsent: z.boolean().optional(),
 });
 type TProfile = z.infer<typeof TProfile>;
-const PProfile = zod(TProfile, () => {
+
+/**
+ * Creating a profile, where the surname rule can be checked.
+ *
+ * It lives here rather than on `TProfile` because a refined schema cannot be
+ * made partial, and the patch endpoint below needs exactly that. A patch is
+ * checked separately, against the profile as it will be once the patch lands
+ * — a rule applied to a fragment would reject an edit that never touched the
+ * name at all.
+ */
+const TProfileCreate = TProfile.refine(
+  (p) => p.kind !== "adult" || (p.lastName ?? "").trim() !== "",
+  { message: "A grown-up needs a last name", path: ["lastName"] },
+);
+const PProfile = zod(TProfileCreate, () => {
   throw new ApplicationError("Invalid profile");
 });
 
@@ -1648,6 +1667,27 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
+    // A learner does not change kind. Grown-ups and children practise on
+    // different surfaces against different curricula, under different consent
+    // and age rules, and their history is written per surface — switching
+    // would leave all of that behind. The editor disables the control; this is
+    // what makes it true for anything that posts the form.
+    if (data.kind !== undefined && data.kind !== profile.kind) {
+      throw new ApplicationError(
+        "A learner stays a grown-up or a kid. Add a new learner instead.",
+      );
+    }
+
+    // Checked against the profile as it will be, not against the fragment: an
+    // edit that only changes an avatar must not be refused because the patch
+    // happens not to mention a surname.
+    const willBeKind = data.kind ?? profile.kind;
+    const willBeLast =
+      data.lastName !== undefined ? data.lastName : (profile.lastName ?? "");
+    if (willBeKind === "adult" && (willBeLast ?? "").trim() === "") {
+      throw new ApplicationError("A grown-up needs a last name");
+    }
+
     const patch: Record<string, unknown> = {};
     if (data.firstName !== undefined) patch.firstName = data.firstName;
     if (data.lastName !== undefined) patch.lastName = data.lastName || null;

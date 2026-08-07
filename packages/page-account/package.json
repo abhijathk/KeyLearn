@@ -9,6 +9,7 @@
     "@keylearn/assessment": "*",
     "@keylearn/braille": "*",
     "@keylearn/certificate": "*",
+    "@keylearn/certificate-ui": "*",
     "@keylearn/debug": "*",
     "@keylearn/identicon": "*",
     "@keylearn/intl": "*",

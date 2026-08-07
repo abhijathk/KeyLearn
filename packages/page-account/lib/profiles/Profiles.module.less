@@ -104,29 +104,38 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  min-inline-size: 0;
   font-size: 0.9rem;
   font-weight: 700;
 }
 
-.activeChip {
-  display: inline-flex;
-  gap: 0.3rem;
-  align-items: center;
-  color: var(--accent-d1);
-  font-family: var(--default-font-family);
-  font-size: 0.55rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+// The name gives way, the "active" chip beside it does not. A long full name
+// would otherwise push the chip out of the row, and the chip is the one thing
+// on this line a parent is scanning for.
+.rowNameText {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  &::before {
-    content: "";
-    inline-size: 0.35rem;
-    block-size: 0.35rem;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent);
-  }
+// The learner at the keyboard right now. A lit dot rather than a word: the
+// row is already highlighted, so the label was saying the same thing twice
+// while taking the width the name wanted.
+//
+// Green, and not the theme accent. "Live" is a meaning, not a decoration —
+// green says it in every interface anyone has used, whereas an accent-coloured
+// dot says whatever colour the household happens to have picked, and on a
+// Cerulean theme it simply read as blue. It is also the one mark on this row
+// that has to survive the accent being changed to green itself, which is why
+// the ring is drawn from the same fixed hue rather than from a token.
+.activeDot {
+  flex: none;
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  border-radius: 50%;
+  background: #35c26b;
+  box-shadow: 0 0 0 3px rgb(53 194 107 / 26%);
 }
 
 .rowMeta {
@@ -1006,4 +1015,24 @@
 
 .medals img + img {
   margin-inline-start: -0.55rem;
+}
+
+// Said next to the label rather than in a hint below it: a surname is optional
+// for a child and required for a grown-up, and that is worth knowing before
+// the field is filled in rather than after it is refused.
+.editorOptional {
+  margin-inline-start: 0.4rem;
+  opacity: 0.75;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+// Shown only while the surname is empty — see the editor. Small and quiet: it
+// is an offer, not a correction.
+.editorHint {
+  margin: 0.35rem 0 0;
+  color: var(--text-color-f2);
+  font-size: 0.68rem;
+  line-height: 1.4;
 }

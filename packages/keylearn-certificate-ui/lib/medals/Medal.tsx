@@ -1,11 +1,11 @@
 import { type ClassName } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
-import braille from "./assets/medal-braille.png";
-import bronze from "./assets/medal-bronze.png";
-import completion from "./assets/medal-completion.png";
-import gold from "./assets/medal-gold.png";
-import silver from "./assets/medal-silver.png";
+import braille from "../assets/medal-braille.png";
+import bronze from "../assets/medal-bronze.png";
+import completion from "../assets/medal-completion.png";
+import gold from "../assets/medal-gold.png";
+import silver from "../assets/medal-silver.png";
 import * as styles from "./Medal.module.less";
 
 /**
@@ -47,7 +47,7 @@ export function Medal({
 }: {
   readonly kind: MedalKind;
   /** `pin` is the size it sits at on an avatar; `hero` the ready-to-sit card. */
-  readonly size?: "pin" | "small" | "normal" | "hero";
+  readonly size?: "pin" | "small" | "medium" | "normal" | "hero";
   readonly title?: string;
   readonly className?: ClassName;
 }): ReactNode {

@@ -1,3 +1,4 @@
+import { EarnedMedals, useEarnedCertificates } from "@keylearn/certificate-ui";
 import {
   makeAccuracyDistribution,
   makeSpeedDistribution,
@@ -186,7 +187,10 @@ function Identity({
   });
   const streak = dailyStreak(results);
   const signedIn = user != null || publicUser.id != null;
-  const { profileName, profileAvatar } = useResultsSafe();
+  const { profileName, profileAvatar, namespace } = useResultsSafe();
+  // Whatever this learner has earned. Read here rather than passed in, because
+  // the header is the only part of this page that has any use for it.
+  const earned = useEarnedCertificates(namespace);
   const account =
     user != null
       ? user.name
@@ -243,6 +247,10 @@ function Identity({
           )}
         </i>
       </span>
+      {/* Beside the name and the day count, which is where somebody looking
+          for "how is this learner doing" is already looking. Nothing renders
+          for a learner with none. */}
+      <EarnedMedals certificates={earned} size="medium" />
     </div>
   );
 }

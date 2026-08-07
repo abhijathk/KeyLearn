@@ -435,7 +435,15 @@ export class User extends TimestampMixin(Model) {
     // signing in, so the account starts unverified and has to pass the emailed
     // code before it can be used — otherwise a provider could pre-register an
     // address its real owner has not reached yet.
-    const name = await User.findUniqueName(email, ro.name ?? email);
+    // First name only, like the email sign-up path beside it. A provider
+    // hands over a full name ("Abhijath Kottikkal") and this handle is what
+    // the app shows on leaderboards, on a public profile and beside the
+    // wordmark — none of which should carry somebody's surname. The full name
+    // stays on the learner profile, which is where the certificate reads it.
+    const name = await User.findUniqueName(
+      email,
+      givenNameOf(ro.name) ?? email,
+    );
     const created = await User.query().insertGraphAndFetch({
       email,
       name,
@@ -454,6 +462,15 @@ export class User extends TimestampMixin(Model) {
     return verified ? { kind: "ok", user } : { kind: "verify", user, email };
   }
 
+  /**
+   * The first word of a provider's display name.
+   *
+   * Providers give "First Last", occasionally with a middle name. Splitting on
+   * whitespace is crude but it is the only thing available — there is no
+   * separate given-name field in the profile every provider returns — and the
+   * cost of getting it wrong is a handle that is shorter than expected rather
+   * than one that leaks a surname.
+   */
   static parseResourceOwner(ro: ResourceOwner): ResourceOwner {
     const emailType = User.jsonSchema.properties.email;
     const nameType = User.jsonSchema.properties.name;
@@ -1427,4 +1444,16 @@ export class Certificate extends Model {
   name?: string;
   nameVisible?: boolean;
   createdAt?: Date;
+}
+
+/**
+ * The first word of a display name, or null when there is nothing usable.
+ *
+ * Used when an identity provider hands over a full name and the app needs the
+ * handle it shows publicly — leaderboards, a public profile, the wordmark. A
+ * surname belongs on the learner profile and the certificate, not there.
+ */
+function givenNameOf(name: string | null | undefined): string | null {
+  const first = (name ?? "").trim().split(/\s+/)[0] ?? "";
+  return first === "" ? null : first;
 }

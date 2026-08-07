@@ -1,4 +1,4 @@
-import { Pages, usePageData } from "@keylearn/pages-shared";
+import { Pages, PROFILE_NAME_MAX, usePageData } from "@keylearn/pages-shared";
 import { Button, CheckBox, Icon, TextField } from "@keylearn/widget";
 import {
   mdiAccountPlus,
@@ -953,6 +953,7 @@ function RegisterForm({
         <TextField
           type="text"
           autoComplete="given-name"
+          maxLength={PROFILE_NAME_MAX}
           placeholder={formatMessage({
             id: "auth.firstName",
             defaultMessage: "First name",
@@ -963,6 +964,7 @@ function RegisterForm({
         <TextField
           type="text"
           autoComplete="family-name"
+          maxLength={PROFILE_NAME_MAX}
           placeholder={formatMessage({
             id: "auth.lastName",
             defaultMessage: "Last name",

@@ -269,3 +269,19 @@ export type NamedUser = {
 };
 
 export type AnyUser = AnonymousUser | NamedUser;
+
+/**
+ * The longest a learner's first or last name may be.
+ *
+ * Thirty-two is what the database column holds, so this is the number the
+ * server would reject at anyway — stating it here lets the input stop at the
+ * limit instead of letting somebody type past it and find out on save.
+ *
+ * It is also comfortably longer than real names need: the longest given names
+ * in common use run to about fifteen characters, and the postal and payment
+ * standards that will eventually carry a printed name cap their own name lines
+ * between twenty-six and thirty-five. A certificate's name box holds about
+ * thirty-five at the grown-up sheet's type size, and `fitName` shortens
+ * anything longer rather than overflowing it.
+ */
+export const PROFILE_NAME_MAX = 32;

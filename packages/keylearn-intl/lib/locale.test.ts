@@ -1,6 +1,7 @@
 import { test } from "node:test";
-import { equal } from "rich-assert";
-import { selectLocale } from "./locale.ts";
+import { equal, isTrue } from "rich-assert";
+import { allLocales, selectLocale } from "./locale.ts";
+import { loadMessages } from "./messages.ts";
 
 test("select locale", () => {
   const filter =
@@ -17,5 +18,20 @@ test("select locale", () => {
   equal(selectLocale(filter("pt-PT")), "pt-pt");
   equal(selectLocale(filter("zh")), "zh-hans");
   equal(selectLocale(filter("zh-CN")), "zh-hans");
-  equal(selectLocale(filter("zh-TW")), "zh-tw");
+  equal(selectLocale(filter("zh-TW")), "zh-hant");
+});
+
+test("the runtime list, the loader and the shipped translations all agree", async () => {
+  // These three drifted apart once and nothing complained: six languages —
+  // Icelandic, Lithuanian, Mongolian, Bokmål, Slovene and Albanian — were
+  // translated, compiled and shipped while being absent from `allLocales`, so
+  // nobody could choose them. The build had no reason to object, because each
+  // list was internally consistent.
+  for (const locale of allLocales) {
+    const messages = await loadMessages(locale);
+    isTrue(
+      Object.keys(messages).length > 0,
+      `${locale} is offered but loads no messages`,
+    );
+  }
 });

@@ -180,39 +180,41 @@ export function SecurityCard({
             />
           )}
         </div>
-        <p className={styles.note}>
-          {user.hasPassword ? (
-            <FormattedMessage
-              id="security.password.changeNote"
-              defaultMessage="Update the password you use to sign in."
-            />
-          ) : (
-            <FormattedMessage
-              id="security.password.setNote"
-              defaultMessage="Add a password so you can also sign in without a social account."
-            />
-          )}
-        </p>
-        <button
-          type="button"
-          className={clsx(styles.subtleBtn, styles.rightAction)}
-          onClick={() => {
-            setPwDone(false);
-            setPwOpen(true);
-          }}
-        >
-          {user.hasPassword ? (
-            <FormattedMessage
-              id="security.password.change"
-              defaultMessage="Change password"
-            />
-          ) : (
-            <FormattedMessage
-              id="security.password.set"
-              defaultMessage="Set a password"
-            />
-          )}
-        </button>
+        <div className={styles.miniRow}>
+          <p className={styles.note}>
+            {user.hasPassword ? (
+              <FormattedMessage
+                id="security.password.changeNote"
+                defaultMessage="Update the password you use to sign in."
+              />
+            ) : (
+              <FormattedMessage
+                id="security.password.setNote"
+                defaultMessage="Add a password so you can also sign in without a social account."
+              />
+            )}
+          </p>
+          <button
+            type="button"
+            className={styles.subtleBtn}
+            onClick={() => {
+              setPwDone(false);
+              setPwOpen(true);
+            }}
+          >
+            {user.hasPassword ? (
+              <FormattedMessage
+                id="security.password.change"
+                defaultMessage="Change password"
+              />
+            ) : (
+              <FormattedMessage
+                id="security.password.set"
+                defaultMessage="Set a password"
+              />
+            )}
+          </button>
+        </div>
         {pwDone && (
           <p className={styles.note}>
             <FormattedMessage

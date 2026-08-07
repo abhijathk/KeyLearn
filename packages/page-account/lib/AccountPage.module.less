@@ -427,8 +427,11 @@
 .prefCard {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
-  padding: 0.85rem 1rem;
+  // Tightened: these are status rows with one action each, not sections. The
+  // email card was already a single line and read best of the set, so the
+  // others follow it rather than the other way round.
+  gap: 0.42rem;
+  padding: 0.6rem 0.85rem;
   border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
   border-radius: 0.8rem;
   background: color-mix(in srgb, var(--text-color) 4%, transparent);
@@ -688,8 +691,8 @@
   max-inline-size: 52rem;
   margin: 0;
   color: var(--text-color-f2);
-  font-size: 0.8rem;
-  line-height: 1.5;
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
 
 /* Sign-in & security card */
@@ -998,4 +1001,61 @@
     color: var(--text-color);
     font-weight: 600;
   }
+}
+
+// Changing the public handle. A small pencil on the name line rather than a
+// worded link: it belongs to the name it edits, and at this size a word beside
+// somebody's own name reads as a label for the name rather than an action.
+.renameIcon {
+  display: inline-grid;
+  place-items: center;
+  vertical-align: middle;
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  margin-inline-start: 0.15rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.3rem;
+  color: var(--text-color-f2);
+  background: none;
+  cursor: pointer;
+
+  svg {
+    inline-size: 0.8rem;
+    block-size: 0.8rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.9;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    color: var(--accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.renameRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-block-start: 0.4rem;
+}
+
+.renameField {
+  flex: 1 1 10rem;
+  min-inline-size: 0;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 45%, transparent);
+  border-radius: 0.4rem;
+  color: var(--text-color);
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
 }

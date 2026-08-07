@@ -9,13 +9,15 @@ import {
   downloadBlob,
   exportFilename,
   isPremiumUser,
+  myCertificates,
   Pages,
   usePageData,
 } from "@keylearn/pages-shared";
 import { SpeedUnit, uiProps } from "@keylearn/result";
+import { openResultStorage } from "@keylearn/result-loader";
 import { useSettings } from "@keylearn/settings";
 import { useTheme } from "@keylearn/themes";
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { Segmented, Toggle } from "./controls.tsx";
@@ -543,7 +545,55 @@ function PrivacyCard(): ReactNode {
   const { settings, updateSettings } = useSettings();
   const { user, publicUser, profiles } = usePageData();
 
-  const exportData = () => {
+  const [exporting, setExporting] = useState(false);
+
+  /**
+   * Everything this account holds, not just what the account page knows.
+   *
+   * The first version exported the account record, the profile list and the
+   * settings — and called itself "Export my data" while leaving out the
+   * practice history, which is the only part anybody actually means by that.
+   * A file that looks complete and is not is worse than no button at all.
+   *
+   * The history lives per learner in this browser's own database, so it is
+   * gathered a learner at a time; the certificates come from the server,
+   * because that is where they are issued.
+   */
+  const exportData = async () => {
+    setExporting(true);
+    const list = profiles ?? [];
+    const learners = await Promise.all(
+      list.map(async (profile) => {
+        let results: unknown[] = [];
+        try {
+          const storage = await openResultStorage({
+            type: "private",
+            userId: publicUser.id ?? null,
+            kids: profile.kind === "kid",
+            namespace: `profile-${profile.id}`,
+          });
+          results = (await storage.load()).map((r) => ({
+            at: new Date(r.timeStamp).toISOString(),
+            layout: String(r.layout),
+            textType: String(r.textType),
+            length: r.length,
+            timeMs: r.time,
+            errors: r.errors,
+            // Characters a minute, as stored. Named so nobody reads it as
+            // words and quietly divides by five twice.
+            charsPerMinute: Math.round(r.speed * 10) / 10,
+            accuracy: Math.round(r.accuracy * 1000) / 1000,
+          }));
+        } catch {
+          // A learner whose local database will not open exports with an
+          // empty history rather than failing the whole download.
+          results = [];
+        }
+        return { profile, lessons: results };
+      }),
+    );
+
+    const certificates = await myCertificates().catch(() => []);
     const data = {
       exportedAt: new Date().toISOString(),
       account: {
@@ -551,7 +601,8 @@ function PrivacyCard(): ReactNode {
         email: user?.email ?? null,
         premium: isPremiumUser(publicUser),
       },
-      profiles: profiles ?? [],
+      learners,
+      certificates,
       settings: settings.toJSON(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -566,6 +617,7 @@ function PrivacyCard(): ReactNode {
         formatStamp(Date.now()),
       ),
     );
+    setExporting(false);
   };
 
   return (
@@ -609,11 +661,24 @@ function PrivacyCard(): ReactNode {
             defaultMessage="Export my data"
           />
         </span>
-        <button className={styles.subtleBtn} onClick={exportData}>
-          <FormattedMessage
-            id="account.prefs.export.action"
-            defaultMessage="Download"
-          />
+        <button
+          className={styles.subtleBtn}
+          disabled={exporting}
+          onClick={() => {
+            void exportData();
+          }}
+        >
+          {exporting ? (
+            <FormattedMessage
+              id="account.prefs.export.working"
+              defaultMessage="Gathering…"
+            />
+          ) : (
+            <FormattedMessage
+              id="account.prefs.export.action"
+              defaultMessage="Download"
+            />
+          )}
         </button>
       </div>
     </div>

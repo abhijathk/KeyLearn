@@ -7,6 +7,7 @@ import {
   type CertificateTemplate,
   certificateTemplate,
 } from "@keylearn/certificate";
+import { medalFor } from "@keylearn/certificate-ui";
 import { artKindOf, ArtMotif } from "@keylearn/identicon";
 import { Layout, loadKeyboard } from "@keylearn/keyboard";
 import {
@@ -32,7 +33,6 @@ import specimenYoung from "./assets/specimen-young.jpg";
 import * as styles from "./CoursePane.module.less";
 import { brailleEvidence, typingEvidence } from "./evidence.ts";
 import { languageLineOf } from "./language-line.ts";
-import { medalFor } from "./Medal.tsx";
 import { ReadyDialog } from "./ReadyDialog.tsx";
 
 /**

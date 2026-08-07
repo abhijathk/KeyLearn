@@ -4,13 +4,13 @@ import {
   planFor,
   RETENTION,
 } from "@keylearn/certificate";
+import { Medal, type MedalKind } from "@keylearn/certificate-ui";
 import { clsx } from "clsx";
 import { type ReactNode, useState } from "react";
 import { createPortal } from "react-dom";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./CoursePane.module.less";
 import { GuideDialog } from "./GuideDialog.tsx";
-import { Medal, type MedalKind } from "./Medal.tsx";
 
 /**
  * The window a learner sees once the practice has proved everything it can.
