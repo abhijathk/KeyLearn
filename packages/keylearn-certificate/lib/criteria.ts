@@ -265,3 +265,36 @@ export function levelName(level: CertificateLevel): string {
       return "Completion";
   }
 }
+
+/**
+ * The holder's name, shortened only as far as it has to be.
+ *
+ * A certificate's name field is a fixed width, and a name that overflows it
+ * looks like a mistake on a document somebody will keep for years. Shrinking
+ * the type instead is worse: the name is the largest thing on the sheet and a
+ * smaller one reads as an afterthought.
+ *
+ * So the name gives way in steps, and only when it must — full name, then the
+ * surname reduced to an initial, then the first name alone. Nobody's first
+ * name is abbreviated: it is the part they are actually called.
+ *
+ * `capacity` is how many characters the field holds at its set size, which the
+ * caller measures rather than guesses.
+ */
+export function fitName(
+  firstName: string,
+  lastName: string | null,
+  capacity: number,
+): string {
+  const first = firstName.trim();
+  const last = (lastName ?? "").trim();
+  if (last === "") {
+    return first;
+  }
+  const full = `${first} ${last}`;
+  if (full.length <= capacity) {
+    return full;
+  }
+  const initialled = `${first} ${[...last][0]}.`;
+  return initialled.length <= capacity ? initialled : first;
+}

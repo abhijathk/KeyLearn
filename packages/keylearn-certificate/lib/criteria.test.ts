@@ -7,6 +7,7 @@ import {
   assess,
   bandFor,
   certificateTemplate,
+  fitName,
 } from "./criteria.ts";
 import { type CertificateEvidence } from "./types.ts";
 
@@ -189,4 +190,23 @@ test("an unknown age falls to the middle sheet for a child", () => {
   // Neither babyish for a twelve-year-old nor over-formal for an eight-year-old.
   equal(certificateTemplate(null, "kid"), "young");
   equal(certificateTemplate(null, "adult"), "adult");
+});
+
+test("the name gives way in steps, and only when it must", () => {
+  // Full name while it fits.
+  equal(fitName("Abhijath", "Kottikkal", 30), "Abhijath Kottikkal");
+  // Then the surname becomes an initial.
+  equal(fitName("Abhijath", "Kottikkal", 14), "Abhijath K.");
+  // Then the first name stands alone. It is never abbreviated — it is the
+  // part somebody is actually called.
+  equal(fitName("Abhijath", "Kottikkal", 9), "Abhijath");
+  // A learner with no surname is simply themselves.
+  equal(fitName("Dhruv", null, 8), "Dhruv");
+  equal(fitName("Dhruv", "", 8), "Dhruv");
+});
+
+test("a long first name is never cut", () => {
+  // Better to overflow slightly than to hand somebody a certificate that
+  // abbreviates the name they go by.
+  equal(fitName("Bartholomew", "Fitzgerald", 6), "Bartholomew");
 });
