@@ -345,22 +345,29 @@ export const Pulse = memo(function Pulse({
         </div>
       </div>
 
+      {/* The row itself stays — it carries speed and accuracy. What goes is
+          the way into the session summary below it: today's minutes, the
+          daily goal ring, the record to beat. */}
       <div
         className={clsx(styles.whisper, expanded && styles.whisperOpen)}
-        role="button"
-        tabIndex={0}
-        aria-expanded={expanded}
+        role={assessing ? undefined : "button"}
+        tabIndex={assessing ? undefined : 0}
+        aria-expanded={assessing ? undefined : expanded}
         title={formatMessage({
           id: "practice.pulse.expand",
           defaultMessage: "Show more about this session",
         })}
-        onClick={toggleExpanded}
-        onKeyDown={(ev) => {
-          if (ev.key === "Enter" || ev.key === " ") {
-            ev.preventDefault();
-            toggleExpanded();
-          }
-        }}
+        onClick={assessing ? undefined : toggleExpanded}
+        onKeyDown={
+          assessing
+            ? undefined
+            : (ev) => {
+                if (ev.key === "Enter" || ev.key === " ") {
+                  ev.preventDefault();
+                  toggleExpanded();
+                }
+              }
+        }
       >
         <span
           id={names?.accuracy}
@@ -457,14 +464,23 @@ export const Pulse = memo(function Pulse({
             {dailyGoal.goal > 0 && <TodayWhisper dailyGoal={dailyGoal} />}
           </>
         )}
-        <svg className={styles.chevron} viewBox="0 0 12 12" aria-hidden={true}>
-          <path d="M2.5 4.5 6 8l3.5-3.5" />
-        </svg>
+        {!assessing && (
+          <svg
+            className={styles.chevron}
+            viewBox="0 0 12 12"
+            aria-hidden={true}
+          >
+            <path d="M2.5 4.5 6 8l3.5-3.5" />
+          </svg>
+        )}
       </div>
 
       <div
-        className={clsx(styles.session, expanded && styles.sessionOpen)}
-        aria-hidden={!expanded}
+        className={clsx(
+          styles.session,
+          expanded && !assessing && styles.sessionOpen,
+        )}
+        aria-hidden={!expanded || assessing}
       >
         <div className={styles.sessionClip}>
           <div className={styles.sessionInner}>
