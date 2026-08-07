@@ -1371,6 +1371,10 @@ export class Certificate extends Model {
         type: "string",
         enum: ["completion", "bronze", "silver", "gold"],
       },
+      // Which of the three papers was printed. Stored rather than worked out
+      // from the age at print time: a birthday must not silently restyle a
+      // document that has already been issued and possibly hung on a wall.
+      sheet: { type: "string", enum: ["adult", "young", "child"] },
       speed: { type: "number" },
       accuracy: { type: "number" },
       /** The holder's name, as printed. Never shown by verification for a kid. */
@@ -1398,6 +1402,7 @@ export class Certificate extends Model {
     table.string("audience", 8).notNullable();
     table.string("language", 32).notNullable();
     table.string("level", 12).notNullable();
+    table.string("sheet", 8).notNullable().defaultTo("adult");
     table.float("speed").notNullable();
     table.float("accuracy").notNullable();
     table.string("name", 80).notNullable();
@@ -1416,6 +1421,7 @@ export class Certificate extends Model {
   audience?: string;
   language?: string;
   level?: string;
+  sheet?: string;
   speed?: number;
   accuracy?: number;
   name?: string;

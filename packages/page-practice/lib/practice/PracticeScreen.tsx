@@ -1,3 +1,4 @@
+import { useAssessment } from "@keylearn/assessment";
 import { catchError } from "@keylearn/debug";
 import { KeyboardProvider } from "@keylearn/keyboard";
 import { schedule } from "@keylearn/lang";
@@ -132,6 +133,7 @@ function buildGoalStats(
 
 function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
   const { settings } = useSettings();
+  const assessment = useAssessment();
   const { results, appendResults } = useResults();
   const [progress, { total, current }] = useProgress(lesson, results);
   const [ceremony, setCeremony] = useState<Ceremony | null>(null);
@@ -152,6 +154,25 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
         <Controller
           progress={progress}
           onResult={(result) => {
+            if (assessment != null) {
+              // A sitting is measured, not recorded. Its lines stay out of the
+              // practice history for a reason that matters: the retention rule
+              // judges the assessment against the pace somebody practises at,
+              // and letting hint-free assessment runs into that history would
+              // drag the comparison down to meet itself.
+              //
+              // The ceremonies are skipped for a plainer reason — an unlock
+              // banner or the daily-goal window opening over a timed run.
+              if (result.validate()) {
+                assessment.report({
+                  // Storage counts characters a minute; a word is five of them.
+                  speed: result.speed / 5,
+                  accuracy: result.accuracy,
+                  time: result.time,
+                });
+              }
+              return;
+            }
             if (result.validate()) {
               const prev =
                 results.length > 0 ? results[results.length - 1] : null;

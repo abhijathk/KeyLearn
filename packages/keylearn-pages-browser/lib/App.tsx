@@ -37,6 +37,7 @@ export function main() {
 const AccountPage = lazy(() => import("./pages/account.tsx"));
 const DesignPage = lazy(() => import("./pages/design.tsx"));
 const VerifyPage = lazy(() => import("./pages/verify.tsx"));
+const AssessmentPage = lazy(() => import("./pages/assessment.tsx"));
 const LoginPage = lazy(() => import("./pages/login.tsx"));
 const RegisterPage = lazy(() => import("./pages/register.tsx"));
 const ForgotPasswordPage = lazy(() => import("./pages/forgot-password.tsx"));
@@ -189,6 +190,17 @@ function PageRoutes() {
             }
           />
         ))}
+        <Route
+          path={Pages.assessment.path}
+          element={
+            <Template path={Pages.assessment.path}>
+              <Title page={Pages.assessment} />
+              <Suspense fallback={<LoadingProgress />}>
+                <AssessmentPage />
+              </Suspense>
+            </Template>
+          }
+        />
         <Route
           path={Pages.design.path}
           element={

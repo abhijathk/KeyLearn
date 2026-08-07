@@ -1,4 +1,5 @@
 import {
+  alphabetName,
   formatCertificateNumber,
   isCertificateNumber,
   normalizeCertificateNumber,
@@ -143,7 +144,7 @@ export default function Page(): ReactNode {
                       defaultMessage="Alphabet"
                     />
                   </dt>
-                  <dd>{result.language}</dd>
+                  <dd>{alphabetName(result.language)}</dd>
                   <dt>
                     <FormattedMessage
                       id="verify.issued"

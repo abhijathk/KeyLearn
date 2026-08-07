@@ -97,6 +97,31 @@ export namespace Pages {
     meta: [{ name: "robots", content: "noindex" }],
   } satisfies PageInfo;
 
+  /**
+   * Sitting the assessment.
+   *
+   * No nav link: this is reached from the account page, and only once the
+   * practice has proved everything it can. A menu entry would offer it to
+   * every learner every day, which is exactly the thing the eligibility rules
+   * exist to prevent.
+   */
+  export const assessment = {
+    path: "/assessment",
+    title: defineMessage({
+      id: "t_Assessment",
+      defaultMessage: "Assessment",
+    }),
+    // Every page carries a label; nothing renders this one, because the
+    // assessment is deliberately absent from the menu.
+    link: {
+      label: defineMessage({
+        id: "t_Assessment",
+        defaultMessage: "Assessment",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
   export const practice = {
     path: "/",
     title: defineMessage({

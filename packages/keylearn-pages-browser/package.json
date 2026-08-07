@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
+    "@keylearn/assessment": "*",
     "@keylearn/certificate": "*",
     "@keylearn/content": "*",
     "@keylearn/debug": "*",
@@ -22,7 +23,10 @@
     "@keylearn/page-static": "*",
     "@keylearn/page-typing-test": "*",
     "@keylearn/pages-shared": "*",
+    "@keylearn/phonetic-model": "*",
+    "@keylearn/phonetic-model-loader": "*",
     "@keylearn/request": "*",
+    "@keylearn/result": "*",
     "@keylearn/result-loader": "*",
     "@keylearn/settings": "*",
     "@keylearn/settings-loader": "*",

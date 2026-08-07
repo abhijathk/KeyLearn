@@ -7,12 +7,16 @@ import {
   assess,
   type CertificateEvidence,
   certificateNumber,
+  certificateTemplate,
+  fitName,
   judge,
+  nameCapacity,
   sequenceOf,
   type Sitting,
 } from "@keylearn/certificate";
 import { Certificate, CertificateSitting, Profile } from "@keylearn/database";
 import { type AuthState } from "../auth/index.ts";
+import { millis } from "./timestamp.ts";
 
 /**
  * Issuing and checking certificates.
@@ -89,21 +93,28 @@ export class Controller {
     const rows = await CertificateSitting.query()
       .where({ profileId: profile.id!, language })
       .orderBy("created_at", "asc");
-    const sittings: readonly Sitting[] = rows.map((row) => ({
-      at: row.createdAt!.getTime(),
-      kind: row.kind as Sitting["kind"],
-      // A stored sitting is already the median of its own runs; presenting it
-      // as a single run keeps the judge's arithmetic identical either way.
-      runs: [
-        {
-          at: row.createdAt!.getTime(),
-          speed: row.speed!,
-          accuracy: row.accuracy!,
-          seconds: row.seconds!,
-        },
-      ],
-    }));
-    const verdict = judge(sittings, evidence);
+    const sittings: readonly Sitting[] = rows.map((row) => {
+      const at = millis(row.createdAt);
+      return {
+        at,
+        kind: row.kind as Sitting["kind"],
+        // A stored sitting is already the median of its own runs; presenting
+        // it as a single run keeps the judge's arithmetic identical either way.
+        runs: [
+          {
+            at,
+            speed: row.speed!,
+            accuracy: row.accuracy!,
+            seconds: row.seconds!,
+          },
+        ],
+      };
+    });
+    // The practice pace goes in as well as the sittings. Without it the
+    // retention rule is inert — an absolute speed alone cannot tell somebody
+    // typing by touch from somebody typing fast while glancing at the keys,
+    // and the second collapses the moment the picture is taken away.
+    const verdict = judge(sittings, evidence, evidence.speed);
     if (!verdict.passed || verdict.level == null) {
       ctx.response.status = 409;
       ctx.response.body = { error: "not-passed", verdict };
@@ -122,6 +133,16 @@ export class Controller {
       return;
     }
 
+    // The paper and the printed name are decided once, here, and stored. Both
+    // depend on facts that move — an age, an editable surname — and a document
+    // that restyles itself after it has been issued is not a document.
+    const sheet = certificateTemplate(evidence.age, evidence.audience);
+    const name = fitName(
+      profile.firstName!,
+      profile.lastName ?? null,
+      nameCapacity(sheet, evidence.kind),
+    );
+
     const inserted = await Certificate.query().insert({
       // The sequence is the row's own identity, taken after insertion so two
       // concurrent requests cannot pick the same one.
@@ -132,15 +153,55 @@ export class Controller {
       audience: evidence.audience,
       language,
       level: verdict.level,
+      sheet,
       speed: verdict.speed!,
       accuracy: verdict.accuracy!,
-      name: profile.firstName!,
+      name,
       nameVisible,
     });
     const saved = await Certificate.query()
       .patchAndFetchById(inserted.id!, { sequence: inserted.id! })
       .throwIfNotFound();
     ctx.response.body = toDetails(saved);
+  }
+
+  /**
+   * Whether verification may name the holder.
+   *
+   * Off by default and changeable afterwards, because the decision belongs to
+   * the moment somebody actually shares the thing rather than to the moment it
+   * was earned. A child's certificate is never named whatever anybody asks
+   * for, so this refuses rather than storing a preference it would then ignore.
+   */
+  @http.POST("/_/certificate/named/{number:[A-Za-z0-9]+}")
+  async setNamed(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("number") number: string,
+    @body.json(null, { maxLength: 256 }) value: unknown,
+  ) {
+    const user = ctx.state.requireUser();
+    const sequence = sequenceOf(number);
+    if (sequence == null) {
+      throw new ForbiddenError();
+    }
+    // Scoped to the caller's own account. Without this, a well-formed number
+    // belonging to somebody else would be enough to unmask them.
+    const found = await Certificate.query().findOne({
+      sequence,
+      userId: user.id!,
+    });
+    if (found == null) {
+      throw new ForbiddenError();
+    }
+    if (found.audience === "kid") {
+      ctx.response.status = 409;
+      ctx.response.body = { error: "child" };
+      return;
+    }
+    const nameVisible =
+      (value as { nameVisible?: unknown })?.nameVisible === true;
+    await Certificate.query().patchAndFetchById(found.id!, { nameVisible });
+    ctx.response.body = { nameVisible };
   }
 
   /**
@@ -191,7 +252,7 @@ export class Controller {
       level: found.level,
       language: found.language,
       kind: found.kind,
-      issued: found.createdAt,
+      issued: new Date(millis(found.createdAt)).toISOString(),
       name: found.audience === "kid" || !found.nameVisible ? null : found.name,
     };
   }
@@ -213,13 +274,19 @@ function toDetails(row: Certificate) {
   return {
     number: certificateNumber(row.sequence!),
     level: row.level,
+    sheet: row.sheet,
     kind: row.kind,
     audience: row.audience,
     language: row.language,
     speed: row.speed,
     accuracy: row.accuracy,
     name: row.name,
-    issued: row.createdAt,
+    nameVisible: row.nameVisible === true,
+    // Always ISO. SQLite hands back "2026-08-07 02:00:09", which is not a
+    // format `new Date()` is required to parse and which browsers disagree
+    // about — so the wire format is pinned here rather than left to whichever
+    // database is underneath.
+    issued: new Date(millis(row.createdAt)).toISOString(),
   };
 }
 

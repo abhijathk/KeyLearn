@@ -6,12 +6,16 @@
 export type IssuedCertificate = {
   readonly number: string;
   readonly level: "completion" | "bronze" | "silver" | "gold";
+  /** Which of the three papers this was printed on, fixed at issue. */
+  readonly sheet: "adult" | "young" | "child";
   readonly kind: "typing" | "braille";
   readonly audience: "adult" | "kid";
   readonly language: string;
   readonly speed: number;
   readonly accuracy: number;
   readonly name: string;
+  /** Whether checking the number reveals who holds it. Never true for a kid. */
+  readonly nameVisible: boolean;
   readonly issued: string;
 };
 
@@ -62,6 +66,15 @@ export type IssueOutcome =
   | {
       readonly ok: false;
       readonly reason: "not-eligible" | "not-passed" | "error";
+      /**
+       * The server's own verdict, when it had one.
+       *
+       * Carried back so the page can say *why* — how many sittings are still
+       * needed, or what the median came to — rather than only that it did not
+       * happen. Typed loosely on purpose: this is the server's `judge` result
+       * and the page passes it straight to `outcomeMessage`.
+       */
+      readonly verdict?: unknown;
     };
 
 /** Ask for a certificate. The server decides; this only reports what it said. */
@@ -82,10 +95,14 @@ export async function issueCertificate(
       };
     }
     if (response.status === 409) {
-      const body = (await response.json()) as { error?: string };
+      const body = (await response.json()) as {
+        error?: string;
+        verdict?: unknown;
+      };
       return {
         ok: false,
         reason: body.error === "not-eligible" ? "not-eligible" : "not-passed",
+        verdict: body.verdict,
       };
     }
     return { ok: false, reason: "error" };
@@ -126,5 +143,32 @@ export async function verifyCertificate(number: string): Promise<VerifyResult> {
     return (await response.json()) as VerifyResult;
   } catch {
     return { valid: false };
+  }
+}
+
+/**
+ * Choose whether checking this number names its holder.
+ *
+ * Separate from issuing, because the decision belongs to the moment somebody
+ * shares it rather than to the moment it was earned. Refused outright for a
+ * child's certificate — the server does not store a preference it would then
+ * have to ignore.
+ */
+export async function setCertificateNamed(
+  number: string,
+  nameVisible: boolean,
+): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `/_/certificate/named/${encodeURIComponent(number)}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ nameVisible }),
+      },
+    );
+    return response.ok;
+  } catch {
+    return false;
   }
 }

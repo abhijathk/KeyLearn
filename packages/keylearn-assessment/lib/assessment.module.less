@@ -1,0 +1,334 @@
+// The assessment's own chrome, in the app's vocabulary.
+//
+// Everything here is either the HUD strip or one of the three windows, and the
+// windows are deliberately the same objects as the ones on the account page —
+// same border weight, same pill buttons, same head-body-foot. A learner who
+// has just read "Ready to sit" should not arrive somewhere that looks like a
+// different application.
+
+// ── the strip ──────────────────────────────────────────────────────────────
+
+.hud {
+  display: flex;
+  position: fixed;
+  inset-inline: 0;
+  inset-block-start: 0;
+  z-index: 280;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.45rem 0.9rem;
+  border-block-end: 1px solid
+    color-mix(in srgb, var(--text-color-f2) 26%, transparent);
+  background-color: color-mix(in srgb, var(--background-color) 92%, black);
+  font-size: 0.78rem;
+}
+
+.hudTitle {
+  font-weight: 680;
+  letter-spacing: 0.02em;
+}
+
+.hudRuns,
+.hudArmed {
+  color: var(--text-color-f1);
+}
+
+.hudSpacer {
+  flex: 1;
+}
+
+.hudClock {
+  font-family: var(--value-font-family);
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+// Only in the last ten seconds — see the Hud component. Weight and colour
+// together, so it still reads as urgent without relying on colour alone.
+.hudLow .hudClock {
+  color: var(--accent);
+}
+
+.hudQuit {
+  padding: 0.15rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 40%, transparent);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+// The kids page owns its own light world whatever the theme is doing, so the
+// strip above it has to as well.
+.hudKid {
+  border-block-end-color: #f0eee6;
+  color: #3a3a4e;
+  background-color: #fdfcf9;
+  font-weight: 700;
+
+  .hudRuns,
+  .hudArmed {
+    color: #6a6a80;
+  }
+
+  .hudQuit {
+    border-color: #d8d5c9;
+    color: #6a6a80;
+  }
+}
+
+.hudKid.hudLow .hudClock {
+  color: #d2622f;
+}
+
+// ── the windows ────────────────────────────────────────────────────────────
+
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  place-items: center;
+  padding: 1.25rem;
+  overflow: auto;
+  background-color: rgb(0 0 0 / 62%);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  inline-size: min(33rem, 100%);
+  max-block-size: calc(100dvb - 2.5rem);
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 30%, transparent);
+  border-radius: 0.65rem;
+  overflow: hidden;
+  background-color: var(--background-color);
+  box-shadow: 0 28px 70px rgb(0 0 0 / 50%);
+}
+
+// The certificate is a portrait page, and at 33rem the whole sheet does not
+// fit above the fold on a laptop.
+.dialogWide {
+  inline-size: min(27rem, 100%);
+}
+
+.dialogHead {
+  display: flex;
+  flex: none;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.85rem 1.1rem;
+  border-block-end: 1px solid
+    color-mix(in srgb, var(--text-color-f2) 22%, transparent);
+  font-size: 0.95rem;
+  font-weight: 680;
+}
+
+.dialogSpacer {
+  flex: 1;
+}
+
+.dialogClose {
+  display: grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 38%, transparent);
+  border-radius: 0.35rem;
+  color: var(--text-color-f1);
+  background: none;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dialogBody {
+  flex: 1 1 auto;
+  padding: 1.1rem;
+  overscroll-behavior: contain;
+  overflow-y: auto;
+}
+
+.dialogFoot {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.8rem 1.1rem;
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--text-color-f2) 22%, transparent);
+}
+
+.btn {
+  padding: 0.34rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 40%, transparent);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: none;
+  font: inherit;
+  font-size: 0.775rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.btnGo {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.between {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+// ── the figures ────────────────────────────────────────────────────────────
+
+.figs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block-start: 0.9rem;
+}
+
+.fig {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-f2) 34%, transparent);
+  border-radius: 999px;
+
+  i {
+    color: var(--text-color-f1);
+    font-size: 0.72rem;
+    font-style: normal;
+  }
+
+  b {
+    font-family: var(--value-font-family);
+    font-size: 0.74rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.figMet {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+
+  b {
+    color: var(--accent);
+  }
+}
+
+// ── the certificate ────────────────────────────────────────────────────────
+
+.sheet {
+  inline-size: 100%;
+}
+
+.certNote {
+  margin: 0.9rem 0 0;
+  color: var(--text-color-f1);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.certWarn {
+  margin: 0.7rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-inline-start: 2px solid var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 9%, transparent);
+  font-size: 0.78rem;
+}
+
+// ── the kid variants ───────────────────────────────────────────────────────
+
+.dialogKid {
+  .dialogBody,
+  .dialogHead,
+  .dialogFoot {
+    color: #3a3a4e;
+    background-color: #fdfcf9;
+  }
+
+  .dialogHead {
+    border-block-end-color: #f2f2ea;
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+
+  .dialogFoot {
+    border-block-start-color: #f2f2ea;
+  }
+
+  .between {
+    color: #55556a;
+    font-size: 0.95rem;
+  }
+
+  .btn {
+    border-color: #d8d5c9;
+    border-radius: 999px;
+    color: #55556a;
+    font-size: 0.85rem;
+    font-weight: 750;
+  }
+
+  .btnGo {
+    border-color: transparent;
+    color: #fff;
+    background-color: #4fb286;
+  }
+}
+
+// ── sharing (grown-ups only — see CertificateShare) ────────────────────────
+
+.share {
+  margin-block-start: 1rem;
+  padding-block-start: 0.9rem;
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--text-color-f2) 22%, transparent);
+}
+
+.shareLabel {
+  margin-block-end: 0.55rem;
+  color: var(--text-color-f1);
+  font-size: 0.7rem;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shareRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.shareNamed {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-block-start: 0.9rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.shareNote {
+  margin: 0.35rem 0 0 1.4rem;
+  color: var(--text-color-f1);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}

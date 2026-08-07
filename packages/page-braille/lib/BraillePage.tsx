@@ -1,3 +1,4 @@
+import { useAssessment } from "@keylearn/assessment";
 import {
   BLANK,
   type Cell,
@@ -91,6 +92,11 @@ function Practice(): ReactNode {
   // Braille progress is per learner, like every other kind. The page is inside
   // ProfileScope, so a switch remounts this and reloads the right one.
   const profileId = useProfiles().active?.id ?? null;
+  const assessment = useAssessment();
+  // The line-finished path lives inside a handler that is installed once, so
+  // it reads the session through a ref rather than closing over it.
+  const assessmentRef = useRef(assessment);
+  assessmentRef.current = assessment;
   const [lesson, setLesson] = useState<Lesson>(() =>
     makeLesson(loadProgress(profileId)),
   );
@@ -118,7 +124,12 @@ function Practice(): ReactNode {
     () => ({ rate: prefs.rate, enabled: prefs.speech }),
     [prefs.rate, prefs.speech],
   );
-  const echoLetters = prefs.echoLetters;
+  // Spell-out is a hint like any other: hearing "b, dots one two" while
+  // being assessed on recall of the cell is the assessment answering itself.
+  const echoLetters =
+    assessment != null && assessment.plan.hideKeyboard
+      ? false
+      : prefs.echoLetters;
   const [live, setLive] = useState("");
   const [started, setStarted] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
@@ -468,6 +479,15 @@ function Practice(): ReactNode {
         isAlphabetComplete(progress.current.unlocked());
       reached.current = nowUnlocked;
       const { cpm, accuracy } = lineResult(line.current, Date.now());
+      // The sitting takes the page's own figures rather than recomputing them
+      // from raw cell counts: this is the number the learner is about to hear
+      // read aloud, and two definitions of the same line's pace would sooner
+      // or later disagree.
+      assessmentRef.current?.report({
+        speed: cpm,
+        accuracy: accuracy / 100,
+        time: Date.now() - line.current.startedAt,
+      });
       const summary = formatMessage(
         {
           id: "braille.summary",
@@ -748,12 +768,18 @@ function Practice(): ReactNode {
    * one settles, which is the same evidence the engine uses to decide the
    * learner is ready for a new one.
    */
-  const showHint = showHintOf(
-    prefs.hints,
-    step ?? null,
-    (key) => progress.current.isSettled(key),
-    keyOfCell,
-  );
+  const showHint =
+    assessment != null && assessment.plan.hideKeyboard
+      ? // The dots are the braille equivalent of the keyboard picture. With them
+        // showing, the drill tests copying rather than recall, which is the one
+        // thing the assessment exists to tell apart.
+        false
+      : showHintOf(
+          prefs.hints,
+          step ?? null,
+          (key) => progress.current.isSettled(key),
+          keyOfCell,
+        );
   const total = hits + misses;
   const accuracy = total > 0 ? Math.round((hits / total) * 100) : 100;
   const minutes = startedAt != null ? (Date.now() - startedAt) / 60000 : 0;

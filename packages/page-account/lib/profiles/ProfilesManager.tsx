@@ -1,4 +1,5 @@
 import { brailleStats } from "@keylearn/braille";
+import { alphabetName } from "@keylearn/certificate";
 import {
   artFamilies,
   artSeedFromName,
@@ -206,7 +207,7 @@ function ProfileMedals({
           key={c.number}
           kind={medalFor(c.level, c.kind)}
           size="pin"
-          title={`${c.language} · ${c.level}`}
+          title={`${alphabetName(c.language)} · ${c.level}`}
         />
       ))}
     </span>

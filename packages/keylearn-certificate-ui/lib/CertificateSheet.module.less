@@ -1,0 +1,34 @@
+// The sheet is a container, and every field on it is sized against the
+// container's width. That is what lets one set of measurements serve a 200px
+// thumbnail and a 1103px export without a second layout for either.
+
+.sheet {
+  position: relative;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  // The artwork is a printed page, and a page needs an edge to sit on — the
+  // under-nine sheet is nearly white at its corners and vanishes into a light
+  // background without one.
+  box-shadow: 0 14px 34px rgb(0 0 0 / 35%);
+  container-type: inline-size;
+}
+
+.art {
+  display: block;
+  inline-size: 100%;
+}
+
+.braille {
+  display: flex;
+  position: absolute;
+  gap: 0;
+  justify-content: center;
+}
+
+.cell {
+  display: inline-grid;
+
+  i {
+    border-radius: 50%;
+  }
+}

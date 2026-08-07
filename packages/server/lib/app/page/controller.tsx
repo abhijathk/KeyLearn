@@ -92,6 +92,11 @@ export class Controller {
     return this.renderPage(ctx, Pages.verify);
   }
 
+  @http.GET(`${Pages.assessment.path}`)
+  async ["assessment-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.assessment);
+  }
+
   @http.GET(`${Pages.design.path}`)
   async ["design-page"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.design);

@@ -1,3 +1,4 @@
+import { CertificateDialog } from "@keylearn/assessment";
 import {
   assess,
   bandFor,
@@ -8,7 +9,13 @@ import {
 } from "@keylearn/certificate";
 import { artKindOf, ArtMotif } from "@keylearn/identicon";
 import { Layout, loadKeyboard } from "@keylearn/keyboard";
-import { type ProfileDetails, usePageData } from "@keylearn/pages-shared";
+import {
+  type IssuedCertificate,
+  myCertificates,
+  Pages,
+  type ProfileDetails,
+  usePageData,
+} from "@keylearn/pages-shared";
 import { Letter } from "@keylearn/phonetic-model";
 import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import { type Result } from "@keylearn/result";
@@ -16,6 +23,7 @@ import { openResultStorage } from "@keylearn/result-loader";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
+import { useNavigate } from "react-router";
 import { BrailleBadge } from "../profiles/BrailleBadge.tsx";
 import { useProfiles } from "../profiles/context.tsx";
 import specimenAdult from "./assets/specimen-adult.jpg";
@@ -23,6 +31,7 @@ import specimenChild from "./assets/specimen-child.jpg";
 import specimenYoung from "./assets/specimen-young.jpg";
 import * as styles from "./CoursePane.module.less";
 import { brailleEvidence, typingEvidence } from "./evidence.ts";
+import { languageLineOf } from "./language-line.ts";
 import { medalFor } from "./Medal.tsx";
 import { ReadyDialog } from "./ReadyDialog.tsx";
 
@@ -204,7 +213,8 @@ function CourseRow({
             results,
             Letter.restrict(letters, loadKeyboard(layout).getCodePoints()),
           )}
-          language={String(layout)}
+          layout={layout}
+          language={languageLineOf(layout, false)}
         />
       )}
     </PhoneticModelLoader>
@@ -214,13 +224,34 @@ function CourseRow({
 function Row({
   profile,
   evidence,
+  layout = Layout.EN_US,
   language,
 }: {
   readonly profile: ProfileDetails;
   readonly evidence: CertificateEvidence;
+  /** Absent for a braille learner, who has no layout at all. */
+  readonly layout?: Layout;
   readonly language?: string;
 }): ReactNode {
   const [ready, setReady] = useState(false);
+  const navigate = useNavigate();
+  const { select } = useProfiles();
+  // What this learner already holds. Fetched per row rather than once for the
+  // pane because a row is where it is shown, and the endpoint answers for the
+  // whole household in one request either way.
+  const [held, setHeld] = useState<readonly IssuedCertificate[]>([]);
+  const [showing, setShowing] = useState<IssuedCertificate | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void myCertificates().then((list) => {
+      if (!cancelled) {
+        setHeld(list.filter((c) => String(c.profileId) === profile.id));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [profile.id]);
   const verdict = assess(evidence);
   const state = verdict.eligible ? "ready" : "going";
   const [bronze, silver, gold] = bandFor(evidence.age, evidence.kind);
@@ -267,6 +298,34 @@ function Row({
           />
         )}
       </div>
+      {held.length > 0 && (
+        <div className={styles.next}>
+          <FormattedMessage
+            id="account.course.holds"
+            defaultMessage="Certificate earned."
+          />{" "}
+          {held.map((certificate) => (
+            <button
+              key={certificate.number}
+              type="button"
+              className={styles.linkBtn}
+              onClick={() => setShowing(certificate)}
+            >
+              <FormattedMessage
+                id="account.course.open"
+                defaultMessage="Open and download"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+      {showing != null && (
+        <CertificateDialog
+          certificate={showing}
+          languageLine={languageLineOf(layout, evidence.kind === "braille")}
+          onClose={() => setShowing(null)}
+        />
+      )}
       {ready && (
         <ReadyDialog
           name={profile.firstName}
@@ -276,8 +335,14 @@ function Row({
             evidence.kind,
           )}
           onClose={() => setReady(false)}
-          // Null until the timed runs exist. See ReadyDialog.
-          onStart={null}
+          onStart={() => {
+            // Make this learner the active one first. The assessment page
+            // reads the profile from the app rather than from the URL — which
+            // is what keeps a child off the grown-up drill — so a parent
+            // clicking a sibling's row has to switch who is practising.
+            select(profile.id);
+            void navigate(Pages.assessment.path);
+          }}
         />
       )}
     </div>

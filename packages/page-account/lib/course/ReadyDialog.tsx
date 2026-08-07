@@ -31,14 +31,8 @@ export function ReadyDialog({
   readonly evidence: CertificateEvidence;
   readonly medal: MedalKind;
   readonly onClose: () => void;
-  /**
-   * Begin the first run — null while the assessment itself does not exist.
-   *
-   * Passing null disables the button and says why, rather than leaving
-   * something that looks live and quietly does nothing. A control that lies
-   * about what it does is worse than one that is plainly not ready.
-   */
-  readonly onStart: (() => void) | null;
+  /** Begin the first run. */
+  readonly onStart: () => void;
 }): ReactNode {
   const [guide, setGuide] = useState(false);
   const sheet = certificateTemplate(evidence.age, evidence.audience);
@@ -220,14 +214,6 @@ export function ReadyDialog({
         </div>
 
         <div className={styles.dialogFoot}>
-          {onStart == null && (
-            <span className={styles.notReady}>
-              <FormattedMessage
-                id="ready.notBuilt"
-                defaultMessage="The timed runs are not built yet."
-              />
-            </span>
-          )}
           <button
             type="button"
             className={styles.linkBtn}
@@ -256,13 +242,7 @@ export function ReadyDialog({
           <button
             type="button"
             className={clsx(styles.btn, styles.btnGo)}
-            disabled={onStart == null}
-            title={
-              onStart == null
-                ? "The assessment itself is not built yet."
-                : undefined
-            }
-            onClick={onStart ?? undefined}
+            onClick={onStart}
           >
             {child ? (
               <FormattedMessage

@@ -1,3 +1,4 @@
+import { useAssessment } from "@keylearn/assessment";
 import { keyboardProps, KeyboardProvider } from "@keylearn/keyboard";
 import { Lesson, lessonProps, LessonType } from "@keylearn/lesson";
 import { LessonLoader } from "@keylearn/lesson-loader";
@@ -1277,6 +1278,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   }, [prefs.kbMode, prefs.hands]);
 
   // Refs mirror the bits of state the one-time key listener needs.
+  const assessment = useAssessment();
+  // Read through a ref inside the global keydown handler, which is installed
+  // once: closing over the session directly would freeze it at whatever it was
+  // when the game mounted.
+  const assessmentRef = useRef(assessment);
+  assessmentRef.current = assessment;
+
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
   const blockedRef = useRef(false);
@@ -1432,9 +1440,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             makeStats(textInput.steps),
           );
           if (result.validate()) {
-            // The same record the grown-up mode saves — the algorithm learns
-            // from every kids run too.
-            appendResults([result]);
+            if (assessmentRef.current != null) {
+              // A sitting is measured, not recorded: assessment runs stay out
+              // of the practice history, because the retention rule judges the
+              // assessment against the pace this learner practises at.
+              assessmentRef.current.report({
+                // Storage counts characters a minute; a word is five of them.
+                speed: result.speed / 5,
+                accuracy: result.accuracy,
+                time: result.time,
+              });
+            } else {
+              // The same record the grown-up mode saves — the algorithm learns
+              // from every kids run too.
+              appendResults([result]);
+            }
           } else {
             setRegenNonce((n) => n + 1);
           }
@@ -1516,7 +1536,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [timerIdle, setTimerIdle] = useState(true);
   useEffect(() => {
     const id = setInterval(() => {
-      if (blockedRef.current) {
+      // A sitting has its own clock across the top. The play timer would end
+      // the game underneath it, mid-run, for reasons nobody could see.
+      if (blockedRef.current || assessmentRef.current != null) {
         return;
       }
       // Nothing typed yet this session, or nothing for a while: the clock
@@ -1611,8 +1633,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const winStart = Math.max(0, pos - 12);
   const winChars = [...passage].slice(winStart, winStart + 42);
   const sessionTotal = prefs.timerMin * 60;
-  const kbVisible = prefs.kbMode !== "off";
-  const helperVisible = kbVisible || prefs.hands;
+  // During a sitting the plan decides, not the saved preference — and for the
+  // youngest band the plan leaves the board on, because their certificate is
+  // about finishing the trail rather than about technique.
+  const hideHints = assessment?.plan.hideKeyboard === true;
+  const kbVisible = !hideHints && prefs.kbMode !== "off";
+  const helperVisible = kbVisible || (!hideHints && prefs.hands);
   const wide = kbVisible && (prefs.kbMode === "full" || prefs.hands);
 
   return (
@@ -1769,7 +1795,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               <SoundIcon muted={true} />
             </span>
           )}
-          {prefs.hands && (
+          {!hideHints && prefs.hands && (
             <div className={styles.hands}>
               <div className={styles.handsArt}>
                 <img src="/kids-assets/hands.png" alt="" />

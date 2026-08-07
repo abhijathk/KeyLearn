@@ -1,3 +1,4 @@
+import { useAssessment } from "@keylearn/assessment";
 import { useIntlNumbers } from "@keylearn/intl";
 import {
   type DailyGoal as DailyGoalType,
@@ -67,6 +68,7 @@ export const Pulse = memo(function Pulse({
 }): ReactNode {
   const { formatMessage } = useIntl();
   const { formatNumber, formatPercents } = useIntlNumbers();
+  const assessing = useAssessment() != null;
   const { formatSpeed, formatConfidence, speedUnit } = useFormatter();
   const { settings, updateSettings } = useSettings();
   const target = settings.get(lessonProps.targetSpeed);
@@ -374,72 +376,87 @@ export const Pulse = memo(function Pulse({
           <b>{hasData ? formatPercents(accuracy.last) : "—"}</b>{" "}
           {hasData && <Delta delta={accuracy.delta} text={formatPercents} />}
         </span>
-        <span
-          id={names?.score}
-          title={formatMessage({
-            id: "metric.score.description",
-            defaultMessage:
-              "Your last lesson’s score, in points. " +
-              "You earn more by typing faster and cleaner.",
-          })}
-        >
-          <span className={styles.lab}>
-            <FormattedMessage id="t_Score" defaultMessage="Score" />
-          </span>
-          <b>{hasData ? formatNumber(score.last, 0) : "—"}</b>{" "}
-          {hasData && (
-            <Delta delta={score.delta} text={(v) => formatNumber(v, 0)} />
-          )}
-        </span>
-        <span
-          title={formatMessage({
-            id: "practice.lane.best.description",
-            defaultMessage: "The fastest you have ever typed this key.",
-          })}
-        >
-          <span className={styles.lab}>
-            <FormattedMessage id="practice.pulse.best" defaultMessage="Best" />
-          </span>
-          {keyCalibrated ? (
-            <>
-              <b>{formatSpeed(timeToSpeed(focusedKey!.bestTimeToType!))}</b>
-              {" · "}
-              {formatConfidence(focusedKey!.bestConfidence)}
-            </>
-          ) : (
-            <b>—</b>
-          )}
-        </span>
-        <span
-          title={formatMessage({
-            id: "metric.learningRate.description",
-            defaultMessage:
-              "How your speed on this key is trending from lesson to lesson.",
-          })}
-        >
-          <span className={styles.lab}>
-            <FormattedMessage id="practice.pulse.pace" defaultMessage="Pace" />
-          </span>
-          {learningRate != null && learningRate === learningRate ? (
-            <Delta
-              delta={learningRate}
-              text={(v) =>
-                formatMessage(
-                  {
-                    id: "practice.pulse.perLesson",
-                    defaultMessage: "{value}/lesson",
-                  },
-                  { value: formatSpeed(v) },
-                )
-              }
-            />
-          ) : (
-            <b>—</b>
-          )}{" "}
-          <Mood rate={learningRate} />
-        </span>
-        <StreakWhisper streakList={streakList} />
-        {dailyGoal.goal > 0 && <TodayWhisper dailyGoal={dailyGoal} />}
+        {/* Score, Best, Pace, the streak and the daily goal are all
+            practice furniture: they exist to keep somebody coming back
+            tomorrow. During a sitting only time, speed and accuracy decide
+            anything, and the rest is either noise or — for the streak and the
+            goal ring — a figure about a day that this run is not part of. */}
+        {!assessing && (
+          <>
+            <span
+              id={names?.score}
+              title={formatMessage({
+                id: "metric.score.description",
+                defaultMessage:
+                  "Your last lesson’s score, in points. " +
+                  "You earn more by typing faster and cleaner.",
+              })}
+            >
+              <span className={styles.lab}>
+                <FormattedMessage id="t_Score" defaultMessage="Score" />
+              </span>
+              <b>{hasData ? formatNumber(score.last, 0) : "—"}</b>{" "}
+              {hasData && (
+                <Delta delta={score.delta} text={(v) => formatNumber(v, 0)} />
+              )}
+            </span>
+            <span
+              title={formatMessage({
+                id: "practice.lane.best.description",
+                defaultMessage: "The fastest you have ever typed this key.",
+              })}
+            >
+              <span className={styles.lab}>
+                <FormattedMessage
+                  id="practice.pulse.best"
+                  defaultMessage="Best"
+                />
+              </span>
+              {keyCalibrated ? (
+                <>
+                  <b>{formatSpeed(timeToSpeed(focusedKey!.bestTimeToType!))}</b>
+                  {" · "}
+                  {formatConfidence(focusedKey!.bestConfidence)}
+                </>
+              ) : (
+                <b>—</b>
+              )}
+            </span>
+            <span
+              title={formatMessage({
+                id: "metric.learningRate.description",
+                defaultMessage:
+                  "How your speed on this key is trending from lesson to lesson.",
+              })}
+            >
+              <span className={styles.lab}>
+                <FormattedMessage
+                  id="practice.pulse.pace"
+                  defaultMessage="Pace"
+                />
+              </span>
+              {learningRate != null && learningRate === learningRate ? (
+                <Delta
+                  delta={learningRate}
+                  text={(v) =>
+                    formatMessage(
+                      {
+                        id: "practice.pulse.perLesson",
+                        defaultMessage: "{value}/lesson",
+                      },
+                      { value: formatSpeed(v) },
+                    )
+                  }
+                />
+              ) : (
+                <b>—</b>
+              )}{" "}
+              <Mood rate={learningRate} />
+            </span>
+            <StreakWhisper streakList={streakList} />
+            {dailyGoal.goal > 0 && <TodayWhisper dailyGoal={dailyGoal} />}
+          </>
+        )}
         <svg className={styles.chevron} viewBox="0 0 12 12" aria-hidden={true}>
           <path d="M2.5 4.5 6 8l3.5-3.5" />
         </svg>
@@ -855,8 +872,16 @@ let tuneSpent = false; // a session already elapsed during the current reach
  */
 function NextChallenge(): ReactNode {
   const { settings, updateSettings } = useSettings();
+  const assessing = useAssessment() != null;
   const capitals = settings.get(lessonProps.capitals);
   const punctuators = settings.get(lessonProps.punctuators);
+
+  // Not during a sitting. This one is not merely noise — it is a button that
+  // changes what the lesson generates, offered in the middle of a timed run
+  // that is being measured on the lesson as it stands.
+  if (assessing) {
+    return null;
+  }
 
   if (capitals === 0) {
     return (
