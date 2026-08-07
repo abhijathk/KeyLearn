@@ -6,6 +6,7 @@ import {
 } from "@keylearn/certificate";
 import { clsx } from "clsx";
 import { type ReactNode, useState } from "react";
+import { createPortal } from "react-dom";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./CoursePane.module.less";
 import { GuideDialog } from "./GuideDialog.tsx";
@@ -57,7 +58,12 @@ export function ReadyDialog({
     [`${evidence.daysPractised}`, "days"],
   ];
 
-  return (
+  // Portalled to the body. The account window sits inside a shell that
+  // establishes its own containing block, and a position:fixed child of that
+  // is clipped to the shell rather than to the viewport — which is why this
+  // window was being cut off at the account window's edge however tall it was
+  // allowed to be.
+  return createPortal(
     <div className={styles.overlay} role="presentation" onClick={onClose}>
       <div
         className={clsx(styles.dialog, child && styles.dialogKid)}
@@ -272,6 +278,7 @@ export function ReadyDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

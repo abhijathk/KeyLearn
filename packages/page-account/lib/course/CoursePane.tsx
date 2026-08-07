@@ -19,7 +19,7 @@ import { FormattedMessage } from "react-intl";
 import { BrailleBadge } from "../profiles/BrailleBadge.tsx";
 import { useProfiles } from "../profiles/context.tsx";
 import specimenAdult from "./assets/specimen-adult.jpg";
-import specimenKid from "./assets/specimen-kid.jpg";
+import specimenChild from "./assets/specimen-child.jpg";
 import specimenYoung from "./assets/specimen-young.jpg";
 import * as styles from "./CoursePane.module.less";
 import { brailleEvidence, typingEvidence } from "./evidence.ts";
@@ -385,7 +385,7 @@ function Check({ check }: { readonly check: CertificateCheck }): ReactNode {
 const SHEET: Readonly<Record<CertificateTemplate, string>> = {
   adult: specimenAdult,
   young: specimenYoung,
-  child: specimenKid,
+  child: specimenChild,
 };
 
 function Specimen({
@@ -402,7 +402,7 @@ function Specimen({
   // not be asking for that styling in the first place.
   return (
     <div className={styles.specimen}>
-      <div className={clsx(styles.sheet, kind === "child" && styles.sheetKid)}>
+      <div className={styles.sheet}>
         <img className={styles.sheetImage} src={SHEET[kind]} alt="" />
         <span className={styles.stamp}>
           <FormattedMessage
