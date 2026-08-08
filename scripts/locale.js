@@ -29,6 +29,7 @@ export const allLocales = [
   "kn",
   "ko",
   "lt",
+  "lv",
   "ml",
   "mn",
   "mr",

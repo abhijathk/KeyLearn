@@ -52,6 +52,7 @@ export const allLocales: readonly LocaleId[] = [
   "kn",
   "ko",
   "lt",
+  "lv",
   "ml",
   "mn",
   "mr",

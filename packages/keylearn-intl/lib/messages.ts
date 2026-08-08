@@ -227,6 +227,14 @@ export async function loadMessages(locale: LocaleId): Promise<Messages> {
         )
       ).default;
 
+    case "lv":
+      return (
+        await import(
+          /* webpackChunkName: "messages-lv" */ "./messages/lv.json",
+          { with: { type: "json" } }
+        )
+      ).default;
+
     case "ml":
       return (
         await import(
