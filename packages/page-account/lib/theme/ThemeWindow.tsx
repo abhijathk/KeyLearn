@@ -1,4 +1,3 @@
-import { downloadBlob } from "@keylearn/pages-shared";
 import {
   type Accent,
   ACCENTS,
@@ -7,7 +6,6 @@ import {
   contrastRatio,
   type CustomAccent,
   duplicateAccent,
-  exportAccents,
   isHex,
   loadCustomAccents,
   parseAccents,
@@ -50,14 +48,14 @@ type Draft = {
 /**
  * Every theme, and what you can do to each.
  *
- * A shipped theme can be used, copied and exported but never edited in place
- * or deleted — editing one opens the maker pre-filled and saves the result as
- * a theme of your own, so a KeyLearn update can never clobber somebody's work
- * and nobody can delete a colour out from under another learner.
+ * A shipped theme can be copied but never edited in place or deleted —
+ * editing one opens the maker pre-filled and saves the result as a theme of
+ * your own, so a KeyLearn update can never clobber somebody's work and nobody
+ * can delete a colour out from under another learner.
  */
 export function ThemeWindow(): ReactNode {
   const { formatMessage } = useIntl();
-  const { accent: current, switchAccent } = useTheme();
+  const { accent: current } = useTheme();
   const [own, setOwn] = useState<readonly CustomAccent[]>(() =>
     loadCustomAccents(),
   );
@@ -216,24 +214,13 @@ export function ThemeWindow(): ReactNode {
                       {accent.night} night · {accent.day} day
                     </span>
                   </div>
-                  {accent.id === current ? (
+                  {accent.id === current && (
                     <span className={styles.current}>
                       <FormattedMessage
                         id="theme.win.current"
                         defaultMessage="✓ In use"
                       />
                     </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className={styles.btn}
-                      onClick={() => switchAccent(accent.id)}
-                    >
-                      <FormattedMessage
-                        id="theme.win.use"
-                        defaultMessage="Use"
-                      />
-                    </button>
                   )}
                   <div className={styles.ops}>
                     <button
@@ -264,23 +251,6 @@ export function ThemeWindow(): ReactNode {
                       }}
                     >
                       ⧉
-                    </button>
-                    <button
-                      type="button"
-                      title={formatMessage({
-                        id: "theme.win.export",
-                        defaultMessage: "Export",
-                      })}
-                      onClick={() =>
-                        downloadBlob(
-                          new Blob([exportAccents([accent])], {
-                            type: "application/json",
-                          }),
-                          `keylearn-theme-${accent.id}.json`,
-                        )
-                      }
-                    >
-                      ↓
                     </button>
                     <button
                       type="button"

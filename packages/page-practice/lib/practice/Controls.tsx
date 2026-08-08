@@ -2,7 +2,12 @@ import { Dir } from "@keylearn/intl";
 import { names } from "@keylearn/lesson-ui";
 import { uiProps } from "@keylearn/result";
 import { useSettings } from "@keylearn/settings";
-import { IconButton, StrokeIcon, useView } from "@keylearn/widget";
+import {
+  IconButton,
+  type IconButtonRef,
+  StrokeIcon,
+  useView,
+} from "@keylearn/widget";
 import { clsx } from "clsx";
 import {
   memo,
@@ -52,6 +57,7 @@ export const Controls = memo(function Controls({
   // text-size slider, which keeps it open while you drag.
   const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const usingSlider = useRef(false);
+  const toggleRef = useRef<IconButtonRef>(null);
   const scheduleClose = useCallback((ms = 4000) => {
     clearTimeout(closeTimer.current);
     closeTimer.current = setTimeout(() => {
@@ -178,13 +184,21 @@ export const Controls = memo(function Controls({
 
       <span className={clsx(styles.toggle, open && styles.toggleOpen)}>
         <IconButton
+          ref={toggleRef}
           icon={<StrokeIcon name="tune" />}
           title={formatMessage({
             id: "practice.widget.tools.description",
             defaultMessage: "Show or hide the practice tools.",
           })}
-          onClick={() => {
+          onClick={(ev) => {
             setOpen((v) => !v);
+            // Enter on this screen starts the lesson. A button that keeps
+            // focus after the menu has folded away answers it first and opens
+            // the menu again instead. Keyboard activation (detail 0) keeps its
+            // place in the tab order; a mouse click has no use for it.
+            if (ev.detail > 0) {
+              toggleRef.current?.blur();
+            }
           }}
         />
       </span>

@@ -664,12 +664,69 @@
   translate: 0 -50%;
 }
 
-.whisperOpen .chevron {
+// Rotated while the panel is actually showing, not merely while it is the
+// learner's choice — so it points the way the panel currently is.
+.whisperShown .chevron {
   transform: rotate(180deg);
+}
+
+// Open, there are two controls pinned to the edge rather than one, so the
+// centred metrics need a little more room to clear.
+.whisperOpen {
+  padding-inline-end: 3.2rem;
 }
 
 .whisper:hover .chevron {
   opacity: 1;
+}
+
+// The pin sits just inboard of the chevron and borrows its whole treatment —
+// same ink, same quiet opacity, same one-weight stroke. It only appears once
+// the panel is open, because there is nothing to hold otherwise.
+.pin {
+  display: flex;
+  position: absolute;
+  inset-inline-end: 2rem;
+  inset-block-start: 50%;
+  align-items: center;
+  justify-content: center;
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
+  padding: 0;
+  border: none;
+  color: var(--text-color);
+  background: none;
+  // Barely there until it is doing something: an unpinned pin is an offer,
+  // not a status.
+  opacity: 0.25;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  translate: 0 -50%;
+
+  svg {
+    inline-size: 100%;
+    block-size: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+}
+
+.whisper:hover .pin {
+  opacity: 0.6;
+}
+
+// Held. Same ink as everything else on this row — the filled head is the
+// whole of the signal.
+.pin.pinOn,
+.whisper:hover .pin.pinOn {
+  opacity: 1;
+
+  circle {
+    fill: currentColor;
+  }
 }
 
 // The panel slides open by animating grid-template-rows 0fr -> 1fr, which

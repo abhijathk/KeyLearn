@@ -34,6 +34,7 @@ import { Indicators, JourneyStrip } from "./Indicators.tsx";
 import { DeferredKeyboardPresenter } from "./KeyboardPresenter.tsx";
 import { PracticeTour } from "./PracticeTour.tsx";
 import * as styles from "./Presenter.module.less";
+import { readPinned } from "./Pulse.tsx";
 import { type LessonState } from "./state/index.ts";
 
 type Props = {
@@ -54,6 +55,8 @@ type State = {
   readonly focusMode: boolean;
   readonly typing: boolean;
   readonly textSize: number;
+  /** The session recap is held open, so the chrome must not step back. */
+  readonly pinned: boolean;
 };
 
 enum View {
@@ -123,6 +126,7 @@ export class Presenter extends PureComponent<Props, State> {
     focusMode: false,
     typing: false,
     textSize: Preferences.get(propTextSize),
+    pinned: readPinned(),
   };
 
   #typingTimer: ReturnType<typeof setTimeout> | undefined;
@@ -147,7 +151,10 @@ export class Presenter extends PureComponent<Props, State> {
     // Header auto-hide (opt-in): hide on the first keystroke, and bring it back
     // ~2 seconds after the last one — the timer resets on every keystroke, so
     // it stays away through continuous typing and returns shortly after a pause.
-    if (this.props.state.settings.get(uiProps.hideHeaderWhileTyping)) {
+    if (
+      this.props.state.settings.get(uiProps.hideHeaderWhileTyping) &&
+      !this.state.pinned
+    ) {
       this.#hideHeader();
       clearTimeout(this.#headerTimer);
       this.#headerTimer = setTimeout(() => {
@@ -196,8 +203,13 @@ export class Presenter extends PureComponent<Props, State> {
     );
   }
 
+  handlePinned = (ev: Event) => {
+    this.setState({ pinned: (ev as CustomEvent<boolean>).detail });
+  };
+
   override componentDidMount() {
     window.addEventListener("keylearn:focus-mode", this.handleToggleFocusMode);
+    window.addEventListener("keylearn:pulse-pinned", this.handlePinned);
     this.#broadcastFocusMode(this.state.focusMode);
     if (this.props.state.settings.isNew) {
       this.setState({
@@ -212,6 +224,7 @@ export class Presenter extends PureComponent<Props, State> {
       "keylearn:focus-mode",
       this.handleToggleFocusMode,
     );
+    window.removeEventListener("keylearn:pulse-pinned", this.handlePinned);
     this.#stopTyping();
     this.#showHeader();
     this.#broadcastFocusMode(false);
@@ -220,7 +233,7 @@ export class Presenter extends PureComponent<Props, State> {
   override render() {
     const {
       props: { state, lines, depressedKeys },
-      state: { view, tour, focus, focusMode, typing, textSize },
+      state: { view, tour, focus, focusMode, typing, textSize, pinned },
       handleResetLesson,
       handleSkipLesson,
       handleKeyDown,
@@ -242,6 +255,7 @@ export class Presenter extends PureComponent<Props, State> {
             focus={tour || focus}
             focusMode={focusMode}
             typing={typing}
+            pinned={pinned}
             depressedKeys={depressedKeys}
             toggledKeys={ModifierState.modifiers}
             controls={
@@ -463,6 +477,7 @@ function NormalLayout({
   focus,
   focusMode,
   typing,
+  pinned,
   depressedKeys,
   toggledKeys,
   controls,
@@ -475,6 +490,7 @@ function NormalLayout({
   readonly focus: boolean;
   readonly focusMode: boolean;
   readonly typing: boolean;
+  readonly pinned: boolean;
   readonly depressedKeys: readonly string[];
   readonly toggledKeys: readonly string[];
   readonly controls: ReactNode;
@@ -488,7 +504,9 @@ function NormalLayout({
       {focusMode || (
         // While typing, everything but the text and keyboard steps back a
         // touch so the typing zone owns the attention.
-        <div className={clsx(styles.chrome, typing && styles.dimmed)}>
+        <div
+          className={clsx(styles.chrome, typing && !pinned && styles.dimmed)}
+        >
           <Indicators state={state} />
           {/* The practice tools ride inside the telemetry island's top-right
               corner, as drawn in the redesign mockup. */}

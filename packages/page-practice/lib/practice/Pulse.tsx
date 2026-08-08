@@ -26,6 +26,7 @@ import {
   type ReactNode,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -74,12 +75,28 @@ export const Pulse = memo(function Pulse({
   const target = settings.get(lessonProps.targetSpeed);
   const { count, speed, accuracy, score } = summaryStats;
   const hasData = count > 0;
-  const [expanded, setExpanded] = useState(readExpanded);
+  // A pinned recap is the only one that outlives a reload. Anything else
+  // opens folded: a panel left open during last week's lesson is not a choice
+  // anybody remembers making.
+  const [pinned, setPinned] = useState(readPinned);
+  const [expanded, setExpanded] = useState(readPinned);
+  // Enter on this screen means "begin the lesson". The row below is a
+  // role=button, so once it holds focus it answers Enter itself — and a
+  // learner who opened the recap, closed it, and pressed Enter to type got the
+  // panel back instead. It hands focus away again whenever it is done with it.
+  const whisperRef = useRef<HTMLDivElement>(null);
   const toggleExpanded = () => {
-    setExpanded((v) => {
-      writeExpanded(!v);
-      return !v;
-    });
+    setExpanded(!expanded);
+  };
+  const togglePinned = () => {
+    const next = !pinned;
+    writePinned(next);
+    setPinned(next);
+    // The screen that dims the chrome lives well above this row, so the state
+    // travels the same way the rest of the practice screen's does.
+    window.dispatchEvent(
+      new window.CustomEvent("keylearn:pulse-pinned", { detail: next }),
+    );
   };
   // A sitting starts when the gap since the previous lesson is long enough
   // that the hands have gone cold. Half an hour is generous — a tea break is
@@ -96,6 +113,25 @@ export const Pulse = memo(function Pulse({
   // While the learner is actively typing, the hero shows the live cumulative
   // speed with a pulsing dot; otherwise the recorded last-lesson speed.
   const showLive = live.typing && live.cpm > 0;
+  // The recap folds away while keys are landing and comes back once they
+  // stop, on the same signal that dims the rest of the chrome — a pin holds
+  // it open through the whole lesson instead. The learner's own open/closed
+  // choice is untouched by this, so it survives the round.
+  const panelOpen = expanded && !assessing && !(live.typing && !pinned);
+  // And an unpinned recap nobody is reading folds itself back up. The clock
+  // only runs between lessons — while keys are landing the panel is already
+  // out of the way, and the count starts over when they stop.
+  useEffect(() => {
+    if (!expanded || pinned || live.typing) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      setExpanded(false);
+    }, 30000);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [expanded, pinned, live.typing]);
   // The goal flag lights up the moment the current speed crosses the target.
   const crossed =
     target > 0 && (showLive ? live.cpm : hasData ? speed.last : 0) >= target;
@@ -349,7 +385,12 @@ export const Pulse = memo(function Pulse({
           the way into the session summary below it: today's minutes, the
           daily goal ring, the record to beat. */}
       <div
-        className={clsx(styles.whisper, expanded && styles.whisperOpen)}
+        ref={whisperRef}
+        className={clsx(
+          styles.whisper,
+          expanded && styles.whisperOpen,
+          panelOpen && styles.whisperShown,
+        )}
         role={assessing ? undefined : "button"}
         tabIndex={assessing ? undefined : 0}
         aria-expanded={assessing ? undefined : expanded}
@@ -357,14 +398,30 @@ export const Pulse = memo(function Pulse({
           id: "practice.pulse.expand",
           defaultMessage: "Show more about this session",
         })}
-        onClick={assessing ? undefined : toggleExpanded}
+        onClick={
+          assessing
+            ? undefined
+            : () => {
+                toggleExpanded();
+                // A pointer never asked for a keyboard focus ring here.
+                whisperRef.current?.blur();
+              }
+        }
         onKeyDown={
           assessing
             ? undefined
             : (ev) => {
                 if (ev.key === "Enter" || ev.key === " ") {
                   ev.preventDefault();
+                  // Toggling the panel is the whole of what this key does —
+                  // without this it also reached the window handler that
+                  // starts the lesson.
+                  ev.stopPropagation();
                   toggleExpanded();
+                  if (expanded) {
+                    // Folded away, so the next Enter belongs to the lesson.
+                    whisperRef.current?.blur();
+                  }
                 }
               }
         }
@@ -464,6 +521,43 @@ export const Pulse = memo(function Pulse({
             {dailyGoal.goal > 0 && <TodayWhisper dailyGoal={dailyGoal} />}
           </>
         )}
+        {/* Only worth offering once there is something open to hold on to. */}
+        {!assessing && expanded && (
+          <button
+            type="button"
+            className={clsx(styles.pin, pinned && styles.pinOn)}
+            aria-pressed={pinned}
+            title={formatMessage(
+              pinned
+                ? {
+                    id: "practice.pulse.unpin",
+                    defaultMessage:
+                      "Let this fade back while you type, as usual",
+                  }
+                : {
+                    id: "practice.pulse.pin",
+                    defaultMessage: "Keep this open while you type",
+                  },
+            )}
+            onClick={(ev) => {
+              // The whole row is the open/close toggle; the pin is a separate
+              // control sitting inside it.
+              ev.stopPropagation();
+              togglePinned();
+              if (ev.detail > 0) {
+                ev.currentTarget.blur();
+              }
+            }}
+          >
+            {/* A tack, in the same one-weight stroke as the chevron beside
+                it. Pinned fills the head, the way the braille icon fills a
+                raised dot. */}
+            <svg viewBox="0 0 12 12" aria-hidden={true}>
+              <circle cx="6" cy="4.5" r="2.1" />
+              <path d="M6 6.6v3.5" />
+            </svg>
+          </button>
+        )}
         {!assessing && (
           <svg
             className={styles.chevron}
@@ -476,11 +570,8 @@ export const Pulse = memo(function Pulse({
       </div>
 
       <div
-        className={clsx(
-          styles.session,
-          expanded && !assessing && styles.sessionOpen,
-        )}
-        aria-hidden={!expanded || assessing}
+        className={clsx(styles.session, panelOpen && styles.sessionOpen)}
+        aria-hidden={!panelOpen}
       >
         <div className={styles.sessionClip}>
           <div className={styles.sessionInner}>
@@ -500,21 +591,23 @@ export const Pulse = memo(function Pulse({
   );
 });
 
-// Whether the session panel is left open, remembered across visits so the
-// learner's choice sticks. Guarded for SSR / storage-blocked environments.
-const OPEN_KEY = "keylearn.pulse.open";
-function readExpanded(): boolean {
+// Pinning is the answer to "I was reading that": the chrome steps back while
+// keys are landing, and if the header auto-hide is on it leaves altogether,
+// which takes the open recap with it. A pin holds it where it is. Off unless
+// asked for — the stepping back is what most people want most of the time.
+export const PIN_KEY = "keylearn.pulse.pinned";
+export function readPinned(): boolean {
   try {
-    return window.localStorage.getItem(OPEN_KEY) === "1";
+    return window.localStorage.getItem(PIN_KEY) === "1";
   } catch {
     return false;
   }
 }
-function writeExpanded(open: boolean): void {
+function writePinned(pinned: boolean): void {
   try {
-    window.localStorage.setItem(OPEN_KEY, open ? "1" : "0");
+    window.localStorage.setItem(PIN_KEY, pinned ? "1" : "0");
   } catch {
-    // ignore — a closed session panel is a fine fallback
+    // ignore — an unpinned panel is the default anyway
   }
 }
 
