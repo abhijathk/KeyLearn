@@ -116,19 +116,40 @@ export class Cursor extends Component<{
 
     const { style } = cursor;
 
+    // Every measurement first, then every write. Interleaving them made the
+    // browser lay the whole text block out three times per keystroke — once
+    // to answer each read that followed a write. The caret is on the typing
+    // path, so those flushes were paid on every letter.
     const from = window.getComputedStyle(char);
-    style.fontFamily = from.fontFamily;
-    style.fontSize = from.fontSize;
-    style.fontStyle = from.fontStyle;
-    style.fontWeight = from.fontWeight;
-    style.fontVariant = from.fontVariant;
-    style.fontKerning = from.fontKerning;
-    style.lineHeight = from.lineHeight;
+    const fontFamily = from.fontFamily;
+    const fontSize = from.fontSize;
+    const fontStyle = from.fontStyle;
+    const fontWeight = from.fontWeight;
+    const fontVariant = from.fontVariant;
+    const fontKerning = from.fontKerning;
+    const lineHeight = from.lineHeight;
 
     const x = char.offsetLeft;
     const y = char.parentElement!.offsetTop;
     const w = char.offsetWidth;
     const h = char.parentElement!.offsetHeight;
+
+    // Where the caret is now, read before anything moves it.
+    const fromLeft = cursor.offsetLeft;
+    const fromTop = cursor.offsetTop;
+
+    const veilPast = this.#veilPastRef.current;
+    const veilNext = this.#veilNextRef.current;
+    const veilContainer = this.#containerRef.current;
+    const containerWidth = veilContainer?.clientWidth || 1;
+
+    style.fontFamily = fontFamily;
+    style.fontSize = fontSize;
+    style.fontStyle = fontStyle;
+    style.fontWeight = fontWeight;
+    style.fontVariant = fontVariant;
+    style.fontKerning = fontKerning;
+    style.lineHeight = lineHeight;
 
     let left: number;
     let top: number;
@@ -186,12 +207,8 @@ export class Cursor extends Component<{
     // and the not-yet stretch below it. As the caret nears the end of its
     // line the lower veil steps down early, so the next line brightens while
     // the eye still has time to read ahead.
-    const veilPast = this.#veilPastRef.current;
-    const veilNext = this.#veilNextRef.current;
-    const container = this.#containerRef.current;
-    if (veilPast != null && veilNext != null && container != null) {
-      const width = container.clientWidth || 1;
-      const nearEnd = x + w * 14 >= width;
+    if (veilPast != null && veilNext != null && veilContainer != null) {
+      const nearEnd = x + w * 14 >= containerWidth;
       const activeBottom = y + (nearEnd ? h * 2 : h);
       veilPast.style.display = "block";
       veilPast.style.insetBlockStart = "0";
@@ -200,9 +217,6 @@ export class Cursor extends Component<{
       veilNext.style.insetBlockStart = `${activeBottom}px`;
       veilNext.style.insetBlockEnd = "0";
     }
-
-    const fromLeft = cursor.offsetLeft;
-    const fromTop = cursor.offsetTop;
 
     style.left = `${left}px`;
     style.top = `${top}px`;

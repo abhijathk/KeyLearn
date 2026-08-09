@@ -39,11 +39,16 @@ export const PointersLayer = memo(function PointersLayer({
   const keyboard = useKeyboard();
   const svgRef = useRef<SVGSVGElement>(null);
   const [combo, setCombo] = useState<KeyCombo | null>(null);
+  // Only the very next character decides which key is cued. The suffix itself
+  // is a fresh array on every keystroke, so depending on it re-ran this — a
+  // state change and a new timer — even when the key being pointed at had not
+  // moved, as happens on a wrong keystroke.
+  const next = suffix.length > 0 ? suffix[0] : null;
   useEffect(() => {
     const tasks = new Tasks();
     setCombo(null);
-    if (suffix.length > 0) {
-      const combo = keyboard.getCombo(suffix[0]);
+    if (next != null) {
+      const combo = keyboard.getCombo(next);
       if (combo != null) {
         // Escalated help cannot wait — cue the key immediately.
         tasks.delayed(helpLevel >= 2 ? 0 : delay, () => {
@@ -54,7 +59,7 @@ export const PointersLayer = memo(function PointersLayer({
     return () => {
       tasks.cancelAll();
     };
-  }, [keyboard, suffix, delay, helpLevel]);
+  }, [keyboard, next, delay, helpLevel]);
   useEffect(() => {
     const svg = svgRef.current;
     if (svg != null) {

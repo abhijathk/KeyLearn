@@ -48,14 +48,22 @@ export function GhostTrack({
     if (startRef.current == null) {
       startRef.current = performance.now();
     }
+    // The replay only ever moves forwards, so it picks up where it left off
+    // rather than rescanning every mark on every frame — and it only asks
+    // React for a render when the fraction actually changes, instead of sixty
+    // times a second while the number stands still.
+    let k = 0;
+    let shown = -1;
     const tick = () => {
       const elapsedMs = performance.now() - startRef.current!;
-      // Replay: how far along the last run was at this elapsed time.
-      let k = 0;
       while (k < marks.length && marks[k] <= elapsedMs) {
         k += 1;
       }
-      setGhostFrac(Math.min(1, k / marks.length));
+      const frac = Math.min(1, k / marks.length);
+      if (frac !== shown) {
+        shown = frac;
+        setGhostFrac(frac);
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);

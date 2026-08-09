@@ -118,6 +118,21 @@ export const Pulse = memo(function Pulse({
   // it open through the whole lesson instead. The learner's own open/closed
   // choice is untouched by this, so it survives the round.
   const panelOpen = expanded && !assessing && !(live.typing && !pinned);
+  // Mounted a moment longer than it is open, so the fold has something to
+  // fold. 340ms matches the panel's own transition.
+  const [recapMounted, setRecapMounted] = useState(panelOpen);
+  useEffect(() => {
+    if (panelOpen) {
+      setRecapMounted(true);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setRecapMounted(false);
+    }, 340);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [panelOpen]);
   // And an unpinned recap nobody is reading folds itself back up. The clock
   // only runs between lessons — while keys are landing the panel is already
   // out of the way, and the count starts over when they stop.
@@ -154,10 +169,16 @@ export const Pulse = memo(function Pulse({
     Math.min(1, Math.max(0, confidence / KEY_PASS_RATIO));
   const conf = keyCalibrated ? road(focusedKey.confidence!) : 0;
   const best = keyCalibrated ? road(focusedKey.bestConfidence!) : 0;
-  const learningRateInfo =
-    focusedKey != null
-      ? LearningRate.from(focusedKey.samples, new Target(settings))
-      : null;
+  // A degree-three polynomial regression over the focused key's samples. It
+  // answers a question that only changes when the samples do — once a lesson —
+  // and was being solved afresh on every keystroke.
+  const learningRateInfo = useMemo(
+    () =>
+      focusedKey != null
+        ? LearningRate.from(focusedKey.samples, new Target(settings))
+        : null,
+    [focusedKey?.samples, settings],
+  );
   const learningRate = learningRateInfo?.learningRate ?? null;
 
   return (
@@ -575,15 +596,23 @@ export const Pulse = memo(function Pulse({
       >
         <div className={styles.sessionClip}>
           <div className={styles.sessionInner}>
-            <SessionRecap
-              results={results}
-              summaryStats={summaryStats}
-              lessonKeys={lessonKeys}
-              focusedKey={focusedKey}
-              forecast={learningRateInfo}
-              streakList={streakList}
-              dailyGoal={dailyGoal}
-            />
+            {/* Only while it can be seen. The recap reduces over every result
+                this profile has ever recorded, and it used to do that on every
+                keystroke behind a panel that was shut — the most expensive
+                thing on the typing path, spent entirely on nothing. It stays
+                mounted for the length of the close so the fold still animates
+                with something inside it. */}
+            {recapMounted && (
+              <SessionRecap
+                results={results}
+                summaryStats={summaryStats}
+                lessonKeys={lessonKeys}
+                focusedKey={focusedKey}
+                forecast={learningRateInfo}
+                streakList={streakList}
+                dailyGoal={dailyGoal}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -25,6 +25,7 @@ import {
   PureComponent,
   type ReactNode,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { FormattedMessage } from "react-intl";
@@ -499,6 +500,10 @@ function NormalLayout({
   readonly onStart: () => void;
   readonly tour: ReactNode;
 }) {
+  // The set of keys in play, and how sure each one is, changes when a lesson
+  // does — not when a key is pressed. Rebuilding the array every keystroke
+  // handed the keyboard a new prop each time and cost it its memo.
+  const masteryKeys = useMemo(() => masteryKeysOf(state), [state]);
   return (
     <Screen className={styles.screen}>
       {focusMode || (
@@ -563,7 +568,7 @@ function NormalLayout({
             toggledKeys={toggledKeys}
             suffix={state.suffix}
             lastLesson={state.lastLesson}
-            masteryKeys={masteryKeysOf(state)}
+            masteryKeys={masteryKeys}
           />
         )}
       </div>
