@@ -347,12 +347,13 @@ export function AllKeysChart({
     return null;
   }
   // Grow the chart with the number of keys so the lines and their end-of-line
-  // labels stay legible as more letters unlock. Each label needs ~13 units of
+  // labels stay legible as more letters unlock. Each label needs GAP units of
   // vertical room (see the anti-overlap pass below); a fixed height crammed
   // them together — and pushed the lowest labels off the bottom — once a dozen
   // or more keys were in play. The rendered height tracks the viewBox at a
   // constant 20 units/rem so the vertical scale never stretches.
-  const H = Math.max(230, 40 + series.length * 13);
+  const GAP = 15;
+  const H = Math.max(260, 48 + series.length * GAP);
   const all = series.flatMap(({ speeds }) => speeds);
   const hi = Math.max(...all) * 1.08;
   const lo = Math.min(...all) * 0.85;
@@ -365,9 +366,24 @@ export function AllKeysChart({
       return { letter, conf, vals, y: py(vals[vals.length - 1]) };
     })
     .sort((a, b) => a.y - b.y);
+  // Two passes, because one is not enough. Pushing each clash downwards is
+  // where this started, and it accumulates: a dozen lines finishing close
+  // together walked the last few labels far below the lines they name, which
+  // is what made them read as floating letters rather than as labels. The
+  // second pass pulls the run back up off the floor, so the column ends up
+  // straddling the lines instead of hanging beneath them.
   for (let i = 1; i < ends.length; i++) {
-    if (ends[i].y - ends[i - 1].y < 13) {
-      ends[i] = { ...ends[i], y: ends[i - 1].y + 13 };
+    if (ends[i].y - ends[i - 1].y < GAP) {
+      ends[i] = { ...ends[i], y: ends[i - 1].y + GAP };
+    }
+  }
+  const floor = H - 10;
+  if (ends.length > 0 && ends[ends.length - 1].y > floor) {
+    ends[ends.length - 1] = { ...ends[ends.length - 1], y: floor };
+    for (let i = ends.length - 2; i >= 0; i--) {
+      if (ends[i + 1].y - ends[i].y < GAP) {
+        ends[i] = { ...ends[i], y: ends[i + 1].y - GAP };
+      }
     }
   }
   const labelY = new Map(ends.map(({ letter, y }) => [letter, y]));
@@ -419,10 +435,26 @@ export function AllKeysChart({
               strokeLinejoin="round"
             />
             <circle cx={lx} cy={ly} r="2.5" fill={color} />
+            {/* When a label has had to move to clear its neighbours, a hairline
+                in the line's own colour walks the eye from the end of the line
+                to the letter. Only drawn when it has actually moved: a leader
+                to a label already sitting on the dot is a line about nothing. */}
+            {Math.abs(y - ly) > 2 && (
+              <path
+                d={`M${lx + 3} ${ly}L${lx + 6} ${ly}L${lx + 6} ${y}L${lx + 8} ${y}`}
+                fill="none"
+                stroke={color}
+                strokeWidth="1"
+                opacity="0.45"
+              />
+            )}
+            {/* The letter is ink, not data. Colour already says how fast the
+                key is — twice over, in the line and the dot — and a green
+                letter on a dark ground is harder to read than a plain one. */}
             <text
-              x={lx + 9}
+              x={lx + 10}
               y={y + 3.5}
-              fill={color}
+              fill="var(--text-color)"
               fontSize="11"
               fontWeight="700"
               style={{ fontFamily: "inherit" }}
