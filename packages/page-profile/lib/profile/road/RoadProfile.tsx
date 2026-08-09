@@ -305,7 +305,7 @@ function dailyStreak(
  */
 function ChildPace({ stats }: { readonly stats: SummaryStats }): ReactNode {
   const { formatSpeed } = useFormatter();
-  const { profileBirthYear = null } = useResults();
+  const { profileBirthYear = null, kidProfile = false } = useResults();
   // Drawn once per visit, not per render: a paragraph that reshuffled under
   // somebody mid-sentence would be worse than one that never changed at all.
   // Switching tabs remounts this, so each look at a child's page is a fresh
@@ -313,7 +313,11 @@ function ChildPace({ stats }: { readonly stats: SummaryStats }): ReactNode {
   const [seed] = useState(() => [Math.random(), Math.random()] as const);
   const age = ageFromBirthYear(profileBirthYear);
   const typical = typicalWpmForAge(age);
-  if (typical == null || age == null) {
+  // A grown-up is read as a grown-up, whatever their birth year says. A kid
+  // who is promoted keeps their date of birth — that is the point of keeping
+  // the same profile — so age alone would go on measuring them against
+  // seven-year-olds and telling whoever reads the page not to worry.
+  if (!kidProfile || typical == null || age == null) {
     return null;
   }
   const [lo, hi] = typical;
