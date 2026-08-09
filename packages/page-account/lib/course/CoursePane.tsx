@@ -260,7 +260,12 @@ function Row({
       <Head profile={profile} state={state} language={language} />
       <div className={styles.checks}>
         {verdict.checks.map((check) => (
-          <Check key={check.id} check={check} />
+          <Check
+            key={check.id}
+            check={check}
+            braille={evidence.kind === "braille"}
+            total={evidence.total}
+          />
         ))}
         {evidence.audience === "kid" && (
           <span className={clsx(styles.check, styles.band)}>
@@ -379,18 +384,18 @@ function Head({
           braille learner is recognised the same way everywhere. The kind badge
           stays beside it: braille says which page they get, not whether they
           are a child. */}
-      {braille && (
-        <span className={styles.brailleMark}>
-          <BrailleBadge />
-        </span>
-      )}
+      {braille && <BrailleBadge />}
       <span
         className={clsx(
           styles.badge,
           profile.kind === "kid" ? styles.kid : styles.adult,
         )}
       >
-        {profile.kind === "kid" ? "kid" : "grown-up"}
+        {profile.kind === "kid" ? (
+          <FormattedMessage id="profiles.kid" defaultMessage="Kid" />
+        ) : (
+          <FormattedMessage id="profiles.adult" defaultMessage="Grown-up" />
+        )}
       </span>
       <span className={styles.meta}>
         {braille ? "Unified English Braille · grade 1" : (language ?? "")}
@@ -423,7 +428,105 @@ function Head({
   );
 }
 
-function Check({ check }: { readonly check: CertificateCheck }): ReactNode {
+/**
+ * The name of one condition, in the reader's language.
+ *
+ * `assess` lives in a package that is also the server's judge, so its labels
+ * are plain English strings with no react-intl anywhere near them — and the
+ * type has always said the UI renders a translated label. It did not, so this
+ * pane read half in Tamil and half in English the moment anything was
+ * translated. Keyed by the check's own id, which is stable and already exists.
+ */
+function CheckLabel({
+  id,
+  braille,
+  total,
+}: {
+  readonly id: string;
+  readonly braille: boolean;
+  readonly total: number;
+}): ReactNode {
+  switch (id) {
+    case "coverage":
+      return braille ? (
+        <FormattedMessage
+          id="account.check.coverage.cells"
+          defaultMessage="Every one of the {total} cells introduced"
+          values={{ total }}
+        />
+      ) : (
+        <FormattedMessage
+          id="account.check.coverage.letters"
+          defaultMessage="Every one of the {total} letters introduced"
+          values={{ total }}
+        />
+      );
+    case "settled":
+      return braille ? (
+        <FormattedMessage
+          id="account.check.settled.cells"
+          defaultMessage="Every cell reliable, not merely met"
+        />
+      ) : (
+        <FormattedMessage
+          id="account.check.settled.letters"
+          defaultMessage="Every letter reliable, not merely met"
+        />
+      );
+    case "volume":
+      return braille ? (
+        <FormattedMessage
+          id="account.check.volume.cells"
+          defaultMessage="Cells entered correctly"
+        />
+      ) : (
+        <FormattedMessage
+          id="account.check.volume.lessons"
+          defaultMessage="Course lessons completed"
+        />
+      );
+    case "days":
+      return (
+        <FormattedMessage
+          id="account.check.days"
+          defaultMessage="Days practised"
+        />
+      );
+    case "elapsed":
+      return (
+        <FormattedMessage
+          id="account.check.elapsed"
+          defaultMessage="Days from the first lesson to the last"
+        />
+      );
+    case "speed":
+      return (
+        <FormattedMessage
+          id="account.check.speed"
+          defaultMessage="Sustained speed"
+        />
+      );
+    case "accuracy":
+      return (
+        <FormattedMessage
+          id="account.check.accuracy"
+          defaultMessage="Sustained accuracy"
+        />
+      );
+    default:
+      return null;
+  }
+}
+
+function Check({
+  check,
+  braille,
+  total,
+}: {
+  readonly check: CertificateCheck;
+  readonly braille: boolean;
+  readonly total: number;
+}): ReactNode {
   const shown = (value: number) =>
     check.unit === "percent"
       ? `${(value * 100).toFixed(1)}%`
@@ -431,7 +534,11 @@ function Check({ check }: { readonly check: CertificateCheck }): ReactNode {
   return (
     <span className={clsx(styles.check, check.met ? styles.met : styles.miss)}>
       <i className={styles.dot} />
-      <span className={styles.label}>{check.label}</span>
+      <span className={styles.label}>
+        {/* The English on the check itself is the last resort, for an id this
+            does not know about. */}
+        <CheckLabel id={check.id} braille={braille} total={total} />
+      </span>
       <span className={styles.value}>
         {shown(check.actual)} / {shown(check.required)}
       </span>

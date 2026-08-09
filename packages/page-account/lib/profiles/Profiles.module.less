@@ -752,6 +752,30 @@
   line-height: 1.5;
 }
 
+// Growing up is not undoable, so it reads as a caution rather than as one more
+// option. Warm rather than red: nothing has gone wrong, and for the child it is
+// good news.
+.growUp {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-block-start: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid
+    color-mix(in srgb, var(--warn-color, #d08b2c) 34%, transparent);
+  border-radius: 0.7rem;
+  color: var(--text-color-f1);
+  background: color-mix(in srgb, var(--warn-color, #d08b2c) 10%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  cursor: pointer;
+
+  input {
+    flex: none;
+    margin-block-start: 0.18rem;
+  }
+}
+
 // The reason a switch above is fixed. Quieter than the setting it explains,
 // so it reads as a footnote rather than as a second instruction.
 .consentWhy {

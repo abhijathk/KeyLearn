@@ -1667,14 +1667,22 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
-    // A learner does not change kind. Grown-ups and children practise on
-    // different surfaces against different curricula, under different consent
-    // and age rules, and their history is written per surface — switching
-    // would leave all of that behind. The editor disables the control; this is
-    // what makes it true for anything that posts the form.
-    if (data.kind !== undefined && data.kind !== profile.kind) {
+    // Children grow up, and the one thing they must not have to do about it is
+    // start again. The profile id does not change, so certificates, medals and
+    // every lesson of history stay exactly where they were and simply belong
+    // to a grown-up now.
+    //
+    // The other direction stays shut, and not out of symmetry: it would move a
+    // grown-up's record onto the children's surfaces and under the consent and
+    // age rules written for a child, which is the shape of an adult claiming
+    // to be one. Nobody needs it, so nothing is lost by refusing it.
+    if (
+      data.kind !== undefined &&
+      data.kind !== profile.kind &&
+      data.kind !== "adult"
+    ) {
       throw new ApplicationError(
-        "A learner stays a grown-up or a kid. Add a new learner instead.",
+        "A grown-up cannot become a kid. Add a new learner instead.",
       );
     }
 
@@ -1689,6 +1697,8 @@ export class Controller {
     }
 
     const patch: Record<string, unknown> = {};
+    // Only ever kid to grown-up; the guard above has already refused the rest.
+    if (data.kind !== undefined) patch.kind = data.kind;
     if (data.firstName !== undefined) patch.firstName = data.firstName;
     if (data.lastName !== undefined) patch.lastName = data.lastName || null;
     if (data.birthYear !== undefined) patch.birthYear = data.birthYear ?? null;

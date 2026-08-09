@@ -1,4 +1,8 @@
-import { useAssessment } from "@keylearn/assessment";
+import {
+  useAssessment,
+  useAssessmentPartial,
+  useAssessmentReset,
+} from "@keylearn/assessment";
 import {
   BLANK,
   type Cell,
@@ -203,6 +207,9 @@ function Practice(): ReactNode {
   // It has existed since the first version of this page and was wired to
   // nothing.
   const probe = useRef(new RolloverProbe());
+  // True from the press that unlocks the audio until the keys are let go
+  // again, so that first chord enters nothing. See `onDown`.
+  const swallowing = useRef(false);
   const greetRef = useRef<() => void>(() => {});
   // The key handler is attached once and reads current values through this ref,
   // so a chord in progress is never dropped by a re-render mid-cell.
@@ -251,6 +258,26 @@ function Practice(): ReactNode {
     scored.current.clear();
     lastAt.current = 0;
   }, []);
+
+  // The clock stops where it stops, which is usually partway down a line. What
+  // was read by then is measured exactly as a finished line is — the same
+  // function, the same guard against timing a line too short to mean anything.
+  useAssessmentPartial(() => {
+    const tally = line.current;
+    if (tally.startedAt === 0) {
+      return null;
+    }
+    const now = Date.now();
+    const { cpm, accuracy } = lineResult(tally, now);
+    return cpm > 0
+      ? { speed: cpm, accuracy: accuracy / 100, time: now - tally.startedAt }
+      : null;
+  });
+
+  // A fresh line for each run, so no line is ever counted by two of them.
+  useAssessmentReset(() => {
+    startLine(makeLesson(progress.current));
+  });
 
   // Fold in whatever the account already holds, once, before the first line is
   // judged against it. A failure here is silent on purpose: offline or signed
@@ -694,7 +721,23 @@ function Practice(): ReactNode {
       setStarted(true);
       if (unlockAudio()) {
         // First interaction: audio is live now, so say what was held back.
+        //
+        // The whole chord goes with it, not just this key. Only the keydown
+        // used to be swallowed, so a learner who begins the way a braille
+        // learner naturally begins — six fingers down at once — had the rest
+        // of that chord read as a cell of its own: dots 1-2-3 arrived as
+        // dots 2-3, a different letter, and a miss on the first cell of the
+        // line. Costly anywhere, and during a sitting it is a scored miss
+        // nobody made.
+        swallowing.current = true;
+        probe.current.keyDown(ev.code);
         greetRef.current();
+        return;
+      }
+      if (swallowing.current) {
+        // Still the unlocking chord. The keyboard's reach is worth measuring
+        // even so — that is about the hardware, not about this cell.
+        probe.current.keyDown(ev.code);
         return;
       }
       if (help(ev.code)) {
@@ -724,6 +767,15 @@ function Practice(): ReactNode {
           ? { best, failedAt: best >= r.failedAt ? 0 : r.failedAt }
           : r,
       );
+      if (swallowing.current) {
+        // The hand is off the keys, so the next chord is a real one.
+        if (probe.current.down === 0) {
+          swallowing.current = false;
+          reader.current.reset();
+          setHeld(0);
+        }
+        return;
+      }
       const event = reader.current.keyUp(ev.code);
       if (event == null) {
         return;
@@ -741,6 +793,9 @@ function Practice(): ReactNode {
     const onBlur = () => {
       reader.current.reset();
       probe.current.reset();
+      // The keys were released somewhere this page could not see it, so the
+      // count it is waiting on will never reach zero on its own.
+      swallowing.current = false;
       setHeld(0);
     };
 

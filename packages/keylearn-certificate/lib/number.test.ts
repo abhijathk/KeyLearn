@@ -6,6 +6,7 @@ import {
   certificateNumber,
   formatCertificateNumber,
   isCertificateNumber,
+  makeNumberingKey,
   normalizeCertificateNumber,
   sequenceOf,
 } from "./number.ts";
@@ -109,4 +110,56 @@ test("inverts, so verification is a lookup and not a scan", () => {
   // A number that is not one of ours yields nothing to look up.
   equal(sequenceOf("ABCDEFGH"), null);
   equal(sequenceOf("nonsense"), null);
+});
+
+test("a key makes the numbering unguessable without it", () => {
+  // The published stride was the problem: this source is AGPL, so anybody
+  // could compute the number for sequence 1, 2, 3 and read off the whole
+  // register. Under a key they cannot, and the same sequence under two keys
+  // shares nothing.
+  const a = makeNumberingKey(0x9e3779b97f4a7c15n, 0x1234_5678n);
+  const b = makeNumberingKey(0xc2b2ae3d27d4eb4fn, 0x8765_4321n);
+  for (const sequence of [0, 1, 2, 3, 100, 999_999]) {
+    const one = certificateNumber(sequence, a);
+    const two = certificateNumber(sequence, b);
+    isTrue(one !== two, `sequence ${sequence} matched under two keys`);
+    // And each key still inverts its own numbers exactly.
+    equal(sequenceOf(one, a), sequence);
+    equal(sequenceOf(two, b), sequence);
+  }
+});
+
+test("a number does not survive the wrong key", () => {
+  // Not merely "reads as something else" — the point is that a number issued
+  // elsewhere cannot be presented here and resolve to a real certificate.
+  const mine = makeNumberingKey(0xa1n, 0xb2n);
+  const theirs = makeNumberingKey(0xc3n, 0xd4n);
+  const number = certificateNumber(42, mine);
+  const under = sequenceOf(number, theirs);
+  isTrue(under == null || under !== 42, "the wrong key recovered the sequence");
+});
+
+test("every secret yields a usable stride", () => {
+  // The stride has to be coprime with 30 or several sequences collide on one
+  // number. Nudging rather than rejecting keeps this total: no deployment can
+  // fail to start because its secret happened to hash to an even number.
+  for (let seed = 0n; seed < 200n; seed++) {
+    const { stride } = makeNumberingKey(seed * 7919n, seed);
+    isTrue(
+      stride % 2n !== 0n && stride % 3n !== 0n && stride % 5n !== 0n,
+      `stride ${stride} shares a factor with 30`,
+    );
+  }
+});
+
+test("the numbering stays a bijection under a key", () => {
+  // The property the whole scheme rests on: no two sequences may ever produce
+  // the same number, so a duplicate cannot happen even in a race.
+  const key = makeNumberingKey(0xdead_beefn, 0xfeed_facen);
+  const seen = new Set<string>();
+  for (let i = 0; i < 5000; i++) {
+    const n = certificateNumber(i, key);
+    isTrue(!seen.has(n), `collision at ${i}`);
+    seen.add(n);
+  }
 });

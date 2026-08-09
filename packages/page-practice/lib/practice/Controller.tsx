@@ -1,3 +1,4 @@
+import { useAssessmentPartial, useAssessmentReset } from "@keylearn/assessment";
 import { type KeyId, useKeyboard } from "@keylearn/keyboard";
 import { type Result } from "@keylearn/result";
 import { type LineList } from "@keylearn/textinput";
@@ -34,6 +35,22 @@ export const Controller = memo(function Controller({
     handleKeyUp,
     handleInput,
   } = useLessonState(progress, onResult);
+  // A timed run rarely ends on a line break. What is already typed when the
+  // clock stops is measured the same way a finished line is.
+  useAssessmentPartial(() => {
+    const result = state.partialResult();
+    return result != null && result.validate()
+      ? {
+          // Storage counts characters a minute; a word is five of them.
+          speed: result.speed / 5,
+          accuracy: result.accuracy,
+          time: result.time,
+        }
+      : null;
+  });
+  // New text for each run — never a line carried over from the last one, which
+  // would be counted twice and would come part-learned.
+  useAssessmentReset(handleSkipLesson);
   useHotkeys({
     // Asked for, so nothing is announced — they know, they pressed it.
     ["Ctrl+ArrowLeft"]: () => handleResetLesson(),

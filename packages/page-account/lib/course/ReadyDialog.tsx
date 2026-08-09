@@ -166,15 +166,23 @@ export function ReadyDialog({
             ) : (
               <ul>
                 <li>
-                  <FormattedMessage
-                    id="ready.plan.runs"
-                    defaultMessage="{runs} runs of {seconds} seconds, on {what} you have not seen."
-                    values={{
-                      runs: plan.runs,
-                      seconds: plan.seconds,
-                      what: braille ? "dictation" : "text",
-                    }}
-                  />
+                  {/* "Not seen" is the wrong verb for somebody who will hear
+                      the whole thing — and it is the one window where the
+                      wording is read out. Two sentences rather than one with a
+                      slot, because the verb has to change with the noun. */}
+                  {braille ? (
+                    <FormattedMessage
+                      id="ready.plan.runs.brl"
+                      defaultMessage="{runs} runs of {seconds} seconds, on dictation you have not heard."
+                      values={{ runs: plan.runs, seconds: plan.seconds }}
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="ready.plan.runs"
+                      defaultMessage="{runs} runs of {seconds} seconds, on text you have not seen."
+                      values={{ runs: plan.runs, seconds: plan.seconds }}
+                    />
+                  )}
                 </li>
                 <li>
                   <b>

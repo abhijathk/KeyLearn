@@ -533,20 +533,29 @@ function ProfileEditor({
   // kind has to move the avatar to one that exists in the set it just landed
   // in. The seed is kept: the shuffle is theirs, only the shapes change.
   /**
-   * Whether this learner may still change kind. Only before they exist.
+   * Which way an existing learner may still change kind.
    *
-   * A grown-up and a child are not two settings of one learner: they practise
-   * on different surfaces, against different curricula, under different
-   * consent and age rules, and their history is written per surface. Switching
-   * an existing profile would leave all of that behind and produce a learner
-   * whose record belongs to somebody they no longer are.
+   * Children grow up. When they do, everything they earned comes with them —
+   * the profile is the same profile, so certificates, medals and every lesson
+   * of history are simply a grown-up's now. Making them start again would cost
+   * them the very thing they spent years building.
+   *
+   * The other direction stays shut. It is not the mirror image: it would put a
+   * grown-up's record on the children's surfaces and under the consent and age
+   * rules written for a child.
    */
-  const locked = profile != null;
+  const growingUp = profile != null && profile.kind === "kid";
+  const lockedAdult = profile != null && profile.kind === "adult";
   const lockedWhy = formatMessage({
-    id: "profiles.kindLocked",
+    id: "profiles.kindLockedAdult",
     defaultMessage:
-      "A learner stays a grown-up or a kid. Add a new learner if you need the other kind.",
+      "A grown-up stays a grown-up. Add a new learner if you need a kid.",
   });
+  // Kid to grown-up is not undoable, so it is accepted rather than stumbled
+  // into: the switch itself only asks, and nothing changes until this is
+  // ticked and the form saved.
+  const [acceptGrowUp, setAcceptGrowUp] = useState(false);
+  const growUpPending = growingUp && kind === "adult";
 
   const switchKind = (next: ProfileKind) => {
     setKind(next);
@@ -567,6 +576,19 @@ function ProfileEditor({
         formatMessage({
           id: "profiles.needName",
           defaultMessage: "Please enter a first name.",
+        }),
+      );
+      return;
+    }
+    // Asked before the surname, because it is the decision and the surname is
+    // only its consequence: being told to enter a last name is bewildering
+    // until you have said yes to the thing that made one necessary.
+    if (growUpPending && !acceptGrowUp) {
+      setError(
+        formatMessage({
+          id: "profiles.needGrowUp",
+          defaultMessage:
+            "Please confirm that this learner is growing up — it cannot be undone.",
         }),
       );
       return;
@@ -682,8 +704,8 @@ function ProfileEditor({
             <div className={styles.kindRow}>
               <button
                 className={clsx(styles.seg, kind === "adult" && styles.segOn)}
-                disabled={locked}
-                title={locked ? lockedWhy : undefined}
+                disabled={lockedAdult}
+                title={lockedAdult ? lockedWhy : undefined}
                 onClick={() => switchKind("adult")}
               >
                 <AdultIcon />
@@ -698,14 +720,38 @@ function ProfileEditor({
                   styles.segKid,
                   kind === "kid" && styles.segOn,
                 )}
-                disabled={locked}
-                title={locked ? lockedWhy : undefined}
+                disabled={lockedAdult || growingUp}
+                title={
+                  lockedAdult || growingUp
+                    ? formatMessage({
+                        id: "profiles.kindKidLocked",
+                        defaultMessage:
+                          "A learner can grow up, but cannot go back to being a kid.",
+                      })
+                    : undefined
+                }
                 onClick={() => switchKind("kid")}
               >
                 <KidIcon />
                 <FormattedMessage id="profiles.kid" defaultMessage="Kid" />
               </button>
             </div>
+            {growUpPending && (
+              <label className={styles.growUp}>
+                <input
+                  type="checkbox"
+                  checked={acceptGrowUp}
+                  onChange={(e) => setAcceptGrowUp(e.target.checked)}
+                />
+                <span>
+                  <FormattedMessage
+                    id="profiles.growUpWarn"
+                    defaultMessage="{name} keeps every certificate, medal and lesson already earned. They move to the grown-up pages, the kids trail and its rewards end, and this cannot be undone."
+                    values={{ name: firstName.trim() || profile.firstName }}
+                  />
+                </span>
+              </label>
+            )}
           </div>
 
           <div className={styles.two}>

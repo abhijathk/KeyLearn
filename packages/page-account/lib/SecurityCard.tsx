@@ -311,10 +311,14 @@ export function SecurityCard({
 
       {/* Take a copy of everything held about the household. */}
       <div className={styles.prefCard}>
-        <div className={styles.prefSect}>Your data</div>
+        <div className={styles.prefSect}>
+          <FormattedMessage id="sec.data.title" defaultMessage="Your data" />
+        </div>
         <p className={styles.prefHint}>
-          Download everything this account holds — profiles, practice history,
-          sign-in methods and the activity below — as a single JSON file.
+          <FormattedMessage
+            id="sec.data.intro"
+            defaultMessage="Download everything this account holds — profiles, practice history, sign-in methods and the activity below — as a single JSON file."
+          />
         </p>
         <button
           type="button"
@@ -323,7 +327,10 @@ export function SecurityCard({
             void AccountService.exportData(user.name, formatStamp(Date.now()));
           }}
         >
-          Download my data
+          <FormattedMessage
+            id="sec.data.download"
+            defaultMessage="Download my data"
+          />
         </button>
       </div>
 

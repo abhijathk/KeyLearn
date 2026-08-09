@@ -56,6 +56,13 @@ export type AssessmentSession = {
   /** A surface has finished measuring a stretch of typing. */
   readonly report: (segment: Segment) => void;
   /**
+   * Offer up whatever is half-typed when the clock stops.
+   *
+   * Pass null to withdraw. See `useAssessmentPartial`, which is how the
+   * surfaces actually do this.
+   */
+  readonly watch: (provider: (() => Segment | null) | null) => void;
+  /**
    * Go on to the next run.
    *
    * Returns to waiting, not to typing: the clock still starts on the first
@@ -95,6 +102,65 @@ export function useAssessmentReporter(): (segment: Segment) => void {
     },
     [session],
   );
+}
+
+/**
+ * Offer up the stretch that is still being typed when the clock stops.
+ *
+ * The clock does not wait for the end of a line, and on a thirty-second run
+ * for a six-year-old the half-line in front of them can be most of what they
+ * did. Scoring only completed lines threw that away, and threw it away
+ * unevenly: the same typing counted or did not depending on where the last
+ * word happened to fall. Worse, a slow learner on a long line could finish a
+ * whole run having completed nothing, and be told there was nothing to score.
+ *
+ * The provider returns null when there is nothing worth counting yet, and the
+ * surface decides what "worth counting" means — it is the same rule each of
+ * them already applies to a finished line, so a part-line is held to the
+ * standard as the whole one.
+ */
+export function useAssessmentPartial(provider: () => Segment | null): void {
+  const session = useContext(Context);
+  // Held in a ref so a provider that closes over fresh state each render does
+  // not re-register on every keystroke — the session only ever calls the
+  // latest one, once, when the clock stops.
+  const latest = useRef(provider);
+  latest.current = provider;
+  const watch = session?.watch;
+  useEffect(() => {
+    if (watch == null) {
+      return;
+    }
+    watch(() => latest.current());
+    return () => {
+      watch(null);
+    };
+  }, [watch]);
+}
+
+/**
+ * Start each run on fresh text.
+ *
+ * Called while a run is waiting to begin, never once it is going, so nothing
+ * anybody typed is ever thrown away by it.
+ *
+ * This is what makes a part-line safe to score. Without it a line begun in one
+ * run and finished in the next would be counted twice — once as the first
+ * run's remainder and again in full — and its clock would include however long
+ * the between-runs window sat open. All three surfaces start the line clock at
+ * the first keystroke, so a run that begins on a fresh line is measured over
+ * exactly its own sixty seconds.
+ */
+export function useAssessmentReset(restart: () => void): void {
+  const session = useContext(Context);
+  const latest = useRef(restart);
+  latest.current = restart;
+  const armed = session != null && session.phase === "armed";
+  useEffect(() => {
+    if (armed) {
+      latest.current();
+    }
+  }, [armed]);
 }
 
 export function AssessmentProvider({
@@ -138,11 +204,21 @@ export function AssessmentProvider({
   const segments = useRef<Segment[]>([]);
   const startedAt = useRef(0);
 
+  // What a surface is in the middle of measuring. Read once, when the clock
+  // stops, so the half-finished line counts too.
+  const inFlight = useRef<(() => Segment | null) | null>(null);
+  const watch = useCallback((provider: (() => Segment | null) | null) => {
+    inFlight.current = provider;
+  }, []);
+
   const takenRef = useRef(0);
   const finishRun = useCallback(() => {
     const collected = segments.current;
     segments.current = [];
-    const run = combine(collected, plan.seconds);
+    const run = combine(
+      withRemainder(collected, inFlight.current?.() ?? null),
+      plan.seconds,
+    );
     if (run != null) {
       setRuns((before) => [...before, run]);
     }
@@ -206,7 +282,7 @@ export function AssessmentProvider({
   }, [phase, start]);
 
   const report = useCallback((segment: Segment) => {
-    if (segment.time > 0 && segment.speed > 0) {
+    if (measurable(segment)) {
       segments.current.push(segment);
     }
   }, []);
@@ -231,6 +307,7 @@ export function AssessmentProvider({
       runs,
       secondsLeft,
       report,
+      watch,
       next,
       quit: onQuit,
     }),
@@ -243,6 +320,7 @@ export function AssessmentProvider({
       runs,
       secondsLeft,
       report,
+      watch,
       next,
       onQuit,
     ],
@@ -260,6 +338,32 @@ export function AssessmentProvider({
  * per character, but characters and milliseconds run close enough together
  * within a single minute that the difference never reaches the second decimal.
  */
+/**
+ * Whether a stretch of typing says anything about how fast somebody types.
+ *
+ * The same bar for a line that was finished and one the clock cut short — a
+ * part-line is not held to a stricter standard for being a part-line, and not
+ * to a looser one either. Each surface has already applied its own rule
+ * before this (`Result.validate` on the typing pages, a floor on the timed
+ * interval in braille); this is the last, cheapest check.
+ */
+export function measurable(segment: Segment): boolean {
+  return segment.time > 0 && segment.speed > 0;
+}
+
+/**
+ * The run's finished lines, plus whatever was still being typed at the bell.
+ *
+ * A part-line that fails the bar is simply left out — never counted as a zero,
+ * which would be worse than not counting it at all.
+ */
+export function withRemainder(
+  collected: readonly Segment[],
+  rest: Segment | null,
+): readonly Segment[] {
+  return rest != null && measurable(rest) ? [...collected, rest] : collected;
+}
+
 export function combine(
   segments: readonly Segment[],
   seconds: number,

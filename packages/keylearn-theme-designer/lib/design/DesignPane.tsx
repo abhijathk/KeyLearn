@@ -8,6 +8,7 @@ import {
   useDialog,
 } from "@keylearn/widget";
 import { useRef } from "react";
+import { useIntl } from "react-intl";
 import { themeAccept, themeFileName } from "../io/constants.ts";
 import { exportTheme, importTheme } from "../io/io.ts";
 import { customTheme, darkTheme, lightTheme } from "../themes/themes.ts";
@@ -25,6 +26,7 @@ import { TextInputDesign } from "./TextInputDesign.tsx";
 import { WidgetsDesign } from "./WidgetsDesign.tsx";
 
 export function DesignPane() {
+  const { formatMessage } = useIntl();
   const { closeDialog } = useDialog();
   const { refresh } = useTheme();
   const { theme, setTheme } = useCustomTheme();
@@ -72,7 +74,10 @@ export function DesignPane() {
           <Field.Filler />
           <Field>
             <Button
-              label="Reset"
+              label={formatMessage({
+                id: "designer.reset",
+                defaultMessage: "Reset",
+              })}
               size={6}
               onClick={() => {
                 setTheme(customTheme);
@@ -83,7 +88,10 @@ export function DesignPane() {
           </Field>
           <Field>
             <Button
-              label="Light"
+              label={formatMessage({
+                id: "designer.light",
+                defaultMessage: "Light",
+              })}
               size={6}
               onClick={() => {
                 setTheme(lightTheme);
@@ -94,7 +102,10 @@ export function DesignPane() {
           </Field>
           <Field>
             <Button
-              label="Dark"
+              label={formatMessage({
+                id: "designer.dark",
+                defaultMessage: "Dark",
+              })}
               size={6}
               onClick={() => {
                 setTheme(darkTheme);
@@ -119,7 +130,10 @@ export function DesignPane() {
       <FieldList>
         <Field>
           <Button
-            label="Apply"
+            label={formatMessage({
+              id: "designer.apply",
+              defaultMessage: "Apply",
+            })}
             size={6}
             onClick={() => {
               applyTheme(theme);
@@ -129,7 +143,10 @@ export function DesignPane() {
         </Field>
         <Field>
           <Button
-            label="Import"
+            label={formatMessage({
+              id: "designer.import",
+              defaultMessage: "Import",
+            })}
             size={6}
             onClick={() => {
               const el = importRef.current!;
@@ -139,7 +156,10 @@ export function DesignPane() {
         </Field>
         <Field>
           <Button
-            label="Export"
+            label={formatMessage({
+              id: "designer.export",
+              defaultMessage: "Export",
+            })}
             size={6}
             onClick={() => {
               exportTheme(theme)
@@ -157,7 +177,10 @@ export function DesignPane() {
         <Field.Filler />
         <Field>
           <Button
-            label="Close"
+            label={formatMessage({
+              id: "designer.close",
+              defaultMessage: "Close",
+            })}
             size={6}
             onClick={() => {
               applyTheme(theme);

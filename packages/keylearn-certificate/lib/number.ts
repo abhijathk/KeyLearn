@@ -20,12 +20,59 @@ export const CERTIFICATE_NUMBER_LENGTH = WIDTH + 1;
 /** 30^7 = 21,870,000,000 distinct numbers. */
 export const CAPACITY = BASE ** WIDTH;
 
-// Coprime with 30, so multiplication modulo 30^7 is a bijection: every
-// sequence gets its own number, for ever. The stride is near the golden ratio
-// of the space, which is what stops consecutive certificates landing anywhere
-// near each other — holding one number tells you nothing about the next.
-const STRIDE = 13_517_460_071n;
-const OFFSET = 5_874_311_209n;
+/**
+ * The scramble that turns a sequence into a number.
+ *
+ * `stride` must be coprime with 30 so that multiplication modulo 30^7 is a
+ * bijection: every sequence gets its own number, for ever, and no two
+ * certificates can collide even in principle.
+ *
+ * It is a *key*, not a constant, and that is the point. With a published
+ * stride anybody holding this source — which is AGPL, so everybody — can
+ * compute the number for sequence 1, 2, 3 and walk the entire register. With
+ * a stride nobody else knows, a guessed number lands on a random sequence
+ * that almost certainly does not exist.
+ */
+export type NumberingKey = {
+  readonly stride: bigint;
+  readonly offset: bigint;
+};
+
+/**
+ * The original published pair.
+ *
+ * Kept so numbers issued before the scheme was keyed can still be read, and
+ * so the tests have a fixed example. It is public knowledge and therefore
+ * enumerable — nothing should issue against it.
+ */
+export const LEGACY_KEY: NumberingKey = {
+  stride: 13_517_460_071n,
+  offset: 5_874_311_209n,
+};
+
+/**
+ * A key from two arbitrary numbers, usually hashed from a secret.
+ *
+ * The stride is nudged up until it is coprime with 30, because 30^7 has only
+ * the factors 2, 3 and 5 and a stride sharing any of them would map several
+ * sequences onto one number. Nudging rather than rejecting keeps this total:
+ * every secret yields a usable key, so a deployment can never fail to start
+ * because its secret hashed unluckily.
+ */
+export function makeNumberingKey(
+  strideSeed: bigint,
+  offsetSeed: bigint,
+): NumberingKey {
+  const N = BigInt(CAPACITY);
+  let stride = ((strideSeed % N) + N) % N;
+  if (stride === 0n) {
+    stride = 1n;
+  }
+  while (stride % 2n === 0n || stride % 3n === 0n || stride % 5n === 0n) {
+    stride = (stride + 1n) % N || 1n;
+  }
+  return { stride, offset: ((offsetSeed % N) + N) % N };
+}
 
 /**
  * Weights for the check character.
@@ -48,12 +95,15 @@ function check(body: string): string {
  * The number for a sequence value, which must come from somewhere
  * authoritative — a database sequence, not a device.
  */
-export function certificateNumber(sequence: number | bigint): string {
+export function certificateNumber(
+  sequence: number | bigint,
+  key: NumberingKey = LEGACY_KEY,
+): string {
   const seq = BigInt(sequence);
   if (seq < 0n || seq >= BigInt(CAPACITY)) {
     throw new RangeError(`Sequence ${seq} is outside the numbering space.`);
   }
-  let x = (seq * STRIDE + OFFSET) % BigInt(CAPACITY);
+  let x = (seq * key.stride + key.offset) % BigInt(CAPACITY);
   let body = "";
   for (let i = 0; i < WIDTH; i++) {
     body = ALPHABET[Number(x % BigInt(BASE))] + body;
@@ -103,7 +153,10 @@ export function normalizeCertificateNumber(value: string): string {
  * certificate against the string. Multiplying by the modular inverse of the
  * stride undoes the multiplication exactly.
  */
-export function sequenceOf(value: string): number | null {
+export function sequenceOf(
+  value: string,
+  key: NumberingKey = LEGACY_KEY,
+): number | null {
   const s = normalizeCertificateNumber(value);
   if (!isCertificateNumber(s)) {
     return null;
@@ -113,7 +166,9 @@ export function sequenceOf(value: string): number | null {
   for (let i = 0; i < WIDTH; i++) {
     x = x * BigInt(BASE) + BigInt(ALPHABET.indexOf(s[i]));
   }
-  return Number((((((x - OFFSET) % N) + N) % N) * inverse(STRIDE, N)) % N);
+  return Number(
+    (((((x - key.offset) % N) + N) % N) * inverse(key.stride, N)) % N,
+  );
 }
 
 /** Modular inverse by the extended Euclidean algorithm. */

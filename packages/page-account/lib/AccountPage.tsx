@@ -714,12 +714,16 @@ function DeleteAccountDialog({
 // A Twitter/X-style verified seal: a scalloped badge with a checkmark, shown
 // inline right after the account holder's name.
 function VerifiedBadge(): ReactNode {
+  const { formatMessage } = useIntl();
   return (
     <svg
       className={styles.verifiedBadge}
       viewBox="0 0 24 24"
       role="img"
-      aria-label="Verified"
+      aria-label={formatMessage({
+        id: "account.verified",
+        defaultMessage: "Verified",
+      })}
     >
       <path
         className={styles.verifiedSeal}

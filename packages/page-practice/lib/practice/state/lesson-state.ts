@@ -128,6 +128,18 @@ export class LessonState {
     this.suffix = this.textInput.remaining.map(({ codePoint }) => codePoint);
   }
 
+  /**
+   * The lesson as it stands, unfinished.
+   *
+   * Built exactly the way the completed one is, so a timed run that stops
+   * mid-line is scored by the same rules as every other line — including
+   * `validate`, which is what rejects a handful of keystrokes as too little to
+   * draw a speed from.
+   */
+  partialResult(): Result | null {
+    return this.textInput.steps.length > 0 ? this.#makeResult() : null;
+  }
+
   #makeResult(timeStamp = Date.now()) {
     return Result.fromStats(
       this.settings.get(keyboardProps.layout),

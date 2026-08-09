@@ -1,4 +1,8 @@
-import { useAssessment } from "@keylearn/assessment";
+import {
+  useAssessment,
+  useAssessmentPartial,
+  useAssessmentReset,
+} from "@keylearn/assessment";
 import { keyboardProps, KeyboardProvider } from "@keylearn/keyboard";
 import { Lesson, lessonProps, LessonType } from "@keylearn/lesson";
 import { LessonLoader } from "@keylearn/lesson-loader";
@@ -995,6 +999,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // the letter introduces itself, and sometimes an egg hatches.
   const prevIncluded = useRef(-1);
   useEffect(() => {
+    // Not during a sitting. Every branch below opens something over the page —
+    // the letter's introduction, a hatching egg, the graduation window — and a
+    // window over a thirty-second timed run costs the child the run.
+    //
+    // Skipped rather than queued, and nothing here is marked as collected: the
+    // moment is not spent, so the graduation they have earned still arrives,
+    // the next time they are practising and free to enjoy it.
+    if (assessmentRef.current != null) {
+      return;
+    }
     const letters = new Set(
       lessonKeys.findIncludedKeys().map(({ letter }) => letter.codePoint),
     );
@@ -1159,6 +1173,34 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     worldRef.current?.startRun();
     forceTick();
   }, [lesson, lessonKeys, included, settings, regenNonce]);
+
+  // A run here is thirty or forty-five seconds, and the words are long enough
+  // that a small child can spend the whole of one without reaching the end of
+  // the passage. Whatever they did type counts.
+  useAssessmentPartial(() => {
+    const textInput = textInputRef.current;
+    if (textInput == null || textInput.steps.length === 0) {
+      return null;
+    }
+    const result = Result.fromStats(
+      settings.get(keyboardProps.layout),
+      settings.get(lessonProps.type).textType,
+      Date.now(),
+      makeStats(textInput.steps),
+    );
+    return result.validate()
+      ? {
+          // Storage counts characters a minute; a word is five of them.
+          speed: result.speed / 5,
+          accuracy: result.accuracy,
+          time: result.time,
+        }
+      : null;
+  });
+  // A fresh passage for each run, so none is ever counted by two of them.
+  useAssessmentReset(() => {
+    setRegenNonce((n) => n + 1);
+  });
 
   const saveBest = (s: number) => {
     setBest((b) => {
@@ -1459,9 +1501,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             setRegenNonce((n) => n + 1);
           }
           // Every third camp, the trail map opens and the herd crosses into
-          // a brand-new land.
+          // a brand-new land — but never mid-sitting, where it would cover the
+          // words with the clock still running.
           roundsRef.current += 1;
-          if (roundsRef.current % 3 === 0) {
+          if (roundsRef.current % 3 === 0 && assessmentRef.current == null) {
             setTimeout(() => setMapOpen(true), 900);
           }
         }

@@ -103,6 +103,21 @@ test("the rollover probe counts keys held together, not keys pressed", () => {
   equal(probe.best, 4, "the high-water mark survives the release");
 });
 
+test("the probe says when the hand is off the keys", () => {
+  // The page unlocks its audio on the first keypress and swallows that chord,
+  // which means it needs to know when the chord is actually over. Counting
+  // keydowns alone cannot tell it: dots may be released in any order.
+  const probe = new RolloverProbe();
+  equal(probe.down, 0);
+  for (const code of ["KeyF", "KeyD", "KeyS"]) probe.keyDown(code);
+  equal(probe.down, 3);
+  probe.keyUp("KeyD");
+  equal(probe.down, 2, "released out of order, and still counted");
+  probe.keyUp("KeyF");
+  probe.keyUp("KeyS");
+  equal(probe.down, 0);
+});
+
 test("the probe ignores keys that are not dots", () => {
   const probe = new RolloverProbe();
   probe.keyDown("KeyF");

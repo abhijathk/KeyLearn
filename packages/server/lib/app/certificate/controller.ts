@@ -11,11 +11,14 @@ import {
   fitName,
   judge,
   nameCapacity,
+  type NumberingKey,
   sequenceOf,
   type Sitting,
 } from "@keylearn/certificate";
+import { DataDir } from "@keylearn/config";
 import { Certificate, CertificateSitting, Profile } from "@keylearn/database";
 import { type AuthState, rateLimit } from "../auth/index.ts";
+import { numberingKey } from "./key.ts";
 import { flag, millis } from "./timestamp.ts";
 
 /**
@@ -30,7 +33,12 @@ import { flag, millis } from "./timestamp.ts";
 @injectable()
 @controller()
 export class Controller {
-  constructor() {}
+  constructor(readonly dataDir: DataDir) {}
+
+  /** The deployment's own scramble — see `numberingKey`. */
+  get #key() {
+    return numberingKey(this.dataDir.dataPath());
+  }
 
   /**
    * Record one sitting.
@@ -136,7 +144,7 @@ export class Controller {
       level: verdict.level,
     });
     if (existing != null) {
-      ctx.response.body = toDetails(existing);
+      ctx.response.body = toDetails(existing, this.#key);
       return;
     }
 
@@ -169,7 +177,7 @@ export class Controller {
     const saved = await Certificate.query()
       .patchAndFetchById(inserted.id!, { sequence: inserted.id! })
       .throwIfNotFound();
-    ctx.response.body = toDetails(saved);
+    ctx.response.body = toDetails(saved, this.#key);
   }
 
   /**
@@ -188,7 +196,7 @@ export class Controller {
   ) {
     rateLimit(ctx, "certificate-named", 20, 60_000);
     const user = ctx.state.requireUser();
-    const sequence = sequenceOf(number);
+    const sequence = sequenceOf(number, this.#key);
     if (sequence == null) {
       throw new ForbiddenError();
     }
@@ -222,11 +230,12 @@ export class Controller {
   @http.GET("/_/certificate/mine")
   async mine(ctx: Context<RouterState & AuthState>) {
     const user = ctx.state.requireUser();
+    const key = this.#key;
     const rows = await Certificate.query()
       .where({ userId: user.id! })
       .orderBy("created_at", "asc");
     ctx.response.body = rows.map((row) => ({
-      ...toDetails(row),
+      ...toDetails(row, key),
       profileId: row.profileId,
     }));
   }
@@ -251,7 +260,7 @@ export class Controller {
     // also keeps this from being a way to enumerate what exists. Inverting the
     // scramble turns the rest into an indexed read rather than a scan over
     // every certificate ever issued.
-    const sequence = sequenceOf(number);
+    const sequence = sequenceOf(number, this.#key);
     if (sequence == null) {
       ctx.response.body = { valid: false };
       return;
@@ -287,9 +296,9 @@ export class Controller {
   }
 }
 
-function toDetails(row: Certificate) {
+function toDetails(row: Certificate, key: NumberingKey) {
   return {
-    number: certificateNumber(row.sequence!),
+    number: certificateNumber(row.sequence!, key),
     level: row.level,
     sheet: row.sheet,
     kind: row.kind,

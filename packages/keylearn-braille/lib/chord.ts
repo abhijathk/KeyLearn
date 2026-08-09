@@ -127,6 +127,11 @@ export class RolloverProbe {
     return this.#best;
   }
 
+  /** How many of the six keys are down right now. */
+  get down(): number {
+    return this.#held.size;
+  }
+
   keyDown(code: string): void {
     if (KEY_TO_DOT.has(code)) {
       this.#held.add(code);

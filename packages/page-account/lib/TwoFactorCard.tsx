@@ -6,6 +6,7 @@ import {
 } from "@keylearn/pages-shared";
 import { TextField } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { PasswordField } from "./AuthPage.tsx";
 import { AccountService } from "./service.ts";
@@ -25,6 +26,7 @@ export function TwoFactorCard({
   readonly user: UserDetails;
   readonly onChanged: () => void;
 }): ReactNode {
+  const { formatMessage } = useIntl();
   const { formatStamp } = useIntlDates();
   const [step, setStep] = useState<"idle" | "scan" | "codes">("idle");
   const [uri, setUri] = useState("");
@@ -84,18 +86,33 @@ export function TwoFactorCard({
 
   return (
     <div className={styles.prefCard}>
-      <div className={styles.prefSect}>Two-step verification</div>
+      <div className={styles.prefSect}>
+        <FormattedMessage
+          id="sec.2fa.title"
+          defaultMessage="Two-step verification"
+        />
+      </div>
       <p className={styles.prefHint}>
-        Ask for a code from an authenticator app as well as your password, so a
-        stolen password is not enough on its own.
+        <FormattedMessage
+          id="sec.2fa.intro"
+          defaultMessage="Ask for a code from an authenticator app as well as your password, so a stolen password is not enough on its own."
+        />
       </p>
 
       {user.twoFactorEnabled && step !== "codes" ? (
         <>
-          <p className={styles.note}>Two-step verification is on.</p>
+          <p className={styles.note}>
+            <FormattedMessage
+              id="sec.2fa.on"
+              defaultMessage="Two-step verification is on."
+            />
+          </p>
           {user.hasPassword ? (
             <PasswordField
-              placeholder="Your password"
+              placeholder={formatMessage({
+                id: "sec.yourPassword",
+                defaultMessage: "Your password",
+              })}
               value={password}
               autoComplete="current-password"
               onChange={setPassword}
@@ -103,7 +120,10 @@ export function TwoFactorCard({
           ) : (
             <TextField
               size="full"
-              placeholder="Current 6-digit code"
+              placeholder={formatMessage({
+                id: "sec.2fa.currentCode",
+                defaultMessage: "Current 6-digit code",
+              })}
               value={code}
               onChange={setCode}
             />
@@ -117,7 +137,10 @@ export function TwoFactorCard({
             }
             onClick={disable}
           >
-            Turn off two-step verification
+            <FormattedMessage
+              id="sec.2fa.turnOff"
+              defaultMessage="Turn off two-step verification"
+            />
           </button>
         </>
       ) : step === "idle" ? (
@@ -129,15 +152,19 @@ export function TwoFactorCard({
             disabled={busy}
             onClick={begin}
           >
-            Set up two-step verification
+            <FormattedMessage
+              id="sec.2fa.setUp"
+              defaultMessage="Set up two-step verification"
+            />
           </button>
         </>
       ) : step === "scan" ? (
         <>
           <p className={styles.prefHint}>
-            Add this key to your authenticator app — 1Password, Bitwarden,
-            Google Authenticator, Aegis, or whichever you use — then type the
-            6-digit code it shows.
+            <FormattedMessage
+              id="sec.2fa.scan"
+              defaultMessage="Add this key to your authenticator app — 1Password, Bitwarden, Google Authenticator, Aegis, or whichever you use — then type the 6-digit code it shows."
+            />
           </p>
           <code className={styles.secretKey}>{secret}</code>
           <div className={styles.secActions}>
@@ -148,17 +175,26 @@ export function TwoFactorCard({
                 void navigator.clipboard?.writeText(secret);
               }}
             >
-              Copy key
+              <FormattedMessage
+                id="sec.2fa.copyKey"
+                defaultMessage="Copy key"
+              />
             </button>
             {/* Opens the authenticator directly, which beats scanning a QR
                 shown on the same screen you are already using. */}
             <a className={styles.link} href={uri}>
-              Open in authenticator app
+              <FormattedMessage
+                id="sec.2fa.openApp"
+                defaultMessage="Open in authenticator app"
+              />
             </a>
           </div>
           <TextField
             size="full"
-            placeholder="6-digit code"
+            placeholder={formatMessage({
+              id: "sec.2fa.code",
+              defaultMessage: "6-digit code",
+            })}
             value={code}
             onChange={setCode}
           />
@@ -169,15 +205,19 @@ export function TwoFactorCard({
             disabled={busy || code.length < 6}
             onClick={confirm}
           >
-            Confirm and turn on
+            <FormattedMessage
+              id="sec.2fa.confirm"
+              defaultMessage="Confirm and turn on"
+            />
           </button>
         </>
       ) : (
         <>
           <p className={styles.note}>
-            Two-step verification is on. Keep these recovery codes somewhere
-            safe — each one signs you in once if you lose your phone. They are
-            shown only now.
+            <FormattedMessage
+              id="sec.2fa.codesNote"
+              defaultMessage="Two-step verification is on. Keep these recovery codes somewhere safe — each one signs you in once if you lose your phone. They are shown only now."
+            />
           </p>
           <ul className={styles.recoveryCodes}>
             {codes.map((c) => (
@@ -204,14 +244,20 @@ export function TwoFactorCard({
               );
             }}
           >
-            Download codes
+            <FormattedMessage
+              id="sec.2fa.download"
+              defaultMessage="Download codes"
+            />
           </button>
           <button
             type="button"
             className={styles.link}
             onClick={() => setStep("idle")}
           >
-            I&rsquo;ve saved them
+            <FormattedMessage
+              id="sec.2fa.saved"
+              defaultMessage="I’ve saved them"
+            />
           </button>
         </>
       )}

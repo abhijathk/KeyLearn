@@ -1,4 +1,5 @@
 import { Field, FieldList } from "@keylearn/widget";
+import { FormattedMessage, useIntl } from "react-intl";
 import { Group } from "./Group.tsx";
 import {
   type Accessor,
@@ -47,25 +48,40 @@ const accent: Accessor = {
 };
 
 export function WidgetsDesign() {
+  const { formatMessage } = useIntl();
   return (
-    <Group title="Page Colors">
+    <Group
+      title={formatMessage({
+        id: "designer.page-colors",
+        defaultMessage: "Page Colors",
+      })}
+    >
       <FieldList>
         <Field>
           <ColorInput accessor={primary} />
         </Field>
-        <Field>Background</Field>
+        <Field>
+          <FormattedMessage
+            id="designer.background"
+            defaultMessage="Background"
+          />
+        </Field>
       </FieldList>
       <FieldList>
         <Field>
           <ColorInput accessor={secondary} />
         </Field>
-        <Field>Text</Field>
+        <Field>
+          <FormattedMessage id="designer.text" defaultMessage="Text" />
+        </Field>
       </FieldList>
       <FieldList>
         <Field>
           <ColorInput accessor={accent} />
         </Field>
-        <Field>Button</Field>
+        <Field>
+          <FormattedMessage id="designer.button" defaultMessage="Button" />
+        </Field>
       </FieldList>
       <PreviewPane>
         <WidgetsPreview />
