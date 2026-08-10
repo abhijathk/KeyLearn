@@ -459,7 +459,7 @@ export class Controller {
   ): Promise<void> {
     const code = await EmailVerification.issue(email, purpose);
     try {
-      await this.mailer.sendMail(messageWithCode({ email, code }));
+      await this.mailer.sendMail(messageWithCode({ email, code, purpose }));
     } catch (err: any) {
       Logger.warn(err, "Error sending verification code to '%s'", email);
       throw new ApplicationError("Error sending e-mail message");

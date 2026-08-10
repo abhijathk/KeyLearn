@@ -1,3 +1,4 @@
+import { type VerificationPurpose } from "@keylearn/database";
 import { type Mailer } from "../mail/index.ts";
 
 // ── Brand palette (matches the KeyLearn theme) ──
@@ -116,23 +117,70 @@ Happy typing!`;
   return { to: email, subject, text, html };
 }
 
+// What the code is FOR, in the reader's words. One template served every
+// purpose, so a code for deleting an account arrived headed "Verify your email"
+// and told the reader to finish signing up — wrong on its face, and impossible
+// to find later by searching the inbox for what you were actually doing.
+const PURPOSE_COPY: Record<
+  VerificationPurpose,
+  {
+    readonly subject: string;
+    readonly noun: string;
+    readonly heading: string;
+    readonly lead: string;
+    readonly ignore: string;
+  }
+> = {
+  ["verify-email"]: {
+    subject: "KeyLearn sign-up code",
+    noun: "sign-up",
+    heading: "Verify your email",
+    lead: "Enter this code on the sign-up screen to finish creating your account:",
+    ignore: "If you didn't try to create a KeyLearn account",
+  },
+  ["change-email"]: {
+    subject: "KeyLearn email-change code",
+    noun: "email-change",
+    heading: "Confirm your new email",
+    lead: "Enter this code to move your KeyLearn account to this address:",
+    ignore: "If you didn't ask to change your KeyLearn email address",
+  },
+  ["identity"]: {
+    subject: "KeyLearn confirmation code",
+    noun: "confirmation",
+    heading: "Confirm it's you",
+    lead: "Enter this code to confirm this change to your KeyLearn account:",
+    ignore: "If you didn't ask to make a change to your KeyLearn account",
+  },
+  ["delete-account"]: {
+    subject: "KeyLearn account-deletion code",
+    noun: "account-deletion",
+    heading: "Confirm you want to delete your account",
+    lead: "Enter this code to permanently delete your KeyLearn account and everything in it:",
+    ignore: "If you didn't ask to delete your KeyLearn account",
+  },
+};
+
 export function messageWithCode({
   email,
   code,
+  purpose = "verify-email",
 }: {
   readonly email: string;
   readonly code: string;
+  readonly purpose?: VerificationPurpose;
 }): Mailer.Message {
-  const subject = `Your KeyLearn verification code: ${code}`;
+  const copy = PURPOSE_COPY[purpose] ?? PURPOSE_COPY["verify-email"];
+  const subject = `${copy.subject}: ${code}`;
   const text = `Hello!
 
-Your KeyLearn email verification code is:
+Your KeyLearn ${copy.noun} code is:
 
 ${code}
 
-Enter it on the sign-up screen to finish creating your account. The code expires in 15 minutes.
+${copy.lead} The code expires in 15 minutes.
 
-If you didn't try to create a KeyLearn account, you can safely ignore this email.
+${copy.ignore}, you can safely ignore this email — nothing happens until the code is entered.
 
 Happy typing!`;
   const codeBlock =
@@ -141,11 +189,9 @@ Happy typing!`;
     `font-family:'SF Mono',Menlo,Consolas,monospace;font-size:34px;font-weight:700;` +
     `letter-spacing:0.4em;color:${INK}">${esc(code)}</div>`;
   const html = shell(
-    `Your verification code is ${code}`,
-    heading("Verify your email") +
-      paragraph(
-        "Enter this code on the sign-up screen to finish creating your account:",
-      ) +
+    `Your ${copy.noun} code is ${code}`,
+    heading(copy.heading) +
+      paragraph(copy.lead) +
       codeBlock +
       `<p style="margin:20px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">This code expires in 15 minutes.</p>`,
   );
