@@ -13,7 +13,7 @@ export class ConfigModule implements Module {
       Env.getPath("PUBLIC_DIR", "/opt/keylearn/public"), //
     );
     bind("canonicalUrl").toValue(
-      Env.getString("APP_URL", "https://www.keylearn.com/"), //
+      Env.getString("APP_URL", "https://www.keylearn.org/"), //
     );
   }
 }

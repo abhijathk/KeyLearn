@@ -10,12 +10,12 @@ useDatabase();
 test("EXPLOIT: a tenant-controlled email cannot take over an account", async () => {
   // The victim registered normally, with a password.
   await User.registerWithPassword(
-    "victim@keylearn.com",
+    "victim@keylearn.org",
     "correct horse battery",
     "victim",
     "1990-01-01",
   );
-  const before = await User.findByEmail("victim@keylearn.com");
+  const before = await User.findByEmail("victim@keylearn.org");
   const victimId = before!.id!;
 
   // The attacker owns an identity provider tenant and sets their user's mail
@@ -24,7 +24,7 @@ test("EXPLOIT: a tenant-controlled email cannot take over an account", async () 
     raw: {},
     provider: "microsoft",
     id: "attacker-subject-9999",
-    email: "victim@keylearn.com",
+    email: "victim@keylearn.org",
     emailVerified: null,
     name: "Attacker",
     url: null,
@@ -39,12 +39,12 @@ test("EXPLOIT: a tenant-controlled email cannot take over an account", async () 
 
   // The victim's account is untouched: same id, password intact, no new link.
   const after = await User.findById(victimId);
-  equal(after!.email, "victim@keylearn.com");
+  equal(after!.email, "victim@keylearn.org");
   equal(after!.externalIds!.length, 0);
   equal(
     (
       await User.loginWithPassword(
-        "victim@keylearn.com",
+        "victim@keylearn.org",
         "correct horse battery",
       )
     )?.id,

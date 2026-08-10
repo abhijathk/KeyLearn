@@ -395,7 +395,7 @@ export function ShareDialog({
   const copyText = () => {
     // Not a link to a shared page — there is no such page yet. This copies
     // what somebody would write around the image, and says so on the button.
-    const text = `${captionText}\nhttps://keylearn.com`;
+    const text = `${captionText}\nhttps://keylearn.org`;
     void navigator.clipboard
       ?.writeText(text)
       .then(() => setNote("Copied."))
@@ -439,7 +439,7 @@ export function ShareDialog({
         await navigator.share({
           title: "KeyLearn",
           text: captionText,
-          url: "https://keylearn.com",
+          url: "https://keylearn.org",
         });
         return;
       } catch {

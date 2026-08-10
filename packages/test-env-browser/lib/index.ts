@@ -23,7 +23,7 @@ install(create(), global);
 
 function create(): JSDOM {
   const jsdom = new JSDOM(undefined, {
-    url: "https://www.keylearn.com/",
+    url: "https://www.keylearn.org/",
     pretendToBeVisual: false, // Disable requestAnimationFrame.
   });
   polyfill(jsdom);

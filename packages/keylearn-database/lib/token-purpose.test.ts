@@ -5,7 +5,7 @@ import { useDatabase } from "./testing.ts";
 
 useDatabase();
 
-const email = "user@keylearn.com";
+const email = "user@keylearn.org";
 
 test("a sign-in link cannot be redeemed as a password reset", async () => {
   const token = await UserLoginRequest.init(email, "login");

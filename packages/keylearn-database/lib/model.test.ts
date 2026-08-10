@@ -112,7 +112,7 @@ test("automatically populate createdAt", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const user = await User.query().insertGraph({
-    email: "user0@keylearn.com",
+    email: "user0@keylearn.org",
     name: "user0",
     externalIds: [
       {
@@ -133,42 +133,42 @@ test("generate unique user name", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   await User.query().insertGraph({
-    email: `test@keylearn.com`,
+    email: `test@keylearn.org`,
     name: `test`,
     createdAt: now,
   });
   for (let i = 1; i <= 9; i++) {
     await User.query().insertGraph({
-      email: `test${i}@keylearn.com`,
+      email: `test${i}@keylearn.org`,
       name: `test${i}`,
       createdAt: now,
     });
   }
   await User.query().insertGraph({
-    email: `example@keylearn.com`,
+    email: `example@keylearn.org`,
     name: `example`,
     createdAt: now,
   });
 
   equal(await User.findUniqueName(null, "x".repeat(100)), "x".repeat(32));
   equal(
-    await User.findUniqueName(null, "x".repeat(100) + "@keylearn.com"),
+    await User.findUniqueName(null, "x".repeat(100) + "@keylearn.org"),
     "x".repeat(32),
   );
   equal(await User.findUniqueName(null, "unique"), "unique");
-  equal(await User.findUniqueName(null, "unique@keylearn.com"), "unique");
+  equal(await User.findUniqueName(null, "unique@keylearn.org"), "unique");
   equal(await User.findUniqueName(null, "test"), "test10");
-  equal(await User.findUniqueName(null, "test@keylearn.com"), "test10");
-  equal(await User.findUniqueName("test@keylearn.com", "test"), "test");
+  equal(await User.findUniqueName(null, "test@keylearn.org"), "test10");
+  equal(await User.findUniqueName("test@keylearn.org", "test"), "test");
   equal(
-    await User.findUniqueName("test@keylearn.com", "test@keylearn.com"),
+    await User.findUniqueName("test@keylearn.org", "test@keylearn.org"),
     "test",
   );
   equal(await User.findUniqueName(null, "test10"), "test10");
-  equal(await User.findUniqueName(null, "test10@keylearn.com"), "test10");
-  equal(await User.findUniqueName("test@keylearn.com", "example"), "example1");
+  equal(await User.findUniqueName(null, "test10@keylearn.org"), "test10");
+  equal(await User.findUniqueName("test@keylearn.org", "example"), "example1");
   equal(
-    await User.findUniqueName("test@keylearn.com", "example@keylearn.com"),
+    await User.findUniqueName("test@keylearn.org", "example@keylearn.org"),
     "example1",
   );
 });
@@ -176,7 +176,7 @@ test("generate unique user name", async (ctx) => {
 test("create user from resource owner with null values", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const email = "example1@keylearn.com";
+  const email = "example1@keylearn.org";
 
   deepEqual(
     (
@@ -227,7 +227,7 @@ test("create user from resource owner with null values", async (ctx) => {
 test("create user from resource owner with non-null values", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const email = "example1@keylearn.com";
+  const email = "example1@keylearn.org";
 
   deepEqual(
     (
@@ -278,7 +278,7 @@ test("create user from resource owner with non-null values", async (ctx) => {
 test("create user from resource owner with invalid values", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const email = "example1@keylearn.com";
+  const email = "example1@keylearn.org";
 
   deepEqual(
     (
@@ -329,7 +329,7 @@ test("create user from resource owner with invalid values", async (ctx) => {
 test("update user from resource owner with null values", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const email = "example1@keylearn.com";
+  const email = "example1@keylearn.org";
 
   await User.query().insertGraph({
     email: email,
@@ -386,7 +386,7 @@ test("update user from resource owner with null values", async (ctx) => {
 test("update user from resource owner with non-null values", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const email = "example1@keylearn.com";
+  const email = "example1@keylearn.org";
 
   await User.query().insertGraph({
     email: email,
@@ -488,7 +488,7 @@ test("update user from resource owner with non-null values", async (ctx) => {
 test("update user from resource owner with invalid values", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const email = "example1@keylearn.com";
+  const email = "example1@keylearn.org";
 
   await User.query().insertGraph({
     email: email,
@@ -590,7 +590,7 @@ test("update user from resource owner with invalid values", async (ctx) => {
 test("merge multiple resource owners", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const email = "example1@keylearn.com";
+  const email = "example1@keylearn.org";
 
   deepEqual(
     (
@@ -705,7 +705,7 @@ test.skip("handle email change", async (ctx) => {
         raw: {},
         provider: "provider1",
         id: "id1",
-        email: "example1@keylearn.com",
+        email: "example1@keylearn.org",
         emailVerified: true,
         name: "name1",
         url: "url1",
@@ -715,7 +715,7 @@ test.skip("handle email change", async (ctx) => {
     {
       id: 4,
       createdAt: now,
-      email: "example1@keylearn.com",
+      email: "example1@keylearn.org",
       name: "name1",
       externalIds: [
         {
@@ -739,7 +739,7 @@ test.skip("handle email change", async (ctx) => {
         raw: {},
         provider: "provider1",
         id: "id1",
-        email: "changed@keylearn.com",
+        email: "changed@keylearn.org",
         emailVerified: true,
         name: "name1",
         url: "url1",
@@ -749,7 +749,7 @@ test.skip("handle email change", async (ctx) => {
     {
       id: 4,
       createdAt: now,
-      email: "changed@keylearn.com",
+      email: "changed@keylearn.org",
       name: "name1",
       externalIds: [
         {
@@ -772,7 +772,7 @@ test("generates unique name for resource owner", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   await User.query().insertGraph({
-    email: "example1@keylearn.com",
+    email: "example1@keylearn.org",
     name: "name",
     createdAt: now,
   });
@@ -783,7 +783,7 @@ test("generates unique name for resource owner", async (ctx) => {
         raw: {},
         provider: "provider2",
         id: "id2",
-        email: "example2@keylearn.com",
+        email: "example2@keylearn.org",
         emailVerified: true,
         name: "name",
         url: null,
@@ -793,7 +793,7 @@ test("generates unique name for resource owner", async (ctx) => {
     {
       id: 5,
       createdAt: now,
-      email: "example2@keylearn.com",
+      email: "example2@keylearn.org",
       name: "name1",
       anonymized: 0,
       publicProfile: 0,
@@ -828,7 +828,7 @@ test("make premium user", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const user = await User.query().insertGraph({
-    email: "user0@keylearn.com",
+    email: "user0@keylearn.org",
     name: "user0",
     externalIds: [],
   });
@@ -856,13 +856,13 @@ test("create access token", async (ctx) => {
   // Should create a new access token. Only its SHA-256 hash is persisted, so a
   // database read never yields a usable login/reset link.
   Random.string = () => "token1";
-  equal(await UserLoginRequest.init("example1@keylearn.com"), "token1");
-  isNull(await User.findByEmail("example1@keylearn.com"));
+  equal(await UserLoginRequest.init("example1@keylearn.org"), "token1");
+  isNull(await User.findByEmail("example1@keylearn.org"));
   deepEqual(
-    (await UserLoginRequest.findByEmail("example1@keylearn.com"))!.toJSON(),
+    (await UserLoginRequest.findByEmail("example1@keylearn.org"))!.toJSON(),
     {
       id: 1,
-      email: "example1@keylearn.com",
+      email: "example1@keylearn.org",
       purpose: "login",
       accessToken: sha256("token1"),
       createdAt: now,
@@ -872,13 +872,13 @@ test("create access token", async (ctx) => {
   // Should REPLACE, not reuse, the previous token: re-issuing rotates it so an
   // older emailed link stops working.
   Random.string = () => "tokenX";
-  equal(await UserLoginRequest.init("example1@keylearn.com"), "tokenX");
-  equal(await User.findByEmail("example1@keylearn.com"), null);
+  equal(await UserLoginRequest.init("example1@keylearn.org"), "tokenX");
+  equal(await User.findByEmail("example1@keylearn.org"), null);
   deepEqual(
-    (await UserLoginRequest.findByEmail("example1@keylearn.com"))!.toJSON(),
+    (await UserLoginRequest.findByEmail("example1@keylearn.org"))!.toJSON(),
     {
       id: 2,
-      email: "example1@keylearn.com",
+      email: "example1@keylearn.org",
       purpose: "login",
       accessToken: sha256("tokenX"),
       createdAt: now,
@@ -890,9 +890,9 @@ test("delete expired access token", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   Random.string = () => "token1";
-  equal(await UserLoginRequest.init("example1@keylearn.com"), "token1");
+  equal(await UserLoginRequest.init("example1@keylearn.org"), "token1");
 
-  isNotNull(await UserLoginRequest.findByEmail("example1@keylearn.com"));
+  isNotNull(await UserLoginRequest.findByEmail("example1@keylearn.org"));
   // The finder takes the stored value, which is the hash — the plaintext token
   // exists only in the emailed link.
   isNotNull(await UserLoginRequest.findByAccessToken(sha256("token1")));
@@ -902,7 +902,7 @@ test("delete expired access token", async (ctx) => {
     now.getTime() + UserLoginRequest.expireTime + 1000,
   );
 
-  isNull(await UserLoginRequest.findByEmail("example1@keylearn.com"));
+  isNull(await UserLoginRequest.findByEmail("example1@keylearn.org"));
   isNull(await UserLoginRequest.findByAccessToken(sha256("token1")));
 });
 
@@ -913,19 +913,19 @@ test("login with a valid access token", async (ctx) => {
 
   // Should create a new access token.
 
-  equal(await UserLoginRequest.init("example1@keylearn.com"), "token1");
+  equal(await UserLoginRequest.init("example1@keylearn.org"), "token1");
 
   // Before the first login.
 
-  isNull(await User.findByEmail("example1@keylearn.com"));
-  isNotNull(await UserLoginRequest.findByEmail("example1@keylearn.com"));
+  isNull(await User.findByEmail("example1@keylearn.org"));
+  isNotNull(await UserLoginRequest.findByEmail("example1@keylearn.org"));
 
   // First login.
 
   deepEqual((await UserLoginRequest.login("token1"))!.toJSON(), {
     id: 4,
     createdAt: now,
-    email: "example1@keylearn.com",
+    email: "example1@keylearn.org",
     name: "example1",
     anonymized: 0,
     publicProfile: 0,
@@ -945,8 +945,8 @@ test("login with a valid access token", async (ctx) => {
   // Should create a new user after login, and CONSUME the token: a magic-login
   // link is single-use, so a leaked or forwarded link cannot be replayed.
 
-  isNotNull(await User.findByEmail("example1@keylearn.com"));
-  isNull(await UserLoginRequest.findByEmail("example1@keylearn.com"));
+  isNotNull(await User.findByEmail("example1@keylearn.org"));
+  isNull(await UserLoginRequest.findByEmail("example1@keylearn.org"));
 
   // Second attempt with the same token is refused.
 
@@ -954,7 +954,7 @@ test("login with a valid access token", async (ctx) => {
 
   // The account itself is of course still there.
 
-  isNotNull(await User.findByEmail("example1@keylearn.com"));
+  isNotNull(await User.findByEmail("example1@keylearn.org"));
 });
 
 test("ignore invalid access token", async (ctx) => {
@@ -971,7 +971,7 @@ test("access token should be case-sensitive", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   await UserLoginRequest.query().insertGraph({
-    email: "test@keylearn.com",
+    email: "test@keylearn.org",
     accessToken: "token",
     createdAt: now,
   });
@@ -1001,9 +1001,9 @@ test("load profile owner", async (ctx) => {
 test("convert to user details", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  deepEqual((await User.findByEmail("user1@keylearn.com"))?.toDetails(), {
+  deepEqual((await User.findByEmail("user1@keylearn.org"))?.toDetails(), {
     id: "55vdtk1",
-    email: "user1@keylearn.com",
+    email: "user1@keylearn.org",
     name: "user1",
     anonymized: false,
     publicProfile: false,
@@ -1211,7 +1211,7 @@ test("refuses to claim an existing account with an unverified email", async (ctx
 
   // A victim who registered with a password.
   const victim = await User.query().insertGraph({
-    email: "victim@keylearn.com",
+    email: "victim@keylearn.org",
     name: "victim",
     createdAt: now,
   });
@@ -1222,7 +1222,7 @@ test("refuses to claim an existing account with an unverified email", async (ctx
     raw: {},
     provider: "provider1",
     id: "attacker-subject",
-    email: "victim@keylearn.com",
+    email: "victim@keylearn.org",
     emailVerified: null,
     name: "attacker",
     url: null,
@@ -1240,7 +1240,7 @@ test("links an existing account only when the provider verified the email", asyn
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const user = await User.query().insertGraph({
-    email: "owner@keylearn.com",
+    email: "owner@keylearn.org",
     name: "owner",
     createdAt: now,
   });
@@ -1249,7 +1249,7 @@ test("links an existing account only when the provider verified the email", asyn
     raw: {},
     provider: "provider1",
     id: "subject1",
-    email: "owner@keylearn.com",
+    email: "owner@keylearn.org",
     emailVerified: true,
     name: "owner",
     url: null,
@@ -1268,7 +1268,7 @@ test("resolves a known subject even when the provider changes the email", async 
     raw: {},
     provider: "provider1",
     id: "subject1",
-    email: "original@keylearn.com",
+    email: "original@keylearn.org",
     emailVerified: true,
     name: "person",
     url: null,
@@ -1279,7 +1279,7 @@ test("resolves a known subject even when the provider changes the email", async 
 
   // A separate account the attacker would like to reach.
   await User.query().insertGraph({
-    email: "target@keylearn.com",
+    email: "target@keylearn.org",
     name: "target",
     createdAt: now,
   });
@@ -1291,7 +1291,7 @@ test("resolves a known subject even when the provider changes the email", async 
     raw: {},
     provider: "provider1",
     id: "subject1",
-    email: "target@keylearn.com",
+    email: "target@keylearn.org",
     emailVerified: true,
     name: "person",
     url: null,
@@ -1302,7 +1302,7 @@ test("resolves a known subject even when the provider changes the email", async 
   equal(second.kind === "ok" ? second.user.id : null, userId);
   equal(
     second.kind === "ok" ? second.user.email : null,
-    "original@keylearn.com",
+    "original@keylearn.org",
   );
 });
 
@@ -1313,7 +1313,7 @@ test("a brand-new account from an unverified email must verify first", async (ct
     raw: {},
     provider: "provider1",
     id: "subject1",
-    email: "fresh@keylearn.com",
+    email: "fresh@keylearn.org",
     emailVerified: null,
     name: "fresh",
     url: null,
@@ -1323,7 +1323,7 @@ test("a brand-new account from an unverified email must verify first", async (ct
   equal(result.kind, "verify");
   // Created, but not usable until the emailed code is entered — otherwise a
   // provider could pre-register an address its real owner has not reached yet.
-  const user = await User.findByEmail("fresh@keylearn.com");
+  const user = await User.findByEmail("fresh@keylearn.org");
   isNotNull(user);
   equal(Boolean(user!.emailVerified), false);
 });

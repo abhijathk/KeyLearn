@@ -1,6 +1,6 @@
 # English
 
-Translated: 1536 messages, 12302 words
+Translated: 1548 messages, 12433 words
 
 Untranslated: 0 messages, 0 words
 
@@ -8,7 +8,7 @@ Untranslated: 0 messages, 0 words
 
 Translated: 1458 messages, 11996 words
 
-Untranslated: 70 messages, 253 words
+Untranslated: 82 messages, 384 words
 
 * *s*
 * *PIN*
@@ -36,7 +36,7 @@ Untranslated: 70 messages, 253 words
 
 Translated: 1471 messages, 12012 words
 
-Untranslated: 59 messages, 242 words
+Untranslated: 71 messages, 373 words
 
 * *Pick*
 * *Stop*
@@ -64,7 +64,7 @@ Untranslated: 59 messages, 242 words
 
 Translated: 1469 messages, 12010 words
 
-Untranslated: 61 messages, 244 words
+Untranslated: 73 messages, 375 words
 
 * *PIN*
 * *wpm*
@@ -92,7 +92,7 @@ Untranslated: 61 messages, 244 words
 
 Translated: 1471 messages, 12012 words
 
-Untranslated: 59 messages, 242 words
+Untranslated: 71 messages, 373 words
 
 * *Pick*
 * *Stop*
@@ -120,7 +120,7 @@ Untranslated: 59 messages, 242 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *PIN*
 * *Pick*
@@ -148,7 +148,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1455 messages, 11993 words
 
-Untranslated: 72 messages, 255 words
+Untranslated: 84 messages, 386 words
 
 * *s*
 * *Arc*
@@ -176,7 +176,7 @@ Untranslated: 72 messages, 255 words
 
 Translated: 1462 messages, 12002 words
 
-Untranslated: 67 messages, 250 words
+Untranslated: 79 messages, 381 words
 
 * *s*
 * *PIN*
@@ -204,7 +204,7 @@ Untranslated: 67 messages, 250 words
 
 Translated: 1450 messages, 11988 words
 
-Untranslated: 79 messages, 264 words
+Untranslated: 91 messages, 395 words
 
 * *s*
 * *PIN*
@@ -232,7 +232,7 @@ Untranslated: 79 messages, 264 words
 
 Translated: 1448 messages, 11989 words
 
-Untranslated: 82 messages, 265 words
+Untranslated: 94 messages, 396 words
 
 * *s*
 * *PIN*
@@ -260,7 +260,7 @@ Untranslated: 82 messages, 265 words
 
 Translated: 1468 messages, 12009 words
 
-Untranslated: 62 messages, 245 words
+Untranslated: 74 messages, 376 words
 
 * *PIN*
 * *wpm*
@@ -288,7 +288,7 @@ Untranslated: 62 messages, 245 words
 
 Translated: 1460 messages, 11998 words
 
-Untranslated: 67 messages, 250 words
+Untranslated: 79 messages, 381 words
 
 * *s*
 * *PIN*
@@ -316,7 +316,7 @@ Untranslated: 67 messages, 250 words
 
 Translated: 1462 messages, 12002 words
 
-Untranslated: 67 messages, 250 words
+Untranslated: 79 messages, 381 words
 
 * *s*
 * *wpm*
@@ -344,7 +344,7 @@ Untranslated: 67 messages, 250 words
 
 Translated: 1471 messages, 12012 words
 
-Untranslated: 59 messages, 242 words
+Untranslated: 71 messages, 373 words
 
 * *Pick*
 * *Stop*
@@ -372,7 +372,7 @@ Untranslated: 59 messages, 242 words
 
 Translated: 1463 messages, 12003 words
 
-Untranslated: 66 messages, 249 words
+Untranslated: 78 messages, 380 words
 
 * *s*
 * *wpm*
@@ -400,7 +400,7 @@ Untranslated: 66 messages, 249 words
 
 Translated: 1448 messages, 11988 words
 
-Untranslated: 81 messages, 264 words
+Untranslated: 93 messages, 395 words
 
 * *s*
 * *Arc*
@@ -428,7 +428,7 @@ Untranslated: 81 messages, 264 words
 
 Translated: 1469 messages, 12010 words
 
-Untranslated: 61 messages, 244 words
+Untranslated: 73 messages, 375 words
 
 * *PIN*
 * *wpm*
@@ -456,7 +456,7 @@ Untranslated: 61 messages, 244 words
 
 Translated: 1471 messages, 12012 words
 
-Untranslated: 59 messages, 242 words
+Untranslated: 71 messages, 373 words
 
 * *Pick*
 * *Stop*
@@ -484,7 +484,7 @@ Untranslated: 59 messages, 242 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *PIN*
 * *Pick*
@@ -512,7 +512,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1462 messages, 12002 words
 
-Untranslated: 67 messages, 250 words
+Untranslated: 79 messages, 381 words
 
 * *s*
 * *PIN*
@@ -540,7 +540,7 @@ Untranslated: 67 messages, 250 words
 
 Translated: 1468 messages, 12008 words
 
-Untranslated: 62 messages, 246 words
+Untranslated: 74 messages, 377 words
 
 * *PIN*
 * *Zen*
@@ -568,7 +568,7 @@ Untranslated: 62 messages, 246 words
 
 Translated: 1462 messages, 12003 words
 
-Untranslated: 68 messages, 251 words
+Untranslated: 80 messages, 382 words
 
 * *PIN*
 * *wpm*
@@ -596,7 +596,7 @@ Untranslated: 68 messages, 251 words
 
 Translated: 1469 messages, 12010 words
 
-Untranslated: 61 messages, 244 words
+Untranslated: 73 messages, 375 words
 
 * *Sun*
 * *Pick*
@@ -624,7 +624,7 @@ Untranslated: 61 messages, 244 words
 
 Translated: 1460 messages, 11998 words
 
-Untranslated: 68 messages, 251 words
+Untranslated: 80 messages, 382 words
 
 * *s*
 * *PIN*
@@ -652,7 +652,7 @@ Untranslated: 68 messages, 251 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 61 messages, 244 words
+Untranslated: 73 messages, 375 words
 
 * *PIN*
 * *wpm*
@@ -680,7 +680,7 @@ Untranslated: 61 messages, 244 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *PIN*
 * *Pick*
@@ -708,7 +708,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 61 messages, 244 words
+Untranslated: 73 messages, 375 words
 
 * *PIN*
 * *wpm*
@@ -736,7 +736,7 @@ Untranslated: 61 messages, 244 words
 
 Translated: 1465 messages, 12005 words
 
-Untranslated: 64 messages, 247 words
+Untranslated: 76 messages, 378 words
 
 * *s*
 * *wpm*
@@ -764,7 +764,7 @@ Untranslated: 64 messages, 247 words
 
 Translated: 1462 messages, 12000 words
 
-Untranslated: 66 messages, 249 words
+Untranslated: 78 messages, 380 words
 
 * *s*
 * *PIN*
@@ -792,7 +792,7 @@ Untranslated: 66 messages, 249 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *PIN*
 * *Pick*
@@ -820,7 +820,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *wpm*
 * *Pick*
@@ -848,7 +848,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1469 messages, 12008 words
 
-Untranslated: 61 messages, 246 words
+Untranslated: 73 messages, 377 words
 
 * *Pick*
 * *Stop*
@@ -876,7 +876,7 @@ Untranslated: 61 messages, 246 words
 
 Translated: 1456 messages, 11995 words
 
-Untranslated: 72 messages, 255 words
+Untranslated: 84 messages, 386 words
 
 * *s*
 * *wpm*
@@ -904,7 +904,7 @@ Untranslated: 72 messages, 255 words
 
 Translated: 1469 messages, 12010 words
 
-Untranslated: 61 messages, 244 words
+Untranslated: 73 messages, 375 words
 
 * *PIN*
 * *wpm*
@@ -932,7 +932,7 @@ Untranslated: 61 messages, 244 words
 
 Translated: 1449 messages, 11989 words
 
-Untranslated: 80 messages, 263 words
+Untranslated: 92 messages, 394 words
 
 * *s*
 * *wpm*
@@ -960,7 +960,7 @@ Untranslated: 80 messages, 263 words
 
 Translated: 1467 messages, 12006 words
 
-Untranslated: 63 messages, 248 words
+Untranslated: 75 messages, 379 words
 
 * *PIN*
 * *wpm*
@@ -988,7 +988,7 @@ Untranslated: 63 messages, 248 words
 
 Translated: 1467 messages, 12006 words
 
-Untranslated: 63 messages, 248 words
+Untranslated: 75 messages, 379 words
 
 * *Kid*
 * *PIN*
@@ -1016,7 +1016,7 @@ Untranslated: 63 messages, 248 words
 
 Translated: 1464 messages, 12004 words
 
-Untranslated: 65 messages, 248 words
+Untranslated: 77 messages, 379 words
 
 * *s*
 * *PIN*
@@ -1044,7 +1044,7 @@ Untranslated: 65 messages, 248 words
 
 Translated: 1459 messages, 11997 words
 
-Untranslated: 69 messages, 252 words
+Untranslated: 81 messages, 383 words
 
 * *s*
 * *PIN*
@@ -1072,7 +1072,7 @@ Untranslated: 69 messages, 252 words
 
 Translated: 1462 messages, 12000 words
 
-Untranslated: 66 messages, 249 words
+Untranslated: 78 messages, 380 words
 
 * *s*
 * *PIN*
@@ -1100,7 +1100,7 @@ Untranslated: 66 messages, 249 words
 
 Translated: 1457 messages, 11995 words
 
-Untranslated: 71 messages, 254 words
+Untranslated: 83 messages, 385 words
 
 * *s*
 * *Arc*
@@ -1128,7 +1128,7 @@ Untranslated: 71 messages, 254 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *PIN*
 * *Pick*
@@ -1156,7 +1156,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1461 messages, 12000 words
 
-Untranslated: 68 messages, 252 words
+Untranslated: 80 messages, 383 words
 
 * *s*
 * *PIN*
@@ -1184,7 +1184,7 @@ Untranslated: 68 messages, 252 words
 
 Translated: 1461 messages, 11999 words
 
-Untranslated: 67 messages, 250 words
+Untranslated: 79 messages, 381 words
 
 * *s*
 * *PIN*
@@ -1212,7 +1212,7 @@ Untranslated: 67 messages, 250 words
 
 Translated: 1463 messages, 12001 words
 
-Untranslated: 65 messages, 248 words
+Untranslated: 77 messages, 379 words
 
 * *s*
 * *PIN*
@@ -1240,7 +1240,7 @@ Untranslated: 65 messages, 248 words
 
 Translated: 1455 messages, 11995 words
 
-Untranslated: 74 messages, 257 words
+Untranslated: 86 messages, 388 words
 
 * *s*
 * *Zen*
@@ -1268,7 +1268,7 @@ Untranslated: 74 messages, 257 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *PIN*
 * *Pick*
@@ -1296,7 +1296,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *PIN*
 * *Pick*
@@ -1324,7 +1324,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1471 messages, 12012 words
 
-Untranslated: 59 messages, 242 words
+Untranslated: 71 messages, 373 words
 
 * *Pick*
 * *Stop*
@@ -1352,7 +1352,7 @@ Untranslated: 59 messages, 242 words
 
 Translated: 1466 messages, 12007 words
 
-Untranslated: 64 messages, 247 words
+Untranslated: 76 messages, 378 words
 
 * *PIN*
 * *wpm*
@@ -1380,7 +1380,7 @@ Untranslated: 64 messages, 247 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *PIN*
 * *Pick*
@@ -1408,7 +1408,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1471 messages, 12012 words
 
-Untranslated: 59 messages, 242 words
+Untranslated: 71 messages, 373 words
 
 * *Pick*
 * *Stop*
@@ -1436,7 +1436,7 @@ Untranslated: 59 messages, 242 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *wpm*
 * *Pick*
@@ -1464,7 +1464,7 @@ Untranslated: 60 messages, 243 words
 
 Translated: 1472 messages, 12013 words
 
-Untranslated: 59 messages, 242 words
+Untranslated: 71 messages, 373 words
 
 * *Pick*
 * *Stop*
@@ -1492,7 +1492,7 @@ Untranslated: 59 messages, 242 words
 
 Translated: 1470 messages, 12011 words
 
-Untranslated: 60 messages, 243 words
+Untranslated: 72 messages, 374 words
 
 * *wpm*
 * *Pick*

@@ -36,7 +36,7 @@ test("send a new access token", async () => {
   const response = await request //
     .POST("/auth/login/register-email")
     .send({
-      email: "test@keylearn.com",
+      email: "test@keylearn.org",
     });
 
   // Assert.
@@ -47,20 +47,20 @@ test("send a new access token", async () => {
     "application/json; charset=UTF-8",
   );
   deepEqual(await response.body.json(), {
-    email: "test@keylearn.com",
+    email: "test@keylearn.org",
   });
 
   isNull(await request.who());
 
   const userLoginRequest =
-    await UserLoginRequest.findByEmail("test@keylearn.com");
+    await UserLoginRequest.findByEmail("test@keylearn.org");
   isNotNull(userLoginRequest);
 
-  const user = await User.findByEmail("test@keylearn.com");
+  const user = await User.findByEmail("test@keylearn.org");
   isNull(user);
 
   const [message] = context.mailer.dump();
-  equal(message.to, "test@keylearn.com");
+  equal(message.to, "test@keylearn.org");
   // The link carries the plaintext token; the row carries only its hash.
   const token = tokenFromLink(message.text!);
   equal(userLoginRequest!.accessToken, hashed(token));
@@ -71,7 +71,7 @@ test("send an existing access token", async () => {
   // Arrange.
 
   await UserLoginRequest.query().insertGraph({
-    email: "test@keylearn.com",
+    email: "test@keylearn.org",
     accessToken: hashed("xyz"),
     createdAt: new Date(),
   } as UserLoginRequest);
@@ -83,7 +83,7 @@ test("send an existing access token", async () => {
   const response = await request //
     .POST("/auth/login/register-email")
     .send({
-      email: "test@keylearn.com",
+      email: "test@keylearn.org",
     });
 
   // Assert.
@@ -94,20 +94,20 @@ test("send an existing access token", async () => {
     "application/json; charset=UTF-8",
   );
   deepEqual(await response.body.json(), {
-    email: "test@keylearn.com",
+    email: "test@keylearn.org",
   });
 
   isNull(await request.who());
 
   const userLoginRequest =
-    await UserLoginRequest.findByEmail("test@keylearn.com");
+    await UserLoginRequest.findByEmail("test@keylearn.org");
   isNotNull(userLoginRequest);
 
-  const user = await User.findByEmail("test@keylearn.com");
+  const user = await User.findByEmail("test@keylearn.org");
   isNull(user);
 
   const [message] = context.mailer.dump();
-  equal(message.to, "test@keylearn.com");
+  equal(message.to, "test@keylearn.org");
   const token = tokenFromLink(message.text!);
   equal(userLoginRequest!.accessToken, hashed(token));
   // Asking again replaces the outstanding token rather than mailing the old
@@ -119,7 +119,7 @@ test("login with an access token / new user", async () => {
   // Arrange.
 
   await UserLoginRequest.query().insertGraph({
-    email: "test@keylearn.com",
+    email: "test@keylearn.org",
     accessToken: hashed("xyz"),
     createdAt: new Date(),
   } as UserLoginRequest);
@@ -137,12 +137,12 @@ test("login with an access token / new user", async () => {
 
   // One shot: redeeming the link consumes it, so the same link in a forwarded
   // email or a browser history is no longer a way in.
-  isNull(await UserLoginRequest.findByEmail("test@keylearn.com"));
+  isNull(await UserLoginRequest.findByEmail("test@keylearn.org"));
 
-  const user = await User.findByEmail("test@keylearn.com");
+  const user = await User.findByEmail("test@keylearn.org");
   isNotNull(user);
 
-  equal(await request.who(), "test@keylearn.com");
+  equal(await request.who(), "test@keylearn.org");
 
   deepEqual(context.mailer.dump(), []);
 });
@@ -151,13 +151,13 @@ test("login with an access token / existing user", async () => {
   // Arrange.
 
   await User.query().insertGraph({
-    email: "test@keylearn.com",
+    email: "test@keylearn.org",
     name: "test",
     createdAt: new Date(),
   } as User);
 
   await UserLoginRequest.query().insertGraph({
-    email: "test@keylearn.com",
+    email: "test@keylearn.org",
     accessToken: hashed("xyz"),
     createdAt: new Date(),
   } as UserLoginRequest);
@@ -173,12 +173,12 @@ test("login with an access token / existing user", async () => {
   equal(response.status, 302);
   equal(response.headers.get("Location"), "/");
 
-  isNull(await UserLoginRequest.findByEmail("test@keylearn.com"));
+  isNull(await UserLoginRequest.findByEmail("test@keylearn.org"));
 
-  const user = await User.findByEmail("test@keylearn.com");
+  const user = await User.findByEmail("test@keylearn.org");
   isNotNull(user);
 
-  equal(await request.who(), "test@keylearn.com");
+  equal(await request.who(), "test@keylearn.org");
 
   deepEqual(context.mailer.dump(), []);
 });
@@ -190,7 +190,7 @@ test("reject a token stolen from the database", async () => {
   // sign anybody in — that is the whole point of storing the hash.
   const stored = hashed("xyz");
   await UserLoginRequest.query().insertGraph({
-    email: "test@keylearn.com",
+    email: "test@keylearn.org",
     accessToken: stored,
     createdAt: new Date(),
   } as UserLoginRequest);
@@ -205,7 +205,7 @@ test("reject a token stolen from the database", async () => {
 
   equal(response.status, 403);
   isNull(await request.who());
-  isNull(await User.findByEmail("test@keylearn.com"));
+  isNull(await User.findByEmail("test@keylearn.org"));
 });
 
 test("ignore invalid access token", async () => {

@@ -37,7 +37,7 @@ export function CertificateDialog({
   // and send the person checking to a number that is not there.
   const origin =
     typeof window === "undefined"
-      ? "https://www.keylearn.com"
+      ? "https://www.keylearn.org"
       : window.location.origin;
   const verifyUrl = `${origin}/verify/${certificate.number}`;
 

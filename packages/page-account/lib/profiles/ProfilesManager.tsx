@@ -27,7 +27,12 @@ import {
   useMemo,
   useState,
 } from "react";
-import { defineMessage, FormattedMessage, useIntl } from "react-intl";
+import {
+  defineMessage,
+  defineMessages,
+  FormattedMessage,
+  useIntl,
+} from "react-intl";
 import { Overlay } from "../Overlay.tsx";
 import { type ProfileInput } from "../service.ts";
 import { familyNames } from "./art-names.tsx";
@@ -46,7 +51,39 @@ import {
 } from "./store.ts";
 import { type ProfileStats, useProfileStats } from "./useProfileStats.ts";
 
-// The Kid / Grown-up badge takes its colour from the learner's own avatar,
+// Hoisted so formatjs can extract them. A message object built inside a ternary
+// is invisible to static extraction, so the id never reaches the catalogue and
+// the string ships in English to every locale.
+const VISION = defineMessages({
+  onTitle: {
+    id: "profiles.vision.onTitle",
+    defaultMessage: "Braille and audio for this learner?",
+  },
+  offTitle: {
+    id: "profiles.vision.offTitle",
+    defaultMessage: "Turn braille and audio off?",
+  },
+  onMessage: {
+    id: "profiles.vision.onMessage",
+    defaultMessage:
+      "They will get the braille page instead of the ordinary one: six-key typing, spoken guidance, and a different curriculum. Choose this because it is what they need, not to try it out — you can change it back, but their practice does not carry across.",
+  },
+  offMessage: {
+    id: "profiles.vision.offMessage",
+    defaultMessage:
+      "They will go back to the ordinary typing page. Their braille progress is kept, but they will not see it until braille is turned on again.",
+  },
+  onConfirm: {
+    id: "profiles.vision.onConfirm",
+    defaultMessage: "Yes, braille and audio",
+  },
+  offConfirm: {
+    id: "profiles.vision.offConfirm",
+    defaultMessage: "Turn it off",
+  },
+});
+
+// The Kid / Grown-up badge takes its colour from the learner’s own avatar,
 // so a row reads as one identity. Photo avatars fall back to the theme accent.
 function badgeStyle(p: Profile): CSSProperties {
   if (p.avatar != null && p.avatar.type === "icon") {
@@ -56,7 +93,7 @@ function badgeStyle(p: Profile): CSSProperties {
   return {};
 }
 
-// A learner's live progress: a bar plus a short summary. Kids read as letters
+// A learner’s live progress: a bar plus a short summary. Kids read as letters
 // learned out of their alphabet; grown-ups read as top speed and day streak.
 function ProgressLine({
   p,
@@ -295,7 +332,7 @@ export function ProfilesManager(): ReactNode {
                 />
                 <span className={styles.rowInfo}>
                   {/* Full name here and nowhere else in the app. This is the
-                      household's own register — the one place a parent is
+                      household’s own register — the one place a parent is
                       distinguishing between people rather than greeting one —
                       and it is the name the certificate will carry. A child
                       with no surname simply shows their first name. */}
@@ -521,8 +558,8 @@ function ProfileEditor({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // A brand-new child profile needs the grown-up's consent; an existing kid
-  // already has it recorded, so we don't re-ask on edit.
+  // A brand-new child profile needs the grown-up’s consent; an existing kid
+  // already has it recorded, so we don’t re-ask on edit.
   const needConsent = profile == null && kind === "kid";
   // An existing child profile shows the consent already on record.
   const shownAsGivenConsent =
@@ -537,11 +574,11 @@ function ProfileEditor({
    *
    * Children grow up. When they do, everything they earned comes with them —
    * the profile is the same profile, so certificates, medals and every lesson
-   * of history are simply a grown-up's now. Making them start again would cost
+   * of history are simply a grown-up’s now. Making them start again would cost
    * them the very thing they spent years building.
    *
    * The other direction stays shut. It is not the mirror image: it would put a
-   * grown-up's record on the children's surfaces and under the consent and age
+   * grown-up’s record on the children’s surfaces and under the consent and age
    * rules written for a child.
    */
   const growingUp = profile != null && profile.kind === "kid";
@@ -615,7 +652,7 @@ function ProfileEditor({
     }
     // Accept either a birth year ("2019") or a plain age ("7") — a small
     // number is converted so the stored value is always a birth year, and
-    // the learner's age keeps counting up on its own.
+    // the learner’s age keeps counting up on its own.
     const raw = birthYear.trim() === "" ? null : Number(birthYear);
     const year =
       raw != null && Number.isFinite(raw)
@@ -651,7 +688,7 @@ function ProfileEditor({
     });
   };
 
-  // Swatches echo the learner's initial once a name is typed; before that they
+  // Swatches echo the learner’s initial once a name is typed; before that they
   // stay as plain colour chips rather than showing a placeholder glyph.
   const initial = firstName.trim().slice(0, 1).toUpperCase();
   // The block below only ever edits a painting; the state is guaranteed to be
@@ -1038,7 +1075,7 @@ function ProfileEditor({
             message={formatMessage({
               id: "profiles.consent.confirmMessage",
               defaultMessage:
-                "This is recorded against the child's profile as the consent under which their practice is kept. Only tick it if you are their parent or guardian and have read the policy.",
+                "This is recorded against the child’s profile as the consent under which their practice is kept. Only tick it if you are their parent or guardian and have read the policy.",
             })}
             confirmLabel={formatMessage({
               id: "profiles.consent.confirmLabel",
@@ -1055,39 +1092,13 @@ function ProfileEditor({
         {confirmVision != null && (
           <ConfirmDialog
             title={formatMessage(
-              confirmVision === "on"
-                ? {
-                    id: "profiles.vision.onTitle",
-                    defaultMessage: "Braille and audio for this learner?",
-                  }
-                : {
-                    id: "profiles.vision.offTitle",
-                    defaultMessage: "Turn braille and audio off?",
-                  },
+              confirmVision === "on" ? VISION.onTitle : VISION.offTitle,
             )}
             message={formatMessage(
-              confirmVision === "on"
-                ? {
-                    id: "profiles.vision.onMessage",
-                    defaultMessage:
-                      "They will get the braille page instead of the ordinary one: six-key typing, spoken guidance, and a different curriculum. Choose this because it is what they need, not to try it out — you can change it back, but their practice does not carry across.",
-                  }
-                : {
-                    id: "profiles.vision.offMessage",
-                    defaultMessage:
-                      "They will go back to the ordinary typing page. Their braille progress is kept, but they will not see it until braille is turned on again.",
-                  },
+              confirmVision === "on" ? VISION.onMessage : VISION.offMessage,
             )}
             confirmLabel={formatMessage(
-              confirmVision === "on"
-                ? {
-                    id: "profiles.vision.onConfirm",
-                    defaultMessage: "Yes, braille and audio",
-                  }
-                : {
-                    id: "profiles.vision.offConfirm",
-                    defaultMessage: "Turn it off",
-                  },
+              confirmVision === "on" ? VISION.onConfirm : VISION.offConfirm,
             )}
             onConfirm={() => {
               setVisionSupport(confirmVision === "on");

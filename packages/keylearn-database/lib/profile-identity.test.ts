@@ -7,7 +7,7 @@ useDatabase();
 
 async function household() {
   const user = await User.query().insertGraph({
-    email: "house@keylearn.com",
+    email: "house@keylearn.org",
     name: "house",
   });
   const account = (await User.findById(user.id!))!;

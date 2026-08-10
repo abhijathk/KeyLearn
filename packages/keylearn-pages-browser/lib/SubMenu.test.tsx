@@ -10,7 +10,7 @@ test("render", () => {
   const r = render(
     <PageDataContext.Provider
       value={{
-        base: "https://www.keylearn.com/",
+        base: "https://www.keylearn.org/",
         locale: "en",
         user: null,
         publicUser: {

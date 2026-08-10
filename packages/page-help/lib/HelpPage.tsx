@@ -152,7 +152,7 @@ export function HelpPage() {
           "<li>You type those words, aiming to keep your mistakes to a minimum.</li>" +
           "<li>While you type, the algorithm records fresh statistics — including how long each key takes you to hit — and feeds them back into step one to build the next batch of words.</li>" +
           "</ol>" +
-          "<p>All you have to do at every stage is type the words you're given; KeyLearn handles the rest.</p>"
+          "<p>All you have to do at every stage is type the words you’re given; KeyLearn handles the rest.</p>"
         }
       />
 
@@ -160,8 +160,8 @@ export function HelpPage() {
         id="help.section3"
         defaultMessage={
           "<h2>How words are generated</h2>" +
-          "<p>KeyLearn builds random words that still sound natural and readable, following the phonetic patterns of your native language — many of them could pass for real words, and some are. Typing text that reads sensibly is far easier than typing a jumble of random letters, and it also helps you internalize the key combinations you'll hit most often. That second part matters a lot: in English, for instance, the letter ‘<em>W</em>’ almost never follows ‘<em>Z</em>’, so this app will never ask you to type that pairing. Instead, you'll practice far more common sequences like ‘<em>the</em>’, ‘<em>that</em>’, and ‘<em>with</em>’ — before long, you'll be flying through the ‘<em>th</em>’ combo.</p>" +
-          "<p>Here's how the algorithm picks which letters go into those words.</p>"
+          "<p>KeyLearn builds random words that still sound natural and readable, following the phonetic patterns of your native language — many of them could pass for real words, and some are. Typing text that reads sensibly is far easier than typing a jumble of random letters, and it also helps you internalize the key combinations you’ll hit most often. That second part matters a lot: in English, for instance, the letter ‘<em>W</em>’ almost never follows ‘<em>Z</em>’, so this app will never ask you to type that pairing. Instead, you’ll practice far more common sequences like ‘<em>the</em>’, ‘<em>that</em>’, and ‘<em>with</em>’ — before long, you’ll be flying through the ‘<em>th</em>’ combo.</p>" +
+          "<p>Here’s how the algorithm picks which letters go into those words.</p>"
         }
       />
 
@@ -213,7 +213,7 @@ export function HelpPage() {
         id="help.adaptive.intro"
         defaultMessage={
           "<h2>The smart layers working behind the scenes</h2>" +
-          "<p>The letter-by-letter cycle above is the backbone of your practice, but KeyLearn runs a few extra adaptive helpers on top of it. You never switch these on or think about them — they quietly shape every session so your time lands where it pays off most. Here's what each one is doing while you type.</p>"
+          "<p>The letter-by-letter cycle above is the backbone of your practice, but KeyLearn runs a few extra adaptive helpers on top of it. You never switch these on or think about them — they quietly shape every session so your time lands where it pays off most. Here’s what each one is doing while you type.</p>"
         }
       />
 
@@ -221,15 +221,15 @@ export function HelpPage() {
         id="help.adaptive.confidence"
         defaultMessage={
           "<h3>Confidence that watches accuracy, not just speed</h3>" +
-          "<p>The core signal for how well you know a key has always been how <em>fast</em> you type it. KeyLearn now adds a second opinion drawn from learning science — a technique called <em>Bayesian Knowledge Tracing</em> — that also weighs how <em>cleanly</em> you hit that key. It forgives the occasional slip on a key you clearly know, and it refuses to be fooled by a lucky fast-but-sloppy tap. The two views are blended together, with raw speed still leading by two-to-one, so a letter only counts as mastered when you're both quick <em>and</em> accurate. It's tuned to unlock the next letter at the same comfortable pace you're used to — usually a couple of clean passes — just with a sharper eye on mistakes.</p>"
+          "<p>The core signal for how well you know a key has always been how <em>fast</em> you type it. KeyLearn now adds a second opinion drawn from learning science — a technique called <em>Bayesian Knowledge Tracing</em> — that also weighs how <em>cleanly</em> you hit that key. It forgives the occasional slip on a key you clearly know, and it refuses to be fooled by a lucky fast-but-sloppy tap. The two views are blended together, with raw speed still leading by two-to-one, so a letter only counts as mastered when you’re both quick <em>and</em> accurate. It’s tuned to unlock the next letter at the same comfortable pace you’re used to — usually a couple of clean passes — just with a sharper eye on mistakes.</p>"
         }
       />
 
       <FormattedMessage
         id="help.adaptive.review"
         defaultMessage={
-          "<h3>A quick warm-up on the keys you're due to review</h3>" +
-          "<p>Letters you picked up a while ago but haven't touched in a few sessions get surfaced first, as a short warm-up at the start of your practice. It works the way a good flashcard deck resurfaces a card right before you'd forget it: reviewing a skill at that fading edge is exactly what pushes it into long-term memory. So don't be surprised to revisit an old friend before meeting anyone new.</p>"
+          "<h3>A quick warm-up on the keys you’re due to review</h3>" +
+          "<p>Letters you picked up a while ago but haven’t touched in a few sessions get surfaced first, as a short warm-up at the start of your practice. It works the way a good flashcard deck resurfaces a card right before you’d forget it: reviewing a skill at that fading edge is exactly what pushes it into long-term memory. So don’t be surprised to revisit an old friend before meeting anyone new.</p>"
         }
       />
 
@@ -237,7 +237,7 @@ export function HelpPage() {
         id="help.adaptive.decay"
         defaultMessage={
           "<h3>Letters quietly fade if you leave them alone</h3>" +
-          "<p>Skills rust when they go unused, and KeyLearn reflects that honestly. A key you haven't practiced in a long time slowly loses a little confidence over real time, so you might see an old letter drift back from green toward red on its own. That's not you getting worse — it's the app gently flagging that the letter is due for a refresh before it truly slips. Your best-ever result for a key is never wiped out; only the current reading softens.</p>"
+          "<p>Skills rust when they go unused, and KeyLearn reflects that honestly. A key you haven’t practiced in a long time slowly loses a little confidence over real time, so you might see an old letter drift back from green toward red on its own. That’s not you getting worse — it’s the app gently flagging that the letter is due for a refresh before it truly slips. Your best-ever result for a key is never wiped out; only the current reading softens.</p>"
         }
       />
 
@@ -245,7 +245,7 @@ export function HelpPage() {
         id="help.adaptive.bigrams"
         defaultMessage={
           "<h3>Drilling the letter pairs that trip you up</h3>" +
-          "<p>Not everything that slows you down is a single key. Often it's the hand-off <em>between</em> two — an awkward pair like ‘<em>ny</em>’, ‘<em>rl</em>’ or ‘<em>br</em>’ where your fingers have to travel or cross over. KeyLearn keeps an eye on the pairings where you consistently stumble and weaves more of them into the words it builds for you, so you smooth out the transitions themselves, not just the individual letters on either side.</p>"
+          "<p>Not everything that slows you down is a single key. Often it’s the hand-off <em>between</em> two — an awkward pair like ‘<em>ny</em>’, ‘<em>rl</em>’ or ‘<em>br</em>’ where your fingers have to travel or cross over. KeyLearn keeps an eye on the pairings where you consistently stumble and weaves more of them into the words it builds for you, so you smooth out the transitions themselves, not just the individual letters on either side.</p>"
         }
       />
 
@@ -253,7 +253,7 @@ export function HelpPage() {
         id="help.section5"
         defaultMessage={
           "<h2>Proper keyboard hand placement</h2>" +
-          "<p>Rest all your fingers on the home row — the row that contains the <em>Caps Lock</em> key. You'll feel small raised bumps on the ‘<em>F</em>’ and ‘<em>J</em>’ keys; line your index fingers up with those. From there, every finger owns a specific group of keys, shown in the illustration below.</p>"
+          "<p>Rest all your fingers on the home row — the row that contains the <em>Caps Lock</em> key. You’ll feel small raised bumps on the ‘<em>F</em>’ and ‘<em>J</em>’ keys; line your index fingers up with those. From there, every finger owns a specific group of keys, shown in the illustration below.</p>"
         }
       />
 
@@ -274,7 +274,7 @@ export function HelpPage() {
         id="help.section6"
         defaultMessage={
           "<h2>Does this app actually work?</h2>" +
-          "<p>Below are a handful of real, anonymized user profiles showing how people's touch typing improved while using KeyLearn. We hope seeing their progress motivates you to keep at it!</p>"
+          "<p>Below are a handful of real, anonymized user profiles showing how people’s touch typing improved while using KeyLearn. We hope seeing their progress motivates you to keep at it!</p>"
         }
       />
 

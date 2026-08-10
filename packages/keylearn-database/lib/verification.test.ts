@@ -5,7 +5,7 @@ import { useDatabase } from "./testing.ts";
 
 useDatabase();
 
-const email = "user@keylearn.com";
+const email = "user@keylearn.org";
 
 test("a code only authorises the purpose it was issued for", async () => {
   // The user is asked to confirm their address...

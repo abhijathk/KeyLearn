@@ -64,7 +64,10 @@ test("ignore invalid user id", async (ctx) => {
 
   equal(response.status, 500);
   equal(response.headers.get("Content-Type"), "text/plain; charset=UTF-8");
-  equal(await response.body.text(), "Error: Unknown user id");
+  // Deliberately generic. The reason is logged, not returned: a body naming
+  // the database or quoting a path describes our internals to whoever can
+  // reach this endpoint, and Paddle only needs to know to retry.
+  equal(await response.body.text(), "Processing error");
 
   isFalse(isPremiumUser(User.toPublicUser(await User.findById(1), "")));
 });

@@ -23,10 +23,17 @@ test("render", () => {
   fireEvent.click(r.getByText("As bars"));
   fireEvent.click(r.getByText("As dots"));
 
-  fireEvent.click(r.getByText("Solid block"));
-  fireEvent.click(r.getByText("Outlined box"));
-  fireEvent.click(r.getByText("Thin line"));
-  fireEvent.click(r.getByText("Underline"));
+  // "Cursor look" is an OptionList, not a row of buttons like the two settings
+  // above it: its menu exists in the DOM only while it is open, and choosing an
+  // option closes it again. So each choice opens the list by clicking whatever
+  // is currently selected, then clicks the option wanted.
+  const chooseShape = (current: string, next: string) => {
+    fireEvent.click(r.getByText(current));
+    fireEvent.click(r.getByText(next));
+  };
+  chooseShape("Solid block", "Outlined box");
+  chooseShape("Outlined box", "Thin line");
+  chooseShape("Thin line", "Underline");
 
   fireEvent.click(r.getByText("Snap into place"));
   fireEvent.click(r.getByText("Glide smoothly"));

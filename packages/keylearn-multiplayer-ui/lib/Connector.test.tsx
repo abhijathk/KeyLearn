@@ -9,7 +9,7 @@ import { FakeWebSocket } from "./websocket.fake.ts";
 import { useWebSocket } from "./websocket-hooks.ts";
 
 test("handle websocket ready state changes", () => {
-  const webSocket = new FakeWebSocket("wss://www.keylearn.com/game");
+  const webSocket = new FakeWebSocket("wss://www.keylearn.org/game");
 
   useWebSocket.makeWebSocket = () => webSocket;
 

@@ -25,7 +25,7 @@ test("handle unauthenticated user", async () => {
 test("get empty settings", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const request = startApp(context.get(Application, kMain));
   await request.become(user.id!);
 
@@ -47,7 +47,7 @@ test("get empty settings", async () => {
 test("get existing settings", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const request = startApp(context.get(Application, kMain));
   await request.become(user.id!);
 
@@ -78,7 +78,7 @@ test("validate content type on put settings", async () => {
   // Arrange.
 
   const request = startApp(context.get(Application, kMain));
-  await request.become("user1@keylearn.com");
+  await request.become("user1@keylearn.org");
 
   // Act.
 
@@ -96,7 +96,7 @@ test("validate format on put settings", async () => {
   // Arrange.
 
   const request = startApp(context.get(Application, kMain));
-  await request.become("user1@keylearn.com");
+  await request.become("user1@keylearn.org");
 
   // Act.
 
@@ -113,7 +113,7 @@ test("validate format on put settings", async () => {
 test("handle put settings", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const request = startApp(context.get(Application, kMain));
   await request.become(user.id!);
 
@@ -137,7 +137,7 @@ test("handle put settings", async () => {
 test("handle delete settings", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const request = startApp(context.get(Application, kMain));
   await request.become(user.id!);
 

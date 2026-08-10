@@ -14,7 +14,7 @@ const page = async () => {
   const request = startApp(context.get(Application, kMain));
   return await request
     .GET("/")
-    .header("X-Forwarded-Host", "www.keylearn.com")
+    .header("X-Forwarded-Host", "www.keylearn.org")
     .header("X-Forwarded-Proto", "https")
     .send();
 };

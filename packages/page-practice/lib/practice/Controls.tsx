@@ -17,7 +17,21 @@ import {
   useRef,
   useState,
 } from "react";
-import { useIntl } from "react-intl";
+import { defineMessages, useIntl } from "react-intl";
+
+// Hoisted so formatjs can extract them; a message built inside a ternary is
+// invisible to static extraction and never reaches the catalogue.
+const KEYBOARD = defineMessages({
+  show: {
+    id: "practice.widget.showKeyboard.description",
+    defaultMessage: "Show the on-screen keyboard.",
+  },
+  hide: {
+    id: "practice.widget.hideKeyboard.description",
+    defaultMessage:
+      "Hide the on-screen keyboard — practise typing without looking down.",
+  },
+});
 import { views } from "../views.tsx";
 import * as styles from "./Controls.module.less";
 
@@ -136,16 +150,7 @@ export const Controls = memo(function Controls({
               <StrokeIcon name={keyboardHidden ? "keyboardOff" : "keyboard"} />
             }
             title={formatMessage(
-              keyboardHidden
-                ? {
-                    id: "practice.widget.showKeyboard.description",
-                    defaultMessage: "Show the on-screen keyboard.",
-                  }
-                : {
-                    id: "practice.widget.hideKeyboard.description",
-                    defaultMessage:
-                      "Hide the on-screen keyboard — practise typing without looking down.",
-                  },
+              keyboardHidden ? KEYBOARD.show : KEYBOARD.hide,
             )}
             onClick={pick(() => {
               updateSettings(

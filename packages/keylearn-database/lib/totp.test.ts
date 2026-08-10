@@ -48,8 +48,8 @@ test("generates distinct 160-bit base32 secrets", () => {
 });
 
 test("builds a scannable otpauth uri", () => {
-  const uri = totpUri("ABC234", "user@keylearn.com");
-  isTrue(uri.startsWith("otpauth://totp/KeyLearn:user%40keylearn.com?"));
+  const uri = totpUri("ABC234", "user@keylearn.org");
+  isTrue(uri.startsWith("otpauth://totp/KeyLearn:user%40keylearn.org?"));
   isTrue(uri.includes("secret=ABC234"));
   isTrue(uri.includes("issuer=KeyLearn"));
 });

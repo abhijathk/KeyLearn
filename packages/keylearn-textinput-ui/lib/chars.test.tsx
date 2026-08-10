@@ -161,7 +161,10 @@ test("render special chars", () => {
       <span
         key={2}
         className={undefined}
-        style={{ color: "var(--textinput--special__color)" }}
+        // The line-break marker is deliberately dimmed: it is a hint about
+        // where Enter goes, not content, and on a blank line it is the only
+        // thing there.
+        style={{ color: "var(--textinput--special__color)", opacity: 0.3 }}
       >
         {"\uE003"}
       </span>,

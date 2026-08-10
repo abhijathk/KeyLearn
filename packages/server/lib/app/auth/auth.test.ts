@@ -15,7 +15,7 @@ const context = new TestContext();
 test("logout", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
 
   const request = startApp(context.get(Application, kMain));
 
@@ -34,7 +34,7 @@ test("logout", async () => {
 test("do not log out on a GET", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
 
   const request = startApp(context.get(Application, kMain));
 
@@ -50,13 +50,13 @@ test("do not log out on a GET", async () => {
   // Assert.
 
   equal(response.status, 405);
-  equal(await request.who(), "user1@keylearn.com");
+  equal(await request.who(), "user1@keylearn.org");
 });
 
 test("patch account", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
 
   const request = startApp(context.get(Application, kMain));
 
@@ -79,10 +79,15 @@ test("patch account", async () => {
       },
       publicUser: {
         id: "55vdtk1",
-        // Derived from the account id, so it is the same pseudonym every time
-        // rather than a new one per request. Pinned here: if it ever moves, the
-        // high-score board has silently renamed everybody who opted out.
-        name: "Sage Pegasus",
+        // Derived from the account's EMAIL, so it is the same pseudonym every
+        // time rather than a new one per request. Pinned here: if it moves for
+        // an unchanged address, the high-score board has silently renamed
+        // everybody who opted out.
+        //
+        // It last moved when the fixture addresses became @keylearn.org — a
+        // change of test data, not of the algorithm, so no real learner was
+        // renamed.
+        name: "Lunar Albatross",
         imageUrl: null,
       },
     });
@@ -122,7 +127,7 @@ test("delete account", async () => {
   // Arrange.
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const userData = factory.load(new PublicId(user.id!));
   const faker = new ResultFaker();
   await userData.append([faker.nextResult()]);
@@ -141,7 +146,7 @@ test("delete account", async () => {
   }
 
   const [message] = context.mailer.dump();
-  equal(message.to, "user1@keylearn.com");
+  equal(message.to, "user1@keylearn.org");
   const code = /\b(\d{6})\b/.exec(message.text!)![1];
 
   const response = await request.POST("/_/account/delete").send({ code });
@@ -156,7 +161,7 @@ test("delete account", async () => {
 test("do not delete an account without the emailed code", async () => {
   // Arrange.
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
 
   const request = startApp(context.get(Application, kMain));
 
@@ -172,5 +177,5 @@ test("do not delete an account without the emailed code", async () => {
 
   equal(response.status, 403);
   isNotNull(await User.findById(user.id!));
-  equal(await request.who(), "user1@keylearn.com");
+  equal(await request.who(), "user1@keylearn.org");
 });

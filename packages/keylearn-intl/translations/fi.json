@@ -1081,7 +1081,7 @@
   "settings.group.words": "Hienosäädä sanoja",
   "settings.group.words.summary": "Isot kirjaimet, välimerkit, toistot",
   "settings.hideHeaderWhileTyping.label": "Piilota otsikko kirjoittamisen ajaksi",
-  "settings.hideHeaderWhileTyping.short": "Liu'uttaa otsikon pois, kun aloitat, ja takaisin muutama sekunti sen jälkeen, kun lopetat.",
+  "settings.hideHeaderWhileTyping.short": "Liu’uttaa otsikon pois, kun aloitat, ja takaisin muutama sekunti sen jälkeen, kun lopetat.",
   "settings.keyboardColors.short": "Värittää jokaisen näppäimen sormialueen mukaan, jotta näet, mitä sormea käyttää.",
   "settings.keyboardPointers.short": "Sytyttää seuraavaksi tarvitsemasi näppäimen, kun vielä opettelet niiden paikkoja.",
   "settings.language.label": "Kieli",

@@ -40,7 +40,7 @@ test("get public user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const id = new PublicId(user.id!);
   const userData = factory.load(id);
   await userData.append([faker.nextResult()]);
@@ -72,7 +72,7 @@ test("do not serve the data of a private profile", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const id = new PublicId(user.id!);
   await factory.load(id).append([faker.nextResult()]);
 
@@ -97,7 +97,7 @@ test("get empty user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const userData = factory.load(new PublicId(user.id!));
   await userData.delete();
 
@@ -126,7 +126,7 @@ test("get existing user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const userData = factory.load(new PublicId(user.id!));
   await userData.append([faker.nextResult()]);
 
@@ -156,7 +156,7 @@ test("validate content type on post", async (ctx) => {
 
   const request = startApp(context.get(Application, kMain));
 
-  await request.become("user1@keylearn.com");
+  await request.become("user1@keylearn.org");
 
   // Act.
 
@@ -177,7 +177,7 @@ test("validate format on post", async (ctx) => {
 
   const request = startApp(context.get(Application, kMain));
 
-  await request.become("user1@keylearn.com");
+  await request.become("user1@keylearn.org");
 
   // Act.
 
@@ -194,13 +194,13 @@ test("validate data on post", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const userData = factory.load(new PublicId(user.id!));
   await userData.delete();
 
   const request = startApp(context.get(Application, kMain));
 
-  await request.become("user1@keylearn.com");
+  await request.become("user1@keylearn.org");
 
   // Act.
 
@@ -219,7 +219,7 @@ test("post to user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const userData = factory.load(new PublicId(user.id!));
   await userData.delete();
 
@@ -244,7 +244,7 @@ test("delete empty user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const userData = factory.load(new PublicId(user.id!));
   await userData.delete();
 
@@ -274,7 +274,7 @@ test("delete existing user data", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
   const factory = context.get(UserDataFactory);
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   const userData = factory.load(new PublicId(user.id!));
   await userData.append([faker.nextResult()]);
 
@@ -305,7 +305,7 @@ test("braille progress is stored and returned per learner", async (ctx) => {
 
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   await Profile.ensureDefault(user);
   const [profile] = await Profile.listForUser(user.id!);
 
@@ -363,12 +363,12 @@ test("braille progress is refused for somebody else's learner", async (ctx) => {
   // One account must not be able to read or overwrite another's child.
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const owner = await findUser("user2@keylearn.com");
+  const owner = await findUser("user2@keylearn.org");
   await Profile.ensureDefault(owner);
   const [theirs] = await Profile.listForUser(owner.id!);
 
   const request = startApp(context.get(Application, kMain));
-  await request.become((await findUser("user1@keylearn.com")).id!);
+  await request.become((await findUser("user1@keylearn.org")).id!);
 
   equal(
     (await request.GET(`/_/sync/braille/profile/${theirs.id!}`).send()).status,
@@ -388,7 +388,7 @@ test("braille progress is refused for somebody else's learner", async (ctx) => {
 test("braille progress that is not JSON is refused", async (ctx) => {
   ctx.mock.timers.enable({ apis: ["Date"], now });
 
-  const user = await findUser("user1@keylearn.com");
+  const user = await findUser("user1@keylearn.org");
   await Profile.ensureDefault(user);
   const [profile] = await Profile.listForUser(user.id!);
 

@@ -71,7 +71,7 @@ test.beforeEach(async () => {
     raw: {},
     provider: "fake",
     id: "123",
-    email: "fake@keylearn.com",
+    email: "fake@keylearn.org",
     emailVerified: true,
     name: "fake",
     url: "url",
@@ -132,7 +132,7 @@ test("redirect to provider", async () => {
   equal(url.searchParams.get("response_type")!, "code");
   equal(
     url.searchParams.get("redirect_uri")!,
-    "https://www.keylearn.com/auth/oauth-callback/fake",
+    "https://www.keylearn.org/auth/oauth-callback/fake",
   );
 });
 
@@ -157,7 +157,7 @@ test("validate state", async () => {
 
   // Assert.
 
-  isNull(await User.findByEmail("fake@keylearn.com"));
+  isNull(await User.findByEmail("fake@keylearn.org"));
   isNull(await request.who());
 
   // Act. Step 2: redirect from provider to keylearn.
@@ -171,7 +171,7 @@ test("validate state", async () => {
 
   // Assert.
 
-  isNull(await User.findByEmail("fake@keylearn.com"));
+  isNull(await User.findByEmail("fake@keylearn.org"));
   isNull(await request.who());
 });
 
@@ -195,7 +195,7 @@ test("reject a callback for a flow that was never started", async () => {
   // Assert.
 
   equal(response.status, 400);
-  isNull(await User.findByEmail("fake@keylearn.com"));
+  isNull(await User.findByEmail("fake@keylearn.org"));
   isNull(await request.who());
 });
 
@@ -222,7 +222,7 @@ test("reject a callback that carries a state but no session", async () => {
   // Assert.
 
   equal(response.status, 400);
-  isNull(await User.findByEmail("fake@keylearn.com"));
+  isNull(await User.findByEmail("fake@keylearn.org"));
   isNull(await request.who());
 });
 
@@ -259,7 +259,7 @@ test("require email", async () => {
 
   // Assert.
 
-  isNull(await User.findByEmail("fake@keylearn.com"));
+  isNull(await User.findByEmail("fake@keylearn.org"));
   isNull(await request.who());
 
   // Act. Step 2: redirect from provider to keylearn.
@@ -274,7 +274,7 @@ test("require email", async () => {
 
   // Assert.
 
-  isNull(await User.findByEmail("fake@keylearn.com"));
+  isNull(await User.findByEmail("fake@keylearn.org"));
   isNull(await request.who());
 });
 
@@ -302,7 +302,7 @@ test("register a new user", async () => {
 
   // Assert.
 
-  isNull(await User.findByEmail("fake@keylearn.com"));
+  isNull(await User.findByEmail("fake@keylearn.org"));
   isNull(await request.who());
 
   // Act. Step 2: redirect from provider to keylearn.
@@ -317,8 +317,8 @@ test("register a new user", async () => {
 
   // Assert.
 
-  isNotNull(await User.findByEmail("fake@keylearn.com"));
-  equal(await request.who(), "fake@keylearn.com");
+  isNotNull(await User.findByEmail("fake@keylearn.org"));
+  equal(await request.who(), "fake@keylearn.org");
 });
 
 test("do not create an account from a login that matches none", async () => {
@@ -356,7 +356,7 @@ test("do not create an account from a login that matches none", async () => {
 
   // Assert.
 
-  isNull(await User.findByEmail("fake@keylearn.com"));
+  isNull(await User.findByEmail("fake@keylearn.org"));
   isNull(await request.who());
 });
 
@@ -364,7 +364,7 @@ test("login an existing user", async () => {
   // Arrange.
 
   await User.query().insertGraph({
-    email: "fake@keylearn.com",
+    email: "fake@keylearn.org",
     emailVerified: true,
     name: "fake name",
     externalIds: [
@@ -412,5 +412,5 @@ test("login an existing user", async () => {
 
   // Assert.
 
-  equal(await request.who(), "fake@keylearn.com");
+  equal(await request.who(), "fake@keylearn.org");
 });

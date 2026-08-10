@@ -29,7 +29,21 @@ import {
   useRef,
   useState,
 } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+
+// Hoisted rather than written inline at the call site: formatjs extracts
+// messages statically, and a message object built inside a ternary is invisible
+// to it — the id never reaches the catalogue and the string ships untranslated.
+const PIN = defineMessages({
+  pin: {
+    id: "practice.pulse.pin",
+    defaultMessage: "Keep this open while you type",
+  },
+  unpin: {
+    id: "practice.pulse.unpin",
+    defaultMessage: "Let this fade back while you type, as usual",
+  },
+});
 import * as styles from "./Pulse.module.less";
 import {
   AlphabetGrid,
@@ -548,18 +562,7 @@ export const Pulse = memo(function Pulse({
             type="button"
             className={clsx(styles.pin, pinned && styles.pinOn)}
             aria-pressed={pinned}
-            title={formatMessage(
-              pinned
-                ? {
-                    id: "practice.pulse.unpin",
-                    defaultMessage:
-                      "Let this fade back while you type, as usual",
-                  }
-                : {
-                    id: "practice.pulse.pin",
-                    defaultMessage: "Keep this open while you type",
-                  },
-            )}
+            title={formatMessage(pinned ? PIN.unpin : PIN.pin)}
             onClick={(ev) => {
               // The whole row is the open/close toggle; the pin is a separate
               // control sitting inside it.

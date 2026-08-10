@@ -16,10 +16,22 @@ import {
 import { ConfirmDialog } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { FloatingShell } from "../FloatingShell.tsx";
 import { accentNames } from "./accent-names.tsx";
 import * as styles from "./ThemeWindow.module.less";
+
+// Hoisted so formatjs can extract them: a message object built inside a ternary
+// is invisible to static extraction, so the id never reaches the catalogue.
+const WIN = defineMessages({
+  edit: { id: "theme.win.edit", defaultMessage: "Edit" },
+  editCopy: { id: "theme.win.editCopy", defaultMessage: "Edit as a copy" },
+  delete: { id: "theme.win.delete", defaultMessage: "Delete" },
+  undeletable: {
+    id: "theme.win.undeletable",
+    defaultMessage: "Themes that ship with KeyLearn cannot be deleted",
+  },
+});
 
 const NIGHT_GROUND = "#141620";
 const DAY_GROUND = "#f5f6fa";
@@ -254,14 +266,7 @@ export function ThemeWindow(): ReactNode {
                     </button>
                     <button
                       type="button"
-                      title={formatMessage(
-                        mine
-                          ? { id: "theme.win.edit", defaultMessage: "Edit" }
-                          : {
-                              id: "theme.win.editCopy",
-                              defaultMessage: "Edit as a copy",
-                            },
-                      )}
+                      title={formatMessage(mine ? WIN.edit : WIN.editCopy)}
                       onClick={() =>
                         setDraft({
                           // A shipped theme is never rewritten in place: the
@@ -286,15 +291,7 @@ export function ThemeWindow(): ReactNode {
                     <button
                       type="button"
                       disabled={!mine}
-                      title={formatMessage(
-                        mine
-                          ? { id: "theme.win.delete", defaultMessage: "Delete" }
-                          : {
-                              id: "theme.win.undeletable",
-                              defaultMessage:
-                                "Themes that ship with KeyLearn cannot be deleted",
-                            },
-                      )}
+                      title={formatMessage(mine ? WIN.delete : WIN.undeletable)}
                       onClick={() => setConfirmDelete(accent as CustomAccent)}
                     >
                       🗑

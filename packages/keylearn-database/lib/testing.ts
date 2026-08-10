@@ -25,7 +25,7 @@ export async function seedModels() {
   await User.query().delete();
   await User.query().insertGraph([
     {
-      email: "user1@keylearn.com",
+      email: "user1@keylearn.org",
       name: "user1",
       createdAt: new Date("2001-02-03T04:05:06Z"),
       externalIds: [
@@ -40,7 +40,7 @@ export async function seedModels() {
       ],
     } as User,
     {
-      email: "user2@keylearn.com",
+      email: "user2@keylearn.org",
       name: "user2",
       createdAt: new Date("2001-02-03T04:05:06Z"),
       externalIds: [
@@ -55,7 +55,7 @@ export async function seedModels() {
       ],
     } as User,
     {
-      email: "user3@keylearn.com",
+      email: "user3@keylearn.org",
       name: "user3",
       createdAt: new Date("2001-02-03T04:05:06Z"),
       externalIds: [

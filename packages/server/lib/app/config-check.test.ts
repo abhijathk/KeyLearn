@@ -74,7 +74,7 @@ test("refuse an insecure cookie", () => {
 
 // The silent one: the browser discards the cookie and sign-in never sticks.
 test("refuse a cookie domain that cannot cover the host", () => {
-  withEnv({ ...sane, COOKIE_DOMAIN: "keylearn.com" }, () => {
+  withEnv({ ...sane, COOKIE_DOMAIN: "example.com" }, () => {
     const { fatal } = checkProductionConfig();
     isTrue(fatal.some((m) => m.includes("COOKIE_DOMAIN")));
   });

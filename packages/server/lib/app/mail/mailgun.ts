@@ -12,8 +12,8 @@ export class MailgunConfig {
   constructor() {
     this.domain = Env.getString("MAIL_DOMAIN");
     this.key = Env.getString("MAIL_KEY");
-    const fromAddress = Env.getString("MAIL_FROM_ADDRESS", "k@keylearn.com");
-    const fromName = Env.getString("MAIL_FROM_NAME", "keylearn.com");
+    const fromAddress = Env.getString("MAIL_FROM_ADDRESS", "k@keylearn.org");
+    const fromName = Env.getString("MAIL_FROM_NAME", "keylearn.org");
     this.from = `${fromName} <${fromAddress}>`;
   }
 }

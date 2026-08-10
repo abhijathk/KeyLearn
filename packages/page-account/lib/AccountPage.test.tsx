@@ -11,7 +11,7 @@ test("render signed-out account page", () => {
   const r = render(
     <PageDataContext.Provider
       value={{
-        base: "https://www.keylearn.com/",
+        base: "https://www.keylearn.org/",
         locale: "en",
         user: null,
         publicUser: {
@@ -43,11 +43,11 @@ test("render signed-in account page", () => {
   const r = render(
     <PageDataContext.Provider
       value={{
-        base: "https://www.keylearn.com/",
+        base: "https://www.keylearn.org/",
         locale: "en",
         user: {
           id: "xzy",
-          email: "name@keylearn.com",
+          email: "name@keylearn.org",
           name: "name",
           anonymized: false,
           publicProfile: false,
@@ -82,7 +82,7 @@ test("render signed-in account page", () => {
     </PageDataContext.Provider>,
   );
 
-  isNotNull(r.queryByText("name@keylearn.com", { exact: false }));
+  isNotNull(r.queryByText("name@keylearn.org", { exact: false }));
   isNotNull(r.queryByText("Hide my identity", { exact: false }));
 
   r.unmount();
