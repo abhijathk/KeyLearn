@@ -10,6 +10,7 @@ import {
   UserExternalId,
   UserLoginRequest,
 } from "./model.ts";
+import { ProfileData } from "./profile-data.ts";
 import { SecurityEvent } from "./security-event.ts";
 
 export async function createSchema(knex: Knex): Promise<void> {
@@ -36,6 +37,7 @@ export async function createSchema(knex: Knex): Promise<void> {
   await createTable(Credential);
   await createTable(EmailVerification);
   await createTable(SecurityEvent);
+  await createTable(ProfileData);
   await createTable(CertificateSitting);
   await createTable(Certificate);
 

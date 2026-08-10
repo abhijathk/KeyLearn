@@ -4,7 +4,7 @@ import { BadRequestError, ForbiddenError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { DataDir } from "@keylearn/config";
-import { Profile } from "@keylearn/database";
+import { Profile, ProfileData } from "@keylearn/database";
 import { HighScoresFactory } from "@keylearn/highscores";
 import { Logger } from "@keylearn/logger";
 import { type NamedUser } from "@keylearn/pages-shared";
@@ -57,6 +57,9 @@ export class Controller {
   async deleteData(ctx: Context<RouterState & AuthState>) {
     const { id } = ctx.state.requireUser();
     await this.userData.load(new PublicId(id!)).delete();
+    // And the database snapshot, or "clear my statistics" would leave the
+    // cleared history sitting in the backed-up copy.
+    await ProfileData.deleteFor(id!, null, "results");
     ctx.response.status = 204;
   }
 
@@ -112,6 +115,7 @@ export class Controller {
       throw new ForbiddenError();
     }
     await this.userData.loadProfile(user.id!, profile.id!).delete();
+    await ProfileData.deleteFor(user.id!, profile.id!, "results");
     ctx.response.status = 204;
   }
 
@@ -159,6 +163,8 @@ export class Controller {
     @pathParam("pid") pid: string,
   ) {
     await (await this.#brailleFile(ctx, pid)).delete();
+    const user = ctx.state.requireUser();
+    await ProfileData.deleteFor(user.id!, Number(pid), "braille");
     ctx.response.status = 204;
   }
 

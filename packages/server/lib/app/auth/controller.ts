@@ -22,6 +22,7 @@ import {
   generateRecoveryCodes,
   generateTotpSecret,
   Profile,
+  ProfileData,
   SecurityEvent,
   type SecurityEventType,
   totpUri,
@@ -460,6 +461,14 @@ export class Controller {
       await this.userData.loadProfile(userId, profileId).delete();
     } catch (err: any) {
       Logger.warn(err, "Could not delete stats for profile %d", profileId);
+    }
+    // The database snapshot as well. Erasing only the file would leave a copy
+    // behind in the one place that is backed up, which is the opposite of what
+    // deleting a learner is for.
+    try {
+      await ProfileData.deleteFor(userId, profileId);
+    } catch (err: any) {
+      Logger.warn(err, "Could not delete snapshot for profile %d", profileId);
     }
   }
 

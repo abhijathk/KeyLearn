@@ -37,9 +37,15 @@ know your hostname is the right one.
 - [ ] Set `DATABASE_CLIENT=mysql` plus `DATABASE_HOST`, `DATABASE_PORT`,
       `DATABASE_DATABASE`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`.
       **⚠** currently `sqlite`.
-- [ ] Schema is created by the app; a fresh empty database is fine. Development
-      data is not worth migrating.
-- [ ] Automated backups of the database **and** of `DATA_DIR`.
+- [ ] Run `packages/devenv/lib/initdb.ts` (or `npm run start-docker`, which does
+      it) to create the schema. **A plain `npm start` does not apply schema
+      changes**, so a new table or column silently does not exist until this is
+      run — a fresh empty database is otherwise fine.
+- [ ] Automated backups of the database. Learner history and braille progress
+      are snapshotted into `profile_data` every `DATA_SNAPSHOT_MINUTES`, so a
+      database backup now carries them — but `DATA_DIR` still holds the working
+      copies, the sessions, and `certificate.key`, which the database does not
+      have. Back up both.
 
 ## 3. Configuration
 
