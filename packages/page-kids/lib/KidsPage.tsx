@@ -11,7 +11,12 @@ import {
   profileStorageKey,
   saveNgramStats,
 } from "@keylearn/pages-shared";
-import { MutableKeyStatsMap, Result, useResults } from "@keylearn/result";
+import {
+  DailyStatsMap,
+  MutableKeyStatsMap,
+  Result,
+  useResults,
+} from "@keylearn/result";
 import { SettingsContext, useSettings } from "@keylearn/settings";
 import {
   Feedback,
@@ -106,6 +111,45 @@ import {
 
 // Storage keys are namespaced by the active household profile so every
 // learner keeps their own scores and toy-box settings.
+/**
+ * The healthy ceiling on a day's practice, in minutes.
+ *
+ * The grown-up page stops encouraging past forty-five: beyond that, extra
+ * typing buys little skill, because the gains consolidate during rest and
+ * fine-motor accuracy fatigues. Children reach that point sooner and are far
+ * less likely to stop on their own — the game is a game — so this sits lower,
+ * and the nudge is a card they have to answer rather than a line they can
+ * type straight past.
+ */
+const KIDS_REST_CEILING_MINUTES = 30;
+
+/** The rest nudge fires at most once a calendar day, across reloads. */
+const REST_NUDGED_KEY = () => profileStorageKey("kids.restNudged");
+
+function nudgedToday(): boolean {
+  try {
+    return (
+      localStorage.getItem(REST_NUDGED_KEY()) === new Date().toDateString()
+    );
+  } catch {
+    return false;
+  }
+}
+
+function markNudgedToday(): void {
+  try {
+    localStorage.setItem(REST_NUDGED_KEY(), new Date().toDateString());
+  } catch {
+    // Storage may be unavailable; showing it twice is harmless.
+  }
+}
+
+/** Minutes practised today, from the same records the stats read. */
+function minutesToday(results: readonly Result[]): number {
+  const today = new DailyStatsMap(results).today.results;
+  return Math.round(today.reduce((sum, { time }) => sum + time, 0) / 60000);
+}
+
 const BEST_KEY = () => profileStorageKey("kids.best");
 const PREFS_KEY = () => profileStorageKey("kids.prefs");
 
@@ -954,6 +998,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // Said out loud when a long pause puts the line back to the start — a line
   // that simply vanishes reads as the app breaking.
   const [resetNotice, setResetNotice] = useState(false);
+  // Raised once a day when the child has practised past the healthy ceiling.
+  const [restOpen, setRestOpen] = useState(false);
   const resetNoticeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [typing, setTyping] = useState(false);
   const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -1080,6 +1126,17 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       );
     }
   };
+
+  // Past the day's healthy ceiling, stop encouraging and suggest a break.
+  // Checked when the results change — that is, once a round is filed — rather
+  // than on a timer, so it never interrupts a line mid-word.
+  const restMinutes = minutesToday(results);
+  useEffect(() => {
+    if (restMinutes >= KIDS_REST_CEILING_MINUTES && !nudgedToday()) {
+      markNudgedToday();
+      setRestOpen(true);
+    }
+  }, [restMinutes]);
 
   // ── the adaptive engine: same stats, same unlock rules ─────────────────
   const { lessonKeys, included } = useMemo(() => {
@@ -1561,6 +1618,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     mapOpen ||
     albumOpen ||
     graduated ||
+    restOpen ||
     hatched != null ||
     ceremony != null;
 
@@ -2476,6 +2534,38 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             </div>
           )}
         </>
+      )}
+
+      {/*
+        Past the day's healthy ceiling. Deliberately a card that has to be
+        answered rather than a line that fades: a child who is enjoying
+        themselves will type straight through a notice, and the whole point
+        is to interrupt. It says the honest reason — the practice keeps
+        working while they are away from it — rather than telling them off.
+      */}
+      {restOpen && (
+        <div className={styles.overlay}>
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>
+              <span className={styles.hIcon}>
+                <MoonIcon />
+              </span>
+              That&rsquo;s a good long practice!
+            </div>
+            <p className={styles.cardText}>
+              You&rsquo;ve typed for {restMinutes} minutes today — plenty for
+              one day. Your fingers keep learning while you rest, so coming back
+              tomorrow does more good than carrying on now.
+            </p>
+            <button
+              type="button"
+              className={styles.cta}
+              onClick={() => setRestOpen(false)}
+            >
+              Okay!
+            </button>
+          </div>
+        </div>
       )}
 
       {finishOpen && (
