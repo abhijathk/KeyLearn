@@ -463,8 +463,15 @@ export function PrivacyPolicyPage() {
           provider; change them there and they update here.
         </li>
         <li>
+          <em>Ask</em> — anything about your data, or about KeyLearn itself,
+          reaches a person at{" "}
+          <a href="mailto:support@keylearn.org">support@keylearn.org</a>.
+        </li>
+        <li>
           <em>Complain</em> — if you believe we&rsquo;ve mishandled your data,
-          you can contact your local data-protection authority.
+          write to us first at{" "}
+          <a href="mailto:support@keylearn.org">support@keylearn.org</a>, and
+          you can contact your local data-protection authority at any time.
         </li>
       </ul>
 

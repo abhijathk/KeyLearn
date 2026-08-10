@@ -32,14 +32,14 @@ function MailLink() {
   const { formatMessage } = useIntl();
   return (
     <StaticLink
-      href="mailto:abhijathka@gmail.com"
+      href="mailto:support@keylearn.org"
       target="email"
       title={formatMessage({
         id: "footer.emailLink.description",
-        defaultMessage: "Share your feedback and ideas at abhijathka@gmail.com",
+        defaultMessage: "Share your feedback and ideas at support@keylearn.org",
       })}
     >
-      abhijathka@gmail.com
+      support@keylearn.org
     </StaticLink>
   );
 }
