@@ -72,6 +72,17 @@ export class ErrorHandler implements HandlerObject {
     }
 
     if (ctx.response.body == null) {
+      // No route matched and nothing wrote a response: without this, the
+      // framework core stamps a bare text/plain "Not found" after all the
+      // middleware has run, and the branded error page never renders.
+      if (!ctx.response.hasStatus) {
+        this.report(ctx, {
+          expose: true,
+          status: 404,
+          message: "Not Found",
+        });
+        return;
+      }
       const { statusCode, statusMessage = statusMessageOf(statusCode) } =
         ctx.response.res;
       if (isClientError(statusCode) || isServerError(statusCode)) {

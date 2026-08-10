@@ -1,14 +1,16 @@
 import { codeThemeFor, codeThemeVars } from "@keylearn/content-snippets";
+import { keyboardProps } from "@keylearn/keyboard";
 import { type KeyId } from "@keylearn/keyboard";
-import { lessonProps, LessonType } from "@keylearn/lesson";
+import { lessonProps, LessonType, Target } from "@keylearn/lesson";
 import { names } from "@keylearn/lesson-ui";
-import { Screen } from "@keylearn/pages-shared";
+import { profileStorageKey, Screen } from "@keylearn/pages-shared";
 import { uiProps } from "@keylearn/result";
 import {
   enumProp,
   numberProp,
   Preferences,
   type Settings,
+  useSettings,
 } from "@keylearn/settings";
 import { type LineList } from "@keylearn/textinput";
 import {
@@ -544,6 +546,7 @@ function NormalLayout({
           <GhostTrack state={state} />
         )}
         <ResetNotice />
+        <GuideRetired lessonKeys={state.lessonKeys} />
         {focus || (
           // The invitation as a self-pressing Enter keycap in the app's own
           // key style, with the message riding under it as a micro-label.
@@ -631,6 +634,74 @@ function ResetNotice(): ReactNode {
           defaultMessage="Line restarted while you were away — so the speed stays honest."
         />
       )}
+    </p>
+  );
+}
+
+/**
+ * Retires the finger guide once it has done its job.
+ *
+ * The pointer under the next key answers "which finger?", and a learner who
+ * can already answer it reads it as clutter — but nobody turns off a hint
+ * they have stopped noticing, so it lingers for months. This watches for the
+ * moment it stopped being needed and takes it away, with a line saying where
+ * to get it back.
+ *
+ * "Stopped being needed" is measured, not guessed at: every key the lesson
+ * has unlocked has to sit above the pass bar the unlock rules themselves use
+ * (see {@link Target.passes}), and at least half the alphabet has to be in
+ * play — all-of-five-keys is confidence about five keys, not about a
+ * keyboard.
+ *
+ * It happens once ever. Somebody who turns the guide back on keeps it.
+ */
+function GuideRetired({
+  lessonKeys,
+}: {
+  readonly lessonKeys: LessonState["lessonKeys"];
+}): ReactNode {
+  const { settings, updateSettings } = useSettings();
+  const [shown, setShown] = useState(false);
+  const pointers = settings.get(keyboardProps.pointers);
+  const keys = [...lessonKeys];
+  const included = keys.filter(({ isIncluded }) => isIncluded);
+  const fluent =
+    included.length > 0 &&
+    included.length >= Math.ceil(keys.length / 2) &&
+    included.every(({ bestConfidence }) => Target.passes(bestConfidence));
+  useEffect(() => {
+    if (!fluent || !pointers) {
+      return;
+    }
+    const key = profileStorageKey("practice.guideRetired");
+    try {
+      if (localStorage.getItem(key) != null) {
+        return;
+      }
+      localStorage.setItem(key, "1");
+    } catch {
+      // A learner with storage blocked simply keeps the guide.
+      return;
+    }
+    updateSettings(settings.set(keyboardProps.pointers, false));
+    setShown(true);
+  }, [fluent, pointers, settings, updateSettings]);
+  useEffect(() => {
+    if (!shown) {
+      return;
+    }
+    const timer = setTimeout(() => setShown(false), 8000);
+    return () => clearTimeout(timer);
+  }, [shown]);
+  if (!shown) {
+    return null;
+  }
+  return (
+    <p className={styles.resetNotice} role="status">
+      <FormattedMessage
+        id="practice.guideRetired"
+        defaultMessage="You know these keys now, so the finger guide has stepped back. Turn it on again any time in keyboard settings."
+      />
     </p>
   );
 }

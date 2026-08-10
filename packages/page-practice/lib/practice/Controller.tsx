@@ -143,6 +143,7 @@ function useLessonState(
     // raise the level (1 shake, 2 urgent pulse, 3 finger guide).
     let helpAt = -1;
     let helpMisses = 0;
+    let lastHelpLevel = 0;
     const { onKeyDown, onKeyUp, onInput } = emulateLayout(
       state.settings,
       keyboard,
@@ -188,11 +189,15 @@ function useLessonState(
             helpMisses = 0;
             helpAt = -1;
           }
-          window.dispatchEvent(
-            new window.CustomEvent("keylearn:help", {
-              detail: { level: Math.min(3, helpMisses) },
-            }),
-          );
+          const helpLevel = Math.min(3, helpMisses);
+          if (helpLevel !== lastHelpLevel) {
+            lastHelpLevel = helpLevel;
+            window.dispatchEvent(
+              new window.CustomEvent("keylearn:help", {
+                detail: { level: helpLevel },
+              }),
+            );
+          }
           timeout.schedule(() => handleResetLesson("idle"), 10000);
         },
       },

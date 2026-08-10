@@ -21,7 +21,7 @@ export class ReplayState {
   #lineIndex!: number;
   #eventIndex!: number;
   #textInput!: TextInput;
-  #depressedKeys!: KeyId[];
+  #depressedKeys!: readonly KeyId[];
 
   constructor(
     settings: TextInputSettings,

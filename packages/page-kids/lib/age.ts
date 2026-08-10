@@ -44,6 +44,16 @@ export type BandConfig = {
   /** Default keyboard guide. */
   readonly kbMode: "off" | "simple" | "full";
   /**
+   * Which face of practice this band lands on.
+   *
+   * The dino trail is the whole point for the younger bands. By eleven it
+   * reads as a game made for somebody smaller — so the oldest band opens on
+   * the grown-up-shaped Classic screen instead. Only the landing choice
+   * differs: either band can switch in the toy-box, and both faces run the
+   * same engine over the same progress.
+   */
+  readonly classic: boolean;
+  /**
    * Whether the coach reads its lines out loud by default.
    *
    * The page coaches entirely in prose, at a reading level the youngest bands
@@ -83,6 +93,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     bigLetters: true,
     hands: true,
     kbMode: "simple",
+    classic: false,
     readAloud: true,
     speechRate: 0.85,
     typicalWpm: typicalWpmForAge(6)!,
@@ -103,6 +114,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     bigLetters: false,
     hands: true,
     kbMode: "simple",
+    classic: false,
     readAloud: true,
     speechRate: 0.95,
     typicalWpm: typicalWpmForAge(8)!,
@@ -123,6 +135,7 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     bigLetters: false,
     hands: true,
     kbMode: "simple",
+    classic: false,
     readAloud: false,
     speechRate: 1,
     typicalWpm: typicalWpmForAge(10)!,
@@ -141,8 +154,12 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     missPenalty: true,
     timerMin: 20,
     bigLetters: false,
-    hands: false,
-    kbMode: "full",
+    // The trail wants the helper hands and the simple board whatever the age:
+    // these are the defaults for the game, and Classic draws its own full
+    // board and its own hands regardless of them.
+    hands: true,
+    kbMode: "simple",
+    classic: true,
     readAloud: false,
     speechRate: 1,
     typicalWpm: typicalWpmForAge(12)!,
@@ -173,4 +190,17 @@ export function currentBand(): AgeBand {
 
 export function bandConfig(band: AgeBand = currentBand()): BandConfig {
   return CONFIGS[band];
+}
+
+/**
+ * Whether this band is even offered the Classic screen.
+ *
+ * Below nine it is not a choice worth having: the grown-up shape assumes a
+ * reader who can take a paragraph of words and a wall of statistics, and the
+ * trail is doing real work for those bands rather than decorating. So the
+ * setting stays off the sheet entirely instead of sitting there as a way to
+ * make the game worse.
+ */
+export function classicOffered(band: AgeBand = currentBand()): boolean {
+  return band === "9-10" || band === "11+";
 }

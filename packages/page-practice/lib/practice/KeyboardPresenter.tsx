@@ -16,7 +16,7 @@ import { useSettings } from "@keylearn/settings";
 import { ModifierState } from "@keylearn/textinput-events";
 import { type CodePoint } from "@keylearn/unicode";
 import { withDeferred } from "@keylearn/widget";
-import { memo, type ReactNode, useEffect, useState } from "react";
+import { memo, type ReactNode, useEffect, useMemo, useState } from "react";
 import { type LastLesson } from "./state/index.ts";
 
 export const KeyboardPresenter = memo(function KeyboardPresenter({
@@ -98,6 +98,13 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
     }
     return undefined;
   }, [wrongKey]);
+  // Pure over (lastLesson, masteryKeys), which only change once per
+  // completed lesson — without this, it would rebuild on every keystroke,
+  // since this component re-renders whenever depressedKeys changes.
+  const heatRings = useMemo(
+    () => (lastLesson ? heatRingsOf(lastLesson, masteryKeys) : []),
+    [lastLesson, masteryKeys],
+  );
   return (
     <div style={{ display: "contents" }} data-kbd-upper={upper}>
       <VirtualKeyboard keyboard={keyboard} height="19rem">
@@ -125,9 +132,7 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
           // Connections first (below), then the per-key rings on top.
           <TransitionsLayer histogram={lastLesson.hits2} />
         )}
-        {focus && lastLesson && (
-          <HeatRingLayer rings={heatRingsOf(lastLesson, masteryKeys)} />
-        )}
+        {focus && lastLesson && <HeatRingLayer rings={heatRings} />}
         {focus || <ZonesLayer />}
       </VirtualKeyboard>
     </div>

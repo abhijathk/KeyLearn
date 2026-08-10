@@ -1,10 +1,31 @@
 // The friendly crash screen: a calm card with a stuck-key face, one clear
 // action, and the technical report folded away.
+//
+// A fixed overlay: when the page beneath is still healthy it stays visible,
+// dimmed under the card; when it crashed and unmounted, this same scrim sits
+// on the body's themed ground — dark or light, following display settings —
+// because --primary is defined by the theme attributes on <html>, which
+// outlive the React tree.
 .screen {
   display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   place-items: center;
-  min-block-size: 60vb;
   padding: 2rem;
+  overflow: auto;
+  background-color: color-mix(
+    in srgb,
+    var(--primary, #14161c) 85%,
+    transparent
+  );
+  backdrop-filter: blur(3px);
+}
+
+// The kids world is always a warm light place — its scrim is cream even
+// when the household theme is dark, so the card never looms.
+.kidsScreen {
+  background-color: rgb(250 246 236 / 88%);
 }
 
 .card {
@@ -25,6 +46,7 @@
 .face svg {
   inline-size: 4rem;
   block-size: 4rem;
+  overflow: visible;
   fill: none;
   stroke: var(--accent, #7fb1f7);
   stroke-width: 2;
@@ -35,6 +57,278 @@
 .eye {
   fill: var(--accent, #7fb1f7);
   stroke: none;
+}
+
+// The stuck key, sticking: a wobble, then a visible jam down and pop back
+// up, the eyes lifting with the effort.
+.stuckFace {
+  transform-origin: 24px 30px;
+  animation: jam-wobble 3.6s ease-in-out infinite;
+}
+
+@keyframes jam-wobble {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  18% {
+    transform: rotate(-2.5deg);
+  }
+  36% {
+    transform: rotate(2deg);
+  }
+  50% {
+    transform: rotate(0deg) translateY(0);
+  }
+  58% {
+    transform: translateY(2.2px) scale(1, 0.94);
+  }
+  66% {
+    transform: translateY(-1px) scale(1, 1.03);
+  }
+  74% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+.stuckBrow {
+  transform-origin: 24px 20px;
+  animation: brow-lift 3.6s ease-in-out infinite;
+}
+
+@keyframes brow-lift {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+  58%,
+  70% {
+    transform: translateY(-1.3px);
+  }
+}
+
+// Announced, never shown — first in the document for the screen reader.
+.sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+// ---- the kids dialect: warm, bouncy, no red -------------------------------
+
+@kids-ink: #4a4238;
+@kids-ink-soft: #8a8071;
+@kids-ground: #faf6ec;
+@kids-yellow: #f2c94c;
+@kids-blue: #3aa0ff;
+@kids-coral: #ff8a5c;
+
+.kidsCard {
+  border-color: rgb(74 66 56 / 12%);
+  background-color: @kids-ground;
+  box-shadow: 0 1rem 3rem rgb(74 66 56 / 25%);
+}
+
+.kidsStage svg {
+  inline-size: 5rem;
+  block-size: 5rem;
+  overflow: visible;
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.kidsShadow {
+  fill: @kids-ink;
+  opacity: 0.3;
+  transform-origin: 24px 44px;
+  animation: shadow-squeeze 1.9s cubic-bezier(0.34, 1.3, 0.64, 1) infinite;
+}
+
+@keyframes shadow-squeeze {
+  0%,
+  12%,
+  62%,
+  100% {
+    opacity: 0.3;
+    transform: scaleX(1);
+  }
+  38% {
+    opacity: 0.15;
+    transform: scaleX(0.7);
+  }
+}
+
+.kidsCap {
+  transform-origin: 24px 40px;
+  animation: cap-bounce 1.9s cubic-bezier(0.34, 1.3, 0.64, 1) infinite;
+}
+
+@keyframes cap-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  12% {
+    transform: translateY(0) scale(1.08, 0.9);
+  }
+  38% {
+    transform: translateY(-7px) scale(0.95, 1.06) rotate(-3deg);
+  }
+  62% {
+    transform: translateY(0) scale(1.06, 0.92);
+  }
+  75% {
+    transform: translateY(-2px) scale(0.99, 1.02);
+  }
+  86% {
+    transform: translateY(0) scale(1.02, 0.98);
+  }
+}
+
+.kidsCapBody {
+  fill: @kids-yellow;
+  stroke: @kids-ink;
+}
+
+.kidsInk {
+  stroke: @kids-ink;
+}
+
+.kidsEye {
+  fill: @kids-ink;
+  stroke: none;
+}
+
+.kidsBlink {
+  transform-origin: 24px 24px;
+  animation: blink-beat 3.8s infinite;
+}
+
+@keyframes blink-beat {
+  0%,
+  88%,
+  100% {
+    transform: scaleY(1);
+  }
+  92%,
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+.kidsStar {
+  stroke: none;
+  opacity: 0;
+  transform-origin: center;
+  animation: star-pop 1.9s ease-out infinite;
+}
+
+.kidsStarCoral {
+  fill: @kids-coral;
+}
+
+.kidsStarBlue {
+  fill: @kids-blue;
+  animation-delay: 0.2s;
+}
+
+@keyframes star-pop {
+  0%,
+  30% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.1) rotate(18deg);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(0.7) rotate(30deg);
+  }
+}
+
+// Nested under the card so these outrank the base .title/.body rules that
+// appear later in this file — equal-specificity single classes would lose.
+
+.kidsReload {
+  border-color: @kids-blue;
+  color: #fff;
+  background-color: @kids-blue;
+  box-shadow: 0 0 0 4px rgb(58 160 255 / 18%);
+  font-size: 1.05rem;
+}
+
+// ---- the braille dialect: the voice leads, the icon keeps time ------------
+
+.voiceStage svg {
+  inline-size: 4rem;
+  block-size: 4rem;
+  overflow: visible;
+  fill: none;
+  stroke: var(--accent, #7fb1f7);
+  stroke-width: 1.7;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.cellDot {
+  fill: var(--accent, #7fb1f7);
+  stroke: none;
+}
+
+.cellDotDim {
+  opacity: 0.35;
+}
+
+.voiceArc {
+  opacity: 0;
+  animation: arc-ripple 2.4s ease-out infinite;
+}
+
+.voiceArc2 {
+  animation-delay: 0.3s;
+}
+
+.voiceArc3 {
+  animation-delay: 0.6s;
+}
+
+@keyframes arc-ripple {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.9;
+  }
+  60%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stuckFace,
+  .stuckBrow,
+  .kidsCap,
+  .kidsShadow,
+  .kidsBlink,
+  .kidsStar,
+  .voiceArc {
+    animation: none;
+  }
+
+  // Frozen arcs still need to be visible.
+  .voiceArc {
+    opacity: 0.6;
+  }
 }
 
 .title {
@@ -105,6 +399,10 @@
   transition: transform 0.2s ease;
 }
 
+.kidsCard .summary {
+  color: @kids-ink-soft;
+}
+
 .details[open] .chevron {
   transform: rotate(180deg);
 }
@@ -127,4 +425,20 @@
   );
   font-size: 0.72rem;
   line-height: 1.5;
+}
+
+// The kids dialect's overrides, after the base rules they replace.
+.kidsCard .title,
+.kidsTitle {
+  color: @kids-ink;
+}
+
+.kidsCard .body,
+.kidsBody {
+  color: @kids-ink-soft;
+}
+
+.kidsCard .details pre {
+  color: @kids-ink;
+  background-color: rgb(74 66 56 / 8%);
 }

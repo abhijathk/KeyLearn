@@ -2,10 +2,225 @@
 <html lang="en">
 <head>
   <meta charSet="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="robots" content="noindex"/>
   <title>KeyLearn is down for maintenance</title>
+  <link rel="icon" href="/assets/favicon-16x16.png" type="image/png" sizes="16x16"/>
+  <link rel="icon" href="/assets/favicon-32x32.png" type="image/png" sizes="32x32"/>
+  <link rel="icon" href="/assets/favicon-96x96.png" type="image/png" sizes="96x96"/>
+  <style>
+    :root {
+      color-scheme: dark;
+      --primary: #141620;
+      --primary-l1: #191c28;
+      --primary-d1: #0e1018;
+      --text-color: #e6e8ee;
+      --text-color-f1: #aab0c0;
+      --text-color-f2: #7a8093;
+      --accent: #8fd9b6;
+      --border-color: rgba(143, 217, 182, 0.3);
+      --shadow-color: rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      block-size: 100%;
+      margin: 0;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      min-block-size: 100vb;
+      padding: 2rem;
+      background-color: var(--primary);
+      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      inline-size: 25rem;
+      max-inline-size: 100%;
+      padding: 2.5rem 2.5rem 2rem;
+      border: 1px solid var(--border-color);
+      border-radius: 1.25rem;
+      background-color: var(--primary-l1);
+      box-shadow: 0 1.5rem 4rem var(--shadow-color);
+      text-align: center;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: baseline;
+      margin-block-end: 1.5rem;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .glyph {
+      align-self: center;
+      inline-size: 1.6rem;
+      block-size: 1.6rem;
+      margin-inline-end: 0.5rem;
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .mark {
+      color: var(--text-color);
+      font-weight: 700;
+    }
+
+    .mark-alt {
+      color: var(--text-color-f1);
+      font-weight: 200;
+    }
+
+    /* The sleepy screen: a breathing chest, closed happy-sleep eyes with a
+       slow double blink, and "z"s drifting up along an arc. */
+    .face svg {
+      inline-size: 4.5rem;
+      block-size: 4.5rem;
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 2;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      overflow: visible;
+    }
+
+    .sleep-body {
+      transform-origin: 24px 40px;
+      animation: sleep-breathe 4.2s ease-in-out infinite;
+    }
+
+    @keyframes sleep-breathe {
+      0%, 100% { transform: scale(1, 1); }
+      50% { transform: scale(1.015, 0.985); }
+    }
+
+    .sleep-lid {
+      transform-origin: 24px 21px;
+      animation: soft-blink 4.2s infinite;
+    }
+
+    @keyframes soft-blink {
+      0%, 60% { transform: scaleY(1); }
+      64% { transform: scaleY(0.1); }
+      68% { transform: scaleY(0.9); }
+      71% { transform: scaleY(0.1); }
+      76%, 100% { transform: scaleY(1); }
+    }
+
+    .zzz {
+      fill: var(--accent);
+      stroke: none;
+      font-family: inherit;
+      font-weight: 700;
+      opacity: 0;
+      animation: z-arc 4.2s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+    }
+
+    .zzz.z2 { animation-delay: 0.5s; }
+    .zzz.z3 { animation-delay: 1s; }
+
+    @keyframes z-arc {
+      0% { opacity: 0; transform: translate(0, 2px) rotate(0deg) scale(0.6); }
+      12% { opacity: 1; }
+      55% { opacity: 0.75; transform: translate(2.5px, -4px) rotate(8deg) scale(0.9); }
+      100% { opacity: 0; transform: translate(5px, -9px) rotate(14deg) scale(1.05); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sleep-body, .sleep-lid, .zzz { animation: none; }
+      .zzz { opacity: 0.7; }
+    }
+
+    h1 {
+      margin-block: 1.1rem 0.5rem;
+      color: var(--text-color);
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+
+    p {
+      margin-block: 0;
+      color: var(--text-color-f1);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    details {
+      inline-size: 100%;
+      margin-block-start: 1.5rem;
+      text-align: start;
+    }
+
+    summary {
+      color: var(--text-color-f2);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    details pre {
+      margin-block: 0.6rem 0;
+      padding: 0.9rem 1rem;
+      border-radius: 0.6rem;
+      overflow: auto;
+      color: var(--text-color-f1);
+      background-color: var(--primary-d1);
+      font-size: 0.72rem;
+      line-height: 1.5;
+    }
+  </style>
 </head>
 <body>
-<h1>KeyLearn is down for maintenance</h1>
-<p>We will be back online shortly, please come again!</p>
+<div class="card">
+  <div class="brand" dir="ltr">
+    <svg class="glyph" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="6" width="18" height="12" rx="2.5"/>
+      <path d="M7 10h0M11 10h0M15 10h0M7 13.5h10"/>
+    </svg>
+    <span class="mark">Key</span><span class="mark-alt">Learn</span>
+  </div>
+  <div class="face" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <g class="sleep-body">
+        <rect x="6" y="10" width="36" height="30" rx="6"/>
+        <path d="M6 33h36"/>
+        <g class="sleep-lid">
+          <path d="M16 21.5 Q18 19.5 20 21.5"/>
+          <path d="M28 21.5 Q30 19.5 32 21.5"/>
+        </g>
+        <path d="M17.5 27.5 Q24 24.5 30.5 27.5" opacity="0.7"/>
+      </g>
+      <text class="zzz z1" x="32" y="9" font-size="7">z</text>
+      <text class="zzz z2" x="36.5" y="5" font-size="5">z</text>
+      <text class="zzz z3" x="40" y="2" font-size="3.5">z</text>
+    </svg>
+  </div>
+  <h1>Down for a moment</h1>
+  <p>We're doing some maintenance. Come back shortly — nothing you've practised is going anywhere.</p>
+  <details>
+    <summary>Technical details</summary>
+    <pre>status: 502 Bad Gateway
+The web server is up, but the KeyLearn
+application behind it is not responding —
+usually a restart or deploy in progress.</pre>
+  </details>
+</div>
 </body>
 </html>

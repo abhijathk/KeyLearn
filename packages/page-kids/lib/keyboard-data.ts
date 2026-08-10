@@ -105,6 +105,43 @@ export const ZONE_OF: Readonly<Record<string, ZoneId>> = {
   m: "terra",
 };
 
+/**
+ * Finger zones for the keys that carry no character of their own.
+ *
+ * The number row and the punctuation keys are defined by their legend rather
+ * than by a letter, so {@link ZONE_OF} never reaches them and they used to
+ * come out uncoloured. These are the standard touch-typing reaches: the index
+ * fingers stretch to 4/5 and 6/7, and everything past the right ring finger
+ * belongs to the little finger.
+ *
+ * Deliberately absent: tab, caps, shift, enter, back and the space bar. They
+ * are the frame the letters sit in, and colouring them competes with the keys
+ * a learner is actually being pointed at.
+ */
+export const ZONE_OF_LABEL: Readonly<Record<string, ZoneId>> = {
+  "`": "rose",
+  "1": "rose",
+  "2": "sage",
+  "3": "sand",
+  "4": "seafoam",
+  "5": "seafoam",
+  "6": "terra",
+  "7": "terra",
+  "8": "sand",
+  "9": "sage",
+  "0": "rose",
+  "-": "rose",
+  "=": "rose",
+  "[": "rose",
+  "]": "rose",
+  "\\": "rose",
+  ";": "rose",
+  "'": "rose",
+  ",": "sand",
+  ".": "sage",
+  "/": "rose",
+};
+
 export type KeyDef = {
   /** Lowercase character this key types, if it is a letter/space key. */
   readonly char?: string;

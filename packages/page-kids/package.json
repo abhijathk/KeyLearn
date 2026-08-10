@@ -18,6 +18,7 @@
     "@keylearn/settings": "*",
     "@keylearn/speech": "*",
     "@keylearn/textinput": "*",
+    "@keylearn/textinput-sounds": "*",
     "@keylearn/themes": "*",
     "@keylearn/widget": "*",
     "clsx": "^2.1.1",

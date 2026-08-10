@@ -55,6 +55,11 @@
   --disc: #e8ecdc;
   --nail: var(--sunny);
   --nail-d: var(--sunny-d);
+  // How solid the Classic resting hands and their watch are. On the day
+  // ground the line-work is dark on near-white and reads plainly at half
+  // strength, where it stays behind the keys instead of competing with
+  // them; at night the same lines are pale on dark and need all of it.
+  --classic-hand-opacity: 0.5;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -76,6 +81,9 @@
   --kline: #3a4064;
   --glass: #2a2f4dee;
   --disc: #3a4064;
+  // Night keeps almost all of it: pale line-work on a dark ground still
+  // needs weight, but a touch off stops it reading as a sticker.
+  --classic-hand-opacity: 0.88;
   // The night scene is its own dark ground, and it does not follow the app's
   // day/night — so a learner on the Day theme would otherwise get a deep
   // accent painted on a deep scene. One step lighter keeps every cue readable
@@ -1439,4 +1447,53 @@
 .themeDotOn {
   border-color: #ffffff;
   box-shadow: 0 0 0 2px rgb(0 0 0 / 0.35);
+}
+
+// Classic draws every glyph on the board in one ink — the theme's own, dark
+// on the day ground and pale at night. The trail greys its modifier words to
+// push them behind the letters; here the board is the centrepiece and a
+// two-tone legend just reads as two kinds of key.
+.kbClassic {
+  .keyMod {
+    color: var(--kink);
+  }
+
+  .kTop {
+    opacity: 1;
+  }
+}
+
+// A full-width space bar on Classic: the trail's board is narrow enough that
+// a short bar reads fine, but on the grown-up shape it looks clipped.
+.kbClassic .keySpace {
+  inline-size: calc(var(--ku) * 26);
+}
+
+// The key that was just pressed by mistake, flashed for a moment. Knowing you
+// hit D instead of F is the correction; knowing only that you were wrong is
+// not — and at this age the eyes are still on the board, which is where the
+// answer belongs.
+.keyWrong {
+  animation: wrongkeyflash 0.45s ease-out;
+}
+
+@keyframes wrongkeyflash {
+  0%,
+  70% {
+    background: color-mix(in srgb, var(--coral) 28%, var(--key-bg));
+    box-shadow:
+      0 3.5px 0 var(--coral),
+      inset 0 0 0 2.5px var(--coral);
+  }
+
+  100% {
+    box-shadow:
+      0 3.5px 0 color-mix(in srgb, var(--kz) 78%, #6a6a5a),
+      inset 0 0 0 2.5px var(--kz);
+  }
+}
+
+// Help level 2: the next key stops suggesting and starts insisting.
+.keyUrgent {
+  animation: nextpulse 0.55s infinite;
 }

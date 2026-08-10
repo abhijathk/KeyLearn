@@ -14,22 +14,40 @@ type Props = {
 
 type State = {
   readonly report: string | null;
+  /** True when the children themselves crashed while rendering — they
+   * cannot be kept on screen behind the error card. */
+  readonly renderCrash: boolean;
 };
 
 export class ErrorHandler extends Component<Props, State> {
   override state: State = {
     report: null,
+    renderCrash: false,
   };
 
   override componentDidMount() {
     catchError.addHandler(this.setError);
+    if (process.env.NODE_ENV !== "production") {
+      // Dev-only: lets the crash screen be exercised from the console
+      // (`window.dispatchEvent(new CustomEvent("keylearn:debug-crash"))`)
+      // without having to break something real. Stripped from production.
+      window.addEventListener("keylearn:debug-crash", this.debugCrash);
+    }
   }
 
   override componentWillUnmount() {
     catchError.deleteHandler(this.setError);
+    if (process.env.NODE_ENV !== "production") {
+      window.removeEventListener("keylearn:debug-crash", this.debugCrash);
+    }
   }
 
+  debugCrash = () => {
+    silentCatchError(new Error("Debug crash (keylearn:debug-crash)"));
+  };
+
   override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    this.setState({ renderCrash: true });
     silentCatchError(error);
   }
 
@@ -39,9 +57,21 @@ export class ErrorHandler extends Component<Props, State> {
 
   override render() {
     const { children, display: Display = ErrorScreen } = this.props;
-    const { report } = this.state;
+    const { report, renderCrash } = this.state;
     if (report != null) {
-      return <Display report={report} />;
+      // A healthy page stays on screen, dimmed under the floating card, so
+      // the learner keeps their context. Only when the page itself crashed
+      // while rendering does the card stand alone on the theme's own ground
+      // — re-rendering a crashed subtree would just throw again.
+      if (renderCrash) {
+        return <Display report={report} />;
+      }
+      return (
+        <>
+          {children}
+          <Display report={report} />
+        </>
+      );
     } else {
       return children;
     }

@@ -1,0 +1,649 @@
+// Classic: the grown-up practice anatomy in the kids world's own hand.
+//
+// Everything here reads the kids page's own variables (--card, --kink,
+// --sunny, --kshadow…), so day and night both come for free and the screen
+// stays part of the same world as the trail.
+
+.classic {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.75rem;
+  inline-size: min(74rem, 100%);
+  min-block-size: 0;
+  padding-inline: 0.5rem;
+}
+
+.ic {
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+// ---- the telemetry island -------------------------------------------------
+
+// One compact band rather than two stacked rows: the speed leads, the target
+// sits beside it, and the rest of the numbers trail off to the right in the
+// same line. Nothing here should ask to be read while somebody is typing.
+.island {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.4rem;
+  align-items: center;
+  padding: 0.6rem 1.3rem;
+  border-radius: var(--kr);
+  background: var(--card);
+  box-shadow: var(--kshadow);
+}
+
+.hero {
+  display: flex;
+  flex: 1 1 22rem;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.1rem;
+  align-items: center;
+}
+
+.spark {
+  inline-size: 4.6rem;
+  block-size: 1.7rem;
+
+  polyline {
+    fill: none;
+    stroke: var(--kink2);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+}
+
+// Holds the row's height steady before there are two results to draw.
+.sparkGap {
+  inline-size: 4.6rem;
+  block-size: 1.7rem;
+}
+
+.sparkDot {
+  fill: var(--sunny);
+  stroke: none;
+}
+
+.speed {
+  display: flex;
+  gap: 0.35rem;
+  align-items: baseline;
+}
+
+.speedVal {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.speedUnit {
+  color: var(--kink2);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.delta {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--seafoam) 55%, var(--kink));
+  background: color-mix(in srgb, var(--seafoam) 28%, var(--card));
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.deltaDown {
+  color: color-mix(in srgb, var(--coral) 55%, var(--kink));
+  background: color-mix(in srgb, var(--coral) 24%, var(--card));
+}
+
+.journey {
+  flex: 1 1 12rem;
+  min-inline-size: 10rem;
+}
+
+.journeyHead {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: 0.35rem;
+}
+
+.journeyTarget {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  font-size: 0.74rem;
+  font-weight: 800;
+
+  .ic {
+    color: var(--terra);
+  }
+}
+
+.journeyPct {
+  color: var(--kink2);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.journeyTrack {
+  position: relative;
+  block-size: 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--kink) 8%, transparent);
+}
+
+.journeyFill {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--seafoam), var(--sunny));
+}
+
+.journeyDot {
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
+  border: 3px solid var(--card);
+  border-radius: 999px;
+  background: var(--sunny);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 22%);
+  transform: translate(-50%, -50%);
+}
+
+// Trails along the same line as the speed, separated by a hairline rather
+// than a whole row of its own.
+.sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  align-items: center;
+  padding-inline-start: 1.2rem;
+  border-inline-start: 2px solid color-mix(in srgb, var(--kink) 8%, transparent);
+}
+
+.subItem {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.subLabel {
+  color: var(--kink2);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.subVal {
+  font-size: 0.88rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    color: var(--kink2);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+}
+
+// ---- the text -------------------------------------------------------------
+
+.textCard {
+  // The anchor for the start gate, which straddles this card's lower edge.
+  position: relative;
+  padding: 2rem 2.4rem 1.4rem;
+  border-radius: var(--kr);
+  background: var(--card);
+  box-shadow: var(--kshadow);
+  text-align: center;
+}
+
+.text {
+  position: relative;
+  font-size: calc(2.5rem * var(--tscale, 1));
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  // A real space, not a non-breaking one, so long passages wrap between
+  // words rather than running off the card.
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.textBig {
+  font-size: calc(3rem * var(--tscale, 1));
+}
+
+.done {
+  color: var(--kink2);
+  opacity: 0.55;
+}
+
+// Each glyph draws above the travelling caret.
+.ch {
+  position: relative;
+  z-index: 1;
+}
+
+.cur {
+  color: var(--sunny-ink);
+}
+
+// One block that slides between letters, rather than a highlight that blinks
+// out of one and into the next.
+.caret {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0;
+  z-index: 0;
+  border-radius: 0.18em;
+  background: var(--sunny);
+  will-change: transform;
+  transition:
+    transform 90ms ease-out,
+    inline-size 90ms ease-out,
+    background-color 120ms ease-out;
+}
+
+// A wrong key turns the caret red — softer than the grown-up page's, which is
+// a full error colour: this one is a correction, not an alarm.
+.caretMiss {
+  background: color-mix(in srgb, var(--coral) 62%, var(--card));
+}
+
+.coach {
+  min-block-size: 1.2em;
+  margin-block-start: 0.9rem;
+  color: var(--sunny-d);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+// ---- the board ------------------------------------------------------------
+
+// The trail's own keyboard, only quieter: Classic recolours the five finger
+// zones to neutral pastels. The trail keeps its bright zones — there the
+// colours are part of the toy; here they would compete with the one key the
+// learner is meant to look at.
+.board {
+  // The same five hues, carrying more colour: the pale version read as grey
+  // at keycap size, which lost the whole point of colouring the zones.
+  --rose: #6fcbbb;
+  --sage: #efd077;
+  --sand: #a6d477;
+  --seafoam: #7cbaef;
+  --terra: #f4ab7c;
+
+  // The keycap metrics live on the trail's keyboard card, which Classic does
+  // not use — without its own copy every cap collapses to a sliver. Matches
+  // `.kbWrapFull`, because Classic always draws the whole board.
+  --ku: clamp(0.66rem, 1.2vi, 1.08rem);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.1em 1.3em 0.9em;
+  border-radius: var(--kr);
+  overflow: visible;
+  background: var(--card);
+  box-shadow: var(--kshadow);
+  font-size: clamp(0.66rem, 1.2vi, 1.08rem);
+
+  // Every cap's glyph reads in one ink, so the finger colours stay a ring
+  // round the key rather than a second thing to read. Dark ground flips it.
+  :global(kbd),
+  span,
+  div {
+    color: inherit;
+  }
+}
+
+// Holds the board and the hands in one stacking context. The wrists run off
+// the bottom of the board, as they do on the grown-up page.
+.boardInner {
+  position: relative;
+  // The whole drawing shows, wrists and all — it is not cropped by the board.
+  overflow: visible;
+}
+
+// ---- the resting hands ----------------------------------------------------
+
+// Each hand is placed by measurement (see classic.tsx) — these only say how
+// it is painted. Decoration: never intercepts a press aimed at the board.
+.hand {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0;
+  z-index: 3;
+  // Set by the page's day/night theme (see kids.module.less): softer on the
+  // light ground so the drawing sits behind the keys, nearly solid at night
+  // where pale line-work needs its weight. The watch inherits it.
+  opacity: var(--classic-hand-opacity, 0.5);
+  pointer-events: none;
+}
+
+.handInk {
+  fill: var(--kink);
+}
+
+// A drawn seven-segment digit: same ink as the line-work it sits on, and it
+// inherits the hand's own opacity from the parent, so the time reads as part
+// of the drawing rather than a label stuck on top of it.
+.seg {
+  fill: var(--kink);
+}
+
+.watchTick {
+  fill: var(--kink);
+  animation: seconds-blink 1s steps(1, end) infinite;
+}
+
+@keyframes seconds-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  50.01%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watchTick {
+    animation: none;
+  }
+}
+
+// ---- the letter journey ---------------------------------------------------
+
+.trailCard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: center;
+  // Pushed to the foot of the page, where the grown-up journey strip sits.
+  margin-block-start: auto;
+  padding: 0.9rem 1.4rem;
+  border-radius: var(--kr);
+  background: var(--card);
+  box-shadow: var(--kshadow);
+}
+
+.trailNote {
+  color: var(--kink2);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.trail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.32rem;
+  justify-content: center;
+}
+
+// Locked keys read as outlines waiting to be filled.
+.tkey {
+  display: grid;
+  place-items: center;
+  inline-size: 2.05rem;
+  block-size: 2.05rem;
+  border: 2px dashed color-mix(in srgb, var(--kink) 22%, transparent);
+  border-radius: 0.55rem;
+  color: color-mix(in srgb, var(--kink) 40%, transparent);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.tkeyOn {
+  border: 2px solid var(--seafoam);
+  color: var(--kink);
+  background: color-mix(in srgb, var(--seafoam) 26%, var(--card));
+}
+
+// The key being worked on: solid, and deliberately still. Nothing outside
+// the keyboard moves, so the only thing that ever pulses is the key to press.
+.tkeyNow {
+  border-color: var(--sunny);
+  color: var(--sunny-ink);
+  background: var(--sunny);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    transition: none;
+  }
+}
+
+// ---- the tools ------------------------------------------------------------
+
+// The trigger sits at the end of the island's hero row, where the grown-up
+// page keeps its tune button.
+.tuneBtn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  margin-inline-start: auto;
+  border: none;
+  border-radius: 999px;
+  color: var(--kink2);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--kink);
+    background: color-mix(in srgb, var(--kink) 7%, transparent);
+  }
+}
+
+.tuneBtnOn {
+  color: var(--sunny-ink);
+  background: var(--sunny);
+
+  &:hover {
+    color: var(--sunny-ink);
+    background: var(--sunny);
+  }
+}
+
+// Anchors the tools popover to the right end of the band.
+.toolsAnchor {
+  display: flex;
+  position: relative;
+  margin-inline-start: auto;
+}
+
+// A compact panel that opens back across the island, not off the edge.
+.tools {
+  display: flex;
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + 0.5rem);
+  z-index: 30;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.5rem;
+  border: 2px solid color-mix(in srgb, var(--kink) 10%, transparent);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: var(--kshadow);
+  white-space: nowrap;
+}
+
+.toolBtn {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border: 2px solid color-mix(in srgb, var(--kink) 12%, transparent);
+  border-radius: 999px;
+  color: var(--kink);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--sunny);
+  }
+}
+
+.railIc {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+// The words-size slider, lying flat so it lines up with the buttons.
+.sizer {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  padding-inline: 0.4rem;
+  cursor: pointer;
+}
+
+.sizerIcon {
+  color: var(--kink2);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.sizer input[type="range"] {
+  inline-size: 5rem;
+  cursor: pointer;
+  accent-color: var(--sunny);
+}
+
+// ---- focus: the chrome steps back while the fingers move -------------------
+
+.island,
+.trailCard {
+  transition: opacity 260ms ease;
+}
+
+// Only the words and the board keep their weight while typing; the numbers,
+// the letter journey and the tools fade until the hands stop. The grown-up
+// page does the same, and for the same reason: a learner reading statistics
+// mid-line is a learner who has stopped typing.
+.typing {
+  .island,
+  .trailCard {
+    opacity: 0.35;
+  }
+}
+
+// ---- the start gate -------------------------------------------------------
+
+// While the lesson waits, the words sit back so the invitation reads first.
+.textCardGated .text {
+  opacity: 0.45;
+}
+
+// Straddles the lower edge of the words card, floating out of the layout so
+// nothing below it shifts when the lesson starts, and well clear of the
+// numbers above.
+.gate {
+  display: inline-flex;
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: 0;
+  z-index: 20;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 1.1rem 0.5rem 0.5rem;
+  // A hairline of the learner's own colour, and a glow in the same, so the
+  // invitation reads as part of the theme rather than a panel dropped on top.
+  border: 2px solid color-mix(in srgb, var(--sunny) 55%, transparent);
+  border-radius: 999px;
+  color: var(--kink);
+  background: var(--card);
+  box-shadow:
+    0 6px 18px color-mix(in srgb, var(--sunny) 30%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--sunny) 12%, transparent);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  translate: -50% 50%;
+}
+
+// The key presses itself, on a slow loop — it says what to do without
+// anybody having to read the sentence beside it.
+.gateKey {
+  display: grid;
+  place-items: center;
+  inline-size: 2.1rem;
+  block-size: 2.1rem;
+  border-radius: 0.55rem;
+  color: var(--sunny-ink);
+  background: var(--sunny);
+  box-shadow: 0 3px 0 var(--sunny-d);
+  animation: gate-press 1.8s ease-in-out infinite;
+}
+
+@keyframes gate-press {
+  0%,
+  62%,
+  100% {
+    box-shadow: 0 3px 0 var(--sunny-d);
+    transform: translateY(0);
+  }
+
+  74%,
+  86% {
+    box-shadow: 0 0 0 var(--sunny-d);
+    transform: translateY(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gateKey {
+    animation: none;
+  }
+}
+
+// ---- the reset notice -----------------------------------------------------
+
+// Said when a long pause put the line back. Without it a learner watches
+// their words vanish and reads it as the app breaking rather than as the
+// clock being fair.
+.notice {
+  align-self: center;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  color: var(--kink);
+  background: color-mix(in srgb, var(--sunny) 22%, var(--card));
+  font-size: 0.9rem;
+  font-weight: 800;
+}

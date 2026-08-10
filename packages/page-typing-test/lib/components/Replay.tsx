@@ -47,7 +47,7 @@ function useReplayState(
   );
   const visible = useDocumentVisibility();
   const [lines, setLines] = useState<LineList>(Session.emptyLines);
-  const [depressedKeys, setDepressedKeys] = useState<KeyId[]>([]);
+  const [depressedKeys, setDepressedKeys] = useState<readonly KeyId[]>([]);
   useEffect(() => {
     const tasks = new Tasks();
     const step = () => {

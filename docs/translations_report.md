@@ -1,1489 +1,1517 @@
 # English
 
-Translated: 1109 messages, 9477 words
+Translated: 1516 messages, 12174 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 934 messages, 8341 words
+Translated: 1459 messages, 12003 words
 
-Untranslated: 165 messages, 1053 words
+Untranslated: 50 messages, 124 words
 
 * *s*
-* *OR*
+* *PIN*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *mint*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
 * *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
+* *Avatar*
+* *indigo*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Letters*
-* *Monthly*
-* *Overall*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
 * ...
 
 # Arabic
 
-Translated: 940 messages, 8349 words
+Translated: 1472 messages, 12019 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 39 messages, 113 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
+* *Settings*
+* ...
+
+# Assamese
+
+Translated: 1470 messages, 12017 words
+
+Untranslated: 41 messages, 115 words
+
+* *PIN*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
 * ...
 
 # Bulgarian
 
-Translated: 940 messages, 8349 words
+Translated: 1472 messages, 12019 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 39 messages, 113 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
+* *Settings*
 * ...
 
 # Bangla
 
-Translated: 939 messages, 8342 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Catalan
 
-Translated: 931 messages, 8338 words
+Translated: 1456 messages, 12000 words
 
-Untranslated: 168 messages, 1056 words
+Untranslated: 52 messages, 126 words
 
 * *s*
-* *OR*
+* *Arc*
+* *PIN*
 * *Zen*
+* *Mode*
+* *Pick*
+* *Stop*
 * *Text*
-* *Sound*
-* *space*
-* *Speed*
-* *Arcade*
+* *Text*
+* *Ember*
+* *Grape*
+* *Later*
+* *Paper*
+* *Sepia*
+* *Voice*
+* *Avatar*
 * *Errors*
-* *Errors*
-* *Layout*
 * *Recent*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Premium*
+* *Crimson*
+* *Custom…*
 * ...
 
 # Czech
 
-Translated: 934 messages, 8340 words
+Translated: 1463 messages, 12009 words
 
-Untranslated: 165 messages, 1054 words
+Untranslated: 47 messages, 121 words
 
 * *s*
-* *OR*
+* *PIN*
+* *wpm*
 * *Zen*
+* *Pick*
+* *Stop*
 * *Text*
-* *Sound*
-* *space*
-* *Speed*
+* *Text*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
 * *Trend*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
+* *Voice*
+* *Avatar*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
 * ...
 
 # Danish
 
-Translated: 929 messages, 8335 words
+Translated: 1451 messages, 11995 words
 
-Untranslated: 170 messages, 1059 words
+Untranslated: 59 messages, 135 words
 
 * *s*
-* *OR*
+* *PIN*
+* *wpm*
 * *Zen*
-* *Auto*
-* *Sound*
-* *space*
-* *Speed*
+* *Mine*
+* *mint*
+* *Pick*
+* *pink*
+* *Send*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Avatar*
+* *citron*
+* *indigo*
 * *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Layouts*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Passage*
-* *Premium*
-* *Reading*
-* *Send me*
+* *orange*
 * ...
 
 # German
 
-Translated: 926 messages, 8333 words
+Translated: 1449 messages, 11996 words
 
-Untranslated: 173 messages, 1062 words
+Untranslated: 62 messages, 136 words
 
 * *s*
-* *OR*
+* *PIN*
 * *Zen*
+* *Name*
+* *Name*
+* *Pick*
+* *pink*
+* *Stop*
+* *Text*
 * *Text*
 * *Coach*
-* *Sound*
-* *space*
-* *Speed*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
 * *Trend*
+* *Voice*
 * *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Heatmap*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Premium*
+* *Avatar*
+* *indigo*
 * ...
 
 # Greek
 
-Translated: 939 messages, 8348 words
+Translated: 1469 messages, 12016 words
 
-Untranslated: 161 messages, 1049 words
+Untranslated: 42 messages, 116 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *PIN*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* ...
-
-# Esperanto
-
-Translated: 937 messages, 8344 words
-
-Untranslated: 162 messages, 1050 words
-
-* *s*
-* *OR*
-* *Zen*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
 * ...
 
 # Spanish
 
-Translated: 935 messages, 8342 words
+Translated: 1461 messages, 12005 words
 
-Untranslated: 164 messages, 1052 words
+Untranslated: 47 messages, 121 words
 
 * *s*
-* *OR*
+* *PIN*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
 * *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Avatar*
+* *Zigzag*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
 * ...
 
 # Estonian
 
-Translated: 934 messages, 8340 words
+Translated: 1463 messages, 12009 words
 
-Untranslated: 165 messages, 1054 words
+Untranslated: 47 messages, 121 words
 
 * *s*
-* *OR*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
 * *Trend*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Voice*
+* *Avatar*
+* *indigo*
+* *Number*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
+* *See it!*
+* *Sunbeam*
 * ...
 
 # Persian
 
-Translated: 940 messages, 8349 words
+Translated: 1472 messages, 12019 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 39 messages, 113 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
+* *Settings*
 * ...
 
 # Finnish
 
-Translated: 936 messages, 8345 words
+Translated: 1464 messages, 12010 words
 
-Untranslated: 164 messages, 1052 words
+Untranslated: 46 messages, 120 words
 
 * *s*
-* *OR*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
 * *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Avatar*
+* *indigo*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* ...
-
-# Faroese
-
-Translated: 937 messages, 8346 words
-
-Untranslated: 163 messages, 1051 words
-
-* *OR*
-* *Sun*
-* *Zen*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
 * ...
 
 # French
 
-Translated: 928 messages, 8334 words
+Translated: 1449 messages, 11995 words
 
-Untranslated: 171 messages, 1060 words
+Untranslated: 61 messages, 135 words
 
 * *s*
-* *OR*
+* *Arc*
 * *Zen*
 * *Auto*
+* *Mode*
+* *Pick*
+* *Stop*
 * *Coach*
-* *Sound*
-* *space*
-* *Speed*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
 * *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Passage*
-* *Premium*
-* *Reading*
-* ...
-
-# Irish
-
-Translated: 936 messages, 8345 words
-
-Untranslated: 164 messages, 1052 words
-
-* *s*
-* *OR*
-* *Zen*
-* *Sound*
-* *space*
-* *Speed*
-* *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
+* *Avatar*
+* *citron*
+* *Effort*
+* *indigo*
+* *orange*
+* *Zigzag*
 * ...
 
 # Gujarati
 
-Translated: 939 messages, 8342 words
+Translated: 1470 messages, 12017 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 41 messages, 115 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
 * ...
 
 # Hebrew
 
-Translated: 940 messages, 8349 words
+Translated: 1472 messages, 12019 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 39 messages, 113 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
+* *Settings*
 * ...
 
 # Hindi
 
-Translated: 939 messages, 8342 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Croatian
 
-Translated: 934 messages, 8340 words
+Translated: 1463 messages, 12009 words
 
-Untranslated: 165 messages, 1054 words
+Untranslated: 47 messages, 121 words
 
 * *s*
-* *OR*
+* *PIN*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
 * *Trend*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Voice*
+* *Avatar*
+* *indigo*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
+* *See it!*
+* *Sunbeam*
 * ...
 
 # Hungarian
 
-Translated: 939 messages, 8348 words
+Translated: 1469 messages, 12015 words
 
-Untranslated: 161 messages, 1049 words
+Untranslated: 42 messages, 117 words
 
-* *OR*
+* *PIN*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
 * ...
 
 # Indonesian
 
-Translated: 938 messages, 8347 words
+Translated: 1463 messages, 12010 words
 
-Untranslated: 162 messages, 1050 words
+Untranslated: 48 messages, 122 words
 
-* *OR*
+* *PIN*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *mint*
+* *Mode*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Avatar*
+* *citron*
+* *Zigzag*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
+* *See it!*
 * ...
 
 # Icelandic
 
-Translated: 938 messages, 8347 words
+Translated: 1470 messages, 12017 words
 
-Untranslated: 162 messages, 1050 words
+Untranslated: 41 messages, 115 words
 
-* *OR*
 * *Sun*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
 * ...
 
 # Italian
 
-Translated: 933 messages, 8339 words
+Translated: 1461 messages, 12005 words
 
-Untranslated: 166 messages, 1055 words
+Untranslated: 48 messages, 122 words
 
 * *s*
-* *OR*
+* *PIN*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
 * *Arcade*
-* *Layout*
-* *Weekly*
+* *Avatar*
+* *Zigzag*
 * *Account*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
 * ...
 
 # Japanese
 
-Translated: 940 messages, 8349 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 41 messages, 115 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
 * ...
 
 # Kannada
 
-Translated: 939 messages, 8342 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Korean
 
-Translated: 940 messages, 8349 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 41 messages, 115 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
 * ...
 
 # Lithuanian
 
-Translated: 936 messages, 8343 words
+Translated: 1466 messages, 12012 words
 
-Untranslated: 163 messages, 1051 words
+Untranslated: 44 messages, 118 words
 
 * *s*
-* *OR*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *indigo*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* ...
+
+# Latvian
+
+Translated: 1463 messages, 12007 words
+
+Untranslated: 46 messages, 120 words
+
+* *s*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *indigo*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *Premium*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
 * ...
 
 # Malayalam
 
-Translated: 939 messages, 8342 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Mongolian
 
-Translated: 940 messages, 8349 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
+* ...
+
+# Marathi
+
+Translated: 1470 messages, 12015 words
+
+Untranslated: 41 messages, 117 words
+
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
+* *Settings*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 930 messages, 8337 words
+Translated: 1457 messages, 12002 words
 
-Untranslated: 169 messages, 1058 words
+Untranslated: 52 messages, 126 words
 
 * *s*
-* *OR*
+* *wpm*
 * *Zen*
-* *Auto*
 * *Best*
 * *Best*
 * *Best*
-* *Sound*
-* *space*
-* *Speed*
+* *Mine*
+* *mint*
+* *Pick*
+* *Send*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
 * *Trend*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Premium*
+* *Voice*
+* *Avatar*
+* *indigo*
+* *Crimson*
 * ...
 
 # Nepali
 
-Translated: 940 messages, 8349 words
+Translated: 1470 messages, 12017 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 41 messages, 115 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
 * ...
 
 # Dutch
 
-Translated: 924 messages, 8330 words
+Translated: 1450 messages, 11996 words
 
-Untranslated: 175 messages, 1064 words
+Untranslated: 60 messages, 134 words
 
 * *s*
-* *OR*
+* *wpm*
 * *Zen*
+* *mint*
+* *Pick*
+* *Stop*
 * *Coach*
+* *Ember*
+* *Grape*
+* *Hints*
+* *Later*
 * *Score*
-* *Sound*
-* *space*
-* *Speed*
+* *Sepia*
 * *Trend*
+* *Voice*
 * *Arcade*
-* *Layout*
+* *Avatar*
+* *indigo*
 * *Recent*
-* *Weekly*
-* *Account*
-* *As bars*
-* *As dots*
-* *At most*
-* *Heatmap*
-* *Learner*
-* *Letters*
+* *Zigzag*
+* ...
+
+# Odia
+
+Translated: 1468 messages, 12013 words
+
+Untranslated: 43 messages, 119 words
+
+* *PIN*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* ...
+
+# Punjabi
+
+Translated: 1468 messages, 12013 words
+
+Untranslated: 43 messages, 119 words
+
+* *Kid*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
 * ...
 
 # Polish
 
-Translated: 933 messages, 8339 words
+Translated: 1465 messages, 12011 words
 
-Untranslated: 166 messages, 1055 words
+Untranslated: 45 messages, 119 words
 
 * *s*
-* *OR*
+* *PIN*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
 * *Trend*
-* *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
 * ...
 
 # Brazilian Portuguese
 
-Translated: 934 messages, 8341 words
+Translated: 1460 messages, 12004 words
 
-Untranslated: 165 messages, 1053 words
+Untranslated: 49 messages, 123 words
 
 * *s*
-* *OR*
+* *PIN*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
 * *Arcade*
+* *Avatar*
 * *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Layouts*
-* *Learner*
-* *Monthly*
-* *Overall*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
+* *See it!*
+* *Strings*
 * ...
 
 # European Portuguese
 
-Translated: 935 messages, 8342 words
+Translated: 1463 messages, 12007 words
 
-Untranslated: 164 messages, 1052 words
+Untranslated: 46 messages, 120 words
 
 * *s*
-* *OR*
+* *PIN*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
 * *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Avatar*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
 * ...
 
 # Romanian
 
-Translated: 932 messages, 8338 words
+Translated: 1458 messages, 12002 words
 
-Untranslated: 167 messages, 1056 words
+Untranslated: 51 messages, 125 words
 
 * *s*
-* *OR*
+* *Arc*
+* *PIN*
 * *Zen*
+* *Pick*
+* *Stop*
 * *Text*
-* *Sound*
-* *space*
-* *Speed*
+* *Text*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
 * *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
+* *Avatar*
+* *indigo*
+* *Zigzag*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * ...
 
 # Russian
 
-Translated: 940 messages, 8349 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Slovak
 
-Translated: 933 messages, 8339 words
+Translated: 1462 messages, 12007 words
 
-Untranslated: 166 messages, 1055 words
+Untranslated: 48 messages, 123 words
 
 * *s*
-* *OR*
+* *PIN*
 * *Zen*
+* *Pick*
+* *Stop*
 * *Text*
-* *Sound*
-* *space*
-* *Speed*
+* *Text*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
 * *Trend*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Voice*
+* *Avatar*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
+* *See it!*
+* *Sunbeam*
 * ...
 
 # Slovenian
 
-Translated: 934 messages, 8340 words
+Translated: 1462 messages, 12006 words
 
-Untranslated: 165 messages, 1054 words
+Untranslated: 47 messages, 121 words
 
 * *s*
-* *OR*
+* *PIN*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
 * *Trend*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Voice*
+* *Avatar*
+* *indigo*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
+* *See it!*
+* *Sunbeam*
 * ...
 
 # Albanian
 
-Translated: 936 messages, 8343 words
+Translated: 1464 messages, 12008 words
 
-Untranslated: 163 messages, 1051 words
+Untranslated: 45 messages, 119 words
 
 * *s*
-* *OR*
+* *PIN*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *indigo*
+* *Zigzag*
+* *Crimson*
+* *Custom…*
+* *Got it!*
 * *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
 * ...
 
 # Swedish
 
-Translated: 931 messages, 8337 words
+Translated: 1456 messages, 12002 words
 
-Untranslated: 168 messages, 1057 words
+Untranslated: 54 messages, 128 words
 
 * *s*
-* *OR*
 * *Zen*
+* *mint*
+* *Pick*
+* *Stop*
+* *Text*
 * *Text*
 * *Coach*
-* *Sound*
-* *space*
-* *Speed*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
 * *Trend*
+* *Voice*
+* *Avatar*
+* *citron*
+* *indigo*
 * *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Premium*
-* *Reading*
-* *Send me*
+* *orange*
+* *Period*
 * ...
 
 # Tamil
 
-Translated: 939 messages, 8342 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Telugu
 
-Translated: 939 messages, 8342 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Thai
 
-Translated: 940 messages, 8349 words
+Translated: 1472 messages, 12019 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 39 messages, 113 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
+* *Settings*
 * ...
 
 # Turkish
 
-Translated: 937 messages, 8345 words
+Translated: 1467 messages, 12014 words
 
-Untranslated: 163 messages, 1052 words
+Untranslated: 44 messages, 118 words
 
-* *OR*
+* *PIN*
+* *wpm*
 * *Zen*
-* *Sound*
-* *space*
-* *Speed*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
 * *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
+* *Avatar*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
 * ...
 
 # Ukrainian
 
-Translated: 940 messages, 8349 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *PIN*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Urdu
 
-Translated: 939 messages, 8342 words
+Translated: 1472 messages, 12019 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 39 messages, 113 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
+* *Settings*
 * ...
 
 # Vietnamese
 
-Translated: 937 messages, 8346 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 163 messages, 1051 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Zen*
-* *Sound*
-* *space*
-* *Speed*
-* *Arcade*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Premium*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Simplified Chinese
 
-Translated: 940 messages, 8349 words
+Translated: 1473 messages, 12020 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 39 messages, 113 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
+* *Settings*
 * ...
 
 # Traditional Chinese
 
-Translated: 940 messages, 8349 words
+Translated: 1471 messages, 12018 words
 
-Untranslated: 160 messages, 1048 words
+Untranslated: 40 messages, 114 words
 
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
-* ...
-
-# Chinese (Taiwan)
-
-Translated: 940 messages, 8349 words
-
-Untranslated: 160 messages, 1048 words
-
-* *OR*
-* *Sound*
-* *space*
-* *Speed*
-* *Layout*
-* *Weekly*
-* *As bars*
-* *As dots*
-* *At most*
-* *Learner*
-* *Monthly*
-* *Overall*
-* *Reading*
-* *Send me*
-* *Accuracy*
-* *Alphabet*
-* *Continue*
-* *Language*
-* *Language*
-* *Loading…*
+* *wpm*
+* *Pick*
+* *Stop*
+* *Ember*
+* *Grape*
+* *Later*
+* *Sepia*
+* *Voice*
+* *Crimson*
+* *Custom…*
+* *Got it!*
+* *See it!*
+* *Sunbeam*
+* *Top Row*
+* *Amethyst*
+* *Cerulean*
+* *Go again*
+* *Home Row*
+* *KeyLearn*
+* *KeyLearn*
 * ...

@@ -1,5 +1,6 @@
 .body {
   block-size: 100vb;
+  background-color: var(--primary);
 }
 
 .center {
@@ -10,9 +11,297 @@
   justify-content: center;
   inline-size: 100%;
   block-size: 100%;
+  padding: 2rem;
 }
 
-.content {
+.card {
   inline-size: 25rem;
-  margin-block-end: 4rem;
+  max-inline-size: 100%;
+  padding: 2.5rem;
+  border: 1px solid
+    color-mix(in oklab, var(--accent, #7fb1f7) 30%, var(--secondary-f2, #555));
+  border-radius: 1.25rem;
+  background-color: var(--primary-l1, transparent);
+  box-shadow: 0 1.5rem 4rem var(--shadow-color, rgb(0 0 0 / 40%));
+  text-align: center;
+}
+
+.brand {
+  display: inline-flex;
+  gap: 0;
+  align-items: baseline;
+  justify-content: center;
+  inline-size: 100%;
+  margin-block-end: 1.5rem;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.glyph {
+  align-self: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  margin-inline-end: 0.5rem;
+  color: var(--accent);
+}
+
+.mark {
+  color: var(--text-color);
+  font-weight: 700;
+}
+
+.markAlt {
+  color: var(--text-color-f1);
+  font-weight: 200;
+}
+
+// ---- the status icon, in the mood-face language ---------------------------
+
+.face {
+  display: flex;
+  justify-content: center;
+  margin-block-end: 0.75rem;
+}
+
+.face svg {
+  inline-size: 4rem;
+  block-size: 4rem;
+  overflow: visible;
+  fill: none;
+  stroke: var(--accent, #8fd9b6);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.eye {
+  fill: var(--accent, #8fd9b6);
+  stroke: none;
+}
+
+// 5xx and the caution triangle speak in the error colour.
+.errTone svg {
+  stroke: var(--error, #ff7a6b);
+}
+
+.errTone .eye {
+  fill: var(--error, #ff7a6b);
+}
+
+// 404: eyes glancing left and right, looking for the missing page.
+.lookEyes {
+  animation: eyes-glance 4s ease-in-out infinite;
+}
+
+@keyframes eyes-glance {
+  0%,
+  20%,
+  100% {
+    transform: translateX(0);
+  }
+  30%,
+  45% {
+    transform: translateX(-2.2px);
+  }
+  60%,
+  80% {
+    transform: translateX(2.2px);
+  }
+}
+
+// 5xx: the stuck key — wobble, jam down, pop back up.
+.stuckFace {
+  transform-origin: 24px 30px;
+  animation: key-jam 3.6s ease-in-out infinite;
+}
+
+@keyframes key-jam {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  18% {
+    transform: rotate(-2.5deg);
+  }
+  36% {
+    transform: rotate(2deg);
+  }
+  50% {
+    transform: rotate(0deg) translateY(0);
+  }
+  58% {
+    transform: translateY(2.2px) scale(1, 0.94);
+  }
+  66% {
+    transform: translateY(-1px) scale(1, 1.03);
+  }
+  74% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+.stuckBrow {
+  transform-origin: 24px 20px;
+  animation: brow-up 3.6s ease-in-out infinite;
+}
+
+@keyframes brow-up {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+  58%,
+  70% {
+    transform: translateY(-1.3px);
+  }
+}
+
+// Other 4xx: the caution triangle's heartbeat, with a soft glow behind.
+.warnGlow {
+  fill: var(--error, #ff7a6b);
+  stroke: none;
+  transform-origin: center;
+  animation: glow-swell 2s ease-in-out infinite;
+}
+
+@keyframes glow-swell {
+  0%,
+  100% {
+    opacity: 0.08;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.28;
+    transform: scale(1.12);
+  }
+}
+
+.warnTri {
+  transform-origin: 12px 14px;
+  animation: tri-beat 2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+@keyframes tri-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.07);
+  }
+  24% {
+    transform: scale(1);
+  }
+  34% {
+    transform: scale(1.045);
+  }
+  46% {
+    transform: scale(1);
+  }
+}
+
+.warnBang {
+  animation: bang-dim 2s ease-in-out infinite;
+}
+
+.warnDot {
+  fill: var(--error, #ff7a6b);
+  stroke: none;
+  animation: bang-dim 2s ease-in-out infinite;
+}
+
+@keyframes bang-dim {
+  0%,
+  46%,
+  100% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lookEyes,
+  .stuckFace,
+  .stuckBrow,
+  .warnGlow,
+  .warnTri,
+  .warnBang,
+  .warnDot {
+    animation: none;
+  }
+}
+
+// ---- title, description, action — the crash screen's type scale ----------
+
+.title {
+  margin-block: 1.1rem 0.5rem;
+  color: var(--text-color, #ddd);
+  font-family: var(--default-font-family, sans-serif);
+  font-size: 1.35rem;
+  font-weight: 800;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.description {
+  margin-block: 0 1.4rem;
+  color: var(--text-color-f1, #aaa);
+  font-family: var(--default-font-family, sans-serif);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.action {
+  display: inline-block;
+  padding-inline: 1.4rem;
+  padding-block: 0.6rem;
+  border: 1px solid var(--accent, #8fd9b6);
+  border-radius: 999px;
+  color: var(--primary, #14161c);
+  background-color: var(--accent, #8fd9b6);
+  box-shadow: 0 0 0 4px
+    color-mix(in oklab, var(--accent, #8fd9b6) 14%, transparent);
+  font-family: var(--default-font-family, sans-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+// ---- the folded technical report ------------------------------------------
+
+.details {
+  margin-block-start: 1.5rem;
+  text-align: center;
+}
+
+.summary {
+  color: var(--text-color-f2, #888);
+  font-family: var(--default-font-family, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.report {
+  margin-block-start: 0.6rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.6rem;
+  overflow: auto;
+  color: var(--text-color-f1, #aaa);
+  background-color: color-mix(
+    in oklab,
+    var(--primary-d2, #000) 60%,
+    transparent
+  );
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: center;
 }

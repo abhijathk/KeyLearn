@@ -29,6 +29,7 @@ import { useProfiles } from "@keylearn/page-account";
 import { Screen } from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import {
+  memo,
   type ReactNode,
   useCallback,
   useEffect,
@@ -839,10 +840,23 @@ function Practice(): ReactNode {
   const accuracy = total > 0 ? Math.round((hits / total) * 100) : 100;
   const minutes = startedAt != null ? (Date.now() - startedAt) / 60000 : 0;
   const cpm = minutes > 0.05 ? Math.round(hits / minutes) : 0;
-  const unlockedCount = progress.current.unlocked().length;
+  // `unlocked()` walks the whole teaching order and mutates internal reach
+  // state — cheap, but pointless to redo on renders where progress hasn't
+  // changed (e.g. a chord still being held down). `progress.current` changes
+  // either inside `commit()` (alongside hits/misses) or on a background sync
+  // pull (which also calls `startLine`, changing `lesson`), so both are deps.
+  const unlockedCount = useMemo(
+    () => progress.current.unlocked().length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hits, misses, lesson],
+  );
   const goal = goalProgress(practisedMs, prefs.goalMinutes);
-  // Days running, from the same list the profile's calendar reads.
-  const streakDays = (() => {
+  // Days running, from the same list the profile's calendar reads. Depends
+  // only on which profile is active, not on anything that changes mid-chord
+  // — recomputed per profile rather than per keystroke. (Won't tick over at
+  // a midnight crossing during a long session, same as before this memo but
+  // no longer as an accidental side effect of unrelated re-renders.)
+  const streakDays = useMemo(() => {
     const days = new Set(practiceDays(profileId));
     const cursor = new Date();
     const key = (d: Date) =>
@@ -855,7 +869,7 @@ function Practice(): ReactNode {
       cursor.setDate(cursor.getDate() - 1);
     }
     return n;
-  })();
+  }, [profileId]);
 
   return (
     <div className={styles.page}>
@@ -1062,23 +1076,37 @@ function Practice(): ReactNode {
           ]}
         />
 
-        <Toggle
-          pressed={prefs.speech}
-          onClick={() => setPrefs({ speech: !prefs.speech })}
-          label={formatMessage({
-            id: "braille.sound",
-            defaultMessage: "Speech",
-          })}
-        />
-        <Toggle
-          pressed={prefs.echoLetters}
-          disabled={!prefs.speech}
-          onClick={() => setPrefs({ echoLetters: !prefs.echoLetters })}
-          label={formatMessage({
-            id: "braille.echo",
-            defaultMessage: "Say each letter",
-          })}
-        />
+        {/*
+          Grouped under one caption, the same shape as Mode and Hints beside
+          it — two independent toggles rather than a segmented either/or, so
+          they keep their own pill each instead of sharing one capsule.
+        */}
+        <span className={styles.control}>
+          <span className={styles.controlLabel}>
+            <FormattedMessage id="braille.voice" defaultMessage="Voice" />
+          </span>
+          <span className={styles.toggleRow}>
+            <Toggle
+              grouped={true}
+              pressed={prefs.speech}
+              onClick={() => setPrefs({ speech: !prefs.speech })}
+              label={formatMessage({
+                id: "braille.sound",
+                defaultMessage: "Speech",
+              })}
+            />
+            <Toggle
+              grouped={true}
+              pressed={prefs.echoLetters}
+              disabled={!prefs.speech}
+              onClick={() => setPrefs({ echoLetters: !prefs.echoLetters })}
+              label={formatMessage({
+                id: "braille.echo",
+                defaultMessage: "Say each letter",
+              })}
+            />
+          </span>
+        </span>
 
         {/*
           A named list rather than a slider: a slider announces a number a
@@ -1331,18 +1359,26 @@ function Toggle({
   pressed,
   disabled = false,
   onClick,
+  grouped = false,
 }: {
   readonly label: string;
   readonly pressed: boolean;
   readonly disabled?: boolean;
   readonly onClick: () => void;
+  /**
+   * True when a caller already wrapped this toggle in its own labelled
+   * `.control`/`.controlLabel` pair (see the "Speech" group below) — skips
+   * the standalone top-margin hack that otherwise stands in for a label.
+   */
+  readonly grouped?: boolean;
 }): ReactNode {
   return (
     <button
       type="button"
       className={clsx(
-        styles.control,
+        !grouped && styles.control,
         styles.toggle,
+        grouped && styles.toggleGrouped,
         pressed && styles.toggleOn,
       )}
       aria-pressed={pressed}
@@ -1354,8 +1390,10 @@ function Toggle({
   );
 }
 
-/** The two scripts, in step and grouped by word. Reading mode only. */
-function Board({
+// Reading-mode only, and its props (lesson/at/shake/wrong) don't change
+// while a chord is mid-formation — memoized so holding dots down doesn't
+// re-walk and re-render the whole two-script board on every "update" event.
+const Board = memo(function Board({
   lesson,
   at,
   shake,
@@ -1423,7 +1461,7 @@ function Board({
       </div>
     </div>
   );
-}
+});
 
 /**
  * The six dot keys, laid out as they sit under the hands.

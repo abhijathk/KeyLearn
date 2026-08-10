@@ -309,3 +309,29 @@ export function FlagIcon({ size = 16, color = "#ff5c5c" }: IconProps) {
     </svg>
   );
 }
+
+/**
+ * The Classic face: a board with a line of text above it.
+ *
+ * Drawn in the same hand as the rest — the settings row that offers it sits
+ * beside a world icon and a paw, and a stock glyph would announce itself as
+ * the one thing on the sheet that came from somewhere else.
+ */
+export function ClassicIcon({ size = 22, color = "#1d4e7a" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 4.5h9M5 8h14" />
+      <rect x="3" y="11.5" width="18" height="9" rx="2.5" />
+      <path d="M7 15h0M11 15h0M15 15h0M8 18h8" />
+    </svg>
+  );
+}

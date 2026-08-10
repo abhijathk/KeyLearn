@@ -44,7 +44,9 @@ export type StrokeIconName =
   | "auto"
   | "book"
   | "heart"
-  | "braille";
+  | "braille"
+  | "warning"
+  | "info";
 
 const shapes: Record<StrokeIconName, ReactNode> = {
   // The cell for "b": dots 1 and 2 raised, the other four empty.
@@ -214,6 +216,22 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   // An open book — the practice-texts library.
   book: (
     <path d="M12 6.4C10.4 5 7.9 4.6 4.5 4.9V17c3.4-.3 5.9.1 7.5 1.6M12 6.4c1.6-1.4 4.1-1.8 7.5-1.5V17c-3.4-.3-5.9.1-7.5 1.6M12 6.4V18.6" />
+  ),
+  // A caution triangle — blocking warnings, spoken calmly.
+  warning: (
+    <>
+      <path d="M12 3.5 21.5 20h-19z" />
+      <path d="M12 9.5v5" />
+      <circle cx="12" cy="17.3" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  // A plain "i" — neutral notices, not errors.
+  info: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5.2" />
+      <circle cx="12" cy="7.7" r="1" fill="currentColor" stroke="none" />
+    </>
   ),
   // The keyboard, struck through — "hide it".
   keyboardOff: (

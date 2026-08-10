@@ -399,6 +399,19 @@
   font-weight: 700;
 }
 
+// Two toggles sharing one label above them (the "Voice" group) sit at the
+// label's control row directly, same as .seg — no standalone top margin.
+.toggleGrouped {
+  margin-block-start: 0;
+}
+
+.toggleRow {
+  display: inline-flex;
+  flex: none;
+  gap: 0.4rem;
+  align-items: center;
+}
+
 // The select carries its own border, so its label sits above a control of
 // exactly the same height as the toggles beside it.
 .rateSelect {
