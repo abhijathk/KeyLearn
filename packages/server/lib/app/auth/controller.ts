@@ -48,6 +48,7 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
+import { File } from "@sosimple/fsx-file";
 import { z } from "zod";
 import { Mailer, Notifier } from "../mail/index.ts";
 import { isBreached } from "./breached.ts";
@@ -461,6 +462,17 @@ export class Controller {
       await this.userData.loadProfile(userId, profileId).delete();
     } catch (err: any) {
       Logger.warn(err, "Could not delete stats for profile %d", profileId);
+    }
+    // Braille progress is a separate file and was being left behind entirely —
+    // a learner could be deleted and their cell-by-cell record stayed on disk.
+    // It belongs disproportionately to children, who are the least able to ask
+    // for it back.
+    try {
+      await new File(
+        this.userData.dataDir.brailleProgressFile(userId, profileId),
+      ).delete();
+    } catch (err: any) {
+      Logger.warn(err, "Could not delete braille progress for %d", profileId);
     }
     // The database snapshot as well. Erasing only the file would leave a copy
     // behind in the one place that is backed up, which is the opposite of what
@@ -1115,6 +1127,17 @@ export class Controller {
     for (const profile of profiles) {
       await this.#deleteProfileData(user.id!, profile.id!);
     }
+    // The account's OWN history, which belongs to no learner and was being
+    // missed entirely: the loop above only ever visited profiles, so deleting
+    // an account left the account-level file — and its database snapshot —
+    // behind. The snapshot row would also go by foreign key, but this path
+    // deliberately does not depend on the database enforcing that.
+    try {
+      await this.userData.load(new PublicId(user.id!)).delete();
+    } catch (err: any) {
+      Logger.warn(err, "Could not delete account stats for %d", user.id!);
+    }
+    await ProfileData.deleteFor(user.id!, null);
     await Profile.query().where("userId", user.id!).delete();
     // The trail goes with the account: keeping it would retain personal data
     // (addresses, device strings) about someone who asked to be erased.

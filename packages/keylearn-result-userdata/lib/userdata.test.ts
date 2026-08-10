@@ -121,7 +121,10 @@ test("delete existing file", async () => {
 
   isFalse(await userData.exists());
   deepEqual(await readAll(userData), []);
-  isTrue(await exists(name + "~1"));
+  // Erased, not set aside. This assertion used to require the opposite — that
+  // a `~1` copy survived — which meant "clear my statistics" and account
+  // deletion both kept the history they said they had removed.
+  isFalse(await exists(name + "~1"));
 });
 
 test("delete existing file second time", async () => {
@@ -154,7 +157,11 @@ test("delete existing file second time", async () => {
 
   isFalse(await userData.exists());
   deepEqual(await readAll(userData), []);
-  isTrue(await exists(name + "~3"));
+  // And the copies an earlier deletion left behind go too, so somebody who
+  // asked to be erased before this was fixed does not stay on disk.
+  isFalse(await exists(name + "~3"));
+  isFalse(await exists(name + "~1"));
+  isFalse(await exists(name + "~2"));
 });
 
 test("serve", async () => {

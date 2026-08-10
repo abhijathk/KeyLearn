@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
+import { readdir } from "node:fs/promises";
+import { basename, dirname, join } from "node:path";
 import { type Context } from "@fastr/core";
 import { type PublicId } from "@keylearn/publicid";
 import { type Result } from "@keylearn/result";
 import { fileChunk, fileHeader, parseFile } from "@keylearn/result-io";
-import { rename, type Stats } from "@sosimple/fsx";
+import { type Stats } from "@sosimple/fsx";
 import { File } from "@sosimple/fsx-file";
 
 export class UserData {
@@ -62,17 +64,36 @@ export class UserData {
     }
   }
 
+  /**
+   * Erase this history.
+   *
+   * This used to rename the file aside to `name~1` instead of removing it, so
+   * every "clear my statistics" and every account deletion left a complete copy
+   * of the history it claimed to have erased — and a fresh copy each time, so
+   * they accumulated. The interface promises the opposite in as many words
+   * ("There is no undo"), and so does the privacy policy.
+   *
+   * The copies left behind by that behaviour go too: someone who asked to be
+   * erased before this was fixed should not stay on disk because they asked
+   * early.
+   */
   async delete(): Promise<void> {
-    if (await this.file.exists()) {
-      let count = 1;
-      while (true) {
-        const candidate = new File(this.file.name + "~" + count);
-        if (await candidate.exists()) {
-          count += 1;
-        } else {
-          await rename(this.file.name, candidate.name);
-          break;
-        }
+    await this.file.delete();
+    const dir = dirname(this.file.name);
+    const base = basename(this.file.name);
+    let names: string[];
+    try {
+      names = await readdir(dir);
+    } catch {
+      return; // No directory means nothing left to erase.
+    }
+    for (const name of names) {
+      // Only this history's own copies — `19~1` belongs to `19`, `191` does not.
+      if (
+        name.startsWith(`${base}~`) &&
+        /^\d+$/.test(name.slice(base.length + 1))
+      ) {
+        await new File(join(dir, name)).delete();
       }
     }
   }
