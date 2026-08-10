@@ -59,7 +59,6 @@
   "account.course.sit": "Fes l’avaluació",
   "account.course.specimen": "Model",
   "account.course.title": "Curs i certificats",
-  "account.delete.codeError": "Aquest codi és incorrecte o ha caducat.",
   "account.delete.codeMessage": "Introdueix el codi de 6 xifres que t’hem enviat a {email} per suprimir el teu compte de manera permanent. No es pot desfer.",
   "account.delete.confirmTitle": "Suprimir el teu compte?",
   "account.delete.continue": "Continua",

@@ -59,7 +59,6 @@
   "account.course.sit": "Ikuti asesmen",
   "account.course.specimen": "Spesimen",
   "account.course.title": "Kursus & sertifikat",
-  "account.delete.codeError": "Kode tersebut salah atau sudah kedaluwarsa.",
   "account.delete.codeMessage": "Masukkan kode 6 digit yang kami kirim ke {email} untuk menghapus akun Anda secara permanen. Tindakan ini tidak dapat dibatalkan.",
   "account.delete.confirmTitle": "Hapus akun Anda?",
   "account.delete.continue": "Lanjutkan",

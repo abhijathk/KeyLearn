@@ -59,7 +59,6 @@
   "account.course.sit": "Susține evaluarea",
   "account.course.specimen": "Model",
   "account.course.title": "Curs și certificate",
-  "account.delete.codeError": "Codul este incorect sau a expirat.",
   "account.delete.codeMessage": "Introdu codul din 6 cifre trimis prin e-mail la {email} pentru a-ți șterge definitiv contul. Nu există anulare.",
   "account.delete.confirmTitle": "Ștergi contul?",
   "account.delete.continue": "Continuă",

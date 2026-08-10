@@ -59,7 +59,6 @@
   "account.course.sit": "เข้าสอบวัดผล",
   "account.course.specimen": "ตัวอย่าง",
   "account.course.title": "คอร์สและใบรับรอง",
-  "account.delete.codeError": "รหัสนี้ไม่ถูกต้องหรือหมดอายุแล้ว",
   "account.delete.codeMessage": "กรอกรหัส 6 หลักที่เราส่งไปยัง {email} เพื่อลบบัญชีของคุณอย่างถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้",
   "account.delete.confirmTitle": "ลบบัญชีของคุณหรือไม่",
   "account.delete.continue": "ดำเนินการต่อ",

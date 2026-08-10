@@ -58,7 +58,6 @@
   "account.course.samples.note": "Alleen getoond voor de leeftijden die dit huishouden ook echt heeft. Het blad wordt gekozen op leeftijd — onder de negen, negen tot dertien, en veertien en ouder — terwijl de norm wordt gekozen op of de leerling een kind of een volwassene is. Een brailleleerling krijgt het blad van de drie dat bij zijn leeftijd past; het enige verschil is de naam die er in integraal braille onder wordt herhaald, en cellen per minuut op de plek van de snelheid.",
   "account.course.sit": "Het examen afleggen",
   "account.course.title": "Cursus en certificaten",
-  "account.delete.codeError": "Die code is onjuist of verlopen.",
   "account.delete.codeMessage": "Voer de 6-cijferige code in die we naar {email} hebben gestuurd om je account permanent te verwijderen. Dit kan niet ongedaan worden gemaakt.",
   "account.delete.confirmTitle": "Je account verwijderen?",
   "account.delete.continue": "Doorgaan",

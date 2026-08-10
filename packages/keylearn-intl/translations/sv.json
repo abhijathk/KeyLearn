@@ -58,7 +58,6 @@
   "account.course.sit": "Gör provet",
   "account.course.specimen": "Exemplar",
   "account.course.title": "Kurs och diplom",
-  "account.delete.codeError": "Den koden är felaktig eller har gått ut.",
   "account.delete.codeMessage": "Ange den 6-siffriga koden vi mejlade till {email} för att permanent radera ditt konto. Detta kan inte ångras.",
   "account.delete.confirmTitle": "Radera ditt konto?",
   "account.delete.continue": "Fortsätt",

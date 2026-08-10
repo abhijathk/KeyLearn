@@ -59,7 +59,6 @@
   "account.course.sit": "મૂલ્યાંકનમાં બેસો",
   "account.course.specimen": "નમૂનો",
   "account.course.title": "અભ્યાસક્રમ અને પ્રમાણપત્રો",
-  "account.delete.codeError": "તે કોડ ખોટો છે અથવા સમાપ્ત થઈ ગયો છે.",
   "account.delete.codeMessage": "તમારું ખાતું કાયમ માટે ડિલીટ કરવા માટે અમે {email} પર ઈમેલ કરેલો 6-અંકનો કોડ દાખલ કરો. આ ક્રિયા પાછી ફેરવી શકાશે નહીં.",
   "account.delete.confirmTitle": "તમારું ખાતું કાઢી નાખવું છે?",
   "account.delete.continue": "ચાલુ રાખો",

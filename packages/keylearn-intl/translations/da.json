@@ -58,7 +58,6 @@
   "account.course.sit": "Tag prøven",
   "account.course.specimen": "Prøveeksemplar",
   "account.course.title": "Kursus og certifikater",
-  "account.delete.codeError": "Koden er forkert eller udløbet.",
   "account.delete.codeMessage": "Indtast den 6-cifrede kode, vi har sendt til {email}, for permanent at slette din konto. Dette kan ikke fortrydes.",
   "account.delete.confirmTitle": "Slet din konto?",
   "account.delete.continue": "Fortsæt",

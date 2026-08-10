@@ -59,7 +59,6 @@
   "account.course.sit": "మూల్యాంకనానికి కూర్చోండి",
   "account.course.specimen": "నమూనా",
   "account.course.title": "కోర్సు, సర్టిఫికేట్లు",
-  "account.delete.codeError": "ఆ కోడ్ తప్పు లేదా గడువు ముగిసింది.",
   "account.delete.codeMessage": "మీ ఖాతాను శాశ్వతంగా తొలగించడానికి మేము {email}కు ఇమెయిల్ చేసిన 6-అంకెల కోడ్‌ను నమోదు చేయండి. దీన్ని రద్దు చేయడం సాధ్యం కాదు.",
   "account.delete.confirmTitle": "మీ ఖాతాను తొలగించాలా?",
   "account.delete.continue": "కొనసాగించండి",

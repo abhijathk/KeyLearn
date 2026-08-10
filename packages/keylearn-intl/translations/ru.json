@@ -59,7 +59,6 @@
   "account.course.sit": "Пройти аттестацию",
   "account.course.specimen": "Образец",
   "account.course.title": "Курс и сертификаты",
-  "account.delete.codeError": "Этот код неверен или срок его действия истёк.",
   "account.delete.codeMessage": "Введите 6-значный код, отправленный на {email}, чтобы безвозвратно удалить аккаунт. Отменить это будет нельзя.",
   "account.delete.confirmTitle": "Удалить аккаунт?",
   "account.delete.continue": "Продолжить",

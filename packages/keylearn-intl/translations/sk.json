@@ -59,7 +59,6 @@
   "account.course.sit": "Absolvovať skúšku",
   "account.course.specimen": "Vzor",
   "account.course.title": "Kurz a certifikáty",
-  "account.delete.codeError": "Tento kód je nesprávny alebo mu vypršala platnosť.",
   "account.delete.codeMessage": "Zadajte 6-miestny kód, ktorý sme poslali na {email}, na trvalé zmazanie vášho účtu. Túto akciu nemožno vrátiť späť.",
   "account.delete.confirmTitle": "Zmazať váš účet?",
   "account.delete.continue": "Pokračovať",

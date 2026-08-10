@@ -488,6 +488,76 @@
   align-self: flex-end;
 }
 
+// The resend link and its "sent" confirmation share a row, so the reassurance
+// appears beside the control that caused it rather than shifting the dialog.
+.resendRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sentNote {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  color: var(--accent-d1);
+  font-size: 0.8rem;
+  font-weight: 600;
+  animation: sent-note-in 0.25s ease-out;
+
+  svg {
+    inline-size: 0.95rem;
+    block-size: 0.95rem;
+  }
+}
+
+@keyframes sent-note-in {
+  from {
+    opacity: 0;
+    transform: translateX(-0.25rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// Choosing the confirmation factor, on the first delete dialog.
+.methodChoice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.methodLabel {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.85rem;
+}
+
+.methodOption {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  input {
+    accent-color: var(--accent);
+  }
+}
+
+// The alternative confirmation methods, revealed only on request.
+.methodList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
 .keepStats {
   display: flex;
   gap: 0.55rem;

@@ -58,7 +58,6 @@
   "account.course.sit": "Passer l’évaluation",
   "account.course.specimen": "Spécimen",
   "account.course.title": "Cours et certificats",
-  "account.delete.codeError": "Ce code est incorrect ou a expiré.",
   "account.delete.codeMessage": "Saisissez le code à 6 chiffres envoyé par e-mail à {email} pour supprimer définitivement votre compte. Cette action est irréversible.",
   "account.delete.confirmTitle": "Supprimer votre compte?",
   "account.delete.continue": "Continuer",

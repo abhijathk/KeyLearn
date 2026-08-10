@@ -59,7 +59,6 @@
   "account.course.sit": "Jep provimin",
   "account.course.specimen": "Model",
   "account.course.title": "Kursi dhe certifikatat",
-  "account.delete.codeError": "Ky kod është i pasaktë ose ka skaduar.",
   "account.delete.codeMessage": "Shkruaj kodin me 6 shifra që të dërguam me email te {email} për të fshirë përgjithmonë llogarinë tënde. Ky veprim nuk mund të kthehet.",
   "account.delete.confirmTitle": "Të fshihet llogaria jote?",
   "account.delete.continue": "Vazhdo",

@@ -1,14 +1,14 @@
 # English
 
-Translated: 1516 messages, 12174 words
+Translated: 1536 messages, 12302 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 1459 messages, 12003 words
+Translated: 1458 messages, 11996 words
 
-Untranslated: 50 messages, 124 words
+Untranslated: 70 messages, 253 words
 
 * *s*
 * *PIN*
@@ -34,9 +34,9 @@ Untranslated: 50 messages, 124 words
 
 # Arabic
 
-Translated: 1472 messages, 12019 words
+Translated: 1471 messages, 12012 words
 
-Untranslated: 39 messages, 113 words
+Untranslated: 59 messages, 242 words
 
 * *Pick*
 * *Stop*
@@ -57,14 +57,14 @@ Untranslated: 39 messages, 113 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Settings*
+* *Password*
 * ...
 
 # Assamese
 
-Translated: 1470 messages, 12017 words
+Translated: 1469 messages, 12010 words
 
-Untranslated: 41 messages, 115 words
+Untranslated: 61 messages, 244 words
 
 * *PIN*
 * *wpm*
@@ -90,9 +90,9 @@ Untranslated: 41 messages, 115 words
 
 # Bulgarian
 
-Translated: 1472 messages, 12019 words
+Translated: 1471 messages, 12012 words
 
-Untranslated: 39 messages, 113 words
+Untranslated: 59 messages, 242 words
 
 * *Pick*
 * *Stop*
@@ -113,14 +113,14 @@ Untranslated: 39 messages, 113 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Settings*
+* *Password*
 * ...
 
 # Bangla
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *PIN*
 * *Pick*
@@ -146,9 +146,9 @@ Untranslated: 40 messages, 114 words
 
 # Catalan
 
-Translated: 1456 messages, 12000 words
+Translated: 1455 messages, 11993 words
 
-Untranslated: 52 messages, 126 words
+Untranslated: 72 messages, 255 words
 
 * *s*
 * *Arc*
@@ -174,9 +174,9 @@ Untranslated: 52 messages, 126 words
 
 # Czech
 
-Translated: 1463 messages, 12009 words
+Translated: 1462 messages, 12002 words
 
-Untranslated: 47 messages, 121 words
+Untranslated: 67 messages, 250 words
 
 * *s*
 * *PIN*
@@ -202,9 +202,9 @@ Untranslated: 47 messages, 121 words
 
 # Danish
 
-Translated: 1451 messages, 11995 words
+Translated: 1450 messages, 11988 words
 
-Untranslated: 59 messages, 135 words
+Untranslated: 79 messages, 264 words
 
 * *s*
 * *PIN*
@@ -230,9 +230,9 @@ Untranslated: 59 messages, 135 words
 
 # German
 
-Translated: 1449 messages, 11996 words
+Translated: 1448 messages, 11989 words
 
-Untranslated: 62 messages, 136 words
+Untranslated: 82 messages, 265 words
 
 * *s*
 * *PIN*
@@ -258,9 +258,9 @@ Untranslated: 62 messages, 136 words
 
 # Greek
 
-Translated: 1469 messages, 12016 words
+Translated: 1468 messages, 12009 words
 
-Untranslated: 42 messages, 116 words
+Untranslated: 62 messages, 245 words
 
 * *PIN*
 * *wpm*
@@ -286,9 +286,9 @@ Untranslated: 42 messages, 116 words
 
 # Spanish
 
-Translated: 1461 messages, 12005 words
+Translated: 1460 messages, 11998 words
 
-Untranslated: 47 messages, 121 words
+Untranslated: 67 messages, 250 words
 
 * *s*
 * *PIN*
@@ -314,9 +314,9 @@ Untranslated: 47 messages, 121 words
 
 # Estonian
 
-Translated: 1463 messages, 12009 words
+Translated: 1462 messages, 12002 words
 
-Untranslated: 47 messages, 121 words
+Untranslated: 67 messages, 250 words
 
 * *s*
 * *wpm*
@@ -342,9 +342,9 @@ Untranslated: 47 messages, 121 words
 
 # Persian
 
-Translated: 1472 messages, 12019 words
+Translated: 1471 messages, 12012 words
 
-Untranslated: 39 messages, 113 words
+Untranslated: 59 messages, 242 words
 
 * *Pick*
 * *Stop*
@@ -365,14 +365,14 @@ Untranslated: 39 messages, 113 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Settings*
+* *Password*
 * ...
 
 # Finnish
 
-Translated: 1464 messages, 12010 words
+Translated: 1463 messages, 12003 words
 
-Untranslated: 46 messages, 120 words
+Untranslated: 66 messages, 249 words
 
 * *s*
 * *wpm*
@@ -398,9 +398,9 @@ Untranslated: 46 messages, 120 words
 
 # French
 
-Translated: 1449 messages, 11995 words
+Translated: 1448 messages, 11988 words
 
-Untranslated: 61 messages, 135 words
+Untranslated: 81 messages, 264 words
 
 * *s*
 * *Arc*
@@ -426,9 +426,9 @@ Untranslated: 61 messages, 135 words
 
 # Gujarati
 
-Translated: 1470 messages, 12017 words
+Translated: 1469 messages, 12010 words
 
-Untranslated: 41 messages, 115 words
+Untranslated: 61 messages, 244 words
 
 * *PIN*
 * *wpm*
@@ -454,9 +454,9 @@ Untranslated: 41 messages, 115 words
 
 # Hebrew
 
-Translated: 1472 messages, 12019 words
+Translated: 1471 messages, 12012 words
 
-Untranslated: 39 messages, 113 words
+Untranslated: 59 messages, 242 words
 
 * *Pick*
 * *Stop*
@@ -477,14 +477,14 @@ Untranslated: 39 messages, 113 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Settings*
+* *Password*
 * ...
 
 # Hindi
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *PIN*
 * *Pick*
@@ -510,9 +510,9 @@ Untranslated: 40 messages, 114 words
 
 # Croatian
 
-Translated: 1463 messages, 12009 words
+Translated: 1462 messages, 12002 words
 
-Untranslated: 47 messages, 121 words
+Untranslated: 67 messages, 250 words
 
 * *s*
 * *PIN*
@@ -538,9 +538,9 @@ Untranslated: 47 messages, 121 words
 
 # Hungarian
 
-Translated: 1469 messages, 12015 words
+Translated: 1468 messages, 12008 words
 
-Untranslated: 42 messages, 117 words
+Untranslated: 62 messages, 246 words
 
 * *PIN*
 * *Zen*
@@ -566,9 +566,9 @@ Untranslated: 42 messages, 117 words
 
 # Indonesian
 
-Translated: 1463 messages, 12010 words
+Translated: 1462 messages, 12003 words
 
-Untranslated: 48 messages, 122 words
+Untranslated: 68 messages, 251 words
 
 * *PIN*
 * *wpm*
@@ -594,9 +594,9 @@ Untranslated: 48 messages, 122 words
 
 # Icelandic
 
-Translated: 1470 messages, 12017 words
+Translated: 1469 messages, 12010 words
 
-Untranslated: 41 messages, 115 words
+Untranslated: 61 messages, 244 words
 
 * *Sun*
 * *Pick*
@@ -622,9 +622,9 @@ Untranslated: 41 messages, 115 words
 
 # Italian
 
-Translated: 1461 messages, 12005 words
+Translated: 1460 messages, 11998 words
 
-Untranslated: 48 messages, 122 words
+Untranslated: 68 messages, 251 words
 
 * *s*
 * *PIN*
@@ -650,9 +650,9 @@ Untranslated: 48 messages, 122 words
 
 # Japanese
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 41 messages, 115 words
+Untranslated: 61 messages, 244 words
 
 * *PIN*
 * *wpm*
@@ -678,9 +678,9 @@ Untranslated: 41 messages, 115 words
 
 # Kannada
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *PIN*
 * *Pick*
@@ -706,9 +706,9 @@ Untranslated: 40 messages, 114 words
 
 # Korean
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 41 messages, 115 words
+Untranslated: 61 messages, 244 words
 
 * *PIN*
 * *wpm*
@@ -734,9 +734,9 @@ Untranslated: 41 messages, 115 words
 
 # Lithuanian
 
-Translated: 1466 messages, 12012 words
+Translated: 1465 messages, 12005 words
 
-Untranslated: 44 messages, 118 words
+Untranslated: 64 messages, 247 words
 
 * *s*
 * *wpm*
@@ -762,9 +762,9 @@ Untranslated: 44 messages, 118 words
 
 # Latvian
 
-Translated: 1463 messages, 12007 words
+Translated: 1462 messages, 12000 words
 
-Untranslated: 46 messages, 120 words
+Untranslated: 66 messages, 249 words
 
 * *s*
 * *PIN*
@@ -790,9 +790,9 @@ Untranslated: 46 messages, 120 words
 
 # Malayalam
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *PIN*
 * *Pick*
@@ -818,9 +818,9 @@ Untranslated: 40 messages, 114 words
 
 # Mongolian
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *wpm*
 * *Pick*
@@ -846,9 +846,9 @@ Untranslated: 40 messages, 114 words
 
 # Marathi
 
-Translated: 1470 messages, 12015 words
+Translated: 1469 messages, 12008 words
 
-Untranslated: 41 messages, 117 words
+Untranslated: 61 messages, 246 words
 
 * *Pick*
 * *Stop*
@@ -869,14 +869,14 @@ Untranslated: 41 messages, 117 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Settings*
+* *Password*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 1457 messages, 12002 words
+Translated: 1456 messages, 11995 words
 
-Untranslated: 52 messages, 126 words
+Untranslated: 72 messages, 255 words
 
 * *s*
 * *wpm*
@@ -902,9 +902,9 @@ Untranslated: 52 messages, 126 words
 
 # Nepali
 
-Translated: 1470 messages, 12017 words
+Translated: 1469 messages, 12010 words
 
-Untranslated: 41 messages, 115 words
+Untranslated: 61 messages, 244 words
 
 * *PIN*
 * *wpm*
@@ -930,9 +930,9 @@ Untranslated: 41 messages, 115 words
 
 # Dutch
 
-Translated: 1450 messages, 11996 words
+Translated: 1449 messages, 11989 words
 
-Untranslated: 60 messages, 134 words
+Untranslated: 80 messages, 263 words
 
 * *s*
 * *wpm*
@@ -958,9 +958,9 @@ Untranslated: 60 messages, 134 words
 
 # Odia
 
-Translated: 1468 messages, 12013 words
+Translated: 1467 messages, 12006 words
 
-Untranslated: 43 messages, 119 words
+Untranslated: 63 messages, 248 words
 
 * *PIN*
 * *wpm*
@@ -986,9 +986,9 @@ Untranslated: 43 messages, 119 words
 
 # Punjabi
 
-Translated: 1468 messages, 12013 words
+Translated: 1467 messages, 12006 words
 
-Untranslated: 43 messages, 119 words
+Untranslated: 63 messages, 248 words
 
 * *Kid*
 * *PIN*
@@ -1014,9 +1014,9 @@ Untranslated: 43 messages, 119 words
 
 # Polish
 
-Translated: 1465 messages, 12011 words
+Translated: 1464 messages, 12004 words
 
-Untranslated: 45 messages, 119 words
+Untranslated: 65 messages, 248 words
 
 * *s*
 * *PIN*
@@ -1042,9 +1042,9 @@ Untranslated: 45 messages, 119 words
 
 # Brazilian Portuguese
 
-Translated: 1460 messages, 12004 words
+Translated: 1459 messages, 11997 words
 
-Untranslated: 49 messages, 123 words
+Untranslated: 69 messages, 252 words
 
 * *s*
 * *PIN*
@@ -1070,9 +1070,9 @@ Untranslated: 49 messages, 123 words
 
 # European Portuguese
 
-Translated: 1463 messages, 12007 words
+Translated: 1462 messages, 12000 words
 
-Untranslated: 46 messages, 120 words
+Untranslated: 66 messages, 249 words
 
 * *s*
 * *PIN*
@@ -1098,9 +1098,9 @@ Untranslated: 46 messages, 120 words
 
 # Romanian
 
-Translated: 1458 messages, 12002 words
+Translated: 1457 messages, 11995 words
 
-Untranslated: 51 messages, 125 words
+Untranslated: 71 messages, 254 words
 
 * *s*
 * *Arc*
@@ -1126,9 +1126,9 @@ Untranslated: 51 messages, 125 words
 
 # Russian
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *PIN*
 * *Pick*
@@ -1154,9 +1154,9 @@ Untranslated: 40 messages, 114 words
 
 # Slovak
 
-Translated: 1462 messages, 12007 words
+Translated: 1461 messages, 12000 words
 
-Untranslated: 48 messages, 123 words
+Untranslated: 68 messages, 252 words
 
 * *s*
 * *PIN*
@@ -1182,9 +1182,9 @@ Untranslated: 48 messages, 123 words
 
 # Slovenian
 
-Translated: 1462 messages, 12006 words
+Translated: 1461 messages, 11999 words
 
-Untranslated: 47 messages, 121 words
+Untranslated: 67 messages, 250 words
 
 * *s*
 * *PIN*
@@ -1210,9 +1210,9 @@ Untranslated: 47 messages, 121 words
 
 # Albanian
 
-Translated: 1464 messages, 12008 words
+Translated: 1463 messages, 12001 words
 
-Untranslated: 45 messages, 119 words
+Untranslated: 65 messages, 248 words
 
 * *s*
 * *PIN*
@@ -1238,9 +1238,9 @@ Untranslated: 45 messages, 119 words
 
 # Swedish
 
-Translated: 1456 messages, 12002 words
+Translated: 1455 messages, 11995 words
 
-Untranslated: 54 messages, 128 words
+Untranslated: 74 messages, 257 words
 
 * *s*
 * *Zen*
@@ -1266,9 +1266,9 @@ Untranslated: 54 messages, 128 words
 
 # Tamil
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *PIN*
 * *Pick*
@@ -1294,9 +1294,9 @@ Untranslated: 40 messages, 114 words
 
 # Telugu
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *PIN*
 * *Pick*
@@ -1322,9 +1322,9 @@ Untranslated: 40 messages, 114 words
 
 # Thai
 
-Translated: 1472 messages, 12019 words
+Translated: 1471 messages, 12012 words
 
-Untranslated: 39 messages, 113 words
+Untranslated: 59 messages, 242 words
 
 * *Pick*
 * *Stop*
@@ -1345,14 +1345,14 @@ Untranslated: 39 messages, 113 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Settings*
+* *Password*
 * ...
 
 # Turkish
 
-Translated: 1467 messages, 12014 words
+Translated: 1466 messages, 12007 words
 
-Untranslated: 44 messages, 118 words
+Untranslated: 64 messages, 247 words
 
 * *PIN*
 * *wpm*
@@ -1378,9 +1378,9 @@ Untranslated: 44 messages, 118 words
 
 # Ukrainian
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *PIN*
 * *Pick*
@@ -1406,9 +1406,9 @@ Untranslated: 40 messages, 114 words
 
 # Urdu
 
-Translated: 1472 messages, 12019 words
+Translated: 1471 messages, 12012 words
 
-Untranslated: 39 messages, 113 words
+Untranslated: 59 messages, 242 words
 
 * *Pick*
 * *Stop*
@@ -1429,14 +1429,14 @@ Untranslated: 39 messages, 113 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Settings*
+* *Password*
 * ...
 
 # Vietnamese
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *wpm*
 * *Pick*
@@ -1462,9 +1462,9 @@ Untranslated: 40 messages, 114 words
 
 # Simplified Chinese
 
-Translated: 1473 messages, 12020 words
+Translated: 1472 messages, 12013 words
 
-Untranslated: 39 messages, 113 words
+Untranslated: 59 messages, 242 words
 
 * *Pick*
 * *Stop*
@@ -1485,14 +1485,14 @@ Untranslated: 39 messages, 113 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Settings*
+* *Password*
 * ...
 
 # Traditional Chinese
 
-Translated: 1471 messages, 12018 words
+Translated: 1470 messages, 12011 words
 
-Untranslated: 40 messages, 114 words
+Untranslated: 60 messages, 243 words
 
 * *wpm*
 * *Pick*

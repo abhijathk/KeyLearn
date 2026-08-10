@@ -59,7 +59,6 @@
   "account.course.sit": "평가 응시하기",
   "account.course.specimen": "견본",
   "account.course.title": "과정과 인증서",
-  "account.delete.codeError": "코드가 올바르지 않거나 만료되었습니다.",
   "account.delete.codeMessage": "{email}(으)로 보낸 6자리 코드를 입력하면 계정이 영구적으로 삭제됩니다. 되돌릴 수 없습니다.",
   "account.delete.confirmTitle": "계정을 삭제하시겠습니까?",
   "account.delete.continue": "계속",

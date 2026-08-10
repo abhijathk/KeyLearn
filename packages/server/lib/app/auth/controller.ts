@@ -251,15 +251,27 @@ const PVerifyCode = zod(TVerifyCode, () => {
   throw new ApplicationError("Enter the 6-digit code from your email");
 });
 
+// Deleting an account may be confirmed by ANY factor the account actually
+// holds — the emailed code, an authenticator code, the password, or a passkey.
+// Email is the default because every account has an address, but somebody who
+// has lost access to their inbox should still be able to close their account
+// with a factor they do control.
 const TDeleteAccount = z.object({
-  code: z.string().regex(/^\d{6}$/),
+  code: z
+    .string()
+    .regex(/^\d{6}$/)
+    .optional(),
+  // An authenticator code, or one of the printed recovery codes.
+  totp: z.string().min(1).max(64).optional(),
+  password: z.string().min(1).max(256).optional(),
+  passkey: z.any().optional(),
   // Opt-in: keep anonymised adult typing stats (no personal data) to help
   // improve the app. Never set for child profiles.
   keepStats: z.boolean().optional(),
 });
 type TDeleteAccount = z.infer<typeof TDeleteAccount>;
 const PDeleteAccount = zod(TDeleteAccount, () => {
-  throw new ApplicationError("Enter the 6-digit code from your email");
+  throw new ApplicationError("Confirm with one of the methods offered");
 });
 
 const TLookup = z.object({
@@ -953,24 +965,132 @@ export class Controller {
     ctx.response.body = { ok: true };
   }
 
+  // Which factors this account can actually confirm a deletion with. The
+  // dialog offers email first and hides the rest behind "more ways", so it
+  // must never advertise a method the account hasn't set up.
+  @http.GET({
+    name: "delete-account-methods",
+    path: "/_/account/delete-methods",
+  })
+  async deleteAccountMethods(
+    ctx: Context<RouterState & SessionState & AuthState>,
+  ) {
+    const user = ctx.state.requireUser();
+    ctx.response.body = {
+      email: user.email != null,
+      password: user.passwordHash != null,
+      totp: user.totpEnabled === true,
+      passkey: (await Credential.listForUser(user.id!)).length > 0,
+    };
+  }
+
+  // A WebAuthn challenge for the deletion dialog, restricted to this account's
+  // own passkeys. It is kept under its own session key: reusing the sign-in
+  // challenge would let an assertion collected for one purpose be replayed for
+  // the other.
+  @http.POST({
+    name: "delete-account-passkey-options",
+    path: "/_/account/delete-passkey-options",
+  })
+  async deleteAccountPasskeyOptions(
+    ctx: Context<RouterState & SessionState & AuthState>,
+  ) {
+    const user = ctx.state.requireUser();
+    rateLimit(ctx, "passkey", 30, 60_000);
+    const { rpID } = this.#rp();
+    const creds = await Credential.listForUser(user.id!);
+    if (creds.length === 0) {
+      throw new ApplicationError("This account has no passkeys.");
+    }
+    const options = await generateAuthenticationOptions({
+      rpID,
+      userVerification: "preferred",
+      allowCredentials: creds.map((cred) => ({
+        id: cred.credentialId!,
+        transports: cred.transports ? JSON.parse(cred.transports) : undefined,
+      })),
+    });
+    ctx.state.session.set("deleteChallenge", options.challenge);
+    ctx.response.body = options;
+  }
+
+  // Does the supplied assertion prove control of one of THIS account's
+  // passkeys? Anything less — a valid assertion for somebody else's key, a
+  // stale challenge — is a refusal.
+  async #confirmByPasskey(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    user: User,
+    response: any,
+  ): Promise<boolean> {
+    const expectedChallenge = ctx.state.session.pull("deleteChallenge") as
+      | string
+      | undefined;
+    if (expectedChallenge == null) {
+      return false;
+    }
+    const cred = await Credential.findByCredentialId(String(response?.id));
+    if (cred == null || cred.userId !== user.id) {
+      return false;
+    }
+    const { rpID, origin } = this.#rp();
+    try {
+      const verification = await verifyAuthenticationResponse({
+        response,
+        expectedChallenge,
+        expectedOrigin: origin,
+        expectedRPID: rpID,
+        credential: {
+          id: cred.credentialId!,
+          publicKey: new Uint8Array(Buffer.from(cred.publicKey!, "base64")),
+          counter: cred.counter ?? 0,
+          transports: cred.transports ? JSON.parse(cred.transports) : undefined,
+        },
+      });
+      return verification.verified;
+    } catch {
+      return false;
+    }
+  }
+
   @http.POST({ name: "delete-account", path: "/_/account/delete" })
   async deleteAccount(
     ctx: Context<RouterState & SessionState & AuthState>,
-    @body.json(PDeleteAccount, jsonOpts) { code, keepStats }: TDeleteAccount,
+    @body.json(PDeleteAccount, jsonOpts)
+    { code, totp, password, passkey, keepStats }: TDeleteAccount,
   ) {
     const user = ctx.state.requireUser();
-    // Confirm the request with a code sent to the registered email.
-    if (user.email != null) {
-      const ok = await EmailVerification.verify(
-        user.email,
-        "delete-account",
-        code,
+    // Guessable factors are throttled together, so trying the password after
+    // running out of code attempts doesn't buy a fresh budget.
+    rateLimit(ctx, "delete-confirm", 10, 300_000);
+    // An account that holds no factor at all — no address, no password, no
+    // authenticator, no passkey — has nothing to prove itself with, and the
+    // live session is the only evidence there could be. Refusing here would
+    // trap somebody in an account they cannot close.
+    const noFactors =
+      user.email == null &&
+      user.passwordHash == null &&
+      user.totpEnabled !== true &&
+      (await Credential.listForUser(user.id!)).length === 0;
+    // Any ONE factor the account actually holds confirms the deletion.
+    const confirmed =
+      noFactors ||
+      (code != null &&
+        user.email != null &&
+        (await EmailVerification.verify(user.email, "delete-account", code))) ||
+      (totp != null &&
+        user.totpEnabled === true &&
+        ((user.totpSecret != null && verifyTotp(user.totpSecret, totp)) ||
+          (await user.useRecoveryCode(totp)))) ||
+      (password != null &&
+        user.passwordHash != null &&
+        user.email != null &&
+        (await User.loginWithPassword(user.email, password)) != null) ||
+      (passkey != null && (await this.#confirmByPasskey(ctx, user, passkey)));
+    if (!confirmed) {
+      this.#audit(ctx, "account-delete-failed", user.id!);
+      throw new ForbiddenError(
+        "That confirmation is incorrect or has expired.",
       );
-      if (!ok) {
-        throw new ForbiddenError(
-          "That confirmation code is incorrect or has expired.",
-        );
-      }
     }
     const profiles = await Profile.listForUser(user.id!);
     // Opt-in: keep anonymised ADULT stats (identifiers stripped) before the

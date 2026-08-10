@@ -59,7 +59,6 @@
   "account.course.sit": "Пройти атестацію",
   "account.course.specimen": "Зразок",
   "account.course.title": "Курс і сертифікати",
-  "account.delete.codeError": "Цей код неправильний або його термін дії минув.",
   "account.delete.codeMessage": "Введіть 6-значний код, який ми надіслали на {email}, щоб остаточно видалити ваш обліковий запис. Це неможливо скасувати.",
   "account.delete.confirmTitle": "Видалити ваш обліковий запис?",
   "account.delete.continue": "Продовжити",

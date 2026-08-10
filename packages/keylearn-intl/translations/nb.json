@@ -59,7 +59,6 @@
   "account.course.sit": "Ta prøven",
   "account.course.specimen": "Eksemplar",
   "account.course.title": "Kurs og kursbevis",
-  "account.delete.codeError": "Koden er feil eller har utløpt.",
   "account.delete.codeMessage": "Skriv inn den 6-sifrede koden vi sendte på e-post til {email} for å slette kontoen din permanent. Dette kan ikke angres.",
   "account.delete.confirmTitle": "Slette kontoen din?",
   "account.delete.continue": "Fortsett",

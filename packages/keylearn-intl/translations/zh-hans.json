@@ -59,7 +59,6 @@
   "account.course.sit": "参加测评",
   "account.course.specimen": "样张",
   "account.course.title": "课程与证书",
-  "account.delete.codeError": "验证码不正确或已过期。",
   "account.delete.codeMessage": "输入我们发送到 {email} 的 6 位验证码，以永久删除你的账户。此操作无法撤销。",
   "account.delete.confirmTitle": "删除你的账户？",
   "account.delete.continue": "继续",

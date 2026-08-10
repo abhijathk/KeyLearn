@@ -59,7 +59,6 @@
   "account.course.sit": "خُض التقييم",
   "account.course.specimen": "نموذج",
   "account.course.title": "المنهج والشهادات",
-  "account.delete.codeError": "هذا الرمز غير صحيح أو انتهت صلاحيته.",
   "account.delete.codeMessage": "أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى {email} لحذف حسابك نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
   "account.delete.confirmTitle": "هل تريد حذف حسابك؟",
   "account.delete.continue": "متابعة",

@@ -58,7 +58,6 @@
   "account.course.sit": "Prüfung ablegen",
   "account.course.specimen": "Muster",
   "account.course.title": "Kurs & Zertifikate",
-  "account.delete.codeError": "Dieser Code ist falsch oder abgelaufen.",
   "account.delete.codeMessage": "Gib den 6-stelligen Code ein, den wir an {email} gesendet haben, um dein Konto endgültig zu löschen. Dies kann nicht rückgängig gemacht werden.",
   "account.delete.confirmTitle": "Konto löschen?",
   "account.delete.continue": "Weiter",

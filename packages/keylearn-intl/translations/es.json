@@ -59,7 +59,6 @@
   "account.course.sit": "Hacer la evaluación",
   "account.course.specimen": "Modelo",
   "account.course.title": "Curso y certificados",
-  "account.delete.codeError": "Ese código es incorrecto o ha caducado.",
   "account.delete.codeMessage": "Introduce el código de 6 dígitos que enviamos a {email} para eliminar tu cuenta de forma permanente. No hay vuelta atrás.",
   "account.delete.confirmTitle": "¿Eliminar tu cuenta?",
   "account.delete.continue": "Continuar",

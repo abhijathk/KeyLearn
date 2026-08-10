@@ -59,7 +59,6 @@
   "account.course.sit": "Fazer a avaliação",
   "account.course.specimen": "Espécime",
   "account.course.title": "Curso e certificados",
-  "account.delete.codeError": "Esse código está incorreto ou expirou.",
   "account.delete.codeMessage": "Introduz o código de 6 dígitos que enviámos para {email} para eliminares a tua conta definitivamente. Não há como desfazer.",
   "account.delete.confirmTitle": "Eliminar a tua conta?",
   "account.delete.continue": "Continuar",

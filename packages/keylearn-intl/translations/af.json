@@ -59,7 +59,6 @@
   "account.course.sit": "Lê die assessering af",
   "account.course.specimen": "Voorbeeld",
   "account.course.title": "Kursus en sertifikate",
-  "account.delete.codeError": "Daardie kode is verkeerd of het verval.",
   "account.delete.codeMessage": "Voer die 6-syfer-kode in wat ons na {email} gestuur het om jou rekening permanent uit te vee. Daar is geen herstel nie.",
   "account.delete.confirmTitle": "Vee jou rekening uit?",
   "account.delete.continue": "Gaan voort",

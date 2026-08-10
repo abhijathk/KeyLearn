@@ -59,7 +59,6 @@
   "account.course.sit": "Osallistu kokeeseen",
   "account.course.specimen": "Mallikappale",
   "account.course.title": "Kurssi ja todistukset",
-  "account.delete.codeError": "Koodi on väärä tai vanhentunut.",
   "account.delete.codeMessage": "Anna sähköpostiisi {email} lähetetty 6-numeroinen koodi poistaaksesi tilisi pysyvästi. Toimintoa ei voi peruuttaa.",
   "account.delete.confirmTitle": "Poistetaanko tilisi?",
   "account.delete.continue": "Jatka",

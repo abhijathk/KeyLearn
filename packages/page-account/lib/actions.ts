@@ -2,12 +2,22 @@ import { catchError } from "@keylearn/debug";
 import { type AnyUser, logout, type UserDetails } from "@keylearn/pages-shared";
 import { useState } from "react";
 import { checkoutProduct } from "./checkout.ts";
-import { AccountService, type PatchAccountRequest } from "./service.ts";
+import {
+  AccountService,
+  type DeleteMethods,
+  type DeleteProof,
+  type PatchAccountRequest,
+} from "./service.ts";
 
 export type AccountActions = {
   readonly patchAccount: (request: PatchAccountRequest) => void;
   readonly sendDeleteAccountCode: () => Promise<void>;
-  readonly deleteAccount: (code: string, keepStats: boolean) => Promise<void>;
+  readonly deleteAccountMethods: () => Promise<DeleteMethods>;
+  readonly deleteAccountPasskeyProof: () => Promise<DeleteProof>;
+  readonly deleteAccount: (
+    proof: DeleteProof,
+    keepStats: boolean,
+  ) => Promise<void>;
   readonly logout: () => void;
   readonly checkout: () => void;
 };
@@ -30,8 +40,11 @@ export function useAccountActions(props: {
   // emailed and entered there), so these just perform the action. deleteAccount
   // returns its promise so the dialog can surface a wrong-code error.
   const sendDeleteAccountCode = () => AccountService.sendDeleteAccountCode();
-  const deleteAccount = (code: string, keepStats: boolean) =>
-    AccountService.deleteAccount(code, keepStats).then(() => {
+  const deleteAccountMethods = () => AccountService.deleteAccountMethods();
+  const deleteAccountPasskeyProof = () =>
+    AccountService.deleteAccountPasskeyProof();
+  const deleteAccount = (proof: DeleteProof, keepStats: boolean) =>
+    AccountService.deleteAccount(proof, keepStats).then(() => {
       reload("/");
     });
 
@@ -49,6 +62,8 @@ export function useAccountActions(props: {
     actions: {
       patchAccount,
       sendDeleteAccountCode,
+      deleteAccountMethods,
+      deleteAccountPasskeyProof,
       deleteAccount,
       logout: doLogout,
       checkout,

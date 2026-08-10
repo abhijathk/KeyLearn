@@ -59,7 +59,6 @@
   "account.course.sit": "認定テストを受ける",
   "account.course.specimen": "見本",
   "account.course.title": "コースと認定証",
-  "account.delete.codeError": "コードが間違っているか、有効期限が切れています。",
   "account.delete.codeMessage": "{email} に送信した6桁のコードを入力すると、アカウントが完全に削除されます。この操作は取り消せません。",
   "account.delete.confirmTitle": "アカウントを削除しますか?",
   "account.delete.continue": "続ける",

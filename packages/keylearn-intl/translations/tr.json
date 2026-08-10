@@ -59,7 +59,6 @@
   "account.course.sit": "Değerlendirmeye gir",
   "account.course.specimen": "Örnek",
   "account.course.title": "Kurs ve sertifikalar",
-  "account.delete.codeError": "Bu kod yanlış veya süresi dolmuş.",
   "account.delete.codeMessage": "Hesabınızı kalıcı olarak silmek için {email} adresine gönderdiğimiz 6 haneli kodu girin. Bu işlem geri alınamaz.",
   "account.delete.confirmTitle": "Hesabınızı silmek istiyor musunuz?",
   "account.delete.continue": "Devam et",

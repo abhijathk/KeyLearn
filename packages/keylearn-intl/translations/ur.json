@@ -59,7 +59,6 @@
   "account.course.sit": "جائزہ دیں",
   "account.course.specimen": "نمونہ",
   "account.course.title": "کورس اور سندیں",
-  "account.delete.codeError": "یہ کوڈ غلط ہے یا میعاد ختم ہو چکی ہے۔",
   "account.delete.codeMessage": "اپنا اکاؤنٹ مستقل طور پر حذف کرنے کے لیے وہ 6 ہندسوں کا کوڈ درج کریں جو ہم نے {email} پر ای میل کیا ہے۔ اسے واپس نہیں لیا جا سکتا۔",
   "account.delete.confirmTitle": "اپنا اکاؤنٹ حذف کریں؟",
   "account.delete.continue": "جاری رکھیں",

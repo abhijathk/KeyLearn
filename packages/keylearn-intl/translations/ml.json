@@ -59,7 +59,6 @@
   "account.course.sit": "വിലയിരുത്തലിന് ഇരിക്കുക",
   "account.course.specimen": "മാതൃക",
   "account.course.title": "കോഴ്സും സർട്ടിഫിക്കറ്റുകളും",
-  "account.delete.codeError": "ആ കോഡ് തെറ്റാണ് അല്ലെങ്കിൽ കാലഹരണപ്പെട്ടു.",
   "account.delete.codeMessage": "നിങ്ങളുടെ അക്കൗണ്ട് ശാശ്വതമായി ഇല്ലാതാക്കാൻ ഞങ്ങൾ {email}-ലേക്ക് അയച്ച 6 അക്ക കോഡ് നൽകുക. ഇത് പഴയപടിയാക്കാൻ കഴിയില്ല.",
   "account.delete.confirmTitle": "നിങ്ങളുടെ അക്കൗണ്ട് ഇല്ലാതാക്കണോ?",
   "account.delete.continue": "തുടരുക",

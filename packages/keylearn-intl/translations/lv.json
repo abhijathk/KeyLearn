@@ -59,7 +59,6 @@
   "account.course.sit": "Kārtot pārbaudījumu",
   "account.course.specimen": "Paraugs",
   "account.course.title": "Kurss un sertifikāti",
-  "account.delete.codeError": "Šis kods ir nepareizs vai tam beidzies derīguma termiņš.",
   "account.delete.codeMessage": "Ievadi 6 ciparu kodu, ko nosūtījām uz {email}, lai neatgriezeniski dzēstu savu kontu. Atsaukt to nevarēs.",
   "account.delete.confirmTitle": "Dzēst kontu?",
   "account.delete.continue": "Turpināt",

@@ -59,7 +59,6 @@
   "account.course.sit": "גש למבחן",
   "account.course.specimen": "דוגמה",
   "account.course.title": "קורס ותעודות",
-  "account.delete.codeError": "הקוד שגוי או שפג תוקפו.",
   "account.delete.codeMessage": "הזן את הקוד בן 6 הספרות ששלחנו במייל אל {email} כדי למחוק את חשבונך לצמיתות. לא ניתן לבטל פעולה זו.",
   "account.delete.confirmTitle": "למחוק את חשבונך?",
   "account.delete.continue": "המשך",

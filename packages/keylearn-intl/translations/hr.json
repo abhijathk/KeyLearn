@@ -59,7 +59,6 @@
   "account.course.sit": "Pristupi provjeri znanja",
   "account.course.specimen": "Ogledni primjerak",
   "account.course.title": "Tečaj i certifikati",
-  "account.delete.codeError": "Taj kôd je netočan ili je istekao.",
   "account.delete.codeMessage": "Unesite šesteroznamenkasti kôd koji smo poslali e-poštom na {email} kako biste trajno izbrisali svoj račun. Ovo se ne može poništiti.",
   "account.delete.confirmTitle": "Izbrisati svoj račun?",
   "account.delete.continue": "Nastavi",

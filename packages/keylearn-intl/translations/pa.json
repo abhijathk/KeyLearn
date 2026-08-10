@@ -59,7 +59,6 @@
   "account.course.sit": "ਮੁਲਾਂਕਣ ਦਿਓ",
   "account.course.specimen": "ਨਮੂਨਾ",
   "account.course.title": "ਕੋਰਸ ਤੇ ਸਰਟੀਫ਼ਿਕੇਟ",
-  "account.delete.codeError": "ਉਹ ਕੋਡ ਗ਼ਲਤ ਹੈ ਜਾਂ ਉਸਦੀ ਮਿਆਦ ਲੰਘ ਚੁੱਕੀ ਹੈ।",
   "account.delete.codeMessage": "ਆਪਣਾ ਖਾਤਾ ਪੱਕੇ ਤੌਰ ’ਤੇ ਮਿਟਾਉਣ ਲਈ ਉਹ 6-ਅੰਕਾਂ ਵਾਲਾ ਕੋਡ ਭਰੋ ਜੋ ਅਸੀਂ {email} ਉੱਤੇ ਈਮੇਲ ਕੀਤਾ ਹੈ। ਇਹ ਵਾਪਸ ਨਹੀਂ ਹੋ ਸਕਦਾ।",
   "account.delete.confirmTitle": "ਆਪਣਾ ਖਾਤਾ ਮਿਟਾਉਣਾ ਹੈ?",
   "account.delete.continue": "ਅੱਗੇ ਵਧੋ",

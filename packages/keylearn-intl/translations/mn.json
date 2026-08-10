@@ -59,7 +59,6 @@
   "account.course.sit": "Шалгалт өгөх",
   "account.course.specimen": "Загвар хуудас",
   "account.course.title": "Курс ба гэрчилгээ",
-  "account.delete.codeError": "Тэр код буруу эсвэл хугацаа нь дууссан байна.",
   "account.delete.codeMessage": "Дансаа бүрмөсөн устгахын тулд бид {email} руу илгээсэн 6 оронтой кодыг оруулна уу. Үүнийг буцаах боломжгүй.",
   "account.delete.confirmTitle": "Дансаа устгах уу?",
   "account.delete.continue": "Үргэлжлүүлэх",

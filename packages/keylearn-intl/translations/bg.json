@@ -59,7 +59,6 @@
   "account.course.sit": "Явяване на изпита",
   "account.course.specimen": "Образец",
   "account.course.title": "Курс и сертификати",
-  "account.delete.codeError": "Този код е грешен или е изтекъл.",
   "account.delete.codeMessage": "Въведете 6-цифрения код, който изпратихме на {email}, за да изтриете акаунта си завинаги. Това не може да бъде отменено.",
   "account.delete.confirmTitle": "Да изтрия ли акаунта ви?",
   "account.delete.continue": "Продължи",

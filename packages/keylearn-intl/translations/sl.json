@@ -59,7 +59,6 @@
   "account.course.sit": "Opravi preverjanje",
   "account.course.specimen": "Vzorec",
   "account.course.title": "Tečaj in potrdila",
-  "account.delete.codeError": "Ta koda je nepravilna ali je potekla.",
   "account.delete.codeMessage": "Vnesite 6-mestno kodo, ki smo jo poslali na {email}, da trajno izbrišete svoj račun. Tega dejanja ni mogoče razveljaviti.",
   "account.delete.confirmTitle": "Želite izbrisati svoj račun?",
   "account.delete.continue": "Nadaljuj",

@@ -16,6 +16,7 @@ export function ConfirmDialog({
   confirmLabel,
   danger = false,
   requireText,
+  extra,
   onConfirm,
   onCancel,
 }: {
@@ -24,6 +25,8 @@ export function ConfirmDialog({
   readonly confirmLabel: string;
   readonly danger?: boolean;
   readonly requireText?: string;
+  /** Extra content between the message and the buttons. */
+  readonly extra?: ReactNode;
   readonly onConfirm: () => void;
   readonly onCancel: () => void;
 }): ReactNode {
@@ -86,6 +89,7 @@ export function ConfirmDialog({
             />
           </>
         )}
+        {extra}
         <div className={styles.actions}>
           <button
             className={clsx(styles.btn, styles.cancel)}

@@ -59,7 +59,6 @@
   "account.course.sit": "Sostieni l’esame",
   "account.course.specimen": "Fac-simile",
   "account.course.title": "Corso e certificati",
-  "account.delete.codeError": "Il codice non è corretto o è scaduto.",
   "account.delete.codeMessage": "Inserisci il codice a 6 cifre che abbiamo inviato a {email} per eliminare definitivamente il tuo account. Non si può annullare.",
   "account.delete.confirmTitle": "Eliminare il tuo account?",
   "account.delete.continue": "Continua",

@@ -100,6 +100,10 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   // Lifted, because the confirmation has to say which of the two logouts is
   // about to happen — the wider one is not undoable by logging back in here.
   const [alsoEverywhere, setAlsoEverywhere] = useState(false);
+  // Which factor will confirm the deletion, chosen on the first dialog and
+  // carried into the second, plus the other factors this account holds.
+  const [deleteMethod, setDeleteMethod] = useState<DeleteMethod>("email");
+  const [deleteOthers, setDeleteOthers] = useState<readonly DeleteMethod[]>([]);
 
   return (
     <FloatingShell
@@ -356,6 +360,17 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
             defaultMessage: "Continue",
           })}
           danger={true}
+          // How to confirm is chosen HERE, before the next step — otherwise
+          // opening that step emails a code to somebody who meant to use their
+          // passkey all along.
+          extra={
+            <DeleteMethodChooser
+              actions={actions}
+              method={deleteMethod}
+              onChange={setDeleteMethod}
+              onMethods={setDeleteOthers}
+            />
+          }
           onConfirm={() => setConfirm("delete2")}
           onCancel={() => setConfirm(null)}
         />
@@ -365,6 +380,9 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
         <DeleteAccountDialog
           email={user.email}
           actions={actions}
+          method={deleteMethod}
+          others={deleteOthers}
+          onChangeMethod={setDeleteMethod}
           onCancel={() => setConfirm(null)}
         />
       )}
@@ -569,35 +587,255 @@ function CheckIcon(): ReactNode {
   );
 }
 
-// The final, strongest delete step: a 6-digit code is emailed to the account's
-// registered address and must be entered to permanently delete it.
+// The final, strongest delete step. An emailed code is the default because
+// every account has an address, but somebody who has lost access to their inbox
+// can confirm with any other factor the account actually holds — so the other
+// methods appear only when they are set up, tucked behind "other ways".
+type DeleteMethod = "email" | "totp" | "password" | "passkey";
+
+// How each factor is named where the account holder picks it.
+function MethodName({ method }: { readonly method: DeleteMethod }): ReactNode {
+  switch (method) {
+    case "email":
+      return (
+        <FormattedMessage
+          id="account.delete.methodEmail"
+          defaultMessage="A code emailed to me"
+        />
+      );
+    case "passkey":
+      return (
+        <FormattedMessage
+          id="account.delete.methodPasskey"
+          defaultMessage="My passkey"
+        />
+      );
+    case "totp":
+      return (
+        <FormattedMessage
+          id="account.delete.methodTotp"
+          defaultMessage="My authenticator app"
+        />
+      );
+    case "password":
+      return (
+        <FormattedMessage
+          id="account.delete.methodPassword"
+          defaultMessage="My password"
+        />
+      );
+  }
+}
+
+// The same four factors, phrased as a change of mind partway through.
+function MethodSwitchLabel({
+  method,
+}: {
+  readonly method: DeleteMethod;
+}): ReactNode {
+  switch (method) {
+    case "email":
+      return (
+        <FormattedMessage
+          id="account.delete.useEmail"
+          defaultMessage="Use an emailed code instead"
+        />
+      );
+    case "passkey":
+      return (
+        <FormattedMessage
+          id="account.delete.usePasskey"
+          defaultMessage="Use my passkey instead"
+        />
+      );
+    case "totp":
+      return (
+        <FormattedMessage
+          id="account.delete.useTotp"
+          defaultMessage="Use my authenticator app instead"
+        />
+      );
+    case "password":
+      return (
+        <FormattedMessage
+          id="account.delete.usePassword"
+          defaultMessage="Use my password instead"
+        />
+      );
+  }
+}
+
+/**
+ * Picks the factor that will confirm the deletion, on the first dialog. An
+ * emailed code is the default because every account has an address; the rest
+ * appear only when the account actually holds them, and only on request.
+ */
+function DeleteMethodChooser({
+  actions,
+  method,
+  onChange,
+  onMethods,
+}: {
+  readonly actions: AccountActions;
+  readonly method: DeleteMethod;
+  readonly onChange: (method: DeleteMethod) => void;
+  readonly onMethods: (others: readonly DeleteMethod[]) => void;
+}): ReactNode {
+  const [choices, setChoices] = useState<readonly DeleteMethod[]>([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    actions
+      .deleteAccountMethods()
+      .then((m) => {
+        const rest: DeleteMethod[] = [];
+        if (m.passkey) {
+          rest.push("passkey");
+        }
+        if (m.totp) {
+          rest.push("totp");
+        }
+        if (m.password) {
+          rest.push("password");
+        }
+        onMethods(rest);
+        setChoices(m.email ? ["email", ...rest] : rest);
+        // An account with no address has no default to fall back on.
+        if (!m.email && rest.length > 0) {
+          onChange(rest[0]);
+          setOpen(true);
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Nothing to choose between: say nothing rather than show a menu of one.
+  if (choices.length < 2) {
+    return null;
+  }
+
+  return (
+    <div className={styles.methodChoice}>
+      <p className={styles.methodLabel}>
+        <FormattedMessage
+          id="account.delete.howConfirm"
+          defaultMessage="Confirm with:"
+        />{" "}
+        <strong>
+          <MethodName method={method} />
+        </strong>
+      </p>
+      {open ? (
+        <div className={styles.methodList}>
+          {choices.map((m) => (
+            <label key={m} className={styles.methodOption}>
+              <input
+                type="radio"
+                name="delete-method"
+                checked={m === method}
+                onChange={() => onChange(m)}
+              />
+              <MethodName method={m} />
+            </label>
+          ))}
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={styles.link}
+          onClick={() => setOpen(true)}
+        >
+          <FormattedMessage
+            id="account.delete.otherWays"
+            defaultMessage="Other ways to confirm"
+          />
+        </button>
+      )}
+    </div>
+  );
+}
+
 function DeleteAccountDialog({
   email,
   actions,
+  method,
+  others,
+  onChangeMethod,
   onCancel,
 }: {
   readonly email: string;
   readonly actions: AccountActions;
+  readonly method: DeleteMethod;
+  readonly others: readonly DeleteMethod[];
+  readonly onChangeMethod: (method: DeleteMethod) => void;
   readonly onCancel: () => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const [code, setCode] = useState("");
+  const [totp, setTotp] = useState("");
+  const [password, setPassword] = useState("");
   const [keepStats, setKeepStats] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [showSwitch, setShowSwitch] = useState(false);
+  // Every factor this account holds except the one in use. "email" is always a
+  // possibility to switch back to when the account has an address.
+  const switchable = (
+    email !== "" ? (["email", ...others] as DeleteMethod[]) : [...others]
+  ).filter((m) => m !== method);
+  // Resending is silent otherwise — the same screen, the same empty box, no
+  // sign anything happened. Confirm it, and hold the link shut briefly so a
+  // second impatient click doesn't invalidate the code that just arrived.
+  const [sentAt, setSentAt] = useState(0);
+  const [cooldown, setCooldown] = useState(0);
 
-  // Email the code as soon as the dialog opens.
+  const sendCode = (initial: boolean) => {
+    setErr(null);
+    actions
+      .sendDeleteAccountCode()
+      .then(() => {
+        if (!initial) {
+          setSentAt(Date.now());
+        }
+        setCooldown(30);
+      })
+      .catch(() => {
+        setErr(
+          formatMessage({
+            id: "account.delete.sendError",
+            defaultMessage: "Couldn’t send the code. Try again in a moment.",
+          }),
+        );
+      });
+  };
+
+  // A code is emailed only if that is the chosen method — an account holder who
+  // picked their passkey on the previous step never triggers one.
   useEffect(() => {
-    actions.sendDeleteAccountCode().catch(() => {
-      setErr(
-        formatMessage({
-          id: "account.delete.sendError",
-          defaultMessage: "Couldn’t send the code. Try again in a moment.",
-        }),
-      );
-    });
+    if (method === "email") {
+      sendCode(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [method]);
+
+  // Tick the resend cooldown down to zero.
+  useEffect(() => {
+    if (cooldown === 0) {
+      return;
+    }
+    const id = window.setTimeout(() => setCooldown((n) => n - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [cooldown]);
+
+  // The "sent" confirmation is a moment's reassurance, not a permanent label.
+  useEffect(() => {
+    if (sentAt === 0) {
+      return;
+    }
+    const id = window.setTimeout(() => setSentAt(0), 6000);
+    return () => window.clearTimeout(id);
+  }, [sentAt]);
 
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
@@ -609,22 +847,42 @@ function DeleteAccountDialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
 
+  // Enough to submit? A passkey needs nothing typed — the browser prompt is
+  // the whole of it.
+  const ready =
+    (method === "email" && code.trim().length === 6) ||
+    (method === "totp" && totp.trim().length > 0) ||
+    (method === "password" && password.length > 0) ||
+    method === "passkey";
+
   const confirm = () => {
-    if (code.trim().length !== 6 || busy) {
+    if (!ready || busy) {
       return;
     }
     setBusy(true);
     setErr(null);
-    actions.deleteAccount(code.trim(), keepStats).catch((e) => {
-      setErr(
-        e?.message ??
-          formatMessage({
-            id: "account.delete.codeError",
-            defaultMessage: "That code is incorrect or has expired.",
-          }),
-      );
-      setBusy(false);
-    });
+    const proof =
+      method === "passkey"
+        ? actions.deleteAccountPasskeyProof()
+        : Promise.resolve(
+            method === "email"
+              ? { code: code.trim() }
+              : method === "totp"
+                ? { totp: totp.trim() }
+                : { password },
+          );
+    proof
+      .then((p) => actions.deleteAccount(p, keepStats))
+      .catch((e) => {
+        setErr(
+          e?.message ??
+            formatMessage({
+              id: "account.delete.confirmError",
+              defaultMessage: "That confirmation is incorrect or has expired.",
+            }),
+        );
+        setBusy(false);
+      });
   };
 
   return (
@@ -645,38 +903,138 @@ function DeleteAccountDialog({
           />
         </h2>
         <p className={dlg.message}>
-          <FormattedMessage
-            id="account.delete.codeMessage"
-            defaultMessage="Enter the 6-digit code we emailed to {email} to permanently delete your account. There is no undo."
-            values={{ email: <strong>{email}</strong> }}
-          />
+          {method === "email" && (
+            <FormattedMessage
+              id="account.delete.codeMessage"
+              defaultMessage="Enter the 6-digit code we emailed to {email} to permanently delete your account. There is no undo."
+              values={{ email: <strong>{email}</strong> }}
+            />
+          )}
+          {method === "totp" && (
+            <FormattedMessage
+              id="account.delete.totpMessage"
+              defaultMessage="Enter the current code from your authenticator app to permanently delete your account. A recovery code works too. There is no undo."
+            />
+          )}
+          {method === "password" && (
+            <FormattedMessage
+              id="account.delete.passwordMessage"
+              defaultMessage="Enter your password to permanently delete your account. There is no undo."
+            />
+          )}
+          {method === "passkey" && (
+            <FormattedMessage
+              id="account.delete.passkeyMessage"
+              defaultMessage="Confirm with your passkey to permanently delete your account. There is no undo."
+            />
+          )}
         </p>
-        <TextField
-          size="full"
-          type="text"
-          autoComplete="one-time-code"
-          autoFocus={true}
-          maxLength={6}
-          placeholder={formatMessage({
-            id: "auth.verify.codePlaceholder",
-            defaultMessage: "6-digit code",
-          })}
-          value={code}
-          onChange={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
-        />
-        <button
-          type="button"
-          className={styles.link}
-          onClick={() => {
-            setErr(null);
-            actions.sendDeleteAccountCode().catch(() => {});
-          }}
-        >
-          <FormattedMessage
-            id="account.delete.resend"
-            defaultMessage="Resend the code"
+        {method === "email" && (
+          <>
+            <TextField
+              size="full"
+              type="text"
+              autoComplete="one-time-code"
+              autoFocus={true}
+              maxLength={6}
+              placeholder={formatMessage({
+                id: "auth.verify.codePlaceholder",
+                defaultMessage: "6-digit code",
+              })}
+              value={code}
+              onChange={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
+            />
+            <div className={styles.resendRow}>
+              <button
+                type="button"
+                className={styles.link}
+                disabled={cooldown > 0}
+                onClick={() => sendCode(false)}
+              >
+                {cooldown > 0 ? (
+                  <FormattedMessage
+                    id="account.delete.resendIn"
+                    defaultMessage="Resend the code in {seconds}s"
+                    values={{ seconds: cooldown }}
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="account.delete.resend"
+                    defaultMessage="Resend the code"
+                  />
+                )}
+              </button>
+              {sentAt > 0 && (
+                <span className={styles.sentNote} role="status">
+                  <CheckIcon />
+                  <FormattedMessage
+                    id="account.delete.resent"
+                    defaultMessage="New code sent"
+                  />
+                </span>
+              )}
+            </div>
+          </>
+        )}
+        {method === "totp" && (
+          <TextField
+            size="full"
+            type="text"
+            autoComplete="one-time-code"
+            autoFocus={true}
+            maxLength={32}
+            placeholder={formatMessage({
+              id: "account.delete.totpPlaceholder",
+              defaultMessage: "Authenticator or recovery code",
+            })}
+            value={totp}
+            onChange={setTotp}
           />
-        </button>
+        )}
+        {method === "password" && (
+          <TextField
+            size="full"
+            type="password"
+            autoComplete="current-password"
+            autoFocus={true}
+            placeholder={formatMessage({
+              id: "t_Password",
+              defaultMessage: "Password",
+            })}
+            value={password}
+            onChange={setPassword}
+          />
+        )}
+        {/* Changing your mind here shouldn't mean starting over. */}
+        {switchable.length > 0 &&
+          (showSwitch ? (
+            <div className={styles.methodList}>
+              {switchable.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className={styles.link}
+                  onClick={() => {
+                    setErr(null);
+                    onChangeMethod(m);
+                  }}
+                >
+                  <MethodSwitchLabel method={m} />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={styles.link}
+              onClick={() => setShowSwitch(true)}
+            >
+              <FormattedMessage
+                id="account.delete.otherWays"
+                defaultMessage="Other ways to confirm"
+              />
+            </button>
+          ))}
         <label className={styles.keepStats}>
           <input
             type="checkbox"
@@ -697,13 +1055,20 @@ function DeleteAccountDialog({
           </button>
           <button
             className={clsx(dlg.btn, dlg.confirm, dlg.confirmDanger)}
-            disabled={code.trim().length !== 6 || busy}
+            disabled={!ready || busy}
             onClick={confirm}
           >
-            <FormattedMessage
-              id="account.delete.final"
-              defaultMessage="Delete forever"
-            />
+            {method === "passkey" ? (
+              <FormattedMessage
+                id="account.delete.finalPasskey"
+                defaultMessage="Confirm and delete forever"
+              />
+            ) : (
+              <FormattedMessage
+                id="account.delete.final"
+                defaultMessage="Delete forever"
+              />
+            )}
           </button>
         </div>
       </div>

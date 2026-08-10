@@ -59,7 +59,6 @@
   "account.course.sit": "Δώσε την αξιολόγηση",
   "account.course.specimen": "Δείγμα",
   "account.course.title": "Πρόγραμμα & πιστοποιητικά",
-  "account.delete.codeError": "Αυτός ο κωδικός είναι λανθασμένος ή έχει λήξει.",
   "account.delete.codeMessage": "Καταχώρισε τον 6ψήφιο κωδικό που στείλαμε στο {email} για να διαγράψεις οριστικά τον λογαριασμό σου. Δεν υπάρχει αναίρεση.",
   "account.delete.confirmTitle": "Διαγραφή του λογαριασμού σου;",
   "account.delete.continue": "Συνέχεια",

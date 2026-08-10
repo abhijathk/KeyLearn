@@ -171,7 +171,10 @@ export function messageWithCode({
   readonly purpose?: VerificationPurpose;
 }): Mailer.Message {
   const copy = PURPOSE_COPY[purpose] ?? PURPOSE_COPY["verify-email"];
-  const subject = `${copy.subject}: ${code}`;
+  // The code never goes in the subject or the preview line. Both surface on a
+  // locked phone's notification and in any mail relay's logs, which would hand
+  // the code to anyone holding the device without unlocking it.
+  const subject = copy.subject;
   const text = `Hello!
 
 Your KeyLearn ${copy.noun} code is:
@@ -189,7 +192,7 @@ Happy typing!`;
     `font-family:'SF Mono',Menlo,Consolas,monospace;font-size:34px;font-weight:700;` +
     `letter-spacing:0.4em;color:${INK}">${esc(code)}</div>`;
   const html = shell(
-    `Your ${copy.noun} code is ${code}`,
+    `Your ${copy.noun} code is inside — it expires in 15 minutes.`,
     heading(copy.heading) +
       paragraph(copy.lead) +
       codeBlock +

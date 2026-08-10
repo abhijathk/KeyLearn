@@ -59,7 +59,6 @@
   "account.course.sit": "Vizsga letétele",
   "account.course.specimen": "Mintapéldány",
   "account.course.title": "Tanfolyam és oklevelek",
-  "account.delete.codeError": "A kód helytelen vagy lejárt.",
   "account.delete.codeMessage": "Add meg a(z) {email} címre elküldött 6 számjegyű kódot a fiókod végleges törléséhez. Ez nem vonható vissza.",
   "account.delete.confirmTitle": "Törlöd a fiókodat?",
   "account.delete.continue": "Folytatás",

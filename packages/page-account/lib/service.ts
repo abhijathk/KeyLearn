@@ -20,6 +20,22 @@ export type Passkey = {
   readonly createdAt: string;
 };
 
+/** Which factors an account can confirm a deletion with. */
+export type DeleteMethods = {
+  readonly email: boolean;
+  readonly password: boolean;
+  readonly totp: boolean;
+  readonly passkey: boolean;
+};
+
+/** Exactly one of these proves the account holder meant it. */
+export type DeleteProof = {
+  readonly code?: string;
+  readonly totp?: string;
+  readonly password?: string;
+  readonly passkey?: unknown;
+};
+
 export type ProfileInput = {
   readonly kind: "adult" | "kid";
   readonly firstName: string;
@@ -327,14 +343,33 @@ export namespace AccountService {
     await response.blob(); // Ignore.
   }
 
+  /** Which factors this account can confirm a deletion with. */
+  export async function deleteAccountMethods(): Promise<DeleteMethods> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/account/delete-methods")
+      .send();
+    return (await response.json()) as DeleteMethods;
+  }
+
+  /**
+   * Confirm deletion with exactly one factor. The caller supplies whichever
+   * the account holder chose; the server accepts any the account actually has.
+   */
   export async function deleteAccount(
-    code: string,
+    proof: DeleteProof,
     keepStats: boolean,
   ): Promise<void> {
     const response = await request
       .POST("/_/account/delete")
-      .send({ code, keepStats });
+      .send({ ...proof, keepStats });
     await response.blob(); // Ignore.
+  }
+
+  /** Prompt for one of this account's passkeys and return the assertion. */
+  export async function deleteAccountPasskeyProof(): Promise<DeleteProof> {
+    const optionsJSON = await postJson("/_/account/delete-passkey-options");
+    return { passkey: await startAuthentication({ optionsJSON }) };
   }
 
   // ---- Household profiles (server-side). All return the full updated list. ----

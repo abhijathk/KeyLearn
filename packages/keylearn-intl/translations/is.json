@@ -59,7 +59,6 @@
   "account.course.sit": "Taka prófið",
   "account.course.specimen": "Sýnishorn",
   "account.course.title": "Námskeið og skírteini",
-  "account.delete.codeError": "Þessi kóði er rangur eða útrunninn.",
   "account.delete.codeMessage": "Sláðu inn 6 stafa kóðann sem við sendum í tölvupósti á {email} til að eyða reikningnum þínum varanlega. Það er engin leið til baka.",
   "account.delete.confirmTitle": "Eyða reikningnum þínum?",
   "account.delete.continue": "Halda áfram",

@@ -59,7 +59,6 @@
   "account.course.sit": "Dự bài đánh giá",
   "account.course.specimen": "Mẫu",
   "account.course.title": "Khóa học và chứng chỉ",
-  "account.delete.codeError": "Mã đó không đúng hoặc đã hết hạn.",
   "account.delete.codeMessage": "Nhập mã gồm 6 chữ số chúng tôi đã gửi đến {email} để xóa vĩnh viễn tài khoản của bạn. Không thể hoàn tác.",
   "account.delete.confirmTitle": "Xóa tài khoản của bạn?",
   "account.delete.continue": "Tiếp tục",

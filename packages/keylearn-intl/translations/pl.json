@@ -59,7 +59,6 @@
   "account.course.sit": "Przystąp do sprawdzianu",
   "account.course.specimen": "Wzór",
   "account.course.title": "Kurs i certyfikaty",
-  "account.delete.codeError": "Ten kod jest nieprawidłowy lub wygasł.",
   "account.delete.codeMessage": "Wprowadź 6-cyfrowy kod, który wysłaliśmy na adres {email}, aby trwale usunąć swoje konto. Tej operacji nie można cofnąć.",
   "account.delete.confirmTitle": "Usunąć swoje konto?",
   "account.delete.continue": "Kontynuuj",

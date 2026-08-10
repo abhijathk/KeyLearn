@@ -59,7 +59,6 @@
   "account.course.sit": "參加檢定",
   "account.course.specimen": "範例",
   "account.course.title": "課程與證書",
-  "account.delete.codeError": "驗證碼不正確或已過期。",
   "account.delete.codeMessage": "請輸入我們寄送至 {email} 的 6 位數驗證碼，以永久刪除您的帳號。此操作無法復原。",
   "account.delete.confirmTitle": "刪除您的帳號？",
   "account.delete.continue": "繼續",

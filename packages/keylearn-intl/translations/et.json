@@ -59,7 +59,6 @@
   "account.course.sit": "Soorita tasemetöö",
   "account.course.specimen": "Näidis",
   "account.course.title": "Kursus ja tunnistused",
-  "account.delete.codeError": "See kood on vale või aegunud.",
   "account.delete.codeMessage": "Sisesta 6-kohaline kood, mille saatsime e-kirjaga aadressile {email}, et kustutada oma konto jäädavalt. Seda ei saa tagasi võtta.",
   "account.delete.confirmTitle": "Kustutada oma konto?",
   "account.delete.continue": "Jätka",

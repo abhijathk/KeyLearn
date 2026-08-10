@@ -59,7 +59,6 @@
   "account.course.sit": "Laikyti vertinimą",
   "account.course.specimen": "Pavyzdys",
   "account.course.title": "Kursas ir sertifikatai",
-  "account.delete.codeError": "Šis kodas neteisingas arba nebegalioja.",
   "account.delete.codeMessage": "Įveskite 6 skaitmenų kodą, kurį išsiuntėme adresu {email}, kad visam laikui ištrintumėte savo paskyrą. Šio veiksmo atšaukti negalima.",
   "account.delete.confirmTitle": "Ištrinti paskyrą?",
   "account.delete.continue": "Tęsti",

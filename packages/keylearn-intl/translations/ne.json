@@ -59,7 +59,6 @@
   "account.course.sit": "मूल्याङ्कन दिनुहोस्",
   "account.course.specimen": "नमुना",
   "account.course.title": "पाठ्यक्रम र प्रमाणपत्र",
-  "account.delete.codeError": "त्यो कोड गलत छ वा म्याद सकिएको छ।",
   "account.delete.codeMessage": "तपाईंको खाता स्थायी रूपमा मेटाउन हामीले {email} मा पठाएको ६-अंकको कोड प्रविष्ट गर्नुहोस्। यसलाई पूर्ववत गर्न सकिँदैन।",
   "account.delete.confirmTitle": "तपाईंको खाता मेटाउने हो?",
   "account.delete.continue": "जारी राख्नुहोस्",

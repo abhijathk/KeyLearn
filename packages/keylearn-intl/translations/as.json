@@ -59,7 +59,6 @@
   "account.course.sit": "মূল্যায়নত বহক",
   "account.course.specimen": "নমুনা",
   "account.course.title": "পাঠ্যক্ৰম আৰু প্ৰমাণপত্ৰ",
-  "account.delete.codeError": "সেই ক'ডটো ভুল বা ইয়াৰ ম্যাদ উকলিছে।",
   "account.delete.codeMessage": "আপোনাৰ একাউণ্ট চিৰদিনৰ বাবে মচিবলৈ {email}-লৈ আমি ইমেইল কৰা ৬-সংখ্যাৰ ক'ডটো দিয়ক। ইয়াক আনডু কৰিব নোৱাৰি।",
   "account.delete.confirmTitle": "আপোনাৰ একাউণ্ট মচিবনে?",
   "account.delete.continue": "আগবাঢ়ক",

@@ -59,7 +59,6 @@
   "account.course.sit": "மதிப்பீட்டில் அமரவும்",
   "account.course.specimen": "மாதிரி",
   "account.course.title": "பாடத்திட்டமும் சான்றிதழ்களும்",
-  "account.delete.codeError": "அந்தக் குறியீடு தவறானது அல்லது காலாவதியானது.",
   "account.delete.codeMessage": "உங்கள் கணக்கை நிரந்தரமாக நீக்க {email} க்கு நாங்கள் மின்னஞ்சல் அனுப்பிய 6-இலக்கக் குறியீட்டை உள்ளிடுங்கள். இதைத் திரும்பப் பெற முடியாது.",
   "account.delete.confirmTitle": "உங்கள் கணக்கை நீக்கவா?",
   "account.delete.continue": "தொடரவும்",

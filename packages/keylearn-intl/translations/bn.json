@@ -59,7 +59,6 @@
   "account.course.sit": "মূল্যায়নে বসুন",
   "account.course.specimen": "নমুনা",
   "account.course.title": "কোর্স ও সার্টিফিকেট",
-  "account.delete.codeError": "কোডটি ভুল অথবা মেয়াদ শেষ হয়ে গেছে।",
   "account.delete.codeMessage": "আপনার একাউন্ট স্থায়ীভাবে মুছে ফেলতে {email}-এ পাঠানো ৬-সংখ্যার কোডটি লিখুন। এটি ফিরিয়ে আনা যাবে না।",
   "account.delete.confirmTitle": "আপনার একাউন্ট মুছে ফেলবেন?",
   "account.delete.continue": "চালিয়ে যান",

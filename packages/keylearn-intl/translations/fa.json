@@ -59,7 +59,6 @@
   "account.course.sit": "شرکت در آزمون",
   "account.course.specimen": "نمونه",
   "account.course.title": "دوره و گواهی‌نامه‌ها",
-  "account.delete.codeError": "این کد نادرست است یا منقضی شده.",
   "account.delete.codeMessage": "کد 6 رقمی که به {email} ایمیل کردیم را برای حذف همیشگی حساب‌تان وارد کنید. این کار قابل بازگشت نیست.",
   "account.delete.confirmTitle": "حساب‌تان حذف شود؟",
   "account.delete.continue": "ادامه",

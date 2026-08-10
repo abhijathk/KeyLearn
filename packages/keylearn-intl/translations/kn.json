@@ -59,7 +59,6 @@
   "account.course.sit": "ಮೌಲ್ಯಮಾಪನಕ್ಕೆ ಕೂರಿ",
   "account.course.specimen": "ಮಾದರಿ",
   "account.course.title": "ಕೋರ್ಸ್ ಮತ್ತು ಪ್ರಮಾಣಪತ್ರಗಳು",
-  "account.delete.codeError": "ಆ ಕೋಡ್ ತಪ್ಪಾಗಿದೆ ಅಥವಾ ಅವಧಿ ಮುಗಿದಿದೆ.",
   "account.delete.codeMessage": "ನಿಮ್ಮ ಖಾತೆಯನ್ನು ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಲು ನಾವು {email} ಗೆ ಇಮೇಲ್ ಮಾಡಿದ 6-ಅಂಕಿಯ ಕೋಡ್ ನಮೂದಿಸಿ. ಇದನ್ನು ಹಿಂತೆಗೆದುಕೊಳ್ಳಲಾಗುವುದಿಲ್ಲ.",
   "account.delete.confirmTitle": "ನಿಮ್ಮ ಖಾತೆಯನ್ನು ಅಳಿಸಬೇಕೇ?",
   "account.delete.continue": "ಮುಂದುವರಿಸಿ",

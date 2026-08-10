@@ -59,7 +59,6 @@
   "account.course.sit": "मूल्यांकन में बैठें",
   "account.course.specimen": "नमूना",
   "account.course.title": "कोर्स और प्रमाणपत्र",
-  "account.delete.codeError": "यह कोड ग़लत है या इसकी मियाद ख़त्म हो चुकी है।",
   "account.delete.codeMessage": "अपना खाता हमेशा के लिए हटाने के लिए, हमने {email} पर भेजा 6-अंकों का कोड दर्ज करें। इसे पूर्ववत नहीं किया जा सकता।",
   "account.delete.confirmTitle": "अपना खाता हटाएँ?",
   "account.delete.continue": "जारी रखें",

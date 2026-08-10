@@ -64,6 +64,10 @@ const LABELS: Record<string, { id: string; defaultMessage: string }> = {
     id: "activity.profileDeleted",
     defaultMessage: "Learner profile deleted",
   }),
+  "account-delete-failed": defineMessage({
+    id: "activity.accountDeleteFailed",
+    defaultMessage: "Failed attempt to delete this account",
+  }),
 };
 
 // Events that should stand out — these are the ones worth a second look if the
@@ -75,6 +79,7 @@ const NOTABLE = new Set([
   "email-changed",
   "sso-link-refused",
   "two-factor-disabled",
+  "account-delete-failed",
 ]);
 
 /** A short, readable device description from a user-agent string. */
