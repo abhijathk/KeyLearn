@@ -46,6 +46,12 @@ know your hostname is the right one.
       database backup now carries them — but `DATA_DIR` still holds the working
       copies, the sessions, and `certificate.key`, which the database does not
       have. Back up both.
+- [ ] **Rehearse the restore before you need it**:
+      `npx tsnode packages/server-cli/lib/main.ts restore-data --dry-run`, then
+      without `--dry-run` against an empty `DATA_DIR`. It refuses to overwrite
+      existing files unless `--force`, because a file on disk is newer than any
+      snapshot of it. Sessions and `certificate.key` are NOT in the snapshot —
+      losing the key changes what every issued certificate number means.
 
 ## 3. Configuration
 
