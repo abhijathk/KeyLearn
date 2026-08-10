@@ -73,3 +73,29 @@ test("append table", async (ctx) => {
     [row1, row2],
   );
 });
+
+// The board is one shared file and the server runs several worker processes.
+// When the lock covered only the write, both callers read the same table, each
+// added its own score, and whichever wrote second discarded the other's entry —
+// a learner's place on the board simply absent, with nothing logged.
+test("keep both scores when two appends overlap", async (ctx) => {
+  const now = new Date("2001-02-03T04:05:06Z");
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+  const faker = new ResultFaker();
+  const timeStamp = now.getTime();
+  const factory = new HighScoresFactory(new DataDir(tmp));
+
+  await Promise.all([
+    factory.append(1, null, [
+      faker.nextResult({ layout: Layout.EN_US, timeStamp }),
+    ]),
+    factory.append(2, null, [
+      faker.nextResult({ layout: Layout.EN_DVORAK, timeStamp }),
+    ]),
+  ]);
+
+  const users = toRows(await factory.load())
+    .map((row: HighScoresRow) => row.user)
+    .sort();
+  deepEqual(users, [1, 2]);
+});

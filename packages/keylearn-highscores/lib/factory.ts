@@ -3,7 +3,7 @@ import { DataDir } from "@keylearn/config";
 import { type Result } from "@keylearn/result";
 import { File } from "@sosimple/fsx-file";
 import { type HighScores } from "./highscores.ts";
-import { readTable, writeTable } from "./io.ts";
+import { readTable, updateTable } from "./io.ts";
 
 @injectable()
 export class HighScoresFactory {
@@ -22,10 +22,11 @@ export class HighScoresFactory {
     profileId: number | null,
     results: readonly Result[],
   ): Promise<void> {
-    const table = await readTable(this.#file);
-    table.append(userId, profileId, results);
-    if (table.dirty) {
-      await writeTable(this.#file, table);
-    }
+    // Read and write under one lock. Reading first and locking only for the
+    // write let two workers each add a score to the same table and the later
+    // write drop the earlier one.
+    await updateTable(this.#file, (table) => {
+      table.append(userId, profileId, results);
+    });
   }
 }

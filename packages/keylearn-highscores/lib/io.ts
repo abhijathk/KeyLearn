@@ -16,13 +16,46 @@ export async function readTable(file: File): Promise<HighScores> {
 }
 
 export async function writeTable(file: File, table: HighScores): Promise<void> {
-  // In case of concurrent modification last writer wins.
-  // TODO Implement optimistic concurrency control.
+  // Overwrites whatever is there. Only safe when the caller did not base
+  // `table` on a read of this same file — otherwise use `updateTable`, which
+  // holds the lock across the read as well.
   await LockFile.withLock(
     file,
     { retryLimit: 3, delayer: exponentialDelay(10) },
     async (lock) => {
       await lock.writeFile(JSON.stringify(table));
+    },
+  );
+}
+
+/**
+ * Read, change and write the table under a single lock.
+ *
+ * The board is one shared file and the server runs several worker processes, so
+ * a read-modify-write split across two lock acquisitions loses updates: both
+ * workers read the same table, each adds its own score, and whichever writes
+ * second silently discards the other's entry. A learner's place on the board
+ * would simply not be there, with nothing logged and nothing to reproduce.
+ *
+ * Holding the lock across the read closes that window — the second worker reads
+ * the table only after the first has committed, and so sees the entry it must
+ * preserve.
+ */
+export async function updateTable(
+  file: File,
+  change: (table: HighScores) => void,
+): Promise<void> {
+  await LockFile.withLock(
+    file,
+    { retryLimit: 3, delayer: exponentialDelay(10) },
+    async (lock) => {
+      // Reads the original file, not the lock file: the lock's contents are
+      // only moved into place when the callback returns.
+      const table = await readTable(file);
+      change(table);
+      if (table.dirty) {
+        await lock.writeFile(JSON.stringify(table));
+      }
     },
   );
 }
