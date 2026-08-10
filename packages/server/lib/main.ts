@@ -6,6 +6,7 @@ import { ConfigModule, Env } from "@keylearn/config";
 import { Logger } from "@keylearn/logger";
 import { Game } from "@keylearn/multiplayer-server";
 import { serveRateLimits } from "./app/auth/ratelimit.ts";
+import { checkProductionConfig } from "./app/config-check.ts";
 import { ApplicationModule, kGame, kMain } from "./app/index.ts";
 import { ReminderSweep } from "./app/mail/index.ts";
 import { ServerModule } from "./server/module.ts";
@@ -23,6 +24,18 @@ if (cluster.isPrimary) {
     publicDir: container.get("publicDir"),
     canonicalUrl: container.get("canonicalUrl"),
   });
+  // Before anything forks: refuse to run a production deployment that is
+  // configured to fail quietly.
+  const { fatal, warnings } = checkProductionConfig();
+  for (const warning of warnings) {
+    Logger.warn("Configuration warning: %s", warning);
+  }
+  if (fatal.length > 0) {
+    for (const problem of fatal) {
+      Logger.error("Configuration error: %s", problem);
+    }
+    process.exit(1);
+  }
   process.title = "keylearn master process";
   // The primary process does nothing but supervise workers, which makes it the
   // right home for the reminder sweep: once per deployment rather than once per

@@ -1,7 +1,19 @@
 # Go-live checklist
 
-Ordered roughly by dependency. Items marked **⚠ wrong today** are current
-development values that will break or leak in production if shipped as they are.
+Ordered roughly by dependency.
+
+The development `.env` is correct **for development** — `COOKIE_SECURE=false` and
+`COOKIE_DOMAIN=localhost` are right there and wrong in production. The danger is
+shipping that file, not the file itself. Items marked **⚠** are the ones that
+differ.
+
+Several of these are now enforced rather than merely listed: with
+`NODE_ENV=production`, the primary process runs `checkProductionConfig()` before
+forking any worker and **refuses to start** on a localhost or plain-HTTP
+`APP_URL`, an insecure cookie, a `COOKIE_DOMAIN` that cannot cover the host, or
+`MAIL_TRANSPORT=log`. SQLite and an empty `TRUSTED_PROXIES` are warned about and
+allowed. That guard is a backstop, not a substitute for this list — it cannot
+know your hostname is the right one.
 
 ## 1. Host
 
@@ -24,19 +36,22 @@ development values that will break or leak in production if shipped as they are.
       under five worker processes will contend on writes.
 - [ ] Set `DATABASE_CLIENT=mysql` plus `DATABASE_HOST`, `DATABASE_PORT`,
       `DATABASE_DATABASE`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`.
-      **⚠ wrong today** — currently `sqlite`.
+      **⚠** currently `sqlite`.
 - [ ] Schema is created by the app; a fresh empty database is fine. Development
       data is not worth migrating.
 - [ ] Automated backups of the database **and** of `DATA_DIR`.
 
 ## 3. Configuration
 
-- [ ] `APP_URL=https://<host>/` — **⚠ wrong today** (`http://localhost:4000/`).
+- [ ] **⚠** `APP_URL=https://<host>/` (currently `http://localhost:4000/`).
       This is the single highest-impact value: every emailed link and both OAuth
       redirect URIs are derived from it.
-- [ ] `COOKIE_SECURE=true` and `COOKIE_DOMAIN=<host>` — **⚠ wrong today**.
-      Session cookies would otherwise travel over plain HTTP.
-- [ ] `TRUSTED_PROXIES=loopback` when behind nginx — **⚠ wrong today** (empty).
+- [ ] **⚠** `COOKIE_SECURE=true` and `COOKIE_DOMAIN=<host>` (or leave
+      `COOKIE_DOMAIN` unset for a host-only cookie, which is usually what you
+      want). Development sets these to `false`/`localhost`, which is correct
+      there and unsafe in production. Enforced at startup.
+- [ ] **⚠** `TRUSTED_PROXIES=loopback` when behind nginx (currently empty,
+      which is correct only for a directly-exposed server).
       Rate limiting and the adaptive CAPTCHA key on the client address; behind a
       proxy with this unset, every visitor shares the proxy's address and the
       limits apply to all of them collectively. Set it *only* as wide as the
