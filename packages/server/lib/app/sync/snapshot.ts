@@ -82,11 +82,15 @@ export class DataSnapshot {
     this.#running = true;
     let written = 0;
     let considered = 0;
+    let pruned = 0;
     try {
       const users = await User.query().select("id");
       for (const user of users) {
         try {
           const userId = user.id!;
+          // Every file this account still has, so anything snapshotted whose
+          // file has since gone can be dropped below.
+          const present = new Set<string>();
           // The account-level history belongs to no learner.
           considered += 1;
           if (
@@ -95,6 +99,7 @@ export class DataSnapshot {
               null,
               "results",
               this.userData.load(new PublicId(userId)).file,
+              present,
             )
           ) {
             written += 1;
@@ -108,6 +113,7 @@ export class DataSnapshot {
                 profileId,
                 "results",
                 this.userData.loadProfile(userId, profileId).file,
+                present,
               )
             ) {
               written += 1;
@@ -118,9 +124,25 @@ export class DataSnapshot {
                 profileId,
                 "braille",
                 new File(this.dataDir.brailleProgressFile(userId, profileId)),
+                present,
               )
             ) {
               written += 1;
+            }
+          }
+          // A learner can clear their history in the moment between this pass
+          // reading a file and writing the row, which would leave a snapshot of
+          // data they had just asked to erase. Deletion cannot close that
+          // window on its own, so the next pass does: a row whose file is gone
+          // is a row that should not exist.
+          for (const row of await ProfileData.listForUser(userId)) {
+            if (!present.has(`${row.profileId ?? ""}:${row.kind}`)) {
+              await ProfileData.deleteFor(
+                userId,
+                row.profileId ?? null,
+                row.kind,
+              );
+              pruned += 1;
             }
           }
         } catch (err: any) {
@@ -128,7 +150,7 @@ export class DataSnapshot {
           Logger.warn(err, "Could not snapshot user %s", user.id);
         }
       }
-      Logger.info("Data snapshot finished", { considered, written });
+      Logger.info("Data snapshot finished", { considered, written, pruned });
     } catch (err: any) {
       Logger.warn(err, "Data snapshot failed");
     } finally {
@@ -149,6 +171,7 @@ export class DataSnapshot {
     profileId: number | null,
     kind: "results" | "braille",
     file: File,
+    present: Set<string>,
   ): Promise<boolean> {
     if (!(await file.exists())) {
       return false;
@@ -157,6 +180,7 @@ export class DataSnapshot {
     if (payload.length === 0) {
       return false;
     }
+    present.add(`${profileId ?? ""}:${kind}`);
     return await ProfileData.store(userId, profileId, kind, payload);
   }
 }
