@@ -17,6 +17,7 @@ import {
 } from "@keylearn/themes";
 import { useFullscreen } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
+import { applyFavIcon } from "./fav-icon.ts";
 
 export function ThemeProvider({ children }: { readonly children: ReactNode }) {
   const fullscreenTarget =
@@ -68,6 +69,9 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
         typeof window !== "undefined" &&
         window.matchMedia?.("(prefers-color-scheme: light)").matches === true);
     applyAccent(accent, day);
+    // The tab follows the learner. Called after applyAccent so the custom
+    // property it has just written is the colour that gets read.
+    applyFavIcon();
     // The cookie exists so the server-rendered first paint already carries the
     // right accent. Only write when it would actually change: a page load that
     // rewrites an identical cookie is churn, and it would also quietly repair
