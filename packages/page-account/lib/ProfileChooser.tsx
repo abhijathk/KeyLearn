@@ -51,20 +51,10 @@ export function ProfileChooser({
             size={28}
             braille={profile.visionSupport ?? false}
             kind={profile.kind}
+            accessible={marked?.(profile.id) === true}
           />
           <span className={styles.whoText}>
-            <span className={styles.whoName}>
-              {profile.firstName}
-              {marked?.(profile.id) === true && (
-                <span
-                  className={styles.whoDot}
-                  // Said rather than only drawn: a dot that means something is
-                  // no use to somebody who cannot see it.
-                  title="Turned on for this learner"
-                  aria-label="Turned on for this learner"
-                />
-              )}
-            </span>
+            <span className={styles.whoName}>{profile.firstName}</span>
             <span className={styles.whoKind}>
               {profile.kind === "kid" ? (
                 <FormattedMessage id="profiles.kid" defaultMessage="Kid" />

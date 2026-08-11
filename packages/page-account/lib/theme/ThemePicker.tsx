@@ -87,6 +87,7 @@ export function ThemePicker(): ReactNode {
               size={28}
               braille={profile.visionSupport}
               kind={profile.kind}
+              accessible={loadSafeZones(profile.id)}
             />
             <span className={styles.whoText}>
               <span className={styles.whoName}>

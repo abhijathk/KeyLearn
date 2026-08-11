@@ -42,3 +42,17 @@
     box-shadow: 0 0 0 1.5px var(--primary-l1, #ffffff);
   }
 }
+
+// Opposite corner to the braille badge, so a learner carrying both marks is
+// not wearing them in the same place.
+.accessDot {
+  display: block;
+  position: absolute;
+  inset-inline-start: -1px;
+  inset-block-start: -1px;
+  inline-size: 0.62rem;
+  block-size: 0.62rem;
+  border: 2px solid var(--primary, #fff);
+  border-radius: 999px;
+  background: var(--accent);
+}

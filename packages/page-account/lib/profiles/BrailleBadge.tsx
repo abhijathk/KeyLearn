@@ -53,14 +53,24 @@ export function BrailleAvatar({
   size = 64,
   braille,
   kind = "adult",
+  accessible,
 }: {
   readonly avatar: Avatar | null;
   readonly name: string;
   readonly size?: number;
   readonly braille: boolean;
   readonly kind?: "adult" | "kid";
+  /**
+   * This learner has an accessibility setting on.
+   *
+   * Marked on the face for the same reason braille is: it changes what the app
+   * does for them rather than how it looks, and whoever is setting the
+   * household up should be able to see which learner it applies to without
+   * opening each one in turn.
+   */
+  readonly accessible?: boolean;
 }): ReactNode {
-  if (!braille) {
+  if (!braille && accessible !== true) {
     return (
       <ProfileAvatar avatar={avatar} name={name} size={size} kind={kind} />
     );
@@ -68,7 +78,28 @@ export function BrailleAvatar({
   return (
     <span className={styles.pin} style={{ inlineSize: size, blockSize: size }}>
       <ProfileAvatar avatar={avatar} name={name} size={size} kind={kind} />
-      <BrailleBadge size={size >= 56 ? "large" : "small"} />
+      {braille && <BrailleBadge size={size >= 56 ? "large" : "small"} />}
+      {accessible === true && <AccessDot />}
     </span>
+  );
+}
+
+/**
+ * The opposite corner to the braille badge, so a learner who has both is not
+ * wearing two marks in one place.
+ */
+function AccessDot(): ReactNode {
+  const { formatMessage } = useIntl();
+  const label = formatMessage({
+    id: "profiles.accessibilityOn",
+    defaultMessage: "Accessibility settings on",
+  });
+  return (
+    <span
+      className={styles.accessDot}
+      title={label}
+      aria-label={label}
+      role="img"
+    />
   );
 }

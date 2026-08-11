@@ -4,7 +4,12 @@ import {
   ProfileAvatar,
   useProfiles,
 } from "@keylearn/page-account";
-import { logout, Pages, usePageData } from "@keylearn/pages-shared";
+import {
+  loadSafeZones,
+  logout,
+  Pages,
+  usePageData,
+} from "@keylearn/pages-shared";
 import { supportUrl } from "@keylearn/thirdparties";
 import { IconButton, StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
@@ -191,6 +196,7 @@ export function MenuDrawer({
                           name={p.firstName}
                           size={36}
                           braille={p.visionSupport}
+                          accessible={loadSafeZones(p.id)}
                         />
                         <span className={styles.learnerName}>
                           {p.firstName}

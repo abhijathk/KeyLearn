@@ -1,4 +1,4 @@
-import { logout as doLogout } from "@keylearn/pages-shared";
+import { loadSafeZones,logout as doLogout } from "@keylearn/pages-shared";
 import { ConfirmDialog } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
@@ -73,6 +73,7 @@ export function ProfilePicker(): ReactNode {
                   size={72}
                   braille={p.visionSupport}
                   kind={p.kind}
+                  accessible={loadSafeZones(p.id)}
                 />
                 <span className={styles.name}>{p.firstName}</span>
                 <span className={styles.kind}>

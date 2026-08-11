@@ -1,5 +1,10 @@
 import { BrailleAvatar, useProfiles } from "@keylearn/page-account";
-import { Avatar, Pages, usePageData } from "@keylearn/pages-shared";
+import {
+  Avatar,
+  loadSafeZones,
+  Pages,
+  usePageData,
+} from "@keylearn/pages-shared";
 import { StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
@@ -71,6 +76,7 @@ export function AccountMenu({
               name={active.firstName}
               size={29}
               braille={active.visionSupport}
+              accessible={loadSafeZones(active.id)}
             />
           </span>
           <span className={clsx(styles.name, kids && styles.kidsName)}>
