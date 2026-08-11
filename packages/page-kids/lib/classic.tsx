@@ -870,3 +870,47 @@ function FlagIcon(): ReactNode {
 function up(label: string): string {
   return label.toUpperCase();
 }
+
+/**
+ * The unlock moment, in Classic's own voice.
+ *
+ * A new key joining the trail is the proudest thing that happens in the loop,
+ * and the trail games mark it well — but they mark it with "tap it three times
+ * to wake it up" and a row of stars, which is pitched at a six-year-old. On a
+ * screen deliberately shaped like the grown-up page, that is the one moment it
+ * would stop feeling like the grown-up page.
+ *
+ * Same trigger and the same spoken line; a keycap the size the moment deserves,
+ * the finger that reaches it, and one press instead of three.
+ */
+export function ClassicUnlock({
+  letter,
+  finger,
+}: {
+  readonly letter: string;
+  readonly finger: string | null;
+}): ReactNode {
+  const up = letter.toUpperCase();
+  return (
+    <div className={styles.unlockScrim} role="alertdialog" aria-modal={true}>
+      <div className={styles.unlockCard}>
+        <div className={styles.unlockEyebrow}>New key</div>
+        <div className={styles.unlockKey} aria-hidden={true}>
+          {up}
+        </div>
+        <p className={styles.unlockLine}>
+          {finger != null ? (
+            <>
+              <b>{up}</b> is yours now — your <b>{finger}</b> reaches it.
+            </>
+          ) : (
+            <>
+              <b>{up}</b> is yours now.
+            </>
+          )}
+        </p>
+        <div className={styles.unlockHint}>Press {up} to carry on</div>
+      </div>
+    </div>
+  );
+}

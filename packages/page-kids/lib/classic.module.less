@@ -647,3 +647,105 @@
   font-size: 0.9rem;
   font-weight: 800;
 }
+
+// ---- the unlock moment ----------------------------------------------------
+
+// Said when a new key joins the trail. The trail games mark this with "tap it
+// three times to wake it up" and a row of stars, which is right for a six-year
+// old and wrong for the age Classic is built for: this is the proudest moment
+// in the loop, and it should not be the moment the screen turns into a toy.
+// Same trigger, same voice line, one press instead of three.
+.unlockScrim {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--kink) 38%, transparent);
+  animation: unlock-in 0.18s ease-out;
+}
+
+.unlockCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: center;
+  max-inline-size: 22rem;
+  padding: 1.6rem 1.8rem;
+  border: 2px solid color-mix(in srgb, var(--sunny) 45%, transparent);
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow:
+    0 18px 40px color-mix(in srgb, var(--kink) 28%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--sunny) 10%, transparent);
+  text-align: center;
+}
+
+.unlockEyebrow {
+  color: var(--sunny-d);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+// The same keycap the board uses, at the size the moment deserves.
+.unlockKey {
+  display: grid;
+  place-items: center;
+  inline-size: 4.4rem;
+  block-size: 4.4rem;
+  border-radius: 0.9rem;
+  color: var(--sunny-ink);
+  background: var(--sunny);
+  box-shadow: 0 5px 0 var(--sunny-d);
+  font-size: 2.4rem;
+  font-weight: 800;
+  animation: unlock-press 2s ease-in-out infinite;
+}
+
+.unlockLine {
+  margin: 0;
+  color: var(--kink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.unlockHint {
+  color: color-mix(in srgb, var(--kink) 62%, transparent);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+@keyframes unlock-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes unlock-press {
+  0%,
+  70%,
+  100% {
+    box-shadow: 0 5px 0 var(--sunny-d);
+    transform: translateY(0);
+  }
+
+  80%,
+  90% {
+    box-shadow: 0 1px 0 var(--sunny-d);
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unlockScrim,
+  .unlockKey {
+    animation: none;
+  }
+}

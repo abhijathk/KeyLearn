@@ -62,7 +62,7 @@ import {
   type Sticker,
 } from "./album.ts";
 import { kidsAudio } from "./audio.ts";
-import { ClassicScreen } from "./classic.tsx";
+import { ClassicScreen, ClassicUnlock } from "./classic.tsx";
 import {
   BranchIcon,
   ChatIcon,
@@ -1676,7 +1676,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           if (prefsRef.current.sounds) {
             kidsAudio.playPoint();
           }
-          if (cer.presses + 1 >= 3) {
+          // Three presses teaches a six-year-old where the key is. At the age
+          // Classic is for, it is a chore standing between them and the thing
+          // they just earned.
+          if (cer.presses + 1 >= (prefsRef.current.classic ? 1 : 3)) {
             setCeremony(null);
             worldRef.current?.hop();
             if (prefsRef.current.sounds) {
@@ -2755,7 +2758,18 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </div>
       )}
 
-      {ceremony != null && (
+      {ceremony != null && classic && (
+        <ClassicUnlock
+          letter={ceremony.letter}
+          finger={
+            FINGER_OF[ceremony.letter] != null
+              ? FINGER_NAMES[FINGER_OF[ceremony.letter]]
+              : null
+          }
+        />
+      )}
+
+      {ceremony != null && !classic && (
         <div className={styles.overlay}>
           <div className={clsx(styles.card, styles.finishCard)}>
             <div className={styles.cerEyebrow}>NEW LETTER!</div>
