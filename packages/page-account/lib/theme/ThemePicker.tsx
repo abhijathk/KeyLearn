@@ -1,4 +1,12 @@
-import { canChooseAccent, loadAccent, Pages } from "@keylearn/pages-shared";
+import {
+  canChooseAccent,
+  loadAccent,
+  loadSafeZones,
+  loadThemedZones,
+  Pages,
+  saveThemedZones,
+  ZONES_CHANGED_EVENT,
+} from "@keylearn/pages-shared";
 import {
   type Accent,
   accentsFor,
@@ -10,6 +18,7 @@ import { clsx } from "clsx";
 import { type ReactNode, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useNavigate } from "react-router";
+import { Toggle } from "../controls.tsx";
 import { BrailleAvatar } from "../profiles/BrailleBadge.tsx";
 import { useProfiles } from "../profiles/context.tsx";
 import { accentHues, accentNames } from "./accent-names.tsx";
@@ -80,7 +89,16 @@ export function ThemePicker(): ReactNode {
               kind={profile.kind}
             />
             <span className={styles.whoText}>
-              <span className={styles.whoName}>{profile.firstName}</span>
+              <span className={styles.whoName}>
+                {profile.firstName}
+                {loadThemedZones(profile.id) && (
+                  <span
+                    className={styles.whoDot}
+                    title="Themed keyboard on for this learner"
+                    aria-label="Themed keyboard on for this learner"
+                  />
+                )}
+              </span>
               <span className={styles.whoKind}>
                 {profile.kind === "kid" ? (
                   <FormattedMessage id="profiles.kid" defaultMessage="Kid" />
@@ -95,6 +113,11 @@ export function ThemePicker(): ReactNode {
           </button>
         ))}
       </div>
+
+      {/* Belongs to the learner chosen above, not to whoever is signed in —
+          so a parent can give one child the themed keyboard without changing
+          it for the rest of the house. */}
+      <ThemedZonesRow profileId={chosen.id} />
 
       <p className={styles.caption}>
         {chosen.kind === "kid" ? (
@@ -315,6 +338,61 @@ function LockedThemes(): ReactNode {
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * The keyboard in this learner's theme colours.
+ *
+ * Loses to the colour-blind palette in Accessibility when both are asked for:
+ * one is about how the keyboard looks, the other about whether it can be read.
+ */
+function ThemedZonesRow({
+  profileId,
+}: {
+  readonly profileId: string;
+}): ReactNode {
+  const [themed, setThemed] = useState(() => loadThemedZones(profileId));
+  const safe = loadSafeZones(profileId);
+  // The switch is per learner, so it must re-read when the learner changes.
+  const [seen, setSeen] = useState(profileId);
+  if (seen !== profileId) {
+    setSeen(profileId);
+    setThemed(loadThemedZones(profileId));
+  }
+  return (
+    <div className={styles.zoneRow}>
+      <div className={styles.zoneText}>
+        <span className={styles.zoneLabel}>
+          <FormattedMessage
+            id="account.appearance.themedZones"
+            defaultMessage="Keyboard in my theme's colours"
+          />
+        </span>
+        <span className={styles.zoneSub}>
+          {safe ? (
+            <FormattedMessage
+              id="account.appearance.themedZones.blocked"
+              defaultMessage="Turned off while the colour-blind keyboard is on, which keeps its own colours."
+            />
+          ) : (
+            <FormattedMessage
+              id="account.appearance.themedZones.sub"
+              defaultMessage="The finger colours take their lead from your theme instead of the KeyLearn set. They stay as far apart from each other either way."
+            />
+          )}
+        </span>
+      </div>
+      <Toggle
+        on={themed && !safe}
+        disabled={safe}
+        onChange={(next) => {
+          setThemed(next);
+          saveThemedZones(next, profileId);
+          window.dispatchEvent(new window.Event(ZONES_CHANGED_EVENT));
+        }}
+      />
     </div>
   );
 }

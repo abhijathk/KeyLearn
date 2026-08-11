@@ -27,6 +27,8 @@ import { FormattedMessage } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { Segmented, Toggle } from "./controls.tsx";
 import { accountProps, allTimeZones, deviceTimeZone } from "./prefs.ts";
+import { ProfileChooser } from "./ProfileChooser.tsx";
+import { useProfiles } from "./profiles/context.tsx";
 import { ThemePicker } from "./theme/ThemePicker.tsx";
 
 // The three interface themes, mapped to the mock's Light / Dark / System.
@@ -127,7 +129,6 @@ export function AppearancePane(): ReactNode {
           defaultMessage="Appearance"
         />
       </h2>
-      <ThemedZonesRow />
       <AppearanceCard />
     </div>
   );
@@ -141,7 +142,20 @@ export function AppearancePane(): ReactNode {
  * put at the bottom of a scroll.
  */
 export function AccessibilityPane(): ReactNode {
-  const [safe, setSafe] = useState(loadSafeZones);
+  const { household } = useProfiles();
+  const profiles = household.profiles;
+  const [chosenId, setChosenId] = useState<string | null>(
+    () => household.activeId ?? profiles[0]?.id ?? null,
+  );
+  const chosen = profiles.find((p) => p.id === chosenId) ?? profiles[0] ?? null;
+  const [safe, setSafe] = useState(() => loadSafeZones(chosen?.id ?? null));
+  // Per learner, so the switch must re-read when the learner changes.
+  const [seen, setSeen] = useState(chosen?.id ?? null);
+  if (seen !== (chosen?.id ?? null)) {
+    setSeen(chosen?.id ?? null);
+    setSafe(loadSafeZones(chosen?.id ?? null));
+  }
+
   return (
     <div className={styles.paneScroll}>
       <h2 className={styles.paneTitle}>
@@ -150,7 +164,23 @@ export function AccessibilityPane(): ReactNode {
           defaultMessage="Accessibility"
         />
       </h2>
-      {SafeRow({ safe, setSafe })}
+      <p className={styles.note}>
+        <FormattedMessage
+          id="account.accessibility.note"
+          defaultMessage="Set for one learner at a time. A household shares a login, and the person who needs this is not always the one who set the account up."
+        />
+      </p>
+
+      {profiles.length > 0 && (
+        <ProfileChooser
+          profiles={profiles}
+          chosenId={chosen?.id ?? null}
+          onChoose={setChosenId}
+          marked={(id) => loadSafeZones(id)}
+        />
+      )}
+
+      {SafeRow({ safe, setSafe, profileId: chosen?.id ?? null })}
     </div>
   );
 }
@@ -158,9 +188,11 @@ export function AccessibilityPane(): ReactNode {
 function SafeRow({
   safe,
   setSafe,
+  profileId,
 }: {
   readonly safe: boolean;
   readonly setSafe: (v: boolean) => void;
+  readonly profileId: string | null;
 }): ReactNode {
   return (
     <div className={styles.row}>
@@ -182,7 +214,7 @@ function SafeRow({
         on={safe}
         onChange={(next) => {
           setSafe(next);
-          saveSafeZones(next);
+          saveSafeZones(next, profileId);
           // The provider paints them, because it is the thing that knows
           // whether this device is on night or day.
           window.dispatchEvent(new window.Event(ZONES_CHANGED_EVENT));
@@ -199,46 +231,6 @@ function SafeRow({
  * one about being able to read the keyboard wins, and saying so is kinder than
  * silently ignoring the switch somebody just moved.
  */
-function ThemedZonesRow(): ReactNode {
-  const [themed, setThemed] = useState(loadThemedZones);
-  // Read on mount rather than watched: the switch that sets it now lives in
-  // another pane, and only one pane is on screen at a time.
-  const safe = loadSafeZones();
-  return (
-    <div className={styles.row}>
-      <div className={styles.rowText}>
-        <span className={styles.rowLabel}>
-          <FormattedMessage
-            id="account.appearance.themedZones"
-            defaultMessage="Keyboard in my theme's colours"
-          />
-        </span>
-        <span className={styles.rowSub}>
-          {safe ? (
-            <FormattedMessage
-              id="account.appearance.themedZones.blocked"
-              defaultMessage="Turned off while the colour-blind keyboard is on, which keeps its own colours."
-            />
-          ) : (
-            <FormattedMessage
-              id="account.appearance.themedZones.sub"
-              defaultMessage="The finger colours take their lead from your theme instead of the KeyLearn set. They stay as far apart from each other either way."
-            />
-          )}
-        </span>
-      </div>
-      <Toggle
-        on={themed && !safe}
-        disabled={safe}
-        onChange={(next) => {
-          setThemed(next);
-          saveThemedZones(next);
-          window.dispatchEvent(new window.Event(ZONES_CHANGED_EVENT));
-        }}
-      />
-    </div>
-  );
-}
 
 function LanguageRegionCard(): ReactNode {
   const { locale } = usePageData();
@@ -600,49 +592,58 @@ function AppearanceCard(): ReactNode {
   const { color, switchColor } = useTheme();
 
   return (
-    <div className={styles.prefCard}>
-      <div className={styles.prefSect}>
-        <FormattedMessage
-          id="account.prefs.appearance"
-          defaultMessage="Light and dark"
-        />
-      </div>
-
-      <div className={styles.row}>
-        <div className={styles.rowText}>
-          <span className={styles.rowLabel}>
-            <FormattedMessage id="account.prefs.theme" defaultMessage="Theme" />
-          </span>
+    <>
+      {/* Light and dark is a device setting; the colour belongs to a learner.
+          Two different scopes, so two cards rather than one with a rule
+          through it. */}
+      <div className={styles.prefCard}>
+        <div className={styles.prefSect}>
+          <FormattedMessage
+            id="account.prefs.appearance"
+            defaultMessage="Light and dark"
+          />
         </div>
-        <Segmented
-          value={
-            THEME_IDS.includes(color as ThemeId) ? (color as ThemeId) : "auto"
-          }
-          onChange={switchColor}
-          options={THEME_OPTIONS}
-        />
-      </div>
 
-      <div className={styles.hr} />
-
-      <div className={styles.row}>
-        <div className={styles.rowText}>
-          <span className={styles.rowLabel}>
-            <FormattedMessage
-              id="account.prefs.accent"
-              defaultMessage="Colour"
-            />
-          </span>
-          <span className={styles.rowSub}>
-            <FormattedMessage
-              id="account.prefs.accent.sub"
-              defaultMessage="One colour per learner. Choose who you are dressing, then pick their colour — the list follows whether they are a grown-up or a kid."
-            />
-          </span>
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowLabel}>
+              <FormattedMessage
+                id="account.prefs.displayMode"
+                defaultMessage="Display mode"
+              />
+            </span>
+          </div>
+          <Segmented
+            value={
+              THEME_IDS.includes(color as ThemeId) ? (color as ThemeId) : "auto"
+            }
+            onChange={switchColor}
+            options={THEME_OPTIONS}
+          />
         </div>
       </div>
-      <ThemePicker />
-    </div>
+
+      <div className={styles.prefCard}>
+        <div className={styles.prefSect}>
+          <FormattedMessage
+            id="account.prefs.themeSect"
+            defaultMessage="Theme"
+          />
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.prefs.accent.sub"
+                defaultMessage="One colour per learner. Choose who you are dressing, then pick their colour — the list follows whether they are a grown-up or a kid."
+              />
+            </span>
+          </div>
+        </div>
+        <ThemePicker />
+      </div>
+    </>
   );
 }
 

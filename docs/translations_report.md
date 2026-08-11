@@ -1,14 +1,14 @@
 # English
 
-Translated: 1560 messages, 12524 words
+Translated: 1561 messages, 12553 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 1457 messages, 11969 words
+Translated: 1455 messages, 11967 words
 
-Untranslated: 95 messages, 502 words
+Untranslated: 98 messages, 533 words
 
 * *s*
 * *PIN*
@@ -21,6 +21,7 @@ Untranslated: 95 messages, 502 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Arcade*
 * *Avatar*
@@ -29,14 +30,13 @@ Untranslated: 95 messages, 502 words
 * *Custom…*
 * *Got it!*
 * *Letters*
-* *Premium*
 * ...
 
 # Arabic
 
-Translated: 1470 messages, 11985 words
+Translated: 1468 messages, 11983 words
 
-Untranslated: 84 messages, 491 words
+Untranslated: 87 messages, 522 words
 
 * *Pick*
 * *Stop*
@@ -44,6 +44,7 @@ Untranslated: 84 messages, 491 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -57,14 +58,13 @@ Untranslated: 84 messages, 491 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Password*
 * ...
 
 # Assamese
 
-Translated: 1468 messages, 11983 words
+Translated: 1466 messages, 11981 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 89 messages, 524 words
 
 * *PIN*
 * *wpm*
@@ -74,6 +74,7 @@ Untranslated: 86 messages, 493 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -85,14 +86,13 @@ Untranslated: 86 messages, 493 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Bulgarian
 
-Translated: 1470 messages, 11985 words
+Translated: 1468 messages, 11983 words
 
-Untranslated: 84 messages, 491 words
+Untranslated: 87 messages, 522 words
 
 * *Pick*
 * *Stop*
@@ -100,6 +100,7 @@ Untranslated: 84 messages, 491 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -113,14 +114,13 @@ Untranslated: 84 messages, 491 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Password*
 * ...
 
 # Bangla
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *PIN*
 * *Pick*
@@ -129,6 +129,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -141,14 +142,13 @@ Untranslated: 85 messages, 492 words
 * *Go again*
 * *Home Row*
 * *KeyLearn*
-* *KeyLearn*
 * ...
 
 # Catalan
 
-Translated: 1454 messages, 11966 words
+Translated: 1452 messages, 11964 words
 
-Untranslated: 97 messages, 504 words
+Untranslated: 100 messages, 535 words
 
 * *s*
 * *Arc*
@@ -164,19 +164,19 @@ Untranslated: 97 messages, 504 words
 * *Later*
 * *Paper*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Avatar*
 * *Errors*
 * *Recent*
 * *Crimson*
-* *Custom…*
 * ...
 
 # Czech
 
-Translated: 1461 messages, 11975 words
+Translated: 1459 messages, 11973 words
 
-Untranslated: 92 messages, 499 words
+Untranslated: 95 messages, 530 words
 
 * *s*
 * *PIN*
@@ -190,6 +190,7 @@ Untranslated: 92 messages, 499 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Avatar*
@@ -197,14 +198,13 @@ Untranslated: 92 messages, 499 words
 * *Custom…*
 * *Got it!*
 * *See it!*
-* *Sunbeam*
 * ...
 
 # Danish
 
-Translated: 1449 messages, 11961 words
+Translated: 1447 messages, 11959 words
 
-Untranslated: 104 messages, 513 words
+Untranslated: 107 messages, 544 words
 
 * *s*
 * *PIN*
@@ -220,19 +220,19 @@ Untranslated: 104 messages, 513 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Avatar*
 * *citron*
 * *indigo*
 * *Layout*
-* *orange*
 * ...
 
 # German
 
-Translated: 1447 messages, 11962 words
+Translated: 1445 messages, 11960 words
 
-Untranslated: 107 messages, 514 words
+Untranslated: 110 messages, 545 words
 
 * *s*
 * *PIN*
@@ -249,18 +249,18 @@ Untranslated: 107 messages, 514 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Arcade*
 * *Avatar*
-* *indigo*
 * ...
 
 # Greek
 
-Translated: 1467 messages, 11982 words
+Translated: 1465 messages, 11980 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 90 messages, 525 words
 
 * *PIN*
 * *wpm*
@@ -270,6 +270,7 @@ Untranslated: 87 messages, 494 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -281,14 +282,13 @@ Untranslated: 87 messages, 494 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Spanish
 
-Translated: 1459 messages, 11971 words
+Translated: 1457 messages, 11969 words
 
-Untranslated: 92 messages, 499 words
+Untranslated: 95 messages, 530 words
 
 * *s*
 * *PIN*
@@ -299,6 +299,7 @@ Untranslated: 92 messages, 499 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Arcade*
 * *Avatar*
@@ -309,14 +310,13 @@ Untranslated: 92 messages, 499 words
 * *Premium*
 * *See it!*
 * *Sunbeam*
-* *Top Row*
 * ...
 
 # Estonian
 
-Translated: 1461 messages, 11975 words
+Translated: 1459 messages, 11973 words
 
-Untranslated: 92 messages, 499 words
+Untranslated: 95 messages, 530 words
 
 * *s*
 * *wpm*
@@ -327,6 +327,7 @@ Untranslated: 92 messages, 499 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Avatar*
@@ -337,14 +338,13 @@ Untranslated: 92 messages, 499 words
 * *Got it!*
 * *Premium*
 * *See it!*
-* *Sunbeam*
 * ...
 
 # Persian
 
-Translated: 1470 messages, 11985 words
+Translated: 1468 messages, 11983 words
 
-Untranslated: 84 messages, 491 words
+Untranslated: 87 messages, 522 words
 
 * *Pick*
 * *Stop*
@@ -352,6 +352,7 @@ Untranslated: 84 messages, 491 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -365,14 +366,13 @@ Untranslated: 84 messages, 491 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Password*
 * ...
 
 # Finnish
 
-Translated: 1462 messages, 11976 words
+Translated: 1460 messages, 11974 words
 
-Untranslated: 91 messages, 498 words
+Untranslated: 94 messages, 529 words
 
 * *s*
 * *wpm*
@@ -383,6 +383,7 @@ Untranslated: 91 messages, 498 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Arcade*
 * *Avatar*
@@ -393,14 +394,13 @@ Untranslated: 91 messages, 498 words
 * *Premium*
 * *See it!*
 * *Sunbeam*
-* *Top Row*
 * ...
 
 # French
 
-Translated: 1447 messages, 11961 words
+Translated: 1445 messages, 11959 words
 
-Untranslated: 106 messages, 513 words
+Untranslated: 109 messages, 544 words
 
 * *s*
 * *Arc*
@@ -414,6 +414,7 @@ Untranslated: 106 messages, 513 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Arcade*
 * *Avatar*
@@ -421,14 +422,13 @@ Untranslated: 106 messages, 513 words
 * *Effort*
 * *indigo*
 * *orange*
-* *Zigzag*
 * ...
 
 # Gujarati
 
-Translated: 1468 messages, 11983 words
+Translated: 1466 messages, 11981 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 89 messages, 524 words
 
 * *PIN*
 * *wpm*
@@ -438,6 +438,7 @@ Untranslated: 86 messages, 493 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -449,14 +450,13 @@ Untranslated: 86 messages, 493 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Hebrew
 
-Translated: 1470 messages, 11985 words
+Translated: 1468 messages, 11983 words
 
-Untranslated: 84 messages, 491 words
+Untranslated: 87 messages, 522 words
 
 * *Pick*
 * *Stop*
@@ -464,6 +464,7 @@ Untranslated: 84 messages, 491 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -477,14 +478,13 @@ Untranslated: 84 messages, 491 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Password*
 * ...
 
 # Hindi
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *PIN*
 * *Pick*
@@ -493,6 +493,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -505,14 +506,13 @@ Untranslated: 85 messages, 492 words
 * *Go again*
 * *Home Row*
 * *KeyLearn*
-* *KeyLearn*
 * ...
 
 # Croatian
 
-Translated: 1461 messages, 11975 words
+Translated: 1459 messages, 11973 words
 
-Untranslated: 92 messages, 499 words
+Untranslated: 95 messages, 530 words
 
 * *s*
 * *PIN*
@@ -524,6 +524,7 @@ Untranslated: 92 messages, 499 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Avatar*
@@ -533,14 +534,13 @@ Untranslated: 92 messages, 499 words
 * *Got it!*
 * *Premium*
 * *See it!*
-* *Sunbeam*
 * ...
 
 # Hungarian
 
-Translated: 1467 messages, 11981 words
+Translated: 1465 messages, 11979 words
 
-Untranslated: 87 messages, 495 words
+Untranslated: 90 messages, 526 words
 
 * *PIN*
 * *Zen*
@@ -550,6 +550,7 @@ Untranslated: 87 messages, 495 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -561,14 +562,13 @@ Untranslated: 87 messages, 495 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Indonesian
 
-Translated: 1461 messages, 11976 words
+Translated: 1459 messages, 11974 words
 
-Untranslated: 93 messages, 500 words
+Untranslated: 96 messages, 531 words
 
 * *PIN*
 * *wpm*
@@ -581,6 +581,7 @@ Untranslated: 93 messages, 500 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Avatar*
 * *citron*
@@ -589,14 +590,13 @@ Untranslated: 93 messages, 500 words
 * *Custom…*
 * *Got it!*
 * *Premium*
-* *See it!*
 * ...
 
 # Icelandic
 
-Translated: 1468 messages, 11983 words
+Translated: 1466 messages, 11981 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 89 messages, 524 words
 
 * *Sun*
 * *Pick*
@@ -605,6 +605,7 @@ Untranslated: 86 messages, 493 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -617,14 +618,13 @@ Untranslated: 86 messages, 493 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Italian
 
-Translated: 1459 messages, 11971 words
+Translated: 1457 messages, 11969 words
 
-Untranslated: 93 messages, 500 words
+Untranslated: 96 messages, 531 words
 
 * *s*
 * *PIN*
@@ -636,6 +636,7 @@ Untranslated: 93 messages, 500 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Arcade*
 * *Avatar*
@@ -645,14 +646,13 @@ Untranslated: 93 messages, 500 words
 * *Custom…*
 * *Got it!*
 * *See it!*
-* *Sunbeam*
 * ...
 
 # Japanese
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 89 messages, 524 words
 
 * *PIN*
 * *wpm*
@@ -662,6 +662,7 @@ Untranslated: 86 messages, 493 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -673,14 +674,13 @@ Untranslated: 86 messages, 493 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Kannada
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *PIN*
 * *Pick*
@@ -689,6 +689,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -700,15 +701,14 @@ Untranslated: 85 messages, 492 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Korean
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 89 messages, 524 words
 
 * *PIN*
 * *wpm*
@@ -718,6 +718,7 @@ Untranslated: 86 messages, 493 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -729,14 +730,13 @@ Untranslated: 86 messages, 493 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Lithuanian
 
-Translated: 1464 messages, 11978 words
+Translated: 1462 messages, 11976 words
 
-Untranslated: 89 messages, 496 words
+Untranslated: 92 messages, 527 words
 
 * *s*
 * *wpm*
@@ -747,6 +747,7 @@ Untranslated: 89 messages, 496 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *indigo*
 * *Crimson*
@@ -757,14 +758,13 @@ Untranslated: 89 messages, 496 words
 * *Sunbeam*
 * *Top Row*
 * *Amethyst*
-* *Cerulean*
 * ...
 
 # Latvian
 
-Translated: 1461 messages, 11973 words
+Translated: 1459 messages, 11971 words
 
-Untranslated: 91 messages, 498 words
+Untranslated: 94 messages, 529 words
 
 * *s*
 * *PIN*
@@ -774,6 +774,7 @@ Untranslated: 91 messages, 498 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *indigo*
 * *Crimson*
@@ -785,14 +786,13 @@ Untranslated: 91 messages, 498 words
 * *Top Row*
 * *Amethyst*
 * *Cerulean*
-* *Go again*
 * ...
 
 # Malayalam
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *PIN*
 * *Pick*
@@ -801,6 +801,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -813,14 +814,13 @@ Untranslated: 85 messages, 492 words
 * *Go again*
 * *Home Row*
 * *KeyLearn*
-* *KeyLearn*
 * ...
 
 # Mongolian
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *wpm*
 * *Pick*
@@ -829,6 +829,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -841,14 +842,13 @@ Untranslated: 85 messages, 492 words
 * *Go again*
 * *Home Row*
 * *KeyLearn*
-* *KeyLearn*
 * ...
 
 # Marathi
 
-Translated: 1468 messages, 11981 words
+Translated: 1466 messages, 11979 words
 
-Untranslated: 86 messages, 495 words
+Untranslated: 89 messages, 526 words
 
 * *Pick*
 * *Stop*
@@ -856,6 +856,7 @@ Untranslated: 86 messages, 495 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -869,14 +870,13 @@ Untranslated: 86 messages, 495 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Password*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 1455 messages, 11968 words
+Translated: 1453 messages, 11966 words
 
-Untranslated: 97 messages, 504 words
+Untranslated: 100 messages, 535 words
 
 * *s*
 * *wpm*
@@ -893,18 +893,18 @@ Untranslated: 97 messages, 504 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Avatar*
 * *indigo*
-* *Crimson*
 * ...
 
 # Nepali
 
-Translated: 1468 messages, 11983 words
+Translated: 1466 messages, 11981 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 89 messages, 524 words
 
 * *PIN*
 * *wpm*
@@ -914,6 +914,7 @@ Untranslated: 86 messages, 493 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -925,14 +926,13 @@ Untranslated: 86 messages, 493 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Dutch
 
-Translated: 1448 messages, 11962 words
+Translated: 1446 messages, 11960 words
 
-Untranslated: 105 messages, 512 words
+Untranslated: 108 messages, 543 words
 
 * *s*
 * *wpm*
@@ -947,20 +947,20 @@ Untranslated: 105 messages, 512 words
 * *Later*
 * *Score*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Arcade*
 * *Avatar*
 * *indigo*
 * *Recent*
-* *Zigzag*
 * ...
 
 # Odia
 
-Translated: 1466 messages, 11979 words
+Translated: 1464 messages, 11977 words
 
-Untranslated: 88 messages, 497 words
+Untranslated: 91 messages, 528 words
 
 * *PIN*
 * *wpm*
@@ -970,6 +970,7 @@ Untranslated: 88 messages, 497 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -981,14 +982,13 @@ Untranslated: 88 messages, 497 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Punjabi
 
-Translated: 1466 messages, 11979 words
+Translated: 1464 messages, 11977 words
 
-Untranslated: 88 messages, 497 words
+Untranslated: 91 messages, 528 words
 
 * *Kid*
 * *PIN*
@@ -998,6 +998,7 @@ Untranslated: 88 messages, 497 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1009,14 +1010,13 @@ Untranslated: 88 messages, 497 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Polish
 
-Translated: 1463 messages, 11977 words
+Translated: 1461 messages, 11975 words
 
-Untranslated: 90 messages, 497 words
+Untranslated: 93 messages, 528 words
 
 * *s*
 * *PIN*
@@ -1028,6 +1028,7 @@ Untranslated: 90 messages, 497 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Crimson*
@@ -1037,14 +1038,13 @@ Untranslated: 90 messages, 497 words
 * *See it!*
 * *Sunbeam*
 * *Top Row*
-* *Amethyst*
 * ...
 
 # Brazilian Portuguese
 
-Translated: 1458 messages, 11970 words
+Translated: 1456 messages, 11968 words
 
-Untranslated: 94 messages, 501 words
+Untranslated: 97 messages, 532 words
 
 * *s*
 * *PIN*
@@ -1055,6 +1055,7 @@ Untranslated: 94 messages, 501 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Arcade*
 * *Avatar*
@@ -1065,14 +1066,13 @@ Untranslated: 94 messages, 501 words
 * *Layouts*
 * *Premium*
 * *See it!*
-* *Strings*
 * ...
 
 # European Portuguese
 
-Translated: 1461 messages, 11973 words
+Translated: 1459 messages, 11971 words
 
-Untranslated: 91 messages, 498 words
+Untranslated: 94 messages, 529 words
 
 * *s*
 * *PIN*
@@ -1083,6 +1083,7 @@ Untranslated: 91 messages, 498 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Arcade*
 * *Avatar*
@@ -1093,14 +1094,13 @@ Untranslated: 91 messages, 498 words
 * *See it!*
 * *Sunbeam*
 * *Top Row*
-* *Amethyst*
 * ...
 
 # Romanian
 
-Translated: 1456 messages, 11968 words
+Translated: 1454 messages, 11966 words
 
-Untranslated: 96 messages, 503 words
+Untranslated: 99 messages, 534 words
 
 * *s*
 * *Arc*
@@ -1114,6 +1114,7 @@ Untranslated: 96 messages, 503 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Arcade*
 * *Avatar*
@@ -1121,14 +1122,13 @@ Untranslated: 96 messages, 503 words
 * *Zigzag*
 * *Crimson*
 * *Custom…*
-* *Got it!*
 * ...
 
 # Russian
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *PIN*
 * *Pick*
@@ -1137,6 +1137,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1149,14 +1150,13 @@ Untranslated: 85 messages, 492 words
 * *Go again*
 * *Home Row*
 * *KeyLearn*
-* *KeyLearn*
 * ...
 
 # Slovak
 
-Translated: 1460 messages, 11973 words
+Translated: 1458 messages, 11971 words
 
-Untranslated: 93 messages, 501 words
+Untranslated: 96 messages, 532 words
 
 * *s*
 * *PIN*
@@ -1169,6 +1169,7 @@ Untranslated: 93 messages, 501 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Avatar*
@@ -1177,14 +1178,13 @@ Untranslated: 93 messages, 501 words
 * *Got it!*
 * *Premium*
 * *See it!*
-* *Sunbeam*
 * ...
 
 # Slovenian
 
-Translated: 1460 messages, 11972 words
+Translated: 1458 messages, 11970 words
 
-Untranslated: 92 messages, 499 words
+Untranslated: 95 messages, 530 words
 
 * *s*
 * *PIN*
@@ -1196,6 +1196,7 @@ Untranslated: 92 messages, 499 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Avatar*
@@ -1205,14 +1206,13 @@ Untranslated: 92 messages, 499 words
 * *Got it!*
 * *Premium*
 * *See it!*
-* *Sunbeam*
 * ...
 
 # Albanian
 
-Translated: 1462 messages, 11974 words
+Translated: 1460 messages, 11972 words
 
-Untranslated: 90 messages, 497 words
+Untranslated: 93 messages, 528 words
 
 * *s*
 * *PIN*
@@ -1223,6 +1223,7 @@ Untranslated: 90 messages, 497 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *indigo*
 * *Zigzag*
@@ -1233,14 +1234,13 @@ Untranslated: 90 messages, 497 words
 * *See it!*
 * *Sunbeam*
 * *Top Row*
-* *Amethyst*
 * ...
 
 # Swedish
 
-Translated: 1454 messages, 11968 words
+Translated: 1452 messages, 11966 words
 
-Untranslated: 99 messages, 506 words
+Untranslated: 102 messages, 537 words
 
 * *s*
 * *Zen*
@@ -1254,6 +1254,7 @@ Untranslated: 99 messages, 506 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Trend*
 * *Voice*
 * *Avatar*
@@ -1261,14 +1262,13 @@ Untranslated: 99 messages, 506 words
 * *indigo*
 * *Layout*
 * *orange*
-* *Period*
 * ...
 
 # Tamil
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *PIN*
 * *Pick*
@@ -1277,6 +1277,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1288,15 +1289,14 @@ Untranslated: 85 messages, 492 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Telugu
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *PIN*
 * *Pick*
@@ -1305,6 +1305,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1317,14 +1318,13 @@ Untranslated: 85 messages, 492 words
 * *Go again*
 * *Home Row*
 * *KeyLearn*
-* *KeyLearn*
 * ...
 
 # Thai
 
-Translated: 1470 messages, 11985 words
+Translated: 1468 messages, 11983 words
 
-Untranslated: 84 messages, 491 words
+Untranslated: 87 messages, 522 words
 
 * *Pick*
 * *Stop*
@@ -1332,6 +1332,7 @@ Untranslated: 84 messages, 491 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1345,14 +1346,13 @@ Untranslated: 84 messages, 491 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Password*
 * ...
 
 # Turkish
 
-Translated: 1465 messages, 11980 words
+Translated: 1463 messages, 11978 words
 
-Untranslated: 89 messages, 496 words
+Untranslated: 92 messages, 527 words
 
 * *PIN*
 * *wpm*
@@ -1363,6 +1363,7 @@ Untranslated: 89 messages, 496 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Arcade*
 * *Avatar*
@@ -1373,14 +1374,13 @@ Untranslated: 89 messages, 496 words
 * *Sunbeam*
 * *Top Row*
 * *Amethyst*
-* *Cerulean*
 * ...
 
 # Ukrainian
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *PIN*
 * *Pick*
@@ -1389,6 +1389,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1400,15 +1401,14 @@ Untranslated: 85 messages, 492 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Urdu
 
-Translated: 1470 messages, 11985 words
+Translated: 1468 messages, 11983 words
 
-Untranslated: 84 messages, 491 words
+Untranslated: 87 messages, 522 words
 
 * *Pick*
 * *Stop*
@@ -1416,6 +1416,7 @@ Untranslated: 84 messages, 491 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1429,14 +1430,13 @@ Untranslated: 84 messages, 491 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Password*
 * ...
 
 # Vietnamese
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *wpm*
 * *Pick*
@@ -1445,6 +1445,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1456,15 +1457,14 @@ Untranslated: 85 messages, 492 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Simplified Chinese
 
-Translated: 1471 messages, 11986 words
+Translated: 1469 messages, 11984 words
 
-Untranslated: 84 messages, 491 words
+Untranslated: 87 messages, 522 words
 
 * *Pick*
 * *Stop*
@@ -1472,6 +1472,7 @@ Untranslated: 84 messages, 491 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1485,14 +1486,13 @@ Untranslated: 84 messages, 491 words
 * *Home Row*
 * *KeyLearn*
 * *KeyLearn*
-* *Password*
 * ...
 
 # Traditional Chinese
 
-Translated: 1469 messages, 11984 words
+Translated: 1467 messages, 11982 words
 
-Untranslated: 85 messages, 492 words
+Untranslated: 88 messages, 523 words
 
 * *wpm*
 * *Pick*
@@ -1501,6 +1501,7 @@ Untranslated: 85 messages, 492 words
 * *Grape*
 * *Later*
 * *Sepia*
+* *Theme*
 * *Voice*
 * *Crimson*
 * *Custom…*
@@ -1512,6 +1513,5 @@ Untranslated: 85 messages, 492 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...

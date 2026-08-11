@@ -234,3 +234,41 @@
   inline-size: 3.14rem;
   background: linear-gradient(135deg, #8fd9b6, #8b8bec, #e28fc8, #c9d94f);
 }
+
+// The themed-keyboard switch, sitting under the learner chips it belongs to.
+.zoneRow {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0 0.15rem;
+}
+
+.zoneText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.zoneLabel {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.zoneSub {
+  color: var(--text-color-f1);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+// A learner who already has the setting on, so a parent can see at a glance
+// which of their children it applies to without opening each in turn.
+.whoDot {
+  display: inline-block;
+  vertical-align: middle;
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  margin-inline-start: 0.35rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
