@@ -632,6 +632,14 @@ export function AccessibilityPage() {
         page and refuses combinations nobody could read.
       </p>
       <p>
+        <em>A keyboard for colour blindness.</em> The finger colours are what
+        the keyboard teaches with, and the usual set does not survive red-green
+        colour blindness — measured, its two closest neighbouring zones are at
+        the threshold of being the same colour for a protanope. Appearance has
+        an alternative set chosen to stay apart under both common forms, per
+        learner.
+      </p>
+      <p>
         <em>Text you can see.</em> The practice text scales independently of the
         rest of the page, so it can be made large without breaking the layout
         around it.

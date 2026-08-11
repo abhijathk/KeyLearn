@@ -9,9 +9,12 @@ import {
   downloadBlob,
   exportFilename,
   isPremiumUser,
+  loadSafeZones,
   myCertificates,
   Pages,
+  saveSafeZones,
   usePageData,
+  ZONES_CHANGED_EVENT,
 } from "@keylearn/pages-shared";
 import { SpeedUnit, uiProps } from "@keylearn/result";
 import { openResultStorage } from "@keylearn/result-loader";
@@ -122,14 +125,47 @@ export function AppearancePane(): ReactNode {
           defaultMessage="Appearance"
         />
       </h2>
-      <p className={styles.note}>
-        <FormattedMessage
-          id="account.appearance.note"
-          defaultMessage="Light or dark is a setting for this device. The colour is a setting for each learner, and follows them to any device they sign in on."
-        />
-      </p>
-
+      <SafeZonesRow />
       <AppearanceCard />
+    </div>
+  );
+}
+
+/**
+ * The colour-blind-friendly keyboard.
+ *
+ * Above the colour picker on purpose: somebody who needs this needs it more
+ * than they need a favourite colour, and a setting that matters is not one to
+ * put at the bottom of a scroll.
+ */
+function SafeZonesRow(): ReactNode {
+  const [on, setOn] = useState(loadSafeZones);
+  return (
+    <div className={styles.row}>
+      <div className={styles.rowText}>
+        <span className={styles.rowLabel}>
+          <FormattedMessage
+            id="account.appearance.safeZones"
+            defaultMessage="Keyboard colours for colour blindness"
+          />
+        </span>
+        <span className={styles.rowSub}>
+          <FormattedMessage
+            id="account.appearance.safeZones.sub"
+            defaultMessage="The finger colours are what the keyboard teaches with. These ones stay apart for red-green colour blindness, where the usual set can look almost the same."
+          />
+        </span>
+      </div>
+      <Toggle
+        on={on}
+        onChange={(next) => {
+          setOn(next);
+          saveSafeZones(next);
+          // The provider paints them, because it is the thing that knows
+          // whether this device is on night or day.
+          window.dispatchEvent(new window.Event(ZONES_CHANGED_EVENT));
+        }}
+      />
     </div>
   );
 }

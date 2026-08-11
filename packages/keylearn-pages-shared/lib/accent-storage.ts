@@ -95,3 +95,45 @@ export function saveAccent(accent: string, profileId?: string | null): boolean {
     return false;
   }
 }
+
+// ---- Colour-blind-friendly keyboard zones ---------------------------------
+
+const ZONES_KEY = "keylearn.safeZones";
+
+/** Said when the preference moves, so the theme provider can repaint. */
+export const ZONES_CHANGED_EVENT = "keylearn:safe-zones";
+
+/**
+ * Whether this learner wants the colour-blind-friendly finger zones.
+ *
+ * Per learner rather than per account, and for the same reason the accent is:
+ * a household shares one login, and the child who needs this is not
+ * necessarily the parent who set it up.
+ *
+ * Off by default. The standard zones are what most people should see, and a
+ * setting that changed the keyboard for everybody in the house would be a
+ * worse default than the one it replaced.
+ */
+export function loadSafeZones(profileId?: string | null): boolean {
+  try {
+    const id = profileId === undefined ? activeProfileId() : profileId;
+    return localStorage.getItem(profileStorageKeyFor(id, ZONES_KEY)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function saveSafeZones(on: boolean, profileId?: string | null): boolean {
+  try {
+    const id = profileId === undefined ? activeProfileId() : profileId;
+    const key = profileStorageKeyFor(id, ZONES_KEY);
+    if (on) {
+      localStorage.setItem(key, "1");
+    } else {
+      localStorage.removeItem(key);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}

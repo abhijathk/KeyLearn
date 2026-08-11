@@ -332,7 +332,7 @@ export function MenuDrawer({
                     somebody sent them, which is the very thing they came to
                     check. */}
                 <RouterLink to={Pages.verify.path} onClick={onClose}>
-                  <StrokeIcon className={styles.utilIcon} name="shield" />
+                  <StrokeIcon className={styles.utilIcon} name="trophy" />
                   {formatMessage(Pages.verify.link.label)}
                 </RouterLink>
                 <RouterLink to={Pages.guide.path} onClick={onClose}>
@@ -358,7 +358,7 @@ export function MenuDrawer({
                   {formatMessage(Pages.termsOfService.link.label)}
                 </RouterLink>
                 <RouterLink to={Pages.accessibility.path} onClick={onClose}>
-                  <StrokeIcon className={styles.utilIcon} name="user" />
+                  <StrokeIcon className={styles.utilIcon} name="people" />
                   {formatMessage(Pages.accessibility.link.label)}
                 </RouterLink>
                 <RouterLink to={Pages.privacyPolicy.path} onClick={onClose}>

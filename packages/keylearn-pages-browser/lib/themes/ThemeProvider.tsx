@@ -2,11 +2,14 @@ import { Cookie, SetCookie } from "@fastr/headers";
 import {
   activeProfileId,
   loadAccent,
+  loadSafeZones,
   PROFILE_CHANGED_EVENT,
   saveAccent,
+  ZONES_CHANGED_EVENT,
 } from "@keylearn/pages-shared";
 import {
   applyTheme,
+  applyZonePalette,
   clearTheme,
   CUSTOM_PREFIX,
   findAnyAccent,
@@ -69,6 +72,8 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
         typeof window !== "undefined" &&
         window.matchMedia?.("(prefers-color-scheme: light)").matches === true);
     applyAccent(accent, day);
+    // After the accent, so it overrides the zones the theme has just set.
+    applyZonePalette(loadSafeZones(), day);
     // The tab follows the learner. Called after applyAccent so the custom
     // property it has just written is the colour that gets read.
     applyFavIcon();
@@ -79,6 +84,11 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
     if (readPrefs().accent !== accent) {
       storePrefs(new ThemePrefs({ color, font, accent }));
     }
+    // The Appearance panel does not re-render this provider, so it says when
+    // the preference moved and the night/day question stays answered here.
+    const onZones = () => applyZonePalette(loadSafeZones(), day);
+    window.addEventListener(ZONES_CHANGED_EVENT, onZones);
+    return () => window.removeEventListener(ZONES_CHANGED_EVENT, onZones);
   }, [accent, color, font]);
 
   return (

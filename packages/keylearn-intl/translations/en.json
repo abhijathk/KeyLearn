@@ -31,6 +31,8 @@
   "account.anonymize.label": "Hide my identity",
   "account.anonymize.sub": "Show a generated name and picture on leaderboards and multiplayer instead of your own.",
   "account.appearance.note": "Light or dark is a setting for this device. The colour is a setting for each learner, and follows them to any device they sign in on.",
+  "account.appearance.safeZones": "Keyboard colours for colour blindness",
+  "account.appearance.safeZones.sub": "The finger colours are what the keyboard teaches with. These ones stay apart for red-green colour blindness, where the usual set can look almost the same.",
   "account.appearance.title": "Appearance",
   "account.check.accuracy": "Sustained accuracy",
   "account.check.coverage.cells": "Every one of the {total} cells introduced",
