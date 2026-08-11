@@ -36,7 +36,24 @@ export default function Page() {
   // Learning always happens under a learner profile — never the bare account.
   // The active profile's own history is loaded via its namespace.
   const { namespace, household } = useProfiles();
+  const { settings } = useSettings();
   useRememberPractice();
+  // The Classic course is a course, not a setting. It picks its own keys in its
+  // own fixed order, so a speed earned on lesson three of Classic is not
+  // evidence about the letters guided practice is currently teaching — and
+  // mixing the two made each one's charts a report on the other. Its history is
+  // kept beside the guided one, under the same learner.
+  //
+  // Anonymous typing keeps its single history: the split is addressed by
+  // learner, and there is no learner to address.
+  // Compared by id, not by identity. The lesson types are enum singletons, and
+  // whether two chunks share one copy of that module is a bundler's decision —
+  // when they do not, `===` is false for the very same course and the history
+  // quietly goes back to guided.
+  const classic =
+    settings.get(lessonProps.type).id === LessonType.CURRICULUM.id;
+  const history =
+    namespace != null && classic ? `${namespace}.classic` : namespace;
 
   // A signed-in account always gets a default profile (auto-created), so this
   // only appears if the last profile was just deleted — a gentle nudge rather
@@ -79,7 +96,7 @@ export default function Page() {
   }
 
   return (
-    <ResultLoader namespace={namespace}>
+    <ResultLoader key={history ?? "none"} namespace={history}>
       <PracticePage />
     </ResultLoader>
   );

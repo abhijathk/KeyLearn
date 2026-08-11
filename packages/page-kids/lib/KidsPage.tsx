@@ -301,6 +301,14 @@ export function classicActive(): boolean {
   }
 }
 
+/**
+ * The same question about a learner who is not the one at the keyboard.
+ *
+ * The account window has to ask it: a course pane showing every learner's
+ * progress must read the course each of them is actually on, or it reports
+ * one learner's guided history as their Classic one.
+ */
+
 function loadPrefs(): Prefs {
   try {
     const prefs: Prefs = {

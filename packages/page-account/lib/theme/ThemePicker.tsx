@@ -1,7 +1,7 @@
 import {
+  accessibilityActive,
   canChooseAccent,
   loadAccent,
-  loadSafeZones,
   loadThemedZones,
   Pages,
   saveThemedZones,
@@ -87,7 +87,7 @@ export function ThemePicker(): ReactNode {
               size={28}
               braille={profile.visionSupport}
               kind={profile.kind}
-              accessible={loadSafeZones(profile.id)}
+              accessible={accessibilityActive(profile.id)}
             />
             <span className={styles.whoText}>
               <span className={styles.whoName}>
@@ -355,7 +355,7 @@ function ThemedZonesRow({
   readonly profileId: string;
 }): ReactNode {
   const [themed, setThemed] = useState(() => loadThemedZones(profileId));
-  const safe = loadSafeZones(profileId);
+  const safe = accessibilityActive(profileId);
   // The switch is per learner, so it must re-read when the learner changes.
   const [seen, setSeen] = useState(profileId);
   if (seen !== profileId) {

@@ -1,7 +1,6 @@
 import {
   BrailleAvatar,
   BrailleBadge,
-  historyNamespace,
   useProfiles,
 } from "@keylearn/page-account";
 import {
@@ -11,10 +10,21 @@ import {
   ProfilePage,
   PublicProfilePage,
 } from "@keylearn/page-profile";
-import { Avatar, Screen, usePageData } from "@keylearn/pages-shared";
-import { PublicResultLoader, ResultLoader } from "@keylearn/result-loader";
+import {
+  accessibilityActive,
+  Avatar,
+  courseNamespace,
+  courseOf,
+  Screen,
+  usePageData,
+} from "@keylearn/pages-shared";
+import {
+  openResultStorage,
+  PublicResultLoader,
+  ResultLoader,
+} from "@keylearn/result-loader";
 import { clsx } from "clsx";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useParams } from "react-router";
 import { ProfileLoader } from "../loader/ProfileLoader.tsx";
@@ -42,6 +52,47 @@ function Profile(): ReactNode {
   return <ModeTabs />;
 }
 
+/**
+ * Whether this learner has anything under Classic.
+ *
+ * Asked of the history rather than of the current setting: a learner who did
+ * Classic for a term and has since moved back to guided practice still did the
+ * work, and a page that hid it would be reporting less than it knows.
+ */
+function useHasClassic(profileId: string, kid: boolean): boolean {
+  const { publicUser } = usePageData();
+  const [has, setHas] = useState(() => courseOf(profileId) === "classic");
+  useEffect(() => {
+    let cancelled = false;
+    // Answer for this learner before asking the disk about them. The initial
+    // state is computed once, at mount, for whoever was selected then — so
+    // switching to a sibling kept the first learner's answer and the filter
+    // never appeared for the one who needed it.
+    setHas(courseOf(profileId) === "classic");
+    void (async () => {
+      try {
+        const storage = openResultStorage({
+          type: "private",
+          userId: publicUser.id ?? null,
+          kids: kid,
+          namespace: courseNamespace(profileId, "classic"),
+        });
+        const loaded = await storage.load();
+        if (!cancelled && loaded.length > 0) {
+          setHas(true);
+        }
+      } catch {
+        // Leave it at whatever the setting said. A history that will not open
+        // is not evidence that there is none.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileId, kid, publicUser.id]);
+  return has;
+}
+
 function LearnerTabs(): ReactNode {
   const { publicUser } = usePageData();
   const { household, active } = useProfiles();
@@ -51,6 +102,15 @@ function LearnerTabs(): ReactNode {
   const selected =
     household.profiles.find((p) => p.id === selectedId) ??
     household.profiles[0];
+  // Which course is on screen. Classic is its own course — its own letters in
+  // its own order, its own history — so its speed and its lesson count belong
+  // beside guided practice, not mixed into it. Reset whenever the learner
+  // changes: the course one child is on says nothing about the next.
+  const [course, setCourse] = useState(() => courseOf(selected.id));
+  useEffect(() => {
+    setCourse(courseOf(selectedId));
+  }, [selectedId]);
+  const hasClassic = useHasClassic(selected.id, selected.kind === "kid");
   return (
     <>
       <Screen className={styles.tabScreen}>
@@ -129,6 +189,40 @@ function LearnerTabs(): ReactNode {
           this is, and a line repeating the name on every switch was a caption
           that told the reader nothing they had not just clicked.
         */}
+        {/* Shown only to a learner who has both. One course is not a choice,
+            and a filter with a single option is furniture. */}
+        {hasClassic && !selected.visionSupport && (
+          <div className={styles.courseRow} role="group">
+            <button
+              type="button"
+              className={clsx(
+                styles.course,
+                course === "guided" && styles.courseOn,
+              )}
+              aria-pressed={course === "guided"}
+              onClick={() => setCourse("guided")}
+            >
+              <FormattedMessage
+                id="profile.course.guided"
+                defaultMessage="Guided practice"
+              />
+            </button>
+            <button
+              type="button"
+              className={clsx(
+                styles.course,
+                course === "classic" && styles.courseOn,
+              )}
+              aria-pressed={course === "classic"}
+              onClick={() => setCourse("classic")}
+            >
+              <FormattedMessage
+                id="profile.course.classic"
+                defaultMessage="Classic"
+              />
+            </button>
+          </div>
+        )}
       </Screen>
       {/*
         Same page, same tabs, same chrome — the content is what differs. A
@@ -146,13 +240,14 @@ function LearnerTabs(): ReactNode {
               name={selected.firstName}
               size={42}
               braille={selected.visionSupport}
+              accessible={accessibilityActive(selected.id)}
             />
           }
         />
       ) : (
         <ResultLoader
-          key={selected.id}
-          namespace={historyNamespace(selected)}
+          key={`${selected.id}:${course}`}
+          namespace={courseNamespace(selected.id, course)}
           profileName={selected.firstName}
           kidProfile={selected.kind === "kid"}
           profileBirthYear={selected.birthYear}
@@ -162,6 +257,7 @@ function LearnerTabs(): ReactNode {
               name={selected.firstName}
               size={42}
               braille={selected.visionSupport}
+              accessible={accessibilityActive(selected.id)}
             />
           }
         >

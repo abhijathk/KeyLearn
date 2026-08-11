@@ -120,3 +120,47 @@ export function profileStorageKeyFor(
 ): string {
   return profileId == null ? base : `profile-${profileId}.${base}`;
 }
+
+/** The courses a learner's history can belong to. */
+export type CourseId = "guided" | "classic";
+
+/**
+ * Which course a learner is on.
+ *
+ * Classic is a course in its own right, not a skin over guided practice: it
+ * picks its own letters in its own order and keeps its own history, so speed
+ * and progress earned in one say nothing about the other. Anything reporting a
+ * learner's progress has to ask which course it is reporting on, including for
+ * a learner who is not the one at the keyboard.
+ */
+export function courseOf(profileId: string | null): CourseId {
+  try {
+    const raw = localStorage.getItem(
+      profileStorageKeyFor(profileId, "kids.prefs"),
+    );
+    if (raw == null) {
+      return "guided";
+    }
+    return JSON.parse(raw)?.classic === true ? "classic" : "guided";
+  } catch {
+    return "guided";
+  }
+}
+
+/** Whether this learner has ever been put on Classic. */
+export function classicCourseActive(profileId: string | null): boolean {
+  return courseOf(profileId) === "classic";
+}
+
+/**
+ * The history namespace for one learner on one course. Guided keeps the
+ * unsuffixed name it has always had, so no existing history moves.
+ */
+export function courseNamespace(
+  profileId: string,
+  course: CourseId = "guided",
+): string {
+  return course === "classic"
+    ? `profile-${profileId}.classic`
+    : `profile-${profileId}`;
+}

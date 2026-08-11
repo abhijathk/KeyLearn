@@ -1,6 +1,7 @@
 export * from "./accents.ts";
 export * from "./asset.ts";
 export * from "./context.ts";
+export * from "./contrast.ts";
 export * from "./custom-accents.ts";
 export * from "./custom-theme.ts";
 export * from "./dynamic-styles-context.tsx";

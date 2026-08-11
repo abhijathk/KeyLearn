@@ -178,3 +178,60 @@ export function saveThemedZones(
     return false;
   }
 }
+
+const CONTRAST_KEY = "keylearn.contrast";
+
+/**
+ * How hard this learner needs the text to work.
+ *
+ * Three steps rather than a dial. The numbers that matter here are settled —
+ * WCAG asks 4.5:1 of ordinary text and 7:1 where low vision is expected — and
+ * a slider hands that research back to the reader as a puzzle to solve by
+ * squinting. Named for what they do to the page, not for who is expected to
+ * need them: nobody should have to identify with a diagnosis to make an app
+ * readable.
+ */
+export type ContrastPref = "default" | "clearer" | "strongest";
+
+export function loadContrast(profileId?: string | null): ContrastPref {
+  try {
+    const id = profileId === undefined ? activeProfileId() : profileId;
+    const raw = localStorage.getItem(profileStorageKeyFor(id, CONTRAST_KEY));
+    return raw === "clearer" || raw === "strongest" ? raw : "default";
+  } catch {
+    return "default";
+  }
+}
+
+export function saveContrast(
+  level: ContrastPref,
+  profileId?: string | null,
+): boolean {
+  try {
+    const id = profileId === undefined ? activeProfileId() : profileId;
+    const key = profileStorageKeyFor(id, CONTRAST_KEY);
+    if (level === "default") {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, level);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether this learner has anything on that changes what the app does for
+ * them, as opposed to how it looks.
+ *
+ * This is what the mark on a learner's face means, so it has to be asked in
+ * one place — a page that worked it out for itself would sooner or later
+ * disagree with the page next to it. The themed keyboard is deliberately not
+ * counted: it is a preference about colour, and marking it would make the mark
+ * mean "has opinions" rather than "needs this".
+ */
+export function accessibilityActive(profileId?: string | null): boolean {
+  const id = profileId === undefined ? activeProfileId() : profileId;
+  return loadSafeZones(id) || loadContrast(id) !== "default";
+}

@@ -11,6 +11,9 @@ import { medalFor } from "@keylearn/certificate-ui";
 import { artKindOf, ArtMotif } from "@keylearn/identicon";
 import { Layout, loadKeyboard } from "@keylearn/keyboard";
 import {
+  type CourseId,
+  courseNamespace,
+  courseOf,
   type IssuedCertificate,
   myCertificates,
   Pages,
@@ -148,6 +151,7 @@ function CourseRow({
 }): ReactNode {
   const braille = profile.visionSupport === true;
   const [results, setResults] = useState<readonly Result[] | null>(null);
+  const [course, setCourse] = useState<CourseId>(() => courseOf(profile.id));
   const { publicUser } = usePageData();
 
   useEffect(() => {
@@ -156,23 +160,35 @@ function CourseRow({
     }
     let cancelled = false;
     void (async () => {
-      try {
-        const storage = openResultStorage({
-          type: "private",
-          userId: publicUser.id ?? null,
-          kids: profile.kind === "kid",
-          namespace: `profile-${profile.id}`,
-        });
-        const loaded = await storage.load();
-        if (!cancelled) {
-          setResults(loaded);
+      // Guided practice and Classic are separate courses with separate
+      // histories, and a certificate is earned on one of them — not on the two
+      // added together, which would count a learner's first week twice. Both
+      // are read and the further one is what the row reports, because that is
+      // the one they are actually doing; the row says which.
+      const read = async (which: CourseId) => {
+        try {
+          const storage = openResultStorage({
+            type: "private",
+            userId: publicUser.id ?? null,
+            kids: profile.kind === "kid",
+            namespace: courseNamespace(profile.id, which),
+          });
+          return await storage.load();
+        } catch {
+          // A learner whose local database will not open shows as having no
+          // practice rather than breaking the page for everybody else.
+          return [];
         }
-      } catch {
-        // A learner whose local database will not open shows as having no
-        // practice rather than breaking the page for everybody else.
-        if (!cancelled) {
-          setResults([]);
-        }
+      };
+      const [guided, classic] = await Promise.all([
+        read("guided"),
+        read("classic"),
+      ]);
+      if (!cancelled) {
+        const on: CourseId =
+          classic.length > guided.length ? "classic" : "guided";
+        setCourse(on);
+        setResults(on === "classic" ? classic : guided);
       }
     })();
     return () => {
@@ -201,6 +217,7 @@ function CourseRow({
       {({ letters }) => (
         <Row
           profile={profile}
+          course={course}
           evidence={typingEvidence(
             profile,
             results,
@@ -219,9 +236,12 @@ function Row({
   evidence,
   layout = Layout.EN_US,
   language,
+  course,
 }: {
   readonly profile: ProfileDetails;
   readonly evidence: CertificateEvidence;
+  /** Which course this row is reporting on. Absent for a braille learner. */
+  readonly course?: CourseId;
   /** Absent for a braille learner, who has no layout at all. */
   readonly layout?: Layout;
   readonly language?: string;
@@ -247,10 +267,40 @@ function Row({
   }, [profile.id]);
   const verdict = assess(evidence);
   const state = verdict.eligible ? "ready" : "going";
+  // How far along, as one number. Every condition counts the same and none can
+  // count more than once — a learner who has typed ten times the lessons needed
+  // is not thereby closer to having practised on enough separate days.
+  const progress =
+    verdict.checks.reduce(
+      (sum, check) =>
+        sum +
+        Math.min(1, check.required > 0 ? check.actual / check.required : 1),
+      0,
+    ) / Math.max(1, verdict.checks.length);
   const [bronze, silver, gold] = bandFor(evidence.age, evidence.kind);
   return (
     <div className={styles.row}>
-      <Head profile={profile} state={state} language={language} />
+      <Head
+        profile={profile}
+        state={state}
+        language={language}
+        course={course}
+      />
+      {/* The same thin line the practice page uses, for the same reason: a
+          household scanning five learners reads five bars faster than five
+          lists of conditions. The list underneath is what says why. */}
+      <div
+        className={styles.bar}
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress * 100)}
+      >
+        <div
+          className={clsx(styles.barFill, verdict.eligible && styles.barDone)}
+          style={{ inlineSize: `${Math.round(progress * 100)}%` }}
+        />
+      </div>
       <div className={styles.checks}>
         {verdict.checks.map((check) => (
           <Check
@@ -289,11 +339,24 @@ function Row({
             </button>
           </>
         ) : (
-          <FormattedMessage
-            id="account.course.outstanding"
-            defaultMessage="Next: {what}."
-            values={{ what: verdict.outstanding[0]?.label.toLowerCase() ?? "" }}
-          />
+          <>
+            <FormattedMessage
+              id="account.course.outstanding"
+              defaultMessage="Next: {what}."
+              values={{
+                what: verdict.outstanding[0]?.label.toLowerCase() ?? "",
+              }}
+            />{" "}
+            {/* Said plainly, because the absence of a link is not a message.
+                Every condition above is met by practising; none of them is met
+                by looking for a button that is not there yet. */}
+            <span className={styles.locked}>
+              <FormattedMessage
+                id="account.course.locked"
+                defaultMessage="The link to sit the assessment appears here once every condition above is met."
+              />
+            </span>
+          </>
         )}
       </div>
       {held.length > 0 && (
@@ -351,10 +414,12 @@ function Head({
   profile,
   state,
   language,
+  course,
 }: {
   readonly profile: ProfileDetails;
   readonly state: "ready" | "going" | "loading";
   readonly language?: string;
+  readonly course?: CourseId;
 }): ReactNode {
   const braille = profile.visionSupport === true;
   const art = profile.avatar?.type === "art" ? profile.avatar : null;
@@ -392,6 +457,17 @@ function Head({
       </span>
       <span className={styles.meta}>
         {braille ? "Unified English Braille · grade 1" : (language ?? "")}
+        {/* Named only when it is not the ordinary one, so five guided rows do
+            not each carry a word that distinguishes nothing. */}
+        {course === "classic" && (
+          <>
+            {" · "}
+            <FormattedMessage
+              id="texts.mode.curriculum"
+              defaultMessage="Classic course"
+            />
+          </>
+        )}
       </span>
       <span
         className={clsx(

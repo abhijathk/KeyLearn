@@ -138,3 +138,35 @@
     color: var(--accent);
   }
 }
+
+// The course filter, under the learner tabs and quieter than them. Who is on
+// screen is the question this page answers first; which of their courses is a
+// second question, and the styling says so — an underline rather than a second
+// pill group, or two rows of identical pills would compete to be read first.
+.courseRow {
+  display: flex;
+  gap: 1.1rem;
+  justify-content: flex-end;
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
+  margin-block-start: 0.55rem;
+}
+
+.course {
+  padding: 0.15rem 0;
+  border: none;
+  border-block-end: 2px solid transparent;
+  color: var(--text-color-f2, var(--text-color-f1));
+  background: transparent;
+  font-family: var(--value-font-family);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.courseOn {
+  border-block-end-color: var(--accent);
+  color: var(--text-color);
+}

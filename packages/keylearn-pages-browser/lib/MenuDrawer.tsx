@@ -5,7 +5,7 @@ import {
   useProfiles,
 } from "@keylearn/page-account";
 import {
-  loadSafeZones,
+  accessibilityActive,
   logout,
   Pages,
   usePageData,
@@ -196,7 +196,7 @@ export function MenuDrawer({
                           name={p.firstName}
                           size={36}
                           braille={p.visionSupport}
-                          accessible={loadSafeZones(p.id)}
+                          accessible={accessibilityActive(p.id)}
                         />
                         <span className={styles.learnerName}>
                           {p.firstName}

@@ -678,3 +678,37 @@
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
 }
+
+// The thin progress line, matched to the practice page's rather than invented
+// again — a learner reading both should not have to work out that two
+// different-looking bars mean the same thing.
+.bar {
+  block-size: 2px;
+  margin-block-start: 0.7rem;
+  border-radius: 1px;
+  overflow: hidden;
+  background-color: var(--separator-color);
+}
+
+.barFill {
+  block-size: 100%;
+  border-radius: 1px;
+  background-color: var(--text-color-f2);
+  // Only when the width changes, and only for people who want motion.
+  transition: inline-size 0.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barFill {
+    transition: none;
+  }
+}
+
+// Full and earned reads differently from full and still going.
+.barDone {
+  background-color: var(--accent);
+}
+
+.locked {
+  color: var(--text-color-f2);
+}

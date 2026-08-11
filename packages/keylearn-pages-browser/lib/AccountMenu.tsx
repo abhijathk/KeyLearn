@@ -1,7 +1,7 @@
 import { BrailleAvatar, useProfiles } from "@keylearn/page-account";
 import {
+  accessibilityActive,
   Avatar,
-  loadSafeZones,
   Pages,
   usePageData,
 } from "@keylearn/pages-shared";
@@ -76,7 +76,7 @@ export function AccountMenu({
               name={active.firstName}
               size={29}
               braille={active.visionSupport}
-              accessible={loadSafeZones(active.id)}
+              accessible={accessibilityActive(active.id)}
             />
           </span>
           <span className={clsx(styles.name, kids && styles.kidsName)}>
