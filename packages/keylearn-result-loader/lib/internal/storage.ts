@@ -235,8 +235,21 @@ export class ResultStorageOfNamedUser implements ResultStorage {
     // Written locally FIRST. This used to go straight to the server and
     // nowhere else, so a lesson finished without a connection was not saved
     // anywhere — it simply vanished, with the learner watching it count.
-    await this.#serial(() => this.#local.append(results));
-    await this.#flush(pl).catch(() => {});
+    let buffered = true;
+    try {
+      await this.#serial(() => this.#local.append(results));
+    } catch {
+      // A device whose local store will not accept writes is a bad reason to
+      // lose a lesson that the server would have taken. Writing locally first
+      // is a safety net for being offline, and a safety net that drops what it
+      // was meant to catch is worse than none.
+      buffered = false;
+    }
+    if (buffered) {
+      await this.#flush(pl).catch(() => {});
+    } else {
+      await this.#remote.send(results, pl);
+    }
   }
 
   async clear(): Promise<void> {

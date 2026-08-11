@@ -317,3 +317,62 @@ test("named user - offline, their history still loads", async () => {
 
   deepEqual(await storage.load(), [r0]);
 });
+
+test("named user - a local store that will not write still reaches the server", async () => {
+  // The device's own database can be broken in ways nobody can see: a store
+  // that was never created, a quota that is full, a private window that
+  // refuses persistence. Buffering locally before uploading is there to
+  // survive being offline — it must not become a way to lose a lesson that
+  // the server was perfectly willing to take.
+  const r0 = faker.nextResult();
+  const remote: Result[] = [];
+  const broken: LocalResultStorage = {
+    async load() {
+      throw new Error("no object store");
+    },
+    async append() {
+      throw new Error("no object store");
+    },
+    async clear() {},
+  };
+
+  const storage = wrapResultStorage(
+    new ResultStorageOfNamedUser(broken, new FakeRemoteResultSync(remote)),
+  );
+
+  await storage.append([r0]);
+
+  deepEqual(remote, [r0]);
+});
+
+test("named user - a lesson is lost only when both ends refuse it", async () => {
+  // And when that happens the caller is told, rather than watching a result
+  // count on screen that nothing anywhere is holding.
+  const r0 = faker.nextResult();
+  const broken: LocalResultStorage = {
+    async load() {
+      throw new Error("no object store");
+    },
+    async append() {
+      throw new Error("no object store");
+    },
+    async clear() {},
+  };
+  const offline: RemoteResultSync = {
+    async receive() {
+      throw new Error("offline");
+    },
+    async send() {
+      throw new Error("offline");
+    },
+    async clear() {},
+  };
+
+  const storage = wrapResultStorage(
+    new ResultStorageOfNamedUser(broken, offline),
+  );
+
+  await rejects(async () => {
+    await storage.append([r0]);
+  });
+});
