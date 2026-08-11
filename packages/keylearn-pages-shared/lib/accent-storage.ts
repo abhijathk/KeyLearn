@@ -100,7 +100,9 @@ export function saveAccent(accent: string, profileId?: string | null): boolean {
 
 const ZONES_KEY = "keylearn.safeZones";
 
-/** Said when the preference moves, so the theme provider can repaint. */
+const THEMED_ZONES_KEY = "keylearn.themedZones";
+
+/** Said when either zone preference moves, so the provider can repaint. */
 export const ZONES_CHANGED_EVENT = "keylearn:safe-zones";
 
 /**
@@ -127,6 +129,45 @@ export function saveSafeZones(on: boolean, profileId?: string | null): boolean {
   try {
     const id = profileId === undefined ? activeProfileId() : profileId;
     const key = profileStorageKeyFor(id, ZONES_KEY);
+    if (on) {
+      localStorage.setItem(key, "1");
+    } else {
+      localStorage.removeItem(key);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether this learner wants the keyboard to wear their theme's colours.
+ *
+ * Off by default: the standard zones were chosen rather than computed, and
+ * they stay the default for everybody who does not ask otherwise.
+ *
+ * Loses to the colour-blind palette when both are on. One is a preference
+ * about how the keyboard looks; the other is about whether it can be read at
+ * all, and that is not a contest.
+ */
+export function loadThemedZones(profileId?: string | null): boolean {
+  try {
+    const id = profileId === undefined ? activeProfileId() : profileId;
+    return (
+      localStorage.getItem(profileStorageKeyFor(id, THEMED_ZONES_KEY)) === "1"
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function saveThemedZones(
+  on: boolean,
+  profileId?: string | null,
+): boolean {
+  try {
+    const id = profileId === undefined ? activeProfileId() : profileId;
+    const key = profileStorageKeyFor(id, THEMED_ZONES_KEY);
     if (on) {
       localStorage.setItem(key, "1");
     } else {

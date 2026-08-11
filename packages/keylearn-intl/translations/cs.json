@@ -30,7 +30,6 @@
   "about.why.p": "Dobré psaní je tichá superschopnost — odstraňuje tření z každé zprávy, eseje a řádku kódu, které kdy napíšete. KeyLearn byl vytvořen, aby tuto dovednost učil co nejpovzbudivějším způsobem, jaký jsme dokázali zvládnout: krátká sezení, upřímná zpětná vazba a pocit stálého pokroku, který skutečně cítíte. Je to fork otevřeného enginu keybr, přepracovaný kolem rodin a znovu postavený tak, aby byl vřelý, ne klinický.",
   "account.anonymize.label": "Skrýt mou identitu",
   "account.anonymize.sub": "Na žebříčcích a ve hře pro více hráčů zobrazit vygenerované jméno a obrázek místo vašich vlastních.",
-  "account.appearance.note": "Světlý, nebo tmavý režim se nastavuje pro toto zařízení. Barva se nastavuje pro každého žáka zvlášť a putuje s ním na každé zařízení, kde se přihlásí.",
   "account.appearance.title": "Vzhled",
   "account.check.accuracy": "Trvalá přesnost",
   "account.check.coverage.cells": "Zavedena každá z {total} buněk",

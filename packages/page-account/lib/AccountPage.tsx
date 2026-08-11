@@ -21,13 +21,18 @@ import { type AccountActions, useAccountActions } from "./actions.ts";
 import { Toggle } from "./controls.tsx";
 import { CoursePane } from "./course/CoursePane.tsx";
 import { FloatingShell } from "./FloatingShell.tsx";
-import { AppearancePane, PreferencesPane } from "./PreferencesPane.tsx";
+import {
+  AccessibilityPane,
+  AppearancePane,
+  PreferencesPane,
+} from "./PreferencesPane.tsx";
 import { ProfilesManager } from "./profiles/ProfilesManager.tsx";
 import { SecurityCard } from "./SecurityCard.tsx";
 import { AccountService } from "./service.ts";
 
 type Pane =
   | "account"
+  | "accessibility"
   | "learners"
   | "course"
   | "security"
@@ -54,6 +59,7 @@ const PANES: readonly Pane[] = [
   "security",
   "appearance",
   "prefs",
+  "accessibility",
   ...(PREMIUM_VISIBLE ? (["premium"] as const) : []),
 ];
 
@@ -180,6 +186,17 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               />
             }
           />
+          <RailItem
+            on={pane === "accessibility"}
+            onClick={() => setPane("accessibility")}
+            icon={<AccessIcon />}
+            label={
+              <FormattedMessage
+                id="account.rail.accessibility"
+                defaultMessage="Accessibility"
+              />
+            }
+          />
 
           {PREMIUM_VISIBLE && (
             <div
@@ -295,6 +312,7 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
           )}
 
           {pane === "appearance" && <AppearancePane />}
+          {pane === "accessibility" && <AccessibilityPane />}
 
           {pane === "prefs" && <PreferencesPane />}
 
@@ -1164,6 +1182,17 @@ function ShieldIcon(): ReactNode {
   return (
     <svg className={styles.railIcon} viewBox="0 0 24 24">
       <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+    </svg>
+  );
+}
+
+// The universal access mark: a figure with arms out, not an eye or an ear —
+// this pane is for everybody who needs the app to meet them somewhere.
+function AccessIcon(): ReactNode {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <circle cx="12" cy="4.2" r="1.6" />
+      <path d="M4.5 8.2h15M12 8.6v6M12 14.6l-3.2 5.6M12 14.6l3.2 5.6" />
     </svg>
   );
 }

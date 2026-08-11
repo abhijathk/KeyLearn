@@ -30,7 +30,6 @@
   "about.why.p": "Escrever bem é um superpoder silencioso — retira o atrito de cada mensagem, redação e linha de código que alguma vez irás escrever. O KeyLearn foi criado para ensinar essa competência da forma mais encorajadora que conseguimos: sessões curtas, feedback honesto e uma sensação de progresso constante que consegues mesmo sentir. É um fork do motor de código aberto keybr, reformulado em torno das famílias e reconstruído para ser acolhedor em vez de clínico.",
   "account.anonymize.label": "Ocultar a minha identidade",
   "account.anonymize.sub": "Mostra um nome e uma imagem gerados nas tabelas de classificação e no multijogador, em vez dos teus.",
-  "account.appearance.note": "Claro ou escuro é uma definição deste dispositivo. A cor é uma definição de cada aprendiz e acompanha-o em qualquer dispositivo onde inicie sessão.",
   "account.appearance.title": "Aspeto",
   "account.check.accuracy": "Precisão sustentada",
   "account.check.coverage.cells": "Todas as {total} células introduzidas",

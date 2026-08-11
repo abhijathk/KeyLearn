@@ -29,7 +29,6 @@
   "about.why.p": "Bien taper est un super-pouvoir discret — il élimine la friction de chaque message, dissertation et ligne de code que tu écriras jamais. KeyLearn a été conçu pour enseigner cette compétence de la manière la plus encourageante possible: des sessions courtes, des retours honnêtes et une sensation de progression régulière que tu ressens vraiment. C’est un fork du moteur open source keybr, repensé autour des familles et reconstruit pour être chaleureux plutôt que clinique.",
   "account.anonymize.label": "Masquer mon identité",
   "account.anonymize.sub": "Afficher un nom et une image générés sur les classements et en multijoueur à la place des vôtres.",
-  "account.appearance.note": "Le mode clair ou sombre est un réglage propre à cet appareil. La couleur, elle, appartient à chaque apprenant et le suit sur tous les appareils où il se connecte.",
   "account.appearance.title": "Apparence",
   "account.check.accuracy": "Précision soutenue",
   "account.check.coverage.cells": "Les {total} cellules ont toutes été introduites",

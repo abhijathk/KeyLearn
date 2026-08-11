@@ -10,9 +10,11 @@ import {
   exportFilename,
   isPremiumUser,
   loadSafeZones,
+  loadThemedZones,
   myCertificates,
   Pages,
   saveSafeZones,
+  saveThemedZones,
   usePageData,
   ZONES_CHANGED_EVENT,
 } from "@keylearn/pages-shared";
@@ -125,7 +127,7 @@ export function AppearancePane(): ReactNode {
           defaultMessage="Appearance"
         />
       </h2>
-      <SafeZonesRow />
+      <ThemedZonesRow />
       <AppearanceCard />
     </div>
   );
@@ -138,8 +140,28 @@ export function AppearancePane(): ReactNode {
  * than they need a favourite colour, and a setting that matters is not one to
  * put at the bottom of a scroll.
  */
-function SafeZonesRow(): ReactNode {
-  const [on, setOn] = useState(loadSafeZones);
+export function AccessibilityPane(): ReactNode {
+  const [safe, setSafe] = useState(loadSafeZones);
+  return (
+    <div className={styles.paneScroll}>
+      <h2 className={styles.paneTitle}>
+        <FormattedMessage
+          id="account.accessibility.title"
+          defaultMessage="Accessibility"
+        />
+      </h2>
+      {SafeRow({ safe, setSafe })}
+    </div>
+  );
+}
+
+function SafeRow({
+  safe,
+  setSafe,
+}: {
+  readonly safe: boolean;
+  readonly setSafe: (v: boolean) => void;
+}): ReactNode {
   return (
     <div className={styles.row}>
       <div className={styles.rowText}>
@@ -157,12 +179,60 @@ function SafeZonesRow(): ReactNode {
         </span>
       </div>
       <Toggle
-        on={on}
+        on={safe}
         onChange={(next) => {
-          setOn(next);
+          setSafe(next);
           saveSafeZones(next);
           // The provider paints them, because it is the thing that knows
           // whether this device is on night or day.
+          window.dispatchEvent(new window.Event(ZONES_CHANGED_EVENT));
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * The keyboard in the learner's own colours.
+ *
+ * Below the colour-blind row and disabled by it: when both are asked for, the
+ * one about being able to read the keyboard wins, and saying so is kinder than
+ * silently ignoring the switch somebody just moved.
+ */
+function ThemedZonesRow(): ReactNode {
+  const [themed, setThemed] = useState(loadThemedZones);
+  // Read on mount rather than watched: the switch that sets it now lives in
+  // another pane, and only one pane is on screen at a time.
+  const safe = loadSafeZones();
+  return (
+    <div className={styles.row}>
+      <div className={styles.rowText}>
+        <span className={styles.rowLabel}>
+          <FormattedMessage
+            id="account.appearance.themedZones"
+            defaultMessage="Keyboard in my theme's colours"
+          />
+        </span>
+        <span className={styles.rowSub}>
+          {safe ? (
+            <FormattedMessage
+              id="account.appearance.themedZones.blocked"
+              defaultMessage="Turned off while the colour-blind keyboard is on, which keeps its own colours."
+            />
+          ) : (
+            <FormattedMessage
+              id="account.appearance.themedZones.sub"
+              defaultMessage="The finger colours take their lead from your theme instead of the KeyLearn set. They stay as far apart from each other either way."
+            />
+          )}
+        </span>
+      </div>
+      <Toggle
+        on={themed && !safe}
+        disabled={safe}
+        onChange={(next) => {
+          setThemed(next);
+          saveThemedZones(next);
           window.dispatchEvent(new window.Event(ZONES_CHANGED_EVENT));
         }}
       />

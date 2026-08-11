@@ -30,7 +30,6 @@
   "about.why.p": "打字打得好是一種無聲的超能力——它消除你今後所寫的每一條訊息、每一篇文章、每一行程式碼中的阻力。KeyLearn 的打造，是為了用我們所能做到的最鼓舞人心的方式來教授這項技能：短暫的練習、誠實的回饋，以及一種你真切可感的穩步進步。它是開源引擎 keybr 的一個分支，圍繞家庭重新設計，並重新打造得溫暖而非冷冰冰。",
   "account.anonymize.label": "隱藏我的身分",
   "account.anonymize.sub": "在排行榜與多人遊戲中顯示系統產生的名稱與圖片，取代您本人的資訊。",
-  "account.appearance.note": "淺色或深色是這台裝置的設定；顏色則屬於每位學習者，會跟著他們到任何登入的裝置上。",
   "account.appearance.title": "外觀",
   "account.check.accuracy": "持續維持的正確率",
   "account.check.coverage.cells": "已學過的 {total} 個點字方全數涵蓋",

@@ -30,7 +30,6 @@
   "about.why.p": "Dobre pisanie to cicha supermoc — usuwa opory z każdej wiadomości, każdego wypracowania i każdej linijki kodu, jaką kiedykolwiek napiszesz. KeyLearn powstał, by uczyć tej umiejętności w najbardziej zachęcający sposób, na jaki nas stać: krótkie sesje, szczera informacja zwrotna i poczucie stałych postępów, które naprawdę czujesz. To fork otwartoźródłowego silnika keybr, przerobiony z myślą o rodzinach i zbudowany na nowo tak, by był ciepły, a nie kliniczny.",
   "account.anonymize.label": "Ukryj moją tożsamość",
   "account.anonymize.sub": "Pokazuj wygenerowane imię i awatar w rankingach oraz trybie wieloosobowym zamiast Twoich.",
-  "account.appearance.note": "Jasny lub ciemny wygląd to ustawienie tego urządzenia. Kolor jest ustawieniem każdego uczącego się i podąża za nim na każde urządzenie, na którym się zaloguje.",
   "account.appearance.title": "Wygląd",
   "account.check.accuracy": "Utrzymana dokładność",
   "account.check.coverage.cells": "Każdy z wprowadzonych znaków brajlowskich ({total})",

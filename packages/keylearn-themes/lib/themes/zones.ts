@@ -81,3 +81,103 @@ export function applyZonePalette(
     }
   }
 }
+
+// ---- Zones derived from the theme -----------------------------------------
+
+/**
+ * Where each finger sits relative to the pinky, in degrees.
+ *
+ * Taken from the default palette rather than invented: dusty rose, sage, sand,
+ * slate blue, mauve and clay are already spread this way, and preserving the
+ * spacing is the whole point. Deriving six colours from one hue — the literal
+ * reading of "finger colours from the theme colour" — would turn six
+ * distinguishable zones into six shades of one, and the colour is what the
+ * keyboard teaches with.
+ */
+const ZONE_OFFSETS: Record<keyof ZonePalette, number> = {
+  pinky: 0,
+  ring: 160,
+  middle: 58,
+  leftIndex: 242,
+  rightIndex: 302,
+  thumb: 50,
+};
+
+// The character of the default zones, measured from them: barely saturated and
+// dark on night, softer and light on day. A theme's palette should feel like
+// the same keyboard wearing a different coat, not like a different keyboard.
+const NIGHT = { s: 12, l: 36 };
+const DAY = { s: 24, l: 72 };
+
+/** The hue of a CSS colour, or null if it cannot be read as one. */
+export function hueOf(css: string): number | null {
+  const hex = /^#([0-9a-f]{6})$/i.exec(css.trim());
+  let r: number, g: number, b: number;
+  if (hex != null) {
+    const n = Number.parseInt(hex[1], 16);
+    [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  } else {
+    const rgb = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i.exec(css);
+    if (rgb == null) {
+      return null;
+    }
+    [r, g, b] = [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+  }
+  const [x, y, z] = [r / 255, g / 255, b / 255];
+  const max = Math.max(x, y, z);
+  const min = Math.min(x, y, z);
+  const d = max - min;
+  if (d === 0) {
+    return 0; // A grey has no hue; start the set at red.
+  }
+  let h: number;
+  if (max === x) {
+    h = ((y - z) / d) % 6;
+  } else if (max === y) {
+    h = (z - x) / d + 2;
+  } else {
+    h = (x - y) / d + 4;
+  }
+  return (((h * 60) % 360) + 360) % 360;
+}
+
+/**
+ * The default arrangement, turned so it starts at this theme's own hue.
+ *
+ * Every theme gets a keyboard that plainly belongs to it, and the zones stay as
+ * far from each other as they are today.
+ */
+export function themedZones(
+  accentCss: string,
+  day: boolean,
+): ZonePalette | null {
+  const hue = hueOf(accentCss);
+  if (hue == null) {
+    return null;
+  }
+  const { s, l } = day ? DAY : NIGHT;
+  const at = (key: keyof ZonePalette) =>
+    `hsl(${Math.round((hue + ZONE_OFFSETS[key]) % 360)} ${s}% ${l}%)`;
+  return {
+    pinky: at("pinky"),
+    ring: at("ring"),
+    middle: at("middle"),
+    leftIndex: at("leftIndex"),
+    rightIndex: at("rightIndex"),
+    thumb: at("thumb"),
+  };
+}
+
+/** Put a derived palette on, or take it off. */
+export function applyThemedZones(
+  palette: ZonePalette | null,
+  style: CSSStyleDeclaration = document.documentElement.style,
+): void {
+  for (const [key, prop] of PROPS) {
+    if (palette == null) {
+      style.removeProperty(prop);
+    } else {
+      style.setProperty(prop, palette[key]);
+    }
+  }
+}

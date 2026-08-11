@@ -30,7 +30,6 @@
   "about.why.p": "Escriure bé és un superpoder silenciós — treu la fricció de cada missatge, redacció i línia de codi que mai escriuràs. KeyLearn es va construir per ensenyar aquesta habilitat de la manera més encoratjadora que vam poder aconseguir: sessions curtes, comentaris honestos i una sensació de progrés constant que realment pots sentir. És una bifurcació del motor de codi obert keybr, reelaborat al voltant de les famílies i reconstruït per ser càlid en lloc de clínic.",
   "account.anonymize.label": "Amaga la meva identitat",
   "account.anonymize.sub": "Mostra un nom i una imatge generats a les classificacions i el mode multijugador en lloc dels teus.",
-  "account.appearance.note": "Clar o fosc és un ajust d’aquest dispositiu. El color és un ajust de cada aprenent i el segueix a qualsevol dispositiu on iniciï la sessió.",
   "account.appearance.title": "Aparença",
   "account.check.accuracy": "Precisió sostinguda",
   "account.check.coverage.cells": "Totes i cadascuna de les {total} cel·les introduïdes",

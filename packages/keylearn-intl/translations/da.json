@@ -29,7 +29,6 @@
   "about.why.p": "At skrive godt er en stille superkraft — det fjerner modstanden fra hver besked, opgave og kodelinje, du nogensinde skriver. KeyLearn blev bygget for at lære den færdighed på den mest opmuntrende måde, vi kunne magte: korte sessioner, ærlig feedback og en følelse af stabil fremgang, du faktisk kan mærke. Det er en fork af den open source keybr-motor, omarbejdet omkring familier og genopbygget til at være varm frem for klinisk.",
   "account.anonymize.label": "Skjul min identitet",
   "account.anonymize.sub": "Vis et genereret navn og billede på ranglister og i flerspillerspil i stedet for dit eget.",
-  "account.appearance.note": "Lys eller mørk er en indstilling for denne enhed. Farven er en indstilling for hver elev og følger dem til enhver enhed, de logger ind på.",
   "account.appearance.title": "Udseende",
   "account.check.accuracy": "Vedvarende nøjagtighed",
   "account.check.coverage.cells": "Hver eneste af de {total} celler introduceret",

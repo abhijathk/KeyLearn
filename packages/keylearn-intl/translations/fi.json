@@ -30,7 +30,6 @@
   "about.why.p": "Hyvä kirjoittaminen on hiljainen supervoima — se poistaa kitkan jokaisesta viestistä, esseestä ja koodirivistä, jonka koskaan kirjoitat. KeyLearn tehtiin opettamaan tuota taitoa kaikkein kannustavimmalla tavalla, johon pystyimme: lyhyet istunnot, rehellinen palaute ja tuntu tasaisesta edistymisestä, jonka todella aistit. Se on avoimen lähdekoodin keybr-moottorin haara, muokattu perheiden ympärille ja rakennettu uudelleen lämpimäksi kliinisen sijaan.",
   "account.anonymize.label": "Piilota henkilöllisyyteni",
   "account.anonymize.sub": "Näytä tulostauluissa ja moninpelissä luotu nimi ja kuva omasi sijaan.",
-  "account.appearance.note": "Vaalea tai tumma on tämän laitteen asetus. Väri taas on oppijakohtainen ja seuraa mukana jokaiselle laitteelle, jolle hän kirjautuu.",
   "account.appearance.title": "Ulkoasu",
   "account.check.accuracy": "Vakaa tarkkuus",
   "account.check.coverage.cells": "Kaikki {total} solua esitelty",

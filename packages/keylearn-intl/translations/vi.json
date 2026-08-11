@@ -30,7 +30,6 @@
   "about.why.p": "Gõ tốt là một siêu năng lực thầm lặng — nó loại bỏ sự trở ngại khỏi mọi tin nhắn, bài luận và dòng mã bạn từng viết. KeyLearn được tạo ra để dạy kỹ năng ấy theo cách khích lệ nhất mà chúng tôi có thể: phiên ngắn, phản hồi trung thực, và cảm giác tiến bộ đều đặn mà bạn thực sự cảm nhận được. Đây là một bản rẽ nhánh của cỗ máy mã nguồn mở keybr, được làm lại xoay quanh các gia đình và dựng lại để ấm áp thay vì lạnh lùng.",
   "account.anonymize.label": "Ẩn danh tính của tôi",
   "account.anonymize.sub": "Hiển thị tên và ảnh đại diện được tạo tự động trên bảng xếp hạng và chế độ nhiều người chơi thay vì thông tin thật của bạn.",
-  "account.appearance.note": "Sáng hay tối là cài đặt riêng của thiết bị này. Màu sắc là cài đặt của từng người học, và đi theo họ tới mọi thiết bị họ đăng nhập.",
   "account.appearance.title": "Giao diện",
   "account.check.accuracy": "Độ chính xác duy trì",
   "account.check.coverage.cells": "Đã học đủ cả {total} ô chữ nổi",

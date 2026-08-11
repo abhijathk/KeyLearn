@@ -30,7 +30,6 @@
   "about.why.p": "타자를 잘 치는 것은 조용한 초능력입니다 — 앞으로 쓸 모든 메시지, 글, 코드 한 줄에서 마찰을 없애줍니다. KeyLearn은 우리가 할 수 있는 가장 격려하는 방식으로 그 기술을 가르치기 위해 만들어졌습니다: 짧은 세션, 정직한 피드백, 그리고 실제로 느낄 수 있는 꾸준한 진전의 감각. 이것은 오픈 소스 keybr 엔진의 포크로, 가족을 중심으로 다시 설계하고, 딱딱하기보다 따뜻하도록 다시 만들었습니다.",
   "account.anonymize.label": "내 신원 숨기기",
   "account.anonymize.sub": "리더보드와 멀티플레이어에서 실제 정보 대신 생성된 이름과 사진을 표시합니다.",
-  "account.appearance.note": "밝게와 어둡게는 이 기기의 설정이에요. 색상은 학습자마다 정하는 설정이라, 로그인하는 어떤 기기에서든 그대로 따라가요.",
   "account.appearance.title": "화면 모양",
   "account.check.accuracy": "꾸준한 정확도",
   "account.check.coverage.cells": "지금까지 배운 {total}개 칸을 모두 익힘",

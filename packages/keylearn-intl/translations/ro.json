@@ -30,7 +30,6 @@
   "about.why.p": "Să scrii bine la tastatură este o superputere discretă — elimină frecarea din fiecare mesaj, eseu și linie de cod pe care le vei scrie vreodată. KeyLearn a fost creat ca să predea această abilitate în cel mai încurajator mod pe care l-am putut găsi: sesiuni scurte, feedback cinstit și un sentiment de progres constant pe care chiar îl poți simți. Este un fork al motorului cu sursă deschisă keybr, regândit în jurul familiilor și reconstruit ca să fie cald, nu clinic.",
   "account.anonymize.label": "Ascunde-mi identitatea",
   "account.anonymize.sub": "Afișează un nume și o imagine generate automat în clasamente și în modul multiplayer, în loc de ale tale.",
-  "account.appearance.note": "Modul deschis sau întunecat este o setare a acestui dispozitiv. Culoarea este o setare a fiecărui cursant și îl însoțește pe orice dispozitiv pe care se autentifică.",
   "account.appearance.title": "Aspect",
   "account.check.accuracy": "Acuratețe susținută",
   "account.check.coverage.cells": "Toate cele {total} celule introduse",

@@ -30,7 +30,6 @@
   "about.why.p": "İyi yazmak sessiz bir süper güçtür — yazacağınız her mesajın, makalenin ve kod satırının sürtünmesini ortadan kaldırır. KeyLearn, bu beceriyi başarabildiğimiz en teşvik edici yolla öğretmek için yapıldı: kısa oturumlar, dürüst geri bildirim ve gerçekten hissedebileceğiniz istikrarlı bir ilerleme duygusu. Açık kaynaklı keybr motorunun bir çatallamasıdır; aileler etrafında yeniden düzenlenmiş ve klinik değil sıcak olacak şekilde yeniden inşa edilmiştir.",
   "account.anonymize.label": "Kimliğimi gizle",
   "account.anonymize.sub": "Skor tablolarında ve çok oyunculu modda kendi adınız ve resminiz yerine oluşturulan bir ad ve resim gösterilsin.",
-  "account.appearance.note": "Açık veya koyu, bu cihaza ait bir ayardır. Renk ise her öğrenene ait bir ayardır ve giriş yaptığı her cihazda onunla birlikte gelir.",
   "account.appearance.title": "Görünüm",
   "account.check.accuracy": "Sürdürülen doğruluk",
   "account.check.coverage.cells": "Tanıtılan {total} hücrenin her biri",

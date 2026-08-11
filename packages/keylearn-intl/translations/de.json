@@ -29,7 +29,6 @@
   "about.why.p": "Gut zu tippen ist eine stille Superkraft — es nimmt jeder Nachricht, jedem Aufsatz und jeder Codezeile, die du je schreibst, die Reibung. KeyLearn wurde gebaut, um diese Fähigkeit auf die ermutigendste Weise zu lehren, die wir hinbekamen: kurze Sitzungen, ehrliches Feedback und ein Gefühl steten Fortschritts, das du wirklich spüren kannst. Es ist ein Fork der quelloffenen keybr-Engine, um Familien herum überarbeitet und neu aufgebaut, um warm statt klinisch zu sein.",
   "account.anonymize.label": "Meine Identität verbergen",
   "account.anonymize.sub": "Zeige einen generierten Namen und ein Bild in Bestenlisten und im Mehrspielermodus anstelle deiner eigenen Daten.",
-  "account.appearance.note": "Hell oder dunkel gilt für dieses Gerät. Die Farbe gehört zum jeweiligen Lerner und begleitet ihn auf jedes Gerät, auf dem er sich anmeldet.",
   "account.appearance.title": "Erscheinungsbild",
   "account.check.accuracy": "Dauerhafte Genauigkeit",
   "account.check.coverage.cells": "Alle {total} eingeführten Zellen",

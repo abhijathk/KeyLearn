@@ -30,7 +30,6 @@
   "about.why.p": "Mengetik dengan baik adalah kekuatan super yang senyap — ia menghilangkan hambatan dari setiap pesan, esai, dan baris kode yang akan Anda tulis. KeyLearn dibangun untuk mengajarkan keterampilan itu dengan cara yang paling menyemangati yang bisa kami usahakan: sesi singkat, umpan balik jujur, dan rasa kemajuan mantap yang benar-benar dapat Anda rasakan. Ini adalah fork dari mesin sumber terbuka keybr, dikerjakan ulang di sekitar keluarga dan dibangun kembali agar hangat alih-alih klinis.",
   "account.anonymize.label": "Sembunyikan identitas saya",
   "account.anonymize.sub": "Tampilkan nama dan gambar yang dihasilkan otomatis di papan peringkat dan mode multipemain, bukan milik Anda sendiri.",
-  "account.appearance.note": "Terang atau gelap adalah pengaturan untuk perangkat ini. Warnanya adalah pengaturan untuk setiap pembelajar, dan ikut ke perangkat mana pun tempat mereka masuk.",
   "account.appearance.title": "Tampilan",
   "account.check.accuracy": "Akurasi yang konsisten",
   "account.check.coverage.cells": "Seluruh {total} sel telah diperkenalkan",

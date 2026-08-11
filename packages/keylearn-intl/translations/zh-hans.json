@@ -30,7 +30,6 @@
   "about.why.p": "打字打得好是一种无声的超能力——它消除你今后所写的每一条消息、每一篇文章、每一行代码中的阻力。KeyLearn 的打造，是为了用我们所能做到的最鼓舞人心的方式来教授这项技能：短暂的练习、诚实的反馈，以及一种你真切可感的稳步进步。它是开源引擎 keybr 的一个分支，围绕家庭重新设计，并重新打造得温暖而非冷冰冰。",
   "account.anonymize.label": "隐藏我的身份",
   "account.anonymize.sub": "在排行榜和多人模式中显示随机生成的名字和头像，而不是你自己的。",
-  "account.appearance.note": "浅色或深色是本设备的设置。颜色则按学习者单独保存，会跟着他们出现在任何登录过的设备上。",
   "account.appearance.title": "外观",
   "account.check.accuracy": "稳定的准确率",
   "account.check.coverage.cells": "全部 {total} 个方都已学过",

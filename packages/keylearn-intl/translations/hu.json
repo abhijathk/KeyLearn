@@ -30,7 +30,6 @@
   "about.why.p": "A jó gépelés csendes szuperképesség — kiveszi a súrlódást minden üzenetből, esszéből és kódsorból, amit valaha írsz. A KeyLearn azért készült, hogy ezt a készséget a lehető legbátorítóbb módon tanítsa: rövid ülések, őszinte visszajelzés és a folyamatos fejlődés érzése, amelyet valóban érezhetsz. A nyílt forráskódú keybr motor forkja, családok köré átdolgozva és úgy újraépítve, hogy meleg legyen, ne klinikai.",
   "account.anonymize.label": "Személyazonosságom elrejtése",
   "account.anonymize.sub": "Generált nevet és profilképet jelenítsen meg a ranglistákon és a többjátékos módban a sajátod helyett.",
-  "account.appearance.note": "A világos vagy sötét megjelenés ehhez az eszközhöz tartozik. A szín tanulónként állítható, és minden eszközre elkíséri a tanulót, amelyre bejelentkezik.",
   "account.appearance.title": "Megjelenés",
   "account.check.accuracy": "Tartós pontosság",
   "account.check.coverage.cells": "Mind a(z) {total} cella bevezetve",

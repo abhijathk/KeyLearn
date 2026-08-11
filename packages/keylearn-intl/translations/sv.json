@@ -29,7 +29,6 @@
   "about.why.p": "Att skriva bra är en tyst superkraft — den tar bort friktionen från varje meddelande, uppsats och kodrad du någonsin skriver. KeyLearn byggdes för att lära ut den färdigheten på det mest uppmuntrande sätt vi kunde: korta pass, ärlig feedback och en känsla av stadiga framsteg som du faktiskt kan känna. Det är en förgrening av den öppna källkodsmotorn keybr, omarbetad kring familjer och ombyggd för att vara varm snarare än klinisk.",
   "account.anonymize.label": "Dölj min identitet",
   "account.anonymize.sub": "Visa ett genererat namn och en bild på topplistor och i flerspelarläge i stället för ditt eget.",
-  "account.appearance.note": "Ljust eller mörkt är en inställning för den här enheten. Färgen är en inställning för varje elev och följer med till alla enheter de loggar in på.",
   "account.appearance.title": "Utseende",
   "account.check.accuracy": "Bibehållen träffsäkerhet",
   "account.check.coverage.cells": "Var och en av de {total} celler som introducerats",

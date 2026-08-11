@@ -30,7 +30,6 @@
   "about.why.p": "Hea trükkimine on vaikne supervõime — see eemaldab hõõrdumise igast sõnumist, esseest ja koodireast, mille sa kunagi kirjutad. KeyLearn loodi, et õpetada seda oskust kõige julgustavamal viisil, mida suutsime: lühikesed seansid, aus tagasiside ja tunne pidevast edenemisest, mida sa tõesti tajud. See on avatud lähtekoodiga keybr-mootori haru, ümber tehtud perede ümber ja uuesti ehitatud olema soe, mitte kliiniline.",
   "account.anonymize.label": "Peida minu identiteet",
   "account.anonymize.sub": "Näita edetabelites ja mitmikmängus enda asemel genereeritud nime ja pilti.",
-  "account.appearance.note": "Hele või tume on selle seadme seade. Värv on iga õppija oma ja liigub temaga kaasa igasse seadmesse, kuhu ta sisse logib.",
   "account.appearance.title": "Välimus",
   "account.check.accuracy": "Püsiv täpsus",
   "account.check.coverage.cells": "Kõik {total} tutvustatud märgiruutu",

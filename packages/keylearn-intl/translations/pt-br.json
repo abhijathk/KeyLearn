@@ -30,7 +30,6 @@
   "about.why.p": "Digitar bem é um superpoder silencioso — tira o atrito de cada mensagem, redação e linha de código que você vai escrever. O KeyLearn foi criado para ensinar essa habilidade da forma mais encorajadora que conseguimos: sessões curtas, feedback honesto e uma sensação de progresso constante que você realmente percebe. É um fork do mecanismo de código aberto keybr, reformulado em torno das famílias e reconstruído para ser acolhedor em vez de clínico.",
   "account.anonymize.label": "Ocultar minha identidade",
   "account.anonymize.sub": "Mostra um nome e uma imagem gerados nos rankings e no multiplayer, em vez dos seus.",
-  "account.appearance.note": "Claro ou escuro é uma configuração deste dispositivo. A cor é uma configuração de cada aprendiz e o acompanha em qualquer dispositivo em que ele entrar.",
   "account.appearance.title": "Aparência",
   "account.check.accuracy": "Precisão sustentada",
   "account.check.coverage.cells": "Todas as {total} células apresentadas",

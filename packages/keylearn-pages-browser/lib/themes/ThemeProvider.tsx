@@ -3,18 +3,21 @@ import {
   activeProfileId,
   loadAccent,
   loadSafeZones,
+  loadThemedZones,
   PROFILE_CHANGED_EVENT,
   saveAccent,
   ZONES_CHANGED_EVENT,
 } from "@keylearn/pages-shared";
 import {
   applyTheme,
+  applyThemedZones,
   applyZonePalette,
   clearTheme,
   CUSTOM_PREFIX,
   findAnyAccent,
   readTheme,
   ThemeContext,
+  themedZones,
   ThemePrefs,
   usePreferredColorScheme,
 } from "@keylearn/themes";
@@ -72,8 +75,9 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
         typeof window !== "undefined" &&
         window.matchMedia?.("(prefers-color-scheme: light)").matches === true);
     applyAccent(accent, day);
-    // After the accent, so it overrides the zones the theme has just set.
-    applyZonePalette(loadSafeZones(), day);
+    // After the accent, so these override the zones the theme has just set,
+    // and so the derived palette can read the accent that was written.
+    paintZones(day);
     // The tab follows the learner. Called after applyAccent so the custom
     // property it has just written is the colour that gets read.
     applyFavIcon();
@@ -86,7 +90,7 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
     }
     // The Appearance panel does not re-render this provider, so it says when
     // the preference moved and the night/day question stays answered here.
-    const onZones = () => applyZonePalette(loadSafeZones(), day);
+    const onZones = () => paintZones(day);
     window.addEventListener(ZONES_CHANGED_EVENT, onZones);
     return () => window.removeEventListener(ZONES_CHANGED_EVENT, onZones);
   }, [accent, color, font]);
@@ -197,6 +201,31 @@ function shade(hex: string, amount: number): string {
  * Both write exactly the same list, and neither writes the ground — which is
  * what keeps the finger colours out of reach either way.
  */
+/**
+ * Decide which finger zones the keyboard wears.
+ *
+ * Order matters and is not arbitrary: the colour-blind palette wins, because
+ * whether the keyboard can be read beats how it looks. Then the theme's own
+ * derived set, if asked for. Otherwise nothing is written and the stylesheet's
+ * own zones stand — removing rather than restoring, so switching themes later
+ * does not leave last theme's colours frozen in place.
+ */
+function paintZones(day: boolean) {
+  if (loadSafeZones()) {
+    applyZonePalette(true, day);
+    return;
+  }
+  applyZonePalette(false, day);
+  if (!loadThemedZones()) {
+    applyThemedZones(null);
+    return;
+  }
+  const accent = getComputedStyle(document.documentElement)
+    .getPropertyValue("--accent")
+    .trim();
+  applyThemedZones(themedZones(accent, day));
+}
+
 function applyAccent(accent: string, day: boolean) {
   const elem = document.documentElement;
   elem.setAttribute(ThemePrefs.accentAttrName, accent);
