@@ -1,20 +1,21 @@
 # English
 
-Translated: 1561 messages, 12553 words
+Translated: 1560 messages, 12522 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 1455 messages, 11967 words
+Translated: 1455 messages, 11965 words
 
-Untranslated: 98 messages, 533 words
+Untranslated: 97 messages, 504 words
 
 * *s*
 * *PIN*
 * *wpm*
 * *Zen*
 * *mint*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -29,15 +30,15 @@ Untranslated: 98 messages, 533 words
 * *Crimson*
 * *Custom…*
 * *Got it!*
-* *Letters*
 * ...
 
 # Arabic
 
-Translated: 1468 messages, 11983 words
+Translated: 1468 messages, 11981 words
 
-Untranslated: 87 messages, 522 words
+Untranslated: 86 messages, 493 words
 
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -56,18 +57,18 @@ Untranslated: 87 messages, 522 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Assamese
 
-Translated: 1466 messages, 11981 words
+Translated: 1466 messages, 11979 words
 
-Untranslated: 89 messages, 524 words
+Untranslated: 88 messages, 495 words
 
 * *PIN*
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -85,15 +86,15 @@ Untranslated: 89 messages, 524 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Bulgarian
 
-Translated: 1468 messages, 11983 words
+Translated: 1468 messages, 11981 words
 
-Untranslated: 87 messages, 522 words
+Untranslated: 86 messages, 493 words
 
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -112,17 +113,17 @@ Untranslated: 87 messages, 522 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Bangla
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -141,19 +142,19 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Catalan
 
-Translated: 1452 messages, 11964 words
+Translated: 1452 messages, 11962 words
 
-Untranslated: 100 messages, 535 words
+Untranslated: 99 messages, 506 words
 
 * *s*
 * *Arc*
 * *PIN*
 * *Zen*
+* *Mode*
 * *Mode*
 * *Pick*
 * *Stop*
@@ -169,19 +170,19 @@ Untranslated: 100 messages, 535 words
 * *Avatar*
 * *Errors*
 * *Recent*
-* *Crimson*
 * ...
 
 # Czech
 
-Translated: 1459 messages, 11973 words
+Translated: 1459 messages, 11971 words
 
-Untranslated: 95 messages, 530 words
+Untranslated: 94 messages, 501 words
 
 * *s*
 * *PIN*
 * *wpm*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Text*
@@ -197,14 +198,13 @@ Untranslated: 95 messages, 530 words
 * *Crimson*
 * *Custom…*
 * *Got it!*
-* *See it!*
 * ...
 
 # Danish
 
-Translated: 1447 messages, 11959 words
+Translated: 1447 messages, 11957 words
 
-Untranslated: 107 messages, 544 words
+Untranslated: 106 messages, 515 words
 
 * *s*
 * *PIN*
@@ -212,6 +212,7 @@ Untranslated: 107 messages, 544 words
 * *Zen*
 * *Mine*
 * *mint*
+* *Mode*
 * *Pick*
 * *pink*
 * *Send*
@@ -225,18 +226,18 @@ Untranslated: 107 messages, 544 words
 * *Avatar*
 * *citron*
 * *indigo*
-* *Layout*
 * ...
 
 # German
 
-Translated: 1445 messages, 11960 words
+Translated: 1445 messages, 11958 words
 
-Untranslated: 110 messages, 545 words
+Untranslated: 109 messages, 516 words
 
 * *s*
 * *PIN*
 * *Zen*
+* *Mode*
 * *Name*
 * *Name*
 * *Pick*
@@ -253,17 +254,17 @@ Untranslated: 110 messages, 545 words
 * *Trend*
 * *Voice*
 * *Arcade*
-* *Avatar*
 * ...
 
 # Greek
 
-Translated: 1465 messages, 11980 words
+Translated: 1465 messages, 11978 words
 
-Untranslated: 90 messages, 525 words
+Untranslated: 89 messages, 496 words
 
 * *PIN*
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -281,18 +282,18 @@ Untranslated: 90 messages, 525 words
 * *Top Row*
 * *Amethyst*
 * *Cerulean*
-* *Go again*
 * ...
 
 # Spanish
 
-Translated: 1457 messages, 11969 words
+Translated: 1457 messages, 11967 words
 
-Untranslated: 95 messages, 530 words
+Untranslated: 94 messages, 501 words
 
 * *s*
 * *PIN*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -309,18 +310,18 @@ Untranslated: 95 messages, 530 words
 * *Got it!*
 * *Premium*
 * *See it!*
-* *Sunbeam*
 * ...
 
 # Estonian
 
-Translated: 1459 messages, 11973 words
+Translated: 1459 messages, 11971 words
 
-Untranslated: 95 messages, 530 words
+Untranslated: 94 messages, 501 words
 
 * *s*
 * *wpm*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -337,15 +338,15 @@ Untranslated: 95 messages, 530 words
 * *Custom…*
 * *Got it!*
 * *Premium*
-* *See it!*
 * ...
 
 # Persian
 
-Translated: 1468 messages, 11983 words
+Translated: 1468 messages, 11981 words
 
-Untranslated: 87 messages, 522 words
+Untranslated: 86 messages, 493 words
 
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -365,18 +366,18 @@ Untranslated: 87 messages, 522 words
 * *Go again*
 * *Home Row*
 * *KeyLearn*
-* *KeyLearn*
 * ...
 
 # Finnish
 
-Translated: 1460 messages, 11974 words
+Translated: 1460 messages, 11972 words
 
-Untranslated: 94 messages, 529 words
+Untranslated: 93 messages, 500 words
 
 * *s*
 * *wpm*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -393,19 +394,19 @@ Untranslated: 94 messages, 529 words
 * *Got it!*
 * *Premium*
 * *See it!*
-* *Sunbeam*
 * ...
 
 # French
 
-Translated: 1445 messages, 11959 words
+Translated: 1445 messages, 11957 words
 
-Untranslated: 109 messages, 544 words
+Untranslated: 108 messages, 515 words
 
 * *s*
 * *Arc*
 * *Zen*
 * *Auto*
+* *Mode*
 * *Mode*
 * *Pick*
 * *Stop*
@@ -421,17 +422,17 @@ Untranslated: 109 messages, 544 words
 * *citron*
 * *Effort*
 * *indigo*
-* *orange*
 * ...
 
 # Gujarati
 
-Translated: 1466 messages, 11981 words
+Translated: 1466 messages, 11979 words
 
-Untranslated: 89 messages, 524 words
+Untranslated: 88 messages, 495 words
 
 * *PIN*
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -449,15 +450,15 @@ Untranslated: 89 messages, 524 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Hebrew
 
-Translated: 1468 messages, 11983 words
+Translated: 1468 messages, 11981 words
 
-Untranslated: 87 messages, 522 words
+Untranslated: 86 messages, 493 words
 
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -476,17 +477,17 @@ Untranslated: 87 messages, 522 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Hindi
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -505,19 +506,19 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Croatian
 
-Translated: 1459 messages, 11973 words
+Translated: 1459 messages, 11971 words
 
-Untranslated: 95 messages, 530 words
+Untranslated: 94 messages, 501 words
 
 * *s*
 * *PIN*
 * *wpm*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -533,17 +534,17 @@ Untranslated: 95 messages, 530 words
 * *Custom…*
 * *Got it!*
 * *Premium*
-* *See it!*
 * ...
 
 # Hungarian
 
-Translated: 1465 messages, 11979 words
+Translated: 1465 messages, 11977 words
 
-Untranslated: 90 messages, 526 words
+Untranslated: 89 messages, 497 words
 
 * *PIN*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -561,19 +562,19 @@ Untranslated: 90 messages, 526 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Indonesian
 
-Translated: 1459 messages, 11974 words
+Translated: 1459 messages, 11972 words
 
-Untranslated: 96 messages, 531 words
+Untranslated: 95 messages, 502 words
 
 * *PIN*
 * *wpm*
 * *Zen*
 * *mint*
+* *Mode*
 * *Mode*
 * *Pick*
 * *Stop*
@@ -589,16 +590,16 @@ Untranslated: 96 messages, 531 words
 * *Crimson*
 * *Custom…*
 * *Got it!*
-* *Premium*
 * ...
 
 # Icelandic
 
-Translated: 1466 messages, 11981 words
+Translated: 1466 messages, 11979 words
 
-Untranslated: 89 messages, 524 words
+Untranslated: 88 messages, 495 words
 
 * *Sun*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -617,19 +618,19 @@ Untranslated: 89 messages, 524 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Italian
 
-Translated: 1457 messages, 11969 words
+Translated: 1457 messages, 11967 words
 
-Untranslated: 96 messages, 531 words
+Untranslated: 95 messages, 502 words
 
 * *s*
 * *PIN*
 * *wpm*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -645,17 +646,17 @@ Untranslated: 96 messages, 531 words
 * *Crimson*
 * *Custom…*
 * *Got it!*
-* *See it!*
 * ...
 
 # Japanese
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 89 messages, 524 words
+Untranslated: 88 messages, 495 words
 
 * *PIN*
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -673,16 +674,16 @@ Untranslated: 89 messages, 524 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Kannada
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -701,17 +702,17 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Korean
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 89 messages, 524 words
+Untranslated: 88 messages, 495 words
 
 * *PIN*
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -729,18 +730,18 @@ Untranslated: 89 messages, 524 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Lithuanian
 
-Translated: 1462 messages, 11976 words
+Translated: 1462 messages, 11974 words
 
-Untranslated: 92 messages, 527 words
+Untranslated: 91 messages, 498 words
 
 * *s*
 * *wpm*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -757,17 +758,17 @@ Untranslated: 92 messages, 527 words
 * *See it!*
 * *Sunbeam*
 * *Top Row*
-* *Amethyst*
 * ...
 
 # Latvian
 
-Translated: 1459 messages, 11971 words
+Translated: 1459 messages, 11969 words
 
-Untranslated: 94 messages, 529 words
+Untranslated: 93 messages, 500 words
 
 * *s*
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -785,16 +786,16 @@ Untranslated: 94 messages, 529 words
 * *Sunbeam*
 * *Top Row*
 * *Amethyst*
-* *Cerulean*
 * ...
 
 # Malayalam
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -813,16 +814,16 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Mongolian
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -841,15 +842,15 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Marathi
 
-Translated: 1466 messages, 11979 words
+Translated: 1466 messages, 11977 words
 
-Untranslated: 89 messages, 526 words
+Untranslated: 88 messages, 497 words
 
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -868,15 +869,14 @@ Untranslated: 89 messages, 526 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 1453 messages, 11966 words
+Translated: 1453 messages, 11964 words
 
-Untranslated: 100 messages, 535 words
+Untranslated: 99 messages, 506 words
 
 * *s*
 * *wpm*
@@ -886,6 +886,7 @@ Untranslated: 100 messages, 535 words
 * *Best*
 * *Mine*
 * *mint*
+* *Mode*
 * *Pick*
 * *Send*
 * *Stop*
@@ -897,17 +898,17 @@ Untranslated: 100 messages, 535 words
 * *Trend*
 * *Voice*
 * *Avatar*
-* *indigo*
 * ...
 
 # Nepali
 
-Translated: 1466 messages, 11981 words
+Translated: 1466 messages, 11979 words
 
-Untranslated: 89 messages, 524 words
+Untranslated: 88 messages, 495 words
 
 * *PIN*
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -925,19 +926,19 @@ Untranslated: 89 messages, 524 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Dutch
 
-Translated: 1446 messages, 11960 words
+Translated: 1446 messages, 11958 words
 
-Untranslated: 108 messages, 543 words
+Untranslated: 107 messages, 514 words
 
 * *s*
 * *wpm*
 * *Zen*
 * *mint*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Coach*
@@ -953,17 +954,17 @@ Untranslated: 108 messages, 543 words
 * *Arcade*
 * *Avatar*
 * *indigo*
-* *Recent*
 * ...
 
 # Odia
 
-Translated: 1464 messages, 11977 words
+Translated: 1464 messages, 11975 words
 
-Untranslated: 91 messages, 528 words
+Untranslated: 90 messages, 499 words
 
 * *PIN*
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -981,17 +982,17 @@ Untranslated: 91 messages, 528 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Punjabi
 
-Translated: 1464 messages, 11977 words
+Translated: 1464 messages, 11975 words
 
-Untranslated: 91 messages, 528 words
+Untranslated: 90 messages, 499 words
 
 * *Kid*
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1009,19 +1010,19 @@ Untranslated: 91 messages, 528 words
 * *Amethyst*
 * *Cerulean*
 * *Go again*
-* *Home Row*
 * ...
 
 # Polish
 
-Translated: 1461 messages, 11975 words
+Translated: 1461 messages, 11973 words
 
-Untranslated: 93 messages, 528 words
+Untranslated: 92 messages, 499 words
 
 * *s*
 * *PIN*
 * *wpm*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1037,18 +1038,18 @@ Untranslated: 93 messages, 528 words
 * *Premium*
 * *See it!*
 * *Sunbeam*
-* *Top Row*
 * ...
 
 # Brazilian Portuguese
 
-Translated: 1456 messages, 11968 words
+Translated: 1456 messages, 11966 words
 
-Untranslated: 97 messages, 532 words
+Untranslated: 96 messages, 503 words
 
 * *s*
 * *PIN*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1065,18 +1066,18 @@ Untranslated: 97 messages, 532 words
 * *Got it!*
 * *Layouts*
 * *Premium*
-* *See it!*
 * ...
 
 # European Portuguese
 
-Translated: 1459 messages, 11971 words
+Translated: 1459 messages, 11969 words
 
-Untranslated: 94 messages, 529 words
+Untranslated: 93 messages, 500 words
 
 * *s*
 * *PIN*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1093,19 +1094,19 @@ Untranslated: 94 messages, 529 words
 * *Premium*
 * *See it!*
 * *Sunbeam*
-* *Top Row*
 * ...
 
 # Romanian
 
-Translated: 1454 messages, 11966 words
+Translated: 1454 messages, 11964 words
 
-Untranslated: 99 messages, 534 words
+Untranslated: 98 messages, 505 words
 
 * *s*
 * *Arc*
 * *PIN*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Text*
@@ -1121,16 +1122,16 @@ Untranslated: 99 messages, 534 words
 * *indigo*
 * *Zigzag*
 * *Crimson*
-* *Custom…*
 * ...
 
 # Russian
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1149,18 +1150,18 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Slovak
 
-Translated: 1458 messages, 11971 words
+Translated: 1458 messages, 11969 words
 
-Untranslated: 96 messages, 532 words
+Untranslated: 95 messages, 503 words
 
 * *s*
 * *PIN*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Text*
@@ -1177,19 +1178,19 @@ Untranslated: 96 messages, 532 words
 * *Custom…*
 * *Got it!*
 * *Premium*
-* *See it!*
 * ...
 
 # Slovenian
 
-Translated: 1458 messages, 11970 words
+Translated: 1458 messages, 11968 words
 
-Untranslated: 95 messages, 530 words
+Untranslated: 94 messages, 501 words
 
 * *s*
 * *PIN*
 * *wpm*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1205,18 +1206,18 @@ Untranslated: 95 messages, 530 words
 * *Custom…*
 * *Got it!*
 * *Premium*
-* *See it!*
 * ...
 
 # Albanian
 
-Translated: 1460 messages, 11972 words
+Translated: 1460 messages, 11970 words
 
-Untranslated: 93 messages, 528 words
+Untranslated: 92 messages, 499 words
 
 * *s*
 * *PIN*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1233,18 +1234,18 @@ Untranslated: 93 messages, 528 words
 * *Premium*
 * *See it!*
 * *Sunbeam*
-* *Top Row*
 * ...
 
 # Swedish
 
-Translated: 1452 messages, 11966 words
+Translated: 1452 messages, 11964 words
 
-Untranslated: 102 messages, 537 words
+Untranslated: 101 messages, 508 words
 
 * *s*
 * *Zen*
 * *mint*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Text*
@@ -1261,16 +1262,16 @@ Untranslated: 102 messages, 537 words
 * *citron*
 * *indigo*
 * *Layout*
-* *orange*
 * ...
 
 # Tamil
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1289,16 +1290,16 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Telugu
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1317,15 +1318,15 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Thai
 
-Translated: 1468 messages, 11983 words
+Translated: 1468 messages, 11981 words
 
-Untranslated: 87 messages, 522 words
+Untranslated: 86 messages, 493 words
 
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1344,19 +1345,19 @@ Untranslated: 87 messages, 522 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Turkish
 
-Translated: 1463 messages, 11978 words
+Translated: 1463 messages, 11976 words
 
-Untranslated: 92 messages, 527 words
+Untranslated: 91 messages, 498 words
 
 * *PIN*
 * *wpm*
 * *Zen*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1373,16 +1374,16 @@ Untranslated: 92 messages, 527 words
 * *See it!*
 * *Sunbeam*
 * *Top Row*
-* *Amethyst*
 * ...
 
 # Ukrainian
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *PIN*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1401,15 +1402,15 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Urdu
 
-Translated: 1468 messages, 11983 words
+Translated: 1468 messages, 11981 words
 
-Untranslated: 87 messages, 522 words
+Untranslated: 86 messages, 493 words
 
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1428,17 +1429,17 @@ Untranslated: 87 messages, 522 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Vietnamese
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1457,15 +1458,15 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...
 
 # Simplified Chinese
 
-Translated: 1469 messages, 11984 words
+Translated: 1469 messages, 11982 words
 
-Untranslated: 87 messages, 522 words
+Untranslated: 86 messages, 493 words
 
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1484,17 +1485,17 @@ Untranslated: 87 messages, 522 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Traditional Chinese
 
-Translated: 1467 messages, 11982 words
+Translated: 1467 messages, 11980 words
 
-Untranslated: 88 messages, 523 words
+Untranslated: 87 messages, 494 words
 
 * *wpm*
+* *Mode*
 * *Pick*
 * *Stop*
 * *Ember*
@@ -1513,5 +1514,4 @@ Untranslated: 88 messages, 523 words
 * *Cerulean*
 * *Go again*
 * *Home Row*
-* *KeyLearn*
 * ...

@@ -71,13 +71,6 @@ export function CoursePane(): ReactNode {
           defaultMessage="Course & certificates"
         />
       </h2>
-      <p className={styles.note}>
-        <FormattedMessage
-          id="account.course.note"
-          defaultMessage="Where each learner is, and what stands between them and a certificate. Only guided practice, the classic course, the kids trail and braille count — other modes are practice, but their letters are chosen by the text rather than by the curriculum."
-        />
-      </p>
-
       {profiles.length === 0 && (
         <p className={styles.empty}>
           <FormattedMessage

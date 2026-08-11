@@ -164,23 +164,18 @@ export function AccessibilityPane(): ReactNode {
           defaultMessage="Accessibility"
         />
       </h2>
-      <p className={styles.note}>
-        <FormattedMessage
-          id="account.accessibility.note"
-          defaultMessage="Set for one learner at a time. A household shares a login, and the person who needs this is not always the one who set the account up."
-        />
-      </p>
+      <div className={styles.prefCard}>
+        {profiles.length > 0 && (
+          <ProfileChooser
+            profiles={profiles}
+            chosenId={chosen?.id ?? null}
+            onChoose={setChosenId}
+            marked={(id) => loadSafeZones(id)}
+          />
+        )}
 
-      {profiles.length > 0 && (
-        <ProfileChooser
-          profiles={profiles}
-          chosenId={chosen?.id ?? null}
-          onChoose={setChosenId}
-          marked={(id) => loadSafeZones(id)}
-        />
-      )}
-
-      {SafeRow({ safe, setSafe, profileId: chosen?.id ?? null })}
+        {SafeRow({ safe, setSafe, profileId: chosen?.id ?? null })}
+      </div>
     </div>
   );
 }
@@ -600,7 +595,7 @@ function AppearanceCard(): ReactNode {
         <div className={styles.prefSect}>
           <FormattedMessage
             id="account.prefs.appearance"
-            defaultMessage="Light and dark"
+            defaultMessage="Display"
           />
         </div>
 
@@ -609,7 +604,7 @@ function AppearanceCard(): ReactNode {
             <span className={styles.rowLabel}>
               <FormattedMessage
                 id="account.prefs.displayMode"
-                defaultMessage="Display mode"
+                defaultMessage="Mode"
               />
             </span>
           </div>
@@ -631,16 +626,6 @@ function AppearanceCard(): ReactNode {
           />
         </div>
 
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowSub}>
-              <FormattedMessage
-                id="account.prefs.accent.sub"
-                defaultMessage="One colour per learner. Choose who you are dressing, then pick their colour — the list follows whether they are a grown-up or a kid."
-              />
-            </span>
-          </div>
-        </div>
         <ThemePicker />
       </div>
     </>
