@@ -172,33 +172,75 @@ export class ResultStorageOfAnonymousUser implements ResultStorage {
 export class ResultStorageOfNamedUser implements ResultStorage {
   readonly #local: LocalResultStorage;
   readonly #remote: RemoteResultSync;
+  // Every touch of the local store queues behind the last, so a flush can
+  // never clear a result that arrived while its send was in flight. The local
+  // store can only be emptied wholesale — there is no delete-these-rows — so
+  // without this the window between "send succeeded" and "clear" would eat any
+  // lesson finished inside it.
+  #chain: Promise<unknown> = Promise.resolve();
 
   constructor(local: LocalResultStorage, remote: RemoteResultSync) {
     this.#local = local;
     this.#remote = remote;
+    // Waiting for the next lesson to push what is already queued would leave
+    // somebody who practised on a train and then closed the tab carrying their
+    // results around until they happened to finish another one.
+    globalThis.addEventListener?.("online", () => {
+      void this.#flush(dummy).catch(() => {});
+    });
+  }
+
+  #serial<T>(work: () => Promise<T>): Promise<T> {
+    const next = this.#chain.then(work, work);
+    this.#chain = next.catch(() => {});
+    return next;
+  }
+
+  /**
+   * Hand everything held locally to the server, and keep it if that fails.
+   *
+   * Errors are the caller's to swallow: a failed flush means "still offline",
+   * which is not a condition anybody upstream can do anything about.
+   */
+  #flush(pl: ProgressListener): Promise<void> {
+    return this.#serial(async () => {
+      const pending = await this.#local.load();
+      if (pending.length === 0) {
+        return;
+      }
+      await this.#remote.send(pending, pl);
+      await this.#local.clear();
+    });
   }
 
   async load(pl = dummy): Promise<Result[]> {
-    const results = await this.#remote.receive(pl);
-    if (results.length > 0) {
-      return results;
-    } else {
-      const results = await this.#local.load();
-      if (results.length > 0) {
-        await this.#remote.send(results, pl);
-        await this.#local.clear();
-        return results;
+    // Anything typed offline goes up before we ask what the server holds, so
+    // the answer already includes it.
+    await this.#flush(pl).catch(() => {});
+    try {
+      return await this.#remote.receive(pl);
+    } catch (err) {
+      // Offline. Their own history is still on this device, and showing it is
+      // better than showing an empty page to somebody who has been practising.
+      const local = await this.#local.load();
+      if (local.length > 0) {
+        return local;
       }
+      throw err;
     }
-    return [];
   }
 
   async append(results: readonly Result[], pl = dummy): Promise<void> {
-    await this.#remote.send(results, pl);
+    // Written locally FIRST. This used to go straight to the server and
+    // nowhere else, so a lesson finished without a connection was not saved
+    // anywhere — it simply vanished, with the learner watching it count.
+    await this.#serial(() => this.#local.append(results));
+    await this.#flush(pl).catch(() => {});
   }
 
   async clear(): Promise<void> {
     await this.#remote.clear();
+    await this.#serial(() => this.#local.clear());
   }
 }
 

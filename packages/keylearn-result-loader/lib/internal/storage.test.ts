@@ -30,7 +30,7 @@ test("named user - initially is empty", async () => {
   equal(results.length, 0);
 });
 
-test("named user - fetch remote and ignore local data", async () => {
+test("named user - local data is carried up, not ignored", async () => {
   const r0 = faker.nextResult();
   const r1 = faker.nextResult();
   const r2 = faker.nextResult();
@@ -47,14 +47,15 @@ test("named user - fetch remote and ignore local data", async () => {
 
   const results = await storage.load();
 
-  // Should contain data from remote store.
-  deepEqual(results, [r2, r3]);
+  // This used to assert the opposite — that local data was ignored and left on
+  // the device. For a signed-in learner that is silent data loss: results they
+  // typed while offline stayed invisible and were never uploaded.
+  deepEqual(results, [r2, r3, r0, r1]);
 
-  // Local store should not be modified.
-  deepEqual(local, [r0, r1]);
+  // Handed over, so the device no longer has to hold them.
+  deepEqual(local, []);
 
-  // Remote store should not be modified.
-  deepEqual(remote, [r2, r3]);
+  deepEqual(remote, [r2, r3, r0, r1]);
 });
 
 test("named user - upload local to remote on first sync", async () => {
@@ -212,12 +213,107 @@ test("handle remote sync errors", async () => {
   // Try to open.
   await rejects(storage.load(), /Cannot read records from database/);
 
-  // Try to append.
-  await rejects(
-    storage.append([faker.nextResult()]),
-    /Cannot add records to database/,
-  );
+  // Appending no longer rejects when only the SERVER is unreachable. The
+  // result is on the device and goes up on the next connection, so failing
+  // here would report a loss that has not happened. A failure of the LOCAL
+  // write still rejects — that is the case where something really is gone,
+  // and "handle local storage errors" below covers it.
+  await storage.append([faker.nextResult()]);
 
   // Try to clear.
   await rejects(storage.clear(), /Cannot clear database/);
+});
+
+// A remote that is simply not there, the way it is on a train.
+class OfflineRemoteSync implements RemoteResultSync {
+  online = false;
+  readonly sent: Result[] = [];
+
+  async send(results: readonly Result[]): Promise<void> {
+    if (!this.online) {
+      throw new Error("offline");
+    }
+    this.sent.push(...results);
+  }
+
+  async receive(): Promise<Result[]> {
+    if (!this.online) {
+      throw new Error("offline");
+    }
+    return [...this.sent];
+  }
+
+  async clear(): Promise<void> {
+    this.sent.length = 0;
+  }
+}
+
+// This used to send straight to the server and nowhere else, so a lesson
+// finished without a connection was not written anywhere at all.
+test("named user - a lesson finished offline is not lost", async () => {
+  const faker = new ResultFaker();
+  const r0 = faker.nextResult();
+  const local: Result[] = [];
+  const remote = new OfflineRemoteSync();
+  const storage = new ResultStorageOfNamedUser(
+    new FakeLocalResultStorage(local),
+    remote,
+  );
+
+  await storage.append([r0]);
+
+  // Nowhere to send it, so it is on the device rather than gone.
+  deepEqual(local, [r0]);
+  equal(remote.sent.length, 0);
+});
+
+test("named user - what was typed offline goes up on the next append", async () => {
+  const faker = new ResultFaker();
+  const r0 = faker.nextResult();
+  const r1 = faker.nextResult();
+  const local: Result[] = [];
+  const remote = new OfflineRemoteSync();
+  const storage = new ResultStorageOfNamedUser(
+    new FakeLocalResultStorage(local),
+    remote,
+  );
+
+  await storage.append([r0]);
+  remote.online = true;
+  await storage.append([r1]);
+
+  deepEqual(remote.sent, [r0, r1]);
+  deepEqual(local, []);
+});
+
+test("named user - and on the next load", async () => {
+  const faker = new ResultFaker();
+  const r0 = faker.nextResult();
+  const local: Result[] = [];
+  const remote = new OfflineRemoteSync();
+  const storage = new ResultStorageOfNamedUser(
+    new FakeLocalResultStorage(local),
+    remote,
+  );
+
+  await storage.append([r0]);
+  remote.online = true;
+
+  deepEqual(await storage.load(), [r0]);
+  deepEqual(local, []);
+});
+
+// Their own history is on the device; showing it beats showing an empty page
+// to somebody who has been practising all week.
+test("named user - offline, their history still loads", async () => {
+  const faker = new ResultFaker();
+  const r0 = faker.nextResult();
+  const local: Result[] = [r0];
+  const remote = new OfflineRemoteSync();
+  const storage = new ResultStorageOfNamedUser(
+    new FakeLocalResultStorage(local),
+    remote,
+  );
+
+  deepEqual(await storage.load(), [r0]);
 });
