@@ -286,6 +286,21 @@ function defaultPrefs(): Prefs {
   };
 }
 
+/**
+ * Whether this learner is on Classic right now.
+ *
+ * Exported because the page that wraps KidsPage has to know before it mounts:
+ * Classic is a separate course with its own history, so the store to open is
+ * decided outside, not inside.
+ */
+export function classicActive(): boolean {
+  try {
+    return loadPrefs().classic === true && classicOffered();
+  } catch {
+    return false;
+  }
+}
+
 function loadPrefs(): Prefs {
   try {
     const prefs: Prefs = {

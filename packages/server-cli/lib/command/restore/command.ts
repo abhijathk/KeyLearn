@@ -108,6 +108,11 @@ export class RestoreCommand {
         ? this.userData.load(new PublicId(userId)).file
         : this.userData.loadProfile(userId, row.profileId).file;
     }
+    if (row.kind === "classic") {
+      return row.profileId == null
+        ? null // A course belongs to a learner, never to the account.
+        : this.userData.loadProfile(userId, row.profileId, "classic").file;
+    }
     return null;
   }
 }

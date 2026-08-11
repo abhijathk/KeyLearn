@@ -3,7 +3,7 @@ import { type Knex } from "knex";
 import { type JSONSchema, Model, snakeCaseMappers } from "objection";
 
 /** Which file a row holds. One row per (account, learner, kind). */
-export type ProfileDataKind = "results" | "braille";
+export type ProfileDataKind = "results" | "braille" | "classic";
 
 /**
  * A durable copy of a learner's data file.

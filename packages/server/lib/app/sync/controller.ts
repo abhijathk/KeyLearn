@@ -126,7 +126,7 @@ export class Controller {
   // the route pattern, which is also what keeps it from walking out of the
   // data directory once it becomes part of a file name.
 
-  @http.GET("/_/sync/data/profile/{pid:[0-9]+}/{course:[a-z]{1,16}}")
+  @http.GET("/_/sync/data/profile/{pid:[0-9]+}/{course:[a-z]+}")
   async getCourseData(
     ctx: Context<RouterState & AuthState>,
     @pathParam("pid") pid: string,
@@ -138,7 +138,7 @@ export class Controller {
       .serve(ctx);
   }
 
-  @http.POST("/_/sync/data/profile/{pid:[0-9]+}/{course:[a-z]{1,16}}")
+  @http.POST("/_/sync/data/profile/{pid:[0-9]+}/{course:[a-z]+}")
   async postCourseData(
     ctx: Context<RouterState & AuthState>,
     @pathParam("pid") pid: string,
@@ -149,7 +149,7 @@ export class Controller {
     const profile = await this.#owned(ctx, pid);
     const results = await parseResults(value);
     await this.userData
-      .loadProfile(user.id!, profile.id!, course)
+      .loadProfile(user.id!, profile.id!, this.#course(course))
       .append(results);
     // The board is one board. A course is a separate history, not a separate
     // leaderboard, so a fast run counts wherever it was typed.
@@ -163,7 +163,7 @@ export class Controller {
     ctx.response.status = 204;
   }
 
-  @http.DELETE("/_/sync/data/profile/{pid:[0-9]+}/{course:[a-z]{1,16}}")
+  @http.DELETE("/_/sync/data/profile/{pid:[0-9]+}/{course:[a-z]+}")
   async deleteCourseData(
     ctx: Context<RouterState & AuthState>,
     @pathParam("pid") pid: string,
@@ -171,8 +171,24 @@ export class Controller {
   ) {
     const user = ctx.state.requireUser();
     const profile = await this.#owned(ctx, pid);
-    await this.userData.loadProfile(user.id!, profile.id!, course).delete();
+    await this.userData
+      .loadProfile(user.id!, profile.id!, this.#course(course))
+      .delete();
     ctx.response.status = 204;
+  }
+
+  /**
+   * A course name that is safe to put in a file name.
+   *
+   * The route pattern already allows only lower-case letters, so nothing here
+   * can walk out of the data directory; this bounds the length, which the
+   * pattern cannot express — its own braces would be read as the router's.
+   */
+  #course(course: string): string {
+    if (course.length > 16) {
+      throw new BadRequestError("Unknown course");
+    }
+    return course;
   }
 
   /** The learner named in the path, once the caller is proved to own them. */

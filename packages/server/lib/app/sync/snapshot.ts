@@ -106,13 +106,24 @@ export class DataSnapshot {
           }
           for (const profile of await Profile.listForUser(userId)) {
             const profileId = profile.id!;
-            considered += 2;
+            considered += 3;
             if (
               await this.#snapshotFile(
                 userId,
                 profileId,
                 "results",
                 this.userData.loadProfile(userId, profileId).file,
+                present,
+              )
+            ) {
+              written += 1;
+            }
+            if (
+              await this.#snapshotFile(
+                userId,
+                profileId,
+                "classic",
+                this.userData.loadProfile(userId, profileId, "classic").file,
                 present,
               )
             ) {
@@ -169,7 +180,7 @@ export class DataSnapshot {
   async #snapshotFile(
     userId: number,
     profileId: number | null,
-    kind: "results" | "braille",
+    kind: "results" | "braille" | "classic",
     file: File,
     present: Set<string>,
   ): Promise<boolean> {

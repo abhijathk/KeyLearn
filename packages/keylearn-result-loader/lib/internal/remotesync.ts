@@ -28,8 +28,12 @@ export class ResultSyncNamedUser implements RemoteResultSync {
 export class ResultSyncProfile implements RemoteResultSync {
   readonly #path: string;
 
-  constructor(profileId: string) {
-    this.#path = `${url}/profile/${encodeURIComponent(profileId)}`;
+  constructor(profileId: string, course: string | null = null) {
+    const base = `${url}/profile/${encodeURIComponent(profileId)}`;
+    // A course other than the guided one has its own history on the server,
+    // beside rather than inside the profile's.
+    this.#path =
+      course == null ? base : `${base}/${encodeURIComponent(course)}`;
   }
 
   receive(pl: ProgressListener): Promise<Result[]> {

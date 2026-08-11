@@ -463,6 +463,14 @@ export class Controller {
     } catch (err: any) {
       Logger.warn(err, "Could not delete stats for profile %d", profileId);
     }
+    // Classic is a separate course with its own file beside the guided one.
+    // It has to go the same way, or splitting the courses would have quietly
+    // reintroduced the leak that deleting a learner used to have.
+    try {
+      await this.userData.loadProfile(userId, profileId, "classic").delete();
+    } catch (err: any) {
+      Logger.warn(err, "Could not delete classic stats for %d", profileId);
+    }
     // Braille progress is a separate file and was being left behind entirely —
     // a learner could be deleted and their cell-by-cell record stayed on disk.
     // It belongs disproportionately to children, who are the least able to ask

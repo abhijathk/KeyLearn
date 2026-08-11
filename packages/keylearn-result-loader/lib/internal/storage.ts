@@ -60,11 +60,12 @@ function openRawResultStorage(
       // signed out it stays local only.
       if (namespace != null) {
         const local = new PersistentResultStorage(`history-${namespace}`);
-        const profileId = namespace.startsWith("profile-")
-          ? namespace.slice("profile-".length)
-          : null;
-        if (userId != null && profileId != null) {
-          const remote = new ResultSyncProfile(profileId);
+        // "profile-19" is the guided history; "profile-19.classic" is a
+        // separate course kept beside it, with its own store and its own path
+        // on the server.
+        const parsed = /^profile-([^.]+)(?:\.([a-z]{1,16}))?$/.exec(namespace);
+        if (userId != null && parsed != null) {
+          const remote = new ResultSyncProfile(parsed[1], parsed[2] ?? null);
           return new ResultStorageOfNamedUser(local, remote);
         }
         return new ResultStorageOfAnonymousUser(local);
