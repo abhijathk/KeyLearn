@@ -717,7 +717,7 @@
 .card {
   display: flex;
   flex-direction: column;
-  inline-size: min(30rem, 94vi);
+  inline-size: min(40rem, 94vi);
   max-block-size: 92vb;
   padding: 1.5rem 1.6rem 1.4rem;
   border-radius: 2rem;
@@ -745,7 +745,7 @@
   flex: none;
   flex-direction: column;
   gap: 0.3rem;
-  inline-size: 7.5rem;
+  inline-size: 6.25rem;
 }
 
 .setTab {
@@ -788,22 +788,6 @@
     flex-direction: row;
     inline-size: auto;
     overflow-x: auto;
-  }
-}
-
-// A little heading over each run of rows, so the card reads as three short
-// lists instead of one long one.
-.sectionLabel {
-  margin-block: 0.9rem 0.35rem;
-  color: var(--kink2);
-  opacity: 0.75;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-
-  &:first-child {
-    margin-block-start: 0.2rem;
   }
 }
 
@@ -864,6 +848,7 @@
 .sl {
   font-size: 0.9rem;
   font-weight: 800;
+  text-wrap: balance;
 }
 
 .sd {
@@ -874,6 +859,7 @@
 
 .ctl {
   display: flex;
+  flex: none;
   flex-wrap: wrap;
   gap: 0.3rem;
   justify-content: flex-end;

@@ -3379,7 +3379,6 @@ function SettingsCard({
               <>
                 {canClassic && (
                   <>
-                    <div className={styles.sectionLabel}>How you practise</div>
                     {/*
             The two faces of the same lesson. Which one a learner lands on
             comes from their age to begin with, but it lives here because
@@ -3424,7 +3423,6 @@ function SettingsCard({
             )}
             {tab === "world" && (
               <>
-                {trail && <div className={styles.sectionLabel}>Your world</div>}
                 {trail && (
                   <div className={styles.srow}>
                     <span
@@ -3652,7 +3650,6 @@ function SettingsCard({
             )}
             {tab === "help" && (
               <>
-                <div className={styles.sectionLabel}>Help while you type</div>
                 {/*
             Only while the words are actually in a panel. The in-world letter
             blocks are capitals by their nature, so whenever a child is on
@@ -3895,7 +3892,6 @@ function SettingsCard({
             )}
             {tab === "session" && (
               <>
-                <div className={styles.sectionLabel}>The session</div>
                 <div className={styles.srow}>
                   <span
                     className={styles.ri}
