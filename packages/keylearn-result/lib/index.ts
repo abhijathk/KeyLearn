@@ -11,5 +11,6 @@ export * from "./recover.ts";
 export * from "./result.ts";
 export * from "./settings.ts";
 export * from "./speedunit.ts";
+export * from "./streak.ts";
 export * from "./summarystats.ts";
 export * from "./texttype.ts";

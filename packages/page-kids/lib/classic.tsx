@@ -1,5 +1,4 @@
 import { type LessonKeys } from "@keylearn/lesson";
-import { Slide, Tour } from "@keylearn/widget";
 import { clsx } from "clsx";
 import {
   type ReactNode,
@@ -921,50 +920,157 @@ export function ClassicUnlock({
 /**
  * The first look at Classic.
  *
- * A learner arriving from the trail games meets a keyboard, an island of
+ * A learner moved here from the trail games meets a keyboard, an island of
  * numbers, a progress track and a tools rail, with nothing to say what any of
- * it is. The grown-up page has a twelve-slide walkthrough explaining the
- * teaching algorithm; that is the right depth for somebody who chose a typing
- * tutor and the wrong one for an eleven-year-old who was moved to a new screen.
+ * it is. The grown-up page has a twelve-slide walkthrough on the teaching
+ * algorithm — the right depth for somebody who went looking for a typing tutor,
+ * the wrong one for an eleven-year-old who was moved to a new screen.
  *
- * Four slides, each pinned to the thing it names, in the fewest words that will
- * do. Shown once.
+ * Built here rather than on the shared Tour widget, which carries the grown-up
+ * page's styling with it: this screen has its own card, its own accent and its
+ * own weight, and a walkthrough that looked borrowed would be the first thing
+ * they saw.
  */
+const TOUR_STEPS = [
+  {
+    sel: "[data-tour='text']",
+    title: "This is your line",
+    body: "Type what you see. The cursor slides along as you go, and a letter turns red if it was not the one.",
+  },
+  {
+    sel: "[data-tour='board']",
+    title: "The glowing key is next",
+    body: "Each colour is a finger. Rest your fingers on the home row and let the nearest one reach — that is what makes you fast later.",
+  },
+  {
+    sel: "[data-tour='island']",
+    title: "How it is going",
+    body: "Your speed, and the bar showing how close the next key is to joining your trail. Reach the flag and it is yours.",
+  },
+  {
+    sel: "[data-tour='tools']",
+    title: "Everything else is here",
+    body: "Bigger text, sound, the timer, and the way back to the trail game. Nothing in here can lose your progress.",
+  },
+] as const;
+
 export function ClassicTour({
   onClose,
 }: {
   readonly onClose: () => void;
 }): ReactNode {
+  const [step, setStep] = useState(0);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const last = step >= TOUR_STEPS.length - 1;
+
+  // Follow the anchor rather than guessing where it is: the island and the
+  // board move with the window, and a card pinned to a stale rectangle points
+  // at nothing.
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = document.querySelector(TOUR_STEPS[step].sel);
+      setRect(el != null ? el.getBoundingClientRect() : null);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [step]);
+
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        onClose();
+      }
+      if (ev.key === "ArrowRight" || ev.key === "Enter") {
+        ev.preventDefault();
+        setStep((n) => (n >= TOUR_STEPS.length - 1 ? n : n + 1));
+      }
+      if (ev.key === "ArrowLeft") {
+        ev.preventDefault();
+        setStep((n) => (n <= 0 ? 0 : n - 1));
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [onClose]);
+
+  const { title, body } = TOUR_STEPS[step];
+  // Below the anchor when there is room beneath it, above it otherwise, and
+  // never off the side of a narrow window.
+  const below = rect == null || rect.bottom < window.innerHeight * 0.6;
+  const cardStyle =
+    rect == null
+      ? undefined
+      : {
+          insetInlineStart: `${Math.min(
+            Math.max(rect.left + rect.width / 2, 180),
+            window.innerWidth - 180,
+          )}px`,
+          insetBlockStart: below ? `${rect.bottom + 14}px` : undefined,
+          insetBlockEnd: below
+            ? undefined
+            : `${window.innerHeight - rect.top + 14}px`,
+        };
+
   return (
-    <Tour onClose={onClose}>
-      <Slide size="small" anchor="[data-tour='text']" position="block-end">
-        <h1>This is your line</h1>
-        <p>
-          Type what you see. The cursor slides along as you go, and a letter
-          turns red if it was not the one.
-        </p>
-      </Slide>
-      <Slide size="small" anchor="[data-tour='board']" position="block-start">
-        <h1>The glowing key is next</h1>
-        <p>
-          Each colour is a finger. Keep your fingers resting on the home row and
-          let the nearest one reach — that is what makes you fast later.
-        </p>
-      </Slide>
-      <Slide size="small" anchor="[data-tour='island']" position="block-end">
-        <h1>How it is going</h1>
-        <p>
-          Your speed, and the bar showing how close the next key is to joining
-          your trail. Reach the flag and it is yours.
-        </p>
-      </Slide>
-      <Slide size="small" anchor="[data-tour='tools']" position="block-end">
-        <h1>Everything else lives here</h1>
-        <p>
-          Bigger text, sound, the timer, and the way back to the trail game.
-          Nothing you change here can lose your progress.
-        </p>
-      </Slide>
-    </Tour>
+    <div className={styles.tourScrim} role="dialog" aria-modal={true}>
+      {rect != null && (
+        <div
+          className={styles.tourRing}
+          style={{
+            insetInlineStart: `${rect.left - 6}px`,
+            insetBlockStart: `${rect.top - 6}px`,
+            inlineSize: `${rect.width + 12}px`,
+            blockSize: `${rect.height + 12}px`,
+          }}
+          aria-hidden={true}
+        />
+      )}
+      <div className={styles.tourCard} style={cardStyle}>
+        <div className={styles.tourTitle}>{title}</div>
+        <p className={styles.tourBody}>{body}</p>
+        <div className={styles.tourFoot}>
+          <div className={styles.tourDots} aria-hidden={true}>
+            {TOUR_STEPS.map((s, i) => (
+              <span
+                key={s.sel}
+                className={clsx(styles.tourDot, i === step && styles.tourDotOn)}
+              />
+            ))}
+          </div>
+          <div className={styles.tourBtns}>
+            {step > 0 && (
+              <button
+                type="button"
+                className={styles.tourSkip}
+                onClick={() => setStep(step - 1)}
+              >
+                Back
+              </button>
+            )}
+            {!last && (
+              <button
+                type="button"
+                className={styles.tourSkip}
+                onClick={onClose}
+              >
+                Skip
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.tourNext}
+              onClick={() => (last ? onClose() : setStep(step + 1))}
+            >
+              {last ? "Let's go" : "Next"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

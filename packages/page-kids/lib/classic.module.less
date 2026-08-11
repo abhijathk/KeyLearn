@@ -749,3 +749,126 @@
     animation: none;
   }
 }
+
+// ---- the first-run walk-through -------------------------------------------
+
+// Above everything. The point of it is to name what is on the screen, so
+// nothing on the screen may sit in front of it — including the app chrome and
+// the widget layer, which reach 2000.
+.tourScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: color-mix(in srgb, var(--kink) 55%, transparent);
+  animation: tour-in 0.2s ease-out;
+}
+
+// A ring around whatever is being talked about, so the words have something to
+// point at. Not a hole punched in the scrim: the element stays dimmed like the
+// rest, which keeps the card the brightest thing on the screen.
+.tourRing {
+  position: fixed;
+  border: 3px solid var(--sunny);
+  border-radius: 0.9rem;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--sunny) 22%, transparent),
+    0 0 26px color-mix(in srgb, var(--sunny) 45%, transparent);
+  pointer-events: none;
+}
+
+.tourCard {
+  display: flex;
+  position: fixed;
+  flex-direction: column;
+  gap: 0.7rem;
+  inline-size: min(21rem, calc(100vi - 2rem));
+  padding: 1.1rem 1.25rem;
+  border: 2px solid color-mix(in srgb, var(--sunny) 40%, transparent);
+  border-radius: 1.1rem;
+  background: var(--card);
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--kink) 34%, transparent);
+  translate: -50% 0;
+}
+
+.tourTitle {
+  color: var(--kink);
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.tourBody {
+  margin: 0;
+  color: color-mix(in srgb, var(--kink) 78%, transparent);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.tourFoot {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tourDots {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.tourDot {
+  inline-size: 0.45rem;
+  block-size: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--kink) 22%, transparent);
+}
+
+.tourDotOn {
+  background: var(--sunny);
+}
+
+.tourBtns {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.tourSkip {
+  padding: 0.35rem 0.6rem;
+  border: none;
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--kink) 62%, transparent);
+  background: none;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tourNext {
+  padding: 0.4rem 0.95rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--sunny-ink);
+  background: var(--sunny);
+  box-shadow: 0 3px 0 var(--sunny-d);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+@keyframes tour-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tourScrim {
+    animation: none;
+  }
+}

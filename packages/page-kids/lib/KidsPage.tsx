@@ -13,6 +13,7 @@ import {
 } from "@keylearn/pages-shared";
 import {
   DailyStatsMap,
+  dailyStreak,
   MutableKeyStatsMap,
   Result,
   useResults,
@@ -2332,7 +2333,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           accuracy={liveAccuracy}
           score={score}
           best={best}
-          streakDays={kidsStreak()}
+          streakDays={dailyStreak(results)}
           minutesDone={Math.floor((sessionTotal - sessionSecs) / 60)}
           minutesGoal={prefs.timerMin}
           target={Math.round(paceTarget(results, cfg) / 5)}

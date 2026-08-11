@@ -1,7 +1,7 @@
 import { Tasks } from "@keylearn/lang";
 import { type LessonKey } from "@keylearn/lesson";
 import { LetterJourney, names } from "@keylearn/lesson-ui";
-import { LocalDate, type Result } from "@keylearn/result";
+import { dailyStreak } from "@keylearn/result";
 import { Popup, Portal } from "@keylearn/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
 import * as styles from "./Indicators.module.less";
@@ -158,23 +158,3 @@ export const JourneyStrip = memo(function JourneyStrip({
     </div>
   );
 });
-
-function dailyStreak(results: readonly Result[]): number {
-  if (results.length === 0) {
-    return 0;
-  }
-  const days = new Set(
-    results.map(({ timeStamp }) => new LocalDate(timeStamp).value),
-  );
-  const dayMs = 24 * 60 * 60 * 1000;
-  let now = Date.now();
-  if (!days.has(new LocalDate(now).value)) {
-    now -= dayMs; // today not practised yet — count up to yesterday
-  }
-  let streak = 0;
-  while (days.has(new LocalDate(now).value)) {
-    streak += 1;
-    now -= dayMs;
-  }
-  return streak;
-}
