@@ -1,7 +1,10 @@
 import { Cookie, SetCookie } from "@fastr/headers";
 import {
+  A11Y_CHANGED_EVENT,
   activeProfileId,
+  loadA11y,
   loadAccent,
+  loadContrast,
   loadSafeZones,
   loadThemedZones,
   PROFILE_CHANGED_EVENT,
@@ -9,6 +12,7 @@ import {
   ZONES_CHANGED_EVENT,
 } from "@keylearn/pages-shared";
 import {
+  applyContrastLevel,
   applyTheme,
   applyThemedZones,
   applyZonePalette,
@@ -90,9 +94,21 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
     }
     // The Appearance panel does not re-render this provider, so it says when
     // the preference moved and the night/day question stays answered here.
-    const onZones = () => paintZones(day);
+    // After the theme and the accent, because it reads the text colours they
+    // have just written and lifts them from there.
+    applyAdaptations();
+    const onZones = () => {
+      paintZones(day);
+      applyAdaptations();
+    };
     window.addEventListener(ZONES_CHANGED_EVENT, onZones);
-    return () => window.removeEventListener(ZONES_CHANGED_EVENT, onZones);
+    window.addEventListener(A11Y_CHANGED_EVENT, applyAdaptations);
+    window.addEventListener(PROFILE_CHANGED_EVENT, applyAdaptations);
+    return () => {
+      window.removeEventListener(ZONES_CHANGED_EVENT, onZones);
+      window.removeEventListener(A11Y_CHANGED_EVENT, applyAdaptations);
+      window.removeEventListener(PROFILE_CHANGED_EVENT, applyAdaptations);
+    };
   }, [accent, color, font]);
 
   return (
@@ -224,6 +240,35 @@ function paintZones(day: boolean) {
     .getPropertyValue("--accent")
     .trim();
   applyThemedZones(themedZones(accent, day));
+}
+
+/**
+ * Everything the active learner has asked the page to do differently.
+ *
+ * Written as attributes on the root rather than as classes, so the rules live
+ * in one stylesheet the whole app already loads and no component has to know
+ * that any of this exists. Removed rather than set to a default value, so a
+ * learner who has asked for nothing leaves no trace in the DOM at all.
+ */
+function applyAdaptations() {
+  const elem = document.documentElement;
+  const prefs = loadA11y();
+  const flags: readonly [string, string | null][] = [
+    ["data-motion", prefs.motion === "reduce" ? "reduce" : null],
+    ["data-typeface", prefs.typeface === "dyslexic" ? "dyslexic" : null],
+    ["data-targets", prefs.targets === "large" ? "large" : null],
+    // The one that reads inverted: the attribute marks the absence, because
+    // showing the clock is the ordinary case and ordinary needs no marking.
+    ["data-timers", prefs.timers ? null : "off"],
+  ];
+  for (const [name, value] of flags) {
+    if (value == null) {
+      elem.removeAttribute(name);
+    } else {
+      elem.setAttribute(name, value);
+    }
+  }
+  applyContrastLevel(loadContrast(), elem.style);
 }
 
 function applyAccent(accent: string, day: boolean) {

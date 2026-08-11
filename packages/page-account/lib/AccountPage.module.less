@@ -86,10 +86,28 @@
   max-inline-size: 52rem;
 }
 
+// A row whose control is too wide to sit beside its explanation. The control
+// drops under the text and keeps to the right, so the eye still finds every
+// control down one edge — a settings list where some controls are left and
+// some are right is a list you have to hunt through.
+.rowStack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.rowStack > *:last-child {
+  align-self: flex-end;
+}
+
 .rowText {
   display: flex;
+  // Takes the room the control does not want. Without this a long
+  // explanation squeezed itself into a column two words wide and the switch
+  // sat marooned beside it.
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 0.15rem;
+  min-inline-size: 0;
 }
 
 .rowLabel {
@@ -438,6 +456,9 @@
 }
 
 .prefSect {
+  // Air above each heading, so a group reads as a group rather than as one
+  // more row that happens to be in capitals.
+  margin-block-start: 0.9rem;
   color: var(--accent-d1);
   font-size: 0.62rem;
   font-weight: 700;
@@ -1128,4 +1149,23 @@
   background: transparent;
   font: inherit;
   font-size: 0.85rem;
+}
+
+// The reading-speed slider and the multiple it is set to, kept on one line so
+// the number reads as a label for the handle rather than as a figure of its
+// own.
+.rateControl {
+  display: flex;
+  flex: none;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.rateValue {
+  min-inline-size: 2.5rem;
+  color: var(--text-color-f1);
+  font-family: var(--value-font-family);
+  font-size: 0.8rem;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
 }

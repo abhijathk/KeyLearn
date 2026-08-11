@@ -18,6 +18,7 @@ import {
   findAccent,
   loadCustomAccents,
 } from "@keylearn/themes";
+import { a11yAdapted } from "./a11y-storage.ts";
 import { getPageData } from "./pagedata.tsx";
 import {
   activeProfileId,
@@ -233,5 +234,5 @@ export function saveContrast(
  */
 export function accessibilityActive(profileId?: string | null): boolean {
   const id = profileId === undefined ? activeProfileId() : profileId;
-  return loadSafeZones(id) || loadContrast(id) !== "default";
+  return loadSafeZones(id) || loadContrast(id) !== "default" || a11yAdapted(id);
 }

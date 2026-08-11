@@ -26,7 +26,13 @@ import {
   toUnicode,
 } from "@keylearn/braille";
 import { useProfiles } from "@keylearn/page-account";
-import { Screen } from "@keylearn/pages-shared";
+import {
+  A11Y_CHANGED_EVENT,
+  hasA11y,
+  loadA11y,
+  saveA11y,
+  Screen,
+} from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import {
   memo,
@@ -125,9 +131,26 @@ function Practice(): ReactNode {
   );
   const mode = prefs.mode;
   // The shape the speech layer wants, rebuilt only when it actually changes.
+  // The reading speed and the chosen voice are accessibility settings, set for
+  // this learner on the Accessibility page and read here — so a parent can set
+  // them up without sitting through the braille page, and the learner's own
+  // slider on this page still moves the same number.
+  const a11y = loadA11y(profileId);
+  // A learner who set their reading speed before it moved here keeps it. Only
+  // when they have no record at all — an answered default is an answer.
+  useEffect(() => {
+    if (!hasA11y(profileId) && prefs.rate !== 1) {
+      saveA11y({ speechRate: prefs.rate }, profileId);
+    }
+    // Once per learner, at the moment their page opens.
+  }, [profileId]); // eslint-disable-line react-hooks/exhaustive-deps
   const voice = useMemo(
-    () => ({ rate: prefs.rate, enabled: prefs.speech }),
-    [prefs.rate, prefs.speech],
+    () => ({
+      rate: a11y.speechRate,
+      enabled: prefs.speech,
+      name: a11y.speechVoice,
+    }),
+    [a11y.speechRate, prefs.speech, a11y.speechVoice],
   );
   // Spell-out is a hint like any other: hearing "b, dots one two" while
   // being assessed on recall of the cell is the assessment answering itself.
@@ -1121,11 +1144,16 @@ function Practice(): ReactNode {
           </span>
           <select
             className={styles.rateSelect}
-            value={String(prefs.rate)}
+            value={String(a11y.speechRate)}
             disabled={!prefs.speech}
             onChange={(ev) => {
               const rate = Number(ev.target.value);
+              // Written where the Accessibility page reads it, so the two
+              // controls are two views of one number rather than two numbers
+              // that agree until somebody moves one of them.
+              saveA11y({ speechRate: rate }, profileId);
               setPrefs({ rate });
+              window.dispatchEvent(new window.Event(A11Y_CHANGED_EVENT));
               // Said at the new speed, so the choice is audible rather than a
               // number somebody has to imagine.
               say(

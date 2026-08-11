@@ -56,9 +56,20 @@ export type VoiceSettings = {
   /** Speech rate. Screen reader users typically run far faster than default. */
   readonly rate: number;
   readonly enabled: boolean;
+  /**
+   * A system voice the learner picked by name, or null for the language match.
+   *
+   * Only ever set by somebody choosing from the list themselves. Choosing one
+   * for them is what the language match exists to avoid — see below.
+   */
+  readonly name?: string | null;
 };
 
-export const defaultVoice: VoiceSettings = { rate: 1, enabled: true };
+export const defaultVoice: VoiceSettings = {
+  rate: 1,
+  enabled: true,
+  name: null,
+};
 
 /**
  * Chrome reports an empty voice list for the first moments after load and
@@ -478,9 +489,21 @@ export function say(
     const utter = new SpeechSynthesisUtterance(text);
     utter.rate = voice.rate;
     // Naming the language lets the engine pick the matching system voice.
-    // Naming the voice itself would not: the list is full of novelty voices
-    // that match on language and are unusable as a reading voice.
+    // Picking a voice *for* the learner would not: the list is full of novelty
+    // voices that match on language and are unusable as a reading voice.
     utter.lang = document.documentElement.lang || navigator.language;
+    // A voice the learner chose themselves is a different matter — they have
+    // heard it, and nobody knows better than they do which one they can listen
+    // to all day. Missing from this machine means we fall back to the language
+    // match rather than to silence.
+    if (voice.name != null) {
+      const chosen = window.speechSynthesis
+        .getVoices()
+        .find((each) => each.name === voice.name);
+      if (chosen != null) {
+        utter.voice = chosen;
+      }
+    }
     let spoke = false;
     utter.addEventListener("start", () => {
       spoke = true;

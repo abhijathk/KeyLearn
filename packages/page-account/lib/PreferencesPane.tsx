@@ -6,13 +6,21 @@ import {
   useIntlDisplayNames,
 } from "@keylearn/intl";
 import {
+  A11Y_CHANGED_EVENT,
+  type A11yPrefs,
+  accessibilityActive,
+  type ContrastPref,
   downloadBlob,
   exportFilename,
   isPremiumUser,
+  loadA11y,
+  loadContrast,
   loadSafeZones,
   loadThemedZones,
   myCertificates,
   Pages,
+  saveA11y,
+  saveContrast,
   saveSafeZones,
   saveThemedZones,
   usePageData,
@@ -22,7 +30,8 @@ import { SpeedUnit, uiProps } from "@keylearn/result";
 import { openResultStorage } from "@keylearn/result-loader";
 import { useSettings } from "@keylearn/settings";
 import { useTheme } from "@keylearn/themes";
-import { type ReactNode, useState } from "react";
+import { clsx } from "clsx";
+import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { Segmented, Toggle } from "./controls.tsx";
@@ -148,13 +157,33 @@ export function AccessibilityPane(): ReactNode {
     () => household.activeId ?? profiles[0]?.id ?? null,
   );
   const chosen = profiles.find((p) => p.id === chosenId) ?? profiles[0] ?? null;
-  const [safe, setSafe] = useState(() => loadSafeZones(chosen?.id ?? null));
-  // Per learner, so the switch must re-read when the learner changes.
-  const [seen, setSeen] = useState(chosen?.id ?? null);
-  if (seen !== (chosen?.id ?? null)) {
-    setSeen(chosen?.id ?? null);
-    setSafe(loadSafeZones(chosen?.id ?? null));
+  const id = chosen?.id ?? null;
+  const [safe, setSafe] = useState(() => loadSafeZones(id));
+  const [contrast, setContrast] = useState<ContrastPref>(() =>
+    loadContrast(id),
+  );
+  const [prefs, setPrefs] = useState<A11yPrefs>(() => loadA11y(id));
+  // Per learner, so everything on the page must re-read when the learner
+  // changes — a switch left showing the last learner's answer is worse than no
+  // switch, because it invites somebody to turn off what they never turned on.
+  const [seen, setSeen] = useState(id);
+  if (seen !== id) {
+    setSeen(id);
+    setSafe(loadSafeZones(id));
+    setContrast(loadContrast(id));
+    setPrefs(loadA11y(id));
   }
+
+  // One place that says "this changed", so the provider repaints and every
+  // other page reading these agrees with this one.
+  const announce = () => {
+    window.dispatchEvent(new window.Event(A11Y_CHANGED_EVENT));
+  };
+  const set = (patch: Partial<A11yPrefs>) => {
+    setPrefs({ ...prefs, ...patch });
+    saveA11y(patch, id);
+    announce();
+  };
 
   return (
     <div className={styles.paneScroll}>
@@ -168,15 +197,305 @@ export function AccessibilityPane(): ReactNode {
         {profiles.length > 0 && (
           <ProfileChooser
             profiles={profiles}
-            chosenId={chosen?.id ?? null}
+            chosenId={id}
             onChoose={setChosenId}
-            marked={(id) => loadSafeZones(id)}
+            marked={(each) => accessibilityActive(each)}
           />
         )}
 
-        {SafeRow({ safe, setSafe, profileId: chosen?.id ?? null })}
+        <div className={styles.prefSect}>
+          <FormattedMessage
+            id="account.a11y.seeing"
+            defaultMessage="Seeing the page"
+          />
+        </div>
+
+        <div className={clsx(styles.row, styles.rowStack)}>
+          <div className={styles.rowText}>
+            <span className={styles.rowLabel}>
+              <FormattedMessage
+                id="account.a11y.contrast"
+                defaultMessage="Text contrast"
+              />
+            </span>
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.a11y.contrast.sub"
+                defaultMessage="How hard the words work to be read. Each step is a measured level rather than a matter of taste — the theme keeps its colours, the text is lifted away from them."
+              />
+            </span>
+          </div>
+          <Segmented<ContrastPref>
+            value={contrast}
+            onChange={(next) => {
+              setContrast(next);
+              saveContrast(next, id);
+              announce();
+            }}
+            options={[
+              {
+                id: "default",
+                label: (
+                  <FormattedMessage
+                    id="account.a11y.contrast.default"
+                    defaultMessage="Theme"
+                  />
+                ),
+              },
+              {
+                id: "clearer",
+                label: (
+                  <FormattedMessage
+                    id="account.a11y.contrast.clearer"
+                    defaultMessage="Clearer"
+                  />
+                ),
+              },
+              {
+                id: "strongest",
+                label: (
+                  <FormattedMessage
+                    id="account.a11y.contrast.strongest"
+                    defaultMessage="Strongest"
+                  />
+                ),
+              },
+            ]}
+          />
+        </div>
+
+        {SafeRow({ safe, setSafe, profileId: id })}
+
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowLabel}>
+              <FormattedMessage
+                id="account.a11y.typeface"
+                defaultMessage="Typeface for dyslexia"
+              />
+            </span>
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.a11y.typeface.sub"
+                defaultMessage="Letters with weighted bottoms and shapes that cannot be mistaken for one another when they rotate — b for d, p for q."
+              />
+            </span>
+          </div>
+          <Toggle
+            on={prefs.typeface === "dyslexic"}
+            onChange={(next) =>
+              set({ typeface: next ? "dyslexic" : "default" })
+            }
+          />
+        </div>
+
+        <div className={styles.prefSect}>
+          <FormattedMessage
+            id="account.a11y.using"
+            defaultMessage="Using the app"
+          />
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowLabel}>
+              <FormattedMessage
+                id="account.a11y.motion"
+                defaultMessage="Hold animations still"
+              />
+            </span>
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.a11y.motion.sub"
+                defaultMessage="Your device's own setting is already followed. This one is for wanting the rest of the machine to move and this page not to."
+              />
+            </span>
+          </div>
+          <Toggle
+            on={prefs.motion === "reduce"}
+            onChange={(next) => set({ motion: next ? "reduce" : "system" })}
+          />
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowLabel}>
+              <FormattedMessage
+                id="account.a11y.targets"
+                defaultMessage="Larger things to press"
+              />
+            </span>
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.a11y.targets.sub"
+                defaultMessage="Buttons and links grow to the size a hand that is not quite steady can reach without aiming."
+              />
+            </span>
+          </div>
+          <Toggle
+            on={prefs.targets === "large"}
+            onChange={(next) => set({ targets: next ? "large" : "default" })}
+          />
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowLabel}>
+              <FormattedMessage
+                id="account.a11y.cues"
+                defaultMessage="Say mistakes in sound"
+              />
+            </span>
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.a11y.cues.sub"
+                defaultMessage="A wrong key is shown in red, and red is the thing some eyes cannot pick out. This says the same in a tone, so nothing depends on colour alone."
+              />
+            </span>
+          </div>
+          <Toggle on={prefs.cues} onChange={(next) => set({ cues: next })} />
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowLabel}>
+              <FormattedMessage
+                id="account.a11y.timers"
+                defaultMessage="Practise without a clock"
+              />
+            </span>
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.a11y.timers.sub"
+                defaultMessage="Hides every countdown and running time. The practice is exactly the same; what goes is being watched while you do it."
+              />
+            </span>
+          </div>
+          <Toggle
+            on={!prefs.timers}
+            onChange={(next) => set({ timers: !next })}
+          />
+        </div>
+
+        {chosen?.visionSupport === true && (
+          <>
+            <div className={styles.prefSect}>
+              <FormattedMessage
+                id="account.a11y.hearing"
+                defaultMessage="The reading voice"
+              />
+            </div>
+            <VoiceRows prefs={prefs} set={set} />
+          </>
+        )}
       </div>
     </div>
+  );
+}
+
+/**
+ * How the braille page reads aloud.
+ *
+ * Only for a learner on vision support, because for everybody else there is no
+ * voice to set — a page of settings that do nothing is not neutral, it is a
+ * page you learn to stop reading.
+ */
+/**
+ * The speeds offered, matching the braille page's own list exactly.
+ *
+ * Named steps rather than a slider, and for the braille page's reason: a
+ * slider announces a number a listener then has to interpret, where a list can
+ * be arrowed through and heard.
+ */
+const SPEECH_RATES: readonly number[] = [0.75, 1, 1.5, 2, 2.5, 3];
+
+function VoiceRows({
+  prefs,
+  set,
+}: {
+  readonly prefs: A11yPrefs;
+  readonly set: (patch: Partial<A11yPrefs>) => void;
+}): ReactNode {
+  const [voices, setVoices] = useState<readonly string[]>([]);
+  useEffect(() => {
+    // The list arrives late in Chrome and is empty for the first moments, so
+    // it is asked for again when the browser says it has one.
+    const read = () => {
+      try {
+        setVoices(window.speechSynthesis.getVoices().map((v) => v.name));
+      } catch {
+        setVoices([]);
+      }
+    };
+    read();
+    window.speechSynthesis?.addEventListener?.("voiceschanged", read);
+    return () => {
+      window.speechSynthesis?.removeEventListener?.("voiceschanged", read);
+    };
+  }, []);
+  return (
+    <>
+      <div className={styles.row}>
+        <div className={styles.rowText}>
+          <span className={styles.rowLabel}>
+            <FormattedMessage
+              id="account.a11y.speechRate"
+              defaultMessage="Reading speed"
+            />
+          </span>
+          <span className={styles.rowSub}>
+            <FormattedMessage
+              id="account.a11y.speechRate.sub"
+              defaultMessage="Somebody who listens all day listens fast. This is the same speed the braille page uses for every word it speaks."
+            />
+          </span>
+        </div>
+        <select
+          className={styles.prefSelect}
+          value={String(prefs.speechRate)}
+          onChange={(ev) => set({ speechRate: Number(ev.target.value) })}
+        >
+          {SPEECH_RATES.map((rate) => (
+            <option key={rate} value={String(rate)}>
+              {rate === 1 ? "1× (normal)" : `${rate}×`}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className={styles.row}>
+        <div className={styles.rowText}>
+          <span className={styles.rowLabel}>
+            <FormattedMessage
+              id="account.a11y.speechVoice"
+              defaultMessage="Voice"
+            />
+          </span>
+          <span className={styles.rowSub}>
+            <FormattedMessage
+              id="account.a11y.speechVoice.sub"
+              defaultMessage="Your device's voices. Left alone, the app uses whichever one matches the language of the page."
+            />
+          </span>
+        </div>
+        <select
+          className={styles.prefSelect}
+          value={prefs.speechVoice ?? ""}
+          onChange={(ev) => set({ speechVoice: ev.target.value || null })}
+        >
+          <option value="">
+            {/* Deliberately not a voice name: the list is full of novelty
+                voices, and the language match is the sane default. */}
+            —
+          </option>
+          {voices.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </div>
+    </>
   );
 }
 

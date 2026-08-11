@@ -1,10 +1,15 @@
 import { lessonProps, LessonType } from "@keylearn/lesson";
 import { useProfiles } from "@keylearn/page-account";
 import { PracticePage } from "@keylearn/page-practice";
-import { usePageData } from "@keylearn/pages-shared";
+import {
+  A11Y_CHANGED_EVENT,
+  loadA11y,
+  usePageData,
+} from "@keylearn/pages-shared";
 import { ResultLoader } from "@keylearn/result-loader";
-import { useSettings } from "@keylearn/settings";
-import { useEffect } from "react";
+import { SettingsContext, useSettings } from "@keylearn/settings";
+import { PlaySounds, soundProps } from "@keylearn/textinput-sounds";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { NavLink } from "react-router";
 import { rememberPractice } from "../library-recent.ts";
@@ -97,7 +102,42 @@ export default function Page() {
 
   return (
     <ResultLoader key={history ?? "none"} namespace={history}>
-      <PracticePage />
+      <WithSoundCues>
+        <PracticePage />
+      </WithSoundCues>
     </ResultLoader>
+  );
+}
+
+/**
+ * Say a mistake in sound for a learner who has asked for it.
+ *
+ * A wrong keystroke is shown in red, which is the one signal a learner with a
+ * colour vision difference may not receive at all. This turns the error tone
+ * on for them without touching the sound settings they can see — leaving those
+ * alone matters, because the switch in Accessibility is theirs and the sound
+ * menu in practice belongs to whoever is at the keyboard.
+ *
+ * Only ever raises silence to errors-only. Somebody who has chosen every key
+ * clicking keeps it.
+ */
+function WithSoundCues({ children }: { readonly children: ReactNode }) {
+  const { settings, updateSettings } = useSettings();
+  const [cues, setCues] = useState(() => loadA11y().cues);
+  useEffect(() => {
+    const reread = () => setCues(loadA11y().cues);
+    window.addEventListener(A11Y_CHANGED_EVENT, reread);
+    return () => window.removeEventListener(A11Y_CHANGED_EVENT, reread);
+  }, []);
+  const value = useMemo(() => {
+    if (!cues || settings.get(soundProps.playSounds) !== PlaySounds.None) {
+      return settings;
+    }
+    return settings.set(soundProps.playSounds, PlaySounds.ErrorsOnly);
+  }, [settings, cues]);
+  return (
+    <SettingsContext.Provider value={{ settings: value, updateSettings }}>
+      {children}
+    </SettingsContext.Provider>
   );
 }

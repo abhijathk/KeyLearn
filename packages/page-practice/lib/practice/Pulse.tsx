@@ -1447,6 +1447,10 @@ function TodayWhisper({
   const minutesDone = Math.floor(value * goal);
   return (
     <span
+      // The hook the no-timer setting hides. Marked here rather than the
+      // setting reaching in and naming a class, so a learner who has asked not
+      // to be timed loses the clock without losing anything else in the lane.
+      data-timer=""
       title={formatMessage({
         id: "practice.lane.today.description",
         defaultMessage:

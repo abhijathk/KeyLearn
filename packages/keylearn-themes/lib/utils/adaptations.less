@@ -1,0 +1,94 @@
+// What a learner has asked the page to do differently.
+//
+// Keyed on attributes the theme provider stamps on the root, so these apply to
+// every page at once and no component has to know the settings exist. Each
+// block is inert until its attribute is present, which is the whole app for
+// everybody who has asked for nothing.
+
+// Still the page.
+//
+// The OS switch is honoured elsewhere and is the right default; this is for
+// somebody who wants films to move and this page to hold still, which the
+// system setting cannot express. Not `display: none` on anything — an
+// animation that carries meaning still runs, it just arrives at its end
+// immediately.
+:root[data-motion="reduce"] {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+// A typeface for readers who find letters swapping places.
+//
+// OpenDyslexic: weighted bottoms so a letter cannot rotate onto another, and
+// distinct shapes for the pairs that mirror. Applied to the interface and to
+// the practice text both — reading the lesson is the part that matters, and a
+// learner who needs this needs it most where the words are.
+//
+// Not applied to the value font: those are figures in columns, where a
+// monospace grid is doing work that letterforms cannot replace.
+:root[data-typeface="dyslexic"] {
+  --default-font-family: "Open Dyslexic", sans-serif;
+  --header-font-family: "Open Dyslexic", sans-serif;
+}
+
+// Bigger targets for everything you press.
+//
+// WCAG 2.2 asks 24×24 CSS pixels at AA, which the app already meets, and 44×44
+// at AAA — which is what a learner with a tremor, or anybody on a touchscreen,
+// actually needs.
+//
+// Grown by a minimum size on the control itself. Two things this deliberately
+// does not do: it does not add a pseudo-element (the app draws switch knobs
+// with ::after, and an overlay wiped them out), and it does not touch anything
+// that draws itself rather than holding a label — an empty element is a
+// control made of CSS, and stretching one deforms it.
+:root[data-targets="large"] {
+  // The exception is written into the selector rather than undone underneath
+  // it: a link inside running text is reached by reading rather than by
+  // aiming, and 44px of line box would tear the paragraph apart.
+  button:not(:empty),
+  [role="button"]:not(:empty),
+  a[href]:not(:empty):not(p a, li a, label a),
+  select,
+  summary {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+  }
+
+  // The switches are the smallest thing on any settings page and the fiddliest
+  // to hit, so they grow rather than being left out — the whole switch, knob
+  // included, so it stays a switch and not a pill with a dot adrift in it.
+  [role="switch"] {
+    inline-size: 3.6rem;
+    block-size: 2.1rem;
+
+    &::after {
+      inset-inline-start: 0.25rem;
+      inset-block-start: 0.25rem;
+      inline-size: 1.6rem;
+      block-size: 1.6rem;
+    }
+
+    &[aria-checked="true"]::after {
+      inset-inline-start: 1.75rem;
+    }
+  }
+}
+
+// Nothing counts down.
+//
+// A clock running while you type is pressure, and pressure is not a teaching
+// aid for everybody. The practice is unchanged; only the reading of the time
+// goes. Marked with `data-timers="off"` — the attribute names the absence,
+// because showing it is the ordinary case.
+:root[data-timers="off"] {
+  [data-timer] {
+    display: none !important;
+  }
+}
