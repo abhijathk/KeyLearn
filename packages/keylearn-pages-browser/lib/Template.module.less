@@ -36,3 +36,31 @@
   text-align: center;
   text-transform: uppercase;
 }
+
+// Off-screen until it is focused, then a real, visible control at the top of
+// the page. Not `display: none` and not `visibility: hidden`: both would take
+// it out of the tab order, which is the one thing it exists to be in.
+.skipLink {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  border-radius: 0 0 0.6rem 0;
+  color: var(--accent-ink);
+  background: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-120%);
+
+  &:focus,
+  &:focus-visible {
+    transform: translateY(0);
+  }
+}
+
+// A landmark that has been jumped to should not then draw a focus ring around
+// the whole page — the jump is the feedback.
+.main:focus {
+  outline: none;
+}

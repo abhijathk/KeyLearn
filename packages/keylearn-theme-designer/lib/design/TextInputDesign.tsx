@@ -1,8 +1,9 @@
 import { Field, FieldList } from "@keylearn/widget";
 import { FormattedMessage, useIntl } from "react-intl";
 import { prop } from "./accessors.ts";
+import { ContrastNote } from "./ContrastNote.tsx";
 import { Group } from "./Group.tsx";
-import { ColorInput } from "./input/ColorInput.tsx";
+import { ColorInput, gray } from "./input/ColorInput.tsx";
 import { PreviewPane } from "./PreviewPane.tsx";
 import { TextInputPreview } from "./TextInputPreview.tsx";
 
@@ -32,6 +33,21 @@ export function TextInputDesign() {
           />
         </Field>
       </FieldList>
+      {/*
+        The one pairing worth checking by default: the practice text against
+        the surface it sits on. Everything else in this pane is an accent on
+        top of it.
+      */}
+      <ContrastNote
+        label={
+          <FormattedMessage
+            id="designer.contrast.text"
+            defaultMessage="Text on the page:"
+          />
+        }
+        text={(theme) => theme.getColor("--textinput__color") ?? gray}
+        ground={(theme) => theme.getColor("--primary") ?? gray}
+      />
       <FieldList>
         <Field>
           <ColorInput accessor={prop["--textinput--hit__color"]} />

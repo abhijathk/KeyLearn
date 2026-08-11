@@ -1,0 +1,28 @@
+.note {
+  display: flex;
+  gap: 0.45rem;
+  align-items: baseline;
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.dot {
+  flex: none;
+  align-self: center;
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  border-radius: 999px;
+}
+
+.note[data-verdict="body"] .dot {
+  background: var(--accent);
+}
+
+.note[data-verdict="large"] .dot {
+  background: var(--Value--less__color, #d99a2b);
+}
+
+.note[data-verdict="fail"] .dot {
+  background: var(--error, #d0322e);
+}

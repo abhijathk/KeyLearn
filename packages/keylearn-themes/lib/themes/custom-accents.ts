@@ -1,3 +1,7 @@
+import {
+  contrastRatio as sharedContrastRatio,
+  parseColor,
+} from "@keylearn/color";
 // Themes a household made for itself.
 //
 // A custom theme is an accent and nothing more: a name and two hexes, one for
@@ -7,7 +11,6 @@
 //
 // They belong to the account rather than to one learner: a colour you mixed is
 // yours to give to anybody in the house.
-
 import { type Accent, ACCENTS } from "./accents.ts";
 
 const KEY = "keylearn.accents.custom";
@@ -21,25 +24,16 @@ export const MIN_CONTRAST = 3;
 const NIGHT_GROUND = "#141620";
 const DAY_GROUND = "#f5f6fa";
 
-function channel(value: number): number {
-  const c = value / 255;
-  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-}
-
-function luminance(hex: string): number {
-  const n = Number.parseInt(hex.slice(1), 16);
-  return (
-    0.2126 * channel((n >> 16) & 255) +
-    0.7152 * channel((n >> 8) & 255) +
-    0.0722 * channel(n & 255)
-  );
-}
-
-/** The WCAG contrast ratio between two opaque colours. */
+/**
+ * The WCAG contrast ratio between two opaque colours.
+ *
+ * Delegates to the colour package rather than keeping a second copy of the
+ * gamma-decoding maths: the two agreed, but a subtle algorithm implemented
+ * twice is one that eventually disagrees, and this one decides whether a
+ * household is allowed to save a theme.
+ */
 export function contrastRatio(a: string, b: string): number {
-  const x = luminance(a);
-  const y = luminance(b);
-  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+  return sharedContrastRatio(parseColor(a), parseColor(b));
 }
 
 export function isHex(value: unknown): value is string {

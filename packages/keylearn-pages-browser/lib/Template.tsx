@@ -2,6 +2,7 @@ import { CompleteProfileGate, useProfiles } from "@keylearn/page-account";
 import { AdBanner, adSenseClientId } from "@keylearn/thirdparties";
 import { PortalContainer, Toaster } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
+import { FormattedMessage } from "react-intl";
 import { showAds } from "./ads.ts";
 import { Header } from "./Header.tsx";
 import { MenuDrawer } from "./MenuDrawer.tsx";
@@ -60,6 +61,17 @@ export function Template({
   });
   return (
     <div className={styles.body}>
+      {/*
+        First in the document, so a keyboard or screen-reader user can reach
+        the lesson without walking the header, the profile menu and the drawer
+        on every single page. Invisible until focused (WCAG 2.4.1).
+      */}
+      <a className={styles.skipLink} href="#main">
+        <FormattedMessage
+          id="nav.skipToContent"
+          defaultMessage="Skip to the main content"
+        />
+      </a>
       <Header
         onOpenMenu={() => setMenuOpen(true)}
         showFocus={path === "/"}
@@ -67,7 +79,7 @@ export function Template({
         kids={path === "/kids"}
         practice={path === "/"}
       />
-      <main className={styles.main}>
+      <main className={styles.main} id="main" tabIndex={-1}>
         {children}
         <PortalContainer />
         <Toaster />
