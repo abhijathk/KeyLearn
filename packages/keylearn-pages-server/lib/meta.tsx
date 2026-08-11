@@ -38,6 +38,14 @@ export function AltLangLinks({ page }: { readonly page: PageInfo }): ReactNode {
 }
 
 export const favIcons: readonly FavIconLink[] = [
+  // First, so that any browser understanding SVG icons uses this one. The PNGs
+  // below stay as the fallback for those that do not.
+  {
+    href: "/assets/favicon.svg",
+    rel: "icon",
+    type: "image/svg+xml",
+    sizes: "any",
+  },
   {
     href: "/assets/favicon-16x16.png",
     rel: "icon",

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!--
+    The tab icon, drawn rather than filled.
+
+    The PNGs beside this one are a #141620 rounded square — the app's own dark
+    background — which is all but invisible against a dark browser tab strip.
+    This has no background at all, just the keyboard mark in the signature mint.
+
+    Both values are the accent's own, from ACCENTS "mint" in the themes package:
+    the day tone on a light tab strip, the night tone on a dark one, so the icon
+    matches what the app itself is showing. The day tone is the base rather than
+    the media-query branch, because a browser that ignores prefers-color-scheme
+    here should land on the darker of the two, which stays legible on the light
+    chrome such browsers usually have.
+  -->
+  <style>
+    .mark { stroke: #2f8a5d; }
+    @media (prefers-color-scheme: dark) {
+      .mark { stroke: #8fd9b6; }
+    }
+  </style>
+  <g class="mark" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="3"/>
+    <path d="M7 10h0M12 10h0M17 10h0M7.5 14.5h9"/>
+  </g>
+</svg>
