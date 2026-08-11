@@ -119,6 +119,72 @@ export class Controller {
     ctx.response.status = 204;
   }
 
+  // ---- A separate course, kept beside the guided one --------------------
+  //
+  // Classic is its own course rather than a second face of the same lesson,
+  // so it keeps its own results. The name is constrained to a short word by
+  // the route pattern, which is also what keeps it from walking out of the
+  // data directory once it becomes part of a file name.
+
+  @http.GET("/_/sync/data/profile/{pid:[0-9]+}/{course:[a-z]{1,16}}")
+  async getCourseData(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+    @pathParam("course") course: string,
+  ) {
+    const profile = await this.#owned(ctx, pid);
+    await this.userData
+      .loadProfile(ctx.state.requireUser().id!, profile.id!, course)
+      .serve(ctx);
+  }
+
+  @http.POST("/_/sync/data/profile/{pid:[0-9]+}/{course:[a-z]{1,16}}")
+  async postCourseData(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+    @pathParam("course") course: string,
+    @body.binary(null, { maxLength: 1048576 }) value: Buffer,
+  ) {
+    const user = ctx.state.requireUser();
+    const profile = await this.#owned(ctx, pid);
+    const results = await parseResults(value);
+    await this.userData
+      .loadProfile(user.id!, profile.id!, course)
+      .append(results);
+    // The board is one board. A course is a separate history, not a separate
+    // leaderboard, so a fast run counts wherever it was typed.
+    if (profile.kind === "adult") {
+      await this.highScores.append(
+        user.id!,
+        profile.id!,
+        creditable(results, user.id!),
+      );
+    }
+    ctx.response.status = 204;
+  }
+
+  @http.DELETE("/_/sync/data/profile/{pid:[0-9]+}/{course:[a-z]{1,16}}")
+  async deleteCourseData(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+    @pathParam("course") course: string,
+  ) {
+    const user = ctx.state.requireUser();
+    const profile = await this.#owned(ctx, pid);
+    await this.userData.loadProfile(user.id!, profile.id!, course).delete();
+    ctx.response.status = 204;
+  }
+
+  /** The learner named in the path, once the caller is proved to own them. */
+  async #owned(ctx: Context<RouterState & AuthState>, pid: string) {
+    const user = ctx.state.requireUser();
+    const profile = await Profile.findOwned(user.id!, Number(pid));
+    if (profile == null) {
+      throw new ForbiddenError();
+    }
+    return profile;
+  }
+
   // ---- Braille progress -------------------------------------------------
   //
   // Kept apart from the result sync above because it is not results: a braille

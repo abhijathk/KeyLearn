@@ -57,14 +57,23 @@ export class DataDir {
    * Returns the full path to a per-profile stats file: one file per learner
    * profile, grouped under its owning account.
    */
-  profileStatsFile(userId: number, profileId: number): string {
+  profileStatsFile(
+    userId: number,
+    profileId: number,
+    // A course other than the guided one keeps its own file beside it. Classic
+    // is a separate course rather than a second face of the same lesson, so
+    // its speeds, its streak and its unlocked keys are its own — and a result
+    // carries no record of which mode produced it, so they could never have
+    // been told apart afterwards.
+    course: string | null = null,
+  ): string {
     const s = String(userId).padStart(9, "0");
     return this.dataPath(
       "profile_stats", //
       s.substring(0, 3),
       s.substring(3, 6),
       s,
-      String(profileId),
+      course == null ? String(profileId) : `${profileId}.${course}`,
     );
   }
 }

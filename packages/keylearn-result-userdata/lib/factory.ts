@@ -21,10 +21,14 @@ export class UserDataFactory {
   }
 
   /** A learner profile's own stats file, under its owning account. */
-  loadProfile(userId: number, profileId: number): UserData {
+  loadProfile(
+    userId: number,
+    profileId: number,
+    course: string | null = null,
+  ): UserData {
     return new UserData(
       new PublicId(userId),
-      new File(this.dataDir.profileStatsFile(userId, profileId)),
+      new File(this.dataDir.profileStatsFile(userId, profileId, course)),
     );
   }
 }

@@ -857,12 +857,22 @@
   font-weight: 700;
 }
 
+// The label column gets a floor so it cannot be crushed into one word per
+// line, and the chips get to wrap onto a second or third row rather than
+// running off the side. Pinning the chips instead — which is what "flex: none"
+// did — fixed the labels and broke the rows with seven chips in them.
+.srow > div:not(.ctl) {
+  flex: 0 1 auto;
+  min-inline-size: 7rem;
+}
+
 .ctl {
   display: flex;
-  flex: none;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   gap: 0.3rem;
   justify-content: flex-end;
+  min-inline-size: 0;
   margin-inline-start: auto;
 }
 
