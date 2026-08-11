@@ -62,7 +62,7 @@ import {
   type Sticker,
 } from "./album.ts";
 import { kidsAudio } from "./audio.ts";
-import { ClassicScreen, ClassicUnlock } from "./classic.tsx";
+import { ClassicScreen, ClassicTour, ClassicUnlock } from "./classic.tsx";
 import {
   BranchIcon,
   ChatIcon,
@@ -151,6 +151,8 @@ function minutesToday(results: readonly Result[]): number {
 }
 
 const BEST_KEY = () => profileStorageKey("kids.best");
+// Shown once per learner, the first time they land on Classic.
+const CLASSIC_TOUR_KEY = () => profileStorageKey("kids.classicTour");
 const PREFS_KEY = () => profileStorageKey("kids.prefs");
 
 type KbMode = "off" | "simple" | "full";
@@ -966,6 +968,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [prefs, setPrefs] = useState(loadPrefs);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [nameOpen, setNameOpen] = useState(() => loadPrefs().name === "");
   const [mapOpen, setMapOpen] = useState(false);
@@ -1344,6 +1347,25 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     prevLettersRef.current = letters;
   }, [included, lessonKeys]);
 
+  // The first arrival on Classic, and only the first. Anything already open —
+  // the settings panel, a ceremony — takes precedence; the walk-through waits
+  // rather than stacking on top of it.
+  useEffect(() => {
+    if (!(prefs.classic && classicOffered(band)) || tourOpen) {
+      return;
+    }
+    let seen = "1";
+    try {
+      seen = localStorage.getItem(CLASSIC_TOUR_KEY()) ?? "";
+    } catch {
+      seen = "1"; // Storage denied: never nag.
+    }
+    if (seen === "") {
+      setTourOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefs.classic, band]);
+
   const dinoName = () =>
     prefsRef.current.name ||
     (prefsRef.current.world === "hero" ? "Your hero" : "Your dino");
@@ -1619,6 +1641,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     albumOpen ||
     graduated ||
     restOpen ||
+    tourOpen ||
     hatched != null ||
     ceremony != null;
 
@@ -2756,6 +2779,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             </button>
           </div>
         </div>
+      )}
+
+      {classic && tourOpen && (
+        <ClassicTour
+          onClose={() => {
+            setTourOpen(false);
+            try {
+              localStorage.setItem(CLASSIC_TOUR_KEY(), "1");
+            } catch {
+              // A learner with storage denied simply sees it again; better than
+              // refusing to show them the page.
+            }
+          }}
+        />
       )}
 
       {ceremony != null && classic && (

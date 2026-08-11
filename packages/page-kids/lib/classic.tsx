@@ -1,4 +1,5 @@
 import { type LessonKeys } from "@keylearn/lesson";
+import { Slide, Tour } from "@keylearn/widget";
 import { clsx } from "clsx";
 import {
   type ReactNode,
@@ -105,7 +106,7 @@ export function ClassicScreen({
   const pct = Math.round(frac * 100);
   return (
     <div className={clsx(styles.classic, typing && styles.typing)}>
-      <div className={styles.island}>
+      <div className={styles.island} data-tour="island">
         <div className={styles.hero}>
           <Spark speeds={speeds} />
           <div className={styles.speed}>
@@ -166,6 +167,7 @@ export function ClassicScreen({
           <button
             type="button"
             className={clsx(styles.tuneBtn, toolsOpen && styles.tuneBtnOn)}
+            data-tour="tools"
             title={toolsOpen ? "Close the tools" : "Open the tools"}
             aria-label={toolsOpen ? "Close the tools" : "Open the tools"}
             aria-expanded={toolsOpen}
@@ -197,6 +199,7 @@ export function ClassicScreen({
 
       <div
         className={clsx(styles.textCard, !armed && styles.textCardGated)}
+        data-tour="text"
         data-practice={true}
       >
         <Text
@@ -235,7 +238,7 @@ export function ClassicScreen({
 
       {/* The trail board, recoloured: quiet pastels so the next key leads,
           with the resting hands laid over it the way the grown-up page does. */}
-      <div className={styles.board} data-practice={true}>
+      <div className={styles.board} data-practice={true} data-tour="board">
         {boardShown && (
           <div className={styles.boardInner} ref={boardRef}>
             {keyboard}
@@ -912,5 +915,56 @@ export function ClassicUnlock({
         <div className={styles.unlockHint}>Press {up} to carry on</div>
       </div>
     </div>
+  );
+}
+
+/**
+ * The first look at Classic.
+ *
+ * A learner arriving from the trail games meets a keyboard, an island of
+ * numbers, a progress track and a tools rail, with nothing to say what any of
+ * it is. The grown-up page has a twelve-slide walkthrough explaining the
+ * teaching algorithm; that is the right depth for somebody who chose a typing
+ * tutor and the wrong one for an eleven-year-old who was moved to a new screen.
+ *
+ * Four slides, each pinned to the thing it names, in the fewest words that will
+ * do. Shown once.
+ */
+export function ClassicTour({
+  onClose,
+}: {
+  readonly onClose: () => void;
+}): ReactNode {
+  return (
+    <Tour onClose={onClose}>
+      <Slide size="small" anchor="[data-tour='text']" position="block-end">
+        <h1>This is your line</h1>
+        <p>
+          Type what you see. The cursor slides along as you go, and a letter
+          turns red if it was not the one.
+        </p>
+      </Slide>
+      <Slide size="small" anchor="[data-tour='board']" position="block-start">
+        <h1>The glowing key is next</h1>
+        <p>
+          Each colour is a finger. Keep your fingers resting on the home row and
+          let the nearest one reach — that is what makes you fast later.
+        </p>
+      </Slide>
+      <Slide size="small" anchor="[data-tour='island']" position="block-end">
+        <h1>How it is going</h1>
+        <p>
+          Your speed, and the bar showing how close the next key is to joining
+          your trail. Reach the flag and it is yours.
+        </p>
+      </Slide>
+      <Slide size="small" anchor="[data-tour='tools']" position="block-end">
+        <h1>Everything else lives here</h1>
+        <p>
+          Bigger text, sound, the timer, and the way back to the trail game.
+          Nothing you change here can lose your progress.
+        </p>
+      </Slide>
+    </Tour>
   );
 }
