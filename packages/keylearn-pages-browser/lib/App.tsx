@@ -51,6 +51,7 @@ const PracticePage = lazy(() => import("./pages/practice.tsx"));
 const ProfilePage = lazy(() => import("./pages/profile.tsx"));
 const TypingTestPage = lazy(() => import("./pages/typing-test.tsx"));
 const TermsOfServicePage = lazy(() => import("./pages/terms-of-service.tsx"));
+const AccessibilityPage = lazy(() => import("./pages/accessibility.tsx"));
 const PrivacyPolicyPage = lazy(() => import("./pages/privacy-policy.tsx"));
 const AboutPage = lazy(() => import("./pages/about.tsx"));
 const GuidePage = lazy(() => import("./pages/guide.tsx"));
@@ -384,6 +385,17 @@ function PageRoutes() {
               <Title page={Pages.termsOfService} />
               <Suspense fallback={<LoadingProgress />}>
                 <TermsOfServicePage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.accessibility.path}
+          element={
+            <Template path={Pages.accessibility.path}>
+              <Title page={Pages.accessibility} />
+              <Suspense fallback={<LoadingProgress />}>
+                <AccessibilityPage />
               </Suspense>
             </Template>
           }

@@ -500,6 +500,24 @@ export namespace Pages {
     meta: [{ name: "robots", content: "noindex" }],
   } satisfies PageInfo;
 
+  export const accessibility = {
+    path: "/accessibility",
+    title: defineMessage({
+      id: "t_Accessibility",
+      defaultMessage: "Accessibility",
+    }),
+    link: {
+      label: defineMessage({
+        id: "t_Accessibility",
+        defaultMessage: "Accessibility",
+      }),
+    },
+    // Indexable, unlike the policy pages: a school looking for this before
+    // they buy should be able to find it, and so should a search for the
+    // statement a public body is obliged to check for.
+    meta,
+  } satisfies PageInfo;
+
   export const about = {
     path: "/about",
     title: defineMessage({

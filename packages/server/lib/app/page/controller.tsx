@@ -320,6 +320,19 @@ export class Controller {
     return this.renderPage(ctx, Pages.privacyPolicy, intl);
   }
 
+  @http.GET(`${Pages.accessibility.path}`)
+  async ["accessibility"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.accessibility);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.accessibility.path}`)
+  async ["accessibility-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.accessibility, intl);
+  }
+
   @http.GET(`${Pages.about.path}`)
   async ["about"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.about);

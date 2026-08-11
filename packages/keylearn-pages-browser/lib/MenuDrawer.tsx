@@ -357,6 +357,10 @@ export function MenuDrawer({
                   <StrokeIcon className={styles.utilIcon} name="doc" />
                   {formatMessage(Pages.termsOfService.link.label)}
                 </RouterLink>
+                <RouterLink to={Pages.accessibility.path} onClick={onClose}>
+                  <StrokeIcon className={styles.utilIcon} name="user" />
+                  {formatMessage(Pages.accessibility.link.label)}
+                </RouterLink>
                 <RouterLink to={Pages.privacyPolicy.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="shield" />
                   {formatMessage(Pages.privacyPolicy.link.label)}

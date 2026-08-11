@@ -563,3 +563,122 @@ export function GuidePage() {
     </div>
   );
 }
+
+/**
+ * The accessibility statement.
+ *
+ * Written as a claim somebody may rely on, which is why it does not say
+ * "conforms to WCAG 2.2 AA": nobody has audited that, and an inaccurate
+ * statement is worse than none — in several jurisdictions it is actionable.
+ * What it does instead is say precisely what has been built, name what is
+ * known to fall short, and give an address that reaches a person. That is also
+ * what a school's accessibility officer is actually looking for; a blanket
+ * conformance claim only invites "show me the audit".
+ */
+export function AccessibilityPage() {
+  return (
+    <div className={styles.paper}>
+      <Masthead
+        kicker="Who can use KeyLearn"
+        title="Accessibility"
+        dateline="Plain English · Reviewed August 2026"
+      />
+
+      <div className={styles.glance}>
+        <div className={styles.glanceLab}>The short version</div>
+        <ul>
+          <li>
+            A learner who is blind or has low vision can practise here — there
+            is a <em>braille mode</em> with six-key entry and spoken guidance,
+            not a bolted-on screen-reader afterthought.
+          </li>
+          <li>
+            Everything is reachable from the keyboard, which is the one input
+            device a typing tutor can be sure of.
+          </li>
+          <li>
+            We aim at <em>WCAG 2.2 Level AA</em>. We have not been independently
+            audited, so we tell you what we know rather than claiming a grade.
+          </li>
+          <li>
+            Something in your way? Write to{" "}
+            <a href="mailto:support@keylearn.org">support@keylearn.org</a> and a
+            person will read it.
+          </li>
+        </ul>
+      </div>
+
+      <h2>What we have built</h2>
+      <p>
+        <em>Braille and audio.</em> A learner set up with vision support gets a
+        different page altogether: six-key braille entry, a curriculum in cells
+        rather than letters, and spoken guidance throughout. It is a separate
+        way of learning to type, not the sighted page read aloud.
+      </p>
+      <p>
+        <em>Keyboard first.</em> Every control can be operated from the
+        keyboard, and a skip link at the top of each page takes you straight to
+        the lesson without walking the header and the menus.
+      </p>
+      <p>
+        <em>Motion can be turned down.</em> If your device asks for reduced
+        motion, the app listens — the animated scenes, the moving cursor and the
+        celebrations all settle down, including the ones drawn on canvas that a
+        stylesheet alone would not reach.
+      </p>
+      <p>
+        <em>Colour you choose, checked.</em> Households can mix their own
+        colours, and the app measures the contrast of what you pick against the
+        page and refuses combinations nobody could read.
+      </p>
+      <p>
+        <em>Text you can see.</em> The practice text scales independently of the
+        rest of the page, so it can be made large without breaking the layout
+        around it.
+      </p>
+      <p>
+        <em>Time you control.</em> Nothing is scored against a countdown you
+        cannot change; session length is a setting, and a lesson interrupted is
+        simply restarted rather than failed.
+      </p>
+
+      <h2>Where we fall short</h2>
+      <p>We would rather say this plainly than have you discover it.</p>
+      <ul>
+        <li>
+          <em>The standard practice page is not narrated.</em> The text being
+          typed is not announced to a screen reader, because announcing every
+          keystroke would make it unusable. A learner who needs speech should
+          use the braille mode, which is built for exactly this and is switched
+          on per learner in the account settings.
+        </li>
+        <li>
+          <em>We have had no independent audit.</em> Everything on this page is
+          our own assessment of our own work, which is the weakest kind of
+          evidence there is.
+        </li>
+        <li>
+          <em>The kids worlds are visual.</em> The dinosaur and hero scenes
+          carry encouragement rather than instruction, so nothing is lost by not
+          seeing them — but they are not described, and a child who cannot see
+          them is getting a plainer experience than one who can.
+        </li>
+      </ul>
+
+      <h2>Telling us</h2>
+      <p>
+        If something here blocks you or a learner you are responsible for, write
+        to <a href="mailto:support@keylearn.org">support@keylearn.org</a>. Say
+        what you were trying to do and what happened; you do not need to know
+        the name of the standard it breaks. We will reply, and if it is our
+        fault we will say so and tell you when it is fixed.
+      </p>
+      <p>
+        For schools and public bodies: we are happy to answer a procurement
+        questionnaire against WCAG 2.2 or EN 301 549, on the understanding that
+        our answers are self-assessed and this page is the honest version of
+        them.
+      </p>
+    </div>
+  );
+}
