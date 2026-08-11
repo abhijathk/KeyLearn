@@ -728,11 +728,67 @@
 }
 
 .cardScroll {
+  display: flex;
   flex: 1;
+  gap: 0.9rem;
   min-block-size: 0;
   margin-inline: -0.4rem;
   padding-inline: 0.4rem;
+}
+
+// A rail of sections down the side, and the chosen one beside it. The list
+// had grown long enough that whatever a child opened the panel for was
+// usually below the fold, and scrolling past four headings to find the timer
+// is how a child decides to go and ask a grown-up instead.
+.setTabs {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 0.3rem;
+  inline-size: 7.5rem;
+}
+
+.setTab {
+  padding: 0.55rem 0.7rem;
+  border: none;
+  border-radius: 0.75rem;
+  color: var(--kink2);
+  background: none;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--kink) 6%, transparent);
+  }
+}
+
+.setTabOn {
+  color: var(--kink);
+  background: color-mix(in srgb, var(--sunny) 26%, transparent);
+}
+
+.setPane {
+  flex: 1;
+  min-inline-size: 0;
   overflow-y: auto;
+}
+
+// On a narrow screen the rail lies down above the section rather than
+// squeezing both into a phone's width.
+@media (max-width: 30rem) {
+  .cardScroll {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .setTabs {
+    flex-direction: row;
+    inline-size: auto;
+    overflow-x: auto;
+  }
 }
 
 // A little heading over each run of rows, so the card reads as three short
