@@ -2566,7 +2566,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             </div>
           </div>
 
-          <div className={styles.say}>{say}</div>
+          {/* The coach's line is the only thing on this page that tells a
+              learner what to do next, and it changes without anything else
+              changing — which for somebody listening rather than looking is a
+              page that says nothing at all. Polite, so it lands after
+              whatever they were reading. */}
+          <div className={styles.say} role="status" aria-live="polite">
+            {say}
+          </div>
 
           {helperVisible && (
             <div
