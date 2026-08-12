@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import { contrastRatio, parseColor } from "@keylearn/color";
-import { equal,isTrue } from "rich-assert";
+import { equal, isTrue } from "rich-assert";
 import { applyContrastLevel } from "./contrast.ts";
 
 // A stand-in for the document's inline style plus its computed values.
@@ -82,4 +82,39 @@ test("a colour that already passes is not touched", () => {
   });
   applyContrastLevel("clearer", style, read);
   equal(inline["--text-color"], "#ffffff");
+});
+
+// A theme whose body text already sits near 15:1 has nothing to gain in its
+// text, and a preset that touched only text looked broken on exactly the page
+// somebody would try it on. What fails there is every line drawn between two
+// things.
+const CHROME = {
+  ...NIGHT,
+  "--separator-color": "#242732",
+  "--Chart-frame__color": "#1e2130",
+  "--textinput--hit__color": "#5a5d68",
+};
+
+test("the lines are raised too, not only the words", () => {
+  const { style, read, inline } = fakeStyle(CHROME);
+  applyContrastLevel("clearer", style, read);
+  const bg = parseColor(CHROME["--background-color"]);
+  // Non-text has its own bar — WCAG asks 3:1 of it, not the 7:1 asked of body
+  // text. A rule between two rows raised to reading contrast is not a rule any
+  // more, it is a wall.
+  const line = parseColor(inline["--separator-color"]);
+  isTrue(contrastRatio(line, bg) >= 3);
+  isTrue(contrastRatio(line, bg) < 7);
+  isTrue(contrastRatio(parseColor(inline["--Chart-frame__color"]), bg) >= 3);
+});
+
+test("what has been typed becomes readable without becoming the loudest thing", () => {
+  const { style, read, inline } = fakeStyle(CHROME);
+  applyContrastLevel("clearer", style, read);
+  const bg = parseColor(CHROME["--background-color"]);
+  const hit = contrastRatio(parseColor(inline["--textinput--hit__color"]), bg);
+  isTrue(hit >= 4.5);
+  // Still quieter than the words still to come: the dimming carries the
+  // meaning "you have dealt with this", and that meaning survives.
+  isTrue(hit < contrastRatio(parseColor(inline["--text-color"]), bg));
 });

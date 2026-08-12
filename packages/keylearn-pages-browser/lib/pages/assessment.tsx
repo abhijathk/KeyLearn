@@ -38,6 +38,7 @@ import { openResultStorage, ResultLoader } from "@keylearn/result-loader";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useNavigate } from "react-router";
+import { WithAdaptations } from "../adaptations.tsx";
 
 /**
  * Sitting the assessment.

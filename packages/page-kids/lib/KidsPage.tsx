@@ -7,6 +7,7 @@ import { keyboardProps, KeyboardProvider } from "@keylearn/keyboard";
 import { Lesson, lessonProps, LessonType } from "@keylearn/lesson";
 import { LessonLoader } from "@keylearn/lesson-loader";
 import {
+  loadA11y,
   loadNgramStats,
   profileStorageKey,
   saveNgramStats,
@@ -2421,7 +2422,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             <div
               className={clsx(styles.hudRight, use3dWord && styles.hudBottom)}
             >
-              {prefs.timerVisible && (
+              {prefs.timerVisible && !noClock() && (
                 <div className={styles.chip}>
                   <span
                     className={styles.ringT}
@@ -3307,6 +3308,17 @@ function StickerTile({
 
 // The sections, in the order a child meets them: how they practise, the world
 // they practise in, what helps while they type, and how long they go for.
+/**
+ * Whether this learner has asked to practise without a clock.
+ *
+ * Read from the shared accessibility record rather than the game's own prefs:
+ * it is a standing preference somebody set for this learner, not a choice made
+ * inside this run, and it applies wherever they type.
+ */
+function noClock(): boolean {
+  return !loadA11y().timers;
+}
+
 const SET_TABS = [
   { id: "practise", label: "Practice" },
   { id: "world", label: "World" },
@@ -3929,14 +3941,25 @@ function SettingsCard({
                     </div>
                   </div>
                   <div className={styles.ctl}>
+                    {/* A standing preference beats a per-session control: a
+                        parent set "practise without a clock" for this learner,
+                        and a child flipping this pill should not undo it. The
+                        session still ends at the campfire — what goes is being
+                        watched while you type. */}
                     <button
                       type="button"
-                      className={pill(!prefs.timerVisible)}
+                      className={pill(!prefs.timerVisible || noClock())}
+                      disabled={noClock()}
+                      title={
+                        noClock()
+                          ? "Hidden for this learner in Accessibility settings"
+                          : undefined
+                      }
                       onClick={() =>
                         savePrefs({ timerVisible: !prefs.timerVisible })
                       }
                     >
-                      {prefs.timerVisible ? "Shown" : "Hidden"}
+                      {prefs.timerVisible && !noClock() ? "Shown" : "Hidden"}
                     </button>
                     {[5, 10, 15, 20, 25, 30].map((min) => (
                       <button

@@ -80,10 +80,41 @@ function reach(color: string, ground: string, target: number): string {
   return best;
 }
 
+/**
+ * What a line or a border has to manage.
+ *
+ * WCAG 1.4.11 asks 3:1 of anything that is not text but still has to be seen —
+ * a rule between two rows, the frame around a chart, the edge of a chip. On a
+ * theme whose body text already sits near 15:1 these hairlines are the only
+ * thing actually failing, so a preset that raised text alone appeared to do
+ * nothing at all on exactly the pages somebody would try it on.
+ */
+const EDGE: Record<ContrastLevel, number | null> = {
+  default: null,
+  clearer: 3, // WCAG AA for non-text.
+  strongest: 4.5,
+};
+
 const PROPS = [
   ["--text-color", "main"],
   ["--text-color-f1", "muted"],
   ["--text-color-f2", "muted"],
+  // The text being typed. Dimmed on purpose — what is behind the cursor has
+  // been dealt with — but "already read" should not mean "cannot be read", and
+  // this is the one piece of text on the page somebody works through a letter
+  // at a time. Raised to the muted level, so it stays quieter than the words
+  // still to come and the hierarchy survives.
+  ["--textinput--hit__color", "muted"],
+  ["--textinput--special__color", "muted"],
+  // The letters in the key list under the practice text, which is how a
+  // learner reads where they are in the alphabet.
+  ["--LessonKey--included__color", "muted"],
+  ["--LessonKey--excluded__color", "muted"],
+  ["--LessonKey--uncalibrated__color", "muted"],
+  // Lines rather than letters.
+  ["--separator-color", "edge"],
+  ["--Chart-frame__color", "edge"],
+  ["--Keyboard-frame__color", "edge"],
 ] as const;
 
 /**
@@ -115,7 +146,12 @@ export function applyContrastLevel(
     return;
   }
   for (const [prop, kind] of PROPS) {
-    const target = kind === "main" ? TARGET[level] : MUTED[level];
+    const target =
+      kind === "main"
+        ? TARGET[level]
+        : kind === "edge"
+          ? EDGE[level]
+          : MUTED[level];
     const current = computed.getPropertyValue(prop).trim();
     if (target == null || current === "") {
       continue;

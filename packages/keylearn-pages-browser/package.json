@@ -30,6 +30,7 @@
     "@keylearn/result-loader": "*",
     "@keylearn/settings": "*",
     "@keylearn/settings-loader": "*",
+    "@keylearn/textinput": "*",
     "@keylearn/textinput-sounds": "*",
     "@keylearn/theme-designer": "*",
     "@keylearn/themes": "*",
