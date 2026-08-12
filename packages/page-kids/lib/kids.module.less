@@ -823,7 +823,10 @@
 .srow {
   display: flex;
   gap: 0.75rem;
-  align-items: center;
+  // Top, not centre. A row whose controls wrap onto three lines was hanging
+  // its icon and its label halfway down the block, so the name of the setting
+  // no longer lined up with the first thing it names.
+  align-items: flex-start;
   margin-block-start: 0.45rem;
   padding: 0.6rem 0.7rem;
   border-radius: 1.2rem;
@@ -862,17 +865,30 @@
 // running off the side. Pinning the chips instead — which is what "flex: none"
 // did — fixed the labels and broke the rows with seven chips in them.
 .srow > div:not(.ctl) {
-  flex: 0 1 auto;
+  // Grows into whatever the controls leave, so a two-word label is not
+  // squeezed into a column while there is room beside it — and never below
+  // the width where "Night on the trail" starts breaking a word a line.
+  flex: 1 1 8rem;
   min-inline-size: 7rem;
+  // The label sits on the same line as the first row of controls, which the
+  // pills' own padding puts a little below the top of the row.
+  padding-block-start: 0.35rem;
 }
 
 .ctl {
   display: flex;
   flex: 1 1 auto;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  // Wrapped rows sit under one another rather than spreading to fill the
+  // height, and each one keeps the same gap as the row above it.
+  gap: 0.4rem 0.3rem;
+  align-content: flex-start;
   justify-content: flex-end;
   min-inline-size: 0;
+  // Never more than three fifths of the row. A row of seven little pills would
+  // otherwise take whatever it liked and leave "pick a session — the run ends
+  // at the campfire" stacked four words deep beside it.
+  max-inline-size: 60%;
   margin-inline-start: auto;
 }
 
