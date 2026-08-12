@@ -24,6 +24,7 @@ import {
   themedZones,
   ThemePrefs,
   usePreferredColorScheme,
+  zonesFromPool,
 } from "@keylearn/themes";
 import { useFullscreen } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
@@ -81,7 +82,7 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
     applyAccent(accent, day);
     // After the accent, so these override the zones the theme has just set,
     // and so the derived palette can read the accent that was written.
-    paintZones(day);
+    paintZones(day, accent);
     // The tab follows the learner. Called after applyAccent so the custom
     // property it has just written is the colour that gets read.
     applyFavIcon();
@@ -98,7 +99,7 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
     // have just written and lifts them from there.
     applyAdaptations();
     const onZones = () => {
-      paintZones(day);
+      paintZones(day, accent);
       applyAdaptations();
     };
     window.addEventListener(ZONES_CHANGED_EVENT, onZones);
@@ -226,20 +227,33 @@ function shade(hex: string, amount: number): string {
  * own zones stand — removing rather than restoring, so switching themes later
  * does not leave last theme's colours frozen in place.
  */
-function paintZones(day: boolean) {
+function paintZones(day: boolean, accentId: string) {
   if (loadSafeZones()) {
     applyZonePalette(true, day);
     return;
   }
   applyZonePalette(false, day);
+  // A theme the household mixed can carry its own finger colours, chosen from
+  // the pool. Above the derived set and below the colour-blind one: it is a
+  // choice somebody made, which beats a computed palette, and loses to being
+  // able to read the keyboard at all.
+  const own = findAnyAccent(accentId);
+  const zones =
+    own != null && "zones" in own
+      ? (own.zones as readonly string[] | null)
+      : null;
+  if (zones != null) {
+    applyThemedZones(zonesFromPool(zones));
+    return;
+  }
   if (!loadThemedZones()) {
     applyThemedZones(null);
     return;
   }
-  const accent = getComputedStyle(document.documentElement)
+  const painted = getComputedStyle(document.documentElement)
     .getPropertyValue("--accent")
     .trim();
-  applyThemedZones(themedZones(accent, day));
+  applyThemedZones(themedZones(painted, day));
 }
 
 /**

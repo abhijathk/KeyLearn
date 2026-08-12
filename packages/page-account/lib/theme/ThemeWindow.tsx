@@ -12,11 +12,19 @@ import {
   removeCustomAccent,
   updateCustomAccent,
   useTheme,
+  ZONE_ORDER,
+  ZONE_POOLS,
 } from "@keylearn/themes";
 import { ConfirmDialog } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import {
+  defineMessage,
+  defineMessages,
+  FormattedMessage,
+  type MessageDescriptor,
+  useIntl,
+} from "react-intl";
 import { FloatingShell } from "../FloatingShell.tsx";
 import { accentNames } from "./accent-names.tsx";
 import * as styles from "./ThemeWindow.module.less";
@@ -55,6 +63,12 @@ type Draft = {
   day: string;
   /** Which list it joins — children see only their own, as with the rest. */
   forKids: boolean;
+  /**
+   * The finger zones, as six colours from the pool, or null to leave the app's
+   * own alone. Null is the default: a household that does not care about the
+   * zones should never have to answer for them.
+   */
+  zones: readonly string[] | null;
 };
 
 /**
@@ -187,6 +201,7 @@ export function ThemeWindow(): ReactNode {
                   night: "#8fd9b6",
                   day: "#2f8a5d",
                   forKids: false,
+                  zones: null,
                 })
               }
             >
@@ -283,6 +298,12 @@ export function ThemeWindow(): ReactNode {
                           forKids:
                             accent.group === "kids" ||
                             (mine && (accent as CustomAccent).forKids),
+                          // A theme of your own keeps its finger colours when
+                          // reopened; a copy of a shipped one starts with the
+                          // app's, because a shipped theme has never had any.
+                          zones: mine
+                            ? ((accent as CustomAccent).zones ?? null)
+                            : null,
                         })
                       }
                     >
@@ -446,7 +467,19 @@ function ThemeMaker({
                     draft.forKids === kids && styles.segOn,
                   )}
                   aria-pressed={draft.forKids === kids}
-                  onClick={() => onChange({ ...draft, forKids: kids })}
+                  onClick={() =>
+                    onChange({
+                      ...draft,
+                      forKids: kids,
+                      // The two pools are the same six hues, muted and
+                      // unmuted, so an arrangement carries across by position:
+                      // whoever had the rose keeps the rose, in whichever
+                      // strength their audience gets. Left as it was, the
+                      // assignment would belong to the wrong pool and be
+                      // dropped on save without anybody being told.
+                      zones: remapZones(draft.zones, kids),
+                    })
+                  }
                 >
                   {kids ? (
                     <FormattedMessage
@@ -529,12 +562,7 @@ function ThemeMaker({
         <div className={styles.fields}>
           <Preview hex={draft.night} night={true} />
           <Preview hex={draft.day} night={false} />
-          <p className={styles.note}>
-            <FormattedMessage
-              id="theme.maker.zones"
-              defaultMessage="The strip under each preview is the finger zones. They are here to be watched, not adjusted: no theme can move them."
-            />
-          </p>
+          <ZonePicker draft={draft} onChange={onChange} />
         </div>
       </div>
 
@@ -589,6 +617,141 @@ function HexField({
           {isHex(value) ? `${contrastRatio(value, ground).toFixed(1)}:1` : "—"}
         </span>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The same arrangement, in the other audience's pool.
+ *
+ * Position for position: the pools are one set of hues at two strengths, so
+ * the third colour in one is the third colour in the other. A colour that is
+ * somehow in neither leaves the whole assignment behind, because half an
+ * arrangement is worse than none.
+ */
+function remapZones(
+  zones: readonly string[] | null,
+  forKids: boolean,
+): readonly string[] | null {
+  if (zones == null) {
+    return null;
+  }
+  const from = forKids ? ZONE_POOLS.adult : ZONE_POOLS.kid;
+  const to = forKids ? ZONE_POOLS.kid : ZONE_POOLS.adult;
+  const mapped = zones.map((color) => to[from.indexOf(color)]);
+  return mapped.every((color) => color != null) ? mapped : null;
+}
+
+/**
+ * Which colour each finger wears.
+ *
+ * A pool rather than a colour picker, and an arrangement of it rather than a
+ * free choice: the zones are the instruction the keyboard teaches with, and
+ * six colours chosen freely will sooner or later contain two nobody can tell
+ * apart. Picking a colour another finger already has swaps the two, so all six
+ * stay different without the maker ever having to refuse anything.
+ *
+ * Grown-up themes get the app's pastels; kids themes get the brighter set the
+ * kids pages are drawn in. Neither list grows.
+ */
+function ZonePicker({
+  draft,
+  onChange,
+}: {
+  readonly draft: Draft;
+  readonly onChange: (draft: Draft) => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const pool = draft.forKids ? ZONE_POOLS.kid : ZONE_POOLS.adult;
+  const current = draft.zones ?? pool;
+  const names: Record<string, MessageDescriptor> = {
+    pinky: defineMessage({
+      id: "theme.maker.zone.pinky",
+      defaultMessage: "Little finger",
+    }),
+    ring: defineMessage({
+      id: "theme.maker.zone.ring",
+      defaultMessage: "Ring finger",
+    }),
+    middle: defineMessage({
+      id: "theme.maker.zone.middle",
+      defaultMessage: "Middle finger",
+    }),
+    leftIndex: defineMessage({
+      id: "theme.maker.zone.leftIndex",
+      defaultMessage: "Left index",
+    }),
+    rightIndex: defineMessage({
+      id: "theme.maker.zone.rightIndex",
+      defaultMessage: "Right index",
+    }),
+    thumb: defineMessage({
+      id: "theme.maker.zone.thumb",
+      defaultMessage: "Thumbs",
+    }),
+  };
+  const pick = (index: number, color: string) => {
+    const next = [...current];
+    const held = next.indexOf(color);
+    if (held === index) {
+      return;
+    }
+    if (held >= 0) {
+      // Somebody else has it: they trade rather than both ending up with it.
+      next[held] = next[index];
+    }
+    next[index] = color;
+    onChange({ ...draft, zones: next });
+  };
+  return (
+    <div className={styles.zonePick}>
+      <div className={styles.zoneHead}>
+        <span className={styles.fieldLabel}>
+          <FormattedMessage
+            id="theme.maker.zonesLabel"
+            defaultMessage="Finger colours"
+          />
+        </span>
+        {draft.zones != null && (
+          <button
+            type="button"
+            className={styles.zoneReset}
+            onClick={() => onChange({ ...draft, zones: null })}
+          >
+            <FormattedMessage
+              id="theme.maker.zonesReset"
+              defaultMessage="Use the app's own"
+            />
+          </button>
+        )}
+      </div>
+      {ZONE_ORDER.map((zone, index) => (
+        <div key={zone} className={styles.zoneRow}>
+          <span className={styles.zoneName}>{formatMessage(names[zone]!)}</span>
+          <span className={styles.zoneSwatches}>
+            {pool.map((color) => (
+              <button
+                key={color}
+                type="button"
+                className={clsx(
+                  styles.zoneSwatch,
+                  current[index] === color && styles.zoneSwatchOn,
+                )}
+                style={{ backgroundColor: color }}
+                aria-pressed={current[index] === color}
+                aria-label={color}
+                onClick={() => pick(index, color)}
+              />
+            ))}
+          </span>
+        </div>
+      ))}
+      <p className={styles.note}>
+        <FormattedMessage
+          id="theme.maker.zonesNote"
+          defaultMessage="Six colours, one for each finger, from the set the app already uses. Choosing one another finger has swaps the two — the keyboard teaches with these colours, so no two fingers may share."
+        />
+      </p>
     </div>
   );
 }

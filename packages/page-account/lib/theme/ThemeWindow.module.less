@@ -342,3 +342,65 @@
   padding-block-start: 0.7rem;
   border-block-start: 1px solid var(--secondary-f2);
 }
+
+// Which colour each finger wears. A row per finger and the pool laid out
+// along it, so the whole question — six fingers, six colours, none shared —
+// is answered by looking rather than by reading an explanation.
+.zonePick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-block-start: 0.6rem;
+}
+
+.zoneHead {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.zoneReset {
+  border: none;
+  color: var(--text-color-f1);
+  background: none;
+  font: inherit;
+  font-size: 0.7rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.zoneRow {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.zoneName {
+  color: var(--text-color-f1);
+  font-size: 0.72rem;
+}
+
+.zoneSwatches {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.zoneSwatch {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  padding: 0;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+// The one this finger has. A ring outside the swatch rather than a tick on
+// top of it, so the colour itself is never obscured by the mark saying it was
+// chosen.
+.zoneSwatchOn {
+  border-color: transparent;
+  outline: 2px solid var(--text-color);
+  outline-offset: 2px;
+}

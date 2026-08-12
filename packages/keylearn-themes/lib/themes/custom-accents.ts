@@ -12,6 +12,7 @@ import {
 // They belong to the account rather than to one learner: a colour you mixed is
 // yours to give to anybody in the house.
 import { type Accent, ACCENTS } from "./accents.ts";
+import { poolAssignment, ZONE_POOLS } from "./zones.ts";
 
 const KEY = "keylearn.accents.custom";
 
@@ -87,10 +88,18 @@ export type CustomAccent = Accent & {
    * grown-up list, and the reverse matters more.
    */
   readonly forKids: boolean;
+  /**
+   * The finger zones this theme paints, as six colours from the pool, or null
+   * to leave the app's own zones alone.
+   *
+   * Optional on purpose: every theme made before this existed keeps exactly
+   * the zones it had, and a household that does not care never has to answer.
+   */
+  readonly zones: readonly string[] | null;
 };
 
 function toAccent(o: unknown): CustomAccent | null {
-  const { id, name, night, day, forKids } = Object(o) as Record<
+  const { id, name, night, day, forKids, zones } = Object(o) as Record<
     string,
     unknown
   >;
@@ -103,15 +112,20 @@ function toAccent(o: unknown): CustomAccent | null {
   ) {
     return null;
   }
+  const kids = forKids === true;
   const accent: CustomAccent = {
     id,
     name,
     hue: "custom",
     group: "custom",
     deg: null,
-    forKids: forKids === true,
+    forKids: kids,
     night: night.toLowerCase(),
     day: day.toLowerCase(),
+    // Checked against the pool this theme's audience is allowed, so a stored
+    // assignment that no longer matches the pool falls back to the app's own
+    // zones rather than painting a colour nobody chose.
+    zones: poolAssignment(zones, kids ? ZONE_POOLS.kid : ZONE_POOLS.adult),
   };
   return accent;
 }
@@ -157,6 +171,7 @@ export function addCustomAccent(draft: {
   night: string;
   day: string;
   forKids?: boolean;
+  zones?: readonly string[] | null;
 }): readonly CustomAccent[] | null {
   if (checkAccent(draft).length > 0) {
     return null;
@@ -171,6 +186,10 @@ export function addCustomAccent(draft: {
     forKids: draft.forKids === true,
     night: draft.night.toLowerCase(),
     day: draft.day.toLowerCase(),
+    zones: poolAssignment(
+      draft.zones,
+      draft.forKids === true ? ZONE_POOLS.kid : ZONE_POOLS.adult,
+    ),
   };
   const next = [...existing, accent];
   return save(next) ? next : null;
@@ -179,7 +198,13 @@ export function addCustomAccent(draft: {
 /** Rewrites one theme in place. */
 export function updateCustomAccent(
   id: string,
-  draft: { name: string; night: string; day: string; forKids?: boolean },
+  draft: {
+    name: string;
+    night: string;
+    day: string;
+    forKids?: boolean;
+    zones?: readonly string[] | null;
+  },
 ): readonly CustomAccent[] | null {
   if (checkAccent(draft).length > 0) {
     return null;
@@ -192,6 +217,10 @@ export function updateCustomAccent(
           forKids: draft.forKids === true,
           night: draft.night.toLowerCase(),
           day: draft.day.toLowerCase(),
+          zones: poolAssignment(
+            draft.zones,
+            draft.forKids === true ? ZONE_POOLS.kid : ZONE_POOLS.adult,
+          ),
         }
       : accent,
   );

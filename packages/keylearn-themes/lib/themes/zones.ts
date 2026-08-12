@@ -181,3 +181,68 @@ export function applyThemedZones(
     }
   }
 }
+
+/**
+ * The colours a household may put on the finger zones.
+ *
+ * A pool, not a colour picker. The zones are not decoration — they are the
+ * instruction the keyboard teaches with, and six colours chosen freely will
+ * sooner or later include two nobody can tell apart, which teaches nothing.
+ * These are the app's own zone colours: the pastels the grown-up themes have
+ * always used, and the brighter set the kids pages are drawn in. Nothing
+ * outside the pool, so no theme can invent a colour that has not been looked
+ * at.
+ *
+ * Six zones, and each colour used once — an assignment is a rearrangement of
+ * the pool rather than a free choice, which is what keeps every pair as far
+ * apart as the pool's worst pair and no further.
+ */
+export const ZONE_POOLS: {
+  readonly adult: readonly string[];
+  readonly kid: readonly string[];
+} = {
+  // Dusty rose, sage, sand, slate blue, soft mauve, clay.
+  adult: ["#c49b9b", "#a9bda1", "#c8b48c", "#94a8c6", "#b19cba", "#b5a292"],
+  // Sky, coral, sage, sand, seafoam, terra — the kids palette, which is the
+  // same set of hues with the muting taken off.
+  kid: ["#3aa0ff", "#ff7d68", "#8fce7e", "#f2c94c", "#5fc9a7", "#f5a25f"],
+};
+
+/** The zones in the order the maker shows them, left thumb to right little. */
+export const ZONE_ORDER: readonly (keyof ZonePalette)[] = [
+  "pinky",
+  "ring",
+  "middle",
+  "leftIndex",
+  "rightIndex",
+  "thumb",
+];
+
+/** The pool arranged into a palette, in the maker's order. */
+export function zonesFromPool(colors: readonly string[]): ZonePalette {
+  const [pinky, ring, middle, leftIndex, rightIndex, thumb] = colors;
+  return { pinky, ring, middle, leftIndex, rightIndex, thumb };
+}
+
+/**
+ * Whether an assignment is one the pool actually allows: six colours, all from
+ * the pool, none used twice. Anything else is somebody else's data or a
+ * half-written write, and the theme's own zones are a better answer than a
+ * keyboard with two identical fingers.
+ */
+export function poolAssignment(
+  colors: unknown,
+  pool: readonly string[],
+): readonly string[] | null {
+  if (!Array.isArray(colors) || colors.length !== ZONE_ORDER.length) {
+    return null;
+  }
+  const lower = colors.map((c) => String(c).toLowerCase());
+  if (!lower.every((c) => pool.includes(c))) {
+    return null;
+  }
+  if (new Set(lower).size !== lower.length) {
+    return null;
+  }
+  return lower;
+}
