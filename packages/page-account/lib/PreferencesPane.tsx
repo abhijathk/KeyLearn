@@ -297,45 +297,52 @@ export function AccessibilityPane(): ReactNode {
     saveA11y(patch, id);
     announce();
   };
-  // A preset that is already satisfied is shown as such rather than offered
-  // again — and it stays satisfied if somebody has since turned on more than
-  // it asked for, because a preset is a floor and not a straitjacket.
-  const applied = (preset: Preset) =>
-    Object.entries(preset.prefs).every(
-      ([key, want]) => prefs[key as keyof A11yPrefs] === want,
-    ) &&
-    (preset.contrast == null || contrast === preset.contrast) &&
-    (preset.safeZones == null || safe === preset.safeZones);
+  // Which preset this learner was started from. Recorded rather than worked
+  // out from the values, because presets share switches: two of them turn the
+  // running figures off, so "do this one's values hold?" lit two badges from a
+  // single click, and turning one off silently unlit the other.
+  const applied = (preset: Preset) => prefs.preset === preset.id;
   /**
-   * Press it to get the preset; press it again to give it back.
+   * Start from a preset, or go back to the app as it ships.
    *
-   * A control that looks pressed and does nothing when pressed again is a
-   * control that has lied about what it is. Undoing puts only the switches
-   * that preset owns back to how the app ships — it does not reach for
-   * anything somebody set themselves.
+   * Everything the presets touch is put back to its default first, so what is
+   * on afterwards is what this preset asked for and nothing carried over from
+   * the last one. That is what the heading promises — start from one of these
+   * — and the switches underneath are where somebody departs from it.
    */
   const toggle = (preset: Preset) => {
     const on = applied(preset);
-    const patch = on
-      ? Object.fromEntries(
-          Object.keys(preset.prefs).map((key) => [
-            key,
-            defaultA11y[key as keyof A11yPrefs],
-          ]),
-        )
-      : preset.prefs;
+    const base: Partial<A11yPrefs> = {
+      motion: "system",
+      typeface: "default",
+      targets: "default",
+      calm: false,
+      chords: true,
+      bounceMs: 0,
+      captions: false,
+      fingerMarks: false,
+      letterSpacing: 0,
+      lineHeight: 1.2,
+      plain: false,
+      predictable: false,
+      cues: false,
+      scores: true,
+      streakGrace: false,
+      timers: true,
+    };
+    const patch: Partial<A11yPrefs> = on
+      ? { ...base, preset: null }
+      : { ...base, ...preset.prefs, preset: preset.id };
     setPrefs({ ...prefs, ...patch });
     saveA11y(patch, id);
-    if (preset.contrast != null) {
-      const next = on ? "default" : preset.contrast;
-      setContrast(next);
-      saveContrast(next, id);
-    }
-    if (preset.safeZones != null) {
-      const next = on ? false : preset.safeZones;
-      setSafe(next);
-      saveSafeZones(next, id);
-    }
+    const nextContrast: ContrastPref = on
+      ? "default"
+      : (preset.contrast ?? "default");
+    setContrast(nextContrast);
+    saveContrast(nextContrast, id);
+    const nextSafe = on ? false : preset.safeZones === true;
+    setSafe(nextSafe);
+    saveSafeZones(nextSafe, id);
     announce();
   };
 
@@ -410,6 +417,7 @@ export function AccessibilityPane(): ReactNode {
             className={styles.presetBtn}
             onClick={() => {
               const off: Partial<A11yPrefs> = {
+                preset: null,
                 motion: "system",
                 typeface: "default",
                 targets: "default",
@@ -728,6 +736,40 @@ export function AccessibilityPane(): ReactNode {
               }
               on={prefs.bounceMs > 0}
               onChange={(next) => set({ bounceMs: next ? 80 : 0 })}
+            />
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.captions"
+                  defaultMessage="Write down what is said aloud"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.captions.sub"
+                  defaultMessage="The braille page and the kids coach both speak. This puts every line on screen as it is said, for a learner who cannot hear it — or a grown-up sitting beside one."
+                />
+              }
+              on={prefs.captions}
+              onChange={(next) => set({ captions: next })}
+            />
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.predictable"
+                  defaultMessage="Always the same words"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.predictable.sub"
+                  defaultMessage="The coach picks its encouragement at random so it does not become wallpaper. This makes it say the same line every time, for a learner who is listening for what the app will say."
+                />
+              }
+              on={prefs.predictable}
+              onChange={(next) => set({ predictable: next })}
             />
 
             <Row

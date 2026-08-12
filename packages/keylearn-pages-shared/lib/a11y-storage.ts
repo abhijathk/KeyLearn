@@ -61,6 +61,24 @@ export type A11yPrefs = {
    */
   readonly calm: boolean;
   /**
+   * Which preset this learner was started from, or null.
+   *
+   * Kept rather than worked out from the switches, because presets share
+   * switches: two of them turning the running figures off means "is this
+   * preset on?" has no answer from the values alone. Asking it that way lit
+   * two badges from one click, and turning one off silently unlit the other.
+   */
+  readonly preset: string | null;
+  /**
+   * Whether everything the app says aloud is also written down.
+   *
+   * The braille page and the kids coach both speak. For a learner who is deaf
+   * or hard of hearing, speech that is not written is an instruction they were
+   * never given — and for a parent sitting beside a child it is a way to
+   * follow the lesson without a second voice in the room.
+   */
+  readonly captions: boolean;
+  /**
    * Whether the app says the same thing in the same place every time.
    *
    * The coach picks its lines at random so encouragement does not turn into
@@ -168,6 +186,8 @@ export const defaultA11y: A11yPrefs = {
   chords: true,
   bounceMs: 0,
   fingerMarks: false,
+  captions: false,
+  preset: null,
   predictable: false,
   letterSpacing: 0,
   lineHeight: 1.2,
@@ -223,6 +243,8 @@ export function loadA11y(profileId?: string | null): A11yPrefs {
       chords: json.chords !== false,
       bounceMs: clampBounce(json.bounceMs),
       fingerMarks: json.fingerMarks === true,
+      captions: json.captions === true,
+      preset: typeof json.preset === "string" ? json.preset : null,
       predictable: json.predictable === true,
       letterSpacing: clampIn(json.letterSpacing, 0, 0.5, 0),
       lineHeight: clampIn(json.lineHeight, 1.2, 2.4, 1.2),
@@ -294,6 +316,7 @@ export function a11yAdapted(profileId?: string | null): boolean {
     prefs.bounceMs > 0 ||
     prefs.cues ||
     prefs.fingerMarks ||
+    prefs.captions ||
     prefs.predictable ||
     prefs.letterSpacing > 0 ||
     prefs.lineHeight > 1.2 ||

@@ -1,8 +1,10 @@
 import { useIntlDates } from "@keylearn/intl";
 import {
   clearNgramStats,
+  clearProfileProgress,
   downloadBlob,
   exportFilename,
+  profileIdOfNamespace,
 } from "@keylearn/pages-shared";
 import { useResults } from "@keylearn/result";
 import { Button, Field, FieldList, Icon } from "@keylearn/widget";
@@ -89,6 +91,10 @@ function useCommands() {
         // own per-profile store — wipe the displayed profile's along with the
         // typing history.
         clearNgramStats(namespace);
+        // The kids game keeps its best score, its land, its album and its
+        // day count in local storage. Left behind, they told a learner who
+        // had just erased everything that the reset had not worked.
+        clearProfileProgress(profileIdOfNamespace(namespace));
       }
     },
   };

@@ -3,7 +3,12 @@ import { keyboardProps } from "@keylearn/keyboard";
 import { type KeyId } from "@keylearn/keyboard";
 import { lessonProps, LessonType, Target } from "@keylearn/lesson";
 import { names } from "@keylearn/lesson-ui";
-import { loadA11y, profileStorageKey, Screen } from "@keylearn/pages-shared";
+import {
+  A11Y_CHANGED_EVENT,
+  loadA11y,
+  profileStorageKey,
+  Screen,
+} from "@keylearn/pages-shared";
 import { uiProps } from "@keylearn/result";
 import {
   enumProp,
@@ -213,9 +218,28 @@ export class Presenter extends PureComponent<Props, State> {
     this.setState({ pinned: (ev as CustomEvent<boolean>).detail });
   };
 
+  /**
+   * The learner changed their mind about starting plain.
+   *
+   * The state is read once, at mount, and this page does not remount when a
+   * setting is saved on another screen — so turning "one thing on screen" off
+   * left the page in focus mode until a reload, which reads as a setting that
+   * does not work. Adopting the new answer immediately is what the switch
+   * appears to promise.
+   */
+  handlePlainChanged = () => {
+    const plain = loadA11y().plain;
+    if (plain !== this.state.focusMode) {
+      this.setState({ focusMode: plain }, () => {
+        this.#broadcastFocusMode(this.state.focusMode);
+      });
+    }
+  };
+
   override componentDidMount() {
     window.addEventListener("keylearn:focus-mode", this.handleToggleFocusMode);
     window.addEventListener("keylearn:pulse-pinned", this.handlePinned);
+    window.addEventListener(A11Y_CHANGED_EVENT, this.handlePlainChanged);
     this.#broadcastFocusMode(this.state.focusMode);
     if (this.props.state.settings.isNew) {
       this.setState({
@@ -230,6 +254,7 @@ export class Presenter extends PureComponent<Props, State> {
       "keylearn:focus-mode",
       this.handleToggleFocusMode,
     );
+    window.removeEventListener(A11Y_CHANGED_EVENT, this.handlePlainChanged);
     window.removeEventListener("keylearn:pulse-pinned", this.handlePinned);
     this.#stopTyping();
     this.#showHeader();

@@ -9,9 +9,11 @@ import { useFormatter, useKeyStyles } from "@keylearn/lesson-ui";
 import {
   ageFromBirthYear,
   clearNgramStats,
+  clearProfileProgress,
   downloadBlob,
   exportFilename,
   type NamedUser,
+  profileIdOfNamespace,
   streakGraceDays,
   typicalWpmForAge,
   usePageData,
@@ -1441,6 +1443,10 @@ function DataRow(): ReactNode {
                   // its own per-profile store — wipe the *displayed* profile's,
                   // matching the history we just cleared.
                   clearNgramStats(namespace);
+                  // The kids game keeps its best score, its land, its album and its
+                  // day count in local storage. Left behind, they told a learner who
+                  // had just erased everything that the reset had not worked.
+                  clearProfileProgress(profileIdOfNamespace(namespace));
                 }}
               >
                 <FormattedMessage

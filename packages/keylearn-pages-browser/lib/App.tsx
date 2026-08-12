@@ -24,6 +24,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router";
+import { Captions } from "./Captions.tsx";
 import { IntlLoader } from "./loader/IntlLoader.tsx";
 import { practiceRedirect } from "./surface.ts";
 import { Template } from "./Template.tsx";
@@ -69,6 +70,10 @@ export function App() {
               <SettingsLoader>
                 <ThemeProvider>
                   <PageRoutes />
+                  {/* Above every page and outside the router, because speech
+                      does not stop at a page boundary and neither should the
+                      writing-down of it. */}
+                  <Captions />
                 </ThemeProvider>
               </SettingsLoader>
             </ProfileScope>

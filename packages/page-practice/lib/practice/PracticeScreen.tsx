@@ -7,7 +7,14 @@ import { LessonLoader } from "@keylearn/lesson-loader";
 import { LoadingProgress, profileStorageKey } from "@keylearn/pages-shared";
 import { DailyStatsMap, type Result, useResults } from "@keylearn/result";
 import { useSettings } from "@keylearn/settings";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useIntl } from "react-intl";
 import { Controller } from "./Controller.tsx";
 import { GoalCeremony, type GoalMode } from "./GoalCeremony.tsx";
 import { SessionAward } from "./SessionAward.tsx";
@@ -23,6 +30,21 @@ export function PracticeScreen() {
     </KeyboardProvider>
   );
 }
+
+/**
+ * Present to a screen reader and to nothing else.
+ *
+ * Not `display: none`, which would take it out of the accessibility tree along
+ * with everything else — the point is to be read and not seen.
+ */
+const SR_ONLY: CSSProperties = {
+  position: "absolute",
+  inlineSize: "1px",
+  blockSize: "1px",
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  clipPath: "inset(50%)",
+};
 
 type Ceremony = {
   readonly label: string;
@@ -139,6 +161,10 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
   const [ceremony, setCeremony] = useState<Ceremony | null>(null);
   const [goal, setGoal] = useState<GoalStats | null>(null);
   const [award, setAward] = useState<LessonEvent | null>(null);
+  // The last lesson, in a sentence, for anybody listening to this page rather
+  // than looking at it.
+  const [spoken, setSpoken] = useState("");
+  const { formatMessage } = useIntl();
   const awardTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const showAward = (event: LessonEvent) => {
     setAward(event);
@@ -209,6 +235,24 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
                 }
               });
               appendResults([result]);
+              // Said out loud to a screen reader, because nothing else on this
+              // page is: the figures update in place, and an element that
+              // changes silently is an element somebody listening never learns
+              // about. One sentence per lesson, politely, so it lands after
+              // whatever they were reading rather than cutting across it.
+              setSpoken(
+                formatMessage(
+                  {
+                    id: "practice.lessonDone.announce",
+                    defaultMessage:
+                      "Lesson done. {speed} words a minute, {accuracy} accurate.",
+                  },
+                  {
+                    speed: Math.round(result.speed / 5),
+                    accuracy: `${Math.round(result.accuracy * 100)}%`,
+                  },
+                ),
+              );
               // If they keep going past the healthy ceiling later in the day,
               // resurface the report in "rest" mode (once) to steer toward a break.
               if (
@@ -222,6 +266,12 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
             }
           }}
         />
+        {/* The one thing on this page that speaks to a screen reader. Kept
+            out of the visual layout entirely — everybody else can already see
+            the figures move. */}
+        <p style={SR_ONLY} role="status" aria-live="polite">
+          {spoken}
+        </p>
         {award != null && (
           <SessionAward
             event={award}

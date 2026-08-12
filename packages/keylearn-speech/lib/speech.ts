@@ -451,12 +451,33 @@ function speechBudget(text: string, rate: number): number {
  * instead of guessing a delay: guessing either talks over the first line or
  * leaves a silence, and both read as the app having stopped working.
  */
+/**
+ * Said whenever the app speaks, carrying the words.
+ *
+ * Every route to the speech engine passes through `say`, so this is the one
+ * place that knows what the app has just said out loud — which is what makes
+ * captions possible without every caller having to remember to write its line
+ * down twice.
+ */
+export const SPOKEN_EVENT = "keylearn:spoken";
+
 export function say(
   text: string,
   voice: VoiceSettings = defaultVoice,
   onDone?: () => void,
   clips?: readonly string[],
 ): void {
+  // Announced before anything else, and regardless of whether the engine will
+  // manage it: a caption is most useful to somebody who is not going to hear
+  // the words at all, and least useful if it waits for the voice to succeed.
+  try {
+    window.dispatchEvent(
+      new window.CustomEvent(SPOKEN_EVENT, { detail: text }),
+    );
+  } catch {
+    // No window, or an engine-less environment. Speech is optional; so is
+    // saying what it would have been.
+  }
   if (!voice.enabled) {
     onDone?.();
     return;

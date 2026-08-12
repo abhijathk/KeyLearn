@@ -712,3 +712,84 @@
 .locked {
   color: var(--text-color-f2);
 }
+
+// The shape of a row that has not arrived yet.
+//
+// Each learner's history is read on its own, so the pane used to grow once per
+// learner as each one landed — and every growth moved whatever was already
+// being read. Holding the space is what makes the difference between a page
+// settling and a page lurching.
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-block-start: 0.7rem;
+}
+
+.skelBar,
+.skelLine {
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--text-color) 6%, transparent) 25%,
+    color-mix(in srgb, var(--text-color) 12%, transparent) 37%,
+    color-mix(in srgb, var(--text-color) 6%, transparent) 63%
+  );
+  background-size: 400% 100%;
+  animation: course-sheen 1.4s ease-in-out infinite;
+}
+
+.skelBar {
+  block-size: 2px;
+}
+
+.skelLine {
+  max-inline-size: 34rem;
+  block-size: 0.62rem;
+}
+
+.skelLine:last-child {
+  max-inline-size: 22rem;
+}
+
+@keyframes course-sheen {
+  from {
+    background-position: 100% 50%;
+  }
+
+  to {
+    background-position: 0% 50%;
+  }
+}
+
+// The real row, arriving. Short and only on the way in: a row that faded
+// every time a number changed would be a row nobody could read.
+.rowReady {
+  animation: course-arrive 0.22s ease-out;
+}
+
+@keyframes course-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+// Both are motion, and both stop when asked — by the device or by the learner.
+// The skeleton keeps its shape either way: it is holding the space, which is
+// the part that matters.
+@media (prefers-reduced-motion: reduce) {
+  .skelBar,
+  .skelLine,
+  .rowReady {
+    animation: none;
+  }
+}
+
+:global(:root[data-motion="reduce"]) {
+  .skelBar,
+  .skelLine,
+  .rowReady {
+    animation: none;
+  }
+}

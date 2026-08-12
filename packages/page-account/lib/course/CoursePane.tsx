@@ -203,6 +203,15 @@ function CourseRow({
     return (
       <div className={styles.row}>
         <Head profile={profile} state="loading" />
+        {/* The shape of the row that is coming, rather than a short row that
+            will shortly become a tall one. Every learner's history is read
+            separately, so without this the pane grew four times in a second
+            and each growth moved whatever somebody was already reading. */}
+        <div className={styles.skeleton} aria-hidden={true}>
+          <span className={styles.skelBar} />
+          <span className={styles.skelLine} />
+          <span className={styles.skelLine} />
+        </div>
       </div>
     );
   }
@@ -279,7 +288,7 @@ function Row({
     ) / Math.max(1, verdict.checks.length);
   const [bronze, silver, gold] = bandFor(evidence.age, evidence.kind);
   return (
-    <div className={styles.row}>
+    <div className={clsx(styles.row, styles.rowReady)}>
       <Head
         profile={profile}
         state={state}

@@ -164,3 +164,50 @@ export function courseNamespace(
     ? `profile-${profileId}.classic`
     : `profile-${profileId}`;
 }
+
+/**
+ * The learner a history namespace belongs to, or null for the bare account.
+ *
+ * Namespaces carry a course suffix; the per-learner storage keys do not, so
+ * anything crossing from one to the other has to drop it.
+ */
+export function profileIdOfNamespace(
+  namespace: string | null | undefined,
+): string | null {
+  if (namespace == null) {
+    return null;
+  }
+  const parsed = /^profile-([^.]+)/.exec(namespace);
+  return parsed?.[1] ?? null;
+}
+
+/**
+ * Everything a learner's practice has left in local storage, erased.
+ *
+ * Results live on the server; the kids game's best score, the land it reached,
+ * its sticker album and the days it counted do not — they are local, and
+ * "erase all my data" was quietly leaving every one of them behind. A learner
+ * who reset their profile and still saw yesterday's best score was told, by
+ * the app, that the reset had not worked.
+ *
+ * Preferences are not progress and are not touched: the world they chose, the
+ * name they gave their companion, their sound and keyboard settings all
+ * survive, because none of them is a record of what they did.
+ */
+export function clearProfileProgress(profileId: string | null): void {
+  const progress = [
+    "kids.best",
+    "kids.days",
+    "kids.album",
+    "kids.land",
+    "kids.restNudged",
+    "kids.stars",
+  ];
+  for (const base of progress) {
+    try {
+      localStorage.removeItem(profileStorageKeyFor(profileId, base));
+    } catch {
+      // Storage may be unavailable; the results are already gone either way.
+    }
+  }
+}

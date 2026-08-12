@@ -1,0 +1,31 @@
+// What the app just said, written across the foot of the page.
+//
+// Fixed rather than in the flow: speech happens on top of whatever is on
+// screen, and a caption that pushed the keyboard down every time the coach
+// spoke would move the thing somebody is looking at.
+.strip {
+  display: flex;
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 40;
+  justify-content: center;
+  padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+.line {
+  max-inline-size: min(48rem, 92vi);
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.6rem;
+  // Its own ground rather than the page's: the caption has to be readable over
+  // a kids world drawn in whatever colours that child chose, and a panel that
+  // borrowed the page's background would vanish into half of them.
+  color: #fff;
+  background: rgba(12, 14, 20, 0.88);
+  font-size: 1rem;
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;
+}
