@@ -7,10 +7,13 @@ import { keyboardProps, KeyboardProvider } from "@keylearn/keyboard";
 import { Lesson, lessonProps, LessonType } from "@keylearn/lesson";
 import { LessonLoader } from "@keylearn/lesson-loader";
 import {
+  A11Y_CHANGED_EVENT,
   loadA11y,
   loadNgramStats,
+  motionStilled,
   profileStorageKey,
   saveNgramStats,
+  streakGraceDays,
 } from "@keylearn/pages-shared";
 import {
   DailyStatsMap,
@@ -1219,8 +1222,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   useEffect(() => {
     worldRef.current?.setLook(prefs.brightness, prefs.paleness);
   }, [prefs.brightness, prefs.paleness]);
+  // The game's own liveliness slider, and the learner's accessibility
+  // settings on top of it. Those win: a slider inside the game is a matter of
+  // taste, and "hold animations still" is not.
+  //
+  // This is the only place the motion preference can be honoured at all — the
+  // world is drawn frame by frame on a canvas, where a stylesheet has no
+  // reach, which is precisely where the movement a learner wants stopped is.
   useEffect(() => {
-    worldRef.current?.setMotion(prefs.motion);
+    const apply = () => {
+      worldRef.current?.setMotion(motionStilled() ? 0 : prefs.motion);
+      worldRef.current?.setCalm(loadA11y().calm || motionStilled());
+    };
+    apply();
+    window.addEventListener(A11Y_CHANGED_EVENT, apply);
+    return () => window.removeEventListener(A11Y_CHANGED_EVENT, apply);
   }, [prefs.motion]);
 
   // The letter tile on the trail wears the learner's colour. It is read from
@@ -1575,7 +1591,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           world.setNight(true);
         }
         world.setLook(prefsRef.current.brightness, prefsRef.current.paleness);
-        world.setMotion(prefsRef.current.motion);
+        world.setMotion(motionStilled() ? 0 : prefsRef.current.motion);
+        world.setCalm(loadA11y().calm || motionStilled());
         // The world is built asynchronously, so the accent effect below has
         // usually already run and found no world to talk to. Apply it here as
         // well, or a fresh scene starts on the built-in colour.
@@ -2357,7 +2374,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           accuracy={liveAccuracy}
           score={score}
           best={best}
-          streakDays={dailyStreak(results)}
+          streakDays={dailyStreak(results, streakGraceDays())}
           minutesDone={Math.floor((sessionTotal - sessionSecs) / 60)}
           minutesGoal={prefs.timerMin}
           target={Math.round(paceTarget(results, cfg) / 5)}

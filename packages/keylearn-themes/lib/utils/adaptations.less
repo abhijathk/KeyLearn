@@ -81,6 +81,18 @@
   }
 }
 
+// No running figures while you type.
+//
+// The lesson is unchanged and every result is still recorded — what goes is
+// the number moving in the corner of the eye while somebody is trying to read
+// a word. Marked on the elements themselves so this cannot quietly take away
+// something it was never meant to.
+:root[data-scores="off"] {
+  [data-score] {
+    display: none !important;
+  }
+}
+
 // Nothing counts down.
 //
 // A clock running while you type is pressure, and pressure is not a teaching

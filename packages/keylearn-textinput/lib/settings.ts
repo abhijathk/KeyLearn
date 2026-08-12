@@ -3,6 +3,7 @@ import {
   booleanProp,
   enumProp,
   itemProp,
+  numberProp,
   type Settings,
 } from "@keylearn/settings";
 import { Font } from "./font.ts";
@@ -28,18 +29,34 @@ export type TextInputSettings = {
    * to the first character of a next word.
    */
   readonly spaceSkipsWords: boolean;
+  /**
+   * How long the same key is ignored after itself, in milliseconds.
+   *
+   * A hand with a tremor, or a keyboard with a worn switch, sends one press
+   * twice a few dozen milliseconds apart. The app scored the second one as a
+   * mistake, which is the app misreading a hand rather than the hand making an
+   * error — and the learner it happens to is precisely the one who cannot
+   * simply try harder.
+   *
+   * Nought is off, which is the default: a fast typist doubling a letter on
+   * purpose ("letter") must never lose the second one. Optional, so every
+   * existing caller keeps meaning exactly what it meant.
+   */
+  readonly bounceMs?: number;
 };
 
 export const textInputSettings = {
   stopOnError: true,
   forgiveErrors: true,
   spaceSkipsWords: true,
+  bounceMs: 0,
 } as const satisfies TextInputSettings;
 
 export const textInputProps = {
   stopOnError: booleanProp("textInput.stopOnError", true),
   forgiveErrors: booleanProp("textInput.forgiveErrors", true),
   spaceSkipsWords: booleanProp("textInput.spaceSkipsWords", false),
+  bounceMs: numberProp("textInput.bounceMs", 0, { min: 0, max: 500 }),
 } as const;
 
 export function toTextInputSettings(settings: Settings): TextInputSettings {
@@ -47,6 +64,7 @@ export function toTextInputSettings(settings: Settings): TextInputSettings {
     stopOnError: settings.get(textInputProps.stopOnError),
     forgiveErrors: settings.get(textInputProps.forgiveErrors),
     spaceSkipsWords: settings.get(textInputProps.spaceSkipsWords),
+    bounceMs: settings.get(textInputProps.bounceMs),
   };
 }
 

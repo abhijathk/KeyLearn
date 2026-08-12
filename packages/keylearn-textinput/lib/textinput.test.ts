@@ -719,3 +719,50 @@ test("tab is ignored when the caret is not on indentation", () => {
   equal(textInput.appendIndent(0, 100), Feedback.Succeeded);
   equal(textInput.pos, 5);
 });
+
+test("a key that bounces is not a mistake", () => {
+  // A hand with a tremor sends one press twice a few dozen milliseconds apart.
+  // Scoring the second as an error is the app misreading a hand, and the
+  // learner it happens to is exactly the one who cannot simply try harder.
+  const textInput = new TextInput("abc", {
+    stopOnError: true,
+    forgiveErrors: true,
+    spaceSkipsWords: false,
+    bounceMs: 120,
+  });
+  equal(textInput.appendChar(1000, A, 100), Feedback.Succeeded);
+  // The same key again, 40ms later: dropped, not counted, not an error.
+  equal(textInput.appendChar(1040, A, 40), Feedback.Succeeded);
+  equal(textInput.pos, 1);
+  equal(textInput.steps.length, 1);
+  // And the lesson has not moved on: the next expected character is still "b".
+  equal(textInput.appendChar(1400, B, 360), Feedback.Succeeded);
+  equal(textInput.pos, 2);
+});
+
+test("a deliberate double letter survives the filter", () => {
+  // The whole risk of this feature: "letter" must not become "leter". Even at
+  // 120 words a minute a repeated letter is around 100ms apart, so the window
+  // is deliberately shorter than a person can type.
+  const textInput = new TextInput("aab", {
+    stopOnError: true,
+    forgiveErrors: true,
+    spaceSkipsWords: false,
+    bounceMs: 60,
+  });
+  equal(textInput.appendChar(1000, A, 100), Feedback.Succeeded);
+  equal(textInput.appendChar(1100, A, 100), Feedback.Succeeded);
+  equal(textInput.pos, 2);
+});
+
+test("the filter is off unless asked for", () => {
+  const textInput = new TextInput("aab", {
+    stopOnError: true,
+    forgiveErrors: true,
+    spaceSkipsWords: false,
+    bounceMs: 0,
+  });
+  equal(textInput.appendChar(1000, A, 100), Feedback.Succeeded);
+  equal(textInput.appendChar(1005, A, 5), Feedback.Succeeded);
+  equal(textInput.pos, 2);
+});

@@ -12,11 +12,13 @@ import {
   downloadBlob,
   exportFilename,
   type NamedUser,
+  streakGraceDays,
   typicalWpmForAge,
   usePageData,
 } from "@keylearn/pages-shared";
 import {
   type DailyStatsMap,
+  dailyStreak,
   type KeyStatsMap,
   makeSummaryStats,
   MutableStreakList,
@@ -185,7 +187,7 @@ function Identity({
   useLayoutEffect(() => {
     toggleExplainers(false);
   });
-  const streak = dailyStreak(results);
+  const streak = dailyStreak(results, streakGraceDays());
   const signedIn = user != null || publicUser.id != null;
   const { profileName, profileAvatar, namespace } = useResultsSafe();
   // Whatever this learner has earned. Read here rather than passed in, because
@@ -253,28 +255,6 @@ function Identity({
       <EarnedMedals certificates={earned} size="medium" />
     </div>
   );
-}
-
-function dailyStreak(
-  results: readonly { readonly timeStamp: number }[],
-): number {
-  if (results.length === 0) {
-    return 0;
-  }
-  const days = new Set(
-    results.map(({ timeStamp }) => new Date(timeStamp).toDateString()),
-  );
-  const dayMs = 24 * 60 * 60 * 1000;
-  let now = Date.now();
-  if (!days.has(new Date(now).toDateString())) {
-    now -= dayMs;
-  }
-  let streak = 0;
-  while (days.has(new Date(now).toDateString())) {
-    streak += 1;
-    now -= dayMs;
-  }
-  return streak;
 }
 
 // ---- the note for a parent -----------------------------------------------

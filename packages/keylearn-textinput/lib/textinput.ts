@@ -38,23 +38,35 @@ export class TextInput {
   readonly stopOnError: boolean;
   readonly forgiveErrors: boolean;
   readonly spaceSkipsWords: boolean;
+  readonly bounceMs: number;
   readonly onStep: StepListener;
   readonly #text: string;
   readonly #chars: readonly Char[];
   #steps: (Step & { readonly char: Char })[] = [];
   #garbage: (Step & { readonly char: Char })[] = [];
   #typo!: boolean;
+  // The last key that arrived and when, for the bounce filter. Kept whether or
+  // not the filter is on, so switching it on mid-lesson does not need a key
+  // pressed twice before it starts working.
+  #lastCodePoint: CodePoint | null = null;
+  #lastAt = 0;
   #output!: { chars: Char[]; lines: LineList; remaining: Char[] };
 
   constructor(
     text: StyledText,
-    { stopOnError, forgiveErrors, spaceSkipsWords }: TextInputSettings,
+    {
+      stopOnError,
+      forgiveErrors,
+      spaceSkipsWords,
+      bounceMs = 0,
+    }: TextInputSettings,
     onStep: StepListener = () => {},
   ) {
     this.text = text;
     this.stopOnError = stopOnError;
     this.forgiveErrors = forgiveErrors;
     this.spaceSkipsWords = spaceSkipsWords;
+    this.bounceMs = bounceMs;
     this.onStep = onStep;
     this.#text = flattenStyledText(text);
     this.#chars = splitStyledText(text);
@@ -65,6 +77,8 @@ export class TextInput {
     this.#steps = [];
     this.#garbage = [];
     this.#typo = false;
+    this.#lastCodePoint = null;
+    this.#lastAt = 0;
     this.#update();
   }
 
@@ -201,6 +215,22 @@ export class TextInput {
     if (this.completed) {
       throw new Error();
     }
+
+    // A hand that shakes sends the same key twice in a few dozen
+    // milliseconds. Dropped before anything is recorded — not scored as a
+    // mistake and not counted as a keystroke, because it was neither. The
+    // window is short by design: a deliberate double letter takes far longer
+    // than this even at speed, and losing one would be a worse fault than the
+    // one being fixed.
+    if (
+      this.bounceMs > 0 &&
+      codePoint === this.#lastCodePoint &&
+      timeStamp - this.#lastAt < this.bounceMs
+    ) {
+      return Feedback.Succeeded;
+    }
+    this.#lastCodePoint = codePoint;
+    this.#lastAt = timeStamp;
 
     const { codePoint: expected } = this.at(this.pos);
 

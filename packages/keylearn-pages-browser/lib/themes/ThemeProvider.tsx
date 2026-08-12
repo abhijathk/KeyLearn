@@ -257,9 +257,11 @@ function applyAdaptations() {
     ["data-motion", prefs.motion === "reduce" ? "reduce" : null],
     ["data-typeface", prefs.typeface === "dyslexic" ? "dyslexic" : null],
     ["data-targets", prefs.targets === "large" ? "large" : null],
-    // The one that reads inverted: the attribute marks the absence, because
-    // showing the clock is the ordinary case and ordinary needs no marking.
+    // These two read inverted: the attribute marks the absence, because
+    // showing the clock and the figures is the ordinary case, and ordinary
+    // needs no marking.
     ["data-timers", prefs.timers ? null : "off"],
+    ["data-scores", prefs.scores ? null : "off"],
   ];
   for (const [name, value] of flags) {
     if (value == null) {

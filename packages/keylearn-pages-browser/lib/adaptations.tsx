@@ -1,10 +1,11 @@
+import { lessonProps } from "@keylearn/lesson";
 import {
   A11Y_CHANGED_EVENT,
   loadA11y,
   PROFILE_CHANGED_EVENT,
 } from "@keylearn/pages-shared";
 import { SettingsContext, useSettings } from "@keylearn/settings";
-import { Font, textDisplayProps } from "@keylearn/textinput";
+import { Font, textDisplayProps, textInputProps } from "@keylearn/textinput";
 import { PlaySounds, soundProps } from "@keylearn/textinput-sounds";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
@@ -63,8 +64,21 @@ export function WithAdaptations({
         next = next.set(textDisplayProps.font, font);
       }
     }
+    // No chord is ever required. A capital needs Shift and a letter together,
+    // and most punctuation needs the same reach — for somebody typing
+    // one-handed or with limited reach that is not a harder keystroke, it is a
+    // different act. Set to nought rather than "less", because a lesson that
+    // asks for one chord in twenty is still a lesson they cannot finish.
+    if (!prefs.chords) {
+      next = next.set(lessonProps.capitals, 0).set(lessonProps.punctuators, 0);
+    }
+    // A hand that shakes sends one press twice. Dropped before it is scored,
+    // rather than forgiven afterwards: it was never a keystroke.
+    if (prefs.bounceMs > 0) {
+      next = next.set(textInputProps.bounceMs, prefs.bounceMs);
+    }
     return next;
-  }, [settings, prefs.cues, prefs.typeface]);
+  }, [settings, prefs.cues, prefs.typeface, prefs.chords, prefs.bounceMs]);
   return (
     <SettingsContext.Provider value={{ settings: value, updateSettings }}>
       {children}

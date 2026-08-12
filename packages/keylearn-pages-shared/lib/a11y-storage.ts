@@ -50,6 +50,55 @@ export type A11yPrefs = {
    */
   readonly cues: boolean;
   /**
+   * Celebrations that hold still.
+   *
+   * The kids world shakes the hero after a wrong key and throws a burst of
+   * sparks when something goes right. Neither is a flashing hazard — nothing
+   * in the app crosses three flashes a second — but a hard shake fires exactly
+   * when a child is already struggling, and for a vestibular or sensory
+   * difficulty it is the moment they stop playing. The colour cues stay,
+   * because they carry the meaning; the movement goes.
+   */
+  readonly calm: boolean;
+  /**
+   * Whether the running figures are on screen while you type.
+   *
+   * Hiding the clock was only half of it: the live speed, the accuracy, the
+   * score and the personal best are the same pressure by another route, and
+   * for a learner who stops because of them they are the reason. The lesson is
+   * unchanged and nothing stops being recorded — the figures are shown
+   * afterwards, when they are information rather than a race.
+   */
+  readonly scores: boolean;
+  /**
+   * Whether a missed day breaks the run.
+   *
+   * A streak is a loss-aversion device. For a learner with a fatiguing
+   * illness it punishes exactly the rest they were told to take, and the fear
+   * of breaking it makes people stop altogether rather than pause. Forgiven,
+   * one missed day is skipped rather than counted, so the number stays a true
+   * count of days actually practised.
+   */
+  readonly streakGrace: boolean;
+  /**
+   * Whether lessons ask for two keys at once.
+   *
+   * A capital needs Shift and a letter together, and most punctuation needs
+   * the same reach. For a learner typing one-handed, with a tremor, or with
+   * limited reach, a chord is not a harder version of a keystroke — it is a
+   * different act, and one they may not be able to perform at all. Off, the
+   * lessons are drawn from what one finger at a time can produce.
+   */
+  readonly chords: boolean;
+  /**
+   * How long the same key is ignored after itself, in milliseconds.
+   *
+   * Nought is off. A hand that shakes sends one press twice; the app scored
+   * the second as a mistake, which is the app misreading a hand rather than
+   * the hand making an error.
+   */
+  readonly bounceMs: number;
+  /**
    * Whether anything counts down.
    *
    * A timer running while you type is pressure, and pressure is not a
@@ -76,6 +125,11 @@ export type A11yPrefs = {
 
 export const defaultA11y: A11yPrefs = {
   motion: "system",
+  calm: false,
+  chords: true,
+  bounceMs: 0,
+  scores: true,
+  streakGrace: false,
   typeface: "default",
   targets: "default",
   cues: false,
@@ -83,6 +137,13 @@ export const defaultA11y: A11yPrefs = {
   speechRate: 1,
   speechVoice: null,
 };
+
+function clampBounce(value: unknown): number {
+  const ms = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  // Nothing above 200ms: past that a deliberate double letter starts being
+  // eaten, and a filter that loses real keystrokes is worse than none.
+  return Math.min(200, Math.max(0, Math.round(ms)));
+}
 
 function clampRate(value: unknown): number {
   const rate = typeof value === "number" && Number.isFinite(value) ? value : 1;
@@ -102,6 +163,11 @@ export function loadA11y(profileId?: string | null): A11yPrefs {
       motion: json.motion === "reduce" ? "reduce" : "system",
       typeface: json.typeface === "dyslexic" ? "dyslexic" : "default",
       targets: json.targets === "large" ? "large" : "default",
+      calm: json.calm === true,
+      chords: json.chords !== false,
+      bounceMs: clampBounce(json.bounceMs),
+      scores: json.scores !== false,
+      streakGrace: json.streakGrace === true,
       cues: json.cues === true,
       timers: json.timers !== false,
       speechRate: clampRate(json.speechRate),
@@ -162,7 +228,38 @@ export function a11yAdapted(profileId?: string | null): boolean {
     prefs.motion !== "system" ||
     prefs.typeface !== "default" ||
     prefs.targets !== "default" ||
+    prefs.calm ||
+    !prefs.chords ||
+    prefs.bounceMs > 0 ||
     prefs.cues ||
+    !prefs.scores ||
+    prefs.streakGrace ||
     !prefs.timers
   );
+}
+
+/** How many missed days a learner's streak survives. */
+export function streakGraceDays(profileId?: string | null): number {
+  return loadA11y(profileId).streakGrace ? 1 : 0;
+}
+
+/**
+ * Whether animation should hold still for this learner, right now.
+ *
+ * Both answers count: the learner's own switch, and the one their whole device
+ * carries. Anything drawn frame by frame has to ask, because a stylesheet
+ * cannot reach a canvas — which is exactly where the most movement is.
+ */
+export function motionStilled(profileId?: string | null): boolean {
+  const prefs = loadA11y(profileId);
+  if (prefs.motion === "reduce") {
+    return true;
+  }
+  try {
+    return (
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
+    );
+  } catch {
+    return false;
+  }
 }

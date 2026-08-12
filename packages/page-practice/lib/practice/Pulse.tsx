@@ -215,6 +215,11 @@ export const Pulse = memo(function Pulse({
         <div
           id={names?.speed}
           className={styles.speed}
+          // The running figure is the loudest thing on the page, and for a
+          // learner who stops because of it, hiding the clock was only half
+          // the problem. Marked so the setting can take it away; the lesson,
+          // the keyboard and the words are untouched.
+          data-score=""
           title={formatMessage({
             id: "metric.speed.description",
             defaultMessage: "Your typing speed in the most recent lesson.",
@@ -463,6 +468,7 @@ export const Pulse = memo(function Pulse({
       >
         <span
           id={names?.accuracy}
+          data-score=""
           title={formatMessage({
             id: "metric.accuracy.description",
             defaultMessage:
@@ -484,6 +490,7 @@ export const Pulse = memo(function Pulse({
           <>
             <span
               id={names?.score}
+              data-score=""
               title={formatMessage({
                 id: "metric.score.description",
                 defaultMessage:
@@ -500,6 +507,7 @@ export const Pulse = memo(function Pulse({
               )}
             </span>
             <span
+              data-score=""
               title={formatMessage({
                 id: "practice.lane.best.description",
                 defaultMessage: "The fastest you have ever typed this key.",
@@ -522,6 +530,7 @@ export const Pulse = memo(function Pulse({
               )}
             </span>
             <span
+              data-score=""
               title={formatMessage({
                 id: "metric.learningRate.description",
                 defaultMessage:
@@ -1376,7 +1385,7 @@ function StreakWhisper({
   const prev = [0, ...milestones].filter((m) => m <= bestRun.length).pop() ?? 0;
   const fracRun = next > prev ? (bestRun.length - prev) / (next - prev) : 1;
   return (
-    <span title={`${title} (${formatPercents(bestRun.level)}+)`}>
+    <span data-score="" title={`${title} (${formatPercents(bestRun.level)}+)`}>
       <span className={styles.lab}>
         <FormattedMessage id="practice.pulse.streak" defaultMessage="Streak" />
       </span>

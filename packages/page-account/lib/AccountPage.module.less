@@ -1169,3 +1169,40 @@
   text-align: end;
   font-variant-numeric: tabular-nums;
 }
+
+// A preset's own button: the same shape as a toggle's neighbour, but a verb
+// rather than a state — pressing it does something rather than turning
+// something on, and once its bundle is satisfied it says so instead.
+.presetBtn {
+  flex: none;
+  padding: 0.45rem 0.9rem;
+  border: var(--separator-border);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.presetOn {
+  border-color: transparent;
+  color: var(--primary);
+  background: var(--accent);
+}
+
+// The way into the individual switches. Quiet on purpose: it is the exit for
+// people a preset did not fit, not the front door.
+.tuneToggle {
+  align-self: flex-start;
+  padding: 0.35rem 0;
+  border: none;
+  color: var(--text-color-f1);
+  background: none;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}

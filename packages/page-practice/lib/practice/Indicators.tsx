@@ -1,6 +1,7 @@
 import { Tasks } from "@keylearn/lang";
 import { type LessonKey } from "@keylearn/lesson";
 import { LetterJourney, names } from "@keylearn/lesson-ui";
+import { streakGraceDays } from "@keylearn/pages-shared";
 import { dailyStreak } from "@keylearn/result";
 import { Popup, Portal } from "@keylearn/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
@@ -48,7 +49,7 @@ export const Indicators = memo(function Indicators({
   }, [hover]);
   const { results } = keyStatsMap;
   const speeds = results.slice(-20).map(({ speed }) => speed);
-  const streak = dailyStreak(results);
+  const streak = dailyStreak(results, streakGraceDays());
   useEffect(() => {
     // The header shows the streak chip; it lives outside this page's tree.
     window.dispatchEvent(

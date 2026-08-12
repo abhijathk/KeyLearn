@@ -150,6 +150,100 @@ export function AppearancePane(): ReactNode {
  * than they need a favourite colour, and a setting that matters is not one to
  * put at the bottom of a scroll.
  */
+/**
+ * What a preset asks for.
+ *
+ * Presets rather than a wall of switches, because a wall of switches is itself
+ * a barrier to the people it is for: a parent at nine in the evening does not
+ * know which four of eleven their child needs, and the research that would
+ * tell them is what this page is supposed to be carrying. Every switch is
+ * still there underneath for anyone who wants to disagree with a preset.
+ *
+ * Named for what they do, never for a condition. Nobody should have to
+ * identify themselves with a diagnosis to make an app usable.
+ */
+type Preset = {
+  readonly id: string;
+  readonly label: ReactNode;
+  readonly sub: ReactNode;
+  readonly prefs: Partial<A11yPrefs>;
+  readonly contrast?: ContrastPref;
+  readonly safeZones?: boolean;
+};
+
+const PRESETS: readonly Preset[] = [
+  {
+    id: "calm",
+    label: (
+      <FormattedMessage id="account.a11y.preset.calm" defaultMessage="Calm" />
+    ),
+    sub: (
+      <FormattedMessage
+        id="account.a11y.preset.calm.sub"
+        defaultMessage="Nothing moves, nothing counts, nothing is timed. A missed day does not break the run."
+      />
+    ),
+    prefs: {
+      motion: "reduce",
+      calm: true,
+      timers: false,
+      scores: false,
+      streakGrace: true,
+    },
+  },
+  {
+    id: "read",
+    label: (
+      <FormattedMessage
+        id="account.a11y.preset.read"
+        defaultMessage="Easier to read"
+      />
+    ),
+    sub: (
+      <FormattedMessage
+        id="account.a11y.preset.read.sub"
+        defaultMessage="Stronger text against the page, and letters that cannot be mistaken for one another."
+      />
+    ),
+    prefs: { typeface: "dyslexic" },
+    contrast: "clearer",
+  },
+  {
+    id: "colour",
+    label: (
+      <FormattedMessage
+        id="account.a11y.preset.colour"
+        defaultMessage="Colours apart"
+      />
+    ),
+    sub: (
+      <FormattedMessage
+        id="account.a11y.preset.colour.sub"
+        defaultMessage="Finger colours that stay distinct, and mistakes said in sound as well as in red."
+      />
+    ),
+    prefs: { cues: true },
+    contrast: "clearer",
+    safeZones: true,
+  },
+  {
+    id: "hands",
+    label: (
+      <FormattedMessage
+        id="account.a11y.preset.hands"
+        defaultMessage="Steadier hands"
+      />
+    ),
+    sub: (
+      <FormattedMessage
+        id="account.a11y.preset.hands.sub"
+        defaultMessage="Bigger things to press, no two keys at once, and a shake is not read as a mistake."
+      />
+    ),
+    prefs: { targets: "large", chords: false, bounceMs: 80 },
+  },
+];
+
 export function AccessibilityPane(): ReactNode {
   const { household } = useProfiles();
   const profiles = household.profiles;
@@ -163,6 +257,7 @@ export function AccessibilityPane(): ReactNode {
     loadContrast(id),
   );
   const [prefs, setPrefs] = useState<A11yPrefs>(() => loadA11y(id));
+  const [tuning, setTuning] = useState(false);
   // Per learner, so everything on the page must re-read when the learner
   // changes — a switch left showing the last learner's answer is worse than no
   // switch, because it invites somebody to turn off what they never turned on.
@@ -178,10 +273,33 @@ export function AccessibilityPane(): ReactNode {
   // other page reading these agrees with this one.
   const announce = () => {
     window.dispatchEvent(new window.Event(A11Y_CHANGED_EVENT));
+    window.dispatchEvent(new window.Event(ZONES_CHANGED_EVENT));
   };
   const set = (patch: Partial<A11yPrefs>) => {
     setPrefs({ ...prefs, ...patch });
     saveA11y(patch, id);
+    announce();
+  };
+  // A preset that is already satisfied is shown as such rather than offered
+  // again — and it stays satisfied if somebody has since turned on more than
+  // it asked for, because a preset is a floor and not a straitjacket.
+  const applied = (preset: Preset) =>
+    Object.entries(preset.prefs).every(
+      ([key, want]) => prefs[key as keyof A11yPrefs] === want,
+    ) &&
+    (preset.contrast == null || contrast === preset.contrast) &&
+    (preset.safeZones == null || safe === preset.safeZones);
+  const apply = (preset: Preset) => {
+    setPrefs({ ...prefs, ...preset.prefs });
+    saveA11y(preset.prefs, id);
+    if (preset.contrast != null) {
+      setContrast(preset.contrast);
+      saveContrast(preset.contrast, id);
+    }
+    if (preset.safeZones != null) {
+      setSafe(preset.safeZones);
+      saveSafeZones(preset.safeZones, id);
+    }
     announce();
   };
 
@@ -205,187 +323,374 @@ export function AccessibilityPane(): ReactNode {
 
         <div className={styles.prefSect}>
           <FormattedMessage
-            id="account.a11y.seeing"
-            defaultMessage="Seeing the page"
+            id="account.a11y.presets"
+            defaultMessage="Start from one of these"
           />
         </div>
 
-        <div className={clsx(styles.row, styles.rowStack)}>
+        {PRESETS.map((preset) => (
+          <div key={preset.id} className={styles.row}>
+            <div className={styles.rowText}>
+              <span className={styles.rowLabel}>{preset.label}</span>
+              <span className={styles.rowSub}>{preset.sub}</span>
+            </div>
+            <button
+              type="button"
+              className={clsx(
+                styles.presetBtn,
+                applied(preset) && styles.presetOn,
+              )}
+              aria-pressed={applied(preset)}
+              onClick={() => apply(preset)}
+            >
+              {applied(preset) ? (
+                <FormattedMessage
+                  id="account.a11y.preset.on"
+                  defaultMessage="On"
+                />
+              ) : (
+                <FormattedMessage
+                  id="account.a11y.preset.apply"
+                  defaultMessage="Use this"
+                />
+              )}
+            </button>
+          </div>
+        ))}
+
+        {/* Nothing is taken away without being asked for, so there has to be a
+            way back that does not mean finding eleven switches again. */}
+        <div className={styles.row}>
           <div className={styles.rowText}>
-            <span className={styles.rowLabel}>
-              <FormattedMessage
-                id="account.a11y.contrast"
-                defaultMessage="Text contrast"
-              />
-            </span>
             <span className={styles.rowSub}>
               <FormattedMessage
-                id="account.a11y.contrast.sub"
-                defaultMessage="How hard the words work to be read. Each step is a measured level rather than a matter of taste — the theme keeps its colours, the text is lifted away from them."
+                id="account.a11y.reset.sub"
+                defaultMessage="Every one of these is off until somebody asks for it. This puts them all back."
               />
             </span>
           </div>
-          <Segmented<ContrastPref>
-            value={contrast}
-            onChange={(next) => {
-              setContrast(next);
-              saveContrast(next, id);
+          <button
+            type="button"
+            className={styles.presetBtn}
+            onClick={() => {
+              const off: Partial<A11yPrefs> = {
+                motion: "system",
+                typeface: "default",
+                targets: "default",
+                calm: false,
+                chords: true,
+                bounceMs: 0,
+                cues: false,
+                scores: true,
+                streakGrace: false,
+                timers: true,
+              };
+              setPrefs({ ...prefs, ...off });
+              saveA11y(off, id);
+              setContrast("default");
+              saveContrast("default", id);
+              setSafe(false);
+              saveSafeZones(false, id);
               announce();
             }}
-            options={[
-              {
-                id: "default",
-                label: (
-                  <FormattedMessage
-                    id="account.a11y.contrast.default"
-                    defaultMessage="Theme"
-                  />
-                ),
-              },
-              {
-                id: "clearer",
-                label: (
-                  <FormattedMessage
-                    id="account.a11y.contrast.clearer"
-                    defaultMessage="Clearer"
-                  />
-                ),
-              },
-              {
-                id: "strongest",
-                label: (
-                  <FormattedMessage
-                    id="account.a11y.contrast.strongest"
-                    defaultMessage="Strongest"
-                  />
-                ),
-              },
-            ]}
-          />
+          >
+            <FormattedMessage
+              id="account.a11y.reset"
+              defaultMessage="Turn everything off"
+            />
+          </button>
         </div>
 
-        {SafeRow({ safe, setSafe, profileId: id })}
-
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowLabel}>
-              <FormattedMessage
-                id="account.a11y.typeface"
-                defaultMessage="Typeface for dyslexia"
-              />
-            </span>
-            <span className={styles.rowSub}>
-              <FormattedMessage
-                id="account.a11y.typeface.sub"
-                defaultMessage="Letters with weighted bottoms and shapes that cannot be mistaken for one another when they rotate — b for d, p for q."
-              />
-            </span>
-          </div>
-          <Toggle
-            on={prefs.typeface === "dyslexic"}
-            onChange={(next) =>
-              set({ typeface: next ? "dyslexic" : "default" })
-            }
-          />
-        </div>
-
+        {/* The fine tuning lives at the end and closed, for whoever wants
+            something a preset does not say. Opening it is a decision; meeting
+            eleven switches on arrival is not. */}
         <div className={styles.prefSect}>
           <FormattedMessage
-            id="account.a11y.using"
-            defaultMessage="Using the app"
+            id="account.a11y.tuning"
+            defaultMessage="Fine tuning"
           />
         </div>
+        <button
+          type="button"
+          className={styles.tuneToggle}
+          aria-expanded={tuning}
+          onClick={() => setTuning(!tuning)}
+        >
+          {tuning ? (
+            <FormattedMessage
+              id="account.a11y.tuning.hide"
+              defaultMessage="Hide the individual settings"
+            />
+          ) : (
+            <FormattedMessage
+              id="account.a11y.tuning.show"
+              defaultMessage="Set each one myself"
+            />
+          )}
+        </button>
 
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowLabel}>
-              <FormattedMessage
-                id="account.a11y.motion"
-                defaultMessage="Hold animations still"
-              />
-            </span>
-            <span className={styles.rowSub}>
-              <FormattedMessage
-                id="account.a11y.motion.sub"
-                defaultMessage="Your device's own setting is already followed. This one is for wanting the rest of the machine to move and this page not to."
-              />
-            </span>
-          </div>
-          <Toggle
-            on={prefs.motion === "reduce"}
-            onChange={(next) => set({ motion: next ? "reduce" : "system" })}
-          />
-        </div>
-
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowLabel}>
-              <FormattedMessage
-                id="account.a11y.targets"
-                defaultMessage="Larger things to press"
-              />
-            </span>
-            <span className={styles.rowSub}>
-              <FormattedMessage
-                id="account.a11y.targets.sub"
-                defaultMessage="Buttons and links grow to the size a hand that is not quite steady can reach without aiming."
-              />
-            </span>
-          </div>
-          <Toggle
-            on={prefs.targets === "large"}
-            onChange={(next) => set({ targets: next ? "large" : "default" })}
-          />
-        </div>
-
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowLabel}>
-              <FormattedMessage
-                id="account.a11y.cues"
-                defaultMessage="Say mistakes in sound"
-              />
-            </span>
-            <span className={styles.rowSub}>
-              <FormattedMessage
-                id="account.a11y.cues.sub"
-                defaultMessage="A wrong key is shown in red, and red is the thing some eyes cannot pick out. This says the same in a tone, so nothing depends on colour alone."
-              />
-            </span>
-          </div>
-          <Toggle on={prefs.cues} onChange={(next) => set({ cues: next })} />
-        </div>
-
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowLabel}>
-              <FormattedMessage
-                id="account.a11y.timers"
-                defaultMessage="Practise without a clock"
-              />
-            </span>
-            <span className={styles.rowSub}>
-              <FormattedMessage
-                id="account.a11y.timers.sub"
-                defaultMessage="Hides every countdown and running time. The practice is exactly the same; what goes is being watched while you do it."
-              />
-            </span>
-          </div>
-          <Toggle
-            on={!prefs.timers}
-            onChange={(next) => set({ timers: !next })}
-          />
-        </div>
-
-        {chosen?.visionSupport === true && (
+        {tuning && (
           <>
             <div className={styles.prefSect}>
               <FormattedMessage
-                id="account.a11y.hearing"
-                defaultMessage="The reading voice"
+                id="account.a11y.seeing"
+                defaultMessage="Seeing the page"
               />
             </div>
-            <VoiceRows prefs={prefs} set={set} />
+
+            <div className={clsx(styles.row, styles.rowStack)}>
+              <div className={styles.rowText}>
+                <span className={styles.rowLabel}>
+                  <FormattedMessage
+                    id="account.a11y.contrast"
+                    defaultMessage="Text contrast"
+                  />
+                </span>
+                <span className={styles.rowSub}>
+                  <FormattedMessage
+                    id="account.a11y.contrast.sub"
+                    defaultMessage="How hard the words work to be read. Each step is a measured level rather than a matter of taste — the theme keeps its colours, the text is lifted away from them."
+                  />
+                </span>
+              </div>
+              <Segmented<ContrastPref>
+                value={contrast}
+                onChange={(next) => {
+                  setContrast(next);
+                  saveContrast(next, id);
+                  announce();
+                }}
+                options={[
+                  {
+                    id: "default",
+                    label: (
+                      <FormattedMessage
+                        id="account.a11y.contrast.default"
+                        defaultMessage="Theme"
+                      />
+                    ),
+                  },
+                  {
+                    id: "clearer",
+                    label: (
+                      <FormattedMessage
+                        id="account.a11y.contrast.clearer"
+                        defaultMessage="Clearer"
+                      />
+                    ),
+                  },
+                  {
+                    id: "strongest",
+                    label: (
+                      <FormattedMessage
+                        id="account.a11y.contrast.strongest"
+                        defaultMessage="Strongest"
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </div>
+
+            {SafeRow({ safe, setSafe, profileId: id })}
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.typeface"
+                  defaultMessage="Typeface for dyslexia"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.typeface.sub"
+                  defaultMessage="Letters with weighted bottoms and shapes that cannot be mistaken for one another when they rotate — b for d, p for q."
+                />
+              }
+              on={prefs.typeface === "dyslexic"}
+              onChange={(next) =>
+                set({ typeface: next ? "dyslexic" : "default" })
+              }
+            />
+
+            <div className={styles.prefSect}>
+              <FormattedMessage
+                id="account.a11y.using"
+                defaultMessage="Using the app"
+              />
+            </div>
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.motion"
+                  defaultMessage="Hold animations still"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.motion.sub"
+                  defaultMessage="Your device's own setting is already followed. This one is for wanting the rest of the machine to move and this page not to."
+                />
+              }
+              on={prefs.motion === "reduce"}
+              onChange={(next) => set({ motion: next ? "reduce" : "system" })}
+            />
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.calm"
+                  defaultMessage="Celebrations that hold still"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.calm.sub"
+                  defaultMessage="The kids world shakes after a wrong key and throws sparks when something goes right. The colours stay; the movement goes."
+                />
+              }
+              on={prefs.calm}
+              onChange={(next) => set({ calm: next })}
+            />
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.targets"
+                  defaultMessage="Larger things to press"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.targets.sub"
+                  defaultMessage="Buttons and links grow to the size a hand that is not quite steady can reach without aiming."
+                />
+              }
+              on={prefs.targets === "large"}
+              onChange={(next) => set({ targets: next ? "large" : "default" })}
+            />
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.chords"
+                  defaultMessage="Never two keys at once"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.chords.sub"
+                  defaultMessage="Capitals and most punctuation need Shift and a letter together. Off, the lessons ask only for what one finger at a time can reach."
+                />
+              }
+              on={!prefs.chords}
+              onChange={(next) => set({ chords: !next })}
+            />
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.bounce"
+                  defaultMessage="Ignore a key that repeats itself"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.bounce.sub"
+                  defaultMessage="A hand that shakes sends one press twice. The second is dropped rather than counted as a mistake — the window is far shorter than a deliberate double letter."
+                />
+              }
+              on={prefs.bounceMs > 0}
+              onChange={(next) => set({ bounceMs: next ? 80 : 0 })}
+            />
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.cues"
+                  defaultMessage="Say mistakes in sound"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.cues.sub"
+                  defaultMessage="A wrong key is shown in red, and red is the thing some eyes cannot pick out. This says the same in a tone, so nothing depends on colour alone."
+                />
+              }
+              on={prefs.cues}
+              onChange={(next) => set({ cues: next })}
+            />
+
+            <div className={styles.prefSect}>
+              <FormattedMessage
+                id="account.a11y.pressure"
+                defaultMessage="Being measured"
+              />
+            </div>
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.timers"
+                  defaultMessage="Practise without a clock"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.timers.sub"
+                  defaultMessage="Hides every countdown and running time. The practice is exactly the same; what goes is being watched while you do it."
+                />
+              }
+              on={!prefs.timers}
+              onChange={(next) => set({ timers: !next })}
+            />
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.scores"
+                  defaultMessage="Practise without a score"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.scores.sub"
+                  defaultMessage="The speed, the accuracy and the score come off the screen while you type. Nothing stops being recorded — they are shown afterwards, when they are information rather than a race."
+                />
+              }
+              on={!prefs.scores}
+              onChange={(next) => set({ scores: !next })}
+            />
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.streak"
+                  defaultMessage="A rest day keeps the streak"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.streak.sub"
+                  defaultMessage="A missed day is forgiven rather than counted, so the number stays a true count of days practised. Nobody should have to choose between resting and starting again."
+                />
+              }
+              on={prefs.streakGrace}
+              onChange={(next) => set({ streakGrace: next })}
+            />
+
+            {chosen?.visionSupport === true && (
+              <>
+                <div className={styles.prefSect}>
+                  <FormattedMessage
+                    id="account.a11y.hearing"
+                    defaultMessage="The reading voice"
+                  />
+                </div>
+                <VoiceRows prefs={prefs} set={set} />
+              </>
+            )}
           </>
         )}
       </div>
@@ -393,20 +698,29 @@ export function AccessibilityPane(): ReactNode {
   );
 }
 
-/**
- * How the braille page reads aloud.
- *
- * Only for a learner on vision support, because for everybody else there is no
- * voice to set — a page of settings that do nothing is not neutral, it is a
- * page you learn to stop reading.
- */
-/**
- * The speeds offered, matching the braille page's own list exactly.
- *
- * Named steps rather than a slider, and for the braille page's reason: a
- * slider announces a number a listener then has to interpret, where a list can
- * be arrowed through and heard.
- */
+/** One switch and the two lines that say what it does. */
+function Row({
+  label,
+  sub,
+  on,
+  onChange,
+}: {
+  readonly label: ReactNode;
+  readonly sub: ReactNode;
+  readonly on: boolean;
+  readonly onChange: (next: boolean) => void;
+}): ReactNode {
+  return (
+    <div className={styles.row}>
+      <div className={styles.rowText}>
+        <span className={styles.rowLabel}>{label}</span>
+        <span className={styles.rowSub}>{sub}</span>
+      </div>
+      <Toggle on={on} onChange={onChange} />
+    </div>
+  );
+}
+
 const SPEECH_RATES: readonly number[] = [0.75, 1, 1.5, 2, 2.5, 3];
 
 function VoiceRows({

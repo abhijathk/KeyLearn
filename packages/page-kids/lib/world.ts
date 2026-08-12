@@ -383,6 +383,16 @@ export type KidsWorld = {
   /** Ambient motion intensity for all companions/sheep: 1 = full liveliness,
    * 0 = they hold still (a calmer, less busy scene). */
   setMotion(intensity: number): void;
+  /**
+   * Hold the celebrations and the flinches still.
+   *
+   * Separate from `setMotion`, which is about how lively the scenery is. This
+   * is about what the world does *to the learner*: the shake after a wrong
+   * key, the shiver of a fright, the burst of sparks. The colours still
+   * change, because that is what carries the meaning — it is the movement
+   * that arrives unasked, and always at the worst moment.
+   */
+  setCalm(calm: boolean): void;
   /** The learner's accent, for the tile marking the letter to type next. */
   setAccent(hex: string): void;
   /** Lay the current practice word out as 3-D letter blocks on the trail
@@ -1370,6 +1380,7 @@ export function createKidsWorld(
   let stumbleT = 0;
   let pointerHitT = 0; // brief red flash on the hero pointer after a wrong key
   let motionScale = 1; // 0 = characters hold still, 1 = full liveliness
+  let calmMode = false; // no shake, no shiver, no sparks
   let beckonT = 0;
   let wasAirborne = false;
   let roarT = 0;
@@ -2236,6 +2247,9 @@ export function createKidsWorld(
     n = 10,
     up = 0.22,
   ) {
+    if (calmMode) {
+      return;
+    }
     for (let i = 0; i < n; i++) {
       const m = new THREE.Mesh(
         new THREE.BoxGeometry(0.16, 0.16, 0.16),
@@ -2411,11 +2425,15 @@ export function createKidsWorld(
           // A flinch backwards and a shiver. The pumpkin keeps its size: it is
           // still the marker showing where the hero is.
           heroPumpkin.position.z = -k * 0.35;
-          heroPumpkin.rotation.z = Math.sin(clock.elapsedTime * 26) * 0.16 * k;
+          heroPumpkin.rotation.z = calmMode
+            ? 0
+            : Math.sin(clock.elapsedTime * 26) * 0.16 * k;
           // The knight's ring has no face to pull, so it recoils and shivers
           // instead — the same beat, told with the only vocabulary it has.
           heroRing.position.z = -k * 0.3;
-          heroRing.rotation.z = Math.sin(clock.elapsedTime * 22) * 0.3 * k;
+          heroRing.rotation.z = calmMode
+            ? 0
+            : Math.sin(clock.elapsedTime * 22) * 0.3 * k;
         } else {
           eyeL.scale.y = eyeR.scale.y = 1;
           heroPumpkin.position.z = 0;
@@ -2441,16 +2459,21 @@ export function createKidsWorld(
         pumpMat.emissive.copy(PUMP_C).lerp(HIT_C, hit);
         pumpMat.emissiveIntensity = 0.3 * pulse * (1 - hit) + hit * 1.15;
         // …and a quick side-to-side shake, fiercest right after the miss.
-        const shakeX = Math.sin(clock.elapsedTime * 60) * hit * 0.28;
-        const shakeY = Math.cos(clock.elapsedTime * 52) * hit * 0.12;
+        // Fires exactly when a child is already struggling, which is why it
+        // is the first thing to go when they have asked for calm. The red
+        // flush above stays: that is the part that says what happened.
+        const shakeAmp = calmMode ? 0 : 1;
+        const shakeX = Math.sin(clock.elapsedTime * 60) * hit * 0.28 * shakeAmp;
+        const shakeY = Math.cos(clock.elapsedTime * 52) * hit * 0.12 * shakeAmp;
         if (playerGhostly) {
           heroPumpkin.position.set(p.x + shakeX, py + shakeY, p.z);
           heroPumpkin.rotation.y = Math.sin(clock.elapsedTime * 1.5) * 0.15;
-          heroPumpkin.rotation.z = Math.sin(clock.elapsedTime * 55) * hit * 0.5;
+          heroPumpkin.rotation.z =
+            Math.sin(clock.elapsedTime * 55) * hit * 0.5 * shakeAmp;
         } else {
           heroRing.position.set(p.x + shakeX, py + shakeY, p.z);
           heroRing.rotation.z +=
-            0.03 + Math.sin(clock.elapsedTime * 55) * hit * 0.4;
+            0.03 + Math.sin(clock.elapsedTime * 55) * hit * 0.4 * shakeAmp;
         }
       }
       cam.position.x += (p.x - 2 - cam.position.x) * 0.06;
@@ -2826,6 +2849,18 @@ export function createKidsWorld(
     },
     setMotion(intensity) {
       motionScale = Math.max(0, Math.min(1, intensity));
+    },
+    setCalm(calm) {
+      calmMode = calm === true;
+      if (calmMode) {
+        // Anything already in the air comes down now rather than finishing its
+        // arc — a learner who has just asked for stillness should get it, not
+        // get it after one more burst.
+        for (const s of sparks) {
+          scene.remove(s);
+        }
+        sparks.length = 0;
+      }
     },
     setAccent(hex) {
       setTileAccent(hex);
