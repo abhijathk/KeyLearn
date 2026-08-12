@@ -104,6 +104,42 @@ Squarespace's "Email Security" preset — a null `v=DKIM1; p=` key, and
 `v=spf1 -all` authorising nobody — has been deleted and replaced with custom
 records.
 
+## The rest of the accessibility work (tier 3)
+
+**Status: two of the three built, the third argued against.**
+
+Tiers 1 and 2 are in and verified. What was scoped as tier 3 stands as:
+
+| Item | State |
+| --- | --- |
+| An announcement when a lesson finishes | **Done** — `PracticeScreen` writes one sentence to a polite live region after every result, since the figures otherwise change in place and silently |
+| The kids coach's line announced | **Done** — the `.say` line is a polite live region; it is the only thing on that page saying what to do next |
+| A fuller screen-reader pass over the kids game | **Deferred** |
+| A plain-language toggle | **Not recommended** — see below |
+
+### The kids game and a screen reader
+
+What is left is the game itself rather than its captions: the world is a
+canvas with no accessible name, the score, combo and hero-level chips update
+silently, and nothing announces a hatching or a new land. It is reachable and
+typable by keyboard today — that is how it is played — but a learner using a
+screen reader gets the lesson text and none of the game around it.
+
+Doing it properly means deciding what a screen reader should say about a
+running game at all: every combo would be noise, and nothing at all is what it
+does now. The likely answer is a small set of announced moments — a letter
+unlocked, a land reached, a companion hatched — and an accessible name and
+description on the canvas that says what is being drawn rather than trying to
+narrate it.
+
+### Why the plain-language toggle is not recommended
+
+It would fork every instruction in the app into two versions, doubling the
+translation surface across 55 locales, and the second version would drift out
+of date the moment anyone edited the first. Where the current wording is too
+dense, the honest fix is to rewrite that line once, for everybody — a copy
+pass, not a setting.
+
 ## Also outstanding
 
 `APP_URL` is `http://localhost:4000/`, so links in real emails point at
