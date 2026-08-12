@@ -61,6 +61,15 @@ export type A11yPrefs = {
    */
   readonly calm: boolean;
   /**
+   * Whether the app says the same thing in the same place every time.
+   *
+   * The coach picks its lines at random so encouragement does not turn into
+   * wallpaper. For an autistic learner the same property reads differently: a
+   * surprise where reassurance should be is not a delight, and knowing what
+   * the app will say is part of being able to use it.
+   */
+  readonly predictable: boolean;
+  /**
    * A finger number on every key, so the zones do not depend on colour alone.
    *
    * The colour-blind palette makes the zones distinguishable; this makes them
@@ -159,6 +168,7 @@ export const defaultA11y: A11yPrefs = {
   chords: true,
   bounceMs: 0,
   fingerMarks: false,
+  predictable: false,
   letterSpacing: 0,
   lineHeight: 1.2,
   plain: false,
@@ -213,6 +223,7 @@ export function loadA11y(profileId?: string | null): A11yPrefs {
       chords: json.chords !== false,
       bounceMs: clampBounce(json.bounceMs),
       fingerMarks: json.fingerMarks === true,
+      predictable: json.predictable === true,
       letterSpacing: clampIn(json.letterSpacing, 0, 0.5, 0),
       lineHeight: clampIn(json.lineHeight, 1.2, 2.4, 1.2),
       plain: json.plain === true,
@@ -283,6 +294,7 @@ export function a11yAdapted(profileId?: string | null): boolean {
     prefs.bounceMs > 0 ||
     prefs.cues ||
     prefs.fingerMarks ||
+    prefs.predictable ||
     prefs.letterSpacing > 0 ||
     prefs.lineHeight > 1.2 ||
     prefs.plain ||

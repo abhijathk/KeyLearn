@@ -60,7 +60,6 @@ import {
   earn,
   type Hatchling,
   HATCHLINGS,
-  kidsStreak,
   loadAlbum,
   nextHatchling,
   practiceDays,
@@ -816,8 +815,20 @@ function heroStage(age: number): string {
   return "Champion";
 }
 
+/**
+ * One of the coach's lines.
+ *
+ * Random by default, because hearing the same sentence every time is how
+ * encouragement turns into wallpaper. For a learner who has asked for
+ * predictability it is the first line every time instead — an autistic child
+ * may be listening for what the app will say, and a surprise in the place
+ * where reassurance should be is not a delight, it is a reason to stop. The
+ * lists are written first-line-first, so the fixed choice is a good one.
+ */
 const pickSay = (list: readonly string[]) =>
-  list[Math.floor(Math.random() * list.length)];
+  loadA11y().predictable
+    ? list[0]
+    : list[Math.floor(Math.random() * list.length)];
 
 const fillSay = (t: string, vars: Record<string, string>) =>
   t.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
@@ -1197,11 +1208,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           sounds: prefs.sounds,
           night: prefs.night,
           keys: included,
-          streak: kidsStreak(),
+          // The same number the lane under the words shows, derived from the
+          // results themselves. It used to come from a list of days kept in
+          // local storage, which is a second answer to one question: a learner
+          // whose history had gone was told "no streak" by the lane and "two
+          // days" by the flame in the header, on the same screen.
+          streak: dailyStreak(results, streakGraceDays()),
         },
       }),
     );
-  }, [prefs.sounds, prefs.night, included]);
+  }, [prefs.sounds, prefs.night, included, results]);
   // Each world has its own voice: the dino arcade blips, the hero storybook
   // chimes (and its bored idle babble).
   useEffect(() => {

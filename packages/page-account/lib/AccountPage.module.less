@@ -1208,19 +1208,15 @@
   justify-content: space-between;
   inline-size: 100%;
   max-inline-size: 52rem;
-  margin-block-start: 0.9rem;
-  padding: 0.6rem 0.7rem;
-  border: var(--separator-border);
-  border-radius: 0.75rem;
+  // No border of its own now that it opens a card of its own — the card is
+  // already the box, and a box inside a box reads as a mistake.
+  padding: 0.2rem 0;
+  border: none;
   color: var(--text-color);
   background: transparent;
   font: inherit;
   text-align: start;
   cursor: pointer;
-
-  &:hover {
-    background: color-mix(in srgb, var(--text-color) 4%, transparent);
-  }
 }
 
 .tuneText {

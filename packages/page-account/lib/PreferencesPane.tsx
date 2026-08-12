@@ -436,10 +436,13 @@ export function AccessibilityPane(): ReactNode {
             />
           </button>
         </div>
+      </div>
 
-        {/* One row that opens the rest, rather than a heading with a link
-            under it. Closed is the point: sixteen switches met on arrival is
-            its own barrier, and the people who want them will look. */}
+      {/* A card of its own, below the presets: the individual switches are a
+          different question from "which of these fits", and putting them in the
+          same panel made the presets look like the top of a long list rather
+          than the answer for most people. Closed until asked for. */}
+      <div className={styles.prefCard}>
         <button
           type="button"
           className={styles.tuneToggle}
