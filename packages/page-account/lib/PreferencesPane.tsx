@@ -10,6 +10,7 @@ import {
   type A11yPrefs,
   accessibilityActive,
   type ContrastPref,
+  defaultA11y,
   downloadBlob,
   exportFilename,
   isPremiumUser,
@@ -289,16 +290,35 @@ export function AccessibilityPane(): ReactNode {
     ) &&
     (preset.contrast == null || contrast === preset.contrast) &&
     (preset.safeZones == null || safe === preset.safeZones);
-  const apply = (preset: Preset) => {
-    setPrefs({ ...prefs, ...preset.prefs });
-    saveA11y(preset.prefs, id);
+  /**
+   * Press it to get the preset; press it again to give it back.
+   *
+   * A control that looks pressed and does nothing when pressed again is a
+   * control that has lied about what it is. Undoing puts only the switches
+   * that preset owns back to how the app ships — it does not reach for
+   * anything somebody set themselves.
+   */
+  const toggle = (preset: Preset) => {
+    const on = applied(preset);
+    const patch = on
+      ? Object.fromEntries(
+          Object.keys(preset.prefs).map((key) => [
+            key,
+            defaultA11y[key as keyof A11yPrefs],
+          ]),
+        )
+      : preset.prefs;
+    setPrefs({ ...prefs, ...patch });
+    saveA11y(patch, id);
     if (preset.contrast != null) {
-      setContrast(preset.contrast);
-      saveContrast(preset.contrast, id);
+      const next = on ? "default" : preset.contrast;
+      setContrast(next);
+      saveContrast(next, id);
     }
     if (preset.safeZones != null) {
-      setSafe(preset.safeZones);
-      saveSafeZones(preset.safeZones, id);
+      const next = on ? false : preset.safeZones;
+      setSafe(next);
+      saveSafeZones(next, id);
     }
     announce();
   };
@@ -341,12 +361,12 @@ export function AccessibilityPane(): ReactNode {
                 applied(preset) && styles.presetOn,
               )}
               aria-pressed={applied(preset)}
-              onClick={() => apply(preset)}
+              onClick={() => toggle(preset)}
             >
               {applied(preset) ? (
                 <FormattedMessage
                   id="account.a11y.preset.on"
-                  defaultMessage="On"
+                  defaultMessage="✓ On"
                 />
               ) : (
                 <FormattedMessage
@@ -401,32 +421,38 @@ export function AccessibilityPane(): ReactNode {
           </button>
         </div>
 
-        {/* The fine tuning lives at the end and closed, for whoever wants
-            something a preset does not say. Opening it is a decision; meeting
-            eleven switches on arrival is not. */}
-        <div className={styles.prefSect}>
-          <FormattedMessage
-            id="account.a11y.tuning"
-            defaultMessage="Fine tuning"
-          />
-        </div>
+        {/* One row that opens the rest, rather than a heading with a link
+            under it. Closed is the point: sixteen switches met on arrival is
+            its own barrier, and the people who want them will look. */}
         <button
           type="button"
           className={styles.tuneToggle}
           aria-expanded={tuning}
           onClick={() => setTuning(!tuning)}
         >
-          {tuning ? (
-            <FormattedMessage
-              id="account.a11y.tuning.hide"
-              defaultMessage="Hide the individual settings"
-            />
-          ) : (
-            <FormattedMessage
-              id="account.a11y.tuning.show"
-              defaultMessage="Set each one myself"
-            />
-          )}
+          <span className={styles.tuneText}>
+            <span className={styles.tuneLabel}>
+              <FormattedMessage
+                id="account.a11y.tuning"
+                defaultMessage="Set each one myself"
+              />
+            </span>
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.a11y.tuning.sub"
+                defaultMessage="Every switch a preset touches, and a few it does not."
+              />
+            </span>
+          </span>
+          {/* Points down when closed, up when open — the direction the panel
+              will move, not an arbitrary mark. */}
+          <svg
+            className={clsx(styles.tuneCaret, tuning && styles.tuneCaretOpen)}
+            viewBox="0 0 12 12"
+            aria-hidden={true}
+          >
+            <path d="M3 4.5 L6 7.5 L9 4.5" />
+          </svg>
         </button>
 
         {tuning && (

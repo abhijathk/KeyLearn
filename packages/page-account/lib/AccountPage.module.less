@@ -1175,6 +1175,10 @@
 // something on, and once its bundle is satisfied it says so instead.
 .presetBtn {
   flex: none;
+  // One width for both states, so the column of buttons does not shuffle
+  // sideways as presets go on and off — and so "on" reads as a state sitting
+  // where the button was, rather than as a green dot that appeared.
+  min-inline-size: 6.5rem;
   padding: 0.45rem 0.9rem;
   border: var(--separator-border);
   border-radius: 999px;
@@ -1183,6 +1187,7 @@
   font: inherit;
   font-size: 0.78rem;
   font-weight: 700;
+  text-align: center;
   cursor: pointer;
 }
 
@@ -1192,17 +1197,63 @@
   background: var(--accent);
 }
 
-// The way into the individual switches. Quiet on purpose: it is the exit for
-// people a preset did not fit, not the front door.
+// The way into the individual switches: one row that opens the rest, shaped
+// like the setting rows above it so it reads as part of the list rather than
+// as a link somebody dropped underneath it. Quiet on purpose — it is the exit
+// for people a preset did not fit, not the front door.
 .tuneToggle {
-  align-self: flex-start;
-  padding: 0.35rem 0;
-  border: none;
-  color: var(--text-color-f1);
-  background: none;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  inline-size: 100%;
+  max-inline-size: 52rem;
+  margin-block-start: 0.9rem;
+  padding: 0.6rem 0.7rem;
+  border: var(--separator-border);
+  border-radius: 0.75rem;
+  color: var(--text-color);
+  background: transparent;
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: underline;
+  text-align: start;
   cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-color) 4%, transparent);
+  }
+}
+
+.tuneText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-inline-size: 0;
+}
+
+.tuneLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tuneCaret {
+  flex: none;
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  fill: none;
+  stroke: var(--text-color-f2);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: rotate 0.15s ease;
+}
+
+.tuneCaretOpen {
+  rotate: 180deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tuneCaret {
+    transition: none;
+  }
 }
