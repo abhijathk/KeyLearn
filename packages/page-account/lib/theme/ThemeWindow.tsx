@@ -89,6 +89,11 @@ export function ThemeWindow(): ReactNode {
   // has this one", which on a household account is a question nobody asked:
   // a parent looking at this list wants to know which themes are spoken for,
   // not which one they happen to be wearing at this moment.
+  // Which face of each theme to write the names in. The list is drawn on
+  // whichever ground the app is wearing, and a theme's night colour on a white
+  // page is the one that cannot be read — so the names take the face made for
+  // the ground they are actually sitting on.
+  const dayGround = isDayGround();
   const worn = new Map<string, string[]>();
   for (const profile of household.profiles) {
     const id = loadAccent(profile.id);
@@ -253,14 +258,10 @@ export function ThemeWindow(): ReactNode {
                           parent wants to know which learner has which colour,
                           not which one is on this screen right now. */}
                       {(worn.get(accent.id)?.length ?? 0) > 0 && (
-                        <span className={styles.wornBy}>
-                          {worn.get(accent.id)!.join(", ")}
-                          {worn.get(accent.id)!.length > 1 && (
-                            <b className={styles.wornCount}>
-                              {worn.get(accent.id)!.length}
-                            </b>
-                          )}
-                        </span>
+                        <WornBadge
+                          names={worn.get(accent.id)!}
+                          color={dayGround ? accent.day : accent.night}
+                        />
                       )}
                     </span>
                     <span className={styles.rowMeta}>
@@ -437,6 +438,74 @@ function shade(hex: string, amount: number): string {
     Math.round(amount < 0 ? c * (1 + amount) : c + (255 - c) * amount);
   const parts = [move((n >> 16) & 255), move((n >> 8) & 255), move(n & 255)];
   return `#${parts.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/**
+ * Who is wearing this theme, as a badge in the theme's own colour.
+ *
+ * The colour is the point: a name written in the colour it wears says which
+ * learner has which theme faster than any label could, and the badge shape
+ * keeps it from reading as part of the theme's name.
+ *
+ * The count rides on the badge rather than beside it, and only past one — a
+ * "1" against every worn theme would be a column of ones saying nothing.
+ */
+function WornBadge({
+  names,
+  color,
+}: {
+  readonly names: readonly string[];
+  readonly color: string;
+}): ReactNode {
+  // Black or white, whichever the theme's own colour can actually carry. A
+  // fixed ink leaves the names unreadable on half the themes in the list.
+  const ink = isLight(color) ? "#141620" : "#ffffff";
+  return (
+    <span
+      className={styles.wornBy}
+      style={{ backgroundColor: color, color: ink }}
+    >
+      {names.join(", ")}
+      {names.length > 1 && (
+        <b className={styles.wornCount} style={{ backgroundColor: ink, color }}>
+          {names.length}
+        </b>
+      )}
+    </span>
+  );
+}
+
+/** Whether a colour is light enough to need dark ink on it. */
+function isLight(hex: string): boolean {
+  const rgb = hex.replace("#", "");
+  if (rgb.length !== 6) {
+    return false;
+  }
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(rgb.slice(i, i + 2), 16));
+  return (r! * 299 + g! * 587 + b! * 114) / 1000 > 140;
+}
+
+/**
+ * Whether the app is currently on its light ground.
+ *
+ * Read from the painted background rather than from the theme setting, because
+ * "auto" follows the device and the setting alone cannot say which face is on
+ * screen right now.
+ */
+function isDayGround(): boolean {
+  try {
+    const bg = getComputedStyle(document.documentElement)
+      .getPropertyValue("--background-color")
+      .trim();
+    const rgb = bg.replace("#", "");
+    if (rgb.length !== 6) {
+      return false;
+    }
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(rgb.slice(i, i + 2), 16));
+    return (r! * 299 + g! * 587 + b! * 114) / 1000 > 128;
+  } catch {
+    return false;
+  }
 }
 
 function Bands({ accent }: { readonly accent: Accent }): ReactNode {

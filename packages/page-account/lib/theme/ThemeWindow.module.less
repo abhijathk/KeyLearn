@@ -429,22 +429,29 @@
 // about the theme, not the theme's name, and a household of five should read
 // as a list of names rather than as five headings.
 .wornBy {
+  // A badge in the theme's own colour, which arrives inline along with the ink
+  // that colour can carry. This sets only the shape: small, rounded, and
+  // sitting beside the name rather than under it.
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  vertical-align: middle;
   margin-inline-start: 0.45rem;
-  color: var(--text-color-f2, var(--secondary-f2));
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
   font-size: 0.62rem;
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .wornCount {
+  // Rides on the badge, in the badge's ink inverted, so it reads as a count
+  // belonging to those names rather than as another word among them.
   display: inline-grid;
   place-items: center;
-  min-inline-size: 1.05rem;
-  block-size: 1.05rem;
-  margin-inline-start: 0.3rem;
-  padding-inline: 0.2rem;
+  min-inline-size: 0.95rem;
+  block-size: 0.95rem;
+  padding-inline: 0.18rem;
   border-radius: 999px;
-  color: var(--primary);
-  background: var(--accent);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
 }
