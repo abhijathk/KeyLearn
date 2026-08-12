@@ -703,6 +703,7 @@ function ZonePicker({
     next[index] = color;
     onChange({ ...draft, zones: next });
   };
+  const own = draft.zones != null;
   return (
     <div className={styles.zonePick}>
       <div className={styles.zoneHead}>
@@ -712,45 +713,74 @@ function ZonePicker({
             defaultMessage="Finger colours"
           />
         </span>
-        {draft.zones != null && (
+        {/* Asked before it is answered. Most themes want the colours the app
+            already teaches with, and a theme that does should not have to
+            visit six rows to say so — while a theme that wants its own should
+            not have to discover that it may. */}
+        <div className={styles.seg} role="group">
           <button
             type="button"
-            className={styles.zoneReset}
+            className={clsx(styles.segBtn, !own && styles.segOn)}
+            aria-pressed={!own}
             onClick={() => onChange({ ...draft, zones: null })}
           >
             <FormattedMessage
-              id="theme.maker.zonesReset"
-              defaultMessage="Use the app's own"
+              id="theme.maker.zonesApp"
+              defaultMessage="KeyLearn's"
             />
           </button>
-        )}
-      </div>
-      {ZONE_ORDER.map((zone, index) => (
-        <div key={zone} className={styles.zoneRow}>
-          <span className={styles.zoneName}>{formatMessage(names[zone]!)}</span>
-          <span className={styles.zoneSwatches}>
-            {pool.map((color) => (
-              <button
-                key={color}
-                type="button"
-                className={clsx(
-                  styles.zoneSwatch,
-                  current[index] === color && styles.zoneSwatchOn,
-                )}
-                style={{ backgroundColor: color }}
-                aria-pressed={current[index] === color}
-                aria-label={color}
-                onClick={() => pick(index, color)}
-              />
-            ))}
-          </span>
+          <button
+            type="button"
+            className={clsx(styles.segBtn, own && styles.segOn)}
+            aria-pressed={own}
+            // Seeded with the pool in its usual order, so choosing "my own"
+            // starts from what was on screen a moment ago rather than from
+            // six colours somebody has to undo.
+            onClick={() => onChange({ ...draft, zones: [...pool] })}
+          >
+            <FormattedMessage
+              id="theme.maker.zonesOwn"
+              defaultMessage="Choose my own"
+            />
+          </button>
         </div>
-      ))}
+      </div>
+      {own &&
+        ZONE_ORDER.map((zone, index) => (
+          <div key={zone} className={styles.zoneRow}>
+            <span className={styles.zoneName}>
+              {formatMessage(names[zone]!)}
+            </span>
+            <span className={styles.zoneSwatches}>
+              {pool.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={clsx(
+                    styles.zoneSwatch,
+                    current[index] === color && styles.zoneSwatchOn,
+                  )}
+                  style={{ backgroundColor: color }}
+                  aria-pressed={current[index] === color}
+                  aria-label={color}
+                  onClick={() => pick(index, color)}
+                />
+              ))}
+            </span>
+          </div>
+        ))}
       <p className={styles.note}>
-        <FormattedMessage
-          id="theme.maker.zonesNote"
-          defaultMessage="Six colours, one for each finger, from the set the app already uses. Choosing one another finger has swaps the two — the keyboard teaches with these colours, so no two fingers may share."
-        />
+        {own ? (
+          <FormattedMessage
+            id="theme.maker.zonesNote"
+            defaultMessage="Six colours, one for each finger, from the set the app already uses. Choosing one another finger has swaps the two — the keyboard teaches with these colours, so no two fingers may share."
+          />
+        ) : (
+          <FormattedMessage
+            id="theme.maker.zonesAppNote"
+            defaultMessage="The strip under each preview is the finger zones, as KeyLearn paints them. This theme leaves them alone."
+          />
+        )}
       </p>
     </div>
   );
