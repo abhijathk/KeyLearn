@@ -2,7 +2,13 @@
   display: block;
   font-kerning: none;
   font-variant: none;
-  line-height: 1.2;
+  line-height: var(--read-line-height, 1.2);
+  // Both take a value the reading settings write on the root, and fall back to
+  // exactly what they were. Spacing between letters and between lines is the
+  // support that helps a dyslexic reader most — more than the typeface, on the
+  // evidence — and it is the one thing a typing surface can offer without
+  // changing a word of the lesson.
+  letter-spacing: var(--read-letter-spacing, normal);
   // Go indents with tabs, and gofmt will not be talked out of it. Left at the
   // browser default of eight, a Go snippet marches off the right of the panel
   // after three levels of nesting; four matches how every editor shows it.

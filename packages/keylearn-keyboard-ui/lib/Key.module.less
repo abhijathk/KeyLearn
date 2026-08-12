@@ -212,3 +212,21 @@
     fill: var(--KeyboardKey-symbol__color);
   }
 }
+
+// The finger number in the corner of a cap.
+//
+// Shown only when the learner has asked for it, because it is a second way of
+// saying what the zone colours already say — and for anybody who reads the
+// colours it would be clutter. Small and faded on purpose: it is there to be
+// consulted, not to compete with the letter.
+.fingerMark {
+  fill: var(--KeyboardKey-symbol__color);
+  opacity: 0.45;
+  font-size: 9px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+:root:not([data-finger-marks="on"]) .fingerMark {
+  display: none;
+}

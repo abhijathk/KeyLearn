@@ -3,7 +3,7 @@ import { keyboardProps } from "@keylearn/keyboard";
 import { type KeyId } from "@keylearn/keyboard";
 import { lessonProps, LessonType, Target } from "@keylearn/lesson";
 import { names } from "@keylearn/lesson-ui";
-import { profileStorageKey, Screen } from "@keylearn/pages-shared";
+import { loadA11y, profileStorageKey, Screen } from "@keylearn/pages-shared";
 import { uiProps } from "@keylearn/result";
 import {
   enumProp,
@@ -126,7 +126,10 @@ export class Presenter extends PureComponent<Props, State> {
     view: Preferences.get(propView),
     tour: false,
     focus: false,
-    focusMode: false,
+    // A learner who has asked for one thing on screen starts with one thing on
+    // screen. The button that turns it off is still there — this is where they
+    // begin, not a cage.
+    focusMode: loadA11y().plain,
     typing: false,
     textSize: Preferences.get(propTextSize),
     pinned: readPinned(),

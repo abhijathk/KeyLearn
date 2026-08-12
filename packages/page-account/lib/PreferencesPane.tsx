@@ -193,6 +193,22 @@ const PRESETS: readonly Preset[] = [
     },
   },
   {
+    id: "focus",
+    label: (
+      <FormattedMessage
+        id="account.a11y.preset.focus"
+        defaultMessage="Fewer things at once"
+      />
+    ),
+    sub: (
+      <FormattedMessage
+        id="account.a11y.preset.focus.sub"
+        defaultMessage="Practice opens with the words and the keyboard, and nothing else asking to be looked at."
+      />
+    ),
+    prefs: { plain: true, scores: false },
+  },
+  {
     id: "read",
     label: (
       <FormattedMessage
@@ -206,7 +222,7 @@ const PRESETS: readonly Preset[] = [
         defaultMessage="Stronger text against the page, and letters that cannot be mistaken for one another."
       />
     ),
-    prefs: { typeface: "dyslexic" },
+    prefs: { typeface: "dyslexic", letterSpacing: 0.06, lineHeight: 1.6 },
     contrast: "clearer",
   },
   {
@@ -223,7 +239,7 @@ const PRESETS: readonly Preset[] = [
         defaultMessage="Finger colours that stay distinct, and mistakes said in sound as well as in red."
       />
     ),
-    prefs: { cues: true },
+    prefs: { cues: true, fingerMarks: true },
     contrast: "clearer",
     safeZones: true,
   },
@@ -546,6 +562,86 @@ export function AccessibilityPane(): ReactNode {
               />
             </div>
 
+            <div className={clsx(styles.row, styles.rowStack)}>
+              <div className={styles.rowText}>
+                <span className={styles.rowLabel}>
+                  <FormattedMessage
+                    id="account.a11y.spacing"
+                    defaultMessage="Room between the letters"
+                  />
+                </span>
+                <span className={styles.rowSub}>
+                  <FormattedMessage
+                    id="account.a11y.spacing.sub"
+                    defaultMessage="Spacing helps a struggling reader more than any typeface does. This applies to the practice text — the words being read one letter at a time."
+                  />
+                </span>
+              </div>
+              <Segmented<string>
+                value={
+                  prefs.letterSpacing >= 0.12
+                    ? "wide"
+                    : prefs.letterSpacing > 0
+                      ? "some"
+                      : "none"
+                }
+                onChange={(next) =>
+                  set({
+                    letterSpacing:
+                      next === "wide" ? 0.14 : next === "some" ? 0.06 : 0,
+                    lineHeight:
+                      next === "wide" ? 2 : next === "some" ? 1.6 : 1.2,
+                  })
+                }
+                options={[
+                  {
+                    id: "none",
+                    label: (
+                      <FormattedMessage
+                        id="account.a11y.spacing.none"
+                        defaultMessage="As set"
+                      />
+                    ),
+                  },
+                  {
+                    id: "some",
+                    label: (
+                      <FormattedMessage
+                        id="account.a11y.spacing.some"
+                        defaultMessage="More"
+                      />
+                    ),
+                  },
+                  {
+                    id: "wide",
+                    label: (
+                      <FormattedMessage
+                        id="account.a11y.spacing.wide"
+                        defaultMessage="Most"
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </div>
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.fingerMarks"
+                  defaultMessage="A finger number on every key"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.fingerMarks.sub"
+                  defaultMessage="The zones say which finger with colour. This says it in a character as well, so nothing depends on telling the colours apart."
+                />
+              }
+              on={prefs.fingerMarks}
+              onChange={(next) => set({ fingerMarks: next })}
+            />
+
             <Row
               label={
                 <FormattedMessage
@@ -654,6 +750,23 @@ export function AccessibilityPane(): ReactNode {
                 defaultMessage="Being measured"
               />
             </div>
+
+            <Row
+              label={
+                <FormattedMessage
+                  id="account.a11y.plain"
+                  defaultMessage="One thing on screen"
+                />
+              }
+              sub={
+                <FormattedMessage
+                  id="account.a11y.plain.sub"
+                  defaultMessage="Practice opens with the words and the keyboard. The figures, the trend and the journey strip stay away until you ask for them back."
+                />
+              }
+              on={prefs.plain}
+              onChange={(next) => set({ plain: next })}
+            />
 
             <Row
               label={

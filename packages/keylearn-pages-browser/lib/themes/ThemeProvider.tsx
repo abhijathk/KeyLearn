@@ -262,12 +262,33 @@ function applyAdaptations() {
     // needs no marking.
     ["data-timers", prefs.timers ? null : "off"],
     ["data-scores", prefs.scores ? null : "off"],
+    ["data-finger-marks", prefs.fingerMarks ? "on" : null],
   ];
   for (const [name, value] of flags) {
     if (value == null) {
       elem.removeAttribute(name);
     } else {
       elem.setAttribute(name, value);
+    }
+  }
+  // The reading measures are numbers rather than states, so they go as custom
+  // properties. Removed rather than set to the default, so the stylesheet's own
+  // value stands and nothing is frozen at whatever was on screen once.
+  const measures: readonly [string, string | null][] = [
+    [
+      "--read-letter-spacing",
+      prefs.letterSpacing > 0 ? `${prefs.letterSpacing}em` : null,
+    ],
+    [
+      "--read-line-height",
+      prefs.lineHeight > 1.2 ? String(prefs.lineHeight) : null,
+    ],
+  ];
+  for (const [prop, value] of measures) {
+    if (value == null) {
+      elem.style.removeProperty(prop);
+    } else {
+      elem.style.setProperty(prop, value);
     }
   }
   applyContrastLevel(loadContrast(), elem.style);

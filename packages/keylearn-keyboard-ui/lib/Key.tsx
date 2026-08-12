@@ -146,6 +146,12 @@ export function makeKeyComponent(
     children.push(makeLigatureLabel(d, 25, 12, styles.secondarySymbol));
   }
   const zoneClassName = zoneClassNameOf(shape);
+  // The same fact the colour carries, written down. A learner who cannot pick
+  // the zone colours apart — which is a good part of why the safe palette
+  // exists — still has nothing to read if colour is the only channel. One
+  // character in the corner of the cap costs the sighted reader nothing and
+  // gives that learner the whole answer.
+  const fingerMark = fingerMarkOf(shape);
   // The solid darker side of the keycap; the face drops onto it when pressed.
   const side = shape.shape ? (
     <path className={styles.side} d={shape.shape} transform="translate(0 3)" />
@@ -166,6 +172,7 @@ export function makeKeyComponent(
     showColors,
     ...props
   }: KeyProps): ReactNode {
+    const marked = fingerMark != null && !neutralKey;
     return (
       <svg
         {...props}
@@ -183,7 +190,20 @@ export function makeKeyComponent(
         data-key={id}
       >
         {side}
-        <g className={styles.cap}>{...children}</g>
+        <g className={styles.cap}>
+          {...children}
+          {marked && (
+            <text
+              className={styles.fingerMark}
+              x={w - 6}
+              y={h - 5}
+              textAnchor="end"
+              aria-hidden={true}
+            >
+              {fingerMark}
+            </text>
+          )}
+        </g>
       </svg>
     );
   }
@@ -287,6 +307,26 @@ function makeLabel(label: LabelShape, className: ClassName = null): ReactNode {
       {text}
     </text>
   );
+}
+
+/**
+ * A single character naming the finger, in the touch-typing numbering every
+ * course already uses: 1 the index, 2 the middle, 3 the ring, 4 the little
+ * finger. The thumb is left unmarked — the space bar needs no telling.
+ */
+function fingerMarkOf({ finger }: KeyShape): string | null {
+  switch (finger) {
+    case "leftIndex":
+    case "rightIndex":
+      return "1";
+    case "middle":
+      return "2";
+    case "ring":
+      return "3";
+    case "pinky":
+      return "4";
+  }
+  return null;
 }
 
 function zoneClassNameOf(shape: KeyShape): string | null {

@@ -61,6 +61,36 @@ export type A11yPrefs = {
    */
   readonly calm: boolean;
   /**
+   * A finger number on every key, so the zones do not depend on colour alone.
+   *
+   * The colour-blind palette makes the zones distinguishable; this makes them
+   * legible without depending on colour at all, which is a different and
+   * stronger thing. WCAG says as much: colour must not be the only way of
+   * conveying anything.
+   */
+  readonly fingerMarks: boolean;
+  /**
+   * Extra room between the letters, as a multiple of the type size.
+   *
+   * Nought is the typeface as drawn. Spacing is the reading support with the
+   * best evidence behind it for dyslexia — ahead of the typeface — and on a
+   * page somebody reads one letter at a time it is worth more here than
+   * anywhere else in the app.
+   */
+  readonly letterSpacing: number;
+  /** Room between the lines, as a multiple. 1.2 is the typeface as set. */
+  readonly lineHeight: number;
+  /**
+   * Whether practice starts with one thing on screen.
+   *
+   * The page carries a lot at once — the figures, the trend, the journey
+   * strip, the tools. For an attention difficulty that is not richness, it is
+   * four things competing with the words. The app already has a focus mode;
+   * this decides what somebody arrives in, and the button to leave it stays
+   * where it was.
+   */
+  readonly plain: boolean;
+  /**
    * Whether the running figures are on screen while you type.
    *
    * Hiding the clock was only half of it: the live speed, the accuracy, the
@@ -128,6 +158,10 @@ export const defaultA11y: A11yPrefs = {
   calm: false,
   chords: true,
   bounceMs: 0,
+  fingerMarks: false,
+  letterSpacing: 0,
+  lineHeight: 1.2,
+  plain: false,
   scores: true,
   streakGrace: false,
   typeface: "default",
@@ -137,6 +171,18 @@ export const defaultA11y: A11yPrefs = {
   speechRate: 1,
   speechVoice: null,
 };
+
+function clampIn(
+  value: unknown,
+  lo: number,
+  hi: number,
+  fallback: number,
+): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(hi, Math.max(lo, value));
+}
 
 function clampBounce(value: unknown): number {
   const ms = typeof value === "number" && Number.isFinite(value) ? value : 0;
@@ -166,6 +212,10 @@ export function loadA11y(profileId?: string | null): A11yPrefs {
       calm: json.calm === true,
       chords: json.chords !== false,
       bounceMs: clampBounce(json.bounceMs),
+      fingerMarks: json.fingerMarks === true,
+      letterSpacing: clampIn(json.letterSpacing, 0, 0.5, 0),
+      lineHeight: clampIn(json.lineHeight, 1.2, 2.4, 1.2),
+      plain: json.plain === true,
       scores: json.scores !== false,
       streakGrace: json.streakGrace === true,
       cues: json.cues === true,
@@ -232,6 +282,10 @@ export function a11yAdapted(profileId?: string | null): boolean {
     !prefs.chords ||
     prefs.bounceMs > 0 ||
     prefs.cues ||
+    prefs.fingerMarks ||
+    prefs.letterSpacing > 0 ||
+    prefs.lineHeight > 1.2 ||
+    prefs.plain ||
     !prefs.scores ||
     prefs.streakGrace ||
     !prefs.timers
