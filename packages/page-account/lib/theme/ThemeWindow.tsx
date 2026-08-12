@@ -1,3 +1,4 @@
+import { loadAccent } from "@keylearn/pages-shared";
 import {
   type Accent,
   ACCENTS,
@@ -26,6 +27,7 @@ import {
   useIntl,
 } from "react-intl";
 import { FloatingShell } from "../FloatingShell.tsx";
+import { useProfiles } from "../profiles/context.tsx";
 import { accentNames } from "./accent-names.tsx";
 import * as styles from "./ThemeWindow.module.less";
 
@@ -82,6 +84,16 @@ type Draft = {
 export function ThemeWindow(): ReactNode {
   const { formatMessage } = useIntl();
   const { accent: current } = useTheme();
+  const { household } = useProfiles();
+  // Who is wearing what. "In use" used to mean "the learner at the keyboard
+  // has this one", which on a household account is a question nobody asked:
+  // a parent looking at this list wants to know which themes are spoken for,
+  // not which one they happen to be wearing at this moment.
+  const worn = new Map<string, string[]>();
+  for (const profile of household.profiles) {
+    const id = loadAccent(profile.id);
+    worn.set(id, [...(worn.get(id) ?? []), profile.firstName]);
+  }
   const [own, setOwn] = useState<readonly CustomAccent[]>(() =>
     loadCustomAccents(),
   );
@@ -236,6 +248,20 @@ export function ThemeWindow(): ReactNode {
                     <span className={styles.rowName}>
                       {mine ? accent.name : accentNames[accent.id]}
                       <Badge group={accent.group} />
+                      {/* Who is wearing it, named. "In use" answered a
+                          question nobody asked on a household account — a
+                          parent wants to know which learner has which colour,
+                          not which one is on this screen right now. */}
+                      {(worn.get(accent.id)?.length ?? 0) > 0 && (
+                        <span className={styles.wornBy}>
+                          {worn.get(accent.id)!.join(", ")}
+                          {worn.get(accent.id)!.length > 1 && (
+                            <b className={styles.wornCount}>
+                              {worn.get(accent.id)!.length}
+                            </b>
+                          )}
+                        </span>
+                      )}
                     </span>
                     <span className={styles.rowMeta}>
                       {accent.night} night · {accent.day} day
@@ -246,16 +272,6 @@ export function ThemeWindow(): ReactNode {
                       second thing to look at rather than a second line of the
                       first. */}
                   <Fingers accent={accent} />
-                  {/* Always a cell, so every row keeps the same five columns
-                      and the operations stay in one line down the edge. */}
-                  <span className={styles.current}>
-                    {accent.id === current && (
-                      <FormattedMessage
-                        id="theme.win.current"
-                        defaultMessage="✓ In use"
-                      />
-                    )}
-                  </span>
                   <div className={styles.ops}>
                     <button
                       type="button"

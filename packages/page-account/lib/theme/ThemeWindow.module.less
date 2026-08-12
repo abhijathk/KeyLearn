@@ -61,12 +61,10 @@
 
 .row {
   display: grid;
-  // Bands, name, finger colours, "in use", operations. Five columns rather
-  // than four because the strip is a cell of its own — dropped in as a fifth
-  // child of a four-column grid it wrapped the whole row onto two lines, but
-  // only on the row that also says "in use", which is the one row anybody
-  // looks at first.
-  grid-template-columns: auto 1fr auto auto auto;
+  // Bands, name, finger colours, operations. The strip is a column of its own
+  // rather than an extra child of a narrower grid, which wrapped the whole row
+  // onto two lines.
+  grid-template-columns: auto 1fr auto auto;
   gap: 0.8rem;
   align-items: stretch;
   min-block-size: 3.1rem;
@@ -161,18 +159,6 @@
 
 .bMine {
   color: var(--slow-key-color);
-}
-
-.current {
-  // A fixed width whether or not it says anything, so the finger strips line
-  // up down the whole list. Sized to its own words: an empty cell that
-  // collapsed pulled one row's colours a centimetre left of every other row's,
-  // and it was the row somebody looks at first.
-  inline-size: 4.4rem;
-  color: var(--accent);
-  font-size: 0.66rem;
-  text-align: end;
-  white-space: nowrap;
 }
 
 .ops {
@@ -434,4 +420,31 @@
   border-color: transparent;
   outline: 2px solid var(--text-color);
   outline-offset: 2px;
+}
+
+// How many learners wear this theme, when it is more than one. A small solid
+// count rather than a second line of words: the row already says "in use", and
+// this only answers "how many".
+// Who is wearing this theme, beside its name. Small and faded: it is a fact
+// about the theme, not the theme's name, and a household of five should read
+// as a list of names rather than as five headings.
+.wornBy {
+  margin-inline-start: 0.45rem;
+  color: var(--text-color-f2, var(--secondary-f2));
+  font-size: 0.62rem;
+  font-weight: 400;
+}
+
+.wornCount {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 1.05rem;
+  block-size: 1.05rem;
+  margin-inline-start: 0.3rem;
+  padding-inline: 0.2rem;
+  border-radius: 999px;
+  color: var(--primary);
+  background: var(--accent);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
 }
