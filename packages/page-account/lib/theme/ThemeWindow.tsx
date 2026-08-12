@@ -241,14 +241,21 @@ export function ThemeWindow(): ReactNode {
                       {accent.night} night · {accent.day} day
                     </span>
                   </div>
-                  {accent.id === current && (
-                    <span className={styles.current}>
+                  {/* In the free space beside the name rather than under it:
+                      the row has room going spare there, and the strip is a
+                      second thing to look at rather than a second line of the
+                      first. */}
+                  <Fingers accent={accent} />
+                  {/* Always a cell, so every row keeps the same five columns
+                      and the operations stay in one line down the edge. */}
+                  <span className={styles.current}>
+                    {accent.id === current && (
                       <FormattedMessage
                         id="theme.win.current"
                         defaultMessage="✓ In use"
                       />
-                    </span>
-                  )}
+                    )}
+                  </span>
                   <div className={styles.ops}>
                     <button
                       type="button"
@@ -427,9 +434,34 @@ function Bands({ accent }: { readonly accent: Accent }): ReactNode {
 }
 
 /**
+ * The finger colours this theme puts on the keyboard.
+ *
+ * Every row shows six, because every theme paints six — the ones it chose, or
+ * KeyLearn's own where it did not. Showing them only for the themes that
+ * differ would make the strip mean "this one is unusual" rather than "this is
+ * what your keyboard will look like", and the second is the question somebody
+ * scanning this list is asking.
+ */
+function Fingers({ accent }: { readonly accent: Accent }): ReactNode {
+  const own = (accent as CustomAccent).zones ?? null;
+  // A theme with none of its own shows what the app would paint for its
+  // audience: the pastels on the grown-up pages, the brighter six the kids
+  // keyboard is drawn in.
+  const kids =
+    accent.group === "kids" || (accent as CustomAccent).forKids === true;
+  const colors = own ?? (kids ? ZONE_POOLS.kid : ZONE_POOLS.adult);
+  return (
+    <span className={styles.rowFingers} aria-hidden={true}>
+      {colors.map((color, i) => (
+        <i key={i} style={{ backgroundColor: color }} />
+      ))}
+    </span>
+  );
+}
+
+/**
  * The maker: a name and two hexes, with each colour shown on the ground it
- * will actually sit on. The finger zones are drawn under both previews to be
- * watched rather than adjusted — no theme can move them.
+ * will actually sit on, and which colour each finger wears.
  */
 function ThemeMaker({
   draft,

@@ -61,7 +61,12 @@
 
 .row {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  // Bands, name, finger colours, "in use", operations. Five columns rather
+  // than four because the strip is a cell of its own — dropped in as a fifth
+  // child of a four-column grid it wrapped the whole row onto two lines, but
+  // only on the row that also says "in use", which is the one row anybody
+  // looks at first.
+  grid-template-columns: auto 1fr auto auto auto;
   gap: 0.8rem;
   align-items: stretch;
   min-block-size: 3.1rem;
@@ -79,6 +84,26 @@
 
 .rowCurrent {
   background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+// The six finger colours this theme paints, in the space the row has going
+// spare beside the name. It answers "what will my keyboard look like" at a
+// glance, which is what the list is being scanned for.
+//
+// Pills rather than squares: the keys they stand for are round-cornered, and
+// six little rectangles in a row read as a progress bar — which is a thing
+// this app has elsewhere and is not this.
+.rowFingers {
+  display: flex;
+  flex: none;
+  gap: 3px;
+  align-items: center;
+}
+
+.rowFingers > i {
+  inline-size: 1.35rem;
+  block-size: 0.62rem;
+  border-radius: 999px;
 }
 
 // Flush to the leading edge and the full height of the row: the trailing edge
@@ -139,8 +164,14 @@
 }
 
 .current {
+  // A fixed width whether or not it says anything, so the finger strips line
+  // up down the whole list. Sized to its own words: an empty cell that
+  // collapsed pulled one row's colours a centimetre left of every other row's,
+  // and it was the row somebody looks at first.
+  inline-size: 4.4rem;
   color: var(--accent);
   font-size: 0.66rem;
+  text-align: end;
   white-space: nowrap;
 }
 

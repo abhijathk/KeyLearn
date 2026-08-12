@@ -203,9 +203,11 @@ export const ZONE_POOLS: {
 } = {
   // Dusty rose, sage, sand, slate blue, soft mauve, clay.
   adult: ["#c49b9b", "#a9bda1", "#c8b48c", "#94a8c6", "#b19cba", "#b5a292"],
-  // Sky, coral, sage, sand, seafoam, terra — the kids palette, which is the
-  // same set of hues with the muting taken off.
-  kid: ["#3aa0ff", "#ff7d68", "#8fce7e", "#f2c94c", "#5fc9a7", "#f5a25f"],
+  // Rose, sage, sand, seafoam, terra, clay — the six the kids keyboard is
+  // already drawn in, at full strength. The same hues as the pastels in the
+  // same order, which is what lets an arrangement carry across when a theme
+  // changes audience.
+  kid: ["#f5a8b8", "#8fce7e", "#f2c94c", "#5fc9a7", "#f5a25f", "#c9b8a8"],
 };
 
 /** The zones in the order the maker shows them, left thumb to right little. */
