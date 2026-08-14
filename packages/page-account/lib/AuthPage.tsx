@@ -1,5 +1,6 @@
 import { Pages, PROFILE_NAME_MAX, usePageData } from "@keylearn/pages-shared";
 import { Button, CheckBox, Icon, TextField } from "@keylearn/widget";
+import { AnimatedHeight, FloatingShell } from "@keylearn/widget";
 import {
   mdiAccountPlus,
   mdiCheckDecagramOutline,
@@ -17,7 +18,6 @@ import {
 } from "react-intl";
 import * as styles from "./AuthPage.module.less";
 import { DobEntry, type DobResult, GrownUpGate } from "./DobEntry.tsx";
-import { AnimatedHeight, FloatingShell } from "./FloatingShell.tsx";
 import { PasswordStrength } from "./PasswordStrength.tsx";
 import { AccountService } from "./service.ts";
 import { isCaptchaRequired, useCaptcha } from "./turnstile.tsx";
@@ -44,6 +44,41 @@ function ssoEmail(): string | null {
     return null;
   }
   return new URLSearchParams(window.location.search).get("email");
+}
+
+/**
+ * Where a successful sign-in lands, when the caller asked for somewhere
+ * other than home — e.g. the staff desk's own sign-in screen, bounced back
+ * to after an ordinary email/password login. Only an internal path is
+ * honoured; anything that would leave the app's own origin is not.
+ *
+ * This resolves through the URL parser rather than checking the raw string
+ * with startsWith("/")/startsWith("//") — that check alone is not enough.
+ * The browser normalises a backslash to a forward slash for special schemes
+ * before it navigates, and strips embedded tab/CR/LF first, so a value like
+ * "/\evil.com" or a path with an encoded tab in it starts with one slash,
+ * not two, yet still resolves to a scheme-relative "//evil.com" once handed
+ * to location.href — the exact string check this used to do would let it
+ * through. Letting the URL constructor do the same normalisation the
+ * browser will do anyway, then comparing the resolved origin, closes that.
+ */
+function loginReturnTo(): string {
+  if (typeof window === "undefined") {
+    return "/";
+  }
+  const raw = new URLSearchParams(window.location.search).get("returnTo");
+  if (raw == null) {
+    return "/";
+  }
+  try {
+    const resolved = new URL(raw, window.location.origin);
+    if (resolved.origin !== window.location.origin) {
+      return "/";
+    }
+    return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+  } catch {
+    return "/";
+  }
 }
 
 function reload(url: string) {
@@ -440,6 +475,7 @@ function LoginForm({
   const [verifyEmail, setVerifyEmail] = useState<string | null>(
     ssoParam() === "verify" ? ssoEmail() : null,
   );
+  const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
   const [remember, setRemember] = useState(true);
   const captcha = useCaptcha();
   const sso = ssoParam();
@@ -504,8 +540,18 @@ function LoginForm({
       .then((result) => {
         if ("verify" in result) {
           setVerifyEmail(result.email);
+        } else if ("twoFactor" in result) {
+          // The password was right, but the account also needs a current
+          // code — the session stays pending server-side until one is
+          // supplied, so reloading now would land on the home page signed
+          // out. VerifyCodeStep can't be reused here: that step confirms an
+          // emailed code and finishes by signing in as a NEW account; this
+          // one confirms an authenticator code against an ALREADY-existing,
+          // already-password-checked account.
+          setBusy(false);
+          setNeedsTwoFactor(true);
         } else {
-          reload("/");
+          reload(loginReturnTo());
         }
       })
       .catch((err) => {
@@ -527,7 +573,20 @@ function LoginForm({
 
   if (verifyEmail != null) {
     return (
-      <VerifyCodeStep email={verifyEmail} onBack={() => setVerifyEmail(null)} />
+      <VerifyCodeStep
+        email={verifyEmail}
+        onBack={() => setVerifyEmail(null)}
+        destination={loginReturnTo()}
+      />
+    );
+  }
+
+  if (needsTwoFactor) {
+    return (
+      <TwoFactorLoginStep
+        onBack={() => setNeedsTwoFactor(false)}
+        destination={loginReturnTo()}
+      />
     );
   }
 
@@ -587,7 +646,7 @@ function LoginForm({
           className={styles.passkeyBtn}
           onClick={() => {
             AccountService.loginPasskey()
-              .then(() => reload("/"))
+              .then(() => reload(loginReturnTo()))
               .catch(() => {});
           }}
         >
@@ -712,6 +771,87 @@ function LoginForm({
   );
 }
 
+// Shown after a correct password for an account with two-step verification
+// on. The password alone only parks a pending sign-in server-side — this is
+// what actually finishes it, with either a current authenticator code or a
+// recovery code.
+function TwoFactorLoginStep({
+  onBack,
+  destination = "/",
+}: {
+  readonly onBack: () => void;
+  readonly destination?: string;
+}) {
+  const { formatMessage } = useIntl();
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = () => {
+    if (code.trim().length < 6 || busy) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    AccountService.twoFactorVerify(code.trim())
+      .then(() => reload(destination))
+      .catch((err) => {
+        setError(err.message);
+        setBusy(false);
+      });
+  };
+
+  return (
+    <form
+      className={styles.form}
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        submit();
+      }}
+    >
+      <p className={styles.intro}>
+        <FormattedMessage
+          id="auth.2fa.intro"
+          defaultMessage="Enter the code from your authenticator app, or one of your recovery codes."
+        />
+      </p>
+      <TextField
+        size="full"
+        type="text"
+        autoComplete="one-time-code"
+        autoFocus={true}
+        maxLength={32}
+        placeholder={formatMessage({
+          id: "auth.2fa.codePlaceholder",
+          defaultMessage: "Authenticator or recovery code",
+        })}
+        value={code}
+        onChange={setCode}
+      />
+      {error != null && <p className={styles.error}>{error}</p>}
+      <div className={styles.primary}>
+        <Button
+          size="full"
+          icon={<Icon shape={mdiCheckDecagramOutline} />}
+          label={formatMessage({
+            id: "auth.2fa.submit",
+            defaultMessage: "Verify",
+          })}
+          disabled={code.trim().length < 6 || busy}
+        />
+      </div>
+      <div className={styles.links}>
+        <LinkButton onClick={onBack}>
+          <FormattedMessage
+            id="auth.backToLogin"
+            defaultMessage="Back to log in"
+          />
+        </LinkButton>
+      </div>
+    </form>
+  );
+}
+
 // Shown after a password sign-up (or a sign-in on an unverified account): the
 // account exists but is dormant until the emailed 6-digit code is entered.
 // Verifying signs the account in and lands on the home page.
@@ -729,6 +869,7 @@ function VerifyCodeStep({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const captcha = useCaptcha();
 
   const submit = () => {
     if (code.trim().length !== 6 || busy) {
@@ -745,9 +886,21 @@ function VerifyCodeStep({
   };
 
   const resend = () => {
-    setResent(true);
     setError(null);
-    AccountService.resendCode(email.trim()).catch(() => {});
+    AccountService.resendCode(email.trim(), captcha.token)
+      .then(() => setResent(true))
+      .catch((err) => {
+        if (isCaptchaRequired(err)) {
+          captcha.require();
+          setError(
+            formatMessage({
+              id: "auth.captcha.required",
+              defaultMessage:
+                "Please complete the verification below and try again.",
+            }),
+          );
+        }
+      });
   };
 
   return (
@@ -788,6 +941,7 @@ function VerifyCodeStep({
         onChange={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
       />
       {error != null && <p className={styles.error}>{error}</p>}
+      {captcha.widget}
       <div className={styles.primary}>
         <Button
           size="full"
@@ -1176,6 +1330,7 @@ function MagicForm({ toLogin }: { readonly toLogin: () => void }) {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const captcha = useCaptcha();
 
   const submit = () => {
     if (email === "" || busy) {
@@ -1183,13 +1338,24 @@ function MagicForm({ toLogin }: { readonly toLogin: () => void }) {
     }
     setBusy(true);
     setError(null);
-    AccountService.registerEmail(email.trim())
+    AccountService.registerEmail(email.trim(), captcha.token)
       .then(() => {
         setSent(true);
         setBusy(false);
       })
       .catch((err) => {
-        setError(err.message);
+        if (isCaptchaRequired(err)) {
+          captcha.require();
+          setError(
+            formatMessage({
+              id: "auth.captcha.required",
+              defaultMessage:
+                "Please complete the verification below and try again.",
+            }),
+          );
+        } else {
+          setError(err.message);
+        }
         setBusy(false);
       });
   };
@@ -1252,6 +1418,7 @@ function MagicForm({ toLogin }: { readonly toLogin: () => void }) {
         onChange={setEmail}
       />
       {error != null && <p className={styles.error}>{error}</p>}
+      {captcha.widget}
       <div className={styles.primary}>
         <Button
           size="full"

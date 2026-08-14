@@ -59,6 +59,7 @@ import {
 } from "./email.ts";
 import { pAdapter } from "./pipe.ts";
 import { clientIp, rateLimit } from "./ratelimit.ts";
+import { encryptTotpSecret, resolveTotpSecret } from "./totp-crypto.ts";
 import {
   clearFailures,
   recordFailure,
@@ -110,11 +111,18 @@ const TAvatar = z.union([
 ]);
 
 // Per-profile UI preferences. Bounded so a profile row cannot become a
-// megabyte-scale arbitrary blob.
-const TPrefs = z.record(
-  z.string().max(48),
-  z.union([z.string().max(256), z.number(), z.boolean(), z.null()]),
-);
+// megabyte-scale arbitrary blob — both per-entry (key/value length) and on
+// the entry count itself, since the app has nowhere near 200 real settings
+// and a request that only bounded per-entry size could still smuggle in
+// tens of thousands of tiny ones.
+const TPrefs = z
+  .record(
+    z.string().max(48),
+    z.union([z.string().max(256), z.number(), z.boolean(), z.null()]),
+  )
+  .refine((prefs) => Object.keys(prefs).length <= 200, {
+    message: "Too many preferences",
+  });
 
 const TProfile = z.object({
   kind: z.enum(["adult", "kid"]),
@@ -189,6 +197,7 @@ function ageInYears(dob: string, now: Date = new Date()): number {
 
 const TCreateToken = z.object({
   email: z.string().min(1).email(),
+  turnstileToken: z.string().max(4096).optional(),
 });
 type TCreateToken = z.infer<typeof TCreateToken>;
 const PCreateToken = zod(TCreateToken, () => {
@@ -224,6 +233,7 @@ const PVerifyEmail = zod(TVerifyEmail, () => {
 
 const TResend = z.object({
   email: z.string().min(1).email(),
+  turnstileToken: z.string().max(4096).optional(),
 });
 type TResend = z.infer<typeof TResend>;
 const PResend = zod(TResend, () => {
@@ -631,9 +641,10 @@ export class Controller {
   @http.POST({ name: "create-token", path: "/auth/login/register-email" })
   async createToken(
     ctx: Context<RouterState & SessionState & AuthState>,
-    @body.json(PCreateToken, jsonOpts) { email }: TCreateToken,
+    @body.json(PCreateToken, jsonOpts) { email, turnstileToken }: TCreateToken,
   ) {
-    rateLimit(ctx, "email", 5, 300_000);
+    rateLimit(ctx, "magic-link", 5, 300_000);
+    await requireCaptchaIfSuspicious(ctx, turnstileToken);
     const token = String(await UserLoginRequest.init(email, "login"));
     const link = String(
       new URL(ctx.state.router.makePath("login", { token }), this.canonicalUrl),
@@ -728,9 +739,10 @@ export class Controller {
   @http.POST({ name: "resend-code", path: "/auth/resend-code" })
   async resendCode(
     ctx: Context<RouterState & SessionState & AuthState>,
-    @body.json(PResend, jsonOpts) { email }: TResend,
+    @body.json(PResend, jsonOpts) { email, turnstileToken }: TResend,
   ) {
-    rateLimit(ctx, "email", 5, 300_000);
+    rateLimit(ctx, "resend-code", 5, 300_000);
+    await requireCaptchaIfSuspicious(ctx, turnstileToken);
     // Only send to accounts that exist and still need verifying, but always
     // answer the same way so the endpoint can't probe for registered emails.
     const user = await User.findByEmail(email);
@@ -836,7 +848,7 @@ export class Controller {
     ctx: Context<RouterState & SessionState & AuthState>,
     @body.json(PForgot, jsonOpts) { email, turnstileToken }: TForgot,
   ) {
-    rateLimit(ctx, "email", 5, 300_000);
+    rateLimit(ctx, "forgot-password", 5, 300_000);
     await requireCaptchaIfSuspicious(ctx, turnstileToken);
     // Only send a link to accounts that actually exist, but always answer the
     // same way so the endpoint can't be used to probe for registered emails.
@@ -989,7 +1001,7 @@ export class Controller {
     if (user.email == null) {
       throw new ApplicationError("Your account has no email address.");
     }
-    rateLimit(ctx, "email", 5, 300_000);
+    rateLimit(ctx, "delete-account-code", 5, 300_000);
     await this.#sendVerificationCode(user.email, "delete-account");
     ctx.response.body = { ok: true };
   }
@@ -1108,7 +1120,14 @@ export class Controller {
         (await EmailVerification.verify(user.email, "delete-account", code))) ||
       (totp != null &&
         user.totpEnabled === true &&
-        ((user.totpSecret != null && verifyTotp(user.totpSecret, totp)) ||
+        ((user.totpSecret != null &&
+          verifyTotp(
+            resolveTotpSecret(
+              user.totpSecret,
+              this.userData.dataDir.dataPath(),
+            ),
+            totp,
+          )) ||
           (await user.useRecoveryCode(totp)))) ||
       (password != null &&
         user.passwordHash != null &&
@@ -1246,7 +1265,7 @@ export class Controller {
   async changeEmailIdentityCode(
     ctx: Context<RouterState & SessionState & AuthState>,
   ) {
-    rateLimit(ctx, "email", 5, 300_000);
+    rateLimit(ctx, "change-email-code", 5, 300_000);
     const user = ctx.state.requireUser();
     if (user.email == null) {
       throw new ApplicationError("Your account has no email address.");
@@ -1261,7 +1280,7 @@ export class Controller {
     @body.json(PChangeEmail, jsonOpts)
     { email, password, identityCode }: TChangeEmail,
   ) {
-    rateLimit(ctx, "email", 5, 300_000);
+    rateLimit(ctx, "change-email", 5, 300_000);
     const user = ctx.state.requireUser();
     // Prove the request comes from the account owner before changing the email.
     if (user.passwordHash != null) {
@@ -1601,7 +1620,11 @@ export class Controller {
       throw new ApplicationError("Two-step verification is already on.");
     }
     const secret = generateTotpSecret();
-    await user.$query().patch({ totpSecret: secret });
+    await user.$query().patch({
+      totpSecret: encryptTotpSecret(secret, this.userData.dataDir.dataPath()),
+    });
+    // The response carries the real secret — for the QR code and the
+    // manual-entry fallback — never what's stored.
     ctx.response.body = {
       secret,
       uri: totpUri(secret, user.email!),
@@ -1622,7 +1645,12 @@ export class Controller {
     if (user.totpSecret == null) {
       throw new ApplicationError("Start the setup again.");
     }
-    if (!verifyTotp(user.totpSecret, code)) {
+    if (
+      !verifyTotp(
+        resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
+        code,
+      )
+    ) {
       throw new ForbiddenError("That code is not right. Try the next one.");
     }
     const codes = generateRecoveryCodes();
@@ -1655,7 +1683,10 @@ export class Controller {
     const byCode =
       code != null &&
       user.totpSecret != null &&
-      verifyTotp(user.totpSecret, code);
+      verifyTotp(
+        resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
+        code,
+      );
     if (!byPassword && !byCode) {
       throw new ForbiddenError("Confirm with your password or a current code.");
     }
@@ -1690,7 +1721,12 @@ export class Controller {
       ctx.state.session.destroy();
       throw new ForbiddenError("Start signing in again.");
     }
-    const byTotp = user.totpSecret != null && verifyTotp(user.totpSecret, code);
+    const byTotp =
+      user.totpSecret != null &&
+      verifyTotp(
+        resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
+        code,
+      );
     const byRecovery = byTotp ? false : await user.useRecoveryCode(code);
     if (!byTotp && !byRecovery) {
       recordFailure(ctx);

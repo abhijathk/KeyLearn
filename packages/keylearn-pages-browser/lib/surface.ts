@@ -58,3 +58,35 @@ export function practiceRedirect(
   const surface = practiceSurfaceOf(profile);
   return drill === surface ? null : SURFACE_HOME[surface];
 }
+
+/**
+ * Pages a kid profile must never reach, whatever else is true of the
+ * request — account settings and profile management, both of which hold
+ * the household owner's real name and email, a delete-account control, and
+ * an edit action on every profile including the grown-ups'. Unlike a
+ * practice drill, there is no "kid version" of these to redirect between;
+ * the only right answer is away, to the kids surface.
+ *
+ * A locked, inert nav link already keeps a kid from clicking through to
+ * either page — this exists because a bookmark, a typed URL, or the back
+ * button all reach the route directly, bypassing that link entirely.
+ */
+const KID_RESTRICTED: ReadonlySet<string> = new Set([
+  Pages.account.path,
+  Pages.profiles.path,
+]);
+
+/**
+ * Where a kid profile standing on `pathname` must be sent instead, or null
+ * when they may stay (including: no learner selected, or the active
+ * learner isn't a kid).
+ */
+export function kidRestrictedRedirect(
+  profile: SurfaceProfile | null,
+  pathname: string,
+): string | null {
+  if (profile == null || profile.kind !== "kid") {
+    return null;
+  }
+  return KID_RESTRICTED.has(pathname) ? Pages.kids.path : null;
+}

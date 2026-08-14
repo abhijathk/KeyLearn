@@ -146,7 +146,7 @@ export default [
       moduleIds: "named",
       chunkIds: "named",
     },
-    devtool: "source-map",
+    devtool: dev ? "source-map" : false,
     plugins: [
       new webpack.DefinePlugin({
         ...ENV,
@@ -210,7 +210,7 @@ export default [
         },
       },
     },
-    devtool: "source-map",
+    devtool: dev ? "source-map" : false,
     plugins: [
       new webpack.DefinePlugin({
         ...ENV,

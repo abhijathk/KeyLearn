@@ -1,7 +1,9 @@
 import { type Context, type Middleware, type Next } from "@fastr/core";
 import { ForbiddenError } from "@fastr/errors";
 import { randomString, type SessionState } from "@fastr/middleware-session";
-import { User } from "@keylearn/database";
+import { StaffAuditEvent, User } from "@keylearn/database";
+import { clientIp } from "./ratelimit.ts";
+import { staffAccessStatus } from "./staff-access.ts";
 import { type AuthState } from "./types.ts";
 
 // How long a "don't keep me signed in" session lasts before it lapses.
@@ -13,14 +15,15 @@ export function loadUser(): Middleware<SessionState & AuthState> {
     next: Next,
   ): Promise<void> => {
     const { state } = ctx;
-    Object.assign(state, await makeAuthState(state));
+    Object.assign(state, await makeAuthState(ctx));
     await next();
   };
 }
 
 async function makeAuthState(
-  state: SessionState & AuthState,
+  ctx: Context<SessionState & AuthState>,
 ): Promise<AuthState> {
+  const { state } = ctx;
   const { session } = state;
   const sessionId = session.id ?? randomString(10);
   // Only a session that reached the END of sign-in carries `userId`. A password
@@ -53,16 +56,46 @@ async function makeAuthState(
     }
   }
   const publicUser = User.toPublicUser(user, sessionId);
+  const requireUser = () => {
+    if (user == null) {
+      throw new ForbiddenError();
+    } else {
+      return user;
+    }
+  };
   return {
     sessionId,
     user,
     publicUser,
-    requireUser: () => {
-      if (user == null) {
+    requireUser,
+    requireStaff: async () => {
+      const u = requireUser();
+      const ip = clientIp(ctx);
+      const status = await staffAccessStatus(u);
+      if (!status.ok) {
+        void StaffAuditEvent.record({
+          userId: u.id,
+          action: "staff-access-denied",
+          detail:
+            status.reason === "not-staff"
+              ? "not staff"
+              : "no passkey or two-step verification",
+          ip,
+        });
         throw new ForbiddenError();
-      } else {
-        return user;
       }
+      // Recorded once per session rather than on every request — the
+      // request rate to the desk isn't the interesting signal, whether a
+      // new session reached it at all is.
+      if (session.get("staffAudited") !== true) {
+        session.set("staffAudited", true);
+        void StaffAuditEvent.record({
+          userId: u.id,
+          action: "staff-signin",
+          ip,
+        });
+      }
+      return u;
     },
   };
 }

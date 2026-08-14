@@ -60,11 +60,14 @@ export type PatchAccountResponse = {
 };
 
 export namespace AccountService {
-  export async function registerEmail(email: string): Promise<unknown> {
+  export async function registerEmail(
+    email: string,
+    turnstileToken?: string,
+  ): Promise<unknown> {
     const response = await request
       .use(expectType("application/json"))
       .POST("/auth/login/register-email")
-      .send({ email });
+      .send({ email, turnstileToken });
     return await response.json();
   }
 
@@ -85,12 +88,17 @@ export namespace AccountService {
   }
 
   /**
-   * Either the account is ready ({ ok: true }) or the email still needs
-   * verifying ({ verify: true, email }) so the caller shows the code step.
+   * The account is ready ({ ok: true }); the email still needs verifying
+   * ({ verify: true, email }); or the password was right but the account
+   * has two-step verification on, so the session is only pending until a
+   * current code is supplied ({ twoFactor: true }) — in every one of these
+   * cases except the first, the caller must show a further step rather
+   * than treat the call as a finished sign-in.
    */
   export type AuthResult =
     | { readonly ok: true }
-    | { readonly verify: true; readonly email: string };
+    | { readonly verify: true; readonly email: string }
+    | { readonly twoFactor: true };
 
   async function postAuthResult(
     path: string,
@@ -149,8 +157,11 @@ export namespace AccountService {
   }
 
   /** Ask for a fresh verification code (always resolves — never reveals whether the email exists). */
-  export async function resendCode(email: string): Promise<void> {
-    await postAuth("/auth/resend-code", { email });
+  export async function resendCode(
+    email: string,
+    turnstileToken?: string,
+  ): Promise<void> {
+    await postAuth("/auth/resend-code", { email, turnstileToken });
   }
 
   export async function completeProfile(dateOfBirth: string): Promise<void> {

@@ -26,7 +26,7 @@ import {
 } from "react-router";
 import { Captions } from "./Captions.tsx";
 import { IntlLoader } from "./loader/IntlLoader.tsx";
-import { practiceRedirect } from "./surface.ts";
+import { kidRestrictedRedirect, practiceRedirect } from "./surface.ts";
 import { Template } from "./Template.tsx";
 import { ThemeProvider } from "./themes/ThemeProvider.tsx";
 import { Title } from "./Title.tsx";
@@ -44,6 +44,14 @@ const RegisterPage = lazy(() => import("./pages/register.tsx"));
 const ForgotPasswordPage = lazy(() => import("./pages/forgot-password.tsx"));
 const ResetPasswordPage = lazy(() => import("./pages/reset-password.tsx"));
 const HelpPage = lazy(() => import("./pages/help.tsx"));
+const SupportPage = lazy(() => import("./pages/support.tsx"));
+const SupportDeskPage = lazy(() => import("./pages/support-desk.tsx"));
+const SupportDeskSigninPage = lazy(
+  () => import("./pages/support-desk-signin.tsx"),
+);
+const SupportDeskAuditPage = lazy(
+  () => import("./pages/support-desk-audit.tsx"),
+);
 const ProfilesManagePage = lazy(() => import("./pages/profiles.tsx"));
 const KidsPage = lazy(() => import("./pages/kids.tsx"));
 const LayoutsPage = lazy(() => import("./pages/layouts.tsx"));
@@ -149,12 +157,36 @@ function PracticeSurfaceGuard(): ReactNode {
   return null;
 }
 
+/**
+ * Keeps a kid profile out of account settings and profile management —
+ * both hold the household owner's PII, a delete-account control, and an
+ * edit action on every profile. The nav drawer already locks the link to
+ * either page while a kid is active, but that's a UI affordance, not a
+ * boundary: a bookmark, a typed URL, or the back button reaches the route
+ * directly regardless. Same shape as {@link PracticeSurfaceGuard}, and for
+ * the same reason — the guard belongs on the route, not on each entry
+ * point, so there is one answer instead of however many ways in exist.
+ */
+function KidAccountGuard(): ReactNode {
+  const { active } = useProfiles();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const home = kidRestrictedRedirect(active, pathname);
+  useEffect(() => {
+    if (home != null) {
+      navigate(home, { replace: true });
+    }
+  }, [home, navigate]);
+  return null;
+}
+
 function PageRoutes() {
   const { locale } = useIntl();
   return (
     <BrowserRouter basename={Pages.intlBase(locale)}>
       <FirstRunRedirect />
       <PracticeSurfaceGuard />
+      <KidAccountGuard />
       <ProfilePicker />
       <Routes>
         <Route
@@ -225,6 +257,50 @@ function PageRoutes() {
               <Title page={Pages.help} />
               <Suspense fallback={<LoadingProgress />}>
                 <HelpPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.support.path}
+          element={
+            <Template path={Pages.support.path}>
+              <Title page={Pages.support} />
+              <Suspense fallback={<LoadingProgress />}>
+                <SupportPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.supportDesk.path}
+          element={
+            <Template path={Pages.supportDesk.path}>
+              <Title page={Pages.supportDesk} />
+              <Suspense fallback={<LoadingProgress />}>
+                <SupportDeskPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.supportDeskSignin.path}
+          element={
+            <Template path={Pages.supportDeskSignin.path}>
+              <Title page={Pages.supportDeskSignin} />
+              <Suspense fallback={<LoadingProgress />}>
+                <SupportDeskSigninPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.supportDeskAudit.path}
+          element={
+            <Template path={Pages.supportDeskAudit.path}>
+              <Title page={Pages.supportDeskAudit} />
+              <Suspense fallback={<LoadingProgress />}>
+                <SupportDeskAuditPage />
               </Suspense>
             </Template>
           }

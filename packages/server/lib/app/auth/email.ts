@@ -382,3 +382,49 @@ ${settingsLink}`;
   );
   return { to: email, subject: title, text, html };
 }
+
+/**
+ * Forwards a business enquiry from the support desk to the configured inbox.
+ *
+ * General support tickets stay queue-only — staff triage those from the
+ * desk. A business enquiry is different: it usually wants a faster, more
+ * personal reply than the queue gives it, so it also lands directly in an
+ * inbox a person is actually watching.
+ */
+export function messageBusinessEnquiry({
+  to,
+  name,
+  fromEmail,
+  subject,
+  message,
+  ticketLink,
+}: {
+  readonly to: string;
+  readonly name: string;
+  readonly fromEmail: string;
+  readonly subject: string;
+  readonly message: string;
+  readonly ticketLink: string;
+}): Mailer.Message {
+  const mailSubject = `Business enquiry: ${subject}`;
+  const text = `New business enquiry from the KeyLearn support desk.
+
+From: ${name} <${fromEmail}>
+Subject: ${subject}
+
+${message}
+
+View in the staff desk:
+${ticketLink}`;
+  const html = shell(
+    mailSubject,
+    heading("Business enquiry") +
+      factList([
+        ["From", `${name} <${fromEmail}>`],
+        ["Subject", subject],
+      ]) +
+      paragraph(message) +
+      `<div style="margin:4px 0 4px">${button(ticketLink, "Open in the staff desk")}</div>`,
+  );
+  return { to, subject: mailSubject, text, html };
+}

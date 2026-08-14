@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import { equal } from "rich-assert";
-import { practiceRedirect, practiceSurfaceOf } from "./surface.ts";
+import {
+  kidRestrictedRedirect,
+  practiceRedirect,
+  practiceSurfaceOf,
+} from "./surface.ts";
 
 const kid = { kind: "kid", visionSupport: false };
 const adult = { kind: "adult", visionSupport: false };
@@ -51,4 +55,29 @@ test("with no learner selected nothing is restricted", () => {
   equal(practiceRedirect(null, "/"), null);
   equal(practiceRedirect(null, "/kids"), null);
   equal(practiceRedirect(null, "/braille"), null);
+});
+
+test("a kid never reaches account settings or profile management", () => {
+  equal(kidRestrictedRedirect(kid, "/account"), "/kids");
+  equal(kidRestrictedRedirect(kid, "/profiles"), "/kids");
+  equal(kidRestrictedRedirect(brailleKid, "/account"), "/kids");
+});
+
+test("a grown-up (braille or not) reaches account settings freely", () => {
+  equal(kidRestrictedRedirect(adult, "/account"), null);
+  equal(kidRestrictedRedirect(adult, "/profiles"), null);
+  equal(kidRestrictedRedirect(braille, "/account"), null);
+});
+
+test("the account-and-profiles restriction never touches other pages", () => {
+  for (const p of [kid, adult, braille]) {
+    equal(kidRestrictedRedirect(p, "/"), null);
+    equal(kidRestrictedRedirect(p, "/kids"), null);
+    equal(kidRestrictedRedirect(p, "/help"), null);
+  }
+});
+
+test("with no learner selected, account and profiles stay reachable", () => {
+  equal(kidRestrictedRedirect(null, "/account"), null);
+  equal(kidRestrictedRedirect(null, "/profiles"), null);
 });

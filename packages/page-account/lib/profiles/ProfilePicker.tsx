@@ -3,10 +3,10 @@ import {
   logout as doLogout,
 } from "@keylearn/pages-shared";
 import { ConfirmDialog } from "@keylearn/widget";
+import * as shell from "@keylearn/widget/lib/components/floatingshell/FloatingShell.module.less";
 import { type ReactNode, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { useLocation, useNavigate } from "react-router";
-import * as shell from "../FloatingShell.module.less";
 import { BrailleAvatar } from "./BrailleBadge.tsx";
 import { useProfiles } from "./context.tsx";
 import { ProfileAvatar } from "./ProfileAvatar.tsx";
@@ -18,8 +18,29 @@ import * as styles from "./ProfilePicker.module.less";
  * — kids and grown-ups — is offered; picking one switches to it. There is no
  * dismiss, only a small log-out button (with confirmation) to leave.
  */
-/** Pages that belong to nobody in particular. */
-const NO_LEARNER: readonly string[] = ["/verify"];
+/**
+ * Pages that belong to nobody in particular. The support desk is the other
+ * clear case: staff signing in there are answering tickets, not choosing who
+ * is about to practise, and forcing that choice first would strand the
+ * sign-in screen's own `returnTo` — picking a profile always lands on
+ * practice/kids/braille, never back where the visitor actually came from.
+ *
+ * The legal/informational pages belong here for the same reason as
+ * checking a certificate: someone who signed in once and just wants to
+ * reread the terms, the privacy policy, or how to reach support shouldn't
+ * have to pick a household member first — and with no dismiss on this
+ * modal, they had no way to reach the page's own content at all.
+ */
+const NO_LEARNER: readonly string[] = [
+  "/verify",
+  "/support/desk",
+  "/terms-of-service",
+  "/privacy-policy",
+  "/accessibility",
+  "/about",
+  "/help",
+  "/guide",
+];
 
 export function ProfilePicker(): ReactNode {
   const { formatMessage } = useIntl();
