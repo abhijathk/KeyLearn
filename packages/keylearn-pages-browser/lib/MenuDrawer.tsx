@@ -16,6 +16,7 @@ import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink, useNavigate } from "react-router";
+import coffeeCup from "../assets/coffee-cup.png";
 import { LanguagePanel } from "./LanguagePanel.tsx";
 import * as styles from "./MenuDrawer.module.less";
 import { NavMenu } from "./NavMenu.tsx";
@@ -352,7 +353,7 @@ export function MenuDrawer({
                     rel="noreferrer noopener"
                     onClick={onClose}
                   >
-                    <StrokeIcon className={styles.utilIcon} name="coffee" />
+                    <img className={styles.utilIcon} src={coffeeCup} alt="" />
                     <FormattedMessage
                       id="footer.supportLink.text"
                       defaultMessage="Buy me a coffee"

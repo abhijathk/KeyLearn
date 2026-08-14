@@ -215,6 +215,15 @@
     filter 0.15s ease;
 }
 
+// The Buy Me a Coffee mark is a raster brand asset, not a square currentColor
+// glyph — width follows the art's own aspect ratio instead of being forced
+// to 1rem square, everything else about `.utilIcon` (including the hover
+// glow, which works on the alpha channel regardless of pixel colour) still
+// applies.
+img.utilIcon {
+  inline-size: auto;
+}
+
 .util {
   display: flex;
   flex-direction: column;

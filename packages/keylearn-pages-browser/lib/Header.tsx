@@ -7,6 +7,7 @@ import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { NavLink, useLocation } from "react-router";
+import coffeeCup from "../assets/coffee-cup.png";
 import { AccountMenu } from "./AccountMenu.tsx";
 import * as styles from "./Header.module.less";
 import { ThemeSwitcher } from "./themes/ThemeSwitcher.tsx";
@@ -418,7 +419,7 @@ export function Header({
               }),
             )}
           >
-            <StrokeIcon name="coffee" />
+            <img className={styles.coffeeCup} src={coffeeCup} alt="" />
           </a>
         )}
         {kids ? (
