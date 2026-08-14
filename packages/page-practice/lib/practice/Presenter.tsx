@@ -119,7 +119,11 @@ function hasCodeTheme(settings: Settings): boolean {
   );
 }
 
-const propTextSize = numberProp("prefs.practice.textScale", 1, {
+// 1.15 rather than the slider's exact midpoint (1.125) — the step is 0.05,
+// so the midpoint itself isn't a reachable value; round up rather than down,
+// since the point of moving off 1 is that the practice text read a touch
+// small at the old default.
+const propTextSize = numberProp("prefs.practice.textScale", 1.15, {
   min: 0.75,
   max: 1.5,
 });
