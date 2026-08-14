@@ -3,6 +3,13 @@
 // Held back, then faded in. A chunk that loads in 120ms should never show a
 // loading state at all — the splash appearing and vanishing is what reads as a
 // flash. Only a wait long enough to notice earns one.
+//
+// 0.2s, not longer: this is what a page reached from the menu drawer shows
+// while its chunk loads, and the drawer's own close transition is 0.25-0.3s
+// (see MenuDrawer.module.less). A longer delay here left a gap after the
+// drawer had already finished closing — the drawer's gone, the new page
+// isn't there yet, and this was still invisible — which read as no loading
+// state at all rather than a merely delayed one.
 .root {
   display: flex;
   position: fixed;
@@ -14,7 +21,7 @@
   animation-name: motion-fade;
   animation-duration: @motion-base;
   animation-timing-function: @motion-ease;
-  animation-delay: 0.4s;
+  animation-delay: 0.2s;
   animation-fill-mode: both;
 
   .motion-respect-reduced();

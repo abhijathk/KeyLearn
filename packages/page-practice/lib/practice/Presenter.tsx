@@ -54,6 +54,10 @@ type Props = {
   readonly onKeyDown: (ev: IKeyboardEvent) => void;
   readonly onKeyUp: (ev: IKeyboardEvent) => void;
   readonly onInput: (ev: IInputEvent) => void;
+  /** Whether this learner has never dismissed the tour before. */
+  readonly startWithTourOpen: boolean;
+  /** Persists that they now have, so it doesn't show again. */
+  readonly onTourClose: () => void;
 };
 
 type State = {
@@ -245,7 +249,7 @@ export class Presenter extends PureComponent<Props, State> {
     window.addEventListener("keylearn:pulse-pinned", this.handlePinned);
     window.addEventListener(A11Y_CHANGED_EVENT, this.handlePlainChanged);
     this.#broadcastFocusMode(this.state.focusMode);
-    if (this.props.state.settings.isNew) {
+    if (this.props.startWithTourOpen) {
       this.setState({
         view: View.Normal,
         tour: true,
@@ -494,6 +498,7 @@ export class Presenter extends PureComponent<Props, State> {
   };
 
   handleTourClose = () => {
+    this.props.onTourClose();
     this.setState(
       {
         view: View.Normal,

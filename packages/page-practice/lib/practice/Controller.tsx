@@ -1,6 +1,7 @@
 import { useAssessmentPartial, useAssessmentReset } from "@keylearn/assessment";
 import { type KeyId, useKeyboard } from "@keylearn/keyboard";
-import { type Result } from "@keylearn/result";
+import { type Result, uiProps } from "@keylearn/result";
+import { useSettings } from "@keylearn/settings";
 import { type LineList } from "@keylearn/textinput";
 import { Feedback } from "@keylearn/textinput";
 import { addKey, deleteKey, emulateLayout } from "@keylearn/textinput-events";
@@ -35,6 +36,7 @@ export const Controller = memo(function Controller({
     handleKeyUp,
     handleInput,
   } = useLessonState(progress, onResult);
+  const { settings, updateSettings } = useSettings();
   // A timed run rarely ends on a line break. What is already typed when the
   // clock stops is measured the same way a finished line is.
   useAssessmentPartial(() => {
@@ -73,6 +75,8 @@ export const Controller = memo(function Controller({
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       onInput={handleInput}
+      startWithTourOpen={!settings.get(uiProps.tourSeen)}
+      onTourClose={() => updateSettings(settings.set(uiProps.tourSeen, true))}
     />
   );
 });

@@ -9,4 +9,9 @@ export const uiProps = {
   // Slide the page header out of the way while typing (it returns when idle),
   // so nothing competes with the practice text.
   hideHeaderWhileTyping: booleanProp("ui.hideHeaderWhileTyping", true),
+  // Explicit, rather than inferred from Settings.isNew: "never touched any
+  // preference" and "never dismissed the tour" are different facts, and
+  // conflating them meant the tour reappeared on every visit for anybody who
+  // simply never opened the settings screen, closing the tour notwithstanding.
+  tourSeen: booleanProp("ui.tourSeen", false),
 } as const;
