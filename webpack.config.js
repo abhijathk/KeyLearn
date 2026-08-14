@@ -188,7 +188,12 @@ export default [
       splitChunks: {
         cacheGroups: {
           vendor: {
-            test: isVendor(["tslib", "@mdi"]),
+            // `three` stays out of the shared vendor bundle deliberately: it
+            // is only used by the kids page's dino world (already
+            // route-lazy-loaded), and sweeping it into "shared-vendor" —
+            // which every page loads up front — would ship it to every
+            // adult practice session that never visits /kids.
+            test: isVendor(["tslib", "@mdi", "three"]),
             chunks: "all",
             name: "shared-vendor",
           },
@@ -237,7 +242,11 @@ export default [
             }),
           ]),
       new BundleAnalyzerPlugin({
-        analyzerMode: "disabled",
+        analyzerMode: process.env.ANALYZE ? "static" : "disabled",
+        openAnalyzer: false,
+        reportFilename: join(import.meta.dirname, "bundle-report.html"),
+        generateStatsFile: Boolean(process.env.ANALYZE),
+        statsFilename: join(import.meta.dirname, "bundle-stats.json"),
       }),
     ],
     performance: {

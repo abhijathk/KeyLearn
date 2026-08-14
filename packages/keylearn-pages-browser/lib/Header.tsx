@@ -1,5 +1,14 @@
 import { lessonStamp, type StampMode } from "@keylearn/lesson";
-import { GearIcon, MoonIcon, SoundIcon, SunIcon } from "@keylearn/page-kids";
+// A deep import into icons.tsx rather than the package root: the root
+// barrel also re-exports KidsPage.tsx, which pulls in the three.js-backed
+// dino world — importing through it would ship that ~150KB (gzipped) to
+// every page instead of only /kids, since Header renders everywhere.
+import {
+  GearIcon,
+  MoonIcon,
+  SoundIcon,
+  SunIcon,
+} from "@keylearn/page-kids/lib/icons.tsx";
 import { useSettings } from "@keylearn/settings";
 import { supportUrl } from "@keylearn/thirdparties";
 import { IconButton, StrokeIcon } from "@keylearn/widget";
