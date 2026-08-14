@@ -24,7 +24,7 @@ test("render", () => {
   like($("html").attr(), {
     "lang": "en",
     "data-color": "auto",
-    "data-font": "open-sans",
+    "data-font": "roboto",
   });
   equal($("title").text(), "400 - Bad Request");
   isTrue($("body").text().includes("400 - Bad Request"));

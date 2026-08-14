@@ -39,7 +39,7 @@ test("render", () => {
     "lang": "en",
     "dir": "ltr",
     "data-color": "auto",
-    "data-font": "open-sans",
+    "data-font": "roboto",
   });
   // The ad and analytics injection was taken out deliberately (commit
   // 2141f451). Asserting the absence keeps it out: a tracker reintroduced into
@@ -81,7 +81,7 @@ test("render alt", () => {
     "lang": "en",
     "dir": "ltr",
     "data-color": "auto",
-    "data-font": "open-sans",
+    "data-font": "roboto",
   });
   isFalse(html.includes("google"));
   isFalse(html.includes("cloudflare"));
@@ -122,7 +122,7 @@ test("render for a bot", () => {
     "lang": "en",
     "dir": "ltr",
     "data-color": "auto",
-    "data-font": "open-sans",
+    "data-font": "roboto",
   });
   equal($("nav").length, 1);
 });

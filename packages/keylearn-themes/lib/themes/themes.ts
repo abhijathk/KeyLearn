@@ -42,12 +42,13 @@ export const COLORS = new ThemeList([
 
 export const FONTS = new ThemeList([
   {
-    id: "open-sans",
-    name: "Open Sans",
-  },
-  {
+    // First = the default for a fresh visit.
     id: "roboto",
     name: "Roboto",
+  },
+  {
+    id: "open-sans",
+    name: "Open Sans",
   },
   {
     id: "rubik",

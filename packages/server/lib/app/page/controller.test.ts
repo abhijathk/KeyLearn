@@ -103,5 +103,5 @@ test(`ignore invalid theme cookie`, async () => {
 
   const $ = load(await response.body.text());
   equal($("html").attr("data-color"), "auto");
-  equal($("html").attr("data-font"), "open-sans");
+  equal($("html").attr("data-font"), "roboto");
 });
