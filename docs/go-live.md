@@ -23,26 +23,68 @@ watched the same check pass silently. `config-check.test.ts` also passes
 
 ## 1. Host
 
-- [ ] A host that runs a **persistent Node process with a real disk**. Sessions
+- [x] A host that runs a **persistent Node process with a real disk**. Sessions
       (`FileStore`), learner results, and `certificate.key` are all files under
       `DATA_DIR`. Serverless platforms with ephemeral storage lose all three.
+      Hetzner CX23 (2 vCPU/4GB, Nuremberg) provisioned 2026-08-14 —
+      `46.224.186.58`, Ubuntu 26.04, key-only SSH, UFW (22/80/443 only),
+      `unattended-upgrades` confirmed active, Node 24.19.0 installed.
 - [ ] Decide the app's hostname. `keylearn.org` currently resolves to Squarespace
       (`198.49.23.145`), so either the app gets a subdomain or that DNS moves.
+      Decided: apex domain, DNS moving to Cloudflare. In progress — Cloudflare
+      zone created, all records (A, both Brevo DKIM CNAMEs, the Brevo
+      link-tracking CNAME, `www`, SPF/DMARC/verification TXT) verified correct
+      and left **unproxied** for now. DNSSEC was enabled at Squarespace and had
+      to be disabled and confirmed cleared from the `.org` registry (DS record)
+      before switching nameservers, or the domain could have gone fully
+      unresolvable — confirmed cleared 2026-08-14 via direct trace to the
+      `.org` registry plus 3 independent resolvers. Nameservers switched to
+      `huxley.ns.cloudflare.com` / `kay.ns.cloudflare.com` at Squarespace
+      2026-08-14 2:47pm, confirmed saved by Squarespace; propagation in
+      progress (registry still showing the old Squarespace nameservers as of
+      this note — normal, can take up to 48h).
 - [ ] Reverse proxy (nginx) terminating TLS and forwarding `/_/game/` to the game
       worker. `GAME_URL` is then left **empty** so the browser uses its own origin.
+      nginx + Certbot installed 2026-08-14; reverse-proxy config live
+      (`/` → `127.0.0.1:4000`, `/_/game/` → `127.0.0.1:4001` with upgrade
+      headers), confirmed responding (502, correctly, since nothing is
+      deployed upstream yet). HTTP only so far — TLS needs Certbot, which
+      needs `keylearn.org` to actually resolve here, which is blocked on the
+      DNS item above.
 - [ ] Process supervision (systemd). Confirm a restart leaves exactly **one**
       master running — several masters can bind the same port simultaneously and
       serve stale code from whichever one wins a given request.
+      Unit installed at `/etc/systemd/system/keylearn.service` 2026-08-14:
+      runs as a dedicated `keylearn` system user (not root), loads
+      `/etc/keylearn/env` directly via `EnvironmentFile=`, `KillMode=control-group`
+      so a restart can't leave orphaned cluster workers behind. Not yet
+      enabled/started — no app code deployed, no database, no real env values
+      yet, so starting it now would just crash-loop. The "confirm a restart
+      leaves exactly one master" behavior is unverified in practice until then.
 - [ ] Cloudflare in front for DNS/TLS/CDN is a good fit. Keep every mail record
       **unproxied** (grey cloud); proxying an MX host breaks delivery.
+      Cloudflare zone exists with all records unproxied (see hostname item
+      above) — this is the same in-progress migration, not a separate task.
 
 ## 2. Database
 
-- [ ] Provision **MySQL 8**. `knex.ts` supports only `mysql` and `sqlite`; SQLite
+- [x] Provision **MySQL 8**. `knex.ts` supports only `mysql` and `sqlite`; SQLite
       under five worker processes will contend on writes.
+      MySQL 8.4.10 installed on the app host itself 2026-08-14 (Ubuntu
+      package default), bound to `127.0.0.1` only — not reachable off-box,
+      UFW doesn't even open 3306. Verified already-secure defaults (no
+      anonymous users, no `test` database, `root` is socket-auth-only, no
+      password/remote root login possible). Created a dedicated `keylearn`
+      database and a `keylearn`@`localhost` user scoped only to that one
+      database (generated password, stored root-readable-only at
+      `/etc/keylearn/db-password` on the server, not in this repo).
+      Connectivity verified: connects, sees only its own database plus the
+      universally-visible `information_schema`/`performance_schema`, no
+      access to the `mysql` system database.
 - [ ] Set `DATABASE_CLIENT=mysql` plus `DATABASE_HOST`, `DATABASE_PORT`,
       `DATABASE_DATABASE`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`.
-      **⚠** currently `sqlite`.
+      **⚠** currently `sqlite`. Done — written into `/etc/keylearn/env` on
+      the server 2026-08-14 along with the rest of Section 3, see below.
 - [ ] Run `packages/devenv/lib/initdb.ts` (or `npm run start-docker`, which does
       it) to create the schema. **A plain `npm start` does not apply schema
       changes**, so a new table or column silently does not exist until this is
@@ -67,31 +109,54 @@ watched the same check pass silently. `config-check.test.ts` also passes
 
 ## 3. Configuration
 
-- [ ] **⚠** `APP_URL=https://<host>/` (currently `http://localhost:4000/`).
+- [x] **⚠** `APP_URL=https://<host>/` (currently `http://localhost:4000/`).
       This is the single highest-impact value: every emailed link and both OAuth
       redirect URIs are derived from it.
-- [ ] **⚠** `COOKIE_SECURE=true` and `COOKIE_DOMAIN=<host>` (or leave
+      Set to `https://keylearn.org/` 2026-08-14.
+- [x] **⚠** `COOKIE_SECURE=true` and `COOKIE_DOMAIN=<host>` (or leave
       `COOKIE_DOMAIN` unset for a host-only cookie, which is usually what you
       want). Development sets these to `false`/`localhost`, which is correct
       there and unsafe in production. Enforced at startup.
-- [ ] **⚠** `TRUSTED_PROXIES=loopback` when behind nginx (currently empty,
+      `COOKIE_SECURE=true` set, `COOKIE_DOMAIN` left unset (host-only cookie,
+      single origin, no `www` in play) — matches the doc's own recommendation.
+- [x] **⚠** `TRUSTED_PROXIES=loopback` when behind nginx (currently empty,
       which is correct only for a directly-exposed server).
       Rate limiting and the adaptive CAPTCHA key on the client address; behind a
       proxy with this unset, every visitor shares the proxy's address and the
       limits apply to all of them collectively. Set it *only* as wide as the
       proxies you actually run — a client that can forge `X-Forwarded-For`
       bypasses both protections.
-- [ ] `DATA_DIR` on the persistent volume, not a home directory.
-- [ ] `NODE_ENV=production`.
-- [ ] `MULTIPLAYER_ENABLED=false` until live practice is finished.
-- [ ] `CERTIFICATE_SECRET` — leave unset for a single server (a key is generated
+      Set to `loopback`, correct for the current single-proxy chain (nginx
+      only, on the same host). **Revisit this** if/when the Cloudflare `A`/`www`
+      records get flipped from DNS-only to Proxied later — that adds a second
+      proxy hop in front of nginx, and either nginx needs its `real_ip` module
+      configured to trust Cloudflare's IP ranges and rewrite to the true
+      client IP, or the client-IP logic breaks.
+- [x] `DATA_DIR` on the persistent volume, not a home directory.
+      Set to `/var/lib/keylearn` — the local SSD, owned by the dedicated
+      `keylearn` system user, matching the systemd unit's `ReadWritePaths`.
+- [x] `NODE_ENV=production`.
+      Set directly in the systemd unit's `Environment=` line (not the env
+      file) — it has to be known before the app can even decide which env
+      file variant to probe, so it can't live in the file it's used to select.
+- [x] `MULTIPLAYER_ENABLED=false` until live practice is finished.
+      Set explicitly (matches the dev default already, but stated explicitly
+      for a production file rather than relying on an implicit default).
+- [x] `CERTIFICATE_SECRET` — leave unset for a single server (a key is generated
       into `DATA_DIR/certificate.key`). Set it explicitly **before issuing any
       certificate** if more than one machine will issue them; changing it later
       changes every certificate's number.
+      Left unset, as recommended — single server. Same treatment given to
+      `TOTP_ENCRYPTION_KEY` (added this session, not in the original doc,
+      same single-server reasoning).
 - [ ] `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` — the adaptive CAPTCHA is
       disabled entirely while the secret is unset. Worth enabling on a public
       deployment.
-- [ ] `BREACH_CHECK=true` (already the default).
+      Left blank for now — needs a Turnstile widget created in the Cloudflare
+      dashboard to get real keys. Optional, safe to add later since the
+      feature just stays off until set.
+- [x] `BREACH_CHECK=true` (already the default).
+      Set explicitly in the file for the same reason as `MULTIPLAYER_ENABLED`.
 
 ## 4. Sign-in providers
 
