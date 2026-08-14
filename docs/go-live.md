@@ -228,11 +228,17 @@ watched the same check pass silently. `config-check.test.ts` also passes
       Facebook account, which needs you.
 - [x] Keep the localhost URIs alongside the production ones so development keeps
       working. Done for Google explicitly; Meta covers it automatically.
-- [ ] Both consoles need a hosted privacy-policy URL before an app can be
-      published to external users. `https://keylearn.org/privacy-policy` is
-      live and confirmed reachable (200) — set it as the Privacy Policy URL
-      on Google's **OAuth consent screen** page and Meta's **Settings → Basic**
-      page.
+- [x] Both consoles need a hosted privacy-policy URL before an app can be
+      published to external users. Set 2026-08-14. Google's OAuth consent
+      screen: home page, privacy policy (`/privacy-policy`), and Terms of
+      Service (`/terms-of-service`) links, all live and confirmed reachable.
+      Meta's Settings → Basic: same privacy policy and Terms of Service URLs
+      — both were still pointing at Meta's own placeholder
+      (`https://www.facebook.com/`) until caught and fixed here. Also set
+      Meta's required Data Deletion Instructions URL to
+      `https://keylearn.org/account`, the actual self-service page where a
+      signed-in user can delete their account through any configured factor
+      — a stronger answer than pointing at prose in the privacy policy.
 - [ ] Microsoft sign-in is deferred — see `deferred.md`. The button stays hidden
       while `AUTH_MICROSOFT_CLIENT_ID` is empty, so nothing breaks by omitting it.
 
