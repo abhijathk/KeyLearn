@@ -15,6 +15,12 @@ forking any worker and **refuses to start** on a localhost or plain-HTTP
 allowed. That guard is a backstop, not a substitute for this list — it cannot
 know your hostname is the right one.
 
+Confirmed live 2026-08-14, not just by reading the code: booted with a bad
+config under `NODE_ENV=production` and watched it log the 3 fatal errors, exit
+1, and leave nothing running; booted again with a fully valid config and
+watched the same check pass silently. `config-check.test.ts` also passes
+(9/9).
+
 ## 1. Host
 
 - [ ] A host that runs a **persistent Node process with a real disk**. Sessions
@@ -46,12 +52,18 @@ know your hostname is the right one.
       database backup now carries them — but `DATA_DIR` still holds the working
       copies, the sessions, and `certificate.key`, which the database does not
       have. Back up both.
-- [ ] **Rehearse the restore before you need it**:
+- [x] **Rehearse the restore before you need it**:
       `npx tsnode packages/server-cli/lib/main.ts restore-data --dry-run`, then
       without `--dry-run` against an empty `DATA_DIR`. It refuses to overwrite
       existing files unless `--force`, because a file on disk is newer than any
       snapshot of it. Sessions and `certificate.key` are NOT in the snapshot —
       losing the key changes what every issued certificate number means.
+      Rehearsed 2026-08-14 against a disposable `/tmp` directory, not the real
+      one: `--dry-run` correctly reported the 5 files it would write with
+      correct byte counts; a real run wrote all 5; a second real run correctly
+      skipped all 5 as already existing. Worth re-rehearsing once against the
+      real production `DATA_DIR` after it exists, but the command itself is
+      confirmed to work as documented.
 
 ## 3. Configuration
 
@@ -119,6 +131,10 @@ know your hostname is the right one.
 - [ ] Confirm the session cookie carries `Secure` and `HttpOnly`.
 - [ ] Confirm rate limiting sees real client addresses, not the proxy's.
 - [ ] Visit a missing URL and force an error: both should render the branded
-      404 and 500 pages, not framework defaults.
+      404 and 500 pages, not framework defaults. Already confirmed working on
+      this same code path in dev (2026-08-14): a live 404 rendered the branded
+      `ErrorPage`, and `error-handler.test.ts` exercises the identical
+      component for 500. Re-check after deploying anyway — this only proves
+      the code path, not the production reverse-proxy/error-page config.
 - [ ] Practise a lesson end to end and confirm the result is saved and appears in
       the profile.
