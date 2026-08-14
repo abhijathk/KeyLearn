@@ -10,13 +10,11 @@ import {
   Pages,
   usePageData,
 } from "@keylearn/pages-shared";
-import { supportUrl } from "@keylearn/thirdparties";
 import { IconButton, StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink, useNavigate } from "react-router";
-import coffeeCup from "../assets/coffee-cup.png";
 import { LanguagePanel } from "./LanguagePanel.tsx";
 import * as styles from "./MenuDrawer.module.less";
 import { NavMenu } from "./NavMenu.tsx";
@@ -346,20 +344,6 @@ export function MenuDrawer({
                   <StrokeIcon className={styles.utilIcon} name="font" />
                   {formatMessage(Pages.guide.link.label)}
                 </RouterLink>
-                {supportUrl !== "" && (
-                  <a
-                    href={supportUrl}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    onClick={onClose}
-                  >
-                    <img className={styles.utilIcon} src={coffeeCup} alt="" />
-                    <FormattedMessage
-                      id="footer.supportLink.text"
-                      defaultMessage="Buy me a coffee"
-                    />
-                  </a>
-                )}
                 <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="doc" />
                   {formatMessage(Pages.termsOfService.link.label)}

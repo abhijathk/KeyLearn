@@ -1,3 +1,4 @@
+import { supportUrl } from "@keylearn/thirdparties";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { type GuideBlock, guideFor, renderRich } from "./guide-content.tsx";
@@ -110,21 +111,7 @@ export function AboutPage() {
       <p>
         <FormattedMessage
           id="about.why.p"
-          defaultMessage="Typing well is a quiet superpower — it takes the friction out of every message, essay, and line of code you’ll ever write. KeyLearn was built to teach that skill in the most encouraging way we could manage: short sessions, honest feedback, and a sense of steady progress you can actually feel. It’s a fork of the open-source keylearn engine, reworked around families and rebuilt to be warm rather than clinical."
-        />
-      </p>
-
-      <Sect>
-        <FormattedMessage
-          id="about.story.h"
-          defaultMessage="The story so far"
-        />
-      </Sect>
-      <p>
-        <FormattedMessage
-          id="about.story.p"
-          defaultMessage="KeyLearn began in 2026 as a simple wish: a typing tutor good enough for a grown-up to sharpen on, yet gentle enough for a five-year-old to love. The best open-source engine around — keylearn — already nailed the hard part, the adaptive lesson algorithm, so KeyLearn started there and grew outward: a playful dino-run world for children, per-learner household profiles, age-aware pacing, a friendlier interface, and support for many languages. Version <em>{version}</em> is the first public release — the foundation the rest of the journey is built on."
-          values={{ em, version: APP_VERSION }}
+          defaultMessage="Typing well is a quiet superpower, and KeyLearn teaches it the encouraging way — short sessions, honest feedback, and steady progress you can feel. It began in 2026, built on keybr, an open-source typing tutor that had already figured out the hard part: adapting to the keys that slow you down. From there it grew into a typing tutor for the whole family — a playful dino-run world for kids, per-learner household profiles, age-aware pacing, and support for many languages."
         />
       </p>
 
@@ -271,6 +258,30 @@ export function AboutPage() {
           }}
         />
       </p>
+
+      {supportUrl !== "" && (
+        <>
+          <Sect>
+            <FormattedMessage
+              id="about.support.h"
+              defaultMessage="Support KeyLearn"
+            />
+          </Sect>
+          <p>
+            <FormattedMessage
+              id="about.support.p"
+              defaultMessage="KeyLearn is free for every learner, and that’s never going to change. If it’s helped you or your kids, buying a coffee helps keep it going. <a>Buy me a coffee</a>."
+              values={{
+                a: (chunks: ReactNode) => (
+                  <a href={supportUrl} target="_blank" rel="noreferrer">
+                    {chunks}
+                  </a>
+                ),
+              }}
+            />
+          </p>
+        </>
+      )}
 
       <Sect>
         <FormattedMessage id="about.version.h" defaultMessage="Version" />

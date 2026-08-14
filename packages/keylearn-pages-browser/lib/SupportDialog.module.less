@@ -1,0 +1,66 @@
+// The compact FloatingShell body already gives us the padded, rounded,
+// bordered window — the banner bleeds past that padding with a negative
+// margin so it reaches the window's own edges, which is what clips it to
+// the matching rounded corners (the window has `overflow: hidden`).
+.banner {
+  display: block;
+  inline-size: calc(100% + 3rem);
+  max-inline-size: none;
+  block-size: auto;
+  margin: -1.3rem -1.5rem 1rem;
+}
+
+.content {
+  text-align: center;
+}
+
+.body {
+  margin: 0 0 1.35rem;
+  color: var(--text-color-f1);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.cancel,
+.support {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2.6rem;
+  padding-inline: 1rem;
+  border: none;
+  border-radius: 0.7rem;
+  font-family: var(--default-font-family);
+  font-size: 0.83rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cancel {
+  border: var(--separator-border);
+  color: var(--text-color-f1);
+  background: transparent;
+
+  &:hover {
+    border-color: var(--text-color-f2);
+    color: var(--text-color);
+  }
+}
+
+.support {
+  color: var(--accent-ink);
+  background-color: var(--accent);
+  box-shadow: 0 0.5rem 1.4rem
+    color-mix(in oklab, var(--accent) 35%, transparent);
+
+  &:hover {
+    background-color: var(--accent-l1);
+  }
+}

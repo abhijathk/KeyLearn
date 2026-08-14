@@ -9,6 +9,7 @@ import { showAds } from "./ads.ts";
 import { Header } from "./Header.tsx";
 import { LoginPrompt } from "./LoginPrompt.tsx";
 import { MenuDrawer } from "./MenuDrawer.tsx";
+import { SupportDialog } from "./SupportDialog.tsx";
 import * as styles from "./Template.module.less";
 
 // Which notice the visitor already dismissed, so retracting and reposting a
@@ -120,6 +121,7 @@ export function Template({
     saveMenuOpen(open);
     setMenuOpenState(open);
   };
+  const [supportOpen, setSupportOpen] = useState(false);
   const { active } = useProfiles();
   const ads = showAds({
     adNetworkConfigured: adSenseClientId !== "0",
@@ -142,6 +144,7 @@ export function Template({
       </a>
       <Header
         onOpenMenu={() => setMenuOpen(true)}
+        onOpenSupport={() => setSupportOpen(true)}
         showFocus={path === "/"}
         showBack={path !== "/"}
         kids={path === "/kids"}
@@ -170,6 +173,7 @@ export function Template({
         path={path}
       />
       <LoginPrompt path={path} />
+      <SupportDialog open={supportOpen} onClose={() => setSupportOpen(false)} />
       <EnvName />
       <CompleteProfileGate />
     </div>

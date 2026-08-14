@@ -163,12 +163,14 @@ function KidMenuIcon(): ReactNode {
 
 export function Header({
   onOpenMenu,
+  onOpenSupport,
   showFocus = false,
   showBack = false,
   kids = false,
   practice = false,
 }: {
   readonly onOpenMenu: () => void;
+  readonly onOpenSupport: () => void;
   readonly showFocus?: boolean;
   readonly showBack?: boolean;
   readonly kids?: boolean;
@@ -408,10 +410,9 @@ export function Header({
         )}
         {!kids && <ThemeSwitcher />}
         {!kids && supportUrl !== "" && (
-          <a
-            href={supportUrl}
-            target="_blank"
-            rel="noreferrer noopener"
+          <button
+            type="button"
+            onClick={onOpenSupport}
             title={formatMessage(
               defineMessage({
                 id: "footer.supportLink.text",
@@ -420,7 +421,7 @@ export function Header({
             )}
           >
             <img className={styles.coffeeCup} src={coffeeCup} alt="" />
-          </a>
+          </button>
         )}
         {kids ? (
           <button

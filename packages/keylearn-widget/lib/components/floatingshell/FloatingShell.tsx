@@ -17,6 +17,7 @@ export function FloatingShell({
   children,
   compact = false,
   flush = false,
+  hideClose = false,
   onClose,
   closeLabel,
 }: {
@@ -26,6 +27,12 @@ export function FloatingShell({
   readonly compact?: boolean;
   /** Remove the body padding so a full-bleed rail/pane layout can fill it. */
   readonly flush?: boolean;
+  /**
+   * Omits the corner close button and (with no title) the head bar
+   * entirely, for a dialog whose own content already offers an explicit
+   * way out — backdrop click and Escape still close it.
+   */
+  readonly hideClose?: boolean;
   /**
    * Most callers are a routed page — closing means leaving it, so the
    * default navigates home. A shell shown inline over the current page
@@ -93,7 +100,7 @@ export function FloatingShell({
               {children}
             </div>
           </>
-        ) : (
+        ) : title != null || !hideClose ? (
           <>
             <div
               className={clsx(styles.windowHead, title == null && styles.bare)}
@@ -101,16 +108,20 @@ export function FloatingShell({
               {title != null && (
                 <span className={styles.windowTitle}>{title}</span>
               )}
-              <button
-                className={styles.windowClose}
-                title={closeTitle}
-                onClick={close}
-              >
-                <StrokeIcon name="close" />
-              </button>
+              {!hideClose && (
+                <button
+                  className={styles.windowClose}
+                  title={closeTitle}
+                  onClick={close}
+                >
+                  <StrokeIcon name="close" />
+                </button>
+              )}
             </div>
             <div className={styles.windowBody}>{children}</div>
           </>
+        ) : (
+          <div className={styles.windowBody}>{children}</div>
         )}
       </div>
     </div>
