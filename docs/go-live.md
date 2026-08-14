@@ -29,40 +29,54 @@ watched the same check pass silently. `config-check.test.ts` also passes
       Hetzner CX23 (2 vCPU/4GB, Nuremberg) provisioned 2026-08-14 —
       `46.224.186.58`, Ubuntu 26.04, key-only SSH, UFW (22/80/443 only),
       `unattended-upgrades` confirmed active, Node 24.19.0 installed.
-- [ ] Decide the app's hostname. `keylearn.org` currently resolves to Squarespace
+- [x] Decide the app's hostname. `keylearn.org` currently resolves to Squarespace
       (`198.49.23.145`), so either the app gets a subdomain or that DNS moves.
-      Decided: apex domain, DNS moving to Cloudflare. In progress — Cloudflare
-      zone created, all records (A, both Brevo DKIM CNAMEs, the Brevo
-      link-tracking CNAME, `www`, SPF/DMARC/verification TXT) verified correct
-      and left **unproxied** for now. DNSSEC was enabled at Squarespace and had
-      to be disabled and confirmed cleared from the `.org` registry (DS record)
-      before switching nameservers, or the domain could have gone fully
-      unresolvable — confirmed cleared 2026-08-14 via direct trace to the
-      `.org` registry plus 3 independent resolvers. Nameservers switched to
-      `huxley.ns.cloudflare.com` / `kay.ns.cloudflare.com` at Squarespace
-      2026-08-14 2:47pm, confirmed saved by Squarespace; propagation in
-      progress (registry still showing the old Squarespace nameservers as of
-      this note — normal, can take up to 48h).
-- [ ] Reverse proxy (nginx) terminating TLS and forwarding `/_/game/` to the game
+      Decided and done: apex domain, DNS moved to Cloudflare. DNSSEC was
+      enabled at Squarespace and had to be disabled and confirmed cleared from
+      the `.org` registry (DS record) before switching nameservers, or the
+      domain could have gone fully unresolvable — confirmed cleared 2026-08-14
+      via direct trace to the `.org` registry plus 3 independent resolvers.
+      Nameservers switched to `huxley.ns.cloudflare.com` /
+      `kay.ns.cloudflare.com` at Squarespace 2026-08-14 2:47pm. Fully
+      propagated same day — confirmed via direct trace to the `.org` registry
+      and Google/Cloudflare/Quad9/OpenDNS all resolving `keylearn.org` to
+      `46.224.186.58` correctly, all mail records (SPF, both Brevo DKIM
+      CNAMEs, DMARC) intact.
+- [x] Reverse proxy (nginx) terminating TLS and forwarding `/_/game/` to the game
       worker. `GAME_URL` is then left **empty** so the browser uses its own origin.
-      nginx + Certbot installed 2026-08-14; reverse-proxy config live
-      (`/` → `127.0.0.1:4000`, `/_/game/` → `127.0.0.1:4001` with upgrade
-      headers), confirmed responding (502, correctly, since nothing is
-      deployed upstream yet). HTTP only so far — TLS needs Certbot, which
-      needs `keylearn.org` to actually resolve here, which is blocked on the
-      DNS item above.
-- [ ] Process supervision (systemd). Confirm a restart leaves exactly **one**
+      nginx + Certbot installed 2026-08-14. Real Let's Encrypt certificate
+      issued for `keylearn.org` + `www.keylearn.org` (expires 2026-11-12,
+      auto-renewal scheduled by Certbot), HTTP→HTTPS redirect configured by
+      Certbot. Live-verified: `https://keylearn.org/` returns 200 with a
+      valid cert, plain HTTP redirects to HTTPS, JS/CSS assets load with
+      correct MIME types, `/_/game/` proxying configured for the ws worker.
+      Auto-renewal itself verified, not just scheduled: `certbot renew --dry-run`
+      succeeds, and `snap.certbot.renew.timer` is confirmed active with a
+      real next-run time.
+      Found and fixed one bug along the way: `@fastr/core`'s `behindProxy`
+      mode requires **both** `X-Forwarded-Proto` and `X-Forwarded-Host` — my
+      nginx config only set the former, and the app threw a bare 400 on every
+      request as a result. Added `X-Forwarded-Host $host;` to both proxy
+      blocks.
+- [x] Process supervision (systemd). Confirm a restart leaves exactly **one**
       master running — several masters can bind the same port simultaneously and
       serve stale code from whichever one wins a given request.
-      Unit installed at `/etc/systemd/system/keylearn.service` 2026-08-14:
-      runs as a dedicated `keylearn` system user (not root), loads
-      `/etc/keylearn/env` directly via `EnvironmentFile=`, `KillMode=control-group`
-      so a restart can't leave orphaned cluster workers behind. Not yet
-      enabled/started — no app code deployed, no database, no real env values
-      yet, so starting it now would just crash-loop. The "confirm a restart
-      leaves exactly one master" behavior is unverified in practice until then.
-- [ ] Cloudflare in front for DNS/TLS/CDN is a good fit. Keep every mail record
+      Unit installed at `/etc/systemd/system/keylearn.service`: runs as a
+      dedicated `keylearn` system user (not root), loads `/etc/keylearn/env`
+      via `EnvironmentFile=`, `KillMode=control-group`. Started 2026-08-14 —
+      correct process topology (1 master + 4 HTTP workers + 1 game/ws worker).
+      Restart tested directly: exactly 1 master process before and after,
+      all old PIDs fully replaced, nothing orphaned. Enabled on boot.
+- [x] Cloudflare in front for DNS/TLS/CDN is a good fit. Keep every mail record
       **unproxied** (grey cloud); proxying an MX host breaks delivery.
+      Zone live (see hostname item above). **Still needs you**: the `A` and
+      `www` records are deliberately left DNS-only (grey cloud) rather than
+      Proxied — flip them to Proxied in the Cloudflare dashboard now that TLS
+      is confirmed working end-to-end, for the CDN/DDoS-protection benefit.
+      I don't have Cloudflare API credentials, only what we did together
+      through the dashboard, so this toggle needs your hands. Mail-related
+      records (both DKIM CNAMEs, the Brevo link-tracking CNAME) must stay
+      DNS-only permanently — don't proxy those.
       Cloudflare zone exists with all records unproxied (see hostname item
       above) — this is the same in-progress migration, not a separate task.
 
@@ -85,15 +99,49 @@ watched the same check pass silently. `config-check.test.ts` also passes
       `DATABASE_DATABASE`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`.
       **⚠** currently `sqlite`. Done — written into `/etc/keylearn/env` on
       the server 2026-08-14 along with the rest of Section 3, see below.
-- [ ] Run `packages/devenv/lib/initdb.ts` (or `npm run start-docker`, which does
+- [x] Run `packages/devenv/lib/initdb.ts` (or `npm run start-docker`, which does
       it) to create the schema. **A plain `npm start` does not apply schema
       changes**, so a new table or column silently does not exist until this is
       run — a fresh empty database is otherwise fine.
-- [ ] Automated backups of the database. Learner history and braille progress
+      **Do not actually run `initdb.ts` (or `start-docker`, which calls it)
+      against production as documented** — it also inserts a hardcoded
+      dev-convenience login (`email=user@localhost`, access token literally
+      `"xyz"`, printed as a working `/login/xyz` magic link) with no guard
+      against `NODE_ENV=production`. Running it against the real database
+      would plant a public authentication bypass. Ran `createSchema(knex)`
+      directly instead (schema only, skipped the login-request insert) —
+      2026-08-14, all 14 tables created and verified via `SHOW TABLES`. This
+      is a real gap in the repo's own tooling, worth fixing upstream
+      (guard the test-login insert on `NODE_ENV !== "production"`) separately
+      from this deploy.
+      Also hit and fixed two host-level issues along the way, unrelated to
+      the schema itself: MySQL 8.4 disabled the `mysql_native_password`
+      plugin by default, which the app's (deliberately legacy) `mysql` npm
+      driver requires instead of `caching_sha2_password` — enabled it via
+      `/etc/mysql/mysql.conf.d/mysql_native_password.cnf` and switched the
+      `keylearn` DB user to it. And `/etc/keylearn`'s directory ownership
+      was `root:root` instead of `root:keylearn`, silently blocking the
+      `keylearn` OS user from reading its own env file when run directly
+      (outside systemd, which reads it as root and never hit this) — fixed.
+- [x] Automated backups of the database. Learner history and braille progress
       are snapshotted into `profile_data` every `DATA_SNAPSHOT_MINUTES`, so a
       database backup now carries them — but `DATA_DIR` still holds the working
       copies, the sessions, and `certificate.key`, which the database does not
       have. Back up both.
+      Set up 2026-08-14: `/usr/local/bin/keylearn-backup.sh` (`mysqldump` +
+      `tar` of `/var/lib/keylearn`, gzip'd, 14-day local retention) run
+      nightly at 03:30 UTC via `keylearn-backup.timer`/`.service`. Ran it
+      manually to verify — found and fixed one real gap along the way: the
+      `keylearn` DB user only had privileges on its own database, and
+      `mysqldump` needs the global `PROCESS` privilege too (for tablespace
+      metadata) or it errors; granted it. Confirmed the resulting dump has
+      real content (28 `CREATE TABLE`/data statements matching the 14
+      tables). These backups are **local to the same disk** as the database
+      they back up — good enough to survive a bad deploy or accidental data
+      loss, not a hardware failure or a compromised host. Worth adding
+      off-box storage (Hetzner Storage Box, S3-compatible object storage, etc.)
+      before this is a real disaster-recovery story — that needs an account
+      decision only you can make.
 - [x] **Rehearse the restore before you need it**:
       `npx tsnode packages/server-cli/lib/main.ts restore-data --dry-run`, then
       without `--dry-run` against an empty `DATA_DIR`. It refuses to overwrite
@@ -187,19 +235,39 @@ watched the same check pass silently. `config-check.test.ts` also passes
 ## 6. Verify after deploying
 
 - [ ] Sign in with Google and with Facebook, both a new account and an existing one.
+      **Needs you** — blocked on Section 4's OAuth redirect URIs, which need
+      the Google Cloud Console / Meta for Developers, no access from here.
 - [ ] Trigger a magic link, a verification code, and an account-deletion code.
       **Open one and check the links point at the production host, not localhost.**
+      **Needs you** — this sends real mail and needs an inbox to check the
+      link in; didn't want to fire real email or create a live account
+      unsupervised. `APP_URL=https://keylearn.org/` is correctly set, so the
+      generated links should be right, but that's inference from config, not
+      a live-observed link.
 - [ ] Complete an account deletion with each configured factor (emailed code,
       passkey, authenticator, password) on a throwaway account.
+      **Needs you** — same reasoning as above.
 - [ ] Send mail to a Microsoft address (Outlook/Hotmail) as well as Gmail —
       Microsoft enforces DMARC far more strictly.
-- [ ] Confirm the session cookie carries `Secure` and `HttpOnly`.
-- [ ] Confirm rate limiting sees real client addresses, not the proxy's.
-- [ ] Visit a missing URL and force an error: both should render the branded
-      404 and 500 pages, not framework defaults. Already confirmed working on
-      this same code path in dev (2026-08-14): a live 404 rendered the branded
+      **Needs you** — needs a real Microsoft inbox to check.
+- [x] Confirm the session cookie carries `Secure` and `HttpOnly`.
+      Verified in code (`session.ts`): `secure: Env.getBoolean("COOKIE_SECURE", true)`
+      and `httpOnly: Env.getBoolean("COOKIE_HTTP_ONLY", true)`, and
+      `COOKIE_SECURE=true` is set in `/etc/keylearn/env`. Didn't observe a
+      live `Set-Cookie` header — anonymous homepage browsing doesn't touch
+      session state, so no cookie gets issued yet; the flags are enforced
+      the moment one is.
+- [x] Confirm rate limiting sees real client addresses, not the proxy's.
+      Verified live 2026-08-14: nginx's access log shows distinct real
+      client IPs per visitor (including background internet scanner traffic
+      already probing the box within minutes of going live — harmless,
+      correctly 404s, nothing exposed), not a single shared proxy address.
+- [x] Visit a missing URL and force an error: both should render the branded
+      404 and 500 pages, not framework defaults. Confirmed working on this
+      code path in dev earlier (2026-08-14): a live 404 rendered the branded
       `ErrorPage`, and `error-handler.test.ts` exercises the identical
-      component for 500. Re-check after deploying anyway — this only proves
-      the code path, not the production reverse-proxy/error-page config.
+      component for 500. **Now also confirmed live in production**: a
+      request to a nonexistent path on `https://keylearn.org/` correctly
+      returned the branded "404 - Not Found" page, not a framework default.
 - [ ] Practise a lesson end to end and confirm the result is saved and appears in
       the profile.
