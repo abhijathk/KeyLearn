@@ -208,14 +208,24 @@ watched the same check pass silently. `config-check.test.ts` also passes
 
 ## 4. Sign-in providers
 
-- [ ] Google Cloud Console → Credentials: add
+- [x] Google Cloud Console → Credentials: add
       `<APP_URL>auth/oauth-callback/google` as an authorised redirect URI.
+      Added 2026-08-14: `https://keylearn.org/auth/oauth-callback/google`,
+      alongside the existing `http://localhost:4000/auth/oauth-callback/google`
+      for dev. Verified live: hitting `/auth/oauth-init/google` on the
+      production site redirects to Google with
+      `redirect_uri=https://keylearn.org/auth/oauth-callback/google` — matches
+      exactly what's registered. An actual click-through sign-in still needs
+      a real Google account and browser, which needs you.
 - [ ] Meta for Developers → Facebook Login: add
       `<APP_URL>auth/oauth-callback/facebook`.
-- [ ] Keep the localhost URIs alongside the production ones so development keeps
-      working.
+- [x] Keep the localhost URIs alongside the production ones so development keeps
+      working. Done for Google (see above); do the same when adding Facebook's.
 - [ ] Both consoles need a hosted privacy-policy URL before an app can be
-      published to external users.
+      published to external users. `https://keylearn.org/privacy-policy` is
+      live and confirmed reachable (200) — set it as the Privacy Policy URL
+      on Google's **OAuth consent screen** page, and Meta's equivalent when
+      you get to Facebook.
 - [ ] Microsoft sign-in is deferred — see `deferred.md`. The button stays hidden
       while `AUTH_MICROSOFT_CLIENT_ID` is empty, so nothing breaks by omitting it.
 
