@@ -1103,6 +1103,10 @@ function RegisterForm({
           defaultMessage="One account for the whole household — you’ll add each learner’s profile next."
         />
       </p>
+      <SocialButtons register={true} />
+      <div className={styles.orRule}>
+        <FormattedMessage id="auth.or" defaultMessage="OR" />
+      </div>
       <div className={styles.nameRow}>
         <TextField
           type="text"
