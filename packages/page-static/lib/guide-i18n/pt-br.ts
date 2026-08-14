@@ -320,6 +320,136 @@ export const ptBr: GuideTranslation = {
       ],
     },
     {
+      id: "access",
+      nav: "Se algo estiver atrapalhando",
+      heading: "Se algo no app estiver atrapalhando você",
+      blocks: [
+        {
+          p: "Existe uma página inteira para isso, e ela é definida *por aprendiz* — então os ajustes de uma pessoa nunca mudam os de ninguém mais.",
+        },
+        { lab: "Onde abrir" },
+        {
+          steps: [
+            "Abra o menu e escolha Conta.",
+            "Escolha Acessibilidade.",
+            "Selecione o aprendiz no topo e ative quantas opções precisar.",
+          ],
+        },
+        {
+          p: "As cinco opções se *combinam*. Quem é disléxico e tem tremor precisa de duas delas, e obrigar essa pessoa a escolher só uma seria o app perguntando qual dificuldade merece ser acolhida.",
+        },
+        {
+          tips: [
+            "Com calma — nada se move, nada é contado, nada é cronometrado, e um dia perdido não quebra a sequência.",
+            "Menos coisas de uma vez — a prática abre só com as palavras e o teclado.",
+            "Mais fácil de ler — a fonte criada para a dislexia, mais espaço entre letras e linhas, texto mais forte.",
+            "Cores distintas — cores de dedo que continuam distinguíveis no daltonismo, e erros avisados por som além do vermelho.",
+            "Mãos mais firmes — alvos maiores para pressionar, nunca duas teclas ao mesmo tempo, e uma tecla que se repete sozinha não conta duas vezes.",
+          ],
+        },
+        {
+          p: "Abaixo delas, *Definir cada uma por conta própria* abre todos os interruptores individualmente — quinze deles, incluindo a velocidade da fala, legendas para tudo o que é dito em voz alta, o número do dedo em cada tecla e por quanto tempo ignorar uma tecla repetida. Um único botão devolve todos ao estado original.",
+        },
+      ],
+    },
+    {
+      id: "braille",
+      nav: "Braille",
+      heading: "Aprendendo em um teclado braille",
+      blocks: [
+        {
+          p: "Um aprendiz cego ou com baixa visão recebe uma página completamente diferente — digitação braille de seis teclas, um currículo em células em vez de letras, e orientação falada o tempo todo. É outro jeito de aprender a digitar, não a página para pessoas videntes lida em voz alta.",
+        },
+        { lab: "Ativar isso para um aprendiz" },
+        {
+          steps: [
+            "Abra o menu e escolha Conta, depois Aprendizes.",
+            "Edite o aprendiz, ou adicione um novo.",
+            "Ative o suporte para deficiência visual e salve.",
+          ],
+        },
+        {
+          p: "A partir daí, esse aprendiz vai direto para a página braille sempre que for a vez dele praticar. O progresso dele é contado em células em vez de letras, e ele pode conquistar um certificado nas mesmas condições que qualquer outra pessoa.",
+        },
+      ],
+    },
+    {
+      id: "courses",
+      nav: "Os dois cursos",
+      heading: "Prática guiada, Curso clássico e código",
+      blocks: [
+        {
+          p: "A *Prática guiada* é o curso adaptativo: ela observa quais teclas atrasam você e monta as lições em torno delas, acrescentando uma letra só quando você consegue digitar as que já tem de forma rápida e precisa.",
+        },
+        {
+          p: "O *Curso clássico* é o modo à moda antiga — uma escada fixa de lições em uma ordem definida, do jeito que um manual de datilografia ensinaria. Algumas pessoas simplesmente preferem saber o que vem a seguir.",
+        },
+        {
+          p: "São cursos separados, com históricos separados, e um certificado é conquistado em um ou no outro — nunca nos dois somados, o que contaria sua primeira semana duas vezes. A página Curso na sua conta diz sobre qual deles ela está falando.",
+        },
+        {
+          p: "O *Código-fonte* é um terceiro tipo de prática: trechos reais em uma linguagem que você escolhe, para que os colchetes, os ponto e vírgulas e a indentação recebam o treino que a prosa comum nunca dá a eles.",
+        },
+        { lab: "Alternar entre eles" },
+        {
+          steps: [
+            "Na tela de prática, abra as configurações da lição.",
+            "Escolha Prática guiada, Curso clássico ou Código-fonte.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "certificates",
+      nav: "Certificados",
+      heading: "Conquistando um certificado",
+      blocks: [
+        {
+          p: "Um certificado diz que um aprendiz com nome e sobrenome digitou a uma velocidade e a uma precisão medidas, em um idioma específico, em uma data específica. Ele é emitido por nós — não é uma qualificação que alguma banca examinadora ou algum empregador tenha concordado em reconhecer — e é prova honesta do que alguém de fato fez.",
+        },
+        { lab: "Ver o quanto falta" },
+        {
+          steps: [
+            "Abra o menu e escolha Conta.",
+            "Escolha Curso.",
+            "Cada aprendiz tem uma linha mostrando todas as condições, com o quanto já avançou em cada uma.",
+          ],
+        },
+        {
+          p: "As condições são coisas como todas as letras apresentadas, todas as letras confiáveis e não apenas vistas uma vez, lições suficientes, dias distintos suficientes, e uma velocidade e uma precisão sustentadas. Quando todas são cumpridas, aparece nessa linha um link para fazer a avaliação.",
+        },
+        {
+          p: "A avaliação é curta, e é julgada nos nossos servidores, não no seu navegador. Passe nela e o certificado é emitido com um número. Qualquer pessoa a quem você der esse número pode conferi-lo na página *Conferir um certificado* — e você escolhe se o seu nome aparece para ela.",
+        },
+      ],
+    },
+    {
+      id: "security",
+      nav: "Mantendo sua conta segura",
+      heading: "Chaves de acesso, códigos e quem andou entrando",
+      blocks: [
+        {
+          p: "Você pode entrar com uma senha, com um provedor como o Google, com um link enviado para o seu e-mail — ou com uma *chave de acesso*, que é a que nós escolheríamos. Uma chave de acesso usa a digital, o rosto ou o PIN do próprio dispositivo; não há senha alguma para vazar, e nada do que guardamos poderia ser usado para entrar no seu lugar.",
+        },
+        { lab: "Adicionar uma chave de acesso" },
+        {
+          steps: [
+            "Abra o menu e escolha Conta, depois Segurança.",
+            "Escolha Adicionar chave de acesso e siga o pedido do seu dispositivo.",
+          ],
+        },
+        {
+          p: "A *verificação em duas etapas* também está ali, usando um app autenticador, com códigos de recuperação caso você perca o celular. Imprima-os e guarde em algum lugar que não seja o celular.",
+        },
+        {
+          p: "A mesma página lista a atividade recente — logins, tentativas de login que falharam, uma chave de acesso adicionada, uma senha alterada — cada uma com a localização aproximada de onde veio, para que algo que você não fez seja fácil de perceber. Se parecer errado, *sair de todos os lugares* encerra todas as sessões, menos a que você está usando.",
+        },
+        {
+          p: "Há também um *PIN dos pais*, que tranca as configurações da conta para que uma criança no dispositivo da família não possa mudá-las nem excluir um perfil.",
+        },
+      ],
+    },
+    {
       id: "yours",
       nav: "Deixe do seu jeito",
       heading: "Deixe do seu jeito",
@@ -327,9 +457,15 @@ export const ptBr: GuideTranslation = {
         { lab: "Mudar o tema" },
         {
           steps: [
-            "Abra o menu.",
-            "Use o seletor de tema — claro, escuro ou o visual do KeyLearn.",
+            "Abra o menu e escolha Conta, depois Aparência.",
+            "Escolha claro, escuro ou seguir o dispositivo.",
           ],
+        },
+        {
+          p: "Se nenhum dos temas que já vêm prontos for o que você quer, o *criador de temas* deixa você misturar o seu — incluindo as cores de dedo com que o teclado ensina. O app mede o contraste de tudo o que você escolhe e recusa combinações que ninguém conseguiria ler.",
+        },
+        {
+          p: "Cada aprendiz da casa pode ter a sua própria cor, para que um dispositivo compartilhado continue parecendo de quem está sentado na frente dele.",
         },
         { lab: "Mudar o idioma do site" },
         {

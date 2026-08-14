@@ -320,6 +320,136 @@ export const es: GuideTranslation = {
       ],
     },
     {
+      id: "access",
+      nav: "Si algo te estorba",
+      heading: "Si algo de la aplicación te estorba",
+      blocks: [
+        {
+          p: "Hay toda una página para esto, y se configura *por aprendiz* — así que los ajustes de una persona nunca cambian nada para las demás.",
+        },
+        { lab: "Abrirla" },
+        {
+          steps: [
+            "Abre el menú y elige Cuenta.",
+            "Elige Accesibilidad.",
+            "Selecciona arriba al aprendiz y luego activa tantos ajustes como necesites.",
+          ],
+        },
+        {
+          p: "Los cinco ajustes se *combinan*. Alguien con dislexia y temblor necesita dos de ellos, y obligarle a elegir uno solo sería como si la aplicación preguntara qué dificultad está dispuesta a atender.",
+        },
+        {
+          tips: [
+            "Calma — nada se mueve, nada se cuenta, nada se cronometra, y un día perdido no rompe la racha.",
+            "Menos cosas a la vez — la práctica se abre solo con las palabras y el teclado.",
+            "Más fácil de leer — la tipografía pensada para la dislexia, más espacio entre letras y líneas, texto más marcado.",
+            "Colores distinguibles — colores de dedos que siguen diferenciándose con daltonismo, y errores que además de rojos se oyen.",
+            "Manos más firmes — objetivos más grandes que pulsar, nunca dos teclas a la vez, y una tecla que se repite no cuenta dos veces.",
+          ],
+        },
+        {
+          p: "Debajo, *Ajustarlo todo yo* abre cada interruptor por separado — quince en total, incluidos la velocidad del habla, los subtítulos de todo lo que se dice en voz alta, un número de dedo en cada tecla y cuánto tiempo se ignora una tecla repetida. Un solo botón los devuelve todos a su sitio.",
+        },
+      ],
+    },
+    {
+      id: "braille",
+      nav: "Braille",
+      heading: "Aprender con un teclado braille",
+      blocks: [
+        {
+          p: "Un aprendiz ciego o con baja visión recibe una página completamente distinta — escritura braille de seis teclas, un temario en celdas en lugar de letras y guía hablada de principio a fin. Es otra manera de aprender a escribir, no la página para videntes leída en voz alta.",
+        },
+        { lab: "Activarlo para un aprendiz" },
+        {
+          steps: [
+            "Abre el menú y elige Cuenta, luego Aprendices.",
+            "Edita al aprendiz, o añade uno nuevo.",
+            "Activa el apoyo de visión y guarda.",
+          ],
+        },
+        {
+          p: "Ese aprendiz irá directo a la página de braille siempre que le toque practicar. Su progreso se cuenta en celdas en vez de en letras, y puede obtener un certificado en las mismas condiciones que cualquier otra persona.",
+        },
+      ],
+    },
+    {
+      id: "courses",
+      nav: "Los dos cursos",
+      heading: "Práctica guiada, Curso clásico y código",
+      blocks: [
+        {
+          p: "La *Práctica guiada* es el curso adaptativo: observa qué teclas te frenan y construye tus lecciones a su alrededor, y solo añade una letra cuando ya escribes las que tienes con rapidez y precisión.",
+        },
+        {
+          p: "El *Curso clásico* es el de toda la vida — una escalera fija de lecciones en un orden establecido, tal como lo enseñaría un manual de mecanografía. Hay quien simplemente prefiere saber qué viene después.",
+        },
+        {
+          p: "Son cursos separados con historiales separados, y el certificado se gana en uno o en el otro — nunca en la suma de los dos, porque eso contaría tu primera semana dos veces. La página de Curso de tu cuenta indica sobre cuál de ellos está informando.",
+        },
+        {
+          p: "*Taller de código* es una tercera forma de practicar: fragmentos reales en el lenguaje que elijas, para que los paréntesis, los puntos y comas y la sangría reciban el entrenamiento que la prosa corriente nunca les da.",
+        },
+        { lab: "Cambiar entre ellos" },
+        {
+          steps: [
+            "En la pantalla de práctica, abre los ajustes de la lección.",
+            "Elige Práctica guiada, Curso clásico o Taller de código.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "certificates",
+      nav: "Certificados",
+      heading: "Conseguir un certificado",
+      blocks: [
+        {
+          p: "Un certificado dice que un aprendiz con nombre escribió a una velocidad y con una precisión medidas, en un idioma concreto y en una fecha concreta. Lo emitimos nosotros — no es un título que ningún tribunal examinador ni ningún empleador se haya comprometido a reconocer — y es una prueba honesta de lo que alguien hizo de verdad.",
+        },
+        { lab: "Ver cuánto te falta" },
+        {
+          steps: [
+            "Abre el menú y elige Cuenta.",
+            "Elige Curso.",
+            "Cada aprendiz tiene una fila que muestra todas las condiciones y por dónde va en cada una.",
+          ],
+        },
+        {
+          p: "Las condiciones son cosas como: todas las letras introducidas, todas las letras fiables y no solo vistas una vez, suficientes lecciones, suficientes días distintos, y una velocidad y una precisión sostenidas. Cuando se cumplen todas, en esa fila aparece un enlace para hacer la prueba.",
+        },
+        {
+          p: "La prueba es corta y se corrige en nuestros servidores, no en tu navegador. Si la superas, el certificado se emite con un número. Cualquiera a quien le des ese número puede comprobarlo en la página *Comprobar un certificado* — y tú decides si se le muestra tu nombre.",
+        },
+      ],
+    },
+    {
+      id: "security",
+      nav: "Mantener tu cuenta segura",
+      heading: "Claves de acceso, códigos y quién ha iniciado sesión",
+      blocks: [
+        {
+          p: "Puedes iniciar sesión con una contraseña, con un proveedor como Google, con un enlace enviado a tu correo — o con una *clave de acceso*, que es la que elegiríamos nosotros. Una clave de acceso usa la huella, la cara o el PIN de tu propio dispositivo; no hay ninguna contraseña que pueda filtrarse, y nada de lo que guardamos serviría para entrar haciéndose pasar por ti.",
+        },
+        { lab: "Añadir una clave de acceso" },
+        {
+          steps: [
+            "Abre el menú y elige Cuenta, luego Seguridad.",
+            "Elige Añadir una clave de acceso y sigue las indicaciones de tu dispositivo.",
+          ],
+        },
+        {
+          p: "También está la *verificación en dos pasos*, con una aplicación de autenticación y códigos de recuperación por si pierdes el teléfono. Imprímelos y guárdalos en algún sitio que no sea el teléfono.",
+        },
+        {
+          p: "La misma página enumera la actividad reciente — inicios de sesión, intentos fallidos, una clave de acceso añadida, una contraseña cambiada — cada uno con el lugar aproximado del que vino, para que algo que tú no hiciste salte a la vista. Si algo no cuadra, *cerrar sesión en todas partes* termina todas las sesiones menos la que estás usando.",
+        },
+        {
+          p: "También hay un *PIN de padres*, que bloquea los ajustes de la cuenta para que un niño en el dispositivo familiar no pueda cambiarlos ni borrar un perfil.",
+        },
+      ],
+    },
+    {
       id: "yours",
       nav: "Hazlo tuyo",
       heading: "Hazlo tuyo",
@@ -327,16 +457,19 @@ export const es: GuideTranslation = {
         { lab: "Cambiar el tema" },
         {
           steps: [
-            "Abre el menú.",
-            "Usa el selector de tema — claro, oscuro o el aspecto de KeyLearn.",
+            "Abre el menú y elige Cuenta, luego Apariencia.",
+            "Elige claro, oscuro o seguir al dispositivo.",
           ],
+        },
+        {
+          p: "Si ninguno de los temas incluidos es el que quieres, el *diseñador de temas* te deja mezclar el tuyo — incluidos los colores de dedos con los que enseña el teclado. La aplicación mide el contraste de lo que elijas y rechaza las combinaciones que nadie podría leer.",
+        },
+        {
+          p: "Cada aprendiz de la casa puede tener su propio color, para que un dispositivo compartido siga sintiéndose de quien está sentado delante.",
         },
         { lab: "Cambiar el idioma del sitio" },
         {
-          steps: [
-            "Abre el menú.",
-            "En Idioma del sitio, elige tu idioma.",
-          ],
+          steps: ["Abre el menú.", "En Idioma del sitio, elige tu idioma."],
         },
         {
           p: "En la pantalla de práctica también puedes cambiar el tamaño del texto y activar o desactivar los sonidos cuando quieras.",

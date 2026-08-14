@@ -320,6 +320,136 @@ export const it: GuideTranslation = {
       ],
     },
     {
+      id: "access",
+      nav: "Se qualcosa ti ostacola",
+      heading: "Se qualcosa dell'app ti ostacola",
+      blocks: [
+        {
+          p: "C'è un'intera pagina dedicata a questo, e si imposta *per ogni allievo* — così le modifiche di una persona non cambiano mai quelle di nessun altro.",
+        },
+        { lab: "Aprirla" },
+        {
+          steps: [
+            "Apri il menu e scegli Account.",
+            "Scegli Accessibilità.",
+            "Seleziona l'allievo in cima, poi attiva tutte le impostazioni che ti servono.",
+          ],
+        },
+        {
+          p: "Le cinque impostazioni si *combinano*. Chi è dislessico e ha un tremore ne ha bisogno di due, e costringerlo a sceglierne una sola equivarrebbe a un'app che chiede quale difficoltà accogliere.",
+        },
+        {
+          tips: [
+            "Con calma — nulla si muove, nulla viene contato, nulla è cronometrato, e un giorno saltato non spezza la serie.",
+            "Meno cose alla volta — la pratica si apre con le sole parole e la tastiera.",
+            "Più facile da leggere — il carattere creato per la dislessia, più spazio tra lettere e righe, testo più marcato.",
+            "Colori distinti — colori delle dita che restano distinguibili anche con il daltonismo, ed errori segnalati con un suono oltre che in rosso.",
+            "Mani più ferme — elementi più grandi da premere, mai due tasti insieme, e un tasto che si ripete da solo non viene contato due volte.",
+          ],
+        },
+        {
+          p: "Sotto di esse, *Imposto tutto da me* apre ogni singolo interruttore — quindici in tutto, tra cui la velocità della voce, i sottotitoli per tutto ciò che viene detto ad alta voce, il numero del dito su ogni tasto e per quanto tempo ignorare un tasto ripetuto. Un solo pulsante li riporta tutti com'erano.",
+        },
+      ],
+    },
+    {
+      id: "braille",
+      nav: "Braille",
+      heading: "Imparare su una tastiera braille",
+      blocks: [
+        {
+          p: "Un allievo cieco o ipovedente ottiene una pagina del tutto diversa — inserimento braille a sei tasti, un percorso fatto di celle invece che di lettere, e una guida vocale in ogni momento. È un modo diverso di imparare a digitare, non la pagina per vedenti letta ad alta voce.",
+        },
+        { lab: "Attivarlo per un allievo" },
+        {
+          steps: [
+            "Apri il menu e scegli Account, poi Allievi.",
+            "Modifica l'allievo, oppure aggiungine uno nuovo.",
+            "Attiva il supporto per la vista e salva.",
+          ],
+        },
+        {
+          p: "Da quel momento quell'allievo va dritto alla pagina braille ogni volta che tocca a lui esercitarsi. I suoi progressi si contano in celle invece che in lettere, e può ottenere un certificato alle stesse condizioni di chiunque altro.",
+        },
+      ],
+    },
+    {
+      id: "courses",
+      nav: "I due corsi",
+      heading: "Pratica guidata, Corso classico e codice",
+      blocks: [
+        {
+          p: "*Pratica guidata* è il corso adattivo: osserva quali tasti ti rallentano e costruisce le lezioni attorno a essi, aggiungendo una lettera solo quando riesci a digitare quelle che hai già in modo veloce e preciso.",
+        },
+        {
+          p: "*Corso classico* è quello all'antica — una scala fissa di lezioni in un ordine stabilito, come lo insegnerebbe un manuale di dattilografia. C'è semplicemente chi preferisce sapere che cosa viene dopo.",
+        },
+        {
+          p: "Sono corsi separati con cronologie separate, e un certificato si ottiene sull'uno o sull'altro — mai sui due sommati insieme, il che conterebbe due volte la tua prima settimana. La pagina Corso nel tuo account dice a quale dei due si riferisce.",
+        },
+        {
+          p: "*Codice sorgente* è un terzo tipo di pratica: frammenti veri in un linguaggio che scegli tu, così parentesi, punti e virgola e indentazione ricevono l'allenamento che la prosa normale non dà loro mai.",
+        },
+        { lab: "Passare dall'uno all'altro" },
+        {
+          steps: [
+            "Nella schermata di pratica, apri le impostazioni della lezione.",
+            "Scegli Pratica guidata, Corso classico o Codice sorgente.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "certificates",
+      nav: "Certificati",
+      heading: "Ottenere un certificato",
+      blocks: [
+        {
+          p: "Un certificato attesta che un allievo con un nome preciso ha digitato a una velocità e a una precisione misurate, in una determinata lingua, in una determinata data. Lo rilasciamo noi — non è un titolo che qualche ente d'esame o datore di lavoro abbia accettato di riconoscere — ed è una prova onesta di ciò che qualcuno ha davvero fatto.",
+        },
+        { lab: "Vedere quanto ti manca" },
+        {
+          steps: [
+            "Apri il menu e scegli Account.",
+            "Scegli Corso.",
+            "Ogni allievo ha una riga che mostra tutte le condizioni, con il punto a cui è arrivato.",
+          ],
+        },
+        {
+          p: "Le condizioni sono cose come tutte le lettere introdotte, tutte le lettere affidabili e non solo incontrate, abbastanza lezioni, abbastanza giorni distinti, e una velocità e una precisione mantenute nel tempo. Quando sono tutte soddisfatte, su quella riga compare un link per sostenere la prova.",
+        },
+        {
+          p: "La prova è breve, ed è valutata sui nostri server invece che nel tuo browser. Superala e il certificato viene rilasciato con sopra un numero. Chiunque riceva da te quel numero può verificarlo nella pagina *Verifica un certificato* — e sei tu a scegliere se mostrargli il tuo nome.",
+        },
+      ],
+    },
+    {
+      id: "security",
+      nav: "Tenere al sicuro il tuo account",
+      heading: "Passkey, codici e chi ha effettuato l'accesso",
+      blocks: [
+        {
+          p: "Puoi accedere con una password, con un provider come Google, con un link inviato alla tua email — oppure con una *passkey*, che è quella che sceglieremmo noi. Una passkey usa l'impronta, il volto o il PIN del tuo stesso dispositivo; non c'è nessuna password che possa trapelare, e nulla di ciò che conserviamo potrebbe essere usato per accedere al posto tuo.",
+        },
+        { lab: "Aggiungere una passkey" },
+        {
+          steps: [
+            "Apri il menu e scegli Account, poi Sicurezza.",
+            "Scegli Aggiungi una passkey e segui la richiesta del tuo dispositivo.",
+          ],
+        },
+        {
+          p: "C'è anche la *verifica in due passaggi*, che usa un'app di autenticazione, con codici di recupero nel caso perdessi il telefono. Stampali e tienili da qualche parte che non sia il telefono.",
+        },
+        {
+          p: "La stessa pagina elenca l'attività recente — accessi, tentativi falliti, una passkey aggiunta, una password cambiata — ognuno con la posizione approssimativa da cui è arrivato, così qualcosa che non hai fatto tu si nota subito. Se qualcosa non torna, *disconnetti ovunque* chiude tutte le sessioni tranne quella che stai usando.",
+        },
+        {
+          p: "C'è anche un *PIN genitore*, che blocca le impostazioni dell'account così un bambino sul dispositivo di famiglia non può cambiarle né eliminare un profilo.",
+        },
+      ],
+    },
+    {
       id: "yours",
       nav: "Rendilo tuo",
       heading: "Rendilo tuo",
@@ -327,9 +457,15 @@ export const it: GuideTranslation = {
         { lab: "Cambiare il tema" },
         {
           steps: [
-            "Apri il menu.",
-            "Usa l'interruttore del tema — chiaro, scuro o lo stile KeyLearn.",
+            "Apri il menu e scegli Account, poi Aspetto.",
+            "Scegli chiaro, scuro o segui il dispositivo.",
           ],
+        },
+        {
+          p: "Se nessuno dei temi già pronti è quello che vuoi, il *creatore di temi* ti permette di comporre il tuo — compresi i colori delle dita con cui la tastiera insegna. L'app misura il contrasto di qualunque cosa tu scelga e rifiuta le combinazioni che nessuno riuscirebbe a leggere.",
+        },
+        {
+          p: "Ogni allievo della casa può avere il proprio colore, così un dispositivo condiviso continua a sembrare di chi ci si siede davanti.",
         },
         { lab: "Cambiare la lingua del sito" },
         {

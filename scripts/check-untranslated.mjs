@@ -56,8 +56,24 @@ function looksHuman(text) {
  * whole voice — Skelty, the big go, the dino — is written rather than
  * translated. Half-translating it would be worse than leaving it alone, so it
  * is excluded here rather than reported for ever as 75 faults.
+ *
+ * The crash screen and the server error page are the other two. Both are the
+ * fallback that renders when something else has already gone wrong —
+ * ErrorScreen is a React error boundary that can be reached by a failure
+ * anywhere in the tree, including the locale loader itself, and ErrorPage is
+ * the server's last-resort handler for the same reason (hence its hard-coded
+ * `lang="en"`). Making either depend on react-intl risks the one screen that
+ * exists to survive a crash failing to render at all. Confirmed, not assumed:
+ * ErrorScreen.tsx says so in its own doc comment, and REPORT_ERRORS (the only
+ * env var gating the debug.tsx toast) does not appear in webpack.config.js,
+ * so that branch never fires in the browser bundle either.
  */
-const ENGLISH_BY_DESIGN = ["packages/page-kids/"];
+const ENGLISH_BY_DESIGN = [
+  "packages/page-kids/",
+  "packages/keylearn-debug/lib/ErrorScreen.tsx",
+  "packages/keylearn-pages-server/lib/ErrorPage.tsx",
+  "packages/keylearn-result-loader/lib/internal/debug.tsx",
+];
 
 const files = globSync("packages/*/lib/**/*.tsx").filter(
   (f) =>
@@ -75,6 +91,11 @@ for (const file of files) {
   // blanking them out stops their defaultMessage being reported.
   const masked = src
     .replace(/defaultMessage:\s*(["'`])(?:\\.|(?!\1)[\s\S])*\1/g, "defaultMessage:''")
+    // A braced expression, which is how a message long enough to be split into
+    // `"…" + "…"` over several lines is written. extract-messages folds those
+    // into en.json, but the rule below only reaches a quote sitting flush
+    // against the brace, so the paragraphs read as loose JSX prose instead.
+    .replace(/defaultMessage=\{(?:[^{}]|\{[^{}]*\})*\}/g, "defaultMessage=''")
     .replace(/defaultMessage=\{?(["'`])(?:\\.|(?!\1)[\s\S])*\1\}?/g, "defaultMessage=''")
     .replace(/\/\*[\s\S]*?\*\//g, " ")
     .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ");

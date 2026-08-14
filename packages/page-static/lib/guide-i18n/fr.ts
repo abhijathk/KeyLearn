@@ -320,6 +320,136 @@ export const fr: GuideTranslation = {
       ],
     },
     {
+      id: "access",
+      nav: "Si quelque chose vous gêne",
+      heading: "Si quelque chose dans l’application vous gêne",
+      blocks: [
+        {
+          p: "Il y a toute une page pour cela, et elle se règle *par apprenant* — les ajustements d’une personne ne changent donc jamais rien pour les autres.",
+        },
+        { lab: "L’ouvrir" },
+        {
+          steps: [
+            "Ouvrez le menu et choisissez Compte.",
+            "Choisissez Accessibilité.",
+            "Sélectionnez l’apprenant en haut, puis activez autant de réglages que nécessaire.",
+          ],
+        },
+        {
+          p: "Les cinq réglages se *combinent*. Une personne dyslexique qui a des tremblements en a besoin de deux, et l’obliger à n’en choisir qu’un reviendrait à ce que l’application lui demande quelle difficulté elle veut bien prendre en compte.",
+        },
+        {
+          tips: [
+            "Calme — rien ne bouge, rien n’est compté, rien n’est chronométré, et un jour manqué ne casse pas la série.",
+            "Moins de choses à la fois — la pratique s’ouvre avec seulement les mots et le clavier.",
+            "Plus facile à lire — la police conçue pour la dyslexie, plus d’espace entre les lettres et les lignes, un texte plus appuyé.",
+            "Couleurs distinctes — des couleurs de doigts qui restent différenciables en cas de daltonisme, et des erreurs signalées par un son autant que par du rouge.",
+            "Mains plus stables — de plus grandes cibles à toucher, jamais deux touches à la fois, et une touche qui se répète n’est pas comptée deux fois.",
+          ],
+        },
+        {
+          p: "En dessous, *Tout régler moi-même* ouvre chaque interrupteur séparément — quinze en tout, dont la vitesse de la voix, les sous-titres de tout ce qui est dit à voix haute, un numéro de doigt sur chaque touche, et la durée pendant laquelle une touche répétée est ignorée. Un seul bouton les remet tous en place.",
+        },
+      ],
+    },
+    {
+      id: "braille",
+      nav: "Braille",
+      heading: "Apprendre sur un clavier braille",
+      blocks: [
+        {
+          p: "Un apprenant aveugle ou malvoyant obtient une page entièrement différente — la saisie braille à six touches, un programme en cellules plutôt qu’en lettres, et des indications vocales du début à la fin. C’est une autre façon d’apprendre à taper, pas la page des voyants lue à haute voix.",
+        },
+        { lab: "L’activer pour un apprenant" },
+        {
+          steps: [
+            "Ouvrez le menu et choisissez Compte, puis Apprenants.",
+            "Modifiez l’apprenant, ou ajoutez-en un nouveau.",
+            "Activez l’assistance visuelle et enregistrez.",
+          ],
+        },
+        {
+          p: "Cet apprenant arrive désormais directement sur la page braille dès que c’est à lui de s’entraîner. Sa progression se compte en cellules plutôt qu’en lettres, et il peut obtenir un certificat aux mêmes conditions que tout le monde.",
+        },
+      ],
+    },
+    {
+      id: "courses",
+      nav: "Les deux cours",
+      heading: "Pratique guidée, Cours classique et code",
+      blocks: [
+        {
+          p: "La *Pratique guidée* est le cours adaptatif : elle observe quelles touches vous ralentissent et construit vos leçons autour d’elles, n’ajoutant une lettre que lorsque vous savez taper celles que vous avez déjà, vite et sans faute.",
+        },
+        {
+          p: "Le *Cours classique* est celui à l’ancienne — une échelle fixe de leçons dans un ordre défini, comme l’enseignerait un manuel de dactylographie. Certains préfèrent tout simplement savoir ce qui vient ensuite.",
+        },
+        {
+          p: "Ce sont deux cours distincts avec des historiques distincts, et un certificat s’obtient sur l’un ou sur l’autre — jamais sur les deux additionnés, ce qui compterait votre première semaine deux fois. La page Cours de votre compte indique lequel des deux elle présente.",
+        },
+        {
+          p: "*Atelier de code* est une troisième forme de pratique : de vrais extraits dans le langage de votre choix, pour que les parenthèses, les points-virgules et l’indentation reçoivent l’entraînement que la prose ordinaire ne leur donne jamais.",
+        },
+        { lab: "Passer de l’un à l’autre" },
+        {
+          steps: [
+            "Sur l’écran de pratique, ouvrez les réglages de la leçon.",
+            "Choisissez Pratique guidée, Cours classique ou Atelier de code.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "certificates",
+      nav: "Certificats",
+      heading: "Obtenir un certificat",
+      blocks: [
+        {
+          p: "Un certificat atteste qu’un apprenant nommé a tapé à une vitesse et avec une précision mesurées, dans une langue donnée, à une date donnée. Il est délivré par nous — ce n’est pas un diplôme qu’un jury d’examen ou un employeur se serait engagé à reconnaître — et c’est un témoignage honnête de ce que quelqu’un a réellement fait.",
+        },
+        { lab: "Voir ce qu’il vous reste à faire" },
+        {
+          steps: [
+            "Ouvrez le menu et choisissez Compte.",
+            "Choisissez Cours.",
+            "Chaque apprenant a une ligne qui montre toutes les conditions, avec où il en est.",
+          ],
+        },
+        {
+          p: "Les conditions sont par exemple : chaque lettre introduite, chaque lettre solide et pas seulement rencontrée, assez de leçons, assez de jours différents, ainsi qu’une vitesse et une précision tenues dans la durée. Quand toutes sont remplies, un lien pour passer l’épreuve apparaît sur cette ligne.",
+        },
+        {
+          p: "L’épreuve est courte, et elle est corrigée sur nos serveurs plutôt que dans votre navigateur. Réussissez-la et le certificat est délivré avec un numéro dessus. Toute personne à qui vous donnez ce numéro peut le vérifier sur la page *Vérifier un certificat* — et c’est vous qui décidez si votre nom lui est montré.",
+        },
+      ],
+    },
+    {
+      id: "security",
+      nav: "Garder votre compte en sécurité",
+      heading: "Clés d’accès, codes et qui s’est connecté",
+      blocks: [
+        {
+          p: "Vous pouvez vous connecter avec un mot de passe, avec un fournisseur comme Google, avec un lien envoyé à votre adresse e-mail — ou avec une *clé d’accès*, et c’est celle-ci que nous choisirions. Une clé d’accès utilise l’empreinte, le visage ou le code de votre propre appareil ; il n’y a aucun mot de passe susceptible de fuiter, et rien de ce que nous conservons ne permettrait de se connecter à votre place.",
+        },
+        { lab: "Ajouter une clé d’accès" },
+        {
+          steps: [
+            "Ouvrez le menu et choisissez Compte, puis Sécurité.",
+            "Choisissez Ajouter une clé d’accès et suivez l’invite de votre appareil.",
+          ],
+        },
+        {
+          p: "La *validation en deux étapes* est là aussi, avec une application d’authentification et des codes de secours au cas où vous perdriez le téléphone. Imprimez-les et rangez-les ailleurs que sur ce téléphone.",
+        },
+        {
+          p: "La même page liste l’activité récente — connexions, échecs de connexion, ajout d’une clé d’accès, changement de mot de passe — chacune avec l’endroit approximatif d’où elle venait, si bien qu’une action qui n’est pas la vôtre saute aux yeux. Si quelque chose cloche, *se déconnecter partout* met fin à toutes les sessions sauf celle que vous utilisez.",
+        },
+        {
+          p: "Il y a aussi un *code parental*, qui verrouille les réglages du compte pour qu’un enfant sur l’appareil familial ne puisse ni les modifier ni supprimer un profil.",
+        },
+      ],
+    },
+    {
       id: "yours",
       nav: "Personnalisez",
       heading: "Personnalisez",
@@ -327,9 +457,15 @@ export const fr: GuideTranslation = {
         { lab: "Changer le thème" },
         {
           steps: [
-            "Ouvrez le menu.",
-            "Utilisez l’interrupteur de thème — un thème clair, sombre ou le look KeyLearn.",
+            "Ouvrez le menu et choisissez Compte, puis Apparence.",
+            "Choisissez clair, sombre, ou suivre l’appareil.",
           ],
+        },
+        {
+          p: "Si aucun des thèmes fournis n’est celui que vous voulez, le *créateur de thèmes* vous laisse composer le vôtre — y compris les couleurs de doigts avec lesquelles le clavier vous apprend. L’application mesure le contraste de ce que vous choisissez et refuse les combinaisons que personne ne pourrait lire.",
+        },
+        {
+          p: "Chaque apprenant du foyer peut avoir sa propre couleur, pour qu’un appareil partagé donne quand même l’impression d’appartenir à celui qui est assis devant.",
         },
         { lab: "Changer la langue du site" },
         {
@@ -360,10 +496,7 @@ export const fr: GuideTranslation = {
       blocks: [
         { lab: "Se déconnecter" },
         {
-          steps: [
-            "Ouvrez le menu.",
-            "Choisissez Se déconnecter et confirmez.",
-          ],
+          steps: ["Ouvrez le menu.", "Choisissez Se déconnecter et confirmez."],
         },
         {
           p: "Votre historique de pratique reste bien à l’abri sur cet appareil — et sur votre compte, si vous en avez créé un — prêt pour la prochaine fois où vous vous installerez pour taper.",

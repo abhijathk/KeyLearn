@@ -320,6 +320,136 @@ export const de: GuideTranslation = {
       ],
     },
     {
+      id: "access",
+      nav: "Wenn etwas im Weg ist",
+      heading: "Wenn dir etwas an der App im Weg ist",
+      blocks: [
+        {
+          p: "Dafür gibt es eine eigene Seite, und sie wird *pro Lernendem* eingestellt — die Anpassungen einer Person ändern also nie etwas für jemand anderen.",
+        },
+        { lab: "So öffnest du sie" },
+        {
+          steps: [
+            "Öffne das Menü und wähle Konto.",
+            "Wähle Barrierefreiheit.",
+            "Wähle oben den Lernenden aus und schalte dann so viele Einstellungen ein, wie du brauchst.",
+          ],
+        },
+        {
+          p: "Die fünf Einstellungen lassen sich *kombinieren*. Wer Legasthenie und ein Zittern hat, braucht zwei davon, und zur Wahl einer einzigen gezwungen zu werden hieße, dass die App fragt, welche Schwierigkeit sie zu berücksichtigen bereit ist.",
+        },
+        {
+          tips: [
+            "Ruhig — nichts bewegt sich, nichts wird gezählt, nichts wird gestoppt, und ein verpasster Tag beendet die Serie nicht.",
+            "Weniger auf einmal — die Übung beginnt nur mit den Wörtern und der Tastatur.",
+            "Leichter zu lesen — die Schrift für Legasthenie, mehr Abstand zwischen Buchstaben und Zeilen, kräftigerer Text.",
+            "Farben unterscheidbar — Fingerfarben, die bei Farbenblindheit deutlich bleiben, und Fehler, die nicht nur rot sind, sondern auch zu hören.",
+            "Ruhigere Hände — größere Flächen zum Drücken, nie zwei Tasten gleichzeitig, und eine Taste, die sich wiederholt, zählt nicht doppelt.",
+          ],
+        },
+        {
+          p: "Darunter öffnet *Alles selbst einstellen* jeden Schalter einzeln — fünfzehn an der Zahl, darunter die Sprechgeschwindigkeit, Untertitel für alles Gesprochene, eine Fingernummer auf jeder Taste und wie lange eine wiederholte Taste ignoriert wird. Eine einzige Schaltfläche setzt sie alle zurück.",
+        },
+      ],
+    },
+    {
+      id: "braille",
+      nav: "Braille",
+      heading: "Lernen auf einer Brailletastatur",
+      blocks: [
+        {
+          p: "Wer blind ist oder wenig sieht, bekommt eine ganz andere Seite — Eingabe mit sechs Tasten, ein Lehrplan in Zellen statt in Buchstaben und gesprochene Führung von Anfang bis Ende. Es ist ein eigener Weg, das Tippen zu lernen, und nicht die vorgelesene Seite für Sehende.",
+        },
+        { lab: "Für einen Lernenden einschalten" },
+        {
+          steps: [
+            "Öffne das Menü und wähle Konto, dann Lernende.",
+            "Bearbeite den Lernenden oder lege einen neuen an.",
+            "Schalte die Sehunterstützung ein und speichere.",
+          ],
+        },
+        {
+          p: "Dieser Lernende landet nun direkt auf der Braille-Seite, sobald er oder sie an der Reihe ist. Der Fortschritt wird in Zellen statt in Buchstaben gezählt, und ein Zertifikat lässt sich unter genau denselben Bedingungen erwerben wie für alle anderen.",
+        },
+      ],
+    },
+    {
+      id: "courses",
+      nav: "Die zwei Kurse",
+      heading: "Geführte Übung, Klassischer Kurs und Code",
+      blocks: [
+        {
+          p: "*Geführte Übung* ist der adaptive Kurs: Er beobachtet, welche Tasten dich ausbremsen, und baut deine Lektionen darum herum — ein neuer Buchstabe kommt erst dazu, wenn du die vorhandenen sowohl schnell als auch genau tippen kannst.",
+        },
+        {
+          p: "*Klassischer Kurs* ist der altmodische — eine feste Leiter von Lektionen in gesetzter Reihenfolge, so wie ein Schreibmaschinenbuch es beibringen würde. Manche wissen einfach gern, was als Nächstes kommt.",
+        },
+        {
+          p: "Es sind getrennte Kurse mit getrenntem Verlauf, und ein Zertifikat wird auf dem einen oder dem anderen erworben — nie auf beiden zusammengezählt, denn das würde deine erste Woche doppelt zählen. Die Kursseite in deinem Konto sagt dir, über welchen sie gerade berichtet.",
+        },
+        {
+          p: "*Code-Handwerk* ist eine dritte Art zu üben: echte Schnipsel in einer Sprache deiner Wahl, damit Klammern, Semikolons und Einrückungen die Übung bekommen, die gewöhnlicher Fließtext ihnen nie gibt.",
+        },
+        { lab: "Zwischen ihnen wechseln" },
+        {
+          steps: [
+            "Öffne auf dem Übungsbildschirm die Lektionseinstellungen.",
+            "Wähle Geführte Übung, Klassischer Kurs oder Code-Handwerk.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "certificates",
+      nav: "Zertifikate",
+      heading: "Ein Zertifikat erwerben",
+      blocks: [
+        {
+          p: "Ein Zertifikat besagt, dass ein namentlich genannter Lernender an einem bestimmten Datum in einer bestimmten Sprache mit gemessener Geschwindigkeit und Genauigkeit getippt hat. Es wird von uns ausgestellt — es ist kein Abschluss, den ein Prüfungsamt oder ein Arbeitgeber anzuerkennen zugesagt hätte — und es ist ein ehrlicher Beleg dafür, was jemand tatsächlich geleistet hat.",
+        },
+        { lab: "Sehen, wie weit du noch entfernt bist" },
+        {
+          steps: [
+            "Öffne das Menü und wähle Konto.",
+            "Wähle Kurs.",
+            "Jeder Lernende hat eine Zeile, die jede Bedingung zeigt und wie weit er damit ist.",
+          ],
+        },
+        {
+          p: "Die Bedingungen sind Dinge wie: jeder Buchstabe eingeführt, jeder Buchstabe zuverlässig und nicht nur einmal getroffen, genügend Lektionen, genügend verschiedene Tage sowie eine dauerhaft gehaltene Geschwindigkeit und Genauigkeit. Sind alle erfüllt, erscheint in dieser Zeile ein Link zur Prüfung.",
+        },
+        {
+          p: "Die Prüfung ist kurz und wird auf unseren Servern bewertet, nicht in deinem Browser. Bestehst du sie, wird das Zertifikat mit einer Nummer ausgestellt. Wem du diese Nummer gibst, der kann sie auf der Seite *Zertifikat prüfen* nachschlagen — und du entscheidest, ob dein Name dabei angezeigt wird.",
+        },
+      ],
+    },
+    {
+      id: "security",
+      nav: "Dein Konto schützen",
+      heading: "Passkeys, Codes und wer sich angemeldet hat",
+      blocks: [
+        {
+          p: "Du kannst dich mit einem Passwort anmelden, über einen Anbieter wie Google, mit einem Link an deine E-Mail-Adresse — oder mit einem *Passkey*, und den würden wir wählen. Ein Passkey nutzt den Fingerabdruck, das Gesicht oder die PIN deines eigenen Geräts; es gibt kein Passwort, das durchsickern könnte, und nichts, was wir speichern, ließe sich nutzen, um sich als du anzumelden.",
+        },
+        { lab: "Einen Passkey hinzufügen" },
+        {
+          steps: [
+            "Öffne das Menü und wähle Konto, dann Sicherheit.",
+            "Wähle Passkey hinzufügen und folge der Aufforderung deines Geräts.",
+          ],
+        },
+        {
+          p: "*Zwei-Schritt-Verifizierung* gibt es ebenfalls, mit einer Authenticator-App und Wiederherstellungscodes, falls du das Telefon verlierst. Drucke sie aus und bewahre sie irgendwo auf, das nicht das Telefon ist.",
+        },
+        {
+          p: "Dieselbe Seite listet die letzten Aktivitäten auf — Anmeldungen, fehlgeschlagene Anmeldungen, ein hinzugefügter Passkey, ein geändertes Passwort — jeweils mit dem ungefähren Ort, von dem sie kamen, sodass etwas, das du nicht getan hast, leicht auffällt. Sieht es falsch aus, beendet *überall abmelden* jede Sitzung außer der, die du gerade nutzt.",
+        },
+        {
+          p: "Es gibt außerdem eine *Eltern-PIN*, die die Kontoeinstellungen sperrt, damit ein Kind am Familiengerät sie nicht ändern und kein Profil löschen kann.",
+        },
+      ],
+    },
+    {
       id: "yours",
       nav: "Mach es zu deinem",
       heading: "Mach es zu deinem",
@@ -327,13 +457,22 @@ export const de: GuideTranslation = {
         { lab: "Das Design ändern" },
         {
           steps: [
-            "Öffne das Menü.",
-            "Nutze den Design-Schalter — hell, dunkel oder den KeyLearn-Look.",
+            "Öffne das Menü und wähle Konto, dann Erscheinungsbild.",
+            "Wähle hell, dunkel oder dem Gerät folgen.",
           ],
+        },
+        {
+          p: "Wenn keines der mitgelieferten Designs das richtige ist, kannst du dir im *Design-Studio* dein eigenes mischen — einschließlich der Fingerfarben, mit denen die Tastatur dich unterrichtet. Die App misst den Kontrast deiner Auswahl und lehnt Kombinationen ab, die niemand lesen könnte.",
+        },
+        {
+          p: "Jeder Lernende im Haushalt kann seine eigene Farbe haben, sodass sich ein geteiltes Gerät trotzdem so anfühlt, als gehöre es dem, der gerade davorsitzt.",
         },
         { lab: "Die Sprache der Seite ändern" },
         {
-          steps: ["Öffne das Menü.", "Wähle unter Sprache der Seite deine Sprache."],
+          steps: [
+            "Öffne das Menü.",
+            "Wähle unter Sprache der Seite deine Sprache.",
+          ],
         },
         {
           p: "Auf dem Übungsbildschirm kannst du außerdem jederzeit die Textgröße anpassen und Töne ein- oder ausschalten, wann immer du möchtest.",

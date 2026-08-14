@@ -363,6 +363,136 @@ export const GUIDE_EN: GuideDoc = {
       ],
     },
     {
+      id: "access",
+      nav: "If something is in the way",
+      heading: "If something about the app is in your way",
+      blocks: [
+        {
+          p: "There is a whole page for this, and it is set *per learner* — so one person's adjustments never change anybody else's.",
+        },
+        { lab: "Open it" },
+        {
+          steps: [
+            "Open the menu and choose Account.",
+            "Choose Accessibility.",
+            "Pick the learner at the top, then turn on as many settings as you need.",
+          ],
+        },
+        {
+          p: "The five settings *combine*. Somebody dyslexic with a tremor needs two of them, and being made to choose one would be the app asking which difficulty to accommodate.",
+        },
+        {
+          tips: [
+            "Calm — nothing moves, nothing counts, nothing is timed, and a missed day does not break the run.",
+            "Fewer things at once — practice opens with just the words and the keyboard.",
+            "Easier to read — the typeface built for dyslexia, more space between letters and lines, stronger text.",
+            "Colours apart — finger colours that stay distinct under colour blindness, and mistakes said in sound as well as red.",
+            "Steadier hands — bigger things to press, no two keys at once, and a key that repeats itself is not counted twice.",
+          ],
+        },
+        {
+          p: "Underneath them, *Set each one myself* opens every switch on its own — fifteen of them, including speech rate, captions for anything said aloud, a finger number on every key, and how long to ignore a repeated key for. One button puts every one of them back.",
+        },
+      ],
+    },
+    {
+      id: "braille",
+      nav: "Braille",
+      heading: "Learning on a braille keyboard",
+      blocks: [
+        {
+          p: "A learner who is blind or has low vision gets a different page altogether — six-key braille entry, a curriculum in cells rather than letters, and spoken guidance throughout. It is a separate way of learning to type, not the sighted page read aloud.",
+        },
+        { lab: "Turn it on for a learner" },
+        {
+          steps: [
+            "Open the menu and choose Account, then Learners.",
+            "Edit the learner, or add a new one.",
+            "Turn on vision support and save.",
+          ],
+        },
+        {
+          p: "That learner now goes straight to the braille page whenever they are the one practising. Their progress is counted in cells rather than letters, and they can earn a certificate on the same terms as anybody else.",
+        },
+      ],
+    },
+    {
+      id: "courses",
+      nav: "The two courses",
+      heading: "Guided practice, Classic, and code",
+      blocks: [
+        {
+          p: "*Guided practice* is the adaptive course: it watches which keys slow you down and builds your lessons around them, adding a letter only once you can type the ones you have both quickly and accurately.",
+        },
+        {
+          p: "*Classic course* is the old-fashioned one — a fixed ladder of lessons in a set order, the way a typing book would teach it. Some people simply prefer knowing what comes next.",
+        },
+        {
+          p: "They are separate courses with separate histories, and a certificate is earned on one or the other — never on the two added together, which would count your first week twice. The Course page in your account says which one it is reporting on.",
+        },
+        {
+          p: "*Code craft* is a third kind of practice: real snippets in a language you choose, so the brackets, semicolons and indentation get the drilling that ordinary prose never gives them.",
+        },
+        { lab: "Switch between them" },
+        {
+          steps: [
+            "On the practice screen, open the lesson settings.",
+            "Choose Guided practice, Classic course or Code craft.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "certificates",
+      nav: "Certificates",
+      heading: "Earning a certificate",
+      blocks: [
+        {
+          p: "A certificate says that a named learner typed at a measured speed and accuracy, in a particular language, on a particular date. It is issued by us — it is not a qualification any examination board or employer has agreed to recognise — and it is honest evidence of what somebody actually did.",
+        },
+        { lab: "See how far off you are" },
+        {
+          steps: [
+            "Open the menu and choose Account.",
+            "Choose Course.",
+            "Each learner has a row showing every condition, with how far along they are.",
+          ],
+        },
+        {
+          p: "The conditions are things like every letter introduced, every letter reliable rather than merely met, enough lessons, enough separate days, and a sustained speed and accuracy. When all of them are met, a link to sit the assessment appears on that row.",
+        },
+        {
+          p: "The assessment is short, and it is judged on our servers rather than in your browser. Pass it and the certificate is issued with a number on it. Anybody you give that number to can check it on the *Check a certificate* page — and you choose whether your name is shown to them.",
+        },
+      ],
+    },
+    {
+      id: "security",
+      nav: "Keeping your account safe",
+      heading: "Passkeys, codes and who has been signing in",
+      blocks: [
+        {
+          p: "You can sign in with a password, with a provider like Google, with a link sent to your e-mail — or with a *passkey*, which is the one we would pick. A passkey uses your device's own fingerprint, face or PIN; there is no password to leak, and nothing we hold could be used to sign in as you.",
+        },
+        { lab: "Add a passkey" },
+        {
+          steps: [
+            "Open the menu and choose Account, then Security.",
+            "Choose Add a passkey and follow your device's prompt.",
+          ],
+        },
+        {
+          p: "*Two-step verification* is there too, using an authenticator app, with recovery codes in case you lose the phone. Print them somewhere that is not the phone.",
+        },
+        {
+          p: "The same page lists recent activity — sign-ins, failed sign-ins, a passkey added, a password changed — each with the rough location it came from, so something you did not do is easy to spot. If it looks wrong, *sign out everywhere* ends every session but the one you are using.",
+        },
+        {
+          p: "There is also a *parent PIN*, which locks the account settings so a child on the family device cannot change them or delete a profile.",
+        },
+      ],
+    },
+    {
       id: "yours",
       nav: "Make it yours",
       heading: "Make it yours",
@@ -370,9 +500,15 @@ export const GUIDE_EN: GuideDoc = {
         { lab: "Change the theme" },
         {
           steps: [
-            "Open the menu.",
-            "Use the theme switch — a light, dark, or the KeyLearn look.",
+            "Open the menu and choose Account, then Appearance.",
+            "Pick light, dark, or follow the device.",
           ],
+        },
+        {
+          p: "If none of the shipped themes is the one you want, the *theme designer* lets you mix your own — including the finger colours the keyboard teaches with. The app measures the contrast of whatever you pick and refuses combinations nobody could read.",
+        },
+        {
+          p: "Each learner in the household can have their own colour, so a shared device still feels like it belongs to whoever is sitting at it.",
         },
         { lab: "Change the site language" },
         {

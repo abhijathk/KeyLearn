@@ -320,6 +320,136 @@ export const nl: GuideTranslation = {
       ],
     },
     {
+      id: "access",
+      nav: "Als iets in de weg zit",
+      heading: "Als iets in de app je in de weg zit",
+      blocks: [
+        {
+          p: "Daar is een hele pagina voor, en die staat *per leerling* ingesteld — de aanpassingen van de één veranderen dus nooit iets voor een ander.",
+        },
+        { lab: "Zo open je hem" },
+        {
+          steps: [
+            "Open het menu en kies Account.",
+            "Kies Toegankelijkheid.",
+            "Kies bovenaan de leerling en zet daarna zo veel instellingen aan als je nodig hebt.",
+          ],
+        },
+        {
+          p: "De vijf instellingen zijn te *combineren*. Iemand met dyslexie én een tremor heeft er twee nodig, en gedwongen worden er één te kiezen zou betekenen dat de app vraagt met welke moeilijkheid ze rekening wil houden.",
+        },
+        {
+          tips: [
+            "Rustig — er beweegt niets, er wordt niets geteld, er loopt geen klok, en een gemiste dag breekt je reeks niet.",
+            "Minder tegelijk — het oefenen begint met alleen de woorden en het toetsenbord.",
+            "Makkelijker te lezen — het lettertype dat voor dyslexie is gemaakt, meer ruimte tussen letters en regels, steviger tekst.",
+            "Kleuren uit elkaar — vingerkleuren die ook bij kleurenblindheid verschillend blijven, en fouten die je hoort en niet alleen rood ziet.",
+            "Stevigere handen — grotere dingen om aan te raken, nooit twee toetsen tegelijk, en een toets die zichzelf herhaalt telt niet dubbel.",
+          ],
+        },
+        {
+          p: "Daaronder opent *Alles zelf instellen* elke schakelaar afzonderlijk — vijftien stuks, waaronder de spreeksnelheid, ondertiteling van alles wat wordt uitgesproken, een vingernummer op elke toets, en hoe lang een herhaalde toets genegeerd wordt. Eén knop zet ze allemaal weer terug.",
+        },
+      ],
+    },
+    {
+      id: "braille",
+      nav: "Braille",
+      heading: "Leren op een brailletoetsenbord",
+      blocks: [
+        {
+          p: "Een leerling die blind of slechtziend is krijgt een heel andere pagina — invoer met zes toetsen, een leerlijn in cellen in plaats van letters, en gesproken begeleiding van begin tot eind. Het is een eigen manier om te leren typen, niet de pagina voor zienden die wordt voorgelezen.",
+        },
+        { lab: "Het aanzetten voor een leerling" },
+        {
+          steps: [
+            "Open het menu en kies Account, dan Leerlingen.",
+            "Bewerk de leerling, of voeg een nieuwe toe.",
+            "Zet zichtondersteuning aan en sla op.",
+          ],
+        },
+        {
+          p: "Die leerling komt nu meteen op de braillepagina terecht zodra hij of zij aan de beurt is om te oefenen. De voortgang wordt in cellen geteld in plaats van in letters, en er valt een certificaat te verdienen op precies dezelfde voorwaarden als voor ieder ander.",
+        },
+      ],
+    },
+    {
+      id: "courses",
+      nav: "De twee cursussen",
+      heading: "Begeleide oefening, Klassiek en code",
+      blocks: [
+        {
+          p: "*Begeleide oefening* is de adaptieve cursus: hij kijkt welke toetsen je afremmen en bouwt je lessen daaromheen, en voegt pas een letter toe zodra je de letters die je hebt zowel snel als accuraat kunt typen.",
+        },
+        {
+          p: "De *Klassieke cursus* is de ouderwetse — een vaste ladder van lessen in een vaste volgorde, zoals een typeboek het zou aanleren. Sommige mensen weten nu eenmaal graag wat er hierna komt.",
+        },
+        {
+          p: "Het zijn aparte cursussen met een aparte geschiedenis, en een certificaat verdien je op de één of op de ander — nooit op de twee bij elkaar opgeteld, want dan zou je eerste week dubbel meetellen. De Cursuspagina in je account vertelt over welke van de twee ze rapporteert.",
+        },
+        {
+          p: "*Codewerk* is een derde soort oefening: echte fragmenten in een taal die je zelf kiest, zodat de haakjes, puntkomma's en inspringingen de training krijgen die gewone tekst ze nooit geeft.",
+        },
+        { lab: "Ertussen wisselen" },
+        {
+          steps: [
+            "Open op het oefenscherm de lesinstellingen.",
+            "Kies Begeleide oefening, Klassieke cursus of Codewerk.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "certificates",
+      nav: "Certificaten",
+      heading: "Een certificaat verdienen",
+      blocks: [
+        {
+          p: "Een certificaat zegt dat een met naam genoemde leerling op een bepaalde datum in een bepaalde taal met een gemeten snelheid en nauwkeurigheid heeft getypt. Het wordt door ons uitgegeven — het is geen diploma dat een examencommissie of werkgever heeft toegezegd te erkennen — en het is een eerlijk bewijs van wat iemand daadwerkelijk heeft gedaan.",
+        },
+        { lab: "Zien hoe ver je nog moet" },
+        {
+          steps: [
+            "Open het menu en kies Account.",
+            "Kies Cursus.",
+            "Elke leerling heeft een rij met alle voorwaarden erin en hoe ver het ermee staat.",
+          ],
+        },
+        {
+          p: "De voorwaarden zijn dingen als: elke letter geïntroduceerd, elke letter betrouwbaar en niet alleen maar één keer tegengekomen, genoeg lessen, genoeg verschillende dagen, en een snelheid en nauwkeurigheid die je volhoudt. Zijn ze allemaal gehaald, dan verschijnt op die rij een link om de proef af te leggen.",
+        },
+        {
+          p: "De proef is kort en wordt op onze servers beoordeeld in plaats van in je browser. Haal je hem, dan wordt het certificaat uitgegeven met een nummer erop. Iedereen aan wie je dat nummer geeft, kan het nakijken op de pagina *Een certificaat controleren* — en jij bepaalt of je naam daarbij wordt getoond.",
+        },
+      ],
+    },
+    {
+      id: "security",
+      nav: "Je account veilig houden",
+      heading: "Passkeys, codes en wie er heeft ingelogd",
+      blocks: [
+        {
+          p: "Je kunt inloggen met een wachtwoord, met een aanbieder zoals Google, met een link die we naar je e-mail sturen — of met een *passkey*, en die zouden wij kiezen. Een passkey gebruikt de vingerafdruk, het gezicht of de pincode van je eigen apparaat; er is geen wachtwoord dat kan uitlekken, en met niets wat wij bewaren kan iemand als jou inloggen.",
+        },
+        { lab: "Een passkey toevoegen" },
+        {
+          steps: [
+            "Open het menu en kies Account, dan Beveiliging.",
+            "Kies Een passkey toevoegen en volg de aanwijzing van je apparaat.",
+          ],
+        },
+        {
+          p: "*Verificatie in twee stappen* is er ook, met een authenticator-app en herstelcodes voor het geval je je telefoon kwijtraakt. Druk ze af en bewaar ze ergens anders dan op die telefoon.",
+        },
+        {
+          p: "Dezelfde pagina toont de recente activiteit — keren dat er is ingelogd, mislukte pogingen, een toegevoegde passkey, een gewijzigd wachtwoord — telkens met de globale locatie waar het vandaan kwam, zodat iets wat jij niet hebt gedaan meteen opvalt. Klopt er iets niet, dan beëindigt *overal uitloggen* elke sessie behalve die waarin je nu zit.",
+        },
+        {
+          p: "Er is ook een *ouderpincode*, die de accountinstellingen op slot zet zodat een kind op het gezinsapparaat ze niet kan wijzigen en geen profiel kan verwijderen.",
+        },
+      ],
+    },
+    {
       id: "yours",
       nav: "Maak het van jou",
       heading: "Maak het van jou",
@@ -327,9 +457,15 @@ export const nl: GuideTranslation = {
         { lab: "Het thema wijzigen" },
         {
           steps: [
-            "Open het menu.",
-            "Gebruik de themaschakelaar — een lichte, donkere of de KeyLearn-weergave.",
+            "Open het menu en kies Account, dan Weergave.",
+            "Kies licht, donker of het apparaat volgen.",
           ],
+        },
+        {
+          p: "Als geen van de meegeleverde thema's het juiste is, kun je met de *themaontwerper* je eigen thema mengen — inclusief de vingerkleuren waarmee het toetsenbord je leert. De app meet het contrast van wat je kiest en weigert combinaties die niemand zou kunnen lezen.",
+        },
+        {
+          p: "Elke leerling in huis kan een eigen kleur hebben, zodat een gedeeld apparaat toch aanvoelt alsof het van degene is die ervoor zit.",
         },
         { lab: "De taal van de site wijzigen" },
         {
