@@ -352,7 +352,7 @@ export function MenuDrawer({
                     rel="noreferrer noopener"
                     onClick={onClose}
                   >
-                    <StrokeIcon className={styles.utilIcon} name="heart" />
+                    <StrokeIcon className={styles.utilIcon} name="coffee" />
                     <FormattedMessage
                       id="footer.supportLink.text"
                       defaultMessage="Buy me a coffee"

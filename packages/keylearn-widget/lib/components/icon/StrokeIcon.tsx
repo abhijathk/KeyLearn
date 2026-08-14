@@ -46,7 +46,8 @@ export type StrokeIconName =
   | "heart"
   | "braille"
   | "warning"
-  | "info";
+  | "info"
+  | "coffee";
 
 const shapes: Record<StrokeIconName, ReactNode> = {
   // The cell for "b": dots 1 and 2 raised, the other four empty.
@@ -231,6 +232,17 @@ const shapes: Record<StrokeIconName, ReactNode> = {
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 11v5.2" />
       <circle cx="12" cy="7.7" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  // A to-go cup with a lid that visibly overhangs the narrower cup body
+  // below it, plus a sip slot — the overhang is what reads as a lid rather
+  // than a trash-bin tab, since bins are the same width top to bottom.
+  coffee: (
+    <>
+      <path d="M4.5 7.5C4.5 4.9 7.9 3.6 12 3.6S19.5 4.9 19.5 7.5" />
+      <path d="M4.5 7.8h15" />
+      <path d="M6.8 9.3l1 8.9a2 2 0 0 0 2 1.8h4.4a2 2 0 0 0 2-1.8l1-8.9" />
+      <path d="M10.2 5.4h3.6" />
     </>
   ),
   // The keyboard, struck through — "hide it".

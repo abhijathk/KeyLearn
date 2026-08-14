@@ -93,8 +93,11 @@
   align-items: center;
 
   // The control language: compact borderless rounded squares on a
-  // translucent surface, one geometry for every header control.
-  button {
+  // translucent surface, one geometry for every header control. `a` joins
+  // `button` here for the coffee link — an external link, not an action,
+  // but visually it's just another control in the row.
+  button,
+  a {
     display: grid;
     place-items: center;
     inline-size: 2.3rem;
@@ -104,8 +107,10 @@
     padding: 0.4rem;
     border: none;
     border-radius: 0.7rem;
+    color: inherit;
     background-color: var(--primary-l1);
     line-height: normal;
+    text-decoration: none;
 
     svg {
       inline-size: 1.15rem;

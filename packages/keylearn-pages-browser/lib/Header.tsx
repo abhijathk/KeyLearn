@@ -1,6 +1,7 @@
 import { lessonStamp, type StampMode } from "@keylearn/lesson";
 import { GearIcon, MoonIcon, SoundIcon, SunIcon } from "@keylearn/page-kids";
 import { useSettings } from "@keylearn/settings";
+import { supportUrl } from "@keylearn/thirdparties";
 import { IconButton, StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -405,6 +406,21 @@ export function Header({
           </span>
         )}
         {!kids && <ThemeSwitcher />}
+        {!kids && supportUrl !== "" && (
+          <a
+            href={supportUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+            title={formatMessage(
+              defineMessage({
+                id: "footer.supportLink.text",
+                defaultMessage: "Buy me a coffee",
+              }),
+            )}
+          >
+            <StrokeIcon name="coffee" />
+          </a>
+        )}
         {kids ? (
           <button
             type="button"
