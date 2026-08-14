@@ -17,6 +17,8 @@ export function FloatingShell({
   children,
   compact = false,
   flush = false,
+  onClose,
+  closeLabel,
 }: {
   /** Optional: the auth window carries no heading of its own. */
   readonly title?: ReactNode;
@@ -24,10 +26,29 @@ export function FloatingShell({
   readonly compact?: boolean;
   /** Remove the body padding so a full-bleed rail/pane layout can fill it. */
   readonly flush?: boolean;
+  /**
+   * Most callers are a routed page — closing means leaving it, so the
+   * default navigates home. A shell shown inline over the current page
+   * (not reached via its own route) passes this instead, so closing just
+   * dismisses it in place.
+   */
+  readonly onClose?: () => void;
+  /**
+   * Overrides the close button's title/aria text. The default ("Close and
+   * return to practice") only makes sense for the navigate-home behavior —
+   * a caller with a custom `onClose` should usually supply its own.
+   */
+  readonly closeLabel?: string;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
-  const close = () => navigate("/");
+  const close = onClose ?? (() => navigate("/"));
+  const closeTitle =
+    closeLabel ??
+    formatMessage({
+      id: "account.close",
+      defaultMessage: "Close and return to practice",
+    });
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") {
@@ -63,10 +84,7 @@ export function FloatingShell({
           <>
             <button
               className={styles.floatClose}
-              title={formatMessage({
-                id: "account.close",
-                defaultMessage: "Close and return to practice",
-              })}
+              title={closeTitle}
               onClick={close}
             >
               <StrokeIcon name="close" />
@@ -85,10 +103,7 @@ export function FloatingShell({
               )}
               <button
                 className={styles.windowClose}
-                title={formatMessage({
-                  id: "account.close",
-                  defaultMessage: "Close and return to practice",
-                })}
+                title={closeTitle}
                 onClick={close}
               >
                 <StrokeIcon name="close" />

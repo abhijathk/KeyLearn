@@ -7,6 +7,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { showAds } from "./ads.ts";
 import { Header } from "./Header.tsx";
+import { LoginPrompt } from "./LoginPrompt.tsx";
 import { MenuDrawer } from "./MenuDrawer.tsx";
 import * as styles from "./Template.module.less";
 
@@ -168,6 +169,7 @@ export function Template({
         onClose={() => setMenuOpen(false)}
         path={path}
       />
+      <LoginPrompt path={path} />
       <EnvName />
       <CompleteProfileGate />
     </div>
