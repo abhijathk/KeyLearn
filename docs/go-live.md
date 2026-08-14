@@ -69,14 +69,14 @@ watched the same check pass silently. `config-check.test.ts` also passes
       all old PIDs fully replaced, nothing orphaned. Enabled on boot.
 - [x] Cloudflare in front for DNS/TLS/CDN is a good fit. Keep every mail record
       **unproxied** (grey cloud); proxying an MX host breaks delivery.
-      Zone live (see hostname item above). **Still needs you**: the `A` and
-      `www` records are deliberately left DNS-only (grey cloud) rather than
-      Proxied — flip them to Proxied in the Cloudflare dashboard now that TLS
-      is confirmed working end-to-end, for the CDN/DDoS-protection benefit.
-      I don't have Cloudflare API credentials, only what we did together
-      through the dashboard, so this toggle needs your hands. Mail-related
-      records (both DKIM CNAMEs, the Brevo link-tracking CNAME) must stay
-      DNS-only permanently — don't proxy those.
+      Zone live (see hostname item above). `A` and `www` flipped to Proxied
+      2026-08-14. Live-verified afterward (forcing resolution to Cloudflare's
+      edge IP to bypass local DNS caching, which had bitten this exact check
+      once already): `server: cloudflare` + a `cf-ray` header present, real
+      app content (`<title>Practice</title>`) actually loading through the
+      proxy, no redirect loop (0 redirects, single 200), `www` correctly
+      redirecting to the apex. Mail-related records (both DKIM CNAMEs, the
+      Brevo link-tracking CNAME) correctly left DNS-only.
       Cloudflare zone exists with all records unproxied (see hostname item
       above) — this is the same in-progress migration, not a separate task.
 
