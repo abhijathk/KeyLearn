@@ -36,6 +36,24 @@ export class DataDir {
   }
 
   /**
+   * Returns the full path to one learner profile's settings — practice and
+   * accessibility preferences, synced per profile rather than per account
+   * (see `keylearn-settings-loader`), since the person who needs larger
+   * targets or a slower default speed is not necessarily the one who signed
+   * in.
+   */
+  profileSettingsFile(userId: number, profileId: number): string {
+    const s = String(userId).padStart(9, "0");
+    return this.dataPath(
+      "profile_settings", //
+      s.substring(0, 3),
+      s.substring(3, 6),
+      s,
+      String(profileId),
+    );
+  }
+
+  /**
    * Returns the full path to a learner's braille progress.
    *
    * Its own file rather than a corner of the stats one: braille progress is a

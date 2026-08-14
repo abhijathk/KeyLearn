@@ -24,6 +24,7 @@
     "@keylearn/result": "*",
     "@keylearn/result-loader": "*",
     "@keylearn/settings": "*",
+    "@keylearn/settings-loader": "*",
     "@keylearn/speech": "*",
     "@keylearn/textinput": "*",
     "@keylearn/themes": "*",

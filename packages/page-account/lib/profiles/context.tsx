@@ -8,6 +8,7 @@ import {
   saveActiveProfileId,
   usePageData,
 } from "@keylearn/pages-shared";
+import { ANONYMOUS_SETTINGS_KEY } from "@keylearn/settings-loader";
 import {
   createContext,
   type ReactNode,
@@ -118,6 +119,32 @@ function forgetPickDismissed(): void {
   }
 }
 
+// A guest who practices before creating an account has their settings under
+// the plain anonymous key (see keylearn-settings-loader). The moment their
+// first profile exists, copy it into that profile's own slot — left
+// unmarked as migrated, so the profile settings loader's own first load()
+// pushes it to the server exactly like any other pre-existing local value.
+// The anonymous key itself is left alone: it still serves signed-out
+// browsing on this device.
+function migrateAnonymousSettings(profileId: string): void {
+  try {
+    const anonymous = localStorage.getItem(ANONYMOUS_SETTINGS_KEY);
+    if (anonymous == null) {
+      return;
+    }
+    const profileKey = `profile-${profileId}.settings`;
+    if (localStorage.getItem(profileKey) != null) {
+      // Something is already there — an existing profile being switched
+      // into for the first time this session, not a fresh signup. Don't
+      // clobber it.
+      return;
+    }
+    localStorage.setItem(profileKey, anonymous);
+  } catch {
+    // Storage may be unavailable; the new profile just starts blank.
+  }
+}
+
 export function ProfilesProvider({
   children,
 }: {
@@ -190,6 +217,7 @@ export function ProfilesProvider({
         const fresh = list.find((p) => !profiles.some((o) => o.id === p.id));
         if (fresh != null) {
           setActiveId(fresh.id);
+          migrateAnonymousSettings(fresh.id);
         }
       }
     };

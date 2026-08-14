@@ -57,4 +57,60 @@ export class SettingsDatabase {
   #getFile(userId: number) {
     return new File(this.dataDir.userSettingsFile(userId));
   }
+
+  async setProfile(
+    userId: number,
+    profileId: number,
+    settings: Settings | null,
+  ): Promise<void> {
+    const file = this.#getProfileFile(userId, profileId);
+    await LockFile.withLock(
+      file,
+      { retryLimit: 5, delayer: exponentialDelay(10) },
+      async (lock) => {
+        if (settings != null) {
+          await lock.writeFile(JSON.stringify(settings.toJSON(), null, 2));
+          await lock.commit();
+        } else {
+          await file.delete();
+          await lock.rollback();
+        }
+      },
+    );
+  }
+
+  async getProfile(
+    userId: number,
+    profileId: number,
+  ): Promise<Settings | null> {
+    const file = this.#getProfileFile(userId, profileId);
+    return await LockFile.withLock(
+      file,
+      {
+        retryLimit: 5,
+        delayer: exponentialDelay(10),
+      },
+      async (lock) => {
+        try {
+          let json: unknown;
+          try {
+            json = await file.readJson();
+          } catch (err: any) {
+            if (err.code === "ENOENT") {
+              return null;
+            } else {
+              throw err;
+            }
+          }
+          return new Settings(json as any);
+        } finally {
+          await lock.rollback();
+        }
+      },
+    );
+  }
+
+  #getProfileFile(userId: number, profileId: number) {
+    return new File(this.dataDir.profileSettingsFile(userId, profileId));
+  }
 }
