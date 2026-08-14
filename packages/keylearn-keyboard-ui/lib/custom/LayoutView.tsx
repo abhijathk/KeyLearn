@@ -2,6 +2,7 @@ import { KeyCharacters, type KeyId } from "@keylearn/keyboard";
 import { LayoutBuilder } from "@keylearn/keyboard-io";
 import { Tab, TabList } from "@keylearn/widget";
 import { useState } from "react";
+import { useIntl } from "react-intl";
 import { KeyLayer } from "../KeyLayer.tsx";
 import { VirtualKeyboard } from "../VirtualKeyboard.tsx";
 import { useCustomLayout } from "./context.tsx";
@@ -16,11 +17,17 @@ export function LayoutView({
   readonly keyId: KeyId;
   readonly setKeyId: (keyId: KeyId) => void;
 }) {
+  const { formatMessage } = useIntl();
   const { keyboard, layout } = useCustomLayout();
   const [index, setIndex] = useState(0);
   return (
     <TabList selectedIndex={index} onSelect={setIndex}>
-      <Tab label="Keyboard">
+      <Tab
+        label={formatMessage({
+          id: "customLayout.tab.keyboard",
+          defaultMessage: "Keyboard",
+        })}
+      >
         <VirtualKeyboard keyboard={keyboard}>
           <KeyLayer
             depressedKeys={[keyId]}
@@ -35,7 +42,12 @@ export function LayoutView({
           characters={layout.get(keyId) ?? new KeyCharacters(keyId, 0, 0, 0, 0)}
         />
       </Tab>
-      <Tab label="Table">
+      <Tab
+        label={formatMessage({
+          id: "customLayout.tab.table",
+          defaultMessage: "Table",
+        })}
+      >
         <LayoutTable />
       </Tab>
       <Tab label="JSON">

@@ -1,6 +1,7 @@
 import { alphabetName, groupNumber } from "@keylearn/certificate";
 import { type IssuedCertificate, myCertificates } from "@keylearn/pages-shared";
 import { type ReactNode, useEffect, useState } from "react";
+import { useIntl } from "react-intl";
 import * as styles from "./EarnedMedals.module.less";
 import { Medal, medalFor } from "./Medal.tsx";
 
@@ -23,6 +24,7 @@ export function EarnedMedals({
   readonly certificates: readonly IssuedCertificate[];
   readonly size?: "pin" | "small" | "medium" | "normal";
 }): ReactNode {
+  const { formatMessage } = useIntl();
   if (certificates.length === 0) {
     return null;
   }
@@ -36,7 +38,13 @@ export function EarnedMedals({
           />
           <span className={styles.card} role="tooltip">
             <b className={styles.title}>{titleOf(certificate)}</b>
-            <Line label="Alphabet" value={alphabetName(certificate.language)} />
+            <Line
+              label={formatMessage({
+                id: "earnedMedals.alphabet",
+                defaultMessage: "Alphabet",
+              })}
+              value={alphabetName(certificate.language)}
+            />
             <Line
               label={
                 certificate.kind === "braille" ? "Cells a minute" : "Speed"
@@ -48,10 +56,19 @@ export function EarnedMedals({
               }
             />
             <Line
-              label="Accuracy"
+              label={formatMessage({
+                id: "earnedMedals.accuracy",
+                defaultMessage: "Accuracy",
+              })}
               value={`${(certificate.accuracy * 100).toFixed(1)}%`}
             />
-            <Line label="Issued" value={dateOf(certificate.issued)} />
+            <Line
+              label={formatMessage({
+                id: "earnedMedals.issued",
+                defaultMessage: "Issued",
+              })}
+              value={dateOf(certificate.issued)}
+            />
             <Line
               label="Number"
               value={groupNumber(certificate.number)}

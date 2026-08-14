@@ -24,6 +24,7 @@ test("render anonymous user with identicon", () => {
           id: null,
           name: "somebody",
           imageUrl: null,
+          staff: false,
         }}
       />
     </FakeIntlProvider>,
@@ -43,6 +44,7 @@ test("render named user with identicon", () => {
           name: "somebody",
           imageUrl: null,
           premium: false,
+          staff: false,
         }}
       />
     </FakeIntlProvider>,
@@ -62,6 +64,7 @@ test("render named user with custom image", () => {
           name: "somebody",
           imageUrl: "https://provider.com/image.png",
           premium: false,
+          staff: false,
         }}
       />
     </FakeIntlProvider>,

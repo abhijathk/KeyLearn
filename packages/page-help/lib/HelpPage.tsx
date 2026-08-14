@@ -123,11 +123,24 @@ export function HelpPage() {
     <Article className={styles.paper}>
       <header className={styles.masthead}>
         <div className={styles.kicker}>
-          <span>The KeyLearn Field Guide</span>
+          <span>
+            <FormattedMessage
+              id="help.masthead.kicker"
+              defaultMessage="The KeyLearn Field Guide"
+            />
+          </span>
         </div>
-        <div className={styles.nameplate}>Learn to Touch Type</div>
+        <div className={styles.nameplate}>
+          <FormattedMessage
+            id="help.masthead.nameplate"
+            defaultMessage="Learn to Touch Type"
+          />
+        </div>
         <div className={styles.dateline}>
-          How the adaptive lessons train your fingers
+          <FormattedMessage
+            id="help.masthead.dateline"
+            defaultMessage="How the adaptive lessons train your fingers"
+          />
         </div>
       </header>
 
@@ -174,7 +187,10 @@ export function HelpPage() {
               <figure className={styles.plate}>
                 <div className={styles.plateArt}>{art}</div>
                 <figcaption className={styles.plateCaption}>
-                  The letter set
+                  <FormattedMessage
+                    id="help.plate.letterSet"
+                    defaultMessage="The letter set"
+                  />
                 </figcaption>
               </figure>
               <figure className={styles.plate}>
@@ -185,7 +201,10 @@ export function HelpPage() {
                   />
                 </div>
                 <figcaption className={styles.plateCaption}>
-                  Words you&rsquo;ll practice
+                  <FormattedMessage
+                    id="help.plate.words"
+                    defaultMessage="Words you’ll practice"
+                  />
                 </figcaption>
               </figure>
             </div>

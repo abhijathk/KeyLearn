@@ -16,6 +16,7 @@
     "@keylearn/keyboard": "*",
     "@keylearn/lang": "*",
     "@keylearn/lesson": "*",
+    "@keylearn/page-support": "*",
     "@keylearn/pages-shared": "*",
     "@keylearn/phonetic-model": "*",
     "@keylearn/phonetic-model-loader": "*",

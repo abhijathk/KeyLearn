@@ -36,7 +36,10 @@ export const BookPreview = memo(function BookPreview({
       <img
         className={styles.coverImage}
         src={book.coverImage}
-        alt="Book cover image"
+        alt={formatMessage({
+          id: "books.coverImage",
+          defaultMessage: "Book cover image",
+        })}
         title={`${book.title} by ${book.author}`}
       />
       <div className={styles.details}>

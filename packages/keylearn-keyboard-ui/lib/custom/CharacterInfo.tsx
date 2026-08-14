@@ -1,6 +1,7 @@
 import { type Character, KeyCharacters } from "@keylearn/keyboard";
 import { formatCodePoint, isDiacritic } from "@keylearn/unicode";
 import { clsx } from "clsx";
+import { FormattedMessage } from "react-intl";
 import * as styles from "./CharacterInfo.module.less";
 
 export function CharacterInfo({
@@ -58,5 +59,12 @@ export function CharacterInfo({
       return formatCodePoint(character.special);
     }
   }
-  return <span className={styles.unassigned}>Unassigned</span>;
+  return (
+    <span className={styles.unassigned}>
+      <FormattedMessage
+        id="characterInfo.unassigned"
+        defaultMessage="Unassigned"
+      />
+    </span>
+  );
 }

@@ -61,14 +61,19 @@ export type A11yPrefs = {
    */
   readonly calm: boolean;
   /**
-   * Which preset this learner was started from, or null.
+   * Which presets this learner has turned on. Any number of them, in any mix.
    *
    * Kept rather than worked out from the switches, because presets share
-   * switches: two of them turning the running figures off means "is this
-   * preset on?" has no answer from the values alone. Asking it that way lit
-   * two badges from one click, and turning one off silently unlit the other.
+   * switches: two of them turn the running figures off, so "is this preset
+   * on?" has no answer from the values alone.
+   *
+   * They combine because the needs do. A dyslexic child with a tremor needs
+   * Easier to read *and* Steadier hands, and making them exclusive meant
+   * choosing which disability to accommodate. Turning one off recomputes from
+   * the ones still on, so a switch two presets both asked for stays on while
+   * either of them does.
    */
-  readonly preset: string | null;
+  readonly presets: readonly string[];
   /**
    * Whether everything the app says aloud is also written down.
    *
@@ -187,7 +192,7 @@ export const defaultA11y: A11yPrefs = {
   bounceMs: 0,
   fingerMarks: false,
   captions: false,
-  preset: null,
+  presets: [],
   predictable: false,
   letterSpacing: 0,
   lineHeight: 1.2,
@@ -244,7 +249,13 @@ export function loadA11y(profileId?: string | null): A11yPrefs {
       bounceMs: clampBounce(json.bounceMs),
       fingerMarks: json.fingerMarks === true,
       captions: json.captions === true,
-      preset: typeof json.preset === "string" ? json.preset : null,
+      // `preset` was a single id before presets could combine. Read either
+      // shape so an existing learner keeps the one they had.
+      presets: Array.isArray(json.presets)
+        ? json.presets.filter((x: unknown) => typeof x === "string")
+        : typeof json.preset === "string"
+          ? [json.preset]
+          : [],
       predictable: json.predictable === true,
       letterSpacing: clampIn(json.letterSpacing, 0, 0.5, 0),
       lineHeight: clampIn(json.lineHeight, 1.2, 2.4, 1.2),

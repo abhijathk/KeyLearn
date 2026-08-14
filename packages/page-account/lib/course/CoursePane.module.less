@@ -727,6 +727,8 @@
 }
 
 .skelBar,
+.skelCheck,
+.skelNext,
 .skelLine {
   border-radius: 999px;
   background: linear-gradient(
@@ -741,6 +743,34 @@
 
 .skelBar {
   block-size: 2px;
+  margin-block-start: 0.7rem;
+}
+
+// Mirrors `.checks`: same two-column rule, same row height, so the placeholder
+// occupies the space the conditions will occupy rather than a guess at it.
+.skelChecks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 0 1.6rem;
+  margin-block-start: 0.75rem;
+}
+
+// Sized to `.check`, which is 0.8rem text on a 1.4 line box with 0.22rem of
+// padding each side — about 1.6rem in all. The bar is thinner than the text it
+// stands for; the margin makes up the rest so the line advances identically.
+.skelCheck {
+  block-size: 0.7rem;
+  margin-block: 0.4rem;
+  border-radius: 999px;
+}
+
+// The "next: ..." line under the rule, which is two lines of text more often
+// than one.
+.skelNext {
+  display: block;
+  block-size: 2.2rem;
+  margin-block-start: 1.5rem;
+  border-radius: 0.3rem;
 }
 
 .skelLine {
@@ -780,6 +810,8 @@
 // the part that matters.
 @media (prefers-reduced-motion: reduce) {
   .skelBar,
+  .skelCheck,
+  .skelNext,
   .skelLine,
   .rowReady {
     animation: none;
@@ -788,6 +820,8 @@
 
 :global(:root[data-motion="reduce"]) {
   .skelBar,
+  .skelCheck,
+  .skelNext,
   .skelLine,
   .rowReady {
     animation: none;

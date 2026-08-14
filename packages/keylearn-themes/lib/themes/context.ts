@@ -18,8 +18,17 @@ export type ThemeValue = {
    * currently at the keyboard, which is the common case; the account's Display
    * panel passes an id so a parent can dress a child's profile without having
    * to become them first.
+   *
+   * `kind` is optional but should be passed whenever the caller already knows
+   * it (e.g. from a live profile list) — without it, a profile created since
+   * the page loaded falls back to "adult", which silently rejects every kids
+   * accent for a just-created kid profile. See accent-storage.ts's `kindOf`.
    */
-  readonly switchAccent: (id: string, profileId?: string | null) => void;
+  readonly switchAccent: (
+    id: string,
+    profileId?: string | null,
+    kind?: "adult" | "kid",
+  ) => void;
   readonly refresh: () => void;
 };
 

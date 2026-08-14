@@ -6,6 +6,7 @@ import {
 } from "@keylearn/keyboard-io";
 import { Button, ErrorAlert, Field, FieldList, Para } from "@keylearn/widget";
 import { useRef, useState } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import { CustomLayoutProvider, useCustomLayout } from "./context.tsx";
 import { LayoutView } from "./LayoutView.tsx";
 import { LiveImport } from "./LiveImport.tsx";
@@ -19,6 +20,7 @@ export function CustomLayoutDesigner() {
 }
 
 function DesignPane() {
+  const { formatMessage } = useIntl();
   const exportRef = useRef<HTMLAnchorElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
   const { layout, setLayout } = useCustomLayout();
@@ -64,14 +66,20 @@ function DesignPane() {
         }}
       />
       <Para align="center">
-        This is a preview of the feature that is still a work in progress.
+        <FormattedMessage
+          id="customLayout.preview"
+          defaultMessage="This is a preview of the feature that is still a work in progress."
+        />
       </Para>
       <LayoutView keyId={keyId} setKeyId={setKeyId} />
       <LiveImport onChange={setKeyId} />
       <FieldList>
         <Field>
           <Button
-            label="Export"
+            label={formatMessage({
+              id: "customLayout.export",
+              defaultMessage: "Export",
+            })}
             onClick={() => {
               exportLayout(layout)
                 .then((blob) => {
@@ -87,7 +95,10 @@ function DesignPane() {
         </Field>
         <Field>
           <Button
-            label="Import"
+            label={formatMessage({
+              id: "customLayout.import",
+              defaultMessage: "Import",
+            })}
             onClick={() => {
               const el = importRef.current!;
               el.click();
@@ -97,7 +108,10 @@ function DesignPane() {
         <Field.Filler />
         <Field>
           <Button
-            label="Reset"
+            label={formatMessage({
+              id: "customLayout.reset",
+              defaultMessage: "Reset",
+            })}
             onClick={() => {
               setLayout(new LayoutBuilder());
             }}

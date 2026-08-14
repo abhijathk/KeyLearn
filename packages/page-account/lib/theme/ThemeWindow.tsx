@@ -16,7 +16,7 @@ import {
   ZONE_ORDER,
   ZONE_POOLS,
 } from "@keylearn/themes";
-import { ConfirmDialog } from "@keylearn/widget";
+import { ConfirmDialog, FloatingShell } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useRef, useState } from "react";
 import {
@@ -26,7 +26,6 @@ import {
   type MessageDescriptor,
   useIntl,
 } from "react-intl";
-import { FloatingShell } from "../FloatingShell.tsx";
 import { useProfiles } from "../profiles/context.tsx";
 import { accentNames } from "./accent-names.tsx";
 import * as styles from "./ThemeWindow.module.less";

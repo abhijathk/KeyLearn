@@ -21,6 +21,7 @@
     "@keylearn/page-practice": "*",
     "@keylearn/page-profile": "*",
     "@keylearn/page-static": "*",
+    "@keylearn/page-support": "*",
     "@keylearn/page-typing-test": "*",
     "@keylearn/pages-shared": "*",
     "@keylearn/phonetic-model": "*",

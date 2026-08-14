@@ -1,4 +1,4 @@
-import { FloatingShell } from "@keylearn/page-account";
+import { FloatingShell } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./HighScoresPage.module.less";

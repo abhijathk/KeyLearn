@@ -14,7 +14,7 @@ import {
 import { StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import {
   CARD_SIZES,
   type CardLook,
@@ -126,6 +126,7 @@ export function ShareDialog({
 }: {
   readonly facts: ShareFacts;
 }): ReactNode {
+  const { formatMessage } = useIntl();
   const profileName = facts.name;
   const kidProfile = facts.kid;
   const [open, setOpen] = useState(false);
@@ -649,7 +650,10 @@ export function ShareDialog({
                     <input
                       className={styles.field}
                       value={nickname}
-                      placeholder="“our small dinosaur”"
+                      placeholder={formatMessage({
+                        id: "share.nickname.placeholder",
+                        defaultMessage: "“our small dinosaur”",
+                      })}
                       onChange={(ev) => setNickname(ev.target.value)}
                     />
                   )}
@@ -929,6 +933,7 @@ function Says({
   readonly ownWords: string;
   readonly setOwnWords: (s: string) => void;
 }): ReactNode {
+  const { formatMessage } = useIntl();
   return (
     <>
       <div className={dialog.label}>
@@ -960,7 +965,10 @@ function Says({
         <input
           className={styles.field}
           value={ownWords}
-          placeholder="In your own words"
+          placeholder={formatMessage({
+            id: "share.ownWords.placeholder",
+            defaultMessage: "In your own words",
+          })}
           onChange={(ev) => setOwnWords(ev.target.value)}
         />
       )}

@@ -13,7 +13,6 @@ import { Layout, loadKeyboard } from "@keylearn/keyboard";
 import {
   type CourseId,
   courseNamespace,
-  courseOf,
   type IssuedCertificate,
   myCertificates,
   Pages,
@@ -22,7 +21,6 @@ import {
 } from "@keylearn/pages-shared";
 import { Letter } from "@keylearn/phonetic-model";
 import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
-import { type Result } from "@keylearn/result";
 import { openResultStorage } from "@keylearn/result-loader";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -37,6 +35,34 @@ import * as styles from "./CoursePane.module.less";
 import { brailleEvidence, typingEvidence } from "./evidence.ts";
 import { languageLineOf } from "./language-line.ts";
 import { ReadyDialog } from "./ReadyDialog.tsx";
+
+/**
+ * How many condition lines a placeholder row stands in for.
+ *
+ * Seven conditions for everybody, and a child gets an eighth for the medal
+ * band. Known from the profile alone, so the placeholder is the height of the
+ * row that replaces it rather than an average of all of them.
+ */
+function skeletonChecks(profile: ProfileDetails): number {
+  return profile.kind === "kid" ? 8 : 7;
+}
+
+/**
+ * Everything one row needs, already resolved.
+ *
+ * Rows used to fetch for themselves, which meant three staggered awaits each —
+ * stored history, then the alphabet, then the certificates — and the pane
+ * reflowed once per stage per learner. Now the pane resolves all of it and a
+ * row is a pure function of this.
+ */
+type RowData = {
+  readonly profile: ProfileDetails;
+  readonly evidence: CertificateEvidence;
+  readonly layout: Layout;
+  readonly language?: string;
+  readonly course?: CourseId;
+  readonly held: readonly IssuedCertificate[];
+};
 
 /**
  * How far each learner is from a certificate, and what is left.
@@ -54,6 +80,95 @@ export function CoursePane(): ReactNode {
   const { publicUser } = usePageData();
   const signedIn = publicUser.id != null;
   const profiles = household.profiles;
+  // Null until every learner's history, alphabet and certificates have all
+  // arrived. The pane shows a skeleton of the right shape until then and then
+  // renders once — nothing appears while anything is still coming.
+  const [rows, setRows] = useState<readonly RowData[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      // Guided practice and Classic are separate courses with separate
+      // histories, and a certificate is earned on one of them — not on the two
+      // added together, which would count a learner's first week twice.
+      const read = async (profile: ProfileDetails, which: CourseId) => {
+        try {
+          const storage = openResultStorage({
+            type: "private",
+            userId: publicUser.id ?? null,
+            kids: profile.kind === "kid",
+            namespace: courseNamespace(profile.id, which),
+          });
+          return await storage.load();
+        } catch {
+          // A learner whose local database will not open shows as having no
+          // practice rather than breaking the page for everybody else.
+          return [];
+        }
+      };
+
+      // One request for the whole household. Each row used to ask for this
+      // separately even though the endpoint answers for everybody either way.
+      const certificates = myCertificates().catch(() => []);
+
+      const built = await Promise.all(
+        profiles.map(async (profile): Promise<Omit<RowData, "held">> => {
+          if (profile.visionSupport === true) {
+            return {
+              profile,
+              evidence: brailleEvidence(profile),
+              layout: Layout.EN_US,
+            };
+          }
+          const [guided, classic] = await Promise.all([
+            read(profile, "guided"),
+            read(profile, "classic"),
+          ]);
+          // The further one is what the row reports, because that is the one
+          // they are actually doing; the row says which.
+          const on: CourseId =
+            classic.length > guided.length ? "classic" : "guided";
+          const results = on === "classic" ? classic : guided;
+          // A learner with no practice yet still has a row, and it still has to
+          // name an alphabet — so fall back to the default layout rather than
+          // asking the keyboard loader for one that does not exist.
+          const layout = results[0]?.layout ?? Layout.EN_US;
+          let letters: readonly Letter[] = [];
+          try {
+            letters = Letter.restrict(
+              (await PhoneticModelLoader.loader(layout.language)).letters,
+              loadKeyboard(layout).getCodePoints(),
+            );
+          } catch {
+            // Coverage cannot be judged without an alphabet, and inventing one
+            // would misreport it. An empty set reads as nothing learned yet,
+            // which is wrong but visibly so, rather than a row that never
+            // arrives.
+          }
+          return {
+            profile,
+            evidence: typingEvidence(profile, results, letters),
+            layout,
+            language: languageLineOf(layout, false),
+            course: on,
+          };
+        }),
+      );
+
+      const held = await certificates;
+      if (!cancelled) {
+        setRows(
+          built.map((row) => ({
+            ...row,
+            held: held.filter((c) => String(c.profileId) === row.profile.id),
+          })),
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profiles, publicUser.id]);
   // Which of the three sheets this household would actually be handed. A home
   // of eleven-year-olds sees only the middle one; nobody is shown a specimen
   // nobody there could earn.
@@ -83,9 +198,27 @@ export function CoursePane(): ReactNode {
         </p>
       )}
 
-      {profiles.map((profile) => (
-        <CourseRow key={profile.id} profile={profile} />
-      ))}
+      {rows == null
+        ? profiles.map((profile) => (
+            <div key={profile.id} className={styles.row}>
+              <Head profile={profile} state="loading" />
+              {/* The shape of the row that is coming, at the height it will
+                  come at. A three-line placeholder standing in for a nine-line
+                  row still moves the page by a couple of hundred pixels per
+                  learner the moment the real one lands, which is the whole
+                  thing this exists to prevent. */}
+              <div className={styles.skeleton} aria-hidden={true}>
+                <span className={styles.skelBar} />
+                <span className={styles.skelChecks}>
+                  {Array.from({ length: skeletonChecks(profile) }, (_, i) => (
+                    <span key={i} className={styles.skelCheck} />
+                  ))}
+                </span>
+                <span className={styles.skelNext} />
+              </div>
+            </div>
+          ))
+        : rows.map((row) => <Row key={row.profile.id} {...row} />)}
 
       {!signedIn && (
         <p className={styles.warn}>
@@ -137,143 +270,24 @@ export function CoursePane(): ReactNode {
 }
 
 /**
- * One learner.
+ * One learner, fully resolved.
  *
- * Both of its inputs are asynchronous — the learner's own stored history, and
- * the alphabet of whichever language they practise. Coverage cannot be
- * answered without the second: "every letter" means nothing until something
- * says whose alphabet.
+ * Everything this needs arrives as a prop. It renders in one pass and never
+ * changes shape afterwards, which is what stops the pane from moving under
+ * somebody who has started reading it.
  */
-function CourseRow({
-  profile,
-}: {
-  readonly profile: ProfileDetails;
-}): ReactNode {
-  const braille = profile.visionSupport === true;
-  const [results, setResults] = useState<readonly Result[] | null>(null);
-  const [course, setCourse] = useState<CourseId>(() => courseOf(profile.id));
-  const { publicUser } = usePageData();
-
-  useEffect(() => {
-    if (braille) {
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      // Guided practice and Classic are separate courses with separate
-      // histories, and a certificate is earned on one of them — not on the two
-      // added together, which would count a learner's first week twice. Both
-      // are read and the further one is what the row reports, because that is
-      // the one they are actually doing; the row says which.
-      const read = async (which: CourseId) => {
-        try {
-          const storage = openResultStorage({
-            type: "private",
-            userId: publicUser.id ?? null,
-            kids: profile.kind === "kid",
-            namespace: courseNamespace(profile.id, which),
-          });
-          return await storage.load();
-        } catch {
-          // A learner whose local database will not open shows as having no
-          // practice rather than breaking the page for everybody else.
-          return [];
-        }
-      };
-      const [guided, classic] = await Promise.all([
-        read("guided"),
-        read("classic"),
-      ]);
-      if (!cancelled) {
-        const on: CourseId =
-          classic.length > guided.length ? "classic" : "guided";
-        setCourse(on);
-        setResults(on === "classic" ? classic : guided);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [braille, profile.id, profile.kind, publicUser.id]);
-
-  if (braille) {
-    return <Row profile={profile} evidence={brailleEvidence(profile)} />;
-  }
-  if (results == null) {
-    return (
-      <div className={styles.row}>
-        <Head profile={profile} state="loading" />
-        {/* The shape of the row that is coming, rather than a short row that
-            will shortly become a tall one. Every learner's history is read
-            separately, so without this the pane grew four times in a second
-            and each growth moved whatever somebody was already reading. */}
-        <div className={styles.skeleton} aria-hidden={true}>
-          <span className={styles.skelBar} />
-          <span className={styles.skelLine} />
-          <span className={styles.skelLine} />
-        </div>
-      </div>
-    );
-  }
-  // A learner with no practice yet still has a row, and it still has to name
-  // an alphabet — so fall back to the default layout rather than asking the
-  // keyboard loader for one that does not exist. The first version passed it
-  // `undefined`, which threw and took the whole pane down the moment a new
-  // profile was added.
-  const layout = results[0]?.layout ?? Layout.EN_US;
-  return (
-    <PhoneticModelLoader language={layout.language}>
-      {({ letters }) => (
-        <Row
-          profile={profile}
-          course={course}
-          evidence={typingEvidence(
-            profile,
-            results,
-            Letter.restrict(letters, loadKeyboard(layout).getCodePoints()),
-          )}
-          layout={layout}
-          language={languageLineOf(layout, false)}
-        />
-      )}
-    </PhoneticModelLoader>
-  );
-}
-
 function Row({
   profile,
   evidence,
   layout = Layout.EN_US,
   language,
   course,
-}: {
-  readonly profile: ProfileDetails;
-  readonly evidence: CertificateEvidence;
-  /** Which course this row is reporting on. Absent for a braille learner. */
-  readonly course?: CourseId;
-  /** Absent for a braille learner, who has no layout at all. */
-  readonly layout?: Layout;
-  readonly language?: string;
-}): ReactNode {
+  held,
+}: RowData): ReactNode {
   const [ready, setReady] = useState(false);
   const navigate = useNavigate();
   const { select } = useProfiles();
-  // What this learner already holds. Fetched per row rather than once for the
-  // pane because a row is where it is shown, and the endpoint answers for the
-  // whole household in one request either way.
-  const [held, setHeld] = useState<readonly IssuedCertificate[]>([]);
   const [showing, setShowing] = useState<IssuedCertificate | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    void myCertificates().then((list) => {
-      if (!cancelled) {
-        setHeld(list.filter((c) => String(c.profileId) === profile.id));
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [profile.id]);
   const verdict = assess(evidence);
   const state = verdict.eligible ? "ready" : "going";
   // How far along, as one number. Every condition counts the same and none can

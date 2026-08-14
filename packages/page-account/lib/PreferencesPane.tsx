@@ -172,6 +172,33 @@ type Preset = {
   readonly safeZones?: boolean;
 };
 
+/**
+ * Every setting a preset can touch, at the value the app ships with.
+ *
+ * One constant because two callers need exactly the same list: turning a
+ * preset on rebuilds from here, and "put everything back" clears to here. When
+ * these were written out twice the reset forgot six of them, so a learner who
+ * had turned on Easier to read kept the letter spacing forever.
+ */
+const PRESET_BASE: Partial<A11yPrefs> = {
+  motion: "system",
+  typeface: "default",
+  targets: "default",
+  calm: false,
+  chords: true,
+  bounceMs: 0,
+  captions: false,
+  fingerMarks: false,
+  letterSpacing: 0,
+  lineHeight: 1.2,
+  plain: false,
+  predictable: false,
+  cues: false,
+  scores: true,
+  streakGrace: false,
+  timers: true,
+};
+
 const PRESETS: readonly Preset[] = [
   {
     id: "calm",
@@ -297,50 +324,45 @@ export function AccessibilityPane(): ReactNode {
     saveA11y(patch, id);
     announce();
   };
-  // Which preset this learner was started from. Recorded rather than worked
-  // out from the values, because presets share switches: two of them turn the
-  // running figures off, so "do this one's values hold?" lit two badges from a
-  // single click, and turning one off silently unlit the other.
-  const applied = (preset: Preset) => prefs.preset === preset.id;
+  // Which presets are on. Recorded rather than worked out from the values,
+  // because presets share switches: two of them turn the running figures off,
+  // so "do this one's values hold?" lit two badges from a single click.
+  const applied = (preset: Preset) => prefs.presets.includes(preset.id);
   /**
-   * Start from a preset, or go back to the app as it ships.
+   * Turn a preset on or off. Any number of them can be on at once.
    *
-   * Everything the presets touch is put back to its default first, so what is
-   * on afterwards is what this preset asked for and nothing carried over from
-   * the last one. That is what the heading promises — start from one of these
-   * — and the switches underneath are where somebody departs from it.
+   * Every preset-touched setting is put back to its default and then the
+   * chosen presets are laid over it in order, so the result is always exactly
+   * the union of what is on — never a leftover from something switched off.
+   * That matters because they overlap: Calm and Fewer things at once both hide
+   * the running figures, and turning Calm off must not un-hide them while the
+   * other one is still on.
+   *
+   * They combine because the needs do. Somebody dyslexic with a tremor needs
+   * two of these, and making them exclusive asked them to pick a disability.
    */
   const toggle = (preset: Preset) => {
-    const on = applied(preset);
-    const base: Partial<A11yPrefs> = {
-      motion: "system",
-      typeface: "default",
-      targets: "default",
-      calm: false,
-      chords: true,
-      bounceMs: 0,
-      captions: false,
-      fingerMarks: false,
-      letterSpacing: 0,
-      lineHeight: 1.2,
-      plain: false,
-      predictable: false,
-      cues: false,
-      scores: true,
-      streakGrace: false,
-      timers: true,
-    };
-    const patch: Partial<A11yPrefs> = on
-      ? { ...base, preset: null }
-      : { ...base, ...preset.prefs, preset: preset.id };
+    const nextIds = applied(preset)
+      ? prefs.presets.filter((each) => each !== preset.id)
+      : [...prefs.presets, preset.id];
+    const chosen = PRESETS.filter((each) => nextIds.includes(each.id));
+    const patch: Partial<A11yPrefs> = Object.assign(
+      { ...PRESET_BASE },
+      ...chosen.map((each) => each.prefs),
+      { presets: nextIds },
+    );
     setPrefs({ ...prefs, ...patch });
     saveA11y(patch, id);
-    const nextContrast: ContrastPref = on
-      ? "default"
-      : (preset.contrast ?? "default");
+    // Contrast and the colour-safe zones are not switches on this page, so
+    // they are folded the same way: on if any preset still on asks for them.
+    const nextContrast: ContrastPref = chosen.some(
+      (each) => each.contrast === "clearer",
+    )
+      ? "clearer"
+      : "default";
     setContrast(nextContrast);
     saveContrast(nextContrast, id);
-    const nextSafe = on ? false : preset.safeZones === true;
+    const nextSafe = chosen.some((each) => each.safeZones === true);
     setSafe(nextSafe);
     saveSafeZones(nextSafe, id);
     announce();
@@ -367,7 +389,7 @@ export function AccessibilityPane(): ReactNode {
         <div className={styles.prefSect}>
           <FormattedMessage
             id="account.a11y.presets"
-            defaultMessage="Start from one of these"
+            defaultMessage="Turn on as many of these as you need"
           />
         </div>
 
@@ -377,27 +399,7 @@ export function AccessibilityPane(): ReactNode {
               <span className={styles.rowLabel}>{preset.label}</span>
               <span className={styles.rowSub}>{preset.sub}</span>
             </div>
-            <button
-              type="button"
-              className={clsx(
-                styles.presetBtn,
-                applied(preset) && styles.presetOn,
-              )}
-              aria-pressed={applied(preset)}
-              onClick={() => toggle(preset)}
-            >
-              {applied(preset) ? (
-                <FormattedMessage
-                  id="account.a11y.preset.on"
-                  defaultMessage="✓ On"
-                />
-              ) : (
-                <FormattedMessage
-                  id="account.a11y.preset.apply"
-                  defaultMessage="Use this"
-                />
-              )}
-            </button>
+            <Toggle on={applied(preset)} onChange={() => toggle(preset)} />
           </div>
         ))}
 
@@ -417,17 +419,8 @@ export function AccessibilityPane(): ReactNode {
             className={styles.presetBtn}
             onClick={() => {
               const off: Partial<A11yPrefs> = {
-                preset: null,
-                motion: "system",
-                typeface: "default",
-                targets: "default",
-                calm: false,
-                chords: true,
-                bounceMs: 0,
-                cues: false,
-                scores: true,
-                streakGrace: false,
-                timers: true,
+                ...PRESET_BASE,
+                presets: [],
               };
               setPrefs({ ...prefs, ...off });
               saveA11y(off, id);

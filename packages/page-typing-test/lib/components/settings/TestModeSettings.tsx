@@ -39,6 +39,7 @@ function Stepper({
   unit: string;
   onChange: (value: number) => void;
 }): ReactNode {
+  const { formatMessage } = useIntl();
   const [text, setText] = useState(String(value));
   useEffect(() => {
     setText(String(value));
@@ -58,7 +59,10 @@ function Stepper({
       <button
         type="button"
         className={styles.stepBtn}
-        aria-label="Decrease"
+        aria-label={formatMessage({
+          id: "typingTest.stepper.decrease",
+          defaultMessage: "Decrease",
+        })}
         onClick={() => commit(current() - step)}
       >
         −
@@ -84,7 +88,10 @@ function Stepper({
       <button
         type="button"
         className={styles.stepBtn}
-        aria-label="Increase"
+        aria-label={formatMessage({
+          id: "typingTest.stepper.increase",
+          defaultMessage: "Increase",
+        })}
         onClick={() => commit(current() + step)}
       >
         +

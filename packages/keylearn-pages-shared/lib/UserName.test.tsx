@@ -14,6 +14,7 @@ test("render anonymous user", () => {
             id: null,
             name: "somebody",
             imageUrl: null,
+            staff: false,
           }}
           path="/account"
         />
@@ -36,6 +37,7 @@ test("render named user", () => {
             name: "somebody",
             imageUrl: null,
             premium: false,
+            staff: false,
           }}
           path="/account"
         />

@@ -1,7 +1,7 @@
 import { useFormatter } from "@keylearn/lesson-ui";
 import { StrokeIcon } from "@keylearn/widget";
 import { type ReactNode } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./SessionAward.module.less";
 import { type LessonEvent } from "./state/index.ts";
 
@@ -18,6 +18,7 @@ export function SessionAward({
   readonly onClose: () => void;
 }): ReactNode {
   const { formatSpeed } = useFormatter();
+  const { formatMessage } = useIntl();
 
   let icon: ReactNode;
   let title: ReactNode;
@@ -97,7 +98,7 @@ export function SessionAward({
         className={styles.card}
         role="status"
         onClick={onClose}
-        title="Dismiss"
+        title={formatMessage({ id: "t_Close", defaultMessage: "Dismiss" })}
       >
         <div className={styles.tile}>{icon}</div>
         <div className={styles.text}>

@@ -16,7 +16,7 @@ import {
 } from "@keylearn/themes";
 import { clsx } from "clsx";
 import { type ReactNode, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
 import { Toggle } from "../controls.tsx";
 import { BrailleAvatar } from "../profiles/BrailleBadge.tsx";
@@ -34,6 +34,7 @@ import * as styles from "./ThemePicker.module.less";
  * and academic sets and braille needs no special case.
  */
 export function ThemePicker(): ReactNode {
+  const { formatMessage } = useIntl();
   const navigate = useNavigate();
   const { household } = useProfiles();
   const { accent: liveAccent, switchAccent } = useTheme();
@@ -56,16 +57,22 @@ export function ThemePicker(): ReactNode {
   // The learner at the keyboard wears what the app is actually painted in;
   // anyone else wears whatever is recorded for them.
   const current =
-    chosen.id === household.activeId ? liveAccent : loadAccent(chosen.id);
+    chosen.id === household.activeId
+      ? liveAccent
+      : loadAccent(chosen.id, chosen.kind);
   const accent = findAccent(current);
   const pick = (id: string) => {
-    switchAccent(id, chosen.id);
+    switchAccent(id, chosen.id, chosen.kind);
     setPicked((n) => n + 1);
   };
   const list = accentsFor(chosen.kind);
   const core = list.filter((item) => item.group === "core");
   const academic = list.filter((item) => item.group === "academic");
   const kids = list.filter((item) => item.group === "kids");
+  const themedHint = formatMessage({
+    id: "theme.themedForLearner",
+    defaultMessage: "Themed keyboard on for this learner",
+  });
 
   return (
     <div className={styles.picker}>
@@ -95,8 +102,8 @@ export function ThemePicker(): ReactNode {
                 {loadThemedZones(profile.id) && (
                   <span
                     className={styles.whoDot}
-                    title="Themed keyboard on for this learner"
-                    aria-label="Themed keyboard on for this learner"
+                    title={themedHint}
+                    aria-label={themedHint}
                   />
                 )}
               </span>

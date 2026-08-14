@@ -1,6 +1,7 @@
 import { type KeyStatsMap } from "@keylearn/result";
 import { type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./report.module.less";
 import { type Period, type ReportData, smooth } from "./report-data.ts";
 
@@ -59,6 +60,7 @@ export function ReportSheet({
   readonly generatedAt: number;
   readonly formatDate: (at: number) => string;
 }): ReactNode {
+  const { formatMessage } = useIntl();
   const avg = smooth(data.points);
   // Results are stored in characters per minute; a word is five characters by
   // the usual convention, which is the figure the rest of the app shows and
@@ -74,22 +76,53 @@ export function ReportSheet({
   const head = (page: number, sub?: string) => (
     <div className={styles.head}>
       <div>
-        <div className={styles.title}>{name} — typing progress</div>
+        <div className={styles.title}>
+          <FormattedMessage
+            id="report.sheet.title"
+            defaultMessage="{name} — typing progress"
+            values={{ name }}
+          />
+        </div>
         <div className={styles.sub}>
           {sub ??
-            `${formatDate(data.from)} to ${formatDate(data.to)} · ${data.count} lessons · ${Math.floor(data.minutes / 60)} h ${data.minutes % 60} m at the keyboard`}
+            formatMessage(
+              {
+                id: "report.sheet.period",
+                defaultMessage:
+                  "{from} to {to} · {count} lessons · {hours} h {minutes} m at the keyboard",
+              },
+              {
+                from: formatDate(data.from),
+                to: formatDate(data.to),
+                count: data.count,
+                hours: Math.floor(data.minutes / 60),
+                minutes: data.minutes % 60,
+              },
+            )}
         </div>
       </div>
       <div className={styles.meta}>
         <span className={styles.brand}>
           <KeyGlyph />
           <b>
-            Key<em>Learn</em>
+            <FormattedMessage
+              id="report.sheet.brand"
+              defaultMessage="Key<em>Learn</em>"
+              values={{ em: (chunks) => <em>{chunks}</em> }}
+            />
           </b>
         </span>
-        Generated {formatDate(generatedAt)}
+        <FormattedMessage
+          id="report.sheet.generated"
+          defaultMessage="Generated {date}"
+          values={{ date: formatDate(generatedAt) }}
+        />
         <br />
-        Page {page} of {pages}
+        <FormattedMessage
+          id="report.sheet.pageOf"
+          defaultMessage="Page {page} of {pages}"
+          values={{ page, pages }}
+        />
       </div>
     </div>
   );
@@ -109,118 +142,185 @@ export function ReportSheet({
 
         <div className={styles.stats}>
           <Stat
-            label="wpm typical"
+            label={formatMessage({
+              id: "report.sheet.stat.typical",
+              defaultMessage: "wpm typical",
+            })}
             value={wpm(data.typicalSpeed)}
             delta={data.speedGain != null ? data.speedGain / 5 : null}
           />
-          <Stat label="wpm best" value={wpm(data.bestSpeed)} />
           <Stat
-            label="accuracy"
+            label={formatMessage({
+              id: "report.sheet.stat.best",
+              defaultMessage: "wpm best",
+            })}
+            value={wpm(data.bestSpeed)}
+          />
+          <Stat
+            label={formatMessage({
+              id: "report.sheet.stat.accuracy",
+              defaultMessage: "accuracy",
+            })}
             value={`${(data.accuracy * 100).toFixed(1)}%`}
             delta={data.accuracyGain != null ? data.accuracyGain * 100 : null}
           />
           <Stat
-            label="keys unlocked"
+            label={formatMessage({
+              id: "report.sheet.stat.keys",
+              defaultMessage: "keys unlocked",
+            })}
             value={`${[...keyStatsMap].filter((k) => k.timeToType != null).length} / ${keyStatsMap.letters.length}`}
           />
         </div>
 
         {options.voice === "parent" && (
           <>
-            <div className={styles.sect}>How it is going</div>
+            <div className={styles.sect}>
+              <FormattedMessage
+                id="report.sheet.parent.heading"
+                defaultMessage="How it is going"
+              />
+            </div>
             <p className={styles.p}>
-              Over this period {name} practised on {data.daysPractised} of{" "}
-              {data.daysInPeriod} days and typed{" "}
-              {data.minutes >= 60
-                ? `just over ${Math.floor(data.minutes / 60)} hours`
-                : `${data.minutes} minutes`}{" "}
-              in total. Typical speed is now {wpm(data.typicalSpeed)} words per
-              minute
-              {data.speedGain != null && data.speedGain > 0
-                ? `, up ${wpm(data.speedGain)} over the period`
-                : ""}
-              , and the best single lesson reached {wpm(data.bestSpeed)}.
-              Accuracy sits at {(data.accuracy * 100).toFixed(1)}%
-              {data.accuracyGain != null && data.accuracyGain > 0
-                ? `, improved by ${(data.accuracyGain * 100).toFixed(1)} points`
-                : ""}
-              .
+              <FormattedMessage
+                id="report.sheet.parent.summary"
+                defaultMessage="Over this period {name} practised on {daysPractised} of {daysInPeriod} days and typed {longSession, select, yes {just over {hours} hours} other {{minutes} minutes}} in total. Typical speed is now {typical} words per minute{gained, select, yes {, up {gain} over the period} other {}}, and the best single lesson reached {best}. Accuracy sits at {accuracy}%{accuracyGained, select, yes {, improved by {accuracyGain} points} other {}}."
+                values={{
+                  name,
+                  daysPractised: data.daysPractised,
+                  daysInPeriod: data.daysInPeriod,
+                  longSession: data.minutes >= 60 ? "yes" : "no",
+                  hours: Math.floor(data.minutes / 60),
+                  minutes: data.minutes,
+                  typical: wpm(data.typicalSpeed),
+                  gained:
+                    data.speedGain != null && data.speedGain > 0 ? "yes" : "no",
+                  gain: data.speedGain != null ? wpm(data.speedGain) : 0,
+                  best: wpm(data.bestSpeed),
+                  accuracy: (data.accuracy * 100).toFixed(1),
+                  accuracyGained:
+                    data.accuracyGain != null && data.accuracyGain > 0
+                      ? "yes"
+                      : "no",
+                  accuracyGain:
+                    data.accuracyGain != null
+                      ? (data.accuracyGain * 100).toFixed(1)
+                      : "0",
+                }}
+              />
             </p>
             {data.longestGap != null && data.longestGap.days >= 5 && (
               <p className={styles.p}>
-                The longest break was {data.longestGap.days} days, from{" "}
-                {formatDate(data.longestGap.at)}. A gap of that length usually
-                costs a week of progress on the way back, which is worth knowing
-                before reading a dip in the chart as a loss of ability.
+                <FormattedMessage
+                  id="report.sheet.parent.gap"
+                  defaultMessage="The longest break was {days} days, from {date}. A gap of that length usually costs a week of progress on the way back, which is worth knowing before reading a dip in the chart as a loss of ability."
+                  values={{
+                    days: data.longestGap.days,
+                    date: formatDate(data.longestGap.at),
+                  }}
+                />
               </p>
             )}
             <p className={styles.p}>
-              There is nothing to do with this beyond noticing it. Practice
-              already chooses what to work on next from the same figures, so the
-              useful response to a slow week is another week rather than a
-              change of plan.
+              <FormattedMessage
+                id="report.sheet.parent.nothingToDo"
+                defaultMessage="There is nothing to do with this beyond noticing it. Practice already chooses what to work on next from the same figures, so the useful response to a slow week is another week rather than a change of plan."
+              />
             </p>
           </>
         )}
 
         {options.voice === "teacher" && (
           <>
-            <div className={styles.sect}>For whoever is teaching</div>
+            <div className={styles.sect}>
+              <FormattedMessage
+                id="report.sheet.teacher.heading"
+                defaultMessage="For whoever is teaching"
+              />
+            </div>
             <p className={styles.p}>
-              {name} has {secure} of {keyStatsMap.letters.length} letters secure
-              and {steady} more in progress, over {data.count} lessons and{" "}
-              {Math.floor(data.minutes / 60)} h {data.minutes % 60} m of
-              keyboard time. Typical speed is {wpm(data.typicalSpeed)} wpm at{" "}
-              {(data.accuracy * 100).toFixed(1)}% accuracy.
+              <FormattedMessage
+                id="report.sheet.teacher.summary"
+                defaultMessage="{name} has {secure} of {letters} letters secure and {steady} more in progress, over {count} lessons and {hours} h {minutes} m of keyboard time. Typical speed is {typical} wpm at {accuracy}% accuracy."
+                values={{
+                  name,
+                  secure,
+                  letters: keyStatsMap.letters.length,
+                  steady,
+                  count: data.count,
+                  hours: Math.floor(data.minutes / 60),
+                  minutes: data.minutes % 60,
+                  typical: wpm(data.typicalSpeed),
+                  accuracy: (data.accuracy * 100).toFixed(1),
+                }}
+              />
             </p>
             <p className={styles.p}>
-              Lessons are generated adaptively rather than following a fixed
-              sequence: the next letters are chosen from this learner&rsquo;s
-              own error and latency data. The figures below therefore describe a
-              moving target, and the letters not yet introduced are pending
-              rather than failed.
+              <FormattedMessage
+                id="report.sheet.teacher.adaptive"
+                defaultMessage="Lessons are generated adaptively rather than following a fixed sequence: the next letters are chosen from this learner’s own error and latency data. The figures below therefore describe a moving target, and the letters not yet introduced are pending rather than failed."
+              />
             </p>
             <p className={styles.p}>
-              <b>Practice pattern.</b> {data.daysPractised} days of{" "}
-              {data.daysInPeriod}
-              {data.longestGap != null && data.longestGap.days >= 3
-                ? `, with a longest break of ${data.longestGap.days} days`
-                : ", with no notable break"}
-              . Short daily sessions beat long infrequent ones at this stage,
-              and the calendar overleaf is the quickest way to see which of the
-              two is happening.
+              <FormattedMessage
+                id="report.sheet.teacher.pattern"
+                defaultMessage="<b>Practice pattern.</b> {daysPractised} days of {daysInPeriod}{gap, select, yes {, with a longest break of {gapDays} days} other {, with no notable break}}. Short daily sessions beat long infrequent ones at this stage, and the calendar overleaf is the quickest way to see which of the two is happening."
+                values={{
+                  b: (chunks) => <b>{chunks}</b>,
+                  daysPractised: data.daysPractised,
+                  daysInPeriod: data.daysInPeriod,
+                  gap:
+                    data.longestGap != null && data.longestGap.days >= 3
+                      ? "yes"
+                      : "no",
+                  gapDays: data.longestGap?.days ?? 0,
+                }}
+              />
             </p>
           </>
         )}
 
         {options.speedChart && (
           <>
-            <div className={styles.sect}>Speed over the period</div>
+            <div className={styles.sect}>
+              <FormattedMessage
+                id="report.sheet.speed.heading"
+                defaultMessage="Speed over the period"
+              />
+            </div>
             <SpeedChart points={data.points} avg={avg} />
             <div className={styles.legend}>
-              Each dot is one lesson. The line is a seven-lesson average, which
-              is what to read — single lessons swing widely and mean little on
-              their own.
+              <FormattedMessage
+                id="report.sheet.speed.legend"
+                defaultMessage="Each dot is one lesson. The line is a seven-lesson average, which is what to read — single lessons swing widely and mean little on their own."
+              />
             </div>
           </>
         )}
 
         {options.accuracyChart && (
           <>
-            <div className={styles.sect}>Accuracy across lessons</div>
+            <div className={styles.sect}>
+              <FormattedMessage
+                id="report.sheet.accuracy.heading"
+                defaultMessage="Accuracy across lessons"
+              />
+            </div>
             <div className={styles.split}>
               <div>
                 <Histogram buckets={data.accuracyBuckets} />
                 <div className={styles.legend}>
-                  Lessons grouped by accuracy, 90% on the left to 100% on the
-                  right.
+                  <FormattedMessage
+                    id="report.sheet.accuracy.legend"
+                    defaultMessage="Lessons grouped by accuracy, 90% on the left to 100% on the right."
+                  />
                 </div>
               </div>
               <p className={styles.p}>
-                Most lessons land in the right-hand half. A short tail to the
-                left is worth a glance rather than a worry: those are usually
-                the first lesson after a break, or a session on newly-unlocked
-                letters, where a dip is expected and temporary.
+                <FormattedMessage
+                  id="report.sheet.accuracy.note"
+                  defaultMessage="Most lessons land in the right-hand half. A short tail to the left is worth a glance rather than a worry: those are usually the first lesson after a break, or a session on newly-unlocked letters, where a dip is expected and temporary."
+                />
               </p>
             </div>
           </>
@@ -228,19 +328,44 @@ export function ReportSheet({
 
         <div className={styles.foot}>
           <span>
-            {name} — {formatDate(data.from)} to {formatDate(data.to)}
+            <FormattedMessage
+              id="report.sheet.footRange"
+              defaultMessage="{name} — {from} to {to}"
+              values={{
+                name,
+                from: formatDate(data.from),
+                to: formatDate(data.to),
+              }}
+            />
           </span>
-          <span>Page 1 of {pages}</span>
+          <span>
+            <FormattedMessage
+              id="report.sheet.pageOf"
+              defaultMessage="Page {page} of {pages}"
+              values={{ page: 1, pages }}
+            />
+          </span>
         </div>
       </section>
 
       {detail && (
         <section className={styles.page}>
-          {head(2, "Detail")}
+          {head(
+            2,
+            formatMessage({
+              id: "report.sheet.detail.sub",
+              defaultMessage: "Detail",
+            }),
+          )}
 
           {options.keys && (
             <>
-              <div className={styles.sect}>Keys learned</div>
+              <div className={styles.sect}>
+                <FormattedMessage
+                  id="report.sheet.keys.heading"
+                  defaultMessage="Keys learned"
+                />
+              </div>
               <div className={styles.keys}>
                 {[...keyStatsMap].map(({ letter, timeToType }) => (
                   <i
@@ -253,16 +378,32 @@ export function ReportSheet({
               </div>
               <div className={styles.keyLegend}>
                 <span>
-                  <i className={styles.keySecure} /> Secure, under 350 ms
+                  <i className={styles.keySecure} />{" "}
+                  <FormattedMessage
+                    id="report.sheet.keys.secure"
+                    defaultMessage="Secure, under 350 ms"
+                  />
                 </span>
                 <span>
-                  <i className={styles.keySteady} /> Steady, 350&ndash;500 ms
+                  <i className={styles.keySteady} />{" "}
+                  <FormattedMessage
+                    id="report.sheet.keys.steady"
+                    defaultMessage="Steady, 350–500 ms"
+                  />
                 </span>
                 <span>
-                  <i className={styles.keyNew} /> Still new, over 500 ms
+                  <i className={styles.keyNew} />{" "}
+                  <FormattedMessage
+                    id="report.sheet.keys.new"
+                    defaultMessage="Still new, over 500 ms"
+                  />
                 </span>
                 <span>
-                  <i className={styles.keyOff} /> Not introduced yet
+                  <i className={styles.keyOff} />{" "}
+                  <FormattedMessage
+                    id="report.sheet.keys.off"
+                    defaultMessage="Not introduced yet"
+                  />
                 </span>
               </div>
             </>
@@ -270,37 +411,84 @@ export function ReportSheet({
 
           {options.calendar && (
             <>
-              <div className={styles.sect}>Practice calendar</div>
+              <div className={styles.sect}>
+                <FormattedMessage
+                  id="report.sheet.calendar.heading"
+                  defaultMessage="Practice calendar"
+                />
+              </div>
               <Calendar points={data.points} from={data.from} to={data.to} />
               <div className={styles.legend}>
-                One square per day across the period. Darker is more lessons.
+                <FormattedMessage
+                  id="report.sheet.calendar.legend"
+                  defaultMessage="One square per day across the period. Darker is more lessons."
+                />
               </div>
             </>
           )}
 
           {options.transitions && transitions.length > 0 && (
             <>
-              <div className={styles.sect}>Next to work on</div>
+              <div className={styles.sect}>
+                <FormattedMessage
+                  id="report.sheet.transitions.heading"
+                  defaultMessage="Next to work on"
+                />
+              </div>
               <p className={styles.p}>
-                These key-pairs run slowest against {name}&rsquo;s own usual
-                pace of {floor} ms. Practice already targets them automatically;
-                they are listed so a tutor can see what the app is working on.
+                <FormattedMessage
+                  id="report.sheet.transitions.description"
+                  defaultMessage="These key-pairs run slowest against {name}’s own usual pace of {floor} ms. Practice already targets them automatically; they are listed so a tutor can see what the app is working on."
+                  values={{ name, floor }}
+                />
               </p>
               <table className={styles.table}>
                 <tbody>
                   <tr>
-                    <th>Pair</th>
-                    <th>Time</th>
-                    <th>vs usual</th>
-                    <th>Typos</th>
+                    <th>
+                      <FormattedMessage
+                        id="report.sheet.transitions.pair"
+                        defaultMessage="Pair"
+                      />
+                    </th>
+                    <th>
+                      <FormattedMessage
+                        id="report.sheet.transitions.time"
+                        defaultMessage="Time"
+                      />
+                    </th>
+                    <th>
+                      <FormattedMessage
+                        id="report.sheet.transitions.vsUsual"
+                        defaultMessage="vs usual"
+                      />
+                    </th>
+                    <th>
+                      <FormattedMessage
+                        id="report.sheet.transitions.typos"
+                        defaultMessage="Typos"
+                      />
+                    </th>
                   </tr>
                   {transitions.map((t, i) => (
                     <tr key={i}>
                       <td>
                         {t.from} → {t.to}
                       </td>
-                      <td>{t.time} ms</td>
-                      <td>{(t.time / floor).toFixed(1)}× slower</td>
+                      <td>
+                        <FormattedMessage
+                          id="report.sheet.milliseconds"
+                          defaultMessage="{time} ms"
+                          values={{ time: t.time }}
+                        />
+                      </td>
+                      <td>
+                        <FormattedMessage
+                          id="report.sheet.transitions.slower"
+                          defaultMessage="{n}× slower"
+                          values={{ n: (t.time / floor).toFixed(1) }}
+                        />
+                      </td>
                       <td>{t.errors}</td>
                     </tr>
                   ))}
@@ -309,39 +497,74 @@ export function ReportSheet({
             </>
           )}
 
-          <div className={styles.sect}>How to read this</div>
+          <div className={styles.sect}>
+            <FormattedMessage
+              id="report.sheet.howToRead.heading"
+              defaultMessage="How to read this"
+            />
+          </div>
           <p className={styles.p}>
-            <b>Words per minute</b> counts a word as five characters including
-            spaces, which is the standard convention, so it can be compared with
-            figures from anywhere else. <b>Typical</b> is the median of lessons
-            in the period rather than the average, so one exceptional lesson
-            does not move it. <b>Accuracy</b> counts a keystroke as correct only
-            the first time: a corrected mistake still counts as a mistake,
-            because the aim is to stop making it rather than to fix it quickly.
+            <FormattedMessage
+              id="report.sheet.howToRead.body"
+              defaultMessage="<b>Words per minute</b> counts a word as five characters including spaces, which is the standard convention, so it can be compared with figures from anywhere else. <b>Typical</b> is the median of lessons in the period rather than the average, so one exceptional lesson does not move it. <b>Accuracy</b> counts a keystroke as correct only the first time: a corrected mistake still counts as a mistake, because the aim is to stop making it rather than to fix it quickly."
+              values={{ b: (chunks) => <b>{chunks}</b> }}
+            />
           </p>
 
           <div className={styles.foot}>
             <span>
-              Generated by KeyLearn on this device — nothing was uploaded
+              <FormattedMessage
+                id="report.sheet.footPrivacy"
+                defaultMessage="Generated by KeyLearn on this device — nothing was uploaded"
+              />
             </span>
-            <span>Page 2 of {pages}</span>
+            <span>
+              <FormattedMessage
+                id="report.sheet.pageOf"
+                defaultMessage="Page {page} of {pages}"
+                values={{ page: 2, pages }}
+              />
+            </span>
           </div>
         </section>
       )}
 
       {options.lessons && (
         <section className={styles.page}>
-          {head(pages, "Every lesson")}
-          <div className={styles.sect}>Every lesson, listed</div>
+          {head(
+            pages,
+            formatMessage({
+              id: "report.sheet.lessons.sub",
+              defaultMessage: "Every lesson",
+            }),
+          )}
+          <div className={styles.sect}>
+            <FormattedMessage
+              id="report.sheet.lessons.heading"
+              defaultMessage="Every lesson, listed"
+            />
+          </div>
           <p className={styles.p}>
-            One row per session, newest first. This is here because a school
-            sometimes has to evidence the hours rather than the progress.
+            <FormattedMessage
+              id="report.sheet.lessons.description"
+              defaultMessage="One row per session, newest first. This is here because a school sometimes has to evidence the hours rather than the progress."
+            />
           </p>
           <table className={styles.table}>
             <tbody>
               <tr>
-                <th>When</th>
-                <th>Speed</th>
+                <th>
+                  <FormattedMessage
+                    id="report.sheet.lessons.when"
+                    defaultMessage="When"
+                  />
+                </th>
+                <th>
+                  <FormattedMessage
+                    id="report.sheet.lessons.speed"
+                    defaultMessage="Speed"
+                  />
+                </th>
               </tr>
               {[...data.points]
                 .reverse()
@@ -349,17 +572,30 @@ export function ReportSheet({
                 .map((p, i) => (
                   <tr key={i}>
                     <td>{formatDate(p.at)}</td>
-                    <td>{wpm(p.speed)} wpm</td>
+                    <td>
+                      <FormattedMessage
+                        id="report.sheet.wpm"
+                        defaultMessage="{speed} wpm"
+                        values={{ speed: wpm(p.speed) }}
+                      />
+                    </td>
                   </tr>
                 ))}
             </tbody>
           </table>
           <div className={styles.foot}>
             <span>
-              Generated by KeyLearn on this device — nothing was uploaded
+              <FormattedMessage
+                id="report.sheet.footPrivacy"
+                defaultMessage="Generated by KeyLearn on this device — nothing was uploaded"
+              />
             </span>
             <span>
-              Page {pages} of {pages}
+              <FormattedMessage
+                id="report.sheet.pageOf"
+                defaultMessage="Page {page} of {pages}"
+                values={{ page: pages, pages }}
+              />
             </span>
           </div>
         </section>

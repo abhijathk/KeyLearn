@@ -135,8 +135,8 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
           setHash(hash + 1);
           storePrefs(prefs);
         },
-        switchAccent: (id, profileId) => {
-          if (!saveAccent(id, profileId)) {
+        switchAccent: (id, profileId, kind) => {
+          if (!saveAccent(id, profileId, kind)) {
             return;
           }
           // Dressing another learner's profile must not repaint the screen the

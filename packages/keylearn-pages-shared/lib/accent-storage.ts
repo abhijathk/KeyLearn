@@ -37,8 +37,25 @@ export function canChooseAccent(): boolean {
   }
 }
 
-/** The kind of a named profile, or the active one when no id is given. */
-function kindOf(profileId: string | null | undefined): "adult" | "kid" {
+/**
+ * The kind of a named profile, or the active one when no id is given.
+ *
+ * `knownKind` lets a caller that already has the profile from live state
+ * (e.g. the theme picker, which reads `household.profiles`) skip this
+ * lookup entirely. It matters because `getPageData().profiles` is an SSR
+ * snapshot taken once at page load and never refreshed — a profile created
+ * after that (most consequentially a brand-new kid profile, since "adult"
+ * is the fallback below) is invisible to it, so the fallback silently
+ * wins and every accent this learner is offered gets checked against the
+ * wrong kind's allow-list.
+ */
+function kindOf(
+  profileId: string | null | undefined,
+  knownKind?: "adult" | "kid",
+): "adult" | "kid" {
+  if (knownKind != null) {
+    return knownKind;
+  }
   if (profileId === undefined) {
     return activeProfileKind() ?? "adult";
   }
@@ -52,11 +69,14 @@ function kindOf(profileId: string | null | undefined): "adult" | "kid" {
  * rather than honoured — a child must not end up wearing Sepia because their
  * profile was once an adult's, and the reverse is just as wrong.
  */
-export function loadAccent(profileId?: string | null): string {
+export function loadAccent(
+  profileId?: string | null,
+  knownKind?: "adult" | "kid",
+): string {
   if (!canChooseAccent()) {
     return DEFAULT_ACCENT;
   }
-  const kind = kindOf(profileId);
+  const kind = kindOf(profileId, knownKind);
   try {
     const id = profileId === undefined ? activeProfileId() : profileId;
     const stored = localStorage.getItem(profileStorageKeyFor(id, KEY));
@@ -84,8 +104,12 @@ function allowed(accent: string, kind: "adult" | "kid"): boolean {
   return accentAllowedFor(accent, kind);
 }
 
-export function saveAccent(accent: string, profileId?: string | null): boolean {
-  if (!canChooseAccent() || !allowed(accent, kindOf(profileId))) {
+export function saveAccent(
+  accent: string,
+  profileId?: string | null,
+  knownKind?: "adult" | "kid",
+): boolean {
+  if (!canChooseAccent() || !allowed(accent, kindOf(profileId, knownKind))) {
     return false;
   }
   try {

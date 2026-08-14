@@ -10,8 +10,7 @@
     "@keylearn/keyboard": "*",
     "@keylearn/pages-shared": "*",
     "@keylearn/result": "*",
-    "@keylearn/widget": "*",
-    "@keylearn/page-account": "*"
+    "@keylearn/widget": "*"
   },
   "devDependencies": {},
   "scripts": {

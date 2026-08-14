@@ -2,6 +2,7 @@ import { Identicon } from "@keylearn/identicon";
 import { type ClassName } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useState } from "react";
+import { useIntl } from "react-intl";
 import * as styles from "./Avatar.module.less";
 import { type AnyUser } from "./types.ts";
 
@@ -17,6 +18,7 @@ export function Avatar({
   // If a remote avatar image fails to load (offline, blocked, 404), fall back
   // to the name-based identicon instead of a broken-image placeholder.
   const [imageFailed, setImageFailed] = useState(false);
+  const { formatMessage } = useIntl();
 
   const sizeClassName = {
     [styles.size_normal]: size === "normal",
@@ -48,7 +50,10 @@ export function Avatar({
           className,
         )}
         src={imageUrl}
-        alt="User image"
+        alt={formatMessage({
+          id: "avatar.userImage",
+          defaultMessage: "User image",
+        })}
         onError={() => setImageFailed(true)}
       />
     );

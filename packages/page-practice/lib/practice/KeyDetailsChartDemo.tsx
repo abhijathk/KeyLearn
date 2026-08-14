@@ -110,7 +110,10 @@ export function KeyDetailsChartDemo(): ReactNode {
           fontSize="9"
           style={{ fontFamily: "inherit" }}
         >
-          lesson 1
+          <FormattedMessage
+            id="practice.chartDemo.firstLesson"
+            defaultMessage="lesson 1"
+          />
         </text>
         <text
           x={W - 2}
