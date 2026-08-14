@@ -218,6 +218,7 @@ test("create user from resource owner with null values", async (ctx) => {
           name: null,
           url: null,
           imageUrl: null,
+          usedAt: now,
         },
       ],
       order: null,
@@ -270,6 +271,7 @@ test("create user from resource owner with non-null values", async (ctx) => {
           name: "name1",
           url: "url1",
           imageUrl: "imageUrl1",
+          usedAt: now,
         },
       ],
       order: null,
@@ -322,6 +324,7 @@ test("create user from resource owner with invalid values", async (ctx) => {
           name: null,
           url: null,
           imageUrl: null,
+          usedAt: now,
         },
       ],
       order: null,
@@ -380,6 +383,7 @@ test("update user from resource owner with null values", async (ctx) => {
           name: null,
           url: null,
           imageUrl: null,
+          usedAt: now,
         },
       ],
       order: null,
@@ -438,6 +442,7 @@ test("update user from resource owner with non-null values", async (ctx) => {
           name: "name1",
           url: "url1",
           imageUrl: "imageUrl1",
+          usedAt: now,
         },
       ],
       order: null,
@@ -484,6 +489,7 @@ test("update user from resource owner with non-null values", async (ctx) => {
           name: "name1!",
           url: "url1!",
           imageUrl: "imageUrl1!",
+          usedAt: now,
         },
       ],
       order: null,
@@ -542,6 +548,7 @@ test("update user from resource owner with invalid values", async (ctx) => {
           name: "name1",
           url: "url1",
           imageUrl: "imageUrl1",
+          usedAt: now,
         },
       ],
       order: null,
@@ -588,6 +595,7 @@ test("update user from resource owner with invalid values", async (ctx) => {
           name: "name1!",
           url: "url1",
           imageUrl: "imageUrl1",
+          usedAt: now,
         },
       ],
       order: null,
@@ -640,6 +648,7 @@ test("merge multiple resource owners", async (ctx) => {
           name: "name1",
           url: "url1",
           imageUrl: "imageUrl1",
+          usedAt: now,
         },
       ],
       order: null,
@@ -689,6 +698,7 @@ test("merge multiple resource owners", async (ctx) => {
           name: "name1",
           url: "url1",
           imageUrl: "imageUrl1",
+          usedAt: now,
         },
         {
           id: 5,
@@ -699,6 +709,7 @@ test("merge multiple resource owners", async (ctx) => {
           name: "name2",
           url: "url2",
           imageUrl: "imageUrl2",
+          usedAt: now,
         },
       ],
       order: null,
@@ -737,6 +748,7 @@ test.skip("handle email change", async (ctx) => {
           name: "name1",
           url: "url1",
           imageUrl: "imageUrl1",
+          usedAt: now,
         },
       ],
       order: null,
@@ -771,6 +783,7 @@ test.skip("handle email change", async (ctx) => {
           name: "name1",
           url: "url1",
           imageUrl: "imageUrl1",
+          usedAt: now,
         },
       ],
       order: null,
@@ -827,12 +840,73 @@ test("generates unique name for resource owner", async (ctx) => {
           name: "name",
           url: null,
           imageUrl: null,
+          usedAt: now,
         },
       ],
       order: null,
       // order: null,
     } as unknown,
   );
+});
+
+test("prefers the most recently used linked provider for name and avatar", async (ctx) => {
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const email = "example1@keylearn.org";
+
+  // First sign-in: provider1 links and, being the only identity, is also the
+  // most recently used one.
+  const afterFirst = await ensureOk({
+    raw: {},
+    provider: "provider1",
+    id: "id1",
+    email,
+    emailVerified: true,
+    name: "name1",
+    url: "url1",
+    imageUrl: "imageUrl1",
+  });
+  like(User.toPublicUser(afterFirst, ""), {
+    name: "name1",
+    imageUrl: "imageUrl1",
+  });
+
+  // A second provider links later. Before this fix, toPublicUser() always
+  // took whichever identity happened to be first in the array — provider1
+  // forever — regardless of which one was actually just used to sign in.
+  ctx.mock.timers.tick(1000);
+  const afterSecond = await ensureOk({
+    raw: {},
+    provider: "provider2",
+    id: "id2",
+    email,
+    emailVerified: true,
+    name: "name2",
+    url: "url2",
+    imageUrl: "imageUrl2",
+  });
+  like(User.toPublicUser(afterSecond, ""), {
+    name: "name2",
+    imageUrl: "imageUrl2",
+  });
+
+  // Signing in with provider1 again refreshes its usedAt, so it becomes the
+  // most recent once more — even though it was linked first.
+  ctx.mock.timers.tick(1000);
+  const afterThird = await ensureOk({
+    raw: {},
+    provider: "provider1",
+    id: "id1",
+    email,
+    emailVerified: true,
+    name: "name1",
+    url: "url1",
+    imageUrl: "imageUrl1",
+  });
+  like(User.toPublicUser(afterThird, ""), {
+    name: "name1",
+    imageUrl: "imageUrl1",
+  });
 });
 
 test("make premium user", async (ctx) => {
@@ -1027,6 +1101,7 @@ test("convert to user details", async (ctx) => {
         name: "externalName1",
         url: "url1",
         imageUrl: "imageUrl1",
+        usedAt: new Date("2001-02-03T04:05:06Z"),
         createdAt: new Date("2001-02-03T04:05:06Z"),
       },
     ],

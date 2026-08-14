@@ -193,6 +193,15 @@ export async function createSchema(knex: Knex): Promise<void> {
     table.boolean("staff").notNullable().defaultTo(false);
   });
 
+  // When a linked provider was last signed in with. Without this,
+  // toPublicUser() had no way to prefer the account's most recently used
+  // provider for its display name/avatar, so whichever provider happened to
+  // be linked first silently won forever — e.g. an old Google link's avatar
+  // outliving a newer Facebook sign-in with no way to tell the two apart.
+  await addColumn("user_external_id", "used_at", (table) => {
+    table.timestamp("used_at").nullable();
+  });
+
   async function addColumn(
     tableName: string,
     columnName: string,

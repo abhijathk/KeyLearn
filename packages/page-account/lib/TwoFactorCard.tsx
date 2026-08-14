@@ -4,8 +4,9 @@ import {
   exportFilename,
   type UserDetails,
 } from "@keylearn/pages-shared";
-import { TextField } from "@keylearn/widget";
-import { type ReactNode, useState } from "react";
+import { StrokeIcon, TextField } from "@keylearn/widget";
+import { toDataURL } from "qrcode";
+import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { PasswordField } from "./AuthPage.tsx";
@@ -31,11 +32,36 @@ export function TwoFactorCard({
   const [step, setStep] = useState<"idle" | "scan" | "codes">("idle");
   const [uri, setUri] = useState("");
   const [secret, setSecret] = useState("");
+  const [qrCode, setQrCode] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [codes, setCodes] = useState<string[]>([]);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // Rendered client-side from the otpauth URI so a phone can scan it — the
+  // "open in app" link below only helps when the browser and the
+  // authenticator are on the same device.
+  useEffect(() => {
+    if (uri === "") {
+      setQrCode(null);
+      return;
+    }
+    let cancelled = false;
+    toDataURL(uri, { margin: 1, width: 200 })
+      .then((dataUrl) => {
+        if (!cancelled) {
+          setQrCode(dataUrl);
+        }
+      })
+      .catch(() => {
+        // No QR code is not fatal: the secret key and "open in app" link
+        // below still let setup finish.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [uri]);
 
   const begin = async () => {
     setErr(null);
@@ -163,31 +189,37 @@ export function TwoFactorCard({
           <p className={styles.prefHint}>
             <FormattedMessage
               id="sec.2fa.scan"
-              defaultMessage="Add this key to your authenticator app — 1Password, Bitwarden, Google Authenticator, Aegis, or whichever you use — then type the 6-digit code it shows."
+              defaultMessage="Scan this code with your authenticator app — 1Password, Bitwarden, Google Authenticator, Aegis, or whichever you use — or add the key below by hand, then type the 6-digit code it shows."
             />
           </p>
-          <code className={styles.secretKey}>{secret}</code>
-          <div className={styles.secActions}>
+          {qrCode != null && (
+            <img
+              className={styles.qrCode}
+              src={qrCode}
+              width={200}
+              height={200}
+              alt={formatMessage({
+                id: "sec.2fa.qrAlt",
+                defaultMessage:
+                  "QR code for two-step verification setup — scan it, or use the key below instead",
+              })}
+            />
+          )}
+          <div className={styles.secretKeyRow}>
+            <code className={styles.secretKey}>{secret}</code>
             <button
               type="button"
-              className={styles.link}
+              className={styles.copyKeyBtn}
+              title={formatMessage({
+                id: "sec.2fa.copyKey",
+                defaultMessage: "Copy key",
+              })}
               onClick={() => {
                 void navigator.clipboard?.writeText(secret);
               }}
             >
-              <FormattedMessage
-                id="sec.2fa.copyKey"
-                defaultMessage="Copy key"
-              />
+              <StrokeIcon name="copy" />
             </button>
-            {/* Opens the authenticator directly, which beats scanning a QR
-                shown on the same screen you are already using. */}
-            <a className={styles.link} href={uri}>
-              <FormattedMessage
-                id="sec.2fa.openApp"
-                defaultMessage="Open in authenticator app"
-              />
-            </a>
           </div>
           <TextField
             size="full"

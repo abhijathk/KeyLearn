@@ -239,6 +239,11 @@ export type UserExternalIdDetails = {
    */
   readonly imageUrl: string | null;
   /**
+   * When this provider was last signed in with — used to prefer the most
+   * recently used linked provider's name/avatar over an older one.
+   */
+  readonly usedAt: string | Date;
+  /**
    * Timestamp.
    */
   readonly createdAt: string | Date;

@@ -46,7 +46,8 @@ export type StrokeIconName =
   | "heart"
   | "braille"
   | "warning"
-  | "info";
+  | "info"
+  | "copy";
 
 const shapes: Record<StrokeIconName, ReactNode> = {
   // The cell for "b": dots 1 and 2 raised, the other four empty.
@@ -231,6 +232,13 @@ const shapes: Record<StrokeIconName, ReactNode> = {
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 11v5.2" />
       <circle cx="12" cy="7.7" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  // Two overlapping rectangles — "copy this".
+  copy: (
+    <>
+      <rect x="8" y="8" width="12" height="12" rx="2" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
     </>
   ),
   // The keyboard, struck through — "hide it".

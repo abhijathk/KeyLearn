@@ -58,6 +58,9 @@ function profileFields({
     ...(name != null && { name }),
     ...(url != null && { url }),
     ...(imageUrl != null && { imageUrl }),
+    // Stamped on every sign-in (not just the first), so toPublicUser() can
+    // tell which linked provider was used most recently.
+    usedAt: new Date(),
   };
 }
 
@@ -456,6 +459,7 @@ export class User extends TimestampMixin(Model) {
           name: ro.name ?? null,
           url: ro.url ?? null,
           imageUrl: ro.imageUrl ?? null,
+          usedAt: new Date(),
         } as UserExternalId,
       ],
     } as User);
@@ -529,7 +533,19 @@ export class User extends TimestampMixin(Model) {
           staff,
         });
       }
-      const [externalId = null] = details.externalId;
+      // When more than one provider is linked, the most recently *used* one
+      // wins — not whichever happened to be linked first. Otherwise an old
+      // Google link's name/avatar would silently outlive a newer Facebook
+      // sign-in with no way to tell the two apart.
+      const externalId =
+        details.externalId.length === 0
+          ? null
+          : details.externalId.reduce((latest, current) =>
+              new Date(current.usedAt).getTime() >
+              new Date(latest.usedAt).getTime()
+                ? current
+                : latest,
+            );
       if (externalId != null) {
         // Try to take username from an external id, if exists.
         return Object.freeze<NamedUser>({
@@ -594,6 +610,7 @@ export class UserExternalId extends TimestampMixin(Model) {
     table.string("name", name.maxLength).nullable();
     table.string("url", url.maxLength).nullable();
     table.string("image_url", imageUrl.maxLength).nullable();
+    table.timestamp("used_at").nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.unique(["user_id", "provider"]);
     table.unique(["provider", "external_id"]);
@@ -606,6 +623,7 @@ export class UserExternalId extends TimestampMixin(Model) {
   name?: string | null;
   url?: string | null;
   imageUrl?: string | null;
+  usedAt?: Date | null;
   createdAt?: Date;
   user?: User;
 
@@ -629,6 +647,9 @@ export class UserExternalId extends TimestampMixin(Model) {
       name: this.name ?? null,
       url: this.url ?? null,
       imageUrl: this.imageUrl ?? null,
+      // Falls back to createdAt for a row linked before this column existed,
+      // so it still sorts rather than always losing to a fresher one.
+      usedAt: this.usedAt ?? this.createdAt!,
       createdAt: this.createdAt!,
     };
   }

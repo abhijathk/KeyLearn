@@ -95,10 +95,10 @@ watched the same check pass silently. `config-check.test.ts` also passes
       Connectivity verified: connects, sees only its own database plus the
       universally-visible `information_schema`/`performance_schema`, no
       access to the `mysql` system database.
-- [ ] Set `DATABASE_CLIENT=mysql` plus `DATABASE_HOST`, `DATABASE_PORT`,
+- [x] Set `DATABASE_CLIENT=mysql` plus `DATABASE_HOST`, `DATABASE_PORT`,
       `DATABASE_DATABASE`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`.
-      **⚠** currently `sqlite`. Done — written into `/etc/keylearn/env` on
-      the server 2026-08-14 along with the rest of Section 3, see below.
+      Written into `/etc/keylearn/env` on the server 2026-08-14 along with
+      the rest of Section 3, see below.
 - [x] Run `packages/devenv/lib/initdb.ts` (or `npm run start-docker`, which does
       it) to create the schema. **A plain `npm start` does not apply schema
       changes**, so a new table or column silently does not exist until this is
@@ -253,7 +253,10 @@ watched the same check pass silently. `config-check.test.ts` also passes
       Without it, DMARC `p=reject` rejects your own replies.
 - [ ] Google DKIM published at `google._domainkey`, then *Start authentication*
       in the Admin console.
-- [ ] Confirm `brevo1`/`brevo2._domainkey` and `_dmarc` survive any DNS move.
+- [x] Confirm `brevo1`/`brevo2._domainkey` and `_dmarc` survive any DNS move.
+      Reverified 2026-08-15 via `dig`: both DKIM selectors resolve to
+      `brevo.com` CNAMEs with valid keys, DMARC is `p=reject; sp=reject`, and
+      SPF still includes `spf.brevo.com`.
 
 ## 6. Verify after deploying
 

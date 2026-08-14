@@ -965,10 +965,25 @@
   }
 }
 
-/* The TOTP secret, shown for manual entry into an authenticator app. */
+/* The TOTP QR code — a fixed white card regardless of theme, since a scanner
+   expects plain dark-on-light contrast rather than the app's own palette. */
+.qrCode {
+  display: block;
+  padding: 0.75rem;
+  border-radius: 0.6rem;
+  background: #ffffff;
+}
+
+/* The TOTP secret and its copy button, for manual entry into an
+   authenticator app — the button sits in the field's own corner rather than
+   as a separate row underneath. */
+.secretKeyRow {
+  position: relative;
+}
+
 .secretKey {
   display: block;
-  padding: 0.6rem 0.75rem;
+  padding: 0.6rem 2.4rem 0.6rem 0.75rem;
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--text-color) 6%, transparent);
   font-family: var(--value-font-family), monospace;
@@ -976,6 +991,32 @@
   letter-spacing: 0.08em;
   word-break: break-all;
   user-select: all;
+}
+
+.copyKeyBtn {
+  display: grid;
+  position: absolute;
+  inset-inline-end: 0.35rem;
+  inset-block-start: 0.35rem;
+  place-items: center;
+  inline-size: 1.9rem;
+  block-size: 1.9rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.4rem;
+  color: var(--text-color-f1);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--text-color) 8%, transparent);
+  }
+
+  svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
 }
 
 /* One-time recovery codes, shown once when two-step verification is enabled. */
