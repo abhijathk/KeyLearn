@@ -5,14 +5,36 @@
 }
 
 html {
-  margin: 0;
-  padding: 0;
   // The whole UI is sized in rem against this single ladder (there must be no
   // other root font-size rule anywhere — a second ladder loses or wins by
   // cascade accident depending on the media query that happens to match).
   // 16px is the explicit floor for narrow windows; the steps below only ever
   // raise it.
-  font-size: 16px;
+  //
+  // Our Latin webfonts (Open Sans, Roboto, etc.) don't cover Brahmic/Gurmukhi
+  // scripts, so the browser's own bundled Noto Sans fallback renders those —
+  // and it has a visibly smaller x-height than our webfonts at the same
+  // declared size. --font-scale compensates uniformly across every step of
+  // the ladder below, rather than adding a second one.
+  --font-scale: 1;
+  margin: 0;
+  padding: 0;
+  font-size: calc(16px * var(--font-scale));
+
+  &:lang(hi),
+  &:lang(mr),
+  &:lang(ne),
+  &:lang(bn),
+  &:lang(ta),
+  &:lang(te),
+  &:lang(kn),
+  &:lang(ml),
+  &:lang(gu),
+  &:lang(pa),
+  &:lang(or),
+  &:lang(as) {
+    --font-scale: 1.12;
+  }
 }
 
 // Stepping the root font size up with the viewport keeps the site comfortably
@@ -20,31 +42,31 @@ html {
 // small.
 @media (min-width: 1280px) {
   html {
-    font-size: 17px;
+    font-size: calc(17px * var(--font-scale));
   }
 }
 
 @media (min-width: 1600px) {
   html {
-    font-size: 18px;
+    font-size: calc(18px * var(--font-scale));
   }
 }
 
 @media (min-width: 2000px) {
   html {
-    font-size: 19.5px;
+    font-size: calc(19.5px * var(--font-scale));
   }
 }
 
 @media (min-width: 2600px) {
   html {
-    font-size: 22px;
+    font-size: calc(22px * var(--font-scale));
   }
 }
 
 @media (min-width: 3400px) {
   html {
-    font-size: 26px;
+    font-size: calc(26px * var(--font-scale));
   }
 }
 
