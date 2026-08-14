@@ -1,13 +1,26 @@
-import { test } from "node:test";
+import { test, type TestContext } from "node:test";
 import { FakeIntlProvider } from "@keylearn/intl";
 import { ProfilesProvider } from "@keylearn/page-account";
+import { SupportService } from "@keylearn/page-support";
 import { PageDataContext } from "@keylearn/pages-shared";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { isNotNull } from "rich-assert";
 import { Template } from "./Template.tsx";
 
-test("render", () => {
+// Template mounts NoticeBanner, which calls SupportService.getActiveNotice()
+// on mount. Left unmocked, that's a real network request that's still in
+// flight when the test unmounts synchronously below — the environment
+// aborts it during teardown, and the abort surfaces as an unhandled
+// rejection that fails the file even though every assertion passed. Mocking
+// the service call directly (rather than the underlying fetch) works
+// regardless of which fetch implementation @keylearn/request resolves to.
+function stubNoticeFetch(ctx: TestContext): void {
+  ctx.mock.method(SupportService, "getActiveNotice", async () => null);
+}
+
+test("render", (ctx) => {
+  stubNoticeFetch(ctx);
   const r = render(
     <PageDataContext.Provider
       value={{
@@ -40,7 +53,8 @@ test("render", () => {
   r.unmount();
 });
 
-test("render alt", () => {
+test("render alt", (ctx) => {
+  stubNoticeFetch(ctx);
   const r = render(
     <PageDataContext.Provider
       value={{

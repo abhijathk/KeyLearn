@@ -64,3 +64,41 @@
 .main:focus {
   outline: none;
 }
+
+// A site-wide notice staff can post from the support desk — quiet enough not
+// to compete with the header, gone entirely once dismissed or retracted.
+.notice {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  color: var(--text-color-f0);
+  background: var(--primary-d1, rgba(88, 133, 245, 0.14));
+  font-size: 0.85rem;
+  text-align: center;
+
+  &[data-level="warning"] {
+    background: rgba(208, 50, 46, 0.12);
+  }
+}
+
+.noticeText {
+  line-height: 1.4;
+}
+
+.noticeClose {
+  padding: 0.1rem 0.4rem;
+  border: none;
+  border-radius: 0.4rem;
+  color: inherit;
+  background: none;
+  opacity: 0.7;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 1;
+  }
+}

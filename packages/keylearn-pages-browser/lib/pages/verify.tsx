@@ -4,11 +4,11 @@ import {
   isCertificateNumber,
   normalizeCertificateNumber,
 } from "@keylearn/certificate";
-import { FloatingShell } from "@keylearn/page-account";
 import { verifyCertificate, type VerifyResult } from "@keylearn/pages-shared";
+import { FloatingShell } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { useParams } from "react-router";
 import * as styles from "./verify.module.less";
 
@@ -20,6 +20,7 @@ import * as styles from "./verify.module.less";
  * a CV. So it asks for nothing, stores nothing, and says as little as it can.
  */
 export default function Page(): ReactNode {
+  const { formatMessage } = useIntl();
   const { number: fromPath } = useParams();
   const [typed, setTyped] = useState(fromPath ?? "");
   const [result, setResult] = useState<VerifyResult | null>(null);
@@ -84,7 +85,10 @@ export default function Page(): ReactNode {
             autoCapitalize="characters"
             autoComplete="off"
             placeholder="WM2F RJ2B"
-            aria-label="Certificate number"
+            aria-label={formatMessage({
+              id: "verify.numberLabel",
+              defaultMessage: "Certificate number",
+            })}
             onChange={(ev) => {
               setTyped(ev.target.value);
               setResult(null);

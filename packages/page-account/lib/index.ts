@@ -11,7 +11,9 @@ export { ConfirmDialog } from "@keylearn/widget";
 // second definition of what counts.
 export * from "./course/evidence.ts";
 export * from "./course/language-line.ts";
-export * from "./FloatingShell.tsx";
+// Lives in @keylearn/widget now, so the support desk can use the same
+// window chrome without page-support and page-account depending on each
+// other.
 export * from "./Overlay.tsx";
 export * from "./profiles/BrailleBadge.tsx";
 export * from "./profiles/context.tsx";
@@ -22,3 +24,4 @@ export * from "./profiles/store.ts";
 export * from "./theme/accent-names.tsx";
 export * from "./theme/ThemePicker.tsx";
 export * from "./theme/ThemeWindow.tsx";
+export { AnimatedHeight, FloatingShell } from "@keylearn/widget";

@@ -1,0 +1,245 @@
+@import "@keylearn/widget/lib/index.less";
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-inline-size: 1100px;
+  margin-inline: auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.headline {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+
+.noticeBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 0.7rem;
+}
+
+.activeNotice {
+  margin: 0;
+  color: var(--text-color-f0);
+  font-size: 0.88rem;
+}
+
+.noticeRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+
+  // The TextField's `size="full"` targets 100% of ITS OWN box, which
+  // overflows a flex row it shares with the Button unless it's also told
+  // to shrink to the space actually left for it.
+  > :first-child {
+    flex: 1;
+    min-inline-size: 0;
+  }
+}
+
+.link {
+  padding: 0;
+  border: none;
+  color: var(--accent-l1, var(--text-color));
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.grow {
+  flex: 1;
+}
+
+.filterSelect {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.14));
+  border-radius: 0.5rem;
+  color: var(--text-color);
+  background: var(--surface-color, transparent);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.empty,
+.emptyDetail {
+  color: var(--text-color-f2);
+  font-size: 0.85rem;
+}
+
+.queueItem,
+.queueItemOn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  inline-size: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 0.6rem;
+  background: none;
+  text-align: start;
+  cursor: pointer;
+}
+
+.queueItemOn {
+  border-color: var(--accent-l1, var(--text-color));
+  background: var(--primary-d1, rgba(88, 133, 245, 0.12));
+}
+
+.queueBadge {
+  align-self: flex-start;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background: var(--surface-color-2, rgba(255, 255, 255, 0.08));
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  &[data-status="flagged"] {
+    color: #d0322e;
+  }
+
+  &[data-status="waiting"] {
+    color: #2f8a5d;
+  }
+
+  &[data-status="spam"] {
+    color: #d0322e;
+    text-decoration: line-through;
+  }
+}
+
+.queueSubject {
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.queueFrom {
+  color: var(--text-color-f2);
+  font-size: 0.78rem;
+}
+
+.detail {
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 0.8rem;
+}
+
+.ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ticketMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-color-f1);
+  font-size: 0.82rem;
+}
+
+.ticketSubject {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.ticketMessage {
+  margin: 0;
+  color: var(--text-color-f0);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.replyRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.moveLabel {
+  margin: 0.4rem 0 0;
+  color: var(--text-color-f2);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.kindBtn,
+.kindBtnDanger {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.14));
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  background: none;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent-l1, var(--text-color));
+    color: var(--text-color);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.kindBtnDanger {
+  border-color: rgba(208, 50, 46, 0.4);
+  color: #d0322e;
+
+  &:hover {
+    border-color: #d0322e;
+  }
+}

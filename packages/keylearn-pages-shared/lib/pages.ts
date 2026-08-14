@@ -7,6 +7,7 @@ import {
   mdiHelpCircleOutline,
   mdiKeyboard,
   mdiKeyboardOutline,
+  mdiLifebuoy,
   mdiSpeedometer,
   mdiTeddyBear,
   mdiTrophyOutline,
@@ -560,6 +561,93 @@ export namespace Pages {
         }),
       },
     ],
+  } satisfies PageInfo;
+
+  export const support = {
+    path: "/support",
+    title: defineMessage({
+      id: "support.headline",
+      defaultMessage: "Support",
+    }),
+    link: {
+      label: defineMessage({
+        id: "support.headline",
+        defaultMessage: "Support",
+      }),
+      title: defineMessage({
+        id: "page.support.description",
+        defaultMessage: "Answers to common questions, and a way to reach us.",
+      }),
+      icon: mdiLifebuoy,
+    },
+    meta: [
+      ...meta,
+      {
+        name: "description",
+        content: defineMessage({
+          id: "page.support.description",
+          defaultMessage: "Answers to common questions, and a way to reach us.",
+        }),
+      },
+    ],
+  } satisfies PageInfo;
+
+  /**
+   * The staff-only ticket queue. No nav link — reached only from a
+   * staff-gated link elsewhere, the same "absent from the menu" pattern
+   * {@link assessment} uses for a page nobody should be routinely offered.
+   */
+  export const supportDesk = {
+    path: "/support/desk",
+    title: defineMessage({
+      id: "staffDesk.headline",
+      defaultMessage: "Support desk",
+    }),
+    link: {
+      label: defineMessage({
+        id: "staffDesk.headline",
+        defaultMessage: "Support desk",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /**
+   * Passkey-first sign-in for the desk, separate from the general
+   * `/login` window. Reached only when a staff visitor isn't already
+   * signed in as an eligible account — {@link supportDesk} and
+   * {@link supportDeskAudit} redirect here with a `returnTo` back to
+   * themselves instead of bouncing to `/practice`.
+   */
+  export const supportDeskSignin = {
+    path: "/support/desk/signin",
+    title: defineMessage({
+      id: "staffDesk.signin.headline",
+      defaultMessage: "Staff sign-in",
+    }),
+    link: {
+      label: defineMessage({
+        id: "staffDesk.signin.headline",
+        defaultMessage: "Staff sign-in",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /** Read-only staff action log. Reached from a link on the desk itself. */
+  export const supportDeskAudit = {
+    path: "/support/desk/audit",
+    title: defineMessage({
+      id: "staffDesk.auditLink",
+      defaultMessage: "Audit log",
+    }),
+    link: {
+      label: defineMessage({
+        id: "staffDesk.auditLink",
+        defaultMessage: "Audit log",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
   } satisfies PageInfo;
 
   export function profileOf(arg: string): string;

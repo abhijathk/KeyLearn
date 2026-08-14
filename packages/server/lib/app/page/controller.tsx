@@ -216,6 +216,58 @@ export class Controller {
     return this.renderPage(ctx, Pages.help, intl);
   }
 
+  @http.GET(`${Pages.support.path}`)
+  async ["support"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.support);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.support.path}`)
+  async ["support-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.support, intl);
+  }
+
+  @http.GET(`${Pages.supportDesk.path}`)
+  async ["support-desk"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.supportDesk);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.supportDesk.path}`)
+  async ["support-desk-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.supportDesk, intl);
+  }
+
+  @http.GET(`${Pages.supportDeskSignin.path}`)
+  async ["support-desk-signin"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.supportDeskSignin);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.supportDeskSignin.path}`)
+  async ["support-desk-signin-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.supportDeskSignin, intl);
+  }
+
+  @http.GET(`${Pages.supportDeskAudit.path}`)
+  async ["support-desk-audit"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.supportDeskAudit);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.supportDeskAudit.path}`)
+  async ["support-desk-audit-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.supportDeskAudit, intl);
+  }
+
   @http.GET(`${Pages.highScores.path}`)
   async ["high-scores"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.highScores);

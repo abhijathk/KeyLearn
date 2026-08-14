@@ -10,8 +10,11 @@ import {
   UserExternalId,
   UserLoginRequest,
 } from "./model.ts";
+import { Notice } from "./notice.ts";
 import { ProfileData } from "./profile-data.ts";
 import { SecurityEvent } from "./security-event.ts";
+import { StaffAuditEvent } from "./staff-audit-event.ts";
+import { SupportTicket } from "./support-ticket.ts";
 
 export async function createSchema(knex: Knex): Promise<void> {
   const createTable = async ({
@@ -40,6 +43,9 @@ export async function createSchema(knex: Knex): Promise<void> {
   await createTable(ProfileData);
   await createTable(CertificateSitting);
   await createTable(Certificate);
+  await createTable(SupportTicket);
+  await createTable(Notice);
+  await createTable(StaffAuditEvent);
 
   // Additive column migrations for databases created before the column
   // existed — createTable above only runs when the table is missing.
@@ -104,6 +110,14 @@ export async function createSchema(knex: Knex): Promise<void> {
   // Two-step verification.
   await addColumn("user", "totp_secret", (table) => {
     table.string("totp_secret", 64).nullable();
+  });
+  // Widened from a 32-character base32 secret to hold an encrypted value
+  // instead (see totp-crypto.ts) — the ciphertext, its IV and its auth tag,
+  // base64-encoded together, run well past 64 characters. Safe to run every
+  // time: altering an already-TEXT column to TEXT again is a no-op on both
+  // engines this app supports.
+  await knex.schema.alterTable("user", (table) => {
+    table.text("totp_secret").alter();
   });
   await addColumn("user", "totp_enabled", (table) => {
     table.boolean("totp_enabled").notNullable().defaultTo(false);
@@ -172,6 +186,12 @@ export async function createSchema(knex: Knex): Promise<void> {
       // Already present.
     }
   }
+
+  // Gates the support desk's staff-only views. Off by default — nobody is
+  // staff until granted with scripts/grant-staff.mjs.
+  await addColumn("user", "staff", (table) => {
+    table.boolean("staff").notNullable().defaultTo(false);
+  });
 
   async function addColumn(
     tableName: string,

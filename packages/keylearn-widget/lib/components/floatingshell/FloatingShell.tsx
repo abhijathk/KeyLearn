@@ -1,16 +1,16 @@
-import { StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useIntl } from "react-intl";
 import { useNavigate } from "react-router";
+import { StrokeIcon } from "../icon/StrokeIcon.tsx";
 import * as styles from "./FloatingShell.module.less";
 
 /**
- * The floating settings-style window the account and auth pages live in:
- * a dimmed, blurred backdrop and a centred panel in the road design
- * language. `compact` hugs the content instead of filling the viewport —
- * combined with `AnimatedHeight` the panel expands and contracts smoothly
- * when its content changes.
+ * The floating settings-style window the account, auth, and other modal-like
+ * pages live in: a dimmed, blurred backdrop and a centred panel in the road
+ * design language. `compact` hugs the content instead of filling the
+ * viewport — combined with `AnimatedHeight` the panel expands and contracts
+ * smoothly when its content changes.
  */
 export function FloatingShell({
   title,

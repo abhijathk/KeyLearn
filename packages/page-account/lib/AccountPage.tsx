@@ -1,3 +1,4 @@
+import { SupportPage } from "@keylearn/page-support";
 import {
   type AnyUser,
   Avatar,
@@ -10,6 +11,7 @@ import {
 import { Button, Icon, TextField } from "@keylearn/widget";
 import { confirmStyles as dlg } from "@keylearn/widget";
 import { ConfirmDialog } from "@keylearn/widget";
+import { FloatingShell } from "@keylearn/widget";
 import { mdiCreditCard } from "@mdi/js";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -20,7 +22,6 @@ import { AccountPricePreview } from "./AccountPricePreview.tsx";
 import { type AccountActions, useAccountActions } from "./actions.ts";
 import { Toggle } from "./controls.tsx";
 import { CoursePane } from "./course/CoursePane.tsx";
-import { FloatingShell } from "./FloatingShell.tsx";
 import {
   AccessibilityPane,
   AppearancePane,
@@ -38,6 +39,7 @@ type Pane =
   | "security"
   | "appearance"
   | "prefs"
+  | "support"
   | "premium";
 
 /**
@@ -52,6 +54,14 @@ type Pane =
  */
 const PREMIUM_VISIBLE = false;
 
+/**
+ * Whether the Support pane and its rail entry are shown. Off for launch —
+ * the ticket queue, staff console and audit log are built but held for
+ * phase 2, so there's nothing behind this pane yet either. The footer's
+ * mailto link is the contact path until then.
+ */
+const SUPPORT_VISIBLE = false;
+
 const PANES: readonly Pane[] = [
   "account",
   "learners",
@@ -60,6 +70,7 @@ const PANES: readonly Pane[] = [
   "appearance",
   "prefs",
   "accessibility",
+  ...(SUPPORT_VISIBLE ? (["support"] as const) : []),
   ...(PREMIUM_VISIBLE ? (["premium"] as const) : []),
 ];
 
@@ -197,6 +208,19 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               />
             }
           />
+          {SUPPORT_VISIBLE && (
+            <RailItem
+              on={pane === "support"}
+              onClick={() => setPane("support")}
+              icon={<SupportIcon />}
+              label={
+                <FormattedMessage
+                  id="account.rail.support"
+                  defaultMessage="Support"
+                />
+              }
+            />
+          )}
 
           {PREMIUM_VISIBLE && (
             <div
@@ -315,6 +339,12 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
           {pane === "accessibility" && <AccessibilityPane />}
 
           {pane === "prefs" && <PreferencesPane />}
+
+          {SUPPORT_VISIBLE && pane === "support" && (
+            <div className={styles.paneScroll}>
+              <SupportPage />
+            </div>
+          )}
 
           {PREMIUM_VISIBLE && pane === "premium" && (
             <div className={styles.paneScroll}>
@@ -1193,6 +1223,18 @@ function AccessIcon(): ReactNode {
     <svg className={styles.railIcon} viewBox="0 0 24 24">
       <circle cx="12" cy="4.2" r="1.6" />
       <path d="M4.5 8.2h15M12 8.6v6M12 14.6l-3.2 5.6M12 14.6l3.2 5.6" />
+    </svg>
+  );
+}
+
+// A life-buoy ring: the throw-a-line mark, distinct from the shield (account
+// safety) and gear (preferences) it sits beside on the rail.
+function SupportIcon(): ReactNode {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="3.3" />
+      <path d="M6.1 6.1l3.3 3.3M17.9 6.1l-3.3 3.3M6.1 17.9l3.3-3.3M17.9 17.9l-3.3-3.3" />
     </svg>
   );
 }

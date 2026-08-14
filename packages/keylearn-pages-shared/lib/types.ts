@@ -138,6 +138,39 @@ export type SecurityEventDetails = {
   readonly createdAt: string;
 };
 
+/** A submission to the support desk — a general question or a business enquiry. */
+export type SupportTicketDetails = {
+  readonly id: number;
+  readonly kind: "support" | "business";
+  readonly name: string;
+  /** Masked (e.g. "r****@gmail.com") unless fetched via the reveal endpoint. */
+  readonly email: string;
+  readonly subject: string;
+  readonly message: string;
+  readonly status: "open" | "flagged" | "waiting" | "closed" | "spam";
+  readonly staffReply: string | null;
+  readonly repliedAt: string | null;
+  readonly createdAt: string;
+};
+
+/** A short site-wide announcement staff can post and later retract. */
+export type NoticeDetails = {
+  readonly id: number;
+  readonly message: string;
+  readonly level: "info" | "warning";
+  readonly createdAt: string;
+};
+
+/** One entry in the support desk's read-only staff action log. */
+export type StaffAuditEventDetails = {
+  readonly id: number;
+  readonly staffName: string | null;
+  readonly action: string;
+  readonly detail: string | null;
+  readonly ip: string | null;
+  readonly createdAt: string;
+};
+
 export type UserDetails = {
   /**
    * Unique id.
@@ -247,6 +280,13 @@ export type AnonymousUser = {
    * Image url for avatar.
    */
   readonly imageUrl: null;
+  /**
+   * An anonymous visitor is never staff. Optional (rather than a required
+   * `false`) so the many existing call sites across the monorepo that build
+   * an {@link AnyUser} don't all need updating — absent reads the same as
+   * false wherever this is checked.
+   */
+  readonly staff?: boolean;
 };
 
 export type NamedUser = {
@@ -266,6 +306,12 @@ export type NamedUser = {
    * Whether this is a premium user;
    */
   readonly premium: boolean;
+  /**
+   * Whether this account can reach the support desk's staff-only views.
+   * Optional for the same reason as {@link AnonymousUser.staff} — absent
+   * reads as not-staff.
+   */
+  readonly staff?: boolean;
 };
 
 export type AnyUser = AnonymousUser | NamedUser;

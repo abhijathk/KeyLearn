@@ -14,6 +14,9 @@ export function SubMenu({ currentPath }: { readonly currentPath: string }) {
   const { formatMessage } = useIntl();
   return (
     <div className={styles.root}>
+      {/* The support desk (ticket queue, staff console) is built but held
+          for phase 2 — the mailto link below is the only contact path for
+          launch. Re-add these two links to bring it back. */}
       <MailLink />
       <GithubLink />
       <RouterLink to={Pages.termsOfService.path}>

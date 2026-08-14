@@ -1,0 +1,170 @@
+@import "@keylearn/widget/lib/index.less";
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-inline-size: 1040px;
+  margin-inline: auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.headline {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.intro {
+  max-inline-size: 640px;
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+// Self-serve answers and the contact form, side by side — reaching either
+// one never means scrolling past the other. `auto-fit`/`minmax` collapses to
+// one column once a track can't fit its minimum, purely from the grid's own
+// available width — this page is also embedded in the Account modal's much
+// narrower pane, where the *viewport* stays wide and a media query would
+// never fire even though there's no room for two columns there.
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.left,
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-inline-size: 0;
+}
+
+.right {
+  padding: 1.4rem 1.5rem;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 0.9rem;
+}
+
+.colHeadline {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.faq {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.faqItem {
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 0.7rem;
+}
+
+.faqQ {
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.faqA {
+  margin: 0.5rem 0 0.1rem;
+  color: var(--text-color-f1);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.moreLinks {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.85rem;
+  line-height: 1.5;
+
+  a {
+    color: var(--accent-l1, var(--text-color));
+    font-weight: 600;
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+}
+
+.kindRow {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.kindBtn,
+.kindBtnOn {
+  flex: 1;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.14));
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  background: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.kindBtnOn {
+  border-color: var(--accent-l1, var(--text-color));
+  color: var(--text-color);
+  background: var(--primary-d1, rgba(88, 133, 245, 0.12));
+}
+
+.notice {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.6rem;
+  color: var(--text-color-f0);
+  background-color: var(--primary-d1, rgba(88, 133, 245, 0.12));
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.error {
+  margin: 0;
+  color: var(--error-color, #d0322e);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.turnstile {
+  display: flex;
+  justify-content: center;
+  min-block-size: 65px;
+}
+
+.primary {
+  display: grid;
+}
+
+// Off-screen rather than display:none — a screen reader that ignores
+// display:none for form discovery would otherwise still announce it.
+.hp {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}

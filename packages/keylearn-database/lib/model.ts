@@ -139,6 +139,7 @@ export class User extends TimestampMixin(Model) {
   totpEnabled?: number | boolean;
   recoveryCodes?: string | null;
   parentPinHash?: string | null;
+  staff?: number | boolean;
   remindedAt?: Date | null;
   createdAt?: Date;
   externalIds?: UserExternalId[];
@@ -518,12 +519,14 @@ export class User extends TimestampMixin(Model) {
       // Handle authenticated user.
       const details = user.toDetails();
       const premium = details.order != null;
+      const staff = Boolean(user.staff);
       if (user.anonymized) {
         return Object.freeze<NamedUser>({
           id: details.id,
           name: anonymousName(details.email),
           imageUrl: null,
           premium,
+          staff,
         });
       }
       const [externalId = null] = details.externalId;
@@ -534,6 +537,7 @@ export class User extends TimestampMixin(Model) {
           name: externalId.name ?? details.name,
           imageUrl: externalId.imageUrl,
           premium,
+          staff,
         });
       } else {
         // Otherwise use auto-generated username.
@@ -542,6 +546,7 @@ export class User extends TimestampMixin(Model) {
           name: details.name,
           imageUrl: null,
           premium,
+          staff,
         });
       }
     } else {
@@ -550,6 +555,7 @@ export class User extends TimestampMixin(Model) {
         id: null,
         name: anonymousName(hint),
         imageUrl: null,
+        staff: false,
       });
     }
   }
@@ -789,6 +795,9 @@ export class Profile extends TimestampMixin(Model) {
         name: anonymousName(`profile:${this.id}`),
         imageUrl: null,
         premium,
+        // A public profile card is never a staff-permission surface — always
+        // false here regardless of the account's real flag.
+        staff: false,
       });
     }
     let imageUrl: string | null = null;
@@ -803,6 +812,7 @@ export class Profile extends TimestampMixin(Model) {
       name: this.firstName!,
       imageUrl,
       premium,
+      staff: false,
     });
   }
 

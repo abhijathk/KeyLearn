@@ -1,12 +1,79 @@
 import { CompleteProfileGate, useProfiles } from "@keylearn/page-account";
+import { SupportService } from "@keylearn/page-support";
+import { type NoticeDetails } from "@keylearn/pages-shared";
 import { AdBanner, adSenseClientId } from "@keylearn/thirdparties";
 import { PortalContainer, Toaster } from "@keylearn/widget";
-import { type ReactNode, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { type ReactNode, useEffect, useState } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import { showAds } from "./ads.ts";
 import { Header } from "./Header.tsx";
 import { MenuDrawer } from "./MenuDrawer.tsx";
 import * as styles from "./Template.module.less";
+
+// Which notice the visitor already dismissed, so retracting and reposting a
+// DIFFERENT notice still shows — only the exact one they closed stays hidden.
+function loadDismissedNoticeId(): number | null {
+  try {
+    const raw = sessionStorage.getItem("keylearn.dismissedNotice");
+    return raw == null ? null : Number(raw);
+  } catch {
+    return null;
+  }
+}
+
+function saveDismissedNoticeId(id: number): void {
+  try {
+    sessionStorage.setItem("keylearn.dismissedNotice", String(id));
+  } catch {
+    // Storage may be unavailable; the banner will simply reappear.
+  }
+}
+
+function NoticeBanner(): ReactNode {
+  const { formatMessage } = useIntl();
+  const [notice, setNotice] = useState<NoticeDetails | null>(null);
+  const [dismissed, setDismissed] = useState(loadDismissedNoticeId);
+
+  useEffect(() => {
+    let cancelled = false;
+    SupportService.getActiveNotice()
+      .then((n) => {
+        if (!cancelled) {
+          setNotice(n);
+        }
+      })
+      .catch(() => {
+        // A failed fetch just means no banner this load — never worth
+        // surfacing as an error on every single page.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (notice == null || notice.id === dismissed) {
+    return null;
+  }
+  return (
+    <div className={styles.notice} data-level={notice.level} role="status">
+      <span className={styles.noticeText}>{notice.message}</span>
+      <button
+        type="button"
+        className={styles.noticeClose}
+        aria-label={formatMessage({
+          id: "notice.dismiss",
+          defaultMessage: "Dismiss",
+        })}
+        onClick={() => {
+          saveDismissedNoticeId(notice.id);
+          setDismissed(notice.id);
+        }}
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
 
 // The household's remembered grown-ups/kids preference. Absent for most of
 // them — it is only written when somebody uses the drawer's switch — which is
@@ -79,6 +146,7 @@ export function Template({
         kids={path === "/kids"}
         practice={path === "/"}
       />
+      <NoticeBanner />
       <main className={styles.main} id="main" tabIndex={-1}>
         {children}
         <PortalContainer />
@@ -86,7 +154,12 @@ export function Template({
       </main>
       {ads && (
         <div className={styles.adSlot}>
-          <div className={styles.adLabel}>Advertisement</div>
+          <div className={styles.adLabel}>
+            <FormattedMessage
+              id="template.adLabel"
+              defaultMessage="Advertisement"
+            />
+          </div>
           <AdBanner />
         </div>
       )}

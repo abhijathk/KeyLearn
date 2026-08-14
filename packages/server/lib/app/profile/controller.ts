@@ -14,6 +14,10 @@ export class Controller {
     ctx: Context,
     @pathParam("id", pProfileOwner) profileOwner: NamedUser,
   ) {
-    ctx.response.body = profileOwner;
+    // Whoever set this profile public shared their typing history, not
+    // whether their account happens to be staff — that isn't this public
+    // surface's business to disclose about them.
+    const { staff: _staff, ...rest } = profileOwner;
+    ctx.response.body = rest;
   }
 }

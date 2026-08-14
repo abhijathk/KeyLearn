@@ -7,6 +7,7 @@ export * from "./dialog/index.ts";
 export * from "./explainer/index.ts";
 export * from "./fieldlist/index.ts";
 export * from "./figure/index.ts";
+export * from "./floatingshell/index.ts";
 export * from "./form/index.ts";
 export * from "./icon/index.ts";
 export * from "./optionlist/index.ts";

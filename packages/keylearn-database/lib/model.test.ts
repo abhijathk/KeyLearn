@@ -206,6 +206,7 @@ test("create user from resource owner with null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -257,6 +258,7 @@ test("create user from resource owner with non-null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -308,6 +310,7 @@ test("create user from resource owner with invalid values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -365,6 +368,7 @@ test("update user from resource owner with null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -422,6 +426,7 @@ test("update user from resource owner with non-null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -467,6 +472,7 @@ test("update user from resource owner with non-null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -524,6 +530,7 @@ test("update user from resource owner with invalid values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -569,6 +576,7 @@ test("update user from resource owner with invalid values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -620,6 +628,7 @@ test("merge multiple resource owners", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -668,6 +677,7 @@ test("merge multiple resource owners", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -805,6 +815,7 @@ test("generates unique name for resource owner", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      staff: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -937,6 +948,7 @@ test("login with a valid access token", async (ctx) => {
     totpEnabled: 0,
     recoveryCodes: null,
     parentPinHash: null,
+    staff: 0,
     remindedAt: null,
     externalIds: [],
     order: null,
@@ -995,6 +1007,7 @@ test("load profile owner", async (ctx) => {
     name: "externalName1",
     imageUrl: "imageUrl1",
     premium: false,
+    staff: false,
   });
 });
 
@@ -1034,11 +1047,13 @@ test("make public user for anonymous", (ctx) => {
     id: null,
     name: "Gold Sparrowhawk",
     imageUrl: null,
+    staff: false,
   });
   deepEqual(User.toPublicUser(null, "hint4"), {
     id: null,
     name: "Gold Skink",
     imageUrl: null,
+    staff: false,
   });
 });
 
@@ -1061,6 +1076,7 @@ test("make public user from user name", (ctx) => {
         totpEnabled: 0,
         recoveryCodes: null,
         parentPinHash: null,
+        staff: 0,
         remindedAt: null,
         externalIds: [],
         createdAt: new Date(0),
@@ -1072,6 +1088,7 @@ test("make public user from user name", (ctx) => {
       name: "somebody",
       imageUrl: null,
       premium: false,
+      staff: false,
     },
   );
 });
@@ -1095,6 +1112,7 @@ test("make public user from external user id", (ctx) => {
         totpEnabled: 0,
         recoveryCodes: null,
         parentPinHash: null,
+        staff: 0,
         remindedAt: null,
         externalIds: [
           {
@@ -1117,6 +1135,7 @@ test("make public user from external user id", (ctx) => {
       name: "somebody",
       imageUrl: null,
       premium: false,
+      staff: false,
     },
   );
   deepEqual(
@@ -1135,6 +1154,7 @@ test("make public user from external user id", (ctx) => {
         totpEnabled: 0,
         recoveryCodes: null,
         parentPinHash: null,
+        staff: 0,
         remindedAt: null,
         externalIds: [
           {
@@ -1157,6 +1177,7 @@ test("make public user from external user id", (ctx) => {
       name: "xyz",
       imageUrl: "imageUrl",
       premium: false,
+      staff: false,
     },
   );
 });
@@ -1181,6 +1202,7 @@ test("make public user with anonymous name", (ctx) => {
       name: "Gleaming Wolf",
       imageUrl: null,
       premium: false,
+      staff: false,
     },
   );
   deepEqual(
@@ -1200,6 +1222,7 @@ test("make public user with anonymous name", (ctx) => {
       name: "Gleaming Wombat",
       imageUrl: null,
       premium: false,
+      staff: false,
     },
   );
 });

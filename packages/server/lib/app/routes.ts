@@ -11,6 +11,7 @@ import { Controller as ProfileController } from "./profile/index.ts";
 import { Controller as SettingsController } from "./settings/index.ts";
 import { Controller as SitemapController } from "./sitemap/index.ts";
 import { Controller as SpeechController } from "./speech/index.ts";
+import { Controller as SupportController } from "./support/index.ts";
 import { Controller as SyncController } from "./sync/index.ts";
 
 export function mainRoutes(): Middleware<any> {
@@ -26,6 +27,7 @@ export function mainRoutes(): Middleware<any> {
         SettingsController,
         SitemapController,
         SpeechController,
+        SupportController,
         SyncController,
       ),
     )

@@ -50,8 +50,13 @@ function mapUser(
   const profile = profileId != null ? profiles.get(profileId) : null;
   // Only show a profile that still exists AND still belongs to this account —
   // a stale id must never let one account's row display another's learner.
-  if (profile != null && profile.userId === user.id) {
-    return profile.toPublicUser(user);
-  }
-  return User.toPublicUser(user, 0);
+  const publicUser =
+    profile != null && profile.userId === user.id
+      ? profile.toPublicUser(user)
+      : User.toPublicUser(user, 0);
+  // A leaderboard entry is about who set the score, not whether the account
+  // that set it happens to be staff — that isn't this public surface's
+  // business to disclose about someone else.
+  const { staff: _staff, ...rest } = publicUser;
+  return rest as AnyUser;
 }
