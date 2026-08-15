@@ -21,6 +21,8 @@
   "about.maker.p": "KeyLearn is designed and built by <em>AK</em>, an independent developer working mostly solo. It started at the kitchen table, watching a young family member hunt-and-peck at a keyboard and wishing for something that felt more like a game than a chore. AK has spent years building software for the web, but this is the first project made squarely for family — no company behind it, no investors to please, just care put into a tool meant to be genuinely useful. Feedback and contributions are always welcome.",
   "about.oss.h": "Open source, and yours",
   "about.oss.p": "KeyLearn is published under the GNU AGPL license: the whole source code is open for you to read, run, or improve. Learning to type is free — every lesson, every learner in your household, and no advertising. If you find it useful you can support the project, but nothing here is held back until you do. Your practice data belongs to you: export it or erase it whenever you like. <a>View the source on GitHub</a>.",
+  "about.contact.h": "Contact",
+  "about.contact.need": "Need help?",
   "about.support.h": "Support KeyLearn",
   "about.support.p": "KeyLearn is free for every learner, and that’s never going to change. If it’s helped you or your kids, buying a coffee helps keep it going. <a>Buy me a coffee</a>.",
   "about.title": "About KeyLearn",

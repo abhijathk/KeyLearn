@@ -1,4 +1,5 @@
 import { supportUrl } from "@keylearn/thirdparties";
+import { StrokeIcon } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
@@ -29,17 +30,50 @@ function Masthead({
   kicker,
   title,
   dateline,
+  chip,
 }: {
   readonly kicker: string;
   readonly title: string;
   readonly dateline: string;
+  /** An optional pill in the header's own top-right corner — room for a
+   * single, high-value action (the About page's contact address) without
+   * competing with the page's own sections below. */
+  readonly chip?: ReactNode;
 }) {
   return (
-    <header>
-      <div className={styles.kicker}>{kicker}</div>
-      <div className={styles.nameplate}>{title}</div>
-      <div className={styles.dateline}>{dateline}</div>
+    <header className={chip != null ? styles.mastheadRow : undefined}>
+      <div>
+        <div className={styles.kicker}>{kicker}</div>
+        <div className={styles.nameplate}>{title}</div>
+        <div className={styles.dateline}>{dateline}</div>
+      </div>
+      {chip}
     </header>
+  );
+}
+
+function ContactChip() {
+  return (
+    <a href="mailto:support@keylearn.org" className={styles.contactCard}>
+      <span className={styles.contactIconBox}>
+        <StrokeIcon name="mail" className={styles.contactIcon} />
+      </span>
+      <span className={styles.contactBody}>
+        <span className={styles.contactLabel}>
+          <FormattedMessage
+            id="about.contact.need"
+            defaultMessage="Need help?"
+          />
+        </span>
+        <span className={styles.contactLine}>
+          <FormattedMessage id="about.contact.h" defaultMessage="Contact" />
+          <span className={styles.contactDot} aria-hidden={true}>
+            •
+          </span>
+          <span className={styles.contactEmail}>support@keylearn.org</span>
+        </span>
+      </span>
+    </a>
   );
 }
 
@@ -71,6 +105,7 @@ export function AboutPage() {
           },
           { version: APP_VERSION },
         )}
+        chip={<ContactChip />}
       />
 
       <div className={styles.glance}>

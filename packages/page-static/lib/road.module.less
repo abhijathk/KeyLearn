@@ -46,6 +46,90 @@
   text-transform: uppercase;
 }
 
+// ---- the masthead's optional contact chip --------------------------------
+
+.mastheadRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+// `.paper a` (below) sets a global underline at higher specificity
+// (class+tag) than a lone class selector can override, so this one has to
+// match it: `.paper .contactCard`, not just `.contactCard`.
+.paper .contactCard {
+  display: flex;
+  flex: none;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.7rem 1.4rem 0.7rem 0.7rem;
+  border: 1px solid color-mix(in oklab, var(--text-color) 12%, transparent);
+  border-radius: 1.1rem;
+  background: color-mix(in oklab, var(--primary-d2) 30%, var(--primary-l1));
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover {
+    border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+    background: color-mix(in oklab, var(--primary-d2) 42%, var(--primary-l1));
+  }
+}
+
+.contactIconBox {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+  border-radius: 0.8rem;
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+.contactIcon {
+  inline-size: 1.3rem;
+  block-size: 1.3rem;
+}
+
+.contactBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-decoration: none;
+}
+
+.contactLabel {
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.contactLine {
+  display: flex;
+  gap: 0.55rem;
+  align-items: baseline;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.contactDot {
+  color: var(--text-color-f2);
+  font-size: 0.7rem;
+}
+
+.contactEmail {
+  color: var(--accent);
+}
+
 // ---- "the short version" ------------------------------------------------
 
 .glance {
