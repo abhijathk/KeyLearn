@@ -1601,8 +1601,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       loaderRef.current != null
         ? createLoaderScene(loaderRef.current, theme)
         : null;
+    let cancelled = false;
     world.ready
       .then(() => {
+        if (cancelled) {
+          // Unmounted (or rebuilt for a new theme/style) while the world was
+          // still loading. world.dispose() already ran; calling these now
+          // would recreate resources — e.g. setWord/setAccent allocating new
+          // letter textures — that dispose() will never get a chance to free.
+          return;
+        }
         if (prefsRef.current.night) {
           world.setNight(true);
         }
@@ -1635,11 +1643,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       })
       .finally(() => {
         loader?.dispose();
-        setLoaded(true);
+        if (!cancelled) {
+          setLoaded(true);
+        }
       });
     const observer = new ResizeObserver(() => world.resize());
     observer.observe(canvas);
     return () => {
+      cancelled = true;
       observer.disconnect();
       loader?.dispose();
       world.dispose();

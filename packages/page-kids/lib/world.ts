@@ -532,6 +532,8 @@ export function createKidsWorld(
       g.fillRect(0, 0, 16, 256);
       const sky = new THREE.CanvasTexture(c);
       sky.colorSpace = THREE.SRGBColorSpace;
+      (scene.background as THREE.Texture | null)?.dispose?.();
+      (scene.environment as THREE.Texture | null)?.dispose?.();
       scene.background = sky;
       scene.backgroundBlurriness = 0;
       scene.environment = null;
@@ -551,7 +553,16 @@ export function createKidsWorld(
     // a dusk grade looked like a renderer fault, not an evening.
     const skyFile = dark && !night ? land.mood : mood;
     const tex = await rgbe.loadAsync(`${ASSETS}/env/${skyFile}.hdr`);
+    if (disposed) {
+      // The world was torn down while this HDR was in flight — nothing left
+      // to hang it on, so free it here rather than leaving it in the promise
+      // closure with no scene reference to ever dispose it.
+      tex.dispose();
+      return;
+    }
     tex.mapping = THREE.EquirectangularReflectionMapping;
+    (scene.background as THREE.Texture | null)?.dispose?.();
+    (scene.environment as THREE.Texture | null)?.dispose?.();
     scene.background = tex;
     scene.backgroundBlurriness = 0.06;
     scene.environment = pmrem.fromEquirectangular(tex).texture;
@@ -960,6 +971,13 @@ export function createKidsWorld(
   const loaded: THREE.Object3D[] = [];
   async function loadModel(url: string) {
     const gltf = await loader.loadAsync(url);
+    if (disposed) {
+      // The world was torn down while this model was in flight. It never
+      // entered `loaded`, so dispose() already ran and will never see it —
+      // free it here instead of leaving it pinned in this closure forever.
+      disposeScene(gltf.scene);
+      return null;
+    }
     loaded.push(gltf.scene);
     // Kids app: death, attack and bite clips never make it in.
     gltf.animations = (gltf.animations ?? []).filter(
@@ -1745,6 +1763,9 @@ export function createKidsWorld(
     const gltf = await loadModel(
       `${ASSETS}/models/${theme.modelDir}/${name}.glb`,
     );
+    if (gltf == null) {
+      return;
+    }
     playerH = theme.playerHeight(name);
     const rig = rigOf(gltf, playerH);
     rig.wrap.position.set(playerX, groundY(playerX), 0);
@@ -1784,6 +1805,12 @@ export function createKidsWorld(
     }
   }
 
+  // Declared before `ready` (rather than down by tick()/dispose(), where it
+  // conceptually belongs) so the checks inside `ready` and its helpers —
+  // reached only after an await, always after this whole function's
+  // synchronous body including this line has run — don't trip TypeScript's
+  // same-scope temporal-dead-zone check.
+  let disposed = false;
   const ready = (async () => {
     // Load the shared movement/idle clips first so every hero can play them.
     if (theme.animationUrls) {
@@ -1803,6 +1830,12 @@ export function createKidsWorld(
       }
     }
     await setPlayer(theme.defaultPlayer);
+    if (disposed) {
+      // Torn down mid-load: setPlayer already no-opped, and every step below
+      // (herd, travellers, sheep, scenery, sky) only ever adds to a scene
+      // that's already been disposed. Stop here rather than churn through it.
+      return;
+    }
 
     const calm = (clips: THREE.AnimationClip[]) =>
       clips.find((c) => /idle|stand|eat|graze/i.test(c.name)) ??
@@ -1838,6 +1871,9 @@ export function createKidsWorld(
         );
       } catch {
         return; // a single missing companion never breaks the world
+      }
+      if (gltf == null) {
+        return;
       }
       const wrap = fitToHeight(gltf.scene, h);
       wrap.position.set(x, surfaceY(x, z), z);
@@ -2123,6 +2159,9 @@ export function createKidsWorld(
       } catch {
         continue; // skip a missing scenery set rather than break the build
       }
+      if (gltf == null) {
+        continue;
+      }
       const variants = [...gltf.scene.children];
       for (let i = 0; i < count; i++) {
         const v = variants[i % variants.length].clone();
@@ -2189,6 +2228,9 @@ export function createKidsWorld(
     if (trueNight && plan.deadGroves + plan.deadScatter > 0) {
       try {
         const dead = await loadModel(`${ASSETS}/models/nature/MegaDead.glb`);
+        if (dead == null) {
+          throw new Error("disposed");
+        }
         const variants = [...dead.scene.children];
         const plant = (x: number, z: number, big: boolean) => {
           const wrap = placeVariant(
@@ -2269,7 +2311,6 @@ export function createKidsWorld(
 
   // ── loop ───────────────────────────────────────────────────────────────
   const clock = new THREE.Clock();
-  let disposed = false;
   function tick() {
     if (disposed) {
       return;
