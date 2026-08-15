@@ -1,19 +1,20 @@
 import { join } from "node:path";
 
-// Webpack (unlike the server, see keylearn-config/lib/env.ts) never loaded
-// dotenv files on its own — every one of these constants silently fell back
-// to its unset default unless the shell invoking `npx webpack` happened to
-// export it. The repo-root .env files are checked first, so the same .env
-// that already configures the server (SUPPORT_URL and friends) also drives
-// the build, and a plain `npm run build-dev` picks it up with no special
-// exports required.
-const repoRoot = join(import.meta.dirname, "..", "..");
+// Mirrors keylearn-config/lib/env.ts's Env.getFiles() precedence: webpack
+// (unlike the server) never loaded dotenv files on its own, so every one of
+// these constants silently fell back to unset unless the shell invoking
+// `npx webpack` happened to export it. Checking the same files the server
+// reads means a plain `npm run build`/`build-dev` picks up local .env or
+// production's /etc/keylearn/env with no special exports required, in dev
+// or prod alike.
 const nodeEnv = process.env.NODE_ENV || "development";
 
 for (const path of [
   // First definition wins, so list the paths in the reversed order.
-  join(repoRoot, `.env.${nodeEnv}`),
-  join(repoRoot, ".env"),
+  join(process.cwd(), `.env.${nodeEnv}`),
+  join(process.cwd(), ".env"),
+  `/etc/keylearn/env.${nodeEnv}`,
+  `/etc/keylearn/env`,
   join(import.meta.dirname, "lib", "config-env"),
   join(import.meta.dirname, "lib", "config-env.example"),
 ]) {
