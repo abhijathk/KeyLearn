@@ -33,7 +33,7 @@
   "about.version.h": "Version",
   "about.version.p": "You’re running KeyLearn <em>v{version}</em>. Each release bumps this number so you always know which build you’re on. <a>See what changed</a>.",
   "about.why.h": "Why KeyLearn exists",
-  "about.why.p": "Typing well is a quiet superpower, and KeyLearn teaches it the encouraging way — short sessions, honest feedback, and steady progress you can feel. It began in 2026, built on keybr, an open-source typing tutor that had already figured out the hard part: adapting to the keys that slow you down. From there it grew into a typing tutor for the whole family — a playful dino-run world for kids, per-learner household profiles, age-aware pacing, and support for many languages.",
+  "about.why.p": "Typing well is a quiet superpower, and KeyLearn teaches it the encouraging way — short sessions, honest feedback, and steady progress you can feel. The core idea — adapting to the keys that slow you down — comes from keybr, an open-source typing engine, and grew from there into a typing tutor for the whole family: a playful dino-run world for kids, per-learner household profiles, age-aware pacing, and support for many languages.",
   "accessibility.dateline": "Plain English · Reviewed August 2026",
   "accessibility.five.1": "<em>Calm.</em> Nothing moves, nothing counts, nothing is timed. A missed day does not break the run.",
   "accessibility.five.2": "<em>Fewer things at once.</em> Practice opens with the words and the keyboard, and nothing else asking to be looked at.",
