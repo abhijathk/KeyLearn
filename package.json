@@ -17,6 +17,7 @@
   "scripts": {
     "build": "env NODE_ENV=production webpack",
     "build-dev": "env NODE_ENV=development webpack",
+    "check-changelog": "node scripts/check-changelog.mjs",
     "check-messages": "node scripts/check-messages.mjs",
     "clean": "lage clean --no-cache",
     "compile": "lage compile --no-cache",
