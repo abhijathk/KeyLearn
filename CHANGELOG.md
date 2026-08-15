@@ -5,6 +5,22 @@ document for the in-app release notes shown from the About page — keep
 `packages/page-static/lib/release-notes.ts` in sync whenever this file
 changes.
 
+## 01.02.00 — 2026-08-15 06:40 UTC
+
+### Added
+
+- A contact card on the About page's Version section, linking to
+  `support@keylearn.org`.
+- A real banner image (light and dark) on the "Create a free account"
+  prompt, replacing its plain wordmark header.
+
+### Fixed
+
+- `support@keylearn.org` can now receive mail. MX, SPF, and DKIM records
+  published for the domain via an existing Google Workspace subscription;
+  the address was previously advertised in the footer and privacy policy
+  but bounced everything sent to it.
+
 ## 01.01.01 — 2026-08-15 01:38 UTC
 
 ### Fixed

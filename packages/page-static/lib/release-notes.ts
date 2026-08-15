@@ -12,6 +12,15 @@ export type ReleaseNote = {
 // surface, and 54-locale translation churn on every release isn't worth it.
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    version: "01.02.00",
+    date: "2026-08-15T06:40:52Z",
+    changes: [
+      "Added a contact card to the About page's Version section — support@keylearn.org now actually receives mail, so it's easy to find.",
+      "Redesigned the “Create a free account” prompt with a real banner image, in both light and dark versions, replacing the plain wordmark header.",
+      "support@keylearn.org can now receive mail — it previously bounced everything sent to it.",
+    ],
+  },
+  {
     version: "01.01.01",
     date: "2026-08-15T01:38:00Z",
     changes: [
