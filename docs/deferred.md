@@ -104,6 +104,34 @@ Squarespace's "Email Security" preset — a null `v=DKIM1; p=` key, and
 `v=spf1 -all` authorising nobody — has been deleted and replaced with custom
 records.
 
+## Microsoft mail lands in Junk
+
+**Status: delivered and authenticated, filtered anyway — expected for a new domain.**
+
+Verified 2026-08-15: mail to an Outlook/Hotmail address arrives and passes
+DMARC, but lands in Junk rather than the inbox. Not a code or DNS bug —
+Microsoft weighs sender reputation and send history heavily on top of
+SPF/DKIM/DMARC, and `keylearn.org` has almost none yet. Two contributing
+factors on top of that, worth fixing when the Google Workspace SPF change
+above happens anyway:
+
+- DMARC currently only passes via the **DKIM** leg — Brevo's envelope sender
+  (`Return-Path`) doesn't align with `keylearn.org` under the strict `aspf=s`
+  policy, so SPF-alignment fails and only DKIM saves the DMARC check. Still a
+  pass, but a weaker signal to aggressive filters than a double pass.
+- Sending through Brevo's shared IP pool ties reputation partly to other
+  Brevo customers on the same IPs.
+
+What actually helps, roughly in order of effort: mark the test messages "Not
+junk" / add `support@keylearn.org` to Safe Senders (trains that mailbox
+specifically); keep sending a steady trickle of real transactional mail
+rather than bursts, since reputation builds over days/weeks of consistent
+legitimate volume; check Brevo's dashboard for domain/sender reputation
+stats; consider Brevo's paid dedicated-IP add-on if this needs to improve
+faster than organic warm-up. Re-check once Google Workspace mail is live —
+`support@keylearn.org` will also send from Google's infrastructure, which
+carries its own (generally stronger) reputation with Microsoft.
+
 ## The rest of the accessibility work (tier 3)
 
 **Status: two of the three built, the third argued against.**
@@ -139,8 +167,3 @@ translation surface across 55 locales, and the second version would drift out
 of date the moment anyone edited the first. Where the current wording is too
 dense, the honest fix is to rewrite that line once, for everybody — a copy
 pass, not a setting.
-
-## Also outstanding
-
-`APP_URL` is `http://localhost:4000/`, so links in real emails point at
-localhost. This must change before any deployment.

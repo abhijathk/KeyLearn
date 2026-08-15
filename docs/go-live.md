@@ -260,22 +260,23 @@ watched the same check pass silently. `config-check.test.ts` also passes
 
 ## 6. Verify after deploying
 
-- [ ] Sign in with Google and with Facebook, both a new account and an existing one.
-      **Needs you** — blocked on Section 4's OAuth redirect URIs, which need
-      the Google Cloud Console / Meta for Developers, no access from here.
-- [ ] Trigger a magic link, a verification code, and an account-deletion code.
+- [x] Sign in with Google and with Facebook, both a new account and an existing one.
+      Verified 2026-08-15 — both providers work for a new and an existing
+      account on production.
+- [x] Trigger a magic link, a verification code, and an account-deletion code.
       **Open one and check the links point at the production host, not localhost.**
-      **Needs you** — this sends real mail and needs an inbox to check the
-      link in; didn't want to fire real email or create a live account
-      unsupervised. `APP_URL=https://keylearn.org/` is correctly set, so the
-      generated links should be right, but that's inference from config, not
-      a live-observed link.
-- [ ] Complete an account deletion with each configured factor (emailed code,
+      Verified 2026-08-15 — emailed links correctly point at
+      `https://keylearn.org/`, not localhost.
+- [x] Complete an account deletion with each configured factor (emailed code,
       passkey, authenticator, password) on a throwaway account.
-      **Needs you** — same reasoning as above.
-- [ ] Send mail to a Microsoft address (Outlook/Hotmail) as well as Gmail —
+      Verified 2026-08-15 — deletion succeeds with every configured factor.
+- [x] Send mail to a Microsoft address (Outlook/Hotmail) as well as Gmail —
       Microsoft enforces DMARC far more strictly.
-      **Needs you** — needs a real Microsoft inbox to check.
+      Verified 2026-08-15 — mail is delivered and authenticates (DMARC
+      passes on the DKIM leg), but lands in Junk. Expected for a brand-new
+      sending domain on a shared ESP IP pool with no send history yet — see
+      "Microsoft mail lands in Junk" in `deferred.md` for why and what
+      improves it over time.
 - [x] Confirm the session cookie carries `Secure` and `HttpOnly`.
       Verified in code (`session.ts`): `secure: Env.getBoolean("COOKIE_SECURE", true)`
       and `httpOnly: Env.getBoolean("COOKIE_HTTP_ONLY", true)`, and
@@ -295,5 +296,6 @@ watched the same check pass silently. `config-check.test.ts` also passes
       component for 500. **Now also confirmed live in production**: a
       request to a nonexistent path on `https://keylearn.org/` correctly
       returned the branded "404 - Not Found" page, not a framework default.
-- [ ] Practise a lesson end to end and confirm the result is saved and appears in
+- [x] Practise a lesson end to end and confirm the result is saved and appears in
       the profile.
+      Verified 2026-08-15 on production.
