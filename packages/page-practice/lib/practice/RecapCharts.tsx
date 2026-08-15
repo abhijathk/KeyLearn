@@ -154,8 +154,16 @@ export const AlphabetGrid = memo(function AlphabetGrid({
   readonly keys: readonly LessonKey[];
   readonly focused: LessonKey | null;
 }): ReactNode {
+  // Fixed at 2 rows: some scripts have 50+ letters, and the card can't grow
+  // taller without breaking alignment with its siblings, so extra letters
+  // shrink the tiles instead (more columns) rather than adding rows.
+  const columns = Math.max(13, Math.ceil(keys.length / 2));
   return (
-    <span className={styles.alpha} aria-hidden={true}>
+    <span
+      className={styles.alpha}
+      style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+      aria-hidden={true}
+    >
       {keys.map((key) => (
         <i
           key={String(key.letter.codePoint)}

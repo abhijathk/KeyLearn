@@ -98,6 +98,8 @@
 
 .alpha {
   display: grid;
+  // Column count is set inline per-alphabet (AlphabetGrid computes it from
+  // the letter count); this is just a fallback if the style is ever absent.
   grid-template-columns: repeat(13, 1fr);
   gap: 0.16rem;
   inline-size: 100%;
