@@ -1,23 +1,96 @@
 @import "@keylearn/widget/lib/index.less";
 
-.list {
+// Rail + pane, in the same shape as the account window: a fixed-size dialog
+// that never grows as more releases pile up — the rail scrolls through
+// versions, the pane scrolls through one release's own changes.
+.layout {
+  display: grid;
+  grid-template-columns: 10.5rem 1fr;
+  block-size: 100%;
+  min-block-size: 0;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+}
+
+.rail {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 0.15rem;
+  padding: 0.9rem 0.6rem 0.8rem;
+  border-inline-end: 1px solid var(--primary-d2);
+  background: color-mix(in oklab, var(--primary-d2) 32%, var(--primary-l1));
+  overflow-y: auto;
+}
+
+.railLabel {
+  margin: 0.3rem 0.5rem 0.6rem;
+  color: var(--text-color-f2);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.railList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.entry {
-  padding-block-end: 1.1rem;
-  border-block-end: 1px dashed
-    color-mix(in oklab, var(--text-color) 15%, transparent);
+.railItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  inline-size: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
 
-  &:last-child {
-    padding-block-end: 0;
-    border-block-end: none;
+  &:hover {
+    color: var(--text-color);
+    background: color-mix(in srgb, var(--text-color) 5%, transparent);
   }
+}
+
+.railItemOn {
+  color: var(--accent-d1);
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
+
+  &:hover {
+    color: var(--accent-d1);
+    background: color-mix(in oklab, var(--accent) 16%, transparent);
+  }
+}
+
+.railVersion {
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.railDate {
+  color: color-mix(in oklab, currentColor 55%, transparent);
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pane {
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.paneScroll {
+  block-size: 100%;
+  padding: 1.5rem 1.7rem;
+  overflow-y: auto;
 }
 
 .entryHead {
@@ -25,12 +98,12 @@
   gap: 0.6rem;
   align-items: baseline;
   justify-content: space-between;
-  margin-block-end: 0.5rem;
+  margin-block-end: 1rem;
 }
 
 .version {
   color: var(--accent);
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 750;
 }
 
@@ -43,7 +116,7 @@
 .changes {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.55rem;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -52,8 +125,8 @@
     position: relative;
     padding-inline-start: 0.9rem;
     color: var(--text-color-f1);
-    font-size: 0.8rem;
-    line-height: 1.5;
+    font-size: 0.82rem;
+    line-height: 1.55;
 
     &::before {
       content: "—";
