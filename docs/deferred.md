@@ -48,29 +48,30 @@ page names the target tenant and is the fastest way to tell those apart.
 
 ## support@keylearn.org cannot receive mail
 
-**Status: live risk, not merely deferred.**
+**Status: resolved 2026-08-15.**
 
-`keylearn.org` publishes no MX records, so the address accepts nothing. It works
-only as a Brevo *sending* identity. The `support`, `r.support` and `img.support`
-CNAMEs are Brevo's branded sending and tracking hosts — `support.keylearn.org`
-the hostname is unrelated to `support@keylearn.org` the mailbox, and no CNAME
-creates one.
+`keylearn.org` published no MX records, so the address accepted nothing —
+it worked only as a Brevo *sending* identity. Fixed using an existing paid
+Google Workspace subscription rather than a new one: `keylearn.org` added
+as an alias domain (domain ownership was already verified via the existing
+`google-site-verification=` TXT — Workspace won't let you create a user on
+an unverified domain, and a user had in fact already been created earlier),
+`support@keylearn.org` added as an alternate email on an existing Workspace
+user rather than a whole separate mailbox/license, MX and SPF published,
+DKIM generated and published. All three DNS records verified live via
+`dig`.
 
-The address is nevertheless printed in the footer and in the privacy policy's
-data-rights section (commit `981ddc1c`). Until MX exists, a user exercising a
-stated data right gets a bounce. Either finish the mailbox or take the address
-back out of the UI.
+**One real mistake caught along the way**: the MX record was first created
+with Name `q` instead of `@` (root) — Cloudflare happily saved
+`q.keylearn.org MX smtp.google.com`, which resolves and looks correct in
+the dashboard list at a glance, but does nothing for the actual domain,
+since mail delivery looks up MX at the apex. Worth double-checking the
+Name column specifically (not just Type and Content) on any DNS record
+meant to apply to the bare domain.
 
-Google Workspace was chosen. Outstanding:
-
-1. Create the Workspace account with `support` as the admin user.
-2. Add Google's domain-verification TXT **alongside** the existing
-   `google-site-verification=` record, not replacing it.
-3. `MX @ priority 1 → smtp.google.com` (one record; the five-record
-   `ASPMX.L.GOOGLE.COM` set is legacy).
-4. **Update SPF to include Google**, see below.
-5. Generate DKIM in Admin console → Gmail → Authenticate email, publish at
-   `google._domainkey`, then Start authentication.
+DKIM authentication started in Admin console → Gmail → Authenticate email
+2026-08-15, now that the `google._domainkey` TXT record is live. Nothing
+left outstanding on this item.
 
 ### The SPF change is not optional
 

@@ -197,12 +197,13 @@ watched the same check pass silently. `config-check.test.ts` also passes
       Left unset, as recommended — single server. Same treatment given to
       `TOTP_ENCRYPTION_KEY` (added this session, not in the original doc,
       same single-server reasoning).
-- [ ] `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` — the adaptive CAPTCHA is
+- [x] `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` — the adaptive CAPTCHA is
       disabled entirely while the secret is unset. Worth enabling on a public
       deployment.
-      Left blank for now — needs a Turnstile widget created in the Cloudflare
-      dashboard to get real keys. Optional, safe to add later since the
-      feature just stays off until set.
+      Confirmed 2026-08-15: deliberately left unset for phase 1, not an
+      oversight — needs a Turnstile widget created in the Cloudflare
+      dashboard to get real keys, optional, and the feature just stays off
+      until set, so it doesn't block go-live.
 - [x] `BREACH_CHECK=true` (already the default).
       Set explicitly in the file for the same reason as `MULTIPLAYER_ENABLED`.
 
@@ -239,20 +240,36 @@ watched the same check pass silently. `config-check.test.ts` also passes
       `https://keylearn.org/account`, the actual self-service page where a
       signed-in user can delete their account through any configured factor
       — a stronger answer than pointing at prose in the privacy policy.
-- [ ] Microsoft sign-in is deferred — see `deferred.md`. The button stays hidden
+- [x] Microsoft sign-in is deferred — see `deferred.md`. The button stays hidden
       while `AUTH_MICROSOFT_CLIENT_ID` is empty, so nothing breaks by omitting it.
+      Confirmed 2026-08-15: deliberately deferred to phase 2, not an
+      oversight — code is complete and tested, blocked only on an Azure app
+      registration (see `deferred.md` for the exact credentials needed and
+      why setup stalled).
 
 ## 5. Mail
 
-- [ ] `MX @ priority 1 → smtp.google.com` once Google Workspace exists, so
+- [x] `MX @ priority 1 → smtp.google.com` once Google Workspace exists, so
       `support@keylearn.org` can receive. **It is printed in the footer and the
       privacy policy today and bounces everything.**
-- [ ] SPF must authorise Google as well as Brevo once replies are sent from
+      Live 2026-08-15: Workspace set up with `keylearn.org` as an alias
+      domain, `support@keylearn.org` added as an alternate email on an
+      existing user, MX published at the apex. Verified via `dig`:
+      `1 smtp.google.com.`. One real mistake caught and fixed along the way —
+      the record was first created at `q.keylearn.org` instead of the apex,
+      which would have silently done nothing for the actual domain.
+- [x] SPF must authorise Google as well as Brevo once replies are sent from
       Workspace:
       `v=spf1 include:spf.brevo.com include:_spf.google.com ~all`.
       Without it, DMARC `p=reject` rejects your own replies.
-- [ ] Google DKIM published at `google._domainkey`, then *Start authentication*
+      Live 2026-08-15, verified via `dig`.
+- [x] Google DKIM published at `google._domainkey`, then *Start authentication*
       in the Admin console.
+      TXT record live 2026-08-15, verified via `dig` (resolves as two
+      concatenated TXT strings, which is normal for a key this size).
+      **Still needs you**: click *Start authentication* in Admin console →
+      Gmail → Authenticate email now that the record is live — that's what
+      actually turns DKIM signing on.
 - [x] Confirm `brevo1`/`brevo2._domainkey` and `_dmarc` survive any DNS move.
       Reverified 2026-08-15 via `dig`: both DKIM selectors resolve to
       `brevo.com` CNAMEs with valid keys, DMARC is `p=reject; sp=reject`, and
