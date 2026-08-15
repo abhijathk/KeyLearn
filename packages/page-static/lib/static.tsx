@@ -48,7 +48,7 @@ function Sect({ children }: { readonly children: ReactNode }) {
 }
 
 // Bump on every release. Format: MAJOR.MINOR.PATCH, zero-padded.
-export const APP_VERSION = "01.01.00";
+export const APP_VERSION = "01.01.01";
 
 export function AboutPage() {
   const { formatMessage } = useIntl();

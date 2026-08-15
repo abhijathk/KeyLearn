@@ -5,6 +5,27 @@ document for the in-app release notes shown from the About page — keep
 `packages/page-static/lib/release-notes.ts` in sync whenever this file
 changes.
 
+## 01.01.01 — 2026-08-15 01:38 UTC
+
+### Fixed
+
+- The "your alphabet" progress grid on the practice recap card could grow
+  taller than the cards next to it for scripts with 50+ letters, since tile
+  size was fixed and only row count scaled with the alphabet. Column count
+  now scales with letter count instead, keeping a fixed height and shrinking
+  the tiles for larger alphabets.
+- The full-screen loading indicator shown while a page's code loads used a
+  0.28s fade-in on top of its 0.2s hold-off delay, so it wasn't fully visible
+  until 0.48s after a page change — a load finishing anywhere in that window
+  showed a barely-visible flicker rather than a readable loading state. The
+  fade is now 0.12s, so it reaches full visibility by 0.32s.
+
+### Internal
+
+- Added `npm run check-changelog`, wired into CI, which fails the build if
+  `APP_VERSION`, `release-notes.ts`, and this file's versions/dates ever
+  drift out of sync.
+
 ## 01.01.00 — 2026-08-15 00:21 UTC
 
 ### Added
@@ -38,6 +59,6 @@ changes.
   regardless of which one language was active. Each locale now loads only
   when it's actually needed.
 
-## 01.00.00 — 2026-08-14
+## 01.00.00 — 2026-08-14 00:00 UTC
 
 - First public release.

@@ -12,6 +12,14 @@ export type ReleaseNote = {
 // surface, and 54-locale translation churn on every release isn't worth it.
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    version: "01.01.01",
+    date: "2026-08-15T01:38:00Z",
+    changes: [
+      "The alphabet-progress grid on the practice recap card could grow taller than its neighbours for scripts with 50+ letters. It now keeps a fixed height and shrinks the tiles instead.",
+      "The full-screen loading indicator shown while a page loads faded in too slowly to ever fully appear for shorter waits, so page changes with a slight delay showed nothing at all. It now reaches full visibility sooner.",
+    ],
+  },
+  {
     version: "01.01.00",
     date: "2026-08-15T00:21:00Z",
     changes: [
