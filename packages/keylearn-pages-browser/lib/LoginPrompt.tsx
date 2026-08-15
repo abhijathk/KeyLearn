@@ -1,8 +1,10 @@
 import { Pages, usePageData } from "@keylearn/pages-shared";
-import { Button, FloatingShell, StrokeIcon } from "@keylearn/widget";
+import { Button, FloatingShell } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
+import loginPromptBanner from "../assets/login-prompt-banner.png";
+import loginPromptBannerLight from "../assets/login-prompt-banner-light.png";
 import * as styles from "./LoginPrompt.module.less";
 
 const LAST_SHOWN_KEY = "keylearn.loginPromptLastShown";
@@ -86,17 +88,15 @@ export function LoginPrompt({ path }: { readonly path: string }): ReactNode {
   return (
     <FloatingShell
       compact={true}
+      hideClose={true}
       onClose={dismiss}
       closeLabel={formatMessage({
         id: "loginPrompt.dismiss",
         defaultMessage: "Continue without an account",
       })}
     >
-      <div className={styles.wordmark} dir="ltr">
-        <StrokeIcon className={styles.glyph} name="keyboard" />
-        <span className={styles.mark}>Key</span>
-        <span className={styles.markAlt}>Learn</span>
-      </div>
+      <img className={styles.banner} src={loginPromptBanner} alt="" />
+      <img className={styles.bannerLight} src={loginPromptBannerLight} alt="" />
       <h1 className={styles.title}>
         <FormattedMessage
           id="loginPrompt.title"

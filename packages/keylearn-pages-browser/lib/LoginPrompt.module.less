@@ -1,29 +1,40 @@
-.wordmark {
-  display: flex;
-  gap: 0;
-  align-items: baseline;
-  justify-content: center;
-  margin-block-end: 0.9rem;
-  font-size: 1.1rem;
-  letter-spacing: -0.02em;
+// Bleeds past the compact window's own padding (1.3rem 1.5rem, set in
+// FloatingShell.module.less) so the banner touches the window's top, left,
+// and right edges — clipped to the window's own rounded corners by its
+// overflow:hidden. Same technique as SupportDialog's banner.
+.banner,
+.bannerLight {
+  display: block;
+  inline-size: calc(100% + 3rem);
+  max-inline-size: none;
+  block-size: auto;
+  margin: -1.3rem -1.5rem 1rem;
 }
 
-.glyph {
-  align-self: center;
-  inline-size: 1.25rem;
-  block-size: 1.25rem;
-  margin-inline-end: 0.4rem;
-  color: var(--accent);
+// The dark banner shows by default; swapped for the light one under the Day
+// theme, and under Auto when the device itself prefers light — same
+// data-color attribute switch used for the code-block ground in
+// Presenter.module.less.
+.bannerLight {
+  display: none;
 }
 
-.mark {
-  color: var(--text-color);
-  font-weight: 700;
+:global(html[data-color="keylearn-day"]) .banner {
+  display: none;
 }
 
-.markAlt {
-  color: var(--text-color-f1);
-  font-weight: 200;
+:global(html[data-color="keylearn-day"]) .bannerLight {
+  display: block;
+}
+
+@media (prefers-color-scheme: light) {
+  :global(html[data-color="auto"]) .banner {
+    display: none;
+  }
+
+  :global(html[data-color="auto"]) .bannerLight {
+    display: block;
+  }
 }
 
 .title {
