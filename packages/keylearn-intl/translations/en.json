@@ -1703,6 +1703,8 @@
   "t_ws_Bullet": "As dots",
   "t_ws_No_whitespace": "Hidden",
   "template.adLabel": "Advertisement",
+  "template.smallScreen.body": "KeyLearn needs room for a full keyboard and your practice text side by side. Please switch to a laptop or desktop to continue.",
+  "template.smallScreen.title": "Made for a bigger screen",
   "terms.account.1": "Accounts are for humans — no bots or automated sign-ups, please.",
   "terms.account.2": "One account per household, with a <em>learner profile</em> for each person in it. You do not need an account each.",
   "terms.account.3": "Accounts are for adults. If you add a profile for a child, you are telling us you are their parent or guardian and that you consent on their behalf — and the profile, its practice and its deletion are yours to control.",

@@ -5,6 +5,14 @@ document for the in-app release notes shown from the About page — keep
 `packages/page-static/lib/release-notes.ts` in sync whenever this file
 changes.
 
+## 01.03.00 — 2026-08-15 09:05 UTC
+
+### Added
+
+- A "made for a bigger screen" message that now shows in place of the app on
+  phones and other screens narrower than 640px, instead of a keyboard and
+  practice layout that never had room to work there.
+
 ## 01.02.00 — 2026-08-15 06:40 UTC
 
 ### Added

@@ -9,6 +9,7 @@ import { showAds } from "./ads.ts";
 import { Header } from "./Header.tsx";
 import { LoginPrompt } from "./LoginPrompt.tsx";
 import { MenuDrawer } from "./MenuDrawer.tsx";
+import { SmallScreenGate } from "./SmallScreenGate.tsx";
 import { SupportDialog } from "./SupportDialog.tsx";
 import * as styles from "./Template.module.less";
 
@@ -176,6 +177,7 @@ export function Template({
       <SupportDialog open={supportOpen} onClose={() => setSupportOpen(false)} />
       <EnvName />
       <CompleteProfileGate />
+      <SmallScreenGate />
     </div>
   );
 }

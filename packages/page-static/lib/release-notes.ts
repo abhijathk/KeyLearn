@@ -12,6 +12,13 @@ export type ReleaseNote = {
 // surface, and 54-locale translation churn on every release isn't worth it.
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    version: "01.03.00",
+    date: "2026-08-15T09:05:00Z",
+    changes: [
+      "KeyLearn needs a real keyboard and enough width for the practice text and keyboard side by side, so it now shows a clear “made for a bigger screen” message on phones and other narrow screens instead of a broken layout.",
+    ],
+  },
+  {
     version: "01.02.00",
     date: "2026-08-15T06:40:52Z",
     changes: [
