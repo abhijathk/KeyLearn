@@ -1,0 +1,65 @@
+@import "@keylearn/widget/lib/index.less";
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.entry {
+  padding-block-end: 1.1rem;
+  border-block-end: 1px dashed
+    color-mix(in oklab, var(--text-color) 15%, transparent);
+
+  &:last-child {
+    padding-block-end: 0;
+    border-block-end: none;
+  }
+}
+
+.entryHead {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-block-end: 0.5rem;
+}
+
+.version {
+  color: var(--accent);
+  font-size: 0.92rem;
+  font-weight: 750;
+}
+
+.date {
+  color: color-mix(in oklab, var(--text-color) 45%, var(--primary));
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.changes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    position: relative;
+    padding-inline-start: 0.9rem;
+    color: var(--text-color-f1);
+    font-size: 0.8rem;
+    line-height: 1.5;
+
+    &::before {
+      content: "—";
+      position: absolute;
+      inset-inline-start: 0;
+      color: color-mix(in oklab, var(--accent) 70%, var(--text-color));
+    }
+  }
+}

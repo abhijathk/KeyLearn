@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { GUIDE_BY_LOCALE } from "./guide-i18n.ts";
+import { loadGuideTranslation } from "./guide-i18n.ts";
 
 // The User Guide is a large prose document. Rather than fragment it into
 // hundreds of react-intl catalog keys, it lives as structured DATA: each
@@ -575,12 +575,9 @@ export function renderRich(text: string): ReactNode {
   );
 }
 
-// Merge a locale's translation over the English doc so any missing field or
-// section silently falls back to English. Matches on the exact locale, then
-// its base language (e.g. "pt-br" → "pt").
-export function guideFor(locale: string): GuideDoc {
-  const base = locale.split("-")[0];
-  const tr = GUIDE_BY_LOCALE[locale] ?? GUIDE_BY_LOCALE[base];
+// Merges a locale's translation over the English doc so any missing field or
+// section silently falls back to English.
+function mergeGuide(tr: GuideTranslation | null): GuideDoc {
   if (tr == null) {
     return GUIDE_EN;
   }
@@ -603,4 +600,15 @@ export function guideFor(locale: string): GuideDoc {
       };
     }),
   };
+}
+
+// Loads a locale's guide translation on demand (see loadGuideTranslation —
+// each locale is its own chunk) and merges it over English. Matches on the
+// exact locale, then its base language (e.g. "pt-br" → "pt").
+export async function guideFor(locale: string): Promise<GuideDoc> {
+  const base = locale.split("-")[0];
+  const tr =
+    (await loadGuideTranslation(locale)) ??
+    (locale !== base ? await loadGuideTranslation(base) : null);
+  return mergeGuide(tr);
 }

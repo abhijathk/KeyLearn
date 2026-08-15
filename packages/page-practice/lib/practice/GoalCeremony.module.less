@@ -266,8 +266,12 @@
 }
 
 .quote {
-  margin: 0.75rem 0.1rem 0.1rem;
+  margin: 0.85rem 0.1rem 0.1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent);
+  border-radius: 0.75rem;
   color: var(--text-color-f1);
+  background: color-mix(in oklab, var(--accent) 7%, transparent);
   font-size: 0.78rem;
   font-style: italic;
   line-height: 1.5;
@@ -276,10 +280,11 @@
 
 .who {
   display: block;
-  margin-block-start: 0.3rem;
-  color: color-mix(in oklab, var(--text-color) 45%, var(--primary));
+  margin-block-start: 0.35rem;
+  color: color-mix(in oklab, var(--accent) 70%, var(--text-color));
   font-size: 0.65rem;
   font-style: normal;
+  letter-spacing: 0.02em;
 }
 
 .actions {

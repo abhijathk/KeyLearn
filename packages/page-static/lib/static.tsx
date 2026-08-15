@@ -1,7 +1,14 @@
 import { supportUrl } from "@keylearn/thirdparties";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { type GuideBlock, guideFor, renderRich } from "./guide-content.tsx";
+import {
+  GUIDE_EN,
+  type GuideBlock,
+  type GuideDoc,
+  guideFor,
+  renderRich,
+} from "./guide-content.tsx";
+import { ReleaseNotesDialog } from "./ReleaseNotesDialog.tsx";
 import * as styles from "./road.module.less";
 
 // The legal pages, written to be read: plain words, honest promises, and the
@@ -41,10 +48,11 @@ function Sect({ children }: { readonly children: ReactNode }) {
 }
 
 // Bump on every release. Format: MAJOR.MINOR.PATCH, zero-padded.
-export const APP_VERSION = "01.00.00";
+export const APP_VERSION = "01.01.00";
 
 export function AboutPage() {
   const { formatMessage } = useIntl();
+  const [notesOpen, setNotesOpen] = useState(false);
   return (
     <div className={styles.paper}>
       <Masthead
@@ -289,10 +297,23 @@ export function AboutPage() {
       <p>
         <FormattedMessage
           id="about.version.p"
-          defaultMessage="You’re running KeyLearn <em>v{version}</em>. Each release bumps this number so you always know which build you’re on."
-          values={{ em, version: APP_VERSION }}
+          defaultMessage="You’re running KeyLearn <em>v{version}</em>. Each release bumps this number so you always know which build you’re on. <a>See what changed</a>."
+          values={{
+            em,
+            version: APP_VERSION,
+            a: (chunks: ReactNode) => (
+              <button
+                type="button"
+                className={styles.inlineLink}
+                onClick={() => setNotesOpen(true)}
+              >
+                {chunks}
+              </button>
+            ),
+          }}
         />
       </p>
+      {notesOpen && <ReleaseNotesDialog onClose={() => setNotesOpen(false)} />}
 
       <div className={styles.foot}>
         <FormattedMessage
@@ -896,9 +917,31 @@ function GuideBlockView({ block }: { readonly block: GuideBlock }): ReactNode {
   );
 }
 
+// Starts on the English doc (already in this bundle as the guaranteed
+// fallback) and swaps in the locale's translation once its chunk arrives, so
+// the page always has something to show rather than a blank first paint.
+function useGuideDoc(locale: string): GuideDoc {
+  const [doc, setDoc] = useState<GuideDoc>(GUIDE_EN);
+
+  useEffect(() => {
+    let cancelled = false;
+    setDoc(GUIDE_EN);
+    guideFor(locale).then((d) => {
+      if (!cancelled) {
+        setDoc(d);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
+
+  return doc;
+}
+
 export function GuidePage() {
   const { locale } = useIntl();
-  const doc = guideFor(locale);
+  const doc = useGuideDoc(locale);
   return (
     <div className={styles.paper}>
       <Masthead kicker={doc.kicker} title={doc.title} dateline={doc.dateline} />
