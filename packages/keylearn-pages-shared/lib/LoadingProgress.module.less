@@ -19,7 +19,12 @@
   justify-content: center;
   pointer-events: none;
   animation-name: motion-fade;
-  animation-duration: @motion-base;
+  // Shorter than @motion-base (0.28s) on purpose: at the generic duration,
+  // full opacity wasn't reached until 0.2s + 0.28s = 0.48s after mount, so any
+  // load that finished in the 0.2-0.48s range only ever faded the loader
+  // partway in — a real, noticeable wait rendered no visible feedback at all.
+  // 0.12s gets it fully visible by 0.32s, matching the delay comment's intent.
+  animation-duration: 0.12s;
   animation-timing-function: @motion-ease;
   animation-delay: 0.2s;
   animation-fill-mode: both;
