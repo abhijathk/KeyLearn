@@ -101,6 +101,206 @@ export function GoalCeremony({
       ? weeklySpeeds[weeklySpeeds.length - 1] - weeklySpeeds[0]
       : 0;
 
+  const stamp = (
+    <div className={styles.stamp}>
+      <FormattedMessage id="goalReport.stamp" defaultMessage="GOAL MET" />
+    </div>
+  );
+
+  const title = (
+    <h1 className={styles.title}>
+      <FormattedMessage
+        id="goalReport.title"
+        defaultMessage="Goal <b>report</b>"
+        values={{ b: (c) => <b>{c}</b> }}
+      />
+    </h1>
+  );
+
+  const metaline = (
+    <div className={styles.metaline}>
+      <FormattedMessage
+        id="goalReport.meta"
+        defaultMessage="{date} · Your goal: {minutes} min a day ✓"
+        values={{
+          date: format(new Date(), {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+          }),
+          minutes: goalMinutes,
+        }}
+      />
+    </div>
+  );
+
+  const stats = (
+    <div className={styles.rows}>
+      <Row
+        label={
+          <FormattedMessage
+            id="goalReport.lessons"
+            defaultMessage="Lessons done"
+          />
+        }
+        value={String(lessons)}
+      />
+      <Row
+        label={
+          <FormattedMessage
+            id="goalReport.time"
+            defaultMessage="Time practised"
+          />
+        }
+        value={formatMinutes(minutes)}
+      />
+      <Row
+        pb={isPersonalBest}
+        label={
+          <FormattedMessage
+            id="goalReport.topSpeed"
+            defaultMessage="Top speed"
+          />
+        }
+        value={formatSpeed(topSpeed)}
+      />
+      <Row
+        label={
+          <FormattedMessage
+            id="goalReport.accuracy"
+            defaultMessage="Accuracy"
+          />
+        }
+        value={`${Math.round(accuracy * 100)}%`}
+      />
+    </div>
+  );
+
+  const trend = weeklySpeeds.length >= 2 && (
+    <>
+      <div className={styles.barsCap}>
+        <span>
+          <FormattedMessage
+            id="goalReport.chart"
+            defaultMessage="Speed · last {n} practice days"
+            values={{ n: weeklySpeeds.length }}
+          />
+        </span>
+        {gain > 0 && <span className={styles.gain}>+{formatSpeed(gain)}</span>}
+      </div>
+      <SpeedChart speeds={weeklySpeeds} />
+    </>
+  );
+
+  const focus = slowestKeys.length > 0 && (
+    <div className={styles.focus}>
+      <span className={styles.focusIcon} aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <circle cx="12" cy="12" r="8.5" />
+          <circle cx="12" cy="12" r="3.4" />
+        </svg>
+      </span>
+      <div className={styles.focusBody}>
+        <span className={styles.focusLead}>
+          <FormattedMessage
+            id="goalReport.focus.lead"
+            defaultMessage="Focus next"
+          />
+        </span>
+        <FormattedMessage
+          id="goalReport.focus.body"
+          defaultMessage="Your slowest keys lately are {keys} — a two-minute drill tomorrow will smooth them out."
+          values={{
+            keys: (
+              <>
+                {slowestKeys.map((k, i) => (
+                  <span key={i} className={styles.keycap}>
+                    {k}
+                  </span>
+                ))}
+              </>
+            ),
+          }}
+        />
+      </div>
+    </div>
+  );
+
+  const encourage =
+    mode === "roll" ? (
+      <p className={styles.encourage}>{formatMessage(copy.roll)}</p>
+    ) : (
+      <p className={`${styles.encourage} ${styles.encourageRest}`}>
+        {formatMessage(copy.restMain)}
+        <span className={styles.encourageSub}>
+          {formatMessage(copy.restSub)}
+        </span>
+      </p>
+    );
+
+  const quote = (
+    <p className={styles.quote}>
+      {"“" + copy.quote.text + "”"}
+      <span className={styles.who}>{"— " + copy.quote.who}</span>
+    </p>
+  );
+
+  const actions = (
+    <div className={styles.actions}>
+      {mode === "roll" ? (
+        <>
+          <button
+            type="button"
+            className={`${styles.btn} ${styles.primary}`}
+            onClick={onContinue}
+          >
+            <svg className={styles.arrow} viewBox="0 0 24 24">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+            <FormattedMessage
+              id="goalReport.keep"
+              defaultMessage="Keep practising"
+            />
+            <span className={styles.kbd}>
+              <FormattedMessage id="goalReport.space" defaultMessage="Space" />
+            </span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.btn} ${styles.ghost}`}
+            onClick={done}
+          >
+            <FormattedMessage id="goalReport.done" defaultMessage="Done" />
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            ref={doneRef}
+            type="button"
+            className={`${styles.btn} ${styles.primary}`}
+            onClick={done}
+          >
+            <FormattedMessage
+              id="goalReport.doneToday"
+              defaultMessage="Done for today"
+            />
+          </button>
+          <button
+            type="button"
+            className={styles.linklike}
+            onClick={onContinue}
+          >
+            <FormattedMessage
+              id="goalReport.keepAnyway"
+              defaultMessage="keep practising anyway"
+            />
+          </button>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div className={styles.overlay}>
       <div
@@ -110,204 +310,20 @@ export function GoalCeremony({
         aria-modal="true"
       >
         <div className={styles.tape} />
-        <div className={styles.inner}>
-          <div className={styles.rcHead}>
-            <h1 className={styles.title}>
-              <FormattedMessage
-                id="goalReport.title"
-                defaultMessage="Goal <b>report</b>"
-                values={{ b: (c) => <b>{c}</b> }}
-              />
-            </h1>
-            <div className={styles.stamp}>
-              <FormattedMessage
-                id="goalReport.stamp"
-                defaultMessage="GOAL MET"
-              />
-            </div>
+        <div className={styles.innerLandscape}>
+          <div className={styles.colLeft}>
+            {title}
+            {metaline}
+            {stats}
+            {trend}
+            {actions}
           </div>
-          <div className={styles.metaline}>
-            <FormattedMessage
-              id="goalReport.meta"
-              defaultMessage="{date} · Your goal: {minutes} min a day ✓"
-              values={{
-                date: format(new Date(), {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                }),
-                minutes: goalMinutes,
-              }}
-            />
-          </div>
-
-          <div className={styles.rows}>
-            <Row
-              label={
-                <FormattedMessage
-                  id="goalReport.lessons"
-                  defaultMessage="Lessons done"
-                />
-              }
-              value={String(lessons)}
-            />
-            <Row
-              label={
-                <FormattedMessage
-                  id="goalReport.time"
-                  defaultMessage="Time practised"
-                />
-              }
-              value={formatMinutes(minutes)}
-            />
-            <Row
-              pb={isPersonalBest}
-              label={
-                <FormattedMessage
-                  id="goalReport.topSpeed"
-                  defaultMessage="Top speed"
-                />
-              }
-              value={formatSpeed(topSpeed)}
-            />
-            <Row
-              label={
-                <FormattedMessage
-                  id="goalReport.accuracy"
-                  defaultMessage="Accuracy"
-                />
-              }
-              value={`${Math.round(accuracy * 100)}%`}
-            />
-          </div>
-
-          {weeklySpeeds.length >= 2 && (
-            <>
-              <hr className={styles.dash} />
-              <div className={styles.barsCap}>
-                <span>
-                  <FormattedMessage
-                    id="goalReport.chart"
-                    defaultMessage="Speed · last {n} practice days"
-                    values={{ n: weeklySpeeds.length }}
-                  />
-                </span>
-                {gain > 0 && (
-                  <span className={styles.gain}>+{formatSpeed(gain)}</span>
-                )}
-              </div>
-              <SpeedChart speeds={weeklySpeeds} />
-            </>
-          )}
-
-          {slowestKeys.length > 0 && (
-            <div className={styles.focus}>
-              <span className={styles.focusIcon} aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <circle cx="12" cy="12" r="8.5" />
-                  <circle cx="12" cy="12" r="3.4" />
-                </svg>
-              </span>
-              <div className={styles.focusBody}>
-                <span className={styles.focusLead}>
-                  <FormattedMessage
-                    id="goalReport.focus.lead"
-                    defaultMessage="Focus next"
-                  />
-                </span>
-                <FormattedMessage
-                  id="goalReport.focus.body"
-                  defaultMessage="Your slowest keys lately are {keys} — a two-minute drill tomorrow will smooth them out."
-                  values={{
-                    keys: (
-                      <>
-                        {slowestKeys.map((k, i) => (
-                          <span key={i} className={styles.keycap}>
-                            {k}
-                          </span>
-                        ))}
-                      </>
-                    ),
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {mode === "roll" ? (
-            <p className={styles.encourage}>{formatMessage(copy.roll)}</p>
-          ) : (
-            <p className={`${styles.encourage} ${styles.encourageRest}`}>
-              {formatMessage(copy.restMain)}
-              <span className={styles.encourageSub}>
-                {formatMessage(copy.restSub)}
-              </span>
-            </p>
-          )}
-
-          <p className={styles.quote}>
-            {"“" + copy.quote.text + "”"}
-            <span className={styles.who}>{"— " + copy.quote.who}</span>
-          </p>
-
-          <div className={styles.actions}>
-            {mode === "roll" ? (
-              <>
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.primary}`}
-                  onClick={onContinue}
-                >
-                  <svg className={styles.arrow} viewBox="0 0 24 24">
-                    <path d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                  <FormattedMessage
-                    id="goalReport.keep"
-                    defaultMessage="Keep practising"
-                  />
-                  <span className={styles.kbd}>
-                    <FormattedMessage
-                      id="goalReport.space"
-                      defaultMessage="Space"
-                    />
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.ghost}`}
-                  onClick={done}
-                >
-                  <FormattedMessage
-                    id="goalReport.done"
-                    defaultMessage="Done"
-                  />
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  ref={doneRef}
-                  type="button"
-                  className={`${styles.btn} ${styles.primary}`}
-                  onClick={done}
-                >
-                  <FormattedMessage
-                    id="goalReport.doneToday"
-                    defaultMessage="Done for today"
-                  />
-                </button>
-                <button
-                  type="button"
-                  className={styles.linklike}
-                  onClick={onContinue}
-                >
-                  <FormattedMessage
-                    id="goalReport.keepAnyway"
-                    defaultMessage="keep practising anyway"
-                  />
-                </button>
-              </>
-            )}
+          <div className={styles.colDivider} />
+          <div className={styles.colRight}>
+            <div className={styles.stampRight}>{stamp}</div>
+            {focus}
+            {encourage}
+            {quote}
           </div>
         </div>
       </div>

@@ -803,6 +803,7 @@
   "lesson.quotes.attribution": "Name the author after each quote",
   "lesson.wordList.custom.placeholder": "Paste your words here — a spelling list, vocabulary, anything. Spaces, commas or new lines between them.",
   "lesson.wordList.useCustom": "Use my own words",
+  "lessonType.books.englishOnly": "Book text is only available in English — switch your keyboard language to English to use it.",
   "lessonType.books.summary": "Real passages from public-domain books.",
   "lessonType.code.summary": "Real code from real frameworks, written to the language’s own standard.",
   "lessonType.curriculum.name": "Classic course",

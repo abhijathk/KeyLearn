@@ -13,7 +13,7 @@
 
 .card {
   position: relative;
-  inline-size: min(21rem, calc(100vi - 2.5rem));
+  inline-size: min(40rem, calc(100vi - 2.5rem));
   border: 1px solid color-mix(in oklab, var(--accent) 22%, var(--primary-d2));
   border-radius: 1.25rem;
   overflow: hidden;
@@ -41,15 +41,39 @@
   opacity: 0.55;
 }
 
-.inner {
-  padding: 1.4rem 1.5rem;
+.innerLandscape {
+  display: flex;
+  gap: 1.3rem;
+  padding: 1.1rem 1.3rem;
 }
 
-.rcHead {
+.colLeft {
   display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+// The stamp sits on its own at the top of the right column, so it needs
+// its own cross-axis alignment in the flex column.
+.stampRight {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-end: 0.3rem;
+}
+
+.colDivider {
+  align-self: stretch;
+  inline-size: 1px;
+  background-color: color-mix(in oklab, var(--text-color) 12%, transparent);
+}
+
+.colRight {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-inline-size: 0;
 }
 
 .title {
@@ -125,13 +149,6 @@
 
 .pb .val {
   color: var(--accent);
-}
-
-.dash {
-  margin: 0.75rem 0;
-  border: none;
-  border-block-start: 1px dashed
-    color-mix(in oklab, var(--text-color) 18%, transparent);
 }
 
 .barsCap {
@@ -292,6 +309,13 @@
   gap: 0.55rem;
   align-items: center;
   margin-block-start: 1rem;
+}
+
+// Pins the primary/secondary buttons to the bottom of the left column,
+// regardless of how tall the stats block above them ends up.
+.colLeft > .actions {
+  margin-block-start: auto;
+  padding-block-start: 0.5rem;
 }
 
 .btn {

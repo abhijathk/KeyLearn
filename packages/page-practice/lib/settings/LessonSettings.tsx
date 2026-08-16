@@ -1,3 +1,4 @@
+import { keyboardProps } from "@keylearn/keyboard";
 import {
   type BooksLesson,
   type CodeLesson,
@@ -14,7 +15,7 @@ import {
 import { LessonLoader } from "@keylearn/lesson-loader";
 import { type Settings, useSettings } from "@keylearn/settings";
 import { SettingTiles } from "@keylearn/widget";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { useIntl } from "react-intl";
 import { BooksLessonSettings } from "./lesson/BooksLessonSettings.tsx";
 import { CodeLessonSettings } from "./lesson/CodeLessonSettings.tsx";
@@ -31,6 +32,28 @@ import * as styles from "./SettingsScreen.module.less";
 export function LessonSettings(): ReactNode {
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
+  // Every book in packages/content-books is English-only (public-domain
+  // English-language novels) — there's no per-language edition to fall
+  // back to, so the source itself has to be unavailable rather than
+  // silently handing back English text under a different keyboard layout.
+  // Matched by id prefix, not `=== Language.EN`, so a regional variant
+  // like British English (id "en-GB") still counts as English rather than
+  // getting disabled for a dialect difference that doesn't affect books.
+  const booksAvailable = settings
+    .get(keyboardProps.language)
+    .id.startsWith("en");
+  // If the layout changes away from English while Book Text is the active
+  // source, don't leave the learner stranded on a now-disabled tile —
+  // fall back to guided practice, the same default a first-time learner
+  // starts on.
+  useEffect(() => {
+    if (
+      !booksAvailable &&
+      settings.get(lessonProps.type) === LessonType.BOOKS
+    ) {
+      updateSettings(settings.set(lessonProps.type, LessonType.GUIDED));
+    }
+  }, [booksAvailable, settings, updateSettings]);
   const sources = [
     {
       label: formatMessage({
@@ -84,6 +107,12 @@ export function LessonSettings(): ReactNode {
         id: "lessonType.books.summary",
         defaultMessage: "Real passages from public-domain books.",
       }),
+      disabled: !booksAvailable,
+      disabledReason: formatMessage({
+        id: "lessonType.books.englishOnly",
+        defaultMessage:
+          "Book text is only available in English — switch your keyboard language to English to use it.",
+      }),
     },
     {
       label: formatMessage({
@@ -127,12 +156,16 @@ export function LessonSettings(): ReactNode {
             settings.set(lessonProps.type, LessonType.ALL.at(index)),
           );
         }}
-        options={sources.map(({ label, description, badge }, index) => ({
-          id: index,
-          label,
-          description,
-          badge,
-        }))}
+        options={sources.map(
+          ({ label, description, badge, disabled, disabledReason }, index) => ({
+            id: index,
+            label,
+            description,
+            badge,
+            disabled,
+            disabledReason,
+          }),
+        )}
       />
       <LessonLoader>
         {(lesson) => (

@@ -177,6 +177,16 @@
   background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
+.tileDisabled {
+  .is-disabled();
+
+  cursor: not-allowed;
+
+  &:hover {
+    border-color: var(--separator-color, rgba(128, 128, 128, 0.2));
+  }
+}
+
 .tileName {
   display: block;
   font-size: 0.82rem;

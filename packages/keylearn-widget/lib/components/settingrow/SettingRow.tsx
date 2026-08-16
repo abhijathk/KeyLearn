@@ -149,6 +149,14 @@ export function SettingTiles<T extends string | number>({
     description?: ReactNode;
     /** A short mark on the tile, for the one or two worth pointing at. */
     badge?: ReactNode;
+    /**
+     * A mode that doesn't apply right now — e.g. book text with a
+     * non-English keyboard layout selected. Still visible (so the option
+     * isn't a mystery), but not selectable, with {@link disabledReason} as
+     * the native tooltip explaining why.
+     */
+    disabled?: boolean;
+    disabledReason?: string;
   }[];
 }): ReactNode {
   return (
@@ -159,9 +167,17 @@ export function SettingTiles<T extends string | number>({
           type="button"
           role="radio"
           aria-checked={value === o.id}
-          className={clsx(styles.tile, value === o.id && styles.tileOn)}
+          disabled={o.disabled}
+          title={o.disabled ? o.disabledReason : undefined}
+          className={clsx(
+            styles.tile,
+            value === o.id && styles.tileOn,
+            o.disabled && styles.tileDisabled,
+          )}
           onClick={() => {
-            onChange(o.id);
+            if (!o.disabled) {
+              onChange(o.id);
+            }
           }}
         >
           <span className={styles.tileName}>
