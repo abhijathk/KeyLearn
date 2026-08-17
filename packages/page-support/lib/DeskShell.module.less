@@ -15,12 +15,16 @@
 
 .nav {
   display: flex;
+  position: sticky;
+  inset-block-start: 0;
   flex: none;
   flex-direction: column;
   inline-size: 13rem;
+  block-size: 100vb;
   padding: 1rem 0.6rem;
   border-inline-end: var(--separator-border);
   background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
+  overflow-y: auto;
 }
 
 .navList {

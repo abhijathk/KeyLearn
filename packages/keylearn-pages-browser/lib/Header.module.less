@@ -98,9 +98,26 @@
   font-weight: 200;
 }
 
-.dashboardAsOf {
-  margin-inline-start: 0.9rem;
+// The desk's own wordmark is followed by the one app it currently manages —
+// a smaller, quieter mark than the "QDesk" logo itself, so the hierarchy
+// reads logo-first, app-second.
+.appDot {
+  margin-inline: 0.3rem;
   color: var(--text-color-f2);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.appName {
+  color: var(--text-color-f1);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.dashboardAsOf {
+  margin-inline-end: 0.6rem;
+  color: var(--text-color-f2);
+  opacity: 0.7;
   font-size: 0.9rem;
   font-weight: 400;
   white-space: nowrap;

@@ -309,6 +309,12 @@ export function Header({
             <StrokeIcon className={styles.glyph} name="headset" />
             <span className={styles.mark}>Q</span>
             <span className={styles.markAlt}>Desk</span>
+            {/* The one app this desk currently manages — a static fact
+                today (see SettingsPage's APPS registry), not yet a live
+                selection, so it's just printed here rather than read from
+                any switcher state. */}
+            <span className={styles.appDot}>.</span>
+            <span className={styles.appName}>KeyLearn</span>
           </span>
         ) : (
           <NavLink
@@ -331,6 +337,9 @@ export function Header({
             {kids && <span className={styles.kidsMark}>Kids</span>}
           </NavLink>
         )}
+        {practice && <PracticeStamp />}
+      </div>
+      <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
         {desk && dashboardAsOf != null && (
           <span className={styles.dashboardAsOf}>
             <FormattedMessage
@@ -347,9 +356,6 @@ export function Header({
             />
           </span>
         )}
-        {practice && <PracticeStamp />}
-      </div>
-      <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
         {streak > 0 && (
           <span
             className={styles.streak}

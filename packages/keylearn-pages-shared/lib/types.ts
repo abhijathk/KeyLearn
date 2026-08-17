@@ -194,6 +194,8 @@ export type SupportTicketDetails = {
   readonly archived: boolean;
   readonly messages: readonly SupportMessageDetails[];
   readonly createdAt: string;
+  /** From the sender's CF-IPCountry header at submission, or null off-Cloudflare. */
+  readonly country: string | null;
 };
 
 /** What kind of announcement a {@link NoticeDetails} is — drives its icon/tone. */
@@ -287,6 +289,30 @@ export type StaffSettingsDetails = {
   readonly requireRevealReason: boolean;
   /** Whether an account's last-login city/IP is shown at all, site-wide. */
   readonly showLastLoginLocation: boolean;
+  /** Tighter row spacing in the Inbox and other ticket lists. */
+  readonly compactDensity: boolean;
+  /** "2h ago" instead of an absolute date/time, wherever the desk shows one. */
+  readonly relativeTimestamps: boolean;
+  /** A small flag next to each ticket, from the sender's CF-IPCountry at submission. */
+  readonly showCountryFlag: boolean;
+  /** Browser notification on a new ticket, separate from the email toggle. */
+  readonly desktopPush: boolean;
+  /** A short chime on a new ticket while the desk tab is open and focused. */
+  readonly soundAlert: boolean;
+  /** Desktop push/sound fire only for flagged tickets, not every new one. */
+  readonly escalationOnly: boolean;
+  /** Which screen opens first when signing in. */
+  readonly defaultLandingPage: "dashboard" | "inbox";
+  /** Force a ticket to "flagged" the second time a guest reopens it. */
+  readonly secondReopenAutoFlag: boolean;
+  /** Auto-close an idle open/waiting ticket after this many days. 0 = off. */
+  readonly autoCloseIdleDays: number;
+  /**
+   * How easily a frustrated tone escalates a ticket. Only meaningful once
+   * the sentiment-reading agent from the pending automation plan is wired
+   * up to read it — stored now so the setting's shape exists ahead of that.
+   */
+  readonly sentimentSensitivity: "mild" | "moderate" | "strict";
 };
 
 /**

@@ -32,11 +32,26 @@ export class StaffSettings extends TimestampMixin(Model) {
       overdueHours: { type: "integer" },
       requireRevealReason: { type: "boolean" },
       showLastLoginLocation: { type: "boolean" },
+      compactDensity: { type: "boolean" },
+      relativeTimestamps: { type: "boolean" },
+      showCountryFlag: { type: "boolean" },
+      desktopPush: { type: "boolean" },
+      soundAlert: { type: "boolean" },
+      escalationOnly: { type: "boolean" },
+      defaultLandingPage: { type: "string", enum: ["dashboard", "inbox"] },
+      secondReopenAutoFlag: { type: "boolean" },
+      autoCloseIdleDays: { type: "integer" },
+      sentimentSensitivity: {
+        type: "string",
+        enum: ["mild", "moderate", "strict"],
+      },
     },
   } satisfies JSONSchema;
 
   static readonly defaultConfidenceThreshold = 85;
   static readonly defaultOverdueHours = 48;
+  static readonly defaultAutoCloseIdleDays = 0;
+  static readonly defaultSentimentSensitivity = "moderate" as const;
 
   static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
     table.increments("id").primary();
@@ -58,6 +73,26 @@ export class StaffSettings extends TimestampMixin(Model) {
       .defaultTo(StaffSettings.defaultOverdueHours);
     table.boolean("require_reveal_reason").notNullable().defaultTo(true);
     table.boolean("show_last_login_location").notNullable().defaultTo(true);
+    table.boolean("compact_density").notNullable().defaultTo(false);
+    table.boolean("relative_timestamps").notNullable().defaultTo(false);
+    table.boolean("show_country_flag").notNullable().defaultTo(false);
+    table.boolean("desktop_push").notNullable().defaultTo(false);
+    table.boolean("sound_alert").notNullable().defaultTo(false);
+    table.boolean("escalation_only").notNullable().defaultTo(false);
+    table
+      .string("default_landing_page", 16)
+      .notNullable()
+      .defaultTo("dashboard");
+    table.boolean("second_reopen_auto_flag").notNullable().defaultTo(false);
+    table
+      .integer("auto_close_idle_days")
+      .unsigned()
+      .notNullable()
+      .defaultTo(StaffSettings.defaultAutoCloseIdleDays);
+    table
+      .string("sentiment_sensitivity", 16)
+      .notNullable()
+      .defaultTo(StaffSettings.defaultSentimentSensitivity);
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
   }
@@ -73,8 +108,39 @@ export class StaffSettings extends TimestampMixin(Model) {
   overdueHours?: number;
   requireRevealReason?: number | boolean;
   showLastLoginLocation?: number | boolean;
+  compactDensity?: number | boolean;
+  relativeTimestamps?: number | boolean;
+  showCountryFlag?: number | boolean;
+  desktopPush?: number | boolean;
+  soundAlert?: number | boolean;
+  escalationOnly?: number | boolean;
+  defaultLandingPage?: "dashboard" | "inbox";
+  secondReopenAutoFlag?: number | boolean;
+  autoCloseIdleDays?: number;
+  sentimentSensitivity?: "mild" | "moderate" | "strict";
   createdAt?: Date;
   updatedAt?: Date;
+
+  static readonly #newRowDefaults = {
+    notifyNew: true,
+    quietFrom: null,
+    quietTo: null,
+    awayUntil: null,
+    confidenceThreshold: StaffSettings.defaultConfidenceThreshold,
+    overdueHours: StaffSettings.defaultOverdueHours,
+    requireRevealReason: true,
+    showLastLoginLocation: true,
+    compactDensity: false,
+    relativeTimestamps: false,
+    showCountryFlag: false,
+    desktopPush: false,
+    soundAlert: false,
+    escalationOnly: false,
+    defaultLandingPage: "dashboard" as const,
+    secondReopenAutoFlag: false,
+    autoCloseIdleDays: StaffSettings.defaultAutoCloseIdleDays,
+    sentimentSensitivity: StaffSettings.defaultSentimentSensitivity,
+  };
 
   /** Hands back usable settings even before this staffer has ever saved any. */
   static async getForUser(userId: number): Promise<StaffSettings> {
@@ -82,17 +148,7 @@ export class StaffSettings extends TimestampMixin(Model) {
     if (existing != null) {
       return existing;
     }
-    return StaffSettings.fromJson({
-      userId,
-      notifyNew: true,
-      quietFrom: null,
-      quietTo: null,
-      awayUntil: null,
-      confidenceThreshold: StaffSettings.defaultConfidenceThreshold,
-      overdueHours: StaffSettings.defaultOverdueHours,
-      requireRevealReason: true,
-      showLastLoginLocation: true,
-    });
+    return StaffSettings.fromJson({ userId, ...StaffSettings.#newRowDefaults });
   }
 
   static async upsert(
@@ -107,6 +163,16 @@ export class StaffSettings extends TimestampMixin(Model) {
       readonly overdueHours?: number;
       readonly requireRevealReason?: boolean;
       readonly showLastLoginLocation?: boolean;
+      readonly compactDensity?: boolean;
+      readonly relativeTimestamps?: boolean;
+      readonly showCountryFlag?: boolean;
+      readonly desktopPush?: boolean;
+      readonly soundAlert?: boolean;
+      readonly escalationOnly?: boolean;
+      readonly defaultLandingPage?: "dashboard" | "inbox";
+      readonly secondReopenAutoFlag?: boolean;
+      readonly autoCloseIdleDays?: number;
+      readonly sentimentSensitivity?: "mild" | "moderate" | "strict";
     },
   ): Promise<StaffSettings> {
     const existing = await StaffSettings.query().findOne({ userId });
@@ -129,7 +195,9 @@ export class StaffSettings extends TimestampMixin(Model) {
    * Deliberately unsophisticated, per the plan: whichever staff member's
    * settings were saved most recently, or the hard defaults if nobody has
    * ever saved any — not a real per-team setting, just a "good enough for a
-   * two-person team" stand-in for one.
+   * two-person team" stand-in for one. The desk-wide behaviours among the
+   * newer settings (second-reopen auto-flag, idle auto-close) are read this
+   * same way, for the same reason.
    */
   static async siteDefault(): Promise<StaffSettings> {
     const latest = await StaffSettings.query()
@@ -140,14 +208,7 @@ export class StaffSettings extends TimestampMixin(Model) {
     }
     return StaffSettings.fromJson({
       userId: 0,
-      notifyNew: true,
-      quietFrom: null,
-      quietTo: null,
-      awayUntil: null,
-      confidenceThreshold: StaffSettings.defaultConfidenceThreshold,
-      overdueHours: StaffSettings.defaultOverdueHours,
-      requireRevealReason: true,
-      showLastLoginLocation: true,
+      ...StaffSettings.#newRowDefaults,
     });
   }
 
@@ -169,6 +230,18 @@ export class StaffSettings extends TimestampMixin(Model) {
         this.showLastLoginLocation == null
           ? true
           : Boolean(this.showLastLoginLocation),
+      compactDensity: Boolean(this.compactDensity),
+      relativeTimestamps: Boolean(this.relativeTimestamps),
+      showCountryFlag: Boolean(this.showCountryFlag),
+      desktopPush: Boolean(this.desktopPush),
+      soundAlert: Boolean(this.soundAlert),
+      escalationOnly: Boolean(this.escalationOnly),
+      defaultLandingPage: this.defaultLandingPage ?? "dashboard",
+      secondReopenAutoFlag: Boolean(this.secondReopenAutoFlag),
+      autoCloseIdleDays:
+        this.autoCloseIdleDays ?? StaffSettings.defaultAutoCloseIdleDays,
+      sentimentSensitivity:
+        this.sentimentSensitivity ?? StaffSettings.defaultSentimentSensitivity,
     };
   }
 }

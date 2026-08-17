@@ -1,9 +1,105 @@
-import { Pages, usePageData } from "@keylearn/pages-shared";
-import { type ReactNode, useEffect, useState } from "react";
+import {
+  Pages,
+  type StaffSettingsDetails,
+  usePageData,
+} from "@keylearn/pages-shared";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink, Navigate } from "react-router";
 import * as styles from "./DeskShell.module.less";
 import { SupportService } from "./service.ts";
+
+// Same cadence as the site-notice poller (Template.tsx's NOTICE_POLL_MS) —
+// the one existing precedent for polling in this codebase.
+const NOTIFICATION_POLL_MS = 30_000;
+
+/** A short two-tone chime via Web Audio — no asset file to ship or load. */
+function playChime(): void {
+  try {
+    const Ctx =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (Ctx == null) {
+      return;
+    }
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch {
+    // Autoplay policy or no audio output — nothing useful to do about it.
+  }
+}
+
+/**
+ * Desktop push and/or sound on a new ticket — a poller, not a push
+ * subscription, since nothing here needs to work while the tab itself is
+ * closed (see the note under the Notifications settings card). Mounted
+ * once per desk visit rather than per screen, so switching between
+ * Dashboard/Inbox/etc. doesn't restart the count baseline.
+ */
+function NotificationPoller(): ReactNode {
+  const [settings, setSettings] = useState<StaffSettingsDetails | null>(null);
+  const prevCount = useRef<number | null>(null);
+
+  useEffect(() => {
+    SupportService.getSettings().then(setSettings);
+  }, []);
+
+  useEffect(() => {
+    if (settings == null || (!settings.desktopPush && !settings.soundAlert)) {
+      return;
+    }
+    let cancelled = false;
+    const check = () => {
+      const statuses = settings.escalationOnly
+        ? (["flagged"] as const)
+        : (["open", "flagged"] as const);
+      Promise.all(
+        statuses.map((s) => SupportService.listTickets({ status: s })),
+      )
+        .then((lists) => {
+          if (cancelled) {
+            return;
+          }
+          const count = lists.reduce((n, l) => n + l.length, 0);
+          if (prevCount.current != null && count > prevCount.current) {
+            if (
+              settings.desktopPush &&
+              typeof Notification !== "undefined" &&
+              Notification.permission === "granted"
+            ) {
+              new Notification("QDesk", {
+                body: settings.escalationOnly
+                  ? "A ticket needs escalated attention."
+                  : "A new ticket needs a look.",
+              });
+            }
+            if (settings.soundAlert) {
+              playChime();
+            }
+          }
+          prevCount.current = count;
+        })
+        .catch(() => {});
+    };
+    check();
+    const id = window.setInterval(check, NOTIFICATION_POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [settings]);
+
+  return null;
+}
 
 export type DeskScreen =
   | "dashboard"
@@ -13,8 +109,7 @@ export type DeskScreen =
   | "notices"
   | "audit"
   | "settings"
-  | "about"
-  | "platformSettings";
+  | "about";
 
 type NavEntry = {
   readonly screen: DeskScreen;
@@ -110,11 +205,10 @@ const MAIN_NAV: readonly NavEntry[] = [
   },
 ];
 
-// Separated from MAIN_NAV: neither is day-to-day ticket work, so both sit
-// pinned to the bottom of the nav rather than mixed in with it. This
-// Settings is the desk *platform* — staff access and (once more than one
-// app is assigned to the same staff email) which app is selected — not
-// how the desk behaves, which is MAIN_NAV's own "Settings" now.
+// Separated from MAIN_NAV: not day-to-day ticket work, so it sits pinned to
+// the bottom of the nav rather than mixed in with it. Settings itself lives
+// in MAIN_NAV — it's now a single page with tabs for each app plus a QDesk
+// platform tab, rather than two separate nav entries.
 const BOTTOM_NAV: readonly NavEntry[] = [
   {
     screen: "about",
@@ -124,23 +218,6 @@ const BOTTOM_NAV: readonly NavEntry[] = [
       <svg viewBox="0 0 24 24" aria-hidden={true}>
         <circle cx="12" cy="12" r="9" />
         <path d="M12 11v5.5M12 7.6h0" />
-      </svg>
-    ),
-  },
-  {
-    screen: "platformSettings",
-    path: Pages.deskPlatformSettings.path,
-    label: (
-      <FormattedMessage
-        id="deskNav.platformSettings"
-        defaultMessage="QDesk settings"
-      />
-    ),
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden={true}>
-        <rect x="3" y="4" width="18" height="16" rx="2.5" />
-        <path d="M3 9h18" />
-        <path d="M7.5 13.5h0M11.5 13.5h5" />
       </svg>
     ),
   },
@@ -179,6 +256,7 @@ export function DeskShell({
   }
   return (
     <div className={styles.shell}>
+      <NotificationPoller />
       <nav
         className={styles.nav}
         aria-label={formatMessage({

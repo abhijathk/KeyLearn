@@ -1,5 +1,6 @@
 import {
   type SavedReplyDetails,
+  type StaffRosterEntry,
   type StaffSettingsDetails,
 } from "@keylearn/pages-shared";
 import { Button, confirmStyles as dlg, TextField } from "@keylearn/widget";
@@ -15,11 +16,127 @@ import * as styles from "./SettingsPage.module.less";
 const CONFIDENCE_STEPS = [70, 85, 95] as const;
 const OVERDUE_STEPS = [24, 48, 72] as const;
 
+/**
+ * Every app this desk is built to run support for — not just what's
+ * actually wired up today. Kept in sync by hand with the About page's own
+ * "Apps it supports" list. Each entry becomes its own tab on this page;
+ * a second app only shows up here once it's actually assigned to the
+ * signed-in staff email — today that's just KeyLearn, so there's exactly
+ * one app tab alongside the QDesk platform tab.
+ */
+const APPS: readonly { readonly id: string; readonly name: string }[] = [
+  { id: "keylearn", name: "KeyLearn" },
+];
+
+const QDESK_TAB = "qdesk";
+type SettingsTab = string;
+
 export function SettingsPage(): ReactNode {
   return (
     <DeskShell active="settings">
-      <Settings />
+      <SettingsTabs />
     </DeskShell>
+  );
+}
+
+function SettingsTabs(): ReactNode {
+  const { formatMessage } = useIntl();
+  const [tab, setTab] = useState<SettingsTab>(APPS[0].id);
+  return (
+    <>
+      <div className={common.tabs} style={{ marginBlockEnd: "1.1rem" }}>
+        {APPS.map((app) => (
+          <button
+            key={app.id}
+            type="button"
+            className={clsx(common.tab, tab === app.id && common.tabOn)}
+            onClick={() => setTab(app.id)}
+          >
+            {app.name}
+          </button>
+        ))}
+        <button
+          type="button"
+          className={clsx(common.tab, tab === QDESK_TAB && common.tabOn)}
+          onClick={() => setTab(QDESK_TAB)}
+        >
+          {formatMessage({
+            id: "deskNav.platformSettings",
+            defaultMessage: "QDesk settings",
+          })}
+        </button>
+      </div>
+      {tab === QDESK_TAB ? <QDeskSettings /> : <Settings />}
+    </>
+  );
+}
+
+function QDeskSettings(): ReactNode {
+  return <StaffRoster />;
+}
+
+function StaffRoster(): ReactNode {
+  const { formatMessage } = useIntl();
+  const [roster, setRoster] = useState<StaffRosterEntry[] | null>(null);
+
+  useEffect(() => {
+    SupportService.getStaffRoster().then(setRoster);
+  }, []);
+
+  const statusFor = (entry: StaffRosterEntry): string => {
+    if (!entry.hasPasskey && !entry.hasAuthenticator) {
+      return formatMessage({
+        id: "deskSettings.roster.noFactor",
+        defaultMessage: "No second factor yet",
+      });
+    }
+    const factor = entry.hasPasskey
+      ? formatMessage({
+          id: "deskSettings.roster.passkey",
+          defaultMessage: "Passkey",
+        })
+      : formatMessage({
+          id: "deskSettings.roster.authenticator",
+          defaultMessage: "Authenticator",
+        });
+    const when =
+      entry.lastSignedInAt != null
+        ? formatMessage(
+            {
+              id: "deskSettings.roster.signedIn",
+              defaultMessage: "signed in {when}",
+            },
+            { when: relativeTime(entry.lastSignedInAt) },
+          )
+        : formatMessage({
+            id: "deskSettings.roster.neverSignedIn",
+            defaultMessage: "never signed in",
+          });
+    return `${factor} · ${when}`;
+  };
+
+  return (
+    <div className={common.card} style={{ marginBlockStart: 0 }}>
+      <p className={common.micro}>
+        <FormattedMessage
+          id="deskSettings.roster.title"
+          defaultMessage="Staff — shown but not editable"
+        />
+      </p>
+      {roster == null && (
+        <p className={common.note}>
+          <FormattedMessage id="staffDesk.loading" defaultMessage="Loading…" />
+        </p>
+      )}
+      <div className={common.facts}>
+        {roster?.map((entry) => (
+          <div className={common.fact} key={entry.email}>
+            <span className={common.factK}>{entry.name ?? entry.email}</span>
+            <span className={common.factV}>{statusFor(entry)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -224,7 +341,120 @@ function Settings(): ReactNode {
                 defaultMessage="Changing either is written to the audit log. They're safe settings, but they change what users receive, so they leave a trace."
               />
             </p>
+
+            <span className={common.lbl}>
+              <FormattedMessage
+                id="deskSettings.landingPage"
+                defaultMessage="Open this to"
+              />
+            </span>
+            <div className={common.tabs}>
+              {LANDING_PAGES.map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  className={clsx(
+                    common.tab,
+                    settings.defaultLandingPage === page && common.tabOn,
+                  )}
+                  onClick={() => patch({ defaultLandingPage: page })}
+                >
+                  {page === "dashboard" ? (
+                    <FormattedMessage
+                      id="deskNav.dashboard"
+                      defaultMessage="Dashboard"
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="deskNav.inbox"
+                      defaultMessage="Inbox"
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <span className={common.lbl}>
+              <FormattedMessage
+                id="deskSettings.autoClose"
+                defaultMessage="Auto-close an idle ticket after"
+              />
+            </span>
+            <div className={common.tabs}>
+              {AUTO_CLOSE_STEPS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={clsx(
+                    common.tab,
+                    settings.autoCloseIdleDays === n && common.tabOn,
+                  )}
+                  onClick={() => patch({ autoCloseIdleDays: n })}
+                >
+                  {n === 0 ? (
+                    <FormattedMessage id="t_Off" defaultMessage="Off" />
+                  ) : (
+                    <FormattedMessage
+                      id="deskSettings.autoCloseDays"
+                      defaultMessage="{n}d"
+                      values={{ n }}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <span className={common.lbl}>
+              <FormattedMessage
+                id="deskSettings.sentimentSensitivity"
+                defaultMessage="Escalate on a frustrated tone"
+              />
+            </span>
+            <div className={common.tabs}>
+              {SENTIMENT_SENSITIVITY_STEPS.map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  className={clsx(
+                    common.tab,
+                    settings.sentimentSensitivity === level && common.tabOn,
+                  )}
+                  onClick={() => patch({ sentimentSensitivity: level })}
+                >
+                  {SENTIMENT_LABEL[level]}
+                </button>
+              ))}
+            </div>
+            <p className={common.noteSmall}>
+              <FormattedMessage
+                id="deskSettings.sentimentSensitivityNote"
+                defaultMessage="Only takes effect once Tab is reading tone on tickets — this reserves the setting ahead of that."
+              />
+            </p>
+
+            <div
+              className={styles.switchRow}
+              style={{ marginBlockStart: "0.6rem" }}
+            >
+              <Switch
+                on={settings.secondReopenAutoFlag}
+                onToggle={() =>
+                  patch({
+                    secondReopenAutoFlag: !settings.secondReopenAutoFlag,
+                  })
+                }
+              />
+              <span>
+                <FormattedMessage
+                  id="deskSettings.secondReopen"
+                  defaultMessage="Flag a ticket for a human on its second reopen"
+                />
+              </span>
+            </div>
           </div>
+
+          <DisplaySettings settings={settings} patch={patch} />
+          <NotificationSettings settings={settings} patch={patch} />
 
           <SavedRepliesManager />
         </div>
@@ -234,6 +464,146 @@ function Settings(): ReactNode {
         </div>
       </div>
     </>
+  );
+}
+
+const LANDING_PAGES = ["dashboard", "inbox"] as const;
+const AUTO_CLOSE_STEPS = [0, 3, 7, 14] as const;
+const SENTIMENT_SENSITIVITY_STEPS = ["mild", "moderate", "strict"] as const;
+const SENTIMENT_LABEL: Record<
+  (typeof SENTIMENT_SENSITIVITY_STEPS)[number],
+  string
+> = { mild: "Mild", moderate: "Moderate", strict: "Strict" };
+
+function DisplaySettings({
+  settings,
+  patch,
+}: {
+  readonly settings: StaffSettingsDetails;
+  readonly patch: (input: Partial<StaffSettingsDetails>) => void;
+}): ReactNode {
+  return (
+    <div className={common.card}>
+      <p className={common.micro}>
+        <FormattedMessage
+          id="deskSettings.display.title"
+          defaultMessage="Display"
+        />
+      </p>
+      <div className={styles.switchRow}>
+        <Switch
+          on={settings.compactDensity}
+          onToggle={() => patch({ compactDensity: !settings.compactDensity })}
+        />
+        <span>
+          <FormattedMessage
+            id="deskSettings.display.compact"
+            defaultMessage="Compact list density (Inbox and Accounts)"
+          />
+        </span>
+      </div>
+      <div className={styles.switchRow}>
+        <Switch
+          on={settings.relativeTimestamps}
+          onToggle={() =>
+            patch({ relativeTimestamps: !settings.relativeTimestamps })
+          }
+        />
+        <span>
+          <FormattedMessage
+            id="deskSettings.display.relativeTimestamps"
+            defaultMessage="Relative timestamps (“2h ago”)"
+          />
+        </span>
+      </div>
+      <div className={styles.switchRow}>
+        <Switch
+          on={settings.showCountryFlag}
+          onToggle={() => patch({ showCountryFlag: !settings.showCountryFlag })}
+        />
+        <span>
+          <FormattedMessage
+            id="deskSettings.display.countryFlag"
+            defaultMessage="Country flag on each ticket"
+          />
+        </span>
+      </div>
+      <p className={common.noteSmall}>
+        <FormattedMessage
+          id="deskSettings.display.note"
+          defaultMessage="Yours only — nobody else's view changes. The desk's own light/dark is the moon icon in the header, not a setting here."
+        />
+      </p>
+    </div>
+  );
+}
+
+function NotificationSettings({
+  settings,
+  patch,
+}: {
+  readonly settings: StaffSettingsDetails;
+  readonly patch: (input: Partial<StaffSettingsDetails>) => void;
+}): ReactNode {
+  const toggleDesktopPush = () => {
+    const next = !settings.desktopPush;
+    if (
+      next &&
+      typeof Notification !== "undefined" &&
+      Notification.permission === "default"
+    ) {
+      void Notification.requestPermission();
+    }
+    patch({ desktopPush: next });
+  };
+  return (
+    <div className={common.card}>
+      <p className={common.micro}>
+        <FormattedMessage
+          id="deskSettings.notifications.title"
+          defaultMessage="Notifications"
+        />
+      </p>
+      <div className={styles.switchRow}>
+        <Switch on={settings.desktopPush} onToggle={toggleDesktopPush} />
+        <span>
+          <FormattedMessage
+            id="deskSettings.notifications.desktopPush"
+            defaultMessage="Desktop notification on a new ticket"
+          />
+        </span>
+      </div>
+      <div className={styles.switchRow}>
+        <Switch
+          on={settings.soundAlert}
+          onToggle={() => patch({ soundAlert: !settings.soundAlert })}
+        />
+        <span>
+          <FormattedMessage
+            id="deskSettings.notifications.soundAlert"
+            defaultMessage="Sound while the desk tab is open"
+          />
+        </span>
+      </div>
+      <div className={styles.switchRow}>
+        <Switch
+          on={settings.escalationOnly}
+          onToggle={() => patch({ escalationOnly: !settings.escalationOnly })}
+        />
+        <span>
+          <FormattedMessage
+            id="deskSettings.notifications.escalationOnly"
+            defaultMessage="Only for flagged tickets, not every new one"
+          />
+        </span>
+      </div>
+      <p className={common.noteSmall}>
+        <FormattedMessage
+          id="deskSettings.notifications.note"
+          defaultMessage="Both need the desk open in a tab — neither works while the browser itself is closed. “Email me when something arrives” above is separate and works either way."
+        />
+      </p>
+    </div>
   );
 }
 

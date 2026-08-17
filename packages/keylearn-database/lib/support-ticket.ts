@@ -82,6 +82,12 @@ export class SupportTicket extends TimestampMixin(Model) {
       // default Inbox view, the way the holding queue does, without
       // pretending its resolution changed.
       archived: { type: "boolean" },
+      // Captured once at creation from CF-IPCountry, same rule as
+      // User.signupCountry — never updated again.
+      country: { type: ["string", "null"], minLength: 2, maxLength: 2 },
+      // How many times a guest reply has moved this ticket from closed back
+      // to open — see replyToThread.
+      reopenCount: { type: "integer" },
     },
   } satisfies JSONSchema;
 
@@ -114,6 +120,8 @@ export class SupportTicket extends TimestampMixin(Model) {
     // controller (a UI/behaviour concern, not this model's job) — not here.
     table.timestamp("closed_at").nullable();
     table.boolean("archived").notNullable().defaultTo(false);
+    table.string("country", 2).nullable();
+    table.integer("reopen_count").unsigned().notNullable().defaultTo(0);
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
     table.index(["status", "created_at"]);
@@ -140,6 +148,8 @@ export class SupportTicket extends TimestampMixin(Model) {
   threadTokenHash?: string;
   closedAt?: Date | null;
   archived?: number | boolean;
+  country?: string | null;
+  reopenCount?: number;
   createdAt?: Date;
   updatedAt?: Date;
 
@@ -160,6 +170,7 @@ export class SupportTicket extends TimestampMixin(Model) {
     status = "open",
     confirmed = true,
     ip = null,
+    country = null,
   }: {
     readonly userId?: number | null;
     readonly kind: SupportTicketKind;
@@ -170,6 +181,7 @@ export class SupportTicket extends TimestampMixin(Model) {
     readonly status?: SupportTicketStatus;
     readonly confirmed?: boolean;
     readonly ip?: string | null;
+    readonly country?: string | null;
   }): Promise<{ ticket: SupportTicket; threadToken: string }> {
     const threadToken = Random.string(20);
     const ticket = await SupportTicket.query().insertAndFetch({
@@ -183,6 +195,7 @@ export class SupportTicket extends TimestampMixin(Model) {
       confirmed,
       threadTokenHash: hashToken(threadToken),
       ip,
+      country,
     });
     return { ticket, threadToken };
   }
@@ -349,6 +362,29 @@ export class SupportTicket extends TimestampMixin(Model) {
     });
   }
 
+  /**
+   * Same transition as `setStatus("open")`, plus the reopen counter — used
+   * only by the guest-reply path (a sender writing again after the ticket
+   * had gone closed/waiting), which is the one place "reopen" has a real
+   * meaning. `autoFlag` escalates straight to "flagged" instead of "open"
+   * once the count crosses the threshold, when the site's
+   * second-reopen-auto-flag setting is on.
+   */
+  async reopen({
+    autoFlag,
+  }: {
+    readonly autoFlag: boolean;
+  }): Promise<SupportTicket> {
+    const reopenCount = (this.reopenCount ?? 0) + 1;
+    const status = autoFlag && reopenCount >= 2 ? "flagged" : "open";
+    return await this.$query().patchAndFetch({
+      status,
+      reopenCount,
+      closedAt: null,
+      updatedAt: new Date(),
+    });
+  }
+
   /** Hides (or restores) a ticket from the default Inbox view — its status is untouched either way. */
   async setArchived(archived: boolean): Promise<SupportTicket> {
     return await this.$query().patchAndFetch({
@@ -429,6 +465,7 @@ export class SupportTicket extends TimestampMixin(Model) {
       archived: Boolean(this.archived),
       messages,
       createdAt: new Date(this.createdAt!).toISOString(),
+      country: this.country ?? null,
     };
   }
 }

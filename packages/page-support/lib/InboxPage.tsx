@@ -1,4 +1,8 @@
-import { Pages, type SupportTicketDetails } from "@keylearn/pages-shared";
+import {
+  Pages,
+  type StaffSettingsDetails,
+  type SupportTicketDetails,
+} from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -6,6 +10,7 @@ import { Link as RouterLink } from "react-router";
 import * as common from "./common.module.less";
 import { DeskShell } from "./DeskShell.tsx";
 import * as styles from "./InboxPage.module.less";
+import { relativeTime } from "./relativeTime.ts";
 import { SupportService, type TicketStatus } from "./service.ts";
 
 type Chip = "needs" | "overdue" | "waiting" | "closed" | "archived";
@@ -27,6 +32,13 @@ function age(createdAt: string): string {
     return `${hours}h`;
   }
   return `${Math.floor(hours / 24)}d`;
+}
+
+/** Two-letter country code → its flag emoji, via regional indicator symbols. */
+function countryFlag(code: string): string {
+  return [...code.toUpperCase()]
+    .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
+    .join("");
 }
 
 export function InboxPage(): ReactNode {
@@ -52,6 +64,11 @@ function Inbox(): ReactNode {
     SupportTicketDetails[] | null
   >(null);
   const [archivedCount, setArchivedCount] = useState<number | null>(null);
+  const [settings, setSettings] = useState<StaffSettingsDetails | null>(null);
+
+  useEffect(() => {
+    SupportService.getSettings().then(setSettings);
+  }, []);
 
   const load = () => {
     setLoading(true);
@@ -251,7 +268,10 @@ function Inbox(): ReactNode {
             />
           </p>
         )}
-        {!searching && showing.map((t) => <TicketRow key={t.id} ticket={t} />)}
+        {!searching &&
+          showing.map((t) => (
+            <TicketRow key={t.id} ticket={t} settings={settings} />
+          ))}
       </div>
 
       <div className={common.card} style={{ marginBlockStart: "1rem" }}>
@@ -380,8 +400,10 @@ function sentimentChip(
 
 function TicketRow({
   ticket,
+  settings,
 }: {
   readonly ticket: SupportTicketDetails;
+  readonly settings: StaffSettingsDetails | null;
 }): ReactNode {
   const last = ticket.messages[ticket.messages.length - 1];
   const overdue =
@@ -390,11 +412,19 @@ function TicketRow({
   return (
     <RouterLink
       to={`${Pages.deskThread.path}/${ticket.id}`}
-      className={styles.ticket}
+      className={clsx(
+        styles.ticket,
+        settings?.compactDensity && styles.ticketCompact,
+      )}
     >
       <span className={styles.who}>{initials(ticket.name)}</span>
       <span className={styles.ticketBody}>
         <span className={clsx(styles.subj, common.truncate)}>
+          {settings?.showCountryFlag && ticket.country != null && (
+            <span aria-hidden={true} style={{ marginInlineEnd: "0.35rem" }}>
+              {countryFlag(ticket.country)}
+            </span>
+          )}
           {ticket.subject}
         </span>
         <span className={clsx(styles.prev, common.truncate)}>
@@ -413,7 +443,11 @@ function TicketRow({
         ) : (
           statusChip(ticket.status)
         )}
-        <span className={styles.when}>{age(ticket.createdAt)}</span>
+        <span className={styles.when}>
+          {settings?.relativeTimestamps
+            ? relativeTime(ticket.createdAt)
+            : age(ticket.createdAt)}
+        </span>
       </span>
     </RouterLink>
   );

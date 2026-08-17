@@ -117,3 +117,14 @@
   font-family: var(--value-font-family);
   font-size: 0.66rem;
 }
+
+// Opt-in via the "Compact ticket list" display setting — tighter padding
+// and the preview line dropped, so more rows fit without scrolling.
+.ticketCompact {
+  gap: 0.6rem;
+  padding: 0.35rem 0.7rem;
+
+  .prev {
+    display: none;
+  }
+}

@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Link as RouterLink } from "react-router";
+import { Link as RouterLink, useNavigate } from "react-router";
 import dashboardBannerDark from "./assets/dashboard-banner-dark.png";
 import dashboardBannerLight from "./assets/dashboard-banner-light.png";
 import * as common from "./common.module.less";
@@ -121,12 +121,24 @@ export function DashboardPage(): ReactNode {
 
 function Dashboard(): ReactNode {
   const { formatMessage } = useIntl();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState(false);
   const [signupRange, setSignupRange] = useState<"today" | "14d" | "all">(
     "14d",
   );
   const [signupSmoothness, setSignupSmoothness] = useState(0.5);
+
+  // "/desk" always resolves to this component (see DeskShell's dashboard
+  // nav entry) — a staffer who'd rather land on the Inbox is bounced there
+  // once, right after mount, per their own default-landing-page setting.
+  useEffect(() => {
+    SupportService.getSettings().then((s) => {
+      if (s.defaultLandingPage === "inbox") {
+        navigate(Pages.deskInbox.path, { replace: true });
+      }
+    });
+  }, [navigate]);
 
   useEffect(() => {
     let cancelled = false;

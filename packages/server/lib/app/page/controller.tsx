@@ -376,19 +376,6 @@ export class Controller {
     return this.renderPage(ctx, Pages.deskAbout, intl);
   }
 
-  @http.GET(`${Pages.deskPlatformSettings.path}`)
-  async ["desk-platform-settings"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskPlatformSettings);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskPlatformSettings.path}`)
-  async ["desk-platform-settings-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskPlatformSettings, intl);
-  }
-
   @http.GET(`${Pages.deskSignin.path}`)
   async ["desk-signin"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.deskSignin);

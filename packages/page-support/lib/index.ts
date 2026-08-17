@@ -9,7 +9,6 @@ export * from "./DeskShell.tsx";
 export * from "./InboxPage.tsx";
 export * from "./linkify.tsx";
 export * from "./NoticesPage.tsx";
-export * from "./PlatformSettingsPage.tsx";
 export * from "./service.ts";
 export * from "./SettingsPage.tsx";
 export * from "./StaffSigninPage.tsx";

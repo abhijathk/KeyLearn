@@ -2,6 +2,7 @@ import { inject, injectable } from "@fastr/invert";
 import { Env, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
+  StaffSettings,
   SupportMessage,
   SupportTicket,
 } from "@keylearn/database";
@@ -178,6 +179,91 @@ export class DigestSweep {
     } catch (err: any) {
       Logger.warn(err, "Daily digest sweep failed");
       return false;
+    }
+  }
+}
+
+/** How often the idle-ticket close sweep looks. Daily, same cadence as the holding queue. */
+export function idleCloseSweepIntervalMs(): number {
+  return Env.getNumber("IDLE_CLOSE_SWEEP_HOURS", 24) * 60 * 60 * 1000;
+}
+
+/**
+ * Closes open/waiting tickets nobody has touched in a while — reads the
+ * threshold from `StaffSettings.siteDefault().autoCloseIdleDays`, same
+ * unsophisticated shared-setting convention as confidenceThreshold/
+ * overdueHours. 0 (the default) means the setting is off and this sweep is
+ * a no-op every run rather than something that needs disabling separately.
+ *
+ * "Idle" is measured from the last message in the thread, not the ticket's
+ * own `updatedAt` — replies live in `SupportMessage`, a separate table that
+ * doesn't touch the ticket row, so `updatedAt` alone would under-count how
+ * recently a thread was actually active.
+ */
+@injectable({ singleton: true })
+export class IdleTicketCloseSweep {
+  #timer: NodeJS.Timeout | null = null;
+
+  start(): void {
+    if (this.#timer != null) {
+      return;
+    }
+    const interval = idleCloseSweepIntervalMs();
+    this.#timer = setInterval(() => {
+      void this.runOnce();
+    }, interval);
+    this.#timer.unref?.();
+    Logger.info("Idle-ticket close sweep scheduled", {
+      everyHours: interval / (60 * 60 * 1000),
+    });
+  }
+
+  stop(): void {
+    if (this.#timer != null) {
+      clearInterval(this.#timer);
+      this.#timer = null;
+    }
+  }
+
+  /** One pass. Returns how many idle tickets were closed (0 while the setting is off). */
+  async runOnce(now: number = Date.now()): Promise<number> {
+    try {
+      const siteSettings = await StaffSettings.siteDefault();
+      const idleDays = siteSettings.autoCloseIdleDays ?? 0;
+      if (idleDays <= 0) {
+        return 0;
+      }
+      const cutoff = now - idleDays * DAY_MS;
+      const candidates = await SupportTicket.query()
+        .whereIn("status", ["open", "waiting"])
+        .whereNot("archived", true);
+      let closed = 0;
+      for (const ticket of candidates) {
+        const lastMessage = await SupportMessage.query()
+          .where("ticketId", ticket.id!)
+          .orderBy("createdAt", "desc")
+          .first();
+        const lastActivity = new Date(
+          lastMessage?.createdAt ?? ticket.createdAt!,
+        ).getTime();
+        if (lastActivity > cutoff) {
+          continue;
+        }
+        await ticket.setStatus("closed");
+        await SupportMessage.create({
+          ticketId: ticket.id!,
+          sender: "system",
+          body: `Automatically closed after ${idleDays} days of inactivity.`,
+        });
+        closed++;
+      }
+      if (closed > 0) {
+        Logger.info("Idle-ticket close sweep finished", { closed, idleDays });
+      }
+      return closed;
+    } catch (err: any) {
+      Logger.warn(err, "Idle-ticket close sweep failed");
+      return 0;
     }
   }
 }

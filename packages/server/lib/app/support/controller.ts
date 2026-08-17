@@ -287,6 +287,16 @@ const TSettings = z.object({
     .optional(),
   requireRevealReason: z.boolean().optional(),
   showLastLoginLocation: z.boolean().optional(),
+  compactDensity: z.boolean().optional(),
+  relativeTimestamps: z.boolean().optional(),
+  showCountryFlag: z.boolean().optional(),
+  desktopPush: z.boolean().optional(),
+  soundAlert: z.boolean().optional(),
+  escalationOnly: z.boolean().optional(),
+  defaultLandingPage: z.enum(["dashboard", "inbox"]).optional(),
+  secondReopenAutoFlag: z.boolean().optional(),
+  autoCloseIdleDays: z.coerce.number().int().min(0).max(90).optional(),
+  sentimentSensitivity: z.enum(["mild", "moderate", "strict"]).optional(),
 });
 
 const TAccountReveal = z.object({
@@ -834,6 +844,9 @@ export class Controller {
         : "open"
       : "holding";
 
+    // Same header, same "captured once, never updated" rule as
+    // User.signupCountry — see auth/controller.ts.
+    const country = ctx.request.headers.get("cf-ipcountry");
     const { ticket, threadToken } = await SupportTicket.create({
       userId: ctx.state.user?.id ?? null,
       kind: input.kind,
@@ -844,6 +857,7 @@ export class Controller {
       status,
       confirmed,
       ip: clientIp(ctx),
+      country: country != null && country !== "" ? country : null,
     });
 
     if (confirmed) {
@@ -1074,10 +1088,18 @@ export class Controller {
     await ticket.clearAutoAttribution();
     // A reply from the person means staff needs to look again — "waiting on
     // them" (the chip's meaning from staff's point of view) no longer holds.
-    const updated =
-      ticket.status === "closed" || ticket.status === "waiting"
-        ? await ticket.setStatus("open")
-        : ticket;
+    // Only a reply after "closed" is a real reopen (a "waiting" ticket was
+    // never resolved in the first place, so it doesn't count toward the
+    // second-reopen-auto-flag threshold).
+    let updated = ticket;
+    if (ticket.status === "closed") {
+      const siteSettings = await StaffSettings.siteDefault();
+      updated = await ticket.reopen({
+        autoFlag: Boolean(siteSettings.secondReopenAutoFlag),
+      });
+    } else if (ticket.status === "waiting") {
+      updated = await ticket.setStatus("open");
+    }
     const messages = (await SupportMessage.listForTicket(updated.id!)).map(
       (m) => m.toDetails(),
     );

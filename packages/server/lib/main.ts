@@ -13,6 +13,7 @@ import {
   AccountDeletionSweep,
   DigestSweep,
   HoldingQueueSweep,
+  IdleTicketCloseSweep,
 } from "./app/support/index.ts";
 import { DataSnapshot } from "./app/sync/index.ts";
 import { ServerModule } from "./server/module.ts";
@@ -55,6 +56,8 @@ if (cluster.isPrimary) {
   // Staff-initiated account deletions, carried out once their 48-hour
   // cooling-off window closes.
   container.get(AccountDeletionSweep).start();
+  // Off (0 days) unless a staff member turns on auto-close-idle in Settings.
+  container.get(IdleTicketCloseSweep).start();
   // Learner data lives in files on this machine's disk; the database is what
   // gets backed up. Copy one into the other at intervals.
   container.get(DataSnapshot).start();

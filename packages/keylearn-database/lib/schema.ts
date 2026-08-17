@@ -333,6 +333,65 @@ export async function createSchema(knex: Knex): Promise<void> {
     table.integer("reopened_count").unsigned().notNullable().defaultTo(0);
   });
 
+  // Staff's own display/notification/behaviour preferences for the desk —
+  // see StaffSettings for what reads/writes each one.
+  await addColumn("staff_settings", "compact_density", (table) => {
+    table.boolean("compact_density").notNullable().defaultTo(false);
+  });
+  await addColumn("staff_settings", "relative_timestamps", (table) => {
+    table.boolean("relative_timestamps").notNullable().defaultTo(false);
+  });
+  await addColumn("staff_settings", "show_country_flag", (table) => {
+    table.boolean("show_country_flag").notNullable().defaultTo(false);
+  });
+  await addColumn("staff_settings", "desktop_push", (table) => {
+    table.boolean("desktop_push").notNullable().defaultTo(false);
+  });
+  await addColumn("staff_settings", "sound_alert", (table) => {
+    table.boolean("sound_alert").notNullable().defaultTo(false);
+  });
+  await addColumn("staff_settings", "escalation_only", (table) => {
+    table.boolean("escalation_only").notNullable().defaultTo(false);
+  });
+  await addColumn("staff_settings", "default_landing_page", (table) => {
+    table
+      .string("default_landing_page", 16)
+      .notNullable()
+      .defaultTo("dashboard");
+  });
+  // Deliberately read via StaffSettings.siteDefault() where it's enforced
+  // (the guest-reply reopen path), same as confidenceThreshold/overdueHours —
+  // desk-wide behaviour, not really "per staff member", but stored on the
+  // same row for the same unsophisticated-but-good-enough reason.
+  await addColumn("staff_settings", "second_reopen_auto_flag", (table) => {
+    table.boolean("second_reopen_auto_flag").notNullable().defaultTo(false);
+  });
+  // 0 = off. Read via siteDefault() by the idle-ticket close sweep.
+  await addColumn("staff_settings", "auto_close_idle_days", (table) => {
+    table.integer("auto_close_idle_days").unsigned().notNullable().defaultTo(0);
+  });
+  // Reserves the setting's shape for the sentiment-reading agent from the
+  // pending automation plan — nothing reads this yet.
+  await addColumn("staff_settings", "sentiment_sensitivity", (table) => {
+    table
+      .string("sentiment_sensitivity", 16)
+      .notNullable()
+      .defaultTo("moderate");
+  });
+
+  // Captured once, from Cloudflare's CF-IPCountry header, at the moment a
+  // ticket is created — never updated again, same rule as User.signupCountry.
+  // Feeds the Inbox's optional per-ticket country flag.
+  await addColumn("support_ticket", "country", (table) => {
+    table.string("country", 2).nullable();
+  });
+  // How many times this ticket has moved from closed back to open via a
+  // guest reply — see replyToThread. Powers the second-reopen auto-flag
+  // setting; not shown to the sender.
+  await addColumn("support_ticket", "reopen_count", (table) => {
+    table.integer("reopen_count").unsigned().notNullable().defaultTo(0);
+  });
+
   async function addColumn(
     tableName: string,
     columnName: string,

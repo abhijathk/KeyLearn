@@ -58,9 +58,6 @@ const DeskNoticesPage = lazy(() => import("./pages/desk-notices.tsx"));
 const DeskSettingsPage = lazy(() => import("./pages/desk-settings.tsx"));
 const DeskAuditPage = lazy(() => import("./pages/desk-audit.tsx"));
 const DeskAboutPage = lazy(() => import("./pages/desk-about.tsx"));
-const DeskPlatformSettingsPage = lazy(
-  () => import("./pages/desk-platform-settings.tsx"),
-);
 const DeskSigninPage = lazy(() => import("./pages/desk-signin.tsx"));
 const ProfilesManagePage = lazy(() => import("./pages/profiles.tsx"));
 const KidsPage = lazy(() => import("./pages/kids.tsx"));
@@ -399,17 +396,6 @@ function PageRoutes() {
               <Title page={Pages.deskAbout} />
               <Suspense fallback={<LoadingProgress />}>
                 <DeskAboutPage />
-              </Suspense>
-            </Template>
-          }
-        />
-        <Route
-          path={Pages.deskPlatformSettings.path}
-          element={
-            <Template path={Pages.deskPlatformSettings.path}>
-              <Title page={Pages.deskPlatformSettings} />
-              <Suspense fallback={<LoadingProgress />}>
-                <DeskPlatformSettingsPage />
               </Suspense>
             </Template>
           }

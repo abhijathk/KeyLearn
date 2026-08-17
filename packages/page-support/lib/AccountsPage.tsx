@@ -1,4 +1,4 @@
-import { Pages } from "@keylearn/pages-shared";
+import { Pages, type StaffSettingsDetails } from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -42,11 +42,16 @@ function Accounts(): ReactNode {
   const [results, setResults] = useState<AccountLookupResult[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [total, setTotal] = useState<number | null>(null);
+  const [settings, setSettings] = useState<StaffSettingsDetails | null>(null);
 
   useEffect(() => {
     SupportService.getAccountsTotal()
       .then(setTotal)
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    SupportService.getSettings().then(setSettings);
   }, []);
 
   // Empty query still loads something — the 10 most recently registered
@@ -134,7 +139,13 @@ function Accounts(): ReactNode {
 
       <div className={styles.rows}>
         {!searching &&
-          (results ?? []).map((r) => <AccountRow key={r.id} account={r} />)}
+          (results ?? []).map((r) => (
+            <AccountRow
+              key={r.id}
+              account={r}
+              compact={Boolean(settings?.compactDensity)}
+            />
+          ))}
       </div>
     </>
   );
@@ -142,13 +153,15 @@ function Accounts(): ReactNode {
 
 function AccountRow({
   account,
+  compact,
 }: {
   readonly account: AccountLookupResult;
+  readonly compact: boolean;
 }): ReactNode {
   return (
     <RouterLink
       to={`${Pages.deskAccountDetail.path}/${account.id}`}
-      className={styles.row}
+      className={clsx(styles.row, compact && styles.rowCompact)}
     >
       <span className={styles.who}>{initials(account.name)}</span>
       <span className={styles.rowBody}>
