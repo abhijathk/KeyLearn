@@ -282,6 +282,38 @@ function Settings(): ReactNode {
                 defaultMessage="Sets an away line on every new ticket and clears itself on the date. Nothing to remember to switch off."
               />
             </p>
+
+            <span className={common.lbl} style={{ marginBlockStart: "0.9rem" }}>
+              <FormattedMessage
+                id="deskSettings.landingPage"
+                defaultMessage="Open this to"
+              />
+            </span>
+            <div className={common.tabs}>
+              {LANDING_PAGES.map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  className={clsx(
+                    common.tab,
+                    settings.defaultLandingPage === page && common.tabOn,
+                  )}
+                  onClick={() => patch({ defaultLandingPage: page })}
+                >
+                  {page === "dashboard" ? (
+                    <FormattedMessage
+                      id="deskNav.dashboard"
+                      defaultMessage="Dashboard"
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="deskNav.inbox"
+                      defaultMessage="Inbox"
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className={common.card}>
@@ -341,38 +373,15 @@ function Settings(): ReactNode {
                 defaultMessage="Changing either is written to the audit log. They're safe settings, but they change what users receive, so they leave a trace."
               />
             </p>
+          </div>
 
-            <span className={common.lbl}>
+          <div className={common.card}>
+            <p className={common.micro}>
               <FormattedMessage
-                id="deskSettings.landingPage"
-                defaultMessage="Open this to"
+                id="deskSettings.lifecycle.title"
+                defaultMessage="Ticket lifecycle"
               />
-            </span>
-            <div className={common.tabs}>
-              {LANDING_PAGES.map((page) => (
-                <button
-                  key={page}
-                  type="button"
-                  className={clsx(
-                    common.tab,
-                    settings.defaultLandingPage === page && common.tabOn,
-                  )}
-                  onClick={() => patch({ defaultLandingPage: page })}
-                >
-                  {page === "dashboard" ? (
-                    <FormattedMessage
-                      id="deskNav.dashboard"
-                      defaultMessage="Dashboard"
-                    />
-                  ) : (
-                    <FormattedMessage
-                      id="deskNav.inbox"
-                      defaultMessage="Inbox"
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
+            </p>
 
             <span className={common.lbl}>
               <FormattedMessage
@@ -404,7 +413,27 @@ function Settings(): ReactNode {
               ))}
             </div>
 
-            <span className={common.lbl}>
+            <div
+              className={styles.switchRow}
+              style={{ marginBlockStart: "0.9rem" }}
+            >
+              <Switch
+                on={settings.secondReopenAutoFlag}
+                onToggle={() =>
+                  patch({
+                    secondReopenAutoFlag: !settings.secondReopenAutoFlag,
+                  })
+                }
+              />
+              <span>
+                <FormattedMessage
+                  id="deskSettings.secondReopen"
+                  defaultMessage="Flag a ticket for a human on its second reopen"
+                />
+              </span>
+            </div>
+
+            <span className={common.lbl} style={{ marginBlockStart: "0.9rem" }}>
               <FormattedMessage
                 id="deskSettings.sentimentSensitivity"
                 defaultMessage="Escalate on a frustrated tone"
@@ -431,26 +460,6 @@ function Settings(): ReactNode {
                 defaultMessage="Only takes effect once Tab is reading tone on tickets — this reserves the setting ahead of that."
               />
             </p>
-
-            <div
-              className={styles.switchRow}
-              style={{ marginBlockStart: "0.6rem" }}
-            >
-              <Switch
-                on={settings.secondReopenAutoFlag}
-                onToggle={() =>
-                  patch({
-                    secondReopenAutoFlag: !settings.secondReopenAutoFlag,
-                  })
-                }
-              />
-              <span>
-                <FormattedMessage
-                  id="deskSettings.secondReopen"
-                  defaultMessage="Flag a ticket for a human on its second reopen"
-                />
-              </span>
-            </div>
           </div>
 
           <DisplaySettings settings={settings} patch={patch} />

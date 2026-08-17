@@ -306,15 +306,22 @@ export function Header({
           // not a link back to practice, which would drop staff out of the
           // desk entirely.
           <span className={styles.wordmark} dir="ltr">
-            <StrokeIcon className={styles.glyph} name="headset" />
+            <StrokeIcon
+              className={clsx(styles.glyph, styles.glyphDesk)}
+              name="headset"
+            />
             <span className={styles.mark}>Q</span>
             <span className={styles.markAlt}>Desk</span>
             {/* The one app this desk currently manages — a static fact
                 today (see SettingsPage's APPS registry), not yet a live
                 selection, so it's just printed here rather than read from
-                any switcher state. */}
-            <span className={styles.appDot}>.</span>
-            <span className={styles.appName}>KeyLearn</span>
+                any switcher state. Carries KeyLearn's own glyph (the same
+                "keyboard" mark its own wordmark uses below), not a generic
+                app icon, so the badge reads as that app's own mark. */}
+            <span className={styles.appBadge}>
+              <StrokeIcon className={styles.appBadgeIcon} name="keyboard" />
+              KeyLearn
+            </span>
           </span>
         ) : (
           <NavLink

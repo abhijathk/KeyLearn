@@ -813,6 +813,7 @@
   "deskSettings.display.relativeTimestamps": "Relative timestamps (“2h ago”)",
   "deskSettings.display.title": "Display",
   "deskSettings.landingPage": "Open this to",
+  "deskSettings.lifecycle.title": "Ticket lifecycle",
   "deskSettings.notifications.desktopPush": "Desktop notification on a new ticket",
   "deskSettings.notifications.escalationOnly": "Only for flagged tickets, not every new one",
   "deskSettings.notifications.note": "Both need the desk open in a tab — neither works while the browser itself is closed. “Email me when something arrives” above is separate and works either way.",
