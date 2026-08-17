@@ -317,11 +317,16 @@ export function Header({
                 selection, so it's just printed here rather than read from
                 any switcher state. Carries KeyLearn's own glyph (the same
                 "keyboard" mark its own wordmark uses below), not a generic
-                app icon, so the badge reads as that app's own mark. */}
-            <span className={styles.appBadge}>
-              <StrokeIcon className={styles.appBadgeIcon} name="keyboard" />
-              KeyLearn
-            </span>
+                app icon, so the badge reads as that app's own mark. Hidden
+                on the sign-in door itself (same `hideAccount` signal the
+                avatar uses) — there's no "current app" context worth
+                naming before a staffer is actually signed in to one. */}
+            {!hideAccount && (
+              <span className={styles.appBadge}>
+                <StrokeIcon className={styles.appBadgeIcon} name="keyboard" />
+                KeyLearn
+              </span>
+            )}
           </span>
         ) : (
           <NavLink
