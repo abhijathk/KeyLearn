@@ -6,6 +6,7 @@ import { Controller as CertificateController } from "./certificate/index.ts";
 import { Controller as CheckoutController } from "./checkout/index.ts";
 import { Controller as GameController } from "./game/index.ts";
 import { Controller as HighScoresController } from "./highscores/index.ts";
+import { Controller as InternalController } from "./internal/index.ts";
 import { Controller as PageController } from "./page/index.ts";
 import { Controller as ProfileController } from "./profile/index.ts";
 import { Controller as SettingsController } from "./settings/index.ts";
@@ -22,6 +23,7 @@ export function mainRoutes(): Middleware<any> {
         CertificateController,
         CheckoutController,
         HighScoresController,
+        InternalController,
         PageController,
         ProfileController,
         SettingsController,

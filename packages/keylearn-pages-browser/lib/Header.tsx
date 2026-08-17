@@ -1,4 +1,5 @@
 import { lessonStamp, type StampMode } from "@keylearn/lesson";
+import { NotificationBell } from "@keylearn/page-account";
 // A deep import into icons.tsx rather than the package root: the root
 // barrel also re-exports KidsPage.tsx, which pulls in the three.js-backed
 // dino world — importing through it would ship that ~150KB (gzipped) to
@@ -177,6 +178,8 @@ export function Header({
   showBack = false,
   kids = false,
   practice = false,
+  desk = false,
+  hideAccount = false,
 }: {
   readonly onOpenMenu: () => void;
   readonly onOpenSupport: () => void;
@@ -185,6 +188,14 @@ export function Header({
   readonly kids?: boolean;
   /** On the practice page the wordmark is followed by the lesson stamp. */
   readonly practice?: boolean;
+  /** The support desk owns its own left-nav and back/coffee/menu don't apply. */
+  readonly desk?: boolean;
+  /**
+   * The staff sign-in door: a signed-out visitor there has nowhere useful
+   * for the account chip to send them (it's not the general `/login`), so
+   * it's dropped rather than offered.
+   */
+  readonly hideAccount?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
   // The back button offers a return to practice, which is neither where a
@@ -255,9 +266,15 @@ export function Header({
   }
 
   return (
-    <header className={clsx(styles.header, hidden && styles.hidden)}>
+    <header
+      className={clsx(
+        styles.header,
+        desk && styles.deskSticky,
+        hidden && styles.hidden,
+      )}
+    >
       <div className={styles.left}>
-        {showBack && !kids && !braille && (
+        {showBack && !kids && !braille && !desk && (
           <NavLink
             to="/"
             className={styles.back}
@@ -271,25 +288,36 @@ export function Header({
             <StrokeIcon name="back" />
           </NavLink>
         )}
-        <NavLink
-          to={kids ? "/kids" : "/"}
-          className={styles.wordmark}
-          // "KeyLearn" is a brand wordmark built from two spans; pin it LTR so
-          // right-to-left locales (Arabic, Hebrew…) don't reorder it to
-          // "LearnKey".
-          dir="ltr"
-          title={formatMessage(
-            defineMessage({
-              id: "nav.home",
-              defaultMessage: "KeyLearn home",
-            }),
-          )}
-        >
-          <StrokeIcon className={styles.glyph} name="keyboard" />
-          <span className={styles.mark}>Key</span>
-          <span className={styles.markAlt}>Learn</span>
-          {kids && <span className={styles.kidsMark}>Kids</span>}
-        </NavLink>
+        {desk ? (
+          // On the support desk, the wordmark is an identity mark only —
+          // not a link back to practice, which would drop staff out of the
+          // desk entirely.
+          <span className={styles.wordmark} dir="ltr">
+            <StrokeIcon className={styles.glyph} name="headset" />
+            <span className={styles.mark}>Q</span>
+            <span className={styles.markAlt}>Desk</span>
+          </span>
+        ) : (
+          <NavLink
+            to={kids ? "/kids" : "/"}
+            className={styles.wordmark}
+            // "KeyLearn" is a brand wordmark built from two spans; pin it LTR so
+            // right-to-left locales (Arabic, Hebrew…) don't reorder it to
+            // "LearnKey".
+            dir="ltr"
+            title={formatMessage(
+              defineMessage({
+                id: "nav.home",
+                defaultMessage: "KeyLearn home",
+              }),
+            )}
+          >
+            <StrokeIcon className={styles.glyph} name="keyboard" />
+            <span className={styles.mark}>Key</span>
+            <span className={styles.markAlt}>Learn</span>
+            {kids && <span className={styles.kidsMark}>Kids</span>}
+          </NavLink>
+        )}
         {practice && <PracticeStamp />}
       </div>
       <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
@@ -318,7 +346,7 @@ export function Header({
             />
           </span>
         )}
-        <AccountMenu kids={kids} />
+        {!hideAccount && !desk && <AccountMenu kids={kids} desk={desk} />}
         {kids && (
           <>
             {(kidsState.streak ?? 0) > 1 && (
@@ -418,7 +446,7 @@ export function Header({
           </span>
         )}
         {!kids && <ThemeSwitcher />}
-        {!kids && supportUrl !== "" && (
+        {!kids && !desk && supportUrl !== "" && (
           <button
             type="button"
             onClick={onOpenSupport}
@@ -432,7 +460,9 @@ export function Header({
             <img className={styles.coffeeCup} src={coffeeCup} alt="" />
           </button>
         )}
-        {kids ? (
+        {!kids && <NotificationBell />}
+        {!hideAccount && desk && <AccountMenu kids={kids} desk={desk} />}
+        {desk ? null : kids ? (
           <button
             type="button"
             className={styles.kidsChip}

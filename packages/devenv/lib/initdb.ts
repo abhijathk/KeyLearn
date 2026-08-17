@@ -1,5 +1,6 @@
 #!/usr/bin/env -S npx tsnode
 
+import { createHash } from "node:crypto";
 import { Container } from "@fastr/invert";
 import { ConfigModule, Env } from "@keylearn/config";
 import { createSchema, UserLoginRequest } from "@keylearn/database";
@@ -19,7 +20,10 @@ async function exec() {
     await createSchema(knex);
     Logger.info(`Database schema was created.`);
     await UserLoginRequest.query().delete().where({ email });
-    await UserLoginRequest.query().insert({ email, accessToken });
+    await UserLoginRequest.query().insert({
+      email,
+      accessToken: createHash("sha256").update(accessToken).digest("hex"),
+    });
     const loginLink = new URL(
       `/login/${accessToken}`,
       container.get("canonicalUrl"),

@@ -1,0 +1,70 @@
+.root {
+  display: inline-flex;
+  position: relative;
+}
+
+.dot {
+  position: absolute;
+  inset-inline-end: 0.15rem;
+  inset-block-start: 0.15rem;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+  pointer-events: none;
+}
+
+.drop {
+  display: grid;
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 2.4rem;
+  z-index: 20;
+  gap: 0.15rem;
+  inline-size: 18rem;
+  max-block-size: 22rem;
+  padding: 0.4rem;
+  border: 1px solid var(--primary-d1, rgba(128, 128, 128, 0.2));
+  border-radius: 0.8rem;
+  background-color: var(--primary-l1, var(--primary));
+  box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.35);
+  overflow-y: auto;
+}
+
+.empty {
+  margin: 0;
+  padding: 0.6rem 0.5rem;
+  color: var(--text-color-f2);
+  font-size: 0.82rem;
+}
+
+.item {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 0.5rem;
+  color: var(--text-color);
+  background-color: transparent;
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--text-color) 6%, transparent);
+  }
+}
+
+.unread {
+  background-color: color-mix(in oklab, var(--accent) 8%, transparent);
+}
+
+.time {
+  color: var(--text-color-f2);
+  font-size: 0.68rem;
+}
+
+.body {
+  font-size: 0.85rem;
+  line-height: 1.4;
+}

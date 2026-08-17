@@ -14,6 +14,7 @@ export * from "./course/language-line.ts";
 // Lives in @keylearn/widget now, so the support desk can use the same
 // window chrome without page-support and page-account depending on each
 // other.
+export * from "./notifications/NotificationBell.tsx";
 export * from "./Overlay.tsx";
 export * from "./profiles/BrailleBadge.tsx";
 export * from "./profiles/context.tsx";

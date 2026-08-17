@@ -1,8 +1,9 @@
 import { logout, Pages } from "@keylearn/pages-shared";
-import { Button, FloatingShell, Icon, TextField } from "@keylearn/widget";
-import { mdiKeyVariant } from "@mdi/js";
+import { Button, FloatingShell, TextField } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import supportSignin from "./assets/support-signin.png";
+import supportSigninDark from "./assets/support-signin-dark.png";
 import { type DeskAccessReason, SupportService } from "./service.ts";
 import * as styles from "./StaffSigninPage.module.less";
 import { isCaptchaRequired, useCaptcha } from "./turnstile.tsx";
@@ -19,25 +20,48 @@ import { isCaptchaRequired, useCaptcha } from "./turnstile.tsx";
 // staff member authenticates.
 function sanitizeReturnTo(raw: string | null): string {
   if (raw == null || typeof window === "undefined") {
-    return Pages.supportDesk.path;
+    return Pages.desk.path;
   }
   try {
     const resolved = new URL(raw, window.location.origin);
     if (resolved.origin !== window.location.origin) {
-      return Pages.supportDesk.path;
+      return Pages.desk.path;
     }
     return `${resolved.pathname}${resolved.search}${resolved.hash}`;
   } catch {
-    return Pages.supportDesk.path;
+    return Pages.desk.path;
   }
 }
 
 function readReturnTo(): string {
   if (typeof window === "undefined") {
-    return Pages.supportDesk.path;
+    return Pages.desk.path;
   }
   return sanitizeReturnTo(
     new URLSearchParams(window.location.search).get("returnTo"),
+  );
+}
+
+// A person with a key — the same mark the main app's own passkey button
+// uses (packages/page-account/lib/AuthPage.tsx), so staff see one
+// consistent passkey glyph across both sign-in doors.
+function PasskeyMark(): ReactNode {
+  return (
+    <svg
+      className={styles.passkeyMark}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={true}
+    >
+      <circle cx="9" cy="7.5" r="3.6" />
+      <path d="M2.5 20.5c0-3.6 2.9-6 6.5-6 .9 0 1.7.1 2.5.4" />
+      <circle cx="17.2" cy="14.6" r="2.6" />
+      <path d="M17.2 17.2v4.1m0-1.5h1.9m-1.9-1.4h1.9" />
+    </svg>
   );
 }
 
@@ -74,82 +98,96 @@ export function StaffSigninPage(): ReactNode {
   useEffect(check, []);
 
   return (
-    <FloatingShell compact={true}>
-      <div className={styles.form}>
-        <div className={styles.keyIcon}>
-          <Icon shape={mdiKeyVariant} />
-        </div>
+    <FloatingShell
+      compact={true}
+      width="47rem"
+      hideClose={true}
+      dismissible={false}
+    >
+      <div className={styles.page}>
         <h1 className={styles.headline}>
           <FormattedMessage
             id="staffDesk.signin.headline"
             defaultMessage="Staff sign-in"
           />
         </h1>
-        {screen === "checking" && (
-          <p className={styles.intro}>
-            <FormattedMessage
-              id="staffDesk.signin.checking"
-              defaultMessage="Checking your access…"
-            />
-          </p>
-        )}
-        {screen === "signed-out" && <SignedOutStep target={target} />}
-        {screen === "not-staff" && (
-          <>
-            <p className={styles.intro}>
-              <FormattedMessage
-                id="staffDesk.signin.notStaff"
-                defaultMessage="This account isn't part of the support desk."
-              />
-            </p>
-            <Button
-              size="full"
-              label={formatMessage({
-                id: "staffDesk.signin.signOut",
-                defaultMessage: "Sign out and try a different account",
-              })}
-              onClick={() =>
-                void logout(
-                  `${Pages.supportDeskSignin.path}?returnTo=${encodeURIComponent(target)}`,
-                )
-              }
-            />
-          </>
-        )}
-        {screen === "needs-2fa" && (
-          <>
-            <p className={styles.intro}>
-              <FormattedMessage
-                id="staffDesk.signin.needs2fa"
-                defaultMessage="This account can reach the desk once it has a passkey or two-step verification turned on."
-              />
-            </p>
-            <a className={styles.link} href={`${Pages.account.path}#security`}>
-              <FormattedMessage
-                id="staffDesk.signin.goToSecurity"
-                defaultMessage="Go to account security settings"
-              />
-            </a>
-          </>
-        )}
-        {screen === "error" && (
-          <>
-            <p className={styles.intro}>
-              <FormattedMessage
-                id="staffDesk.signin.error"
-                defaultMessage="Something went wrong. Try again."
-              />
-            </p>
-            <Button
-              size="full"
-              label={formatMessage({
-                id: "staffDesk.signin.retry",
-                defaultMessage: "Try again",
-              })}
-              onClick={check}
-            />
-          </>
-        )}
+        <div className={styles.layout}>
+          <div className={styles.form}>
+            {screen === "checking" && (
+              <p className={styles.intro}>
+                <FormattedMessage
+                  id="staffDesk.signin.checking"
+                  defaultMessage="Checking your access…"
+                />
+              </p>
+            )}
+            {screen === "signed-out" && <SignedOutStep target={target} />}
+            {screen === "not-staff" && (
+              <>
+                <p className={styles.intro}>
+                  <FormattedMessage
+                    id="staffDesk.signin.notStaff"
+                    defaultMessage="This account isn't part of the support desk."
+                  />
+                </p>
+                <Button
+                  size="full"
+                  label={formatMessage({
+                    id: "staffDesk.signin.signOut",
+                    defaultMessage: "Sign out and try a different account",
+                  })}
+                  onClick={() =>
+                    void logout(
+                      `${Pages.deskSignin.path}?returnTo=${encodeURIComponent(target)}`,
+                      true,
+                    )
+                  }
+                />
+              </>
+            )}
+            {screen === "needs-2fa" && (
+              <>
+                <p className={styles.intro}>
+                  <FormattedMessage
+                    id="staffDesk.signin.needs2fa"
+                    defaultMessage="This account can reach the desk once it has a passkey or two-step verification turned on."
+                  />
+                </p>
+                <a
+                  className={styles.link}
+                  href={`${Pages.account.path}#security`}
+                >
+                  <FormattedMessage
+                    id="staffDesk.signin.goToSecurity"
+                    defaultMessage="Go to account security settings"
+                  />
+                </a>
+              </>
+            )}
+            {screen === "error" && (
+              <>
+                <p className={styles.intro}>
+                  <FormattedMessage
+                    id="staffDesk.signin.error"
+                    defaultMessage="Something went wrong. Try again."
+                  />
+                </p>
+                <Button
+                  size="full"
+                  label={formatMessage({
+                    id: "staffDesk.signin.retry",
+                    defaultMessage: "Try again",
+                  })}
+                  onClick={check}
+                />
+              </>
+            )}
+          </div>
+          <div className={styles.art} aria-hidden={true}>
+            <img className={styles.artImg} src={supportSigninDark} alt="" />
+            <img className={styles.artImgLight} src={supportSignin} alt="" />
+          </div>
+        </div>
         {screen !== "checking" && (
           <p className={styles.footnote}>
             <FormattedMessage
@@ -189,7 +227,7 @@ function SignedOutStep({ target }: { readonly target: string }): ReactNode {
         <p className={styles.intro}>
           <FormattedMessage
             id="staffDesk.signin.notLinked"
-            defaultMessage="This page isn't linked from anywhere. If you reached it by accident, there's nothing here for you."
+            defaultMessage="This sign-in is reserved for KeyLearn support staff."
           />
         </p>
         <button
@@ -204,7 +242,7 @@ function SignedOutStep({ target }: { readonly target: string }): ReactNode {
               .catch(() => setBusy(false));
           }}
         >
-          <Icon shape={mdiKeyVariant} />
+          <PasskeyMark />
           <FormattedMessage
             id="staffDesk.signin.usePasskey"
             defaultMessage="Use a passkey"

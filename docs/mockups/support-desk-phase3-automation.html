@@ -1,0 +1,1025 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KeyLearn support — automating the desk</title>
+<style>
+  :root{color-scheme:light}
+  body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}
+  img{max-width:100%}
+
+  /* Tokens lifted from packages/keylearn-themes, same as phase 2's mock. */
+  :root {
+    --primary: #141620; --primary-d1: #222536; --primary-d2: #2c3046;
+    --primary-l1: #1a1c29; --primary-l2: #1e2130;
+    --secondary: #e6e8ee; --secondary-d1: #f5f6f8;
+    --secondary-l1: #b8becf; --secondary-l2: #8b94b0;
+    --text-color-f1: #b2b4ba; --text-color-f2: #888a91;
+    --accent: #8fd9b6; --accent-d1: #74d0a5; --accent-l1: #aae2c7; --accent-l2: #c4ebd9;
+    --accent-ink: #241a12;
+    --error: #ff7a6b;
+    --warn: #e8a819;
+    --agent: #7aa7e0; --agent-ink: #0e1e33;
+
+    --background-color: var(--primary);
+    --text-color: var(--secondary);
+    --separator-color: var(--primary-d1);
+    --separator-border: 1px solid var(--separator-color);
+
+    --default-font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --header-font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --value-font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --field-height: 2rem;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --primary: #f5f6fa; --primary-d1: #e4e7f2; --primary-d2: #d3d7e9;
+      --primary-l1: #fcfcfd; --primary-l2: #ffffff;
+      --secondary: #1f2433; --secondary-d1: #0c0e13;
+      --secondary-l1: #363f59; --secondary-l2: #596792;
+      --text-color-f1: #545865; --text-color-f2: #7f828d;
+      --accent: #2f8a5d; --accent-d1: #266f4b; --accent-l1: #38a56f; --accent-l2: #42bf81;
+      --accent-ink: #ffffff;
+      --error: #cf5a4a;
+      --agent: #2f6bb0; --agent-ink: #ffffff;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --primary: #141620; --primary-d1: #222536; --primary-d2: #2c3046;
+    --primary-l1: #1a1c29; --primary-l2: #1e2130;
+    --secondary: #e6e8ee; --secondary-d1: #f5f6f8;
+    --secondary-l1: #b8becf; --secondary-l2: #8b94b0;
+    --text-color-f1: #b2b4ba; --text-color-f2: #888a91;
+    --accent: #8fd9b6; --accent-d1: #74d0a5; --accent-l1: #aae2c7; --accent-l2: #c4ebd9;
+    --accent-ink: #241a12; --error: #ff7a6b;
+    --agent: #7aa7e0; --agent-ink: #0e1e33;
+  }
+
+  :root[data-theme="light"] {
+    --primary: #f5f6fa; --primary-d1: #e4e7f2; --primary-d2: #d3d7e9;
+    --primary-l1: #fcfcfd; --primary-l2: #ffffff;
+    --secondary: #1f2433; --secondary-d1: #0c0e13;
+    --secondary-l1: #363f59; --secondary-l2: #596792;
+    --text-color-f1: #545865; --text-color-f2: #7f828d;
+    --accent: #2f8a5d; --accent-d1: #266f4b; --accent-l1: #38a56f; --accent-l2: #42bf81;
+    --accent-ink: #ffffff; --error: #cf5a4a;
+    --agent: #2f6bb0; --agent-ink: #ffffff;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0 1.25rem 6rem;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    font-family: var(--default-font-family);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 74rem; margin: 0 auto; }
+  header.doc { padding: 3.5rem 0 1.4rem; }
+
+  .eyebrow {
+    margin: 0 0 0.7rem;
+    color: var(--accent);
+    font-family: var(--value-font-family);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0 0 0.9rem;
+    font-family: var(--header-font-family);
+    font-size: clamp(2rem, 5vw, 2.9rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .lede { max-width: 46rem; margin: 0; color: var(--text-color-f1); font-size: 1rem; }
+  .lede + .lede { margin-top: 0.7rem; }
+  .lede b { color: var(--text-color); font-weight: 600; }
+
+  h2 {
+    margin: 3.4rem 0 0.3rem;
+    font-family: var(--header-font-family);
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+
+  .note { max-width: 47rem; margin: 0 0 1.1rem; color: var(--text-color-f1); font-size: 0.9rem; }
+  .note code { padding: 0.05rem 0.35rem; border-radius: 0.3rem; background-color: var(--primary-l2); font-family: var(--value-font-family); font-size: 0.82em; }
+
+  .stepno {
+    display: inline-block;
+    margin-inline-end: 0.5rem;
+    color: var(--text-color-f2);
+    font-family: var(--value-font-family);
+    font-size: 0.85rem;
+  }
+
+  .app {
+    overflow: hidden;
+    border: var(--separator-border);
+    border-radius: 1rem;
+    background-color: var(--primary-l1);
+  }
+
+  .chrome {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.55rem 0.9rem;
+    border-block-end: var(--separator-border);
+    background-color: var(--primary);
+  }
+
+  .brand { display: flex; gap: 0.5rem; align-items: center; font-weight: 600; font-size: 0.9rem; }
+
+  .brand .mark {
+    display: grid;
+    place-items: center;
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    border-radius: 0.5rem;
+    color: var(--accent-ink);
+    background-color: var(--accent);
+    font-family: var(--value-font-family);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .grow { flex: 1; }
+
+  .url {
+    padding: 0.2rem 0.7rem;
+    border: var(--separator-border);
+    border-radius: 999px;
+    color: var(--text-color-f2);
+    background-color: var(--primary-l2);
+    font-family: var(--value-font-family);
+    font-size: 0.7rem;
+  }
+
+  .avatar {
+    display: grid;
+    place-items: center;
+    inline-size: 1.7rem;
+    block-size: 1.7rem;
+    border-radius: 50%;
+    color: var(--primary);
+    background-color: var(--secondary-l1);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .pane { padding: 1.1rem 1.1rem 1.3rem; }
+
+  .btn {
+    display: inline-block;
+    min-block-size: var(--field-height);
+    padding-inline: 1.5rem;
+    border: none;
+    border-radius: 0.7rem;
+    color: var(--secondary);
+    background-color: transparent;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: var(--field-height);
+    cursor: pointer;
+  }
+
+  .btn.primary { color: var(--accent-ink); background-color: var(--accent); }
+  .btn.ghost { border: var(--separator-border); background-color: var(--primary-l2); }
+  .btn.danger { color: var(--error); border: 1px solid color-mix(in srgb, var(--error) 45%, transparent); }
+  .btn.small { min-block-size: 1.6rem; padding-inline: 0.8rem; font-size: 0.78rem; line-height: 1.6rem; }
+
+  .btnrow { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-block-start: 0.9rem; }
+
+  .field {
+    display: block;
+    inline-size: 100%;
+    min-block-size: var(--field-height);
+    padding-inline: 1rem;
+    border: 1px solid var(--primary-d1);
+    border-radius: 0.6rem;
+    color: var(--secondary);
+    background-color: var(--primary-l1);
+    font-family: var(--default-font-family);
+    font-size: 0.85rem;
+    line-height: var(--field-height);
+  }
+
+  .lbl {
+    display: block;
+    margin-block: 0.9rem 0.3rem;
+    color: var(--text-color-f2);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .tabs {
+    display: inline-flex;
+    gap: 0.15rem;
+    align-items: center;
+    max-inline-size: 100%;
+    margin-block-end: 1rem;
+    padding: 0.25rem;
+    border: var(--separator-border);
+    border-radius: 999px;
+    background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs button {
+    flex: none;
+    block-size: 2rem;
+    padding-inline: 1rem;
+    border: none;
+    border-radius: 999px;
+    color: var(--text-color-f1);
+    background-color: transparent;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .tabs button.on { color: var(--accent-ink); background-color: var(--accent); }
+
+  .card {
+    padding: 1rem 1.1rem 1.1rem;
+    border: var(--separator-border);
+    border-radius: 0.8rem;
+    background-color: var(--primary-l2);
+  }
+
+  .card + .card { margin-block-start: 0.8rem; }
+  .card h3 { margin: 0 0 0.5rem; font-family: var(--header-font-family); font-size: 1rem; font-weight: 600; }
+  .card.danger { border-color: color-mix(in srgb, var(--error) 45%, var(--separator-color)); }
+
+  .micro {
+    margin: 0 0 0.55rem;
+    color: var(--text-color-f2);
+    font-family: var(--value-font-family);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+  .micro.danger { color: var(--error); }
+
+  .chip {
+    display: inline-flex;
+    gap: 0.3rem;
+    align-items: center;
+    padding: 0.1rem 0.55rem;
+    border: var(--separator-border);
+    border-radius: 999px;
+    color: var(--text-color-f1);
+    font-family: var(--value-font-family);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .chip.new { border-color: transparent; color: var(--accent-ink); background-color: var(--accent); }
+  .chip.wait { border-color: color-mix(in srgb, var(--warn) 55%, transparent); color: var(--warn); }
+  .chip.closed { color: var(--text-color-f2); }
+  .chip.alarm { border-color: color-mix(in srgb, var(--error) 55%, transparent); color: var(--error); }
+  .chip.agent { border-color: color-mix(in srgb, var(--agent) 55%, transparent); color: var(--agent); }
+
+  .aibadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.02rem 0.34rem;
+    border-radius: 0.3rem;
+    background-color: var(--agent);
+    color: var(--agent-ink);
+    font-family: var(--value-font-family);
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .agentname { display: inline-flex; gap: 0.4rem; align-items: center; font-weight: 700; text-transform: none; letter-spacing: normal; }
+
+  /* ---- sentiment ------------------------------------------------------------ */
+  .chip.mood-neutral { color: var(--text-color-f2); }
+  .chip.mood-frustrated { border-color: color-mix(in srgb, var(--warn) 55%, transparent); color: var(--warn); }
+  .chip.mood-critical { border-color: transparent; color: var(--error); background-color: color-mix(in srgb, var(--error) 16%, transparent); }
+
+  .split { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 1rem; }
+  @media (max-width: 58rem) { .split { grid-template-columns: 1fr; } }
+
+  .filters { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; margin-block-end: 0.8rem; }
+  .tickets { display: grid; gap: 0.35rem; }
+
+  .ticket {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    border: var(--separator-border);
+    border-radius: 0.7rem;
+    background-color: var(--primary-l2);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .ticket.urgent { border-color: color-mix(in srgb, var(--error) 55%, transparent); }
+  .ticket .who {
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border-radius: 50%;
+    color: var(--primary);
+    background-color: var(--secondary-l1);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .ticket .subj { font-size: 0.88rem; }
+  .ticket .prev { color: var(--text-color-f2); font-size: 0.76rem; }
+  .ticket .meta { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .ticket .when { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.66rem; }
+
+  .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---- thread, incl. new agent sender -------------------------------------- */
+  .thread { display: grid; gap: 0.7rem; }
+  .msg { display: grid; gap: 0.3rem; max-inline-size: 42rem; padding: 0.7rem 0.9rem; border-radius: 0.8rem; }
+  .msg.them { border: var(--separator-border); background-color: var(--primary-l2); }
+  .msg.us { justify-self: end; color: var(--accent-ink); background-color: var(--accent); }
+  .msg.us .head { color: color-mix(in srgb, var(--accent-ink) 70%, transparent); }
+  .msg.sys { justify-self: center; max-inline-size: 34rem; border: 1px dashed var(--separator-color); background-color: transparent; color: var(--text-color-f2); font-size: 0.78rem; text-align: center; }
+  .msg.auto { border: 1px dashed color-mix(in srgb, var(--accent) 55%, var(--separator-color)); background-color: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .msg.auto .head { color: var(--accent); }
+  .msg.agent { justify-self: end; border: 1px solid color-mix(in srgb, var(--agent) 55%, transparent); background-color: color-mix(in srgb, var(--agent) 12%, transparent); }
+  .msg.agent .head { color: var(--agent); }
+
+  .msg .head { display: flex; gap: 0.5rem; align-items: baseline; color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; }
+  .msg p { margin: 0; font-size: 0.88rem; }
+
+  .facts { display: grid; gap: 0.4rem; }
+  .fact { display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.6rem; padding-block: 0.3rem; border-block-end: var(--separator-border); font-size: 0.82rem; }
+  .fact:last-child { border-block-end: none; }
+  .fact .k { color: var(--text-color-f2); font-size: 0.75rem; }
+  .fact .v { min-inline-size: 0; overflow-wrap: anywhere; }
+  .fact .v.mono { font-family: var(--value-font-family); font-size: 0.76rem; }
+
+  .switch {
+    display: inline-flex;
+    align-items: center;
+    inline-size: 2.4rem;
+    block-size: 1.35rem;
+    padding: 0.15rem;
+    border-radius: 999px;
+    background-color: var(--primary-d1);
+  }
+
+  .switch i { inline-size: 1.05rem; block-size: 1.05rem; border-radius: 50%; background-color: var(--text-color-f2); }
+  .switch.on { background-color: var(--accent); justify-content: flex-end; }
+  .switch.on i { background-color: var(--accent-ink); }
+  .switch.off-danger { background-color: color-mix(in srgb, var(--error) 30%, var(--primary-d1)); }
+  .switch.off-danger i { background-color: var(--error); }
+
+  .switchrow { display: flex; gap: 0.6rem; align-items: center; padding-block: 0.5rem; }
+  .switchrow span.lab { font-size: 0.85rem; }
+  .switchrow span.sub { display: block; color: var(--text-color-f2); font-size: 0.75rem; }
+
+  .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.7rem; margin-block-start: 1rem; }
+  .rules div { padding: 0.9rem 1rem; border: var(--separator-border); border-radius: 0.7rem; background-color: var(--primary-l1); font-size: 0.85rem; }
+  .rules b { display: block; margin-block-end: 0.25rem; color: var(--accent); font-family: var(--value-font-family); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  .map { display: grid; gap: 0.3rem; margin-block-start: 1rem; }
+  .maprow {
+    display: grid;
+    grid-template-columns: 15rem 1fr auto;
+    gap: 0.7rem;
+    align-items: baseline;
+    padding: 0.45rem 0.8rem;
+    border: var(--separator-border);
+    border-radius: 0.6rem;
+    background-color: var(--primary-l1);
+    font-size: 0.83rem;
+  }
+  @media (max-width: 50rem) { .maprow { grid-template-columns: 1fr; } }
+  .maprow code { color: var(--accent); font-family: var(--value-font-family); font-size: 0.78rem; }
+  .maprow .gate { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .answers { display: grid; gap: 0.35rem; margin-block-start: 0.5rem; }
+  .answer {
+    display: grid;
+    grid-template-columns: 1.4rem minmax(0, 1fr) auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.55rem 0.75rem;
+    border: var(--separator-border);
+    border-radius: 0.6rem;
+    background-color: var(--primary-l2);
+    text-align: start;
+  }
+  .answer .num { color: var(--accent); font-family: var(--value-font-family); font-size: 0.66rem; }
+  .answer b { display: block; font-size: 0.84rem; font-weight: 600; }
+  .answer span.sub { display: block; color: var(--text-color-f2); font-size: 0.75rem; }
+  .answer .hit { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.62rem; text-align: end; }
+  .answer .hit .warn { color: var(--warn); }
+
+  .mailcard {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.9rem 1rem;
+    border: var(--separator-border);
+    border-radius: 0.7rem;
+    background-color: var(--primary-l2);
+  }
+  .mailhead { display: grid; grid-template-columns: 4.5rem 1fr; gap: 0.5rem; font-size: 0.8rem; }
+  .mailhead .k { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.68rem; }
+  .mailbody { padding-block-start: 0.5rem; border-block-start: var(--separator-border); font-size: 0.85rem; }
+
+  /* ---- digest email: glance-first layout -------------------------------------- */
+  .glancerow { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-block-end: 0.7rem; }
+  .glancetile { flex: 1; min-inline-size: 6rem; padding: 0.6rem 0.7rem; border-radius: 0.6rem; background-color: var(--primary-l1); text-align: center; }
+  .glancetile .n { display: block; font-family: var(--value-font-family); font-size: 1.35rem; font-weight: 700; }
+  .glancetile .lab { display: block; margin-block-start: 0.1rem; color: var(--text-color-f2); font-size: 0.66rem; }
+  .glancetile.resolved .n { color: var(--accent); }
+  .glancetile.suggested .n { color: var(--agent); }
+  .glancetile.flagged .n { color: var(--warn); }
+
+  .digestbar { display: flex; block-size: 0.7rem; border-radius: 999px; overflow: hidden; margin-block-end: 0.4rem; }
+  .digestbar i { display: block; }
+  .digestbar .resolved { background-color: var(--accent); }
+  .digestbar .suggested { background-color: var(--agent); }
+  .digestbar .flagged { background-color: var(--warn); }
+
+  table.digesttable { inline-size: 100%; border-collapse: collapse; margin-block-end: 0.6rem; font-size: 0.81rem; }
+  table.digesttable th { padding-block-end: 0.3rem; color: var(--text-color-f2); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; text-align: start; border-block-end: var(--separator-border); }
+  table.digesttable td { padding-block: 0.45rem; border-block-end: var(--separator-border); vertical-align: top; }
+  table.digesttable tr:last-child td { border-block-end: none; }
+  table.digesttable td.who { white-space: nowrap; font-weight: 600; }
+  table.digesttable td.status { white-space: nowrap; }
+
+  .optional {
+    margin-block-start: 0.7rem;
+    padding-block-start: 0.6rem;
+    border-block-start: 1px dashed var(--separator-color);
+  }
+  .optional summary { cursor: pointer; color: var(--text-color-f2); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .optional p { color: var(--text-color-f1); font-size: 0.82rem; }
+
+  .stamp {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 0.5rem;
+    background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+    font-size: 0.76rem;
+  }
+  .stamp .dot2 { inline-size: 0.5rem; block-size: 0.5rem; border-radius: 50%; background-color: var(--accent); }
+  .stamp.danger { border-color: color-mix(in srgb, var(--error) 45%, transparent); background-color: color-mix(in srgb, var(--error) 10%, transparent); }
+  .stamp.danger .dot2 { background-color: var(--error); }
+
+  /* ---- desk shell ------------------------------------------------------------ */
+  .deskshell { display: flex; align-items: stretch; min-block-size: 30rem; }
+  .desknav {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    inline-size: 12.5rem;
+    padding: 0.8rem 0.6rem;
+    border-inline-end: var(--separator-border);
+    background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
+  }
+  .navlist { display: flex; flex-direction: column; gap: 0.1rem; margin: 0; padding: 0; list-style: none; }
+  .navitem {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    inline-size: 100%;
+    padding: 0.5rem 0.6rem;
+    border: none;
+    border-radius: 0.6rem;
+    color: var(--text-color-f1);
+    background-color: transparent;
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: start;
+    cursor: pointer;
+  }
+  .navitem svg { flex: none; inline-size: 1.05rem; block-size: 1.05rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .navitem.on { color: var(--accent-ink); background-color: var(--accent); }
+  .navitem.on svg { stroke: var(--accent-ink); }
+  .navgrow { flex: 1; }
+
+  .navbadge {
+    margin-inline-start: auto;
+    padding: 0.05rem 0.42rem;
+    border-radius: 999px;
+    background-color: color-mix(in oklab, var(--text-color) 16%, transparent);
+    color: var(--text-color-f1);
+    font-family: var(--value-font-family);
+    font-size: 0.66rem;
+    font-weight: 700;
+  }
+  .navitem.on .navbadge { background-color: color-mix(in oklab, var(--accent-ink) 22%, transparent); color: var(--accent-ink); }
+  .navbadge.alert { background-color: color-mix(in oklab, var(--error) 25%, transparent); color: var(--error); }
+  .navitem.on .navbadge.alert { background-color: var(--accent-ink); color: var(--error); }
+
+  .staffblock { display: flex; gap: 0.55rem; align-items: center; padding-block-start: 0.7rem; border-block-start: var(--separator-border); }
+  .staffblock .who { display: grid; place-items: center; inline-size: 2rem; block-size: 2rem; border-radius: 50%; color: var(--primary); background-color: var(--secondary-l1); font-size: 0.7rem; font-weight: 700; }
+  .staffblock .id { min-inline-size: 0; }
+  .staffblock .name { display: block; font-size: 0.82rem; font-weight: 600; }
+  .staffblock .signout { display: block; padding: 0; border: none; color: var(--text-color-f2); background: none; font: inherit; font-size: 0.72rem; cursor: pointer; }
+
+  .deskmain { flex: 1; min-inline-size: 0; padding: 1.1rem 1.1rem 1.3rem; overflow-x: auto; }
+
+  /* ---- dashboard stat grid ---------------------------------------------------- */
+  .asof { margin: 0 0 0.9rem; color: var(--text-color-f2); font-size: 0.76rem; }
+  .statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.6rem; margin-block-end: 1rem; }
+  .stat { padding: 0.8rem 0.9rem; border: var(--separator-border); border-radius: 0.8rem; background-color: var(--primary-l2); }
+  .stat .n { display: block; font-family: var(--value-font-family); font-size: 1.55rem; font-weight: 700; }
+  .stat .lab { display: block; margin-block-start: 0.2rem; color: var(--text-color-f2); font-size: 0.72rem; }
+  .stat .delta { margin-inline-start: 0.4rem; color: var(--accent); font-size: 0.7rem; font-weight: 600; }
+  .stat .delta.bad { color: var(--error); }
+
+  .trendcard { padding: 0.9rem 0.9rem 0.7rem; }
+  .trend { display: flex; gap: 0.3rem; align-items: flex-end; block-size: 4.5rem; margin-block-start: 0.6rem; }
+  .trend i { flex: 1; min-inline-size: 0.35rem; border-radius: 0.2rem 0.2rem 0 0; background-color: color-mix(in oklab, var(--accent) 45%, transparent); }
+  .trend i.agentpart { background-color: color-mix(in oklab, var(--agent) 55%, transparent); }
+
+  .stackbar { display: flex; block-size: 0.9rem; border-radius: 999px; overflow: hidden; margin-block: 0.5rem; }
+  .stackbar i { display: block; }
+  .stackbar .resolved { background-color: var(--accent); }
+  .stackbar .suggested { background-color: var(--agent); }
+  .stackbar .escalated { background-color: var(--warn); }
+  .legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-color-f2); }
+  .legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .legend i { inline-size: 0.6rem; block-size: 0.6rem; border-radius: 50%; }
+  .legend .resolved i { background-color: var(--accent); }
+  .legend .suggested i { background-color: var(--agent); }
+  .legend .escalated i { background-color: var(--warn); }
+
+  /* ---- suggested-reply queue -------------------------------------------------- */
+  .suggestcard { padding: 0.8rem 0.9rem; border: 1px dashed color-mix(in srgb, var(--agent) 55%, var(--separator-color)); border-radius: 0.7rem; background-color: color-mix(in srgb, var(--agent) 8%, transparent); margin-block-end: 0.6rem; }
+  .suggestcard .from { font-size: 0.82rem; font-weight: 600; }
+  .suggestcard .draft { margin: 0.5rem 0; padding: 0.6rem 0.7rem; border-radius: 0.5rem; background-color: var(--primary-l2); font-size: 0.85rem; }
+  .suggestcard .why { margin: 0.3rem 0 0; color: var(--text-color-f2); font-size: 0.74rem; }
+
+  /* ---- notification bell ------------------------------------------------------ */
+  .bellwrap { position: relative; }
+  .bell { display: grid; place-items: center; inline-size: 2rem; block-size: 2rem; border-radius: 50%; border: var(--separator-border); background-color: var(--primary-l2); cursor: pointer; }
+  .bell svg { inline-size: 1.05rem; block-size: 1.05rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .belldot { position: absolute; inset-block-start: -0.1rem; inset-inline-end: -0.1rem; inline-size: 0.6rem; block-size: 0.6rem; border-radius: 50%; background-color: var(--error); border: 2px solid var(--primary); }
+  .belldrop { position: absolute; inset-inline-end: 0; inset-block-start: 2.4rem; inline-size: 18rem; padding: 0.5rem; border: var(--separator-border); border-radius: 0.8rem; background-color: var(--primary-l1); box-shadow: 0 0.6rem 1.6rem rgba(0,0,0,0.35); z-index: 5; }
+  .notif { display: block; padding: 0.55rem 0.6rem; border-radius: 0.5rem; font-size: 0.82rem; }
+  .notif.unread { background-color: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .notif .t { color: var(--text-color-f2); font-size: 0.7rem; }
+
+  /* ---- quota-exhausted banner + status ---------------------------------------- */
+  .banner {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--separator-color));
+    border-radius: 0.8rem;
+    background-color: color-mix(in srgb, var(--warn) 10%, transparent);
+    font-size: 0.85rem;
+  }
+  .banner.incident { border-color: color-mix(in srgb, var(--error) 50%, var(--separator-color)); background-color: color-mix(in srgb, var(--error) 10%, transparent); }
+  .banner .ico { flex: none; inline-size: 1.15rem; block-size: 1.15rem; margin-block-start: 0.12rem; color: var(--error); }
+  .banner b { display: block; }
+  .banner .body { flex: 1; color: var(--text-color-f1); }
+  .banner .body b { color: var(--text-color); }
+
+  .quotameter { display: grid; gap: 0.3rem; margin-block: 0.6rem; }
+  .qrow { display: grid; grid-template-columns: 8rem 1fr 4.5rem; gap: 0.6rem; align-items: center; font-size: 0.78rem; }
+  .qrow .name { font-family: var(--value-font-family); font-size: 0.72rem; }
+  .qbar { position: relative; block-size: 0.5rem; border-radius: 999px; background-color: var(--primary-d1); overflow: hidden; }
+  .qbar i { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 999px; background-color: var(--accent); }
+  .qbar.full i { background-color: var(--error); }
+  .qrow .pct { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.72rem; text-align: end; }
+  .qrow.full .pct { color: var(--error); }
+
+  footer { margin-block-start: 3rem; padding-block: 1.5rem; border-block-start: var(--separator-border); color: var(--text-color-f2); font-size: 0.78rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <p class="eyebrow">Mock · not built · phase 3</p>
+  <h1>Automating the desk</h1>
+  <p class="lede">
+    Everything below sits on top of the desk that already exists — the same
+    tickets, the same Answers library, the same audit log. Nothing here
+    replaces a human; it removes the part where a human has to be the one
+    who <i>notices</i> a routine ticket, drafts the obvious reply, and closes
+    the loop. The agent reads, drafts, and flags. A person still owns close,
+    still owns anything that matters, and can turn the whole thing off with
+    one switch.
+  </p>
+  <p class="lede">
+    Built on <b>OpenClaw</b> (MIT — Gateway, cron/automations, taskflow,
+    MCP tools, a native Groq provider) driving <b>Groq</b> as the model,
+    against a handful of new, deliberately narrow endpoints on KeyLearn's
+    own support API. No third-party helpdesk, no second database — one more
+    actor in the same desk, with a smaller badge in the audit log.
+  </p>
+  <p class="lede">
+    It has a name, on purpose — <b>Tab</b>, with a small <span class="aibadge">AI</span>
+    mark beside it everywhere it appears, so nobody mistakes its message for
+    a colleague's, and nobody has to wonder either.
+  </p>
+</header>
+
+<h2><span class="stepno">01</span>Where the agent sits</h2>
+<p class="note">
+  The agent is not staff. It doesn't sign in with a passkey and it isn't in
+  <code>STAFF_EMAILS</code> — it carries its own key, checked by its own
+  code path, that opens a much smaller door than the one a human walks
+  through.
+</p>
+<div class="map">
+  <div class="maprow"><code>x-support-agent-key</code><span>Header-based credential, constant-time compared against <code>SUPPORT_AGENT_API_KEY</code> — a separate check from <code>requireStaff()</code>, never the same code path.</span><span class="gate">new</span></div>
+  <div class="maprow"><code>GET /_/support/agent/queue</code><span>Open/waiting tickets needing a look.</span><span class="gate">read</span></div>
+  <div class="maprow"><code>GET /_/support/agent/tickets/{id}</code><span>Full thread — same shape staff already sees.</span><span class="gate">read</span></div>
+  <div class="maprow"><code>POST /_/support/agent/tickets/{id}/reply</code><span>Posts as <code>sender: "agent"</code>. Moves the ticket to "waiting", same as a staff reply. Never closes it.</span><span class="gate">write</span></div>
+  <div class="maprow"><code>POST /_/support/agent/tickets/{id}/sentiment</code><span>Records a tone read; a "critical" read flags the ticket on its own.</span><span class="gate">write</span></div>
+  <div class="maprow"><code>POST /_/support/agent/tickets/{id}/flag</code><span>Escalates with a reason — security concern, low confidence, an explicit ask for a human.</span><span class="gate">write</span></div>
+  <div class="maprow"><code>everything else</code><span>Close a ticket, reveal an email, touch settings/notices, change anyone's account — not exposed to this key, at all. Never was, never will be.</span><span class="gate">refused</span></div>
+</div>
+
+<h2><span class="stepno">02</span>A reply in the thread — the agent's own colour</h2>
+<p class="note">
+  Staff already sees four kinds of message in a thread: theirs, yours, the
+  automatic keyword-matched answer, and the system's own notes. This is a
+  fifth — visually distinct from all of them, so nobody mistakes an LLM's
+  drafted sentence for a colleague's.
+</p>
+<div class="app">
+  <div class="chrome"><span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span><span class="grow"></span><span class="url">/desk/t/482</span></div>
+  <div class="pane">
+    <div class="thread">
+      <div class="msg them"><div class="head">Priya · 9:02 AM</div><p>My daughter's practice streak reset overnight and I don't understand why — is that a bug?</p></div>
+      <div class="msg agent"><div class="head"><span class="agentname">Tab <span class="aibadge">AI</span></span> · 9:03 AM · drafted from Answer #14</div><p>Streaks reset at local midnight if a day is skipped — nothing was lost, and her past results are still all there under her profile. If today still shows a reset that doesn't match her activity, reply here and I'll get a person to look at the account directly.</p></div>
+      <div class="msg sys">Waiting on Priya · auto-reply sent, ticket not closed</div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">03</span>Reading the room — sentiment, not just topic</h2>
+<p class="note">
+  Two tickets can be the same technical issue and need completely different
+  handling. A tone read runs alongside classification and shows up as a chip
+  in the inbox and the thread — <b>only a "critical" read escalates on its
+  own</b>; a merely frustrated one is tagged for the daily digest and the
+  agent still tries to help.
+</p>
+<div class="app">
+  <div class="chrome"><span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span><span class="grow"></span><span class="url">/desk/inbox</span></div>
+  <div class="pane">
+    <div class="tickets">
+      <div class="ticket"><span class="who">P</span><span><span class="subj truncate">Streak reset overnight</span><span class="prev truncate">Priya · handled by Tab, waiting on her</span></span><span class="meta"><span class="chip mood-neutral">neutral</span><span class="chip wait">waiting</span><span class="when">9:03 AM</span></span></div>
+      <div class="ticket"><span class="who">D</span><span><span class="subj truncate">Third email — still can't get typing sounds working</span><span class="prev truncate">Devesh · getting more upset each message</span></span><span class="meta"><span class="chip mood-frustrated">frustrated</span><span class="chip wait">waiting</span><span class="when">8:41 AM</span></span></div>
+      <div class="ticket urgent"><span class="who">A</span><span><span class="subj truncate">Someone signed into my son's account from a country we've never been to</span><span class="prev truncate">Anon · flagged: security concern, critical sentiment</span></span><span class="meta"><span class="chip mood-critical">critical</span><span class="chip alarm">flagged</span><span class="when">8:12 AM</span></span></div>
+    </div>
+  </div>
+</div>
+<p class="note" style="margin-block-start:0.8rem">
+  The middle ticket is the deliberate one: "frustrated" alone doesn't stop
+  the agent trying — it just makes sure the digest surfaces it even though
+  it never got flagged, so a pattern of quiet frustration doesn't stay
+  invisible.
+</p>
+
+<h2><span class="stepno">04</span>The middle tier — for uncertain, not for routine</h2>
+<p class="note">
+  This is <b>not</b> where every unmatched question goes by default — a
+  routine question with a grounded, correct answer sends itself, full
+  stop, the same as step 02. This queue exists for the narrower case where
+  Verify (step 5 of the triage flow) genuinely can't confirm the draft is
+  right — the Booklet doesn't clearly cover the specific case, or two
+  sources disagree. One click to send as-is, one to edit first, one to
+  hand to a person instead. It reuses the same idea the Answers library
+  already has in <code>suggestOnly</code>, just applied to Tab's own
+  uncertain drafts instead of a keyword rule.
+</p>
+<div class="app">
+  <div class="chrome"><span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span><span class="grow"></span><span class="url">/desk/suggested</span></div>
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem" type="button">Dashboard</button>
+        <button class="navitem" type="button">Inbox<span class="navbadge">6</span></button>
+        <button class="navitem on" type="button">Suggested<span class="navbadge">3</span></button>
+        <button class="navitem" type="button">Answers</button>
+        <button class="navitem" type="button">Notices</button>
+        <button class="navitem" type="button">Settings</button>
+        <button class="navitem" type="button">Audit</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock"><span class="who">A</span><span class="id"><span class="name">abhijath</span><button class="signout" type="button">Log out</button></span></div>
+    </nav>
+    <div class="deskmain">
+      <p class="note" style="margin-block-start:0">Verify couldn't confirm these as correct on its own. Nothing here has reached the person yet.</p>
+      <div class="suggestcard">
+        <div class="from">Owen — "Can I pair two braille displays to one profile at once?"</div>
+        <div class="draft">I believe only one display pairs per profile at a time, but I'm not fully certain that's still true after the recent update — worth double-checking before I tell them that with confidence.</div>
+        <p class="why">Not in the Booklet's braille section as written · Answers library has nothing matching · Verify flagged this as unconfirmed rather than guessing</p>
+        <div class="btnrow"><button class="btn primary small">Send as-is</button><button class="btn ghost small">Edit &amp; send</button><button class="btn danger small">Hand to a person</button></div>
+      </div>
+      <div class="suggestcard">
+        <div class="from">Meera — "Does moving my daughter's profile to a new email affect her existing streak, or only new activity?"</div>
+        <div class="draft">Moving the linked email shouldn't touch her results or streak — everything's tied to the profile, not the address on the account.</div>
+        <p class="why">Answer #21 covers <i>how</i> to move an account, not what happens to in-progress streaks specifically — Tab's draft goes slightly beyond what's written, so Verify held it rather than treating it as fully grounded</p>
+        <div class="btnrow"><button class="btn primary small">Send as-is</button><button class="btn ghost small">Edit &amp; send</button><button class="btn danger small">Hand to a person</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">05</span>Escalation — two speeds, one queue</h2>
+<p class="note">
+  Everything escalated still lands in the same flagged queue staff already
+  has — nothing new to check. The only change is <b>how loud it is on the
+  way in</b>: most flags wait for tomorrow's digest; a short list of things
+  interrupt immediately, because a day's delay is the wrong answer for them.
+</p>
+<div class="split">
+  <div>
+    <p class="micro">Flags in tomorrow's digest, not before</p>
+    <div class="rules">
+      <div><b>Low confidence</b>The verify step re-reads its own draft and isn't sure — hands off rather than guesses.</div>
+      <div><b>Frustrated, not critical</b>Worth a human eye, not worth interrupting anyone's evening for.</div>
+      <div><b>Explicit "I want a person"</b>Said plainly, honoured immediately — just not paged.</div>
+      <div><b>Reopened once after a Tab reply</b>The customer wrote back — the reply didn't land. Feeds the reopen-rate metric too.</div>
+    </div>
+  </div>
+  <div>
+    <p class="micro danger">Flags right now — email fires immediately</p>
+    <div class="rules">
+      <div><b>Security / account-takeover pattern</b>Credential-stuffing language, a suspicious sign-in, a phishing link sent <i>to</i> support.</div>
+      <div><b>Critical sentiment</b>Reads as genuinely distressed — see step 03.</div>
+      <div><b>Child-safety or abuse report</b>Anything suggesting a child is at risk, or a report of another user's behaviour — never Tab's to judge alone.</div>
+      <div><b>Privacy / data-deletion request</b>A parent asking for a child's data removed, or withdrawing consent — must be handled precisely, not paraphrased.</div>
+      <div><b>Legal or regulatory contact</b>A lawyer, a regulator, anything with real consequences if the wording is even slightly off.</div>
+      <div><b>A report that reads like a real security bug</b>Treated as a live vulnerability report, not a support ticket, until a person says otherwise.</div>
+      <div><b>Reopened a second time</b>The automated path already failed once on this ticket — stop trying, don't try a third draft.</div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">06</span>The daily digest — glance first, prose optional</h2>
+<p class="note">
+  One email, every morning, to every address in <code>STAFF_EMAILS</code>.
+  The point of a digest is that most mornings you don't need to read past
+  the first screenful — numbers, a bar, a short table of what actually
+  needs eyes. The paragraph-style writeup is still there underneath, for
+  the mornings you want the story rather than the shape of it.
+</p>
+<div class="app">
+  <div class="pane">
+    <div class="mailcard">
+      <div class="mailhead"><span class="k">FROM</span><span>Tab, KeyLearn Support &lt;support@keylearn.org&gt;</span><span class="k">TO</span><span>abhijath@…, support@… (every STAFF_EMAILS address)</span><span class="k">SUBJECT</span><span>Desk summary — Fri 16 Aug · 2 need a look</span></div>
+      <div class="mailbody">
+
+        <div class="glancerow">
+          <div class="glancetile"><span class="n">19</span><span class="lab">Came in</span></div>
+          <div class="glancetile resolved"><span class="n">14</span><span class="lab">Resolved</span></div>
+          <div class="glancetile suggested"><span class="n">3</span><span class="lab">Approved</span></div>
+          <div class="glancetile flagged"><span class="n">2</span><span class="lab">Flagged</span></div>
+        </div>
+
+        <div class="digestbar" style="inline-size:100%"><i class="resolved" style="inline-size:74%"></i><i class="suggested" style="inline-size:16%"></i><i class="flagged" style="inline-size:10%"></i></div>
+        <div class="legend" style="margin-block-end:0.9rem"><span class="resolved"><i></i>Resolved by Tab</span><span class="suggested"><i></i>Approved by you</span><span class="flagged"><i></i>Flagged</span></div>
+
+        <table class="digesttable">
+          <thead><tr><th>Who</th><th>Ticket</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="who">Anon</td><td>Sign-in from an unfamiliar location</td><td class="status"><span class="chip alarm">flagged · urgent</span></td></tr>
+            <tr><td class="who">Devesh</td><td>Typing sounds still not working (3rd message)</td><td class="status"><span class="chip mood-frustrated">frustrated</span></td></tr>
+            <tr><td class="who">Owen</td><td>Pairing two braille displays — suggested reply</td><td class="status"><span class="chip agent">awaiting approval</span></td></tr>
+            <tr><td class="who">Priya</td><td>Streak-reset — wrote back after Tab's reply</td><td class="status"><span class="chip wait">reopened ×1</span></td></tr>
+          </tbody>
+        </table>
+
+        <details class="optional">
+          <summary>Full detail, if you want the story instead of the shape</summary>
+          <p><b>19 tickets</b> came in yesterday. <b>14 resolved automatically</b>, <b>3 sent as suggestions and approved by you</b>, <b>2 flagged</b> — both already in your inbox, one of them urgent (sign-in from an unfamiliar location — see the flagged queue, not this email, for the detail on that one).</p>
+          <p><b>Worth a look, not urgent:</b> Devesh's typing-sound thread (frustrated, third message) · Owen's braille-display-pairing question, which got a suggested reply that's still waiting on your approval since Tab wasn't fully sure it's still accurate after the last update.</p>
+          <p><b>Reopened after a reply:</b> 1 — Priya's streak-reset thread, she wrote back. Worth checking whether Answer #14 needs a rewrite.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">07</span>Settings — the kill switch and the guardrails</h2>
+<p class="note">
+  Automation gets its own card, right where the desk's existing settings
+  already live — a signature, quiet hours, a threshold. This one just has a
+  bigger switch at the top.
+</p>
+<div class="app">
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem" type="button">Dashboard</button>
+        <button class="navitem" type="button">Inbox</button>
+        <button class="navitem" type="button">Answers</button>
+        <button class="navitem" type="button">Notices</button>
+        <button class="navitem on" type="button">Settings</button>
+        <button class="navitem" type="button">Audit</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock"><span class="who">A</span><span class="id"><span class="name">abhijath</span><button class="signout" type="button">Log out</button></span></div>
+    </nav>
+    <div class="deskmain">
+      <div class="card danger">
+        <p class="micro danger">Automation — off switches everything below</p>
+        <div class="switchrow"><span class="switch on"><i></i></span><span><span class="lab">Agent is active</span><span class="sub">Off routes every ticket to the human queue immediately — nothing in flight is lost, it just stops picking up new ones.</span></span></div>
+      </div>
+      <div class="card">
+        <p class="micro">Guardrails</p>
+        <span class="lbl">Auto-send confidence floor</span>
+        <div class="tabs"><button>70%</button><button class="on">85%</button><button>95%</button></div>
+        <span class="lbl">Max auto-closes per hour, before the rest wait for a human</span>
+        <div class="tabs"><button>10</button><button class="on">25</button><button>50</button><button>No cap</button></div>
+        <div class="switchrow"><span class="switch off-danger"><i></i></span><span><span class="lab">Shadow mode</span><span class="sub">Agent drafts and classifies everything, but every send — even "auto-send confidence" ones — waits for one-click approval. Turn on while trusting a new prompt or threshold.</span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">08</span>Dashboard — is it actually working</h2>
+<p class="note">
+  New tiles beside the ones staff already checks — the numbers that answer
+  "is this thing pulling its weight" without staff having to read every
+  thread themselves.
+</p>
+<div class="app">
+  <div class="pane">
+    <p class="asof">As of 16 Aug, 07:58 · next refresh in 4 minutes</p>
+    <div class="statgrid">
+      <div class="stat"><span class="n">74%<span class="delta">↑ 3pt</span></span><span class="lab">Auto-resolved, last 7 days</span></div>
+      <div class="stat"><span class="n">16%</span><span class="lab">Sent as suggestion, staff-approved</span></div>
+      <div class="stat"><span class="n">10%</span><span class="lab">Escalated to a human</span></div>
+      <div class="stat"><span class="n">4.1%<span class="delta bad">↑ 0.6pt</span></span><span class="lab">Reopened after an agent reply</span></div>
+    </div>
+    <div class="card trendcard">
+      <p class="micro">Resolution mix, last 14 days</p>
+      <div class="stackbar" style="inline-size:100%"><i class="resolved" style="inline-size:74%"></i><i class="suggested" style="inline-size:16%"></i><i class="escalated" style="inline-size:10%"></i></div>
+      <div class="legend"><span class="resolved"><i></i>Agent, auto-sent</span><span class="suggested"><i></i>Agent, staff-approved</span><span class="escalated"><i></i>Escalated</span></div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">09</span>Answers — the loop closes here</h2>
+<p class="note">
+  Solved-rate already exists per Answer. Two additions: a <b>reopened-rate</b>
+  right beside it, so a rule that's quietly misfiring can't hide behind a
+  healthy-looking hit count — and a new lane for answers the agent itself
+  proposes after a human resolves something it couldn't.
+</p>
+<div class="answers">
+  <div class="answer"><span class="num">#14</span><span><b>Streak reset explained</b><span class="sub">Fired 212 times</span></span><span class="hit">91% solved<br><span class="warn">6% reopened</span></span></div>
+  <div class="answer"><span class="num">#21</span><span><b>Move a profile to a new email</b><span class="sub">Fired 34 times</span></span><span class="hit">97% solved<br>1% reopened</span></div>
+</div>
+<div class="suggestcard" style="margin-block-start:0.8rem">
+  <div class="from">Proposed answer, from your reply on ticket #476</div>
+  <div class="draft">If a browser extension blocks the typing sound effects, that's usually an ad-blocker muting the tab — allow audio for keylearn.org specifically rather than turning sound off site-wide.</div>
+  <p class="why">You resolved this manually 3 times this month with near-identical wording — Tab noticed and drafted a rule.</p>
+  <div class="btnrow"><button class="btn primary small">Add to Answers</button><button class="btn ghost small">Edit first</button><button class="btn danger small">Dismiss</button></div>
+</div>
+
+<h2><span class="stepno">10</span>Signed-in users don't need another inbox</h2>
+<p class="note">
+  A guest's thread link is their only way back in — that stays exactly as
+  it is. A signed-in user already has an account to check, so a reply
+  becomes a small badge instead of one more email fighting for attention.
+</p>
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn</span><span class="grow"></span>
+    <div class="bellwrap">
+      <div class="bell"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg></div>
+      <span class="belldot"></span>
+      <div class="belldrop">
+        <a class="notif unread" href="#"><span class="t">Just now</span><br>Your support ticket "Streak reset overnight" got a reply</a>
+        <a class="notif" href="#"><span class="t">Yesterday</span><br>Your business enquiry was received</a>
+      </div>
+    </div>
+    <span class="avatar">P</span>
+  </div>
+</div>
+
+<h2><span class="stepno">11</span>When the model itself runs out</h2>
+<p class="note">
+  A free-tier daily cap is a real ceiling here, not a hypothetical — Groq
+  tracks requests-per-day <i>per model</i>, and the pipeline calls two of
+  them per ticket. This isn't treated as an error to retry into a black
+  hole: it's a distinct, detected state with its own banner and its own
+  immediate email, separate from tomorrow's digest.
+</p>
+<div class="app">
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem" type="button">Dashboard</button>
+        <button class="navitem" type="button">Inbox<span class="navbadge alert">31</span></button>
+        <button class="navitem" type="button">Suggested</button>
+        <button class="navitem" type="button">Answers</button>
+        <button class="navitem" type="button">Notices</button>
+        <button class="navitem on" type="button">Settings</button>
+        <button class="navitem" type="button">Audit</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock"><span class="who">A</span><span class="id"><span class="name">abhijath</span><button class="signout" type="button">Log out</button></span></div>
+    </nav>
+    <div class="deskmain">
+      <div class="banner incident">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 2.5 18a1.8 1.8 0 0 0 1.5 2.7h16a1.8 1.8 0 0 0 1.5-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z"></path></svg></span>
+        <span class="body">
+          <b>Tab is paused — daily quota reached on gpt-oss-20b</b>
+          Every new ticket since 6:41 PM has been routed straight to the human queue, same as the kill switch being off. Nothing was auto-replied incorrectly and nothing is stuck — it's just all sitting in your Inbox now.
+          Resets 12:00 AM Pacific (in 5h 19m), or switch to the paid tier below to lift the cap immediately.
+        </span>
+      </div>
+
+      <div class="card" style="margin-block-start:0.8rem">
+        <p class="micro">Today's usage against the free-tier cap</p>
+        <div class="quotameter">
+          <div class="qrow full"><span class="name">gpt-oss-20b</span><div class="qbar full"><i style="inline-size:100%"></i></div><span class="pct">1,000 / 1,000</span></div>
+          <div class="qrow"><span class="name">gpt-oss-120b</span><div class="qbar"><i style="inline-size:52%"></i></div><span class="pct">521 / 1,000</span></div>
+        </div>
+        <p class="note" style="margin:0.4rem 0 0">
+          20b does two calls per ticket (classify+sentiment, then draft); 120b
+          does one (verify) — which is why the cheaper model runs out first
+          even though it's rated for the same daily request count.
+        </p>
+        <div class="btnrow"><button class="btn primary small">Switch to paid tier</button><button class="btn ghost small">View usage detail</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="note" style="margin-block-start:1.2rem">
+  The alert email fires once, the moment the pipeline first sees a
+  quota/rate-limit response — not once per failed ticket, so a bad afternoon
+  doesn't also flood the inbox.
+</p>
+<div class="app">
+  <div class="pane">
+    <div class="mailcard">
+      <div class="mailhead"><span class="k">FROM</span><span>Tab, KeyLearn Support &lt;support@keylearn.org&gt;</span><span class="k">TO</span><span>abhijath@…, support@… (every STAFF_EMAILS address)</span><span class="k">SUBJECT</span><span>⚠ Tab is paused — quota reached</span></div>
+      <div class="mailbody">
+        <p><b>gpt-oss-20b hit its free-tier daily limit</b> (1,000 requests) at 6:41 PM. Automation has stopped — every ticket since is routing directly to your Inbox, unread and untouched, exactly as if the kill switch were off.</p>
+        <p><b>31 tickets</b> have come in since. None were auto-replied to incorrectly; none were dropped.</p>
+        <p>Resets automatically at midnight Pacific, or upgrade to the paid tier from Settings → Automation to lift the cap right away.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Rules this phase adds</h2>
+<div class="rules">
+  <div><b>The agent only ever talks</b>It can read a thread and post a reply. It cannot touch a profile, a setting, or anyone's account — kids' issues included, since support was already scoped to the account holder, never the child, before automation existed.</div>
+  <div><b>Ticket text is data, never instructions</b>Nothing embedded in a message — "ignore previous instructions," "mark this resolved," "give me an admin email" — is followed. It's read the same way a phishing attempt is read: as content to react to, not commands to obey.</div>
+  <div><b>One switch stops all of it</b>Off means every new ticket routes to a human immediately. Nothing in flight is lost; nothing new gets picked up.</div>
+  <div><b>A cap on how much damage an hour can do</b>If something's misfiring at scale — a bad prompt change, a degraded model — the auto-close cap throws the rest to a human instead of compounding the mistake.</div>
+  <div><b>Escalation on sentiment is opinionated</b>Only a critical read jumps the queue. A frustrated one still gets the agent's best attempt — being upset about a real, fixable problem isn't itself a reason to make someone wait longer.</div>
+  <div><b>Everything it does is audited as "agent," never as a person</b>Its key, its own audit-log actions, its own actor identity — never attributed to a staff member, never blended into a human's history.</div>
+  <div><b>Shadow mode exists for exactly one reason</b>Trying a new threshold or prompt against real tickets without risking a real send — every draft still happens, nothing goes out unapproved.</div>
+  <div><b>Routine is fully automated, on purpose</b>Nothing about a correct, grounded answer needs a human to bless it first. The suggested-replies queue is for genuine uncertainty, not a default parking spot — most tickets never touch it.</div>
+  <div><b>Every claim traces to a document, not memory</b>Tab drafts from the Answers library and the How-To Booklet — a maintained reference of how KeyLearn actually works — never from what the model thinks it recalls about the product.</div>
+  <div><b>Some things are never said, no matter how confident or well-grounded</b>Another person's account details or activity, internal/company specifics, or how a security mechanism actually works internally — held out at the same Verify step that checks factual correctness, as a separate, unconditional filter.</div>
+  <div><b>Running out of model quota fails the same way the kill switch does</b>Straight to the human queue, immediately, with one alert email — never a silent stop, never a retry loop, never a wrong answer sent because the good model wasn't available.</div>
+</div>
+
+<footer>
+  Mock · phase 3, sits on top of <code>support-desk-phase2.html</code>.
+  Tokens from <code>keylearn-themes</code>; renders in whichever theme you're
+  reading in. Names, numbers, and messages are invented.
+</footer>
+
+</div>
+</body>
+</html>

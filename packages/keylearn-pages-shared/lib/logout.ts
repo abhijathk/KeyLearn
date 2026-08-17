@@ -1,3 +1,5 @@
+import { DESK_SESSION_HEADER } from "./desk-session.ts";
+
 /**
  * Signs out and returns to the given page.
  *
@@ -6,12 +8,22 @@
  * plain `/auth/logout` link can be triggered by any third-party page that
  * embeds it — harmless in isolation, but it lets someone else decide when a
  * user's session ends.
+ *
+ * `desk: true` ends the support desk's own session (a separate cookie from
+ * the signed-in learner's, see `deskAwareSession`) — the two doors sharing
+ * this one endpoint is exactly why the marker header exists.
  */
-export async function logout(returnTo: string = "/"): Promise<void> {
+export async function logout(
+  returnTo: string = "/",
+  desk: boolean = false,
+): Promise<void> {
   try {
     await fetch("/auth/logout", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(desk ? { [DESK_SESSION_HEADER]: "1" } : {}),
+      },
       // Send the session cookie, and mark this same-origin so the server's
       // cross-site guard sees a first-party request.
       credentials: "same-origin",

@@ -21,6 +21,7 @@ import {
   EmailVerification,
   generateRecoveryCodes,
   generateTotpSecret,
+  Notification,
   Profile,
   ProfileData,
   SecurityEvent,
@@ -51,6 +52,7 @@ import {
 import { File } from "@sosimple/fsx-file";
 import { z } from "zod";
 import { Mailer, Notifier } from "../mail/index.ts";
+import { preferredLocale } from "../page/intl.ts";
 import { isBreached } from "./breached.ts";
 import {
   messageWithCode,
@@ -193,6 +195,29 @@ function ageInYears(dob: string, now: Date = new Date()): number {
     age -= 1;
   }
   return age;
+}
+
+/**
+ * Stamps a brand-new account's signup country/locale, once. Only call this
+ * from a code path that just created `userId` — `User.signupCountry`/
+ * `locale` are meant to be captured once, at registration, and never
+ * touched again, so this deliberately does not know how to update an
+ * existing account.
+ */
+async function captureSignupContext(
+  ctx: Context<RouterState>,
+  userId: number,
+): Promise<void> {
+  // Absent outside Cloudflare (e.g. local dev) — left unset, same as any
+  // account registered before this column existed.
+  const signupCountry = ctx.request.headers.get("cf-ipcountry");
+  const patch: { signupCountry?: string; locale?: string } = {
+    locale: preferredLocale(ctx),
+  };
+  if (signupCountry != null && signupCountry !== "") {
+    patch.signupCountry = signupCountry;
+  }
+  await User.query().findById(userId).patch(patch);
 }
 
 const TCreateToken = z.object({
@@ -614,6 +639,10 @@ export class Controller {
           case "verify":
             // A fresh account from an address nobody vouched for: make them
             // prove the mailbox before it becomes usable. No session yet.
+            // Unambiguously a brand-new row (unlike the "ok" case below,
+            // which can't tell a new account from a returning one) — safe
+            // to stamp its signup country/locale here.
+            await captureSignupContext(ctx, result.user.id!);
             await this.#sendVerificationCode(
               result.email,
               "verify-email",
@@ -687,8 +716,9 @@ export class Controller {
       );
     }
     ctx.state.session.destroy();
+    let user: User;
     try {
-      await User.registerWithPassword(
+      user = await User.registerWithPassword(
         email,
         password,
         firstName,
@@ -703,6 +733,7 @@ export class Controller {
       }
       throw err;
     }
+    await captureSignupContext(ctx, user.id!);
     // The account exists but isn't usable until the email is verified: email a
     // one-time code and let the client collect it. No session is established
     // here, so an unverified account can't be signed in.
@@ -1020,7 +1051,7 @@ export class Controller {
     ctx.response.body = {
       email: user.email != null,
       password: user.passwordHash != null,
-      totp: user.totpEnabled === true,
+      totp: Boolean(user.totpEnabled),
       passkey: (await Credential.listForUser(user.id!)).length > 0,
     };
   }
@@ -1110,7 +1141,7 @@ export class Controller {
     const noFactors =
       user.email == null &&
       user.passwordHash == null &&
-      user.totpEnabled !== true &&
+      !user.totpEnabled &&
       (await Credential.listForUser(user.id!)).length === 0;
     // Any ONE factor the account actually holds confirms the deletion.
     const confirmed =
@@ -1119,7 +1150,7 @@ export class Controller {
         user.email != null &&
         (await EmailVerification.verify(user.email, "delete-account", code))) ||
       (totp != null &&
-        user.totpEnabled === true &&
+        Boolean(user.totpEnabled) &&
         ((user.totpSecret != null &&
           verifyTotp(
             resolveTotpSecret(
@@ -1140,10 +1171,32 @@ export class Controller {
         "That confirmation is incorrect or has expired.",
       );
     }
+    await this.deleteAccountById(user.id!, { keepStats: keepStats === true });
+    ctx.state.session.destroy();
+    ctx.response.body = { ok: true };
+  }
+
+  /**
+   * Carries out an account's actual erasure — profile data, the stats
+   * snapshot, security history, then the account row itself. Public (unlike
+   * the confirmation gate in {@link deleteAccount} above it) so a
+   * staff-initiated deletion, carried out by `AccountDeletionSweep` once its
+   * own 48-hour cooling-off window closes, reaches the exact same erasure
+   * path a self-service deletion uses — one way an account goes away, not
+   * two implementations to keep in sync.
+   */
+  async deleteAccountById(
+    userId: number,
+    { keepStats = false }: { readonly keepStats?: boolean } = {},
+  ): Promise<void> {
+    const user = await User.query().findById(userId);
+    if (user == null) {
+      return;
+    }
     const profiles = await Profile.listForUser(user.id!);
     // Opt-in: keep anonymised ADULT stats (identifiers stripped) before the
     // data is erased. Best-effort — never blocks the deletion.
-    if (keepStats === true) {
+    if (keepStats) {
       await this.#retainAnonymizedStats(user.id!, profiles).catch((err) => {
         Logger.warn(err, "Could not retain anonymized stats");
       });
@@ -1170,8 +1223,6 @@ export class Controller {
     // (addresses, device strings) about someone who asked to be erased.
     await SecurityEvent.deleteForUser(user.id!);
     await user.$query().delete();
-    ctx.state.session.destroy();
-    ctx.response.body = { ok: true };
   }
 
   // Append each ADULT profile's typing results — stripped to anonymous metrics
@@ -1765,6 +1816,41 @@ export class Controller {
     const events = await SecurityEvent.listForUser(user.id!, 50);
     ctx.response.body = { events: events.map((e) => e.toDetails()) };
     ctx.response.headers.set("Cache-Control", "private, no-store");
+  }
+
+  // The signed-in account's "you have an update" badge — currently only
+  // fired for a support-ticket reply while signed in, in place of an
+  // email (see page-support's email-vs-notification split).
+  @http.GET({ name: "list-notifications", path: "/_/account/notifications" })
+  async listNotifications(
+    ctx: Context<RouterState & SessionState & AuthState>,
+  ) {
+    const user = ctx.state.requireUser();
+    const [notifications, unread] = await Promise.all([
+      Notification.listForUser(user.id!),
+      Notification.countUnread(user.id!),
+    ]);
+    ctx.response.body = {
+      notifications: notifications.map((n) => n.toDetails()),
+      unread,
+    };
+    ctx.response.headers.set("Cache-Control", "private, no-store");
+  }
+
+  @http.POST({
+    name: "mark-notification-read",
+    path: "/_/account/notifications/{id:[0-9]+}/read",
+  })
+  async markNotificationRead(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id") id: string,
+  ) {
+    const user = ctx.state.requireUser();
+    // markRead is scoped to (id, userId) — a guessed id belonging to
+    // another account silently no-ops rather than leaking whether it
+    // exists, same as returning it here regardless.
+    await Notification.markRead(Number(id), user.id!);
+    ctx.response.body = { ok: true };
   }
 
   @http.GET({ name: "list-passkeys", path: "/_/passkeys" })

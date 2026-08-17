@@ -156,6 +156,28 @@ export class SecurityEvent extends TimestampMixin(Model) {
       .limit(Math.min(Math.max(limit, 1), SecurityEvent.keepPerUser));
   }
 
+  /**
+   * The most recent event of a given type for a user, e.g. their last
+   * login — the staff roster's "signed in Nh ago". Same retention window as
+   * {@link listForUser}: an event past the window is treated as gone, not
+   * stale.
+   */
+  static async lastOfType(
+    userId: number,
+    type: SecurityEventType,
+  ): Promise<SecurityEvent | null> {
+    const cutoff = new Date(Date.now() - SecurityEvent.retentionMs);
+    return (
+      (await SecurityEvent.query()
+        .where("userId", userId)
+        .where("type", type)
+        .where("createdAt", ">=", cutoff)
+        .orderBy("createdAt", "desc")
+        .orderBy("id", "desc")
+        .first()) ?? null
+    );
+  }
+
   /** Drops an account's trail. Called when the account itself is erased. */
   static async deleteForUser(userId: number): Promise<void> {
     await SecurityEvent.query().where("userId", userId).delete();

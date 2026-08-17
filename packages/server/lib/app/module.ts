@@ -8,13 +8,14 @@ import {
 } from "@fastr/invert";
 import { compress } from "@fastr/middleware-compress";
 import { conditional } from "@fastr/middleware-conditional";
-import { SessionHandler } from "@fastr/middleware-session";
+import { SessionHandler, type SessionOptions } from "@fastr/middleware-session";
 import { staticFiles } from "@fastr/middleware-static-files";
 import { Env } from "@keylearn/config";
 import { ManifestModule } from "./assets.ts";
 import { AuthModule, loadUser } from "./auth/index.ts";
 import { cacheControl } from "./cachecontrol.ts";
 import { csrfGuard } from "./csrf.ts";
+import { deskAwareSession } from "./desk-session.ts";
 import { ErrorHandler } from "./error/index.ts";
 import { securityHeaders } from "./headers.ts";
 import { MailModule } from "./mail/index.ts";
@@ -49,6 +50,8 @@ export class ApplicationModule implements Module {
   provideMain(
     container: Container,
     @inject("publicDir") publicDir: string,
+    @inject("sessionOptions") sessionOptions: SessionOptions,
+    @inject("deskSessionOptions") deskSessionOptions: SessionOptions,
   ): Application {
     return (
       new Application(container, { behindProxy: behindProxy() })
@@ -59,7 +62,7 @@ export class ApplicationModule implements Module {
         .use(conditional())
         .use(compress())
         .use(staticFiles(publicDir, { cacheControl }))
-        .use(SessionHandler)
+        .use(deskAwareSession(sessionOptions, deskSessionOptions))
         .use(loadUser())
         // After the session loads, so a rejection is logged with the real path,
         // and before any route can act on the request.

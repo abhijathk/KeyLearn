@@ -19,8 +19,30 @@ export type StaffAuditAction =
   | "reveal-email"
   | "reply-ticket"
   | "ticket-status"
+  | "ticket-archived"
   | "notice-published"
-  | "notice-retracted";
+  | "notice-retracted"
+  | "account-lookup"
+  | "account-viewed"
+  | "account-email-revealed"
+  | "account-deletion-requested"
+  | "account-deletion-cancelled"
+  | "answer-changed"
+  | "rule-changed"
+  | "notice-updated"
+  | "notice-deleted"
+  | "settings-changed"
+  | "automation-toggled"
+  // The automation agent's own actions — see `requireSupportAgent` — kept
+  // in a distinct, obviously-agent-prefixed namespace so the audit log
+  // never conflates a machine action with a human staff one, even by a
+  // reader skimming quickly.
+  | "agent-access-denied"
+  | "agent-reply"
+  | "agent-sentiment"
+  | "agent-flag"
+  | "agent-close-spam"
+  | "agent-quota-paused";
 
 export class StaffAuditEvent extends TimestampMixin(Model) {
   static override readonly tableName = "staff_audit_event";

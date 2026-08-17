@@ -14,6 +14,17 @@
     opacity 0.9s ease;
 }
 
+// The support desk scrolls its own main column (long dashboards, long
+// ticket threads) — pinning the header keeps the nav-adjacent identity/
+// log-out control and the desk label reachable without scrolling back up.
+.deskSticky {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 30;
+  border-block-end: var(--separator-border);
+  background-color: var(--background-color);
+}
+
 // Auto-hide while typing: slide up out of view and fade, without taking the
 // header out of layout (so nothing below jumps).
 .hidden {

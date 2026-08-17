@@ -1,0 +1,123 @@
+// The left-nav wrapper every /desk screen mounts inside — a full-page app
+// shell (not a FloatingShell dialog), matching the mock's `.deskshell`/
+// `.desknav`/`.deskmain` structure minus the mock's fake browser chrome bar,
+// which is staging only.
+@import "@keylearn/widget/lib/index.less";
+
+.shell {
+  display: flex;
+  align-items: stretch;
+  min-block-size: 100vb;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font-family: var(--default-font-family);
+}
+
+.nav {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  inline-size: 13rem;
+  padding: 1rem 0.6rem;
+  border-inline-end: var(--separator-border);
+  background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
+}
+
+.navList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// About and Settings aren't day-to-day ticket work, so they're pinned to
+// the foot of the nav instead of mixed in with the rest.
+.navListBottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  list-style: none;
+  margin: auto 0 0;
+  padding: 0.5rem 0 0;
+  border-block-start: var(--separator-border);
+}
+
+.navItem,
+.navItemOn {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  inline-size: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 0.6rem;
+  color: var(--text-color-f1);
+  background-color: transparent;
+  font-size: 0.85rem;
+  text-decoration: none;
+
+  svg {
+    flex: none;
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    color: var(--text-color);
+  }
+}
+
+.navItemOn {
+  color: var(--accent-ink);
+  background-color: var(--accent);
+
+  svg {
+    stroke: var(--accent-ink);
+  }
+
+  &:hover {
+    color: var(--accent-ink);
+  }
+}
+
+.navBadge,
+.navBadgeAlert {
+  margin-inline-start: auto;
+  padding: 0.05rem 0.42rem;
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background-color: color-mix(in oklab, var(--text-color) 16%, transparent);
+  font-family: var(--value-font-family);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.navBadgeAlert {
+  color: var(--error);
+  background-color: color-mix(in oklab, var(--error) 25%, transparent);
+}
+
+.navItemOn .navBadge,
+.navItemOn .navBadgeAlert {
+  color: var(--accent-ink);
+  background-color: color-mix(in oklab, var(--accent-ink) 22%, transparent);
+}
+
+.navItemOn .navBadgeAlert {
+  color: var(--error);
+  background-color: var(--accent-ink);
+}
+
+.main {
+  flex: 1;
+  min-inline-size: 0;
+  padding: 1.3rem 1.5rem 3rem;
+  overflow-x: auto;
+}

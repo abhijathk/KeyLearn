@@ -20,11 +20,19 @@ export function FloatingShell({
   hideClose = false,
   onClose,
   closeLabel,
+  width,
+  dismissible = true,
 }: {
   /** Optional: the auth window carries no heading of its own. */
   readonly title?: ReactNode;
   readonly children: ReactNode;
   readonly compact?: boolean;
+  /**
+   * A specific CSS width (e.g. `"44rem"`), for the rare caller whose content
+   * doesn't fit either preset — narrower than the default `58rem` but wider
+   * than `compact`'s `26.5rem`. Overrides both.
+   */
+  readonly width?: string;
   /** Remove the body padding so a full-bleed rail/pane layout can fill it. */
   readonly flush?: boolean;
   /**
@@ -46,6 +54,13 @@ export function FloatingShell({
    * a caller with a custom `onClose` should usually supply its own.
    */
   readonly closeLabel?: string;
+  /**
+   * Whether the backdrop click and Escape close the window at all. A page
+   * with no meaningful "behind it" to return to (the standalone staff
+   * sign-in door, reached with no close button either) sets this to
+   * `false` so there's no accidental way to bounce off it.
+   */
+  readonly dismissible?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
@@ -57,6 +72,9 @@ export function FloatingShell({
       defaultMessage: "Close and return to practice",
     });
   useEffect(() => {
+    if (!dismissible) {
+      return;
+    }
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") {
         close();
@@ -65,13 +83,13 @@ export function FloatingShell({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dismissible]);
   return (
     <div
       className={styles.overlay}
       role="presentation"
       onClick={(ev) => {
-        if (ev.target === ev.currentTarget) {
+        if (dismissible && ev.target === ev.currentTarget) {
           close();
         }
       }}
@@ -82,6 +100,7 @@ export function FloatingShell({
           compact && styles.compact,
           flush && styles.flushWindow,
         )}
+        style={width != null ? { inlineSize: width } : undefined}
         role="dialog"
         aria-modal={true}
       >

@@ -65,3 +65,31 @@ export const favIcons: readonly FavIconLink[] = [
     sizes: "96x96",
   },
 ];
+
+/** The desk's own tab icon — its fixed headset mark in its fixed amber, never the visitor's own KeyLearn accent choice. */
+export const favIconsDesk: readonly FavIconLink[] = [
+  {
+    href: "/assets/favicon-desk.svg",
+    rel: "icon",
+    type: "image/svg+xml",
+    sizes: "any",
+  },
+  {
+    href: "/assets/favicon-desk-16x16.png",
+    rel: "icon",
+    type: "image/png",
+    sizes: "16x16",
+  },
+  {
+    href: "/assets/favicon-desk-32x32.png",
+    rel: "icon",
+    type: "image/png",
+    sizes: "32x32",
+  },
+  {
+    href: "/assets/favicon-desk-96x96.png",
+    rel: "icon",
+    type: "image/png",
+    sizes: "96x96",
+  },
+];

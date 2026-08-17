@@ -1,4 +1,7 @@
 import { type Knex } from "knex";
+import { AccountDeletionRequest } from "./account-deletion-request.ts";
+import { AgentStatus } from "./agent-status.ts";
+import { Answer, AnswerRule } from "./answer.ts";
 import {
   Certificate,
   CertificateSitting,
@@ -11,9 +14,15 @@ import {
   UserLoginRequest,
 } from "./model.ts";
 import { Notice } from "./notice.ts";
+import { Notification } from "./notification.ts";
+import { PracticeSession } from "./practice-session.ts";
 import { ProfileData } from "./profile-data.ts";
+import { SavedReply } from "./saved-reply.ts";
 import { SecurityEvent } from "./security-event.ts";
 import { StaffAuditEvent } from "./staff-audit-event.ts";
+import { StaffSettings } from "./staff-settings.ts";
+import { SupportBlock } from "./support-block.ts";
+import { SupportMessage } from "./support-message.ts";
 import { SupportTicket } from "./support-ticket.ts";
 
 export async function createSchema(knex: Knex): Promise<void> {
@@ -44,8 +53,21 @@ export async function createSchema(knex: Knex): Promise<void> {
   await createTable(CertificateSitting);
   await createTable(Certificate);
   await createTable(SupportTicket);
+  // Depends on SupportTicket (FK) — must come after it.
+  await createTable(SupportMessage);
   await createTable(Notice);
   await createTable(StaffAuditEvent);
+  await createTable(Answer);
+  // Depends on Answer (FK) — must come after it.
+  await createTable(AnswerRule);
+  await createTable(SavedReply);
+  await createTable(StaffSettings);
+  // Depends on User (FK) — must come after it.
+  await createTable(PracticeSession);
+  await createTable(Notification);
+  await createTable(AgentStatus);
+  await createTable(SupportBlock);
+  await createTable(AccountDeletionRequest);
 
   // Additive column migrations for databases created before the column
   // existed — createTable above only runs when the table is missing.
@@ -200,6 +222,115 @@ export async function createSchema(knex: Knex): Promise<void> {
   // outliving a newer Facebook sign-in with no way to tell the two apart.
   await addColumn("user_external_id", "used_at", (table) => {
     table.timestamp("used_at").nullable();
+  });
+
+  // Captured once, from Cloudflare's CF-IPCountry header, at the moment an
+  // account registers — never updated again. Feeds the support dashboard's
+  // signup-geography breakdown; not an ongoing location trail.
+  await addColumn("user", "signup_country", (table) => {
+    table.string("signup_country", 2).nullable();
+  });
+
+  // Captured once, from Accept-Language negotiation, at the moment an
+  // account registers — never updated again, same rule as signup_country.
+  // Feeds the support dashboard's signup-language breakdown.
+  await addColumn("user", "locale", (table) => {
+    table.string("locale", 10).nullable();
+  });
+
+  // Support-ticket columns below are also present in SupportTicket.createTable
+  // itself, so a fresh database gets the full schema in one shot — these
+  // addColumn calls exist purely to bring an already-created support_ticket
+  // table (created before these columns existed) up to date.
+  await addColumn("support_ticket", "confirmed", (table) => {
+    table.boolean("confirmed").notNullable().defaultTo(true);
+  });
+  await addColumn("support_ticket", "confirm_token_hash", (table) => {
+    table.string("confirm_token_hash", 64).nullable();
+  });
+  await addColumn("support_ticket", "closed_at", (table) => {
+    table.timestamp("closed_at").nullable();
+  });
+  // Which Answer/AnswerRule auto-replied to this ticket, if still credited
+  // at close time — see SupportTicket.attachAutoAnswer/clearAutoAttribution.
+  await addColumn("support_ticket", "auto_answer_id", (table) => {
+    table.integer("auto_answer_id").unsigned().nullable();
+  });
+  await addColumn("support_ticket", "auto_rule_id", (table) => {
+    table.integer("auto_rule_id").unsigned().nullable();
+  });
+  // The automation agent's tone read — see SupportTicket.setSentiment.
+  await addColumn("support_ticket", "sentiment", (table) => {
+    table.string("sentiment", 16).nullable();
+  });
+  // thread_token_hash is NOT NULL + unique, which a plain addColumn cannot
+  // express on a table that may already hold rows — added nullable first,
+  // then tightened below.
+  const threadTokenAdded = await addColumn(
+    "support_ticket",
+    "thread_token_hash",
+    (table) => {
+      table.string("thread_token_hash", 64).nullable();
+    },
+  );
+  if (threadTokenAdded) {
+    // The desk was never reachable before this column existed
+    // (SUPPORT_VISIBLE was off), so any pre-existing rows are test data, not
+    // real conversations — simplest correct fix is to drop them rather than
+    // mint tokens for tickets nobody could ever have reached anyway.
+    await knex("support_ticket").delete();
+    await knex.schema.alterTable("support_ticket", (table) => {
+      table.string("thread_token_hash", 64).notNullable().alter();
+    });
+    try {
+      await knex.schema.alterTable("support_ticket", (table) => {
+        table.unique(["thread_token_hash"]);
+      });
+    } catch {
+      // Already present (e.g. this ran as part of createTable on a fresh DB).
+    }
+  }
+
+  // Notice columns below are likewise also present in Notice.createTable
+  // itself; these addColumn calls upgrade an already-created notice table.
+  await addColumn("notice", "kind", (table) => {
+    table.string("kind", 16).notNullable().defaultTo("feature");
+  });
+  await addColumn("notice", "starts_at", (table) => {
+    table.timestamp("starts_at").nullable();
+  });
+  await addColumn("notice", "ends_at", (table) => {
+    table.timestamp("ends_at").nullable();
+  });
+  await addColumn("notice", "audience", (table) => {
+    table.string("audience", 16).notNullable().defaultTo("everyone");
+  });
+  await addColumn("notice", "dismissible", (table) => {
+    table.boolean("dismissible").notNullable().defaultTo(true);
+  });
+  await addColumn("agent_status", "enabled", (table) => {
+    table.boolean("enabled").notNullable().defaultTo(true);
+  });
+  await addColumn("support_message", "answer_ids", (table) => {
+    table.text("answer_ids").nullable();
+  });
+  await addColumn("staff_settings", "require_reveal_reason", (table) => {
+    table.boolean("require_reveal_reason").notNullable().defaultTo(true);
+  });
+  await addColumn("staff_settings", "show_last_login_location", (table) => {
+    table.boolean("show_last_login_location").notNullable().defaultTo(true);
+  });
+  await addColumn("support_ticket", "archived", (table) => {
+    table.boolean("archived").notNullable().defaultTo(false);
+  });
+  await addColumn("notice", "display", (table) => {
+    table.string("display", 16).notNullable().defaultTo("banner");
+  });
+  await addColumn("answer", "reopened_count", (table) => {
+    table.integer("reopened_count").unsigned().notNullable().defaultTo(0);
+  });
+  await addColumn("answer_rule", "reopened_count", (table) => {
+    table.integer("reopened_count").unsigned().notNullable().defaultTo(0);
   });
 
   async function addColumn(

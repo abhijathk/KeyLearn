@@ -345,15 +345,21 @@ function applyAccent(accent: string, day: boolean) {
 
 function readPrefs() {
   return ThemePrefs.deserialize(
-    Cookie.parse(document.cookie).get(ThemePrefs.cookieKey),
+    Cookie.parse(document.cookie).get(
+      ThemePrefs.cookieKeyFor(window.location.pathname),
+    ),
   );
 }
 
 function storePrefs(prefs: ThemePrefs) {
   document.cookie = String(
-    new SetCookie(ThemePrefs.cookieKey, ThemePrefs.serialize(prefs), {
-      maxAge: 100 * 24 * 60 * 60,
-      sameSite: "Lax",
-    }),
+    new SetCookie(
+      ThemePrefs.cookieKeyFor(window.location.pathname),
+      ThemePrefs.serialize(prefs),
+      {
+        maxAge: 100 * 24 * 60 * 60,
+        sameSite: "Lax",
+      },
+    ),
   );
 }

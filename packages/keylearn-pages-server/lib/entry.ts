@@ -7,3 +7,7 @@ import "../assets/favicon.svg";
 import "../assets/favicon-16x16.png";
 import "../assets/favicon-32x32.png";
 import "../assets/favicon-96x96.png";
+import "../assets/favicon-desk.svg";
+import "../assets/favicon-desk-16x16.png";
+import "../assets/favicon-desk-32x32.png";
+import "../assets/favicon-desk-96x96.png";

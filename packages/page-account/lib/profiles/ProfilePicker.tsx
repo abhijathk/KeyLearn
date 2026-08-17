@@ -33,7 +33,7 @@ import * as styles from "./ProfilePicker.module.less";
  */
 const NO_LEARNER: readonly string[] = [
   "/verify",
-  "/support/desk",
+  "/desk",
   "/terms-of-service",
   "/privacy-policy",
   "/accessibility",

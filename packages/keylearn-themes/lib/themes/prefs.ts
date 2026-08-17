@@ -6,6 +6,22 @@ export class ThemePrefs {
   static fontAttrName = "data-font";
   static accentAttrName = "data-accent";
   static cookieKey = "prefs";
+  /** The desk's own theme cookie — see {@link cookieKeyFor}. */
+  static deskCookieKey = "desk_prefs";
+
+  /**
+   * The desk and the learner-facing app are treated as two separate
+   * apps that happen to share a domain — switching Day/Night on one
+   * must not repaint the other. A distinct cookie per side (rather than
+   * relying on the cookie's Path attribute, whose browser-default value
+   * depends on exactly which URL it was set from) makes that true
+   * regardless of which desk page the switch was clicked from.
+   */
+  static cookieKeyFor(pathname: string): string {
+    return pathname.startsWith("/desk")
+      ? ThemePrefs.deskCookieKey
+      : ThemePrefs.cookieKey;
+  }
 
   static dataAttributes({ color, font, accent }: ThemePrefs) {
     return {

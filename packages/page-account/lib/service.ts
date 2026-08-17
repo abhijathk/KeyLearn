@@ -2,6 +2,7 @@ import {
   type AnyUser,
   downloadBlob,
   exportFilename,
+  type NotificationDetails,
   type ProfileAvatar,
   type ProfileDetails,
   type SecurityEventDetails,
@@ -321,6 +322,27 @@ export namespace AccountService {
       .DELETE(`/_/passkeys/${id}`)
       .send();
     return ((await response.json()) as { passkeys: Passkey[] }).passkeys;
+  }
+
+  export async function listNotifications(): Promise<{
+    readonly notifications: readonly NotificationDetails[];
+    readonly unread: number;
+  }> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/account/notifications")
+      .send();
+    return (await response.json()) as {
+      notifications: readonly NotificationDetails[];
+      unread: number;
+    };
+  }
+
+  export async function markNotificationRead(id: number): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST(`/_/account/notifications/${id}/read`)
+      .send({});
   }
 
   export async function forgotPassword(

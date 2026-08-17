@@ -1,0 +1,358 @@
+// Shared control shapes for every /desk screen, translated closely from
+// docs/mockups/support-desk-phase2.html so the six screens read as one
+// console rather than six separately invented ones. Real app tokens only —
+// no colours or spacing invented here that keylearn-themes doesn't already
+// define.
+@import "@keylearn/widget/lib/index.less";
+
+.grow {
+  flex: 1;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 58rem) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ---------------------------------------------------------------- surfaces
+
+.card {
+  padding: 1rem 1.1rem 1.1rem;
+  border: var(--separator-border);
+  border-radius: 0.8rem;
+  background-color: var(--primary-l2);
+
+  & + & {
+    margin-block-start: 0.8rem;
+  }
+}
+
+.cardWarn {
+  border-color: color-mix(
+    in srgb,
+    var(--warn, #e8a819) 35%,
+    var(--separator-color)
+  );
+}
+
+.cardDanger {
+  border-color: color-mix(in srgb, var(--error) 35%, var(--separator-color));
+}
+
+.cardTitle {
+  margin: 0 0 0.5rem;
+  font-family: var(--header-font-family);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.micro {
+  margin: 0 0 0.55rem;
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.microWarn {
+  color: var(--warn, #e8a819);
+}
+
+.microDanger {
+  color: var(--error);
+}
+
+.note {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.noteSmall {
+  margin: 0.5rem 0 0;
+  color: var(--text-color-f2);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+// ---------------------------------------------------------------- chips
+
+.chip {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  padding: 0.1rem 0.55rem;
+  border: var(--separator-border);
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  font-family: var(--value-font-family);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.chipNew {
+  border-color: transparent;
+  color: var(--accent-ink);
+  background-color: var(--accent);
+}
+
+.chipWait {
+  border-color: color-mix(in srgb, var(--warn, #e8a819) 80%, transparent);
+  color: var(--warn, #e8a819);
+}
+
+.chipClosed {
+  color: var(--text-color-f1);
+}
+
+.chipAlarm {
+  border-color: color-mix(in srgb, var(--error) 80%, transparent);
+  color: var(--error);
+}
+
+.chipAnon {
+  border-style: dashed;
+}
+
+// Sentiment chips sit beside status chips in the same row (Inbox/Thread) —
+// solid fills, same visual weight as .chipNew, not the outlined treatment
+// some status chips use, so the two read as one consistent chip language.
+.moodNeutral {
+  border-color: transparent;
+  color: var(--text-color-f1);
+  background-color: var(--primary-l2);
+}
+
+.moodFrustrated {
+  border-color: transparent;
+  color: var(--primary);
+  background-color: var(--warn, #e8a819);
+}
+
+.moodCritical {
+  border-color: transparent;
+  color: var(--primary);
+  background-color: var(--error);
+}
+
+// ---------------------------------------------------------------- buttons
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--field-height, 2rem);
+  padding-inline: 1.25rem;
+  border: none;
+  border-radius: 0.7rem;
+  color: var(--secondary);
+  background-color: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.primary {
+  color: var(--accent-ink);
+  background-color: var(--accent);
+}
+
+.ghost {
+  border: var(--separator-border);
+  background-color: var(--primary-l2);
+}
+
+.danger {
+  border: 1px solid color-mix(in srgb, var(--error) 45%, transparent);
+  color: var(--error);
+}
+
+.small {
+  min-block-size: 1.6rem;
+  padding-inline: 0.8rem;
+  font-size: 0.78rem;
+}
+
+.btnRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block-start: 0.9rem;
+}
+
+.link {
+  padding: 0;
+  border: none;
+  color: var(--accent-l1, var(--text-color));
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+// ---------------------------------------------------------------- fields
+
+.field {
+  display: block;
+  inline-size: 100%;
+  min-block-size: var(--field-height, 2rem);
+  padding-inline: 1rem;
+  border: 1px solid var(--primary-d1);
+  border-radius: 0.6rem;
+  color: var(--secondary);
+  background-color: var(--primary-l1);
+  font-family: var(--default-font-family);
+  font-size: 0.85rem;
+}
+
+.fieldArea {
+  min-block-size: 6.5rem;
+  padding-block: 0.5rem;
+  line-height: 1.6;
+  resize: block;
+}
+
+.lbl {
+  display: block;
+  margin-block: 0.9rem 0.3rem;
+  color: var(--text-color-f2);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+// ---------------------------------------------------------------- tabs
+
+.tabs {
+  display: inline-flex;
+  gap: 0.15rem;
+  align-items: center;
+  max-inline-size: 100%;
+  margin-block-end: 1rem;
+  padding: 0.25rem;
+  border: var(--separator-border);
+  border-radius: 999px;
+  background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
+  overflow-x: auto;
+}
+
+.tab {
+  flex: none;
+  block-size: 2rem;
+  padding-inline: 1rem;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-color-f1);
+  background-color: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tabOn {
+  color: var(--accent-ink);
+  background-color: var(--accent);
+}
+
+// ---------------------------------------------------------------- switch
+
+.switch {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  inline-size: 2.4rem;
+  block-size: 1.35rem;
+  padding: 0.15rem;
+  border: none;
+  border-radius: 999px;
+  background-color: var(--primary-d1);
+  cursor: pointer;
+}
+
+.switchDot {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  border-radius: 50%;
+  background-color: var(--text-color-f2);
+}
+
+.switchOn {
+  justify-content: flex-end;
+  background-color: var(--accent);
+}
+
+.switchOn .switchDot {
+  background-color: var(--accent-ink);
+}
+
+// ---------------------------------------------------------------- facts
+
+.facts {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 0.6rem;
+  padding-block: 0.3rem;
+  border-block-end: var(--separator-border);
+  font-size: 0.82rem;
+
+  &:last-child {
+    border-block-end: none;
+  }
+}
+
+.factK {
+  color: var(--text-color-f2);
+  font-size: 0.75rem;
+}
+
+.factV {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.factVMono {
+  font-family: var(--value-font-family);
+  font-size: 0.76rem;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -9,6 +9,11 @@ import { serveRateLimits } from "./app/auth/ratelimit.ts";
 import { checkProductionConfig } from "./app/config-check.ts";
 import { ApplicationModule, kGame, kMain } from "./app/index.ts";
 import { ReminderSweep } from "./app/mail/index.ts";
+import {
+  AccountDeletionSweep,
+  DigestSweep,
+  HoldingQueueSweep,
+} from "./app/support/index.ts";
 import { DataSnapshot } from "./app/sync/index.ts";
 import { ServerModule } from "./server/module.ts";
 import { Service } from "./server/service.ts";
@@ -42,6 +47,14 @@ if (cluster.isPrimary) {
   // right home for the reminder sweep: once per deployment rather than once per
   // worker, and never competing with a request.
   container.get(ReminderSweep).start();
+  // Unconfirmed holding-queue tickets carry an unverified email address —
+  // drop them once their confirmation window has lapsed.
+  container.get(HoldingQueueSweep).start();
+  // One staff-facing status email a day — no LLM involved, see DigestSweep.
+  container.get(DigestSweep).start();
+  // Staff-initiated account deletions, carried out once their 48-hour
+  // cooling-off window closes.
+  container.get(AccountDeletionSweep).start();
   // Learner data lives in files on this machine's disk; the database is what
   // gets backed up. Copy one into the other at intervals.
   container.get(DataSnapshot).start();

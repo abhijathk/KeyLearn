@@ -1,0 +1,93 @@
+@import "@keylearn/widget/lib/index.less";
+
+.backLink {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  margin-block-end: 0.9rem;
+  color: var(--text-color-f1);
+  font-size: 0.8rem;
+  text-decoration: none;
+
+  svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    color: var(--text-color);
+    text-decoration: underline;
+  }
+}
+
+.head {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  margin-block-end: 1rem;
+}
+
+.who {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: 50%;
+  color: var(--primary);
+  background-color: var(--secondary-l1);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.name {
+  margin: 0;
+  font-family: var(--header-font-family);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.sub {
+  margin: 0.15rem 0 0;
+  color: var(--text-color-f2);
+  font-size: 0.78rem;
+}
+
+.ticketList {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ticketRow {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.65rem;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
+  color: inherit;
+  font-size: 0.8rem;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--accent);
+  }
+}
+
+.ticketSubj {
+  min-inline-size: 0;
+}
+
+.ticketWhen {
+  flex: none;
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.68rem;
+  text-transform: capitalize;
+}

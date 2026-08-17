@@ -1,10 +1,11 @@
 import { CompleteProfileGate, useProfiles } from "@keylearn/page-account";
 import { SupportService } from "@keylearn/page-support";
-import { type NoticeDetails } from "@keylearn/pages-shared";
+import { type NoticeDetails, Pages, SiteNotice } from "@keylearn/pages-shared";
 import { AdBanner, adSenseClientId } from "@keylearn/thirdparties";
 import { PortalContainer, Toaster } from "@keylearn/widget";
+import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage } from "react-intl";
 import { showAds } from "./ads.ts";
 import { Header } from "./Header.tsx";
 import { LoginPrompt } from "./LoginPrompt.tsx";
@@ -32,48 +33,70 @@ function saveDismissedNoticeId(id: number): void {
   }
 }
 
-function NoticeBanner(): ReactNode {
-  const { formatMessage } = useIntl();
+// How often an already-open tab re-checks for a retracted/changed notice —
+// staff turning one off should clear it everywhere within this window, not
+// just on the next full page load.
+const NOTICE_POLL_MS = 30_000;
+
+function SiteNoticeBanner(): ReactNode {
   const [notice, setNotice] = useState<NoticeDetails | null>(null);
   const [dismissed, setDismissed] = useState(loadDismissedNoticeId);
+  // Steps aside the moment keys start landing — an incident notice has no
+  // close button by design (see NoticeBanner.tsx), so without this it would
+  // sit fixed over (or above) the practice text for the entire session.
+  const [typing, setTyping] = useState(false);
+
+  useEffect(() => {
+    const onTyping = (ev: Event) => {
+      setTyping(Boolean((ev as CustomEvent<boolean>).detail));
+    };
+    window.addEventListener("keylearn:typing", onTyping);
+    return () => window.removeEventListener("keylearn:typing", onTyping);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    SupportService.getActiveNotice()
-      .then((n) => {
-        if (!cancelled) {
-          setNotice(n);
-        }
-      })
-      .catch(() => {
-        // A failed fetch just means no banner this load — never worth
-        // surfacing as an error on every single page.
-      });
+    const fetchNotice = () => {
+      SupportService.getActiveNotice()
+        .then((n) => {
+          if (!cancelled) {
+            setNotice(n);
+          }
+        })
+        .catch(() => {
+          // A failed fetch just means no banner this load — never worth
+          // surfacing as an error on every single page.
+        });
+    };
+    fetchNotice();
+    const id = window.setInterval(fetchNotice, NOTICE_POLL_MS);
     return () => {
       cancelled = true;
+      window.clearInterval(id);
     };
   }, []);
 
   if (notice == null || notice.id === dismissed) {
     return null;
   }
+  // Stays mounted and fades/collapses via CSS rather than unmounting outright
+  // — an instant pop in and out (React mounting/unmounting the DOM node) is
+  // what read as "choppy"; a transitioned opacity + height glides instead.
   return (
-    <div className={styles.notice} data-level={notice.level} role="status">
-      <span className={styles.noticeText}>{notice.message}</span>
-      <button
-        type="button"
-        className={styles.noticeClose}
-        aria-label={formatMessage({
-          id: "notice.dismiss",
-          defaultMessage: "Dismiss",
-        })}
-        onClick={() => {
+    <div
+      className={clsx(
+        styles.noticeTransition,
+        typing && styles.noticeTransitionHidden,
+      )}
+      aria-hidden={typing}
+    >
+      <SiteNotice
+        notice={notice}
+        onDismiss={() => {
           saveDismissedNoticeId(notice.id);
           setDismissed(notice.id);
         }}
-      >
-        ✕
-      </button>
+      />
     </div>
   );
 }
@@ -131,7 +154,10 @@ export function Template({
     storedMode: storedMode(),
   });
   return (
-    <div className={styles.body}>
+    // "desk-app" is a plain, un-hashed marker class (not a CSS-module one):
+    // accents.less reaches for it via `html:has(.desk-app)` from a different
+    // package, which only works if the name survives compilation unhashed.
+    <div className={clsx(styles.body, path.startsWith("/desk") && "desk-app")}>
       {/*
         First in the document, so a keyboard or screen-reader user can reach
         the lesson without walking the header, the profile menu and the drawer
@@ -150,8 +176,11 @@ export function Template({
         showBack={path !== "/"}
         kids={path === "/kids"}
         practice={path === "/"}
+        desk={path.startsWith("/desk")}
+        hideAccount={path === Pages.deskSignin.path}
       />
-      <NoticeBanner />
+      {/* The live site notice is for the learner-facing app — the desk has its own preview in the notice composer, not the real banner. */}
+      {!path.startsWith("/desk") && <SiteNoticeBanner />}
       <main className={styles.main} id="main" tabIndex={-1}>
         {children}
         <PortalContainer />

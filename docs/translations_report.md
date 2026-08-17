@@ -1,1517 +1,1517 @@
 # English
 
-Translated: 1560 messages, 12522 words
+Translated: 2191 messages, 20042 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 1455 messages, 11965 words
+Translated: 1814 messages, 17745 words
 
-Untranslated: 97 messages, 504 words
+Untranslated: 318 messages, 1988 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
 * *wpm*
 * *Zen*
-* *mint*
-* *Mode*
-* *Pick*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
 * *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *indigo*
-* *Crimson*
-* *Custom…*
-* *Got it!*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
 * ...
 
 # Arabic
 
-Translated: 1468 messages, 11981 words
+Translated: 1831 messages, 17768 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 305 messages, 1974 words
 
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
-* *KeyLearn*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Assamese
 
-Translated: 1466 messages, 11979 words
+Translated: 1828 messages, 17763 words
 
-Untranslated: 88 messages, 495 words
+Untranslated: 306 messages, 1975 words
 
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Bulgarian
 
-Translated: 1468 messages, 11981 words
+Translated: 1830 messages, 17766 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 305 messages, 1974 words
 
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
-* *KeyLearn*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Bangla
 
-Translated: 1467 messages, 11980 words
+Translated: 1829 messages, 17764 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Catalan
 
-Translated: 1452 messages, 11962 words
+Translated: 1815 messages, 17749 words
 
-Untranslated: 99 messages, 506 words
+Untranslated: 317 messages, 1985 words
 
 * *s*
+* *AI*
 * *Arc*
+* *Now*
 * *PIN*
 * *Zen*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
 * *Mode*
 * *Mode*
-* *Pick*
-* *Stop*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
 * *Text*
 * *Text*
-* *Ember*
-* *Grape*
-* *Later*
-* *Paper*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Avatar*
-* *Errors*
-* *Recent*
+* *About*
 * ...
 
 # Czech
 
-Translated: 1459 messages, 11971 words
+Translated: 1818 messages, 17751 words
 
-Untranslated: 94 messages, 501 words
+Untranslated: 315 messages, 1985 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
 * *Zen*
-* *Mode*
-* *Pick*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
 * *Stop*
 * *Text*
 * *Text*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Avatar*
-* *Crimson*
-* *Custom…*
-* *Got it!*
+* *About*
+* *Audit*
+* *Close*
 * ...
 
 # Danish
 
-Translated: 1447 messages, 11957 words
+Translated: 1807 messages, 17738 words
 
-Untranslated: 106 messages, 515 words
+Untranslated: 326 messages, 1998 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
 * *Zen*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
 * *Mine*
-* *mint*
-* *Mode*
-* *Pick*
+* *Name*
 * *pink*
+* *Save*
 * *Send*
+* *spam*
+* *Spam*
 * *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Avatar*
-* *citron*
-* *indigo*
+* *About*
+* *Audit*
 * ...
 
 # German
 
-Translated: 1445 messages, 11958 words
+Translated: 1804 messages, 17740 words
 
-Untranslated: 109 messages, 516 words
+Untranslated: 330 messages, 1998 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
 * *Zen*
-* *Mode*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
 * *Name*
 * *Name*
-* *Pick*
+* *Name*
 * *pink*
-* *Stop*
+* *Save*
+* *spam*
+* *Spam*
 * *Text*
 * *Text*
-* *Coach*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Arcade*
+* *About*
 * ...
 
 # Greek
 
-Translated: 1465 messages, 11978 words
+Translated: 1826 messages, 17761 words
 
-Untranslated: 89 messages, 496 words
+Untranslated: 308 messages, 1977 words
 
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Spanish
 
-Translated: 1457 messages, 11967 words
+Translated: 1818 messages, 17753 words
 
-Untranslated: 94 messages, 501 words
+Untranslated: 315 messages, 1984 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
 * *Sepia*
-* *Theme*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *Zigzag*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
-* *See it!*
 * ...
 
 # Estonian
 
-Translated: 1459 messages, 11971 words
+Translated: 1823 messages, 17758 words
 
-Untranslated: 94 messages, 501 words
+Untranslated: 311 messages, 1980 words
 
 * *s*
-* *wpm*
+* *AI*
+* *Now*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Avatar*
-* *indigo*
-* *Number*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
 * ...
 
 # Persian
 
-Translated: 1468 messages, 11981 words
+Translated: 1831 messages, 17768 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 305 messages, 1974 words
 
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
-* *KeyLearn*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Finnish
 
-Translated: 1460 messages, 11972 words
+Translated: 1826 messages, 17762 words
 
-Untranslated: 93 messages, 500 words
+Untranslated: 308 messages, 1976 words
 
 * *s*
-* *wpm*
+* *AI*
+* *Now*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *indigo*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
-* *See it!*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Title*
+* *Today*
 * ...
 
 # French
 
-Translated: 1445 messages, 11957 words
+Translated: 1806 messages, 17742 words
 
-Untranslated: 108 messages, 515 words
+Untranslated: 328 messages, 1996 words
 
 * *s*
+* *AI*
 * *Arc*
+* *Now*
 * *Zen*
 * *Auto*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
 * *Mode*
 * *Mode*
-* *Pick*
-* *Stop*
-* *Coach*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *citron*
-* *Effort*
-* *indigo*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
 * ...
 
 # Gujarati
 
-Translated: 1466 messages, 11979 words
+Translated: 1828 messages, 17763 words
 
-Untranslated: 88 messages, 495 words
+Untranslated: 306 messages, 1975 words
 
-* *PIN*
+* *AI*
+* *Now*
 * *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Hebrew
 
-Translated: 1468 messages, 11981 words
+Translated: 1830 messages, 17766 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 305 messages, 1974 words
 
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
-* *KeyLearn*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Hindi
 
-Translated: 1467 messages, 11980 words
+Translated: 1829 messages, 17764 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Croatian
 
-Translated: 1459 messages, 11971 words
+Translated: 1822 messages, 17757 words
 
-Untranslated: 94 messages, 501 words
+Untranslated: 312 messages, 1981 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Avatar*
-* *indigo*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
 * ...
 
 # Hungarian
 
-Translated: 1465 messages, 11977 words
+Translated: 1828 messages, 17764 words
 
-Untranslated: 89 messages, 497 words
+Untranslated: 307 messages, 1976 words
 
+* *AI*
+* *Now*
 * *PIN*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
 * ...
 
 # Indonesian
 
-Translated: 1459 messages, 11972 words
+Translated: 1819 messages, 17754 words
 
-Untranslated: 95 messages, 502 words
+Untranslated: 315 messages, 1984 words
 
+* *AI*
+* *Now*
 * *PIN*
 * *wpm*
 * *Zen*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
 * *mint*
 * *Mode*
 * *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Avatar*
-* *citron*
-* *Zigzag*
-* *Crimson*
-* *Custom…*
-* *Got it!*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
 * ...
 
 # Icelandic
 
-Translated: 1466 messages, 11979 words
+Translated: 1828 messages, 17764 words
 
-Untranslated: 88 messages, 495 words
+Untranslated: 307 messages, 1976 words
 
+* *AI*
+* *Now*
 * *Sun*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Italian
 
-Translated: 1457 messages, 11967 words
+Translated: 1820 messages, 17755 words
 
-Untranslated: 95 messages, 502 words
+Untranslated: 314 messages, 1983 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *Zigzag*
-* *Account*
-* *Crimson*
-* *Custom…*
-* *Got it!*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
 * ...
 
 # Japanese
 
-Translated: 1467 messages, 11980 words
+Translated: 1828 messages, 17763 words
 
-Untranslated: 88 messages, 495 words
+Untranslated: 307 messages, 1976 words
 
+* *AI*
+* *Now*
 * *PIN*
 * *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
 * ...
 
 # Kannada
 
-Translated: 1467 messages, 11980 words
+Translated: 1830 messages, 17766 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Korean
 
-Translated: 1467 messages, 11980 words
+Translated: 1828 messages, 17763 words
 
-Untranslated: 88 messages, 495 words
+Untranslated: 307 messages, 1976 words
 
+* *AI*
+* *Now*
 * *PIN*
 * *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
 * ...
 
 # Lithuanian
 
-Translated: 1462 messages, 11974 words
+Translated: 1826 messages, 17761 words
 
-Untranslated: 91 messages, 498 words
+Untranslated: 308 messages, 1977 words
 
 * *s*
-* *wpm*
-* *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *indigo*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Latvian
 
-Translated: 1459 messages, 11969 words
+Translated: 1822 messages, 17756 words
 
-Untranslated: 93 messages, 500 words
+Untranslated: 311 messages, 1980 words
 
 * *s*
-* *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *indigo*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Malayalam
 
-Translated: 1467 messages, 11980 words
+Translated: 1829 messages, 17764 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Mongolian
 
-Translated: 1467 messages, 11980 words
+Translated: 1831 messages, 17768 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Marathi
 
-Translated: 1466 messages, 11977 words
+Translated: 1829 messages, 17764 words
 
-Untranslated: 88 messages, 497 words
+Untranslated: 305 messages, 1974 words
 
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
-* *KeyLearn*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 1453 messages, 11964 words
+Translated: 1820 messages, 17754 words
 
-Untranslated: 99 messages, 506 words
+Untranslated: 313 messages, 1982 words
 
 * *s*
-* *wpm*
+* *AI*
+* *Now*
 * *Zen*
-* *Best*
-* *Best*
-* *Best*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
 * *Mine*
-* *mint*
-* *Mode*
-* *Pick*
+* *Name*
+* *Save*
 * *Send*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Avatar*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
 * ...
 
 # Nepali
 
-Translated: 1466 messages, 11979 words
+Translated: 1828 messages, 17763 words
 
-Untranslated: 88 messages, 495 words
+Untranslated: 306 messages, 1975 words
 
-* *PIN*
+* *AI*
+* *Now*
 * *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Dutch
 
-Translated: 1446 messages, 11958 words
+Translated: 1803 messages, 17736 words
 
-Untranslated: 107 messages, 514 words
+Untranslated: 330 messages, 2000 words
 
 * *s*
+* *AI*
+* *Now*
 * *wpm*
 * *Zen*
-* *mint*
-* *Mode*
-* *Pick*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
 * *Stop*
+* *About*
+* *Audit*
+* *Close*
 * *Coach*
-* *Ember*
-* *Grape*
-* *Hints*
-* *Later*
-* *Score*
-* *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *indigo*
+* *Email*
 * ...
 
 # Odia
 
-Translated: 1464 messages, 11975 words
+Translated: 1828 messages, 17763 words
 
-Untranslated: 90 messages, 499 words
+Untranslated: 306 messages, 1975 words
 
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Punjabi
 
-Translated: 1464 messages, 11975 words
+Translated: 1828 messages, 17763 words
 
-Untranslated: 90 messages, 499 words
+Untranslated: 306 messages, 1975 words
 
-* *Kid*
+* *AI*
+* *Now*
 * *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Polish
 
-Translated: 1461 messages, 11973 words
+Translated: 1822 messages, 17756 words
 
-Untranslated: 92 messages, 499 words
+Untranslated: 311 messages, 1980 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
 * *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
-* *See it!*
-* *Sunbeam*
 * ...
 
 # Brazilian Portuguese
 
-Translated: 1456 messages, 11966 words
+Translated: 1818 messages, 17751 words
 
-Untranslated: 96 messages, 503 words
+Untranslated: 315 messages, 1984 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *Layout*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Layouts*
-* *Premium*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
 * ...
 
 # European Portuguese
 
-Translated: 1459 messages, 11969 words
+Translated: 1821 messages, 17756 words
 
-Untranslated: 93 messages, 500 words
+Untranslated: 313 messages, 1982 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
-* *See it!*
-* *Sunbeam*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
 * ...
 
 # Romanian
 
-Translated: 1454 messages, 11964 words
+Translated: 1814 messages, 17747 words
 
-Untranslated: 98 messages, 505 words
+Untranslated: 319 messages, 1988 words
 
 * *s*
+* *AI*
 * *Arc*
+* *Now*
 * *PIN*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
+* *Body*
+* *Calm*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
 * *Text*
 * *Text*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *indigo*
-* *Zigzag*
-* *Crimson*
+* *About*
+* *Audit*
 * ...
 
 # Russian
 
-Translated: 1467 messages, 11980 words
+Translated: 1831 messages, 17768 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Slovak
 
-Translated: 1458 messages, 11969 words
+Translated: 1819 messages, 17753 words
 
-Untranslated: 95 messages, 503 words
+Untranslated: 315 messages, 1985 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
 * *Zen*
-* *Mode*
-* *Pick*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
 * *Stop*
 * *Text*
 * *Text*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Avatar*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
+* *About*
+* *Audit*
+* *Close*
 * ...
 
 # Slovenian
 
-Translated: 1458 messages, 11968 words
+Translated: 1821 messages, 17755 words
 
-Untranslated: 94 messages, 501 words
+Untranslated: 312 messages, 1981 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Avatar*
-* *indigo*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
 * ...
 
 # Albanian
 
-Translated: 1460 messages, 11970 words
+Translated: 1822 messages, 17757 words
 
-Untranslated: 92 messages, 499 words
+Untranslated: 312 messages, 1981 words
 
 * *s*
+* *AI*
+* *Now*
 * *PIN*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
 * *Sepia*
-* *Theme*
-* *Voice*
-* *indigo*
-* *Zigzag*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *Premium*
-* *See it!*
-* *Sunbeam*
 * ...
 
 # Swedish
 
-Translated: 1452 messages, 11964 words
+Translated: 1813 messages, 17748 words
 
-Untranslated: 101 messages, 508 words
+Untranslated: 321 messages, 1990 words
 
 * *s*
+* *AI*
+* *Now*
 * *Zen*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
 * *mint*
-* *Mode*
-* *Pick*
-* *Stop*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
 * *Text*
 * *Text*
+* *About*
+* *Audit*
+* *Close*
 * *Coach*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Trend*
-* *Voice*
-* *Avatar*
-* *citron*
-* *indigo*
-* *Layout*
 * ...
 
 # Tamil
 
-Translated: 1467 messages, 11980 words
+Translated: 1829 messages, 17764 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Telugu
 
-Translated: 1467 messages, 11980 words
+Translated: 1829 messages, 17764 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Thai
 
-Translated: 1468 messages, 11981 words
+Translated: 1831 messages, 17768 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 305 messages, 1974 words
 
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
-* *KeyLearn*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Turkish
 
-Translated: 1463 messages, 11976 words
+Translated: 1826 messages, 17761 words
 
-Untranslated: 91 messages, 498 words
+Untranslated: 308 messages, 1977 words
 
+* *AI*
+* *Now*
 * *PIN*
-* *wpm*
 * *Zen*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Arcade*
-* *Avatar*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
 * ...
 
 # Ukrainian
 
-Translated: 1467 messages, 11980 words
+Translated: 1830 messages, 17766 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *PIN*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Urdu
 
-Translated: 1468 messages, 11981 words
+Translated: 1829 messages, 17764 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 305 messages, 1974 words
 
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
-* *KeyLearn*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Vietnamese
 
-Translated: 1467 messages, 11980 words
+Translated: 1828 messages, 17763 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 306 messages, 1975 words
 
+* *AI*
+* *Now*
 * *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
 * ...
 
 # Simplified Chinese
 
-Translated: 1469 messages, 11982 words
+Translated: 1831 messages, 17767 words
 
-Untranslated: 86 messages, 493 words
+Untranslated: 305 messages, 1974 words
 
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
-* *KeyLearn*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...
 
 # Traditional Chinese
 
-Translated: 1467 messages, 11980 words
+Translated: 1830 messages, 17766 words
 
-Untranslated: 87 messages, 494 words
+Untranslated: 305 messages, 1974 words
 
-* *wpm*
-* *Mode*
-* *Pick*
-* *Stop*
-* *Ember*
-* *Grape*
-* *Later*
-* *Sepia*
-* *Theme*
-* *Voice*
-* *Crimson*
-* *Custom…*
-* *Got it!*
-* *See it!*
-* *Sunbeam*
-* *Top Row*
-* *Amethyst*
-* *Cerulean*
-* *Go again*
-* *Home Row*
+* *AI*
+* *Now*
+* *Body*
+* *Edit*
+* *Kids*
+* *Kind*
+* *Live*
+* *Name*
+* *Save*
+* *spam*
+* *Spam*
+* *About*
+* *Audit*
+* *Close*
+* *Email*
+* *Inbox*
+* *Shift*
+* *Title*
+* *Today*
+* *Active*
 * ...

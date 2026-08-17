@@ -28,4 +28,28 @@ export class SessionModule implements Module {
       sameSite: "Lax",
     } as SessionOptions;
   }
+
+  /**
+   * A second, independent cookie for the support desk — see
+   * `deskAwareSession`. Same store/lifetime/security posture as the
+   * learner's own session, just a different name, so a staff member signing
+   * in on `/desk` doesn't overwrite the account they're also signed into on
+   * the main app in the same browser (and vice versa).
+   */
+  @provides({ id: "deskSessionOptions", singleton: true })
+  provideDeskSessionOptions(dataDir: DataDir): SessionOptions {
+    return {
+      store: new FileStore({
+        directory: dataDir.dataPath("sessions"),
+      }),
+      rolling: true,
+      key: Env.getString("DESK_COOKIE_NAME", "desk_session"),
+      maxAge: Env.getNumber("COOKIE_MAX_AGE", 1209600),
+      domain: Env.getString("COOKIE_DOMAIN", "") || undefined,
+      path: Env.getString("COOKIE_PATH", "/"),
+      httpOnly: Env.getBoolean("COOKIE_HTTP_ONLY", true),
+      secure: Env.getBoolean("COOKIE_SECURE", true),
+      sameSite: "Lax",
+    } as SessionOptions;
+  }
 }

@@ -1,4 +1,5 @@
 import { createHash, randomInt } from "node:crypto";
+import { isStaffEmail } from "@keylearn/config";
 import { type ResourceOwner } from "@keylearn/oauth";
 import {
   type AnonymousUser,
@@ -144,6 +145,23 @@ export class User extends TimestampMixin(Model) {
   parentPinHash?: string | null;
   staff?: number | boolean;
   remindedAt?: Date | null;
+  /**
+   * The 2-character ISO country code Cloudflare reported (`CF-IPCountry`) at
+   * the moment this account registered. Captured once, at sign-up, and never
+   * updated again — this is a signup-attribution field for the support
+   * dashboard's language/geography breakdown, not an ongoing location trail.
+   * Bolt-on, like `staff`: added purely via an `addColumn` migration, not in
+   * `jsonSchema`/`createTable`.
+   */
+  signupCountry?: string | null;
+  /**
+   * The locale negotiated from `Accept-Language` at the moment this account
+   * registered. Captured once, at sign-up, and never updated again — same
+   * signup-attribution rule as `signupCountry`, feeding the support
+   * dashboard's language breakdown. Bolt-on, same reasoning as
+   * `signupCountry`: `addColumn` migration only, not in `jsonSchema`.
+   */
+  locale?: string | null;
   createdAt?: Date;
   externalIds?: UserExternalId[];
   order?: Order;
@@ -523,7 +541,7 @@ export class User extends TimestampMixin(Model) {
       // Handle authenticated user.
       const details = user.toDetails();
       const premium = details.order != null;
-      const staff = Boolean(user.staff);
+      const staff = isStaffEmail(user.email);
       if (user.anonymized) {
         return Object.freeze<NamedUser>({
           id: details.id,

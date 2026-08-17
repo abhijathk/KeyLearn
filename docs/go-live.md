@@ -204,6 +204,15 @@ watched the same check pass silently. `config-check.test.ts` also passes
       oversight — needs a Turnstile widget created in the Cloudflare
       dashboard to get real keys, optional, and the feature just stays off
       until set, so it doesn't block go-live.
+- [ ] **⚠** `STAFF_EMAILS` — comma-separated allowlist of the accounts that
+      may reach `/desk`, checked at request time instead of a database
+      column. Unlike `TURNSTILE_*` above, this one is **not** optional: an
+      empty allowlist is the safe default (nobody can reach the desk), but
+      it also means the desk is unusable until this is set. Must be set on
+      the production env file, with the email of the account that will
+      staff the desk, *before* that desk is relied on — and, per the deploy
+      loop below, before `systemctl restart keylearn` on the deploy that
+      ships it, so the account isn't locked out immediately after restart.
 - [x] `BREACH_CHECK=true` (already the default).
       Set explicitly in the file for the same reason as `MULTIPLAYER_ENABLED`.
 

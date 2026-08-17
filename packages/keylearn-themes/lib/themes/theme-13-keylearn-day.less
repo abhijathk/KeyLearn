@@ -37,6 +37,10 @@
   --error-d1: darken(@colors[@error], 10);
   --error: @colors[@error];
   --error-l1: lighten(@colors[@error], 10);
+  // Darker than the night theme's amber (#e8a819) — that value fails
+  // contrast against this pale ground, same compression the error color
+  // above already gets.
+  --warn: #96650a;
   --shadow-color: #00000033;
   --slow-key-color: #d2653c;
   --fast-key-color: #2f9e5c;

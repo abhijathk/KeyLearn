@@ -104,3 +104,52 @@ each(@accents, {
     }
   }
 });
+
+// The support desk's own accent — amber, not KeyLearn's mint, so the two
+// products don't read as the same app. Forced regardless of the visitor's
+// own accent choice (this isn't a user preference — every staff member sees
+// the same desk), which is why it lives here as an override rather than as
+// a shippable entry in `@accents`/`ACCENTS`: it must never appear in the
+// general accent picker or be selectable for ordinary KeyLearn practice.
+//
+// `html:has(.desk-app)` reaches for the plain marker class Template.tsx
+// applies on every `/desk` route (see that file). Three attribute/pseudo
+// selectors on `html` (`[data-color][data-accent]:has(...)`) outrank the
+// two-attribute rules generated above regardless of source order, which
+// matters because `--Button__background-color` and friends in theme.less
+// resolve `var(--accent)` *at the html element*, not at a descendant — an
+// override placed lower in the tree would leave every one of those still
+// pointing at the old accent.
+@desk-accent-night: #e8a24a;
+@desk-accent-day: #b5661a;
+
+html[data-color="keylearn"][data-accent]:has(.desk-app),
+html[data-color="auto"][data-accent]:has(.desk-app) {
+  .accent-night(@desk-accent-night);
+}
+
+html[data-color="keylearn-day"][data-accent]:has(.desk-app) {
+  .accent-day(@desk-accent-day);
+}
+
+@media (prefers-color-scheme: light) {
+  html[data-color="auto"][data-accent]:has(.desk-app) {
+    .accent-day(@desk-accent-day);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-color="auto"][data-accent]:has(.desk-app) {
+    .accent-night(@desk-accent-night);
+  }
+}
+
+// A disabled desk button reads as washed-out (opacity dimming a light
+// accent over a dark ground looks pale, not "off") rather than as a plain
+// darker shade of the same amber. `[class*=]` reaches into the shared
+// widget package's own CSS-module output from here: the hashed suffix
+// changes per build, but the local class name it's built from does not.
+html:has(.desk-app) [class*="Button-module__disabled"] {
+  background-color: var(--accent-d2);
+  opacity: 1;
+}

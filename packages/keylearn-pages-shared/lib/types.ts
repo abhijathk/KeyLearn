@@ -138,6 +138,25 @@ export type SecurityEventDetails = {
   readonly createdAt: string;
 };
 
+/**
+ * One message in a support ticket's conversation thread.
+ *
+ * Replaces the ticket's old single staffReply/repliedAt slot — "them" is the
+ * original submitter (or a later guest reply from their thread link), "us"
+ * is staff, "auto" is a matched Answer sent without a human, and "system" is
+ * a note like "marked resolved" that belongs in the timeline but was said by
+ * nobody.
+ */
+export type SupportMessageDetails = {
+  readonly id: number;
+  readonly sender: "them" | "us" | "auto" | "agent" | "system";
+  readonly body: string;
+  readonly emailed: boolean;
+  /** Which Answer(s) an agent reply was drafted from — null for every other sender. */
+  readonly answerIds: readonly number[] | null;
+  readonly createdAt: string;
+};
+
 /** A submission to the support desk — a general question or a business enquiry. */
 export type SupportTicketDetails = {
   readonly id: number;
@@ -147,18 +166,156 @@ export type SupportTicketDetails = {
   readonly email: string;
   readonly subject: string;
   readonly message: string;
-  readonly status: "open" | "flagged" | "waiting" | "closed" | "spam";
+  readonly status:
+    | "open"
+    | "flagged"
+    | "waiting"
+    | "closed"
+    | "spam"
+    | "holding";
+  /**
+   * The automation agent's tone read — set only via its own sentiment
+   * endpoint, null until it's looked. `"critical"` is the one value that
+   * escalates a ticket on its own; `"frustrated"` is visibility-only.
+   */
+  readonly sentiment: "neutral" | "frustrated" | "critical" | null;
+  /**
+   * False only while a signed-out "support" submission sits in the
+   * email-confirmation holding queue. Every other submission starts (and
+   * stays) confirmed.
+   */
+  readonly confirmed: boolean;
+  /** @deprecated Superseded by {@link SupportTicketDetails.messages}; kept for old rows. */
   readonly staffReply: string | null;
+  /** @deprecated Superseded by {@link SupportTicketDetails.messages}; kept for old rows. */
   readonly repliedAt: string | null;
+  readonly closedAt: string | null;
+  /** Hidden from the default Inbox view — orthogonal to `status`, which keeps whatever resolution it had. */
+  readonly archived: boolean;
+  readonly messages: readonly SupportMessageDetails[];
   readonly createdAt: string;
 };
+
+/** What kind of announcement a {@link NoticeDetails} is — drives its icon/tone. */
+export type NoticeKind = "incident" | "maintenance" | "feature";
+
+/**
+ * How a {@link NoticeDetails} shows: the thin top-of-page strip (almost
+ * always right — it doesn't block anything) or a floating, centered window
+ * (the rare, deliberate exception for a message someone actually needs to
+ * stop and read).
+ */
+export type NoticeDisplay = "banner" | "window";
 
 /** A short site-wide announcement staff can post and later retract. */
 export type NoticeDetails = {
   readonly id: number;
   readonly message: string;
+  /** @deprecated Superseded by {@link NoticeDetails.kind}; kept for old rows. */
   readonly level: "info" | "warning";
+  readonly kind: NoticeKind;
+  readonly display: NoticeDisplay;
+  /** Null means "live now". */
+  readonly startsAt: string | null;
+  /** Null means "no scheduled end". */
+  readonly endsAt: string | null;
+  /** `"everyone"`, `"signed-in"`, `"kids"`, or a locale code. */
+  readonly audience: string;
+  readonly dismissible: boolean;
   readonly createdAt: string;
+};
+
+/** A short published article the support desk can hand back automatically. */
+export type AnswerDetails = {
+  readonly id: number;
+  readonly title: string;
+  readonly body: string;
+  readonly published: boolean;
+  readonly hitCount: number;
+  readonly solvedCount: number;
+  /** Times the sender wrote back after this article's auto-reply — it didn't hold. */
+  readonly reopenedCount: number;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+};
+
+/** A keyword/phrase rule that points at an {@link AnswerDetails}. */
+export type AnswerRuleDetails = {
+  readonly id: number;
+  readonly answerId: number;
+  /** Comma-or-newline-delimited keywords/phrases. */
+  readonly keywords: string;
+  readonly suggestOnly: boolean;
+  readonly firedCount: number;
+  readonly solvedCount: number;
+  readonly reopenedCount: number;
+  /** The parent article, when eagerly loaded alongside the rule. */
+  readonly answer: AnswerDetails | null;
+};
+
+/** A pending (or resolved) staff-initiated account deletion — the 48-hour cooling-off window and its outcome. */
+export type AccountDeletionRequestDetails = {
+  readonly id: number;
+  readonly reason: string;
+  readonly requestedAt: string;
+  readonly executeAt: string;
+  readonly cancelledAt: string | null;
+  readonly completedAt: string | null;
+};
+
+/** A canned reply starting point staff can drop into a thread and edit. */
+export type SavedReplyDetails = {
+  readonly id: number;
+  readonly title: string;
+  readonly body: string;
+  readonly usedCount: number;
+  readonly updatedAt: string;
+};
+
+/** One staff member's own desk preferences. */
+export type StaffSettingsDetails = {
+  readonly signature: string | null;
+  readonly notifyNew: boolean;
+  /** "HH:MM", 24-hour, or null for "no quiet hours set". */
+  readonly quietFrom: string | null;
+  readonly quietTo: string | null;
+  /** ISO date ("YYYY-MM-DD"), or null. */
+  readonly awayUntil: string | null;
+  readonly confidenceThreshold: number;
+  readonly overdueHours: number;
+  /** Whether revealing an account's email requires typing a short reason first. */
+  readonly requireRevealReason: boolean;
+  /** Whether an account's last-login city/IP is shown at all, site-wide. */
+  readonly showLastLoginLocation: boolean;
+};
+
+/**
+ * A signed-in account's in-app "you have an update" indicator — currently
+ * only fired when a support ticket gets a reply while signed in, in place
+ * of an email (see `page-support`'s email-vs-notification split).
+ */
+export type NotificationDetails = {
+  readonly id: number;
+  readonly kind: "ticket-reply";
+  readonly ticketId: number | null;
+  /** A short snapshot of the reply — there's no thread view to link to yet. */
+  readonly body: string | null;
+  readonly read: boolean;
+  readonly createdAt: string;
+};
+
+/**
+ * One row of the support desk's read-only staff roster — who's allowlisted
+ * and what proves their identity, not editable from here (see
+ * `STAFF_EMAILS`). An allowlisted address with no account yet still
+ * appears, with both factors false and no last sign-in.
+ */
+export type StaffRosterEntry = {
+  readonly email: string;
+  readonly name: string | null;
+  readonly hasPasskey: boolean;
+  readonly hasAuthenticator: boolean;
+  readonly lastSignedInAt: string | null;
 };
 
 /** One entry in the support desk's read-only staff action log. */

@@ -47,7 +47,9 @@ export type StrokeIconName =
   | "braille"
   | "warning"
   | "info"
-  | "copy";
+  | "copy"
+  | "bell"
+  | "headset";
 
 const shapes: Record<StrokeIconName, ReactNode> = {
   // The cell for "b": dots 1 and 2 raised, the other four empty.
@@ -125,6 +127,12 @@ const shapes: Record<StrokeIconName, ReactNode> = {
     <>
       <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
       <path d="M4.5 7.5l7.5 5.5 7.5-5.5" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
     </>
   ),
   code: <path d="M9 8l-4 4 4 4M15 8l4 4-4 4" />,
@@ -247,6 +255,15 @@ const shapes: Record<StrokeIconName, ReactNode> = {
       <rect x="3" y="6" width="18" height="12" rx="2.5" />
       <path d="M7 10h0M15 10h0M7 13.5h6" />
       <path d="M4 4l16 16" />
+    </>
+  ),
+  // A support agent's headset — the desk's own wordmark glyph.
+  headset: (
+    <>
+      <path d="M4 13v-1a8 8 0 0 1 16 0v1" />
+      <rect x="2.5" y="12.5" width="4" height="6.5" rx="1.8" />
+      <rect x="17.5" y="12.5" width="4" height="6.5" rx="1.8" />
+      <path d="M19.5 19v0.5a3 3 0 0 1-3 3h-2.5" />
     </>
   ),
 };

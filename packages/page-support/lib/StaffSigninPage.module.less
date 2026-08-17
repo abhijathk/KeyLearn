@@ -1,28 +1,88 @@
 @import "@keylearn/widget/lib/index.less";
 
+// This door is reached before a staff member's own theme/font choice is in
+// play (it isn't even the same session), so it stays fixed to one legible
+// face rather than following whatever font the site's active theme picked.
+.page {
+  --default-font-family: "Roboto", sans-serif;
+  --value-font-family: "Roboto", sans-serif;
+
+  font-family: var(--default-font-family);
+}
+
+// Form on the left, a small illustration on the right — collapses to the
+// form alone below the breakpoint, so a narrow viewport stays just as
+// compact as the old single-column window.
+.layout {
+  display: flex;
+  gap: 1.1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.art {
+  flex: none;
+  inline-size: 18.5rem;
+  border-radius: 0.8rem;
+  overflow: hidden;
+}
+
+.artImg,
+.artImgLight {
+  display: block;
+  object-fit: contain;
+  inline-size: 100%;
+  block-size: auto;
+  // Same fixed box for both — the day illustration isn't drawn to quite
+  // the same proportions as the night one, so `contain` keeps each one
+  // whole inside an identically sized frame rather than cropping either.
+  aspect-ratio: 3 / 2;
+}
+
+// The night illustration shows by default; swapped for the day one under
+// the Day theme, and under Auto when the device itself prefers light —
+// same data-color attribute switch LoginPrompt.module.less uses.
+.artImgLight {
+  display: none;
+}
+
+:global(html[data-color="keylearn-day"]) .artImg {
+  display: none;
+}
+
+:global(html[data-color="keylearn-day"]) .artImgLight {
+  display: block;
+}
+
+@media (prefers-color-scheme: light) {
+  :global(html[data-color="auto"]) .artImg {
+    display: none;
+  }
+
+  :global(html[data-color="auto"]) .artImgLight {
+    display: block;
+  }
+}
+
+@media (width <= 34rem) {
+  .art {
+    display: none;
+  }
+}
+
 .form {
   display: flex;
+  flex: none;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.55rem;
+  inline-size: 18.5rem;
   color: var(--text-color);
   font-family: var(--value-font-family);
 }
 
-.keyIcon {
-  display: flex;
-  align-items: center;
-  align-self: center;
-  justify-content: center;
-  inline-size: 2.75rem;
-  block-size: 2.75rem;
-  border-radius: 50%;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-}
-
 .headline {
-  margin: 0;
-  font-size: 1.6rem;
+  margin: 0 0 0.9rem;
+  font-size: 1.4rem;
   font-weight: 600;
   line-height: 1.25;
   text-align: center;
@@ -41,6 +101,12 @@
 // Same treatment as the general login window's passkey button — a device's
 // own sign-in, not a third-party one, so it gets its own mark and colours
 // rather than borrowing the white OAuth-provider button style.
+.passkeyMark {
+  flex: none;
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+}
+
 .passkeyBtn {
   display: flex;
   gap: 0.55rem;
@@ -54,6 +120,7 @@
   font-family: var(--default-font-family);
   font-size: 0.9rem;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background-color 0.15s ease,
@@ -104,6 +171,7 @@
   font-family: var(--default-font-family);
   font-size: 0.88rem;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
 
   &:hover {
@@ -141,9 +209,13 @@
 }
 
 .footnote {
-  margin: 0.4rem 0 0;
+  margin: 1.1rem 0 0;
+  padding-block-start: 0.9rem;
+  border-block-start: 1px solid
+    var(--separator-color, rgba(128, 128, 128, 0.25));
   color: var(--text-color-f2);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   line-height: 1.5;
   text-align: center;
+  white-space: nowrap;
 }

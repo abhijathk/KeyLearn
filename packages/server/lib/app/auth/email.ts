@@ -311,6 +311,67 @@ Happy typing!`;
 }
 
 /**
+ * A support-staff-initiated account deletion, in progress but not yet
+ * final — the 48-hour window is what makes this a notice rather than an
+ * ambush: the account holder has time to stop it themselves before
+ * anything is erased. Never optional, same reasoning as
+ * {@link messageSecurityAlert}: the whole point is reaching someone who
+ * may not have asked for this.
+ */
+export function messageAccountDeletionRequested({
+  email,
+  when,
+  cancelLink,
+  contactLink,
+}: {
+  readonly email: string;
+  readonly when: string;
+  readonly cancelLink: string;
+  readonly contactLink: string;
+}): Mailer.Message {
+  const subject = "Your KeyLearn account is scheduled for deletion";
+  const text = `Hello!
+
+A member of KeyLearn support has requested that this account be deleted, following contact with our support desk.
+
+Scheduled for: ${when}
+
+Once that happens, the name and email on this account are permanently erased from our servers. This can't be undone.
+
+If you asked for this, there's nothing more to do — it'll happen automatically at the time above.
+
+If you did NOT ask for this, cancel it now:
+${cancelLink}
+
+Then get in touch so we can find out what happened:
+${contactLink}
+
+Happy typing!`;
+  const html = shell(
+    "A support-requested deletion of your KeyLearn account is in progress",
+    heading("Account deletion scheduled") +
+      paragraph(
+        "A member of KeyLearn support has requested that this account be deleted, following contact with our support desk.",
+      ) +
+      factList([
+        ["Account", email],
+        ["Scheduled for", when],
+      ]) +
+      paragraph(
+        "Once that happens, the name and email on this account are permanently erased from our servers. This can't be undone.",
+      ) +
+      paragraph(
+        "If you asked for this, there's nothing more to do — it'll happen automatically at the time above.",
+      ) +
+      paragraph("If you did NOT ask for this, cancel it now:") +
+      `<div style="margin:4px 0 18px">${button(cancelLink, "Cancel this deletion")}</div>` +
+      paragraph("Then get in touch so we can find out what happened:") +
+      `<div style="margin:4px 0 4px">${button(contactLink, "Contact support")}</div>`,
+  );
+  return { to: email, subject, text, html };
+}
+
+/**
  * The practice nudge. Sent only to accounts that asked for it, and worded as an
  * invitation rather than a scolding — this goes to households with children,
  * and guilt is a poor teacher.
@@ -425,6 +486,171 @@ ${ticketLink}`;
       ]) +
       paragraph(message) +
       `<div style="margin:4px 0 4px">${button(ticketLink, "Open in the staff desk")}</div>`,
+  );
+  return { to, subject: mailSubject, text, html };
+}
+
+/**
+ * The automation agent's one interrupt-now email — a security/critical-
+ * sentiment/child-safety-flavoured flag, or a model-quota pause. Everything
+ * else it flags waits for the next daily digest instead; see the support
+ * controller's agent-flag/quota-alert endpoints for what qualifies.
+ */
+export function messageUrgentFlag({
+  to,
+  subject,
+  reason,
+  detail,
+  deskLink,
+}: {
+  readonly to: string;
+  readonly subject: string;
+  readonly reason: string;
+  readonly detail: string;
+  readonly deskLink: string;
+}): Mailer.Message {
+  const mailSubject = `⚠ ${subject}`;
+  const text = `${subject}
+
+${reason}
+
+${detail}
+
+Open in the staff desk:
+${deskLink}`;
+  const html = shell(
+    mailSubject,
+    heading(subject) +
+      factList([["Reason", reason]]) +
+      paragraph(detail) +
+      `<div style="margin:4px 0 4px">${button(deskLink, "Open in the staff desk")}</div>`,
+  );
+  return { to, subject: mailSubject, text, html };
+}
+
+/**
+ * Once a day, one per `STAFF_EMAILS` address — glance-first, per the
+ * mockup's step 06: stats, not prose. Every figure is a plain count from
+ * the desk's own database, no LLM involved (see `DigestSweep`'s doc
+ * comment for why this deliberately doesn't need one).
+ */
+export function messageDailyDigest({
+  to,
+  date,
+  ticketsCreated,
+  agentReplies,
+  flagged,
+  frustrated,
+  deskLink,
+}: {
+  readonly to: string;
+  readonly date: string;
+  readonly ticketsCreated: number;
+  readonly agentReplies: number;
+  readonly flagged: number;
+  readonly frustrated: number;
+  readonly deskLink: string;
+}): Mailer.Message {
+  const subject = `Desk summary — ${date}`;
+  const text = `${ticketsCreated} tickets came in. ${agentReplies} replied to by Tab. ${flagged} flagged for you. ${frustrated} read as frustrated (not flagged, worth a look).
+
+Open the desk:
+${deskLink}`;
+  const html = shell(
+    subject,
+    heading("Desk summary") +
+      factList([
+        ["Came in", String(ticketsCreated)],
+        ["Replied by Tab", String(agentReplies)],
+        ["Flagged for you", String(flagged)],
+        ["Read as frustrated", String(frustrated)],
+      ]) +
+      `<div style="margin:4px 0 4px">${button(deskLink, "Open the desk")}</div>`,
+  );
+  return { to, subject, text, html };
+}
+
+/**
+ * Sent once, when a signed-out "support" submission goes into the
+ * email-confirmation holding queue. Carries both links from the same
+ * `SupportTicket.create()` call: confirming flips the ticket out of holding,
+ * and the thread link is how the sender follows/replies to the conversation
+ * afterwards — there is no separate "here is your thread link" email later,
+ * since the plaintext thread token is only ever available at this moment.
+ */
+export function messageConfirmSupportTicket({
+  to,
+  name,
+  confirmLink,
+  threadLink,
+}: {
+  readonly to: string;
+  readonly name: string;
+  readonly confirmLink: string;
+  readonly threadLink: string;
+}): Mailer.Message {
+  const subject = "Confirm your KeyLearn support request";
+  const text = `Hi ${name},
+
+Thanks for reaching out to KeyLearn support. Please confirm this request is really from you:
+
+${confirmLink}
+
+Once confirmed, you can follow the conversation and reply here, any time:
+
+${threadLink}
+
+If you didn't send this request, you can safely ignore this email — nothing happens until it's confirmed.
+
+Happy typing!`;
+  const html = shell(
+    "Confirm your support request to start the conversation",
+    heading("Confirm your request") +
+      paragraph(
+        `Thanks for reaching out, ${name}. Please confirm this request is really from you before it reaches our queue.`,
+      ) +
+      `<div style="margin:4px 0 4px">${button(confirmLink, "Confirm request")}</div>` +
+      fallbackLink(confirmLink) +
+      paragraph(
+        "Once confirmed, you can follow the conversation and reply here, any time:",
+      ) +
+      fallbackLink(threadLink) +
+      `<p style="margin:22px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">Didn't send this? You can safely ignore this email — nothing happens until it's confirmed.</p>`,
+  );
+  return { to, subject, text, html };
+}
+
+/**
+ * Emails a staff reply out to the ticket's real address. The thread link is
+ * minted fresh for this send (`SupportTicket.reissueThreadToken`) rather than
+ * reused — the plaintext token from the ticket's original creation was only
+ * ever available once, so the most recent reply email is the sender's
+ * working way back into the conversation.
+ */
+export function messageThreadReply({
+  to,
+  subject,
+  body,
+  threadLink,
+}: {
+  readonly to: string;
+  readonly subject: string;
+  readonly body: string;
+  readonly threadLink: string;
+}): Mailer.Message {
+  const mailSubject = `Re: ${subject}`;
+  const text = `${body}
+
+View or reply to this conversation:
+${threadLink}
+
+Happy typing!`;
+  const html = shell(
+    mailSubject,
+    heading("New reply") +
+      paragraph(body) +
+      `<div style="margin:4px 0 4px">${button(threadLink, "View conversation")}</div>` +
+      fallbackLink(threadLink),
   );
   return { to, subject: mailSubject, text, html };
 }

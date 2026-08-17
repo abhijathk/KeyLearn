@@ -17,7 +17,7 @@ import { ThemePrefs, useTheme } from "@keylearn/themes";
 import { type ReactNode } from "react";
 import { useIntl } from "react-intl";
 import { isBot } from "./bot.ts";
-import { AltLangLinks, favIcons, Metas } from "./meta.tsx";
+import { AltLangLinks, favIcons, favIconsDesk, Metas } from "./meta.tsx";
 
 export function Shell({
   page,
@@ -64,7 +64,9 @@ function Head({
       <meta charSet="UTF-8" />
       <title>{formatMessage(page.title)}</title>
       <StylesheetAssets entrypoint="browser" />
-      <FavIconAssets links={favIcons} />
+      <FavIconAssets
+        links={page.path.startsWith("/desk") ? favIconsDesk : favIcons}
+      />
       <AltLangLinks page={page} />
       <Metas page={page} />
       <meta name="viewport" content="width=device-width, initial-scale=1" />

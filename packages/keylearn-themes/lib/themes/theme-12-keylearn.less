@@ -37,6 +37,10 @@
   --error-d1: lighten(@colors[@error], 10);
   --error: @colors[@error];
   --error-l1: darken(@colors[@error], 10);
+  // A real per-theme token — code across the desk console falls back to a
+  // hardcoded amber (`var(--warn, #e8a819)`) when this isn't set, which
+  // reads fine here but fails contrast on the day theme's pale ground.
+  --warn: #e8a819;
   --shadow-color: #00000088;
   --slow-key-color: #ff8a5c;
   --fast-key-color: #37c871;

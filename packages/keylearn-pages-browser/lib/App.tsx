@@ -36,6 +36,7 @@ export function main() {
 }
 
 const AccountPage = lazy(() => import("./pages/account.tsx"));
+const DeletionCancelPage = lazy(() => import("./pages/deletion-cancel.tsx"));
 const DesignPage = lazy(() => import("./pages/design.tsx"));
 const VerifyPage = lazy(() => import("./pages/verify.tsx"));
 const AssessmentPage = lazy(() => import("./pages/assessment.tsx"));
@@ -45,13 +46,19 @@ const ForgotPasswordPage = lazy(() => import("./pages/forgot-password.tsx"));
 const ResetPasswordPage = lazy(() => import("./pages/reset-password.tsx"));
 const HelpPage = lazy(() => import("./pages/help.tsx"));
 const SupportPage = lazy(() => import("./pages/support.tsx"));
-const SupportDeskPage = lazy(() => import("./pages/support-desk.tsx"));
-const SupportDeskSigninPage = lazy(
-  () => import("./pages/support-desk-signin.tsx"),
+const DeskDashboardPage = lazy(() => import("./pages/desk.tsx"));
+const DeskInboxPage = lazy(() => import("./pages/desk-inbox.tsx"));
+const DeskThreadPage = lazy(() => import("./pages/desk-thread.tsx"));
+const DeskAccountsPage = lazy(() => import("./pages/desk-accounts.tsx"));
+const DeskAccountDetailPage = lazy(
+  () => import("./pages/desk-account-detail.tsx"),
 );
-const SupportDeskAuditPage = lazy(
-  () => import("./pages/support-desk-audit.tsx"),
-);
+const DeskAnswersPage = lazy(() => import("./pages/desk-answers.tsx"));
+const DeskNoticesPage = lazy(() => import("./pages/desk-notices.tsx"));
+const DeskSettingsPage = lazy(() => import("./pages/desk-settings.tsx"));
+const DeskAuditPage = lazy(() => import("./pages/desk-audit.tsx"));
+const DeskAboutPage = lazy(() => import("./pages/desk-about.tsx"));
+const DeskSigninPage = lazy(() => import("./pages/desk-signin.tsx"));
 const ProfilesManagePage = lazy(() => import("./pages/profiles.tsx"));
 const KidsPage = lazy(() => import("./pages/kids.tsx"));
 const LayoutsPage = lazy(() => import("./pages/layouts.tsx"));
@@ -273,34 +280,133 @@ function PageRoutes() {
           }
         />
         <Route
-          path={Pages.supportDesk.path}
+          path={Pages.desk.path}
           element={
-            <Template path={Pages.supportDesk.path}>
-              <Title page={Pages.supportDesk} />
+            <Template path={Pages.desk.path}>
+              <Title page={Pages.desk} />
               <Suspense fallback={<LoadingProgress />}>
-                <SupportDeskPage />
+                <DeskDashboardPage />
               </Suspense>
             </Template>
           }
         />
         <Route
-          path={Pages.supportDeskSignin.path}
+          path={Pages.deskInbox.path}
           element={
-            <Template path={Pages.supportDeskSignin.path}>
-              <Title page={Pages.supportDeskSignin} />
+            <Template path={Pages.deskInbox.path}>
+              <Title page={Pages.deskInbox} />
               <Suspense fallback={<LoadingProgress />}>
-                <SupportDeskSigninPage />
+                <DeskInboxPage />
               </Suspense>
             </Template>
           }
         />
         <Route
-          path={Pages.supportDeskAudit.path}
+          path={`${Pages.deskThread.path}/:id`}
           element={
-            <Template path={Pages.supportDeskAudit.path}>
-              <Title page={Pages.supportDeskAudit} />
+            <Template path={Pages.deskThread.path}>
+              <Title page={Pages.deskThread} />
               <Suspense fallback={<LoadingProgress />}>
-                <SupportDeskAuditPage />
+                <DeskThreadPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.deskAccounts.path}
+          element={
+            <Template path={Pages.deskAccounts.path}>
+              <Title page={Pages.deskAccounts} />
+              <Suspense fallback={<LoadingProgress />}>
+                <DeskAccountsPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={`${Pages.deskAccountDetail.path}/:id`}
+          element={
+            <Template path={Pages.deskAccountDetail.path}>
+              <Title page={Pages.deskAccountDetail} />
+              <Suspense fallback={<LoadingProgress />}>
+                <DeskAccountDetailPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={`${Pages.deletionCancel.path}/:token`}
+          element={
+            <Template path={Pages.deletionCancel.path}>
+              <Title page={Pages.deletionCancel} />
+              <Suspense fallback={<LoadingProgress />}>
+                <DeletionCancelPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.deskAnswers.path}
+          element={
+            <Template path={Pages.deskAnswers.path}>
+              <Title page={Pages.deskAnswers} />
+              <Suspense fallback={<LoadingProgress />}>
+                <DeskAnswersPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.deskNotices.path}
+          element={
+            <Template path={Pages.deskNotices.path}>
+              <Title page={Pages.deskNotices} />
+              <Suspense fallback={<LoadingProgress />}>
+                <DeskNoticesPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.deskSettings.path}
+          element={
+            <Template path={Pages.deskSettings.path}>
+              <Title page={Pages.deskSettings} />
+              <Suspense fallback={<LoadingProgress />}>
+                <DeskSettingsPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.deskAudit.path}
+          element={
+            <Template path={Pages.deskAudit.path}>
+              <Title page={Pages.deskAudit} />
+              <Suspense fallback={<LoadingProgress />}>
+                <DeskAuditPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.deskAbout.path}
+          element={
+            <Template path={Pages.deskAbout.path}>
+              <Title page={Pages.deskAbout} />
+              <Suspense fallback={<LoadingProgress />}>
+                <DeskAboutPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.deskSignin.path}
+          element={
+            <Template path={Pages.deskSignin.path}>
+              <Title page={Pages.deskSignin} />
+              <Suspense fallback={<LoadingProgress />}>
+                <DeskSigninPage />
               </Suspense>
             </Template>
           }

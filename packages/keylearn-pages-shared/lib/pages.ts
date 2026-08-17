@@ -593,12 +593,35 @@ export namespace Pages {
   } satisfies PageInfo;
 
   /**
-   * The staff-only ticket queue. No nav link — reached only from a
-   * staff-gated link elsewhere, the same "absent from the menu" pattern
-   * {@link assessment} uses for a page nobody should be routinely offered.
+   * The account holder's own view of a staff-requested deletion, reached
+   * only via the emailed cancel link — no nav link, no staff auth. The base
+   * path only — the token is appended separately, same convention
+   * {@link deskThread} uses for its own id-suffixed variant.
    */
-  export const supportDesk = {
-    path: "/support/desk",
+  export const deletionCancel = {
+    path: "/support/deletion-cancel",
+    title: defineMessage({
+      id: "deletionCancel.headline",
+      defaultMessage: "Account deletion",
+    }),
+    link: {
+      label: defineMessage({
+        id: "deletionCancel.headline",
+        defaultMessage: "Account deletion",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /**
+   * The staff console's landing page — today's numbers first, per the
+   * mock's own "opens on the dashboard, not the inbox" rule. No nav link —
+   * reached only from a staff-gated link elsewhere, the same "absent from
+   * the menu" pattern {@link assessment} uses for a page nobody should be
+   * routinely offered.
+   */
+  export const desk = {
+    path: "/desk",
     title: defineMessage({
       id: "staffDesk.headline",
       defaultMessage: "Support desk",
@@ -612,31 +635,130 @@ export namespace Pages {
     meta: [{ name: "robots", content: "noindex" }],
   } satisfies PageInfo;
 
-  /**
-   * Passkey-first sign-in for the desk, separate from the general
-   * `/login` window. Reached only when a staff visitor isn't already
-   * signed in as an eligible account — {@link supportDesk} and
-   * {@link supportDeskAudit} redirect here with a `returnTo` back to
-   * themselves instead of bouncing to `/practice`.
-   */
-  export const supportDeskSignin = {
-    path: "/support/desk/signin",
+  /** Every ticket, newest first — the desk's second screen. */
+  export const deskInbox = {
+    path: "/desk/inbox",
     title: defineMessage({
-      id: "staffDesk.signin.headline",
-      defaultMessage: "Staff sign-in",
+      id: "deskNav.inbox",
+      defaultMessage: "Inbox",
     }),
     link: {
       label: defineMessage({
-        id: "staffDesk.signin.headline",
-        defaultMessage: "Staff sign-in",
+        id: "deskNav.inbox",
+        defaultMessage: "Inbox",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /**
+   * One ticket's thread, with everything known about the sender beside it.
+   * The base path only — the `:id`/`{id}` param is appended by the client
+   * route and the server's SSR handler separately, the same convention
+   * {@link profile} uses for its own id-suffixed variant.
+   */
+  export const deskThread = {
+    path: "/desk/t",
+    title: defineMessage({
+      id: "deskNav.inbox",
+      defaultMessage: "Inbox",
+    }),
+    link: {
+      label: defineMessage({
+        id: "deskNav.inbox",
+        defaultMessage: "Inbox",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /** Search and open any registered account — facts only, never a profile. */
+  export const deskAccounts = {
+    path: "/desk/accounts",
+    title: defineMessage({
+      id: "deskNav.accounts",
+      defaultMessage: "Accounts",
+    }),
+    link: {
+      label: defineMessage({
+        id: "deskNav.accounts",
+        defaultMessage: "Accounts",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /**
+   * One account's facts, opened from a search result. The base path only —
+   * the `:id`/`{id}` param is appended separately, same convention as
+   * {@link deskThread}.
+   */
+  export const deskAccountDetail = {
+    path: "/desk/accounts/a",
+    title: defineMessage({
+      id: "deskNav.accounts",
+      defaultMessage: "Accounts",
+    }),
+    link: {
+      label: defineMessage({
+        id: "deskNav.accounts",
+        defaultMessage: "Accounts",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /** The how-to library, and the keyword rules that decide when it answers. */
+  export const deskAnswers = {
+    path: "/desk/answers",
+    title: defineMessage({
+      id: "deskNav.answers",
+      defaultMessage: "Answers",
+    }),
+    link: {
+      label: defineMessage({
+        id: "deskNav.answers",
+        defaultMessage: "Answers",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /** What appears at the top of the app, and when. */
+  export const deskNotices = {
+    path: "/desk/notices",
+    title: defineMessage({
+      id: "deskNav.notices",
+      defaultMessage: "Notices",
+    }),
+    link: {
+      label: defineMessage({
+        id: "deskNav.notices",
+        defaultMessage: "Notices",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /** Preferences and content only — cannot grant access, move mail, or weaken sign-in. */
+  export const deskSettings = {
+    path: "/desk/settings",
+    title: defineMessage({
+      id: "deskNav.settings",
+      defaultMessage: "Settings",
+    }),
+    link: {
+      label: defineMessage({
+        id: "deskNav.settings",
+        defaultMessage: "Settings",
       }),
     },
     meta: [{ name: "robots", content: "noindex" }],
   } satisfies PageInfo;
 
   /** Read-only staff action log. Reached from a link on the desk itself. */
-  export const supportDeskAudit = {
-    path: "/support/desk/audit",
+  export const deskAudit = {
+    path: "/desk/audit",
     title: defineMessage({
       id: "staffDesk.auditLink",
       defaultMessage: "Audit log",
@@ -645,6 +767,44 @@ export namespace Pages {
       label: defineMessage({
         id: "staffDesk.auditLink",
         defaultMessage: "Audit log",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /** Version, release notes, and what this app is versus KeyLearn itself. */
+  export const deskAbout = {
+    path: "/desk/about",
+    title: defineMessage({
+      id: "deskNav.about",
+      defaultMessage: "About",
+    }),
+    link: {
+      label: defineMessage({
+        id: "deskNav.about",
+        defaultMessage: "About",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /**
+   * Passkey-first sign-in for the desk, separate from the general
+   * `/login` window. Reached only when a staff visitor isn't already
+   * signed in as an eligible account — {@link DeskShell} (every screen
+   * under `/desk`) redirects here with a `returnTo` back to itself instead
+   * of bouncing to `/practice`.
+   */
+  export const deskSignin = {
+    path: "/desk/signin",
+    title: defineMessage({
+      id: "staffDesk.signin.headline",
+      defaultMessage: "Staff sign-in",
+    }),
+    link: {
+      label: defineMessage({
+        id: "staffDesk.signin.headline",
+        defaultMessage: "Staff sign-in",
       }),
     },
     meta: [{ name: "robots", content: "noindex" }],

@@ -1,0 +1,124 @@
+@import "@keylearn/widget/lib/index.less";
+
+.answers {
+  display: grid;
+  gap: 0.35rem;
+  margin-block-end: 1.2rem;
+}
+
+.answer {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: center;
+  inline-size: 100%;
+  padding: 0.55rem 0.75rem;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
+  background-color: var(--primary-l2);
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent);
+  }
+}
+
+.num {
+  color: var(--accent);
+  font-family: var(--value-font-family);
+  font-size: 0.66rem;
+}
+
+.answerTitle {
+  display: block;
+  overflow: hidden;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.answerSub {
+  display: block;
+  overflow: hidden;
+  color: var(--text-color-f2);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hit {
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+.rule {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) 1.2rem minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
+  background-color: var(--primary-l2);
+  font-size: 0.82rem;
+}
+
+.ruleSuggestOnly {
+  opacity: 0.55;
+}
+
+@media (max-width: 50rem) {
+  .rule {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ruleWhen {
+  overflow: hidden;
+  font-family: var(--value-font-family);
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ruleArrow {
+  color: var(--text-color-f2);
+  text-align: center;
+}
+
+.ruleHits {
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+.formGrid {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.select {
+  display: block;
+  inline-size: 100%;
+  min-block-size: var(--field-height, 2rem);
+  padding-inline: 1rem;
+  border: 1px solid var(--primary-d1);
+  border-radius: 0.6rem;
+  color: var(--secondary);
+  background-color: var(--primary-l1);
+  font-family: var(--default-font-family);
+  font-size: 0.85rem;
+}
+
+.checkRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block-start: 0.9rem;
+  font-size: 0.85rem;
+}

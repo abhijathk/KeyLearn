@@ -133,6 +133,82 @@
   }
 }
 
+// ── Support desk: identity chip doubles as the log-out trigger ──
+
+.deskWrap {
+  position: relative;
+}
+
+// Doubled-up class in the selector (rather than relying on `.deskTrigger`
+// alone) so this beats Header.module.less's `.controls button, a { … }`
+// reset — that rule forces every header button/link into a fixed 2.3rem
+// icon square, which is right for the theme/notification buttons but wrong
+// here: this trigger holds an avatar *and* a name, not a single glyph.
+.deskWrap .deskTrigger {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: flex-start;
+  inline-size: auto;
+  min-inline-size: 0;
+  block-size: auto;
+  min-block-size: 0;
+  padding: 0.2rem 0.3rem;
+  border: none;
+  border-radius: 0.5rem;
+  color: inherit;
+  background-color: transparent;
+  font: inherit;
+  line-height: normal;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    background-color: var(--primary-l2);
+  }
+}
+
+.deskDropdown {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + 0.4rem);
+  z-index: 20;
+  inline-size: max-content;
+  min-inline-size: 8rem;
+  padding: 0.35rem;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
+  background-color: var(--primary-l2);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+}
+
+// Same doubled-selector fix as `.deskTrigger` above: this button also lives
+// inside `.controls`, so it needs to out-rank Header.module.less's
+// `.controls button, a { … }` 2.3rem-icon-square reset too, or the two-word
+// label wraps into a near-square box instead of reading on one line.
+.deskDropdown .deskSignOut {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: auto;
+  min-block-size: 0;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  border-radius: 0.4rem;
+  color: var(--error);
+  background-color: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: normal;
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--error) 12%, transparent);
+  }
+}
+
 // ── Night variants ──
 // Same hues, mixed toward the dark ground instead of white, with labels lifted
 // so they stay legible rather than sinking into the chip.

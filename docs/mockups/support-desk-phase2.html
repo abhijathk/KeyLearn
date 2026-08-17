@@ -1,0 +1,2168 @@
+<!doctype html><html><head><!-- frame-runtime --><script>window.__FRAME_PREAMBLE={"capabilities":{"artifact":"artifact.BWD0CGLd.js","assets":"assets.hcOK0ALv.js","comments":"comments.aMuwftAG.js","db":"db.C8ehi_0m.js","downloads":"downloads.BXsoAvg9.js","mcp":"mcp.D3B2EyQu.js","permissions":"permissions.DdITF2Mk.js","room":"room.BgXZkiYR.js","sample":"sample.DpdXn9di.js","self":"artifact.BWD0CGLd.js","user":"user.o5zdRedj.js"},"transforms":"_transforms.BI3gXbbT.js","comments":"_comments.Cp2LbYKb.js","translate":"_translate.BOzFH2D9.js"}</script><script>(function(){"use strict";var ce=["light","dark","system"],ue=/^[A-Za-z0-9_-]{1,64}$/,V=/^[a-zA-Z_:][a-zA-Z0-9_:.-]{0,127}$/,fe=new Set(["class","hidden","value","checked"]);function de(e){const t=e.toLowerCase();return t.startsWith("data-")||t.startsWith("aria-")||fe.has(t)}var pe="http://www.w3.org/1999/xhtml",me="http://www.w3.org/2000/svg",ge=new Set(["script","style","iframe","noscript","noframes","noembed","xmp","plaintext","template","title","textarea","object","embed"]),ve=new Set(["script","style"]);function _e(e){const t=e.localName.toLowerCase();return e.namespaceURI===pe?!ge.has(t):e.namespaceURI===me?!ve.has(t):!1}function he(e){if(e===null||typeof e!="object")return!1;const t=e.__frame_patch;if(t===null||typeof t!="object")return!1;const{seq:n,elements:a}=t;if(typeof n!="number"||!Number.isSafeInteger(n)||!Array.isArray(a)||a.length===0||a.length>64)return!1;for(const i of a){if(i===null||typeof i!="object")return!1;const r=i;if(typeof r.target!="string"||!ue.test(r.target)||r.text!==void 0&&typeof r.text!="string")return!1;if(r.attrsSet!==void 0){if(r.attrsSet===null||typeof r.attrsSet!="object")return!1;for(const[l,c]of Object.entries(r.attrsSet))if(!V.test(l)||typeof c!="string")return!1}if(r.attrsRemoved!==void 0){if(!Array.isArray(r.attrsRemoved))return!1;for(const l of r.attrsRemoved)if(typeof l!="string"||!V.test(l))return!1}}return!0}function ye(e){if(e===null||typeof e!="object")return!1;const t=e.__frame_init;return t!==null&&typeof t=="object"}function be(e){return e!==null&&typeof e=="object"&&e.__frame_size_poke===!0}function Ee(e){if(e===null||typeof e!="object")return!1;const t=e.__frame_theme;if(t===null||typeof t!="object")return!1;const n=t.theme;return typeof n=="string"&&ce.includes(n)}function we(e){try{typeof reportError=="function"?reportError(e):setTimeout(()=>{throw e},0)}catch{}}var X=["#62744c","#b04e72","#5b7596","#a3651f","#7a6ba8","#3f7a75"],J=e=>{let t=0;for(let n=0;n<e.length;n++)t=t*31+e.charCodeAt(n)>>>0;return X[t%X.length]??"#788c5d"},Z="#c7c9d1",Q=e=>"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2 2'%3E%3Ccircle cx='1' cy='1' r='1' fill='"+encodeURIComponent(e)+"'/%3E%3C/svg%3E",Ae=Object.freeze({id:null,name:"",avatarUrl:Q(Z),color:Z,email:null,isOwner:!1,canEdit:!1}),Se=(...e)=>{const t=e[0],n=typeof t=="string"?[t]:Array.isArray(t)?t.filter(i=>typeof i=="string"):[],a=Object.create(null);for(const i of n)a[i]={id:i,name:"",avatarUrl:Q(J(i)),color:J(i),email:null,isMe:!1};return a},ee=Object.freeze(Object.assign(Object.create(null),{user:Object.freeze(Object.assign(Object.create(null),{id:null,isOwner:!1,canEdit:!1,me:Ae,profiles:Se,name:"",avatarUrl:null,search:Object.freeze([]),email:null}))})),je={sample:"sample"};function te(){const e=new Uint8Array(20);try{crypto.getRandomValues(e)}catch{for(let n=0;n<e.length;n++)e[n]=Math.floor(Math.random()*256)}let t="";for(const n of e)t+=(n%36).toString(36);return t}function Re(e,t){const n=r=>{const l={path:r},c=r.split("/");return{id:c[c.length-1],path:r,get:()=>t("get",[l]),set:d=>t("set",[l,d]),update:d=>t("update",[l,d]),delete:()=>t("delete",[l]),acquire:d=>t("acquire",[l,d]),onSnapshot:(d,E)=>t("subscribe",[l,d,E]),collection:d=>i(r+"/"+String(d))}},a=r=>({where:(l,c,d)=>a({...r,where:[...r.where??[],{f:String(l),op:String(c),v:d}]}),orderBy:(l,c)=>a({...r,orderBy:{f:String(l),dir:c===void 0?"asc":String(c)}}),limit:l=>a({...r,limit:Number(l)}),get:()=>t("query",[r]),onSnapshot:(l,c)=>t("subscribe",[r,l,c])}),i=r=>({...a({collection:r}),path:r,doc:l=>n(r+"/"+(l===void 0?te():String(l))),add:l=>{const c=n(r+"/"+te());return Promise.resolve(c.set(l)).then(()=>c)}});e.doc=r=>n(String(r)),e.collection=r=>i(String(r))}var Oe=Object.freeze([]);function Pe(e,t){let n=null,a=null;const i=()=>e.__settled;e.peers=()=>Oe,e.connected=()=>!1,e.emit=()=>i()?.()??Promise.resolve(),e.presence=r=>{const l=i();if(l)return l();let c=null;if(r!==null&&typeof r=="object")try{Array.isArray(r)||(c={...r})}catch{}return c===null?Promise.reject({code:"invalid_argument",message:"presence takes an object"}):(n===null&&(n=Object.create(null),a=Promise.resolve(t("presence",[n]))),Object.assign(n,c),a)}}var D="__frame_scroll",Te=150,Me=310,Le=160,ke=3e4;function Ce(){let e=0,t=!1,n=!1,a=!1,i=0,r=null;const l=u=>{try{sessionStorage.setItem(D,JSON.stringify({y:u}))}catch{}},c=()=>{if(clearTimeout(e),r===null)return;const u=r;r=null,l(u)},d=()=>{if(t){t=!1;return}n=!0,r=scrollY,clearTimeout(e),e=setTimeout(c,Te)};try{addEventListener("scroll",d,{passive:!0}),addEventListener("pagehide",c)}catch{}const E=()=>{let u;try{u=sessionStorage.getItem(D)}catch{return null}if(u===null)return null;let g;try{g=JSON.parse(u)}catch{g=null}const f=g?.y;if(!(typeof f=="number"&&Number.isFinite(f)&&f>=0)){try{sessionStorage.removeItem(D)}catch{}return null}return f};let T=!1;const h=u=>{try{const g=scrollY;scrollTo({top:u,left:0,behavior:"instant"}),i=u,a=!0,clearTimeout(e),r=null,l(u);const f=scrollY;f!==g&&(t=!0),f!==u&&!T&&(T=!0,addEventListener("load",()=>{try{if(scrollY===f){const p=E();h(p!==null?p:i)}}catch{}},{once:!0}))}catch{}},R=()=>{try{return!!location.hash}catch{return!0}};let A=!1;const O=()=>{try{if(A||innerWidth>Me||innerHeight>Le)return;A=!0;const u=Date.now(),g=()=>{try{removeEventListener("resize",g)}catch{}if(Date.now()-u>ke||n||R())return;const f=E();h(f!==null?f:i)};addEventListener("resize",g)}catch{}};let M=!1,o=!1;return{restore(){if(M||(M=!0,R()))return;const u=E();u!==null&&(h(u),O())},promoted(){if(o||(o=!0,R()))return;const u=E();u!==null?(h(u),O()):a&&h(i)}}}var He="modulepreload",Ye=function(e){return"/"+e},We={},Ne=function(t,n,a){let i=Promise.resolve();function r(l){const c=new Event("vite:preloadError",{cancelable:!0});if(c.payload=l,window.dispatchEvent(c),!c.defaultPrevented)throw l}return i.then(l=>{for(const c of l||[])c.status==="rejected"&&r(c.reason);return t().catch(r)})};(function(){const e=Object.defineProperty,t=globalThis,n=["RTCPeerConnection","webkitRTCPeerConnection","RTCDataChannel","RTCIceCandidate","RTCSessionDescription","RTCRtpSender","RTCRtpReceiver"];let a=0;for(let i=0;i<n.length;i++){const r=n[i];try{e(t,r,{value:void 0,writable:!1,configurable:!1})}catch{try{delete t[r]}catch{}try{e(t,r,{value:void 0,writable:!1,configurable:!0})}catch{}}typeof t[r]=="function"&&a++}if(a&&window!==top)try{parent.postMessage({__frame_rtc_lockdown_failed:a},"*")}catch{}})();var Ue=1e4,qe=Object.freeze([...window.__FRAME_PREAMBLE?.origins??["https://claude.ai","https://preview.claude.ai"]]);function re(e){for(const t of qe)if(t.endsWith(":*"))try{const n=new URL(e);if(`${n.protocol}//${n.hostname}:*`===t)return!0}catch{}else if(e===t)return!0;return!1}var k=Object.freeze({...window.__FRAME_PREAMBLE?.capabilities}),x=window.__FRAME_PREAMBLE?.transforms,$=window.__FRAME_PREAMBLE?.comments,z=window.__FRAME_PREAMBLE?.translate,q=/^[\w.-]+\.js$/,Ie=/^[a-z][a-z0-9_-]{0,63}$/,I=e=>Ne(()=>import("/_runtime/"+e),void 0);function Be(e,t){return{contract:e.contract,changes:new Set(e.changes??[]),flags:new Set(e.flags??[]),capabilities:e.capabilities??{},capBudgets:e.capBudgets??{},transforms:new Map,shellOrigin:t,mount:Y,pipe:()=>({wrap:(n,a)=>(...i)=>{try{return a(...i)}catch(r){return Promise.reject(r)}}})}}var ne=null,C=null;function F(e,t,n){try{Object.defineProperty(e,t,{value:n,writable:!1,configurable:!1,enumerable:!0})}catch{try{Object.defineProperty(e,t,{value:n,writable:!1,configurable:!0,enumerable:!0})}catch{}}}var H=!1;function De(e,t){const n=[];for(const a of e.elements){const i=document.querySelector(`[data-id="${a.target}"]`);if(!i){parent.postMessage({__frame_patch_miss:{seq:e.seq}},t);return}if([...Object.keys(a.attrsSet??{}),...a.attrsRemoved??[]].some(r=>!de(r))){parent.postMessage({__frame_patch_miss:{seq:e.seq}},t);return}if(a.text!==void 0&&!_e(i)){parent.postMessage({__frame_patch_miss:{seq:e.seq}},t);return}for(const[r,l]of Object.entries(a.attrsSet??{}))if(!oe(i,r)){try{i.setAttribute(r,l)}catch{}se(i,r,l)}for(const r of a.attrsRemoved??[])oe(i,r)||(i.removeAttribute(r),se(i,r,null));typeof a.text=="string"&&(i.textContent=a.text),n.push(a.target)}try{document.dispatchEvent(new CustomEvent("claude:edit",{detail:{seq:e.seq,targets:n}}))}catch{}}function se(e,t,n){if(!(e instanceof HTMLInputElement))return;const a=t.toLowerCase();a==="checked"?e.checked=n!==null:a==="value"&&e.type!=="file"&&(e.value=n??"")}function oe(e,t){const n=t.toLowerCase(),a=e;return n==="data-id"||(n==="value"||n==="checked")&&(a.__artifactSecret===!0||/^(password|hidden|file)$/.test(a.type??"")||/(^|\s)(cc-|one-time-code|current-password|new-password)/i.test(`${e.getAttribute("autocomplete")??""} ${a.autocomplete??""}`))}function ae(e){const t=document.documentElement;e==="light"||e==="dark"?(t.dataset.theme=e,t.style.colorScheme=e,H=!0):H&&(delete t.dataset.theme,t.style.colorScheme="",H=!1)}var ie=256,N=Object.assign(Object.create(null),{mcp:Object.assign(Object.create(null),{watchTool:{handlerArg:3}}),db:Object.assign(Object.create(null),{subscribe:{handlerArg:1,errArg:2}}),room:Object.assign(Object.create(null),{on:{handlerArg:1,errArg:2},onPeers:{handlerArg:0,errArg:1},onConnection:{handlerArg:0,errArg:1}})}),xe=Object.assign(Object.create(null),{db:(e,t)=>Re(e,t),room:(e,t,n)=>Pe(e,n)}),j=new Map;function Y(e,t){const n=j.get(e);if(!n)return;const a=Object.assign(Object.create(null),t);Object.assign(n.impl,a),n.r(n.ns),n.impl.__settled=()=>Promise.reject({code:"capability_removed",message:`${e}: method not in this runtime`});const i=n.queue;n.queue=[];for(const r of i){const l=a[r.method];if(l)if(N[e]?.[r.method])try{r.resolve(l(...r.args))}catch{U(r,N[e][r.method],{code:"transform_error",message:`${e}.${r.method} rejected its arguments`})}else l(...r.args).then(r.resolve,r.reject);else{const c={code:"capability_removed",message:`${e}.${r.method} is not in this runtime`},d=N[e]?.[r.method];if(d){U(r,d,c);continue}r.reject(c)}}}function $e(e,t){const n=j.get(e);if(!n)return;n.impl.__settled=()=>Promise.reject(t),n.r(null);const a=n.queue;n.queue=[];for(const i of a){const r=N[e]?.[i.method];if(r){U(i,r,t);continue}i.reject(t)}}function le(e,t){if(typeof e=="function")try{return e(...t)}catch{return Object.create(null)}return Array.isArray(e)?[...e]:e!==null&&typeof e=="object"?{...e}:e}function B(e,t){const n=ee[e];if(!n){$e(e,t);return}j.get(e)?.r(null),Y(e,Object.fromEntries(Object.entries(n).map(([a,i])=>[a,(...r)=>Promise.resolve(le(i,r))])))}function U(e,t,n){if(e.syncState?.dead)return;const a=t.errArg===void 0?void 0:e.args[t.errArg],i=t.errArg===void 0?e.args[t.handlerArg]:a;typeof i=="function"&&queueMicrotask(()=>{if(!e.syncState?.dead)try{i(t.errArg===void 0?{type:"error",error:n}:n)}catch(r){we(r)}})}var W=Object.getOwnPropertyDescriptor(window,"claude");if(window!==top&&!(W&&W.writable===!1)){const e=x&&q.test(x)?I(x).catch(()=>{}):Promise.resolve(void 0),t=o=>{if(o.type==="auxclick"&&o.button!==1)return;const u=o.target,g=u&&u.closest?u.closest("a[href],area[href]"):null;if(!g)return;const f=g.getAttribute("href");if(!f)return;let p,P;try{p=new URL(f,document.baseURI),P=new URL(document.baseURI).origin}catch{return}if((p.protocol==="http:"||p.protocol==="https:")&&p.origin!==P){o.preventDefault();const w=(g.getAttribute("target")??"").toLowerCase(),y=o.type==="auxclick"||o.metaKey||o.ctrlKey||o.shiftKey||o.altKey||!["","_self","_top","_parent"].includes(w);parent.postMessage({__frame_nav:!0,url:p.href,newTab:y},"*")}};addEventListener("click",t,!0),addEventListener("auxclick",t,!0);const n={},a=o=>{o.isTrusted&&(n.pointer=!0)},i=o=>{o.isTrusted&&(n.click=!0)};addEventListener("pointermove",a,{capture:!0,passive:!0}),addEventListener("click",i,{capture:!0,passive:!0}),e.then(o=>{o?.wireNav&&(o.wireNav(),removeEventListener("click",t,!0),removeEventListener("auxclick",t,!0),removeEventListener("pointermove",a,!0),removeEventListener("click",i,!0),o.wireEngagement?.(n))});let r=null;try{r=Ce()}catch{}const l=W?.value??{};F(window,"claude",l);const c=o=>{let u;const g=new Promise(_=>{u=_}),f={impl:Object.create(null),queue:[],u:g,r:u,ns:null};j.set(o,f);const p=f.impl,P=_=>({code:"queue_overflow",message:`${o}.${_}: pre-init call queue is full`}),w=(_,s)=>{if(f.queue.length>=ie){const m=ee[o];return m&&_ in m?Promise.resolve(le(m[_],s)):Promise.reject(P(_))}return new Promise((m,v)=>{f.queue.push({method:_,args:s,resolve:m,reject:v})})},y=je[o],L=new Proxy(y===void 0?p:(()=>{}),{apply:(_,s,m)=>{const v=y,b=p[v]??p.__settled;return b?b(...m):w(v,m)},get:(_,s)=>{if(typeof s!="string"||s==="then"||s==="toJSON"||s==="valueOf")return;if(s==="toString")return Object.prototype.toString;if(y!==void 0&&(s==="call"||s==="apply"||s==="bind"))return Function.prototype[s];const m=N[o]?.[s];return m?(...v)=>{if(typeof v[m.handlerArg]!="function")throw new TypeError(`${o}.${s} requires a handler function`);const b=p[s];if(b)return b(...v);if(p.__settled){const S={dead:!1},ze={args:[...v],syncState:S};return p.__settled().catch(Fe=>U(ze,m,Fe)),()=>{S.dead=!0}}if(f.queue.length>=ie){const S={dead:!1};return U({args:[...v],syncState:S},m,P(s)),()=>{S.dead=!0}}let K=null;const G={dead:!1};return f.queue.push({method:s,args:v,resolve:S=>{K=typeof S=="function"?S:null,G.dead&&K?.()},reject:()=>{},syncState:G}),()=>{G.dead=!0,K?.()}}:(...v)=>{const b=p[s]??p.__settled;return b?b(...v):w(s,v)}},set:()=>!1});xe[o]?.(p,(_,s)=>L[_](...s),w),f.ns=L,F(l,o,L)};for(const o of Object.keys(k)){if(l[o]!==void 0){F(l,o,l[o]);continue}c(o)}if(l.use===void 0){const o=u=>{if(typeof u!="string"||!Object.hasOwn(k,u))return Promise.resolve(null);const g=j.get(u);return g?g.u:Promise.resolve(l[u]??null)};try{Object.defineProperty(l,"use",{value:o,writable:!0,configurable:!0,enumerable:!1})}catch{}}let d=null,E=null,T=0;const h=o=>{o.source!==parent||!re(o.origin)||ye(o.data)&&(d=o.data.__frame_init,C=o.origin,removeEventListener("message",h),clearTimeout(T),E?.())};addEventListener("message",h),parent.postMessage({__frame_connect:!0},"*");const R=new Promise(o=>{E=o,T=setTimeout(()=>{removeEventListener("message",h),o()},Ue)}),A=document.readyState==="loading"?new Promise(o=>document.addEventListener("DOMContentLoaded",()=>o(),{once:!0})):Promise.resolve();A.then(()=>{try{r?.restore()}catch{}});const O={cb:null},M=o=>{if(!(o.source!==parent||!re(o.origin))&&be(o.data)){try{r?.promoted()}catch{}O.cb?.()}};addEventListener("message",M),R.then(async()=>{if(!d||!C){for(const s of j.keys())B(s,{code:"not_granted",message:"frame initialization did not arrive - capability unavailable"});return}ae(d.theme);const o=C;let u=!1,g=!1;addEventListener("message",s=>{if(s.source!==parent||s.origin!==o)return;Ee(s.data)&&ae(s.data.__frame_theme.theme),he(s.data)&&De(s.data.__frame_patch,o);const m=s.data?.__fc_mode;m&&typeof m=="object"&&!u&&$&&q.test($)&&(u=!0,I($).then(b=>b.install?.(o,m.on===!0)).catch(()=>{}));const v=s.data?.__ft_cmd;v&&typeof v=="object"&&!g&&z&&q.test(z)&&(g=!0,I(z).then(b=>b.install?.(o,v)).catch(()=>{}))});const f=Object.keys(d.capabilities??{});for(const s of f)Object.hasOwn(k,s)||Ie.test(s)&&l[s]===void 0&&(c(s),B(s,{code:"capability_disabled",message:"capability not in this runtime generation"}));const p=f.filter(s=>Object.hasOwn(k,s)).map(s=>[s,k[s]]).filter(s=>typeof s[1]=="string"&&q.test(s[1])),P=await Promise.allSettled(p.map(([,s])=>I(s))),w=await e,y=C;w?.buildBoot||parent.postMessage({__frame_cap_telemetry:{kind:"cap-load-error",cap:"_transforms"}},y),ne=w?.buildBoot?w.buildBoot(d,w.TRANSFORMS??{},{shellOrigin:y,mount:Y},s=>parent.postMessage({__frame_cap_telemetry:s},y)):Be(d,y);const L=s=>parent.postMessage({__frame_cap_telemetry:{kind:"cap-load-error",cap:s}},y),_=ne;P.forEach((s,m)=>{const v=p[m][0];if(s.status!=="fulfilled"){L(v);return}try{s.value?.install?.(_)}catch{L(v)}});for(const[s,m]of j)if(m.impl.__settled===void 0){if(f.includes(s)){B(s,{code:"capability_disabled",message:"capability not available in this session"});continue}B(s,{code:"not_granted",message:"capability not available in this session"})}await A,parent.postMessage({__frame_ready:!0},C),e.then(s=>s?.installSizeReporter?.(y,O))})}})();</script><!-- /frame-runtime --><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>KeyLearn support — the desk</title>
+
+<style>
+  /* Tokens lifted from packages/keylearn-themes: the signature night theme and
+     the day theme, with the derived steps computed the way the LESS does. */
+  :root {
+    --primary: #141620; --primary-d1: #222536; --primary-d2: #2c3046;
+    --primary-l1: #1a1c29; --primary-l2: #1e2130;
+    --secondary: #e6e8ee; --secondary-d1: #f5f6f8;
+    --secondary-l1: #b8becf; --secondary-l2: #8b94b0;
+    --text-color-f1: #b2b4ba; --text-color-f2: #888a91;
+    --accent: #8fd9b6; --accent-d1: #74d0a5; --accent-l1: #aae2c7; --accent-l2: #c4ebd9;
+    --accent-ink: #241a12;
+    --error: #ff7a6b;
+    --warn: #e8a819;
+
+    --background-color: var(--primary);
+    --text-color: var(--secondary);
+    --separator-color: var(--primary-d1);
+    --separator-border: 1px solid var(--separator-color);
+
+    --default-font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --header-font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --value-font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --field-height: 2rem;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --primary: #f5f6fa; --primary-d1: #e4e7f2; --primary-d2: #d3d7e9;
+      --primary-l1: #fcfcfd; --primary-l2: #ffffff;
+      --secondary: #1f2433; --secondary-d1: #0c0e13;
+      --secondary-l1: #363f59; --secondary-l2: #596792;
+      --text-color-f1: #545865; --text-color-f2: #7f828d;
+      --accent: #2f8a5d; --accent-d1: #266f4b; --accent-l1: #38a56f; --accent-l2: #42bf81;
+      --accent-ink: #ffffff;
+      --error: #cf5a4a;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --primary: #141620; --primary-d1: #222536; --primary-d2: #2c3046;
+    --primary-l1: #1a1c29; --primary-l2: #1e2130;
+    --secondary: #e6e8ee; --secondary-d1: #f5f6f8;
+    --secondary-l1: #b8becf; --secondary-l2: #8b94b0;
+    --text-color-f1: #b2b4ba; --text-color-f2: #888a91;
+    --accent: #8fd9b6; --accent-d1: #74d0a5; --accent-l1: #aae2c7; --accent-l2: #c4ebd9;
+    --accent-ink: #241a12; --error: #ff7a6b;
+  }
+
+  :root[data-theme="light"] {
+    --primary: #f5f6fa; --primary-d1: #e4e7f2; --primary-d2: #d3d7e9;
+    --primary-l1: #fcfcfd; --primary-l2: #ffffff;
+    --secondary: #1f2433; --secondary-d1: #0c0e13;
+    --secondary-l1: #363f59; --secondary-l2: #596792;
+    --text-color-f1: #545865; --text-color-f2: #7f828d;
+    --accent: #2f8a5d; --accent-d1: #266f4b; --accent-l1: #38a56f; --accent-l2: #42bf81;
+    --accent-ink: #ffffff; --error: #cf5a4a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0 1.25rem 6rem;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    font-family: var(--default-font-family);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 74rem; margin: 0 auto; }
+
+  header.doc { padding: 3.5rem 0 1.4rem; }
+
+  .eyebrow {
+    margin: 0 0 0.7rem;
+    color: var(--accent);
+    font-family: var(--value-font-family);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0 0 0.9rem;
+    font-family: var(--header-font-family);
+    font-size: clamp(2rem, 5vw, 2.9rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .lede { max-width: 46rem; margin: 0; color: var(--text-color-f1); font-size: 1rem; }
+  .lede + .lede { margin-top: 0.7rem; }
+  .lede b { color: var(--text-color); font-weight: 600; }
+
+  h2 {
+    margin: 3.4rem 0 0.3rem;
+    font-family: var(--header-font-family);
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+
+  .note { max-width: 47rem; margin: 0 0 1.1rem; color: var(--text-color-f1); font-size: 0.9rem; }
+  .note code { padding: 0.05rem 0.35rem; border-radius: 0.3rem; background-color: var(--primary-l2); font-family: var(--value-font-family); font-size: 0.82em; }
+
+  .stepno {
+    display: inline-block;
+    margin-inline-end: 0.5rem;
+    color: var(--text-color-f2);
+    font-family: var(--value-font-family);
+    font-size: 0.85rem;
+  }
+
+  /* ---- the app frame ------------------------------------------------------ */
+
+  .app {
+    overflow: hidden;
+    border: var(--separator-border);
+    border-radius: 1rem;
+    background-color: var(--primary-l1);
+  }
+
+  .chrome {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.55rem 0.9rem;
+    border-block-end: var(--separator-border);
+    background-color: var(--primary);
+  }
+
+  .brand { display: flex; gap: 0.5rem; align-items: center; font-weight: 600; font-size: 0.9rem; }
+
+  .brand .mark {
+    display: grid;
+    place-items: center;
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    border-radius: 0.5rem;
+    color: var(--accent-ink);
+    background-color: var(--accent);
+    font-family: var(--value-font-family);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .grow { flex: 1; }
+
+  .url {
+    padding: 0.2rem 0.7rem;
+    border: var(--separator-border);
+    border-radius: 999px;
+    color: var(--text-color-f2);
+    background-color: var(--primary-l2);
+    font-family: var(--value-font-family);
+    font-size: 0.7rem;
+  }
+
+  .avatar {
+    display: grid;
+    place-items: center;
+    inline-size: 1.7rem;
+    block-size: 1.7rem;
+    border-radius: 50%;
+    color: var(--primary);
+    background-color: var(--secondary-l1);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .pane { padding: 1.1rem 1.1rem 1.3rem; }
+
+  /* ---- widget parity ------------------------------------------------------ */
+
+  .btn {
+    display: inline-block;
+    min-block-size: var(--field-height);
+    padding-inline: 1.5rem;
+    border: none;
+    border-radius: 0.7rem;
+    color: var(--secondary);
+    background-color: transparent;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: var(--field-height);
+    cursor: pointer;
+  }
+
+  .btn.primary { color: var(--accent-ink); background-color: var(--accent); }
+  .btn.ghost { border: var(--separator-border); background-color: var(--primary-l2); }
+  .btn.danger { color: var(--error); border: 1px solid color-mix(in srgb, var(--error) 45%, transparent); }
+  .btn.small { min-block-size: 1.6rem; padding-inline: 0.8rem; font-size: 0.78rem; line-height: 1.6rem; }
+
+  .btnrow { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-block-start: 0.9rem; }
+
+  .field {
+    display: block;
+    inline-size: 100%;
+    min-block-size: var(--field-height);
+    padding-inline: 1rem;
+    border: 1px solid var(--primary-d1);
+    border-radius: 0.6rem;
+    color: var(--secondary);
+    background-color: var(--primary-l1);
+    font-family: var(--default-font-family);
+    font-size: 0.85rem;
+    line-height: var(--field-height);
+  }
+
+  .field.area { min-block-size: 6.5rem; padding-block: 0.5rem; line-height: 1.6; }
+  .field.ph { color: var(--text-color-f2); }
+
+  .lbl {
+    display: block;
+    margin-block: 0.9rem 0.3rem;
+    color: var(--text-color-f2);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .tabs {
+    display: inline-flex;
+    gap: 0.15rem;
+    align-items: center;
+    max-inline-size: 100%;
+    margin-block-end: 1rem;
+    padding: 0.25rem;
+    border: var(--separator-border);
+    border-radius: 999px;
+    background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs button {
+    flex: none;
+    block-size: 2rem;
+    padding-inline: 1rem;
+    border: none;
+    border-radius: 999px;
+    color: var(--text-color-f1);
+    background-color: transparent;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .tabs button.on { color: var(--accent-ink); background-color: var(--accent); }
+
+  .card {
+    padding: 1rem 1.1rem 1.1rem;
+    border: var(--separator-border);
+    border-radius: 0.8rem;
+    background-color: var(--primary-l2);
+  }
+
+  .card + .card { margin-block-start: 0.8rem; }
+  .card h3 { margin: 0 0 0.5rem; font-family: var(--header-font-family); font-size: 1rem; font-weight: 600; }
+
+  .micro {
+    margin: 0 0 0.55rem;
+    color: var(--text-color-f2);
+    font-family: var(--value-font-family);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .chip {
+    display: inline-flex;
+    gap: 0.3rem;
+    align-items: center;
+    padding: 0.1rem 0.55rem;
+    border: var(--separator-border);
+    border-radius: 999px;
+    color: var(--text-color-f1);
+    font-family: var(--value-font-family);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .chip.new { border-color: transparent; color: var(--accent-ink); background-color: var(--accent); }
+  .chip.wait { border-color: color-mix(in srgb, var(--warn) 55%, transparent); color: var(--warn); }
+  .chip.closed { color: var(--text-color-f2); }
+  .chip.alarm { border-color: color-mix(in srgb, var(--error) 55%, transparent); color: var(--error); }
+  .chip.anon { border-style: dashed; }
+
+  .split { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 1rem; }
+  @media (max-width: 58rem) { .split { grid-template-columns: 1fr; } }
+
+  /* ---- inbox --------------------------------------------------------------- */
+
+  .filters { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; margin-block-end: 0.8rem; }
+
+  .tickets { display: grid; gap: 0.35rem; }
+
+  .ticket {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    border: var(--separator-border);
+    border-radius: 0.7rem;
+    background-color: var(--primary-l2);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .ticket.on { border-color: var(--accent); }
+  .ticket.unread .subj { font-weight: 700; }
+
+  .ticket .who {
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border-radius: 50%;
+    color: var(--primary);
+    background-color: var(--secondary-l1);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .ticket .who.anon { color: var(--text-color-f1); background-color: var(--primary-d1); }
+  .ticket .subj { font-size: 0.88rem; }
+  .ticket .prev { color: var(--text-color-f2); font-size: 0.76rem; }
+  .ticket .meta { display: flex; gap: 0.35rem; align-items: center; }
+  .ticket .when { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.66rem; }
+
+  .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---- thread -------------------------------------------------------------- */
+
+  .thread { display: grid; gap: 0.7rem; }
+
+  .msg { display: grid; gap: 0.3rem; max-inline-size: 42rem; padding: 0.7rem 0.9rem; border-radius: 0.8rem; }
+  .msg.them { border: var(--separator-border); background-color: var(--primary-l2); }
+  .msg.us { justify-self: end; color: var(--accent-ink); background-color: var(--accent); }
+  .msg.us .head { color: color-mix(in srgb, var(--accent-ink) 70%, transparent); }
+  .msg.sys { justify-self: center; max-inline-size: 34rem; border: 1px dashed var(--separator-color); background-color: transparent; color: var(--text-color-f2); font-size: 0.78rem; text-align: center; }
+
+  .msg .head { display: flex; gap: 0.5rem; align-items: baseline; color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; }
+  .msg p { margin: 0; font-size: 0.88rem; }
+
+  .facts { display: grid; gap: 0.4rem; }
+
+  .fact { display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.6rem; padding-block: 0.3rem; border-block-end: var(--separator-border); font-size: 0.82rem; }
+  .fact:last-child { border-block-end: none; }
+  .fact .k { color: var(--text-color-f2); font-size: 0.75rem; }
+  .fact .v { min-inline-size: 0; overflow-wrap: anywhere; }
+  .fact .v.mono { font-family: var(--value-font-family); font-size: 0.76rem; }
+
+  /* ---- notices ------------------------------------------------------------- */
+
+  .banner {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--separator-color));
+    border-radius: 0.8rem;
+    background-color: color-mix(in srgb, var(--warn) 10%, transparent);
+    font-size: 0.85rem;
+  }
+
+  .banner.feature { border-color: color-mix(in srgb, var(--accent) 45%, var(--separator-color)); background-color: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .banner.incident { border-color: color-mix(in srgb, var(--error) 50%, var(--separator-color)); background-color: color-mix(in srgb, var(--error) 10%, transparent); }
+
+  .banner .ico { flex: none; inline-size: 1.15rem; block-size: 1.15rem; margin-block-start: 0.12rem; }
+  .banner b { display: block; }
+  .banner .body { flex: 1; color: var(--text-color-f1); }
+  .banner .body b { color: var(--text-color); }
+  .banner .x { flex: none; padding: 0 0.3rem; border: none; color: var(--text-color-f2); background: none; font: inherit; font-size: 1rem; cursor: pointer; }
+
+  .noticerow {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    border: var(--separator-border);
+    border-radius: 0.7rem;
+    background-color: var(--primary-l2);
+  }
+
+  .noticerow .kind { font-family: var(--value-font-family); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .noticerow .kind.incident { color: var(--error); }
+  .noticerow .kind.maint { color: var(--warn); }
+  .noticerow .kind.feature { color: var(--accent); }
+  .noticerow .win { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.68rem; }
+
+  .switch {
+    display: inline-flex;
+    align-items: center;
+    inline-size: 2.4rem;
+    block-size: 1.35rem;
+    padding: 0.15rem;
+    border-radius: 999px;
+    background-color: var(--primary-d1);
+  }
+
+  .switch i { inline-size: 1.05rem; block-size: 1.05rem; border-radius: 50%; background-color: var(--text-color-f2); }
+  .switch.on { background-color: var(--accent); justify-content: flex-end; }
+  .switch.on i { background-color: var(--accent-ink); }
+
+  /* ---- passkey sign-in ------------------------------------------------------ */
+
+  .signin { max-inline-size: 26rem; margin-inline: auto; padding-block: 2rem 1rem; text-align: center; }
+  .signin h3 { margin: 0 0 0.3rem; font-family: var(--header-font-family); font-size: 1.35rem; font-weight: 400; }
+  .signin p { margin: 0 0 1.2rem; color: var(--text-color-f1); font-size: 0.86rem; }
+
+  .keyicon {
+    display: grid;
+    place-items: center;
+    inline-size: 3.4rem;
+    block-size: 3.4rem;
+    margin-inline: auto;
+    margin-block-end: 0.9rem;
+    border-radius: 1rem;
+    color: var(--accent);
+    background-color: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+
+  .keyicon svg { inline-size: 1.7rem; block-size: 1.7rem; }
+
+  .orrule { display: flex; gap: 0.7rem; align-items: center; margin-block: 1.1rem; color: var(--text-color-f2); font-size: 0.72rem; }
+  .orrule::before, .orrule::after { content: ""; flex: 1; block-size: 1px; background-color: var(--separator-color); }
+
+  /* ---- misc ---------------------------------------------------------------- */
+
+  .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.7rem; margin-block-start: 1rem; }
+  .rules div { padding: 0.9rem 1rem; border: var(--separator-border); border-radius: 0.7rem; background-color: var(--primary-l1); font-size: 0.85rem; }
+  .rules b { display: block; margin-block-end: 0.25rem; color: var(--accent); font-family: var(--value-font-family); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  .map { display: grid; gap: 0.3rem; margin-block-start: 1rem; }
+
+  .maprow {
+    display: grid;
+    grid-template-columns: 15rem 1fr auto;
+    gap: 0.7rem;
+    align-items: baseline;
+    padding: 0.45rem 0.8rem;
+    border: var(--separator-border);
+    border-radius: 0.6rem;
+    background-color: var(--primary-l1);
+    font-size: 0.83rem;
+  }
+
+  @media (max-width: 50rem) { .maprow { grid-template-columns: 1fr; } }
+
+  .maprow code { color: var(--accent); font-family: var(--value-font-family); font-size: 0.78rem; }
+  .maprow .gate { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* ---- self-serve answers --------------------------------------------------- */
+
+  .answers { display: grid; gap: 0.35rem; margin-block-start: 0.5rem; }
+
+  .answer {
+    display: grid;
+    grid-template-columns: 1.4rem minmax(0, 1fr) auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.55rem 0.75rem;
+    border: var(--separator-border);
+    border-radius: 0.6rem;
+    background-color: var(--primary-l2);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .answer .num { color: var(--accent); font-family: var(--value-font-family); font-size: 0.66rem; }
+  .answer b { display: block; font-size: 0.84rem; font-weight: 600; }
+  .answer span.sub { display: block; color: var(--text-color-f2); font-size: 0.75rem; }
+  .answer .hit { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.62rem; }
+
+  .steps { margin: 0.4rem 0 0; padding-inline-start: 1.1rem; color: var(--text-color-f1); font-size: 0.83rem; }
+  .steps li { margin-block: 0.2rem; }
+  .steps kbd { padding: 0.05rem 0.3rem; border: var(--separator-border); border-block-end-width: 2px; border-radius: 0.3rem; background-color: var(--primary-l1); font-family: var(--value-font-family); font-size: 0.75em; }
+
+  .rule {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) 1.2rem minmax(0, 1fr) auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.55rem 0.75rem;
+    border: var(--separator-border);
+    border-radius: 0.6rem;
+    background-color: var(--primary-l2);
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 50rem) { .rule { grid-template-columns: 1fr; } }
+
+  .rule .when { font-family: var(--value-font-family); font-size: 0.76rem; }
+  .rule .arrow { color: var(--text-color-f2); text-align: center; }
+  .rule .hits { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.66rem; }
+
+  .msg.auto { border: 1px dashed color-mix(in srgb, var(--accent) 55%, var(--separator-color)); background-color: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .msg.auto .head { color: var(--accent); }
+
+  /* ---- the gate ------------------------------------------------------------ */
+
+  .gate { display: grid; gap: 0.4rem; }
+
+  .gaterow {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    align-items: start;
+    padding: 0.65rem 0.8rem;
+    border: var(--separator-border);
+    border-radius: 0.6rem;
+    background-color: var(--primary-l2);
+  }
+
+  .gaterow .step {
+    display: grid;
+    place-items: center;
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    border-radius: 50%;
+    color: var(--accent-ink);
+    background-color: var(--accent);
+    font-family: var(--value-font-family);
+    font-size: 0.62rem;
+    font-weight: 700;
+  }
+
+  .gaterow b { display: block; font-size: 0.86rem; }
+  .gaterow p { margin: 0.15rem 0 0; color: var(--text-color-f1); font-size: 0.8rem; }
+  .gaterow .verdict { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .gaterow .verdict.stop { color: var(--error); }
+
+  .mailcard {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.9rem 1rem;
+    border: var(--separator-border);
+    border-radius: 0.7rem;
+    background-color: var(--primary-l2);
+  }
+
+  .mailhead { display: grid; grid-template-columns: 4.5rem 1fr; gap: 0.5rem; font-size: 0.8rem; }
+  .mailhead .k { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.68rem; }
+  .mailbody { padding-block-start: 0.5rem; border-block-start: var(--separator-border); font-size: 0.85rem; }
+
+  .stamp {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 0.5rem;
+    background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+    font-size: 0.76rem;
+  }
+
+  .stamp .dot2 { inline-size: 0.5rem; block-size: 0.5rem; border-radius: 50%; background-color: var(--accent); }
+
+  /* ---- desk shell: left nav, staff identity pinned to the bottom ----------- */
+
+  .deskshell { display: flex; align-items: stretch; min-block-size: 30rem; }
+
+  .desknav {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    inline-size: 12.5rem;
+    padding: 0.8rem 0.6rem;
+    border-inline-end: var(--separator-border);
+    background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
+  }
+
+  .navlist { display: flex; flex-direction: column; gap: 0.1rem; margin: 0; padding: 0; list-style: none; }
+
+  .navitem {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    inline-size: 100%;
+    padding: 0.5rem 0.6rem;
+    border: none;
+    border-radius: 0.6rem;
+    color: var(--text-color-f1);
+    background-color: transparent;
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .navitem svg { flex: none; inline-size: 1.05rem; block-size: 1.05rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  .navitem.on { color: var(--accent-ink); background-color: var(--accent); }
+  .navitem.on svg { stroke: var(--accent-ink); }
+
+  .navgrow { flex: 1; }
+
+  .staffblock {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    padding-block-start: 0.7rem;
+    border-block-start: var(--separator-border);
+  }
+
+  .staffblock .who {
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border-radius: 50%;
+    color: var(--primary);
+    background-color: var(--secondary-l1);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .staffblock .id { min-inline-size: 0; }
+  .staffblock .name { display: block; font-size: 0.82rem; font-weight: 600; }
+  .staffblock .signout { display: block; padding: 0; border: none; color: var(--text-color-f2); background: none; font: inherit; font-size: 0.72rem; cursor: pointer; }
+  .staffblock .signout:hover { color: var(--error); }
+
+  .deskmain { flex: 1; min-inline-size: 0; padding: 1.1rem 1.1rem 1.3rem; overflow-x: auto; }
+
+  /* ---- dashboard ------------------------------------------------------------ */
+
+  .asof { margin: 0 0 0.9rem; color: var(--text-color-f2); font-size: 0.76rem; }
+
+  .statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.6rem; margin-block-end: 1rem; }
+
+  .stat { padding: 0.8rem 0.9rem; border: var(--separator-border); border-radius: 0.8rem; background-color: var(--primary-l2); }
+  .stat .n { display: block; font-family: var(--value-font-family); font-size: 1.55rem; font-weight: 700; }
+  .stat .lab { display: block; margin-block-start: 0.2rem; color: var(--text-color-f2); font-size: 0.72rem; }
+  .stat .delta { margin-inline-start: 0.4rem; color: var(--accent); font-size: 0.7rem; font-weight: 600; }
+
+  .trendcard { padding: 0.9rem 0.9rem 0.7rem; }
+  .trend { display: flex; gap: 0.3rem; align-items: flex-end; block-size: 4.5rem; margin-block-start: 0.6rem; }
+  .trend i { flex: 1; min-inline-size: 0.35rem; border-radius: 0.2rem 0.2rem 0 0; background-color: color-mix(in oklab, var(--accent) 45%, transparent); }
+  .trend i.now { background-color: var(--accent); }
+
+  .worldmap {
+    position: relative;
+    block-size: 11rem;
+    margin-block-end: 0.8rem;
+    border: var(--separator-border);
+    border-radius: 0.7rem;
+    background-color: var(--primary-l1);
+    background-image: radial-gradient(color-mix(in oklab, var(--text-color) 10%, transparent) 1px, transparent 1px);
+    background-size: 14px 14px;
+    overflow: hidden;
+  }
+
+  .worldmap .cap { position: absolute; inset-inline-start: 0.7rem; inset-block-start: 0.6rem; color: var(--text-color-f2); font-size: 0.68rem; }
+
+  .geodot { position: absolute; border-radius: 50%; background-color: color-mix(in oklab, var(--accent) 70%, transparent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 12%, transparent); }
+
+  .geolist { display: grid; gap: 0.4rem; }
+  .georow { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) 4.5rem auto; gap: 0.6rem; align-items: center; }
+  .georow .rank { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.7rem; }
+  .georow .name { font-size: 0.84rem; }
+  .georow .bar { position: relative; block-size: 0.4rem; border-radius: 999px; background-color: var(--primary-d1); overflow: hidden; }
+  .georow .bar i { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 999px; background-color: var(--accent); }
+  .georow .pct { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.7rem; text-align: end; }
+  .georow.other .name, .georow.other .pct { color: var(--text-color-f2); }
+
+  /* ---- nav badges, search, saved replies ------------------------------------ */
+
+  .navbadge {
+    margin-inline-start: auto;
+    padding: 0.05rem 0.42rem;
+    border-radius: 999px;
+    background-color: color-mix(in oklab, var(--text-color) 16%, transparent);
+    color: var(--text-color-f1);
+    font-family: var(--value-font-family);
+    font-size: 0.66rem;
+    font-weight: 700;
+  }
+
+  .navitem.on .navbadge { background-color: color-mix(in oklab, var(--accent-ink) 22%, transparent); color: var(--accent-ink); }
+  .navbadge.alert { background-color: color-mix(in oklab, var(--error) 25%, transparent); color: var(--error); }
+  .navitem.on .navbadge.alert { background-color: var(--accent-ink); color: var(--error); }
+
+  .searchbox {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    inline-size: 100%;
+    margin-block-end: 0.8rem;
+    padding-inline: 0.8rem;
+    border: 1px solid var(--primary-d1);
+    border-radius: 0.6rem;
+    background-color: var(--primary-l1);
+  }
+
+  .searchbox svg { flex: none; inline-size: 0.95rem; block-size: 0.95rem; color: var(--text-color-f2); fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+  .searchbox span { padding-block: 0.5rem; color: var(--text-color-f2); font-size: 0.84rem; white-space: nowrap; }
+
+  .replies { display: grid; gap: 0.35rem; }
+
+  .reply {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.55rem 0.75rem;
+    border: var(--separator-border);
+    border-radius: 0.6rem;
+    background-color: var(--primary-l1);
+  }
+
+  .reply b { display: block; font-size: 0.84rem; font-weight: 600; }
+  .reply span.sub { display: block; overflow: hidden; color: var(--text-color-f2); font-size: 0.76rem; text-overflow: ellipsis; white-space: nowrap; }
+  .reply .used { color: var(--text-color-f2); font-family: var(--value-font-family); font-size: 0.66rem; white-space: nowrap; }
+</style>
+
+<div class="wrap">
+
+<header class="doc">
+  <p class="eyebrow">Mock · not built</p>
+  <h1>Support, and the desk behind it</h1>
+  <p class="lede">
+    Two audiences that must never see each other's screen. A person with a
+    problem gets <b>one form, one thread, and an answer before a person reads it</b> where the answer is already written. You get <b>an unlisted console</b>
+    that reads every message ever sent and can put a banner in front of every
+    user in the world.
+  </p>
+  <p class="lede">
+    Built on what the app already has: passkeys work end to end today, Brevo
+    already sends over SMTP, and the theme tokens below are lifted straight from
+    <code style="font-family:var(--value-font-family);font-size:0.85em">keylearn-themes</code>,
+    not approximated.
+  </p>
+</header>
+
+<h2>Where everything lives</h2>
+<p class="note">
+  The console is unlisted — it is in no menu, no sitemap, and no link anywhere in
+  the app. That reduces noise; it is not the security boundary. The boundary is
+  the staff flag and a second factor, which is why every staff route says so
+  below.
+</p>
+
+<div class="map">
+  <div class="maprow"><code>/about → Contact</code><span>Where a <em>signed-out</em> visitor starts. Gone the moment they sign in — one entry point per state, never both at once.</span><span class="gate">open</span></div>
+  <div class="maprow"><code>Account → Support</code><span>Where a <em>signed-in</em> person starts instead — a rail item in the account window, partially built already. Never shown to a signed-out visitor, since there is no account window to put it in.</span><span class="gate">open</span></div>
+  <div class="maprow"><code>/support</code><span>The form itself. Works signed out, because "I cannot sign in" is the most common message you will get.</span><span class="gate">open · rate limited</span></div>
+  <div class="maprow"><code>/support/t/&lt;token&gt;</code><span>One person's thread. The token is the key; it is emailed, never guessable, and expires.</span><span class="gate">token</span></div>
+  <div class="maprow"><code>/support/confirm/&lt;token&gt;</code><span>Confirms an address for a message sent while signed out.</span><span class="gate">token</span></div>
+  <div class="maprow"><code>/desk</code><span>The console — opens on the dashboard, today's numbers first.</span><span class="gate">staff + passkey</span></div>
+  <div class="maprow"><code>/desk/inbox</code><span>Tickets. Everything that has come in, newest first.</span><span class="gate">staff + passkey</span></div>
+  <div class="maprow"><code>/desk/t/&lt;id&gt;</code><span>A thread, with everything known about the sender beside it.</span><span class="gate">staff + passkey</span></div>
+  <div class="maprow"><code>/support/answers</code><span>The how-to library. Plain pages, indexed, linkable — the same text the form suggests and the auto-reply sends.</span><span class="gate">open</span></div>
+  <div class="maprow"><code>business enquiries</code><span>Land in the desk <em>and</em> forward to your personal address, immediately and unfiltered.</span><span class="gate">open · never auto-answered</span></div>
+  <div class="maprow"><code>/desk/answers</code><span>The library, and the rules that decide when it answers for you.</span><span class="gate">staff + passkey</span></div>
+  <div class="maprow"><code>/desk/settings</code><span>Preferences and content only. Cannot grant access, move mail, or weaken sign-in.</span><span class="gate">staff + passkey</span></div>
+  <div class="maprow"><code>/desk/audit</code><span>Read-only. Who signed in, who revealed an address, who published a notice.</span><span class="gate">staff + passkey</span></div>
+  <div class="maprow"><code>/desk/notices</code><span>What appears at the top of the app, and when.</span><span class="gate">staff + passkey</span></div>
+</div>
+
+<h2><span class="stepno">01</span>Getting in — the staff sign-in</h2>
+<p class="note">
+  Passkey first, because the app already has the whole WebAuthn path built and a
+  console that can read every support message should not be reachable with a
+  password somebody reused. A staff account with neither a passkey nor an
+  authenticator cannot open this page at all — not "is warned", cannot.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn</span>
+    <span class="grow"></span>
+    <span class="url">keylearn.app/desk</span>
+  </div>
+  <div class="pane">
+    <div class="signin">
+      <div class="keyicon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="9" r="4"></circle>
+          <path d="M12.5 11.5 21 20"></path>
+          <path d="M18 17l2-2"></path>
+          <path d="M15.5 14.5l2-2"></path>
+        </svg>
+      </div>
+      <h3>Staff sign-in</h3>
+      <p>This page is not linked from anywhere. If you reached it by accident, there is nothing here for you.</p>
+
+      <button class="btn primary" type="button" style="min-inline-size:100%">Use a passkey</button>
+
+      <div class="orrule">or</div>
+
+      <button class="btn ghost" type="button" style="min-inline-size:100%">Password and authenticator code</button>
+
+      <p style="margin-block-start:1.2rem;font-size:0.78rem;color:var(--text-color-f2)">
+        Every attempt here, successful or not, is written to the security log
+        with the IP that made it.
+      </p>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">02</span>Sending a message — the person's side</h2>
+<p class="note">
+  Two states of the same form. Signed in, it already knows who you are and what
+  you were doing. Signed out, it asks for an address and confirms it before the
+  message reaches the desk — which is the whole anti-spam design, and it costs
+  the honest sender one click.
+</p>
+
+<div class="split">
+  <div class="app">
+    <div class="chrome">
+      <span class="brand"><span class="mark">K</span>KeyLearn</span>
+      <span class="grow"></span>
+      <span class="url">/support</span>
+      <span class="avatar">A</span>
+    </div>
+    <div class="pane">
+      <p class="micro">Signed in</p>
+      <h3 style="margin:0 0 0.2rem;font-family:var(--header-font-family);font-size:1.2rem;font-weight:400">Ask us anything</h3>
+      <p style="margin:0;color:var(--text-color-f1);font-size:0.85rem">
+        We are two people and a mailing list. You will hear back, usually within
+        a day.
+      </p>
+
+      <span class="lbl">What is this about?</span>
+      <div class="tabs" style="margin-block-end:0.2rem">
+        <button class="on" type="button">Something is broken</button>
+        <button type="button">A question</button>
+        <button type="button">An idea</button>
+        <button type="button">Business</button>
+      </div>
+
+      <span class="lbl">Tell us what happened</span>
+      <div class="field area ph">The keyboard stops responding after about ten minutes of the guided course. Reloading fixes it. Firefox, on my laptop.</div>
+
+      <div class="card" style="margin-block-start:0.9rem;padding:0.7rem 0.85rem">
+        <p class="micro" style="margin-block-end:0.4rem">Attached automatically — you can see all of it</p>
+        <div class="facts">
+          <div class="fact"><span class="k">Page</span><span class="v mono">/practice</span></div>
+          <div class="fact"><span class="k">Browser</span><span class="v mono">Firefox 141 · macOS</span></div>
+          <div class="fact"><span class="k">App build</span><span class="v mono">2026.08.09-1</span></div>
+          <div class="fact"><span class="k">Profile</span><span class="v">Dhev · kids</span></div>
+        </div>
+        <p style="margin:0.55rem 0 0;color:var(--text-color-f2);font-size:0.76rem">
+          No lesson content, no keystrokes and no results are attached. If you
+          would rather send none of this, turn it off — we will just ask more
+          questions.
+        </p>
+        <div class="btnrow" style="margin-block-start:0.55rem">
+          <span class="switch on"><i></i></span>
+          <span style="font-size:0.8rem;color:var(--text-color-f1)">Include the details above</span>
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button class="btn primary" type="button">Send</button>
+        <button class="btn ghost" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <div class="chrome">
+      <span class="brand"><span class="mark">K</span>KeyLearn</span>
+      <span class="grow"></span>
+      <span class="url">/support</span>
+    </div>
+    <div class="pane">
+      <p class="micro">Signed out</p>
+      <h3 style="margin:0 0 0.2rem;font-family:var(--header-font-family);font-size:1.2rem;font-weight:400">Can't get in?</h3>
+      <p style="margin:0;color:var(--text-color-f1);font-size:0.85rem">
+        You do not need an account to write to us. Most people who reach this
+        page cannot sign in, which is exactly why it does not ask you to.
+      </p>
+
+      <span class="lbl">Your email</span>
+      <div class="field ph" style="line-height:2rem">you@example.com</div>
+
+      <span class="lbl">What is going on?</span>
+      <div class="field area ph">I signed up with my Google account last year and now it says no account exists for that address.</div>
+
+      <div class="btnrow">
+        <button class="btn primary" type="button">Send</button>
+      </div>
+
+      <div class="banner" style="margin-block-start:1rem">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.2v.1"></path></svg>
+        <span class="body">
+          <b>One click before we see it.</b>
+          We will email that address a link. Following it confirms the address is
+          yours and opens your conversation. Until then the message sits in a
+          holding queue, which is how the desk stays free of bots.
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<h2><span class="stepno">03</span>Answering before you have to</h2>
+<p class="note">
+  Most of what arrives is one of about a dozen questions. As somebody types, the
+  form looks for those and offers the answer <em>above</em> the Send button. It
+  never blocks sending and never hides the button — a deflection wall that makes
+  people fight to reach a human is worse than the volume it saves.
+</p>
+
+<div class="split">
+  <div class="app">
+    <div class="chrome">
+      <span class="brand"><span class="mark">K</span>KeyLearn</span>
+      <span class="grow"></span>
+      <span class="url">/support</span>
+      <span class="avatar">A</span>
+    </div>
+    <div class="pane">
+      <span class="lbl">Tell us what happened</span>
+      <div class="field area">how do I move my daughter to her own profile without losing her stars</div>
+
+      <p class="micro" style="margin-block-start:0.9rem">This might be it</p>
+      <div class="answers">
+        <button class="answer" type="button">
+          <span class="num">01</span>
+          <span style="min-inline-size:0">
+            <b>Moving a child to their own profile</b>
+            <span class="sub">Stars, streak and history all move with them.</span>
+          </span>
+          <span class="hit">92%</span>
+        </button>
+        <button class="answer" type="button">
+          <span class="num">02</span>
+          <span style="min-inline-size:0">
+            <b>Why a streak reset after switching profiles</b>
+            <span class="sub">And how to have it counted back.</span>
+          </span>
+          <span class="hit">64%</span>
+        </button>
+      </div>
+
+      <div class="card" style="margin-block-start:0.7rem;padding:0.8rem 0.9rem">
+        <p class="micro" style="margin-block-end:0.35rem">Moving a child to their own profile</p>
+        <ol class="steps">
+          <li>Open <b>Account → Profiles</b>.</li>
+          <li>Choose <b>Add a profile</b> and pick <b>Kids</b>.</li>
+          <li>On the old profile, choose <b>Move practice history</b> and select the new one.</li>
+          <li>Stars, streak and best score move with the history. Nothing is lost and nothing is copied twice.</li>
+        </ol>
+        <div class="btnrow">
+          <button class="btn primary small" type="button">That solved it</button>
+          <button class="btn ghost small" type="button">Not quite — send my message</button>
+        </div>
+      </div>
+
+      <p style="margin-block-start:0.9rem;color:var(--text-color-f2);font-size:0.78rem">
+        <b style="color:var(--text-color)">Send is still right there.</b> Choosing
+        "that solved it" closes the form and records which answer worked, which is
+        the only signal worth having about whether these pages are any good.
+      </p>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <p class="micro">What gets automated, and what never does</p>
+      <div class="facts">
+        <div class="fact"><span class="k">Suggested</span><span class="v">How-to questions, matched on the text as it is typed.</span></div>
+        <div class="fact"><span class="k">Auto-replied</span><span class="v">A confident match sends the article immediately, clearly marked as automatic, and the ticket stays open.</span></div>
+        <div class="fact"><span class="k">Never touched</span><span class="v">Anything about a child, a refund, a certificate, an account that cannot be reached — and every business enquiry.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="micro">Why an auto-reply never closes a ticket</p>
+      <p style="margin:0;color:var(--text-color-f1);font-size:0.84rem">
+        Automatic closing is how support systems teach people that writing in is
+        pointless. Here the automatic answer is the <em>first</em> reply, not the
+        last one, and the ticket still shows in your inbox as needing a human
+        until you say otherwise. If the article solved it, they tap "this
+        solved it" and it closes itself.
+      </p>
+    </div>
+
+    <div class="card">
+      <p class="micro">The same text, three places</p>
+      <p style="margin:0;color:var(--text-color-f1);font-size:0.84rem">
+        One library. The form suggests from it, the auto-reply sends from it, and
+        <code style="font-family:var(--value-font-family);font-size:0.9em">/support/answers</code>
+        publishes it as ordinary linkable pages. Editing an article fixes all
+        three, and you can paste a link to one into any conversation.
+      </p>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">04</span>An automatic first reply, in the thread</h2>
+<p class="note">
+  What the person sees when a rule fires. It is marked as automatic in plain
+  words, because a canned answer pretending to be a person is the fastest way to
+  lose somebody's goodwill.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn</span>
+    <span class="grow"></span>
+    <span class="url">/support/t/2b71…</span>
+    <span class="avatar">D</span>
+  </div>
+  <div class="pane">
+    <div class="thread">
+      <div class="msg them">
+        <span class="head">You · 11 Aug, 21:15</span>
+        <p>How do I move my daughter to her own profile without losing her stars?</p>
+      </div>
+      <div class="msg auto">
+        <span class="head">Sent automatically · 11 Aug, 21:15</span>
+        <p style="margin-block-end:0.3rem"><b>This looks like a question we have written up.</b> If it is not what you meant, ignore this — a person has your message and will reply.</p>
+        <ol class="steps" style="color:inherit">
+          <li>Open <b>Account → Profiles</b>.</li>
+          <li>Choose <b>Add a profile</b>, then <b>Kids</b>.</li>
+          <li>On the old profile, choose <b>Move practice history</b>.</li>
+        </ol>
+      </div>
+      <div class="msg sys">Still open · a person will read this within a day</div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">05</span>Business enquiries go two places</h2>
+<p class="note">
+  A school asking about licensing should not sit in a queue behind a stuck
+  keyboard. Choosing <b>Business</b> creates the ticket like anything else
+  <em>and</em> forwards the whole message to your personal address the moment it
+  arrives.
+</p>
+
+<div class="split">
+  <div class="app">
+    <div class="chrome">
+      <span class="brand"><span class="mark">K</span>KeyLearn</span>
+      <span class="grow"></span>
+      <span class="url">/support</span>
+    </div>
+    <div class="pane">
+      <span class="lbl">What is this about?</span>
+      <div class="tabs" style="margin-block-end:0.2rem">
+        <button type="button">Something is broken</button>
+        <button type="button">A question</button>
+        <button type="button">An idea</button>
+        <button class="on" type="button">Business</button>
+      </div>
+
+      <span class="lbl">Your email</span>
+      <div class="field ph" style="line-height:2rem">principal@stjosephs.vic.edu.au</div>
+
+      <span class="lbl">Tell us what you need</span>
+      <div class="field area ph">We are a primary school in Melbourne with about 300 students and would like to talk about using KeyLearn across years 3 to 6.</div>
+
+      <div class="banner feature" style="margin-block-start:0.9rem">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v12H3z"></path><path d="m3 7 9 6 9-6"></path></svg>
+        <span class="body">
+          <b>This one reaches a person directly.</b> Business enquiries are never
+          answered automatically and never wait in a queue.
+        </span>
+      </div>
+
+      <div class="btnrow">
+        <button class="btn primary" type="button">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <p class="micro">Where it lands</p>
+      <div class="facts">
+        <div class="fact"><span class="k">The desk</span><span class="v">A ticket like any other, tagged <span class="chip" style="text-transform:none">business</span>, so the thread and every reply stay in one place.</span></div>
+        <div class="fact"><span class="k">Your inbox</span><span class="v mono">abhijathka@gmail.com</span></div>
+        <div class="fact"><span class="k">Reply-to</span><span class="v">The sender's address, so you can answer from your phone and it just works.</span></div>
+        <div class="fact"><span class="k">Automation</span><span class="v">None. No suggestions, no auto-reply, no matching.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="micro">The one thing to watch</p>
+      <p style="margin:0;color:var(--text-color-f1);font-size:0.84rem">
+        Answering from your own mail client means that reply is <em>not</em> in the
+        thread — the person sees two conversations. So the forwarded mail carries
+        a link straight to the ticket, and the sensible habit is to read on your
+        phone and answer in the desk. Worth knowing before it bites, rather than
+        after.
+      </p>
+    </div>
+
+    <div class="card">
+      <p class="micro">Not a public address</p>
+      <p style="margin:0;color:var(--text-color-f1);font-size:0.84rem">
+        Your personal address is a forwarding destination held in configuration.
+        It is never shown in the app, never in a page source, and never in an
+        email header a stranger can read.
+      </p>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">06</span>The conversation — the person's side</h2>
+<p class="note">
+  Opened with the emailed link. This is where a reply is read and answered.
+  Because the thread lives here rather than in a mailbox, nothing depends on
+  <code>support@</code> being able to receive mail — which today it cannot.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn</span>
+    <span class="grow"></span>
+    <span class="url">/support/t/9f3c…</span>
+    <span class="avatar">A</span>
+  </div>
+  <div class="pane">
+    <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;margin-block-end:0.9rem">
+      <h3 style="margin:0;font-family:var(--header-font-family);font-size:1.15rem;font-weight:600">Keyboard stops responding mid-lesson</h3>
+      <span class="chip wait">waiting for you</span>
+      <span class="grow"></span>
+      <span style="color:var(--text-color-f2);font-family:var(--value-font-family);font-size:0.7rem">opened 9 Aug</span>
+    </div>
+
+    <div class="thread">
+      <div class="msg them">
+        <span class="head">You · 9 Aug, 19:04</span>
+        <p>The keyboard stops responding after about ten minutes of the guided course. Reloading fixes it. Firefox, on my laptop.</p>
+      </div>
+
+      <div class="msg sys">Details attached: /practice · Firefox 141 · macOS · build 2026.08.09-1</div>
+
+      <div class="msg us">
+        <span class="head">KeyLearn · 10 Aug, 08:12</span>
+        <p>Thanks — that is a real bug and you are the third person to hit it. It happens when the tab has been in the background and comes back. Does it also happen if you keep the tab in front the whole time?</p>
+      </div>
+
+      <div class="msg them">
+        <span class="head">You · 10 Aug, 20:30</span>
+        <p>Just tried for fifteen minutes without switching tabs. No problem at all.</p>
+      </div>
+
+      <div class="msg us">
+        <span class="head">KeyLearn · 11 Aug, 07:40</span>
+        <p>That confirms it. The fix is going out this week — I will write here when it is live rather than making you check.</p>
+      </div>
+    </div>
+
+    <span class="lbl">Reply</span>
+    <div class="field area ph">Write here…</div>
+    <div class="btnrow">
+      <button class="btn primary" type="button">Send reply</button>
+      <button class="btn ghost" type="button">This is resolved</button>
+    </div>
+    <p style="margin-block-start:0.8rem;color:var(--text-color-f2);font-size:0.76rem">
+      This link is yours. Anyone who has it can read this conversation, so treat
+      it like a password — and it stops working 90 days after the conversation
+      closes.
+    </p>
+  </div>
+</div>
+
+<h2><span class="stepno">07</span>The dashboard — what opens first</h2>
+<p class="note">
+  <code>/desk</code> lands here, not on the inbox. Staff-only, refreshed on a
+  schedule rather than pushed live — nobody needs to watch a signup counter
+  tick in real time, and a cached number is much cheaper than a live one.
+  Registered accounts only: a guest's practice never leaves their device, so
+  there is nothing here for the server to have counted.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span>
+    <span class="grow"></span>
+    <span class="url">/desk</span>
+  </div>
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem on" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Dashboard</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 12h4l2 3h6l2-3h4"></path><path d="M5.5 12 4 6.5A2 2 0 0 1 6 4h12a2 2 0 0 1 2 2.5L18.5 12"></path><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"></path></svg>Inbox<span class="navbadge">4</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.3 4.3 4 4.3v14.4c3.3 0 6.2.7 8 2.2 1.8-1.5 4.7-2.2 8-2.2V4.3c-3.3 0-6.2.7-8 2.2z"></path></svg>Answers</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5L6 9H4a1 1 0 0 0-1 1z"></path><path d="M17.5 8.5a5 5 0 0 1 0 7"></path></svg>Notices<span class="navbadge alert">1</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>Audit</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Settings</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock">
+        <span class="who">A</span>
+        <span class="id">
+          <span class="name">abhijath</span>
+          <button class="signout" type="button">Log out</button>
+        </span>
+      </div>
+    </nav>
+    <div class="deskmain">
+      <p class="asof">As of 12 Aug, 21:40 · next refresh in 12 minutes</p>
+
+      <div class="statgrid">
+        <div class="stat"><span class="n">2,847</span><span class="lab">Accounts created, all time</span></div>
+        <div class="stat"><span class="n">+96<span class="delta">↑ this week</span></span><span class="lab">New signups, last 7 days</span></div>
+        <div class="stat"><span class="n">1.8</span><span class="lab">Avg. logins / week, per active user</span></div>
+        <div class="stat"><span class="n">3.2</span><span class="lab">Avg. practice sessions / week, per active user</span></div>
+      </div>
+
+      <div class="card trendcard">
+        <p class="micro">Signups, last 14 days</p>
+        <div class="trend">
+          <i style="block-size:24%"></i><i style="block-size:38%"></i><i style="block-size:20%"></i><i style="block-size:52%"></i>
+          <i style="block-size:34%"></i><i style="block-size:46%"></i><i style="block-size:30%"></i><i style="block-size:60%"></i>
+          <i style="block-size:44%"></i><i style="block-size:70%"></i><i style="block-size:55%"></i><i style="block-size:82%"></i>
+          <i style="block-size:66%"></i><i class="now" style="block-size:100%"></i>
+        </div>
+      </div>
+
+      <div class="split" style="margin-block-start:0.8rem">
+        <div>
+          <p class="micro">Where people are, by country</p>
+          <div class="worldmap">
+            <span class="cap">Illustrative — one dot per country with 5+ learners, sized by count</span>
+            <span class="geodot" style="inline-size:1.5rem;block-size:1.5rem;inset-inline-start:16%;inset-block-start:36%"></span>
+            <span class="geodot" style="inline-size:1rem;block-size:1rem;inset-inline-start:23%;inset-block-start:60%"></span>
+            <span class="geodot" style="inline-size:1.9rem;block-size:1.9rem;inset-inline-start:46%;inset-block-start:30%"></span>
+            <span class="geodot" style="inline-size:1.2rem;block-size:1.2rem;inset-inline-start:52%;inset-block-start:44%"></span>
+            <span class="geodot" style="inline-size:2.3rem;block-size:2.3rem;inset-inline-start:70%;inset-block-start:50%"></span>
+            <span class="geodot" style="inline-size:0.85rem;block-size:0.85rem;inset-inline-start:80%;inset-block-start:68%"></span>
+          </div>
+          <div class="geolist">
+            <div class="georow"><span class="rank">01</span><span class="name">India</span><div class="bar"><i style="inline-size:100%"></i></div><span class="pct">31%</span></div>
+            <div class="georow"><span class="rank">02</span><span class="name">United States</span><div class="bar"><i style="inline-size:64%"></i></div><span class="pct">20%</span></div>
+            <div class="georow"><span class="rank">03</span><span class="name">United Kingdom</span><div class="bar"><i style="inline-size:38%"></i></div><span class="pct">12%</span></div>
+            <div class="georow"><span class="rank">04</span><span class="name">Australia</span><div class="bar"><i style="inline-size:28%"></i></div><span class="pct">9%</span></div>
+            <div class="georow"><span class="rank">05</span><span class="name">Canada</span><div class="bar"><i style="inline-size:19%"></i></div><span class="pct">6%</span></div>
+            <div class="georow other"><span class="rank">—</span><span class="name">Other · 22 countries, under 5 learners each</span><div class="bar"><i style="inline-size:22%"></i></div><span class="pct">22%</span></div>
+          </div>
+          <p style="margin:0.6rem 0 0;color:var(--text-color-f2);font-size:0.76rem">
+            Grouped rather than named — a country with one learner in it is a
+            person, not a data point, and the map should not be able to single
+            them out.
+          </p>
+        </div>
+
+        <div>
+          <div class="card">
+            <p class="micro">Language, by site preference</p>
+            <div class="geolist">
+              <div class="georow"><span class="rank">01</span><span class="name">English</span><div class="bar"><i style="inline-size:100%"></i></div><span class="pct">58%</span></div>
+              <div class="georow"><span class="rank">02</span><span class="name">Hindi</span><div class="bar"><i style="inline-size:26%"></i></div><span class="pct">15%</span></div>
+              <div class="georow"><span class="rank">03</span><span class="name">Spanish</span><div class="bar"><i style="inline-size:14%"></i></div><span class="pct">8%</span></div>
+              <div class="georow other"><span class="rank">—</span><span class="name">52 other languages</span><div class="bar"><i style="inline-size:33%"></i></div><span class="pct">19%</span></div>
+            </div>
+            <p style="margin:0.5rem 0 0;color:var(--text-color-f2);font-size:0.74rem">Already stored for the 55-locale UI — nothing new collected for this.</p>
+          </div>
+
+          <div class="card">
+            <p class="micro">How they signed up</p>
+            <div class="geolist">
+              <div class="georow"><span class="rank">01</span><span class="name">Google</span><div class="bar"><i style="inline-size:100%"></i></div><span class="pct">54%</span></div>
+              <div class="georow"><span class="rank">02</span><span class="name">Email + password</span><div class="bar"><i style="inline-size:52%"></i></div><span class="pct">28%</span></div>
+              <div class="georow"><span class="rank">03</span><span class="name">Facebook</span><div class="bar"><i style="inline-size:33%"></i></div><span class="pct">18%</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <p class="micro">Grown-up vs kid profiles</p>
+            <div class="geolist">
+              <div class="georow"><span class="rank">01</span><span class="name">Kids</span><div class="bar"><i style="inline-size:100%"></i></div><span class="pct">61%</span></div>
+              <div class="georow"><span class="rank">02</span><span class="name">Grown-ups</span><div class="bar"><i style="inline-size:64%"></i></div><span class="pct">39%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">08</span>The inbox</h2>
+<p class="note">
+  Everything that has come in, newest first. The only counts that matter are on
+  the filters: how many are waiting on you, and how many have been waiting too
+  long.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span>
+    <span class="grow"></span>
+    <span class="url">/desk/inbox</span>
+  </div>
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Dashboard</button>
+        <button class="navitem on" type="button"><svg viewBox="0 0 24 24"><path d="M3 12h4l2 3h6l2-3h4"></path><path d="M5.5 12 4 6.5A2 2 0 0 1 6 4h12a2 2 0 0 1 2 2.5L18.5 12"></path><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"></path></svg>Inbox<span class="navbadge">4</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.3 4.3 4 4.3v14.4c3.3 0 6.2.7 8 2.2 1.8-1.5 4.7-2.2 8-2.2V4.3c-3.3 0-6.2.7-8 2.2z"></path></svg>Answers</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5L6 9H4a1 1 0 0 0-1 1z"></path><path d="M17.5 8.5a5 5 0 0 1 0 7"></path></svg>Notices<span class="navbadge alert">1</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>Audit</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Settings</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock">
+        <span class="who">A</span>
+        <span class="id">
+          <span class="name">abhijath</span>
+          <button class="signout" type="button">Log out</button>
+        </span>
+      </div>
+    </nav>
+    <div class="deskmain">
+    <div class="searchbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M20 20l-4.8-4.8"></path></svg>
+      <span>Search by name, email or keyword — reaches closed tickets too</span>
+    </div>
+
+    <div class="filters">
+      <span class="chip new">needs a reply · 4</span>
+      <span class="chip alarm">over 48h · 1</span>
+      <span class="chip">waiting on them · 3</span>
+      <span class="chip closed">closed · 128</span>
+      <span class="grow"></span>
+      <span class="chip anon">holding queue · 2</span>
+    </div>
+
+    <div class="tickets">
+      <div class="ticket unread on">
+        <span class="who">RM</span>
+        <span style="min-inline-size:0">
+          <span class="subj truncate" style="display:block">Keyboard stops responding mid-lesson</span>
+          <span class="prev truncate" style="display:block">Just tried for fifteen minutes without switching tabs. No problem at all.</span>
+        </span>
+        <span class="meta"><span class="chip new">needs a reply</span><span class="when">2h</span></span>
+      </div>
+
+      <div class="ticket unread">
+        <span class="who anon">?</span>
+        <span style="min-inline-size:0">
+          <span class="subj truncate" style="display:block">Signed up with Google, now no account exists</span>
+          <span class="prev truncate" style="display:block">I signed up with my Google account last year and now it says no account…</span>
+        </span>
+        <span class="meta"><span class="chip anon">signed out</span><span class="chip alarm">51h</span></span>
+      </div>
+
+      <div class="ticket">
+        <span class="who">DK</span>
+        <span style="min-inline-size:0">
+          <span class="subj truncate" style="display:block">Can my daughter keep her streak after we moved profiles?</span>
+          <span class="prev truncate" style="display:block">We moved her from my profile to her own and the streak reset to zero…</span>
+        </span>
+        <span class="meta"><span class="chip new">needs a reply</span><span class="when">6h</span></span>
+      </div>
+
+      <div class="ticket">
+        <span class="who">SP</span>
+        <span style="min-inline-size:0">
+          <span class="subj truncate" style="display:block">Certificate number won't verify</span>
+          <span class="prev truncate" style="display:block">Thank you, that worked — it was the letter O not a zero.</span>
+        </span>
+        <span class="meta"><span class="chip closed">closed</span><span class="when">1d</span></span>
+      </div>
+
+      <div class="ticket">
+        <span class="who">MJ</span>
+        <span style="min-inline-size:0">
+          <span class="subj truncate" style="display:block">Malayalam layout request</span>
+          <span class="prev truncate" style="display:block">Sent you the layout file you asked for.</span>
+        </span>
+        <span class="meta"><span class="chip wait">waiting on them</span><span class="when">3d</span></span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-block-start:1rem">
+      <p class="micro">The holding queue</p>
+      <p style="margin:0;color:var(--text-color-f1);font-size:0.84rem">
+        Two messages from addresses that have not been confirmed yet. They are
+        not in the list above and never will be until somebody follows the link
+        in their own email. Unconfirmed messages are deleted after seven days,
+        so the queue cannot grow into a mailbox you have to weed.
+      </p>
+    </div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">09</span>A thread, with the context beside it</h2>
+<p class="note">
+  The reply box, and everything about the sender that you would otherwise ask
+  for. This is also the most dangerous screen in the app, so what it will not
+  show is as deliberate as what it will.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span>
+    <span class="grow"></span>
+    <span class="url">/desk/t/4821</span>
+  </div>
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Dashboard</button>
+        <button class="navitem on" type="button"><svg viewBox="0 0 24 24"><path d="M3 12h4l2 3h6l2-3h4"></path><path d="M5.5 12 4 6.5A2 2 0 0 1 6 4h12a2 2 0 0 1 2 2.5L18.5 12"></path><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"></path></svg>Inbox<span class="navbadge">4</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.3 4.3 4 4.3v14.4c3.3 0 6.2.7 8 2.2 1.8-1.5 4.7-2.2 8-2.2V4.3c-3.3 0-6.2.7-8 2.2z"></path></svg>Answers</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5L6 9H4a1 1 0 0 0-1 1z"></path><path d="M17.5 8.5a5 5 0 0 1 0 7"></path></svg>Notices<span class="navbadge alert">1</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>Audit</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Settings</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock">
+        <span class="who">A</span>
+        <span class="id">
+          <span class="name">abhijath</span>
+          <button class="signout" type="button">Log out</button>
+        </span>
+      </div>
+    </nav>
+    <div class="deskmain">
+    <div class="split">
+      <div>
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-block-end:0.8rem">
+          <h3 style="margin:0;font-family:var(--header-font-family);font-size:1.1rem;font-weight:600">Keyboard stops responding mid-lesson</h3>
+          <span class="chip new">needs a reply</span>
+        </div>
+
+        <div class="thread">
+          <div class="msg them">
+            <span class="head">Rahul M · 9 Aug, 19:04</span>
+            <p>The keyboard stops responding after about ten minutes of the guided course. Reloading fixes it. Firefox, on my laptop.</p>
+          </div>
+          <div class="msg us">
+            <span class="head">You · 10 Aug, 08:12 · emailed</span>
+            <p>Thanks — that is a real bug and you are the third person to hit it…</p>
+          </div>
+          <div class="msg them">
+            <span class="head">Rahul M · 10 Aug, 20:30</span>
+            <p>Just tried for fifteen minutes without switching tabs. No problem at all.</p>
+          </div>
+        </div>
+
+        <span class="lbl">Reply — goes out by email and appears in their thread</span>
+        <div class="field area ph">Write here…</div>
+        <div class="btnrow">
+          <button class="btn primary" type="button">Send reply</button>
+          <button class="btn ghost" type="button">Reply and close</button>
+          <button class="btn ghost" type="button">Saved replies</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <p class="micro">Who wrote this</p>
+          <div class="facts">
+            <div class="fact"><span class="k">Name</span><span class="v">Rahul M</span></div>
+            <div class="fact"><span class="k">Email</span><span class="v mono">r••••@gmail.com</span></div>
+            <div class="fact"><span class="k">Account since</span><span class="v">March 2026</span></div>
+            <div class="fact"><span class="k">Sign-in</span><span class="v">Google · passkey</span></div>
+            <div class="fact"><span class="k">Profiles</span><span class="v">2 · one kids</span></div>
+            <div class="fact"><span class="k">Last seen</span><span class="v">10 Aug</span></div>
+          </div>
+          <div class="btnrow" style="margin-block-start:0.6rem">
+            <button class="btn ghost small" type="button">Reveal full email</button>
+          </div>
+          <p style="margin:0.6rem 0 0;color:var(--text-color-f2);font-size:0.75rem">
+            Revealing it is written to the audit log with your name against it.
+          </p>
+        </div>
+
+        <div class="card">
+          <p class="micro">What they sent with it</p>
+          <div class="facts">
+            <div class="fact"><span class="k">Page</span><span class="v mono">/practice</span></div>
+            <div class="fact"><span class="k">Browser</span><span class="v mono">Firefox 141 · macOS</span></div>
+            <div class="fact"><span class="k">Build</span><span class="v mono">2026.08.09-1</span></div>
+            <div class="fact"><span class="k">Locale</span><span class="v mono">en-AU</span></div>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:color-mix(in srgb, var(--error) 35%, var(--separator-color))">
+          <p class="micro" style="color:var(--error)">What this screen will not show you</p>
+          <p style="margin:0;color:var(--text-color-f1);font-size:0.82rem">
+            Their lesson results, their keystrokes, their typing speed, their
+            children's names, or any profile that is not the one the message came
+            from. Not hidden behind a control — not queried at all. A support
+            console is the softest way into a user's data, and the only reliable
+            protection is for the data to be absent from the query.
+          </p>
+        </div>
+
+        <div class="card">
+          <p class="micro">Move it</p>
+          <div class="btnrow" style="margin-block-start:0">
+            <button class="btn ghost small" type="button">Waiting on them</button>
+            <button class="btn ghost small" type="button">Close</button>
+            <button class="btn danger small" type="button">Spam</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+
+<h2><span class="stepno">10</span>The answers library, and the rules</h2>
+<p class="note">
+  A third tab on the desk. Write an article once; it powers the suggestions, the
+  automatic reply and a public page. The hit counts tell you which questions the
+  app itself should stop causing.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span>
+    <span class="grow"></span>
+    <span class="url">/desk/answers</span>
+  </div>
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Dashboard</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 12h4l2 3h6l2-3h4"></path><path d="M5.5 12 4 6.5A2 2 0 0 1 6 4h12a2 2 0 0 1 2 2.5L18.5 12"></path><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"></path></svg>Inbox<span class="navbadge">4</span></button>
+        <button class="navitem on" type="button"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.3 4.3 4 4.3v14.4c3.3 0 6.2.7 8 2.2 1.8-1.5 4.7-2.2 8-2.2V4.3c-3.3 0-6.2.7-8 2.2z"></path></svg>Answers</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5L6 9H4a1 1 0 0 0-1 1z"></path><path d="M17.5 8.5a5 5 0 0 1 0 7"></path></svg>Notices<span class="navbadge alert">1</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>Audit</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Settings</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock">
+        <span class="who">A</span>
+        <span class="id">
+          <span class="name">abhijath</span>
+          <button class="signout" type="button">Log out</button>
+        </span>
+      </div>
+    </nav>
+    <div class="deskmain">
+    <p class="micro">Articles · sorted by how often they were the answer</p>
+    <div class="answers" style="margin-block-end:1.2rem">
+      <button class="answer" type="button">
+        <span class="num">01</span>
+        <span style="min-inline-size:0"><b>Moving a child to their own profile</b><span class="sub">Public · last edited 2 Aug</span></span>
+        <span class="hit">148 · solved 84%</span>
+      </button>
+      <button class="answer" type="button">
+        <span class="num">02</span>
+        <span style="min-inline-size:0"><b>Signing in when your account used Google</b><span class="sub">Public · last edited 28 Jul</span></span>
+        <span class="hit">96 · solved 61%</span>
+      </button>
+      <button class="answer" type="button">
+        <span class="num">03</span>
+        <span style="min-inline-size:0"><b>Checking a certificate number</b><span class="sub">Public · last edited 14 Jul</span></span>
+        <span class="hit">73 · solved 91%</span>
+      </button>
+      <button class="answer" type="button">
+        <span class="num">04</span>
+        <span style="min-inline-size:0"><b>Why your streak reset</b><span class="sub">Public · last edited 9 Aug</span></span>
+        <span class="hit">61 · solved 38%</span>
+      </button>
+      <button class="answer" type="button">
+        <span class="num">05</span>
+        <span style="min-inline-size:0"><b>Getting practice from another device to show up</b><span class="sub">Public · last edited 30 Jul</span></span>
+        <span class="hit">44 · solved 72%</span>
+      </button>
+    </div>
+
+    <div class="split">
+      <div>
+        <p class="micro">Rules — when an answer sends itself</p>
+        <div class="answers">
+          <div class="rule">
+            <span class="when">move · profile · stars · streak</span>
+            <span class="arrow">→</span>
+            <span>Moving a child to their own profile</span>
+            <span class="hits">fired 41 · 84%</span>
+          </div>
+          <div class="rule">
+            <span class="when">certificate · number · verify</span>
+            <span class="arrow">→</span>
+            <span>Checking a certificate number</span>
+            <span class="hits">fired 29 · 91%</span>
+          </div>
+          <div class="rule">
+            <span class="when">google · sign in · no account</span>
+            <span class="arrow">→</span>
+            <span>Signing in when your account used Google</span>
+            <span class="hits">fired 18 · 61%</span>
+          </div>
+          <div class="rule" style="opacity:0.55">
+            <span class="when">streak · reset · lost</span>
+            <span class="arrow">→</span>
+            <span>Why your streak reset <span class="chip" style="text-transform:none">suggest only</span></span>
+            <span class="hits">solved 38% — too low to send</span>
+          </div>
+        </div>
+
+        <div class="btnrow">
+          <button class="btn primary" type="button">New article</button>
+          <button class="btn ghost" type="button">New rule</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="border-color:color-mix(in srgb, var(--warn) 35%, var(--separator-color))">
+          <p class="micro" style="color:var(--warn)">Read the bottom of this list, not the top</p>
+          <p style="margin:0;color:var(--text-color-f1);font-size:0.84rem">
+            "Why your streak reset" was the answer 61 times and solved it 38% of
+            the time. That is not a bad article — it is a bad <em>behaviour</em>.
+            Sixty-one people were surprised by something the app did, and the fix
+            belongs in the app, not in a better paragraph.
+          </p>
+          <p style="margin:0.6rem 0 0;color:var(--text-color-f1);font-size:0.84rem">
+            So the rule for it is suggest-only. An article that does not solve
+            things is not allowed to answer on its own, and the low score is left
+            visible instead of being tuned away.
+          </p>
+        </div>
+
+        <div class="card">
+          <p class="micro">Matching, honestly</p>
+          <p style="margin:0;color:var(--text-color-f1);font-size:0.84rem">
+            Keyword and phrase matching over the message text — no model, nothing
+            sent anywhere, and it runs on the server in about a millisecond.
+            Simple matching that you can read and correct beats a clever one you
+            cannot explain to somebody who got the wrong answer.
+          </p>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">11</span>Notices — what the whole app sees</h2>
+<p class="note">
+  A notice has a kind, a window and an audience. Write it on Friday, give it a
+  Sunday window, and it appears and disappears on its own. Nothing to remember
+  to turn off — which is the failure mode of every "maintenance banner" toggle
+  ever built.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span>
+    <span class="grow"></span>
+    <span class="url">/desk/notices</span>
+  </div>
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Dashboard</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 12h4l2 3h6l2-3h4"></path><path d="M5.5 12 4 6.5A2 2 0 0 1 6 4h12a2 2 0 0 1 2 2.5L18.5 12"></path><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"></path></svg>Inbox<span class="navbadge">4</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.3 4.3 4 4.3v14.4c3.3 0 6.2.7 8 2.2 1.8-1.5 4.7-2.2 8-2.2V4.3c-3.3 0-6.2.7-8 2.2z"></path></svg>Answers</button>
+        <button class="navitem on" type="button"><svg viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5L6 9H4a1 1 0 0 0-1 1z"></path><path d="M17.5 8.5a5 5 0 0 1 0 7"></path></svg>Notices<span class="navbadge alert">1</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>Audit</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Settings</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock">
+        <span class="who">A</span>
+        <span class="id">
+          <span class="name">abhijath</span>
+          <button class="signout" type="button">Log out</button>
+        </span>
+      </div>
+    </nav>
+    <div class="deskmain">
+    <div class="tickets" style="margin-block-end:1rem">
+      <div class="noticerow">
+        <span class="kind incident">incident</span>
+        <span style="min-inline-size:0">
+          <b style="font-size:0.86rem">Sign-in with Google is failing</b>
+          <span class="win" style="display:block">live now · until cleared · everyone</span>
+        </span>
+        <span class="switch on"><i></i></span>
+      </div>
+      <div class="noticerow">
+        <span class="kind maint">maintenance</span>
+        <span style="min-inline-size:0">
+          <b style="font-size:0.86rem">Short outage on Sunday, 07:00–07:30 AEST</b>
+          <span class="win" style="display:block">Sun 16 Aug 06:00 → 07:30 · signed in</span>
+        </span>
+        <span class="switch on"><i></i></span>
+      </div>
+      <div class="noticerow">
+        <span class="kind feature">feature</span>
+        <span style="min-inline-size:0">
+          <b style="font-size:0.86rem">Accessibility presets are here</b>
+          <span class="win" style="display:block">9 Aug → 23 Aug · everyone · dismissible</span>
+        </span>
+        <span class="switch on"><i></i></span>
+      </div>
+      <div class="noticerow" style="opacity:0.5">
+        <span class="kind feature">feature</span>
+        <span style="min-inline-size:0">
+          <b style="font-size:0.86rem">Code craft lessons</b>
+          <span class="win" style="display:block">ended 2 Aug</span>
+        </span>
+        <span class="switch"><i></i></span>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <p class="micro">New notice</p>
+
+        <span class="lbl">Kind</span>
+        <div class="tabs" style="margin-block-end:0.2rem">
+          <button type="button">Incident</button>
+          <button type="button">Maintenance</button>
+          <button class="on" type="button">Feature</button>
+        </div>
+
+        <span class="lbl">Headline</span>
+        <div class="field ph" style="line-height:2rem">Accessibility presets are here</div>
+
+        <span class="lbl">A sentence more</span>
+        <div class="field area ph" style="min-block-size:4rem">Five presets that change how the app reads, moves and sounds. Account → Accessibility.</div>
+
+        <span class="lbl">Shows from / until</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+          <div class="field ph" style="line-height:2rem">9 Aug 2026, 09:00</div>
+          <div class="field ph" style="line-height:2rem">23 Aug 2026, 09:00</div>
+        </div>
+
+        <span class="lbl">Who sees it</span>
+        <div class="tabs" style="margin-block-end:0.2rem">
+          <button class="on" type="button">Everyone</button>
+          <button type="button">Signed in</button>
+          <button type="button">Kids</button>
+          <button type="button">One language</button>
+        </div>
+
+        <div class="btnrow">
+          <span class="switch on"><i></i></span>
+          <span style="font-size:0.8rem;color:var(--text-color-f1)">They can dismiss it</span>
+        </div>
+
+        <div class="btnrow">
+          <button class="btn primary" type="button">Schedule</button>
+          <button class="btn ghost" type="button">Show me first</button>
+        </div>
+      </div>
+
+      <div>
+        <p class="micro">How it lands, top of every page</p>
+
+        <div class="banner feature" style="margin-block-end:0.6rem">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 10l-4.4 3.4L17 19l-5-3-5 3 1.4-5.6L4 10l5.8-1.4z"></path></svg>
+          <span class="body"><b>Accessibility presets are here.</b> Five presets that change how the app reads, moves and sounds. Account → Accessibility.</span>
+          <button class="x" type="button" aria-label="Dismiss">×</button>
+        </div>
+
+        <div class="banner" style="margin-block-end:0.6rem">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 3l9 16H3z"></path><path d="M12 10v4"></path><path d="M12 16.6v.1"></path></svg>
+          <span class="body"><b>Short outage on Sunday, 07:00–07:30 AEST.</b> Your practice is saved on this device and will sync when we are back.</span>
+          <button class="x" type="button" aria-label="Dismiss">×</button>
+        </div>
+
+        <div class="banner incident">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5"></path><path d="M12 16.3v.1"></path></svg>
+          <span class="body"><b>Sign-in with Google is failing.</b> We know, and we are on it. Signing in with an email link still works.</span>
+        </div>
+
+        <p style="margin-block-start:0.7rem;color:var(--text-color-f2);font-size:0.78rem">
+          The incident has no dismiss button. A person who dismissed it and then
+          hit the same failure would file the ticket you were trying to prevent.
+          Feature notices dismiss forever; maintenance dismisses until the window
+          starts, then returns once.
+        </p>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+
+<h2><span class="stepno">12</span>Settings, and what must never be one</h2>
+<p class="note">
+  A settings page is fine. A staff-management page is not. Both look like
+  "admin", but one changes what the desk <em>says</em> and the other changes who
+  can <em>open</em> it — and only the second can be used against you.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span>
+    <span class="grow"></span>
+    <span class="url">/desk/settings</span>
+  </div>
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Dashboard</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 12h4l2 3h6l2-3h4"></path><path d="M5.5 12 4 6.5A2 2 0 0 1 6 4h12a2 2 0 0 1 2 2.5L18.5 12"></path><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"></path></svg>Inbox<span class="navbadge">4</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.3 4.3 4 4.3v14.4c3.3 0 6.2.7 8 2.2 1.8-1.5 4.7-2.2 8-2.2V4.3c-3.3 0-6.2.7-8 2.2z"></path></svg>Answers</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5L6 9H4a1 1 0 0 0-1 1z"></path><path d="M17.5 8.5a5 5 0 0 1 0 7"></path></svg>Notices<span class="navbadge alert">1</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>Audit</button>
+        <button class="navitem on" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Settings</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock">
+        <span class="who">A</span>
+        <span class="id">
+          <span class="name">abhijath</span>
+          <button class="signout" type="button">Log out</button>
+        </span>
+      </div>
+    </nav>
+    <div class="deskmain">
+    <div class="split">
+      <div>
+        <div class="card">
+          <p class="micro">Yours — nobody else sees these</p>
+
+          <span class="lbl">Sign replies as</span>
+          <div class="field ph" style="line-height:2rem">KeyLearn</div>
+          <p style="margin:0.35rem 0 0;color:var(--text-color-f2);font-size:0.76rem">
+            Your own name reads warmer and is fine. It is a name on an email, not
+            an identity claim.
+          </p>
+
+          <div class="btnrow">
+            <span class="switch on"><i></i></span>
+            <span style="font-size:0.82rem;color:var(--text-color-f1)">Email me when something arrives</span>
+          </div>
+          <div class="btnrow" style="margin-block-start:0.4rem">
+            <span class="switch on"><i></i></span>
+            <span style="font-size:0.82rem;color:var(--text-color-f1)">Not between 21:00 and 07:00</span>
+          </div>
+
+          <span class="lbl">Away until</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+            <div class="field ph" style="line-height:2rem">—</div>
+            <div class="field ph" style="line-height:2rem">not set</div>
+          </div>
+          <p style="margin:0.35rem 0 0;color:var(--text-color-f2);font-size:0.76rem">
+            Sets an away line on every new ticket and clears itself on the date.
+            Nothing to remember to switch off.
+          </p>
+        </div>
+
+        <div class="card">
+          <p class="micro">How the desk behaves</p>
+          <div class="btnrow" style="margin-block-start:0">
+            <span class="switch on"><i></i></span>
+            <span style="font-size:0.82rem;color:var(--text-color-f1)">Send a confident answer automatically</span>
+          </div>
+          <span class="lbl">Confident means at least</span>
+          <div class="tabs" style="margin-block-end:0.2rem">
+            <button type="button">70%</button>
+            <button class="on" type="button">85%</button>
+            <button type="button">95%</button>
+          </div>
+          <span class="lbl">Flag a ticket as overdue after</span>
+          <div class="tabs" style="margin-block-end:0.2rem">
+            <button type="button">24h</button>
+            <button class="on" type="button">48h</button>
+            <button type="button">72h</button>
+          </div>
+          <p style="margin:0.4rem 0 0;color:var(--text-color-f2);font-size:0.76rem">
+            Changing either is written to the audit log. They are safe settings,
+            but they change what users receive, so they leave a trace.
+          </p>
+        </div>
+
+        <div class="card">
+          <p class="micro">Saved replies — shared with every staff member</p>
+          <div class="replies">
+            <div class="reply">
+              <span style="min-inline-size:0"><b>Moving a child to their own profile</b><span class="sub">"You can move her practice history without losing a single star — Account → Profiles, Add a profile…"</span></span>
+              <span class="used">used 34 times</span>
+            </div>
+            <div class="reply">
+              <span style="min-inline-size:0"><b>Certificate number won't verify</b><span class="sub">"Thanks for flagging it — the most common cause is mixing up the letter O and the digit zero…"</span></span>
+              <span class="used">used 21 times</span>
+            </div>
+            <div class="reply">
+              <span style="min-inline-size:0"><b>Asking for a screen recording</b><span class="sub">"Would you mind a short screen recording of it happening? No need to narrate — just the few seconds around the…"</span></span>
+              <span class="used">used 12 times</span>
+            </div>
+          </div>
+          <div class="btnrow">
+            <button class="btn ghost small" type="button">New saved reply</button>
+          </div>
+          <p style="margin:0.5rem 0 0;color:var(--text-color-f2);font-size:0.76rem">
+            A starting point, not a canned answer — inserted into the reply box
+            as text you can still edit before it sends. Shared rather than
+            personal, the same reasoning as the answers library: two staff
+            members writing the same thing slightly differently is not a
+            feature.
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="border-color:color-mix(in srgb, var(--error) 40%, var(--separator-color))">
+          <p class="micro" style="color:var(--error)">Deliberately not on this page</p>
+          <div class="facts">
+            <div class="fact"><span class="k">Who is staff</span><span class="v">Set from <span class="mono" style="font-family:var(--value-font-family);font-size:0.9em">STAFF_EMAILS</span> at boot. A stolen session cannot promote a second account, so revoking the first actually ends it.</span></div>
+            <div class="fact"><span class="k">Business forwarding</span><span class="v">Held in configuration. Editable here, it would let an attacker quietly redirect every school and licensing enquiry you get.</span></div>
+            <div class="fact"><span class="k">Sign-in requirements</span><span class="v">No switch weakens the passkey or authenticator rule. A self-downgrade toggle is the first thing anybody who got in would reach for.</span></div>
+            <div class="fact"><span class="k">Sending address</span><span class="v">Brevo credentials and the From domain are deployment concerns. Changing them from a web form breaks deliverability and invites spoofing.</span></div>
+          </div>
+          <p style="margin:0.7rem 0 0;color:var(--text-color-f1);font-size:0.83rem">
+            The line is simple enough to hold in your head: settings may change
+            what the desk <b>says</b> and when it <b>nags you</b>. They may never
+            change who can open it, where mail goes, or what proves identity.
+            Those three move by deploy.
+          </p>
+        </div>
+
+        <div class="card">
+          <p class="micro">Staff, shown but not editable</p>
+          <div class="facts">
+            <div class="fact"><span class="k">abhijath</span><span class="v">passkey · signed in 2h ago</span></div>
+            <div class="fact"><span class="k">rekha</span><span class="v">authenticator · signed in 3d ago</span></div>
+          </div>
+          <p style="margin:0.6rem 0 0;color:var(--text-color-f2);font-size:0.78rem">
+            Listing is useful — you want to see who has access and how they get
+            in. There is no add, no remove and no row menu, because the answer to
+            "who made them staff" should always be "a deploy did".
+          </p>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="stepno">13</span>The audit log</h2>
+<p class="note">
+  Read-only, and the screen I would build before any setting at all. It is what
+  makes a console with this much reach trustworthy — including to you, six
+  months from now, trying to remember what happened.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn <span style="color:var(--text-color-f2);font-weight:400">desk</span></span>
+    <span class="grow"></span>
+    <span class="url">/desk/audit</span>
+  </div>
+  <div class="deskshell">
+    <nav class="desknav">
+      <div class="navlist">
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Dashboard</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 12h4l2 3h6l2-3h4"></path><path d="M5.5 12 4 6.5A2 2 0 0 1 6 4h12a2 2 0 0 1 2 2.5L18.5 12"></path><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"></path></svg>Inbox<span class="navbadge">4</span></button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M12 6.5C10.2 5 7.3 4.3 4 4.3v14.4c3.3 0 6.2.7 8 2.2 1.8-1.5 4.7-2.2 8-2.2V4.3c-3.3 0-6.2.7-8 2.2z"></path></svg>Answers</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5L6 9H4a1 1 0 0 0-1 1z"></path><path d="M17.5 8.5a5 5 0 0 1 0 7"></path></svg>Notices<span class="navbadge alert">1</span></button>
+        <button class="navitem on" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>Audit</button>
+        <button class="navitem" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Settings</button>
+      </div>
+      <span class="navgrow"></span>
+      <div class="staffblock">
+        <span class="who">A</span>
+        <span class="id">
+          <span class="name">abhijath</span>
+          <button class="signout" type="button">Log out</button>
+        </span>
+      </div>
+    </nav>
+    <div class="deskmain">
+    <div class="tickets">
+      <div class="rule"><span class="when">12 Aug 19:22</span><span class="arrow">·</span><span><b>abhijath</b> signed in with a passkey</span><span class="hits">203.0.113.7</span></div>
+      <div class="rule"><span class="when">12 Aug 19:24</span><span class="arrow">·</span><span><b>abhijath</b> revealed the full address on ticket 4821</span><span class="hits">203.0.113.7</span></div>
+      <div class="rule"><span class="when">12 Aug 09:05</span><span class="arrow">·</span><span><b>abhijath</b> published the incident notice "Sign-in with Google is failing"</span><span class="hits">203.0.113.7</span></div>
+      <div class="rule" style="border-color:color-mix(in srgb, var(--error) 45%, transparent)"><span class="when">11 Aug 03:41</span><span class="arrow">·</span><span>Sign-in refused — <b>not staff</b></span><span class="hits">45.83.•.• · 6 attempts</span></div>
+      <div class="rule"><span class="when">09 Aug 08:12</span><span class="arrow">·</span><span><b>rekha</b> changed the overdue threshold from 72h to 48h</span><span class="hits">198.51.100.24</span></div>
+    </div>
+
+    <div class="card" style="margin-block-start:1rem">
+      <p class="micro">The fourth row is the point</p>
+      <p style="margin:0;color:var(--text-color-f1);font-size:0.84rem">
+        Somebody found the URL and tried six times at three in the morning. That
+        is not an incident — it is the expected weather for any path that exists,
+        and precisely why the unlisted URL was never the protection. What matters
+        is that they met a staff check they could not pass, and that you can see
+        they tried.
+      </p>
+    </div>
+    </div>
+  </div>
+</div>
+
+
+<h2><span class="stepno">14</span>The gate — abuse, and phishing in both directions</h2>
+<p class="note">
+  A support form is the one door in the app that accepts writing from a
+  stranger, and a support inbox is a place a stranger can make <em>you</em>
+  click something. Both directions need guarding, and the second is the one
+  people forget.
+</p>
+
+<div class="app">
+  <div class="chrome">
+    <span class="brand"><span class="mark">K</span>KeyLearn</span>
+    <span class="grow"></span>
+    <span class="url">what a message passes through</span>
+  </div>
+  <div class="pane">
+    <div class="gate">
+      <div class="gaterow">
+        <span class="step">1</span>
+        <span>
+          <b>Rate limit, by address and by network</b>
+          <p>A few messages an hour from one address, a few from one network. Enough that a family sharing a connection is never blocked; not enough to be worth automating.</p>
+        </span>
+        <span class="verdict">throttle</span>
+      </div>
+      <div class="gaterow">
+        <span class="step">2</span>
+        <span>
+          <b>Confirm the address before a human sees it</b>
+          <p>A message sent while signed out waits in the holding queue until somebody follows a link in that inbox. This is the single most effective filter here: a bot posting to the endpoint never reads the mail, so it never arrives.</p>
+        </span>
+        <span class="verdict">hold</span>
+      </div>
+      <div class="gaterow">
+        <span class="step">3</span>
+        <span>
+          <b>No attachments. At all.</b>
+          <p>You cannot scan your way to safety on a two-person team, and a support inbox that accepts files is a malware delivery service with a friendly form on the front. If a screenshot is genuinely needed, ask for it in the reply and look at it in the browser — never as a download.</p>
+        </span>
+        <span class="verdict stop">refused</span>
+      </div>
+      <div class="gaterow">
+        <span class="step">4</span>
+        <span>
+          <b>Everything renders as plain text</b>
+          <p>No HTML, no markdown, no embedded images. A message is escaped and shown as characters, so nothing a sender writes can become a link, a script, a tracking pixel, or a button that looks like it belongs to the console.</p>
+        </span>
+        <span class="verdict stop">inert</span>
+      </div>
+      <div class="gaterow">
+        <span class="step">5</span>
+        <span>
+          <b>Links are shown, never followed</b>
+          <p>A URL in a message is displayed with its full host and is not clickable. Copying it out is deliberate, which is exactly the pause that stops a tired person at the end of a shift.</p>
+        </span>
+        <span class="verdict">defanged</span>
+      </div>
+      <div class="gaterow">
+        <span class="step">6</span>
+        <span>
+          <b>Length and repetition caps</b>
+          <p>A ceiling on message length, and the same body from the same address twice is folded into one ticket rather than two. Both are boring; both remove most of what gets through the first two steps.</p>
+        </span>
+        <span class="verdict">folded</span>
+      </div>
+      <div class="gaterow">
+        <span class="step">7</span>
+        <span>
+          <b>Nothing in a message can act</b>
+          <p>The console never renders sender content as markup, never auto-loads a remote image, and has no control whose behaviour depends on message text. A ticket is data being displayed, not instructions being followed.</p>
+        </span>
+        <span class="verdict stop">no effect</span>
+      </div>
+    </div>
+
+    <div class="split" style="margin-block-start:1rem">
+      <div class="card">
+        <p class="micro">What a link looks like in the console</p>
+        <div class="mailcard">
+          <div class="mailbody" style="border:0;padding:0">
+            Hi, my account is locked. I already tried resetting it here:
+            <div style="margin-block-start:0.5rem;padding:0.5rem 0.7rem;border:1px dashed var(--separator-color);border-radius:0.5rem;font-family:var(--value-font-family);font-size:0.78rem">
+              <span style="color:var(--error)">keylearn-support.example.com</span><span style="color:var(--text-color-f2)">/reset?u=admin</span>
+              <div style="margin-block-start:0.3rem;color:var(--text-color-f2);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em">not a link · host shown in full · copy to open</div>
+            </div>
+            &hellip;but it just asks for my password again.
+          </div>
+        </div>
+        <p style="margin:0.7rem 0 0;color:var(--text-color-f1);font-size:0.83rem">
+          The host is spelled out and coloured because that is where the lie
+          lives. A real user pasting a real link loses nothing; somebody trying
+          to walk you onto a fake sign-in page has to get past a control that
+          will not click.
+        </p>
+      </div>
+
+      <div class="card">
+        <p class="micro">The other direction — proving mail is from you</p>
+        <div class="mailcard">
+          <div class="mailhead"><span class="k">From</span><span>KeyLearn &lt;support@keylearn.org&gt;</span></div>
+          <div class="mailhead"><span class="k">Subject</span><span>Re: Keyboard stops responding mid-lesson</span></div>
+          <div class="mailbody">
+            <span class="stamp"><span class="dot2"></span>Ticket 4821 · opened by you on 9 Aug</span>
+            <p style="margin:0.6rem 0 0">Thanks — that is a real bug and you are the third person to hit it&hellip;</p>
+            <p style="margin:0.6rem 0 0;color:var(--text-color-f2);font-size:0.78rem">
+              We will never ask for your password, and no e-mail from us will
+              ever contain a form. Open your conversation from keylearn.org
+              rather than from this message if you would rather.
+            </p>
+          </div>
+        </div>
+        <p style="margin:0.7rem 0 0;color:var(--text-color-f1);font-size:0.83rem">
+          Every reply carries the ticket number and the date <em>they</em>
+          opened it — a fact an impersonator does not have. SPF, DKIM and DMARC
+          are set so a forged sender is rejected rather than filed as spam.
+        </p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-block-start:0.9rem;border-color:color-mix(in srgb, var(--error) 35%, var(--separator-color))">
+      <p class="micro" style="color:var(--error)">The rule that matters most</p>
+      <p style="margin:0;color:var(--text-color-f1);font-size:0.84rem">
+        <b style="color:var(--text-color)">Support can never change how somebody signs in.</b>
+        Not reset a password, not remove a passkey, not disable two-step
+        verification, not change an e-mail address. Every one of those is done
+        by the account holder, through the account, proving they are who they
+        say. This is the difference between a support desk and a permanent
+        account-takeover service, and it is why the console has no button for
+        any of them — social engineering cannot extract a capability that does
+        not exist.
+      </p>
+      <p style="margin:0.6rem 0 0;color:var(--text-color-f1);font-size:0.84rem">
+        What support <em>can</em> do for someone locked out is send the standard
+        recovery mail to the address already on the account. Which helps the
+        real owner and does nothing at all for anybody else.
+      </p>
+    </div>
+  </div>
+</div>
+
+<h2>Rules this thing keeps</h2>
+
+<div class="rules">
+  <div><b>Unlisted is not a lock</b>No link, no menu entry, no sitemap row — that is for quiet, not safety. Every <code>/desk</code> route independently checks the staff flag and a second factor, so finding the URL gets you a sign-in page and nothing else.</div>
+  <div><b>Staff cannot be granted in the app</b>The flag is set from an environment list at boot. There is no button anywhere that makes somebody staff, so an account takeover cannot promote itself, and the audit question "who made them staff" has one answer: a deploy.</div>
+  <div><b>The console reads messages, not users</b>It can see what a person wrote and the four facts they attached. It cannot see results, keystrokes, speed or other profiles — those are not in the query. Revealing a full email address is itself an audited action.</div>
+  <div><b>Nothing depends on receiving email</b>Replies go out through Brevo and the conversation lives on a token-opened page. <code>support@</code> not receiving mail is a known gap and this design routes around it rather than waiting for it.</div>
+  <div><b>Anonymous means confirmed</b>A message sent while signed out waits in a holding queue until somebody follows a link in their own inbox. Unconfirmed messages self-delete after seven days.</div>
+  <div><b>Automation answers first, never last</b>A confident match replies immediately and is labelled as automatic, but the ticket stays in your inbox until a person deals with it. Nothing auto-closes, and nothing about a child, a refund or a locked-out account is ever matched at all.</div>
+  <div><b>Business enquiries bypass everything</b>Tagged, never automated, never queued, and forwarded to your personal address the moment they land — with a link back to the ticket so the reply goes in the thread rather than into a second conversation.</div>
+  <div><b>No attachments, no markup, no live links</b>A message is escaped and rendered as characters. Nothing a stranger writes can become a script, a tracking pixel or a button — and files are refused outright, because a two-person team cannot scan its way to safety.</div>
+  <div><b>Support cannot change how anybody signs in</b>No password reset, no passkey removal, no e-mail change, no second factor disabled. The console has no button for any of it, so social engineering has nothing to extract. The most it can do is send recovery mail to the address already on the account.</div>
+  <div><b>Settings cannot open doors</b>The console has preferences — a signature, notifications, an away date, thresholds. It has no control that grants access, redirects mail or weakens sign-in. Those three move by deploy, so a compromised session cannot make itself permanent.</div>
+  <div><b>Notices expire by themselves</b>Every notice carries a window. Nothing has to be remembered, and the stale "scheduled maintenance" banner from three weeks ago cannot happen.</div>
+</div>
+
+<footer>
+  Mock · the support surface for KeyLearn. Colours, type scale, control geometry
+  and the segmented tabs are taken from <code>keylearn-themes</code> and
+  <code>keylearn-widget</code>; it renders in whichever theme you are reading in.
+  Names, messages and dates are invented.
+</footer>
+
+</div>
+
+</body></html>
