@@ -12,8 +12,9 @@ export type DeskScreen =
   | "answers"
   | "notices"
   | "audit"
+  | "settings"
   | "about"
-  | "settings";
+  | "platformSettings";
 
 type NavEntry = {
   readonly screen: DeskScreen;
@@ -96,10 +97,24 @@ const MAIN_NAV: readonly NavEntry[] = [
       </svg>
     ),
   },
+  {
+    screen: "settings",
+    path: Pages.deskSettings.path,
+    label: <FormattedMessage id="deskNav.settings" defaultMessage="Settings" />,
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden={true}>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+      </svg>
+    ),
+  },
 ];
 
 // Separated from MAIN_NAV: neither is day-to-day ticket work, so both sit
-// pinned to the bottom of the nav rather than mixed in with it.
+// pinned to the bottom of the nav rather than mixed in with it. This
+// Settings is the desk *platform* — staff access and (once more than one
+// app is assigned to the same staff email) which app is selected — not
+// how the desk behaves, which is MAIN_NAV's own "Settings" now.
 const BOTTOM_NAV: readonly NavEntry[] = [
   {
     screen: "about",
@@ -113,13 +128,19 @@ const BOTTOM_NAV: readonly NavEntry[] = [
     ),
   },
   {
-    screen: "settings",
-    path: Pages.deskSettings.path,
-    label: <FormattedMessage id="deskNav.settings" defaultMessage="Settings" />,
+    screen: "platformSettings",
+    path: Pages.deskPlatformSettings.path,
+    label: (
+      <FormattedMessage
+        id="deskNav.platformSettings"
+        defaultMessage="QDesk settings"
+      />
+    ),
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden={true}>
-        <circle cx="12" cy="12" r="3" />
-        <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+        <rect x="3" y="4" width="18" height="16" rx="2.5" />
+        <path d="M3 9h18" />
+        <path d="M7.5 13.5h0M11.5 13.5h5" />
       </svg>
     ),
   },

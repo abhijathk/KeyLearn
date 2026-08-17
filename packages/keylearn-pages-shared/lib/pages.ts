@@ -740,7 +740,13 @@ export namespace Pages {
     meta: [{ name: "robots", content: "noindex" }],
   } satisfies PageInfo;
 
-  /** Preferences and content only — cannot grant access, move mail, or weaken sign-in. */
+  /**
+   * How the desk behaves for the app currently selected — confidence
+   * threshold, automation, saved replies, the signed-in staff member's own
+   * preferences. Preferences and content only — cannot grant access, move
+   * mail, or weaken sign-in. Staff access itself, and (eventually) which
+   * app is selected, live in {@link deskPlatformSettings} instead.
+   */
   export const deskSettings = {
     path: "/desk/settings",
     title: defineMessage({
@@ -783,6 +789,28 @@ export namespace Pages {
       label: defineMessage({
         id: "deskNav.about",
         defaultMessage: "About",
+      }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /**
+   * The desk platform itself, not any one app it manages: who has staff
+   * access, and (once more than one app is assigned to the same staff
+   * email) which app is currently selected. {@link deskSettings} holds
+   * everything about how the desk behaves for the selected app instead —
+   * this page is deliberately the smaller of the two.
+   */
+  export const deskPlatformSettings = {
+    path: "/desk/platform-settings",
+    title: defineMessage({
+      id: "deskNav.platformSettings",
+      defaultMessage: "QDesk settings",
+    }),
+    link: {
+      label: defineMessage({
+        id: "deskNav.platformSettings",
+        defaultMessage: "QDesk settings",
       }),
     },
     meta: [{ name: "robots", content: "noindex" }],

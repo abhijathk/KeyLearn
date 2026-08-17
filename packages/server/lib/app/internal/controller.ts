@@ -17,7 +17,7 @@ import {
 import { UserDataFactory } from "@keylearn/result-userdata";
 import { z } from "zod";
 import { messageAccountDeletionRequested } from "../auth/email.ts";
-import { clientIp } from "../auth/ratelimit.ts";
+import { clientIp, rateLimit } from "../auth/ratelimit.ts";
 import { staffAccessStatus } from "../auth/staff-access.ts";
 import { resolveTotpSecret } from "../auth/totp-crypto.ts";
 import { type AuthState } from "../auth/types.ts";
@@ -78,44 +78,49 @@ export class Controller {
     @body.json(PStaffAuthVerify) input: TStaffAuthVerify,
   ) {
     ctx.state.requireOpsApi();
+    rateLimit(ctx, `ops-staff-auth:${input.email}`, 10, 300_000);
     const user = await User.findByEmail(input.email);
-    if (user == null) {
+    // Password verified before anything about staff/2FA status is
+    // revealed — checking staff eligibility first would let an
+    // unauthenticated caller map the staff roster (who's on it, who
+    // still needs a second factor) purely from the `reason` in the
+    // response, without ever proving they hold the account.
+    if (
+      user == null ||
+      input.password == null ||
+      user.passwordHash == null ||
+      (await User.loginWithPassword(input.email, input.password)) == null
+    ) {
       ctx.response.body = { ok: false, reason: "invalid" };
       return;
     }
     const status = await staffAccessStatus(user);
     if (!status.ok) {
-      // "not-staff" and "needs-2fa" (no passkey/TOTP configured at all —
-      // distinct from "configured, but this request omitted the code")
-      // both pass straight through; a signed-out status can't happen
-      // here since `user` is non-null.
       ctx.response.body = { ok: false, reason: status.reason };
       return;
     }
-    if (input.password == null || user.passwordHash == null) {
-      ctx.response.body = { ok: false, reason: "invalid" };
+    // Passkey satisfies `staffAccessStatus`'s own factor check, but this
+    // API is password-plus-TOTP only — it has no way to verify a
+    // passkey. A staff member without TOTP enrolled must not be able to
+    // reach the ops app on password alone just because they normally
+    // sign in to KeyLearn itself with a passkey.
+    if (!user.totpEnabled) {
+      ctx.response.body = { ok: false, reason: "needs-2fa" };
       return;
     }
-    const verified = await User.loginWithPassword(input.email, input.password);
-    if (verified == null) {
-      ctx.response.body = { ok: false, reason: "invalid" };
+    if (input.totp == null) {
+      ctx.response.body = { ok: false, reason: "needs-2fa" };
       return;
     }
-    if (user.totpEnabled) {
-      if (input.totp == null) {
-        ctx.response.body = { ok: false, reason: "needs-2fa" };
-        return;
-      }
-      const valid =
-        user.totpSecret != null &&
-        verifyTotp(
-          resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
-          input.totp,
-        );
-      if (!valid) {
-        ctx.response.body = { ok: false, reason: "invalid" };
-        return;
-      }
+    const valid =
+      user.totpSecret != null &&
+      verifyTotp(
+        resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
+        input.totp,
+      );
+    if (!valid) {
+      ctx.response.body = { ok: false, reason: "invalid" };
+      return;
     }
     void StaffAuditEvent.record({
       userId: user.id,

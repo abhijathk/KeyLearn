@@ -1,6 +1,5 @@
 import {
   type SavedReplyDetails,
-  type StaffRosterEntry,
   type StaffSettingsDetails,
 } from "@keylearn/pages-shared";
 import { Button, confirmStyles as dlg, TextField } from "@keylearn/widget";
@@ -231,7 +230,6 @@ function Settings(): ReactNode {
         </div>
 
         <div>
-          <StaffRoster />
           <AccountsSettings settings={settings} patch={patch} />
         </div>
       </div>
@@ -395,71 +393,6 @@ function Switch({
     >
       <span className={common.switchDot} />
     </button>
-  );
-}
-
-function StaffRoster(): ReactNode {
-  const { formatMessage } = useIntl();
-  const [roster, setRoster] = useState<StaffRosterEntry[] | null>(null);
-
-  useEffect(() => {
-    SupportService.getStaffRoster().then(setRoster);
-  }, []);
-
-  const statusFor = (entry: StaffRosterEntry): string => {
-    if (!entry.hasPasskey && !entry.hasAuthenticator) {
-      return formatMessage({
-        id: "deskSettings.roster.noFactor",
-        defaultMessage: "No second factor yet",
-      });
-    }
-    const factor = entry.hasPasskey
-      ? formatMessage({
-          id: "deskSettings.roster.passkey",
-          defaultMessage: "Passkey",
-        })
-      : formatMessage({
-          id: "deskSettings.roster.authenticator",
-          defaultMessage: "Authenticator",
-        });
-    const when =
-      entry.lastSignedInAt != null
-        ? formatMessage(
-            {
-              id: "deskSettings.roster.signedIn",
-              defaultMessage: "signed in {when}",
-            },
-            { when: relativeTime(entry.lastSignedInAt) },
-          )
-        : formatMessage({
-            id: "deskSettings.roster.neverSignedIn",
-            defaultMessage: "never signed in",
-          });
-    return `${factor} · ${when}`;
-  };
-
-  return (
-    <div className={common.card} style={{ marginBlockStart: 0 }}>
-      <p className={common.micro}>
-        <FormattedMessage
-          id="deskSettings.roster.title"
-          defaultMessage="Staff — shown but not editable"
-        />
-      </p>
-      {roster == null && (
-        <p className={common.note}>
-          <FormattedMessage id="staffDesk.loading" defaultMessage="Loading…" />
-        </p>
-      )}
-      <div className={common.facts}>
-        {roster?.map((entry) => (
-          <div className={common.fact} key={entry.email}>
-            <span className={common.factK}>{entry.name ?? entry.email}</span>
-            <span className={common.factV}>{statusFor(entry)}</span>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 

@@ -146,6 +146,24 @@ function Dashboard(): ReactNode {
     };
   }, []);
 
+  // The header shows this, not the page — it lives outside the Dashboard's
+  // own render tree, so the timestamp is broadcast rather than rendered
+  // here directly, same pattern as the practice page's streak/focus-mode
+  // state (see Header.tsx). Cleared on unmount so it doesn't linger once
+  // the visitor has left the Dashboard.
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("keylearn:desk-dashboard-asof", {
+        detail: stats?.computedAt ?? null,
+      }),
+    );
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent("keylearn:desk-dashboard-asof", { detail: null }),
+      );
+    };
+  }, [stats?.computedAt]);
+
   if (error) {
     return (
       <p className={common.note}>
@@ -167,8 +185,6 @@ function Dashboard(): ReactNode {
       </p>
     );
   }
-
-  const asOf = new Date(stats.computedAt);
 
   const countryRows = stats.byCountry.filter((r) => r.country !== "other");
   const countryOtherBucket = stats.byCountry.find((r) => r.country === "other");
@@ -194,20 +210,6 @@ function Dashboard(): ReactNode {
           alt=""
         />
       </div>
-      <p className={styles.asOf}>
-        <FormattedMessage
-          id="deskDashboard.asOf"
-          defaultMessage="As of {time}"
-          values={{
-            time: asOf.toLocaleString(undefined, {
-              day: "numeric",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          }}
-        />
-      </p>
 
       <div className={styles.opsGrid}>
         <div className={clsx(styles.ccard, styles.opsHeroAttn)}>

@@ -205,10 +205,18 @@ export function Header({
   const [focusMode, setFocusMode] = useState(false);
   const [typing, setTyping] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [dashboardAsOf, setDashboardAsOf] = useState<string | null>(null);
   const kidsState = useKidsControls();
   useEffect(() => {
     const onStreak = (ev: Event) => {
       setStreak((ev as CustomEvent<number>).detail ?? 0);
+    };
+    // The desk's Dashboard broadcasts its data timestamp rather than
+    // rendering it itself — the header is the one place it stays visible
+    // no matter how far down the page a staff member has scrolled, and it
+    // clears the moment the Dashboard unmounts (see DashboardPage.tsx).
+    const onDashboardAsOf = (ev: Event) => {
+      setDashboardAsOf((ev as CustomEvent<string | null>).detail ?? null);
     };
     // The practice screen owns focus mode and broadcasts its state; the
     // header just follows, so the two can never drift apart.
@@ -229,11 +237,16 @@ export function Header({
     window.addEventListener("keylearn:focus-mode-state", onFocusMode);
     window.addEventListener("keylearn:typing", onTyping);
     window.addEventListener("keylearn:header-hide", onHide);
+    window.addEventListener("keylearn:desk-dashboard-asof", onDashboardAsOf);
     return () => {
       window.removeEventListener("keylearn:streak", onStreak);
       window.removeEventListener("keylearn:focus-mode-state", onFocusMode);
       window.removeEventListener("keylearn:typing", onTyping);
       window.removeEventListener("keylearn:header-hide", onHide);
+      window.removeEventListener(
+        "keylearn:desk-dashboard-asof",
+        onDashboardAsOf,
+      );
     };
   }, []);
 
@@ -317,6 +330,22 @@ export function Header({
             <span className={styles.markAlt}>Learn</span>
             {kids && <span className={styles.kidsMark}>Kids</span>}
           </NavLink>
+        )}
+        {desk && dashboardAsOf != null && (
+          <span className={styles.dashboardAsOf}>
+            <FormattedMessage
+              id="deskDashboard.asOf"
+              defaultMessage="Last updated {time}"
+              values={{
+                time: new Date(dashboardAsOf).toLocaleString(undefined, {
+                  day: "numeric",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              }}
+            />
+          </span>
         )}
         {practice && <PracticeStamp />}
       </div>
