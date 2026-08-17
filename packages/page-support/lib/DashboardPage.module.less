@@ -1,10 +1,13 @@
 @import "@keylearn/widget/lib/index.less";
 
+// Same chip-style border every SIGNUPS/ATTENTION/etc. stamp on this page
+// uses (see .stamp below) — laid over the artwork's own baked-in border
+// rather than a plain card border, so the banner still reads as part of
+// the same chip language as the rest of the dashboard.
 .banner {
   margin-block-end: 1rem;
-  border: 1px solid
-    color-mix(in oklab, var(--accent) 22%, var(--primary-d2, var(--primary-d1)));
-  border-radius: 0.9rem;
+  border: 2px solid color-mix(in oklab, var(--accent) 50%, transparent);
+  border-radius: 1.25rem;
   overflow: hidden;
 }
 
@@ -15,11 +18,11 @@
   block-size: auto;
 }
 
-// Dark banner: 25% transparent. Light banner: 20% transparent — set
+// Dark banner: 40% transparent. Light banner: 30% transparent — set
 // per-theme rather than shared, since the two images read differently
 // against their own background.
 .bannerImg {
-  opacity: 0.75;
+  opacity: 0.6;
 }
 
 // The night banner shows by default; swapped for the day one under the Day
@@ -27,7 +30,7 @@
 // data-color attribute switch LoginPrompt.module.less uses.
 .bannerImgLight {
   display: none;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 :global(html[data-color="keylearn-day"]) .bannerImg {
@@ -45,6 +48,19 @@
 
   :global(html[data-color="auto"]) .bannerImgLight {
     display: block;
+  }
+}
+
+// The light banner's own baked-in corner curve is drawn noticeably softer
+// than the dark one's — a wider clip here so the container's cut fully
+// absorbs it instead of slicing across it at a visible angle.
+:global(html[data-color="keylearn-day"]) .banner {
+  border-radius: 2rem;
+}
+
+@media (prefers-color-scheme: light) {
+  :global(html[data-color="auto"]) .banner {
+    border-radius: 2rem;
   }
 }
 

@@ -1,4 +1,3 @@
-import { smooth } from "@keylearn/math";
 import { type NoticeKind, Pages } from "@keylearn/pages-shared";
 import { Range } from "@keylearn/widget";
 import { clsx } from "clsx";
@@ -127,7 +126,7 @@ function Dashboard(): ReactNode {
   const [signupRange, setSignupRange] = useState<"today" | "14d" | "all">(
     "14d",
   );
-  const [signupSmoothness, setSignupSmoothness] = useState(0);
+  const [signupSmoothness, setSignupSmoothness] = useState(0.5);
 
   useEffect(() => {
     let cancelled = false;
@@ -764,16 +763,55 @@ const CHART_W = 1000;
 const CHART_H = 200;
 const CHART_PAD = 8;
 
-// A fresh filter per call — `smooth()` returns a stateful per-sample
-// closure (the same exponential-smoothing filter the Profile page's own
-// charts use, see packages/keylearn-math/lib/util.ts), so a new one is
-// needed every time the source series changes.
-function applySmoothing(
-  values: readonly number[],
+/**
+ * A straight-line path through every point — no data altered, no curve.
+ * `smoothness === 0` on {@link smoothPath} reduces to exactly this.
+ */
+function pathOf(pts: readonly (readonly [number, number])[]): string {
+  return pts
+    .map(
+      ([px, py], i) =>
+        `${i === 0 ? "M" : "L"}${px.toFixed(1)} ${py.toFixed(1)}`,
+    )
+    .join(" ");
+}
+
+/**
+ * The same points {@link pathOf} draws, but connected with a Catmull-Rom
+ * spline instead of straight segments — the slider changes how the line
+ * *looks* between real days, never the days' actual values. `smoothness`
+ * (0–1, straight to curviest) is the spline's tension, converted to cubic
+ * Bézier control points per segment.
+ */
+function smoothPath(
+  pts: readonly (readonly [number, number])[],
   smoothness: number,
-): number[] {
-  const filter = smooth(smoothness);
-  return values.map((v) => filter(v));
+): string {
+  if (pts.length < 3 || smoothness <= 0) {
+    return pathOf(pts);
+  }
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1x = p1[0] + ((p2[0] - p0[0]) / 6) * smoothness;
+    // The spline can swing a control point past the chart's own baseline
+    // near a flat or low stretch — clamped so the curve never dips below
+    // the x-axis the data itself never goes under.
+    const c1y = Math.min(
+      p1[1] + ((p2[1] - p0[1]) / 6) * smoothness,
+      CHART_H - CHART_PAD,
+    );
+    const c2x = p2[0] - ((p3[0] - p1[0]) / 6) * smoothness;
+    const c2y = Math.min(
+      p2[1] - ((p3[1] - p1[1]) / 6) * smoothness,
+      CHART_H - CHART_PAD,
+    );
+    d += ` C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
 }
 
 /**
@@ -811,10 +849,9 @@ function SignupTrendChart({
     );
   }
 
-  const smoothed = applySmoothing(trend, smoothness);
   const days = 7;
-  const lastWeek = smoothed.slice(0, days);
-  const thisWeek = smoothed.slice(days, days * 2);
+  const lastWeek = trend.slice(0, days);
+  const thisWeek = trend.slice(days, days * 2);
 
   const maxV = Math.max(1, ...thisWeek, ...lastWeek);
   const x = (i: number) =>
@@ -823,14 +860,7 @@ function SignupTrendChart({
     CHART_H - CHART_PAD - (v / maxV) * (CHART_H - CHART_PAD * 2 - 24);
   const curPts = thisWeek.map((v, i) => [x(i), y(v)] as const);
   const prevPts = lastWeek.map((v, i) => [x(i), y(v)] as const);
-  const pathOf = (pts: readonly (readonly [number, number])[]) =>
-    pts
-      .map(
-        ([px, py], i) =>
-          `${i === 0 ? "M" : "L"}${px.toFixed(1)} ${py.toFixed(1)}`,
-      )
-      .join(" ");
-  const curPath = pathOf(curPts);
+  const curPath = smoothPath(curPts, smoothness);
   const fillPath = `${curPath} L ${x(days - 1)} ${CHART_H - CHART_PAD} L ${x(0)} ${CHART_H - CHART_PAD} Z`;
   let peakI = 0;
   for (let i = 1; i < thisWeek.length; i++) {
@@ -889,7 +919,7 @@ function SignupTrendChart({
         })}
         <path d={fillPath} fill="url(#signup-trend-g)" stroke="none" />
         <path
-          d={pathOf(prevPts)}
+          d={smoothPath(prevPts, smoothness)}
           fill="none"
           stroke="var(--accent-l1)"
           strokeWidth={2}
@@ -1009,10 +1039,10 @@ function SignupTrendChart({
 }
 
 /**
- * A single smoothed line, for the ranges that have no natural
- * week-over-week comparison (today's hourly signups, or the whole
- * lifetime's monthly signups) — same visual language as
- * {@link SignupTrendChart}'s "this week" line, without the second series.
+ * A single line, for the ranges that have no natural week-over-week
+ * comparison (today's hourly signups, or the whole lifetime's monthly
+ * signups) — same visual language as {@link SignupTrendChart}'s "this
+ * week" line, without the second series.
  */
 function SingleTrendChart({
   trend,
@@ -1024,34 +1054,26 @@ function SingleTrendChart({
   readonly onSmoothnessChange: (value: number) => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
-  const smoothed = applySmoothing(trend, smoothness);
-  const n = Math.max(1, smoothed.length);
+  const n = Math.max(1, trend.length);
   const [hover, setHover] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const maxV = Math.max(1, ...smoothed);
+  const maxV = Math.max(1, ...trend);
   const x = (i: number) =>
     n === 1
       ? CHART_W / 2
       : CHART_PAD + (i / (n - 1)) * (CHART_W - CHART_PAD * 2);
   const y = (v: number) =>
     CHART_H - CHART_PAD - (v / maxV) * (CHART_H - CHART_PAD * 2 - 24);
-  const pts = smoothed.map((v, i) => [x(i), y(v)] as const);
-  const pathOf = (p: readonly (readonly [number, number])[]) =>
-    p
-      .map(
-        ([px, py], i) =>
-          `${i === 0 ? "M" : "L"}${px.toFixed(1)} ${py.toFixed(1)}`,
-      )
-      .join(" ");
-  const linePath = pathOf(pts);
+  const pts = trend.map((v, i) => [x(i), y(v)] as const);
+  const linePath = smoothPath(pts, smoothness);
   const fillPath =
     pts.length === 0
       ? ""
       : `${linePath} L ${x(n - 1)} ${CHART_H - CHART_PAD} L ${x(0)} ${CHART_H - CHART_PAD} Z`;
   let peakI = 0;
-  for (let i = 1; i < smoothed.length; i++) {
-    if (smoothed[i] > smoothed[peakI]) {
+  for (let i = 1; i < trend.length; i++) {
+    if (trend[i] > trend[peakI]) {
       peakI = i;
     }
   }
@@ -1074,7 +1096,7 @@ function SingleTrendChart({
     setHover(best);
   };
 
-  if (smoothed.length === 0) {
+  if (trend.length === 0) {
     return null;
   }
 
@@ -1131,7 +1153,7 @@ function SingleTrendChart({
               fill="var(--accent)"
               fontSize={11}
             >
-              peak {Math.round(smoothed[peakI])}
+              peak {Math.round(trend[peakI])}
             </text>
           </>
         )}
@@ -1176,7 +1198,7 @@ function SingleTrendChart({
             top: `${(pts[hover][1] / CHART_H) * 100}%`,
           }}
         >
-          <b>{Math.round(smoothed[hover])}</b>
+          <b>{Math.round(trend[hover])}</b>
         </div>
       )}
       <div className={styles.chartLegend}>
