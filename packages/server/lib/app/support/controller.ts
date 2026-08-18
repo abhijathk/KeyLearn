@@ -53,6 +53,11 @@ import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
 import { matchAnswers } from "./matching.ts";
+import {
+  forwardReplyToQdesk,
+  forwardTicketToQdesk,
+  qdeskConfigured,
+} from "./qdesk-forward.ts";
 import { digestHour } from "./sweep.ts";
 
 const jsonOpts = { maxLength: 4096 };
@@ -145,6 +150,16 @@ const TStaffMessage = z.object({
 });
 type TStaffMessage = z.infer<typeof TStaffMessage>;
 const PStaffMessage = zod(TStaffMessage);
+
+const TDeliverReply = z.object({
+  body: z.string().trim().min(1).max(4000),
+  // "us" = a QDesk staff member, "agent" = Tab running on QDesk's side —
+  // preserved so the guest thread view renders the right sender label.
+  sender: z.enum(["us", "agent"]),
+  close: z.boolean().optional(),
+});
+type TDeliverReply = z.infer<typeof TDeliverReply>;
+const PDeliverReply = zod(TDeliverReply);
 
 const TGuestMessage = z.object({
   message: z.string().trim().min(1).max(4000),
@@ -823,6 +838,9 @@ export class Controller {
         sender: "them",
         body: input.message,
       });
+      if (dup.confirmed) {
+        forwardReplyToQdesk(dup.id!, input.message);
+      }
       const threadToken = await SupportTicket.reissueThreadToken(dup.id!);
       const holding = !dup.confirmed;
       if (holding) {
@@ -868,7 +886,19 @@ export class Controller {
         sender: "them",
         body: input.message,
       });
-      if (input.kind === "support") {
+      forwardTicketToQdesk({
+        id: ticket.id!,
+        kind: input.kind,
+        name: input.name,
+        email: input.email,
+        subject: input.subject,
+        message: input.message,
+        userId: ctx.state.user?.id ?? null,
+      });
+      // With the QDesk bridge on, QDesk's own agent owns automation —
+      // running the local auto-reply too would give the customer two
+      // bots answering the same message.
+      if (input.kind === "support" && !qdeskConfigured()) {
         await this.#tryAutoReply(ticket.id!, input.message);
       }
     } else {
@@ -1009,13 +1039,24 @@ export class Controller {
     }
     // The thread's first message only becomes visible once the ticket
     // leaves the holding queue — this is the first moment the sender (or
-    // staff) can actually read it.
+    // staff) can actually read it, and therefore also the first moment it
+    // is real enough to forward to QDesk (an unconfirmed submission never
+    // leaves this repo).
     await SupportMessage.create({
       ticketId: ticket.id!,
       sender: "them",
       body: ticket.message!,
     });
-    if (ticket.kind === "support") {
+    forwardTicketToQdesk({
+      id: ticket.id!,
+      kind: (ticket.kind ?? "support") as "support" | "business",
+      name: ticket.name!,
+      email: ticket.email!,
+      subject: ticket.subject!,
+      message: ticket.message!,
+      userId: ticket.userId ?? null,
+    });
+    if (ticket.kind === "support" && !qdeskConfigured()) {
       await this.#tryAutoReply(ticket.id!, ticket.message!);
     }
     ctx.response.body = { ok: true };
@@ -1078,6 +1119,7 @@ export class Controller {
       sender: "them",
       body: input.message,
     });
+    forwardReplyToQdesk(ticket.id!, input.message);
     // The sender writing again means the auto-reply (if any) didn't fully
     // solve it — credit the reopen to the article/rule that answered before
     // clearing the attribution, so a later close doesn't also credit a solve.
@@ -1300,6 +1342,39 @@ export class Controller {
       m.toDetails(),
     );
     ctx.response.body = updated.toDetails({ reveal: false, messages });
+  }
+
+  /**
+   * QDesk delivering a reply back to the customer through this repo's
+   * own channels — the return leg of the forwarding bridge
+   * (qdesk-forward.ts). QDesk is the system of record for the
+   * conversation, but the mailer, the in-app notification badge, and the
+   * guest thread view all live here, so an ops-side reply has to land
+   * here to actually reach anyone. Ops-key gated, machine to machine —
+   * the acting staff member's identity stays in QDesk's own audit log.
+   */
+  @http.POST("/_/internal/tickets/{id}/deliver-reply")
+  async deliverOpsReply(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @body.json(PDeliverReply, jsonOpts) input: TDeliverReply,
+  ) {
+    ctx.state.requireOpsApi();
+    const ticket = await SupportTicket.findById(id);
+    if (ticket == null) {
+      ctx.response.status = 404;
+      return;
+    }
+    await SupportMessage.create({
+      ticketId: id,
+      sender: input.sender,
+      body: input.body,
+      emailed: ticket.userId == null,
+    });
+    const status: SupportTicketStatus = input.close ? "closed" : "waiting";
+    const updated = await ticket.setStatus(status);
+    void this.#notifyReply(ticket, input.body);
+    ctx.response.body = { ok: true, status: updated.status };
   }
 
   /**
