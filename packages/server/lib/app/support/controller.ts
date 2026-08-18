@@ -54,6 +54,7 @@ import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
 import { matchAnswers } from "./matching.ts";
 import {
+  fetchHelpArticles,
   forwardReplyToQdesk,
   forwardTicketToQdesk,
   qdeskConfigured,
@@ -1065,6 +1066,17 @@ export class Controller {
       await this.#tryAutoReply(ticket.id!, ticket.message!);
     }
     ctx.response.body = { ok: true };
+  }
+
+  /**
+   * The help centre's articles. Public and unauthenticated by design —
+   * this is published content, the same articles the assistant answers
+   * from, and the point is that somebody can read them BEFORE opening a
+   * ticket.
+   */
+  @http.GET("/_/support/help/articles")
+  async helpArticles(ctx: Context<RouterState & AuthState>) {
+    ctx.response.body = { articles: await fetchHelpArticles() };
   }
 
   @http.GET("/_/support/t/{token}")

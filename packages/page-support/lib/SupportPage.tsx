@@ -135,7 +135,7 @@ function GrownUpOnly(): ReactNode {
         />
       </p>
       <p className={styles.intro}>
-        <RouterLink to={Pages.help.path}>
+        <RouterLink to={Pages.helpCentre.path}>
           <FormattedMessage
             id="support.grownUpOnly.help"
             defaultMessage="In the meantime, the help pages might have your answer."
@@ -246,10 +246,10 @@ export function SupportPage(): ReactNode {
           <p className={styles.moreLinks}>
             <FormattedMessage
               id="support.moreLinks"
-              defaultMessage="Still stuck? The <help>Help page</help> and the <guide>User Guide</guide> cover how KeyLearn works in more depth."
+              defaultMessage="Still stuck? <help>Help articles</help> answer the most common questions, and the <guide>User Guide</guide> covers how KeyLearn works in more depth."
               values={{
                 help: (chunks: ReactNode) => (
-                  <RouterLink to={Pages.help.path}>{chunks}</RouterLink>
+                  <RouterLink to={Pages.helpCentre.path}>{chunks}</RouterLink>
                 ),
                 guide: (chunks: ReactNode) => (
                   <RouterLink to={Pages.guide.path}>{chunks}</RouterLink>

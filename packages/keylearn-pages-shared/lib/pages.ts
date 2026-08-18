@@ -663,6 +663,22 @@ export namespace Pages {
    * by the client route and the server's SSR handler separately, same
    * convention as {@link deskThread}.
    */
+  /** The customer-facing knowledge base — the same articles the support assistant answers from. */
+  export const helpCentre = {
+    path: "/support/help",
+    title: defineMessage({
+      id: "helpCentre.headline",
+      defaultMessage: "Help",
+    }),
+    link: {
+      label: defineMessage({
+        id: "helpCentre.headline",
+        defaultMessage: "Help",
+      }),
+    },
+    meta: [],
+  } satisfies PageInfo;
+
   export const supportThread = {
     path: "/support/t",
     title: defineMessage({

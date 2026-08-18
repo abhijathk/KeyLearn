@@ -255,6 +255,19 @@ export class Controller {
     return this.renderPage(ctx, Pages.deskInbox, intl);
   }
 
+  @http.GET(`${Pages.helpCentre.path}`)
+  async ["help-centre"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.helpCentre);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.helpCentre.path}`)
+  async ["help-centre-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.helpCentre, intl);
+  }
+
   // The token is an opaque url-safe string, not a number — the pattern
   // has to admit letters or every emailed thread link 404s.
   @http.GET(`${Pages.supportThread.path}/{token:[A-Za-z0-9_-]+}`)

@@ -1,0 +1,100 @@
+@import "@keylearn/widget/lib/index.less";
+
+.page {
+  max-inline-size: 44rem;
+  margin-inline: auto;
+  padding-block: 1.5rem 2.5rem;
+}
+
+.headline {
+  margin: 0 0 0.5rem;
+  font-family: var(--header-font-family);
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.intro {
+  margin: 0 0 1.2rem;
+  color: var(--text-color-f1);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.search {
+  margin-block-end: 1rem;
+
+  input {
+    inline-size: 100%;
+  }
+}
+
+.list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.item {
+  border: var(--separator-border);
+  border-radius: 0.8rem;
+  overflow: hidden;
+  background-color: var(--primary-l1);
+}
+
+/* The whole row is the control — a title you can only open by hitting a
+   small chevron is a title that feels broken. */
+.itemHead {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: space-between;
+  inline-size: 100%;
+  padding: 0.8rem 1rem;
+  border: none;
+  color: inherit;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--primary-l2);
+  }
+}
+
+.itemTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.chevron {
+  flex: none;
+  color: var(--text-color-f2);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.itemBody {
+  margin: 0;
+  padding: 0 1rem 1rem;
+  color: var(--text-color-f1);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+  white-space: pre-wrap;
+}
+
+.note {
+  margin: 0.5rem 0;
+  color: var(--text-color-f2);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.footer {
+  margin-block-start: 1.5rem;
+  padding-block-start: 1rem;
+  border-block-start: var(--separator-border);
+  font-size: 0.9rem;
+}

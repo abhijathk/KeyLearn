@@ -161,6 +161,14 @@ export type UpdateNoticeInput = {
   readonly active?: boolean;
 };
 
+/** One published article from the desk's knowledge base. */
+export type HelpArticle = {
+  readonly id: number;
+  readonly title: string;
+  readonly body: string;
+  readonly updatedAt: string;
+};
+
 /** What the customer's own thread view gets back — the ticket plus its messages. */
 export type ThreadView = SupportTicketDetails;
 
@@ -170,6 +178,21 @@ export namespace SupportService {
    * from their email rather than a session — a signed-out guest has no
    * other way back in.
    */
+  /** The published help articles. Public — no session needed. */
+  export async function listHelpArticles(): Promise<readonly HelpArticle[]> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/support/help/articles")
+      .send();
+    if (!response.ok) {
+      return [];
+    }
+    const body = (await response.json()) as {
+      readonly articles?: readonly HelpArticle[];
+    };
+    return body.articles ?? [];
+  }
+
   export async function getThread(
     token: string,
   ): Promise<{ readonly ticket?: ThreadView; readonly pending?: boolean }> {

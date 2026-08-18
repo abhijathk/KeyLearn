@@ -6,6 +6,7 @@ export * from "./AuditLogPage.tsx";
 export * from "./DashboardPage.tsx";
 export * from "./DeletionCancelPage.tsx";
 export * from "./DeskShell.tsx";
+export * from "./HelpCentrePage.tsx";
 export * from "./InboxPage.tsx";
 export * from "./linkify.tsx";
 export * from "./NoticesPage.tsx";

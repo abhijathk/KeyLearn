@@ -50,6 +50,7 @@ const DeskDashboardPage = lazy(() => import("./pages/desk.tsx"));
 const DeskInboxPage = lazy(() => import("./pages/desk-inbox.tsx"));
 const DeskThreadPage = lazy(() => import("./pages/desk-thread.tsx"));
 const SupportThreadPage = lazy(() => import("./pages/support-thread.tsx"));
+const HelpCentrePage = lazy(() => import("./pages/help-centre.tsx"));
 const DeskAccountsPage = lazy(() => import("./pages/desk-accounts.tsx"));
 const DeskAccountDetailPage = lazy(
   () => import("./pages/desk-account-detail.tsx"),
@@ -298,6 +299,17 @@ function PageRoutes() {
               <Title page={Pages.deskInbox} />
               <Suspense fallback={<LoadingProgress />}>
                 <DeskInboxPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.helpCentre.path}
+          element={
+            <Template path={Pages.helpCentre.path}>
+              <Title page={Pages.helpCentre} />
+              <Suspense fallback={<LoadingProgress />}>
+                <HelpCentrePage />
               </Suspense>
             </Template>
           }

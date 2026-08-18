@@ -71,3 +71,49 @@ export function forwardTicketToQdesk(ticket: {
 export function forwardReplyToQdesk(ticketId: number, body: string): void {
   void post(`/_/apps/tickets/${ticketId}/messages`, { body });
 }
+
+/** One published help article, as the desk publishes it. */
+export type HelpArticle = {
+  readonly id: number;
+  readonly title: string;
+  readonly body: string;
+  readonly updatedAt: string;
+};
+
+// The articles change when a staff member edits one — minutes matter,
+// seconds don't. A short cache keeps a busy help page off the desk
+// entirely, and means the desk being briefly unreachable doesn't empty
+// the page for everyone.
+const ARTICLE_TTL_MS = 5 * 60 * 1000;
+let cache: { at: number; articles: readonly HelpArticle[] } | null = null;
+
+/**
+ * The desk's published knowledge base, for the customer-facing help
+ * centre. Returns the last good answer if the desk is unreachable, and
+ * an empty list if we've never had one — a help page with nothing on it
+ * is a bad day; a help page that 500s is a worse one.
+ */
+export async function fetchHelpArticles(): Promise<readonly HelpArticle[]> {
+  const cfg = config();
+  if (cfg == null) {
+    return [];
+  }
+  if (cache != null && Date.now() - cache.at < ARTICLE_TTL_MS) {
+    return cache.articles;
+  }
+  try {
+    const res = await fetch(new URL("/_/apps/answers", cfg.url), {
+      headers: { "x-qdesk-app-key": cfg.key },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) {
+      throw new Error(`status ${res.status}`);
+    }
+    const articles = (await res.json()) as HelpArticle[];
+    cache = { at: Date.now(), articles };
+    return articles;
+  } catch (err) {
+    console.error("qdesk help articles failed", err);
+    return cache?.articles ?? [];
+  }
+}
