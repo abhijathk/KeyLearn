@@ -367,6 +367,44 @@ export class Controller {
   }
 
   /**
+   * How much of Tab's own workload it's handling without a human — the
+   * ops app's Dashboard headline AI metric. Counted straight off this
+   * repo's own `staff_audit_event` rows for the agent-scoped endpoints
+   * (`agent-reply`/`agent-flag`/`agent-close-spam`), not re-derived from
+   * ticket state, so it can never drift from what actually happened.
+   * `agent-reply` covers both a grounded auto-reply and an off-topic
+   * redirect — this repo doesn't currently distinguish the two in the
+   * audit action name, so "replied" is honestly a slight overcount of
+   * "resolved with a real answer." Good enough for a trend number; not
+   * precise enough to bill against.
+   */
+  @http.GET("/_/internal/agent-stats")
+  async getAgentStats(ctx: Context<RouterState & AuthState>) {
+    ctx.state.requireOpsApi();
+    const since = new Date(Date.now() - 7 * DAY_MS);
+    const rows = (await StaffAuditEvent.knex()(StaffAuditEvent.tableName)
+      .select("action")
+      .count({ count: "*" })
+      .whereIn("action", ["agent-reply", "agent-flag", "agent-close-spam"])
+      .where("created_at", ">=", since)
+      .groupBy("action")) as { action: string; count: number | string }[];
+    const counts = Object.fromEntries(
+      rows.map((r) => [r.action, Number(r.count)]),
+    );
+    const replied = counts["agent-reply"] ?? 0;
+    const flagged = counts["agent-flag"] ?? 0;
+    const closedSpam = counts["agent-close-spam"] ?? 0;
+    const total = replied + flagged + closedSpam;
+    ctx.response.body = {
+      replied,
+      escalated: flagged,
+      closedSpam,
+      total,
+      resolutionRate: total === 0 ? null : replied / total,
+    };
+  }
+
+  /**
    * The one KeyLearn-side setting the ops app's Settings screen surfaces
    * directly rather than mirroring locally, because it isn't really a
    * per-staff preference on this side either — `StaffSettings.siteDefault()`
