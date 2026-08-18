@@ -55,12 +55,13 @@ type Pane =
 const PREMIUM_VISIBLE = false;
 
 /**
- * Whether the Support pane and its rail entry are shown. Off for launch —
- * the ticket queue, staff console and audit log are built but held for
- * phase 2, so there's nothing behind this pane yet either. The footer's
- * mailto link is the contact path until then.
+ * Whether the Support pane and its rail entry are shown. On: the desk
+ * behind it is live — tickets reach QDesk, the assistant answers what it
+ * can, a person picks up the rest, and the reply comes back to the
+ * sender's own conversation page. The reason this was held (nothing
+ * behind the pane) no longer applies.
  */
-const SUPPORT_VISIBLE = false;
+const SUPPORT_VISIBLE = true;
 
 const PANES: readonly Pane[] = [
   "account",
