@@ -1,7 +1,12 @@
-import { Pages, usePageData } from "@keylearn/pages-shared";
+import {
+  activeProfileKind,
+  Pages,
+  PROFILE_CHANGED_EVENT,
+  usePageData,
+} from "@keylearn/pages-shared";
 import { Button, Icon, TextField, toast } from "@keylearn/widget";
 import { mdiEmailFastOutline } from "@mdi/js";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink } from "react-router";
 import { SupportService, type TicketKind } from "./service.ts";
@@ -90,10 +95,62 @@ const FAQ: {
   },
 ];
 
+/**
+ * Whether a kid profile is the one currently in use on this device.
+ *
+ * The active profile is a browser-side choice (localStorage), never part
+ * of the session — the server only ever knows the ACCOUNT. So this is a
+ * front-door guard, not a security boundary, and it doesn't need to be:
+ * a ticket is always attributed to the account holder regardless, and
+ * the point is that a child shouldn't be writing to strangers from a
+ * parent's account, not that the check be unforgeable.
+ */
+function useKidActive(): boolean {
+  const [kid, setKid] = useState(() => activeProfileKind() === "kid");
+  useEffect(() => {
+    const recheck = () => setKid(activeProfileKind() === "kid");
+    // Switching profile doesn't reload the page, so listen for the swap.
+    window.addEventListener(PROFILE_CHANGED_EVENT, recheck);
+    return () => window.removeEventListener(PROFILE_CHANGED_EVENT, recheck);
+  }, []);
+  return kid;
+}
+
+/**
+ * Shown instead of the form while a kid profile is active. Deliberately
+ * an explanation rather than a redirect: a child who tapped Help and got
+ * silently thrown back to the kids page learns nothing, and the thing
+ * they actually need is to go and find a grown-up.
+ */
+function GrownUpOnly(): ReactNode {
+  return (
+    <div className={styles.page}>
+      <h1 className={styles.headline}>
+        <FormattedMessage id="support.headline" defaultMessage="Support" />
+      </h1>
+      <p className={styles.intro}>
+        <FormattedMessage
+          id="support.grownUpOnly"
+          defaultMessage="Messages to us are sent by the grown-up who owns this account. Ask them to switch to their own profile and write to us — they'll get our reply by email."
+        />
+      </p>
+      <p className={styles.intro}>
+        <RouterLink to={Pages.help.path}>
+          <FormattedMessage
+            id="support.grownUpOnly.help"
+            defaultMessage="In the meantime, the help pages might have your answer."
+          />
+        </RouterLink>
+      </p>
+    </div>
+  );
+}
+
 export function SupportPage(): ReactNode {
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
   const captcha = useCaptcha();
+  const kidActive = useKidActive();
 
   const [kind, setKind] = useState<TicketKind>("support");
   const [name, setName] = useState(
@@ -152,6 +209,10 @@ export function SupportPage(): ReactNode {
       })
       .finally(() => setBusy(false));
   };
+
+  if (kidActive) {
+    return <GrownUpOnly />;
+  }
 
   return (
     <div className={styles.page}>

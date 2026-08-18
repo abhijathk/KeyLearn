@@ -1806,6 +1806,8 @@
   "support.form.sentToast": "Sent — thanks, we'll reply by email.",
   "support.form.subject": "Subject",
   "support.form.submit": "Send message",
+  "support.grownUpOnly": "Messages to us are sent by the grown-up who owns this account. Ask them to switch to their own profile and write to us — they'll get our reply by email.",
+  "support.grownUpOnly.help": "In the meantime, the help pages might have your answer.",
   "support.headline": "Support",
   "support.intro": "Most answers are below. Can't find yours? Send a message and we'll reply by email.",
   "support.moreLinks": "Still stuck? The <help>Help page</help> and the <guide>User Guide</guide> cover how KeyLearn works in more depth.",
