@@ -192,16 +192,24 @@ function sentimentChip(
   }
 }
 
-function senderLabel(m: SupportMessageDetails, name: string): string {
+/**
+ * This is the CUSTOMER's own view of the thread, so the labels are the
+ * mirror of the desk's: "them" is the person reading this page, and
+ * "us"/"agent" are the desk writing back. `authorName` is the name the
+ * desk chose to be seen as — a staffer's working name or the
+ * assistant's — and falls back to a generic label when an older desk
+ * build sent none.
+ */
+function senderLabel(m: SupportMessageDetails): string {
   switch (m.sender) {
     case "them":
-      return name;
-    case "us":
       return "You";
+    case "us":
+      return m.authorName ?? "KeyLearn Support";
     case "auto":
       return "Automatic";
     case "agent":
-      return "Tab · AI";
+      return `${m.authorName ?? "Tab"} · AI`;
     case "system":
       return "System";
   }
@@ -225,7 +233,7 @@ function MessageBubble({
   return (
     <div className={clsx(styles.msg, cls)}>
       <span className={styles.head}>
-        {senderLabel(message, "")}
+        {senderLabel(message)}
         {" · "}
         {new Date(message.createdAt).toLocaleString(undefined, {
           day: "numeric",

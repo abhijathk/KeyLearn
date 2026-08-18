@@ -632,14 +632,18 @@ export function messageThreadReply({
   subject,
   body,
   threadLink,
+  authorName = null,
 }: {
   readonly to: string;
   readonly subject: string;
   readonly body: string;
   readonly threadLink: string;
+  /** Who it's from, as the desk chose to present them. Null keeps the old unattributed wording. */
+  readonly authorName?: string | null;
 }): Mailer.Message {
   const mailSubject = `Re: ${subject}`;
-  const text = `${body}
+  const from = authorName != null && authorName !== "" ? authorName : null;
+  const text = `${from != null ? `${from} replied:\n\n` : ""}${body}
 
 View or reply to this conversation:
 ${threadLink}
@@ -647,7 +651,7 @@ ${threadLink}
 Happy typing!`;
   const html = shell(
     mailSubject,
-    heading("New reply") +
+    heading(from != null ? `New reply from ${from}` : "New reply") +
       paragraph(body) +
       `<div style="margin:4px 0 4px">${button(threadLink, "View conversation")}</div>` +
       fallbackLink(threadLink),

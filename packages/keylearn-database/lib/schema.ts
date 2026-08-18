@@ -311,6 +311,11 @@ export async function createSchema(knex: Knex): Promise<void> {
   await addColumn("agent_status", "enabled", (table) => {
     table.boolean("enabled").notNullable().defaultTo(true);
   });
+  // The name the customer sees above a desk reply (QDesk sends it with
+  // the reply; see that repo's deliver-reply bridge).
+  await addColumn("support_message", "author_name", (table) => {
+    table.string("author_name", 64).nullable();
+  });
   await addColumn("support_message", "answer_ids", (table) => {
     table.text("answer_ids").nullable();
   });

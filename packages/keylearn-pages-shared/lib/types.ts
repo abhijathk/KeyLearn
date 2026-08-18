@@ -152,6 +152,8 @@ export type SupportMessageDetails = {
   readonly sender: "them" | "us" | "auto" | "agent" | "system";
   readonly body: string;
   readonly emailed: boolean;
+  /** The name shown above this reply — the sender's chosen desk name or the assistant's, never an account name. Null on the customer's own messages. */
+  readonly authorName: string | null;
   /** Which Answer(s) an agent reply was drafted from — null for every other sender. */
   readonly answerIds: readonly number[] | null;
   readonly createdAt: string;

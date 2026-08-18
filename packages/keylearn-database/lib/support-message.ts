@@ -30,6 +30,10 @@ export class SupportMessage extends TimestampMixin(Model) {
       body: { type: "string", minLength: 1, maxLength: 4000 },
       staffUserId: { type: ["integer", "null"] },
       emailed: { type: "boolean" },
+      // The name the SENDER chose to be seen as on this thread — a desk
+      // staffer's working name or the assistant's configured name.
+      // Never an account name: it's shown to the customer.
+      authorName: { type: ["string", "null"], maxLength: 64 },
     },
   } satisfies JSONSchema;
   // answerIds is intentionally left out of jsonSchema.properties — it's a
@@ -52,6 +56,7 @@ export class SupportMessage extends TimestampMixin(Model) {
       .onUpdate("CASCADE");
     table.string("sender", 16).notNullable();
     table.text("body").notNullable();
+    table.string("author_name", 64).nullable();
     // Who sent it, when sender is "us" — not a foreign key, for the same
     // reason as SupportTicket.userId: a departed staffer's messages must not
     // vanish from a thread they actually wrote.
@@ -73,6 +78,7 @@ export class SupportMessage extends TimestampMixin(Model) {
   body?: string;
   staffUserId?: number | null;
   emailed?: number | boolean;
+  authorName?: string | null;
   answerIds?: string | null;
   createdAt?: Date;
 
@@ -83,6 +89,7 @@ export class SupportMessage extends TimestampMixin(Model) {
     staffUserId = null,
     emailed = false,
     answerIds = null,
+    authorName = null,
   }: {
     readonly ticketId: number;
     readonly sender: SupportMessageSender;
@@ -90,6 +97,7 @@ export class SupportMessage extends TimestampMixin(Model) {
     readonly staffUserId?: number | null;
     readonly emailed?: boolean;
     readonly answerIds?: readonly number[] | null;
+    readonly authorName?: string | null;
   }): Promise<SupportMessage> {
     return await SupportMessage.query().insertAndFetch({
       ticketId,
@@ -97,6 +105,7 @@ export class SupportMessage extends TimestampMixin(Model) {
       body,
       staffUserId,
       emailed,
+      authorName,
       answerIds:
         answerIds != null && answerIds.length > 0
           ? JSON.stringify(answerIds)
@@ -123,6 +132,7 @@ export class SupportMessage extends TimestampMixin(Model) {
       sender: this.sender!,
       body: this.body!,
       emailed: Boolean(this.emailed),
+      authorName: this.authorName ?? null,
       answerIds:
         this.answerIds != null
           ? (JSON.parse(this.answerIds) as number[])

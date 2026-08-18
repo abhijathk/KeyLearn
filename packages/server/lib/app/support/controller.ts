@@ -157,6 +157,11 @@ const TDeliverReply = z.object({
   // preserved so the guest thread view renders the right sender label.
   sender: z.enum(["us", "agent"]),
   close: z.boolean().optional(),
+  // The name the customer will see above this reply — the desk sends
+  // whatever the staffer or the assistant is called there. Bounded and
+  // optional: an older desk build simply omits it and the thread falls
+  // back to the generic label it always used.
+  authorName: z.string().trim().max(64).nullable().optional(),
 });
 type TDeliverReply = z.infer<typeof TDeliverReply>;
 const PDeliverReply = zod(TDeliverReply);
@@ -1370,10 +1375,11 @@ export class Controller {
       sender: input.sender,
       body: input.body,
       emailed: ticket.userId == null,
+      authorName: input.authorName ?? null,
     });
     const status: SupportTicketStatus = input.close ? "closed" : "waiting";
     const updated = await ticket.setStatus(status);
-    void this.#notifyReply(ticket, input.body);
+    void this.#notifyReply(ticket, input.body, input.authorName ?? null);
     ctx.response.body = { ok: true, status: updated.status };
   }
 
@@ -1384,7 +1390,12 @@ export class Controller {
    * conversation at all. Best-effort either way: neither path may fail
    * the reply itself, which is already saved by the time this runs.
    */
-  async #notifyReply(ticket: SupportTicket, body: string): Promise<void> {
+  async #notifyReply(
+    ticket: SupportTicket,
+    body: string,
+    /** Who the customer should see this reply from; null keeps the generic label. */
+    authorName: string | null = null,
+  ): Promise<void> {
     if (ticket.userId != null) {
       try {
         await Notification.create({
@@ -1406,6 +1417,7 @@ export class Controller {
           subject: ticket.subject!,
           body,
           threadLink: this.#link(`/support/t/${threadToken}`),
+          authorName,
         }),
       );
     } catch {
