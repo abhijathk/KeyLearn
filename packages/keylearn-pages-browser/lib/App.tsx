@@ -49,6 +49,7 @@ const SupportPage = lazy(() => import("./pages/support.tsx"));
 const DeskDashboardPage = lazy(() => import("./pages/desk.tsx"));
 const DeskInboxPage = lazy(() => import("./pages/desk-inbox.tsx"));
 const DeskThreadPage = lazy(() => import("./pages/desk-thread.tsx"));
+const SupportThreadPage = lazy(() => import("./pages/support-thread.tsx"));
 const DeskAccountsPage = lazy(() => import("./pages/desk-accounts.tsx"));
 const DeskAccountDetailPage = lazy(
   () => import("./pages/desk-account-detail.tsx"),
@@ -297,6 +298,20 @@ function PageRoutes() {
               <Title page={Pages.deskInbox} />
               <Suspense fallback={<LoadingProgress />}>
                 <DeskInboxPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        {/* The customer's own conversation, reached by the token in our
+            emails — a public route, no sign-in, since a signed-out guest
+            has no other way back to it. */}
+        <Route
+          path={`${Pages.supportThread.path}/:token`}
+          element={
+            <Template path={Pages.supportThread.path}>
+              <Title page={Pages.supportThread} />
+              <Suspense fallback={<LoadingProgress />}>
+                <SupportThreadPage />
               </Suspense>
             </Template>
           }

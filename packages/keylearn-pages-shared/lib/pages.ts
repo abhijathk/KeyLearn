@@ -657,6 +657,28 @@ export namespace Pages {
    * route and the server's SSR handler separately, the same convention
    * {@link profile} uses for its own id-suffixed variant.
    */
+  /**
+   * A customer's own view of their support conversation, reached by the
+   * link in our emails. The base path only — the `{token}` is appended
+   * by the client route and the server's SSR handler separately, same
+   * convention as {@link deskThread}.
+   */
+  export const supportThread = {
+    path: "/support/t",
+    title: defineMessage({
+      id: "supportThread.title",
+      defaultMessage: "Your conversation",
+    }),
+    link: {
+      label: defineMessage({
+        id: "supportThread.title",
+        defaultMessage: "Your conversation",
+      }),
+    },
+    // Reached only by a private link from an email — never indexed.
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
   export const deskThread = {
     path: "/desk/t",
     title: defineMessage({

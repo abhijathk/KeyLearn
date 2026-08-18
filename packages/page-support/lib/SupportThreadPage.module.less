@@ -1,0 +1,129 @@
+@import "@keylearn/widget/lib/index.less";
+
+.page {
+  max-inline-size: 44rem;
+  margin-inline: auto;
+  padding-block: 1.5rem 2.5rem;
+}
+
+.headline {
+  margin: 0 0 1rem;
+  font-family: var(--header-font-family);
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+/* The conversation itself. Scrolls inside its own pane so the composer
+   stays put while a long thread moves, the same way a chat app does. */
+.chat {
+  display: grid;
+  gap: 0.45rem;
+  max-block-size: 60vb;
+  padding: 0.9rem;
+  border: var(--separator-border);
+  border-radius: 1rem;
+  overscroll-behavior: contain;
+  background-color: var(--primary-l1);
+  overflow-y: auto;
+}
+
+.mine,
+.theirs {
+  display: grid;
+  gap: 0.15rem;
+  /* Only as wide as the words — a full-width bubble stops reading as a
+     message and starts reading as a paragraph. */
+  inline-size: fit-content;
+  max-inline-size: min(28rem, 84%);
+  padding: 0.55rem 0.8rem;
+  border-radius: 1.1rem;
+}
+
+.mine {
+  justify-self: end;
+  /* The squared-off corner points back at the sender — what gives a
+     thread its shape at a glance. */
+  border-end-end-radius: 0.35rem;
+  color: var(--accent-ink);
+  background-color: var(--accent);
+}
+
+.theirs {
+  justify-self: start;
+  border: var(--separator-border);
+  border-end-start-radius: 0.35rem;
+  background-color: var(--primary-l2);
+}
+
+.from {
+  color: var(--accent);
+  font-family: var(--value-font-family);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.at {
+  justify-self: end;
+  opacity: 0.65;
+  font-size: 0.62rem;
+}
+
+/* Status lines ("marked resolved") belong to neither side. */
+.system {
+  justify-self: center;
+  margin: 0.2rem 0;
+  color: var(--text-color-f2);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.composer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-block-start: 0.8rem;
+}
+
+.field {
+  flex: 1;
+  min-inline-size: 0;
+
+  /* The widget's own input sizes to its content — stretch it so the
+     composer looks like a composer and not a search box. */
+  input,
+  textarea {
+    inline-size: 100%;
+  }
+}
+
+.send {
+  flex: none;
+}
+
+.notice {
+  margin: 0 0 1rem;
+  color: var(--text-color-f1);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.closed {
+  margin: 0.7rem 0 0;
+  color: var(--text-color-f2);
+  font-size: 0.8rem;
+}
+
+.newLink {
+  font-size: 0.9rem;
+}

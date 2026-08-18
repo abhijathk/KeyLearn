@@ -13,4 +13,5 @@ export * from "./service.ts";
 export * from "./SettingsPage.tsx";
 export * from "./StaffSigninPage.tsx";
 export * from "./SupportPage.tsx";
+export * from "./SupportThreadPage.tsx";
 export * from "./ThreadPage.tsx";

@@ -161,7 +161,45 @@ export type UpdateNoticeInput = {
   readonly active?: boolean;
 };
 
+/** What the customer's own thread view gets back — the ticket plus its messages. */
+export type ThreadView = SupportTicketDetails;
+
 export namespace SupportService {
+  /**
+   * The customer's own conversation, addressed by the unguessable token
+   * from their email rather than a session — a signed-out guest has no
+   * other way back in.
+   */
+  export async function getThread(
+    token: string,
+  ): Promise<{ readonly ticket?: ThreadView; readonly pending?: boolean }> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET(`/_/support/t/${encodeURIComponent(token)}`)
+      .send();
+    if (!response.ok) {
+      throw new Error(`thread ${response.status}`);
+    }
+    return (await response.json()) as {
+      readonly ticket?: ThreadView;
+      readonly pending?: boolean;
+    };
+  }
+
+  export async function replyToThread(
+    token: string,
+    message: string,
+  ): Promise<{ readonly ticket?: ThreadView }> {
+    const response = await request
+      .use(expectType("application/json"))
+      .POST(`/_/support/t/${encodeURIComponent(token)}/reply`)
+      .send({ message });
+    if (!response.ok) {
+      throw new Error(`reply ${response.status}`);
+    }
+    return (await response.json()) as { readonly ticket?: ThreadView };
+  }
+
   export async function createTicket(input: CreateTicketInput): Promise<void> {
     await request
       .use(expectType("application/json"))

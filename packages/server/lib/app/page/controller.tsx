@@ -255,6 +255,23 @@ export class Controller {
     return this.renderPage(ctx, Pages.deskInbox, intl);
   }
 
+  // The token is an opaque url-safe string, not a number — the pattern
+  // has to admit letters or every emailed thread link 404s.
+  @http.GET(`${Pages.supportThread.path}/{token:[A-Za-z0-9_-]+}`)
+  async ["support-thread"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.supportThread);
+  }
+
+  @http.GET(
+    `/{locale:${localePattern}}${Pages.supportThread.path}/{token:[A-Za-z0-9_-]+}`,
+  )
+  async ["support-thread-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.supportThread, intl);
+  }
+
   @http.GET(`${Pages.deskThread.path}/{id:[0-9]+}`)
   async ["desk-thread"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.deskThread);
