@@ -126,7 +126,7 @@ export class SupportMessage extends TimestampMixin(Model) {
     readonly authorName?: string | null;
     /** Client-generated, unique per message — the offline outbox's guard. */
     readonly clientId?: string | null;
-    readonly kind?: "crisis" | "handover" | null;
+    readonly kind?: "crisis" | "crisis-quiet" | "handover" | null;
   }): Promise<SupportMessage> {
     return await SupportMessage.query().insertAndFetch({
       ticketId,

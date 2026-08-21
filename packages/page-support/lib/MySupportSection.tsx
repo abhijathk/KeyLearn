@@ -1333,15 +1333,19 @@ function Thread({
 
                 {m.kind === "crisis" ? (
                   /* Never a bubble. Nothing about the emergency redirect
-                     should read as the assistant chatting. */
+                     should read as the assistant chatting. The redirect
+                     arrives as a few paced chunks; the alert header opens
+                     the run once rather than repeating on every chunk. */
                   <div className={styles.crisis} role="alert">
-                    <span className={styles.crisisHead}>
-                      <Icon name="alert" size={16} />
-                      <FormattedMessage
-                        id="support.my.crisisHead"
-                        defaultMessage="This sounds like an emergency"
-                      />
-                    </span>
+                    {thread.messages[i - 1]?.kind !== "crisis" && (
+                      <span className={styles.crisisHead}>
+                        <Icon name="alert" size={16} />
+                        <FormattedMessage
+                          id="support.my.crisisHead"
+                          defaultMessage="This sounds like an emergency"
+                        />
+                      </span>
+                    )}
                     <CrisisBody text={m.body} />
                   </div>
                 ) : m.sender === "system" || m.kind === "handover" ? (
@@ -1744,9 +1748,27 @@ function CrisisBody({ text }: { readonly text: string }): ReactNode {
         <p key={i}>
           {para.split("**").map((part, j) =>
             // Odd indices are what the script marked: the number to dial.
+            // Rendered digit-by-digit in individual boxes (owner
+            // directive) — aria carries the whole number so assistive
+            // tech reads "000", not "zero. zero. zero." as three items.
             j % 2 === 1 ? (
-              <span key={j} className={styles.dialNumber}>
-                {part}
+              <span
+                key={j}
+                className={styles.dialNumber}
+                aria-label={part.trim()}
+              >
+                {part
+                  .trim()
+                  .split("")
+                  .map((ch, k) => (
+                    <span
+                      key={k}
+                      className={styles.dialDigit}
+                      aria-hidden={true}
+                    >
+                      {ch}
+                    </span>
+                  ))}
               </span>
             ) : (
               part

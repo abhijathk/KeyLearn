@@ -81,23 +81,64 @@ async function post(
  * rather than a chat bubble — nothing about this should look like the
  * assistant making conversation.
  */
+/** Seconds between crisis chunks — read-then-act pacing, not typing theater. */
+const CRISIS_CHUNK_GAP_MS = 3_000;
+
 async function landCrisisReply(
   ticketId: number,
   result: unknown,
 ): Promise<void> {
-  const reply = (result as { crisisReply?: string | null } | null)?.crisisReply;
-  if (reply == null || reply === "") {
+  const payload = result as {
+    crisisReply?: string | null;
+    crisisChunks?: readonly string[] | null;
+    crisisQuiet?: boolean;
+  } | null;
+  // Chunked delivery (owner directive): the FIRST chunk carries the
+  // number and lands immediately — nothing else has to be read to act.
+  // The remaining chunks arrive a few seconds apart while the person
+  // dials: steadying words, what the operator will do, the honest AI
+  // disclaimers. A desk old enough to send only the single block still
+  // works — it lands whole.
+  const chunks =
+    payload?.crisisChunks != null && payload.crisisChunks.length > 0
+      ? payload.crisisChunks
+      : payload?.crisisReply != null && payload.crisisReply !== ""
+        ? [payload.crisisReply]
+        : [];
+  if (chunks.length === 0) {
     return;
   }
+  // Covert danger renders as an ORDINARY bubble on the customer's screen —
+  // "crisis-quiet" is stored for the record, and the thread UI deliberately
+  // has no special styling for it: to anyone glancing at the screen this
+  // is a support chat about nothing in particular.
+  const kind = payload?.crisisQuiet === true ? "crisis-quiet" : "crisis";
   try {
     await SupportMessage.create({
       ticketId,
       sender: "agent",
-      kind: "crisis",
-      body: reply,
+      kind,
+      body: chunks[0]!,
     });
   } catch (err) {
     console.error("qdesk-forward: could not record the crisis reply", err);
+    return;
+  }
+  // The rest are best-effort and paced. Deliberately NOT awaited — the
+  // customer's own request must not wait nine seconds for follow-up
+  // paragraphs, and a failure here can never claw back chunk one.
+  for (let i = 1; i < chunks.length; i++) {
+    const body = chunks[i]!;
+    setTimeout(() => {
+      void SupportMessage.create({
+        ticketId,
+        sender: "agent",
+        kind,
+        body,
+      }).catch((err) =>
+        console.error("qdesk-forward: crisis chunk failed", err),
+      );
+    }, i * CRISIS_CHUNK_GAP_MS);
   }
 }
 
@@ -111,6 +152,10 @@ export function forwardTicketToQdesk(ticket: {
   readonly userId: number | null;
   /** The row the opening message was written to, for its second tick. */
   readonly messageId?: number | null;
+  /** ISO 3166-1 alpha-2 from the edge (cf-ipcountry) — network truth, not a preference. */
+  readonly country?: string | null;
+  /** The browser's own IANA zone. */
+  readonly timeZone?: string | null;
 }): void {
   const cfg = config();
   void attachmentsFor(ticket.messageId)
@@ -130,6 +175,8 @@ export function forwardTicketToQdesk(ticket: {
           subject: ticket.subject,
           message: ticket.message,
           keylearnUserId: ticket.userId,
+          country: ticket.country ?? null,
+          timeZone: ticket.timeZone ?? null,
         },
         cfg,
       ),

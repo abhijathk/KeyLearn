@@ -53,6 +53,14 @@ const TNewTicket = z.object({
   message: z.string().trim().min(1).max(2000),
   /** Uploaded before send; bound to the first message once it exists. */
   attachmentIds: z.array(z.number().int().positive()).max(10).optional(),
+  /**
+   * The browser's own IANA zone (Intl.DateTimeFormat().resolvedOptions().
+   * timeZone) — exact where a country code is only a guess, and the thing
+   * that lets the desk say "it's 9pm for them" rather than working it out
+   * from an IP. Paired with the network country below, which the customer
+   * cannot spoof by changing an OS setting.
+   */
+  timeZone: z.string().trim().max(64).nullable().optional(),
 });
 type TNewTicket = z.infer<typeof TNewTicket>;
 const PNewTicket = zod(TNewTicket);
@@ -413,6 +421,14 @@ export class MyTicketsController {
       message: ticket.message!,
       userId: user.id!,
       messageId: first.id!,
+      // Two independent facts, deliberately: the country comes from the
+      // network (Cloudflare's edge, not something a customer can set),
+      // and the zone from the browser. Together they answer "where are
+      // they and what time is it there" — which the crisis script needs
+      // for the right emergency number and the assistant uses to greet
+      // and time-phrase like a local.
+      country: ctx.request.headers.get("cf-ipcountry"),
+      timeZone: input.timeZone ?? null,
     });
 
     ctx.response.body = { id: ticket.id, reference: reference(ticket.id!) };
