@@ -1,0 +1,158 @@
+/**
+ * Rich reply chrome — the keycaps, the rail, the steps.
+ *
+ * Drawn entirely from the theme's own tokens, so the accent follows
+ * whatever the learner has chosen and both light and dark themes are
+ * covered without a second set of rules. Nothing here hard-codes a colour.
+ *
+ * The keycap is the one deliberate piece of skeuomorphism in the app, and
+ * it earns it: this is a typing tutor, the on-screen keyboard already
+ * draws keys exactly this way, and a customer hunting for a screen
+ * recognises the shape before they read the word.
+ */
+
+.para {
+  margin: 0;
+
+  & + & {
+    margin-block-start: 0.6rem;
+  }
+}
+
+/* ── The keycap ───────────────────────────────────────────────────── */
+
+.cap {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.4rem 0.2rem;
+  border: 1px solid var(--separator-color, rgb(0 0 0 / 12%));
+  /* The seated bottom edge — what makes it read as pressable rather than
+     as a tinted rectangle. */
+  border-block-end-width: 2px;
+  border-radius: 0.45rem;
+  color: var(--secondary);
+  background-color: var(--primary-l2);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
+  font-size: 0.9em;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* One accent per rail. If every cap is tinted the destination stops being
+   findable and the rail is just texture. */
+.capDest {
+  border-color: transparent;
+  color: var(--accent-ink);
+  background-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── The path rail ────────────────────────────────────────────────── */
+
+.rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  align-items: center;
+  margin-block: 0.55rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 0.7rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.railItem {
+  display: inline-flex;
+  gap: 0.15rem;
+  align-items: center;
+}
+
+.arrow {
+  flex: none;
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  margin-inline: 0.2rem;
+  color: var(--accent);
+  opacity: 0.85;
+}
+
+/* ── The step rail ────────────────────────────────────────────────── */
+/*
+   Numbered because these ARE ordered actions — losing your place between
+   two of them is the failure the numbering prevents. Never used for a
+   list that merely has several items.
+*/
+
+.steps {
+  display: grid;
+  gap: 0.55rem;
+  list-style: none;
+  margin-block: 0.6rem;
+  padding: 0;
+  padding-inline-start: 1.75rem;
+  counter-reset: step;
+}
+
+.step {
+  display: grid;
+  position: relative;
+  gap: 0.05rem;
+  counter-increment: step;
+
+  &::before {
+    content: counter(step);
+    display: grid;
+    position: absolute;
+    inset-inline-start: -1.75rem;
+    inset-block-start: 0.05rem;
+    place-items: center;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    border-radius: 50%;
+    color: var(--accent-ink);
+    background-color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The connector, drawn between one marker and the next. */
+  &:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: -1.13rem;
+    inset-block-start: 1.4rem;
+    inline-size: 1px;
+    block-size: calc(100% - 1.15rem);
+    background-color: color-mix(in oklab, var(--accent) 35%, transparent);
+  }
+}
+
+.stepWhere {
+  font-weight: 600;
+}
+
+.stepHint {
+  color: color-mix(in oklab, var(--secondary) 65%, transparent);
+  font-size: 0.9em;
+}
+
+/* ── The inline crumb ─────────────────────────────────────────────── */
+/*
+   For a path mentioned mid-sentence, where a full rail would be a speed
+   bump. Same vocabulary, one line, no elevation.
+*/
+
+.crumb {
+  display: inline;
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.35rem;
+  background-color: color-mix(in oklab, var(--accent) 14%, transparent);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.crumbSep {
+  margin-inline: 0.25rem;
+  color: var(--accent);
+  opacity: 0.7;
+}
