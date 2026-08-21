@@ -149,6 +149,16 @@ export function checkProductionConfig(
     }
   }
 
+  // Admin is env-only by design — no DB row can grant it — which means a
+  // deployment that forgets this variable has no admin at all: nobody can
+  // manage staff or unlock Tab & automation, and nothing else will say why.
+  if (Env.getString("ADMIN_EMAILS", "").trim() === "") {
+    warnings.push(
+      "ADMIN_EMAILS is not set, so no account is an admin — staff cannot " +
+        "be managed and the desk's locked settings cannot be unlocked.",
+    );
+  }
+
   // A business enquiry is forwarded to this address and nowhere else.
   // Unset, the forward is skipped silently — so a partnership or
   // licensing approach lands in the queue and nobody is told, which is

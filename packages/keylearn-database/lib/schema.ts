@@ -1,7 +1,9 @@
+import { envStaffEmails } from "@keylearn/config";
 import { type Knex } from "knex";
 import { AccountDeletionRequest } from "./account-deletion-request.ts";
 import { AgentStatus } from "./agent-status.ts";
 import { Answer, AnswerRule } from "./answer.ts";
+import { DeskUnlock } from "./desk-unlock.ts";
 import {
   Certificate,
   CertificateSitting,
@@ -20,6 +22,7 @@ import { ProfileData } from "./profile-data.ts";
 import { SavedReply } from "./saved-reply.ts";
 import { SecurityEvent } from "./security-event.ts";
 import { SecurityReset } from "./security-reset.ts";
+import { Staff } from "./staff.ts";
 import { StaffAuditEvent } from "./staff-audit-event.ts";
 import { StaffSettings } from "./staff-settings.ts";
 import { SupportAttachment } from "./support-attachment.ts";
@@ -30,19 +33,22 @@ import { SupportPinProof } from "./support-pin-proof.ts";
 import { SupportTicket } from "./support-ticket.ts";
 
 export async function createSchema(knex: Knex): Promise<void> {
+  /** Returns whether the table was created by this call, not whether it exists. */
   const createTable = async ({
     tableName,
     createTable,
   }: {
     tableName: string;
     createTable: (knex: Knex, table: Knex.CreateTableBuilder) => void;
-  }) => {
+  }): Promise<boolean> => {
     const { schema } = knex;
     if (!(await schema.hasTable(tableName))) {
       await schema.createTable(tableName, (table) => {
         createTable(knex, table);
       });
+      return true;
     }
+    return false;
   };
 
   await createTable(User);
@@ -76,6 +82,25 @@ export async function createSchema(knex: Knex): Promise<void> {
   await createTable(AgentStatus);
   await createTable(SupportBlock);
   await createTable(AccountDeletionRequest);
+
+  // Who may reach the desk, moved out of the STAFF_EMAILS env var.
+  //
+  // The seed runs on creation only. Doing it whenever the table is empty
+  // would mean an admin who removes every other staff member gets them all
+  // back at the next restart — a silent re-grant of access that was
+  // deliberately revoked, which is a security bug rather than a nicety.
+  if (await createTable(Staff)) {
+    const seeded = await Staff.seed(envStaffEmails());
+    if (seeded > 0) {
+      console.log(`staff: seeded ${seeded} address(es) from STAFF_EMAILS`);
+    }
+  }
+  await createTable(DeskUnlock);
+  // Gives a fresh deployment a working failsafe before anyone has signed in
+  // to set one. A no-op once a passcode exists — see DeskUnlock.bootstrap.
+  if (await DeskUnlock.bootstrap(process.env["ADMIN_UNLOCK_PASSCODE"] ?? "")) {
+    console.log("desk-unlock: passcode taken from ADMIN_UNLOCK_PASSCODE");
+  }
 
   // Additive column migrations for databases created before the column
   // existed — createTable above only runs when the table is missing.

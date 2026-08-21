@@ -1,6 +1,7 @@
 export * from "./account-deletion-request.ts";
 export * from "./agent-status.ts";
 export * from "./answer.ts";
+export * from "./desk-unlock.ts";
 export * from "./model.ts";
 export * from "./notice.ts";
 export * from "./notification.ts";
@@ -10,6 +11,7 @@ export * from "./saved-reply.ts";
 export * from "./schema.ts";
 export * from "./security-event.ts";
 export * from "./security-reset.ts";
+export * from "./staff.ts";
 export * from "./staff-audit-event.ts";
 export * from "./staff-settings.ts";
 export * from "./support-attachment.ts";

@@ -6,6 +6,7 @@ import { ConfigModule, Env } from "@keylearn/config";
 import { Logger } from "@keylearn/logger";
 import { Game } from "@keylearn/multiplayer-server";
 import { serveRateLimits } from "./app/auth/ratelimit.ts";
+import { startStaffCache } from "./app/auth/staff-cache.ts";
 import { checkProductionConfig } from "./app/config-check.ts";
 import { ApplicationModule, kGame, kMain } from "./app/index.ts";
 import { ReminderSweep } from "./app/mail/index.ts";
@@ -76,6 +77,10 @@ if (cluster.isPrimary) {
 } else {
   const container = makeContainer();
   const service = container.get(Service);
+  // Per worker, not in the primary: the staff roster is cached in this
+  // process's memory so `isStaffEmail` can stay synchronous, and it is this
+  // process that answers requests with it. See staff-cache.ts.
+  startStaffCache();
   switch (process.argv[2]) {
     case "http":
       process.title = "keylearn server worker process";

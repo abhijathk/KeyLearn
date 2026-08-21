@@ -32,6 +32,11 @@ export type StaffAuditAction =
   | "notice-updated"
   | "notice-deleted"
   | "settings-changed"
+  // The desk pushed its roster; the synced replica changed.
+  | "staff-roster-synced"
+  // The desk's Tab & automation gate — every unlock and every failure.
+  | "desk-unlock"
+  | "desk-unlock-failed"
   | "automation-toggled"
   // The automation agent's own actions — see `requireSupportAgent` — kept
   // in a distinct, obviously-agent-prefixed namespace so the audit log

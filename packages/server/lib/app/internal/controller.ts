@@ -10,14 +10,16 @@ import { Context } from "@fastr/core";
 import { ApplicationError, NotFoundError } from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
-import { DataDir, Env, listStaffEmails } from "@keylearn/config";
+import { DataDir, Env, isAdminEmail, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
+  checkUnlockPasscode,
   Credential,
   maskEmail,
   PracticeSession,
   Profile,
   SecurityEvent,
+  Staff,
   StaffAuditEvent,
   StaffSettings,
   SupportAttachment,
@@ -34,6 +36,7 @@ import { z } from "zod";
 import { messageAccountDeletionRequested } from "../auth/email.ts";
 import { clientIp, rateLimit } from "../auth/ratelimit.ts";
 import { staffAccessStatus } from "../auth/staff-access.ts";
+import { refreshStaffCache } from "../auth/staff-cache.ts";
 import { resolveTotpSecret } from "../auth/totp-crypto.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
@@ -46,6 +49,21 @@ const TStaffAuthVerify = z.object({
   totp: z.string().trim().min(1).optional(),
 });
 type TStaffAuthVerify = z.infer<typeof TStaffAuthVerify>;
+const TDeskUnlockCheck = z.object({
+  passcode: z.string().trim().min(1).max(64),
+  /** Who is trying — for the audit line, not for authorisation. */
+  staffEmail: z.string().trim().min(3).max(320),
+});
+type TDeskUnlockCheck = z.infer<typeof TDeskUnlockCheck>;
+const PDeskUnlockCheck = zod(TDeskUnlockCheck);
+
+const TStaffRosterSync = z.object({
+  /** The complete active roster — replaces, never appends. */
+  emails: z.array(z.string().trim().min(3).max(320)).max(200),
+});
+type TStaffRosterSync = z.infer<typeof TStaffRosterSync>;
+const PStaffRosterSync = zod(TStaffRosterSync);
+
 const PStaffAuthVerify = zod(TStaffAuthVerify);
 
 const TStaffAuthPasskeyVerify = z.object({
@@ -167,6 +185,9 @@ export class Controller {
       userId: user.id,
       name: user.name,
       email: user.email,
+      // Env-only, never a DB row — see adminEmails() for why that
+      // invariant is what makes the desk-managed roster safe at all.
+      admin: isAdminEmail(user.email),
     };
   }
 
@@ -275,6 +296,7 @@ export class Controller {
       userId: user!.id,
       name: user!.name,
       email: user!.email,
+      admin: isAdminEmail(user!.email),
     };
   }
 
@@ -542,6 +564,95 @@ export class Controller {
       }),
     );
     ctx.response.body = roster;
+  }
+
+  /**
+   * The desk pushing its roster here — QDesk owns "who is staff" now, and
+   * this app keeps a synced replica that `isStaffEmail`'s per-worker cache
+   * reads (see staff-cache.ts).
+   *
+   * A full-list replace rather than add/remove deltas, deliberately: it is
+   * idempotent, self-healing after a missed push, and there is no ordering
+   * to get wrong. Reconciliation is add-what's-missing, soft-remove
+   * what's-absent — never a DELETE, because the audit trail refers to
+   * people by rows that must keep resolving after they've gone.
+   *
+   * Admins are unaffected by construction: they come from ADMIN_EMAILS and
+   * are staff whether or not any row says so, so a push can neither grant
+   * nor revoke admin. That invariant is what makes a desk-managed roster
+   * acceptable at all.
+   */
+  @http.PUT("/_/internal/staff-roster")
+  async syncStaffRoster(
+    ctx: Context<RouterState & AuthState>,
+    @body.json(PStaffRosterSync) input: TStaffRosterSync,
+  ) {
+    ctx.state.requireOpsApi();
+    const wanted = new Set(
+      input.emails
+        .map((email) => email.trim().toLowerCase())
+        .filter((e) => e !== ""),
+    );
+    const current = new Set(await Staff.activeEmails());
+    let added = 0;
+    let removed = 0;
+    for (const email of wanted) {
+      if (!current.has(email)) {
+        await Staff.add(email, null);
+        added++;
+      }
+    }
+    for (const email of current) {
+      if (!wanted.has(email)) {
+        await Staff.remove(email);
+        removed++;
+      }
+    }
+    if (added > 0 || removed > 0) {
+      void StaffAuditEvent.record({
+        action: "staff-roster-synced",
+        detail: `desk push: ${added} added, ${removed} removed, ${wanted.size} active`,
+      });
+      // The per-worker caches refresh on their own timer; this refresh
+      // makes THIS worker answer correctly straight away, so the desk
+      // can read back what it just wrote without racing the interval.
+      await refreshStaffCache();
+    }
+    ctx.response.body = { added, removed, active: [...wanted] };
+  }
+
+  /**
+   * The failsafe passcode behind the desk's Tab & automation unlock.
+   *
+   * The hash and the failure counter live HERE (DeskUnlock, one row,
+   * scrypt) rather than in the desk, so a leaked desk database contains
+   * nothing that opens the gate, and the lockout counter is shared however
+   * many desks or workers ask. The desk's passkey path never touches this
+   * — a passkey is not guessable, so it gets no counter and cannot be
+   * locked out (which also means a flood of wrong passcodes can never
+   * deny the admin their passkey).
+   */
+  @http.POST("/_/internal/desk-unlock/check")
+  async checkDeskUnlock(
+    ctx: Context<RouterState & AuthState>,
+    @body.json(PDeskUnlockCheck) input: TDeskUnlockCheck,
+  ) {
+    ctx.state.requireOpsApi();
+    const result = await checkUnlockPasscode(input.passcode, clientIp(ctx));
+    void StaffAuditEvent.record({
+      action: result.ok ? "desk-unlock" : "desk-unlock-failed",
+      detail: result.ok
+        ? `by ${input.staffEmail}`
+        : `${input.staffEmail}: ${result.reason}`,
+      ip: clientIp(ctx),
+    });
+    ctx.response.body = result.ok
+      ? { ok: true }
+      : result.reason === "locked"
+        ? { ok: false, reason: "locked", until: result.until.toISOString() }
+        : result.reason === "wrong"
+          ? { ok: false, reason: "wrong", remaining: result.remaining }
+          : { ok: false, reason: "no-passcode" };
   }
 
   /** Same masked scope the desk's own Accounts page has always shown. */
