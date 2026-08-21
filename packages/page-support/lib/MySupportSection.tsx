@@ -97,6 +97,15 @@ function storeOutbox(ticketId: number, messages: readonly Outgoing[]): void {
 
 /** How often an open conversation asks whether anything has arrived. */
 const POLL_MS = 20_000;
+
+/**
+ * How often the desk is told somebody is writing.
+ *
+ * Comfortably shorter than the desk's own presence TTL, so a person
+ * typing continuously never appears to stop — and long enough that a
+ * fast typist is not a stream of requests.
+ */
+const TYPING_PING_MS = 4_000;
 /** How long the "someone is answering" dots may run before giving up. */
 /**
  * The subject's ceiling, matched to the server's own column so a title
@@ -905,6 +914,15 @@ function Thread({
   const { formatMessage } = intl;
   const [thread, setThread] = useState<SupportService.MyThread | null>(null);
   const [reply, setReply] = useState("");
+  /**
+   * The last time the desk was told this person is writing.
+   *
+   * Throttled to one ping every few seconds rather than one per
+   * keystroke: the desk's own presence entry lives for a while anyway,
+   * so a ping per character would be a hundred requests to say the same
+   * thing once.
+   */
+  const typingSentAt = useRef(0);
   const [outbox, setOutbox] = useState<readonly Outgoing[]>(() =>
     loadOutbox(id),
   );
@@ -1550,7 +1568,14 @@ function Thread({
         ) : (
           <Composer
             value={reply}
-            onChange={setReply}
+            onChange={(next) => {
+              setReply(next);
+              const now = Date.now();
+              if (next !== "" && now - typingSentAt.current > TYPING_PING_MS) {
+                typingSentAt.current = now;
+                SupportService.typing(id);
+              }
+            }}
             focusSignal={focusReply}
             pending={thread.pending}
             uploading={uploading}

@@ -28,6 +28,7 @@ import {
   forwardCsatToQdesk,
   forwardReplyToQdesk,
   forwardTicketToQdesk,
+  tellDeskCustomerTyping,
 } from "./qdesk-forward.ts";
 
 /**
@@ -415,6 +416,26 @@ export class MyTicketsController {
     });
 
     ctx.response.body = { id: ticket.id, reference: reference(ticket.id!) };
+  }
+
+  /**
+   * "I am writing." Sent while the customer types, so the desk can show
+   * it — the mirror of the indicator they see when staff are typing.
+   *
+   * Rate-limited like everything else on this controller: it is a bare
+   * ping, but it is still a request somebody's keyboard can generate.
+   */
+  @http.POST("/_/support/my/tickets/{id}/typing")
+  async typingMine(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id", pId) id: number,
+  ) {
+    rateLimit(ctx, "support-typing", 120, 60_000);
+    const user = ctx.state.requireUser();
+    await this.#mine(ctx, id);
+    void user;
+    tellDeskCustomerTyping(id);
+    ctx.response.body = { ok: true };
   }
 
   @http.POST("/_/support/my/tickets/{id}/reply")

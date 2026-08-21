@@ -265,6 +265,30 @@ export async function deskIsTyping(ticketId: number): Promise<boolean> {
   }
 }
 
+/**
+ * "The customer is writing", passed to the desk.
+ *
+ * Fire-and-forget and deliberately thin: it says somebody was typing a
+ * moment ago and nothing about what. A failure is silence, which is the
+ * correct behaviour for an indicator — a missing one costs nothing, a
+ * wrong one is a claim.
+ */
+export function tellDeskCustomerTyping(ticketId: number): void {
+  const cfg = config();
+  if (cfg == null) {
+    return;
+  }
+  void fetch(new URL(`/_/apps/tickets/${ticketId}/typing`, cfg.url), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-qdesk-app-key": cfg.key,
+    },
+    body: "{}",
+    signal: AbortSignal.timeout(3000),
+  }).catch(() => {});
+}
+
 /** One published help article, as the desk publishes it. */
 export type HelpArticle = {
   readonly id: number;

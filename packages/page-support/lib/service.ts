@@ -329,6 +329,20 @@ export namespace SupportService {
       .send();
   }
 
+  /**
+   * "I am writing", so the desk can show it.
+   *
+   * Deliberately fire-and-forget: an indicator that failed to send is a
+   * missing indicator, which costs nothing. Errors are swallowed rather
+   * than surfaced — there is nothing a person could do about one.
+   */
+  export function typing(id: number): void {
+    void request
+      .POST(`/_/support/my/tickets/${id}/typing`)
+      .send()
+      .catch(() => {});
+  }
+
   /** "Not really" — reopen it and keep the conversation going. */
   export async function notSorted(id: number): Promise<void> {
     await request
