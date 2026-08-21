@@ -36,9 +36,6 @@ export function applyFavIcon(): void {
   // The desk's favicon is its own fixed headset mark in its own fixed
   // amber, not the learner's chosen accent — leave the static SVG
   // `favicon-desk.svg` (already the right colour) alone.
-  if (window.location.pathname.startsWith("/desk")) {
-    return;
-  }
   const link = document.querySelector<HTMLLinkElement>(
     'link[rel~="icon"][type="image/svg+xml"]',
   );

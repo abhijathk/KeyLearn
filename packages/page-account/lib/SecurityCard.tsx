@@ -10,6 +10,7 @@ import { ActivityLog } from "./ActivityLog.tsx";
 import { PasswordField } from "./AuthPage.tsx";
 import { ParentPinCard } from "./ParentPinCard.tsx";
 import { PasswordStrength } from "./PasswordStrength.tsx";
+import { SecurityResetDialog } from "./SecurityResetDialog.tsx";
 import { AccountService, type Passkey } from "./service.ts";
 import { TwoFactorCard } from "./TwoFactorCard.tsx";
 
@@ -101,6 +102,8 @@ export function SecurityCard({
   // ── Email (changed in a small two-step dialog) ──
   const [emOpen, setEmOpen] = useState(false);
   const [emDone, setEmDone] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
 
   return (
     <>
@@ -308,6 +311,33 @@ export function SecurityCard({
       <TwoFactorCard user={user} onChanged={onChanged} />
 
       <ParentPinCard user={user} onChanged={onChanged} />
+
+      {/* The second way in to the reset. The other is on the PIN screen,
+          which an account with no PIN never sees — so without this, losing
+          an authenticator on a household that never set a PIN left no way
+          back at all. Quiet, and at the foot of the things it undoes. */}
+      <p className={styles.secReset}>
+        <button type="button" onClick={() => setResetOpen(true)}>
+          <FormattedMessage
+            id="sec.reset.entry"
+            defaultMessage="Lost your phone, PIN or recovery codes?"
+          />
+        </button>
+      </p>
+
+      {resetOpen && (
+        <SecurityResetDialog
+          onClose={() => {
+            setResetOpen(false);
+            // Several parts of the account move at once, so the whole page
+            // is re-read rather than one card guessing at the new state.
+            if (resetDone) {
+              window.location.reload();
+            }
+          }}
+          onDone={() => setResetDone(true)}
+        />
+      )}
 
       {/* Take a copy of everything held about the household. */}
       <div className={styles.prefCard}>

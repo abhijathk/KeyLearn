@@ -1,6 +1,6 @@
 import { type UserDetails } from "@keylearn/pages-shared";
-import { TextField } from "@keylearn/widget";
-import { type ReactNode, useState } from "react";
+import { FloatingShell, PinField } from "@keylearn/widget";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { PasswordField } from "./AuthPage.tsx";
@@ -20,7 +20,97 @@ export function ParentPinCard({
   readonly user: UserDetails;
   readonly onChanged: () => void;
 }): ReactNode {
+  const { formatMessage: fm } = useIntl();
+  const [open, setOpen] = useState(false);
+  const card = useRef<HTMLDivElement | null>(null);
+
+  // Support sends people here when they have no PIN yet. Landing on the
+  // Security pane is only half the journey — the card is below the fold,
+  // and "set one up in Security" with nothing visibly about a PIN is a
+  // dead end.
+  useEffect(() => {
+    if (window.sessionStorage.getItem(SCROLL_TO_PIN) == null) {
+      return;
+    }
+    window.sessionStorage.removeItem(SCROLL_TO_PIN);
+    card.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    setOpen(true);
+  }, []);
+
+  return (
+    <div className={styles.prefCard} ref={card}>
+      <div className={styles.prefSect}>
+        <FormattedMessage id="sec.pin.title" defaultMessage="Grown-up PIN" />
+      </div>
+      {/* One row, note left and action right — the same shape the password
+          and email cards use, so the column of them lines up. */}
+      <div className={styles.miniRow}>
+        <p className={styles.note}>
+          {user.parentPinSet ? (
+            <FormattedMessage
+              id="sec.pin.isSet"
+              defaultMessage="A {n}-digit PIN is set."
+              values={{ n: user.parentPinLength ?? 4 }}
+            />
+          ) : (
+            <FormattedMessage
+              id="sec.pin.notSet"
+              defaultMessage="No PIN is set."
+            />
+          )}
+        </p>
+        <button
+          type="button"
+          className={styles.secBtn}
+          onClick={() => setOpen(true)}
+        >
+          {user.parentPinSet ? (
+            <FormattedMessage
+              id="sec.pin.manage"
+              defaultMessage="Change or remove"
+            />
+          ) : (
+            <FormattedMessage id="sec.pin.setCard" defaultMessage="Set a PIN" />
+          )}
+        </button>
+      </div>
+
+      {open && (
+        <FloatingShell
+          title={fm({ id: "sec.pin.title", defaultMessage: "Grown-up PIN" })}
+          onClose={() => setOpen(false)}
+        >
+          <PinWindow
+            user={user}
+            onChanged={onChanged}
+            onDone={() => setOpen(false)}
+          />
+        </FloatingShell>
+      )}
+    </div>
+  );
+}
+
+/** Where support sends somebody who has to make a PIN before writing in. */
+export const SCROLL_TO_PIN = "keylearn.security.scrollToPin";
+
+function PinWindow({
+  user,
+  onChanged,
+  onDone,
+}: {
+  readonly user: UserDetails;
+  readonly onChanged: () => void;
+  readonly onDone: () => void;
+}): ReactNode {
   const { formatMessage } = useIntl();
+  /**
+   * How long the new PIN will be. Chosen up front rather than inferred
+   * from typing, because the boxes have to exist before there is anything
+   * to count — and because deciding "four or six" is a different thought
+   * from choosing the digits.
+   */
+  const [size, setSize] = useState(user.parentPinLength ?? 4);
   const [pin, setPin] = useState("");
   const [confirm, setConfirm] = useState("");
   const [currentPin, setCurrentPin] = useState("");
@@ -30,7 +120,7 @@ export function ParentPinCard({
   const [done, setDone] = useState(false);
 
   const mismatch = confirm !== "" && pin !== confirm;
-  const valid = /^\d{4,8}$/.test(pin) && pin === confirm;
+  const valid = pin.length === size && pin === confirm;
 
   const save = async (next: string | null) => {
     setErr(null);
@@ -50,6 +140,7 @@ export function ParentPinCard({
       setPassword("");
       setDone(true);
       onChanged();
+      onDone();
     } catch (e: any) {
       setErr(e?.body?.error?.message ?? "Could not save the PIN.");
     } finally {
@@ -58,92 +149,115 @@ export function ParentPinCard({
   };
 
   return (
-    <div className={styles.prefCard}>
-      <div className={styles.prefSect}>
-        <FormattedMessage id="sec.pin.title" defaultMessage="Grown-up PIN" />
-      </div>
-      <p className={styles.prefHint}>
-        <FormattedMessage
-          id="sec.pin.intro"
-          defaultMessage="Ask for a PIN before anyone can add, change or delete a learner profile. Useful on a device the children also use."
-        />
-      </p>
-
+    <div className={styles.pinWindow}>
       {user.parentPinSet && (
-        <>
-          <p className={styles.note}>
+        <p className={styles.note}>
+          {user.hasPassword ? (
             <FormattedMessage
-              id="sec.pin.set"
-              defaultMessage="A grown-up PIN is set."
+              id="sec.pin.setBoth"
+              defaultMessage="A PIN is set. Confirm with it, or your password, to change or remove it."
             />
-          </p>
-          <p className={styles.prefHint}>
-            {user.hasPassword ? (
-              <FormattedMessage
-                id="sec.pin.confirmWithBoth"
-                defaultMessage="To change or remove it, confirm with the current PIN or your password."
-              />
-            ) : (
-              <FormattedMessage
-                id="sec.pin.confirmWithPin"
-                defaultMessage="To change or remove it, confirm with the current PIN."
-              />
-            )}
-          </p>
-          <TextField
-            size="full"
-            type="password"
-            placeholder={formatMessage({
-              id: "sec.pin.current",
-              defaultMessage: "Current PIN",
-            })}
-            value={currentPin}
-            onChange={setCurrentPin}
-          />
-          {user.hasPassword && (
-            <PasswordField
-              placeholder={formatMessage({
-                id: "sec.pin.orPassword",
-                defaultMessage: "…or your password",
-              })}
-              value={password}
-              autoComplete="current-password"
-              onChange={setPassword}
+          ) : (
+            <FormattedMessage
+              id="sec.pin.setPinOnly"
+              defaultMessage="A PIN is set. Confirm with it to change or remove it."
             />
           )}
-        </>
+        </p>
       )}
 
-      <TextField
-        size="full"
-        type="password"
-        placeholder={
-          user.parentPinSet
-            ? formatMessage({
-                id: "sec.pin.new",
-                defaultMessage: "New PIN (4-8 digits)",
-              })
-            : formatMessage({
-                id: "sec.pin.fresh",
-                defaultMessage: "PIN (4-8 digits)",
-              })
-        }
-        value={pin}
-        onChange={(v) => {
-          setPin(v.replace(/\D/g, "").slice(0, 8));
-          setDone(false);
-        }}
-      />
-      <TextField
-        size="full"
-        type="password"
-        placeholder={formatMessage({
-          id: "sec.pin.repeat",
-          defaultMessage: "Repeat the PIN",
-        })}
-        value={confirm}
-        onChange={(v) => setConfirm(v.replace(/\D/g, "").slice(0, 8))}
-      />
+      {/* Label and control on one line each. Stacked captions turned four
+          fields into eleven rows of mostly empty card. */}
+      <div className={styles.pinRows}>
+        {user.parentPinSet && (
+          <>
+            <span className={styles.pinLabel}>
+              <FormattedMessage
+                id="sec.pin.current"
+                defaultMessage="Current PIN"
+              />
+            </span>
+            <PinField
+              value={currentPin}
+              length={user.parentPinLength}
+              onChange={setCurrentPin}
+              autoFocus={false}
+            />
+
+            {user.hasPassword && (
+              <>
+                <span className={styles.pinLabel}>
+                  <FormattedMessage
+                    id="sec.pin.orPassword"
+                    defaultMessage="…or your password"
+                  />
+                </span>
+                <PasswordField
+                  placeholder=""
+                  value={password}
+                  autoComplete="current-password"
+                  onChange={setPassword}
+                />
+              </>
+            )}
+          </>
+        )}
+
+        <span className={styles.pinLabel}>
+          <FormattedMessage id="sec.pin.howLong" defaultMessage="Digits" />
+        </span>
+        <div className={styles.pinSizes}>
+          {[4, 5, 6].map((n) => (
+            <button
+              key={n}
+              type="button"
+              className={n === size ? styles.pinSizeOn : styles.pinSize}
+              aria-pressed={n === size}
+              onClick={() => {
+                setSize(n);
+                // The boxes change shape underneath; anything half-typed
+                // into the old ones is not the PIN they mean.
+                setPin("");
+                setConfirm("");
+                setDone(false);
+              }}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+
+        <span className={styles.pinLabel}>
+          {user.parentPinSet ? (
+            <FormattedMessage id="sec.pin.new" defaultMessage="New PIN" />
+          ) : (
+            <FormattedMessage
+              id="sec.pin.fresh"
+              defaultMessage="Choose a PIN"
+            />
+          )}
+        </span>
+        <PinField
+          value={pin}
+          length={size}
+          autoFocus={false}
+          onChange={(v) => {
+            setPin(v);
+            setDone(false);
+          }}
+        />
+
+        <span className={styles.pinLabel}>
+          <FormattedMessage id="sec.pin.repeat" defaultMessage="Repeat it" />
+        </span>
+        <PinField
+          value={confirm}
+          length={size}
+          autoFocus={false}
+          onChange={setConfirm}
+        />
+      </div>
+
       {mismatch && (
         <p className={styles.secErr}>
           <FormattedMessage
@@ -193,9 +307,12 @@ export function ParentPinCard({
  * than on every visit.
  */
 export function ParentPinPrompt({
+  length,
   onPass,
   onCancel,
 }: {
+  /** One box per digit; null falls back to a single free-length field. */
+  readonly length: number | null;
   readonly onPass: () => void;
   readonly onCancel: () => void;
 }): ReactNode {
@@ -231,22 +348,19 @@ export function ParentPinPrompt({
           defaultMessage="Enter the grown-up PIN to manage learner profiles."
         />
       </p>
-      <TextField
-        size="full"
-        type="password"
-        placeholder={formatMessage({
-          id: "sec.pin.plain",
-          defaultMessage: "PIN",
-        })}
+      <PinField
         value={pin}
-        onChange={(v) => setPin(v.replace(/\D/g, "").slice(0, 8))}
+        length={length}
+        onChange={setPin}
+        onComplete={() => void submit()}
+        disabled={busy}
       />
       {err != null && <p className={styles.secErr}>{err}</p>}
       <div className={styles.secActions}>
         <button
           type="button"
           className={styles.secBtn}
-          disabled={busy || pin.length < 4}
+          disabled={busy || pin.length < (length ?? 4)}
           onClick={submit}
         >
           <FormattedMessage id="sec.continue" defaultMessage="Continue" />

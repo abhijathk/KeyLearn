@@ -157,7 +157,7 @@ export function Template({
     // "desk-app" is a plain, un-hashed marker class (not a CSS-module one):
     // accents.less reaches for it via `html:has(.desk-app)` from a different
     // package, which only works if the name survives compilation unhashed.
-    <div className={clsx(styles.body, path.startsWith("/desk") && "desk-app")}>
+    <div className={styles.body}>
       {/*
         First in the document, so a keyboard or screen-reader user can reach
         the lesson without walking the header, the profile menu and the drawer
@@ -176,11 +176,8 @@ export function Template({
         showBack={path !== "/"}
         kids={path === "/kids"}
         practice={path === "/"}
-        desk={path.startsWith("/desk")}
-        hideAccount={path === Pages.deskSignin.path}
       />
-      {/* The live site notice is for the learner-facing app — the desk has its own preview in the notice composer, not the real banner. */}
-      {!path.startsWith("/desk") && <SiteNoticeBanner />}
+      <SiteNoticeBanner />
       <main className={styles.main} id="main" tabIndex={-1}>
         {children}
         <PortalContainer />

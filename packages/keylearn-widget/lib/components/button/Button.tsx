@@ -39,6 +39,9 @@ export function Button({
       className={clsx(
         styles.root,
         iconStyles.altIcon,
+        // Only when there is an icon, so the hundreds of plain buttons
+        // keep the inline-block layout they were built against.
+        icon != null && styles.withIcon,
         disabled && styles.disabled,
         sizeClassName(size),
       )}
@@ -46,7 +49,8 @@ export function Button({
       tabIndex={tabIndex}
       title={title}
     >
-      {icon} {label || children}
+      {icon}
+      {label || children}
     </button>
   );
 }

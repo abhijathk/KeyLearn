@@ -67,6 +67,19 @@ export function rateLimit(
   prune(now);
 }
 
+/**
+ * Forgets every counter. For tests only.
+ *
+ * The buckets are keyed by IP, and every request in a test file comes
+ * from the same one — so a file that exercises a limited endpoint more
+ * times than the limit allows starts failing on the sixth test for
+ * reasons that have nothing to do with what it is testing.
+ */
+export function resetRateLimits(): void {
+  shared.clear();
+  pending.clear();
+}
+
 /** A bucket if its window has not closed, else nothing. */
 function live(bucket: Bucket | undefined, now: number): Bucket | null {
   return bucket != null && now < bucket.resetAt ? bucket : null;

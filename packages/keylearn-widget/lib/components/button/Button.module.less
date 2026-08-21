@@ -27,6 +27,21 @@
   cursor: pointer;
 }
 
+/*
+ * An icon and a label need to be laid out, not merely adjacent.
+ *
+ * `inline-block` plus the literal space between them left the glyph
+ * sitting on the text baseline with a space-width gap that grew and
+ * shrank with the font — so an icon button looked misaligned next to the
+ * same button without one.
+ */
+.withIcon {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: center;
+}
+
 .root:focus-visible {
   color: var(--Button--focused__color);
   background-color: var(--Button--focused__background-color);

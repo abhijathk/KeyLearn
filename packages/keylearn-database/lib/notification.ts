@@ -28,6 +28,15 @@ export class Notification extends TimestampMixin(Model) {
       // a real follow-up feature, not something to fake with a stale or
       // rotating guest thread token just to make this link somewhere.
       body: { type: ["string", "null"], maxLength: 240 },
+      // Who the customer should see this from — a staffer's desk name, or
+      // the assistant's. Stored per notification rather than looked up,
+      // because it is a property of the message that caused it and the
+      // person who wrote it may have changed name since.
+      authorName: { type: ["string", "null"], maxLength: 64 },
+      // Whether the assistant wrote it. Stored rather than guessed from
+      // the name: the promise the thread makes — that the assistant is
+      // never passed off as a person — has to hold on the bell too.
+      fromAssistant: { type: "boolean" },
     },
   } satisfies JSONSchema;
 
@@ -40,6 +49,8 @@ export class Notification extends TimestampMixin(Model) {
     // notification row.
     table.integer("ticket_id").unsigned().nullable();
     table.string("body", 240).nullable();
+    table.string("author_name", 64).nullable();
+    table.boolean("from_assistant").notNullable().defaultTo(false);
     table.timestamp("read_at").nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.index(["user_id", "read_at"]);
@@ -50,6 +61,8 @@ export class Notification extends TimestampMixin(Model) {
   kind?: NotificationKind;
   ticketId?: number | null;
   body?: string | null;
+  authorName?: string | null;
+  fromAssistant?: boolean;
   readAt?: Date | null;
   createdAt?: Date;
 
@@ -58,17 +71,23 @@ export class Notification extends TimestampMixin(Model) {
     kind,
     ticketId = null,
     body = null,
+    authorName = null,
+    fromAssistant = false,
   }: {
     readonly userId: number;
     readonly kind: NotificationKind;
     readonly ticketId?: number | null;
     readonly body?: string | null;
+    readonly authorName?: string | null;
+    readonly fromAssistant?: boolean;
   }): Promise<Notification> {
     return await Notification.query().insertAndFetch({
       userId,
       kind,
       ticketId,
       body: body != null ? body.slice(0, 240) : null,
+      authorName,
+      fromAssistant,
     });
   }
 
@@ -110,12 +129,38 @@ export class Notification extends TimestampMixin(Model) {
     return await notification.$query().patchAndFetch({ readAt: new Date() });
   }
 
+  /**
+   * Removed from the person's own list.
+   *
+   * A real delete rather than a "dismissed" flag: a notification is a
+   * nudge about something that lives elsewhere, and once it has been
+   * dealt with there is nothing to keep. The ticket it points at is the
+   * record, and that is untouched.
+   *
+   * Scoped to (id, userId) so a guessed id belonging to another account
+   * silently no-ops rather than reporting whether it exists.
+   */
+  static async dismiss(id: number, userId: number): Promise<void> {
+    await Notification.query().delete().where({ id, userId });
+  }
+
+  /** The whole list at once. */
+  static async dismissAll(userId: number): Promise<void> {
+    await Notification.query().delete().where({ userId });
+  }
+
   toDetails(): NotificationDetails {
     return {
       id: this.id!,
       kind: this.kind!,
       ticketId: this.ticketId ?? null,
       body: this.body ?? null,
+      authorName: this.authorName ?? null,
+      fromAssistant: Boolean(this.fromAssistant),
+      // Filled in by the caller, which has the ticket to hand.
+      reference: null,
+      subject: null,
+      status: null,
       read: this.readAt != null,
       createdAt: new Date(this.createdAt!).toISOString(),
     };

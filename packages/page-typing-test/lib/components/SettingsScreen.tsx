@@ -91,7 +91,7 @@ export function SettingsScreen() {
               type="button"
               className={styles.close}
               title={formatMessage({
-                id: "t_Close",
+                id: "t_Dismiss",
                 defaultMessage: "Dismiss",
               })}
               onClick={close}

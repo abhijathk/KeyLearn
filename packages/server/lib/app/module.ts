@@ -21,6 +21,7 @@ import { securityHeaders } from "./headers.ts";
 import { MailModule } from "./mail/index.ts";
 import { gameRoutes, mainRoutes } from "./routes.ts";
 import { SessionModule } from "./session.ts";
+import { noStoreSupport } from "./support/no-store.ts";
 import { trailingSlashRedirect } from "./trailing-slash.ts";
 
 export const kMain = Symbol();
@@ -63,6 +64,9 @@ export class ApplicationModule implements Module {
         .use(compress())
         .use(staticFiles(publicDir, { cacheControl }))
         .use(deskAwareSession(sessionOptions, deskSessionOptions))
+        // Before the routes, so the header is on the response whichever
+        // way the route ends — including the 428 that asks for the PIN.
+        .use(noStoreSupport())
         .use(loadUser())
         // After the session loads, so a rejection is logged with the real path,
         // and before any route can act on the request.

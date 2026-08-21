@@ -229,32 +229,6 @@ export class Controller {
     return this.renderPage(ctx, Pages.support, intl);
   }
 
-  @http.GET(`${Pages.desk.path}`)
-  async ["desk"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.desk);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.desk.path}`)
-  async ["desk-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.desk, intl);
-  }
-
-  @http.GET(`${Pages.deskInbox.path}`)
-  async ["desk-inbox"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskInbox);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskInbox.path}`)
-  async ["desk-inbox-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskInbox, intl);
-  }
-
   @http.GET(`${Pages.helpCentre.path}`)
   async ["help-centre"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.helpCentre);
@@ -285,47 +259,6 @@ export class Controller {
     return this.renderPage(ctx, Pages.supportThread, intl);
   }
 
-  @http.GET(`${Pages.deskThread.path}/{id:[0-9]+}`)
-  async ["desk-thread"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskThread);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskThread.path}/{id:[0-9]+}`)
-  async ["desk-thread-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskThread, intl);
-  }
-
-  @http.GET(`${Pages.deskAccounts.path}`)
-  async ["desk-accounts"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskAccounts);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskAccounts.path}`)
-  async ["desk-accounts-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskAccounts, intl);
-  }
-
-  @http.GET(`${Pages.deskAccountDetail.path}/{id:[0-9]+}`)
-  async ["desk-account-detail"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskAccountDetail);
-  }
-
-  @http.GET(
-    `/{locale:${localePattern}}${Pages.deskAccountDetail.path}/{id:[0-9]+}`,
-  )
-  async ["desk-account-detail-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskAccountDetail, intl);
-  }
-
   @http.GET(`${Pages.deletionCancel.path}/{token:[a-zA-Z0-9]+}`)
   async ["deletion-cancel"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.deletionCancel);
@@ -339,84 +272,6 @@ export class Controller {
     @pathParam("locale", pIntl) intl: IntlShape,
   ) {
     return this.renderPage(ctx, Pages.deletionCancel, intl);
-  }
-
-  @http.GET(`${Pages.deskAnswers.path}`)
-  async ["desk-answers"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskAnswers);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskAnswers.path}`)
-  async ["desk-answers-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskAnswers, intl);
-  }
-
-  @http.GET(`${Pages.deskNotices.path}`)
-  async ["desk-notices"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskNotices);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskNotices.path}`)
-  async ["desk-notices-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskNotices, intl);
-  }
-
-  @http.GET(`${Pages.deskSettings.path}`)
-  async ["desk-settings"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskSettings);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskSettings.path}`)
-  async ["desk-settings-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskSettings, intl);
-  }
-
-  @http.GET(`${Pages.deskAudit.path}`)
-  async ["desk-audit"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskAudit);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskAudit.path}`)
-  async ["desk-audit-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskAudit, intl);
-  }
-
-  @http.GET(`${Pages.deskAbout.path}`)
-  async ["desk-about"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskAbout);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskAbout.path}`)
-  async ["desk-about-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskAbout, intl);
-  }
-
-  @http.GET(`${Pages.deskSignin.path}`)
-  async ["desk-signin"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.deskSignin);
-  }
-
-  @http.GET(`/{locale:${localePattern}}${Pages.deskSignin.path}`)
-  async ["desk-signin-i18n"](
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("locale", pIntl) intl: IntlShape,
-  ) {
-    return this.renderPage(ctx, Pages.deskSignin, intl);
   }
 
   @http.GET(`${Pages.highScores.path}`)

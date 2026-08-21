@@ -14,6 +14,7 @@ import {
   DigestSweep,
   HoldingQueueSweep,
   IdleTicketCloseSweep,
+  QdeskRetrySweep,
 } from "./app/support/index.ts";
 import { DataSnapshot } from "./app/sync/index.ts";
 import { ServerModule } from "./server/module.ts";
@@ -58,6 +59,9 @@ if (cluster.isPrimary) {
   container.get(AccountDeletionSweep).start();
   // Off (0 days) unless a staff member turns on auto-close-idle in Settings.
   container.get(IdleTicketCloseSweep).start();
+  // Forwarding to the desk is fire-and-forget so an outage can't fail a
+  // customer's send; this is what makes that safe rather than lossy.
+  container.get(QdeskRetrySweep).start();
   // Learner data lives in files on this machine's disk; the database is what
   // gets backed up. Copy one into the other at intervals.
   container.get(DataSnapshot).start();

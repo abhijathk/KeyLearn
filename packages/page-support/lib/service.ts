@@ -223,6 +223,330 @@ export namespace SupportService {
     return (await response.json()) as { readonly ticket?: ThreadView };
   }
 
+  // ── the account holder's own section ──
+
+  export type MyTicket = {
+    readonly id: number;
+    readonly reference: string;
+    readonly subject: string;
+    readonly status: string;
+    readonly unread: number;
+    readonly hasDraft: boolean;
+    readonly hasAttachments: boolean;
+    readonly updatedAt: string;
+    readonly createdAt: string;
+    readonly askCsat: boolean;
+  };
+
+  export type MyAttachment = {
+    readonly id: number;
+    readonly fileName: string;
+    readonly mimeType: string;
+    readonly size: number;
+    readonly isImage: boolean;
+    readonly createdAt: string;
+  };
+
+  export type MyMessage = {
+    readonly id: number;
+    readonly sender: string;
+    readonly authorName: string | null;
+    /** "crisis" and "handover" are not chat bubbles — see the thread view. */
+    readonly kind: string | null;
+    readonly body: string;
+    readonly createdAt: string;
+    /**
+     * When the desk took it, or null if it has not been handed over yet.
+     * The second tick on your own messages; always null on anything sent
+     * to you, which never gets a tick at all.
+     */
+    readonly deliveredAt: string | null;
+    readonly attachments: readonly MyAttachment[];
+  };
+
+  export type MyThread = {
+    readonly id: number;
+    readonly reference: string;
+    readonly subject: string;
+    readonly status: string;
+    readonly createdAt: string;
+    readonly hasEarlier: boolean;
+    /** Somebody at the desk is writing right now — not a guess. */
+    readonly deskTyping: boolean;
+    readonly messages: readonly MyMessage[];
+    readonly pending: readonly MyAttachment[];
+    readonly draft: { readonly subject: string; readonly body: string } | null;
+    readonly csat: {
+      readonly rating: number;
+      readonly note: string | null;
+    } | null;
+  };
+
+  const json = async <T>(res: any): Promise<T> => (await res.json()) as T;
+
+  export async function listMyTickets(): Promise<{
+    readonly tickets: readonly MyTicket[];
+    readonly unreadTotal: number;
+  }> {
+    return await json(
+      await request
+        .use(expectType("application/json"))
+        .GET("/_/support/my/tickets")
+        .send(),
+    );
+  }
+
+  export async function getMyTicket(
+    id: number,
+    all = false,
+  ): Promise<MyThread> {
+    return await json(
+      await request
+        .use(expectType("application/json"))
+        .GET(`/_/support/my/tickets/${id}${all ? "?all=1" : ""}`)
+        .send(),
+    );
+  }
+
+  /** Whose name and address the ticket will carry. */
+  export async function whoAmI(): Promise<{
+    readonly name: string;
+    readonly email: string;
+  }> {
+    return await json(
+      await request
+        .use(expectType("application/json"))
+        .GET("/_/support/my/me")
+        .send(),
+    );
+  }
+
+  /** "Yes" on the closing question — the case is done. */
+  export async function markSorted(id: number): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST(`/_/support/my/tickets/${id}/sorted`)
+      .send();
+  }
+
+  /** "Not really" — reopen it and keep the conversation going. */
+  export async function notSorted(id: number): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST(`/_/support/my/tickets/${id}/not-sorted`)
+      .send();
+  }
+
+  export async function createMyTicket(input: {
+    readonly subject: string;
+    readonly message: string;
+    readonly attachmentIds?: readonly number[];
+  }): Promise<{ readonly id: number; readonly reference: string }> {
+    return await json(
+      await request
+        .use(expectType("application/json"))
+        .POST("/_/support/my/tickets")
+        .send(input),
+    );
+  }
+
+  export async function replyToMyTicket(
+    id: number,
+    input: {
+      readonly message: string;
+      readonly attachmentIds?: readonly number[];
+      readonly clientId?: string;
+    },
+  ): Promise<{ readonly id: number; readonly duplicate: boolean }> {
+    return await json(
+      await request
+        .use(expectType("application/json"))
+        .POST(`/_/support/my/tickets/${id}/reply`)
+        .send(input),
+    );
+  }
+
+  /** Debounced as they type — the draft lives on the server, not in the tab. */
+  export async function saveDraft(input: {
+    readonly ticketId?: number | null;
+    readonly subject?: string | null;
+    readonly body?: string | null;
+  }): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .PUT("/_/support/my/draft")
+      .send(input);
+  }
+
+  /**
+   * Base64 rather than multipart: the server has no multipart parser, and
+   * adding one for screenshots and the occasional PDF would be a dependency
+   * and a new class of parser bug for no gain.
+   */
+  /**
+   * A null ticket id means "not a ticket yet" — the file is held against
+   * the account and claimed when the first message creates one.
+   */
+  export async function uploadAttachment(
+    ticketId: number | null,
+    file: File,
+  ): Promise<MyAttachment> {
+    const data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = () => {
+        const result = String(reader.result);
+        resolve(result.slice(result.indexOf(",") + 1));
+      };
+      reader.readAsDataURL(file);
+    });
+    return await json(
+      await request
+        .use(expectType("application/json"))
+        .POST(
+          ticketId == null
+            ? "/_/support/my/attachments"
+            : `/_/support/my/tickets/${ticketId}/attachments`,
+        )
+        .send({ fileName: file.name, mimeType: file.type, data }),
+    );
+  }
+
+  /** What the new-message tray still holds after a reload. */
+  export async function listUnboundAttachments(): Promise<
+    readonly MyAttachment[]
+  > {
+    const { pending } = await json<{
+      readonly pending: readonly MyAttachment[];
+    }>(
+      await request
+        .use(expectType("application/json"))
+        .GET("/_/support/my/attachments")
+        .send(),
+    );
+    return pending;
+  }
+
+  export async function removeAttachment(id: number): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .DELETE(`/_/support/my/attachments/${id}`)
+      .send();
+  }
+
+  /** Renders in place — used as an <img src> and to open one full size. */
+  export function attachmentUrl(id: number): string {
+    return `/_/support/my/attachments/${id}`;
+  }
+
+  /** Forces a save. The same bytes, a different Content-Disposition. */
+  export function attachmentDownloadUrl(id: number): string {
+    return `/_/support/my/attachments/${id}?download=1`;
+  }
+
+  export async function getDraft(
+    ticketId: number | null,
+  ): Promise<{ readonly subject: string; readonly body: string } | null> {
+    const res = await request
+      .use(expectType("application/json"))
+      .GET(
+        `/_/support/my/draft${ticketId == null ? "" : `?ticketId=${ticketId}`}`,
+      )
+      .send();
+    const { draft } = (await res.json()) as {
+      readonly draft: {
+        readonly subject: string;
+        readonly body: string;
+      } | null;
+    };
+    return draft;
+  }
+
+  export async function rateTicket(
+    id: number,
+    rating: number,
+    note: string | null,
+  ): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST(`/_/support/my/tickets/${id}/csat`)
+      .send({ rating, note });
+  }
+
+  export async function dismissCsat(id: number): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST(`/_/support/my/tickets/${id}/csat/dismiss`)
+      .send();
+  }
+
+  export async function deleteMyTicket(id: number): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .DELETE(`/_/support/my/tickets/${id}`)
+      .send();
+  }
+
+  export type SupportGate = {
+    readonly required: boolean;
+    readonly setupRequired: boolean;
+    readonly proved: boolean;
+    /** One box per digit; null means a single free-length field. */
+    readonly length: number | null;
+  };
+
+  /** Asked on page load — the section must not open before the answer. */
+  export async function getGate(): Promise<SupportGate> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/support/gate")
+      .send();
+    return (await response.json()) as SupportGate;
+  }
+
+  /**
+   * Prove the grown-up PIN for this browser session.
+   *
+   * Lives here rather than being imported from the account page: support
+   * needs the same endpoint for its own gate, and a page-to-page import
+   * for one fetch would couple two otherwise independent bundles. The
+   * endpoint belongs to the account controller either way — this is a
+   * caller, not a second implementation.
+   */
+  /**
+   * Support's own proof, which lasts for the visit rather than a quarter
+   * of an hour — see the server's `proveSupportPin`. Same PIN, shorter
+   * reach.
+   */
+  export async function verifyParentPin(pin: string): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST("/_/support/my/pin")
+      .send({ pin });
+  }
+
+  /**
+   * Handing the proof back on the way out.
+   *
+   * `keepalive` because this fires as the page is going away, and a normal
+   * fetch is cancelled when the document unloads — the one moment the call
+   * matters most is the one an ordinary request would not survive.
+   */
+  export function revokeParentPin(): void {
+    try {
+      void fetch("/_/support/my/pin/revoke", {
+        method: "POST",
+        keepalive: true,
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      }).catch(() => {});
+    } catch {
+      // Losing the revoke costs the early lock, not correctness: the
+      // fifteen-minute TTL still expires it.
+    }
+  }
+
   export async function createTicket(input: CreateTicketInput): Promise<void> {
     await request
       .use(expectType("application/json"))

@@ -1,0 +1,10 @@
+/* Sized from the line it sits in, and nudged to sit on the text baseline
+   rather than hanging below it the way an inline SVG otherwise does. */
+.root {
+  display: inline-block;
+  vertical-align: -0.42em;
+  /* Larger than a text glyph: these carry the meaning of a reply, and at
+     text size they read as punctuation. */
+  inline-size: 1.6em;
+  block-size: 1.6em;
+}

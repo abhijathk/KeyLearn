@@ -156,6 +156,11 @@ export type SupportMessageDetails = {
   readonly authorName: string | null;
   /** Which Answer(s) an agent reply was drafted from — null for every other sender. */
   readonly answerIds: readonly number[] | null;
+  /**
+   * When the desk acknowledged it, or null if it is stored here and not
+   * handed over yet. Drawn as the second tick on your own messages.
+   */
+  readonly deliveredAt: string | null;
   readonly createdAt: string;
 };
 
@@ -326,8 +331,16 @@ export type NotificationDetails = {
   readonly id: number;
   readonly kind: "ticket-reply";
   readonly ticketId: number | null;
-  /** A short snapshot of the reply — there's no thread view to link to yet. */
+  /** A short snapshot of the reply. Clicking opens the conversation. */
   readonly body: string | null;
+  /** Who it is from — the assistant's name, or a staffer's desk name. */
+  readonly authorName: string | null;
+  /** Whether that author was the assistant, so it is never passed off. */
+  readonly fromAssistant: boolean;
+  /** The conversation it belongs to, read off the ticket at list time. */
+  readonly reference: string | null;
+  readonly subject: string | null;
+  readonly status: string | null;
   readonly read: boolean;
   readonly createdAt: string;
 };
@@ -394,6 +407,8 @@ export type UserDetails = {
   readonly twoFactorEnabled: boolean;
   /** Whether a grown-up PIN guards profile management. */
   readonly parentPinSet: boolean;
+  /** How many digits it has; null when unset, or set before we recorded it. */
+  readonly parentPinLength: number | null;
   /** Whether the account's email address has been verified. */
   readonly emailVerified: boolean;
   /**

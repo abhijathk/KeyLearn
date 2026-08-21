@@ -10,6 +10,7 @@ import { Logger } from "@keylearn/logger";
 import { messageDailyDigest } from "../auth/email.ts";
 import { Controller as AuthController } from "../auth/index.ts";
 import { Mailer } from "../mail/index.ts";
+import { QdeskRetrySweep } from "./qdesk-retry.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -132,7 +133,7 @@ export class DigestSweep {
     }
     try {
       const since = new Date(now - 24 * 60 * 60 * 1000);
-      const [ticketsCreated, agentReplies, flagged, frustrated] =
+      const [ticketsCreated, agentReplies, flagged, frustrated, undelivered] =
         await Promise.all([
           SupportTicket.query().where("createdAt", ">=", since).resultSize(),
           SupportMessage.query()
@@ -147,7 +148,17 @@ export class DigestSweep {
             .where("sentiment", "frustrated")
             .where("updatedAt", ">=", since)
             .resultSize(),
+          // Customer messages that have not reached the desk. Nothing else
+          // says this out loud: the retry sweep keeps trying quietly, and
+          // the customer sees one tick rather than two — which tells them
+          // something, and tells staff nothing at all.
+          SupportMessage.query()
+            .whereNull("deliveredAt")
+            .where("sender", "them")
+            .where("createdAt", ">=", new Date(now - 7 * DAY_MS))
+            .resultSize(),
         ]);
+      const abandoned = await QdeskRetrySweep.abandoned();
       const deskLink = String(new URL("/desk", this.canonicalUrl));
       await Promise.all(
         listStaffEmails().map((to) =>
@@ -163,6 +174,8 @@ export class DigestSweep {
               agentReplies,
               flagged,
               frustrated,
+              undelivered,
+              abandoned,
               deskLink,
             }),
           ),
@@ -174,6 +187,8 @@ export class DigestSweep {
         agentReplies,
         flagged,
         frustrated,
+        undelivered,
+        abandoned,
       });
       return true;
     } catch (err: any) {
@@ -236,7 +251,13 @@ export class IdleTicketCloseSweep {
       const cutoff = now - idleDays * DAY_MS;
       const candidates = await SupportTicket.query()
         .whereIn("status", ["open", "waiting"])
-        .whereNot("archived", true);
+        .whereNot("archived", true)
+        // Never a business enquiry. Auto-close exists for a support
+        // question that has run its course; a partnership or licensing
+        // approach going quiet means nobody here has answered it yet,
+        // and closing it turns that into a decision the company never
+        // consciously made.
+        .whereNot("kind", "business");
       let closed = 0;
       for (const ticket of candidates) {
         const lastMessage = await SupportMessage.query()

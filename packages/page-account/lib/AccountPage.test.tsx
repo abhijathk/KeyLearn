@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { FakeIntlProvider } from "@keylearn/intl";
 import { PageDataContext } from "@keylearn/pages-shared";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { isNotNull } from "rich-assert";
 import { AccountPage } from "./AccountPage.tsx";
@@ -58,6 +58,7 @@ test("render signed-in account page", () => {
           hasPassword: true,
           twoFactorEnabled: false,
           parentPinSet: false,
+          parentPinLength: null,
           emailVerified: true,
         },
         publicUser: {
@@ -81,6 +82,23 @@ test("render signed-in account page", () => {
       </MemoryRouter>
     </PageDataContext.Provider>,
   );
+
+  // The window lands on Appearance now, so the rail is what proves it
+  // rendered. Scoped to the navigation, because the pane behind it uses
+  // the same words as the rail item that opened it.
+  const rail = r.container.querySelector("nav")!;
+  isNotNull(rail);
+  isNotNull(
+    [...rail.querySelectorAll("button")].find((b) =>
+      /Appearance/.test(b.textContent ?? ""),
+    ),
+  );
+
+  act(() => {
+    [...rail.querySelectorAll("button")]
+      .find((b) => /Account/.test(b.textContent ?? ""))!
+      .click();
+  });
 
   isNotNull(r.queryByText("name@keylearn.org", { exact: false }));
   isNotNull(r.queryByText("Hide my identity", { exact: false }));

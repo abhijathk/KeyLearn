@@ -1,0 +1,399 @@
+.root {
+  display: inline-flex;
+  position: relative;
+}
+
+.dot {
+  position: absolute;
+  inset-inline-end: 0.15rem;
+  inset-block-start: 0.15rem;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+  pointer-events: none;
+}
+
+.drop {
+  /* Flex column, not grid: a grid column sizes to its content, and the
+     rows were being squeezed to the width of the narrowest thing in the
+     list — "Clear all" wrapped, the reference clipped, and the buttons
+     landed on top of the text. */
+  display: flex;
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 2.4rem;
+  z-index: 20;
+  flex-direction: column;
+  gap: 0.15rem;
+  /* Wide enough that a date stops wrapping mid-value — "20 Aug," on one
+     line and "07:23" on the next was the whole complaint. */
+  inline-size: 26rem;
+  max-inline-size: calc(100vi - 1.5rem);
+  max-block-size: 22rem;
+  padding: 0.4rem;
+  border: 1px solid var(--primary-d1, rgba(128, 128, 128, 0.2));
+  border-radius: 0.8rem;
+  background-color: var(--primary-l1, var(--primary));
+  box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.35);
+  overflow-y: auto;
+}
+
+.empty {
+  margin: 0;
+  padding: 0.6rem 0.5rem;
+  color: var(--text-color-f2);
+  font-size: 0.82rem;
+}
+
+/* A row: the unread mark, the message, the way to be rid of it. */
+/* Divided rather than spaced. Gaps between cards read as separate things;
+   these are one list. */
+.item {
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
+  box-sizing: border-box;
+  inline-size: 100%;
+  padding: 0.15rem 0.15rem 0.15rem 0.4rem;
+  border-block-end: 1px solid var(--primary-d1, rgba(128, 128, 128, 0.15));
+
+  &:last-of-type {
+    border-block-end: 0;
+  }
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--text-color) 6%, transparent);
+  }
+}
+
+.unread {
+  background-color: color-mix(in oklab, var(--accent) 8%, transparent);
+}
+
+/* A dot rather than a bolder row: when most of the list is unread, a row
+   treatment stops distinguishing anything. */
+.mark {
+  flex: none;
+  inline-size: 0.44rem;
+  block-size: 0.44rem;
+  margin-block-start: 0.72rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+}
+
+.markSpent {
+  background-color: transparent;
+}
+
+.body {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+/* Block, not grid. A grid button lays its spans out as grid items, and
+   with the column auto-sized they stacked on top of one another. */
+.itemMain {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  padding: 0.45rem 0.35rem 0.2rem;
+  border: none;
+  border-radius: 0.5rem;
+  color: var(--text-color);
+  background: transparent;
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.35rem;
+  align-items: baseline;
+  min-inline-size: 0;
+  margin-block-end: 0.12rem;
+}
+
+.who {
+  min-inline-size: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.role {
+  flex: none;
+  color: var(--text-color-f2);
+  font-size: 0.68rem;
+
+  &::before {
+    content: "·";
+    margin-inline-end: 0.35rem;
+  }
+}
+
+/* The quietest thing in the row, and last: leading with it put "when" in
+   front of "what", and wrapped "20 Aug," onto its own line. */
+.time {
+  flex: none;
+  margin-inline-start: auto;
+  padding-inline-start: 0.35rem;
+  color: var(--text-color-f2);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ref {
+  color: var(--text-color-f2);
+  font-family: var(--monospace-font-family);
+  font-size: 0.66rem;
+}
+
+.chip {
+  padding: 0.02rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.chipOpen {
+  color: var(--accent);
+  background-color: color-mix(in oklab, var(--accent) 18%, transparent);
+}
+
+.chipWaiting {
+  color: var(--accent);
+  background-color: color-mix(in oklab, var(--accent) 26%, transparent);
+}
+
+.chipPerson {
+  color: var(--error-color, #d0322e);
+  background-color: color-mix(
+    in oklab,
+    var(--error-color, #d0322e) 16%,
+    transparent
+  );
+}
+
+.chipDone {
+  color: var(--text-color-f2);
+  background-color: color-mix(in oklab, var(--text-color) 12%, transparent);
+}
+
+/* Wrapped rather than clipped. A subject is the person's own words for
+   what went wrong; an ellipsis in the middle of it helps nobody. */
+.subject {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Two lines of the reply — enough to decide whether to open it now. */
+.excerpt {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-color-f2);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.actions {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0 0.35rem 0.45rem;
+}
+
+.act {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--primary-d1, rgba(128, 128, 128, 0.25));
+  border-radius: 0.4rem;
+  color: var(--text-color);
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--text-color) 8%, transparent);
+  }
+}
+
+.actPrimary {
+  border-color: transparent;
+  color: var(--primary);
+  background-color: var(--accent);
+}
+
+/* Always present rather than revealed on hover: a control that appears
+   only when the pointer is already on it cannot be found by anyone who
+   does not know it is there, and never at all on a tablet. */
+.dismiss {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.4rem;
+  block-size: 1.4rem;
+  margin-block-start: 0.35rem;
+  border: none;
+  border-radius: 0.4rem;
+  color: var(--text-color-f2);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--text-color) 12%, transparent);
+  }
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  box-sizing: border-box;
+  inline-size: 100%;
+  margin-block-end: 0.2rem;
+  padding: 0.1rem 0.35rem 0.3rem;
+  border-block-end: 1px solid var(--primary-d1, rgba(128, 128, 128, 0.2));
+}
+
+.headActions {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+/* Accent, not muted: it is the one action in the header and it should
+   look like one. */
+.headLink {
+  padding: 0.1rem 0.3rem;
+  border: none;
+  border-radius: 0.35rem;
+  color: var(--accent);
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--accent) 14%, transparent);
+  }
+}
+
+.headClose {
+  display: grid;
+  place-items: center;
+  inline-size: 1.3rem;
+  block-size: 1.3rem;
+  border: none;
+  border-radius: 0.35rem;
+  color: var(--text-color-f2);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+    background-color: color-mix(in oklab, var(--text-color) 12%, transparent);
+  }
+}
+
+.headTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* The way into the section itself, under the list. */
+.foot {
+  inline-size: 100%;
+  padding: 0.5rem;
+  border: none;
+  border-block-start: 1px solid var(--primary-d1, rgba(128, 128, 128, 0.2));
+  color: var(--accent);
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--text-color) 6%, transparent);
+  }
+}
+
+/*
+ * Winning the geometry back from the header.
+ *
+ * The dropdown is rendered inside the header's control row, and that row
+ * styles every `button` beneath it as a 2.3rem shrink-to-fit grid square
+ * — the control language for the icons in the row itself. At (0,1,1) it
+ * outranks a plain class, so every button in this list (each row, Open,
+ * Mark read, Clear, the footer link) collapsed to a 39px square and took
+ * the text with it.
+ *
+ * `.drop.drop` is (0,2,1): higher than the header's rule, and it does not
+ * depend on which stylesheet the bundler happens to emit last.
+ */
+.drop.drop {
+  button {
+    place-items: initial;
+    inline-size: auto;
+    min-inline-size: 0;
+    block-size: auto;
+    min-block-size: 0;
+  }
+
+  .itemMain {
+    display: block;
+    inline-size: 100%;
+  }
+
+  .act {
+    display: inline-block;
+    inline-size: auto;
+    block-size: auto;
+  }
+
+  .headClose {
+    display: grid;
+    place-items: center;
+    inline-size: 1.3rem;
+    min-inline-size: 1.3rem;
+    block-size: 1.3rem;
+    min-block-size: 1.3rem;
+  }
+
+  .dismiss {
+    display: grid;
+    place-items: center;
+    inline-size: 1.4rem;
+    min-inline-size: 1.4rem;
+    block-size: 1.4rem;
+    min-block-size: 1.4rem;
+  }
+
+  .headLink,
+  .headClose,
+  .foot {
+    display: block;
+    inline-size: auto;
+    block-size: auto;
+  }
+
+  .foot {
+    inline-size: 100%;
+  }
+}

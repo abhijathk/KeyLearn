@@ -98,7 +98,7 @@ export function SessionAward({
         className={styles.card}
         role="status"
         onClick={onClose}
-        title={formatMessage({ id: "t_Close", defaultMessage: "Dismiss" })}
+        title={formatMessage({ id: "t_Dismiss", defaultMessage: "Dismiss" })}
       >
         <div className={styles.tile}>{icon}</div>
         <div className={styles.text}>

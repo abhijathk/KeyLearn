@@ -9,6 +9,7 @@ import { Context } from "@fastr/core";
 import { ApplicationError, HttpError } from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
+import { type SessionState } from "@fastr/middleware-session";
 import { Env, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
@@ -33,7 +34,7 @@ import {
   type SupportTicketStatus,
   User,
 } from "@keylearn/database";
-import { type NoticeKind } from "@keylearn/pages-shared";
+import { type NoticeKind, resolveDateMarks } from "@keylearn/pages-shared";
 import { type Knex } from "knex";
 import { z } from "zod";
 import {
@@ -43,6 +44,10 @@ import {
   messageThreadReply,
   messageUrgentFlag,
 } from "../auth/email.ts";
+import {
+  requireParentPinForSupport,
+  supportGateStatus,
+} from "../auth/parent-pin.ts";
 import { clientIp, rateLimit } from "../auth/ratelimit.ts";
 import { staffAccessStatus } from "../auth/staff-access.ts";
 import {
@@ -125,7 +130,7 @@ const TCreateTicket = z.object({
   name: z.string().trim().min(1).max(64),
   email: z.string().trim().min(1).max(128).email(),
   subject: z.string().trim().min(1).max(128),
-  message: z.string().trim().min(1).max(4000),
+  message: z.string().trim().min(1).max(2000),
   turnstileToken: z.string().max(4096).optional(),
   // Hidden form field a real visitor never fills in. Any value here means a
   // bot filled out every field it could find — accepted-and-dropped rather
@@ -163,12 +168,20 @@ const TDeliverReply = z.object({
   // optional: an older desk build simply omits it and the thread falls
   // back to the generic label it always used.
   authorName: z.string().trim().max(64).nullable().optional(),
+  /**
+   * "crisis" marks the fixed §6.7 emergency redirect, which the account
+   * section renders as an alert with the number set large rather than as
+   * a chat bubble. Nothing about an emergency number should read as the
+   * assistant making conversation. Optional so an older desk build simply
+   * sends an ordinary message.
+   */
+  kind: z.enum(["crisis", "handover"]).nullable().optional(),
 });
 type TDeliverReply = z.infer<typeof TDeliverReply>;
 const PDeliverReply = zod(TDeliverReply);
 
 const TGuestMessage = z.object({
-  message: z.string().trim().min(1).max(4000),
+  message: z.string().trim().min(1).max(2000),
 });
 type TGuestMessage = z.infer<typeof TGuestMessage>;
 const PGuestMessage = zod(TGuestMessage);
@@ -796,9 +809,15 @@ export class Controller {
 
   @http.POST("/_/support/tickets")
   async createTicket(
-    ctx: Context<RouterState & AuthState>,
+    ctx: Context<RouterState & SessionState & AuthState>,
     @body.json(PCreateTicket, jsonOpts) input: TCreateTicket,
   ) {
+    // On a household account with a kid profile, support is a grown-up's
+    // section — see auth/parent-pin.ts for why this one is stricter than
+    // the ordinary PIN gate. Checked before the rate limiter so a child
+    // probing the form can't burn the household's hourly allowance.
+    await requireParentPinForSupport(ctx, ctx.state.user);
+
     rateLimit(ctx, "support-ticket", 5, 60 * 60 * 1000);
     rateLimit(
       ctx,
@@ -839,13 +858,13 @@ export class Controller {
       .first();
 
     if (dup != null) {
-      await SupportMessage.create({
+      const dupMessage = await SupportMessage.create({
         ticketId: dup.id!,
         sender: "them",
         body: input.message,
       });
       if (dup.confirmed) {
-        forwardReplyToQdesk(dup.id!, input.message);
+        forwardReplyToQdesk(dup.id!, input.message, dupMessage.id!);
       }
       const threadToken = await SupportTicket.reissueThreadToken(dup.id!);
       const holding = !dup.confirmed;
@@ -887,7 +906,7 @@ export class Controller {
     if (confirmed) {
       // The ticket's own `message` column stays the cheap preview line for
       // the queue; the thread's actual first message is this same text.
-      await SupportMessage.create({
+      const first = await SupportMessage.create({
         ticketId: ticket.id!,
         sender: "them",
         body: input.message,
@@ -900,6 +919,7 @@ export class Controller {
         subject: input.subject,
         message: input.message,
         userId: ctx.state.user?.id ?? null,
+        messageId: first.id!,
       });
       // With the QDesk bridge on, QDesk's own agent owns automation —
       // running the local auto-reply too would give the customer two
@@ -1048,7 +1068,7 @@ export class Controller {
     // staff) can actually read it, and therefore also the first moment it
     // is real enough to forward to QDesk (an unconfirmed submission never
     // leaves this repo).
-    await SupportMessage.create({
+    const confirmedFirst = await SupportMessage.create({
       ticketId: ticket.id!,
       sender: "them",
       body: ticket.message!,
@@ -1061,6 +1081,7 @@ export class Controller {
       subject: ticket.subject!,
       message: ticket.message!,
       userId: ticket.userId ?? null,
+      messageId: confirmedFirst.id!,
     });
     if (ticket.kind === "support" && !qdeskConfigured()) {
       await this.#tryAutoReply(ticket.id!, ticket.message!);
@@ -1074,6 +1095,20 @@ export class Controller {
    * from, and the point is that somebody can read them BEFORE opening a
    * ticket.
    */
+  /**
+   * Whether this account's support section is behind the grown-up PIN, and
+   * whether this browser has already got past it.
+   *
+   * Asked on page load rather than inferred: `parentPinSet` is on the user
+   * already, but whether the PIN has been *proved in this session* is
+   * server state, and the page must not open before it knows. Cheap enough
+   * to call every visit — one indexed count and a session read.
+   */
+  @http.GET("/_/support/gate")
+  async supportGate(ctx: Context<RouterState & SessionState & AuthState>) {
+    ctx.response.body = await supportGateStatus(ctx, ctx.state.user);
+  }
+
   @http.GET("/_/support/help/articles")
   async helpArticles(ctx: Context<RouterState & AuthState>) {
     ctx.response.body = { articles: await fetchHelpArticles() };
@@ -1081,9 +1116,15 @@ export class Controller {
 
   @http.GET("/_/support/t/{token}")
   async getThread(
-    ctx: Context<RouterState & AuthState>,
+    ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("token", pToken) token: string,
   ) {
+    // A thread carries everything anyone has written into this ticket, so
+    // it is gated like the rest of the section. Only for a signed-in
+    // session, deliberately: the link is emailed, and a parent opening it
+    // from their inbox on a device they are not signed in on must not be
+    // asked for a PIN the page has no way to check.
+    await requireParentPinForSupport(ctx, ctx.state.user);
     const ticket = await SupportTicket.findByThreadToken(token);
     if (ticket == null) {
       ctx.response.status = 404;
@@ -1118,10 +1159,12 @@ export class Controller {
 
   @http.POST("/_/support/t/{token}/reply")
   async replyToThread(
-    ctx: Context<RouterState & AuthState>,
+    ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("token", pToken) token: string,
     @body.json(PGuestMessage, jsonOpts) input: TGuestMessage,
   ) {
+    // Same gate as reading the thread — writing into it is not a lesser act.
+    await requireParentPinForSupport(ctx, ctx.state.user);
     const ticket = await SupportTicket.findByThreadToken(token);
     if (ticket == null || !ticket.confirmed) {
       ctx.response.status = 404;
@@ -1131,12 +1174,12 @@ export class Controller {
       ctx.response.status = 410;
       return;
     }
-    await SupportMessage.create({
+    const guestReply = await SupportMessage.create({
       ticketId: ticket.id!,
       sender: "them",
       body: input.message,
     });
-    forwardReplyToQdesk(ticket.id!, input.message);
+    forwardReplyToQdesk(ticket.id!, input.message, guestReply.id!);
     // The sender writing again means the auto-reply (if any) didn't fully
     // solve it — credit the reopen to the article/rule that answered before
     // clearing the attribution, so a later close doesn't also credit a solve.
@@ -1193,39 +1236,6 @@ export class Controller {
 
   // ── Public: answers library ──
 
-  @http.GET("/_/support/answers")
-  async listPublicAnswers(ctx: Context<RouterState & AuthState>) {
-    const answers = await Answer.listPublished();
-    ctx.response.body = answers.map((a) => a.toDetails());
-  }
-
-  @http.POST("/_/support/answers/suggest")
-  async suggestAnswers(
-    ctx: Context<RouterState & AuthState>,
-    @body.json(PSuggest, jsonOpts) input: TSuggest,
-  ) {
-    rateLimit(ctx, "answers-suggest", 30, 60_000);
-    const rules = await AnswerRule.listAll();
-    const matches = matchAnswers(
-      input.text,
-      rules.map((r) => ({
-        id: r.id!,
-        answerId: r.answerId!,
-        keywords: r.keywords!,
-        suggestOnly: Boolean(r.suggestOnly),
-      })),
-    )
-      .map((m) => {
-        const rule = rules.find((r) => r.id === m.ruleId);
-        return rule?.answer != null && Boolean(rule.answer.published)
-          ? { score: m.score, answer: rule.answer.toDetails() }
-          : null;
-      })
-      .filter((m) => m != null)
-      .slice(0, 3);
-    ctx.response.body = { matches };
-  }
-
   // ── Public: site-wide notices ──
 
   @http.GET("/_/support/notice")
@@ -1240,126 +1250,7 @@ export class Controller {
 
   // ── Staff: access status (unaudited — see doc comment) ──
 
-  /**
-   * Read-only status the staff sign-in screen polls after every sign-in
-   * attempt — data instead of a thrown error, so the screen can tell
-   * "wrong account" apart from "right account, no second factor yet"
-   * instead of showing one generic failure for both. Never throws and
-   * never audits: {@link requireStaff} is still the real, audited gate on
-   * every endpoint below.
-   */
-  @http.GET("/_/support/desk/access")
-  async deskAccess(ctx: Context<RouterState & AuthState>) {
-    ctx.response.body = await staffAccessStatus(ctx.state.user);
-  }
-
   // ── Staff: ticket queue + threads ──
-
-  @http.GET("/_/support/tickets")
-  async listTickets(
-    ctx: Context<RouterState & AuthState>,
-    @queryParam("kind", pKind) kind: SupportTicketKind | undefined,
-    @queryParam("status", pStatus) status: SupportTicketStatus | undefined,
-    @queryParam("archived", pArchived) archived: boolean | undefined,
-    @queryParam("q", pQuery) q: string | undefined,
-  ) {
-    await ctx.state.requireStaff();
-    const tickets = await SupportTicket.listQueue({
-      kind,
-      status,
-      archived,
-      q,
-    });
-    ctx.response.body = tickets.map((t) => t.toDetails());
-  }
-
-  @http.GET("/_/support/tickets/{id}")
-  async getTicket(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-  ) {
-    await ctx.state.requireStaff();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const messages = (await SupportMessage.listForTicket(id)).map((m) =>
-      m.toDetails(),
-    );
-    ctx.response.body = ticket.toDetails({ reveal: false, messages });
-  }
-
-  /**
-   * The one deliberate way to see a submitter's real address. Everything
-   * else that returns a ticket masks it — this is a separate, audited
-   * action rather than a side effect of opening a thread.
-   */
-  @http.POST("/_/support/tickets/{id}/reveal-email")
-  async revealEmail(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "reveal-email",
-      detail: `ticket ${id}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = { email: ticket.email };
-  }
-
-  /**
-   * Posts a real thread message from staff — replaces the old single-slot
-   * reply. Emails the reply to the ticket's real address with a freshly
-   * minted thread link (the original plaintext token was only ever handed
-   * out once, at the ticket's creation).
-   */
-  @http.POST("/_/support/tickets/{id}/reply")
-  async postReply(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PStaffMessage, jsonOpts) input: TStaffMessage,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    await SupportMessage.create({
-      ticketId: id,
-      sender: "us",
-      body: input.body,
-      staffUserId: staff.id,
-      emailed: true,
-    });
-    // Staff replied — now waiting on the person to respond next.
-    const status: SupportTicketStatus = input.close ? "closed" : "waiting";
-    const updated = await ticket.setStatus(status);
-    if (status === "closed") {
-      await this.#creditAutoSolve(updated);
-    }
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "reply-ticket",
-      detail: `ticket ${id} → ${status}`,
-      ip: clientIp(ctx),
-    });
-
-    void this.#notifyReply(ticket, input.body);
-
-    const messages = (await SupportMessage.listForTicket(id)).map((m) =>
-      m.toDetails(),
-    );
-    ctx.response.body = updated.toDetails({ reveal: false, messages });
-  }
 
   /**
    * QDesk delivering a reply back to the customer through this repo's
@@ -1388,10 +1279,20 @@ export class Controller {
       body: input.body,
       emailed: ticket.userId == null,
       authorName: input.authorName ?? null,
+      kind: input.kind ?? null,
     });
-    const status: SupportTicketStatus = input.close ? "closed" : "waiting";
+    // A crisis redirect is not a reply waiting on the customer — it goes
+    // in front of a person, and "waiting on you" is the wrong thing to
+    // tell somebody who has just been handed an emergency number.
+    const status: SupportTicketStatus =
+      input.kind === "crisis" ? "flagged" : input.close ? "closed" : "waiting";
     const updated = await ticket.setStatus(status);
-    void this.#notifyReply(ticket, input.body, input.authorName ?? null);
+    void this.#notifyReply(
+      ticket,
+      input.body,
+      input.authorName ?? null,
+      input.sender === "agent",
+    );
     ctx.response.body = { ok: true, status: updated.status };
   }
 
@@ -1407,6 +1308,8 @@ export class Controller {
     body: string,
     /** Who the customer should see this reply from; null keeps the generic label. */
     authorName: string | null = null,
+    /** Whether the assistant wrote it, so the bell can say so. */
+    fromAssistant = false,
   ): Promise<void> {
     if (ticket.userId != null) {
       try {
@@ -1415,6 +1318,8 @@ export class Controller {
           kind: "ticket-reply",
           ticketId: ticket.id!,
           body,
+          authorName,
+          fromAssistant,
         });
       } catch {
         // Best-effort — see doc comment.
@@ -1427,7 +1332,12 @@ export class Controller {
         messageThreadReply({
           to: ticket.email!,
           subject: ticket.subject!,
-          body,
+          // Resolved here because an email has no renderer to do it
+          // later: whatever is sent is what the recipient reads, forever.
+          // UTC, because a guest has no account and therefore no zone we
+          // could honour — and a time with a named zone is at least true
+          // for everyone, which "10:39" is not.
+          body: resolveDateMarks(body, { timeZone: "UTC" }),
           threadLink: this.#link(`/support/t/${threadToken}`),
           authorName,
         }),
@@ -1437,642 +1347,12 @@ export class Controller {
     }
   }
 
-  /**
-   * @deprecated Superseded by {@link postReply}, kept for backward safety.
-   * Writes through the ticket's old single staffReply/repliedBy slot — does
-   * not post a SupportMessage or send mail.
-   */
-  @http.PUT("/_/support/tickets/{id}")
-  async replyToTicketLegacy(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PReply, jsonOpts) input: TReply,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const updated = await ticket.reply({
-      staffUserId: staff.id!,
-      reply: input.reply,
-      status: input.status,
-    });
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "reply-ticket",
-      detail: `ticket ${id} → ${input.status}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = updated.toDetails();
-  }
-
-  /** A status-only move — "waiting on them", "close", "spam" — no reply sent. */
-  @http.PUT("/_/support/tickets/{id}/status")
-  async setTicketStatus(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PStatus, jsonOpts) input: TStatus,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const updated = await ticket.setStatus(input.status);
-    if (input.status === "closed") {
-      await this.#creditAutoSolve(updated);
-    }
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "ticket-status",
-      detail: `ticket ${id} → ${input.status}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = updated.toDetails();
-  }
-
-  /** Hides (or restores) a ticket from the default Inbox view — its status, and everything else, is untouched. */
-  @http.PUT("/_/support/tickets/{id}/archive")
-  async setTicketArchived(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PArchive, jsonOpts) input: TArchive,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const updated = await ticket.setArchived(input.archived);
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "ticket-archived",
-      detail: `ticket ${id} → ${input.archived ? "archived" : "unarchived"}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = updated.toDetails();
-  }
-
-  // ── Automation agent (machine credential, not staff) ──
-  //
-  // Every route below is gated by `requireSupportAgent()`, not
-  // `requireStaff()` — a completely separate credential (see
-  // `auth/middleware.ts`), narrower in what it can reach: read the queue
-  // and a thread, post a reply, record a tone read, and flag a ticket.
-  // Nothing here can close a ticket, reveal a masked email, or touch
-  // settings/notices — those routes simply aren't exposed to this key.
-
-  /**
-   * Open tickets needing a look — same shape as the staff queue, but
-   * "support" kind only. Business enquiries (sales/partnership) stay
-   * entirely human-handled, same as today — never exposed to the agent.
-   */
-  @http.GET("/_/support/agent/queue")
-  async agentQueue(ctx: Context<RouterState & AuthState>) {
-    ctx.state.requireSupportAgent();
-    const tickets = await SupportTicket.listQueue({
-      status: "open",
-      kind: "support",
-    });
-    ctx.response.body = tickets.map((t) => t.toDetails());
-  }
-
-  /** A ticket's full thread — same shape the staff view returns. */
-  @http.GET("/_/support/agent/tickets/{id}")
-  async agentGetTicket(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-  ) {
-    ctx.state.requireSupportAgent();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const messages = (await SupportMessage.listForTicket(id)).map((m) =>
-      m.toDetails(),
-    );
-    ctx.response.body = ticket.toDetails({ reveal: false, messages });
-  }
-
-  /**
-   * Posts a `sender: "agent"` reply — moves the ticket to "waiting", same
-   * as a staff reply, and never to "closed": closing stays a human (or the
-   * sender's own {@link resolveThread}) decision, on purpose.
-   */
-  @http.POST("/_/support/agent/tickets/{id}/reply")
-  async agentReply(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PAgentMessage, jsonOpts) input: TAgentMessage,
-  ) {
-    ctx.state.requireSupportAgent();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    await SupportMessage.create({
-      ticketId: id,
-      sender: "agent",
-      body: input.body,
-      emailed: ticket.userId == null,
-      answerIds: input.usedAnswerIds,
-    });
-    const updated = await ticket.setStatus("waiting");
-    void StaffAuditEvent.record({
-      userId: null,
-      action: "agent-reply",
-      detail: `ticket ${id}`,
-      ip: clientIp(ctx),
-    });
-    void this.#notifyReply(ticket, input.body);
-    const messages = (await SupportMessage.listForTicket(id)).map((m) =>
-      m.toDetails(),
-    );
-    ctx.response.body = updated.toDetails({ reveal: false, messages });
-  }
-
-  /**
-   * Records the agent's tone read. A `critical` read escalates on its own
-   * — the one sentiment-driven trigger the mock's design agreed to — a
-   * `frustrated` read is visibility-only and doesn't touch the queue.
-   */
-  @http.POST("/_/support/agent/tickets/{id}/sentiment")
-  async agentSentiment(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PAgentSentiment, jsonOpts) input: TAgentSentiment,
-  ) {
-    ctx.state.requireSupportAgent();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const updated = await ticket.setSentiment(input.sentiment);
-    if (input.sentiment === "critical") {
-      await updated.setStatus("flagged");
-    }
-    void StaffAuditEvent.record({
-      userId: null,
-      action: "agent-sentiment",
-      detail: `ticket ${id} → ${input.sentiment}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = updated.toDetails();
-  }
-
-  /**
-   * Escalates a ticket with a reason. `urgent` tickets fire an immediate
-   * alert to every staff address instead of waiting for the next daily
-   * digest — see the mockup's step 05 "fires now" list (security/
-   * account-takeover, child-safety, privacy/deletion, legal/regulatory, a
-   * real-looking vulnerability report, a second reopen).
-   */
-  @http.POST("/_/support/agent/tickets/{id}/flag")
-  async agentFlag(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PAgentFlag, jsonOpts) input: TAgentFlag,
-  ) {
-    ctx.state.requireSupportAgent();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const updated = await ticket.setStatus("flagged");
-    void StaffAuditEvent.record({
-      userId: null,
-      action: "agent-flag",
-      detail: `ticket ${id} — ${input.reason}`,
-      ip: clientIp(ctx),
-    });
-    if (input.urgent) {
-      void this.#sendUrgentAlert({
-        subject: `Urgent: ${updated.subject}`,
-        reason: input.reason,
-        detail: `Ticket #${id} from ${updated.name} — flagged by Tab, not waiting for the daily digest.`,
-        deskLink: this.#link(`/desk/t/${id}`),
-      });
-    }
-    ctx.response.body = updated.toDetails();
-  }
-
-  /**
-   * Marks a ticket spam after Tab has already redirected the same thread
-   * once for off-topic content — posts a final message, then moves the
-   * ticket to "spam" instead of "waiting". Unlike "closed"/"waiting",
-   * "spam" is not reopened by a further reply (see `replyToThread`), so a
-   * spammer replying again does not resurrect the ticket into anyone's
-   * queue. A second spam-closed ticket from the same email within
-   * {@link SPAM_WINDOW_MS} earns that address a temporary cooldown on new
-   * submissions ({@link SupportBlock}); a repeat after an earlier cooldown
-   * escalates to a staff alert instead of re-blocking automatically —
-   * Tab does not enforce a permanent ban unattended.
-   */
-  @http.POST("/_/support/agent/tickets/{id}/close-spam")
-  async agentCloseSpam(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PAgentMessage, jsonOpts) input: TAgentMessage,
-  ) {
-    ctx.state.requireSupportAgent();
-    const ticket = await SupportTicket.findById(id);
-    if (ticket == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    await SupportMessage.create({
-      ticketId: id,
-      sender: "agent",
-      body: input.body,
-      emailed: ticket.userId == null,
-    });
-    const updated = await ticket.setStatus("spam");
-    void StaffAuditEvent.record({
-      userId: null,
-      action: "agent-close-spam",
-      detail: `ticket ${id}`,
-      ip: clientIp(ctx),
-    });
-    void this.#notifyReply(ticket, input.body);
-
-    const since = new Date(Date.now() - SPAM_WINDOW_MS);
-    const recentSpamCount = await SupportTicket.query()
-      .whereRaw("lower(email) = ?", [ticket.email!.toLowerCase()])
-      .where("status", "spam")
-      .where("updatedAt", ">=", since)
-      .resultSize();
-
-    if (recentSpamCount >= 2) {
-      const existingBlock = await SupportBlock.currentFor(ticket.email!);
-      if (existingBlock != null && (existingBlock.blockCount ?? 0) >= 1) {
-        void this.#sendUrgentAlert({
-          subject: `Repeated spam from ${ticket.email}`,
-          reason:
-            "Repeated off-topic/spam tickets after an earlier cooldown — needs a permanent-ban decision",
-          detail: `Ticket #${id} from ${updated.name} — this address has already earned a cooldown ${existingBlock.blockCount} time(s) before. Tab will not re-block automatically; a human needs to decide on a permanent block.`,
-          deskLink: this.#link(`/desk/t/${id}`),
-        });
-      } else {
-        await SupportBlock.applyBlock(
-          ticket.email!,
-          SPAM_BLOCK_DURATION_MS,
-          "Repeated off-topic/spam tickets",
-        );
-      }
-    }
-
-    ctx.response.body = updated.toDetails();
-  }
-
-  /**
-   * The one place an urgent staff alert actually goes out — best-effort,
-   * one email per `STAFF_EMAILS` address, never allowed to fail the
-   * request that triggered it.
-   */
-  async #sendUrgentAlert({
-    subject,
-    reason,
-    detail,
-    deskLink,
-  }: {
-    readonly subject: string;
-    readonly reason: string;
-    readonly detail: string;
-    readonly deskLink: string;
-  }): Promise<void> {
-    try {
-      await Promise.all(
-        listStaffEmails().map((to) =>
-          this.mailer.sendMail(
-            messageUrgentFlag({ to, subject, reason, detail, deskLink }),
-          ),
-        ),
-      );
-    } catch {
-      // Best-effort — see doc comment.
-    }
-  }
-
-  /**
-   * Called the moment the triage flow first sees a quota/rate-limit
-   * response from Groq — fires once, not once per failed ticket
-   * ({@link AgentStatus.pause} no-ops if already paused), and reads the
-   * same way the kill switch being off does: every ticket from here
-   * routes straight to the human queue until {@link agentQuotaClear}.
-   */
-  @http.POST("/_/support/agent/quota-alert")
-  async agentQuotaAlert(
-    ctx: Context<RouterState & AuthState>,
-    @body.json(PAgentQuota, jsonOpts) input: TAgentQuota,
-  ) {
-    ctx.state.requireSupportAgent();
-    const wasAlreadyPaused = (await AgentStatus.current()).pausedSince != null;
-    const status = await AgentStatus.pause(input.model);
-    if (!wasAlreadyPaused) {
-      void StaffAuditEvent.record({
-        userId: null,
-        action: "agent-quota-paused",
-        detail: `model ${input.model}`,
-        ip: clientIp(ctx),
-      });
-      void this.#sendUrgentAlert({
-        subject: `Tab is paused — quota reached on ${input.model}`,
-        reason: `${input.model} hit its request limit.`,
-        detail:
-          "Automation has stopped — every new ticket is routing directly to your inbox, untouched, exactly as if the kill switch were off. Resets automatically, or check Settings → Automation.",
-        deskLink: this.#link("/desk/settings"),
-      });
-    }
-    ctx.response.body = { pausedSince: status.pausedSince };
-  }
-
-  /** Called once the agent successfully processes a ticket again. */
-  @http.POST("/_/support/agent/quota-clear")
-  async agentQuotaClear(ctx: Context<RouterState & AuthState>) {
-    ctx.state.requireSupportAgent();
-    await AgentStatus.clear();
-    ctx.response.body = { ok: true };
-  }
-
-  /** The Settings page's paused-state banner (mockup step 11) and kill switch. */
-  @http.GET("/_/support/desk/quota-status")
-  async deskQuotaStatus(ctx: Context<RouterState & AuthState>) {
-    await ctx.state.requireStaff();
-    const status = await AgentStatus.current();
-    ctx.response.body = {
-      pausedSince:
-        status.pausedSince != null
-          ? new Date(status.pausedSince).toISOString()
-          : null,
-      pausedModel: status.pausedModel,
-      enabled: status.enabled ?? true,
-    };
-  }
-
-  /**
-   * The staff kill switch (mockup step 07) — independent of the quota
-   * pause. Off routes every ticket straight to the human queue, same as a
-   * quota pause, until switched back on.
-   */
-  @http.POST("/_/support/desk/automation-enabled")
-  async deskSetAutomationEnabled(
-    ctx: Context<RouterState & AuthState>,
-    @body.json(PDeskAutomationEnabled, jsonOpts)
-    input: TDeskAutomationEnabled,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const status = await AgentStatus.setEnabled(input.enabled);
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "automation-toggled",
-      detail: input.enabled ? "on" : "off",
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = { enabled: status.enabled ?? true };
-  }
-
-  /**
-   * Read-only: whether the triage flow should even start this run. Checked
-   * once at the top of every `triage.mjs` pass — same "routes to human,
-   * nothing in flight is lost" behavior as a quota pause, just staff-driven
-   * instead of Groq-driven.
-   */
-  @http.GET("/_/support/agent/status")
-  async agentAutomationStatus(ctx: Context<RouterState & AuthState>) {
-    ctx.state.requireSupportAgent();
-    const status = await AgentStatus.current();
-    ctx.response.body = {
-      enabled: (status.enabled ?? true) && status.pausedSince == null,
-    };
-  }
-
   // ── Staff: account lookup ──
   //
   // Structurally scoped: this query never selects, joins, or returns a
   // child profile's name/kind/avatar, any result/practice_session content
   // beyond a COUNT, or anything from ProfileData — the restriction is that
   // those columns are simply never reached, not filtered out afterwards.
-
-  @http.GET("/_/support/accounts")
-  async lookupAccounts(
-    ctx: Context<RouterState & AuthState>,
-    @queryParam("query", pQuery) query: string | undefined,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const term = query?.trim();
-    // Empty query: the search screen's placeholder state shows the 10 most
-    // recently registered accounts rather than a blank page — same query
-    // shape, just no `where`, so it's still a real lookup for the audit log.
-    const users = await (term
-      ? User.query()
-          .withGraphFetched("externalIds")
-          .where((q) =>
-            q
-              .where("email", "like", `%${term}%`)
-              .orWhere("name", "like", `%${term}%`),
-          )
-          .orderBy("createdAt", "desc")
-          .limit(20)
-      : User.query()
-          .withGraphFetched("externalIds")
-          .orderBy("createdAt", "desc")
-          .limit(10));
-
-    const results = await Promise.all(
-      users.map(async (u) => {
-        const profileCount = await Profile.query()
-          .where("userId", u.id!)
-          .resultSize();
-        const lastLogin = await SecurityEvent.query()
-          .where({ userId: u.id!, type: "login" })
-          .orderBy("createdAt", "desc")
-          .first();
-        return {
-          id: u.id!,
-          name: u.name!,
-          email: maskEmail(u.email!),
-          emailVerified: Boolean(u.emailVerified),
-          createdAt: new Date(u.createdAt!).toISOString(),
-          signInMethod: deriveSignInMethod(u),
-          profileCount,
-          lastSeen:
-            lastLogin?.createdAt != null
-              ? new Date(lastLogin.createdAt).toISOString()
-              : null,
-        };
-      }),
-    );
-
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "account-lookup",
-      detail: term ? term.slice(0, 120) : "(recent, no query)",
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = results;
-  }
-
-  /** How many accounts exist, for the search screen's "N registered" stat. */
-  @http.GET("/_/support/accounts/total")
-  async getAccountsTotal(ctx: Context<RouterState & AuthState>) {
-    await ctx.state.requireStaff();
-    ctx.response.body = { total: await User.query().resultSize() };
-  }
-
-  /**
-   * One account's facts — same scope as {@link lookupAccounts}, just for a
-   * single id: never a profile's name/kind/avatar, never lesson or typing
-   * content. The support-ticket list below is subject/status/date only, the
-   * same shape the Inbox itself shows, not message bodies.
-   */
-  @http.GET("/_/support/accounts/{id}")
-  async getAccount(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const user = await User.query()
-      .withGraphFetched("externalIds")
-      .findById(id);
-    if (user == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const profileCount = await Profile.query().where("userId", id).resultSize();
-    const lastLogin = await SecurityEvent.query()
-      .where({ userId: id, type: "login" })
-      .orderBy("createdAt", "desc")
-      .first();
-    const tickets = await SupportTicket.query()
-      .where("userId", id)
-      .orderBy("createdAt", "desc")
-      .limit(10);
-    const siteSettings = await StaffSettings.siteDefault();
-    const showLocation = siteSettings.toDetails().showLastLoginLocation;
-    const deletionRequest = await AccountDeletionRequest.findPendingForUser(id);
-
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "account-viewed",
-      detail: `account ${id}`,
-      ip: clientIp(ctx),
-    });
-
-    ctx.response.body = {
-      id: user.id!,
-      name: user.name!,
-      email: maskEmail(user.email!),
-      emailVerified: Boolean(user.emailVerified),
-      createdAt: new Date(user.createdAt!).toISOString(),
-      signInMethod: deriveSignInMethod(user),
-      signupCountry: user.signupCountry ?? null,
-      locale: user.locale ?? null,
-      profileCount,
-      lastLogin:
-        lastLogin == null
-          ? null
-          : {
-              at: new Date(lastLogin.createdAt!).toISOString(),
-              ip: showLocation ? (lastLogin.ip ?? null) : null,
-              userAgent: showLocation ? (lastLogin.userAgent ?? null) : null,
-            },
-      tickets: tickets.map((t) => ({
-        id: t.id!,
-        subject: t.subject!,
-        status: t.status!,
-        createdAt: new Date(t.createdAt!).toISOString(),
-      })),
-      deletionRequest: deletionRequest?.toDetails() ?? null,
-    };
-  }
-
-  /**
-   * Starts the 48-hour cooling-off window and emails the account holder —
-   * a reason is mandatory (staff accountability, same rule the reveal-email
-   * endpoint already enforces when the setting is on) even though it isn't
-   * repeated back to the customer verbatim; the email states plainly what's
-   * happening and how to stop it.
-   */
-  @http.POST("/_/support/accounts/{id}/request-deletion")
-  async requestAccountDeletion(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PAccountRequestDeletion, jsonOpts)
-    input: TAccountRequestDeletion,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const user = await User.findById(id);
-    if (user == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    if (user.email == null) {
-      throw new ApplicationError(
-        "This account has no email address to notify.",
-      );
-    }
-    const existing = await AccountDeletionRequest.findPendingForUser(id);
-    if (existing != null) {
-      throw new ApplicationError(
-        "A deletion is already scheduled for this account.",
-      );
-    }
-    const { request, cancelToken } = await AccountDeletionRequest.request({
-      userId: id,
-      requestedByUserId: staff.id ?? null,
-      reason: input.reason,
-    });
-    await this.mailer.sendMail(
-      messageAccountDeletionRequested({
-        email: user.email,
-        when: new Date(request.executeAt!).toLocaleString(undefined, {
-          dateStyle: "long",
-          timeStyle: "short",
-        }),
-        cancelLink: this.#link(`/support/deletion-cancel/${cancelToken}`),
-        contactLink: this.#link("/support"),
-      }),
-    );
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "account-deletion-requested",
-      detail: `account ${id} — ${input.reason}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = { deletionRequest: request.toDetails() };
-  }
-
-  /** Staff-side cancel — the account holder has their own token-based link, see {@link cancelAccountDeletionByToken}. */
-  @http.POST("/_/support/accounts/{id}/cancel-deletion")
-  async cancelAccountDeletion(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PAccountRequestDeletion, jsonOpts)
-    input: TAccountRequestDeletion,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const pending = await AccountDeletionRequest.findPendingForUser(id);
-    if (pending == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const cancelled = await pending.cancel("staff");
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "account-deletion-cancelled",
-      detail: `account ${id} — ${input.reason}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = { deletionRequest: cancelled.toDetails() };
-  }
 
   /**
    * What the account holder's own cancel page reads before showing anything
@@ -2113,147 +1393,9 @@ export class Controller {
     ctx.response.body = { deletionRequest: cancelled.toDetails() };
   }
 
-  /** The one deliberate, audited way to see a registered account's real address. */
-  @http.POST("/_/support/accounts/{id}/reveal-email")
-  async revealAccountEmail(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PAccountReveal, jsonOpts) input: TAccountReveal,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const user = await User.findById(id);
-    if (user == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    const siteSettings = await StaffSettings.siteDefault();
-    const reason = input.reason?.trim();
-    if (siteSettings.toDetails().requireRevealReason && !reason) {
-      throw new ApplicationError(
-        "A reason is required to reveal this address.",
-      );
-    }
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "account-email-revealed",
-      detail: reason ? `account ${id} — ${reason}` : `account ${id}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = { email: user.email };
-  }
-
   // ── Staff: dashboard ──
 
-  @http.GET("/_/support/desk/dashboard")
-  async getDashboardStats(ctx: Context<RouterState & AuthState>) {
-    await ctx.state.requireStaff();
-    ctx.response.body = await getDashboard();
-  }
-
   // ── Staff: answers + rules CRUD ──
-
-  @http.GET("/_/support/desk/answers")
-  async listAllAnswers(ctx: Context<RouterState & AuthState>) {
-    await ctx.state.requireStaff();
-    const answers = await Answer.query().orderBy("createdAt", "desc");
-    ctx.response.body = answers.map((a) => a.toDetails());
-  }
-
-  @http.POST("/_/support/desk/answers")
-  async createAnswer(
-    ctx: Context<RouterState & AuthState>,
-    @body.json(PAnswerCreate, jsonOpts) input: TAnswerCreate,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const answer = await Answer.create({
-      title: input.title,
-      body: input.body,
-      published: input.published,
-      createdBy: staff.id,
-    });
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "answer-changed",
-      detail: `created "${input.title.slice(0, 100)}"`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = answer.toDetails();
-  }
-
-  @http.PUT("/_/support/desk/answers/{id}")
-  async updateAnswer(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PAnswerUpdate, jsonOpts) input: TAnswerUpdate,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const answer = await Answer.update(id, input);
-    if (answer == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "answer-changed",
-      detail: `updated answer ${id}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = answer.toDetails();
-  }
-
-  @http.GET("/_/support/desk/rules")
-  async listRules(ctx: Context<RouterState & AuthState>) {
-    await ctx.state.requireStaff();
-    const rules = await AnswerRule.listAll();
-    ctx.response.body = rules.map((r) => r.toDetails());
-  }
-
-  @http.POST("/_/support/desk/rules")
-  async createRule(
-    ctx: Context<RouterState & AuthState>,
-    @body.json(PRuleCreate, jsonOpts) input: TRuleCreate,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const created = await AnswerRule.create({
-      answerId: input.answerId,
-      keywords: input.keywords,
-      suggestOnly: input.suggestOnly,
-    });
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "rule-changed",
-      detail: `created rule for answer ${input.answerId}`,
-      ip: clientIp(ctx),
-    });
-    const withAnswer = await AnswerRule.query()
-      .withGraphFetched("answer")
-      .findById(created.id!);
-    ctx.response.body = (withAnswer ?? created).toDetails();
-  }
-
-  @http.PUT("/_/support/desk/rules/{id}")
-  async updateRule(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PRuleUpdate, jsonOpts) input: TRuleUpdate,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const updated = await AnswerRule.update(id, input);
-    if (updated == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "rule-changed",
-      detail: `updated rule ${id}`,
-      ip: clientIp(ctx),
-    });
-    const withAnswer = await AnswerRule.query()
-      .withGraphFetched("answer")
-      .findById(id);
-    ctx.response.body = (withAnswer ?? updated).toDetails();
-  }
 
   // ── Staff: saved replies ──
   //
@@ -2261,234 +1403,11 @@ export class Controller {
   // replies, notices and settings, changes here are not audited (matching
   // the /use endpoint's own reasoning below).
 
-  @http.GET("/_/support/desk/saved-replies")
-  async listSavedReplies(ctx: Context<RouterState & AuthState>) {
-    await ctx.state.requireStaff();
-    const replies = await SavedReply.listAll();
-    ctx.response.body = replies.map((r) => r.toDetails());
-  }
-
-  @http.POST("/_/support/desk/saved-replies")
-  async createSavedReply(
-    ctx: Context<RouterState & AuthState>,
-    @body.json(PSavedReplyCreate, jsonOpts) input: TSavedReplyCreate,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const reply = await SavedReply.create({
-      title: input.title,
-      body: input.body,
-      createdBy: staff.id,
-    });
-    ctx.response.body = reply.toDetails();
-  }
-
-  @http.PUT("/_/support/desk/saved-replies/{id}")
-  async updateSavedReply(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PSavedReplyUpdate, jsonOpts) input: TSavedReplyUpdate,
-  ) {
-    await ctx.state.requireStaff();
-    const reply = await SavedReply.update(id, input);
-    if (reply == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    ctx.response.body = reply.toDetails();
-  }
-
-  /** Called when staff actually inserts a saved reply into an outgoing message. */
-  @http.POST("/_/support/desk/saved-replies/{id}/use")
-  async useSavedReply(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-  ) {
-    await ctx.state.requireStaff();
-    await SavedReply.incrementUsed(id);
-    ctx.response.status = 204;
-  }
-
   // ── Staff + public: notices ──
-
-  @http.GET("/_/support/desk/notices")
-  async listAllNotices(ctx: Context<RouterState & AuthState>) {
-    await ctx.state.requireStaff();
-    const notices = await Notice.query().orderBy("createdAt", "desc");
-    ctx.response.body = notices.map((n) => n.toDetails());
-  }
-
-  @http.POST("/_/support/notices")
-  async createNotice(
-    ctx: Context<RouterState & AuthState>,
-    @body.json(PNoticeCreate, jsonOpts) input: TNoticeCreate,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const notice = await Notice.create({
-      message: input.message,
-      level: input.level,
-      kind: input.kind as NoticeKind | undefined,
-      display: input.display,
-      startsAt: input.startsAt ?? null,
-      endsAt: input.endsAt ?? null,
-      audience: input.audience,
-      dismissible: input.dismissible,
-      createdBy: staff.id!,
-    });
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "notice-published",
-      detail: input.message.slice(0, 120),
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = notice.toDetails();
-  }
-
-  @http.PUT("/_/support/notices/{id}")
-  async updateNotice(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-    @body.json(PNoticeUpdate, jsonOpts) input: TNoticeUpdate,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const { active, ...fields } = input;
-
-    if (active != null) {
-      await Notice.setActive(id, active);
-      if (!active) {
-        void StaffAuditEvent.record({
-          userId: staff.id,
-          action: "notice-retracted",
-          detail: `notice ${id}`,
-          ip: clientIp(ctx),
-        });
-      }
-    }
-
-    const hasFieldPatch = Object.values(fields).some((v) => v !== undefined);
-    let notice: Notice | null;
-    if (hasFieldPatch) {
-      notice = await Notice.update(id, fields);
-      if (notice != null) {
-        void StaffAuditEvent.record({
-          userId: staff.id,
-          action: "notice-updated",
-          detail: `notice ${id}`,
-          ip: clientIp(ctx),
-        });
-      }
-    } else {
-      notice = (await Notice.query().findById(id)) ?? null;
-    }
-
-    if (notice == null) {
-      ctx.response.status = 404;
-      return;
-    }
-    ctx.response.body = notice.toDetails();
-  }
-
-  /** Permanently removes a notice — distinct from retracting it (PUT .../active), which keeps the row. */
-  @http.DELETE("/_/support/notices/{id}")
-  async deleteNotice(
-    ctx: Context<RouterState & AuthState>,
-    @pathParam("id", pId) id: number,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const deleted = await Notice.delete(id);
-    if (!deleted) {
-      ctx.response.status = 404;
-      return;
-    }
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "notice-deleted",
-      detail: `notice ${id}`,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = { ok: true };
-  }
 
   // ── Staff: settings ──
 
-  @http.GET("/_/support/desk/settings")
-  async getSettings(ctx: Context<RouterState & AuthState>) {
-    const staff = await ctx.state.requireStaff();
-    const settings = await StaffSettings.getForUser(staff.id!);
-    ctx.response.body = settings.toDetails();
-  }
-
-  @http.PUT("/_/support/desk/settings")
-  async updateSettings(
-    ctx: Context<RouterState & AuthState>,
-    @body.json(PSettings, jsonOpts) input: TSettings,
-  ) {
-    const staff = await ctx.state.requireStaff();
-    const settings = await StaffSettings.upsert(staff.id!, input);
-    void StaffAuditEvent.record({
-      userId: staff.id,
-      action: "settings-changed",
-      detail: null,
-      ip: clientIp(ctx),
-    });
-    ctx.response.body = settings.toDetails();
-  }
-
   // ── Staff: roster (read-only) ──
 
-  /**
-   * Who's allowlisted and what proves their identity — not editable here,
-   * see `deskSettings.notHere.staff`. An address with no account yet still
-   * appears, since it lists who's *allowed*, not just who's signed in.
-   */
-  @http.GET("/_/support/desk/staff")
-  async listStaffRoster(ctx: Context<RouterState & AuthState>) {
-    await ctx.state.requireStaff();
-    const roster = await Promise.all(
-      listStaffEmails().map(async (email) => {
-        const user = await User.findByEmail(email);
-        if (user == null) {
-          return {
-            email,
-            name: null,
-            hasPasskey: false,
-            hasAuthenticator: false,
-            lastSignedInAt: null,
-          };
-        }
-        const [credentials, lastLogin] = await Promise.all([
-          Credential.listForUser(user.id!),
-          SecurityEvent.lastOfType(user.id!, "login"),
-        ]);
-        return {
-          email,
-          name: user.name ?? null,
-          hasPasskey: credentials.length > 0,
-          hasAuthenticator: Boolean(user.totpEnabled),
-          lastSignedInAt:
-            lastLogin != null
-              ? new Date(lastLogin.createdAt!).toISOString()
-              : null,
-        };
-      }),
-    );
-    ctx.response.body = roster;
-  }
-
   // ── Staff: audit log ──
-
-  /** Read-only. Nothing on the desk edits or deletes a row here. */
-  @http.GET("/_/support/audit")
-  async listAudit(ctx: Context<RouterState & AuthState>) {
-    await ctx.state.requireStaff();
-    const events = await StaffAuditEvent.listRecent(100);
-    const userIds = [
-      ...new Set(events.map((e) => e.userId).filter((id) => id != null)),
-    ] as number[];
-    const users = await User.loadAll(userIds);
-    ctx.response.body = events.map((e) =>
-      e.toDetails(
-        e.userId != null ? (users.get(e.userId)?.name ?? null) : null,
-      ),
-    );
-  }
 }

@@ -21,11 +21,15 @@ import {
   EmailVerification,
   generateRecoveryCodes,
   generateTotpSecret,
+  maskEmail,
   Notification,
   Profile,
   ProfileData,
   SecurityEvent,
   type SecurityEventType,
+  SecurityReset,
+  type SecurityResetScope,
+  SupportTicket,
   totpUri,
   User,
   UserExistsError,
@@ -53,12 +57,16 @@ import { File } from "@sosimple/fsx-file";
 import { z } from "zod";
 import { Mailer, Notifier } from "../mail/index.ts";
 import { preferredLocale } from "../page/intl.ts";
+import { reference } from "../support/my-controller.ts";
 import { isBreached } from "./breached.ts";
 import {
   messageWithCode,
   messageWithLink,
+  messageWithResetCode,
   messageWithResetLink,
+  resetScopeLines,
 } from "./email.ts";
+import { accountGateStatus, revokeSupportPin } from "./parent-pin.ts";
 import { pAdapter } from "./pipe.ts";
 import { clientIp, rateLimit } from "./ratelimit.ts";
 import { encryptTotpSecret, resolveTotpSecret } from "./totp-crypto.ts";
@@ -403,11 +411,14 @@ const PTwoFactorLogin = zod(TTwoFactorLogin, () => {
 });
 
 const TParentPin = z.object({
-  // 4-8 digits: long enough not to be guessed over a child's shoulder in a few
-  // tries (attempts are rate-limited), short enough to be remembered.
+  // 4-6 digits: long enough not to be guessed over a child's shoulder in a
+  // few tries (attempts are rate-limited), short enough to be remembered,
+  // and short enough that six boxes still fit on one line at the pane's
+  // width. Nothing longer was ever in use, so there is no older shape to
+  // keep accepting.
   pin: z
     .string()
-    .regex(/^\d{4,8}$/)
+    .regex(/^\d{4,6}$/)
     .nullable(),
   // Proof this is the account owner and not whoever is holding the tablet.
   password: z.string().max(128).optional(),
@@ -415,7 +426,7 @@ const TParentPin = z.object({
 });
 type TParentPin = z.infer<typeof TParentPin>;
 const PParentPin = zod(TParentPin, () => {
-  throw new ApplicationError("Choose a PIN of 4 to 8 digits");
+  throw new ApplicationError("Choose a PIN of 4 to 6 digits");
 });
 
 const TVerifyPin = z.object({
@@ -424,6 +435,29 @@ const TVerifyPin = z.object({
 type TVerifyPin = z.infer<typeof TVerifyPin>;
 const PVerifyPin = zod(TVerifyPin, () => {
   throw new ApplicationError("Enter the grown-up PIN");
+});
+
+/**
+ * Which of the four to reset. Every field optional and defaulting to
+ * false: a client that omits one is asking for less, never for more.
+ */
+const TSecurityReset = z.object({
+  password: z.boolean().optional(),
+  twoFactor: z.boolean().optional(),
+  recoveryCodes: z.boolean().optional(),
+  parentPin: z.boolean().optional(),
+});
+type TSecurityReset = z.infer<typeof TSecurityReset>;
+const PSecurityReset = zod(TSecurityReset, () => {
+  throw new ApplicationError("Choose at least one thing to reset.");
+});
+
+const TSecurityResetConfirm = z.object({
+  code: z.string().trim().min(1).max(16),
+});
+type TSecurityResetConfirm = z.infer<typeof TSecurityResetConfirm>;
+const PSecurityResetConfirm = zod(TSecurityResetConfirm, () => {
+  throw new ApplicationError("Enter the code from your email.");
 });
 
 const TPatchAccount = z.object({
@@ -1631,7 +1665,25 @@ export class Controller {
       user.id!,
       pin == null ? "removed" : null,
     );
-    ctx.response.body = { ok: true, parentPinSet: pin != null };
+    // The length goes back with it, so the card can redraw its boxes
+    // without a round trip to re-read the account.
+    ctx.response.body = {
+      ok: true,
+      parentPinSet: pin != null,
+      parentPinLength: pin?.length ?? null,
+    };
+  }
+
+  /**
+   * Whether the account window itself is locked, and by how many digits.
+   *
+   * Asked on load rather than inferred: only the server knows whether the
+   * PIN has been proved in this visit, and a window that renders first and
+   * locks second has already shown what it was hiding.
+   */
+  @http.GET("/_/account/pin-gate")
+  async accountGate(ctx: Context<RouterState & SessionState & AuthState>) {
+    ctx.response.body = await accountGateStatus(ctx, ctx.state.user);
   }
 
   @http.POST({
@@ -1656,6 +1708,189 @@ export class Controller {
     clearFailures(ctx);
     ctx.state.session.set("parentPinAt", Date.now());
     ctx.response.body = { ok: true };
+  }
+
+  // ---- The way back in when a factor is lost ----
+
+  /**
+   * What this account could reset, and what state each one is in.
+   *
+   * Sent so the dialog can show four rows that are true of *this* account
+   * rather than four hopeful checkboxes: an account with no two-step
+   * verification should not be offered the chance to turn it off.
+   */
+  @http.GET({
+    name: "security-reset-options",
+    path: "/_/account/security-reset/options",
+  })
+  async securityResetOptions(
+    ctx: Context<RouterState & SessionState & AuthState>,
+  ) {
+    const user = ctx.state.requireUser();
+    ctx.response.body = {
+      email: user.email == null ? null : maskEmail(user.email),
+      password: {
+        // Offered to everyone: an SSO-only account setting its first
+        // password is the case this whole feature was asked for.
+        available: user.email != null,
+        hasPassword: user.passwordHash != null,
+      },
+      twoFactor: {
+        available: Boolean(user.totpEnabled),
+        enabled: Boolean(user.totpEnabled),
+      },
+      recoveryCodes: {
+        available: user.countRecoveryCodes() > 0,
+        left: user.countRecoveryCodes(),
+      },
+      parentPin: {
+        available: user.parentPinHash != null,
+        set: user.parentPinHash != null,
+      },
+    };
+  }
+
+  /**
+   * Step one: choose, then send a code for exactly that choice.
+   *
+   * The selection is stored server-side before the code goes out, and the
+   * code that comes back can only perform the stored row. Letting the
+   * client send the selection *with* the code instead would mean a code
+   * obtained for "clear the PIN" could be spent turning off two-step
+   * verification, which is the change an attacker actually wants.
+   *
+   * Reachable by anyone holding a signed-in session, deliberately — a
+   * parent who has forgotten the PIN is locked out of everything behind
+   * it, so the way back cannot sit behind it too. The email is the check:
+   * the code goes to the account's address and nowhere else.
+   */
+  @http.POST({
+    name: "security-reset-code",
+    path: "/_/account/security-reset/code",
+  })
+  async securityResetCode(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PSecurityReset, jsonOpts) input: TSecurityReset,
+  ) {
+    rateLimit(ctx, "security-reset", 5, 300_000);
+    const user = ctx.state.requireUser();
+    if (user.email == null) {
+      throw new ApplicationError("Your account has no email address.");
+    }
+    // Only what this account actually has. A request to turn off two-step
+    // verification that was never on is not an error worth a message, but
+    // it must not be recorded as something the code will "do" either.
+    const scope: SecurityResetScope = {
+      password: input.password === true,
+      twoFactor: input.twoFactor === true && Boolean(user.totpEnabled),
+      recoveryCodes:
+        input.recoveryCodes === true && user.countRecoveryCodes() > 0,
+      parentPin: input.parentPin === true && user.parentPinHash != null,
+    };
+    if (!Object.values(scope).some(Boolean)) {
+      throw new ApplicationError("Choose at least one thing to reset.");
+    }
+    await SecurityReset.ask(user.id!, scope);
+    const code = await EmailVerification.issue(user.email, "security-reset");
+    try {
+      await this.mailer.sendMail(
+        messageWithResetCode({ email: user.email, code, scope }),
+      );
+    } catch (err: any) {
+      Logger.warn(err, "Error sending security-reset code to '%s'", user.email);
+    }
+    ctx.response.body = { ok: true, scope };
+  }
+
+  /**
+   * Step two: the code, and only the changes it was issued for.
+   *
+   * Everything here is recoverable by the account owner and nothing here
+   * touches the two things that would let somebody take the account over
+   * — the password is not set, only offered by link, and the email
+   * address is left alone entirely.
+   */
+  @http.POST({ name: "security-reset", path: "/_/account/security-reset" })
+  async securityReset(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PSecurityResetConfirm, jsonOpts) { code }: TSecurityResetConfirm,
+  ) {
+    rateLimit(ctx, "security-reset", 10, 300_000);
+    const user = ctx.state.requireUser();
+    if (user.email == null) {
+      throw new ApplicationError("Your account has no email address.");
+    }
+    const pending = await SecurityReset.pendingFor(user.id!);
+    if (pending == null) {
+      throw new ForbiddenError(
+        "That request has expired. Choose what to reset and ask for a new code.",
+      );
+    }
+    if (!(await EmailVerification.verify(user.email, "security-reset", code))) {
+      recordFailure(ctx);
+      throw new ForbiddenError("That code is not right, or it has expired.");
+    }
+    clearFailures(ctx);
+    const scope = pending.scope();
+    // Consumed before the work, not after: a failure part-way through must
+    // not leave a request that a second code could perform again.
+    await SecurityReset.clear(user.id!);
+
+    if (scope.twoFactor) {
+      // The codes go with it — they exist only to get past this.
+      await user.$query().patch({
+        totpEnabled: false,
+        totpSecret: null,
+        recoveryCodes: null,
+      });
+      this.#audit(ctx, "two-factor-disabled", user.id!, "security reset");
+    } else if (scope.recoveryCodes) {
+      // Only when two-step survives: the branch above already cleared them.
+      await user.$query().patch({ recoveryCodes: null });
+    }
+    if (scope.parentPin) {
+      await user.setParentPin(null);
+      ctx.state.session.delete("parentPinAt");
+      // The support section keeps its own proof, in its own table.
+      await revokeSupportPin(ctx);
+      this.#audit(ctx, "parent-pin-set", user.id!, "removed by security reset");
+    }
+    if (scope.password) {
+      // A link rather than a password set from here. The existing reset
+      // path is already hardened — breach checks, single-use token — and
+      // a second way to set a password is a second thing to get wrong.
+      const token = String(await UserLoginRequest.init(user.email, "reset"));
+      const link = String(
+        new URL(`/reset-password/${token}`, this.canonicalUrl),
+      );
+      try {
+        await this.mailer.sendMail(
+          messageWithResetLink({ email: user.email, link }),
+        );
+      } catch (err: any) {
+        Logger.warn(err, "Error sending reset link to '%s'", user.email);
+      }
+    }
+
+    this.#audit(
+      ctx,
+      "security-reset",
+      user.id!,
+      resetScopeLines(scope).join("; "),
+    );
+    this.#alert(ctx, user, "Your security settings were reset");
+    // Anyone else holding a session on this account loses it. This session
+    // is re-stamped so the person doing the resetting stays in.
+    const epoch = (user.sessionEpoch ?? 0) + 1;
+    await user.$query().patch({ sessionEpoch: epoch });
+    ctx.state.session.set("epoch", epoch);
+    ctx.response.body = {
+      ok: true,
+      scope,
+      // What was done, in the same words the email used.
+      done: resetScopeLines(scope),
+      passwordLinkSent: scope.password,
+    };
   }
 
   // ---- Two-step verification (TOTP) ----
@@ -1830,8 +2065,37 @@ export class Controller {
       Notification.listForUser(user.id!),
       Notification.countUnread(user.id!),
     ]);
+
+    // The reference, subject and status are read off the ticket at list
+    // time rather than copied onto the notification when it was made: a
+    // conversation that has since been resolved should say so on the
+    // bell, and a copy taken at reply time would still say "open".
+    const ids = [
+      ...new Set(
+        notifications.map((n) => n.ticketId).filter((id) => id != null),
+      ),
+    ] as number[];
+    const tickets =
+      ids.length === 0
+        ? []
+        : await SupportTicket.query()
+            .select("id", "subject", "status")
+            .whereIn("id", ids)
+            .where("userId", user.id!);
+    const byId = new Map(tickets.map((t) => [t.id!, t]));
+
     ctx.response.body = {
-      notifications: notifications.map((n) => n.toDetails()),
+      notifications: notifications.map((n) => {
+        const ticket = n.ticketId == null ? null : byId.get(n.ticketId);
+        return {
+          ...n.toDetails(),
+          // Null when the ticket is gone or was never this account's —
+          // the notification still reads, it just cannot be opened.
+          reference: ticket == null ? null : reference(ticket.id!),
+          subject: ticket?.subject ?? null,
+          status: ticket?.status ?? null,
+        };
+      }),
       unread,
     };
     ctx.response.headers.set("Cache-Control", "private, no-store");
@@ -1850,6 +2114,31 @@ export class Controller {
     // another account silently no-ops rather than leaking whether it
     // exists, same as returning it here regardless.
     await Notification.markRead(Number(id), user.id!);
+    ctx.response.body = { ok: true };
+  }
+
+  @http.DELETE({
+    name: "dismiss-notification",
+    path: "/_/account/notifications/{id:[0-9]+}",
+  })
+  async dismissNotification(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id") id: string,
+  ) {
+    const user = ctx.state.requireUser();
+    await Notification.dismiss(Number(id), user.id!);
+    ctx.response.body = { ok: true };
+  }
+
+  @http.DELETE({
+    name: "dismiss-all-notifications",
+    path: "/_/account/notifications",
+  })
+  async dismissAllNotifications(
+    ctx: Context<RouterState & SessionState & AuthState>,
+  ) {
+    const user = ctx.state.requireUser();
+    await Notification.dismissAll(user.id!);
     ctx.response.body = { ok: true };
   }
 
@@ -1922,6 +2211,13 @@ export class Controller {
       );
     }
     const consented = data.kind === "kid";
+    if (consented) {
+      // Sticky: from now on this household's support section wants the
+      // grown-up PIN, and deleting the profile again does not undo it.
+      // Deleting a learner profile is precisely what somebody trying to get
+      // past the gate would reach for.
+      await User.query().findById(user.id!).patch({ supportPinRequired: true });
+    }
     await Profile.query().insert({
       userId: user.id!,
       kind: data.kind,

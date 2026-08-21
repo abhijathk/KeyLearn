@@ -14,22 +14,12 @@ export type AuthState = {
    */
   readonly requireStaff: () => Promise<User>;
   /**
-   * A completely separate door for the automation agent — checked against
-   * `SUPPORT_AGENT_API_KEY` via a request header, never a session or a
-   * passkey. Deliberately not `requireStaff`: the agent is not staff, has
-   * no user, and the routes it's allowed to reach are a small, fixed
-   * subset (see the support controller's `/agent/*` routes) — this exists
-   * so that subset never has to be reachable through the human sign-in
-   * path at all.
-   */
-  readonly requireSupportAgent: () => void;
-  /**
    * The door for the separate ops app (formerly the desk, now a closed
    * sibling repo) — checked against `OPS_API_KEY` via a request header,
-   * same shape as {@link requireSupportAgent}. It reaches a wider surface
-   * than the automation agent (staff-auth verification, account reveal
-   * and deletion) since it's the ops app's OWN staff members acting
-   * through it, already authenticated on that app's own side — this key
+   * checked against a request header rather than a session. It reaches
+   * staff-auth verification, account reveal and deletion, since it is the
+   * ops app's OWN staff members acting through it, already authenticated
+   * on that app's own side — this key
    * only proves the request came from that app's server, not a browser.
    */
   readonly requireOpsApi: () => void;

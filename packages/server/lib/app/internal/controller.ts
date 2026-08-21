@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import {
   body,
   controller,
@@ -6,10 +7,10 @@ import {
   queryParam,
 } from "@fastr/controller";
 import { Context } from "@fastr/core";
-import { ApplicationError } from "@fastr/errors";
+import { ApplicationError, NotFoundError } from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
-import { Env, listStaffEmails } from "@keylearn/config";
+import { DataDir, Env, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
   Credential,
@@ -19,6 +20,7 @@ import {
   SecurityEvent,
   StaffAuditEvent,
   StaffSettings,
+  SupportAttachment,
   SupportTicket,
   User,
   verifyTotp,
@@ -90,6 +92,7 @@ export class Controller {
     @inject("canonicalUrl") readonly canonicalUrl: string,
     readonly mailer: Mailer,
     readonly userData: UserDataFactory,
+    @inject(DataDir) readonly dataDir: DataDir,
   ) {}
 
   #link(path: string): string {
@@ -285,6 +288,58 @@ export class Controller {
    * body — this is a GET) so the audit event attributes to the actual
    * ops-app staff member, not a generic "ops app" actor.
    */
+  /**
+   * The bytes of one customer attachment, for the desk to show a staff
+   * member.
+   *
+   * The file stays here. Only its description crosses the bridge when a
+   * ticket is forwarded; this is how the desk gets the contents, on
+   * demand, when somebody actually clicks. Copying every screenshot into
+   * the desk's storage as well would mean two places to leak it from, two
+   * things to back up, and two things to delete when somebody asks to be
+   * forgotten.
+   *
+   * Ops-key only, like everything else here — the desk is trusted, a
+   * browser is not, and this route has no session of its own to check.
+   */
+  @http.GET("/_/internal/attachments/{id}")
+  async opsAttachment(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+  ) {
+    ctx.state.requireOpsApi();
+    const row = await SupportAttachment.query().findById(id);
+    if (row == null || row.ticketId == null) {
+      throw new NotFoundError();
+    }
+    // A ticket the customer has removed from their own list is not one
+    // the desk should still be pulling files out of.
+    const ticket = await SupportTicket.findById(row.ticketId);
+    if (ticket == null) {
+      throw new NotFoundError();
+    }
+    let bytes: Buffer;
+    try {
+      bytes = await readFile(this.dataDir.supportAttachmentFile(row.id!));
+    } catch {
+      // The row outliving the file is a real state — an upload swept, a
+      // restore that missed it — and the desk needs to say "no longer
+      // available" rather than show a broken image.
+      throw new NotFoundError();
+    }
+    ctx.response.headers.set("content-type", row.mimeType!);
+    // Always an attachment: this is a machine-to-machine route, the desk
+    // decides how to present it, and nothing here should ever be treated
+    // as a document rendered on this origin.
+    const safeName = row.fileName!.replace(/[^\w.\- ]+/g, "_");
+    ctx.response.headers.set(
+      "content-disposition",
+      `attachment; filename="${safeName}"`,
+    );
+    ctx.response.headers.set("x-content-type-options", "nosniff");
+    ctx.response.body = bytes;
+  }
+
   @http.GET("/_/internal/accounts/search")
   async searchAccounts(
     ctx: Context<RouterState & AuthState>,

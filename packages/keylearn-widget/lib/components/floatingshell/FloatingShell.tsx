@@ -22,6 +22,7 @@ export function FloatingShell({
   closeLabel,
   width,
   dismissible = true,
+  closeOnBackdrop = true,
 }: {
   /** Optional: the auth window carries no heading of its own. */
   readonly title?: ReactNode;
@@ -61,6 +62,15 @@ export function FloatingShell({
    * `false` so there's no accidental way to bounce off it.
    */
   readonly dismissible?: boolean;
+  /**
+   * Whether a click on the dim behind the window closes it.
+   *
+   * Separate from {@link dismissible} because the two are not the same
+   * act: Escape is deliberate, a click that lands slightly wide of a
+   * window is not. A window somebody is working in — filling a form,
+   * writing a message — should not be closable by a missed click.
+   */
+  readonly closeOnBackdrop?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
@@ -89,7 +99,7 @@ export function FloatingShell({
       className={styles.overlay}
       role="presentation"
       onClick={(ev) => {
-        if (dismissible && ev.target === ev.currentTarget) {
+        if (dismissible && closeOnBackdrop && ev.target === ev.currentTarget) {
           close();
         }
       }}

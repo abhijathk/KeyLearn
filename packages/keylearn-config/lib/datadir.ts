@@ -23,6 +23,30 @@ export class DataDir {
   }
 
   /**
+   * Where one support attachment's bytes live.
+   *
+   * Same three-level fan-out as the stats files above, keyed on the
+   * attachment's own id rather than the user's: a directory with several
+   * thousand entries is slow to list on every filesystem worth naming, and
+   * these accumulate faster than accounts do.
+   *
+   * The bytes are deliberately not in the database. A screenshot of a
+   * broken certificate is a few hundred kilobytes of opaque data that no
+   * query ever looks inside, and putting it in a row makes every backup,
+   * dump and replica carry it. The row keeps the name, the type and the
+   * size; the disk keeps the file.
+   */
+  supportAttachmentFile(attachmentId: number): string {
+    const s = String(attachmentId).padStart(9, "0");
+    return this.dataPath(
+      "support_attachments", //
+      s.substring(0, 3),
+      s.substring(3, 6),
+      s,
+    );
+  }
+
+  /**
    * Returns the full path to a user stats file for the given user id.
    */
   userStatsFile(userId: number): string {

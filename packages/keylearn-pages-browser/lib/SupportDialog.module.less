@@ -4,10 +4,19 @@
 // the matching rounded corners (the window has `overflow: hidden`).
 .banner {
   display: block;
-  inline-size: calc(100% + 3rem);
-  max-inline-size: none;
+  object-fit: contain;
+  /* Inside the card's padding rather than bleeding past it, and at its
+     own aspect ratio. The artwork is a cut-out on transparency, so it
+     sits on the dialog's own surface — no crop, no radius, nothing for
+     a rounded corner to clip. */
+  inline-size: 100%;
   block-size: auto;
-  margin: -1.3rem -1.5rem 1rem;
+  /* Capped: this artwork is three people rather than two, so at full
+     width it stood taller than the sentence it is there to introduce. */
+  max-block-size: 11rem;
+  margin-block: -0.4rem 0.9rem;
+  /* Full strength — the artwork carries this dialog. */
+  opacity: 1;
 }
 
 .content {

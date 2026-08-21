@@ -14,7 +14,7 @@ import { type AuthState } from "./types.ts";
  * matched, which matters for a credential with no rate limiting of its
  * own (this is a machine caller, not a human who'll get locked out).
  * Deliberately fails closed on an empty configured key rather than letting
- * an unset `SUPPORT_AGENT_API_KEY` match an empty header.
+ * an unset `OPS_API_KEY` match an empty header.
  */
 function safeEqual(a: string, b: string): boolean {
   if (a === "" || b === "") {
@@ -118,19 +118,6 @@ async function makeAuthState(
         });
       }
       return u;
-    },
-    requireSupportAgent: () => {
-      const configured = Env.getString("SUPPORT_AGENT_API_KEY", "");
-      const provided = ctx.request.headers.get("x-support-agent-key") ?? "";
-      if (!safeEqual(configured, provided)) {
-        void StaffAuditEvent.record({
-          userId: null,
-          action: "agent-access-denied",
-          detail: null,
-          ip: clientIp(ctx),
-        });
-        throw new ForbiddenError();
-      }
     },
     requireOpsApi: () => {
       const configured = Env.getString("OPS_API_KEY", "");

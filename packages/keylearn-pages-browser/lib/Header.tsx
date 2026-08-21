@@ -17,7 +17,6 @@ import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { NavLink, useLocation } from "react-router";
-import coffeeCup from "../assets/coffee-cup.png";
 import { AccountMenu } from "./AccountMenu.tsx";
 import * as styles from "./Header.module.less";
 import { ThemeSwitcher } from "./themes/ThemeSwitcher.tsx";
@@ -178,7 +177,6 @@ export function Header({
   showBack = false,
   kids = false,
   practice = false,
-  desk = false,
   hideAccount = false,
 }: {
   readonly onOpenMenu: () => void;
@@ -188,8 +186,6 @@ export function Header({
   readonly kids?: boolean;
   /** On the practice page the wordmark is followed by the lesson stamp. */
   readonly practice?: boolean;
-  /** The support desk owns its own left-nav and back/coffee/menu don't apply. */
-  readonly desk?: boolean;
   /**
    * The staff sign-in door: a signed-out visitor there has nowhere useful
    * for the account chip to send them (it's not the general `/login`), so
@@ -211,13 +207,6 @@ export function Header({
     const onStreak = (ev: Event) => {
       setStreak((ev as CustomEvent<number>).detail ?? 0);
     };
-    // The desk's Dashboard broadcasts its data timestamp rather than
-    // rendering it itself — the header is the one place it stays visible
-    // no matter how far down the page a staff member has scrolled, and it
-    // clears the moment the Dashboard unmounts (see DashboardPage.tsx).
-    const onDashboardAsOf = (ev: Event) => {
-      setDashboardAsOf((ev as CustomEvent<string | null>).detail ?? null);
-    };
     // The practice screen owns focus mode and broadcasts its state; the
     // header just follows, so the two can never drift apart.
     const onFocusMode = (ev: Event) => {
@@ -237,16 +226,11 @@ export function Header({
     window.addEventListener("keylearn:focus-mode-state", onFocusMode);
     window.addEventListener("keylearn:typing", onTyping);
     window.addEventListener("keylearn:header-hide", onHide);
-    window.addEventListener("keylearn:desk-dashboard-asof", onDashboardAsOf);
     return () => {
       window.removeEventListener("keylearn:streak", onStreak);
       window.removeEventListener("keylearn:focus-mode-state", onFocusMode);
       window.removeEventListener("keylearn:typing", onTyping);
       window.removeEventListener("keylearn:header-hide", onHide);
-      window.removeEventListener(
-        "keylearn:desk-dashboard-asof",
-        onDashboardAsOf,
-      );
     };
   }, []);
 
@@ -279,15 +263,9 @@ export function Header({
   }
 
   return (
-    <header
-      className={clsx(
-        styles.header,
-        desk && styles.deskSticky,
-        hidden && styles.hidden,
-      )}
-    >
+    <header className={clsx(styles.header, hidden && styles.hidden)}>
       <div className={styles.left}>
-        {showBack && !kids && !braille && !desk && (
+        {showBack && !kids && !braille && (
           <NavLink
             to="/"
             className={styles.back}
@@ -301,73 +279,28 @@ export function Header({
             <StrokeIcon name="back" />
           </NavLink>
         )}
-        {desk ? (
-          // On the support desk, the wordmark is an identity mark only —
-          // not a link back to practice, which would drop staff out of the
-          // desk entirely.
-          <span className={styles.wordmark} dir="ltr">
-            <StrokeIcon
-              className={clsx(styles.glyph, styles.glyphDesk)}
-              name="headset"
-            />
-            <span className={styles.mark}>Q</span>
-            <span className={styles.markAlt}>Desk</span>
-            {/* The one app this desk currently manages — a static fact
-                today (see SettingsPage's APPS registry), not yet a live
-                selection, so it's just printed here rather than read from
-                any switcher state. Carries KeyLearn's own glyph (the same
-                "keyboard" mark its own wordmark uses below), not a generic
-                app icon, so the badge reads as that app's own mark. Hidden
-                on the sign-in door itself (same `hideAccount` signal the
-                avatar uses) — there's no "current app" context worth
-                naming before a staffer is actually signed in to one. */}
-            {!hideAccount && (
-              <span className={styles.appBadge}>
-                <StrokeIcon className={styles.appBadgeIcon} name="keyboard" />
-                KeyLearn
-              </span>
-            )}
-          </span>
-        ) : (
-          <NavLink
-            to={kids ? "/kids" : "/"}
-            className={styles.wordmark}
-            // "KeyLearn" is a brand wordmark built from two spans; pin it LTR so
-            // right-to-left locales (Arabic, Hebrew…) don't reorder it to
-            // "LearnKey".
-            dir="ltr"
-            title={formatMessage(
-              defineMessage({
-                id: "nav.home",
-                defaultMessage: "KeyLearn home",
-              }),
-            )}
-          >
-            <StrokeIcon className={styles.glyph} name="keyboard" />
-            <span className={styles.mark}>Key</span>
-            <span className={styles.markAlt}>Learn</span>
-            {kids && <span className={styles.kidsMark}>Kids</span>}
-          </NavLink>
-        )}
+        <NavLink
+          to={kids ? "/kids" : "/"}
+          className={styles.wordmark}
+          // "KeyLearn" is a brand wordmark built from two spans; pin it LTR so
+          // right-to-left locales (Arabic, Hebrew…) don't reorder it to
+          // "LearnKey".
+          dir="ltr"
+          title={formatMessage(
+            defineMessage({
+              id: "nav.home",
+              defaultMessage: "KeyLearn home",
+            }),
+          )}
+        >
+          <StrokeIcon className={styles.glyph} name="keyboard" />
+          <span className={styles.mark}>Key</span>
+          <span className={styles.markAlt}>Learn</span>
+          {kids && <span className={styles.kidsMark}>Kids</span>}
+        </NavLink>
         {practice && <PracticeStamp />}
       </div>
       <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
-        {desk && dashboardAsOf != null && (
-          <span className={styles.dashboardAsOf}>
-            <FormattedMessage
-              id="deskDashboard.asOf"
-              defaultMessage="Last updated {time}"
-              values={{
-                time: new Date(dashboardAsOf).toLocaleString(undefined, {
-                  day: "numeric",
-                  month: "short",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-              }}
-            />
-          </span>
-        )}
         {streak > 0 && (
           <span
             className={styles.streak}
@@ -393,7 +326,7 @@ export function Header({
             />
           </span>
         )}
-        {!hideAccount && !desk && <AccountMenu kids={kids} desk={desk} />}
+        {!hideAccount && <AccountMenu kids={kids} />}
         {kids && (
           <>
             {(kidsState.streak ?? 0) > 1 && (
@@ -493,23 +426,23 @@ export function Header({
           </span>
         )}
         {!kids && <ThemeSwitcher />}
-        {!kids && !desk && supportUrl !== "" && (
-          <button
-            type="button"
-            onClick={onOpenSupport}
+        {!kids && supportUrl !== "" && (
+          // An IconButton like the bell and the theme switch beside it,
+          // now that it is a stroke icon rather than a fixed-colour image
+          // that had to size itself.
+          <IconButton
+            icon={<StrokeIcon name="coffee" />}
             title={formatMessage(
               defineMessage({
                 id: "footer.supportLink.text",
                 defaultMessage: "Buy me a coffee",
               }),
             )}
-          >
-            <img className={styles.coffeeCup} src={coffeeCup} alt="" />
-          </button>
+            onClick={onOpenSupport}
+          />
         )}
         {!kids && <NotificationBell />}
-        {!hideAccount && desk && <AccountMenu kids={kids} desk={desk} />}
-        {desk ? null : kids ? (
+        {kids ? (
           <button
             type="button"
             className={styles.kidsChip}

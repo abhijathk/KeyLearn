@@ -159,7 +159,43 @@ const PURPOSE_COPY: Record<
     lead: "Enter this code to permanently delete your KeyLearn account and everything in it:",
     ignore: "If you didn't ask to delete your KeyLearn account",
   },
+  // The lead is replaced at send time by one naming the exact things that
+  // were asked for — see `messageWithResetCode`. A code that says only
+  // "a security change" is one somebody approves without reading.
+  ["security-reset"]: {
+    subject: "KeyLearn security-reset code",
+    noun: "security-reset",
+    heading: "Confirm these security changes",
+    lead: "Enter this code to make these changes to your KeyLearn account's security:",
+    ignore: "If you didn't ask to reset your KeyLearn security settings",
+  },
 };
+
+/**
+ * What each part of a reset is called, in the second person, for the
+ * email and for the confirmation that follows it.
+ */
+export function resetScopeLines(scope: {
+  readonly password: boolean;
+  readonly twoFactor: boolean;
+  readonly recoveryCodes: boolean;
+  readonly parentPin: boolean;
+}): string[] {
+  const lines: string[] = [];
+  if (scope.password) {
+    lines.push("Send a link to set a new password");
+  }
+  if (scope.twoFactor) {
+    lines.push("Turn off two-step verification");
+  }
+  if (scope.recoveryCodes) {
+    lines.push("Void your recovery codes");
+  }
+  if (scope.parentPin) {
+    lines.push("Clear the grown-up PIN");
+  }
+  return lines;
+}
 
 export function messageWithCode({
   email,
@@ -199,6 +235,67 @@ Happy typing!`;
       `<p style="margin:20px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">This code expires in 15 minutes.</p>`,
   );
   return { to: email, subject, text, html };
+}
+
+/**
+ * The security-reset code, with the requested changes listed above it.
+ *
+ * Deliberately not the generic code email: this one code can turn off
+ * two-step verification, and somebody reading it on a phone needs to see
+ * what they are approving before the digits, not after.
+ */
+export function messageWithResetCode({
+  email,
+  code,
+  scope,
+}: {
+  readonly email: string;
+  readonly code: string;
+  readonly scope: {
+    readonly password: boolean;
+    readonly twoFactor: boolean;
+    readonly recoveryCodes: boolean;
+    readonly parentPin: boolean;
+  };
+}): Mailer.Message {
+  const copy = PURPOSE_COPY["security-reset"];
+  const lines = resetScopeLines(scope);
+  const text = `Hello!
+
+You asked to reset these KeyLearn security settings:
+
+${lines.map((l) => `  - ${l}`).join("\n")}
+
+Your security-reset code is:
+
+${code}
+
+The code expires in 15 minutes, and only makes the changes listed above.
+
+If you didn't ask for this, you can safely ignore this email — nothing changes until the code is entered. Your password and email address are not affected either way.
+
+Happy typing!`;
+  const list =
+    `<ul style="margin:14px 0 18px;padding-inline-start:20px;font-family:${FONT};` +
+    `font-size:15px;color:${INK}">` +
+    lines.map((l) => `<li style="margin:4px 0">${esc(l)}</li>`).join("") +
+    `</ul>`;
+  const codeBlock =
+    `<div style="margin:6px 0 4px;background:${ACCENT_SOFT};border:1px solid ${BORDER};` +
+    `border-radius:12px;padding:18px 12px;text-align:center;` +
+    `font-family:'SF Mono',Menlo,Consolas,monospace;font-size:34px;font-weight:700;` +
+    `letter-spacing:0.4em;color:${INK}">${esc(code)}</div>`;
+  const html = shell(
+    "Your security-reset code is inside — it expires in 15 minutes.",
+    heading(copy.heading) +
+      paragraph("You asked to reset these security settings:") +
+      list +
+      codeBlock +
+      `<p style="margin:20px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">` +
+      `This code expires in 15 minutes and only makes the changes listed above. ` +
+      `If you didn't ask for this, ignore this email — nothing changes until the code is entered.</p>`,
+  );
+  return { to: email, subject: copy.subject, text, html };
 }
 
 export function messageWithResetLink({
@@ -541,6 +638,8 @@ export function messageDailyDigest({
   agentReplies,
   flagged,
   frustrated,
+  undelivered = 0,
+  abandoned = 0,
   deskLink,
 }: {
   readonly to: string;
@@ -549,22 +648,44 @@ export function messageDailyDigest({
   readonly agentReplies: number;
   readonly flagged: number;
   readonly frustrated: number;
+  /** Customer messages still waiting to reach the desk. */
+  readonly undelivered?: number;
+  /** Ones the retry sweep has given up on — nothing will deliver these. */
+  readonly abandoned?: number;
   readonly deskLink: string;
 }): Mailer.Message {
-  const subject = `Desk summary — ${date}`;
+  const subject =
+    abandoned > 0
+      ? `Desk summary — ${date} — DELIVERY FAILING`
+      : `Desk summary — ${date}`;
+  // Said first when it is happening, because it is the only line here that
+  // means somebody is waiting on an answer nobody can see they asked for.
+  const deliveryLine =
+    abandoned > 0
+      ? `\n${abandoned} message(s) never reached the desk and will not be retried again. Somebody wrote in and nobody has seen it.\n`
+      : undelivered > 0
+        ? `\n${undelivered} message(s) are still waiting to reach the desk.\n`
+        : "";
   const text = `${ticketsCreated} tickets came in. ${agentReplies} replied to by Tab. ${flagged} flagged for you. ${frustrated} read as frustrated (not flagged, worth a look).
-
+${deliveryLine}
 Open the desk:
 ${deskLink}`;
+  const facts: [string, string][] = [
+    ["Came in", String(ticketsCreated)],
+    ["Replied by Tab", String(agentReplies)],
+    ["Flagged for you", String(flagged)],
+    ["Read as frustrated", String(frustrated)],
+  ];
+  if (undelivered > 0) {
+    facts.push(["Waiting to reach the desk", String(undelivered)]);
+  }
+  if (abandoned > 0) {
+    facts.push(["Never delivered — given up on", String(abandoned)]);
+  }
   const html = shell(
     subject,
     heading("Desk summary") +
-      factList([
-        ["Came in", String(ticketsCreated)],
-        ["Replied by Tab", String(agentReplies)],
-        ["Flagged for you", String(flagged)],
-        ["Read as frustrated", String(frustrated)],
-      ]) +
+      factList(facts) +
       `<div style="margin:4px 0 4px">${button(deskLink, "Open the desk")}</div>`,
   );
   return { to, subject, text, html };

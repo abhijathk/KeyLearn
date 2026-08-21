@@ -64,9 +64,7 @@ function Head({
       <meta charSet="UTF-8" />
       <title>{formatMessage(page.title)}</title>
       <StylesheetAssets entrypoint="browser" />
-      <FavIconAssets
-        links={page.path.startsWith("/desk") ? favIconsDesk : favIcons}
-      />
+      <FavIconAssets links={favIcons} />
       <AltLangLinks page={page} />
       <Metas page={page} />
       <meta name="viewport" content="width=device-width, initial-scale=1" />

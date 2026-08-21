@@ -22,6 +22,10 @@ export default [
       "**/sandbox/",
       "**/tmp/",
       "root/",
+      // Parked implementations kept for reference. They do not live
+      // beside the modules they import and are never built, so every
+      // import in them is unresolvable by construction.
+      "docs/",
       "packages/keylearn-code/lib/parser.js",
       "packages/keylearn-code/lib/syntax/_*.ts",
       "packages/keylearn-code/lib/syntax/lang_*.ts",

@@ -4,6 +4,49 @@ import { Model } from "objection";
 import { Order, User, UserExternalId, UserLoginRequest } from "./model.ts";
 import { createSchema } from "./schema.ts";
 
+/**
+ * Retries a fixture step that lost a deadlock.
+ *
+ * The suite's flakiest failure was here, and it is not a product bug:
+ * plenty of writes in this app are deliberately fire-and-forget — audit
+ * rows, security events, notifications, the delivery mark on a forwarded
+ * message — so a request that has already answered may still be writing
+ * when the next test truncates `user` and seeds it again. Two
+ * transactions, opposite lock order, and InnoDB picks a victim. Which
+ * test dies is therefore a matter of timing, which is exactly what was
+ * seen: a different two to five every run.
+ *
+ * Nothing in production does a mass DELETE of `user` alongside live
+ * traffic, so this shape does not occur there. Retrying is also what the
+ * error itself asks for — "try restarting transaction" — and a deadlock
+ * is transient by definition: the loser rolled back cleanly and the
+ * winner has now finished.
+ */
+async function withDeadlockRetry<T>(
+  body: () => Promise<T>,
+  attempts = 5,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await body();
+    } catch (err) {
+      const code =
+        (err as { nativeError?: { code?: string }; code?: string })?.nativeError
+          ?.code ??
+        (err as { code?: string })?.code ??
+        "";
+      if (code !== "ER_LOCK_DEADLOCK" && code !== "ER_LOCK_WAIT_TIMEOUT") {
+        throw err;
+      }
+      lastErr = err;
+      // Back off a little so the winner is done before the next attempt.
+      await new Promise((resolve) => setTimeout(resolve, 25 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 export function useDatabase() {
   const knex = makeKnex();
 
@@ -12,8 +55,10 @@ export function useDatabase() {
   });
 
   beforeEach(async () => {
-    await clearTables();
-    await seedModels();
+    await withDeadlockRetry(async () => {
+      await clearTables();
+      await seedModels();
+    });
   });
 
   after(async () => {

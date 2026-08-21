@@ -125,6 +125,7 @@ export class User extends TimestampMixin(Model) {
     // client-side arithmetic gate is a speed bump a child can walk around with
     // devtools; this is checked by the server.
     table.string("parent_pin_hash", 160).nullable();
+    table.integer("parent_pin_length").unsigned().nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.unique(["email"]);
     table.unique(["name"]);
@@ -143,6 +144,13 @@ export class User extends TimestampMixin(Model) {
   totpEnabled?: number | boolean;
   recoveryCodes?: string | null;
   parentPinHash?: string | null;
+  parentPinLength?: number | null;
+  /**
+   * This household has had a learner profile at some point, so the support
+   * section stays behind the grown-up PIN even if that profile is later
+   * removed. Set on creation, never cleared — see schema.ts.
+   */
+  supportPinRequired?: number | boolean;
   staff?: number | boolean;
   remindedAt?: Date | null;
   /**
@@ -330,15 +338,33 @@ export class User extends TimestampMixin(Model) {
    * Sets (or clears) the grown-up PIN. Hashed with the same scrypt parameters as
    * a password: a 4-6 digit PIN has a tiny keyspace, so a fast hash would make a
    * leaked database trivially reversible.
+   *
+   * The length is kept alongside the hash, because a hash cannot be asked
+   * how long its input was and the entry screen draws one box per digit.
+   * It is a real disclosure — knowing a PIN is four digits narrows the
+   * search from about 111 million to 10,000 — but an attacker would try
+   * four first regardless, and what actually makes a PIN of any length
+   * safe here is the ten-attempts-per-five-minutes limiter on the verify
+   * route, not the secrecy of its length.
    */
   async setParentPin(pin: string | null): Promise<void> {
     await this.$query().patch({
       parentPinHash: pin == null ? null : await hashPassword(pin),
+      parentPinLength: pin == null ? null : pin.length,
     });
   }
 
   async verifyParentPin(pin: string): Promise<boolean> {
-    return await verifyPassword(pin, this.parentPinHash);
+    const ok = await verifyPassword(pin, this.parentPinHash);
+    // A PIN set before the length was recorded has no length, and the
+    // entry screen cannot draw the right number of boxes for it. A
+    // correct PIN is the one moment we know how long it is, so it is
+    // written down then — once — and every prompt afterwards is exact.
+    if (ok && this.parentPinLength == null) {
+      this.parentPinLength = pin.length;
+      await this.$query().patch({ parentPinLength: pin.length });
+    }
+    return ok;
   }
 
   async setPassword(password: string): Promise<void> {
@@ -528,6 +554,16 @@ export class User extends TimestampMixin(Model) {
       hasPassword: this.passwordHash != null,
       twoFactorEnabled: Boolean(this.totpEnabled),
       parentPinSet: this.parentPinHash != null,
+      /**
+       * How many boxes the entry screen draws.
+       *
+       * Null both when no PIN is set and when one was set before this
+       * column existed — the screen then falls back to a single free-length
+       * field. Guessing four there would lock out anyone whose PIN is
+       * longer, which is the one outcome a PIN screen must never produce.
+       */
+      parentPinLength:
+        this.parentPinHash == null ? null : (this.parentPinLength ?? null),
       emailVerified: Boolean(this.emailVerified),
       createdAt: this.createdAt!,
     };
@@ -1168,7 +1204,13 @@ export type VerificationPurpose =
   /** Prove the requester still reads the account's CURRENT address. */
   | "identity"
   /** Confirm permanent deletion of the account. */
-  | "delete-account";
+  | "delete-account"
+  /**
+   * Confirm a security reset. Bound to a recorded selection rather than
+   * standing on its own — see SecurityReset for why a code that only
+   * authorises its purpose is not enough here.
+   */
+  | "security-reset";
 
 // A short-lived email-verification code. The 6-digit code is emailed and stored
 // only as a hash, so a database read never reveals a live code. One row per

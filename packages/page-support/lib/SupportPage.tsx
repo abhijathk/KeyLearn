@@ -146,7 +146,184 @@ function GrownUpOnly(): ReactNode {
   );
 }
 
-export function SupportPage(): ReactNode {
+/**
+ * The grown-up PIN gate for support.
+ *
+ * Shown when the page opens, not when the form is submitted. The rule is
+ * that the support section does not open without the PIN, and a gate that
+ * fires on Send has already shown somebody the section — including any
+ * previous conversation on it.
+ *
+ * It can be dismissed, because a locked screen with no way out is its own
+ * kind of failure. Dismissing does not reveal the section: it leaves the
+ * lock in place with a way back in, which is what {@link SupportLocked}
+ * is for.
+ */
+function ParentPinGate({
+  setupRequired,
+  onPass,
+  onClose,
+}: {
+  readonly setupRequired: boolean;
+  readonly onPass: () => void;
+  readonly onClose: () => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const [pin, setPin] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  if (setupRequired) {
+    return (
+      <div className={styles.page}>
+        <h1 className={styles.headline}>
+          <FormattedMessage id="support.headline" defaultMessage="Support" />
+        </h1>
+        <p className={styles.intro}>
+          <FormattedMessage
+            id="support.pin.setupNeeded"
+            defaultMessage="There's a kid profile on this account, so writing to us needs a grown-up PIN. Set one up in your account settings and come back — it takes a moment, and it keeps these conversations out of small hands."
+          />
+        </p>
+        <p className={styles.intro}>
+          <RouterLink to={`${Pages.account.path}#security`}>
+            <FormattedMessage
+              id="support.pin.setupLink"
+              defaultMessage="Set up a grown-up PIN"
+            />
+          </RouterLink>
+        </p>
+        <Button
+          label={formatMessage({
+            id: "support.pin.close",
+            defaultMessage: "Not now",
+          })}
+          onClick={onClose}
+        />
+      </div>
+    );
+  }
+
+  const submit = async () => {
+    setErr(null);
+    setBusy(true);
+    try {
+      await SupportService.verifyParentPin(pin);
+      onPass();
+    } catch {
+      setErr(
+        formatMessage({
+          id: "support.pin.wrong",
+          defaultMessage: "That PIN is not right.",
+        }),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className={styles.page}>
+      <h1 className={styles.headline}>
+        <FormattedMessage id="support.headline" defaultMessage="Support" />
+      </h1>
+      <p className={styles.intro}>
+        <FormattedMessage
+          id="support.pin.intro"
+          defaultMessage="Enter the grown-up PIN to open support."
+        />
+      </p>
+      <TextField
+        size="full"
+        type="password"
+        value={pin}
+        placeholder={formatMessage({
+          id: "support.pin.plain",
+          defaultMessage: "PIN",
+        })}
+        onChange={setPin}
+      />
+      {err != null && <p className={styles.error}>{err}</p>}
+      <Button
+        label={formatMessage({
+          id: "support.pin.submit",
+          defaultMessage: "Continue",
+        })}
+        disabled={busy || pin.trim() === ""}
+        onClick={() => {
+          void submit();
+        }}
+      />
+      <Button
+        label={formatMessage({
+          id: "support.pin.close",
+          defaultMessage: "Not now",
+        })}
+        onClick={onClose}
+      />
+    </div>
+  );
+}
+
+/**
+ * What is left after the gate is dismissed. Never the support section —
+ * just the door, and the handle.
+ */
+function SupportLocked({
+  setupRequired,
+  onOpen,
+}: {
+  readonly setupRequired: boolean;
+  readonly onOpen: () => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  return (
+    <div className={styles.page}>
+      <h1 className={styles.headline}>
+        <FormattedMessage id="support.headline" defaultMessage="Support" />
+      </h1>
+      <p className={styles.intro}>
+        {setupRequired ? (
+          <FormattedMessage
+            id="support.locked.setup"
+            defaultMessage="Support is for the grown-up who owns this account. Set up a grown-up PIN to open it."
+          />
+        ) : (
+          <FormattedMessage
+            id="support.locked.intro"
+            defaultMessage="Support is for the grown-up who owns this account. Enter the PIN to open it."
+          />
+        )}
+      </p>
+      <Button
+        label={formatMessage(
+          setupRequired
+            ? { id: "support.locked.setupCta", defaultMessage: "Set up a PIN" }
+            : {
+                id: "support.locked.cta",
+                defaultMessage: "Enter the grown-up PIN",
+              },
+        )}
+        onClick={onOpen}
+      />
+    </div>
+  );
+}
+
+export function SupportPage({
+  gated = false,
+}: {
+  /**
+   * Put the grown-up PIN in front of this section.
+   *
+   * Only the copy mounted inside the account dialog sets it. The standalone
+   * route is the door for people with no account, where there is nobody to
+   * identify and nothing to check — a PIN there would lock out the very
+   * visitors it exists for. The server agrees: an anonymous request is
+   * never gated (see auth/parent-pin.ts).
+   */
+  readonly gated?: boolean;
+} = {}): ReactNode {
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
   const captcha = useCaptcha();
@@ -163,6 +340,57 @@ export function SupportPage(): ReactNode {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  // Set when the server answers 428. `setup` means the household has a kid
+  // profile but no PIN yet, so there is nothing to prompt for.
+  // The server's answer, fetched on load. `null` while we are still asking —
+  // the section stays closed until we know, because opening it and then
+  // taking it away would already have shown it.
+  const [gate, setGate] = useState<SupportService.SupportGate | null>(null);
+  const [promptOpen, setPromptOpen] = useState(true);
+
+  useEffect(() => {
+    if (!gated) {
+      setGate({
+        required: false,
+        setupRequired: false,
+        proved: true,
+        length: null,
+      });
+      return;
+    }
+    let live = true;
+    SupportService.getGate()
+      .then((g) => {
+        if (live) {
+          setGate(g);
+        }
+      })
+      .catch(() => {
+        // Fail closed on a signed-in session we could not classify: the
+        // server refuses the actions anyway, so an optimistic page would
+        // only offer a form that cannot be sent.
+        if (live) {
+          setGate(
+            publicUser.id != null
+              ? {
+                  required: true,
+                  setupRequired: false,
+                  proved: false,
+                  length: null,
+                }
+              : {
+                  required: false,
+                  setupRequired: false,
+                  proved: true,
+                  length: null,
+                },
+          );
+        }
+      });
+    return () => {
+      live = false;
+    };
+  }, [gated, publicUser.id]);
 
   const valid =
     name.trim() !== "" &&
@@ -195,7 +423,19 @@ export function SupportPage(): ReactNode {
         );
       })
       .catch((err: any) => {
-        if (isCaptchaRequired(err)) {
+        if (err?.status === 428 && err?.body?.error?.parentPin === true) {
+          // The 15-minute window can lapse between opening the page and
+          // pressing Send. The server is the one that noticed; put the gate
+          // back rather than showing a bare error.
+          setGate({
+            required: true,
+            setupRequired: err.body.error.parentPinSetupRequired === true,
+            proved: false,
+            // The 428 does not carry it; the next getGate() will.
+            length: err.body.error.parentPinLength ?? null,
+          });
+          setPromptOpen(true);
+        } else if (isCaptchaRequired(err)) {
           captcha.require();
           setError(
             formatMessage({
@@ -212,6 +452,31 @@ export function SupportPage(): ReactNode {
 
   if (kidActive) {
     return <GrownUpOnly />;
+  }
+
+  // Still asking. Render nothing rather than the section — a flash of the
+  // form before the lock appears is the same leak, just briefer.
+  if (gate == null) {
+    return <div className={styles.page} />;
+  }
+
+  // The section does not open without the PIN. Unlike `kidActive` above —
+  // which only knows which profile is currently selected, and is a step
+  // away from any child who switches profiles — this is the server's own
+  // answer, and the same function decides what it will permit.
+  if (gate.required && !gate.proved) {
+    return promptOpen ? (
+      <ParentPinGate
+        setupRequired={gate.setupRequired}
+        onPass={() => setGate({ ...gate, proved: true })}
+        onClose={() => setPromptOpen(false)}
+      />
+    ) : (
+      <SupportLocked
+        setupRequired={gate.setupRequired}
+        onOpen={() => setPromptOpen(true)}
+      />
+    );
   }
 
   return (

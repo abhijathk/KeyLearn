@@ -34,8 +34,26 @@ export class SupportMessage extends TimestampMixin(Model) {
       // staffer's working name or the assistant's configured name.
       // Never an account name: it's shown to the customer.
       authorName: { type: ["string", "null"], maxLength: 64 },
+      // Idempotency for the offline outbox — see schema.ts.
+      clientId: { type: ["string", "null"], maxLength: 64 },
+      /**
+       * What this message *is*, when that changes how it must be shown.
+       * Null for ordinary text. "crisis" is the fixed emergency redirect,
+       * which is drawn as its own block rather than a bubble — nothing
+       * about it should read as the assistant chatting. "handover" is the
+       * line that says a person has taken over.
+       */
+      kind: { type: ["string", "null"], enum: ["crisis", "handover", null] },
     },
   } satisfies JSONSchema;
+  // deliveredAt is left out of jsonSchema.properties for the same reason
+  // every other timestamp in this package is (see SupportTicket's
+  // csatRatedAt): declaring a Date column there makes the validator
+  // serialise the value on its way to the driver, and MySQL rejects the
+  // quoted string with ER_TRUNCATED_WRONG_VALUE. SQLite accepts it, so
+  // this fails only in production and only on delivery — the tests in
+  // support/delivery-ticks.test.ts run against MySQL for that reason.
+  //
   // answerIds is intentionally left out of jsonSchema.properties — it's a
   // plain string column (JSON-encoded), hand-parsed in toDetails(), same
   // pattern as User.recoveryCodes. Including it here would make AJV
@@ -67,6 +85,9 @@ export class SupportMessage extends TimestampMixin(Model) {
     // attribution, mockup step 02's "drafted from Answer #14"); nothing
     // reads it back to make a decision.
     table.text("answer_ids").nullable();
+    // Set once the desk has taken the message, not when it was sent —
+    // the difference is the whole point of a second tick.
+    table.timestamp("delivered_at").nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     // A thread reads oldest-first — this is the index that query serves.
     table.index(["ticket_id", "created_at"]);
@@ -79,7 +100,10 @@ export class SupportMessage extends TimestampMixin(Model) {
   staffUserId?: number | null;
   emailed?: number | boolean;
   authorName?: string | null;
+  clientId?: string | null;
+  kind?: string | null;
   answerIds?: string | null;
+  deliveredAt?: Date | null;
   createdAt?: Date;
 
   static async create({
@@ -90,6 +114,8 @@ export class SupportMessage extends TimestampMixin(Model) {
     emailed = false,
     answerIds = null,
     authorName = null,
+    clientId = null,
+    kind = null,
   }: {
     readonly ticketId: number;
     readonly sender: SupportMessageSender;
@@ -98,6 +124,9 @@ export class SupportMessage extends TimestampMixin(Model) {
     readonly emailed?: boolean;
     readonly answerIds?: readonly number[] | null;
     readonly authorName?: string | null;
+    /** Client-generated, unique per message — the offline outbox's guard. */
+    readonly clientId?: string | null;
+    readonly kind?: "crisis" | "handover" | null;
   }): Promise<SupportMessage> {
     return await SupportMessage.query().insertAndFetch({
       ticketId,
@@ -110,6 +139,8 @@ export class SupportMessage extends TimestampMixin(Model) {
         answerIds != null && answerIds.length > 0
           ? JSON.stringify(answerIds)
           : null,
+      clientId,
+      kind,
     });
   }
 
@@ -137,8 +168,28 @@ export class SupportMessage extends TimestampMixin(Model) {
         this.answerIds != null
           ? (JSON.parse(this.answerIds) as number[])
           : null,
+      deliveredAt:
+        this.deliveredAt != null
+          ? new Date(this.deliveredAt).toISOString()
+          : null,
       createdAt: new Date(this.createdAt!).toISOString(),
     };
+  }
+
+  /**
+   * Marks a message as taken by the desk.
+   *
+   * Best-effort on purpose: a tick that fails to appear is a cosmetic
+   * loss, and must never fail the delivery it is describing.
+   */
+  static async markDelivered(id: number): Promise<void> {
+    try {
+      await SupportMessage.query()
+        .findById(id)
+        .patch({ deliveredAt: new Date() });
+    } catch (err) {
+      console.error("support-message: could not record delivery", err);
+    }
   }
 }
 

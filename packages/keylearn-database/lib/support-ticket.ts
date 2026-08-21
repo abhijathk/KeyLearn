@@ -54,6 +54,8 @@ export class SupportTicket extends TimestampMixin(Model) {
       email: { type: "string", minLength: 1, maxLength: 128 },
       subject: { type: "string", minLength: 1, maxLength: 128 },
       message: { type: "string", minLength: 1, maxLength: 4000 },
+      csatRating: { type: ["integer", "null"], minimum: 1, maximum: 5 },
+      csatNote: { type: ["string", "null"], maxLength: 2000 },
       status: {
         type: "string",
         enum: ["open", "flagged", "waiting", "closed", "spam", "holding"],
@@ -146,6 +148,15 @@ export class SupportTicket extends TimestampMixin(Model) {
   sentiment?: SupportTicketSentiment | null;
   confirmTokenHash?: string | null;
   threadTokenHash?: string;
+  /** Soft delete from the owner's own list; the desk keeps the conversation. */
+  deletedByUserAt?: Date | null;
+  /** What the unread count and the rail dot are counted against. */
+  lastReadAt?: Date | null;
+  /** One to five, once the case has closed. */
+  csatRating?: number | null;
+  csatNote?: string | null;
+  csatRatedAt?: Date | null;
+  csatDismissedAt?: Date | null;
   closedAt?: Date | null;
   archived?: number | boolean;
   country?: string | null;

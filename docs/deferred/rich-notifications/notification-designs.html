@@ -1,0 +1,957 @@
+<title>KeyLearn — notification designs</title>
+
+<style>
+  :root {
+    --ink: #191614;
+    --paper: #fbf9f6;
+    --card: #ffffff;
+    --slate: #6e6459;
+    --rule: #e3dcd2;
+    --amber: #c67c14;
+    --amber-soft: #f6e6cc;
+    --good: #2f6f4e;
+    --warn: #9a4b1e;
+    --shadow: 0 1px 2px rgba(25, 22, 20, 0.06), 0 8px 24px rgba(25, 22, 20, 0.08);
+    --ui: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #f2eee9;
+      --paper: #141110;
+      --card: #1d1917;
+      --slate: #a2968a;
+      --rule: #2f2926;
+      --amber: #e0a343;
+      --amber-soft: #3a2c17;
+      --good: #6fbf95;
+      --warn: #e09a6a;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #f2eee9;
+    --paper: #141110;
+    --card: #1d1917;
+    --slate: #a2968a;
+    --rule: #2f2926;
+    --amber: #e0a343;
+    --amber-soft: #3a2c17;
+    --good: #6fbf95;
+    --warn: #e09a6a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  :root[data-theme="light"] {
+    --ink: #191614;
+    --paper: #fbf9f6;
+    --card: #ffffff;
+    --slate: #6e6459;
+    --rule: #e3dcd2;
+    --amber: #c67c14;
+    --amber-soft: #f6e6cc;
+    --good: #2f6f4e;
+    --warn: #9a4b1e;
+    --shadow: 0 1px 2px rgba(25, 22, 20, 0.06), 0 8px 24px rgba(25, 22, 20, 0.08);
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 68rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--slate);
+  }
+
+  h1 {
+    margin: 0.6rem 0 0;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  .lede {
+    max-width: 38rem;
+    margin: 1rem 0 0;
+    color: var(--slate);
+    font-size: 1.02rem;
+  }
+
+  hr.rule {
+    height: 0;
+    margin: 3rem 0;
+    border: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .plate {
+    display: grid;
+    grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+    margin-block: 3.5rem;
+  }
+
+  @media (max-width: 54rem) {
+    .plate {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.5rem;
+    }
+  }
+
+  .notes p {
+    margin: 0.7rem 0 0;
+    color: var(--slate);
+    font-size: 0.93rem;
+  }
+
+  .notes p strong {
+    color: var(--ink);
+    font-weight: 650;
+  }
+
+  .cost {
+    margin-top: 1.1rem;
+    padding-top: 0.9rem;
+    border-top: 1px dashed var(--rule);
+    font-size: 0.86rem;
+  }
+
+  .cost dt {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--slate);
+  }
+
+  .cost dd {
+    margin: 0.15rem 0 0.7rem;
+    color: var(--ink);
+  }
+
+  /* ── the simulated app chrome the mocks sit in ───────────────────── */
+
+  .stage {
+    padding: 1.1rem 1.1rem 2.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 0.9rem;
+    background: var(--paper);
+    overflow-x: auto;
+  }
+
+  .appbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .glyph {
+    display: grid;
+    place-items: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border: 1px solid var(--rule);
+    border-radius: 0.55rem;
+    background: var(--card);
+    color: var(--slate);
+  }
+
+  .glyph.on {
+    position: relative;
+    border-color: var(--amber);
+    color: var(--ink);
+  }
+
+  .glyph.on::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 7px;
+    height: 7px;
+    border: 2px solid var(--paper);
+    border-radius: 50%;
+    background: var(--amber);
+  }
+
+  /* ── the dropdown itself ─────────────────────────────────────────── */
+
+  .drop {
+    width: 22.5rem;
+    max-width: 100%;
+    margin-left: auto;
+    border: 1px solid var(--rule);
+    border-radius: 0.85rem;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    font-size: 0.875rem;
+  }
+
+  .drop-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .drop-head b {
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .drop-head a {
+    color: var(--amber);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .drop-foot {
+    padding: 0.6rem 0.9rem;
+    border-top: 1px solid var(--rule);
+    color: var(--amber);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .row {
+    display: flex;
+    gap: 0.7rem;
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+  }
+
+  .row:last-of-type {
+    border-bottom: 0;
+  }
+
+  .row.new {
+    background: color-mix(in srgb, var(--amber) 7%, transparent);
+  }
+
+  .avatar {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--amber-soft);
+    color: var(--amber);
+    font-size: 0.72rem;
+    font-weight: 750;
+  }
+
+  .avatar.bot {
+    border: 1px dashed var(--amber);
+    background: transparent;
+  }
+
+  .body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .line1 {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+
+  .who {
+    font-weight: 680;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .role {
+    flex: none;
+    color: var(--slate);
+    font-size: 0.72rem;
+  }
+
+  .when {
+    flex: none;
+    margin-left: auto;
+    color: var(--slate);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .subject {
+    margin-top: 0.05rem;
+    color: var(--ink);
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .excerpt {
+    margin-top: 0.15rem;
+    color: var(--slate);
+    font-size: 0.82rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ref {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--slate);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.05rem 0.42rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .chip.open {
+    background: color-mix(in srgb, var(--amber) 18%, transparent);
+    color: var(--amber);
+  }
+
+  .chip.person {
+    background: color-mix(in srgb, var(--warn) 16%, transparent);
+    color: var(--warn);
+  }
+
+  .chip.done {
+    background: color-mix(in srgb, var(--good) 16%, transparent);
+    color: var(--good);
+  }
+
+  .dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    margin-top: 0.45rem;
+    border-radius: 50%;
+    background: var(--amber);
+  }
+
+  .dot.spent {
+    background: transparent;
+  }
+
+  .daybar {
+    padding: 0.4rem 0.9rem;
+    background: color-mix(in srgb, var(--slate) 8%, transparent);
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--slate);
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+
+  .btn {
+    padding: 0.22rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 0.45rem;
+    background: var(--card);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+  }
+
+  .btn.primary {
+    border-color: transparent;
+    background: var(--amber);
+    color: #fff;
+  }
+
+  :root[data-theme="dark"] .btn.primary,
+  .btn.primary {
+    color: #17120b;
+  }
+
+  .count {
+    flex: none;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--amber);
+    color: #17120b;
+    font-size: 0.68rem;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .broken .when {
+    margin-left: 0;
+    width: 3.2rem;
+    white-space: normal;
+  }
+
+  .broken .row {
+    gap: 0.4rem;
+  }
+
+  /* Clearing — shown on every option, because it belongs to all of them. */
+  .x {
+    flex: none;
+    align-self: flex-start;
+    width: 1.4rem;
+    height: 1.4rem;
+    margin: -0.1rem -0.25rem 0 0;
+    border: 0;
+    border-radius: 0.35rem;
+    background: transparent;
+    color: var(--slate);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .x:hover {
+    background: color-mix(in srgb, var(--slate) 16%, transparent);
+    color: var(--ink);
+  }
+
+  .verdict {
+    padding: 1.4rem 1.5rem;
+    border: 1px solid var(--amber);
+    border-radius: 0.9rem;
+    background: color-mix(in srgb, var(--amber) 7%, transparent);
+  }
+
+  .verdict h2 {
+    margin-bottom: 0.4rem;
+  }
+
+  .verdict ol {
+    margin: 0.8rem 0 0;
+    padding-left: 1.2rem;
+    color: var(--slate);
+  }
+
+  .verdict li {
+    margin-bottom: 0.45rem;
+  }
+
+  .verdict li strong {
+    color: var(--ink);
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.35rem;
+    background: color-mix(in srgb, var(--slate) 14%, transparent);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--slate);
+  }
+
+  .tag.free {
+    background: color-mix(in srgb, var(--good) 16%, transparent);
+    color: var(--good);
+  }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">KeyLearn · account · notifications</p>
+  <h1>Four ways the bell could read</h1>
+  <p class="lede">
+    Every mock below is the real dropdown at its real width, with the data the
+    product actually has. Pick one — or take the parts you want from several and
+    I'll build that.
+    <br /><br />
+    <strong style="color: var(--ink)">Clearing is in all four.</strong> Each row
+    has its own <span class="tag">×</span> and the header carries a “Clear all”.
+    There is no “mark all read” — opening a notification is what reads it, and a
+    control whose only effect is to hide the fact that you have not looked is
+    not worth the row it sits in. Already built.
+  </p>
+
+  <hr class="rule" />
+
+  <!-- ── what's there now ───────────────────────────────────────────── -->
+  <section class="plate">
+    <div class="stage">
+      <div class="appbar">
+        <span class="glyph">☾</span>
+        <span class="glyph on">◔</span>
+        <span class="glyph">≡</span>
+      </div>
+      <div class="drop broken">
+        <div class="row new">
+          <span class="body">
+            <span class="when">20 Aug, 07:23</span>
+            <span class="excerpt">Checked and your certificate is fixed</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row">
+          <span class="body">
+            <span class="when">19 Aug, 13:48</span>
+            <span class="excerpt">Thanks for confirming</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row">
+          <span class="body">
+            <span class="when">19 Aug, 07:34</span>
+            <span class="excerpt">Checked</span>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <p class="eyebrow">Now</p>
+      <h2>The date is winning</h2>
+      <p>
+        The timestamp is the first and most prominent thing in each row, so the
+        eye lands on <em>when</em> before <em>what</em> — and at this width it
+        wraps mid-value into “20 Aug,” / “07:23”.
+      </p>
+      <p>
+        Nothing says which conversation a reply belongs to, who wrote it, or
+        whether it needs an answer. <strong>Clicking marks it read and does
+        nothing else</strong> — it doesn't open the ticket, which is the one
+        thing somebody clicking a reply notification wants.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ── A ──────────────────────────────────────────────────────────── -->
+  <section class="plate">
+    <div class="stage">
+      <div class="appbar">
+        <span class="glyph">☾</span>
+        <span class="glyph on">◔</span>
+        <span class="glyph">≡</span>
+      </div>
+      <div class="drop">
+        <div class="drop-head">
+          <b>Notifications</b>
+          <a href="#">Clear all</a>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row new">
+          <span class="avatar">RM</span>
+          <span class="body">
+            <span class="line1">
+              <span class="who">Ruth</span>
+              <span class="role">· KeyLearn</span>
+              <span class="when">2h</span>
+            </span>
+            <span class="subject">Certificate won't download</span>
+            <span class="excerpt"
+              >I've re-issued it — try the download again and tell me if it
+              still does nothing.</span
+            >
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row new">
+          <span class="avatar bot">T</span>
+          <span class="body">
+            <span class="line1">
+              <span class="who">Tab</span>
+              <span class="role">· AI assistant</span>
+              <span class="when">19h</span>
+            </span>
+            <span class="subject">Keyboard layout is wrong</span>
+            <span class="excerpt"
+              >Passed to a person — they'll pick this up and reply here.</span
+            >
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row">
+          <span class="avatar">RM</span>
+          <span class="body">
+            <span class="line1">
+              <span class="who">Ruth</span>
+              <span class="role">· KeyLearn</span>
+              <span class="when">2 Aug</span>
+            </span>
+            <span class="subject">Adding a second learner</span>
+            <span class="excerpt">Glad that sorted it.</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="drop-foot">All messages</div>
+      </div>
+    </div>
+    <div class="notes">
+      <p class="eyebrow">Option A</p>
+      <h2>Conversation card</h2>
+      <p>
+        Who wrote it, which conversation, and enough of the reply to decide
+        whether to open it. The time shrinks to a relative stamp on the right,
+        where it stops competing.
+      </p>
+      <p>
+        <strong>A person and the assistant are visibly different</strong> — solid
+        initials versus a dashed outline, named role either way. That honesty is
+        already the rule inside the thread; this carries it to the bell.
+      </p>
+      <dl class="cost">
+        <dt>Needs from the server</dt>
+        <dd>
+          Author name, ticket subject, and a body excerpt on the notification.
+          The first two aren't stored today. <span class="tag">~1 migration</span>
+        </dd>
+        <dt>Trade-off</dt>
+        <dd>Tallest of the four — about three fit before scrolling.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ── B ──────────────────────────────────────────────────────────── -->
+  <section class="plate">
+    <div class="stage">
+      <div class="appbar">
+        <span class="glyph">☾</span>
+        <span class="glyph on">◔</span>
+        <span class="glyph">≡</span>
+      </div>
+      <div class="drop">
+        <div class="drop-head">
+          <b>Notifications</b>
+          <a href="#">Clear all</a>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row new">
+          <span class="dot"></span>
+          <span class="body">
+            <span class="line1">
+              <span class="subject" style="font-weight: 680"
+                >Certificate won't download</span
+              >
+              <span class="when">2h</span>
+            </span>
+            <span class="line1" style="margin-top: 0.2rem; gap: 0.35rem">
+              <span class="ref">KEY0000018</span>
+              <span class="chip open">Open</span>
+              <span class="count">3</span>
+            </span>
+            <span class="excerpt">Latest from Ruth: I've re-issued it —</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row new">
+          <span class="dot"></span>
+          <span class="body">
+            <span class="line1">
+              <span class="subject" style="font-weight: 680"
+                >Keyboard layout is wrong</span
+              >
+              <span class="when">19h</span>
+            </span>
+            <span class="line1" style="margin-top: 0.2rem; gap: 0.35rem">
+              <span class="ref">KEY0000014</span>
+              <span class="chip person">With a person</span>
+            </span>
+            <span class="excerpt">Latest from Tab: Passed to a person —</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row">
+          <span class="dot spent"></span>
+          <span class="body">
+            <span class="line1">
+              <span class="subject" style="font-weight: 680"
+                >Adding a second learner</span
+              >
+              <span class="when">2 Aug</span>
+            </span>
+            <span class="line1" style="margin-top: 0.2rem; gap: 0.35rem">
+              <span class="ref">KEY0000009</span>
+              <span class="chip done">Resolved</span>
+            </span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="drop-foot">All messages</div>
+      </div>
+    </div>
+    <div class="notes">
+      <p class="eyebrow">Option B</p>
+      <h2>One row per conversation</h2>
+      <p>
+        Three replies to one ticket collapse into one entry with a count, rather
+        than three rows saying nearly the same thing. The reference and status
+        travel with it.
+      </p>
+      <p>
+        <strong>The status chip is the useful part</strong> — “With a person”
+        against “Resolved” tells somebody whether anything is still owed them,
+        which no per-reply list can.
+      </p>
+      <dl class="cost">
+        <dt>Needs from the server</dt>
+        <dd>
+          Grouping by ticket, plus subject and status.
+          <span class="tag free">no new columns</span> — the ticket already has
+          both.
+        </dd>
+        <dt>Trade-off</dt>
+        <dd>
+          You lose “what exactly did they say”; the excerpt is only ever the
+          latest.
+        </dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ── C ──────────────────────────────────────────────────────────── -->
+  <section class="plate">
+    <div class="stage">
+      <div class="appbar">
+        <span class="glyph">☾</span>
+        <span class="glyph on">◔</span>
+        <span class="glyph">≡</span>
+      </div>
+      <div class="drop">
+        <div class="drop-head">
+          <b>Notifications</b>
+          <a href="#">Clear all</a>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="daybar">Today</div>
+        <div class="row new">
+          <span class="dot"></span>
+          <span class="body">
+            <span class="line1">
+              <span class="who">Ruth replied</span>
+              <span class="when">07:23</span>
+            </span>
+            <span class="excerpt">Certificate won't download</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="daybar">Yesterday</div>
+        <div class="row new">
+          <span class="dot"></span>
+          <span class="body">
+            <span class="line1">
+              <span class="who">Passed to a person</span>
+              <span class="when">13:48</span>
+            </span>
+            <span class="excerpt">Keyboard layout is wrong</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row">
+          <span class="dot spent"></span>
+          <span class="body">
+            <span class="line1">
+              <span class="who">Tab replied</span>
+              <span class="when">07:34</span>
+            </span>
+            <span class="excerpt">Keyboard layout is wrong</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="daybar">2 August</div>
+        <div class="row">
+          <span class="dot spent"></span>
+          <span class="body">
+            <span class="line1">
+              <span class="who">Marked resolved</span>
+              <span class="when">16:02</span>
+            </span>
+            <span class="excerpt">Adding a second learner</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="drop-foot">All messages</div>
+      </div>
+    </div>
+    <div class="notes">
+      <p class="eyebrow">Option C</p>
+      <h2>Day-grouped timeline</h2>
+      <p>
+        The date moves out of every row and into a header above the group, so
+        the rows carry only a time. Six or seven fit where A fits three.
+      </p>
+      <p>
+        <strong>It reads as a history rather than an inbox</strong> — good if
+        notifications will one day cover more than support replies (a finished
+        course, a new certificate, a learner's first perfect run).
+      </p>
+      <dl class="cost">
+        <dt>Needs from the server</dt>
+        <dd>Nothing. <span class="tag free">no new columns</span></dd>
+        <dt>Trade-off</dt>
+        <dd>
+          Least informative per row — no status, no excerpt of the actual reply.
+        </dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ── D ──────────────────────────────────────────────────────────── -->
+  <section class="plate">
+    <div class="stage">
+      <div class="appbar">
+        <span class="glyph">☾</span>
+        <span class="glyph on">◔</span>
+        <span class="glyph">≡</span>
+      </div>
+      <div class="drop">
+        <div class="drop-head">
+          <b>Notifications</b>
+          <a href="#">Clear all</a>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row new">
+          <span class="avatar">RM</span>
+          <span class="body">
+            <span class="line1">
+              <span class="who">Ruth</span>
+              <span class="role">· KeyLearn</span>
+              <span class="when">2h</span>
+            </span>
+            <span class="line1" style="margin-top: 0.15rem; gap: 0.35rem">
+              <span class="ref">KEY0000018</span>
+              <span class="chip open">Waiting on you</span>
+            </span>
+            <span class="excerpt"
+              >I've re-issued it — try the download again and tell me if it
+              still does nothing.</span
+            >
+            <span class="actions">
+              <button class="btn primary">Open</button>
+              <button class="btn">Mark read</button>
+            </span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="row">
+          <span class="avatar bot">T</span>
+          <span class="body">
+            <span class="line1">
+              <span class="who">Tab</span>
+              <span class="role">· AI assistant</span>
+              <span class="when">19h</span>
+            </span>
+            <span class="line1" style="margin-top: 0.15rem; gap: 0.35rem">
+              <span class="ref">KEY0000014</span>
+              <span class="chip person">With a person</span>
+            </span>
+            <span class="excerpt">Passed to a person — they'll reply here.</span>
+          </span>
+          <button class="x" aria-label="Clear">×</button>
+        </div>
+        <div class="drop-foot">All messages</div>
+      </div>
+    </div>
+    <div class="notes">
+      <p class="eyebrow">Option D</p>
+      <h2>Actionable card</h2>
+      <p>
+        A on top, with the status chip and explicit buttons on whichever row is
+        unread. “Waiting on you” is the case worth interrupting somebody for, and
+        this is the only option that says so.
+      </p>
+      <p>
+        <strong>Actions only appear on the unread row.</strong> Buttons on every
+        row would turn a list into a form, and there is nothing to do on a reply
+        already read.
+      </p>
+      <dl class="cost">
+        <dt>Needs from the server</dt>
+        <dd>
+          Everything A needs, plus ticket status.
+          <span class="tag">~1 migration</span>
+        </dd>
+        <dt>Trade-off</dt>
+        <dd>
+          Busiest of the four. Two entries fill the dropdown; on a phone, one.
+        </dd>
+      </dl>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <div class="verdict">
+    <p class="eyebrow">If you want my pick</p>
+    <h2>B, with two things borrowed from A</h2>
+    <ol>
+      <li>
+        <strong>B's grouping is the real fix.</strong> Three notifications about
+        one ticket is the situation the current list handles worst, and no amount
+        of styling a per-reply row solves it.
+      </li>
+      <li>
+        <strong>Take A's author line.</strong> “Ruth · KeyLearn” versus “Tab · AI
+        assistant” costs one line and keeps the promise the thread already makes:
+        the assistant is never passed off as a person.
+      </li>
+      <li>
+        <strong>Take A's excerpt.</strong> One clamped line of the latest reply
+        is usually enough to decide whether to open it now or after dinner.
+      </li>
+      <li>
+        <strong>All four open the ticket on click</strong> — that's a bug fix, not
+        a design choice, and it lands whichever you pick.
+      </li>
+      <li>
+        <strong>Clearing is a delete, not a “dismissed” flag.</strong> A
+        notification is a nudge about something that lives elsewhere; once it has
+        been dealt with there is nothing worth keeping. The conversation it
+        pointed at is untouched.
+      </li>
+    </ol>
+  </div>
+</div>

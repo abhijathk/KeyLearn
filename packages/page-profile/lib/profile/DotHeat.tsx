@@ -219,7 +219,7 @@ function HeatKeys({ dots }: { readonly dots: readonly DotFacts[] }): ReactNode {
           nothing, so there is no dot to score.
         */}
         <div className={braille.space}>
-          <FormattedMessage id="braille.spacebar" defaultMessage="Space" />
+          <FormattedMessage id="braille.spacebarLabel" defaultMessage="Space" />
         </div>
       </div>
       <div className={styles.legendRow}>

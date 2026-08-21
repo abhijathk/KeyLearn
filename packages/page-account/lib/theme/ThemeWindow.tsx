@@ -33,7 +33,7 @@ import * as styles from "./ThemeWindow.module.less";
 // Hoisted so formatjs can extract them: a message object built inside a ternary
 // is invisible to static extraction, so the id never reaches the catalogue.
 const WIN = defineMessages({
-  edit: { id: "theme.win.edit", defaultMessage: "Edit" },
+  edit: { id: "theme.win.editAction", defaultMessage: "Edit" },
   editCopy: { id: "theme.win.editCopy", defaultMessage: "Edit as a copy" },
   delete: { id: "theme.win.delete", defaultMessage: "Delete" },
   undeletable: {

@@ -1,3 +1,6 @@
+import { palettes } from "@keylearn/identicon";
+import { Pages, usePageData } from "@keylearn/pages-shared";
+import { hashCode, LCG } from "@keylearn/rand";
 import { supportUrl } from "@keylearn/thirdparties";
 import { StrokeIcon } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
@@ -19,12 +22,34 @@ import * as styles from "./road.module.less";
 // inside a translatable message rather than split into fragments.
 const em = (chunks: ReactNode) => <em>{chunks}</em>;
 
-// The support address, as a rich-text chunk. Several legal/help paragraphs
-// end in "write to support@keylearn.org" — one chunk keeps the mailto: link
-// and the visible address in sync everywhere it appears.
-const supportLink = (chunks: ReactNode) => (
-  <a href="mailto:support@keylearn.org">{chunks}</a>
-);
+/**
+ * "Write to us", as a rich-text chunk — pointing at the support page
+ * rather than at an address.
+ *
+ * These paragraphs used to end in a `mailto:`, which asked somebody to
+ * leave the site, open a mail client, and start a thread nobody here can
+ * see the state of: no reference number, no record they can return to,
+ * and no way for us to tell whether it ever arrived. The same reasoning
+ * that put {@link ContactChip} on the About page applies to every one of
+ * them, so they all lead to the same two places — the account's own
+ * support section when signed in, the standalone page when not.
+ *
+ * A component rather than a plain function, because the destination
+ * depends on who is reading.
+ */
+function SupportLink({
+  children,
+}: {
+  readonly children: ReactNode;
+}): ReactNode {
+  const { publicUser } = usePageData();
+  const signedIn = publicUser.id != null;
+  return (
+    <a href={signedIn ? "/account#support" : Pages.support.path}>{children}</a>
+  );
+}
+
+const supportLink = (chunks: ReactNode) => <SupportLink>{chunks}</SupportLink>;
 
 function Masthead({
   kicker,
@@ -52,11 +77,75 @@ function Masthead({
   );
 }
 
+/**
+ * The way to a person, without publishing an address.
+ *
+ * A `mailto:` asked somebody to leave, open a mail client, and start a
+ * thread nobody here can see the state of. Both destinations below are a
+ * real conversation with a reference number, kept where the person can
+ * come back to it — signed in goes to the account's own support section,
+ * a guest to the standalone page that works without an account.
+ *
+ * Painted the way the account avatars are: the same `LCG`, the same
+ * painting palettes, ink taken from the palette so the words hold their
+ * contrast on whichever ground comes up. A new one every visit.
+ */
 function ContactChip() {
+  const { publicUser } = usePageData();
+  const signedIn = publicUser.id != null;
+
+  // Seeded after mount, not during render. The page is rendered on the
+  // server too, and a random seed there would disagree with the client's
+  // and trip hydration — so the first paint takes a fixed seed and the
+  // real one lands a frame later.
+  const [seed, setSeed] = useState("keylearn-support");
+  useEffect(() => {
+    setSeed(String(Date.now()) + Math.random().toString(36).slice(2));
+  }, []);
+
+  const random = LCG(hashCode(seed));
+  const palette = palettes[(random() * palettes.length) | 0]!;
+  const washes = [];
+  for (let i = 0; i < 4; i++) {
+    const cx = 10 + random() * 280;
+    const cy = 10 + random() * 40;
+    const rx = 60 + random() * 90;
+    const ry = 22 + random() * 26;
+    const angle = ((random() * 40) | 0) - 20;
+    washes.push(
+      <ellipse
+        key={i}
+        cx={cx}
+        cy={cy}
+        rx={rx}
+        ry={ry}
+        fill={palette.wash[i % palette.wash.length]}
+        // Lighter than the avatar's washes. An avatar carries two big
+        // letters that can afford a busy ground; this carries a sentence,
+        // and every point of ground darkness comes off the text.
+        fillOpacity={0.3 + random() * 0.2}
+        transform={`rotate(${angle} ${cx} ${cy})`}
+      />,
+    );
+  }
+
   return (
-    <a href="mailto:support@keylearn.org" className={styles.contactCard}>
+    <a
+      href={signedIn ? "/account#support" : Pages.support.path}
+      className={styles.contactCard}
+      style={{ color: palette.ink }}
+    >
+      <svg
+        className={styles.contactArt}
+        viewBox="0 0 300 56"
+        preserveAspectRatio="none"
+        aria-hidden={true}
+      >
+        <rect width={300} height={56} fill={palette.ground} />
+        {washes}
+      </svg>
       <span className={styles.contactIconBox}>
-        <StrokeIcon name="mail" className={styles.contactIcon} />
+        <StrokeIcon name="headset" className={styles.contactIcon} />
       </span>
       <span className={styles.contactBody}>
         <span className={styles.contactLabel}>
@@ -66,13 +155,20 @@ function ContactChip() {
           />
         </span>
         <span className={styles.contactLine}>
-          <FormattedMessage id="about.contact.h" defaultMessage="Contact" />
-          <span className={styles.contactDot} aria-hidden={true}>
-            •
-          </span>
-          <span className={styles.contactEmail}>support@keylearn.org</span>
+          {signedIn ? (
+            <FormattedMessage
+              id="about.contact.openSupport"
+              defaultMessage="Open support"
+            />
+          ) : (
+            <FormattedMessage
+              id="about.contact.message"
+              defaultMessage="Send us a message"
+            />
+          )}
         </span>
       </span>
+      <StrokeIcon name="arrowRight" className={styles.contactGo} />
     </a>
   );
 }
@@ -824,15 +920,15 @@ export function PrivacyPolicyPage() {
         </li>
         <li>
           <FormattedMessage
-            id="privacy.rights.ask"
-            defaultMessage="<em>Ask</em> — anything about your data, or about KeyLearn itself, reaches a person at <supportLink>support@keylearn.org</supportLink>."
+            id="privacy.rights.ask2"
+            defaultMessage="<em>Ask</em> — anything about your data, or about KeyLearn itself, reaches a person through <supportLink>our support page</supportLink>."
             values={{ em, supportLink }}
           />
         </li>
         <li>
           <FormattedMessage
-            id="privacy.rights.complain"
-            defaultMessage="<em>Complain</em> — if you believe we’ve mishandled your data, write to us first at <supportLink>support@keylearn.org</supportLink>, and you can contact your local data-protection authority at any time."
+            id="privacy.rights.complain2"
+            defaultMessage="<em>Complain</em> — if you believe we’ve mishandled your data, tell us first through <supportLink>our support page</supportLink>, and you can contact your local data-protection authority at any time."
             values={{ em, supportLink }}
           />
         </li>
@@ -868,8 +964,8 @@ export function PrivacyPolicyPage() {
       </p>
       <p>
         <FormattedMessage
-          id="privacy.children.p5"
-          defaultMessage="If you believe a child has created an account here without a parent’s involvement, write to <supportLink>support@keylearn.org</supportLink> and we will delete it."
+          id="privacy.children.p5b"
+          defaultMessage="If you believe a child has created an account here without a parent’s involvement, tell us through <supportLink>our support page</supportLink> and we will delete it."
           values={{ supportLink }}
         />
       </p>
@@ -1077,8 +1173,8 @@ export function AccessibilityPage() {
           </li>
           <li>
             <FormattedMessage
-              id="accessibility.glance.5"
-              defaultMessage="Something in your way? Write to <supportLink>support@keylearn.org</supportLink> and a person will read it."
+              id="accessibility.glance.5b"
+              defaultMessage="Something in your way? <supportLink>Tell us</supportLink> and a person will read it."
               values={{ supportLink }}
             />
           </li>
@@ -1318,8 +1414,8 @@ export function AccessibilityPage() {
       </h2>
       <p>
         <FormattedMessage
-          id="accessibility.telling.p1"
-          defaultMessage="If something here blocks you or a learner you are responsible for, write to <supportLink>support@keylearn.org</supportLink>. Say what you were trying to do and what happened; you do not need to know the name of the standard it breaks. We will reply, and if it is our fault we will say so and tell you when it is fixed."
+          id="accessibility.telling.p1b"
+          defaultMessage="If something here blocks you or a learner you are responsible for, <supportLink>tell us</supportLink>. Say what you were trying to do and what happened; you do not need to know the name of the standard it breaks. We will reply, and if it is our fault we will say so and tell you when it is fixed."
           values={{ supportLink }}
         />
       </p>

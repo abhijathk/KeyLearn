@@ -101,7 +101,7 @@ export function Tour({ children, onClose, ...props }: TourProps): ReactNode {
                   className={styles.close}
                   onClick={close}
                   title={formatMessage({
-                    id: "t_Close",
+                    id: "t_Dismiss",
                     defaultMessage: "Dismiss",
                   })}
                 >

@@ -338,6 +338,21 @@ export namespace AccountService {
     };
   }
 
+  /** Removed from the list — the ticket it points at is untouched. */
+  export async function dismissNotification(id: number): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .DELETE(`/_/account/notifications/${id}`)
+      .send();
+  }
+
+  export async function dismissAllNotifications(): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .DELETE("/_/account/notifications")
+      .send();
+  }
+
   export async function markNotificationRead(id: number): Promise<void> {
     await request
       .use(expectType("application/json"))
@@ -452,5 +467,86 @@ export namespace AccountService {
         .DELETE(`/_/profiles/${id}`)
         .send(),
     );
+  }
+
+  /** Whether the account window itself is behind the grown-up PIN. */
+  export type AccountGate = {
+    readonly required: boolean;
+    readonly proved: boolean;
+    /** One box per digit; null until the length has been recorded. */
+    readonly length: number | null;
+  };
+
+  export async function getAccountGate(): Promise<AccountGate> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/account/pin-gate")
+      .send();
+    return (await response.json()) as AccountGate;
+  }
+
+  // ---- The way back in when a factor is lost ----
+
+  /** What this account can reset, and the state of each. */
+  export type SecurityResetOptions = {
+    /** Masked — enough to recognise, not enough to hand out. */
+    readonly email: string | null;
+    readonly password: {
+      readonly available: boolean;
+      readonly hasPassword: boolean;
+    };
+    readonly twoFactor: {
+      readonly available: boolean;
+      readonly enabled: boolean;
+    };
+    readonly recoveryCodes: {
+      readonly available: boolean;
+      readonly left: number;
+    };
+    readonly parentPin: { readonly available: boolean; readonly set: boolean };
+  };
+
+  export type SecurityResetScope = {
+    readonly password: boolean;
+    readonly twoFactor: boolean;
+    readonly recoveryCodes: boolean;
+    readonly parentPin: boolean;
+  };
+
+  export async function getSecurityResetOptions(): Promise<SecurityResetOptions> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/account/security-reset/options")
+      .send();
+    return (await response.json()) as SecurityResetOptions;
+  }
+
+  /**
+   * Asks for a code for exactly this selection. The server records the
+   * choice, so the code that comes back cannot be spent on anything else.
+   */
+  export async function sendSecurityResetCode(
+    scope: SecurityResetScope,
+  ): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST("/_/account/security-reset/code")
+      .send(scope);
+  }
+
+  export async function confirmSecurityReset(
+    code: string,
+  ): Promise<{
+    readonly done: readonly string[];
+    readonly passwordLinkSent: boolean;
+  }> {
+    const response = await request
+      .use(expectType("application/json"))
+      .POST("/_/account/security-reset")
+      .send({ code });
+    return (await response.json()) as {
+      done: readonly string[];
+      passwordLinkSent: boolean;
+    };
   }
 }

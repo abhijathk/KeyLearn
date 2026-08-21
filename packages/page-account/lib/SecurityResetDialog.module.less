@@ -1,0 +1,145 @@
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* Every element inside is sized in percentages of this box; without
+     this the padding pushes the rows past its edge. */
+  box-sizing: border-box;
+  inline-size: min(30rem, 78vi);
+}
+
+.lead {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* A row is the whole hit area, not just the box — these are the four
+   things somebody is about to do to their own account, and each should be
+   easy to tick on a tablet. */
+.row {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--separator-color, rgb(128 128 128 / 30%));
+  border-radius: 0.6rem;
+  cursor: pointer;
+
+  input {
+    flex: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+    margin-block-start: 0.15rem;
+    accent-color: var(--accent-color, #4a9);
+  }
+}
+
+.row:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--accent-color, #4a9) 45%,
+    var(--separator-color, rgb(128 128 128 / 30%))
+  );
+}
+
+/* Still shown, still readable: "Not turned on" is the answer to the
+   question somebody opened this dialog with. */
+.rowOff {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.rowOff:hover {
+  border-color: var(--separator-color, rgb(128 128 128 / 30%));
+}
+
+.rowLabel {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.rowNote {
+  display: block;
+  margin-block-start: 0.15rem;
+  color: var(--text-color-f2);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.codeRow {
+  display: flex;
+  justify-content: center;
+  padding-block: 0.4rem;
+}
+
+/* A badge, not a sentence — the same shape a wrong PIN gets. */
+.err {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  margin: 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  color: var(--error-color, #d0322e);
+  background: color-mix(in srgb, var(--error-color, #d0322e) 14%, transparent);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.doneList {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  font-size: 0.88rem;
+
+  li {
+    margin-block: 0.2rem;
+  }
+}
+
+.note {
+  margin: 0;
+  color: var(--text-color-f2);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.primary,
+.ghost {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary {
+  border: 1px solid transparent;
+  color: var(--accent-ink, #062);
+  background: var(--accent-color, #4a9);
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ghost {
+  border: 1px solid var(--separator-color, rgb(128 128 128 / 30%));
+  color: inherit;
+  background: transparent;
+}

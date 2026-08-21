@@ -1,0 +1,64 @@
+@import "../../styles/components.less";
+
+/* Left-aligned in the settings grid; centred callers wrap it themselves. */
+.pin {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/*
+ * Filled tiles rather than outlined fields.
+ *
+ * A PIN box is not a text input people compose in — it holds one
+ * character and is done. Drawing it as a solid tile says that, reads at a
+ * glance as "how many digits are wanted", and stays legible at the size
+ * six of them need to be to fit one line.
+ */
+.box {
+  .is-blurred();
+  inline-size: 2.35rem;
+  block-size: 2.7rem;
+  padding: 0;
+  /* A visible edge, not a transparent one. Filled-only tiles disappeared
+     into the card on both themes — you could not see where to type. The
+     theme's own accent at 60% rather than the field border, which was too
+     close to the card behind it to read on either theme. */
+  border: 1px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  border-radius: 0.7rem;
+  color: var(--TextField__color);
+  background-color: var(--primary-l1, var(--TextField__background-color));
+  font-family: var(--default-font-family);
+  /* The box is small; the mask dot inside it should not be. */
+  font-size: 1.45rem;
+  line-height: 1;
+  text-align: center;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+  caret-color: var(--TextField--focused__color);
+}
+
+/* Full strength on the box being typed into, so the row says where you
+   are as well as how many digits are wanted. */
+.box:focus {
+  border-color: var(--accent);
+  color: var(--TextField--focused__color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 34%, transparent);
+  outline: none;
+}
+
+.box:disabled {
+  opacity: 0.6;
+}
+
+/* Hides the digits without making the field a password field — see the
+   note on `canMaskWithCss`. Applied only where it is supported, so it
+   never silently leaves a PIN on screen. */
+.masked {
+  -webkit-text-security: disc;
+  /* Real, and unrecognised: `text-security` is not in stylelint's
+     property list, but it is what the unprefixed form will be and
+     dropping it would leave this working only in WebKit forever. */
+  /* stylelint-disable-next-line property-no-unknown */
+  text-security: disc;
+}

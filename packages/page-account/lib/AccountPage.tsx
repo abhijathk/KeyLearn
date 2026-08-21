@@ -1,4 +1,4 @@
-import { SupportPage } from "@keylearn/page-support";
+import { MySupportSection, SupportService } from "@keylearn/page-support";
 import {
   type AnyUser,
   Avatar,
@@ -8,14 +8,21 @@ import {
   usePageData,
   type UserDetails,
 } from "@keylearn/pages-shared";
-import { Button, Icon, TextField } from "@keylearn/widget";
+import { Button, Icon, PinField, TextField } from "@keylearn/widget";
 import { confirmStyles as dlg } from "@keylearn/widget";
 import { ConfirmDialog } from "@keylearn/widget";
 import { FloatingShell } from "@keylearn/widget";
 import { mdiCreditCard } from "@mdi/js";
 import { clsx } from "clsx";
-import { type ReactNode, useEffect, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { useNavigate } from "react-router";
 import { NavLink } from "react-router";
 import * as styles from "./AccountPage.module.less";
 import { AccountPricePreview } from "./AccountPricePreview.tsx";
@@ -29,6 +36,7 @@ import {
 } from "./PreferencesPane.tsx";
 import { ProfilesManager } from "./profiles/ProfilesManager.tsx";
 import { SecurityCard } from "./SecurityCard.tsx";
+import { SecurityResetDialog } from "./SecurityResetDialog.tsx";
 import { AccountService } from "./service.ts";
 
 type Pane =
@@ -78,14 +86,19 @@ const PANES: readonly Pane[] = [
 // The window can be deep-linked to a pane via the URL hash, e.g.
 // "/account#learners" (used by the nav drawer's "Manage" shortcut).
 function initialPane(): Pane {
+  // Appearance rather than Account: opening this window is far more often
+  // "change the theme" than "read my own email address back".
   if (typeof window === "undefined") {
-    return "account";
+    return "appearance";
   }
   const hash = window.location.hash.replace(/^#/, "");
-  return PANES.includes(hash as Pane) ? (hash as Pane) : "account";
+  return PANES.includes(hash as Pane) ? (hash as Pane) : "appearance";
 }
 
 export function AccountPage() {
+  // Asked once when the window opens, and again on leaving the support
+  // pane — reading a conversation is what clears it.
+
   const { user, publicUser } = usePageData();
   if (user != null) {
     return <SignedIn user={user} publicUser={publicUser} />;
@@ -93,11 +106,208 @@ export function AccountPage() {
   return <SignedOut />;
 }
 
+/**
+ * The panes that are a grown-up's, behind the PIN when one is set.
+ *
+ * Three of them — Account, Security, Support — and not the window, which
+ * would put a lock in front of changing the theme. What is behind these
+ * is the account's address, the keys to it, and a private channel to an
+ * adult stranger; the rest is preferences.
+ *
+ * The same proof support uses, so the PIN is asked once per visit rather
+ * than once per pane, and closing the window ends it. No PIN set means no
+ * gate: that household chose not to have one.
+ */
+const GATED_PANES: ReadonlySet<Pane> = new Set([
+  "account",
+  "security",
+  "support",
+]);
+
+function AccountGate({
+  hasPin,
+  active,
+  children,
+}: {
+  /** From page data, so a household with no PIN never waits on a fetch. */
+  readonly hasPin: boolean;
+  /** Whether the pane on show is one of the gated three. */
+  readonly active: boolean;
+  readonly children: ReactNode;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const [gate, setGate] = useState<AccountService.AccountGate | null>(
+    // Nothing to ask about: no PIN is set, so there is no lock, and a
+    // round trip to be told so is a blank window for no reason. The
+    // server still enforces every action behind it either way.
+    hasPin ? null : { required: false, proved: true, length: null },
+  );
+  const [pin, setPin] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [forgot, setForgot] = useState(false);
+  // A reset changes several parts of the account at once — two-step, the
+  // codes, the PIN, whether a password exists. Re-reading one of them
+  // would leave the others stale, so the page is reloaded instead, and
+  // only once the dialog is closed so its summary stays readable.
+  const resetHappened = useRef(false);
+
+  /** Re-asks the server whether the lock still applies. */
+  const refreshGate = useCallback(async () => {
+    try {
+      setGate(await AccountService.getAccountGate());
+    } catch {
+      setGate({ required: true, proved: false, length: null });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasPin) {
+      return;
+    }
+    let live = true;
+    AccountService.getAccountGate()
+      .then((g) => live && setGate(g))
+      // Fail closed. The window shows an address and a learner list, and
+      // an optimistic render of those is the leak the gate exists to stop.
+      .catch(
+        () => live && setGate({ required: true, proved: false, length: null }),
+      );
+    return () => {
+      live = false;
+    };
+  }, [hasPin]);
+
+  /**
+   * Takes the PIN as an argument rather than reading state: `onComplete`
+   * fires one render before the last digit lands, so reading `pin` here
+   * verified an incomplete PIN and called a correct one wrong.
+   */
+  const submit = async (candidate: string = pin) => {
+    // Filling the last box submits, and so does the button beside it. Two
+    // verifies for one PIN spends two of the ten attempts the limiter
+    // allows in five minutes.
+    if (busy) {
+      return;
+    }
+    setErr(null);
+    setBusy(true);
+    try {
+      await SupportService.verifyParentPin(candidate);
+      setGate((g) => (g == null ? g : { ...g, proved: true }));
+    } catch {
+      setPin("");
+      setErr(
+        formatMessage({
+          id: "account.pin.wrong",
+          defaultMessage: "That PIN is not right.",
+        }),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Nothing at all until the answer is in: a flash of the pane before the
+  // lock lands is the same leak, only briefer.
+  if (gate == null) {
+    return active ? <div className={styles.gateBox} /> : children;
+  }
+
+  if (!active || !gate.required || gate.proved) {
+    return children;
+  }
+
+  return (
+    <div className={styles.gateBox}>
+      <LockIcon />
+      <p className={styles.gateText}>
+        <FormattedMessage
+          id="account.pin.intro"
+          defaultMessage="Enter the grown-up PIN to open your account."
+        />
+      </p>
+      <PinField
+        value={pin}
+        length={gate.length}
+        onChange={setPin}
+        onComplete={(value) => void submit(value)}
+        disabled={busy}
+      />
+      {/* No Continue: the last digit submits. */}
+      {err != null && <p className={styles.gateErr}>{err}</p>}
+
+      {/* The way out of a forgotten PIN, and it has to live here: the
+            reset cannot sit behind the thing it resets. Deliberately
+            quiet and in the corner — it is the rare path, and it should
+            not read as an easier alternative to remembering. */}
+      <button
+        type="button"
+        className={styles.gateForgot}
+        onClick={() => setForgot(true)}
+      >
+        <FormattedMessage
+          id="account.pin.forgot"
+          defaultMessage="Can't remember it?"
+        />
+      </button>
+
+      {forgot && (
+        <SecurityResetDialog
+          onClose={() => {
+            setForgot(false);
+            if (resetHappened.current) {
+              window.location.reload();
+            }
+          }}
+          // A cleared PIN means the gate no longer applies — re-ask
+          // rather than leaving somebody looking at a lock that is open.
+          onDone={() => {
+            resetHappened.current = true;
+            void refreshGate();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function LockIcon(): ReactNode {
+  return (
+    <svg className={styles.gateLock} viewBox="0 0 24 24">
+      <path d="M7 10V7a5 5 0 0 1 10 0v3" />
+      <rect x="4.6" y="10" width="14.8" height="10.4" rx="2.4" />
+    </svg>
+  );
+}
+
 function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   const { formatMessage } = useIntl();
   const { user, publicUser, actions } = useAccountActions(props);
   const premium = isPremiumUser(publicUser);
   const [pane, setPaneState] = useState<Pane>(initialPane);
+  const navigate = useNavigate();
+  // Closing is the same act as clicking the corner X, so it goes through
+  // the same path: the section unmounts and hands its PIN proof back.
+  const closeWindow = useCallback(() => navigate("/"), [navigate]);
+  const closingIn = useIdleClose(closeWindow);
+  const [supportUnread, setSupportUnread] = useState(0);
+  useEffect(() => {
+    // Skipped while the pane is open: the section is already refreshing,
+    // and a dot on the item you are standing in says nothing.
+    if (pane === "support") {
+      return;
+    }
+    let live = true;
+    SupportService.listMyTickets()
+      .then(({ unreadTotal }) => live && setSupportUnread(unreadTotal))
+      // Silent on purpose. A badge that cannot be fetched is a badge that
+      // does not appear; it is not worth an error anywhere.
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [pane]);
   const setPane = (next: Pane) => {
     setPaneState(next);
     if (typeof window !== "undefined") {
@@ -126,22 +336,37 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   return (
     <FloatingShell
       flush={true}
+      // Escape still closes it; a stray click on the dim does not. There
+      // is a half-written support message in here often enough that
+      // losing it to a missed click is not a fair trade.
+      closeOnBackdrop={false}
       title={<FormattedMessage id="t_Account" defaultMessage="Account" />}
     >
+      {/* Said before it happens, not after. A window that vanishes mid-read
+          is indistinguishable from a crash, and any movement cancels it. */}
+      {closingIn != null && (
+        <div className={styles.idleWarn} role="status">
+          <FormattedMessage
+            id="account.idleClosing"
+            defaultMessage="Closing in {n}s — move the mouse or press a key to stay."
+            values={{ n: closingIn }}
+          />
+        </div>
+      )}
       <div className={styles.b5}>
         {/* ── Left rail ── */}
         <nav className={styles.rail}>
-          <button
-            className={clsx(styles.who, pane === "account" && styles.whoOn)}
-            onClick={() => setPane("account")}
-          >
-            <Avatar user={publicUser} size="normal" />
-            {/* Name only here — the address is shown in the content pane, and
-                repeating it in a narrow rail just truncated it. */}
-            <span className={styles.whoText}>
-              <span className={styles.whoName}>{publicUser.name}</span>
-            </span>
-          </button>
+          <RailItem
+            on={pane === "appearance"}
+            onClick={() => setPane("appearance")}
+            icon={<PaletteIcon />}
+            label={
+              <FormattedMessage
+                id="account.rail.appearance"
+                defaultMessage="Appearance"
+              />
+            }
+          />
 
           <RailItem
             on={pane === "learners"}
@@ -162,28 +387,6 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               <FormattedMessage
                 id="account.rail.course"
                 defaultMessage="Course"
-              />
-            }
-          />
-          <RailItem
-            on={pane === "security"}
-            onClick={() => setPane("security")}
-            icon={<ShieldIcon />}
-            label={
-              <FormattedMessage
-                id="account.rail.security"
-                defaultMessage="Security"
-              />
-            }
-          />
-          <RailItem
-            on={pane === "appearance"}
-            onClick={() => setPane("appearance")}
-            icon={<PaletteIcon />}
-            label={
-              <FormattedMessage
-                id="account.rail.appearance"
-                defaultMessage="Appearance"
               />
             }
           />
@@ -209,20 +412,6 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               />
             }
           />
-          {SUPPORT_VISIBLE && (
-            <RailItem
-              on={pane === "support"}
-              onClick={() => setPane("support")}
-              icon={<SupportIcon />}
-              label={
-                <FormattedMessage
-                  id="account.rail.support"
-                  defaultMessage="Support"
-                />
-              }
-            />
-          )}
-
           {PREMIUM_VISIBLE && (
             <div
               className={clsx(
@@ -270,91 +459,146 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
             </div>
           )}
 
-          <button
-            className={styles.railLogout}
-            onClick={() => setConfirm("logout")}
-          >
-            <LogoutIcon />
-            <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
-          </button>
+          {/* Both pushed to the bottom together. The auto margin used to
+              sit on Log out alone, which left Account stranded up against
+              Support with the gap below it. */}
+          <div className={styles.railFoot}>
+            <RailItem
+              on={pane === "account"}
+              onClick={() => setPane("account")}
+              icon={<AccountIcon />}
+              label={
+                <FormattedMessage
+                  id="account.rail.account"
+                  defaultMessage="Account"
+                />
+              }
+            />
+
+            <RailItem
+              on={pane === "security"}
+              onClick={() => setPane("security")}
+              icon={<ShieldIcon />}
+              label={
+                <FormattedMessage
+                  id="account.rail.security"
+                  defaultMessage="Security"
+                />
+              }
+            />
+
+            {SUPPORT_VISIBLE && (
+              <RailItem
+                on={pane === "support"}
+                onClick={() => setPane("support")}
+                // Without this nobody knows a reply arrived: the count
+                // only exists inside the section, and nobody opens it
+                // speculatively.
+                dot={supportUnread > 0}
+                icon={<SupportIcon />}
+                label={
+                  <FormattedMessage
+                    id="account.rail.support"
+                    defaultMessage="Support"
+                  />
+                }
+              />
+            )}
+
+            <button
+              className={styles.railLogout}
+              onClick={() => setConfirm("logout")}
+            >
+              <LogoutIcon />
+              <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
+            </button>
+          </div>
         </nav>
 
         {/* ── Right content pane ── */}
+        {/* One gate around the pane region rather than three around three
+            panes: the proof is shared, so asking once covers all of them
+            for the visit and switching between them must not re-ask. */}
         <div className={styles.pane}>
-          {pane === "account" && (
-            <AccountPane
-              user={user}
-              publicUser={publicUser}
-              onAnonymize={() =>
-                actions.patchAccount({ anonymized: !user.anonymized })
-              }
-              onPublicProfile={() =>
-                actions.patchAccount({ publicProfile: !user.publicProfile })
-              }
-              alsoEverywhere={alsoEverywhere}
-              onAlsoEverywhere={setAlsoEverywhere}
-              onLogout={() => setConfirm("logout")}
-              onDelete={() => setConfirm("delete")}
-              onRename={(name) => actions.patchAccount({ name })}
-            />
-          )}
-
-          {pane === "learners" && (
-            <div className={styles.paneScroll}>
-              <h2 className={styles.paneTitle}>
-                <FormattedMessage
-                  id="account.section.profiles"
-                  defaultMessage="Learner profiles"
-                />
-              </h2>
-              <p className={styles.cardNote}>
-                <FormattedMessage
-                  id="account.profiles.note"
-                  defaultMessage="Add a profile for each person in your household. Kids get the dino game; each profile keeps its own progress on this device."
-                />
-              </p>
-              <ProfilesManager />
-            </div>
-          )}
-
-          {pane === "security" && (
-            <div className={styles.paneScroll}>
-              <SecurityCard
+          <AccountGate
+            hasPin={user.parentPinSet}
+            active={GATED_PANES.has(pane)}
+          >
+            {pane === "account" && (
+              <AccountPane
                 user={user}
-                onChanged={() => {
-                  // The 2FA and PIN flags live on the account record, so pull a
-                  // fresh copy rather than guessing the new state client-side.
-                  actions.patchAccount({});
-                }}
+                publicUser={publicUser}
+                onAnonymize={() =>
+                  actions.patchAccount({ anonymized: !user.anonymized })
+                }
+                onPublicProfile={() =>
+                  actions.patchAccount({ publicProfile: !user.publicProfile })
+                }
+                alsoEverywhere={alsoEverywhere}
+                onAlsoEverywhere={setAlsoEverywhere}
+                onLogout={() => setConfirm("logout")}
+                onDelete={() => setConfirm("delete")}
+                onRename={(name) => actions.patchAccount({ name })}
               />
-            </div>
-          )}
+            )}
 
-          {pane === "course" && (
-            <div className={styles.paneScroll}>
-              <CoursePane />
-            </div>
-          )}
+            {pane === "learners" && (
+              <div className={styles.paneScroll}>
+                <h2 className={styles.paneTitle}>
+                  <FormattedMessage
+                    id="account.section.profiles"
+                    defaultMessage="Learner profiles"
+                  />
+                </h2>
+                <p className={styles.cardNote}>
+                  <FormattedMessage
+                    id="account.profiles.note"
+                    defaultMessage="Add a profile for each person in your household. Kids get the dino game; each profile keeps its own progress on this device."
+                  />
+                </p>
+                <ProfilesManager />
+              </div>
+            )}
 
-          {pane === "appearance" && <AppearancePane />}
-          {pane === "accessibility" && <AccessibilityPane />}
+            {pane === "security" && (
+              <div className={styles.paneScroll}>
+                <SecurityCard
+                  user={user}
+                  onChanged={() => {
+                    // The 2FA and PIN flags live on the account record, so pull a
+                    // fresh copy rather than guessing the new state client-side.
+                    actions.patchAccount({});
+                  }}
+                />
+              </div>
+            )}
 
-          {pane === "prefs" && <PreferencesPane />}
+            {pane === "course" && (
+              <div className={styles.paneScroll}>
+                <CoursePane />
+              </div>
+            )}
 
-          {SUPPORT_VISIBLE && pane === "support" && (
-            <div className={styles.paneScroll}>
-              <SupportPage />
-            </div>
-          )}
+            {pane === "appearance" && <AppearancePane />}
+            {pane === "accessibility" && <AccessibilityPane />}
 
-          {PREMIUM_VISIBLE && pane === "premium" && (
-            <div className={styles.paneScroll}>
-              <PremiumPane
-                premium={premium}
-                onCheckout={() => actions.checkout()}
-              />
-            </div>
-          )}
+            {pane === "prefs" && <PreferencesPane />}
+
+            {SUPPORT_VISIBLE && pane === "support" && (
+              <div className={styles.paneScroll}>
+                <MySupportSection />
+              </div>
+            )}
+
+            {PREMIUM_VISIBLE && pane === "premium" && (
+              <div className={styles.paneScroll}>
+                <PremiumPane
+                  premium={premium}
+                  onCheckout={() => actions.checkout()}
+                />
+              </div>
+            )}
+          </AccountGate>
         </div>
       </div>
 
@@ -1151,19 +1395,21 @@ function VerifiedBadge(): ReactNode {
   );
 }
 
+/**
+ * A palette, drawn to survive 17px.
+ *
+ * The previous one carried four filled dots at r=1.2 in a 24 viewBox —
+ * under a pixel across once the rail scales it down, so they rendered as
+ * grey mush rather than paint. Three larger wells read as deliberate, and
+ * the outline no longer sets its own stroke width to fight the rail's.
+ */
 function PaletteIcon(): ReactNode {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={styles.railIcon}>
-      <path
-        d="M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.1 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-4-4-7.3-9-7.3Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <circle cx="7.5" cy="12" r="1.2" fill="currentColor" />
-      <circle cx="9.5" cy="8" r="1.2" fill="currentColor" />
-      <circle cx="14" cy="7" r="1.2" fill="currentColor" />
-      <circle cx="17.5" cy="10" r="1.2" fill="currentColor" />
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <path d="M12 3.4c-4.8 0-8.6 3.6-8.6 8.1s3.8 8.1 8.6 8.1c.9 0 1.6-.7 1.6-1.5 0-.4-.2-.8-.4-1.1-.2-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5h1.6c2.6 0 4.7-2 4.7-4.6 0-3.8-3.8-6.5-8.6-6.5Z" />
+      <circle cx="7.9" cy="12.4" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="10.1" cy="8.2" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="8.1" r="1.5" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -1179,32 +1425,136 @@ function CourseIcon() {
   );
 }
 
+/**
+ * How long the account window may sit untouched before it closes itself.
+ *
+ * Ten minutes rather than a PIN re-prompt, because a window that closes
+ * explains itself and a prompt appearing mid-sentence does not. Closing
+ * unmounts the support section, which hands its PIN proof back — so the
+ * lock and the close are one mechanism rather than two rules that can
+ * disagree. The server's own fifteen-minute expiry is deliberately longer:
+ * it is the backstop for when this never runs at all.
+ */
+export const IDLE_CLOSE_MS = 10 * 60 * 1000;
+/** How long the window says so before it goes. */
+export const IDLE_WARN_MS = 30 * 1000;
+
+/**
+ * Seconds left before the window closes itself, or null when nobody is
+ * idle enough to care.
+ *
+ * Activity is recorded as a timestamp and read by one interval, rather
+ * than resetting a timeout on every event — `pointermove` fires hundreds
+ * of times a second while somebody is just moving the cursor, and
+ * re-arming a timer that often is a lot of work to achieve nothing.
+ */
+export function useIdleClose(
+  onIdle: () => void,
+  // Injectable so the test can run this in milliseconds rather than
+  // minutes, and without faking the clock — patching `Date.now` and
+  // `setInterval` globally fights React's own scheduler.
+  closeMs: number = IDLE_CLOSE_MS,
+  warnMs: number = IDLE_WARN_MS,
+  tickMs: number = 1000,
+): number | null {
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const last = useRef(Date.now());
+  const idled = useRef(false);
+
+  useEffect(() => {
+    const seen = () => {
+      last.current = Date.now();
+    };
+    // Scroll and touch are here because reading is activity: somebody
+    // working through a long thread may never move the mouse.
+    const events = [
+      "pointermove",
+      "pointerdown",
+      "keydown",
+      "wheel",
+      "touchstart",
+      "scroll",
+    ] as const;
+    for (const e of events) {
+      window.addEventListener(e, seen, { passive: true });
+    }
+    const timer = window.setInterval(() => {
+      const idle = Date.now() - last.current;
+      if (idle >= closeMs) {
+        // Guarded: a background tab throttles this interval, so it can
+        // fire late and more than once on the way back.
+        if (!idled.current) {
+          idled.current = true;
+          onIdle();
+        }
+        return;
+      }
+      setRemaining(
+        idle >= closeMs - warnMs ? Math.ceil((closeMs - idle) / 1000) : null,
+      );
+    }, tickMs);
+    return () => {
+      for (const e of events) {
+        window.removeEventListener(e, seen);
+      }
+      window.clearInterval(timer);
+    };
+  }, [onIdle, closeMs, warnMs, tickMs]);
+
+  return remaining;
+}
+
 function RailItem({
   on,
   onClick,
   icon,
   label,
+  dot = false,
 }: {
   readonly on: boolean;
   readonly onClick: () => void;
   readonly icon: ReactNode;
   readonly label: ReactNode;
+  /** Something is waiting behind this item. */
+  readonly dot?: boolean;
 }): ReactNode {
+  const { formatMessage } = useIntl();
   return (
     <button className={clsx(styles.nav, on && styles.navOn)} onClick={onClick}>
       {icon}
       {label}
+      {dot && (
+        <span
+          className={styles.railDot}
+          aria-label={formatMessage({
+            id: "account.rail.unread",
+            defaultMessage: "Unread reply",
+          })}
+        />
+      )}
     </button>
   );
 }
 
 // ── Rail icons (stroked, matching the account mock) ──
 
+/**
+ * Two figures, because Account is one.
+ *
+ * A single head and shoulders offset to the left is the same mark as a
+ * single head and shoulders centred — the two sat in one rail and read as
+ * the same icon. Person versus people is the distinction that survives
+ * being 17 pixels wide.
+ */
 function LearnersIcon(): ReactNode {
   return (
     <svg className={styles.railIcon} viewBox="0 0 24 24">
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M3 20c0-3.3 3-5.5 6-5.5s6 2.2 6 5.5" />
+      {/* The one behind, drawn first and smaller so it reads as depth
+          rather than as a second, equal figure. */}
+      <circle cx="6.8" cy="9.1" r="2.3" />
+      <path d="M2.4 19.6a4.7 4.7 0 0 1 3.5-4.4" />
+      <circle cx="14.8" cy="8.3" r="3" />
+      <path d="M9 20.4a5.9 5.9 0 0 1 11.8 0" />
     </svg>
   );
 }
@@ -1219,32 +1569,70 @@ function ShieldIcon(): ReactNode {
 
 // The universal access mark: a figure with arms out, not an eye or an ear —
 // this pane is for everybody who needs the app to meet them somewhere.
+/**
+ * The standard accessibility figure, in proportion.
+ *
+ * The old one had a head too small for its body and a visible gap
+ * beneath it, so it read as a floating dot above a stick. The head is now
+ * large enough to be a head at 17px, and the arms sit where shoulders
+ * are rather than at the neck.
+ */
 function AccessIcon(): ReactNode {
   return (
     <svg className={styles.railIcon} viewBox="0 0 24 24">
-      <circle cx="12" cy="4.2" r="1.6" />
-      <path d="M4.5 8.2h15M12 8.6v6M12 14.6l-3.2 5.6M12 14.6l3.2 5.6" />
+      <circle cx="12" cy="4.8" r="2" />
+      <path d="M12 8.4v4.4M6.2 10.4h11.6M12 12.8l-3.2 6.6M12 12.8l3.2 6.6" />
     </svg>
   );
 }
 
-// A life-buoy ring: the throw-a-line mark, distinct from the shield (account
-// safety) and gear (preferences) it sits beside on the rail.
+/**
+ * The same speech bubble the section's own empty state draws. A life-buoy
+ * says "rescue"; this is a conversation, and the rail should promise the
+ * same thing the pane behind it delivers.
+ */
 function SupportIcon(): ReactNode {
   return (
     <svg className={styles.railIcon} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="8.5" />
-      <circle cx="12" cy="12" r="3.3" />
-      <path d="M6.1 6.1l3.3 3.3M17.9 6.1l-3.3 3.3M6.1 17.9l3.3-3.3M17.9 17.9l-3.3-3.3" />
+      <path d="M19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75v7.5a2.25 2.25 0 0 0 2.25 2.25h2.25v3.9l4.65-3.9h8.1a2.25 2.25 0 0 0 2.25-2.25v-7.5A2.25 2.25 0 0 0 19.5 4.5z" />
     </svg>
   );
 }
 
+/**
+ * Sliders rather than a gear.
+ *
+ * A twelve-toothed gear at 17px is a circle with a furry edge — the teeth
+ * are narrower than the stroke that draws them, so they close up into a
+ * blob. Three rails and three knobs stay legible at any size, and say
+ * "things you can adjust" more directly than a cog does.
+ *
+ * Each rail is drawn in two segments so it stops either side of its knob
+ * instead of running through it; the knobs are unfilled, so a line
+ * crossing behind one would show.
+ */
 function GearIcon(): ReactNode {
   return (
     <svg className={styles.railIcon} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 13a7.9 7.9 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.6h-4l-.4 2.6a7 7 0 0 0-1.7 1l-2.3-1-2 3.4L4.6 11a7.9 7.9 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7 7 0 0 0 1.7-1l2.3 1 2-3.4z" />
+      <path d="M3.5 7h3.6M10.9 7h9.6" />
+      <circle cx="9" cy="7" r="1.9" />
+      <path d="M3.5 12h10.1M17.4 12h3.1" />
+      <circle cx="15.5" cy="12" r="1.9" />
+      <path d="M3.5 17h2.6M9.9 17h10.6" />
+      <circle cx="8" cy="17" r="1.9" />
+    </svg>
+  );
+}
+
+/**
+ * A person, for the account itself — the same mark the avatar occupied,
+ * now that the rail names the pane rather than showing whose it is.
+ */
+function AccountIcon(): ReactNode {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M4.8 20a7.2 7.2 0 0 1 14.4 0" />
     </svg>
   );
 }
@@ -1305,13 +1693,47 @@ function NameEditor({
 }: {
   readonly name: string;
   readonly verified: boolean;
-  readonly onRename: (name: string) => void;
+  readonly onRename: (name: string) => Promise<void> | void;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const tidy = draft.trim();
   const changed = tidy !== "" && tidy !== name;
+
+  /**
+   * Saves, and says so when it does not.
+   *
+   * The reason the field appeared to do nothing: a refused rename — a
+   * name already taken is the common one — was logged to the console and
+   * nowhere else, so the editor closed and the old name came back with
+   * no explanation at all.
+   */
+  const save = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      await onRename(tidy);
+      setEditing(false);
+    } catch (cause) {
+      const message =
+        (cause as { body?: { error?: { message?: string } } })?.body?.error
+          ?.message ??
+        (cause as { message?: string })?.message ??
+        null;
+      setErr(
+        message ??
+          formatMessage({
+            id: "account.rename.failed",
+            defaultMessage: "That name could not be saved.",
+          }),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
 
   if (!editing) {
     return (
@@ -1356,22 +1778,19 @@ function NameEditor({
         onChange={(ev) => setDraft(ev.target.value)}
         onKeyDown={(ev) => {
           if (ev.key === "Enter" && changed) {
-            onRename(tidy);
-            setEditing(false);
+            void save();
           }
           if (ev.key === "Escape") {
             setEditing(false);
+            setErr(null);
           }
         }}
       />
       <button
         type="button"
         className={styles.subtleBtn}
-        disabled={!changed}
-        onClick={() => {
-          onRename(tidy);
-          setEditing(false);
-        }}
+        disabled={!changed || busy}
+        onClick={() => void save()}
       >
         <FormattedMessage id="account.rename.save" defaultMessage="Save" />
       </button>
@@ -1382,6 +1801,7 @@ function NameEditor({
       >
         <FormattedMessage id="account.rename.cancel" defaultMessage="Cancel" />
       </button>
+      {err != null && <span className={styles.renameErr}>{err}</span>}
     </span>
   );
 }

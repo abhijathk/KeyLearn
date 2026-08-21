@@ -168,10 +168,18 @@ export function MenuDrawer({
                       />
                     </span>
                     <span className={styles.labelHairline} />
+                    {/* Locked with everything else grown-up. It sits above
+                        the locked zone rather than inside it — the learner
+                        row itself has to stay usable so a child can switch
+                        back — so the lock is applied to this link on its
+                        own. It leads to the account window, which is the
+                        one place a kid profile must not reach. */}
                     <RouterLink
-                      className={styles.manage}
+                      className={clsx(styles.manage, kidLock && styles.locked)}
                       to={`${Pages.account.path}#learners`}
                       onClick={onClose}
+                      aria-disabled={kidLock}
+                      inert={kidLock}
                     >
                       <FormattedMessage
                         id="nav.manageLearners"

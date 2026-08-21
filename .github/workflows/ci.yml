@@ -29,6 +29,57 @@ jobs:
           DATABASE_CLIENT: sqlite
           NODE_COMPILE_CACHE: /tmp/node-compile-cache
 
+  # The same suite against the database production actually runs.
+  #
+  # The job above uses sqlite because it needs no service and is quick, and
+  # for most of the suite the dialect is irrelevant. It is not always
+  # irrelevant: a Date column declared in a model's jsonSchema is
+  # serialised on its way to the driver, which sqlite accepts and MySQL
+  # rejects outright — so a delivery-tracking column once passed every
+  # check here and would have failed on every write in production. A whole
+  # class of bug is invisible to a sqlite-only suite, and this is the
+  # cheapest way to see it.
+  mysql:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        # native_password so the driver connects the same way the local
+        # development container does.
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: keylearn_tests
+          MYSQL_USER: keylearn
+          MYSQL_PASSWORD: keylearn
+        ports:
+          - 3306:3306
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "npm"
+      - name: Test against MySQL
+        run: |
+          npm ci
+          npm run compile
+          npm run test
+        env:
+          DATABASE_CLIENT: mysql
+          DATABASE_HOST: 127.0.0.1
+          DATABASE_PORT: "3306"
+          DATABASE_DATABASE: keylearn_tests
+          DATABASE_USERNAME: keylearn
+          DATABASE_PASSWORD: keylearn
+          NODE_COMPILE_CACHE: /tmp/node-compile-cache
+
   # Kept separate from the build so a newly-published advisory shows up as its
   # own red check rather than as a confusing build failure — and so it can be
   # read at a glance without digging through compile output.

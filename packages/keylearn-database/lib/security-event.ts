@@ -26,6 +26,7 @@ export type SecurityEventType =
   | "two-factor-enabled"
   | "two-factor-disabled"
   | "parent-pin-set"
+  | "security-reset"
   | "profile-deleted"
   | "account-delete-failed"
   | "account-deleted";

@@ -60,12 +60,14 @@
 // match it: `.paper .contactCard`, not just `.contactCard`.
 .paper .contactCard {
   display: flex;
+  position: relative;
   flex: none;
   gap: 0.9rem;
   align-items: center;
-  padding: 0.7rem 1.4rem 0.7rem 0.7rem;
+  padding: 0.7rem 1.2rem 0.7rem 0.7rem;
   border: 1px solid color-mix(in oklab, var(--text-color) 12%, transparent);
   border-radius: 1.1rem;
+  overflow: hidden;
   background: color-mix(in oklab, var(--primary-d2) 30%, var(--primary-l1));
   text-decoration: none;
   transition:
@@ -329,4 +331,61 @@
     padding-inline-start: 0;
     border-inline-start: 0;
   }
+}
+
+/* The chevron at the end of the support banner. */
+.paper .contactGo {
+  flex: none;
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  opacity: 0.55;
+}
+
+/* The wash, behind everything else in the chip. */
+.paper .contactArt {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/* Everything else rides above the paint. */
+.paper .contactCard > *:not(.contactArt) {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * The words take the palette's own ink, not the theme's.
+ *
+ * `.contactLabel` and `.contactLine` set `var(--text-color)`, which on the
+ * dark theme is near-white — and this chip's ground is a pale wash
+ * whatever the theme, so the text was white on cream. Inheriting from the
+ * anchor picks up `palette.ink`, the same colour the avatar initials use
+ * against the same grounds.
+ */
+.paper .contactLabel,
+.paper .contactLine,
+.paper .contactIconBox {
+  color: inherit;
+}
+
+/* Paint is uneven by design, so the words carry a light halo — without it
+   a wash landing behind a line takes the line with it. */
+.paper .contactLabel {
+  opacity: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* A crisp one-pixel lift, not a glow. The blurred version softened the
+   letterforms, which is the opposite of what it was there to do. */
+.paper .contactLine {
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.paper .contactIconBox {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.5);
 }

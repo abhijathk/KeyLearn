@@ -1,0 +1,192 @@
+/* ────────────────────────────────────────────────────────────────
+   QDesk loaders, recoloured for KeyLearn.
+
+   Copied from ~/Documents/KeyLearn/loaders/qdesk-loaders.css. They read
+   their colours from custom properties, so adopting them is a token remap
+   rather than a fork — QDesk's brand yellow never resolves here because
+   --qk-acc points at KeyLearn's accent instead. Class names are unchanged,
+   so a fix upstream stays a drop-in.
+
+   Two of the six are deliberately left out: the page loader (1) and the
+   full-screen overlay (6) that exists to host it. This section lives
+   inside the account dialog, and a blocking full-screen wash over a dialog
+   is the wrong scale of interruption for "the list is loading".
+   ──────────────────────────────────────────────────────────────── */
+
+:root {
+  --qk-acc: var(--accent);
+  --qk-accink: var(--accent-ink, var(--primary));
+  --qk-line: var(--secondary-l2);
+  --qk-field: var(--primary-d1);
+  --qk-ink: var(--secondary);
+  --qk-sub: var(--secondary-l1);
+  --qk-bg: var(--primary);
+  --qk-r-pill: 999px;
+}
+
+:global {
+
+  /* ---------------------------------------------------------- keyframes */
+  @keyframes qk-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes qk-tdot {
+    0%,
+    60%,
+    100% {
+      opacity: 0.35;
+      transform: translateY(0);
+    }
+    30% {
+      opacity: 1;
+      transform: translateY(-0.25rem);
+    }
+  }
+  @keyframes qk-shimmer {
+    0% {
+      background-position: 150% 0;
+    }
+    100% {
+      background-position: -50% 0;
+    }
+  }
+  @keyframes qk-slide {
+    0% {
+      inset-inline-start: -40%;
+    }
+    100% {
+      inset-inline-start: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .qk-spinner,
+    .qk-dots i,
+    .qk-skel,
+    .qk-bar-loader::after {
+      animation: none;
+    }
+  }
+  /* ============================================================
+   2 · INLINE SPINNER  —  .qk-spinner  (+ .qk-spinner--lg)
+   Inherits currentColor, so it works inside buttons, rows and
+   icon slots. Pair with aria-busy="true" on the button.
+   ============================================================ */
+  .qk-spinner {
+    display: inline-block;
+    flex: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+    border: 2px solid color-mix(in oklab, currentColor 25%, transparent);
+    border-block-start-color: currentColor;
+    border-radius: 50%;
+    animation: qk-spin 0.7s linear infinite;
+  }
+  .qk-spinner--lg {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    border-width: 2.5px;
+  }
+
+  /* ============================================================
+   3 · THREE-DOT LOADER  —  .qk-dots
+   Same rhythm as the chat typing indicator. Use where a spinner
+   would feel heavy: inline text, small cards, "assistant is
+   thinking" states.
+   ============================================================ */
+  .qk-dots {
+    display: inline-flex;
+    gap: 0.31rem;
+    align-items: center;
+  }
+  .qk-dots i {
+    inline-size: 0.44rem;
+    block-size: 0.44rem;
+    border-radius: 50%;
+    background: var(--qk-acc);
+    animation: qk-tdot 1.1s infinite;
+  }
+  .qk-dots i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .qk-dots i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  /* ============================================================
+   4 · TOP PROGRESS BAR  —  .qk-bar-loader
+   Indeterminate bar for background fetches. Sits under the
+   header; no layout shift.
+   ============================================================ */
+  .qk-bar-loader {
+    position: relative;
+    block-size: 0.1875rem;
+    border-radius: var(--qk-r-pill);
+    overflow: hidden;
+    background: var(--qk-field);
+  }
+  .qk-bar-loader::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inline-size: 40%;
+    border-radius: var(--qk-r-pill);
+    background: var(--qk-acc);
+    animation: qk-slide 1.2s ease-in-out infinite;
+  }
+
+  /* ============================================================
+   5 · SKELETONS  —  .qk-skel  /  .qk-skel-row
+   Shimmer placeholders that hold the real layout's shape.
+   Modifiers: --text --title --circle --pill
+   .qk-skel-row is a ready-made ticket/account row.
+   ============================================================ */
+  .qk-skel {
+    block-size: 0.875rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(
+      90deg,
+      var(--qk-field) 0%,
+      color-mix(in oklab, var(--qk-field) 55%, var(--qk-line)) 50%,
+      var(--qk-field) 100%
+    );
+    background-size: 200% 100%;
+    animation: qk-shimmer 1.4s ease-in-out infinite;
+  }
+  .qk-skel--text {
+    block-size: 0.75rem;
+  }
+  .qk-skel--title {
+    block-size: 1.125rem;
+    border-radius: 0.625rem;
+  }
+  .qk-skel--circle {
+    flex: none;
+    inline-size: 2.375rem;
+    block-size: 2.375rem;
+    border-radius: 50%;
+  }
+  .qk-skel--pill {
+    inline-size: 4rem;
+    block-size: 1.25rem;
+    border-radius: var(--qk-r-pill);
+  }
+  .qk-skel-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    padding-inline: 0.875rem;
+    padding-block: 0.7rem;
+    border: 1px solid var(--qk-line);
+    border-radius: 0.625rem;
+  }
+  .qk-skel-row-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.44rem;
+    min-inline-size: 0;
+  }
+}

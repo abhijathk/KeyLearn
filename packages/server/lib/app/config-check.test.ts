@@ -27,6 +27,18 @@ const sane = {
   COOKIE_DOMAIN: "app.keylearn.org",
   COOKIE_SECURE: "true",
   MAIL_TRANSPORT: "smtp",
+  // Naming a transport is not the same as being able to send through it,
+  // so a configuration without these is no longer "sane".
+  MAIL_SMTP_HOST: "smtp-relay.example.com",
+  MAIL_SMTP_USER: "postmaster",
+  MAIL_SMTP_PASSWORD: "s3cret-relay-password",
+  MAIL_FROM_ADDRESS: "hello@keylearn.org",
+  // Set explicitly rather than inherited: the developer's own .env is
+  // loaded into process.env before these tests run, and its placeholder
+  // keys would otherwise decide the result.
+  OPS_API_KEY: "Nq8s4Xb2m0PfTz1Lc7RkYw3Ve6Hd9Jg5",
+  QDESK_APP_KEY: "Zr5t8Wv1Qb4Nm7Kd0Yx3Fp6Ls9Hc2Ja",
+  QDESK_URL: "https://desk.keylearn.org/",
   DATABASE_CLIENT: "mysql",
   TRUSTED_PROXIES: "loopback",
 };
@@ -90,6 +102,36 @@ test("refuse a mail transport that sends nothing", () => {
   withEnv({ ...sane, MAIL_TRANSPORT: "log" }, () => {
     const { fatal } = checkProductionConfig();
     isTrue(fatal.some((m) => m.includes("MAIL_TRANSPORT")));
+  });
+});
+
+test("refuse a placeholder shared secret", () => {
+  // The one that would otherwise ship: it works, so nothing else notices.
+  withEnv({ ...sane, OPS_API_KEY: "dev-only-secret" }, () => {
+    const { fatal } = checkProductionConfig();
+    isTrue(fatal.some((m) => m.includes("OPS_API_KEY")));
+    isTrue(fatal.some((m) => m.includes("placeholder")));
+  });
+});
+
+test("refuse a shared secret that is merely short", () => {
+  withEnv({ ...sane, QDESK_APP_KEY: "abc123" }, () => {
+    const { fatal } = checkProductionConfig();
+    isTrue(fatal.some((m) => m.includes("QDESK_APP_KEY")));
+  });
+});
+
+test("refuse an smtp transport with no credentials", () => {
+  withEnv({ ...sane, MAIL_SMTP_PASSWORD: "" }, () => {
+    const { fatal } = checkProductionConfig();
+    isTrue(fatal.some((m) => m.includes("MAIL_SMTP_PASSWORD")));
+  });
+});
+
+test("refuse a plain-HTTP desk URL", () => {
+  withEnv({ ...sane, QDESK_URL: "http://desk.keylearn.org/" }, () => {
+    const { fatal } = checkProductionConfig();
+    isTrue(fatal.some((m) => m.includes("QDESK_URL")));
   });
 });
 

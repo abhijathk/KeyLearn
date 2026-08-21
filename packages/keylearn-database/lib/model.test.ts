@@ -1110,6 +1110,7 @@ test("convert to user details", async (ctx) => {
     hasPassword: false,
     twoFactorEnabled: false,
     parentPinSet: false,
+    parentPinLength: null,
     emailVerified: false,
     createdAt: now,
   });

@@ -49,7 +49,9 @@ export type StrokeIconName =
   | "info"
   | "copy"
   | "bell"
-  | "headset";
+  | "headset"
+  | "coffee"
+  | "arrowRight";
 
 const shapes: Record<StrokeIconName, ReactNode> = {
   // The cell for "b": dots 1 and 2 raised, the other four empty.
@@ -264,6 +266,19 @@ const shapes: Record<StrokeIconName, ReactNode> = {
       <rect x="2.5" y="12.5" width="4" height="6.5" rx="1.8" />
       <rect x="17.5" y="12.5" width="4" height="6.5" rx="1.8" />
       <path d="M19.5 19v0.5a3 3 0 0 1-3 3h-2.5" />
+    </>
+  ),
+  // "Buy me a coffee". Drawn rather than the photograph it replaces: a
+  // raster cup could not take the theme's colour, so it stayed the same
+  // warm brown on a dark header while every icon beside it turned pale.
+  arrowRight: <path d="M5 12h13M12 5l7 7-7 7" />,
+  coffee: (
+    <>
+      <path d="M4.5 9h11v5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4z" />
+      <path d="M15.5 10.2h1.6a2.4 2.4 0 0 1 0 4.8h-1.6" />
+      <path d="M3 20.5h14" />
+      <path d="M8 3.2c-.7 1 0 1.7.6 2.6" />
+      <path d="M11.6 3.2c-.7 1 0 1.7.6 2.6" />
     </>
   ),
 };

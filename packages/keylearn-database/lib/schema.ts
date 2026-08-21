@@ -19,10 +19,14 @@ import { PracticeSession } from "./practice-session.ts";
 import { ProfileData } from "./profile-data.ts";
 import { SavedReply } from "./saved-reply.ts";
 import { SecurityEvent } from "./security-event.ts";
+import { SecurityReset } from "./security-reset.ts";
 import { StaffAuditEvent } from "./staff-audit-event.ts";
 import { StaffSettings } from "./staff-settings.ts";
+import { SupportAttachment } from "./support-attachment.ts";
 import { SupportBlock } from "./support-block.ts";
+import { SupportDraft } from "./support-draft.ts";
 import { SupportMessage } from "./support-message.ts";
+import { SupportPinProof } from "./support-pin-proof.ts";
 import { SupportTicket } from "./support-ticket.ts";
 
 export async function createSchema(knex: Knex): Promise<void> {
@@ -55,6 +59,10 @@ export async function createSchema(knex: Knex): Promise<void> {
   await createTable(SupportTicket);
   // Depends on SupportTicket (FK) — must come after it.
   await createTable(SupportMessage);
+  await createTable(SupportAttachment);
+  await createTable(SupportDraft);
+  await createTable(SecurityReset);
+  await createTable(SupportPinProof);
   await createTable(Notice);
   await createTable(StaffAuditEvent);
   await createTable(Answer);
@@ -161,6 +169,41 @@ export async function createSchema(knex: Knex): Promise<void> {
 
   await addColumn("user", "parent_pin_hash", (table) => {
     table.string("parent_pin_hash", 160).nullable();
+  });
+
+  // How many digits the PIN has, so the entry screen can draw one box per
+  // digit. A hash cannot be asked this.
+  //
+  // Left null on accounts whose PIN predates the column, and the entry
+  // screen falls back to a single free-length field for those. Not
+  // backfilled with 4: a household whose PIN is six digits would be shown
+  // four boxes and locked out of their own account.
+  // Who a support reply is from, shown on the notification itself.
+  await addColumn("notification", "author_name", (table) => {
+    table.string("author_name", 64).nullable();
+  });
+
+  await addColumn("notification", "from_assistant", (table) => {
+    table.boolean("from_assistant").notNullable().defaultTo(false);
+  });
+
+  await addColumn("user", "parent_pin_length", (table) => {
+    table.integer("parent_pin_length").unsigned().nullable();
+  });
+
+  // Sticky memory of "this household has had a learner profile", which the
+  // support gate reads alongside the live profile count.
+  //
+  // Without it the requirement lifts the moment the last kid profile is
+  // deleted — and deleting a profile is exactly what a child who wants past
+  // the gate would try. Once true, never cleared.
+  //
+  // Deliberately not backfilled: accounts that still HAVE a kid profile are
+  // caught by the live count, and for one whose profile was already deleted
+  // before this shipped there is nothing left to read. The flag starts
+  // earning its keep from the next kid profile created on any account.
+  await addColumn("user", "support_pin_required", (table) => {
+    table.boolean("support_pin_required").notNullable().defaultTo(false);
   });
 
   // Public profiles become opt-in. Existing accounts are moved to private too,
@@ -393,8 +436,64 @@ export async function createSchema(knex: Knex): Promise<void> {
   // How many times this ticket has moved from closed back to open via a
   // guest reply — see replyToThread. Powers the second-reopen auto-flag
   // setting; not shown to the sender.
+  // ── the account-window support section ──
+
+  // Removing a ticket from your own list is a soft delete. The row has to
+  // stay: the desk keeps the conversation and archives it, so "gone from my
+  // messages" is a timestamp rather than a DELETE. Held here rather than in
+  // the browser, or the ticket reappears on their phone.
+  await addColumn("support_ticket", "deleted_by_user_at", (table) => {
+    table.timestamp("deleted_by_user_at").nullable();
+  });
+
+  // What the unread count on the chip and the dot on the rail are counted
+  // against. In local storage it would say "2 unread" on the laptop and
+  // nothing on the tablet.
+  await addColumn("support_ticket", "last_read_at", (table) => {
+    table.timestamp("last_read_at").nullable();
+  });
+
+  // One question, five stars, asked once a case has closed.
+  await addColumn("support_ticket", "csat_rating", (table) => {
+    table.integer("csat_rating").unsigned().nullable();
+  });
+  await addColumn("support_ticket", "csat_note", (table) => {
+    table.text("csat_note").nullable();
+  });
+  await addColumn("support_ticket", "csat_rated_at", (table) => {
+    table.timestamp("csat_rated_at").nullable();
+  });
+  // Closing the rating card is a decision, and it must not come back on
+  // another device — without this it is dismissed per browser, which reads
+  // as the product nagging.
+  await addColumn("support_ticket", "csat_dismissed_at", (table) => {
+    table.timestamp("csat_dismissed_at").nullable();
+  });
+
+  // What a message *is*, where that changes how it has to be shown: the
+  // fixed emergency redirect is not a chat bubble, and the line saying a
+  // person has taken over is not a reply. Null for ordinary text.
+  await addColumn("support_message", "kind", (table) => {
+    table.string("kind", 16).nullable();
+  });
+
+  // A client-generated id, unique per message. The one thing that makes the
+  // offline outbox safe: replaying a send that half-succeeded finds the row
+  // already there instead of posting it twice.
+  await addColumn("support_message", "client_id", (table) => {
+    table.string("client_id", 64).nullable();
+    table.unique(["client_id"], { indexName: "support_message_client_id" });
+  });
+
   await addColumn("support_ticket", "reopen_count", (table) => {
     table.integer("reopen_count").unsigned().notNullable().defaultTo(0);
+  });
+
+  // When the desk acknowledged a message — the second tick in the thread.
+  // Null on everything written before this shipped, which reads as "sent"
+  // and is as much as can honestly be said about them.
+  await addColumn("support_message", "delivered_at", (table) => {
+    table.timestamp("delivered_at").nullable();
   });
 
   async function addColumn(

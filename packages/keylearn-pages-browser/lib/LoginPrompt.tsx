@@ -43,7 +43,6 @@ const EXCLUDED_PATHS: readonly string[] = [
   Pages.kids.path,
   Pages.verify.path,
   Pages.support.path,
-  Pages.desk.path,
   Pages.termsOfService.path,
   Pages.privacyPolicy.path,
   Pages.accessibility.path,

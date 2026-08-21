@@ -25,7 +25,24 @@ const SKIP = new Set(["node_modules", ".types", "lib/messages"]);
  * regex sound rather than a guess.
  */
 const PAIR =
-  /\bid[=:]\s*\{?["']([^"']+)["']\}?[,\s]*\n?\s*defaultMessage[=:]\s*\{?["']((?:[^"'\\]|\\.)*)["']/g;
+  /\bid[=:]\s*\{?["']([^"']+)["']\}?[,\s]*\n?\s*defaultMessage[=:]\s*\{?((?:["'](?:[^"'\\]|\\.)*["']\s*\+?\s*)+)/g;
+
+/**
+ * The message text from one or more adjacent string literals.
+ *
+ * A long default message is often written as `"first half " + "second
+ * half"`, which the real extractor joins before it ever reaches the
+ * catalogue. Reading only the first literal made two identical messages
+ * look like a conflict — and since this check gates CI, that is a build
+ * failed over nothing. Joined here the same way.
+ */
+function literalText(raw) {
+  let out = "";
+  for (const [, piece] of raw.matchAll(/["']((?:[^"'\\]|\\.)*)["']/g)) {
+    out += piece;
+  }
+  return out;
+}
 
 function* sources(dir) {
   for (const entry of readdirSync(dir)) {
@@ -48,7 +65,8 @@ const uses = new Map();
 
 for (const file of sources(ROOT)) {
   const text = readFileSync(file, "utf8");
-  for (const [, id, message] of text.matchAll(PAIR)) {
+  for (const [, id, raw] of text.matchAll(PAIR)) {
+    const message = literalText(raw);
     if (!(id in catalogue)) {
       missing.set(id, file.slice(ROOT.length + 1));
     }

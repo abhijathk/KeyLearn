@@ -4,7 +4,7 @@ import {
   exportFilename,
   type UserDetails,
 } from "@keylearn/pages-shared";
-import { StrokeIcon, TextField } from "@keylearn/widget";
+import { FloatingShell, StrokeIcon, TextField } from "@keylearn/widget";
 import { toDataURL } from "qrcode";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -21,6 +21,69 @@ import { AccountService } from "./service.ts";
  * mean losing the account.
  */
 export function TwoFactorCard({
+  user,
+  onChanged,
+}: {
+  readonly user: UserDetails;
+  readonly onChanged: () => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className={styles.prefCard}>
+      <div className={styles.prefSect}>
+        <FormattedMessage
+          id="sec.2fa.title"
+          defaultMessage="Two-step verification"
+        />
+      </div>
+      <div className={styles.miniRow}>
+        <p className={styles.note}>
+          {user.twoFactorEnabled ? (
+            <FormattedMessage
+              id="sec.2fa.on"
+              defaultMessage="Two-step verification is on."
+            />
+          ) : (
+            <FormattedMessage
+              id="sec.2fa.off"
+              defaultMessage="Two-step verification is off."
+            />
+          )}
+        </p>
+        <button
+          type="button"
+          className={styles.secBtn}
+          onClick={() => setOpen(true)}
+        >
+          {user.twoFactorEnabled ? (
+            <FormattedMessage id="sec.2fa.manage" defaultMessage="Manage" />
+          ) : (
+            <FormattedMessage
+              id="sec.2fa.turnOnBtn"
+              defaultMessage="Turn it on"
+            />
+          )}
+        </button>
+      </div>
+
+      {open && (
+        <FloatingShell
+          title={formatMessage({
+            id: "sec.2fa.title",
+            defaultMessage: "Two-step verification",
+          })}
+          onClose={() => setOpen(false)}
+        >
+          <TwoFactorWindow user={user} onChanged={onChanged} />
+        </FloatingShell>
+      )}
+    </div>
+  );
+}
+
+function TwoFactorWindow({
   user,
   onChanged,
 }: {
@@ -111,20 +174,7 @@ export function TwoFactorCard({
   };
 
   return (
-    <div className={styles.prefCard}>
-      <div className={styles.prefSect}>
-        <FormattedMessage
-          id="sec.2fa.title"
-          defaultMessage="Two-step verification"
-        />
-      </div>
-      <p className={styles.prefHint}>
-        <FormattedMessage
-          id="sec.2fa.intro"
-          defaultMessage="Ask for a code from an authenticator app as well as your password, so a stolen password is not enough on its own."
-        />
-      </p>
-
+    <div className={styles.pinWindow}>
       {user.twoFactorEnabled && step !== "codes" ? (
         <>
           <p className={styles.note}>

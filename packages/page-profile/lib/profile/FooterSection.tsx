@@ -83,7 +83,7 @@ function useCommands() {
         id: "profile.reset.message",
         defaultMessage:
           "Do you really want to erase all your data and reset your profile? " +
-          "This can't be undone once you confirm!",
+          "This can’t be undone once you confirm!",
       });
       if (window.confirm(message)) {
         clearResults();

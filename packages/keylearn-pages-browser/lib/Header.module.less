@@ -171,6 +171,11 @@
   // translucent surface, one geometry for every header control. `a` joins
   // `button` here for the coffee link — an external link, not an action,
   // but visually it's just another control in the row.
+  //
+  // Deliberately a descendant selector: several controls wrap their own
+  // trigger in a positioning div, so `>` would miss them. The cost is
+  // that it also reaches anything a control opens — see the reset at the
+  // foot of NotificationBell.module.less, which has to win it back.
   button,
   a {
     display: grid;
@@ -192,15 +197,6 @@
       block-size: 1.15rem;
     }
   }
-}
-
-// The Buy Me a Coffee mark is a fixed-colour brand asset, not a themed
-// stroke icon, so it gets its own slightly larger size to read at a glance
-// alongside the thinner-lined controls either side of it.
-.coffeeCup {
-  display: block;
-  inline-size: auto;
-  block-size: 1.4rem;
 }
 
 .streak {
