@@ -11,7 +11,8 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { readJsonSync } from "./lib/fs-json.js";
-import { translationsPath } from "./lib/intl-io.js";
+import { messagesPath, translationsPath } from "./lib/intl-io.js";
+import { messageIdHash } from "./lib/intl.js";
 import { defaultLocale } from "./locale.js";
 
 const ROOT = join(import.meta.dirname, "..", "packages");
@@ -112,4 +113,26 @@ if (missing.size > 0) {
   process.exit(1);
 }
 
-console.log(`all message ids are in translations/${defaultLocale}.json`);
+// The other half of the same trap, and the one that bit after this file
+// was written: an id CAN be in the catalogue and still render as a hash,
+// because what the app actually loads is lib/messages/<locale>.json —
+// compiled, keyed by hash, and only regenerated when somebody remembers
+// to run compile-messages. Editing the catalogue without recompiling
+// leaves the build green and the screen showing "FjZHhK8D".
+const compiled = readJsonSync(messagesPath(defaultLocale));
+const stale = [...uses.keys()].filter((id) => compiled[messageIdHash(id)] == null);
+if (stale.length > 0) {
+  console.error(
+    `${stale.length} message id(s) are in the catalogue but missing from ` +
+      `the COMPILED messages — each would still render as a hash:`,
+  );
+  for (const id of stale.sort()) {
+    console.error(`  ${id}`);
+  }
+  console.error("\nRun: node scripts/compile-messages.mjs");
+  process.exit(1);
+}
+
+console.log(
+  `all message ids are in translations/${defaultLocale}.json and compiled`,
+);

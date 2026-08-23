@@ -326,7 +326,11 @@ export function SupportPage({
 } = {}): ReactNode {
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
-  const captcha = useCaptcha();
+  // Eager: the guest form is the one door into the desk that needs no
+  // account, so the server requires a token on every submission. Mounting
+  // the widget here means it is solved in the background while somebody
+  // writes their message, and the first press of Send already has one.
+  const captcha = useCaptcha({ eager: true });
   const kidActive = useKidActive();
 
   const [kind, setKind] = useState<TicketKind>("support");

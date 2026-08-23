@@ -3,6 +3,7 @@ import { Button, TextField } from "@keylearn/widget";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink, useParams } from "react-router";
+import { ReplyBody } from "./ReplyBody.tsx";
 import { SupportService, type ThreadView } from "./service.ts";
 import * as styles from "./SupportThreadPage.module.less";
 
@@ -232,7 +233,17 @@ function Bubble({
   return (
     <div className={mine ? styles.mine : styles.theirs}>
       {from != null && <span className={styles.from}>{from}</span>}
-      <p className={styles.body}>{body}</p>
+      {/* Same split as the in-app thread: the desk's replies render their
+          paths and steps; the customer's own words stay exactly as they
+          typed them. A <div> because a path rail and a step list are block
+          elements, and a <p> may not contain them. */}
+      {mine ? (
+        <p className={styles.body}>{body}</p>
+      ) : (
+        <div className={styles.body}>
+          <ReplyBody text={body} />
+        </div>
+      )}
       <span className={styles.at}>
         {new Date(at).toLocaleString(undefined, {
           day: "numeric",

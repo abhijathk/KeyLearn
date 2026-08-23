@@ -1,4 +1,6 @@
+import { parseReply, plainText } from "@keylearn/page-support";
 import { type NotificationDetails, usePageData } from "@keylearn/pages-shared";
+import { NOTIFICATIONS_CHANGED } from "@keylearn/pages-shared";
 import { IconButton, renderMessageText, StrokeIcon } from "@keylearn/widget";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
@@ -19,6 +21,17 @@ import * as styles from "./NotificationBell.module.less";
  */
 /** Unhurried on purpose — see the effect below. */
 const POLL_MS = 60_000;
+
+/**
+ * A notification preview: the reply as words, with the rendering markup
+ * resolved rather than shown. Derived from the same parse the thread uses
+ * so the two can never drift apart.
+ */
+function previewOf(body: string): string {
+  return plainText(parseReply(body))
+    .replace(/\s*\n+\s*/g, " ")
+    .trim();
+}
 
 export function NotificationBell(): ReactNode {
   const { formatMessage, locale } = useIntl();
@@ -77,11 +90,19 @@ export function NotificationBell(): ReactNode {
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
+    // The immediate path. The poll and the focus listener both cover things
+    // happening elsewhere — a reply arriving while this tab sits idle. This
+    // covers the opposite case: the person clearing a notification here, in
+    // this tab, by reading the support thread it points at. Nothing
+    // refocuses, so without this the badge sat lit for up to a minute after
+    // they had read the message, which reads as the app not noticing.
+    window.addEventListener(NOTIFICATIONS_CHANGED, load);
     return () => {
       live = false;
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
+      window.removeEventListener(NOTIFICATIONS_CHANGED, load);
     };
   }, [signedIn]);
 
@@ -171,8 +192,16 @@ export function NotificationBell(): ReactNode {
                 onClick={() => openThread(n)}
               >
                 <span className={styles.body}>
+                  {/* The plain reading of the reply, not the raw text.
+                      A preview is one line of a dropdown — there is no
+                      room for a keycap rail, and showing the source
+                      instead put literal asterisks in front of the
+                      customer: "Turn off **Pause cursor on mistakes**".
+                      plainText() derives the fallback from the parsed
+                      blocks, so it can never disagree with what the
+                      thread itself displays. */}
                   {n.body != null ? (
-                    renderMessageText(n.body, undefined, locale)
+                    renderMessageText(previewOf(n.body), undefined, locale)
                   ) : (
                     <FormattedMessage
                       id="notifications.ticketReply"

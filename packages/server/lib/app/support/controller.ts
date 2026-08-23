@@ -52,6 +52,7 @@ import { clientIp, rateLimit } from "../auth/ratelimit.ts";
 import { staffAccessStatus } from "../auth/staff-access.ts";
 import {
   recordFailure,
+  requireCaptcha,
   requireCaptchaIfSuspicious,
 } from "../auth/turnstile.ts";
 import { type AuthState } from "../auth/types.ts";
@@ -132,6 +133,13 @@ const TCreateTicket = z.object({
   subject: z.string().trim().min(1).max(128),
   message: z.string().trim().min(1).max(2000),
   turnstileToken: z.string().max(4096).optional(),
+  /**
+   * The browser's own IANA zone, same field and same reasoning as the
+   * signed-in form (my-controller). Optional: an older client that does
+   * not send it still files a ticket, it just arrives without a local
+   * time.
+   */
+  timeZone: z.string().trim().max(64).nullable().optional(),
   // Hidden form field a real visitor never fills in. Any value here means a
   // bot filled out every field it could find — accepted-and-dropped rather
   // than rejected, so it never learns which signal caught it.
@@ -831,7 +839,14 @@ export class Controller {
         "This email address has been temporarily paused from opening new support requests, due to repeated off-topic submissions. Please try again later.",
       );
     }
-    await requireCaptchaIfSuspicious(ctx, input.turnstileToken);
+    // Always, not adaptively — see the note on requireCaptcha. This is the
+    // one door into QDesk that needs no account, and every ticket through
+    // it costs a triage pass and, when automation is on, several model
+    // calls. The other layers stay: they catch different things. Rate
+    // limits bound volume per address and per email, the honeypot catches
+    // naive form-fillers, SupportBlock catches repeat offenders, and
+    // looksSuspicious still feeds the failure streak.
+    await requireCaptcha(ctx, input.turnstileToken);
 
     if (input.website) {
       // Honeypot tripped. Same body shape as a real submission — the caller
@@ -920,6 +935,14 @@ export class Controller {
         message: input.message,
         userId: ctx.state.user?.id ?? null,
         messageId: first.id!,
+        // Same two independent facts my-controller sends (see the note
+        // there): country from the network edge, zone from the browser.
+        // They were missing here, so every ticket filed through the
+        // public form reached QDesk with no location and no local time —
+        // which costs the crisis script its emergency number and the
+        // assistant its sense of what time it is for the customer.
+        country: ctx.request.headers.get("cf-ipcountry"),
+        timeZone: input.timeZone ?? null,
       });
       // With the QDesk bridge on, QDesk's own agent owns automation —
       // running the local auto-reply too would give the customer two
@@ -1287,12 +1310,27 @@ export class Controller {
     const status: SupportTicketStatus =
       input.kind === "crisis" ? "flagged" : input.close ? "closed" : "waiting";
     const updated = await ticket.setStatus(status);
-    void this.#notifyReply(
-      ticket,
-      input.body,
-      input.authorName ?? null,
-      input.sender === "agent",
-    );
+    // A crisis reply is never announced.
+    //
+    // A notification is a banner, an unread badge, a line of preview text
+    // on a lock screen — surfaces designed to be seen without the phone
+    // being unlocked, which is precisely the wrong property when the
+    // person may be reading with an aggressor beside them. The covert
+    // script exists so the conversation looks unremarkable to anyone
+    // glancing at it; a push saying "KeyLearn support replied" undoes
+    // that from outside the app, where nothing we style can reach.
+    //
+    // They are already in the conversation — they wrote the message that
+    // triggered this — so nothing is lost by staying quiet. A person has
+    // been paged and is on the thread either way.
+    if (input.kind !== "crisis") {
+      void this.#notifyReply(
+        ticket,
+        input.body,
+        input.authorName ?? null,
+        input.sender === "agent",
+      );
+    }
     ctx.response.body = { ok: true, status: updated.status };
   }
 

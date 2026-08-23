@@ -10,6 +10,7 @@ export * from "./LoadingProgress.tsx";
 export * from "./logout.ts";
 export * from "./ngram-store.ts";
 export * from "./NoticeBanner.tsx";
+export * from "./notifications-changed.ts";
 export * from "./pagedata.tsx";
 export * from "./pages.ts";
 export * from "./profile-storage.ts";

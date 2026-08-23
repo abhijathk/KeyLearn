@@ -82,7 +82,9 @@ export function OptionListMenu({
       }}
       style={{
         insetInlineStart: place.left,
-        insetBlockStart: place.top,
+        // Exactly one of these is set — see placeBelow.
+        insetBlockStart: place.top ?? undefined,
+        insetBlockEnd: place.bottom ?? undefined,
         inlineSize: place.width,
         maxBlockSize: place.maxHeight,
       }}
@@ -131,7 +133,10 @@ function hasPortal(): boolean {
 
 type Placement = {
   readonly left: number;
-  readonly top: number;
+  /** Set when the menu drops down; null when it drops up. */
+  readonly top: number | null;
+  /** Set when the menu drops up; null when it drops down. */
+  readonly bottom: number | null;
   readonly width: number;
   readonly maxHeight: number;
 };
@@ -139,6 +144,14 @@ type Placement = {
 /**
  * Below the button when there is room, above it when there is not, and never
  * taller than the space it has.
+ *
+ * Note which edge is pinned. Dropping down, the menu's top goes just under
+ * the button. Dropping UP, its bottom goes just over the button — pinned by
+ * the bottom, not by a top computed from `maxHeight`. That is the whole fix
+ * for a menu that opened upward and floated well clear of its field: a list
+ * of three time zones is about ninety pixels tall, `maxHeight` is three
+ * hundred and twenty, and subtracting the one from the button's top left a
+ * two-hundred-pixel gap between the field and the list that belongs to it.
  */
 function placeBelow(anchor: HTMLElement): Placement {
   const rect = anchor.getBoundingClientRect();
@@ -152,7 +165,8 @@ function placeBelow(anchor: HTMLElement): Placement {
   const maxHeight = Math.max(120, Math.min(320, dropDown ? below : above));
   return {
     left: rect.left,
-    top: dropDown ? rect.bottom + 4 : rect.top - maxHeight - 4,
+    top: dropDown ? rect.bottom + 4 : null,
+    bottom: dropDown ? null : window.innerHeight - rect.top + 4,
     width: rect.width,
     maxHeight,
   };

@@ -60,6 +60,7 @@ test("render signed-in account page", () => {
           parentPinSet: false,
           parentPinLength: null,
           emailVerified: true,
+          signupCountry: null,
         },
         publicUser: {
           id: "xyz",

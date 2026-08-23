@@ -37,9 +37,12 @@ export function isCaptchaRequired(err: any): boolean {
 function TurnstileWidget({
   siteKey,
   onToken,
+  eager = false,
 }: {
   readonly siteKey: string;
   readonly onToken: (token: string) => void;
+  /** Run invisibly from mount rather than waiting to be asked. */
+  readonly eager?: boolean;
 }): ReactNode {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -52,8 +55,22 @@ function TurnstileWidget({
           return;
         }
         widgetId = t.render(ref.current, {
-          sitekey: siteKey,
-          callback: onToken,
+          "sitekey": siteKey,
+          "callback": onToken,
+          // "interaction-only": Cloudflare shows nothing at all unless it
+          // genuinely cannot decide, in which case a single checkbox
+          // appears. A real visitor on the support form should never learn
+          // this exists; a headless client has to run a browser engine to
+          // get past it, which is the cost we are actually buying.
+          "appearance": eager ? "interaction-only" : "always",
+          // Named so Cloudflare's own analytics can tell the guest form
+          // apart from sign-in when a rule needs tuning.
+          "action": eager ? "support-send" : "support-challenge",
+          // A token is good for five minutes. Somebody composing a long
+          // first message will outlast that, so refresh rather than let
+          // them press send and be refused for having thought too long.
+          "refresh-expired": "auto",
+          "expired-callback": () => onToken(""),
         });
       })
       .catch(() => {});
@@ -66,7 +83,7 @@ function TurnstileWidget({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteKey]);
+  }, [siteKey, eager]);
   return <div ref={ref} className={styles.turnstile} />;
 }
 
@@ -76,14 +93,28 @@ function TurnstileWidget({
  * renders the widget. Once the visitor solves it, `token` is set and the
  * caller resubmits.
  */
-export function useCaptcha() {
+export function useCaptcha({
+  eager = false,
+}: { readonly eager?: boolean } = {}) {
   const siteKey = usePageData().turnstileSiteKey;
   const [needed, setNeeded] = useState(false);
   const [token, setToken] = useState<string | undefined>(undefined);
 
+  // Eager mounts the widget immediately, so a token is in hand BEFORE the
+  // first submission rather than after one has been refused. That is what
+  // lets the server require a token on every send from the public form
+  // without a visitor ever seeing a round trip fail.
+  //
+  // Reactive (the default) stays right for signed-in surfaces, where the
+  // check is a backstop and mounting a challenge nobody needs would be
+  // noise.
   const widget =
-    needed && siteKey ? (
-      <TurnstileWidget siteKey={siteKey} onToken={setToken} />
+    (eager || needed) && siteKey ? (
+      <TurnstileWidget
+        siteKey={siteKey}
+        onToken={setToken}
+        eager={eager && !needed}
+      />
     ) : null;
 
   return {

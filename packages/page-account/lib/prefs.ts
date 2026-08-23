@@ -1,4 +1,10 @@
-import { dateProps, deviceTimeZone } from "@keylearn/intl";
+import {
+  dateProps,
+  deviceTimeZone,
+  regionOfTimeZone,
+  regionsWithZones,
+  zonesForRegion,
+} from "@keylearn/intl";
 import { booleanProp, stringProp } from "@keylearn/settings";
 
 /**
@@ -32,22 +38,72 @@ export const accountProps = {
 
 export { deviceTimeZone };
 
-/** All IANA time zones the runtime knows, with the device zone guaranteed in. */
-export function allTimeZones(): readonly string[] {
-  let list: string[] = [];
-  try {
-    const supported = (
-      Intl as unknown as { supportedValuesOf?: (k: string) => string[] }
-    ).supportedValuesOf;
-    if (typeof supported === "function") {
-      list = supported("timeZone");
-    }
-  } catch {
-    list = [];
-  }
-  const device = deviceTimeZone();
-  if (!list.includes(device)) {
-    list = [device, ...list];
+/**
+ * The countries offered, and the zones inside one.
+ *
+ * This used to hand the runtime's entire IANA list to a single select —
+ * four hundred-odd entries, labelled with identifiers like
+ * `America/Indiana/Vevay`, sorted by a slash. Almost nobody knows the name
+ * of their own zone; they know their country. Two short lists answer a
+ * question people can actually answer.
+ *
+ * It also closes a quieter bug. Everything downstream — the date and time
+ * formats, the currency and phone shapes the number drills practise —
+ * derives the COUNTRY from the chosen zone. The old list happily offered
+ * zones that map to no country, and picking one silently dropped all of
+ * that back to guessing from the interface language. Every zone offered
+ * here has a country by construction.
+ */
+export function timeZoneCountries(): readonly string[] {
+  return regionsWithZones();
+}
+
+/**
+ * Zones for one country, with `current` guaranteed present.
+ *
+ * The guarantee matters for two people: someone whose saved zone predates
+ * this list, and someone whose device reports a zone we do not carry.
+ * Neither should open this screen and find their own setting missing from
+ * it.
+ */
+export function timeZonesIn(
+  country: string,
+  current?: string,
+): readonly string[] {
+  const list = [...zonesForRegion(country)];
+  if (current != null && current !== "" && !list.includes(current)) {
+    list.unshift(current);
   }
   return list;
+}
+
+/**
+ * Which country to show selected, given what we know.
+ *
+ * In order of how much it is worth: the zone they have already chosen,
+ * then the country the network reported when they registered, then what
+ * their device says, then the region carried by the interface language.
+ *
+ * The network country comes second rather than first on purpose. It is
+ * where the packets surfaced, which a VPN or a corporate proxy answers for
+ * them; a saved preference is a decision somebody made. But it beats the
+ * device on the day someone lands in a new country with a laptop still set
+ * to the old one, and it is the only signal available at registration.
+ */
+export function countryForTimeZone(
+  saved: string,
+  signupCountry?: string | null,
+  locale?: string,
+): string {
+  const known = new Set(regionsWithZones());
+  const fromSaved = saved === "" ? null : regionOfTimeZone(saved);
+  const fromNetwork = (signupCountry ?? "").trim().toUpperCase() || null;
+  const fromDevice = regionOfTimeZone(deviceTimeZone());
+  const fromLocale = (locale ?? "").split(/[-_]/)[1]?.toUpperCase() ?? null;
+  for (const guess of [fromSaved, fromNetwork, fromDevice, fromLocale]) {
+    if (guess != null && known.has(guess)) {
+      return guess;
+    }
+  }
+  return "US";
 }

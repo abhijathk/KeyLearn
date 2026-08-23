@@ -130,6 +130,29 @@ export class Notification extends TimestampMixin(Model) {
   }
 
   /**
+   * Marks every unread notification pointing at one ticket as read.
+   *
+   * The bell and the support thread were counting the same replies without
+   * telling each other: opening a thread stamped the ticket's own
+   * `lastReadAt`, so the unread pip inside support cleared, while the
+   * notification that had announced the reply stayed unread and the bell
+   * kept its number. The person had read the message, and the app went on
+   * insisting they had not.
+   *
+   * Scoped by userId as well as ticketId, on the same reasoning as
+   * `markRead` above: a ticket id is not a capability.
+   */
+  static async markReadForTicket(
+    ticketId: number,
+    userId: number,
+  ): Promise<number> {
+    return await Notification.query()
+      .patch({ readAt: new Date() })
+      .where({ ticketId, userId })
+      .whereNull("readAt");
+  }
+
+  /**
    * Removed from the person's own list.
    *
    * A real delete rather than a "dismissed" flag: a notification is a

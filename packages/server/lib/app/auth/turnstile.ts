@@ -138,6 +138,41 @@ async function verifyToken(
  * is required; otherwise it's a no-op. Throws {@link CaptchaRequiredError} when
  * a challenge is needed but not satisfied.
  */
+/**
+ * Always verify. For the doors a stranger can walk through.
+ *
+ * `requireCaptchaIfSuspicious` below is the right shape for sign-in, where a
+ * "failure" is a wrong password and a brute-forcer accumulates them until
+ * the challenge fires. It is the wrong shape for the public support form,
+ * and the reason is worth stating plainly: **filing a ticket successfully is
+ * not a failure**. A bot that submits plausible-looking tickets never
+ * records one, so `tooManyFailures` is never true, so it is never
+ * challenged — no matter how many it files. The adaptive gate on that form
+ * only ever fired for messages that already looked like spam.
+ *
+ * Here the token is required on every submission. In Cloudflare's managed
+ * mode that costs a real visitor nothing visible: the browser solves a
+ * background challenge on page load and the token is already in hand by the
+ * time they press send. What it costs an automated client is a working
+ * browser engine per request, which is the whole point.
+ *
+ * Unset keys still disable the feature entirely, so local dev and any
+ * self-hoster without a Cloudflare account are unaffected.
+ */
+export async function requireCaptcha(
+  ctx: Context,
+  token: string | undefined,
+): Promise<void> {
+  if (!turnstileEnabled()) {
+    return;
+  }
+  if (!(await verifyToken(token, ctx))) {
+    recordFailure(ctx);
+    throw new CaptchaRequiredError();
+  }
+  clearFailures(ctx);
+}
+
 export async function requireCaptchaIfSuspicious(
   ctx: Context,
   token: string | undefined,

@@ -38,6 +38,7 @@ import {
   type VerificationPurpose,
   verifyTotp,
 } from "@keylearn/database";
+import { dateProps, zonesForRegion } from "@keylearn/intl";
 import { Logger } from "@keylearn/logger";
 import { type AbstractAdapter } from "@keylearn/oauth";
 import {
@@ -47,6 +48,8 @@ import {
 } from "@keylearn/pages-shared";
 import { PublicId } from "@keylearn/publicid";
 import { UserDataFactory } from "@keylearn/result-userdata";
+import { Settings } from "@keylearn/settings";
+import { SettingsDatabase } from "@keylearn/settings-database";
 import {
   generateAuthenticationOptions,
   generateRegistrationOptions,
@@ -215,6 +218,7 @@ function ageInYears(dob: string, now: Date = new Date()): number {
 async function captureSignupContext(
   ctx: Context<RouterState>,
   userId: number,
+  settingsDatabase?: SettingsDatabase,
 ): Promise<void> {
   // Absent outside Cloudflare (e.g. local dev) — left unset, same as any
   // account registered before this column existed.
@@ -226,6 +230,55 @@ async function captureSignupContext(
     patch.signupCountry = signupCountry;
   }
   await User.query().findById(userId).patch(patch);
+  if (settingsDatabase != null) {
+    await seedTimeZone(userId, signupCountry, settingsDatabase);
+  }
+}
+
+/**
+ * Gives a brand-new account a time zone, from where the network says they
+ * are.
+ *
+ * Without this the zone stays empty, which means "follow this device" — and
+ * a device is right about the clock but says nothing the app can use for
+ * the rest of it. Dates, times, prices and the shapes the number drills
+ * practise all key off the COUNTRY the zone names, and a device set to a
+ * zone we do not carry drops all of that back to guessing from the
+ * interface language. Someone in Chennai reading English then practises
+ * American phone numbers.
+ *
+ * A default, not a decision: it writes only at registration, only when the
+ * network actually told us something, and Preferences shows it as an
+ * ordinary editable choice. Anyone the network reads wrong — a VPN, a
+ * corporate proxy, a traveller — changes it in two clicks.
+ */
+async function seedTimeZone(
+  userId: number,
+  signupCountry: string | null,
+  settingsDatabase: SettingsDatabase,
+): Promise<void> {
+  if (signupCountry == null || signupCountry === "") {
+    return;
+  }
+  const zone = zonesForRegion(signupCountry)[0];
+  if (zone == null) {
+    return;
+  }
+  try {
+    // Never clobbers. The account was created seconds ago, but a signup
+    // flow that synced settings first is not worth a lost preference.
+    const existing = await settingsDatabase.get(userId);
+    if (existing != null && existing.get(dateProps.timeZone) !== "") {
+      return;
+    }
+    await settingsDatabase.set(
+      userId,
+      (existing ?? new Settings()).set(dateProps.timeZone, zone),
+    );
+  } catch {
+    // A settings file that will not write is not a reason to fail a
+    // registration that has otherwise succeeded.
+  }
 }
 
 const TCreateToken = z.object({
@@ -478,6 +531,9 @@ export class Controller {
     readonly mailer: Mailer,
     readonly notifier: Notifier,
     readonly userData: UserDataFactory,
+    // Only for seeding a new account's time zone from the network country
+    // at registration — see seedTimeZone below.
+    readonly settingsDatabase: SettingsDatabase,
   ) {}
 
   // Tell the account holder that something changed. Always sent — the point of
@@ -676,7 +732,11 @@ export class Controller {
             // Unambiguously a brand-new row (unlike the "ok" case below,
             // which can't tell a new account from a returning one) — safe
             // to stamp its signup country/locale here.
-            await captureSignupContext(ctx, result.user.id!);
+            await captureSignupContext(
+              ctx,
+              result.user.id!,
+              this.settingsDatabase,
+            );
             await this.#sendVerificationCode(
               result.email,
               "verify-email",
@@ -767,7 +827,7 @@ export class Controller {
       }
       throw err;
     }
-    await captureSignupContext(ctx, user.id!);
+    await captureSignupContext(ctx, user.id!, this.settingsDatabase);
     // The account exists but isn't usable until the email is verified: email a
     // one-time code and let the client collect it. No session is established
     // here, so an unverified account can't be signed in.

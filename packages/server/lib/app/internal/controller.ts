@@ -707,6 +707,57 @@ export class Controller {
     };
   }
 
+  /**
+   * The facts an account holder may be told about their own account.
+   *
+   * Deliberately NOT `getAccount` with fewer fields. That one is the
+   * staff Accounts page: it carries a masked email, the last login's IP
+   * and user agent, and any pending deletion request — things a support
+   * agent may look at and must never read back to the person on the
+   * other end. This is the answering surface, so it holds only what the
+   * customer already knows about themselves and might reasonably ask us
+   * to confirm: when they started, how many learners they set up, and
+   * what those learners are called.
+   *
+   * **No practice content, by design.** `practice_session` is
+   * deliberately skeletal — its own docstring says the support and
+   * analytics surface "must never see a lesson, a speed, an accuracy or
+   * a keystroke" — so "how much has she improved" cannot be answered
+   * from here and is not attempted. Adding it is a decision about that
+   * boundary, not a field to slip in.
+   *
+   * Scoped by the caller, not by this route: QDesk resolves the id from
+   * the ticket the customer wrote on, so the agent never supplies one.
+   */
+  @http.GET("/_/internal/accounts/{id}/self-summary")
+  async accountSelfSummary(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+  ) {
+    ctx.state.requireOpsApi();
+    const user = await User.query().findById(id);
+    if (user == null) {
+      ctx.response.status = 404;
+      return;
+    }
+    const profiles = await Profile.query()
+      .where("userId", id)
+      .orderBy("createdAt", "asc");
+    ctx.response.body = {
+      memberSince: new Date(user.createdAt!).toISOString(),
+      profileCount: profiles.length,
+      // First names only. The surname belongs to a child on a family
+      // account and is never needed to answer "how many profiles do I
+      // have" or "which one is the braille one".
+      profiles: profiles.map((p) => ({
+        firstName: p.firstName!,
+        kind: p.kind ?? "adult",
+        visionSupport: Boolean(p.visionSupport),
+        createdAt: new Date(p.createdAt!).toISOString(),
+      })),
+    };
+  }
+
   @http.POST("/_/internal/accounts/{id}/reveal-email")
   async revealAccountEmail(
     ctx: Context<RouterState & AuthState>,

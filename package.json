@@ -15,8 +15,8 @@
     "scripts"
   ],
   "scripts": {
-    "build": "env NODE_ENV=production webpack",
-    "build-dev": "env NODE_ENV=development webpack",
+    "build": "npm run check-messages && env NODE_ENV=production webpack",
+    "build-dev": "npm run check-messages && env NODE_ENV=development webpack",
     "check-changelog": "node scripts/check-changelog.mjs",
     "check-messages": "node scripts/check-messages.mjs",
     "clean": "lage clean --no-cache",
@@ -32,7 +32,7 @@
     "stylelint-fix": "stylelint '{**/*,*}.{less,css}' --fix",
     "test": "lage test --no-cache",
     "translate": "node scripts/translate.js",
-    "watch": "env NODE_ENV=development webpack --watch"
+    "watch": "npm run check-messages && env NODE_ENV=development webpack --watch"
   },
   "dependencies": {
     "@fastr/client": "^0.1.3",

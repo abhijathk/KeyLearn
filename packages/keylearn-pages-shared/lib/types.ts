@@ -36,6 +36,13 @@ export type PageData = {
    */
   readonly locale: LocaleId;
   /**
+   * ISO 3166-1 alpha-2 from the network edge (Cloudflare's `cf-ipcountry`),
+   * or null where there is no edge in front — development, or any host
+   * without it. Network truth rather than a preference: the browser cannot
+   * know this, which is exactly why it is sent down.
+   */
+  readonly networkCountry?: string | null;
+  /**
    * The full details about the currently authenticated user, which include
    * private information such as email, or null if the anonymous is anonymous.
    *
@@ -405,6 +412,12 @@ export type UserDetails = {
   readonly hasPassword: boolean;
   /** Whether two-step verification is switched on. */
   readonly twoFactorEnabled: boolean;
+  /**
+   * ISO 3166-1 alpha-2 the network reported at registration, or null when
+   * it was not available (off-Cloudflare, or an account older than the
+   * column). A starting guess for the time-zone country, never a setting.
+   */
+  readonly signupCountry: string | null;
   /** Whether a grown-up PIN guards profile management. */
   readonly parentPinSet: boolean;
   /** How many digits it has; null when unset, or set before we recorded it. */

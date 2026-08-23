@@ -510,9 +510,9 @@ export const GUIDE_EN: GuideDoc = {
         {
           p: "Each learner in the household can have their own colour, so a shared device still feels like it belongs to whoever is sitting at it.",
         },
-        { lab: "Change the site language" },
+        { lab: "Change the app language" },
         {
-          steps: ["Open the menu.", "Under Site language, pick your language."],
+          steps: ["Open the menu.", "Under App language, pick your language."],
         },
         {
           p: "On the practice screen you can also resize the text and turn sounds on or off whenever you please.",
@@ -526,6 +526,44 @@ export const GUIDE_EN: GuideDoc = {
       blocks: [
         {
           p: "No ads, and no trackers. A child’s profile never leaves your browser. Sign in only if you want syncing or sharing; otherwise everything stays on this device, and you are free to delete it at any time.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Getting help",
+      heading: "Getting help",
+      blocks: [
+        {
+          p: "Every message you send us becomes a *conversation you can come back to*, not an email that disappears. It lives under Account, and it keeps its own reference number — the one to quote if you ever ring or write again.",
+        },
+        { lab: "Ask for help" },
+        {
+          steps: [
+            "Open the menu and choose Account, then Support.",
+            "Choose Log a ticket and say what is happening.",
+            "Attach a screenshot if it helps — PNG, JPG or PDF, up to 10 MB each.",
+          ],
+        },
+        {
+          p: "Replies appear in that conversation *and* arrive by email, so you do not have to sit and watch the page. Anything already sorted folds away under Resolved, which starts closed — the thing you are still waiting on is the thing you see.",
+        },
+        { lab: "Who answers" },
+        {
+          p: "An assistant called Tab reads it first and answers what it can. It will tell you it is an AI — it never pretends otherwise, and it will say plainly when it does not know something.",
+        },
+        {
+          p: "A person takes over whenever that is the better answer: anything about money, your data, safety, or simply because you asked. You never have to ask twice, and you never have to repeat yourself — whoever picks it up can already see everything you have said.",
+        },
+        {
+          p: "If a message ever reads like a genuine emergency, the reply is the same every time and comes from a fixed script rather than the assistant: the emergency number where you are, and a person on our side alerted straight away. We cannot make that call for you, and we say so.",
+        },
+        { lab: "Tidying up" },
+        {
+          p: "You can remove a conversation from your list at any time with the bin icon beside it. A small note by *Log a ticket* keeps count of how many you have cleared, so a thread that vanished is never a mystery.",
+        },
+        {
+          p: "On a shared family device, the Support section asks for the grown-up PIN before it opens — support threads are account business, and the person practising is not always the person who set the account up.",
         },
       ],
     },

@@ -1383,3 +1383,57 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* Finished threads, folded away by default. Present rather than
+   prominent: reopening is a reply, and "what did they tell me last
+   time" is a real reason to look. */
+.resolvedGroup {
+  margin-block-start: var(--gap-2, 0.75rem);
+}
+
+.resolvedSummary {
+  list-style: none;
+  padding-block: 0.4rem;
+  color: var(--secondary-text-color);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  user-select: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: "▸";
+    display: inline-block;
+    margin-inline-end: 0.4rem;
+    transition: transform 0.15s ease;
+  }
+
+  &:hover {
+    color: var(--primary-text-color);
+  }
+}
+
+.resolvedGroup[open] .resolvedSummary::before {
+  transform: rotate(90deg);
+}
+
+/* How many this account has cleared away. A badge on the far end of the
+   actions row: there for the person who wondered where a ticket went,
+   and held at half opacity so it never competes with the button beside
+   it. Removal is a soft delete — the thread is still on the desk — so
+   the wording says who did it rather than implying it is gone. */
+.removedNote {
+  align-self: center;
+  margin-inline-start: auto;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--separator-color);
+  border-radius: 999px;
+  color: var(--secondary-text-color);
+  background-color: var(--surface-2-color, transparent);
+  opacity: 0.5;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}

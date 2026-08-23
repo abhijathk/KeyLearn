@@ -130,6 +130,34 @@ export function regionOfTimeZone(timeZone: string): string | null {
   return ZONE_REGION[timeZone.trim()] ?? null;
 }
 
+/**
+ * Every country this table names, for a picker that asks for the country
+ * first.
+ *
+ * Asking "which of four hundred IANA identifiers are you?" is a question
+ * almost nobody can answer — a person in Perth is looking for Australia,
+ * not for the string `Australia/Perth`, and someone in Ohio has no reason
+ * to know their zone is called `America/New_York`. Country first turns one
+ * impossible list into two short ones.
+ *
+ * Deliberately built from this table rather than from the runtime's full
+ * zone list: an unmapped zone formats worse anyway, because everything
+ * below keys off the country.
+ */
+export function regionsWithZones(): readonly string[] {
+  return [...new Set(Object.values(ZONE_REGION))].sort();
+}
+
+/**
+ * The zones this table holds for one country, in the order they are
+ * written above — which is roughly by population, so the first is the
+ * right default for most people who live there.
+ */
+export function zonesForRegion(region: string): readonly string[] {
+  const want = region.trim().toUpperCase();
+  return Object.keys(ZONE_REGION).filter((zone) => ZONE_REGION[zone] === want);
+}
+
 /** The region already written into a locale tag, e.g. "pt-BR" → "BR". */
 function regionOfLocale(locale: string): string | null {
   const part = locale.split(/[-_]/)[1];

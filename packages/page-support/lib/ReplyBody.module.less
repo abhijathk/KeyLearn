@@ -156,3 +156,504 @@
   color: var(--accent);
   opacity: 0.7;
 }
+
+/* ── Inline: a quantity, and a key combination ────────────────────── */
+
+.stat {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: baseline;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 34%, transparent);
+  border-radius: 0.4rem;
+  background-color: color-mix(in oklab, var(--accent) 14%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+.statValue {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.statUnit {
+  opacity: 0.75;
+  font-size: 0.85em;
+}
+
+.combo {
+  display: inline-flex;
+  gap: 0.2rem;
+  align-items: center;
+  vertical-align: baseline;
+}
+
+.plus {
+  margin-inline: 0.15rem;
+  opacity: 0.7;
+  font-size: 0.8em;
+  font-weight: 600;
+}
+
+/* ── Guidance: three weights, and they are not interchangeable ────── */
+/*
+   The danger weight is reserved for actions that cannot be undone. Spend
+   it on anything reversible and it stops working on the day it matters.
+   All three take their hue from the theme so a learner who has chosen a
+   different palette still gets three distinguishable weights.
+*/
+
+.callout {
+  display: grid;
+  grid-template-columns: 1.05rem 1fr;
+  gap: 0.55rem;
+  margin-block: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid;
+  border-radius: 0.6rem;
+  font-size: 0.95em;
+}
+
+.calloutIcon {
+  flex: none;
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  margin-block-start: 0.1rem;
+}
+
+.calloutBody {
+  margin: 0;
+}
+
+.calloutHead {
+  display: block;
+  margin-block-end: 0.15rem;
+  font-weight: 700;
+}
+
+.calloutNote {
+  border-color: color-mix(in oklab, var(--accent) 28%, transparent);
+  background-color: color-mix(in oklab, var(--accent) 9%, transparent);
+
+  .calloutIcon {
+    color: var(--accent);
+  }
+}
+
+.calloutWarn {
+  border-color: color-mix(in oklab, #e8b45c 40%, transparent);
+  background-color: color-mix(in oklab, #e8b45c 12%, transparent);
+
+  .calloutIcon {
+    color: #b98424;
+  }
+}
+
+.calloutDanger {
+  border-color: color-mix(in oklab, #d0503f 42%, transparent);
+  background-color: color-mix(in oklab, #d0503f 12%, transparent);
+
+  .calloutIcon {
+    color: #c4372a;
+  }
+}
+
+/* The warn and danger hues are the one place this file names a colour
+   rather than a token: amber-means-check and red-means-irreversible are
+   conventions a learner's chosen accent must not be allowed to override.
+   A "cannot be undone" note drawn in a cheerful green accent is a lie. */
+:global(.dark) {
+  .calloutWarn .calloutIcon {
+    color: #e8b45c;
+  }
+
+  .calloutDanger .calloutIcon {
+    color: #ff8a7a;
+  }
+}
+
+/* ── The requirement checklist ────────────────────────────────────── */
+/*
+   For "not yet, and here's what's left". Showing what is already done is
+   half the reason it works — a bare list of what is missing reads as a
+   refusal.
+*/
+
+.checklist {
+  display: grid;
+  gap: 0.4rem;
+  list-style: none;
+  margin-block: 0.6rem;
+  padding: 0;
+}
+
+.check {
+  display: grid;
+  grid-template-columns: 1.05rem 1fr;
+  gap: 0.55rem;
+  align-items: start;
+}
+
+/* An unmet requirement has to read as an empty box, not as a gap. Drawn
+   from the text colour rather than the separator token, which is tuned for
+   hairlines between rows and disappears at this size on a dark bubble. */
+.checkBox {
+  display: grid;
+  place-items: center;
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  margin-block-start: 0.15rem;
+  border: 1.5px solid color-mix(in oklab, currentcolor 38%, transparent);
+  border-radius: 0.3rem;
+
+  svg {
+    inline-size: 0.62rem;
+    block-size: 0.62rem;
+  }
+}
+
+.checkDone {
+  .checkBox {
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    background-color: var(--accent);
+  }
+
+  .checkText {
+    opacity: 0.75;
+  }
+}
+
+.checkMet {
+  margin-inline-start: 0.4rem;
+  opacity: 0.7;
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── A switch, shown at the state it should be in ─────────────────── */
+/*
+   Not a control. The customer has to find this on their own screen and
+   recognise which way it should sit; something they could press here
+   would promise an action this bubble cannot perform.
+*/
+
+.toggles {
+  display: grid;
+  gap: 0.4rem;
+  margin-block: 0.6rem;
+}
+
+.toggleRow {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--separator-color, rgb(0 0 0 / 10%));
+  border-radius: 0.55rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.toggleName {
+  font-weight: 600;
+}
+
+.toggleState {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.switch {
+  display: block;
+  position: relative;
+  flex: none;
+  inline-size: 2.2rem;
+  block-size: 1.25rem;
+  border-radius: 999px;
+  background-color: var(--separator-color, rgb(0 0 0 / 18%));
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0.175rem;
+    inset-block-start: 0.175rem;
+    inline-size: 0.9rem;
+    block-size: 0.9rem;
+    border-radius: 50%;
+    background-color: var(--secondary);
+    opacity: 0.6;
+  }
+}
+
+.switchOn {
+  background-color: color-mix(in oklab, var(--accent) 45%, transparent);
+
+  &::after {
+    inset-inline-start: 1.125rem;
+    background-color: var(--accent);
+    opacity: 1;
+  }
+}
+
+.switchLabel {
+  opacity: 0.7;
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── A number on a range ──────────────────────────────────────────── */
+
+.rangeRow {
+  display: grid;
+  gap: 0.4rem;
+  margin-block: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--separator-color, rgb(0 0 0 / 10%));
+  border-radius: 0.55rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.rangeTop {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.rangeName {
+  font-weight: 600;
+}
+
+.rangeValue {
+  color: var(--accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  display: block;
+  position: relative;
+  block-size: 0.3rem;
+  border-radius: 999px;
+  background-color: var(--separator-color, rgb(0 0 0 / 15%));
+}
+
+.fill {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  border-radius: 999px;
+  background-color: var(--accent);
+}
+
+.knob {
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  margin-inline-start: -0.375rem;
+  margin-block-start: -0.375rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.rangeEnds {
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.7;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Two readings of one thing ────────────────────────────────────── */
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block: 0.6rem;
+  text-align: center;
+}
+
+.side {
+  display: grid;
+  padding: 0.55rem;
+  border: 1px solid var(--separator-color, rgb(0 0 0 / 10%));
+  border-radius: 0.55rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+// Before `.sideNow` below, which overrides the colour from inside a
+// higher-specificity nest. Order does not change which one wins — the
+// nested selector out-specifies this either way — but stylelint's
+// no-descending-specificity reads a plain selector appearing after a
+// compound one as the mistake it usually is, and it is right often enough
+// to be worth keeping.
+.sideValue {
+  font-size: 1.2em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sideNow {
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+
+  .sideValue {
+    color: var(--accent);
+  }
+}
+
+.sideLabel {
+  margin-block-start: 0.1rem;
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
+.vs {
+  opacity: 0.7;
+  font-size: 0.78em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Proof the message was read ───────────────────────────────────── */
+
+.quoteBack {
+  margin-block: 0.6rem;
+  padding-inline-start: 0.7rem;
+  padding-block: 0.15rem;
+  border-inline-start: 2px solid
+    color-mix(in oklab, var(--accent) 55%, transparent);
+  opacity: 0.85;
+  font-style: italic;
+}
+
+.echo {
+  display: grid;
+  gap: 0.45rem;
+  margin-block: 0.6rem;
+  padding: 0.6rem 0.65rem;
+  border-radius: 0.6rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.echoTheirs {
+  margin: 0;
+  padding-inline-start: 0.5rem;
+  border-inline-start: 2px solid var(--separator-color, rgb(0 0 0 / 18%));
+  opacity: 0.65;
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+.echoOurs {
+  margin: 0;
+}
+
+/* ── Where it came from, and how long it will take ────────────────── */
+
+.sourceChip {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  margin-block: 0.4rem;
+  padding: 0.18rem 0.5rem;
+  border: 1px dashed var(--separator-color, rgb(0 0 0 / 18%));
+  border-radius: 0.4rem;
+  opacity: 0.8;
+  font-size: 0.85em;
+
+  svg {
+    flex: none;
+    inline-size: 0.7rem;
+    block-size: 0.7rem;
+    color: var(--accent);
+  }
+}
+
+.readTime {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  margin-block: 0.3rem;
+  opacity: 0.7;
+  font-size: 0.78em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  svg {
+    flex: none;
+    inline-size: 0.65rem;
+    block-size: 0.65rem;
+  }
+}
+
+/* ── The resolution moment ────────────────────────────────────────── */
+/*
+   People recall an experience by its most intense moment and its last one,
+   not its average. This is the one place the warmth is unhurried, and
+   nothing is asked of them after it.
+*/
+
+.sorted {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin-block: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.65rem;
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in oklab, var(--accent) 16%, transparent),
+      transparent 70%
+    ),
+    color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.sortedTick {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  border-radius: 50%;
+  color: var(--accent-ink);
+  background-color: var(--accent);
+
+  svg {
+    inline-size: 0.8rem;
+    block-size: 0.8rem;
+  }
+}
+
+.sortedText {
+  display: grid;
+  gap: 0.05rem;
+
+  span {
+    opacity: 0.75;
+    font-size: 0.9em;
+  }
+}
+
+/* ── A sample, shown rather than described ────────────────────────── */
+
+.sample {
+  margin-block: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--separator-color, rgb(0 0 0 / 10%));
+  border-radius: 0.55rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.85em;
+  line-height: 1.7;
+  /* The indentation is the point of a code sample. */
+  white-space: pre;
+  overflow-x: auto;
+}

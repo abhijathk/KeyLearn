@@ -293,9 +293,17 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   const closingIn = useIdleClose(closeWindow);
   const [supportUnread, setSupportUnread] = useState(0);
   useEffect(() => {
-    // Skipped while the pane is open: the section is already refreshing,
-    // and a dot on the item you are standing in says nothing.
+    // Standing in the section clears the dot. It is an aggregate "there is
+    // something to see", and once you are looking at the list — where each
+    // thread carries its own unread count — it has no job left to do.
+    //
+    // It used to return early here without clearing, so the number went
+    // stale instead: you read the replies, came back out to the menu, and
+    // the dot was still lit beside Support until something else happened
+    // to refetch it. Leaving the pane runs this effect again and asks the
+    // server for the truth, so anything genuinely still unread comes back.
     if (pane === "support") {
+      setSupportUnread(0);
       return;
     }
     let live = true;

@@ -1,3 +1,4 @@
+import { notificationsChanged } from "@keylearn/pages-shared";
 import {
   Button,
   PinField,
@@ -25,6 +26,7 @@ import {
   Ticks,
   When,
 } from "./MySupport.tsx";
+import { ReplyBody } from "./ReplyBody.tsx";
 import { SupportService } from "./service.ts";
 import * as styles from "./SupportPage.module.less";
 
@@ -140,6 +142,9 @@ export function MySupportSection(): ReactNode {
   }, []);
 
   const [view, setView] = useState<View>({ kind: "list" });
+  // How many this account has cleared from its own list. Reset on every
+  // load rather than incremented locally, so two tabs cannot disagree.
+  const [deletedCount, setDeletedCount] = useState(0);
   const [tickets, setTickets] = useState<
     readonly SupportService.MyTicket[] | null
   >(null);
@@ -153,8 +158,9 @@ export function MySupportSection(): ReactNode {
 
   const refresh = useCallback(async () => {
     try {
-      const { tickets } = await SupportService.listMyTickets();
+      const { tickets, deletedCount } = await SupportService.listMyTickets();
       setTickets(tickets);
+      setDeletedCount(deletedCount);
       setRating((current) => current ?? tickets.find((t) => t.askCsat) ?? null);
       setLoadFailed(false);
     } catch (err) {
@@ -377,6 +383,56 @@ export function MySupportSection(): ReactNode {
             t.reference.toLowerCase().includes(query.toLowerCase()),
         );
 
+  // Live first, finished folded away. A support page is somewhere people
+  // arrive worried about the thing that is still open, and a year of
+  // resolved tickets stacked above it is a wall to read past. Closed
+  // threads stay one click away rather than gone: reopening is a reply,
+  // and "what did they tell me last time" is a real reason to look.
+  const live = shown.filter((t) => t.status !== "closed");
+  const resolved = shown.filter((t) => t.status === "closed");
+
+  const chipOf = (t: (typeof tickets)[number]): ReactNode => (
+    <div key={t.id} className={styles.chip}>
+      <button
+        type="button"
+        className={styles.chipOpen}
+        onClick={() => setView({ kind: "thread", id: t.id })}
+      >
+        <span className={styles.reference}>{t.reference}</span>
+        <span className={styles.chipSubject}>{t.subject}</span>
+        <span className={styles.chipMeta}>
+          {(t.hasAttachments || t.hasDraft) && (
+            <span className={styles.marks}>
+              {t.hasDraft && (
+                <span className={styles.draftMark}>
+                  <FormattedMessage
+                    id="support.my.draftMark"
+                    defaultMessage="Draft"
+                  />
+                </span>
+              )}
+              {t.hasAttachments && <Icon name="clip" size={13} />}
+            </span>
+          )}
+          <When iso={t.updatedAt} />
+          {t.unread > 0 && <span className={styles.unread}>{t.unread}</span>}
+          <StatusBadge status={t.status} />
+        </span>
+      </button>
+      <button
+        type="button"
+        className={styles.iconButton}
+        aria-label={formatMessage(
+          { id: "support.my.delete", defaultMessage: "Remove {ref}" },
+          { ref: t.reference },
+        )}
+        onClick={() => setDeleting(t)}
+      >
+        <Icon name="trash" />
+      </button>
+    </div>
+  );
+
   return (
     <div className={styles.overlayHost}>
       {overlay}
@@ -421,54 +477,20 @@ export function MySupportSection(): ReactNode {
             )}
 
             <div className={styles.floatWrap}>
-              <div className={styles.chips}>
-                {shown.map((t) => (
-                  <div key={t.id} className={styles.chip}>
-                    <button
-                      type="button"
-                      className={styles.chipOpen}
-                      onClick={() => setView({ kind: "thread", id: t.id })}
-                    >
-                      <span className={styles.reference}>{t.reference}</span>
-                      <span className={styles.chipSubject}>{t.subject}</span>
-                      <span className={styles.chipMeta}>
-                        {(t.hasAttachments || t.hasDraft) && (
-                          <span className={styles.marks}>
-                            {t.hasDraft && (
-                              <span className={styles.draftMark}>
-                                <FormattedMessage
-                                  id="support.my.draftMark"
-                                  defaultMessage="Draft"
-                                />
-                              </span>
-                            )}
-                            {t.hasAttachments && <Icon name="clip" size={13} />}
-                          </span>
-                        )}
-                        <When iso={t.updatedAt} />
-                        {t.unread > 0 && (
-                          <span className={styles.unread}>{t.unread}</span>
-                        )}
-                        <StatusBadge status={t.status} />
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.iconButton}
-                      aria-label={formatMessage(
-                        {
-                          id: "support.my.delete",
-                          defaultMessage: "Remove {ref}",
-                        },
-                        { ref: t.reference },
-                      )}
-                      onClick={() => setDeleting(t)}
-                    >
-                      <Icon name="trash" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <div className={styles.chips}>{live.map(chipOf)}</div>
+
+              {resolved.length > 0 && (
+                <details className={styles.resolvedGroup}>
+                  <summary className={styles.resolvedSummary}>
+                    <FormattedMessage
+                      id="support.my.resolvedGroup"
+                      defaultMessage="Resolved ({count})"
+                      values={{ count: resolved.length }}
+                    />
+                  </summary>
+                  <div className={styles.chips}>{resolved.map(chipOf)}</div>
+                </details>
+              )}
 
               {deleting != null && (
                 <ConfirmDelete
@@ -531,6 +553,17 @@ export function MySupportSection(): ReactNode {
                 })}
                 onClick={() => setView({ kind: "new" })}
               />
+              {/* Only once there is something to say. A permanent
+                  "0 removed" explains a thing nobody did. */}
+              {deletedCount > 0 && (
+                <span className={styles.removedNote}>
+                  <FormattedMessage
+                    id="support.my.removedCount"
+                    defaultMessage="{count, plural, one {# ticket removed by you} other {# tickets removed by you}}"
+                    values={{ count: deletedCount }}
+                  />
+                </span>
+              )}
             </div>
           </>
         )}
@@ -993,6 +1026,15 @@ function Thread({
     async (all: boolean) => {
       try {
         const t = await SupportService.getMyTicket(id, all);
+        // Reading the thread is what marks its notifications read on the
+        // server. Tell the bell now rather than leaving it to its own
+        // minute-long poll — the person is looking at both at once, and a
+        // badge that lingers after they have read the message reads as the
+        // app not having noticed. Only when something actually changed:
+        // this loader polls every 20 seconds while the thread is open.
+        if (t.markedRead === true) {
+          notificationsChanged();
+        }
         if (lastSeenId.current == null) {
           lastSeenId.current = t.messages.at(-1)?.id ?? -1;
         } else if (firstUnseenId.current == null) {
@@ -1397,7 +1439,12 @@ function Thread({
                       {m.attachments.map((a) => (
                         <Attachment key={a.id} file={a} onView={setViewing} />
                       ))}
-                      {renderMessageText(m.body, undefined, locale)}
+                      {/* Rich rendering for what the DESK writes only.
+                          A customer typing asterisks means asterisks —
+                          promoting their own words into product chrome
+                          would put KeyLearn's voice in their mouth. Their
+                          bubble below stays plain. */}
+                      <ReplyBody text={m.body} locale={locale} />
                     </div>
                     <span className={styles.stamp}>
                       {new Date(m.createdAt).toLocaleTimeString(locale, {

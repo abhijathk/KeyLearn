@@ -1,3 +1,4 @@
+import { deviceTimeZone } from "@keylearn/intl";
 import {
   type AccountDeletionRequestDetails,
   type AnswerDetails,
@@ -266,6 +267,8 @@ export namespace SupportService {
 
   export type MyThread = {
     readonly id: number;
+    /** True only when this very request cleared the unread state. */
+    readonly markedRead?: boolean;
     readonly reference: string;
     readonly subject: string;
     readonly status: string;
@@ -287,6 +290,8 @@ export namespace SupportService {
   export async function listMyTickets(): Promise<{
     readonly tickets: readonly MyTicket[];
     readonly unreadTotal: number;
+    /** Tickets this account has removed from its own list — a soft delete. */
+    readonly deletedCount: number;
   }> {
     return await json(
       await request
@@ -296,6 +301,11 @@ export namespace SupportService {
     );
   }
 
+  /**
+   * True when loading the thread is what marked it read — so the bell can
+   * be told to refetch at that moment rather than waiting for its own
+   * poll. False on every subsequent poll of an already-read thread.
+   */
   export async function getMyTicket(
     id: number,
     all = false,
@@ -360,7 +370,11 @@ export namespace SupportService {
       await request
         .use(expectType("application/json"))
         .POST("/_/support/my/tickets")
-        .send(input),
+        // The browser is the only place this is knowable. Sent on
+        // creation because the desk needs it to say "it's 9pm for them"
+        // and, in a crisis, to reach for the right emergency number —
+        // both of which are decided before anyone reads the ticket.
+        .send({ ...input, timeZone: deviceTimeZone() }),
     );
   }
 
@@ -565,7 +579,10 @@ export namespace SupportService {
     await request
       .use(expectType("application/json"))
       .POST("/_/support/tickets")
-      .send(input);
+      // Same zone the signed-in form sends — a guest ticket needs the
+      // local time just as much, and arguably more, since there is no
+      // account behind it to infer anything from.
+      .send({ ...input, timeZone: deviceTimeZone() });
   }
 
   export async function listTickets({
@@ -647,15 +664,6 @@ export namespace SupportService {
       .PUT(`/_/support/tickets/${id}/status`)
       .send({ status });
     return (await response.json()) as SupportTicketDetails;
-  }
-
-  /** The one deliberate, audited way to see a submitter's real address. */
-  export async function revealEmail(id: number): Promise<string> {
-    const response = await request
-      .use(expectType("application/json"))
-      .POST(`/_/support/tickets/${id}/reveal-email`)
-      .send({});
-    return ((await response.json()) as { email: string }).email;
   }
 
   /**

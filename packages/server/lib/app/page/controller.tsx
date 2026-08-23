@@ -453,6 +453,12 @@ export class Controller {
       // Off until live practice is finished — see PageData.multiplayer.
       multiplayer: Env.getBoolean("MULTIPLAYER_ENABLED", false),
       locale,
+      // What the network says about where this request came from —
+      // Cloudflare's edge, so it is absent in development and on any
+      // deployment without it. Sent to the page so Preferences can show
+      // the person the same two readings the support desk sees, rather
+      // than one of them.
+      networkCountry: ctx.request.headers.get("cf-ipcountry"),
       user: user?.toDetails() ?? null,
       publicUser,
       settings: settings?.toJSON() ?? null,

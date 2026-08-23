@@ -1,9 +1,12 @@
 import {
   allLocales,
+  cityOfTimeZone,
   defaultLocale,
   formatsForTimeZone,
+  useCollator,
   useIntlDates,
   useIntlDisplayNames,
+  utcOffsetLabel,
 } from "@keylearn/intl";
 import {
   A11Y_CHANGED_EVENT,
@@ -31,12 +34,19 @@ import { SpeedUnit, uiProps } from "@keylearn/result";
 import { openResultStorage } from "@keylearn/result-loader";
 import { useSettings } from "@keylearn/settings";
 import { useTheme } from "@keylearn/themes";
+import { OptionList } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { Segmented, Toggle } from "./controls.tsx";
-import { accountProps, allTimeZones, deviceTimeZone } from "./prefs.ts";
+import {
+  accountProps,
+  countryForTimeZone,
+  deviceTimeZone,
+  timeZoneCountries,
+  timeZonesIn,
+} from "./prefs.ts";
 import { ProfileChooser } from "./ProfileChooser.tsx";
 import { useProfiles } from "./profiles/context.tsx";
 import { ThemePicker } from "./theme/ThemePicker.tsx";
@@ -110,13 +120,6 @@ export function PreferencesPane(): ReactNode {
           defaultMessage="Preferences"
         />
       </h2>
-      <p className={styles.note}>
-        <FormattedMessage
-          id="account.prefs.note"
-          defaultMessage="These apply to your whole account. Typing, keyboard and language-of-practice settings live in Practice settings and are kept per profile."
-        />
-      </p>
-
       <LanguageRegionCard />
       <NotificationsCard />
       <PrivacyCard />
@@ -1038,12 +1041,45 @@ function SafeRow({
  */
 
 function LanguageRegionCard(): ReactNode {
-  const { locale } = usePageData();
-  const { formatLocalLanguageName } = useIntlDisplayNames();
+  const { locale, networkCountry } = usePageData();
+  const { formatMessage } = useIntl();
+  const { formatLocalLanguageName, formatRegionName } = useIntlDisplayNames();
+  // Sorted the way the reader's own language sorts, so "Österreich" lands
+  // where a German speaker expects it rather than after "Z".
+  const collator = useCollator();
+  const collate = (a: string, b: string) => collator.compare(a, b);
   const { settings, updateSettings } = useSettings();
   const timeZone = settings.get(accountProps.timeZone) || deviceTimeZone();
+
+  // The two readings the support desk also sees, shown to the person they
+  // are about. Consent is the ONLY gate — an earlier version also hid this
+  // whenever the device agreed with the account setting, which sounds
+  // tidy and meant it never appeared at all: with no zone explicitly
+  // chosen, `timeZone` above already falls back to the device's, so the
+  // two were equal by construction.
+  const deviceZone = deviceTimeZone();
+  const deviceRegion = countryForTimeZone(deviceZone);
+  const deviceNote = {
+    zone: cityOfTimeZone(deviceZone) || deviceZone,
+    region: deviceRegion === "" ? null : formatRegionName(deviceRegion),
+    // Absent without Cloudflare in front — development, or a host that
+    // does not set it. Rendered only when there is something to render.
+    network:
+      networkCountry == null || networkCountry === ""
+        ? null
+        : formatRegionName(networkCountry),
+  };
   const weekStart = settings.get(accountProps.weekStart);
   const speedUnit = settings.get(uiProps.speedUnit).id;
+  // Nothing is written until they choose: an unset preference still means
+  // "follow this device", and pre-filling the country must not quietly
+  // become a saved answer they never gave.
+  const country = countryForTimeZone(
+    settings.get(accountProps.timeZone),
+    null,
+    locale,
+  );
+  const zones = timeZonesIn(country, timeZone);
 
   const switchLocale = (next: string) => {
     const base = Pages.intlBase(locale);
@@ -1077,17 +1113,27 @@ function LanguageRegionCard(): ReactNode {
             />
           </span>
         </div>
-        <select
-          className={styles.prefSelect}
-          value={allLocales.includes(locale) ? locale : defaultLocale}
-          onChange={(ev) => switchLocale(ev.target.value)}
-        >
-          {allLocales.map((id) => (
-            <option key={id} value={id}>
-              {formatLocalLanguageName(id)}
-            </option>
-          ))}
-        </select>
+        {/* The same picker as the zone below it, for the same reason: a
+            native select of thirty-odd languages opens as a list the
+            window decides the height of, and two controls in one card
+            behaving differently is one control too many to learn.
+
+            Sorted by the name as it is written, not by locale id — `de`
+            and `da` next to each other is a sorted list of identifiers,
+            not of languages. */}
+        <div className={styles.prefStack}>
+          <OptionList
+            title={formatMessage({
+              id: "account.prefs.language.label",
+              defaultMessage: "App & email language",
+            })}
+            value={allLocales.includes(locale) ? locale : defaultLocale}
+            options={[...allLocales]
+              .map((id) => ({ value: id, name: formatLocalLanguageName(id) }))
+              .sort((a, b) => collate(a.name, b.name))}
+            onSelect={switchLocale}
+          />
+        </div>
       </div>
 
       <div className={styles.hr} />
@@ -1101,9 +1147,13 @@ function LanguageRegionCard(): ReactNode {
             />
           </span>
           <span className={styles.rowSub}>
+            {/* Short on purpose. The example line underneath shows the
+                effect in one glance, so the words only have to say that
+                there IS one beyond streaks — the rest is a paragraph
+                nobody in a settings list reads. */}
             <FormattedMessage
               id="account.prefs.timezone.sub"
-              defaultMessage="More than when your day rolls over for streaks and goals: this is how KeyLearn knows which country you are in. Dates, times, prices and phone numbers are written your country’s way because of this, and the number drills practise those local shapes rather than another country’s. Your language stays whatever you chose above — only the local conventions follow the zone."
+              defaultMessage="Sets when your day rolls over, and how dates, times, prices and phone numbers are written. Your language doesn't change."
             />
           </span>
           {/* Prose can describe the effect; showing it is quicker to read and
@@ -1116,20 +1166,95 @@ function LanguageRegionCard(): ReactNode {
               values={{ sample: <b>{regionSample(timeZone)}</b> }}
             />
           </span>
+          {/* What this device reports, as against what the account is set
+              to. Shown ONLY with analytics consent on, because it is the
+              one place the app says out loud that it can read this — a
+              line telling somebody what was collected, on a screen where
+              they never agreed to the collecting, is worse than saying
+              nothing.
+
+              Quiet by design: a note, not a setting. Nothing here is
+              editable, and the account's own choice above always wins —
+              this exists so a traveller can see why the two differ
+              instead of wondering whether something is broken. */}
+          {settings.get(accountProps.analytics) && (
+            <span className={styles.rowDeviceNote}>
+              <FormattedMessage
+                id="account.prefs.timezone.device"
+                defaultMessage="This device reports {zone}{region}. Your account setting above is what KeyLearn uses."
+                values={{
+                  zone: <b>{deviceNote.zone}</b>,
+                  region:
+                    deviceNote.region == null ? "" : ` — ${deviceNote.region}`,
+                }}
+              />
+              {deviceNote.network != null && (
+                <>
+                  {" "}
+                  <FormattedMessage
+                    id="account.prefs.timezone.network"
+                    defaultMessage="Your connection looks like it is coming from {country}."
+                    values={{ country: <b>{deviceNote.network}</b> }}
+                  />
+                </>
+              )}
+            </span>
+          )}
         </div>
-        <select
-          className={styles.prefSelect}
-          value={timeZone}
-          onChange={(ev) =>
-            updateSettings(settings.set(accountProps.timeZone, ev.target.value))
-          }
-        >
-          {allTimeZones().map((tz) => (
-            <option key={tz} value={tz}>
-              {tz}
-            </option>
-          ))}
-        </select>
+        {/* Country first, then the zone inside it. Two questions somebody
+            can answer instead of one they cannot.
+
+            KeyLearn's own OptionList rather than a native select, because
+            the offset has to sit in its own right-aligned column. A native
+            <option> holds text and nothing else, so "Sydney UTC+10" would
+            ragged-edge down the list and stop being scannable — which is
+            the entire reason for showing the offset. */}
+        <div className={styles.prefStack}>
+          <OptionList
+            title={formatMessage({
+              id: "account.prefs.timezone.country",
+              defaultMessage: "Country",
+            })}
+            value={country}
+            // By the country's NAME, not its ISO code. Sorting the codes
+            // put the United Arab Emirates at the top of the list, above
+            // Argentina, because "AE" sorts before "AR" — correct, and
+            // useless to anyone looking for their own country.
+            options={timeZoneCountries()
+              .map((id) => ({ value: id, name: formatRegionName(id) }))
+              .sort((a, b) => collate(a.name, b.name))}
+            onSelect={(id) => {
+              // Moving country lands on that country's main zone. Keeping
+              // the old one would leave "Australia" showing a zone in Peru
+              // until they noticed the second list.
+              const next = timeZonesIn(id)[0];
+              if (next != null) {
+                updateSettings(settings.set(accountProps.timeZone, next));
+              }
+            }}
+          />
+          <OptionList
+            title={formatMessage({
+              id: "account.prefs.timezone.zone",
+              defaultMessage: "Time zone",
+            })}
+            value={timeZone}
+            options={zones.map((tz) => ({
+              value: tz,
+              name: (
+                <span className={styles.zoneRow}>
+                  <span>{cityOfTimeZone(tz)}</span>
+                  <span className={styles.zoneOffset}>
+                    {utcOffsetLabel(tz)}
+                  </span>
+                </span>
+              ),
+            }))}
+            onSelect={(tz) =>
+              updateSettings(settings.set(accountProps.timeZone, tz))
+            }
+          />
+        </div>
       </div>
 
       <div className={styles.hr} />

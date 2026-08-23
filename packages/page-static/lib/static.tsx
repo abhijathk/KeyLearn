@@ -837,6 +837,14 @@ export function PrivacyPolicyPage() {
         />
       </p>
 
+      <p>
+        <FormattedMessage
+          id="privacy.collect.support"
+          defaultMessage="<em>Messages you send support</em> — what you write to us, any files you attach, the country our network sees the request coming from and the time zone your browser reports. An assistant reads it first to answer what it can, which means the text of your message is processed by the AI provider that runs it; it always identifies itself as an AI, and a person takes over whenever that is the better answer. Conversations stay on your account so you can come back to them, and you can remove any of them from your list at any time."
+          values={{ em }}
+        />
+      </p>
+
       <Sect>
         <FormattedMessage
           id="privacy.never.h"
@@ -1417,6 +1425,12 @@ export function AccessibilityPage() {
           id="accessibility.telling.p1b"
           defaultMessage="If something here blocks you or a learner you are responsible for, <supportLink>tell us</supportLink>. Say what you were trying to do and what happened; you do not need to know the name of the standard it breaks. We will reply, and if it is our fault we will say so and tell you when it is fixed."
           values={{ supportLink }}
+        />
+      </p>
+      <p>
+        <FormattedMessage
+          id="accessibility.telling.ai"
+          defaultMessage="An assistant reads it first and answers what it can. It always says it is an AI, never pretends otherwise, and a person takes over the moment you ask for one — you will not have to ask twice."
         />
       </p>
       <p>

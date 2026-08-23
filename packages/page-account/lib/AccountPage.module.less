@@ -697,6 +697,81 @@
   cursor: pointer;
 }
 
+// Country above zone, right-aligned with every other control in the column.
+// Stacked rather than side by side: the second list depends on the first,
+// and reading order should say so.
+// The pickers in the Language & region card. One width for all three, so
+// they line up down the right edge of the card the way every other control
+// in a settings list does.
+//
+// `min()` rather than a fixed width: at 14rem these sit comfortably beside
+// their explanation on a laptop, and on a phone the row has already stacked
+// (see the media query below) and the picker takes the full width instead
+// of poking out of the card.
+.prefStack {
+  display: grid;
+  flex: none;
+  gap: 0.4rem;
+  justify-items: stretch;
+  inline-size: min(14rem, 100%);
+
+  // Targeted structurally, not by class: the picker is a widget-owned CSS
+  // module, so its class names are hashed and nothing here can name them.
+  // The root is a <span>, which is also why an earlier `button {}` block
+  // silently matched nothing and left these two fields looking unlike
+  // every other control on the page.
+  //
+  // The widget ships a 20rem minimum and 1.5rem of inner padding, which
+  // are right for a form field standing on its own and half again too
+  // wide for a settings row — it pushed the control past the edge of the
+  // card. Brought back to the size of the plain selects above and below,
+  // so the column of controls reads as one column.
+  > span {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+    border-radius: 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  > span > span > span:first-child {
+    padding-inline-start: 0.6rem;
+  }
+
+  > span > span > span:last-child {
+    padding-inline-end: 0.6rem;
+  }
+}
+
+// Below this the explanation and the control cannot share a line without
+// one of them becoming a column of single words.
+@media (max-width: 40rem) {
+  .row:has(.prefStack) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .prefStack {
+    inline-size: 100%;
+  }
+}
+
+// City on the left, offset on the right. The offset is how somebody checks
+// a guess, so it wants its own column to be scanned down — ragged after the
+// city name it would be no faster to read than not showing it at all.
+.zoneRow {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.zoneOffset {
+  opacity: 0.65;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
 // pill toggle switch
 .tog {
   position: relative;
@@ -1480,4 +1555,16 @@
   gap: 0.6rem;
   min-inline-size: 22rem;
   padding: 0.9rem 1.1rem 1.1rem;
+}
+
+/* What the browser reports, as against what the account is set to. A
+   note, not a setting: nothing here is editable and the account's own
+   choice always wins. Quieter than the example line above it, because a
+   traveller wants to see why the two differ, not be asked about it. */
+.rowDeviceNote {
+  display: block;
+  margin-block-start: 0.2rem;
+  color: var(--secondary-text-color);
+  opacity: 0.7;
+  font-size: 0.75rem;
 }

@@ -160,29 +160,38 @@ function LearnerTabs(): ReactNode {
               </button>
             </div>
           </div>
-          <div className={styles.tabs}>
-            {household.profiles.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className={clsx(styles.tab, p.id === selected.id && styles.on)}
-                onClick={() => setSelectedId(p.id)}
-              >
-                {/*
+          {/* One learner is not a choice — the same rule the course filter
+              below already follows. A single tab cannot be switched away
+              from, and it repeats a name the heading underneath already
+              says, so it is furniture with a click target. */}
+          {household.profiles.length > 1 && (
+            <div className={styles.tabs}>
+              {household.profiles.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={clsx(
+                    styles.tab,
+                    p.id === selected.id && styles.on,
+                  )}
+                  onClick={() => setSelectedId(p.id)}
+                >
+                  {/*
                 No avatar on the tabs: at this size a lettered disc beside the
                 name is the same letter twice. The braille badge does stay,
                 because it is the one marker that says something the name does
                 not — that this learner gets a different page and a voice.
               */}
-                {p.visionSupport && (
-                  <span className={styles.tabAvatar}>
-                    <BrailleBadge />
-                  </span>
-                )}
-                {p.firstName}
-              </button>
-            ))}
-          </div>
+                  {p.visionSupport && (
+                    <span className={styles.tabAvatar}>
+                      <BrailleBadge />
+                    </span>
+                  )}
+                  {p.firstName}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {/*
           No caption under the tabs. The selected tab already says whose page

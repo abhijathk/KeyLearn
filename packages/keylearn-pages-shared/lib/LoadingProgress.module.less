@@ -32,6 +32,16 @@
   .motion-respect-reduced();
 }
 
+// A loader taking over from one that has just left the screen. No hold-back
+// and no fade: the previous gate was already showing this, so anything other
+// than appearing instantly reads as a blink rather than as one continuous
+// wait. See the note in LoadingProgress.tsx for why the gates cannot simply
+// share a single element.
+.continuing {
+  opacity: 1;
+  animation: none;
+}
+
 .loader {
   display: flex;
   flex-direction: column;

@@ -565,6 +565,16 @@ export class User extends TimestampMixin(Model) {
       parentPinLength:
         this.parentPinHash == null ? null : (this.parentPinLength ?? null),
       emailVerified: Boolean(this.emailVerified),
+      /**
+       * Where the network said they were when they registered.
+       *
+       * Carried to the client for one job: pre-selecting the country in the
+       * time-zone preference, so nobody has to find their own country in a
+       * list before they can find their own zone. It is a starting guess,
+       * never a setting — a VPN or a corporate proxy answers this question
+       * for some people, and every screen that shows it lets them disagree.
+       */
+      signupCountry: this.signupCountry ?? null,
       createdAt: this.createdAt!,
     };
   }

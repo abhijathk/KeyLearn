@@ -120,45 +120,56 @@ export function ResultGrouper({
     ? characterClass
     : "letters";
 
+  // Nothing to choose between is not a filter. With one keyboard layout
+  // and one character class — which is every account until somebody has
+  // practised digits or symbols — the row is a label, a lone button that
+  // cannot be turned off, and the vertical space of a control.
+  const hasChoice = resultsLayouts.size > 1 || classes.length > 1;
+
   return (
     <>
-      <div className={styles.filterRow}>
-        <span className={styles.axis}>
-          <FormattedMessage
-            id="t_Show_statistics_for:"
-            defaultMessage="Filter statistics by:"
-          />
-        </span>
-        {resultsLayouts.size > 1 && (
-          <select
-            className={styles.filterSelect}
-            value={selectedLayout.id}
-            onChange={(ev) => {
-              setSelectedLayout(Layout.ALL.get(ev.target.value));
-            }}
-          >
-            {layoutOptions.map(({ value, name }) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </select>
-        )}
-        <span className={styles.seg}>
-          {classes.map(([value, name]) => (
-            <button
-              key={value}
-              type="button"
-              className={clsx(styles.segItem, filter === value && styles.segOn)}
-              onClick={() => {
-                setCharacterClass(value);
+      {hasChoice && (
+        <div className={styles.filterRow}>
+          <span className={styles.axis}>
+            <FormattedMessage
+              id="t_Show_statistics_for:"
+              defaultMessage="Filter statistics by:"
+            />
+          </span>
+          {resultsLayouts.size > 1 && (
+            <select
+              className={styles.filterSelect}
+              value={selectedLayout.id}
+              onChange={(ev) => {
+                setSelectedLayout(Layout.ALL.get(ev.target.value));
               }}
             >
-              {name}
-            </button>
-          ))}
-        </span>
-      </div>
+              {layoutOptions.map(({ value, name }) => (
+                <option key={value} value={value}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          )}
+          <span className={styles.seg}>
+            {classes.map(([value, name]) => (
+              <button
+                key={value}
+                type="button"
+                className={clsx(
+                  styles.segItem,
+                  filter === value && styles.segOn,
+                )}
+                onClick={() => {
+                  setCharacterClass(value);
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </span>
+        </div>
+      )}
 
       <KeyboardContext.Provider value={keyboard}>
         <PhoneticModelLoader language={selectedLayout.language}>

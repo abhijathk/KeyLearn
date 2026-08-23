@@ -298,9 +298,12 @@ export function MenuDrawer({
                 {!visionSupport && (
                   <>
                     <div className={styles.label}>
+                      {/* "App language", matching Preferences. Two names for
+                          one setting is two settings as far as anyone
+                          searching for it is concerned. */}
                       <FormattedMessage
                         id="drawer.language"
-                        defaultMessage="Site language"
+                        defaultMessage="App language"
                       />
                     </div>
                     <LanguagePanel currentPath={path} />

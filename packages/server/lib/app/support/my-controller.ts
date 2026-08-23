@@ -8,6 +8,7 @@ import { type RouterState } from "@fastr/middleware-router";
 import { type SessionState } from "@fastr/middleware-session";
 import { DataDir } from "@keylearn/config";
 import {
+  Notification,
   SupportAttachment,
   SupportDraft,
   SupportMessage,
@@ -20,6 +21,7 @@ import {
   revokeSupportPin,
 } from "../auth/parent-pin.ts";
 import { rateLimit } from "../auth/ratelimit.ts";
+import { requireCaptchaIfSuspicious } from "../auth/turnstile.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import {
@@ -61,6 +63,8 @@ const TNewTicket = z.object({
    * cannot spoof by changing an OS setting.
    */
   timeZone: z.string().trim().max(64).nullable().optional(),
+  /** Cloudflare Turnstile, when the deployment has keys. See below. */
+  turnstileToken: z.string().max(4096).optional(),
 });
 type TNewTicket = z.infer<typeof TNewTicket>;
 const PNewTicket = zod(TNewTicket);
@@ -74,6 +78,7 @@ const TReply = z.object({
    * second copy of somebody's message.
    */
   clientId: z.string().trim().min(8).max(64).optional(),
+  turnstileToken: z.string().max(4096).optional(),
 });
 type TReply = z.infer<typeof TReply>;
 const PReply = zod(TReply);
@@ -198,6 +203,11 @@ export class MyTicketsController {
       .orderBy("updatedAt", "desc")
       .limit(100);
 
+    const deletedCount = await SupportTicket.query()
+      .where("userId", user.id!)
+      .whereNotNull("deletedByUserAt")
+      .resultSize();
+
     const ids = tickets.map((t) => t.id!);
     const drafts = await SupportDraft.ticketIdsWithDrafts(user.id!);
     const withAttachments = new Set(
@@ -289,6 +299,13 @@ export class MyTicketsController {
       })),
       // What the rail dot reads.
       unreadTotal: [...unread.values()].reduce((a, b) => a + b, 0),
+      // How many this account has removed from its own list. Zero for
+      // almost everybody, and the label that reads it only appears once
+      // it isn't — a permanent "0 removed" would be clutter explaining
+      // something nobody did. It exists because removal is a soft delete:
+      // the thread is still on the desk, and a person who cleared one and
+      // then wondered where it went deserves a trace rather than silence.
+      deletedCount,
     };
   }
 
@@ -316,16 +333,43 @@ export class MyTicketsController {
     // polls every 20 seconds while it is open, and an unconditional patch
     // turns idle reading into a write per poll per open thread.
     const newest = messages.at(-1)?.createdAt;
+    // Whether THIS request was the one that marked the thread read. The
+    // client fires its "notifications changed" event on the strength of
+    // it, and the thread polls every 20 seconds — firing unconditionally
+    // would mean a refetch of the bell three times a minute, forever, on
+    // any open thread.
+    let markedRead = false;
     if (
       newest != null &&
       (ticket.lastReadAt == null ||
         new Date(ticket.lastReadAt) < new Date(newest))
     ) {
       await ticket.$query().patch({ lastReadAt: new Date() });
+      markedRead = true;
+      // The bell announced this reply, so reading it here is what answers
+      // the bell. Without this the two disagreed: the pip inside support
+      // cleared while the bell went on counting a message the person had
+      // just finished reading, and the only way to clear it was to dismiss
+      // the notification by hand.
+      //
+      // Inside the same guard as the stamp above on purpose — both are
+      // "something new has been seen", and running it on every poll would
+      // be a write per poll per open thread for no gain.
+      // Scoped by the ticket's own owner, which is exactly who the
+      // notification was created for — a guest ticket has no userId and
+      // never had a bell entry to clear.
+      await Notification.markReadForTicket(id, ticket.userId ?? user.id!).catch(
+        () => {
+          // Best-effort: the thread has been read either way, and failing to
+          // clear a badge must never fail the request that renders it.
+        },
+      );
     }
 
     ctx.response.body = {
       id: ticket.id,
+      /** True only when this request is what cleared the unread state. */
+      markedRead,
       reference: reference(ticket.id!),
       subject: ticket.subject,
       status: ticket.status,
@@ -373,6 +417,7 @@ export class MyTicketsController {
     const user = ctx.state.requireUser();
     await requireParentPinForSupport(ctx, user);
     rateLimit(ctx, "support-my-ticket", 5, 60 * 60 * 1000);
+    await requireCaptchaIfSuspicious(ctx, input.turnstileToken);
 
     // The account holder's own name and address. Nobody signed in is asked
     // to type an address we already have, and nobody can put somebody
@@ -404,12 +449,11 @@ export class MyTicketsController {
       user.id!,
       pending.map((a) => a.id!),
     );
-    await SupportMessage.create({
-      ticketId: ticket.id!,
-      sender: "system",
-      kind: "handover",
-      body: "Sent. We'll reply here and by email — you don't need to keep this open.",
-    });
+    // No "Sent." system line. The customer's own message is already sitting
+    // in the thread, which says it arrived more convincingly than a note
+    // saying so — and the form's own confirmation has just told them we
+    // reply by email. Two reassurances and a receipt for one action read
+    // as a machine covering itself.
     await SupportDraft.clear(user.id!, null);
 
     forwardTicketToQdesk({
@@ -460,6 +504,21 @@ export class MyTicketsController {
     @pathParam("id", pId) id: number,
     @body.json(PReply) input: TReply,
   ) {
+    // This route had neither a limiter nor a check, while the route beside
+    // it that opens a ticket had both. Replying is the cheaper thing to
+    // automate and lands in the same QDesk inbox: a scripted session could
+    // fill a thread as fast as the network allowed.
+    //
+    // Sixty an hour is far above anyone typing and far below anything
+    // worth calling a flood.
+    rateLimit(ctx, "support-my-reply", 60, 60 * 60 * 1000);
+    // Adaptive here, not mandatory. This person is signed in, past the
+    // grown-up PIN and rate-limited, so the residual risk is a stolen
+    // session rather than a bot filling in a form — and a hard challenge
+    // mid-conversation, in a support thread somebody may be upset in, is
+    // its own harm. The streak only builds if something already looks
+    // wrong.
+    await requireCaptchaIfSuspicious(ctx, input.turnstileToken);
     const user = ctx.state.requireUser();
     const ticket = await this.#mine(ctx, id);
 

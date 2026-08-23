@@ -49,6 +49,53 @@ export function deviceTimeZone(): string {
   }
 }
 
+/**
+ * The place inside a zone identifier, as a person would say it.
+ *
+ * `Australia/Sydney` → "Sydney", `America/Argentina/Buenos_Aires` →
+ * "Buenos Aires". The continent prefix is the file system's business, not
+ * the reader's — inside a country picker it is the same word on every row.
+ */
+export function cityOfTimeZone(timeZone: string): string {
+  const last = timeZone.split("/").pop() ?? timeZone;
+  return last.replaceAll("_", " ");
+}
+
+/**
+ * What this zone is set to right now, against UTC: "UTC+10", "UTC−3:30".
+ *
+ * Computed rather than tabulated, so it follows daylight saving instead of
+ * going a hour wrong for half the year. Shown beside the city because the
+ * offset is how somebody checks a guess — a person who is not sure whether
+ * they want Adelaide or Darwin recognises +9:30 immediately.
+ */
+export function utcOffsetLabel(
+  timeZone: string,
+  at: Date = new Date(),
+): string {
+  let name = "";
+  try {
+    name =
+      new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" })
+        .formatToParts(at)
+        .find((p) => p.type === "timeZoneName")?.value ?? "";
+  } catch {
+    return "";
+  }
+  // "GMT+10:00", or bare "GMT" at zero.
+  const m = /^GMT([+-])(\d{1,2}):(\d{2})$/.exec(name);
+  if (m == null) {
+    return name === "GMT" ? "UTC" : "";
+  }
+  const [, sign, hours, minutes] = m;
+  // A true minus sign, not a hyphen: at this size a hyphen reads as a
+  // separator between the two columns rather than as part of the number.
+  const s = sign === "-" ? "−" : "+";
+  return minutes === "00"
+    ? `UTC${s}${Number(hours)}`
+    : `UTC${s}${Number(hours)}:${minutes}`;
+}
+
 export type IntlDates = {
   /** The zone every method below resolves against. */
   readonly timeZone: string;
