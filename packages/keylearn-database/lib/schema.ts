@@ -17,6 +17,15 @@ import {
 } from "./model.ts";
 import { Notice } from "./notice.ts";
 import { Notification } from "./notification.ts";
+import {
+  Batch,
+  OrgAccessEvent,
+  Organization,
+  OrganizationPlan,
+  OrgInvite,
+  OrgMember,
+  ProfileAccess,
+} from "./organizations.ts";
 import { PracticeSession } from "./practice-session.ts";
 import { ProfileData } from "./profile-data.ts";
 import { SavedReply } from "./saved-reply.ts";
@@ -55,7 +64,18 @@ export async function createSchema(knex: Knex): Promise<void> {
   await createTable(UserExternalId);
   await createTable(Order);
   await createTable(UserLoginRequest);
+  // The organisation tier (docs/organisations.md rev 2). Organization and
+  // Batch come BEFORE Profile — a fresh database's profile table carries a
+  // real foreign key to organization, and the referenced table must exist
+  // first. Everything referencing profile comes after it.
+  await createTable(Organization);
+  await createTable(Batch);
+  await createTable(OrgMember);
+  await createTable(OrganizationPlan);
   await createTable(Profile);
+  await createTable(ProfileAccess);
+  await createTable(OrgInvite);
+  await createTable(OrgAccessEvent);
   await createTable(Credential);
   await createTable(EmailVerification);
   await createTable(SecurityEvent);
@@ -534,6 +554,142 @@ export async function createSchema(knex: Knex): Promise<void> {
   await addColumn("support_message", "feedback", (table) => {
     table.string("feedback", 8).nullable();
   });
+
+  // ---- organisation tier: profile grows an alternate owner ------------
+  //
+  // Additive columns first (both dialects), then the two changes ALTER
+  // cannot express everywhere — user_id turning nullable, and the P4
+  // CHECK — handled per dialect in migrateProfileOwnership below.
+  await addColumn("profile", "organization_id", (table) => {
+    table.integer("organization_id").unsigned().nullable().index();
+  });
+  await addColumn("profile", "batch_id", (table) => {
+    table.integer("batch_id").unsigned().nullable();
+  });
+  await addColumn("profile", "pin_hash", (table) => {
+    table.string("pin_hash", 255).nullable();
+  });
+  await addColumn("profile", "pin_failed_attempts", (table) => {
+    table.integer("pin_failed_attempts").unsigned().notNullable().defaultTo(0);
+  });
+  await addColumn("profile", "pin_locked_until", (table) => {
+    table.timestamp("pin_locked_until").nullable();
+  });
+  await addColumn("profile", "pin_permanently_locked", (table) => {
+    table.boolean("pin_permanently_locked").notNullable().defaultTo(false);
+  });
+  await migrateProfileOwnership(knex);
+
+  /**
+   * The two profile changes plain ALTER cannot express everywhere:
+   * `user_id` becomes nullable (an organisation-owned learner has no
+   * account), and P4 becomes a constraint the database enforces —
+   * exactly one of user_id / organization_id set (spec section 4.1, A2).
+   *
+   * MySQL: MODIFY + ADD CONSTRAINT ... CHECK (enforced since 8.0.16),
+   * both guarded by information_schema so re-running is a no-op.
+   *
+   * SQLite: neither is ALTER-able, so P4 is enforced with a pair of
+   * triggers (same guarantee, different spelling), and nullability via
+   * the documented rebuild — but ONLY when the existing table still says
+   * NOT NULL, so a fresh database (whose createTable already has the
+   * final shape, CHECK included) never rebuilds anything.
+   */
+  async function migrateProfileOwnership(knex: Knex): Promise<void> {
+    const client = (knex.client.config as { __client?: string }).__client;
+    if (client === "mysql") {
+      const [nullable] = (await knex.raw(
+        `SELECT IS_NULLABLE AS n FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'profile' AND COLUMN_NAME = 'user_id'`,
+      )) as unknown as [{ n: string }[]];
+      if (nullable[0]?.n === "NO") {
+        await knex.raw(
+          "ALTER TABLE `profile` MODIFY `user_id` INT UNSIGNED NULL",
+        );
+      }
+      const [checks] = (await knex.raw(
+        `SELECT COUNT(*) AS c FROM information_schema.TABLE_CONSTRAINTS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'profile'
+            AND CONSTRAINT_NAME = 'profile_one_owner'`,
+      )) as unknown as [{ c: number }[]];
+      if (Number(checks[0]?.c ?? 0) === 0) {
+        await knex.raw(
+          "ALTER TABLE `profile` ADD CONSTRAINT `profile_one_owner` CHECK ((`user_id` IS NULL) <> (`organization_id` IS NULL))",
+        );
+      }
+      return;
+    }
+    // SQLite. The rebuild below produces a table carrying the real CHECK,
+    // so triggers are only ever the fallback for a database that does NOT
+    // take the rebuild path. They are installed at the END for that
+    // reason: created first, the rebuild's DROP TABLE would take them
+    // with it and leave P4 unenforced by anything.
+    const info = (await knex.raw(`PRAGMA table_info(profile)`)) as unknown as {
+      name: string;
+      notnull: number;
+    }[];
+    const userId = info.find((c) => c.name === "user_id");
+    if (userId == null || userId.notnull === 0) {
+      // Already nullable: a fresh table (CHECK included, nothing to do) or
+      // one rebuilt by an earlier boot. Only a table somehow lacking the
+      // CHECK needs the trigger fallback.
+      await ensureOwnerTriggers(knex);
+      return;
+    }
+    // The documented SQLite rebuild: copy into a table with the final
+    // shape, swap names. foreign_keys goes off so dropping the old table
+    // does not trip the two children (certificate, certificate_sitting),
+    // whose FK definitions name "profile" by text and resolve to the new
+    // table the moment the rename lands.
+    await knex.raw("PRAGMA foreign_keys = OFF");
+    try {
+      await knex.schema.createTable("profile__rebuild", (table) => {
+        Profile.createTable(knex, table);
+      });
+      const cols = info.map((c) => "`" + c.name + "`").join(", ");
+      await knex.raw(
+        `INSERT INTO profile__rebuild (${cols}) SELECT ${cols} FROM profile`,
+      );
+      await knex.raw("DROP TABLE profile");
+      await knex.raw("ALTER TABLE profile__rebuild RENAME TO profile");
+    } finally {
+      await knex.raw("PRAGMA foreign_keys = ON");
+    }
+    // The rebuilt table has the CHECK; this is a no-op on it, and the
+    // belt-and-braces for anything that somehow does not.
+    await ensureOwnerTriggers(knex);
+  }
+
+  /**
+   * P4 for a SQLite table whose definition lacks the CHECK — the same
+   * guarantee spelled as a pair of triggers. Skipped entirely when the
+   * table already carries the constraint, so the common path installs
+   * nothing.
+   */
+  async function ensureOwnerTriggers(knex: Knex): Promise<void> {
+    const [table] = (await knex.raw(
+      `SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'profile'`,
+    )) as unknown as [{ sql: string } | undefined];
+    if (table?.sql?.includes("profile_one_owner")) {
+      return;
+    }
+    const triggers = (await knex.raw(
+      `SELECT name FROM sqlite_master WHERE type = 'trigger' AND name = 'profile_one_owner_ins'`,
+    )) as unknown as { name: string }[];
+    if (triggers.length > 0) {
+      return;
+    }
+    await knex.raw(
+      `CREATE TRIGGER profile_one_owner_ins BEFORE INSERT ON profile
+        WHEN (NEW.user_id IS NULL) = (NEW.organization_id IS NULL)
+        BEGIN SELECT RAISE(ABORT, 'profile must have exactly one owner'); END`,
+    );
+    await knex.raw(
+      `CREATE TRIGGER profile_one_owner_upd BEFORE UPDATE ON profile
+        WHEN (NEW.user_id IS NULL) = (NEW.organization_id IS NULL)
+        BEGIN SELECT RAISE(ABORT, 'profile must have exactly one owner'); END`,
+    );
+  }
 
   async function addColumn(
     tableName: string,

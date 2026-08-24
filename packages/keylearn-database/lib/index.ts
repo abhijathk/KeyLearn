@@ -5,6 +5,7 @@ export * from "./desk-unlock.ts";
 export * from "./model.ts";
 export * from "./notice.ts";
 export * from "./notification.ts";
+export * from "./organizations.ts";
 export * from "./practice-session.ts";
 export * from "./profile-data.ts";
 export * from "./saved-reply.ts";

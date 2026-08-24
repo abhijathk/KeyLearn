@@ -58,6 +58,8 @@ import {
 } from "@simplewebauthn/server";
 import { File } from "@sosimple/fsx-file";
 import { z } from "zod";
+import { actorFor } from "../access/actor.ts";
+import { reachProfile } from "../access/resolver.ts";
 import { Mailer, Notifier } from "../mail/index.ts";
 import { preferredLocale } from "../page/intl.ts";
 import { reference } from "../support/my-controller.ts";
@@ -2301,7 +2303,11 @@ export class Controller {
   ) {
     const user = ctx.state.requireUser();
     this.#requireParentPin(ctx, user);
-    const profile = await Profile.findOwned(user.id!, Number(id));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(id),
+      "manage",
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }
@@ -2376,7 +2382,11 @@ export class Controller {
   ) {
     const user = ctx.state.requireUser();
     this.#requireParentPin(ctx, user);
-    const profile = await Profile.findOwned(user.id!, Number(id));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(id),
+      "manage",
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }

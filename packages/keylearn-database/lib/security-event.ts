@@ -29,7 +29,13 @@ export type SecurityEventType =
   | "security-reset"
   | "profile-deleted"
   | "account-delete-failed"
-  | "account-deleted";
+  | "account-deleted"
+  // The organisation tier: learner-PIN acts are security acts (A7/A8 —
+  // the events name outcomes, never the PIN itself).
+  | "learner-pin-set"
+  | "learner-pin-cleared"
+  | "learner-pin-unlocked"
+  | "learner-pin-locked";
 
 /**
  * An append-only record of security-relevant account activity.

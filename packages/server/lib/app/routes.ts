@@ -7,6 +7,7 @@ import { Controller as CheckoutController } from "./checkout/index.ts";
 import { Controller as GameController } from "./game/index.ts";
 import { Controller as HighScoresController } from "./highscores/index.ts";
 import { Controller as InternalController } from "./internal/index.ts";
+import { OrgController } from "./org/index.ts";
 import { Controller as PageController } from "./page/index.ts";
 import { Controller as ProfileController } from "./profile/index.ts";
 import { Controller as SettingsController } from "./settings/index.ts";
@@ -27,6 +28,7 @@ export function mainRoutes(): Middleware<any> {
         CheckoutController,
         HighScoresController,
         InternalController,
+        OrgController,
         PageController,
         ProfileController,
         SettingsController,

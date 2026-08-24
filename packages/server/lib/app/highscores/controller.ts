@@ -8,6 +8,8 @@ import {
   type HighScoresRow,
   type Range,
 } from "@keylearn/highscores";
+import { actorFor } from "../access/actor.ts";
+import { reachProfile } from "../access/resolver.ts";
 import { type AuthState } from "../auth/index.ts";
 import { mapEntries } from "./model.ts";
 import { leaderboardReady } from "./readiness.ts";
@@ -86,7 +88,8 @@ export class Controller {
     const claimed = Number(ctx.request.query.get("profile"));
     let profileId: number | null = null;
     if (Number.isSafeInteger(claimed) && claimed > 0) {
-      profileId = (await Profile.findOwned(user.id!, claimed))?.id ?? null;
+      profileId =
+        (await reachProfile(actorFor(ctx, user), claimed, "read"))?.id ?? null;
     }
     return rows.findIndex(
       (row) =>

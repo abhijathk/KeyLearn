@@ -17,6 +17,8 @@ import {
 } from "@keylearn/certificate";
 import { DataDir } from "@keylearn/config";
 import { Certificate, CertificateSitting, Profile } from "@keylearn/database";
+import { actorFor } from "../access/actor.ts";
+import { reachProfile } from "../access/resolver.ts";
 import { type AuthState, rateLimit } from "../auth/index.ts";
 import { numberingKey } from "./key.ts";
 import { flag, millis } from "./timestamp.ts";
@@ -288,7 +290,11 @@ export class Controller {
     pid: string,
   ): Promise<Profile> {
     const user = ctx.state.requireUser();
-    const profile = await Profile.findOwned(user.id!, Number(pid));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(pid),
+      "read",
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }

@@ -13,6 +13,8 @@ import { type Result } from "@keylearn/result";
 import { parseMessage } from "@keylearn/result-io";
 import { UserDataFactory } from "@keylearn/result-userdata";
 import { File } from "@sosimple/fsx-file";
+import { actorFor } from "../access/actor.ts";
+import { type ProfileAction,reachProfile } from "../access/resolver.ts";
 import { type AuthState, pProfileOwner } from "../auth/index.ts";
 import { partitionPlausible } from "./plausible.ts";
 
@@ -71,7 +73,11 @@ export class Controller {
     @pathParam("pid") pid: string,
   ) {
     const user = ctx.state.requireUser();
-    const profile = await Profile.findOwned(user.id!, Number(pid));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(pid),
+      "read",
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }
@@ -85,7 +91,11 @@ export class Controller {
     @body.binary(null, { maxLength: 1048576 }) value: Buffer,
   ) {
     const user = ctx.state.requireUser();
-    const profile = await Profile.findOwned(user.id!, Number(pid));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(pid),
+      "write",
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }
@@ -110,7 +120,11 @@ export class Controller {
     @pathParam("pid") pid: string,
   ) {
     const user = ctx.state.requireUser();
-    const profile = await Profile.findOwned(user.id!, Number(pid));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(pid),
+      "write",
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }
@@ -132,7 +146,7 @@ export class Controller {
     @pathParam("pid") pid: string,
     @pathParam("course") course: string,
   ) {
-    const profile = await this.#owned(ctx, pid);
+    const profile = await this.#owned(ctx, pid, "read");
     await this.userData
       .loadProfile(ctx.state.requireUser().id!, profile.id!, course)
       .serve(ctx);
@@ -146,7 +160,7 @@ export class Controller {
     @body.binary(null, { maxLength: 1048576 }) value: Buffer,
   ) {
     const user = ctx.state.requireUser();
-    const profile = await this.#owned(ctx, pid);
+    const profile = await this.#owned(ctx, pid, "write");
     const results = await parseResults(value);
     await this.userData
       .loadProfile(user.id!, profile.id!, this.#course(course))
@@ -170,7 +184,7 @@ export class Controller {
     @pathParam("course") course: string,
   ) {
     const user = ctx.state.requireUser();
-    const profile = await this.#owned(ctx, pid);
+    const profile = await this.#owned(ctx, pid, "write");
     await this.userData
       .loadProfile(user.id!, profile.id!, this.#course(course))
       .delete();
@@ -191,10 +205,18 @@ export class Controller {
     return course;
   }
 
-  /** The learner named in the path, once the caller is proved to own them. */
-  async #owned(ctx: Context<RouterState & AuthState>, pid: string) {
+  /** The learner named in the path, once the resolver says the caller may reach them. */
+  async #owned(
+    ctx: Context<RouterState & AuthState>,
+    pid: string,
+    action: ProfileAction,
+  ) {
     const user = ctx.state.requireUser();
-    const profile = await Profile.findOwned(user.id!, Number(pid));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(pid),
+      action,
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }
@@ -214,7 +236,7 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @pathParam("pid") pid: string,
   ) {
-    const file = await this.#brailleFile(ctx, pid);
+    const file = await this.#brailleFile(ctx, pid, "read");
     ctx.response.type = "application/json";
     // An empty document rather than a 404: "this learner has done no braille
     // yet" is an ordinary answer, not an error, and the client would have to
@@ -230,7 +252,7 @@ export class Controller {
     // verbatim — so whatever arrives, the file this serves back is JSON.
     @body.json(null, { maxLength: 262144 }) value: unknown,
   ) {
-    const file = await this.#brailleFile(ctx, pid);
+    const file = await this.#brailleFile(ctx, pid, "write");
     if (value == null || typeof value !== "object" || Array.isArray(value)) {
       throw new BadRequestError("Not a progress document");
     }
@@ -244,7 +266,7 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @pathParam("pid") pid: string,
   ) {
-    await (await this.#brailleFile(ctx, pid)).delete();
+    await (await this.#brailleFile(ctx, pid, "write")).delete();
     const user = ctx.state.requireUser();
     await ProfileData.deleteFor(user.id!, Number(pid), "braille");
     ctx.response.status = 204;
@@ -254,9 +276,14 @@ export class Controller {
   async #brailleFile(
     ctx: Context<RouterState & AuthState>,
     pid: string,
+    action: ProfileAction,
   ): Promise<File> {
     const user = ctx.state.requireUser();
-    const profile = await Profile.findOwned(user.id!, Number(pid));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(pid),
+      action,
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }

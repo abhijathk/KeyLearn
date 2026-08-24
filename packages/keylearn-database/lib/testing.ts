@@ -118,6 +118,11 @@ export async function seedModels() {
 }
 
 export async function clearTables() {
+  // Organisation tier first: org_access_event has no FK to organization's
+  // dependants, and organization's CASCADE sweeps members, batches,
+  // invites, plans and grants in one delete.
+  await clearTable("org_access_event");
+  await clearTable("organization");
   await clearTable(UserLoginRequest.tableName);
   await clearTable(Order.tableName);
   await clearTable(UserExternalId.tableName);

@@ -7,6 +7,8 @@ import { websocket } from "@fastr/middleware-websocket";
 import { Env } from "@keylearn/config";
 import { Profile } from "@keylearn/database";
 import { WebSocketServer } from "ws";
+import { actorFor } from "../access/actor.ts";
+import { reachProfile } from "../access/resolver.ts";
 import { type AuthState, clientIp } from "../auth/index.ts";
 import { allowWebSocketOrigin } from "./origin.ts";
 import { SessionFactory } from "./session.ts";
@@ -55,7 +57,11 @@ export class Controller {
     if (user != null) {
       const claimed = Number(ctx.request.query.get("profile"));
       if (Number.isSafeInteger(claimed) && claimed > 0) {
-        const profile = await Profile.findOwned(user.id!, claimed);
+        const profile = await reachProfile(
+          actorFor(ctx, user),
+          claimed,
+          "practise",
+        );
         if (profile != null && profile.kind === "adult") {
           publicUser = profile.toPublicUser(user);
         }

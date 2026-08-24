@@ -777,10 +777,16 @@ export class Profile extends TimestampMixin(Model) {
   static override readonly columnNameMappers = snakeCaseMappers();
   static override jsonSchema = {
     type: "object",
-    required: ["userId", "kind", "firstName"],
+    // `userId` left the required list with the organisation tier
+    // (docs/organisations.md rev 2): a mode-A learner is owned by an
+    // organisation instead. Exactly one of the two is set — the CHECK
+    // in the schema enforces it where nobody can forget (P4/A2).
+    required: ["kind", "firstName"],
     properties: {
       id: { type: "integer" },
-      userId: { type: "integer" },
+      userId: { type: ["integer", "null"] },
+      organizationId: { type: ["integer", "null"] },
+      batchId: { type: ["integer", "null"] },
       kind: { type: "string", enum: ["adult", "kid"] },
       firstName: { type: "string", minLength: 1, maxLength: 32 },
       lastName: { type: ["null", "string"], maxLength: 32 },
@@ -792,24 +798,62 @@ export class Profile extends TimestampMixin(Model) {
       visionSupport: { type: "boolean" },
       parentalConsent: { type: "boolean" },
       anonymized: { type: "boolean" },
+      // The PIN identifies, it does not protect (P3): four to six digits
+      // picking one person out of a known handful INSIDE an
+      // already-authenticated session. Hash columns stay out of details.
+      pinHash: { type: ["string", "null"] },
+      pinFailedAttempts: { type: "integer" },
+      pinPermanentlyLocked: { type: "boolean" },
     },
   } satisfies JSONSchema;
 
   static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
     table.increments("id").primary();
-    table.integer("user_id").unsigned().notNullable().index();
+    // Nullable since the organisation tier: null means "owned by an
+    // organisation instead" — never "owned by nobody"; see the CHECK.
+    table.integer("user_id").unsigned().nullable().index();
+    table
+      .integer("organization_id")
+      .unsigned()
+      .nullable()
+      .index()
+      .references("id")
+      .inTable("organization")
+      .onDelete("CASCADE");
+    table.integer("batch_id").unsigned().nullable();
+    // P4 where it cannot be forgotten: exactly one owner, enforced by the
+    // database rather than the code remembering to (spec §4.1). Never
+    // model this polymorphically — real foreign keys are the point.
+    table.check(
+      "(`user_id` IS NULL) <> (`organization_id` IS NULL)",
+      [],
+      "profile_one_owner",
+    );
     table.string("kind", 8).notNullable();
     table.string("first_name", 32).notNullable();
     table.string("last_name", 32).nullable();
     table.integer("birth_year").nullable();
     table.text("avatar").nullable();
     table.text("prefs").nullable();
+    // Historically bolted on by migration only; declared here too so the
+    // organisation tier's SQLite table rebuild (schema.ts,
+    // migrateProfileOwnership) produces the complete final shape and a
+    // straight column-for-column copy. The addColumn guard makes the
+    // migration a no-op on tables born from this definition.
+    table.boolean("vision_support").notNullable().defaultTo(false);
     table.boolean("parental_consent").notNullable().defaultTo(false);
     // Per-learner "hide my identity". Each grown-up in a household decides for
     // themselves whether their own name shows on leaderboards and in
     // multiplayer — it is their result, not the account holder's.
     table.boolean("anonymized").notNullable().defaultTo(false);
     table.timestamp("consent_at").nullable();
+    // PIN sign-in (spec §6). Hashed with the existing password path — no
+    // second credential implementation — and locked out PER PROFILE,
+    // never per address: a batch sits behind one school NAT (A6).
+    table.string("pin_hash", 255).nullable();
+    table.integer("pin_failed_attempts").unsigned().notNullable().defaultTo(0);
+    table.timestamp("pin_locked_until").nullable();
+    table.boolean("pin_permanently_locked").notNullable().defaultTo(false);
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table
       .foreign("user_id")
@@ -819,7 +863,9 @@ export class Profile extends TimestampMixin(Model) {
   }
 
   readonly id?: number;
-  userId?: number;
+  userId?: number | null;
+  organizationId?: number | null;
+  batchId?: number | null;
   kind?: string;
   firstName?: string;
   lastName?: string | null;
@@ -830,6 +876,10 @@ export class Profile extends TimestampMixin(Model) {
   parentalConsent?: number | boolean;
   anonymized?: number | boolean;
   consentAt?: Date | string | null;
+  pinHash?: string | null;
+  pinFailedAttempts?: number;
+  pinLockedUntil?: Date | string | null;
+  pinPermanentlyLocked?: number | boolean;
   createdAt?: Date;
 
   static async listForUser(userId: number): Promise<Profile[]> {
@@ -838,6 +888,88 @@ export class Profile extends TimestampMixin(Model) {
 
   static async findOwned(userId: number, id: number): Promise<Profile | null> {
     return (await Profile.query().findOne({ id, userId })) ?? null;
+  }
+
+  // ---- PIN sign-in (docs/organisations.md §6) -------------------------
+  //
+  // Escalating lockout, keyed per profile and nothing else: failed
+  // attempts count, a threshold locks for a period, a further threshold
+  // locks permanently until an owner or admin clears it (A6/A7).
+
+  static readonly PIN_SOFT_LOCK_AT = 5;
+  static readonly PIN_HARD_LOCK_AT = 15;
+  static readonly PIN_SOFT_LOCK_MS = 5 * 60 * 1000;
+
+  pinLocked(): boolean {
+    if (this.pinPermanentlyLocked) {
+      return true;
+    }
+    return (
+      this.pinLockedUntil != null &&
+      new Date(this.pinLockedUntil).getTime() > Date.now()
+    );
+  }
+
+  async setPin(pin: string): Promise<void> {
+    // The existing password path — scrypt via hashPassword — so there is
+    // exactly one credential implementation to audit (spec §6.3).
+    await this.$query().patch({
+      pinHash: await hashPassword(pin),
+      pinFailedAttempts: 0,
+      pinLockedUntil: null,
+      pinPermanentlyLocked: false,
+    });
+  }
+
+  async clearPin(): Promise<void> {
+    await this.$query().patch({
+      pinHash: null,
+      pinFailedAttempts: 0,
+      pinLockedUntil: null,
+      pinPermanentlyLocked: false,
+    });
+  }
+
+  /** A7: clearing a lockout is an owner/admin act, recorded by the caller. */
+  async unlockPin(): Promise<void> {
+    await this.$query().patch({
+      pinFailedAttempts: 0,
+      pinLockedUntil: null,
+      pinPermanentlyLocked: false,
+    });
+  }
+
+  /**
+   * One verification attempt, lockout included. Returns what happened
+   * rather than throwing: a wrong PIN at a keyboard full of children is
+   * routine, not exceptional. The PIN value itself must never reach a
+   * log, a URL or an error message (A8) — this returns only outcomes.
+   */
+  async verifyPin(pin: string): Promise<"ok" | "wrong" | "locked" | "unset"> {
+    if (this.pinHash == null) {
+      return "unset";
+    }
+    if (this.pinLocked()) {
+      return "locked";
+    }
+    if (await verifyPassword(pin, this.pinHash)) {
+      if ((this.pinFailedAttempts ?? 0) > 0) {
+        await this.$query().patch({
+          pinFailedAttempts: 0,
+          pinLockedUntil: null,
+        });
+      }
+      return "ok";
+    }
+    const failed = (this.pinFailedAttempts ?? 0) + 1;
+    const patch: Partial<Profile> = { pinFailedAttempts: failed };
+    if (failed >= Profile.PIN_HARD_LOCK_AT) {
+      patch.pinPermanentlyLocked = true;
+    } else if (failed % Profile.PIN_SOFT_LOCK_AT === 0) {
+      patch.pinLockedUntil = new Date(Date.now() + Profile.PIN_SOFT_LOCK_MS);
+    }
+    await this.$query().patch(patch);
+    return this.pinLocked() ? "locked" : "wrong";
   }
 
   // All learning lives under a profile, never the bare account. So every

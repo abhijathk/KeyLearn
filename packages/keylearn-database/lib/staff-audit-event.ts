@@ -14,6 +14,8 @@ import { TimestampMixin } from "./model.ts";
  * edit afterwards.
  */
 export type StaffAuditAction =
+  // The organisation tier: the platform issuing a licence is a staff act.
+  | "org-created"
   | "staff-signin"
   | "staff-access-denied"
   | "reveal-email"

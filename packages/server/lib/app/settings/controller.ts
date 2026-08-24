@@ -6,6 +6,8 @@ import { type RouterState } from "@fastr/middleware-router";
 import { Profile } from "@keylearn/database";
 import { Settings } from "@keylearn/settings";
 import { SettingsDatabase } from "@keylearn/settings-database";
+import { actorFor } from "../access/actor.ts";
+import { reachProfile } from "../access/resolver.ts";
 import { type AuthState } from "../auth/index.ts";
 
 @injectable()
@@ -43,7 +45,7 @@ export class Controller {
     @pathParam("id") id: string,
   ) {
     const user = ctx.state.requireUser();
-    const profile = await Profile.findOwned(user.id!, Number(id));
+    const profile = await reachProfile(actorFor(ctx, user), Number(id), "read");
     if (profile == null) {
       throw new ForbiddenError();
     }
@@ -59,7 +61,11 @@ export class Controller {
     @body.json(null, { maxLength: 65536 }) value: unknown,
   ) {
     const user = ctx.state.requireUser();
-    const profile = await Profile.findOwned(user.id!, Number(id));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(id),
+      "write",
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }
@@ -77,7 +83,11 @@ export class Controller {
     @pathParam("id") id: string,
   ) {
     const user = ctx.state.requireUser();
-    const profile = await Profile.findOwned(user.id!, Number(id));
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(id),
+      "write",
+    );
     if (profile == null) {
       throw new ForbiddenError();
     }
