@@ -88,6 +88,10 @@ export class SupportMessage extends TimestampMixin(Model) {
     // Set once the desk has taken the message, not when it was sent —
     // the difference is the whole point of a second tick.
     table.timestamp("delivered_at").nullable();
+    // The desk's own id for this reply (delivered messages only) — what
+    // per-reply feedback references — and the customer's thumbs on it.
+    table.integer("qdesk_message_id").unsigned().nullable();
+    table.string("feedback", 8).nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     // A thread reads oldest-first — this is the index that query serves.
     table.index(["ticket_id", "created_at"]);
@@ -104,6 +108,8 @@ export class SupportMessage extends TimestampMixin(Model) {
   kind?: string | null;
   answerIds?: string | null;
   deliveredAt?: Date | null;
+  qdeskMessageId?: number | null;
+  feedback?: "good" | "bad" | null;
   createdAt?: Date;
 
   static async create({
@@ -116,6 +122,7 @@ export class SupportMessage extends TimestampMixin(Model) {
     authorName = null,
     clientId = null,
     kind = null,
+    qdeskMessageId = null,
   }: {
     readonly ticketId: number;
     readonly sender: SupportMessageSender;
@@ -127,6 +134,8 @@ export class SupportMessage extends TimestampMixin(Model) {
     /** Client-generated, unique per message — the offline outbox's guard. */
     readonly clientId?: string | null;
     readonly kind?: "crisis" | "crisis-quiet" | "handover" | null;
+    /** The desk's own id for a reply it delivered here — feedback's handle. */
+    readonly qdeskMessageId?: number | null;
   }): Promise<SupportMessage> {
     return await SupportMessage.query().insertAndFetch({
       ticketId,
@@ -141,6 +150,7 @@ export class SupportMessage extends TimestampMixin(Model) {
           : null,
       clientId,
       kind,
+      qdeskMessageId,
     });
   }
 
@@ -172,6 +182,8 @@ export class SupportMessage extends TimestampMixin(Model) {
         this.deliveredAt != null
           ? new Date(this.deliveredAt).toISOString()
           : null,
+      qdeskMessageId: this.qdeskMessageId ?? null,
+      feedback: (this.feedback as "good" | "bad" | null) ?? null,
       createdAt: new Date(this.createdAt!).toISOString(),
     };
   }

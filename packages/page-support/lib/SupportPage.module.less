@@ -580,6 +580,48 @@
   font-size: 0.66rem;
 }
 
+/* The expectation line under the subject while a person has the thread —
+   set like a caption, not an alert: it exists to lower the temperature. */
+.expectation {
+  margin: 0.2rem 0 0;
+  color: var(--secondary-l1);
+  font-size: 0.8rem;
+}
+
+/* The per-reply thumbs. Quiet by default — timestamp-coloured, no box —
+   so a thread of good answers doesn't read as a row of buttons; the
+   chosen one takes the accent (or the error tone for "didn't help"),
+   which is all the confirmation the tap needs. */
+.replyFeedback {
+  display: inline-flex;
+  gap: 0.15rem;
+  vertical-align: middle;
+  margin-inline-start: 0.3rem;
+}
+
+.thumb {
+  display: inline-flex;
+  padding: 0.1rem 0.15rem;
+  border: none;
+  color: var(--secondary-l1);
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+  }
+}
+
+.thumbOn,
+.thumbOn:hover {
+  color: var(--accent, var(--text-color));
+}
+
+.thumbBadOn,
+.thumbBadOn:hover {
+  color: var(--error-color, #d0322e);
+}
+
 .from {
   padding-inline: 0.25rem;
   color: var(--accent);

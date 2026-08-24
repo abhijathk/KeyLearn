@@ -168,6 +168,13 @@ export type SupportMessageDetails = {
    * handed over yet. Drawn as the second tick on your own messages.
    */
   readonly deliveredAt: string | null;
+  /**
+   * The desk's own id for a reply it delivered here — present only on
+   * desk replies, and the handle the per-reply thumbs post back with.
+   */
+  readonly qdeskMessageId: number | null;
+  /** The customer's thumbs on this reply, if they gave one. */
+  readonly feedback: "good" | "bad" | null;
   readonly createdAt: string;
 };
 

@@ -262,6 +262,13 @@ export namespace SupportService {
      * to you, which never gets a tick at all.
      */
     readonly deliveredAt: string | null;
+    /**
+     * The desk's own id for a reply it delivered here — present only on
+     * desk replies, and what makes the per-reply thumbs possible.
+     */
+    readonly qdeskMessageId: number | null;
+    /** Your thumbs on this reply, if you gave one. */
+    readonly feedback: "good" | "bad" | null;
     readonly attachments: readonly MyAttachment[];
   };
 
@@ -269,6 +276,12 @@ export namespace SupportService {
     readonly id: number;
     /** True only when this very request cleared the unread state. */
     readonly markedRead?: boolean;
+    /**
+     * How long a first reply usually takes, in minutes — the desk's own
+     * 30-day median. Null when nothing is measured; the expectation line
+     * simply doesn't render then.
+     */
+    readonly expectedReplyMinutes?: number | null;
     readonly reference: string;
     readonly subject: string;
     readonly status: string;
@@ -499,6 +512,18 @@ export namespace SupportService {
       .use(expectType("application/json"))
       .POST(`/_/support/my/tickets/${id}/csat`)
       .send({ rating, note });
+  }
+
+  /** Thumbs on one desk reply — did that particular answer help. */
+  export async function rateReply(
+    ticketId: number,
+    messageId: number,
+    rating: "good" | "bad",
+  ): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST(`/_/support/my/tickets/${ticketId}/messages/${messageId}/feedback`)
+      .send({ rating });
   }
 
   export async function dismissCsat(id: number): Promise<void> {

@@ -521,6 +521,20 @@ export async function createSchema(knex: Knex): Promise<void> {
     table.timestamp("delivered_at").nullable();
   });
 
+  // The desk's own id for a reply it delivered here — the handle the
+  // per-reply thumbs post back with, so "didn't help" lands on the exact
+  // message that missed. Null on anything not delivered from the desk.
+  await addColumn("support_message", "qdesk_message_id", (table) => {
+    table.integer("qdesk_message_id").unsigned().nullable();
+  });
+
+  // The customer's own thumbs on a desk reply, kept here as well as
+  // forwarded, so the thread can render their choice without a round
+  // trip to the desk.
+  await addColumn("support_message", "feedback", (table) => {
+    table.string("feedback", 8).nullable();
+  });
+
   async function addColumn(
     tableName: string,
     columnName: string,

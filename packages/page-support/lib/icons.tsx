@@ -31,6 +31,14 @@ const PATHS = {
   // button — a triangle centred by its bounding box always looks left.
   send: "M4.6 2.6 13.4 8 4.6 13.4Z",
   star: "M8 1.6 9.79 5.53 14.09 6.02 10.9 8.94 11.76 13.18 8 11.05 4.24 13.18 5.1 8.94 1.91 6.02 6.21 5.53Z",
+  // The per-reply feedback pair. Drawn, like everything here, because a
+  // platform emoji thumb can't take the theme's colour and reads as a
+  // reaction sticker where this is a control. Cuff first, then the hand
+  // — two subpaths so the stroke stays clean at 15px.
+  thumbUp:
+    "M2.2 7.8h2.3v5.9H2.2Z M4.5 8.2l3-4.9a1.3 1.3 0 012.4.7V7h2.6a1.4 1.4 0 011.4 1.6l-.8 3.9a1.7 1.7 0 01-1.7 1.4H4.5",
+  thumbDown:
+    "M2.2 8.2h2.3V2.3H2.2Z M4.5 7.8l3 4.9a1.3 1.3 0 002.4-.7V9h2.6a1.4 1.4 0 001.4-1.6l-.8-3.9a1.7 1.7 0 00-1.7-1.4H4.5",
 } as const;
 
 export type IconName = keyof typeof PATHS;

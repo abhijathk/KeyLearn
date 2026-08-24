@@ -26,8 +26,10 @@ import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import {
   deskIsTyping,
+  fetchExpectedReplyMinutes,
   forwardArchiveToQdesk,
   forwardCsatToQdesk,
+  forwardFeedbackToQdesk,
   forwardReplyToQdesk,
   forwardTicketToQdesk,
   tellDeskCustomerTyping,
@@ -106,6 +108,12 @@ const TCsat = z.object({
 });
 type TCsat = z.infer<typeof TCsat>;
 const PCsat = zod(TCsat);
+
+const TReplyFeedback = z.object({
+  rating: z.enum(["good", "bad"]),
+});
+type TReplyFeedback = z.infer<typeof TReplyFeedback>;
+const PReplyFeedback = zod(TReplyFeedback);
 
 const TPin = z.object({
   pin: z
@@ -379,6 +387,11 @@ export class MyTicketsController {
       // thread's own poll rather than on a channel of its own: it is one
       // boolean, and a person typing takes longer than a poll interval.
       deskTyping: await deskIsTyping(ticket.id!),
+      // How long a first reply usually takes (desk median, cached ten
+      // minutes) — what turns "flagged, silence" into "a person has it,
+      // usually within about an hour". Null when nothing is measured or
+      // the desk is unreachable, and the line simply doesn't render.
+      expectedReplyMinutes: await fetchExpectedReplyMinutes(),
       messages: shown.map((m) => ({
         id: m.id,
         sender: m.sender,
@@ -392,6 +405,9 @@ export class MyTicketsController {
         // server.
         deliveredAt:
           m.deliveredAt != null ? new Date(m.deliveredAt).toISOString() : null,
+        // The per-reply thumbs' handle and the choice already made.
+        qdeskMessageId: m.qdeskMessageId ?? null,
+        feedback: (m.feedback as "good" | "bad" | null) ?? null,
         attachments: (attachments.get(m.id!) ?? []).map((a) => a.toDetails()),
       })),
       // Anything uploaded and not yet sent, so the compose tray survives a
@@ -835,6 +851,37 @@ export class MyTicketsController {
   }
 
   // ── the rating ──
+
+  /**
+   * Thumbs on ONE reply in the thread — did that particular answer help.
+   * Different question from the ticket-level CSAT below, and the earliest
+   * signal there is that a technically-correct reply didn't land. Only
+   * messages the desk delivered can carry one (they're the ones with a
+   * desk id to attribute it to). Last tap wins — people mis-tap.
+   */
+  @http.POST("/_/support/my/tickets/{id}/messages/{messageId}/feedback")
+  async rateReply(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @pathParam("messageId", pId) messageId: number,
+    @body.json(PReplyFeedback) input: TReplyFeedback,
+  ) {
+    await this.#mine(ctx, id);
+    // Scoped to the ticket so nobody can rate a message out of someone
+    // else's conversation by guessing ids.
+    const message = await SupportMessage.query().findOne({
+      id: messageId,
+      ticketId: id,
+    });
+    if (message == null || message.qdeskMessageId == null) {
+      throw new NotFoundError();
+    }
+    await message.$query().patch({ feedback: input.rating });
+    // Fire-and-forget like every other forward: the desk being down must
+    // never fail the customer's tap, and the local row already holds it.
+    forwardFeedbackToQdesk(id, message.qdeskMessageId, input.rating);
+    ctx.response.body = { ok: true };
+  }
 
   @http.POST("/_/support/my/tickets/{id}/csat")
   async rate(

@@ -259,6 +259,21 @@ export function forwardReplyToQdesk(
  * the people who answered the ticket ever see it — the desk widget is
  * where that happens.
  */
+/**
+ * The customer's thumbs on ONE desk reply — forwarded so it lands on the
+ * exact message in the desk's own thread. `qdeskMessageId` is the desk's
+ * id, carried in on the delivery leg and stored on the local message row.
+ */
+export function forwardFeedbackToQdesk(
+  ticketId: number,
+  qdeskMessageId: number,
+  rating: "good" | "bad",
+): void {
+  void post(`/_/apps/tickets/${ticketId}/messages/${qdeskMessageId}/feedback`, {
+    rating,
+  });
+}
+
 export function forwardCsatToQdesk(
   ticketId: number,
   rating: number,
@@ -379,5 +394,94 @@ export async function fetchHelpArticles(): Promise<readonly HelpArticle[]> {
   } catch (err) {
     console.error("qdesk help articles failed", err);
     return cache?.articles ?? [];
+  }
+}
+
+/** One active notice as the desk publishes it. */
+export type DeskNotice = {
+  readonly id: number;
+  readonly message: string;
+  readonly kind: "incident" | "maintenance" | "feature";
+  readonly display: "banner" | "window";
+  readonly dismissible: boolean;
+  readonly createdAt: string;
+};
+
+// Same shape and reasoning as the article cache above: an incident
+// notice changing within a minute is fine, the desk being down must not
+// empty the banner, and a poll-per-pageview must never reach the desk.
+const NOTICE_TTL_MS = 60 * 1000;
+let noticeCache: { at: number; notices: readonly DeskNotice[] } | null = null;
+
+/**
+ * The desk's active notices, folded into this app's own public notice
+ * feed — an incident posted on the desk is about THIS product's
+ * customers, and "we know, no need to write in" on the support form is
+ * the cheapest ticket-flood prevention there is.
+ */
+export async function fetchDeskNotices(): Promise<readonly DeskNotice[]> {
+  const cfg = config();
+  if (cfg == null) {
+    return [];
+  }
+  if (noticeCache != null && Date.now() - noticeCache.at < NOTICE_TTL_MS) {
+    return noticeCache.notices;
+  }
+  try {
+    const res = await fetch(new URL("/_/apps/notices", cfg.url), {
+      headers: { "x-qdesk-app-key": cfg.key },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) {
+      throw new Error(`status ${res.status}`);
+    }
+    const body = (await res.json()) as { notices?: DeskNotice[] };
+    noticeCache = { at: Date.now(), notices: body.notices ?? [] };
+    return noticeCache.notices;
+  } catch (err) {
+    console.error("qdesk notices failed", err);
+    return noticeCache?.notices ?? [];
+  }
+}
+
+// Moves on the scale of days; ten minutes of staleness costs nothing.
+const EXPECTED_REPLY_TTL_MS = 10 * 60 * 1000;
+let expectedReplyCache: { at: number; medianMinutes: number | null } | null =
+  null;
+
+/**
+ * How long the desk's first reply usually takes — the number behind the
+ * thread view's "we usually reply within…" line. Null when the desk is
+ * unreachable or has nothing measured, and the line simply doesn't show:
+ * a made-up expectation is worse than none.
+ */
+export async function fetchExpectedReplyMinutes(): Promise<number | null> {
+  const cfg = config();
+  if (cfg == null) {
+    return null;
+  }
+  if (
+    expectedReplyCache != null &&
+    Date.now() - expectedReplyCache.at < EXPECTED_REPLY_TTL_MS
+  ) {
+    return expectedReplyCache.medianMinutes;
+  }
+  try {
+    const res = await fetch(new URL("/_/apps/expected-reply", cfg.url), {
+      headers: { "x-qdesk-app-key": cfg.key },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) {
+      throw new Error(`status ${res.status}`);
+    }
+    const body = (await res.json()) as { medianMinutes?: number | null };
+    expectedReplyCache = {
+      at: Date.now(),
+      medianMinutes: body.medianMinutes ?? null,
+    };
+    return expectedReplyCache.medianMinutes;
+  } catch (err) {
+    console.error("qdesk expected-reply failed", err);
+    return expectedReplyCache?.medianMinutes ?? null;
   }
 }

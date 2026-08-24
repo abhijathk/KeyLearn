@@ -1320,6 +1320,19 @@ function Thread({
         <h2 className={styles.threadSubject} title={thread.subject}>
           {thread.subject}
         </h2>
+        {/* An expectation, only while a person has the thread and only
+            when there's a real number behind it (the desk's own median).
+            "Flagged" used to render as unexplained silence — the single
+            most bot-like thing the desk did to a customer. */}
+        {thread.status === "flagged" && thread.expectedReplyMinutes != null && (
+          <p className={styles.expectation}>
+            <FormattedMessage
+              id="support.my.expectedReply"
+              defaultMessage="A person has this one. We usually reply within about {wait}."
+              values={{ wait: waitWords(thread.expectedReplyMinutes, intl) }}
+            />
+          </p>
+        )}
       </div>
 
       <div className={styles.thread}>
@@ -1458,6 +1471,14 @@ function Thread({
                           className={styles.ticks}
                           delivered={m.deliveredAt != null}
                         />
+                      )}
+                      {/* Did THIS reply help — the pair of drawn thumbs,
+                          only on replies the desk can attribute (it needs
+                          the desk id the delivery carried in). Never on
+                          the emergency script: rating an emergency
+                          redirect is not a question worth asking. */}
+                      {!mine && m.qdeskMessageId != null && m.kind == null && (
+                        <ReplyFeedback ticketId={id} message={m} />
                       )}
                     </span>
                   </div>
@@ -1779,6 +1800,76 @@ function ConfirmDelete({
  * is translated into. The first line is dropped because the heading above
  * already says it.
  */
+/**
+ * The pair of drawn thumbs under a desk reply — "did this one help".
+ *
+ * Optimistic and forgiving: the choice paints immediately, a mis-tap is
+ * corrected by tapping the other one (last tap wins on the server too),
+ * and a failed request quietly reverts rather than scolding — losing a
+ * thumb is not worth an error dialog. Icons are the section's own drawn
+ * glyphs, not platform emoji, for the same reason as every other control
+ * here: they take the theme's colour and read as controls, not stickers.
+ */
+function ReplyFeedback({
+  ticketId,
+  message,
+}: {
+  readonly ticketId: number;
+  readonly message: {
+    readonly id: number;
+    readonly feedback: "good" | "bad" | null;
+  };
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const [rating, setRating] = useState<"good" | "bad" | null>(message.feedback);
+  const rate = (value: "good" | "bad") => {
+    if (rating === value) {
+      return;
+    }
+    const previous = rating;
+    setRating(value);
+    SupportService.rateReply(ticketId, message.id, value).catch(() => {
+      setRating(previous);
+    });
+  };
+  return (
+    <span className={styles.replyFeedback}>
+      <button
+        type="button"
+        className={`${styles.thumb} ${rating === "good" ? styles.thumbOn : ""}`}
+        aria-pressed={rating === "good"}
+        title={formatMessage({
+          id: "support.my.replyHelped",
+          defaultMessage: "This reply helped",
+        })}
+        aria-label={formatMessage({
+          id: "support.my.replyHelped",
+          defaultMessage: "This reply helped",
+        })}
+        onClick={() => rate("good")}
+      >
+        <Icon name="thumbUp" size={13} />
+      </button>
+      <button
+        type="button"
+        className={`${styles.thumb} ${rating === "bad" ? styles.thumbBadOn : ""}`}
+        aria-pressed={rating === "bad"}
+        title={formatMessage({
+          id: "support.my.replyDidNotHelp",
+          defaultMessage: "This reply didn't help",
+        })}
+        aria-label={formatMessage({
+          id: "support.my.replyDidNotHelp",
+          defaultMessage: "This reply didn't help",
+        })}
+        onClick={() => rate("bad")}
+      >
+        <Icon name="thumbDown" size={13} />
+      </button>
+    </span>
+  );
+}
+
 function CrisisBody({ text }: { readonly text: string }): ReactNode {
   const lines = text.split("\n");
   const body = (
@@ -1853,6 +1944,33 @@ function starWords(intl: IntlShape): readonly string[] {
  * Anything older keeps the date, because a weekday alone stops being a
  * date once it is more than a week back.
  */
+/**
+ * A wait in words a person plans around — "an hour", "3 hours", "a day"
+ * — never "137 minutes". Rounded UP on purpose: an expectation the desk
+ * usually beats builds trust, one it usually misses spends it.
+ */
+function waitWords(minutes: number, intl: IntlShape): string {
+  if (minutes <= 60) {
+    return intl.formatMessage({
+      id: "support.my.waitHour",
+      defaultMessage: "an hour",
+    });
+  }
+  if (minutes <= 12 * 60) {
+    return intl.formatMessage(
+      {
+        id: "support.my.waitHours",
+        defaultMessage: "{hours} hours",
+      },
+      { hours: Math.ceil(minutes / 60) },
+    );
+  }
+  return intl.formatMessage({
+    id: "support.my.waitDay",
+    defaultMessage: "a day",
+  });
+}
+
 function dayLabel(iso: string, intl: IntlShape): string {
   const then = new Date(iso);
   const midnight = new Date();

@@ -60,6 +60,7 @@ import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
 import { matchAnswers } from "./matching.ts";
 import {
+  fetchDeskNotices,
   fetchHelpArticles,
   forwardReplyToQdesk,
   forwardTicketToQdesk,
@@ -184,6 +185,11 @@ const TDeliverReply = z.object({
    * sends an ordinary message.
    */
   kind: z.enum(["crisis", "handover"]).nullable().optional(),
+  /**
+   * The desk's own message id — the handle the per-reply thumbs post
+   * back with. Optional so an older desk build simply omits it.
+   */
+  qdeskMessageId: z.number().int().positive().nullable().optional(),
 });
 type TDeliverReply = z.infer<typeof TDeliverReply>;
 const PDeliverReply = zod(TDeliverReply);
@@ -1267,7 +1273,33 @@ export class Controller {
     @queryParam("audience", pAudience) audience: string | undefined,
   ) {
     const notices = await Notice.activeNotices(audience);
-    ctx.response.body = { notices: notices.map((n) => n.toDetails()) };
+    // The desk's own notices, folded in. An incident posted where the
+    // support team lives should reach the people it's about — the
+    // site-wide banner and the support form both read this feed, so a
+    // desk incident becomes "we know, no need to write in" everywhere at
+    // once. Negative ids on purpose: the dismissal memory keys on id, a
+    // desk notice must never collide with a local one, and this app's own
+    // rows can never be negative. Cached and failure-tolerant inside the
+    // fetcher — the desk being down never empties the local feed.
+    const deskNotices = (await fetchDeskNotices())
+      .filter((n) => n.display === "banner")
+      .map((n) => ({
+        id: -n.id,
+        message: n.message,
+        level: (n.kind === "feature" ? "info" : "warning") as
+          | "info"
+          | "warning",
+        kind: n.kind,
+        display: n.display,
+        startsAt: null,
+        endsAt: null,
+        audience: "everyone",
+        dismissible: n.dismissible,
+        createdAt: n.createdAt,
+      }));
+    ctx.response.body = {
+      notices: [...notices.map((n) => n.toDetails()), ...deskNotices],
+    };
     ctx.response.headers.set("Cache-Control", "public, max-age=30");
   }
 
@@ -1303,6 +1335,7 @@ export class Controller {
       emailed: ticket.userId == null,
       authorName: input.authorName ?? null,
       kind: input.kind ?? null,
+      qdeskMessageId: input.qdeskMessageId ?? null,
     });
     // A crisis redirect is not a reply waiting on the customer — it goes
     // in front of a person, and "waiting on you" is the wrong thing to
