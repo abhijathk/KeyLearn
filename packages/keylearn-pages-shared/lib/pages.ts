@@ -626,6 +626,44 @@ export namespace Pages {
    * convention as {@link deskThread}.
    */
   /** The customer-facing knowledge base — the same articles the support assistant answers from. */
+  /**
+   * The one organisation surface a visitor can find on their own —
+   * docs/organisations.md §8. Everything else in the tier is invite-only
+   * and unreachable without a token; this is an information page with an
+   * enquiry form, and deliberately not a second way to sign in.
+   */
+  export const forSchools = {
+    path: "/for-schools",
+    title: defineMessage({
+      id: "forSchools.title",
+      defaultMessage: "KeyLearn for schools",
+    }),
+    link: {
+      label: defineMessage({
+        id: "forSchools.title",
+        defaultMessage: "KeyLearn for schools",
+      }),
+    },
+    meta: [],
+  } satisfies PageInfo;
+
+  /**
+   * Where an invite link lands. The token in the path is the only way to
+   * reach it, and it is what tells the page which organisation and role
+   * are on offer (mock 12).
+   */
+  export const join = {
+    path: "/join",
+    title: defineMessage({
+      id: "join.title",
+      defaultMessage: "Join",
+    }),
+    link: {
+      label: defineMessage({ id: "join.title", defaultMessage: "Join" }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
   export const helpCentre = {
     path: "/support/help",
     title: defineMessage({

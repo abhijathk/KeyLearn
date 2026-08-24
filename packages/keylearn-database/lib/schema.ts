@@ -578,6 +578,15 @@ export async function createSchema(knex: Knex): Promise<void> {
   await addColumn("profile", "pin_permanently_locked", (table) => {
     table.boolean("pin_permanently_locked").notNullable().defaultTo(false);
   });
+  // Which domains an organisation's staff accounts use (option A: owners
+  // and admins must match; teachers are encouraged). Null = unrestricted.
+  await addColumn("organization", "staff_email_domains", (table) => {
+    table.string("staff_email_domains", 255).nullable();
+  });
+  // Who an invite was written to, when it was emailed rather than printed.
+  await addColumn("org_invite", "email", (table) => {
+    table.string("email", 128).nullable();
+  });
   await migrateProfileOwnership(knex);
 
   /**

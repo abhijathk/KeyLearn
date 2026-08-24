@@ -77,6 +77,7 @@ export class Organization extends TimestampMixin(Model) {
       name: { type: "string", minLength: 1, maxLength: 128 },
       // "school" labels batches "class" in the UI; the schema keeps one word.
       type: { type: "string", minLength: 1, maxLength: 24 },
+      staffEmailDomains: { type: ["string", "null"], maxLength: 255 },
     },
   } satisfies JSONSchema;
 
@@ -88,6 +89,11 @@ export class Organization extends TimestampMixin(Model) {
     table.integer("parent_id").unsigned().nullable();
     table.string("name", 128).notNullable();
     table.string("type", 24).notNullable();
+    // Which email domains this organisation's STAFF accounts use, comma
+    // separated — "balakairali.org.au" or "example.org,example.org.au".
+    // Null means no restriction, which is the twelve-parents-in-a-hall
+    // school that has only personal addresses; nothing changes for them.
+    table.string("staff_email_domains", 255).nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
   }
 
@@ -95,7 +101,50 @@ export class Organization extends TimestampMixin(Model) {
   parentId?: number | null;
   name?: string;
   type?: string;
+  staffEmailDomains?: string | null;
   createdAt?: Date;
+
+  /** The allowlist as domains, lowercased; empty when unrestricted. */
+  domains(): string[] {
+    return (this.staffEmailDomains ?? "")
+      .split(",")
+      .map((d) => d.trim().toLowerCase().replace(/^@/, ""))
+      .filter((d) => d !== "");
+  }
+
+  /**
+   * May an account with this address hold this staff role here?
+   *
+   * Owner and admin are the people who can see every learner in the
+   * school and appoint others, so they must be AT the school — option A,
+   * the owner's decision. A teacher sees one batch and appoints nobody,
+   * so an org address is recommended and not required: at a community
+   * school the volunteer teachers are the parents, and forcing a second
+   * address on them would split one person across two accounts.
+   *
+   * Returns "ok", "recommended" (allowed, worth a nudge), or "wrong".
+   */
+  staffAddressVerdict(
+    email: string | null | undefined,
+    role: string,
+  ): "ok" | "recommended" | "wrong" {
+    const allowed = this.domains();
+    if (allowed.length === 0 || role === "guardian") {
+      return "ok";
+    }
+    const at = (email ?? "").lastIndexOf("@");
+    const domain =
+      at < 0
+        ? ""
+        : email!
+            .slice(at + 1)
+            .trim()
+            .toLowerCase();
+    if (allowed.includes(domain)) {
+      return "ok";
+    }
+    return role === "teacher" ? "recommended" : "wrong";
+  }
 
   static async findById(id: number): Promise<Organization | null> {
     return (await Organization.query().findById(id)) ?? null;
@@ -143,6 +192,7 @@ export class Organization extends TimestampMixin(Model) {
       name: this.name!,
       type: this.type!,
       parentId: this.parentId ?? null,
+      staffEmailDomains: this.domains(),
       createdAt: new Date(this.createdAt!).toISOString(),
     };
   }
@@ -485,6 +535,7 @@ export class OrgInvite extends TimestampMixin(Model) {
       tokenHash: { type: "string", minLength: 64, maxLength: 64 },
       issuedByUserId: { type: "integer" },
       acceptedByUserId: { type: ["integer", "null"] },
+      email: { type: ["string", "null"], maxLength: 128 },
     },
   } satisfies JSONSchema;
 
@@ -500,6 +551,12 @@ export class OrgInvite extends TimestampMixin(Model) {
     table.integer("batch_id").unsigned().nullable();
     table.string("role", 16).notNullable();
     table.string("token_hash", 64).notNullable().unique();
+    // Who this was WRITTEN TO, when it was emailed rather than printed.
+    // Deliberately not who may redeem it: parents hold the school's
+    // address at work and their account at home, and a couple share one
+    // between them. Locking the token to the mailbox turns all of that
+    // into support tickets. Null on an anonymous printed slip.
+    table.string("email", 128).nullable();
     table.integer("issued_by_user_id").unsigned().notNullable();
     table.timestamp("expires_at").notNullable();
     table.integer("accepted_by_user_id").unsigned().nullable();
@@ -513,6 +570,7 @@ export class OrgInvite extends TimestampMixin(Model) {
   batchId?: number | null;
   role?: string;
   tokenHash?: string;
+  email?: string | null;
   issuedByUserId?: number;
   expiresAt?: Date | string;
   acceptedByUserId?: number | null;
@@ -528,12 +586,15 @@ export class OrgInvite extends TimestampMixin(Model) {
     batchId = null,
     role,
     issuedByUserId,
+    email = null,
     expiresInDays = OrgInvite.DEFAULT_EXPIRY_DAYS,
   }: {
     readonly organizationId: number;
     readonly batchId?: number | null;
     readonly role: "owner" | "admin" | "teacher" | "guardian";
     readonly issuedByUserId: number;
+    /** Set when emailed to a named address; null for a printed slip. */
+    readonly email?: string | null;
     readonly expiresInDays?: number;
   }): Promise<{ invite: OrgInvite; token: string }> {
     const token = Random.string(40);
@@ -542,10 +603,85 @@ export class OrgInvite extends TimestampMixin(Model) {
       batchId,
       role,
       tokenHash: hashToken(token),
+      email: email == null ? null : email.trim().toLowerCase(),
       issuedByUserId,
       expiresAt: new Date(Date.now() + expiresInDays * 24 * 3600 * 1000),
     });
     return { invite, token };
+  }
+
+  /**
+   * A sheet of them at once. A class of forty is forty invites and
+   * nobody is pressing a button forty times — the addressed form comes
+   * from a CSV of the class list, the anonymous form from a count and
+   * gets printed as tear-off slips for the hall.
+   */
+  static async issueMany({
+    organizationId,
+    batchId = null,
+    role,
+    issuedByUserId,
+    emails = null,
+    count = 0,
+  }: {
+    readonly organizationId: number;
+    readonly batchId?: number | null;
+    readonly role: "owner" | "admin" | "teacher" | "guardian";
+    readonly issuedByUserId: number;
+    readonly emails?: readonly string[] | null;
+    readonly count?: number;
+  }): Promise<{ invite: OrgInvite; token: string }[]> {
+    const made: { invite: OrgInvite; token: string }[] = [];
+    const targets =
+      emails != null ? emails.map((e) => e) : new Array<null>(count).fill(null);
+    for (const email of targets) {
+      made.push(
+        await OrgInvite.issue({
+          organizationId,
+          batchId,
+          role,
+          issuedByUserId,
+          email,
+        }),
+      );
+    }
+    return made;
+  }
+
+  /** Whether this address already holds a live invite here — CSV dedupe. */
+  static async pendingEmails(organizationId: number): Promise<Set<string>> {
+    const rows = await OrgInvite.query()
+      .where("organizationId", organizationId)
+      .whereNull("acceptedAt")
+      .whereNull("revokedAt")
+      .whereNotNull("email")
+      .select("email");
+    return new Set(rows.map((r) => (r.email ?? "").toLowerCase()));
+  }
+
+  toDetails() {
+    return {
+      id: this.id!,
+      role: this.role!,
+      batchId: this.batchId ?? null,
+      email: this.email ?? null,
+      expiresAt: new Date(this.expiresAt!).toISOString(),
+      acceptedAt:
+        this.acceptedAt != null
+          ? new Date(this.acceptedAt).toISOString()
+          : null,
+      acceptedByUserId: this.acceptedByUserId ?? null,
+      revokedAt:
+        this.revokedAt != null ? new Date(this.revokedAt).toISOString() : null,
+      status:
+        this.acceptedAt != null
+          ? ("joined" as const)
+          : this.revokedAt != null
+            ? ("revoked" as const)
+            : new Date(this.expiresAt!).getTime() < Date.now()
+              ? ("expired" as const)
+              : ("waiting" as const),
+    };
   }
 
   /** A13: expired, revoked or used fails closed — one answer for all three, so a probe learns nothing. */

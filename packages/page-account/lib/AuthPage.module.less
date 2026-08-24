@@ -48,6 +48,38 @@
 // "OR" between the one-tap providers and the email field. The rules are drawn
 // with the row's own borders rather than pseudo-elements, so the word keeps its
 // breathing room at any width.
+/**
+ * The organisation signpost — the only new thing on either auth screen.
+ *
+ * Prose, not a control: muted face, one mint link, sitting below the form
+ * under a hairline in the slot the sign-in link already occupies, so the
+ * window's shape does not change. Deliberately quieter than every button
+ * above it — ninety-nine visitors in a hundred are a family, and this is
+ * for the hundredth.
+ */
+.signpost {
+  margin-block-start: 0.55rem;
+  padding-block-start: 0.85rem;
+  border-block-start: 1px solid var(--separator-color);
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: pretty;
+
+  a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
+}
+
 .orRule {
   display: flex;
   gap: 0.7rem;

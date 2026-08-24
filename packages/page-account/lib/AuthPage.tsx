@@ -139,6 +139,34 @@ export function AuthPage({
   );
 }
 
+/**
+ * The one organisation thing on this screen — docs/organisations.md §5.3.
+ *
+ * A signpost to an information page, NOT a way to sign in: there is no
+ * organisation login to offer, because staff credentials only ever come
+ * from an accepted invite. So it is a sentence rather than a control,
+ * below the form and under a hairline, where the eye reaches it only
+ * after the buttons above have been read and found to be for somebody
+ * else. A button in the stack would read as a fifth way to log in and
+ * send families down a dead end.
+ */
+function ForSchoolsSignpost(): ReactNode {
+  return (
+    <p className={styles.signpost}>
+      <FormattedMessage
+        id="auth.forSchools"
+        defaultMessage="Running a school or community class?"
+      />{" "}
+      <a href={Pages.forSchools.path}>
+        <FormattedMessage
+          id="auth.forSchools.link"
+          defaultMessage="KeyLearn for schools"
+        />
+      </a>
+    </p>
+  );
+}
+
 function ModeTitle({ mode }: { readonly mode: AuthMode }): ReactNode {
   switch (mode) {
     case "register":
@@ -767,6 +795,7 @@ function LoginForm({
           </LinkButton>
         )}
       </div>
+      <ForSchoolsSignpost />
     </form>
   );
 }
@@ -1200,6 +1229,10 @@ function RegisterForm({
           </LinkButton>
         </span>
       </div>
+      {/* Same block, same place as the login form — and it matters more
+          here: a coordinator setting up for the first time is far likelier
+          to be registering than returning. */}
+      <ForSchoolsSignpost />
     </form>
   );
 }

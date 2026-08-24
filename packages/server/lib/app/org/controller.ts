@@ -48,6 +48,12 @@ const TCreateOrg = z.object({
   /** The account that will own it — invited, not attached (A13). */
   ownerEmail: z.string().trim().min(3).max(128).email(),
   seats: z.number().int().min(1).max(100000).nullable().optional(),
+  /**
+   * Comma-separated domains this organisation's staff sign in with —
+   * "balakairali.org.au". Null leaves staff unrestricted, which is the
+   * school whose committee has only personal addresses.
+   */
+  staffEmailDomains: z.string().trim().max(255).nullable().optional(),
 });
 const PCreateOrg = zod(TCreateOrg);
 type TCreateOrg = z.infer<typeof TCreateOrg>;
@@ -61,6 +67,14 @@ type TBatch = z.infer<typeof TBatch>;
 const TInvite = z.object({
   role: z.enum(["owner", "admin", "teacher", "guardian"]),
   batchId: z.number().int().positive().nullable().optional(),
+  /**
+   * The class list, from a pasted block or an uploaded CSV's `email`
+   * column. Each address gets its own invite and its own email. Absent
+   * means anonymous slips instead — see `count`.
+   */
+  emails: z.array(z.string().trim().min(3).max(128)).max(500).optional(),
+  /** How many anonymous slips to mint for printing. */
+  count: z.number().int().min(1).max(500).optional(),
 });
 const PInvite = zod(TInvite);
 type TInvite = z.infer<typeof TInvite>;
@@ -167,6 +181,7 @@ export class OrgController {
     const org = await Organization.query().insertAndFetch({
       name: data.name,
       type: data.type,
+      staffEmailDomains: data.staffEmailDomains || null,
     });
     if (data.seats != null) {
       await OrganizationPlan.query().insert({
@@ -297,6 +312,62 @@ export class OrgController {
         "A guardian invite needs the class it enrols into.",
       );
     }
+    // A class of forty is forty invites. Three shapes, one endpoint: a
+    // list of addresses (emailed), a count (anonymous slips to print),
+    // or neither (a single link to hand over).
+    if (data.emails != null && data.emails.length > 0) {
+      const checked = await this.#screenEmails(id, data.emails);
+      const seats = await org.seatStatus();
+      if (
+        seats.seats != null &&
+        seats.used + checked.invite.length > seats.seats
+      ) {
+        throw new ApplicationError(
+          `That would need ${checked.invite.length} seats and ${Math.max(0, seats.seats - seats.used)} are free.`,
+        );
+      }
+      const made = await OrgInvite.issueMany({
+        organizationId: id,
+        batchId,
+        role: data.role,
+        issuedByUserId: user.id!,
+        emails: checked.invite,
+      });
+      // Sending is best-effort per address: one dead mailbox must not
+      // lose the other thirty-nine invites, which already exist.
+      for (const { invite, token } of made) {
+        void this.#sendInvite(org, invite, token).catch((err) => {
+          console.error("org-invite: could not send", err);
+        });
+      }
+      ctx.response.body = {
+        sent: made.length,
+        skipped: checked.skipped,
+        invites: made.map(({ invite }) => invite.toDetails()),
+      };
+      return;
+    }
+
+    if (data.count != null && data.count > 1) {
+      const made = await OrgInvite.issueMany({
+        organizationId: id,
+        batchId,
+        role: data.role,
+        issuedByUserId: user.id!,
+        count: data.count,
+      });
+      ctx.response.body = {
+        // Printed once, here, and never readable again — the sheet IS
+        // the only copy, which is why it comes back whole.
+        slips: made.map(({ invite, token }) => ({
+          id: invite.id!,
+          url: this.#inviteUrl(token),
+          expiresAt: new Date(invite.expiresAt!).toISOString(),
+        })),
+      };
+      return;
+    }
+
     const { invite, token } = await OrgInvite.issue({
       organizationId: id,
       batchId,
@@ -311,6 +382,108 @@ export class OrgController {
       // The clear token exists here and on the paper it gets printed to —
       // it is never readable again.
       url: this.#inviteUrl(token),
+    };
+  }
+
+  /**
+   * Read the list back before anyone is emailed. A merge that quietly
+   * invites the same parent twice is how a coordinator stops trusting
+   * the tool, so repeats, addresses already in the school and typos are
+   * all reported rather than silently dropped.
+   */
+  async #screenEmails(
+    organizationId: number,
+    raw: readonly string[],
+  ): Promise<{
+    invite: string[];
+    skipped: {
+      email: string;
+      reason:
+        | "repeated"
+        | "already-invited"
+        | "already-here"
+        | "not-an-address";
+    }[];
+  }> {
+    const pending = await OrgInvite.pendingEmails(organizationId);
+    const members = new Set(
+      (
+        await Promise.all(
+          (await OrgMember.listFor(organizationId)).map(
+            async (m) => await User.query().findById(m.userId!),
+          ),
+        )
+      )
+        .filter((u) => u != null)
+        .map((u) => (u!.email ?? "").toLowerCase()),
+    );
+    const seen = new Set<string>();
+    const invite: string[] = [];
+    const skipped: {
+      email: string;
+      reason:
+        | "repeated"
+        | "already-invited"
+        | "already-here"
+        | "not-an-address";
+    }[] = [];
+    for (const entry of raw) {
+      const email = entry.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        skipped.push({ email: entry, reason: "not-an-address" });
+      } else if (seen.has(email)) {
+        skipped.push({ email, reason: "repeated" });
+      } else if (members.has(email)) {
+        skipped.push({ email, reason: "already-here" });
+      } else if (pending.has(email)) {
+        skipped.push({ email, reason: "already-invited" });
+      } else {
+        seen.add(email);
+        invite.push(email);
+      }
+    }
+    return { invite, skipped };
+  }
+
+  /** Placeholder for the mail send — wired to the app mailer next. */
+  async #sendInvite(
+    _org: Organization,
+    _invite: OrgInvite,
+    _token: string,
+  ): Promise<void> {
+    // The mailer lands here; the invite already exists either way, so a
+    // failure to send is a reason to resend, never a reason to lose it.
+  }
+
+  /** The roster: who was invited, who joined, who is still waiting. */
+  @http.GET("/_/org/{id:[0-9]+}/invites")
+  async listInvites(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id", zod(pId)) id: number,
+  ) {
+    const { member } = await this.#member(ctx, id, "invites.guardians");
+    const all = await OrgInvite.listFor(id);
+    // A teacher sees the invites for their own class and no others —
+    // the same boundary their learner list has.
+    const mine =
+      member.role === "teacher"
+        ? all.filter((i) => (i.batchId ?? null) === (member.batchId ?? null))
+        : all;
+    const names = new Map<number, string | null>();
+    for (const i of mine) {
+      if (i.acceptedByUserId != null && !names.has(i.acceptedByUserId)) {
+        const u = await User.query().findById(i.acceptedByUserId);
+        names.set(i.acceptedByUserId, u?.name ?? null);
+      }
+    }
+    ctx.response.body = {
+      invites: mine.map((i) => ({
+        ...i.toDetails(),
+        acceptedByName:
+          i.acceptedByUserId == null
+            ? null
+            : (names.get(i.acceptedByUserId) ?? null),
+      })),
     };
   }
 
@@ -367,6 +540,33 @@ export class OrgController {
           `You're already ${existing.role} at ${org.name}.`,
         );
       }
+      // Option A (owner's decision): the people who can see every learner
+      // and appoint others must be AT the school. A teacher sees one class
+      // and appoints nobody, so an org address is encouraged rather than
+      // required — at a community school the volunteer teachers ARE the
+      // parents, and forcing a second address on them would split one
+      // person across two accounts.
+      const verdict = org.staffAddressVerdict(user.email, invite.role!);
+      if (verdict === "wrong") {
+        // The invite is deliberately NOT consumed: clicking while signed
+        // into the wrong account must not burn it, or somebody has to be
+        // re-invited for a mistake that cost nothing.
+        throw new ApplicationError(
+          `${org.name}'s ${invite.role}s sign in with a ${org
+            .domains()
+            .map((d) => "@" + d)
+            .join(
+              " or ",
+            )} address. You're signed in as ${user.email}. Sign in with your school address, or ask to join as a teacher instead — teachers keep their own address.`,
+        );
+      }
+      // A domain check on an unverified address is theatre: anyone could
+      // register treasurer@theschool.org without ever controlling it.
+      if (org.domains().length > 0 && !user.emailVerified) {
+        throw new ApplicationError(
+          "Confirm your email address first — a staff role needs a verified one.",
+        );
+      }
       await OrgMember.query().insert({
         organizationId: invite.organizationId!,
         userId: user.id!,
@@ -380,6 +580,16 @@ export class OrgController {
         organization: org.toDetails(),
         role: invite.role!,
         batchId: invite.batchId ?? null,
+        // Teachers are nudged, never blocked (see the verdict above).
+        addressNote:
+          verdict === "recommended"
+            ? `Teachers at ${org.name} usually sign in with a ${org
+                .domains()
+                .map((d) => "@" + d)
+                .join(
+                  " or ",
+                )} address. Yours works fine — if you also have a child here, keeping this one account is the better choice.`
+            : null,
       };
       return;
     }
