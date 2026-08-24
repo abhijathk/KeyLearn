@@ -36,6 +36,8 @@ export function main() {
 }
 
 const AccountPage = lazy(() => import("./pages/account.tsx"));
+const JoinPage = lazy(() => import("./pages/join.tsx"));
+const ForSchoolsPage = lazy(() => import("./pages/for-schools.tsx"));
 const DeletionCancelPage = lazy(() => import("./pages/deletion-cancel.tsx"));
 const DesignPage = lazy(() => import("./pages/design.tsx"));
 const VerifyPage = lazy(() => import("./pages/verify.tsx"));
@@ -193,6 +195,33 @@ function PageRoutes() {
               <Title page={Pages.practice} />
               <Suspense fallback={<LoadingProgress />}>
                 <PracticePage />
+              </Suspense>
+            </Template>
+          }
+        />
+        {/* The one org page a visitor can find on their own. Public,
+            no sign-in, and not a second way to log in — see spec §8. */}
+        <Route
+          path={Pages.forSchools.path}
+          element={
+            <Template path={Pages.forSchools.path}>
+              <Title page={Pages.forSchools} />
+              <Suspense fallback={<LoadingProgress />}>
+                <ForSchoolsPage />
+              </Suspense>
+            </Template>
+          }
+        />
+        {/* The invite link. Only reachable with a token — there is no
+            path to it by clicking around, which is the invite-only rule
+            (docs/organisations.md §5.3) expressed as routing. */}
+        <Route
+          path={`${Pages.join.path}/:token`}
+          element={
+            <Template path={Pages.join.path}>
+              <Title page={Pages.join} />
+              <Suspense fallback={<LoadingProgress />}>
+                <JoinPage />
               </Suspense>
             </Template>
           }

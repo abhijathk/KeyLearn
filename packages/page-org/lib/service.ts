@@ -88,9 +88,9 @@ export namespace OrgService {
     if (!response.ok) {
       return [];
     }
-    const body = await response.body.json<{
+    const body = (await response.json()) as {
       readonly organizations?: readonly OrgSummary[];
-    }>();
+    };
     return body.organizations ?? [];
   }
 
@@ -102,7 +102,7 @@ export namespace OrgService {
     if (!response.ok) {
       throw new Error(`organisation ${response.status}`);
     }
-    return await response.body.json<OrgOverview>();
+    return (await response.json()) as OrgOverview;
   }
 
   export async function learners(id: number): Promise<readonly Learner[]> {
@@ -113,9 +113,9 @@ export namespace OrgService {
     if (!response.ok) {
       return [];
     }
-    const body = await response.body.json<{
+    const body = (await response.json()) as {
       readonly learners?: readonly Learner[];
-    }>();
+    };
     return body.learners ?? [];
   }
 
@@ -127,7 +127,7 @@ export namespace OrgService {
       .use(expectType("application/json"))
       .POST(`/_/org/${id}/batches`)
       .send({ name });
-    return await response.body.json<BatchSummary>();
+    return (await response.json()) as BatchSummary;
   }
 
   export async function createInvite(
@@ -139,7 +139,7 @@ export namespace OrgService {
       .use(expectType("application/json"))
       .POST(`/_/org/${id}/invites`)
       .send({ role, batchId });
-    return await response.body.json<InviteCreated>();
+    return (await response.json()) as InviteCreated;
   }
 
   export async function createLearner(
@@ -156,7 +156,7 @@ export namespace OrgService {
       .use(expectType("application/json"))
       .POST(`/_/org/${id}/learners`)
       .send(data);
-    return await response.body.json<Learner>();
+    return (await response.json()) as Learner;
   }
 
   /** Mode B only: ends the grant, and nothing else (A12). */
@@ -187,10 +187,49 @@ export namespace OrgService {
     if (!response.ok) {
       return [];
     }
-    const body = await response.body.json<{
+    const body = (await response.json()) as {
       readonly events?: readonly AccessEvent[];
-    }>();
+    };
     return body.events ?? [];
+  }
+
+  /** What the link is offering — readable before anyone signs in. */
+  export async function previewInvite(token: string): Promise<
+    | {
+        readonly valid: true;
+        readonly organization: {
+          readonly id: number;
+          readonly name: string;
+          readonly type: string;
+        };
+        readonly role: string;
+        readonly batchName: string | null;
+        readonly expiresAt: string;
+        readonly staffEmailDomains: readonly string[];
+      }
+    | { readonly valid: false }
+  > {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET(`/_/org/invites/${encodeURIComponent(token)}/preview`)
+      .send();
+    if (!response.ok) {
+      return { valid: false };
+    }
+    return (await response.json()) as
+      | {
+          readonly valid: true;
+          readonly organization: {
+            readonly id: number;
+            readonly name: string;
+            readonly type: string;
+          };
+          readonly role: string;
+          readonly batchName: string | null;
+          readonly expiresAt: string;
+          readonly staffEmailDomains: readonly string[];
+        }
+      | { readonly valid: false };
   }
 
   /** The tier's one door: accepting an invite (A13). */
@@ -206,14 +245,16 @@ export namespace OrgService {
       .use(expectType("application/json"))
       .POST("/_/org/invites/accept")
       .send({ token, profileIds });
-    const body = await response.body.json<{
+    const body = (await response.json()) as {
       readonly organization?: { readonly id: number; readonly name: string };
       readonly role?: string;
       readonly error?: { readonly message?: string };
-    }>();
+    };
     if (body.error != null) {
       return { error: body.error.message ?? "That invite isn't valid." };
     }
-    return body;
+    // The error branch is the only shape that differs; everything else
+    // passes through as the endpoint sent it.
+    return { organization: body.organization, role: body.role };
   }
 }

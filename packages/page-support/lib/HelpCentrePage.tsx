@@ -4,7 +4,7 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink } from "react-router";
 import * as styles from "./HelpCentrePage.module.less";
-import { type HelpArticle,SupportService } from "./service.ts";
+import { type HelpArticle, SupportService } from "./service.ts";
 
 /**
  * The help centre — the same articles the support assistant answers

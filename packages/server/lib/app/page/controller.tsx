@@ -92,6 +92,42 @@ export class Controller {
     return this.renderPage(ctx, Pages.verify);
   }
 
+  @http.GET(`${Pages.forSchools.path}`)
+  async ["for-schools-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.forSchools);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.forSchools.path}`)
+  async ["for-schools-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.forSchools, intl);
+  }
+
+  // The invite link (docs/organisations.md §5.3). The bare path renders
+  // the same dead end as a bad token — there is no such thing as a join
+  // page without an invite, and saying so is kinder than a 404.
+  @http.GET(`${Pages.join.path}`)
+  async ["join-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.join);
+  }
+
+  @http.GET(`${Pages.join.path}/{token:[A-Za-z0-9_-]+}`)
+  async ["join-page-token"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.join);
+  }
+
+  @http.GET(
+    `/{locale:${localePattern}}${Pages.join.path}/{token:[A-Za-z0-9_-]+}`,
+  )
+  async ["join-page-token-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.join, intl);
+  }
+
   @http.GET(`${Pages.assessment.path}`)
   async ["assessment-page"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.assessment);

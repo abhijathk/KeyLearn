@@ -3,6 +3,7 @@
 export * from "./AccountPage.tsx";
 export * from "./AuthPage.tsx";
 export * from "./CompleteProfileGate.tsx";
+export { AccountService } from "./service.ts";
 // Lives in @keylearn/widget now, so the assessment windows can use the same
 // dialog without page-account and the assessment depending on each other.
 export { ConfirmDialog } from "@keylearn/widget";

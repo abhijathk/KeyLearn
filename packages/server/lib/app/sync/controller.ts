@@ -14,7 +14,7 @@ import { parseMessage } from "@keylearn/result-io";
 import { UserDataFactory } from "@keylearn/result-userdata";
 import { File } from "@sosimple/fsx-file";
 import { actorFor } from "../access/actor.ts";
-import { type ProfileAction,reachProfile } from "../access/resolver.ts";
+import { type ProfileAction, reachProfile } from "../access/resolver.ts";
 import { type AuthState, pProfileOwner } from "../auth/index.ts";
 import { partitionPlausible } from "./plausible.ts";
 

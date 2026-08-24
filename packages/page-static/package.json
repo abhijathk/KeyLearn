@@ -6,10 +6,10 @@
   "main": "lib/index.ts",
   "types": ".types/index.d.ts",
   "dependencies": {
-    "@keylearn/identicon": "workspace:*",
+    "@keylearn/identicon": "*",
     "@keylearn/intl": "*",
     "@keylearn/pages-shared": "*",
-    "@keylearn/rand": "workspace:*",
+    "@keylearn/rand": "*",
     "@keylearn/thirdparties": "*",
     "@keylearn/widget": "*"
   },

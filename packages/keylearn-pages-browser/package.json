@@ -18,6 +18,7 @@
     "@keylearn/page-kids": "*",
     "@keylearn/page-layouts": "*",
     "@keylearn/page-multiplayer": "*",
+    "@keylearn/page-org": "*",
     "@keylearn/page-practice": "*",
     "@keylearn/page-profile": "*",
     "@keylearn/page-static": "*",

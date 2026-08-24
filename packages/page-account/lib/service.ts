@@ -534,9 +534,7 @@ export namespace AccountService {
       .send(scope);
   }
 
-  export async function confirmSecurityReset(
-    code: string,
-  ): Promise<{
+  export async function confirmSecurityReset(code: string): Promise<{
     readonly done: readonly string[];
     readonly passwordLinkSent: boolean;
   }> {

@@ -1,0 +1,327 @@
+@import "@keylearn/widget/lib/index.less";
+
+// The public schools page — mock 13. Road design language: whisper
+// headers over a fading hairline, numbered accent circles, and no boxed
+// cards. A coordinator reads this top to bottom; nothing here is a
+// dashboard.
+
+.paper {
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
+  padding-inline: 1.2rem;
+  padding-block: 2.4rem 4rem;
+}
+
+.nameplate {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vi, 2.4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.em {
+  color: var(--accent);
+  font-style: normal;
+}
+
+.lede {
+  max-inline-size: 52rem;
+  margin-block: 0.9rem 0;
+  color: var(--text-color-f1);
+  font-size: 0.92rem;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+// The whisper header: small, spaced, and closed off by a hairline that
+// fades rather than ruling a hard line across the page.
+.whisper {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin-block: 2.6rem 1rem;
+  color: var(--text-color-f2);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+
+  &::after {
+    content: "";
+    flex: 1;
+    block-size: 1px;
+    background: linear-gradient(to right, var(--separator-color), transparent);
+  }
+}
+
+.note {
+  max-inline-size: 52rem;
+  margin-block: 1rem 0;
+  color: var(--text-color-f1);
+  font-size: 0.85rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+// ------------------------------------------------------------ promises
+
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  list-style: none;
+  max-inline-size: 52rem;
+  margin: 0;
+  padding: 0;
+}
+
+.rule {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.ruleNumber {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.7rem;
+  block-size: 1.7rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font-family: var(--value-font-family);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ruleTitle {
+  margin: 0.1rem 0 0.3rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.ruleBody {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.86rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+// ----------------------------------------------------------- audiences
+
+.who {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6rem;
+  max-inline-size: 52rem;
+
+  @media (max-width: 46rem) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.audHead {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block-end: 0.5rem;
+}
+
+.aud p {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.9rem;
+  block-size: 1.9rem;
+  border: 1.5px solid var(--separator-color);
+  border-radius: 50%;
+  color: var(--accent);
+
+  svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+}
+
+// ------------------------------------------------------------- pricing
+
+.price {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.6rem;
+  max-inline-size: 52rem;
+
+  @media (max-width: 46rem) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pcol p {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.tag {
+  color: var(--text-color-f2) !important;
+  font-size: 0.64rem !important;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.big {
+  margin-block: 0.3rem 0.5rem !important;
+  color: var(--text-color) !important;
+  font-size: 1.3rem !important;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mint {
+  color: var(--accent) !important;
+}
+
+// --------------------------------------------------------- domain rule
+
+.domainTable {
+  max-inline-size: 52rem;
+}
+
+.drow {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding-block: 0.65rem;
+  border-block-end: 1px solid var(--separator-color);
+  font-size: 0.85rem;
+
+  @media (max-width: 40rem) {
+    grid-template-columns: 1fr auto;
+    gap: 0.2rem 1rem;
+
+    .m {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &:last-child {
+    border-block-end: none;
+  }
+}
+
+.r {
+  font-weight: 700;
+}
+
+.m {
+  color: var(--text-color-f1);
+  font-size: 0.82rem;
+}
+
+.v {
+  font-family: var(--value-font-family);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.must {
+  color: var(--accent);
+}
+
+.rec {
+  // The nudge, not the rule — a teacher is never blocked by it.
+  color: var(--warning-color, #e8a819);
+}
+
+.any {
+  color: var(--text-color-f2);
+}
+
+// ------------------------------------------------------------- enquiry
+
+.formwrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-inline-size: 34rem;
+}
+
+.frow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  span {
+    color: var(--text-color-f2);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+
+  @media (max-width: 34rem) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Off-screen rather than display:none — a bot reading the DOM finds it,
+// a screen reader is told to skip it, and nobody sees it.
+.hp {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.formnote {
+  margin: 0;
+  color: var(--text-color-f2);
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+
+.error {
+  margin: 0;
+  color: var(--error-color, #ff7a6b);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.sent {
+  max-inline-size: 34rem;
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-inline-start: 2px solid var(--accent);
+  color: var(--text-color-f1);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}

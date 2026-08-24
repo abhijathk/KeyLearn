@@ -508,6 +508,61 @@ export class OrgController {
   }
 
   /**
+   * What an invite link is offering, before anybody signs in.
+   *
+   * Deliberately unauthenticated: the band on the join page has to name
+   * the organisation and the role while the visitor is still signed out,
+   * and they are holding the token already — it was handed to them. It
+   * answers with the same "not valid" for expired, used, revoked and
+   * never-existed, so a guessed token learns nothing from being close,
+   * and it is rate limited so the space cannot be swept.
+   *
+   * The token travels in the path because it is already in the path of
+   * the page the visitor clicked; putting it in a body would hide it
+   * from nothing.
+   */
+  @http.GET("/_/org/invites/{token}/preview")
+  async previewInvite(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    // Deliberately permissive: a truncated or mistyped link is just
+    // another token that does not exist, and it should get the same
+    // answer — not a raw 400 that tells the visitor they broke it.
+    @pathParam("token", zod(z.string().trim().min(1).max(120)))
+    token: string,
+  ) {
+    rateLimit(ctx, "org-invite-preview", 60, 300_000);
+    if (token.length < 20) {
+      ctx.response.body = { valid: false };
+      return;
+    }
+    const invite = await OrgInvite.findLive(token);
+    if (invite == null) {
+      ctx.response.body = { valid: false };
+      return;
+    }
+    const org = await Organization.findById(invite.organizationId!);
+    if (org == null) {
+      ctx.response.body = { valid: false };
+      return;
+    }
+    const batch =
+      invite.batchId == null
+        ? null
+        : await Batch.query().findById(invite.batchId);
+    ctx.response.body = {
+      valid: true,
+      organization: { id: org.id!, name: org.name!, type: org.type! },
+      role: invite.role!,
+      batchName: batch?.name ?? null,
+      expiresAt: new Date(invite.expiresAt!).toISOString(),
+      // So the form can say "your school address" before it is attempted,
+      // rather than refusing after the fact.
+      staffEmailDomains:
+        invite.role === "owner" || invite.role === "admin" ? org.domains() : [],
+    };
+  }
+
+  /**
    * The one door in (A13). A role invite attaches the accepting account
    * as a member; a guardian invite writes enrolment grants for the
    * children the guardian names — their own children, verified — and the

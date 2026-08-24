@@ -2,7 +2,6 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { adSenseClientId, adSenseSlotId } from "./config.ts";
 
 declare global {
-   
   var adsbygoogle: unknown[] | undefined;
 }
 

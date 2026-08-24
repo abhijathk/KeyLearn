@@ -9,7 +9,13 @@ import {
   mdiLoginVariant,
 } from "@mdi/js";
 import { clsx } from "clsx";
-import { type KeyboardEvent, type ReactNode, useState } from "react";
+import {
+  createContext,
+  type KeyboardEvent,
+  type ReactNode,
+  useContext,
+  useState,
+} from "react";
 import {
   defineMessage,
   FormattedMessage,
@@ -23,6 +29,13 @@ import { AccountService } from "./service.ts";
 import { isCaptchaRequired, useCaptcha } from "./turnstile.tsx";
 
 export type AuthMode = "login" | "register" | "forgot" | "reset" | "magic";
+
+/**
+ * True when the card is already flying an organisation's colours — the
+ * join page. The signpost asks "running a school?" of someone a school
+ * has just invited, which is noise at best, so it stands down.
+ */
+const InvitedContext = createContext(false);
 
 /**
  * What the OAuth callback bounced back with, if anything.
@@ -94,9 +107,17 @@ function reload(url: string) {
 export function AuthPage({
   mode: initialMode,
   token,
+  banner,
 }: {
   readonly mode: AuthMode;
   readonly token?: string;
+  /**
+   * Rendered inside the card, above the form. The join page puts the
+   * invite band here rather than beside the card, because the card is a
+   * modal: anything outside it sits behind the scrim, and a parent
+   * cannot read which school invited them through a blur.
+   */
+  readonly banner?: ReactNode;
 }): ReactNode {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [carriedEmail, setCarriedEmail] = useState("");
@@ -115,27 +136,30 @@ export function AuthPage({
   const toMagic = () => go("magic", Pages.login.path);
 
   return (
-    <FloatingShell compact={true}>
-      <AnimatedHeight>
-        <div key={mode} className={styles.swap}>
-          {mode === "register" ? (
-            <RegisterForm toLogin={toLogin} email={carriedEmail} />
-          ) : mode === "forgot" ? (
-            <ForgotForm toLogin={toLogin} />
-          ) : mode === "reset" ? (
-            <ResetForm token={token ?? ""} />
-          ) : mode === "magic" ? (
-            <MagicForm toLogin={toLogin} />
-          ) : (
-            <LoginForm
-              toRegisterWith={toRegisterWith}
-              toForgot={toForgot}
-              toMagic={toMagic}
-            />
-          )}
-        </div>
-      </AnimatedHeight>
-    </FloatingShell>
+    <InvitedContext value={banner != null}>
+      <FloatingShell compact={true}>
+        {banner}
+        <AnimatedHeight>
+          <div key={mode} className={styles.swap}>
+            {mode === "register" ? (
+              <RegisterForm toLogin={toLogin} email={carriedEmail} />
+            ) : mode === "forgot" ? (
+              <ForgotForm toLogin={toLogin} />
+            ) : mode === "reset" ? (
+              <ResetForm token={token ?? ""} />
+            ) : mode === "magic" ? (
+              <MagicForm toLogin={toLogin} />
+            ) : (
+              <LoginForm
+                toRegisterWith={toRegisterWith}
+                toForgot={toForgot}
+                toMagic={toMagic}
+              />
+            )}
+          </div>
+        </AnimatedHeight>
+      </FloatingShell>
+    </InvitedContext>
   );
 }
 
@@ -151,6 +175,9 @@ export function AuthPage({
  * send families down a dead end.
  */
 function ForSchoolsSignpost(): ReactNode {
+  if (useContext(InvitedContext)) {
+    return null;
+  }
   return (
     <p className={styles.signpost}>
       <FormattedMessage

@@ -6,7 +6,7 @@ import {
   setStaffEmails,
 } from "@keylearn/config";
 import { deepEqual, equal, isFalse, isTrue } from "rich-assert";
-import { checkUnlockPasscode,DeskUnlock } from "./desk-unlock.ts";
+import { checkUnlockPasscode, DeskUnlock } from "./desk-unlock.ts";
 import { Staff } from "./staff.ts";
 import { clearTable, useDatabase } from "./testing.ts";
 
