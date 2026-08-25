@@ -93,6 +93,14 @@ const TInvite = z.object({
 const PInvite = zod(TInvite);
 type TInvite = z.infer<typeof TInvite>;
 
+const TOrgPatch = z.object({
+  name: z.string().trim().min(1).max(128).optional(),
+  /** Empty string clears the rule; absent leaves it alone. */
+  staffEmailDomains: z.string().trim().max(255).nullable().optional(),
+});
+const POrgPatch = zod(TOrgPatch);
+type TOrgPatch = z.infer<typeof TOrgPatch>;
+
 const TScreen = z.object({
   emails: z.array(z.string().trim().min(1).max(128)).max(500),
 });
@@ -280,10 +288,56 @@ export class OrgController {
       })),
       seats,
       members,
+      // The settings pane needs to show the current rule, and only the
+      // owner can change it — but everyone benefits from seeing it,
+      // since it explains why an invite was refused.
+      staffEmailDomains: org.domains(),
     };
   }
 
   // ---- batches ---------------------------------------------------------
+
+  /**
+   * Change the school's name or its staff address rule.
+   *
+   * Owner only: the domain decides who may hold admin, so it is the one
+   * setting an admin must not be able to widen for themselves.
+   *
+   * Changing it never touches who is already staff. The rule is checked
+   * when an invite is accepted, so a school that adopts a domain
+   * mid-term does not lock out the admins it already has — it only
+   * governs the next person invited. Anything else would be a setting
+   * that silently locks people out of their own school.
+   */
+  @http.PATCH("/_/org/{id:[0-9]+}")
+  async patchOrg(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id", zod(pId)) id: number,
+    @body.json(POrgPatch) data: TOrgPatch,
+  ) {
+    const { org } = await this.#member(ctx, id, "org.manage");
+    await this.#writable(org);
+    const patch: Record<string, unknown> = {};
+    if (data.name != null) {
+      patch["name"] = data.name;
+    }
+    if (data.staffEmailDomains !== undefined) {
+      const cleaned = (data.staffEmailDomains ?? "")
+        .split(/[,\s]+/)
+        .map((d) => d.trim().toLowerCase().replace(/^@/, ""))
+        .filter((d) => d !== "" && /^[a-z0-9.-]+\.[a-z]{2,}$/.test(d));
+      patch["staffEmailDomains"] =
+        cleaned.length === 0 ? null : cleaned.join(",");
+    }
+    if (Object.keys(patch).length > 0) {
+      await org.$query().patch(patch);
+    }
+    const fresh = await Organization.findById(id);
+    ctx.response.body = {
+      ...fresh!.toDetails(),
+      staffEmailDomains: fresh!.domains(),
+    };
+  }
 
   @http.POST("/_/org/{id:[0-9]+}/batches")
   async createBatch(
@@ -1024,6 +1078,33 @@ export class OrgController {
   }
 
   // ---- the audit (A15) -------------------------------------------------
+
+  /** Who is staff here — the roster the owner appoints from. */
+  @http.GET("/_/org/{id:[0-9]+}/members")
+  async listMembers(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id", zod(pId)) id: number,
+  ) {
+    // Same standing as appointing one: a teacher has no business with
+    // the staff list, and their own learner list already tells them
+    // what they need.
+    await this.#member(ctx, id, "members.teachers");
+    const members = await OrgMember.listFor(id);
+    const rows = await Promise.all(
+      members.map(async (m) => {
+        const user = await User.query().findById(m.userId!);
+        return {
+          userId: m.userId!,
+          name: user?.name ?? null,
+          email: user?.email ?? null,
+          role: m.role!,
+          batchId: m.batchId ?? null,
+          since: new Date(m.createdAt ?? Date.now()).toISOString(),
+        };
+      }),
+    );
+    ctx.response.body = { members: rows };
+  }
 
   @http.GET("/_/org/{id:[0-9]+}/audit")
   async audit(

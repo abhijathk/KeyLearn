@@ -40,6 +40,15 @@ export type MemberSummary = {
   readonly batchId: number | null;
 };
 
+export type StaffMember = {
+  readonly userId: number;
+  readonly name: string | null;
+  readonly email: string | null;
+  readonly role: OrgRole;
+  readonly batchId: number | null;
+  readonly since: string;
+};
+
 export type OrgOverview = {
   readonly organization: {
     readonly id: number;
@@ -52,6 +61,8 @@ export type OrgOverview = {
   readonly seats: SeatStatus;
   /** Null for a teacher — the roster of accounts is not their business. */
   readonly members: readonly MemberSummary[] | null;
+  /** The addresses staff must accept on; empty means no rule. */
+  readonly staffEmailDomains: readonly string[];
 };
 
 export type Learner = {
@@ -300,6 +311,48 @@ export namespace OrgService {
       .use(expectType("application/json"))
       .POST(`/_/org/${id}/learners/${profileId}/pin`)
       .send(body);
+  }
+
+  /** The staff roster — who may see what, and who appointed them. */
+  export async function members(id: number): Promise<readonly StaffMember[]> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET(`/_/org/${id}/members`)
+      .send();
+    if (!response.ok) {
+      return [];
+    }
+    const body = (await response.json()) as {
+      readonly members?: readonly StaffMember[];
+    };
+    return body.members ?? [];
+  }
+
+  export async function removeMember(
+    id: number,
+    userId: number,
+  ): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST(`/_/org/${id}/members/${userId}/remove`)
+      .send({});
+  }
+
+  /** Rename the school, or change which addresses its staff sign in with. */
+  export async function patchOrg(
+    id: number,
+    data: {
+      readonly name?: string;
+      readonly staffEmailDomains?: string | null;
+    },
+  ): Promise<{ readonly staffEmailDomains: readonly string[] }> {
+    const response = await request
+      .use(expectType("application/json"))
+      .PATCH(`/_/org/${id}`)
+      .send(data);
+    return (await response.json()) as {
+      readonly staffEmailDomains: readonly string[];
+    };
   }
 
   export async function audit(id: number): Promise<readonly AccessEvent[]> {

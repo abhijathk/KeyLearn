@@ -21,6 +21,7 @@ import {
   OrgService,
   type OrgSummary,
 } from "./service.ts";
+import { Staff } from "./Staff.tsx";
 
 /**
  * The coordinator's desk — mock 09.
@@ -31,7 +32,7 @@ import {
  * what is made here — the resolver owns that (P2), so a section that
  * forgets to hide itself shows an empty list rather than a leak.
  */
-type Pane = "seats" | "learners" | "invite" | "roster" | "audit";
+type Pane = "seats" | "learners" | "invite" | "roster" | "staff" | "audit";
 
 export function DeskPage(): ReactNode {
   const { publicUser } = usePageData();
@@ -237,6 +238,20 @@ function Desk({
               <FormattedMessage id="desk.rail.roster" defaultMessage="Roster" />
             }
           />
+          {/* Staff and the address rule are an owner/admin concern —
+              a teacher appoints nobody. */}
+          {overview.members != null && (
+            <RailItem
+              on={pane === "staff"}
+              onClick={() => {
+                setPane("staff");
+              }}
+              icon={<StaffIcon />}
+              label={
+                <FormattedMessage id="desk.rail.staff" defaultMessage="Staff" />
+              }
+            />
+          )}
           {/* A teacher has no member list, and the audit is written in
               terms of who those members are — so it is not offered. */}
           {overview.members != null && (
@@ -317,6 +332,14 @@ function Desk({
               />
             </div>
           )}
+          {pane === "staff" && overview.members != null && (
+            <div className={styles.paneScroll}>
+              <h2 className={styles.paneTitle}>
+                <FormattedMessage id="desk.pane.staff" defaultMessage="Staff" />
+              </h2>
+              <Staff id={id} overview={overview} onChange={refresh} />
+            </div>
+          )}
           {pane === "audit" && overview.members != null && (
             <div className={styles.paneScroll}>
               <h2 className={styles.paneTitle}>
@@ -395,6 +418,14 @@ function RosterIcon(): ReactNode {
   return (
     <svg className={styles.railIcon} viewBox="0 0 24 24">
       <path d="M4 5.5h16M4 12h16M4 18.5h10" />
+    </svg>
+  );
+}
+
+function StaffIcon(): ReactNode {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <path d="M12 11.5a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5zM4.5 20.5c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6" />
     </svg>
   );
 }

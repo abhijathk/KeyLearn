@@ -1,0 +1,126 @@
+@import "@keylearn/widget/lib/index.less";
+
+// The staff pane. Same row as learners and the roster — a person with a
+// name, a line of detail, and one action.
+
+.note {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--error-color, #ff7a6b);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.saved {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.row {
+  display: flex;
+  // Not wrapped: the action belongs beside the name, not under it. The
+  // detail line truncates instead — an email is recognisable from its
+  // first half, and a button on its own line reads as a second row.
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+}
+
+.rowInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-inline-size: 0;
+  margin-inline-end: auto;
+}
+
+.rowName {
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowMeta {
+  overflow: hidden;
+  color: var(--text-color-f2);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowAction {
+  flex: none;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.25));
+  border-radius: 0.45rem;
+  color: var(--text-color);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:disabled {
+    color: var(--text-color-f2);
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.addRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.primary {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-radius: 0.6rem;
+  color: var(--primary);
+  background: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled {
+    background: color-mix(in srgb, var(--accent) 45%, transparent);
+    cursor: default;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--accent-d1);
+  }
+}

@@ -770,3 +770,93 @@ test("the reference is a crib note that dies on acceptance", async () => {
   );
   isNull(accepted!.reference ?? null);
 });
+
+test("the staff address rule can be changed, and only by an owner", async () => {
+  const { owner, guardian, org } = await seed();
+  await OrgMember.query().insert({
+    organizationId: org.id!,
+    userId: guardian.id!,
+    role: "admin",
+  });
+
+  const request = startApp(context.get(Application, kMain));
+
+  // An admin cannot widen the rule that decides who may be an admin.
+  await request.become(guardian.id!);
+  equal(
+    (
+      await request
+        .PATCH(`/_/org/${org.id!}`)
+        .send({ staffEmailDomains: "anywhere.example" })
+    ).status,
+    403,
+  );
+
+  await request.become(owner.id!);
+  const response = await request
+    .PATCH(`/_/org/${org.id!}`)
+    .send({ staffEmailDomains: "@Balakairali.ORG.au, notadomain" });
+  equal(response.status, 200);
+  const body = (await response.body.json()) as {
+    staffEmailDomains: string[];
+  };
+  // Lower-cased, the @ stripped, and the thing that is not a domain
+  // dropped rather than stored and silently never matching.
+  deepEqual(body.staffEmailDomains, ["balakairali.org.au"]);
+
+  // Empty clears it — a school that drops the rule must be able to.
+  const cleared = await request
+    .PATCH(`/_/org/${org.id!}`)
+    .send({ staffEmailDomains: "" });
+  deepEqual(
+    ((await cleared.body.json()) as { staffEmailDomains: string[] })
+      .staffEmailDomains,
+    [],
+  );
+});
+
+test("changing the rule does not evict the staff already here", async () => {
+  const { owner, guardian, org, batchA } = await seed();
+  // A teacher on a personal address, which is expressly allowed — and
+  // with a class, since a teacher without one reaches nothing by
+  // design and would prove the wrong thing here.
+  await OrgMember.query().insert({
+    organizationId: org.id!,
+    userId: guardian.id!,
+    role: "teacher",
+    batchId: batchA.id!,
+  });
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(owner.id!);
+  await request
+    .PATCH(`/_/org/${org.id!}`)
+    .send({ staffEmailDomains: "balakairali.org.au" });
+
+  // Still staff, still reaching their class. The rule is a gate on
+  // acceptance, not a standing condition — otherwise a setting change
+  // would lock people out of their own school mid-term. Checked with
+  // something a teacher may actually do: the staff list is not one.
+  isNotNull(await OrgMember.find(org.id!, guardian.id!));
+  await request.become(guardian.id!);
+  equal((await request.GET(`/_/org/${org.id!}/learners`).send()).status, 200);
+});
+
+test("a teacher has no business with the staff list", async () => {
+  const { owner, guardian, org, batchA } = await seed();
+  await OrgMember.query().insert({
+    organizationId: org.id!,
+    userId: guardian.id!,
+    role: "teacher",
+    batchId: batchA.id!,
+  });
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(owner.id!);
+  equal((await request.GET(`/_/org/${org.id!}/members`).send()).status, 200);
+
+  // A teacher sees one class and appoints nobody, so the roster of who
+  // else works here is not theirs to read.
+  await request.become(guardian.id!);
+  equal((await request.GET(`/_/org/${org.id!}/members`).send()).status, 403);
+});
