@@ -2,6 +2,7 @@ import { ProfileAvatar } from "@keylearn/page-account";
 import { ConfirmDialog, SettingsCard, TextField } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { RoleName } from "./roles.tsx";
 import { type OrgOverview, OrgService, type StaffMember } from "./service.ts";
 import * as styles from "./Staff.module.less";
 
@@ -129,7 +130,7 @@ function StaffRow({
       <span className={styles.rowInfo}>
         <span className={styles.rowName}>{who}</span>
         <span className={styles.rowMeta}>
-          {member.role}
+          <RoleName role={member.role} />
           {batch != null && ` · ${batch.name}`}
           {member.email != null && member.name != null && ` · ${member.email}`}
         </span>

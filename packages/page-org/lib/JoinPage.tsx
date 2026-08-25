@@ -8,6 +8,7 @@ import { Button, FloatingShell } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./JoinPage.module.less";
+import { RoleName } from "./roles.tsx";
 import { OrgService } from "./service.ts";
 
 /**
@@ -168,13 +169,16 @@ function InviteBand({
             <FormattedMessage
               id="join.band.roleBatch"
               defaultMessage="You've been invited as {role} for {batch}."
-              values={{ role: preview.role, batch: preview.batchName }}
+              values={{
+                role: <RoleName role={preview.role} />,
+                batch: preview.batchName,
+              }}
             />
           ) : (
             <FormattedMessage
               id="join.band.role"
               defaultMessage="You've been invited as {role}."
-              values={{ role: preview.role }}
+              values={{ role: <RoleName role={preview.role} /> }}
             />
           )}
         </span>
@@ -335,7 +339,7 @@ function AcceptStep({
                 id="join.accept.asRole"
                 defaultMessage="You'll join as {role}{batch, select, none {} other { for {batch}}}."
                 values={{
-                  role: preview.role,
+                  role: <RoleName role={preview.role} />,
                   batch: preview.batchName ?? "none",
                 }}
               />
@@ -349,7 +353,7 @@ function AcceptStep({
                   defaultMessage="{org}'s {role}s sign in with a {domains} address."
                   values={{
                     org: preview.organization.name,
-                    role: preview.role,
+                    role: <RoleName role={preview.role} />,
                     domains: preview.staffEmailDomains
                       .map((d) => `@${d}`)
                       .join(" or "),

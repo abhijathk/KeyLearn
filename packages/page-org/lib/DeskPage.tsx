@@ -13,6 +13,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { BulkInvite } from "./BulkInvite.tsx";
 import * as styles from "./DeskPage.module.less";
 import { Learners } from "./Learners.tsx";
+import { RoleName } from "./roles.tsx";
 import {
   type AccessEvent,
   type InviteRow,
@@ -187,7 +188,9 @@ function Desk({
               <span className={styles.orgbadge}>{initialsOf(org.name)}</span>
               <span className={styles.whoText}>
                 <span className={styles.whoName}>{org.name}</span>
-                <span className={styles.whoRole}>{org.role}</span>
+                <span className={styles.whoRole}>
+                  <RoleName role={org.role} />
+                </span>
               </span>
             </button>
           ))}
@@ -1025,7 +1028,7 @@ function InviteLine({
             <span className={styles.ref}>{invite.reference}</span>
           )}
           {invite.reference != null && " · "}
-          {invite.role}
+          <RoleName role={invite.role} />
           {batchName != null && ` · ${batchName}`}
         </span>
       </span>
