@@ -22,9 +22,11 @@ import {
 import { z } from "zod";
 import { endProfileSession, startProfileSession } from "../access/actor.ts";
 import { reachProfile } from "../access/resolver.ts";
+import { messageWithOrgInvite } from "../auth/email.ts";
 import { clientIp, rateLimit } from "../auth/ratelimit.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
+import { Mailer } from "../mail/index.ts";
 
 /**
  * The organisation tier's API — docs/organisations.md revision 2.
@@ -129,7 +131,10 @@ type TEnter = z.infer<typeof TEnter>;
 @injectable()
 @controller()
 export class OrgController {
-  constructor(@inject("canonicalUrl") readonly canonicalUrl: string) {}
+  constructor(
+    @inject("canonicalUrl") readonly canonicalUrl: string,
+    readonly mailer: Mailer,
+  ) {}
 
   // ---- membership plumbing --------------------------------------------
 
@@ -481,14 +486,43 @@ export class OrgController {
     };
   }
 
-  /** Placeholder for the mail send — wired to the app mailer next. */
+  /**
+   * Send one invite.
+   *
+   * The invite row already exists by the time this runs, and that is
+   * deliberate: a failure to send is a reason to resend, never a reason
+   * to lose the invite. The roster shows it as not-yet-accepted either
+   * way, which is also what the coordinator needs to see.
+   */
   async #sendInvite(
-    _org: Organization,
-    _invite: OrgInvite,
-    _token: string,
+    org: Organization,
+    invite: OrgInvite,
+    token: string,
   ): Promise<void> {
-    // The mailer lands here; the invite already exists either way, so a
-    // failure to send is a reason to resend, never a reason to lose it.
+    if (invite.email == null) {
+      // An anonymous slip for printing — there is nobody to write to.
+      return;
+    }
+    const batch =
+      invite.batchId == null
+        ? null
+        : await Batch.query().findById(invite.batchId);
+    await this.mailer.sendMail(
+      messageWithOrgInvite({
+        email: invite.email,
+        link: this.#inviteUrl(token),
+        orgName: org.name!,
+        role: invite.role! as "owner" | "admin" | "teacher" | "guardian",
+        batchName: batch?.name ?? null,
+        expiresAt: new Date(invite.expiresAt!),
+        // Only where the school actually restricts the role — saying
+        // "use your school address" to a parent would be wrong.
+        staffDomains:
+          invite.role === "owner" || invite.role === "admin"
+            ? org.domains()
+            : [],
+      }),
+    );
   }
 
   /** The roster: who was invited, who joined, who is still waiting. */

@@ -225,9 +225,14 @@ function ByEmail({
   if (sent != null) {
     return (
       <p className={styles.done}>
+        {/* "Created", not "delivered". Sending is deliberately
+            fire-and-forget so one dead mailbox cannot lose the other
+            thirty-nine, which means this count cannot promise arrival —
+            the Roster is where a coordinator sees what actually
+            happened. */}
         <FormattedMessage
           id="bulk.sent"
-          defaultMessage="{n, plural, one {# invite is} other {# invites are}} on their way. They appear below as people accept them."
+          defaultMessage="{n, plural, one {# invite} other {# invites}} created and being emailed. Roster shows who has accepted; an invite whose email bounces is still valid, so it can be handed over on paper."
           values={{ n: sent }}
         />
       </p>

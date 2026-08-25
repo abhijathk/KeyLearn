@@ -779,3 +779,93 @@ Happy typing!`;
   );
   return { to, subject: mailSubject, text, html };
 }
+
+/**
+ * The organisation invite — docs/organisations.md §5.3.
+ *
+ * Written for someone who was handed a class list at a school and has
+ * never heard of us: it says who invited them, as what, and what
+ * accepting actually does, before the button. A parent who cannot tell
+ * an invite from a marketing email deletes both.
+ *
+ * The link is the invite. There is no code to type and no account to
+ * make first — signing in is what accepts it.
+ */
+export function messageWithOrgInvite({
+  email,
+  link,
+  orgName,
+  role,
+  batchName,
+  expiresAt,
+  staffDomains,
+}: {
+  readonly email: string;
+  readonly link: string;
+  readonly orgName: string;
+  readonly role: "owner" | "admin" | "teacher" | "guardian";
+  readonly batchName: string | null;
+  readonly expiresAt: Date;
+  /** Set only for roles the school restricts by address. */
+  readonly staffDomains: readonly string[];
+}): Mailer.Message {
+  const where = batchName == null ? orgName : `${orgName} — ${batchName}`;
+  const guardian = role === "guardian";
+
+  const subject = guardian
+    ? `${orgName} has invited you to KeyLearn`
+    : `${orgName} has invited you as ${role}`;
+
+  // What accepting DOES, in the words of the person accepting it. The
+  // guardian line is the one that matters most: it is consent, and it
+  // should read the same here as it does on the screen.
+  const what = guardian
+    ? `Accepting lets ${orgName} see how your children are getting on in class — nothing else. Their accounts stay yours, and you can end it at any time.`
+    : `Accepting adds this account to ${orgName} as ${role}.`;
+
+  const domainNote =
+    staffDomains.length === 0
+      ? ""
+      : `Please accept while signed in with your ${staffDomains
+          .map((d) => "@" + d)
+          .join(" or ")} address — ${orgName} requires one for this role.`;
+
+  const expires = expiresAt.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+  });
+
+  const text = `${where} has invited you to KeyLearn.
+
+${what}
+
+Open this link to accept:
+
+${link}
+
+The link works once and expires on ${expires}.${
+    domainNote === ""
+      ? ""
+      : `
+
+${domainNote}`
+  }
+
+If you were not expecting this, you can ignore this email — nothing happens until you open the link.`;
+
+  const html = shell(
+    subject,
+    heading(`${orgName} has invited you`) +
+      paragraph(
+        batchName == null
+          ? `You have been invited to join ${orgName} on KeyLearn as ${role}.`
+          : `You have been invited to ${batchName} at ${orgName}.`,
+      ) +
+      paragraph(what) +
+      `<div style="margin:4px 0 4px">${button(link, guardian ? "Accept and enrol" : "Accept invite")}</div>` +
+      fallbackLink(link) +
+      (domainNote === "" ? "" : paragraph(domainNote)) +
+      `<p style="margin:22px 0 0;font-family:${FONT};font-size:13px;color:${MUTED}">This link works once and expires on ${esc(expires)}. Nothing happens until you open it.</p>`,
+  );
+  return { to: email, subject, text, html };
+}

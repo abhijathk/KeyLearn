@@ -581,3 +581,67 @@ test("reading the list needs the same standing as sending to it", async () => {
     .send({ emails: ["someone@example.com"] });
   equal(response.status, 403);
 });
+
+test("an addressed invite is actually emailed, with the class named", async () => {
+  const { owner, org, batchA } = await seed();
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(owner.id!);
+  // The fake mailer accumulates across tests in this file, so empty it
+  // first and assert only on what this action put there.
+  context.mailer.dump();
+  equal(
+    (
+      await request.POST(`/_/org/${org.id!}/invites`).send({
+        role: "guardian",
+        batchId: batchA.id!,
+        emails: ["parent@example.com"],
+      })
+    ).status,
+    200,
+  );
+
+  // Sending is fire-and-forget so one dead mailbox cannot lose the rest,
+  // so give the queued send a turn to run before reading the outbox.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const [mail, ...rest] = context.mailer.dump();
+  deepEqual(rest, []);
+  isNotNull(mail);
+  equal(mail!.to, "parent@example.com");
+  isTrue(mail!.subject.includes(org.name!));
+  // The link is the invite — no code to type, nothing to sign up for
+  // first — so it has to be in the body.
+  isTrue((mail!.text ?? "").includes("/join/"));
+  // And it names the class, because a parent with children in two of
+  // them needs to know which one this is.
+  isTrue((mail!.text ?? "").includes(batchA.name!));
+});
+
+test("only a staff invite carries the address rule", async () => {
+  const { owner, org, batchA } = await seed();
+  await org.$query().patch({ staffEmailDomains: "balakairali.org.au" });
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(owner.id!);
+  context.mailer.dump();
+  await request
+    .POST(`/_/org/${org.id!}/invites`)
+    .send({ role: "admin", emails: ["someone@gmail.com"] });
+  await request.POST(`/_/org/${org.id!}/invites`).send({
+    role: "guardian",
+    batchId: batchA.id!,
+    emails: ["parent@gmail.com"],
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const sent = context.mailer.dump();
+  const admin = sent.find((m) => m.to === "someone@gmail.com");
+  const parent = sent.find((m) => m.to === "parent@gmail.com");
+  isNotNull(admin);
+  isNotNull(parent);
+  // The admin is told which address to accept on…
+  isTrue((admin!.text ?? "").includes("balakairali.org.au"));
+  // …and the parent is not, because parents are never restricted and
+  // telling them otherwise would turn a non-rule into a barrier.
+  isTrue(!(parent!.text ?? "").includes("balakairali.org.au"));
+});

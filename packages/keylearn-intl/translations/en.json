@@ -563,7 +563,7 @@
   "bulk.role.teacher": "Teacher",
   "bulk.rowNo": "row {n}",
   "bulk.send": "{n, plural, =0 {Nothing to send} one {Send # invite} other {Send # invites}}",
-  "bulk.sent": "{n, plural, one {# invite is} other {# invites are}} on their way. They appear below as people accept them.",
+  "bulk.sent": "{n, plural, one {# invite} other {# invites}} created and being emailed. Roster shows who has accepted; an invite whose email bounces is still valid, so it can be handed over on paper.",
   "bulk.short": "That needs {need} seats and {left} are free. Ask for more, or trim the list.",
   "bulk.slips.done": "Done — hide these",
   "bulk.slips.expires": "expires {date}",
