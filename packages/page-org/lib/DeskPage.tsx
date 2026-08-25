@@ -265,6 +265,11 @@ function Desk({
                   defaultMessage="Overview"
                 />
               </h2>
+              <Dashboard
+                overview={overview}
+                learners={learners}
+                invites={invites}
+              />
               <Seats overview={overview} />
               <Classes overview={overview} learners={learners} />
             </div>
@@ -399,6 +404,147 @@ function AuditIcon(): ReactNode {
     <svg className={styles.railIcon} viewBox="0 0 24 24">
       <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6zM12 14.2a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4z" />
     </svg>
+  );
+}
+
+/**
+ * The school at a glance.
+ *
+ * Every number here is counted from what this member is allowed to
+ * see, not fetched separately — a teacher has no member list, so they
+ * get the chips about their own class and no staff head-count, which is
+ * the correct answer rather than a hidden one.
+ *
+ * Waiting invites sit beside the counts on purpose: "nineteen learners"
+ * means something different when eleven parents have not joined yet.
+ */
+function Dashboard({
+  overview,
+  learners,
+  invites,
+}: {
+  readonly overview: OrgOverview;
+  readonly learners: readonly Learner[];
+  readonly invites: readonly InviteRow[];
+}): ReactNode {
+  const members = overview.members;
+  const count = (role: string) =>
+    (members ?? []).filter((m) => m.role === role).length;
+  const waiting = invites.filter(
+    (i) => i.acceptedAt == null && i.revokedAt == null,
+  ).length;
+  const modeA = learners.filter((l) => l.mode === "A").length;
+  const modeB = learners.length - modeA;
+
+  return (
+    <div className={styles.chips}>
+      <Chip
+        n={learners.length}
+        label={
+          <FormattedMessage
+            id="desk.chip.learners"
+            defaultMessage="{n, plural, one {learner} other {learners}}"
+            values={{ n: learners.length }}
+          />
+        }
+        accent={true}
+      />
+      <Chip
+        n={overview.batches.length}
+        label={
+          <FormattedMessage
+            id="desk.chip.classes"
+            defaultMessage="{n, plural, one {class} other {classes}}"
+            values={{ n: overview.batches.length }}
+          />
+        }
+      />
+      {/* Only where the two kinds both exist — a weekend school is all
+          mode B and the split would be noise. */}
+      {modeA > 0 && modeB > 0 && (
+        <>
+          <Chip
+            n={modeB}
+            label={
+              <FormattedMessage
+                id="desk.chip.family"
+                defaultMessage="family-owned"
+              />
+            }
+          />
+          <Chip
+            n={modeA}
+            label={
+              <FormattedMessage
+                id="desk.chip.ours"
+                defaultMessage="this centre's"
+              />
+            }
+          />
+        </>
+      )}
+      {members != null && (
+        <>
+          <Chip
+            n={count("owner") + count("admin")}
+            label={
+              <FormattedMessage
+                id="desk.chip.admins"
+                defaultMessage="{n, plural, one {admin} other {admins}}"
+                values={{ n: count("owner") + count("admin") }}
+              />
+            }
+          />
+          <Chip
+            n={count("teacher")}
+            label={
+              <FormattedMessage
+                id="desk.chip.teachers"
+                defaultMessage="{n, plural, one {teacher} other {teachers}}"
+                values={{ n: count("teacher") }}
+              />
+            }
+          />
+        </>
+      )}
+      {waiting > 0 && (
+        <Chip
+          n={waiting}
+          label={
+            <FormattedMessage
+              id="desk.chip.waiting"
+              defaultMessage="not joined yet"
+            />
+          }
+          warn={true}
+        />
+      )}
+    </div>
+  );
+}
+
+function Chip({
+  n,
+  label,
+  accent = false,
+  warn = false,
+}: {
+  readonly n: number;
+  readonly label: ReactNode;
+  readonly accent?: boolean;
+  readonly warn?: boolean;
+}): ReactNode {
+  return (
+    <div
+      className={clsx(
+        styles.chip,
+        accent && styles.chipAccent,
+        warn && styles.chipWarn,
+      )}
+    >
+      <span className={styles.chipN}>{n}</span>
+      <span className={styles.chipLabel}>{label}</span>
+    </div>
   );
 }
 

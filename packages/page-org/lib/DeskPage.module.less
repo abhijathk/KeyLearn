@@ -378,3 +378,51 @@
 .ref {
   color: var(--accent);
 }
+
+// ----------------------------------------------------------- the chips
+//
+// The school at a glance. Numbers big enough to read at arm's length,
+// because a coordinator checks these between classes rather than
+// studying them.
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.6rem 0.75rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+}
+
+.chipAccent {
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent);
+  background: color-mix(in oklab, var(--accent) 8%, transparent);
+}
+
+// Not an error — a number with work behind it.
+.chipWarn {
+  border-color: color-mix(
+    in oklab,
+    var(--warning-color, #e8a819) 35%,
+    transparent
+  );
+}
+
+.chipN {
+  font-size: 1.5rem;
+  font-weight: 750;
+  line-height: 1.05;
+}
+
+.chipLabel {
+  color: var(--text-color-f2);
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
