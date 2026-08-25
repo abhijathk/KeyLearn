@@ -92,6 +92,11 @@ export class Controller {
     return this.renderPage(ctx, Pages.verify);
   }
 
+  @http.GET(`${Pages.org.path}`)
+  async ["org-desk-page"](ctx: Context<RouterState & AuthState>) {
+    return this.renderPage(ctx, Pages.org);
+  }
+
   @http.GET(`${Pages.forSchools.path}`)
   async ["for-schools-page"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.forSchools);

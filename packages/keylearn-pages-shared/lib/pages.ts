@@ -648,6 +648,24 @@ export namespace Pages {
   } satisfies PageInfo;
 
   /**
+   * The coordinator's desk — seats, classes, the invite chain and the
+   * access log (mock 09). Reachable only by someone who is already staff
+   * somewhere: for everyone else it says so and points at for-schools,
+   * because there is no self-serve way into the tier.
+   */
+  export const org = {
+    path: "/org",
+    title: defineMessage({
+      id: "org.title",
+      defaultMessage: "Your school",
+    }),
+    link: {
+      label: defineMessage({ id: "org.title", defaultMessage: "Your school" }),
+    },
+    meta: [{ name: "robots", content: "noindex" }],
+  } satisfies PageInfo;
+
+  /**
    * Where an invite link lands. The token in the path is the only way to
    * reach it, and it is what tells the page which organisation and role
    * are on offer (mock 12).

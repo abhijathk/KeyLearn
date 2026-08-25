@@ -1,0 +1,353 @@
+@import "@keylearn/widget/lib/index.less";
+
+// The coordinator's desk — mock 09. Same Road language as the schools
+// page: whisper headers over a fading hairline, no boxed cards, and
+// numbers large enough to read across a hall.
+
+.paper {
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
+  padding-inline: 1.2rem;
+  padding-block: 2.4rem 4rem;
+}
+
+.nameplate {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vi, 2.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.lede {
+  max-inline-size: 46rem;
+  margin-block: 0.9rem 1.4rem;
+  color: var(--text-color-f1);
+  font-size: 0.92rem;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.whisper {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin-block: 2.4rem 0.9rem;
+  color: var(--text-color-f2);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+
+  &::after {
+    content: "";
+    flex: 1;
+    block-size: 1px;
+    background: linear-gradient(to right, var(--separator-color), transparent);
+  }
+}
+
+.note {
+  max-inline-size: 46rem;
+  margin-block: 0.7rem 0;
+  color: var(--text-color-f1);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.empty {
+  margin-block: 0.4rem 0;
+  color: var(--text-color-f2);
+  font-size: 0.85rem;
+}
+
+.faint {
+  color: var(--text-color-f2);
+}
+
+// A text button for the actions that must not look like the main one —
+// revoking an invite, adding a class.
+.quiet {
+  padding: 0;
+  border: none;
+  color: var(--accent);
+  background: none;
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ------------------------------------------------------------- org bar
+
+.orgSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block-end: 1.2rem;
+
+  button {
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--separator-color);
+    border-radius: 999px;
+    color: var(--text-color-f1);
+    background: none;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+}
+
+.onSwitch {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+.orgbar {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  padding-block-end: 1rem;
+  border-block-end: 1px solid var(--separator-color);
+}
+
+.orgbadge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font-family: var(--value-font-family);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.orgwho {
+  min-inline-size: 0;
+
+  b {
+    display: block;
+    font-size: 1.05rem;
+  }
+
+  span {
+    color: var(--text-color-f2);
+    font-size: 0.76rem;
+  }
+}
+
+.role {
+  margin-inline-start: auto;
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+// --------------------------------------------------------------- seats
+
+.seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+
+  small {
+    color: var(--text-color-f2);
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+}
+
+.big {
+  font-family: var(--value-font-family);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+
+  span {
+    color: var(--text-color-f2);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+}
+
+.meter {
+  flex: 1;
+  min-inline-size: 8rem;
+  max-inline-size: 20rem;
+  block-size: 0.4rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: var(--separator-color);
+
+  i {
+    display: block;
+    block-size: 100%;
+    background-color: var(--accent);
+  }
+}
+
+// The promise that stops a Sunday-afternoon panic, stated next to the
+// number it is about.
+.lapse {
+  max-inline-size: 46rem;
+  margin-block: 0.9rem 0;
+  padding-inline-start: 0.85rem;
+  border-inline-start: 2px solid var(--separator-color);
+  color: var(--text-color-f2);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.lapsed {
+  .lapse();
+
+  border-inline-start-color: var(--accent);
+  color: var(--text-color-f1);
+}
+
+// ------------------------------------------------------------- classes
+
+.table {
+  inline-size: 100%;
+  max-inline-size: 46rem;
+  margin-block-start: 0.8rem;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+
+  th {
+    padding-block: 0.4rem;
+    border-block-end: 1px solid var(--separator-color);
+    color: var(--text-color-f2);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-align: start;
+    text-transform: uppercase;
+  }
+
+  td {
+    vertical-align: baseline;
+    padding-block: 0.6rem;
+    border-block-end: 1px solid var(--separator-color);
+  }
+
+  tr:last-child td {
+    border-block-end: none;
+  }
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--separator-color);
+  border-radius: 999px;
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+// Mode B: the family owns the profile and lent the school a view.
+.b {
+  border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+  color: var(--accent);
+}
+
+// Mode A: the school owns the profile, and it is PIN-locked.
+.a {
+  border-color: color-mix(in oklab, var(--text-color-f1) 40%, transparent);
+  color: var(--text-color-f1);
+}
+
+.addRow {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  max-inline-size: 30rem;
+  margin-block-start: 0.9rem;
+}
+
+// -------------------------------------------------------------- roster
+
+.roster {
+  max-inline-size: 46rem;
+  margin-block-start: 0.6rem;
+}
+
+.rrow {
+  display: flex;
+  gap: 0.7rem;
+  align-items: baseline;
+  padding-block: 0.5rem;
+  border-block-end: 1px solid var(--separator-color);
+  font-size: 0.85rem;
+
+  &:last-child {
+    border-block-end: none;
+  }
+}
+
+.rwho {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rtag {
+  margin-inline-start: auto;
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ok {
+  color: var(--accent);
+}
+
+// --------------------------------------------------------------- audit
+
+.audit {
+  max-inline-size: 46rem;
+  margin-block-start: 0.4rem;
+}
+
+.arow {
+  display: flex;
+  gap: 0.7rem;
+  align-items: baseline;
+  padding-block: 0.5rem;
+  border-block-end: 1px solid var(--separator-color);
+  color: var(--text-color-f1);
+  font-size: 0.85rem;
+
+  &:last-child {
+    border-block-end: none;
+  }
+
+  b {
+    color: var(--text-color);
+    font-weight: 500;
+  }
+}
+
+.at {
+  margin-inline-start: auto;
+  color: var(--text-color-f2);
+  font-family: var(--value-font-family);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}

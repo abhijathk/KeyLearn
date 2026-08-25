@@ -518,3 +518,66 @@ test("A5 — a PIN-entered session answers only for that learner", async () => {
     .send();
   isTrue(afterExit.status < 400);
 });
+
+test("the invite read-back reports every row and writes nothing", async () => {
+  const { owner, guardian, org, batchA } = await seed();
+
+  // Already a member, so their address must come back as already-here.
+  await OrgMember.query().insert({
+    organizationId: org.id!,
+    userId: guardian.id!,
+    role: "teacher",
+    batchId: batchA.id!,
+  });
+  // Already invited, so a second attempt at the same address is a
+  // duplicate rather than a second invite.
+  await OrgInvite.issue({
+    organizationId: org.id!,
+    batchId: batchA.id!,
+    role: "guardian",
+    issuedByUserId: owner.id!,
+    email: "pending@example.com",
+  });
+
+  const before = (await OrgInvite.listFor(org.id!)).length;
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(owner.id!);
+  const response = await request.POST(`/_/org/${org.id!}/invites/screen`).send({
+    emails: [
+      "priya@example.com",
+      guardian.email!,
+      "priya@example.com",
+      "pending@example.com",
+      "not-an-address",
+    ],
+  });
+  equal(response.status, 200);
+  const body = (await response.body.json()) as {
+    verdicts: { email: string; verdict: string }[];
+    willInvite: number;
+  };
+
+  // In the order given: a coordinator is reading this against the rows
+  // of a spreadsheet they still have open.
+  deepEqual(
+    body.verdicts.map((v) => v.verdict),
+    ["invite", "already-here", "repeated", "already-invited", "not-an-address"],
+  );
+  equal(body.willInvite, 1);
+
+  // And not one invite was created by looking.
+  equal((await OrgInvite.listFor(org.id!)).length, before);
+});
+
+test("reading the list needs the same standing as sending to it", async () => {
+  const { org } = await seed();
+  const outsider = await findUser("user3@keylearn.org");
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(outsider.id!);
+  const response = await request
+    .POST(`/_/org/${org.id!}/invites/screen`)
+    .send({ emails: ["someone@example.com"] });
+  equal(response.status, 403);
+});

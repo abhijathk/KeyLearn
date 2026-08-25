@@ -79,6 +79,49 @@ export type AccessEvent = {
   readonly at: string;
 };
 
+export type InviteVerdict =
+  | "invite"
+  | "repeated"
+  | "already-invited"
+  | "already-here"
+  | "not-an-address";
+
+export type ScreenResult = {
+  /** In the order given, so a verdict lines up with its CSV row. */
+  readonly verdicts: readonly {
+    readonly email: string;
+    readonly verdict: InviteVerdict;
+  }[];
+  readonly willInvite: number;
+  /** Null when no plan exists yet — nothing to run out of. */
+  readonly seatsLeft: number | null;
+};
+
+export type BulkResult = {
+  readonly sent: number;
+  readonly skipped: readonly {
+    readonly email: string;
+    readonly reason: Exclude<InviteVerdict, "invite">;
+  }[];
+};
+
+export type Slip = {
+  readonly id: number;
+  readonly url: string;
+  readonly expiresAt: string;
+};
+
+export type InviteRow = {
+  readonly id: number;
+  readonly role: string;
+  readonly batchId: number | null;
+  readonly email: string | null;
+  readonly expiresAt: string;
+  readonly acceptedAt: string | null;
+  readonly acceptedByName: string | null;
+  readonly revokedAt: string | null;
+};
+
 export namespace OrgService {
   export async function myOrgs(): Promise<readonly OrgSummary[]> {
     const response = await request
@@ -140,6 +183,81 @@ export namespace OrgService {
       .POST(`/_/org/${id}/invites`)
       .send({ role, batchId });
     return (await response.json()) as InviteCreated;
+  }
+
+  /**
+   * The read-back before the send. No invite exists after this call and
+   * no email leaves — it only says what would happen, by row.
+   */
+  export async function screenInvites(
+    id: number,
+    emails: readonly string[],
+  ): Promise<ScreenResult> {
+    const response = await request
+      .use(expectType("application/json"))
+      .POST(`/_/org/${id}/invites/screen`)
+      .send({ emails });
+    return (await response.json()) as ScreenResult;
+  }
+
+  /** One invite each, emailed. Returns what was skipped and why. */
+  export async function inviteByEmail(
+    id: number,
+    role: "owner" | "admin" | "teacher" | "guardian",
+    batchId: number | null,
+    emails: readonly string[],
+  ): Promise<BulkResult> {
+    const response = await request
+      .use(expectType("application/json"))
+      .POST(`/_/org/${id}/invites`)
+      .send({ role, batchId, emails });
+    return (await response.json()) as BulkResult;
+  }
+
+  /**
+   * Anonymous slips for printing. The tokens come back whole exactly
+   * once — the sheet is the only copy — so this result must reach the
+   * printer before it is thrown away.
+   */
+  export async function inviteSlips(
+    id: number,
+    role: "guardian",
+    batchId: number | null,
+    count: number,
+  ): Promise<readonly Slip[]> {
+    const response = await request
+      .use(expectType("application/json"))
+      .POST(`/_/org/${id}/invites`)
+      .send({ role, batchId, count });
+    const body = (await response.json()) as {
+      readonly slips?: readonly Slip[];
+    };
+    return body.slips ?? [];
+  }
+
+  /** The roster: who was invited, who joined, who is still waiting. */
+  export async function listInvites(id: number): Promise<readonly InviteRow[]> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET(`/_/org/${id}/invites`)
+      .send();
+    if (!response.ok) {
+      return [];
+    }
+    const body = (await response.json()) as {
+      readonly invites?: readonly InviteRow[];
+    };
+    return body.invites ?? [];
+  }
+
+  export async function revokeInvite(
+    id: number,
+    inviteId: number,
+  ): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST(`/_/org/${id}/invites/${inviteId}/revoke`)
+      .send({});
   }
 
   export async function createLearner(

@@ -38,6 +38,7 @@ export function main() {
 const AccountPage = lazy(() => import("./pages/account.tsx"));
 const JoinPage = lazy(() => import("./pages/join.tsx"));
 const ForSchoolsPage = lazy(() => import("./pages/for-schools.tsx"));
+const OrgDeskPage = lazy(() => import("./pages/org.tsx"));
 const DeletionCancelPage = lazy(() => import("./pages/deletion-cancel.tsx"));
 const DesignPage = lazy(() => import("./pages/design.tsx"));
 const VerifyPage = lazy(() => import("./pages/verify.tsx"));
@@ -195,6 +196,17 @@ function PageRoutes() {
               <Title page={Pages.practice} />
               <Suspense fallback={<LoadingProgress />}>
                 <PracticePage />
+              </Suspense>
+            </Template>
+          }
+        />
+        <Route
+          path={Pages.org.path}
+          element={
+            <Template path={Pages.org.path}>
+              <Title page={Pages.org} />
+              <Suspense fallback={<LoadingProgress />}>
+                <OrgDeskPage />
               </Suspense>
             </Template>
           }

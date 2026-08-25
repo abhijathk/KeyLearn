@@ -79,6 +79,12 @@ const TInvite = z.object({
 const PInvite = zod(TInvite);
 type TInvite = z.infer<typeof TInvite>;
 
+const TScreen = z.object({
+  emails: z.array(z.string().trim().min(1).max(128)).max(500),
+});
+const PScreen = zod(TScreen);
+type TScreen = z.infer<typeof TScreen>;
+
 const TAccept = z.object({
   token: z.string().trim().min(20).max(80),
   /**
@@ -391,11 +397,28 @@ export class OrgController {
    * the tool, so repeats, addresses already in the school and typos are
    * all reported rather than silently dropped.
    */
+  /**
+   * Reads a pasted list or a CSV's email column and says, for each entry
+   * IN THE ORDER GIVEN, what would happen to it.
+   *
+   * Order is the whole point: the coordinator is looking at row 6 of a
+   * spreadsheet they still have open, and "row 6 is not an address" is
+   * fixable where "one of these forty is not an address" is not.
+   */
   async #screenEmails(
     organizationId: number,
     raw: readonly string[],
   ): Promise<{
     invite: string[];
+    verdicts: {
+      email: string;
+      verdict:
+        | "invite"
+        | "repeated"
+        | "already-invited"
+        | "already-here"
+        | "not-an-address";
+    }[];
     skipped: {
       email: string;
       reason:
@@ -419,9 +442,10 @@ export class OrgController {
     );
     const seen = new Set<string>();
     const invite: string[] = [];
-    const skipped: {
+    const verdicts: {
       email: string;
-      reason:
+      verdict:
+        | "invite"
         | "repeated"
         | "already-invited"
         | "already-here"
@@ -430,19 +454,31 @@ export class OrgController {
     for (const entry of raw) {
       const email = entry.trim().toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        skipped.push({ email: entry, reason: "not-an-address" });
+        // The raw entry, not the lowercased one — they have to find this
+        // string in their spreadsheet.
+        verdicts.push({ email: entry, verdict: "not-an-address" });
       } else if (seen.has(email)) {
-        skipped.push({ email, reason: "repeated" });
+        verdicts.push({ email, verdict: "repeated" });
       } else if (members.has(email)) {
-        skipped.push({ email, reason: "already-here" });
+        verdicts.push({ email, verdict: "already-here" });
       } else if (pending.has(email)) {
-        skipped.push({ email, reason: "already-invited" });
+        verdicts.push({ email, verdict: "already-invited" });
       } else {
         seen.add(email);
         invite.push(email);
+        verdicts.push({ email, verdict: "invite" });
       }
     }
-    return { invite, skipped };
+    return {
+      invite,
+      verdicts,
+      skipped: verdicts
+        .filter((v) => v.verdict !== "invite")
+        .map(({ email, verdict }) => ({
+          email,
+          reason: verdict as Exclude<typeof verdict, "invite">,
+        })),
+    };
   }
 
   /** Placeholder for the mail send — wired to the app mailer next. */
@@ -456,6 +492,38 @@ export class OrgController {
   }
 
   /** The roster: who was invited, who joined, who is still waiting. */
+  /**
+   * The read-back. Same screening as the send, no side effects at all —
+   * not an invite row, not an email, not a consumed seat.
+   *
+   * A mail-merge that quietly invites the same parent twice is how a
+   * coordinator stops trusting the tool on day one, so the list is shown
+   * before anybody is written to, never after.
+   */
+  @http.POST("/_/org/{id:[0-9]+}/invites/screen")
+  async screenInvites(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id", zod(pId)) id: number,
+    @body.json(PScreen) data: TScreen,
+  ) {
+    // Reading a list is the same privilege as sending to it.
+    await this.#member(ctx, id, "invites.guardians");
+    const org = await Organization.findById(id);
+    if (org == null) {
+      throw new ForbiddenError();
+    }
+    const checked = await this.#screenEmails(id, data.emails);
+    const seats = await org.seatStatus();
+    ctx.response.body = {
+      verdicts: checked.verdicts,
+      willInvite: checked.invite.length,
+      // Said here rather than at send time, so "forty parents, four
+      // seats" is discovered while the spreadsheet is still open.
+      seatsLeft:
+        seats.seats == null ? null : Math.max(0, seats.seats - seats.used),
+    };
+  }
+
   @http.GET("/_/org/{id:[0-9]+}/invites")
   async listInvites(
     ctx: Context<RouterState & SessionState & AuthState>,
