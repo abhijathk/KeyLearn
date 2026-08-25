@@ -11,6 +11,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { BulkInvite } from "./BulkInvite.tsx";
 import * as styles from "./DeskPage.module.less";
+import { Learners } from "./Learners.tsx";
 import {
   type AccessEvent,
   type InviteRow,
@@ -29,7 +30,7 @@ import {
  * what is made here — the resolver owns that (P2), so a section that
  * forgets to hide itself shows an empty list rather than a leak.
  */
-type Pane = "seats" | "invite" | "roster" | "audit";
+type Pane = "seats" | "learners" | "invite" | "roster" | "audit";
 
 export function DeskPage(): ReactNode {
   const { publicUser } = usePageData();
@@ -203,6 +204,19 @@ function Desk({
             }
           />
           <RailItem
+            on={pane === "learners"}
+            onClick={() => {
+              setPane("learners");
+            }}
+            icon={<LearnersIcon />}
+            label={
+              <FormattedMessage
+                id="desk.rail.learners"
+                defaultMessage="Learners"
+              />
+            }
+          />
+          <RailItem
             on={pane === "invite"}
             onClick={() => {
               setPane("invite");
@@ -252,6 +266,22 @@ function Desk({
               </h2>
               <Seats overview={overview} />
               <Classes overview={overview} learners={learners} />
+            </div>
+          )}
+          {pane === "learners" && (
+            <div className={styles.paneScroll}>
+              <h2 className={styles.paneTitle}>
+                <FormattedMessage
+                  id="desk.pane.learners"
+                  defaultMessage="Learners"
+                />
+              </h2>
+              <Learners
+                id={id}
+                overview={overview}
+                learners={learners}
+                onChange={refresh}
+              />
             </div>
           )}
           {pane === "invite" && (
@@ -335,6 +365,14 @@ function SchoolIcon(): ReactNode {
   return (
     <svg className={styles.railIcon} viewBox="0 0 24 24">
       <path d="M3 21V9l9-6 9 6v12M9 21v-7h6v7M3 21h18" />
+    </svg>
+  );
+}
+
+function LearnersIcon(): ReactNode {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <path d="M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5M17 5.6a3.2 3.2 0 010 6.3M18.5 14.8c2 .7 3.2 2.3 3.2 4.4" />
     </svg>
   );
 }

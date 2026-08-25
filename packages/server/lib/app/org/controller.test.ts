@@ -645,3 +645,59 @@ test("only a staff invite carries the address rule", async () => {
   // telling them otherwise would turn a non-rule into a barrier.
   isTrue(!(parent!.text ?? "").includes("balakairali.org.au"));
 });
+
+test("a school cannot touch the PIN of a family's learner", async () => {
+  const { owner, guardian, org, batchA } = await seed();
+
+  // A family's child, enrolled by the guardian accepting an invite —
+  // the school can see them, and that is all.
+  const child = await Profile.query().insertAndFetch({
+    userId: guardian.id!,
+    organizationId: null,
+    kind: "kid",
+    firstName: "Meera",
+    parentalConsent: true,
+  });
+  await ProfileAccess.grant({
+    profileId: child.id!,
+    organizationId: org.id!,
+    batchId: batchA.id!,
+    grantedByUserId: guardian.id!,
+  });
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(owner.id!);
+  const response = await request
+    .POST(`/_/org/${org.id!}/learners/${child.id!}/pin`)
+    .send({ pin: "1234" });
+  equal(response.status, 403);
+
+  // Not merely refused — untouched. A partial write here would be a
+  // school quietly taking over a family's learner.
+  const after = await Profile.query().findById(child.id!);
+  equal(after!.userId, guardian.id!);
+  isNull(after!.organizationId ?? null);
+});
+
+test("a learner the school owns has no account behind them", async () => {
+  const { owner, org, batchA } = await seed();
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(owner.id!);
+  const response = await request.POST(`/_/org/${org.id!}/learners`).send({
+    firstName: "Dhruv",
+    batchId: batchA.id!,
+    pin: "4821",
+  });
+  equal(response.status, 200);
+  const { profileId } = (await response.body.json()) as { profileId: number };
+
+  const profile = await Profile.query().findById(profileId);
+  // Exactly one owner — the CHECK constraint's whole purpose (A2).
+  isNull(profile!.userId ?? null);
+  equal(profile!.organizationId, org.id!);
+  // And a PIN from birth: it is the only thing telling this child apart
+  // from the next one at the same shared machine.
+  equal(await profile!.verifyPin("4821"), "ok");
+  equal(await profile!.verifyPin("0000"), "wrong");
+});
