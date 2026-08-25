@@ -571,6 +571,7 @@ export class OrgInvite extends TimestampMixin(Model) {
   role?: string;
   tokenHash?: string;
   email?: string | null;
+  reference?: string | null;
   issuedByUserId?: number;
   expiresAt?: Date | string;
   acceptedByUserId?: number | null;
@@ -587,6 +588,7 @@ export class OrgInvite extends TimestampMixin(Model) {
     role,
     issuedByUserId,
     email = null,
+    reference = null,
     expiresInDays = OrgInvite.DEFAULT_EXPIRY_DAYS,
   }: {
     readonly organizationId: number;
@@ -595,6 +597,12 @@ export class OrgInvite extends TimestampMixin(Model) {
     readonly issuedByUserId: number;
     /** Set when emailed to a named address; null for a printed slip. */
     readonly email?: string | null;
+    /**
+     * The coordinator's note about who this is for — the child's name,
+     * usually. Never shown to the recipient and dropped from view once
+     * they accept; it exists to chase the ones who have not.
+     */
+    readonly reference?: string | null;
     readonly expiresInDays?: number;
   }): Promise<{ invite: OrgInvite; token: string }> {
     const token = Random.string(40);
@@ -604,6 +612,8 @@ export class OrgInvite extends TimestampMixin(Model) {
       role,
       tokenHash: hashToken(token),
       email: email == null ? null : email.trim().toLowerCase(),
+      reference:
+        reference == null || reference.trim() === "" ? null : reference.trim(),
       issuedByUserId,
       expiresAt: new Date(Date.now() + expiresInDays * 24 * 3600 * 1000),
     });
@@ -628,20 +638,39 @@ export class OrgInvite extends TimestampMixin(Model) {
     readonly batchId?: number | null;
     readonly role: "owner" | "admin" | "teacher" | "guardian";
     readonly issuedByUserId: number;
-    readonly emails?: readonly string[] | null;
+    /** Addresses, each optionally carrying the coordinator's reference. */
+    readonly emails?:
+      | readonly (
+          | string
+          | {
+              readonly email: string;
+              readonly reference?: string | null;
+            }
+        )[]
+      | null;
     readonly count?: number;
   }): Promise<{ invite: OrgInvite; token: string }[]> {
     const made: { invite: OrgInvite; token: string }[] = [];
-    const targets =
-      emails != null ? emails.map((e) => e) : new Array<null>(count).fill(null);
-    for (const email of targets) {
+    const targets: { email: string | null; reference: string | null }[] =
+      emails != null
+        ? emails.map((e) =>
+            typeof e === "string"
+              ? { email: e, reference: null }
+              : { email: e.email, reference: e.reference ?? null },
+          )
+        : new Array(count).fill(null).map(() => ({
+            email: null,
+            reference: null,
+          }));
+    for (const target of targets) {
       made.push(
         await OrgInvite.issue({
           organizationId,
           batchId,
           role,
           issuedByUserId,
-          email,
+          email: target.email,
+          reference: target.reference,
         }),
       );
     }
@@ -665,6 +694,10 @@ export class OrgInvite extends TimestampMixin(Model) {
       role: this.role!,
       batchId: this.batchId ?? null,
       email: this.email ?? null,
+      // Only while it is still waiting. Once the parent is in, the
+      // school knows who they are from the enrolment itself, so the
+      // coordinator's crib note has done its job and stops being shown.
+      reference: this.acceptedAt != null ? null : (this.reference ?? null),
       expiresAt: new Date(this.expiresAt!).toISOString(),
       acceptedAt:
         this.acceptedAt != null

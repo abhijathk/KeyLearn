@@ -701,3 +701,72 @@ test("a learner the school owns has no account behind them", async () => {
   equal(await profile!.verifyPin("4821"), "ok");
   equal(await profile!.verifyPin("0000"), "wrong");
 });
+
+test("the reference is a crib note that dies on acceptance", async () => {
+  const { owner, guardian, org, batchA } = await seed();
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(owner.id!);
+  equal(
+    (
+      await request.POST(`/_/org/${org.id!}/invites`).send({
+        role: "guardian",
+        batchId: batchA.id!,
+        emails: [{ email: "parent@example.com", reference: "Meera Nair" }],
+      })
+    ).status,
+    200,
+  );
+
+  // While it is waiting, the coordinator can see who it is for — that
+  // is the entire point: an unaccepted address is not a findable
+  // person, "the Nair girl in Ms Priya's class" is.
+  const listed = (await (
+    await request.GET(`/_/org/${org.id!}/invites`).send()
+  ).body.json()) as { invites: { email: string; reference: string | null }[] };
+  const waiting = listed.invites.find((i) => i.email === "parent@example.com");
+  equal(waiting!.reference, "Meera Nair");
+
+  // It is never sent to the person it describes.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const mail = context.mailer.dump().find((m) => m.to === "parent@example.com");
+  isNotNull(mail);
+  isTrue(!(mail!.text ?? "").includes("Meera Nair"));
+  isTrue(!(mail!.html ?? "").includes("Meera Nair"));
+
+  // And once the parent is in, it is gone from the row entirely — not
+  // merely hidden. It is a child's name sitting beside an address.
+  const invite = (await OrgInvite.listFor(org.id!)).find(
+    (i) => i.email === "parent@example.com",
+  );
+  const child = await Profile.query().insertAndFetch({
+    userId: guardian.id!,
+    organizationId: null,
+    kind: "kid",
+    firstName: "Meera",
+    parentalConsent: true,
+  });
+  const { token } = await OrgInvite.issue({
+    organizationId: org.id!,
+    batchId: batchA.id!,
+    role: "guardian",
+    issuedByUserId: owner.id!,
+    email: "parent2@example.com",
+    reference: "Second Child",
+  });
+  isNotNull(invite);
+
+  await request.become(guardian.id!);
+  equal(
+    (
+      await request
+        .POST("/_/org/invites/accept")
+        .send({ token, profileIds: [child.id!] })
+    ).status,
+    200,
+  );
+  const accepted = (await OrgInvite.listFor(org.id!)).find(
+    (i) => i.email === "parent2@example.com",
+  );
+  isNull(accepted!.reference ?? null);
+});

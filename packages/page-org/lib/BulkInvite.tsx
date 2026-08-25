@@ -199,9 +199,20 @@ function ByEmail({
       return;
     }
     setBusy(true);
+    // Carry each address's reference with it, matched by position —
+    // the screen returns verdicts in the order it was given them.
+    const refByEmail = new Map<string, string | null>();
+    entries.forEach((entry) => {
+      if (!refByEmail.has(entry.email.toLowerCase())) {
+        refByEmail.set(entry.email.toLowerCase(), entry.reference);
+      }
+    });
     const toSend = screened.verdicts
       .filter((v) => v.verdict === "invite")
-      .map((v) => v.email);
+      .map((v) => ({
+        email: v.email,
+        reference: refByEmail.get(v.email.toLowerCase()) ?? null,
+      }));
     OrgService.inviteByEmail(
       id,
       role as "guardian" | "teacher" | "admin" | "owner",
@@ -279,7 +290,7 @@ function ByEmail({
         <span>
           <FormattedMessage
             id="bulk.dropSub"
-            defaultMessage="a .csv exported from your spreadsheet — or choose a file"
+            defaultMessage="name, email, class, reference — only email is required"
           />
         </span>
         <input
@@ -312,7 +323,7 @@ function ByEmail({
         placeholder={formatMessage({
           id: "bulk.paste",
           defaultMessage:
-            "…or paste addresses, one per line. A CSV is read the same way — only the email column is used.",
+            "…or paste addresses, one per line. From a CSV we read the email and, if it is there, a reference column — the child's name — so you can tell later who has not joined.",
         })}
         onChange={(event) => {
           take(event.target.value, null);
@@ -345,7 +356,7 @@ function ByEmail({
       ) : (
         <ReadBack
           screened={screened}
-          lines={entries.map((e) => e.line)}
+          rows={entries}
           busy={busy}
           onSend={send}
           onBack={() => {
@@ -360,14 +371,14 @@ function ByEmail({
 /** The list read back, by row, before anybody is written to. */
 function ReadBack({
   screened,
-  lines,
+  rows,
   busy,
   onSend,
   onBack,
 }: {
   readonly screened: ScreenResult;
-  /** Source line of each verdict, positionally — see parseEmails. */
-  readonly lines: readonly number[];
+  /** The parsed rows, positionally aligned with the verdicts. */
+  readonly rows: readonly CsvRow[];
   readonly busy: boolean;
   readonly onSend: () => void;
   readonly onBack: () => void;
@@ -424,10 +435,13 @@ function ReadBack({
               <span className={styles.rowNo}>
                 {formatMessage(
                   { id: "bulk.rowNo", defaultMessage: "row {n}" },
-                  { n: lines[index] ?? index + 1 },
+                  { n: rows[index]?.line ?? index + 1 },
                 )}
               </span>{" "}
               {v.email}
+              {rows[index]?.reference != null && (
+                <span className={styles.ref}> · {rows[index]!.reference}</span>
+              )}
             </span>
             <span className={`${styles.ptag} ${tone[v.verdict]}`}>
               {label[v.verdict]}
@@ -657,27 +671,95 @@ function OnPaper({
  * address; everything else on the line is ignored, including the name
  * column, because the parent names themselves when they join.
  */
-export function parseEmails(raw: string): { email: string; line: number }[] {
-  const out: { email: string; line: number }[] = [];
+export type CsvRow = {
+  readonly email: string;
+  /** The coordinator's own note — usually the child's name. */
+  readonly reference: string | null;
+  /** Line number in THEIR file. */
+  readonly line: number;
+};
+
+/**
+ * Reads a pasted block or a CSV into addresses.
+ *
+ * The class list a school already keeps has four things in it: the
+ * parent's name, their address, the class, and who the child is. Only
+ * the address is required. The child's name is kept as a reference so
+ * an unaccepted invite can be chased in the real world — "the Nair boy
+ * in Ms Priya's class hasn't joined" is a findable person; an
+ * unaccepted address is not.
+ *
+ * The parent's own name is deliberately ignored: they tell us their
+ * name when they join, and a stale spreadsheet name would follow them
+ * around afterwards. The reference does not follow them around, because
+ * it is dropped the moment they accept.
+ *
+ * Deliberately forgiving about shape: a secretary's export has a header
+ * row, quoted fields, a trailing blank line and a stray semicolon, and
+ * none of that is worth an error message.
+ */
+export function parseEmails(raw: string): CsvRow[] {
+  const out: CsvRow[] = [];
   const lines = raw.split(/\r?\n/);
+
+  // Which column holds what, if there is a header saying so. Without a
+  // header the address is found by looking for an "@", and anything
+  // after it that is not the class is taken as the reference.
+  let refCol: number | null = null;
+  let emailCol: number | null = null;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
     if (line.trim() === "") {
       continue;
     }
-    const cells = line
-      .split(/[,;\t]/)
-      .map((c) => c.trim().replace(/^"|"$/g, ""));
-    const cell = cells.find((c) => c.includes("@"));
-    if (cell == null) {
-      // A header row, or a line with no address in it at all. Skipping
-      // beats reporting "row 1 is not an address" for `name,email,class`.
+    const cells = split(line);
+
+    if (refCol == null && emailCol == null && looksLikeHeader(cells)) {
+      cells.forEach((cell, index) => {
+        const name = cell.toLowerCase();
+        if (name.includes("mail")) {
+          emailCol = index;
+        } else if (
+          name.includes("ref") ||
+          name.includes("student") ||
+          name.includes("learner") ||
+          name.includes("child") ||
+          name.includes("pupil")
+        ) {
+          refCol = index;
+        }
+      });
       continue;
     }
-    // The line number in THEIR file, not our position in the result.
-    // Skipping a header and then saying "row 1" for what the spreadsheet
-    // calls row 2 makes the number worse than useless.
-    out.push({ email: cell, line: i + 1 });
+
+    const emailIndex =
+      emailCol != null && cells[emailCol]?.includes("@")
+        ? emailCol
+        : cells.findIndex((c) => c.includes("@"));
+    if (emailIndex < 0) {
+      // A header we did not recognise, or a line with no address at all.
+      continue;
+    }
+    const reference =
+      refCol != null && refCol !== emailIndex ? (cells[refCol] ?? "") : "";
+    out.push({
+      email: cells[emailIndex]!,
+      reference: reference.trim() === "" ? null : reference.trim(),
+      line: i + 1,
+    });
   }
   return out;
+}
+
+function split(line: string): string[] {
+  return line.split(/[,;\t]/).map((c) => c.trim().replace(/^"|"$/g, ""));
+}
+
+/** A row with no address in it, naming its own columns. */
+function looksLikeHeader(cells: readonly string[]): boolean {
+  return (
+    !cells.some((c) => c.includes("@")) &&
+    cells.some((c) => c.toLowerCase().includes("mail"))
+  );
 }

@@ -2,6 +2,7 @@ import { AuthPage } from "@keylearn/page-account";
 import { usePageData } from "@keylearn/pages-shared";
 import {
   Button,
+  ConfirmDialog,
   FloatingShell,
   SettingsCard,
   TextField,
@@ -300,7 +301,7 @@ function Desk({
               <h2 className={styles.paneTitle}>
                 <FormattedMessage
                   id="desk.pane.roster"
-                  defaultMessage="Who has joined"
+                  defaultMessage="Roster"
                 />
               </h2>
               <Roster
@@ -512,86 +513,46 @@ function Classes({
         />
       </p>
       {overview.batches.length === 0 ? (
-        <p className={styles.empty}>
+        <p className={styles.cardNote}>
           <FormattedMessage
             id="desk.classes.empty"
             defaultMessage="No classes yet. Add one, then invite its teacher and its parents."
           />
         </p>
       ) : (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>
-                <FormattedMessage
-                  id="desk.classes.col.name"
-                  defaultMessage="class"
-                />
-              </th>
-              <th>
-                <FormattedMessage
-                  id="desk.classes.col.teacher"
-                  defaultMessage="teacher"
-                />
-              </th>
-              <th>
-                <FormattedMessage
-                  id="desk.classes.col.learners"
-                  defaultMessage="learners"
-                />
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {overview.batches.map((batch) => {
-              const mine = learners.filter((l) => l.batchId === batch.id);
-              const modeA = mine.filter((l) => l.mode === "A").length;
-              const teacher = teacherOf(batch.id);
-              return (
-                <tr key={batch.id}>
-                  <td>
-                    <b>{batch.name}</b>
-                  </td>
-                  <td className={teacher == null ? styles.faint : undefined}>
-                    {teacher ?? (
-                      <FormattedMessage
-                        id="desk.classes.noTeacher"
-                        defaultMessage="not invited yet"
-                      />
-                    )}
-                  </td>
-                  <td>
-                    {mine.length}{" "}
-                    {mine.length > 0 &&
-                      (modeA === 0 ? (
-                        <span className={`${styles.pill} ${styles.b}`}>
-                          <FormattedMessage
-                            id="desk.mode.b"
-                            defaultMessage="families own"
-                          />
-                        </span>
-                      ) : modeA === mine.length ? (
-                        <span className={`${styles.pill} ${styles.a}`}>
-                          <FormattedMessage
-                            id="desk.mode.a"
-                            defaultMessage="school owns · PIN"
-                          />
-                        </span>
-                      ) : (
-                        <span className={styles.pill}>
-                          <FormattedMessage
-                            id="desk.mode.mixed"
-                            defaultMessage="{n} school-owned"
-                            values={{ n: modeA }}
-                          />
-                        </span>
-                      ))}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        overview.batches.map((batch) => {
+          const mine = learners.filter((l) => l.batchId === batch.id);
+          const modeA = mine.filter((l) => l.mode === "A").length;
+          const teacher = teacherOf(batch.id);
+          return (
+            <div key={batch.id} className={styles.rrow}>
+              <span className={styles.rowInfo}>
+                <span className={styles.rowName}>{batch.name}</span>
+                <span className={styles.rowMeta}>
+                  {teacher ?? (
+                    <FormattedMessage
+                      id="desk.classes.noTeacher"
+                      defaultMessage="no teacher invited yet"
+                    />
+                  )}
+                  {" · "}
+                  <FormattedMessage
+                    id="desk.classes.count"
+                    defaultMessage="{n, plural, =0 {no learners} one {# learner} other {# learners}}"
+                    values={{ n: mine.length }}
+                  />
+                  {modeA > 0 && (
+                    <FormattedMessage
+                      id="desk.classes.owned"
+                      defaultMessage=", {n} this centre's own"
+                      values={{ n: modeA }}
+                    />
+                  )}
+                </span>
+              </span>
+            </div>
+          );
+        })
       )}
 
       {adding ? (
@@ -607,23 +568,36 @@ function Classes({
             value={name}
             onChange={setName}
           />
-          <Button
-            onClick={add}
+          <button
+            type="button"
+            className={styles.primary}
             disabled={busy || name.trim() === ""}
-            label={formatMessage({
-              id: "desk.classes.save",
-              defaultMessage: "Add",
-            })}
-          />
+            onClick={add}
+          >
+            <FormattedMessage id="desk.classes.save" defaultMessage="Add" />
+          </button>
+          <button
+            type="button"
+            className={styles.rowAction}
+            onClick={() => {
+              setAdding(false);
+            }}
+          >
+            <FormattedMessage
+              id="desk.classes.cancel"
+              defaultMessage="Cancel"
+            />
+          </button>
         </div>
       ) : (
         <button
           type="button"
-          className={styles.quiet}
+          className={styles.primary}
           onClick={() => {
             setAdding(true);
           }}
         >
+          <span className={styles.plus}>+</span>
           <FormattedMessage
             id="desk.classes.add"
             defaultMessage="Add a class"
@@ -649,97 +623,237 @@ function Roster({
   readonly id: number;
   readonly onChange: () => void;
 }): ReactNode {
+  const { formatMessage } = useIntl();
+  const [showSpent, setShowSpent] = useState(false);
+  const [revoking, setRevoking] = useState<InviteRow | null>(null);
+
   if (invites.length === 0) {
-    return null;
+    return (
+      <SettingsCard
+        caption={
+          <FormattedMessage id="desk.roster.caption" defaultMessage="Invites" />
+        }
+      >
+        <p className={styles.cardNote}>
+          <FormattedMessage
+            id="desk.roster.none"
+            defaultMessage="No invites yet. Everyone gets in through one, so this is where the term starts."
+          />
+        </p>
+      </SettingsCard>
+    );
   }
-  const joined = invites.filter((i) => i.acceptedAt != null).length;
+
   const waiting = invites.filter(
     (i) => i.acceptedAt == null && i.revokedAt == null,
   );
+  const joined = invites.filter((i) => i.acceptedAt != null);
+  const revoked = invites.filter(
+    (i) => i.revokedAt != null && i.acceptedAt == null,
+  );
+
   const batchName = (batchId: number | null): string | null =>
     batchId == null
       ? null
       : (overview.batches.find((b) => b.id === batchId)?.name ?? null);
 
+  const who =
+    revoking == null
+      ? ""
+      : (revoking.email ??
+        formatMessage({
+          id: "desk.roster.slip",
+          defaultMessage: "Printed slip",
+        }));
+
   return (
-    <SettingsCard
-      caption={
-        <FormattedMessage id="desk.roster.caption" defaultMessage="Invites" />
-      }
-    >
-      <p className={styles.cardNote}>
-        <FormattedMessage
-          id="desk.roster.count"
-          defaultMessage="{joined} of {total} invites accepted."
-          values={{ joined, total: invites.length }}
+    <>
+      {/* A revoked invite cannot be un-revoked — the token is hashed and
+          gone. Issuing a replacement is easy, but the person holding the
+          old link is stranded until someone notices. */}
+      {revoking != null && (
+        <ConfirmDialog
+          title={formatMessage({
+            id: "desk.roster.revoke.title",
+            defaultMessage: "Revoke this invite?",
+          })}
+          message={formatMessage(
+            {
+              id: "desk.roster.revoke.message",
+              defaultMessage:
+                "The link sent to {who} stops working immediately. It cannot be turned back on — you would send a new invite instead, and the old link would stay dead in their inbox.",
+            },
+            { who },
+          )}
+          confirmLabel={formatMessage({
+            id: "desk.roster.revoke.confirm",
+            defaultMessage: "Revoke it",
+          })}
+          danger={true}
+          onConfirm={() => {
+            const target = revoking;
+            setRevoking(null);
+            void OrgService.revokeInvite(id, target.id).then(onChange);
+          }}
+          onCancel={() => {
+            setRevoking(null);
+          }}
         />
-      </p>
-      <div>
-        {invites.map((invite) => (
-          <div key={invite.id} className={styles.rrow}>
-            <span className={styles.rwho}>
-              {invite.acceptedByName ?? invite.email ?? (
-                <FormattedMessage
-                  id="desk.roster.slip"
-                  defaultMessage="printed slip"
-                />
-              )}
-              {batchName(invite.batchId) != null && (
-                <span className={styles.faint}>
-                  {" · "}
-                  {batchName(invite.batchId)}
-                </span>
-              )}
-            </span>
-            {invite.revokedAt != null ? (
-              <span className={`${styles.rtag} ${styles.faint}`}>
-                <FormattedMessage
-                  id="desk.roster.revoked"
-                  defaultMessage="revoked"
-                />
-              </span>
-            ) : invite.acceptedAt != null ? (
-              <span className={`${styles.rtag} ${styles.ok}`}>
-                <FormattedMessage
-                  id="desk.roster.joined"
-                  defaultMessage="joined"
-                />
-              </span>
-            ) : (
-              <>
-                <span className={styles.rtag}>
-                  <FormattedMessage
-                    id="desk.roster.waiting"
-                    defaultMessage="not yet"
-                  />
-                </span>
+      )}
+
+      {/* Waiting first. By the third Sunday the only question a
+          coordinator has is who still has not joined, and burying that
+          under the people who already did is the wrong way round. */}
+      {waiting.length > 0 && (
+        <SettingsCard
+          caption={
+            <FormattedMessage
+              id="desk.roster.waitingCaption"
+              defaultMessage="Not joined yet"
+            />
+          }
+        >
+          {waiting.map((invite) => (
+            <InviteLine
+              key={invite.id}
+              invite={invite}
+              batchName={batchName(invite.batchId)}
+              action={
                 <button
                   type="button"
-                  className={styles.quiet}
+                  className={styles.rowAction}
                   onClick={() => {
-                    void OrgService.revokeInvite(id, invite.id).then(onChange);
+                    setRevoking(invite);
                   }}
                 >
                   <FormattedMessage
                     id="desk.roster.revoke"
-                    defaultMessage="revoke"
+                    defaultMessage="Revoke"
                   />
                 </button>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-      {waiting.length > 0 && (
-        <p className={styles.cardNote}>
-          <FormattedMessage
-            id="desk.roster.chase"
-            defaultMessage="{n, plural, one {# invite has} other {# invites have}} not been used yet. They expire on their own; revoking one only stops it early."
-            values={{ n: waiting.length }}
-          />
-        </p>
+              }
+            />
+          ))}
+          <p className={styles.cardNote}>
+            <FormattedMessage
+              id="desk.roster.chase"
+              defaultMessage="These expire on their own. Revoking one only stops it early — useful if it went to the wrong address."
+            />
+          </p>
+        </SettingsCard>
       )}
-    </SettingsCard>
+
+      {joined.length > 0 && (
+        <SettingsCard
+          caption={
+            <FormattedMessage
+              id="desk.roster.joinedCaption"
+              defaultMessage="Joined"
+            />
+          }
+        >
+          {joined.map((invite) => (
+            <InviteLine
+              key={invite.id}
+              invite={invite}
+              batchName={batchName(invite.batchId)}
+              action={
+                <span className={styles.doneTag}>
+                  <FormattedMessage
+                    id="desk.roster.joined"
+                    defaultMessage="joined"
+                  />
+                </span>
+              }
+            />
+          ))}
+        </SettingsCard>
+      )}
+
+      {/* Spent invites are history, not work. They stay reachable —
+          "did I already revoke that one?" is a real question — but they
+          do not get to crowd out the list that needs chasing. */}
+      {revoked.length > 0 && (
+        <SettingsCard
+          caption={
+            <FormattedMessage
+              id="desk.roster.spentCaption"
+              defaultMessage="Finished with"
+            />
+          }
+        >
+          {showSpent ? (
+            revoked.map((invite) => (
+              <InviteLine
+                key={invite.id}
+                invite={invite}
+                batchName={batchName(invite.batchId)}
+                action={
+                  <span className={styles.faintTag}>
+                    <FormattedMessage
+                      id="desk.roster.revoked"
+                      defaultMessage="revoked"
+                    />
+                  </span>
+                }
+              />
+            ))
+          ) : (
+            <button
+              type="button"
+              className={styles.rowAction}
+              onClick={() => {
+                setShowSpent(true);
+              }}
+            >
+              <FormattedMessage
+                id="desk.roster.showSpent"
+                defaultMessage="Show {n} revoked"
+                values={{ n: revoked.length }}
+              />
+            </button>
+          )}
+        </SettingsCard>
+      )}
+    </>
+  );
+}
+
+/** One invite, in the same filled row the learners list uses. */
+function InviteLine({
+  invite,
+  batchName,
+  action,
+}: {
+  readonly invite: InviteRow;
+  readonly batchName: string | null;
+  readonly action: ReactNode;
+}): ReactNode {
+  return (
+    <div className={styles.rrow}>
+      <span className={styles.rowInfo}>
+        <span className={styles.rowName}>
+          {invite.acceptedByName ?? invite.email ?? (
+            <FormattedMessage
+              id="desk.roster.slip"
+              defaultMessage="Printed slip"
+            />
+          )}
+        </span>
+        <span className={styles.rowMeta}>
+          {/* The coordinator's own note first — "who is this?" is the
+              question they are actually asking of an unaccepted invite,
+              and the address rarely answers it. Gone once they join. */}
+          {invite.reference != null && (
+            <span className={styles.ref}>{invite.reference}</span>
+          )}
+          {invite.reference != null && " · "}
+          {invite.role}
+          {batchName != null && ` · ${batchName}`}
+        </span>
+      </span>
+      {action}
+    </div>
   );
 }
 
@@ -765,33 +879,31 @@ function Audit({
       caption={<FormattedMessage id="desk.audit" defaultMessage="Every look" />}
     >
       {events.length === 0 ? (
-        <p className={styles.empty}>
+        <p className={styles.cardNote}>
           <FormattedMessage
             id="desk.audit.empty"
             defaultMessage="Nobody has looked at an individual learner yet. When they do, it appears here."
           />
         </p>
       ) : (
-        <div>
-          {events.map((event, index) => (
-            <div key={index} className={styles.arow}>
-              <span>
-                <b>
-                  {actorName(event.actorUserId) ?? (
-                    <FormattedMessage
-                      id="desk.audit.someone"
-                      defaultMessage="A staff member"
-                    />
-                  )}
-                </b>{" "}
-                {event.action}
+        events.map((event, index) => (
+          <div key={index} className={styles.rrow}>
+            <span className={styles.rowInfo}>
+              <span className={styles.rowName}>
+                {actorName(event.actorUserId) ?? (
+                  <FormattedMessage
+                    id="desk.audit.someone"
+                    defaultMessage="A staff member"
+                  />
+                )}
               </span>
-              <span className={styles.at}>
-                {new Date(event.at).toLocaleString()}
-              </span>
-            </div>
-          ))}
-        </div>
+              <span className={styles.rowMeta}>{event.action}</span>
+            </span>
+            <span className={styles.faintTag}>
+              {new Date(event.at).toLocaleString()}
+            </span>
+          </div>
+        ))
       )}
       <p className={styles.cardNote}>
         <FormattedMessage

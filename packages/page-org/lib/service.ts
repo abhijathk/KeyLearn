@@ -116,6 +116,8 @@ export type InviteRow = {
   readonly role: string;
   readonly batchId: number | null;
   readonly email: string | null;
+  /** The coordinator's note; null once the invite has been accepted. */
+  readonly reference: string | null;
   readonly expiresAt: string;
   readonly acceptedAt: string | null;
   readonly acceptedByName: string | null;
@@ -205,7 +207,10 @@ export namespace OrgService {
     id: number,
     role: "owner" | "admin" | "teacher" | "guardian",
     batchId: number | null,
-    emails: readonly string[],
+    emails: readonly (
+      | string
+      | { readonly email: string; readonly reference: string | null }
+    )[],
   ): Promise<BulkResult> {
     const response = await request
       .use(expectType("application/json"))

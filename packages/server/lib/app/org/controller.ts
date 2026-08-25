@@ -74,7 +74,19 @@ const TInvite = z.object({
    * column. Each address gets its own invite and its own email. Absent
    * means anonymous slips instead — see `count`.
    */
-  emails: z.array(z.string().trim().min(3).max(128)).max(500).optional(),
+  emails: z
+    .array(
+      z.union([
+        z.string().trim().min(3).max(128),
+        z.object({
+          email: z.string().trim().min(3).max(128),
+          /** The coordinator's crib note, never shown to the invitee. */
+          reference: z.string().trim().max(64).nullable().optional(),
+        }),
+      ]),
+    )
+    .max(500)
+    .optional(),
   /** How many anonymous slips to mint for printing. */
   count: z.number().int().min(1).max(500).optional(),
 });
@@ -327,7 +339,20 @@ export class OrgController {
     // list of addresses (emailed), a count (anonymous slips to print),
     // or neither (a single link to hand over).
     if (data.emails != null && data.emails.length > 0) {
-      const checked = await this.#screenEmails(id, data.emails);
+      // Either shape is accepted; screening only ever looks at the
+      // address, and the reference rides along to the invite row.
+      const rows = data.emails.map((e) =>
+        typeof e === "string"
+          ? { email: e, reference: null }
+          : { email: e.email, reference: e.reference ?? null },
+      );
+      const refs = new Map(
+        rows.map((r) => [r.email.trim().toLowerCase(), r.reference]),
+      );
+      const checked = await this.#screenEmails(
+        id,
+        rows.map((r) => r.email),
+      );
       const seats = await org.seatStatus();
       if (
         seats.seats != null &&
@@ -342,7 +367,10 @@ export class OrgController {
         batchId,
         role: data.role,
         issuedByUserId: user.id!,
-        emails: checked.invite,
+        emails: checked.invite.map((email) => ({
+          email,
+          reference: refs.get(email) ?? null,
+        })),
       });
       // Sending is best-effort per address: one dead mailbox must not
       // lose the other thirty-nine invites, which already exist.
@@ -730,9 +758,14 @@ export class OrgController {
         role: invite.role!,
         batchId: invite.batchId ?? null,
       });
-      await invite
-        .$query()
-        .patch({ acceptedByUserId: user.id!, acceptedAt: new Date() });
+      await invite.$query().patch({
+        acceptedByUserId: user.id!,
+        acceptedAt: new Date(),
+        // The reference was a crib note for chasing this person up.
+        // They are here now, so it is deleted rather than merely
+        // hidden — it is a child's name sitting beside an address.
+        reference: null,
+      });
       ctx.response.body = {
         organization: org.toDetails(),
         role: invite.role!,
@@ -780,9 +813,14 @@ export class OrgController {
       });
       enrolled.push(profileId);
     }
-    await invite
-      .$query()
-      .patch({ acceptedByUserId: user.id!, acceptedAt: new Date() });
+    await invite.$query().patch({
+      acceptedByUserId: user.id!,
+      acceptedAt: new Date(),
+      // The reference was a crib note for chasing this person up.
+      // They are here now, so it is deleted rather than merely
+      // hidden — it is a child's name sitting beside an address.
+      reference: null,
+    });
     ctx.response.body = {
       organization: org.toDetails(),
       role: "guardian",

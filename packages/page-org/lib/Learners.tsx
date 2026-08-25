@@ -1,5 +1,10 @@
 import { ProfileAvatar } from "@keylearn/page-account";
-import { PinField, SettingsCard, TextField } from "@keylearn/widget";
+import {
+  ConfirmDialog,
+  PinField,
+  SettingsCard,
+  TextField,
+} from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./Learners.module.less";
@@ -85,6 +90,7 @@ function LearnerRow({
 }): ReactNode {
   const { formatMessage } = useIntl();
   const [pin, setPin] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,6 +129,7 @@ function LearnerRow({
   };
 
   const unenrol = () => {
+    setConfirming(false);
     setBusy(true);
     setError(null);
     OrgService.unenrol(id, learner.profileId)
@@ -236,6 +243,15 @@ function LearnerRow({
                 defaultMessage="Cancel"
               />
             </button>
+            {/* No dialog for this one — typing a PIN and pressing Save is
+                already deliberate. But the child turns up on Sunday with
+                the old one in their head, so say that here. */}
+            <span className={styles.pinWarn}>
+              <FormattedMessage
+                id="learners.pinWarn"
+                defaultMessage="Their old PIN stops working straight away."
+              />
+            </span>
           </span>
         )
       ) : (
@@ -244,13 +260,44 @@ function LearnerRow({
           type="button"
           className={styles.rowAction}
           disabled={busy}
-          onClick={unenrol}
+          onClick={() => {
+            setConfirming(true);
+          }}
         >
           <FormattedMessage id="learners.unenrol" defaultMessage="End view" />
         </button>
       )}
 
       {error != null && <p className={styles.error}>{error}</p>}
+
+      {/* Ending a view cannot be undone from this side: only the parent
+          can grant it again, by accepting a fresh invite. Worth one
+          question before a mis-click costs somebody a phone call. */}
+      {confirming && (
+        <ConfirmDialog
+          title={formatMessage({
+            id: "learners.unenrol.title",
+            defaultMessage: "End this class's view?",
+          })}
+          message={formatMessage(
+            {
+              id: "learners.unenrol.message",
+              defaultMessage:
+                "{name} keeps their account and everything in it — this only stops the school seeing their progress. To undo it you would have to invite their parent again, and they would have to accept.",
+            },
+            { name: learner.firstName },
+          )}
+          confirmLabel={formatMessage({
+            id: "learners.unenrol.confirm",
+            defaultMessage: "End the view",
+          })}
+          danger={true}
+          onConfirm={unenrol}
+          onCancel={() => {
+            setConfirming(false);
+          }}
+        />
+      )}
     </div>
   );
 }

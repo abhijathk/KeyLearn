@@ -587,6 +587,13 @@ export async function createSchema(knex: Knex): Promise<void> {
   await addColumn("org_invite", "email", (table) => {
     table.string("email", 128).nullable();
   });
+  // The coordinator's own note about who this invite is for — a child's
+  // name, a membership number, whatever their spreadsheet already uses.
+  // It exists so an unaccepted invite can be chased in the real world,
+  // and it is shown only while the invite is unaccepted.
+  await addColumn("org_invite", "reference", (table) => {
+    table.string("reference", 64).nullable();
+  });
   await migrateProfileOwnership(knex);
 
   /**

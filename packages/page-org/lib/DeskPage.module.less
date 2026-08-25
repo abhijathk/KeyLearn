@@ -222,108 +222,131 @@
   }
 }
 
-// ------------------------------------------------------------- classes
+// ------------------------------------------- rows, shared by every pane
+//
+// The same filled box the account page's profile list uses, so classes,
+// invites and audit lines all read as the same kind of object — which
+// they are: a thing with a name, a line of detail, and one action.
 
-.table {
-  inline-size: 100%;
-  border-collapse: collapse;
-  font-size: 0.86rem;
-
-  th {
-    padding-block: 0.35rem;
-    border-block-end: var(--separator-border);
-    color: var(--text-color-f2);
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-align: start;
-    text-transform: uppercase;
-  }
-
-  td {
-    vertical-align: baseline;
-    padding-block: 0.55rem;
-    border-block-end: var(--separator-border);
-  }
-
-  tr:last-child td {
-    border-block-end: none;
-  }
-}
-
-.pill {
-  display: inline-block;
-  padding: 0.05rem 0.45rem;
-  border: 1px solid var(--separator-color);
-  border-radius: 999px;
-  color: var(--text-color-f2);
-  font-size: 0.6rem;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-}
-
-// Mode B: the family owns the profile and lent the school a view.
-.b {
-  border-color: color-mix(in oklab, var(--accent) 40%, transparent);
-  color: var(--accent);
-}
-
-// Mode A: the school owns the profile, and it is PIN-locked.
-.a {
-  border-color: color-mix(in oklab, var(--text-color-f1) 40%, transparent);
-  color: var(--text-color-f1);
-}
-
-.addRow {
+.rrow {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.6rem;
   align-items: center;
+  padding: 0.5rem 0.7rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
 }
 
-// ------------------------------------------------------- roster + audit
-
-.rrow,
-.arow {
+.rowInfo {
   display: flex;
-  gap: 0.7rem;
-  align-items: baseline;
-  padding-block: 0.45rem;
-  border-block-end: var(--separator-border);
-  font-size: 0.85rem;
-
-  &:last-child {
-    border-block-end: none;
-  }
-}
-
-.arow b {
-  color: var(--text-color);
-  font-weight: 600;
-}
-
-.rwho {
+  flex-direction: column;
+  gap: 0.1rem;
   min-inline-size: 0;
+  margin-inline-end: auto;
+}
+
+.rowName {
   overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.rtag,
-.at {
-  margin-inline-start: auto;
+.rowMeta {
   color: var(--text-color-f2);
-  font-size: 0.66rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.rowAction {
+  flex: none;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.25));
+  border-radius: 0.45rem;
+  color: var(--text-color);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  &:disabled {
+    color: var(--text-color-f2);
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+// A settled state, not an action — so it must not look pressable.
+.doneTag {
+  flex: none;
+  color: var(--accent);
+  font-size: 0.7rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.at {
-  text-transform: none;
+.faintTag {
+  flex: none;
+  color: var(--text-color-f2);
+  font-size: 0.7rem;
+  white-space: nowrap;
 }
 
-.ok {
-  color: var(--accent);
+.addRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+// The account page's add button, down to the plus.
+.primary {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  align-self: flex-start;
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-radius: 0.6rem;
+  color: var(--primary);
+  background: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled {
+    background: color-mix(in srgb, var(--accent) 45%, transparent);
+    cursor: default;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--accent-d1);
+  }
+}
+
+.plus {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 // ------------------------------------------------------ the empty cases
@@ -348,4 +371,10 @@
   font-size: 0.95rem;
   line-height: 1.55;
   text-wrap: pretty;
+}
+
+// The coordinator's crib note on an unaccepted invite — who this is
+// for. Accented because it is the part they scan for.
+.ref {
+  color: var(--accent);
 }
