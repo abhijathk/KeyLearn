@@ -1,45 +1,27 @@
 @import "@keylearn/widget/lib/index.less";
 
-// Inviting forty parents — mock 16. Two routes to the same invite: the
-// spreadsheet and the hall.
-
-.whisper {
-  display: flex;
-  gap: 0.7rem;
-  align-items: center;
-  margin-block: 2.4rem 0.9rem;
-  color: var(--text-color-f2);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-
-  &::after {
-    content: "";
-    flex: 1;
-    block-size: 1px;
-    background: linear-gradient(to right, var(--separator-color), transparent);
-  }
-}
+// Inviting forty parents. Lives inside a card in the desk's invite
+// pane, so this file styles only what is inside that card — the chrome
+// comes from SettingsCard, the same one the account window uses.
 
 .sub {
-  margin-block: 1.6rem 0.6rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  margin: 0.6rem 0 0;
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .note {
-  max-inline-size: 46rem;
-  margin-block: 0.7rem 0;
+  margin: 0;
   color: var(--text-color-f1);
-  font-size: 0.82rem;
-  line-height: 1.6;
+  font-size: 0.86rem;
+  line-height: 1.55;
   text-wrap: pretty;
 }
 
 .hint {
   color: var(--text-color-f2);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
 }
 
 .faint {
@@ -51,8 +33,8 @@
   border: none;
   color: var(--accent);
   background: none;
-  font-family: inherit;
-  font-size: 0.78rem;
+  font: inherit;
+  font-size: 0.8rem;
   cursor: pointer;
 
   &:hover {
@@ -61,21 +43,21 @@
 }
 
 .error {
-  max-inline-size: 46rem;
-  margin-block: 0.7rem 0;
+  margin: 0;
   color: var(--error-color, #ff7a6b);
-  font-size: 0.82rem;
-  line-height: 1.55;
+  font-size: 0.84rem;
+  line-height: 1.45;
 }
 
 .done {
-  max-inline-size: 46rem;
-  margin-block: 1rem 0;
-  padding: 0.85rem 1rem;
-  border-inline-start: 2px solid var(--accent);
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
   color: var(--text-color-f1);
+  background-color: color-mix(in oklab, var(--accent) 8%, transparent);
   font-size: 0.88rem;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 // ------------------------------------------------------------ the form
@@ -83,55 +65,52 @@
 .compose {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-block-start: 0.9rem;
+  gap: 0.7rem;
 }
 
 .pick {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.45rem;
   align-items: center;
 
-  span {
+  > span {
     color: var(--text-color-f2);
-    font-size: 0.66rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: 0.72rem;
+    font-weight: 600;
   }
 
   select,
   input {
-    padding: 0.4rem 0.6rem;
-    border: 1px solid var(--separator-color);
+    padding: 0.38rem 0.55rem;
+    border: var(--separator-border);
     border-radius: 0.5rem;
     color: var(--text-color);
-    background-color: var(--primary-color, transparent);
-    font-family: inherit;
+    background-color: color-mix(in srgb, var(--text-color) 4%, transparent);
+    font: inherit;
     font-size: 0.85rem;
   }
 
   input {
-    inline-size: 5rem;
+    inline-size: 4.5rem;
   }
 }
 
 .domainWarn {
-  max-inline-size: 46rem;
-  margin-block: 0.9rem 0;
-  padding: 0.7rem 0.9rem;
-  border-inline-start: 2px solid var(--accent);
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
   color: var(--text-color-f1);
-  font-size: 0.8rem;
-  line-height: 1.6;
+  background-color: color-mix(in srgb, var(--text-color) 4%, transparent);
+  font-size: 0.82rem;
+  line-height: 1.55;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
+  gap: 0.7rem;
   align-items: center;
-  margin-block-start: 0.9rem;
 }
 
 // ------------------------------------------------------------- the CSV
@@ -139,20 +118,19 @@
 .drop {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.2rem;
   align-items: center;
-  max-inline-size: 46rem;
-  padding: 1.4rem 1rem;
+  padding: 1.1rem 1rem;
   border: 1px dashed var(--separator-color);
-  border-radius: 0.9rem;
+  border-radius: 0.7rem;
   text-align: center;
   cursor: pointer;
 
   b {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
   }
 
-  span {
+  > span {
     color: var(--text-color-f2);
     font-size: 0.78rem;
   }
@@ -175,37 +153,35 @@
   color: var(--accent);
 
   svg {
-    inline-size: 1.5rem;
-    block-size: 1.5rem;
+    inline-size: 1.3rem;
+    block-size: 1.3rem;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.3;
+    stroke-width: 1.4;
     stroke-linejoin: round;
     stroke-linecap: round;
   }
 }
 
 .fileCard {
-  max-inline-size: 46rem;
-  margin-block: 0.7rem 0;
-  padding: 0.6rem 0.9rem;
-  border-inline-start: 2px solid var(--accent);
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
   color: var(--text-color-f1);
-  font-family: var(--value-font-family);
-  font-size: 0.78rem;
+  background-color: color-mix(in srgb, var(--text-color) 4%, transparent);
+  font-size: 0.8rem;
 }
 
 .paste {
   display: block;
   inline-size: 100%;
-  max-inline-size: 46rem;
-  margin-block-start: 0.7rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid var(--separator-color);
+  padding: 0.6rem 0.75rem;
+  border: var(--separator-border);
   border-radius: 0.6rem;
   color: var(--text-color);
-  background: none;
-  font-family: var(--value-font-family);
+  background-color: color-mix(in srgb, var(--text-color) 4%, transparent);
+  font: inherit;
   font-size: 0.82rem;
   line-height: 1.6;
   resize: block;
@@ -214,17 +190,17 @@
 // ------------------------------------------------------- the read-back
 
 .prev {
-  max-inline-size: 46rem;
-  margin-block-start: 0.9rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
+  overflow: hidden;
 }
 
 .prow {
   display: flex;
-  gap: 0.8rem;
+  gap: 0.7rem;
   align-items: baseline;
-  padding-block: 0.4rem;
-  border-block-end: 1px solid var(--separator-color);
-  font-family: var(--value-font-family);
+  padding: 0.4rem 0.8rem;
+  border-block-end: var(--separator-border);
   font-size: 0.8rem;
 
   &:last-child {
@@ -241,7 +217,7 @@
 
 .ptag {
   margin-inline-start: auto;
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -266,24 +242,19 @@
 .psum {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.1rem;
+  gap: 0.9rem;
   align-items: center;
-  max-inline-size: 46rem;
-  margin-block-start: 0.9rem;
-  padding-block-start: 0.9rem;
-  border-block-start: 1px solid var(--separator-color);
 
-  span {
+  > span {
     display: flex;
-    gap: 0.35rem;
+    gap: 0.3rem;
     align-items: baseline;
     color: var(--text-color-f2);
     font-size: 0.72rem;
   }
 
   b {
-    font-family: var(--value-font-family);
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   // The send button sits at the far end, after the counts it is about.
@@ -307,33 +278,32 @@
 // ----------------------------------------------------------- the slips
 
 .warnBar {
-  max-inline-size: 46rem;
-  margin-block: 0.7rem 0;
-  padding: 0.8rem 1rem;
-  border-inline-start: 2px solid var(--warning-color, #e8a819);
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid
+    color-mix(in oklab, var(--warning-color, #e8a819) 45%, transparent);
+  border-radius: 0.7rem;
   color: var(--text-color-f1);
-  font-size: 0.82rem;
-  line-height: 1.6;
+  font-size: 0.84rem;
+  line-height: 1.55;
 }
 
 .sheet {
-  max-inline-size: 46rem;
-  margin-block-start: 0.9rem;
-  padding: 1rem;
-  border: 1px solid var(--separator-color);
-  border-radius: 0.6rem;
+  padding: 0.8rem;
+  border: var(--separator-border);
+  border-radius: 0.7rem;
 }
 
 .sheetHead {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-content: space-between;
-  padding-block-end: 0.7rem;
-  border-block-end: 1px solid var(--separator-color);
+  padding-block-end: 0.6rem;
+  border-block-end: var(--separator-border);
   font-size: 0.82rem;
 
-  span {
+  > span {
     color: var(--text-color-f2);
     font-size: 0.72rem;
   }
@@ -341,13 +311,13 @@
 
 .tear {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
   gap: 0;
 }
 
 // Dashed on every side so the sheet reads as something to cut up.
 .slip {
-  padding: 0.7rem 0.6rem;
+  padding: 0.6rem 0.5rem;
   border: 1px dashed var(--separator-color);
   text-align: center;
 }
@@ -355,16 +325,15 @@
 .sname {
   margin: 0;
   color: var(--text-color-f2);
-  font-size: 0.6rem;
-  letter-spacing: 0.14em;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .scode {
-  margin-block: 0.35rem;
+  margin-block: 0.3rem;
   color: var(--text-color);
-  font-family: var(--value-font-family);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -372,12 +341,11 @@
 .sfoot {
   margin: 0;
   color: var(--text-color-f2);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
 }
 
 // On paper, the slips are the only thing that should survive.
 @media print {
-  .whisper,
   .sub,
   .note,
   .warnBar,

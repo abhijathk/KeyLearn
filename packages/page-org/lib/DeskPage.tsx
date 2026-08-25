@@ -1,6 +1,12 @@
 import { AuthPage } from "@keylearn/page-account";
 import { usePageData } from "@keylearn/pages-shared";
-import { Button, TextField } from "@keylearn/widget";
+import {
+  Button,
+  FloatingShell,
+  SettingsCard,
+  TextField,
+} from "@keylearn/widget";
+import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { BulkInvite } from "./BulkInvite.tsx";
@@ -23,6 +29,8 @@ import {
  * what is made here — the resolver owns that (P2), so a section that
  * forgets to hide itself shows an empty list rather than a leak.
  */
+type Pane = "seats" | "invite" | "roster" | "audit";
+
 export function DeskPage(): ReactNode {
   const { publicUser } = usePageData();
   const [orgs, setOrgs] = useState<readonly OrgSummary[] | null>(null);
@@ -63,25 +71,12 @@ export function DeskPage(): ReactNode {
     return <NotStaff />;
   }
   return (
-    <div className={styles.paper}>
-      {orgs.length > 1 && (
-        <div className={styles.orgSwitch}>
-          {orgs.map((org) => (
-            <button
-              key={org.id}
-              type="button"
-              className={org.id === current ? styles.onSwitch : undefined}
-              onClick={() => {
-                setCurrent(org.id);
-              }}
-            >
-              {org.name}
-            </button>
-          ))}
-        </div>
-      )}
-      {current != null && <Desk key={current} id={current} />}
-    </div>
+    <Desk
+      key={current ?? 0}
+      orgs={orgs}
+      current={current}
+      onSwitch={setCurrent}
+    />
   );
 }
 
@@ -93,14 +88,14 @@ export function DeskPage(): ReactNode {
  */
 function NotStaff(): ReactNode {
   return (
-    <div className={styles.paper}>
-      <h1 className={styles.nameplate}>
+    <div className={styles.standalone}>
+      <h1 className={styles.standaloneTitle}>
         <FormattedMessage
           id="desk.none.title"
           defaultMessage="No school on this account"
         />
       </h1>
-      <p className={styles.lede}>
+      <p className={styles.standaloneBody}>
         <FormattedMessage
           id="desk.none.body"
           defaultMessage="This page is for people who run a school or class. You join one by accepting an invite — there is no way to sign yourself up, which is what keeps a school's data closed."
@@ -121,7 +116,17 @@ function NotStaff(): ReactNode {
   );
 }
 
-function Desk({ id }: { readonly id: number }): ReactNode {
+function Desk({
+  orgs,
+  current,
+  onSwitch,
+}: {
+  readonly orgs: readonly OrgSummary[];
+  readonly current: number | null;
+  readonly onSwitch: (id: number) => void;
+}): ReactNode {
+  const id = current ?? orgs[0]!.id;
+  const [pane, setPane] = useState<Pane>("seats");
   const [overview, setOverview] = useState<OrgOverview | null>(null);
   const [learners, setLearners] = useState<readonly Learner[]>([]);
   const [invites, setInvites] = useState<readonly InviteRow[]>([]);
@@ -158,43 +163,203 @@ function Desk({ id }: { readonly id: number }): ReactNode {
   }
 
   return (
-    <>
-      <OrgBar overview={overview} />
-      <Seats overview={overview} />
-      <Classes overview={overview} learners={learners} />
-      <BulkInvite id={id} overview={overview} onChange={refresh} />
-      <Roster
-        invites={invites}
-        overview={overview}
-        id={id}
-        onChange={refresh}
-      />
-      {overview.members != null && <Audit events={events} names={overview} />}
-    </>
+    <FloatingShell
+      flush={true}
+      // A half-filled class list is easy to lose to a stray click on the
+      // dim, and re-pasting forty addresses is not a small ask.
+      closeOnBackdrop={false}
+      title={<FormattedMessage id="org.title" defaultMessage="Your school" />}
+    >
+      <div className={styles.b5}>
+        <nav className={styles.rail}>
+          {orgs.map((org) => (
+            <button
+              key={org.id}
+              type="button"
+              className={clsx(styles.who, org.id === id && styles.whoOn)}
+              onClick={() => {
+                onSwitch(org.id);
+              }}
+            >
+              <span className={styles.orgbadge}>{initialsOf(org.name)}</span>
+              <span className={styles.whoText}>
+                <span className={styles.whoName}>{org.name}</span>
+                <span className={styles.whoRole}>{org.role}</span>
+              </span>
+            </button>
+          ))}
+
+          <RailItem
+            on={pane === "seats"}
+            onClick={() => {
+              setPane("seats");
+            }}
+            icon={<SchoolIcon />}
+            label={
+              <FormattedMessage
+                id="desk.rail.school"
+                defaultMessage="Overview"
+              />
+            }
+          />
+          <RailItem
+            on={pane === "invite"}
+            onClick={() => {
+              setPane("invite");
+            }}
+            icon={<InviteIcon />}
+            label={
+              <FormattedMessage id="desk.rail.invite" defaultMessage="Invite" />
+            }
+          />
+          <RailItem
+            on={pane === "roster"}
+            onClick={() => {
+              setPane("roster");
+            }}
+            icon={<RosterIcon />}
+            label={
+              <FormattedMessage id="desk.rail.roster" defaultMessage="Roster" />
+            }
+          />
+          {/* A teacher has no member list, and the audit is written in
+              terms of who those members are — so it is not offered. */}
+          {overview.members != null && (
+            <RailItem
+              on={pane === "audit"}
+              onClick={() => {
+                setPane("audit");
+              }}
+              icon={<AuditIcon />}
+              label={
+                <FormattedMessage
+                  id="desk.rail.audit"
+                  defaultMessage="Access"
+                />
+              }
+            />
+          )}
+        </nav>
+
+        <div className={styles.pane}>
+          {pane === "seats" && (
+            <div className={styles.paneScroll}>
+              <h2 className={styles.paneTitle}>
+                <FormattedMessage
+                  id="desk.pane.school"
+                  defaultMessage="Overview"
+                />
+              </h2>
+              <Seats overview={overview} />
+              <Classes overview={overview} learners={learners} />
+            </div>
+          )}
+          {pane === "invite" && (
+            <div className={styles.paneScroll}>
+              <h2 className={styles.paneTitle}>
+                <FormattedMessage
+                  id="desk.pane.invite"
+                  defaultMessage="Invite people"
+                />
+              </h2>
+              <BulkInvite id={id} overview={overview} onChange={refresh} />
+            </div>
+          )}
+          {pane === "roster" && (
+            <div className={styles.paneScroll}>
+              <h2 className={styles.paneTitle}>
+                <FormattedMessage
+                  id="desk.pane.roster"
+                  defaultMessage="Who has joined"
+                />
+              </h2>
+              <Roster
+                invites={invites}
+                overview={overview}
+                id={id}
+                onChange={refresh}
+              />
+            </div>
+          )}
+          {pane === "audit" && overview.members != null && (
+            <div className={styles.paneScroll}>
+              <h2 className={styles.paneTitle}>
+                <FormattedMessage
+                  id="desk.pane.audit"
+                  defaultMessage="Access, audited"
+                />
+              </h2>
+              <Audit events={events} names={overview} />
+            </div>
+          )}
+        </div>
+      </div>
+    </FloatingShell>
   );
 }
 
-function OrgBar({ overview }: { readonly overview: OrgOverview }): ReactNode {
-  const initials = overview.organization.name
+function initialsOf(name: string): string {
+  return name
     .split(/\s+/)
     .slice(0, 2)
     .map((word) => word.charAt(0).toUpperCase())
     .join("");
+}
+
+function RailItem({
+  on,
+  onClick,
+  icon,
+  label,
+}: {
+  readonly on: boolean;
+  readonly onClick: () => void;
+  readonly icon: ReactNode;
+  readonly label: ReactNode;
+}): ReactNode {
   return (
-    <div className={styles.orgbar}>
-      <span className={styles.orgbadge}>{initials}</span>
-      <div className={styles.orgwho}>
-        <b>{overview.organization.name}</b>
-        <span>{overview.organization.type}</span>
-      </div>
-      <span className={styles.role}>
-        <FormattedMessage
-          id="desk.youAre"
-          defaultMessage="you · {role}"
-          values={{ role: overview.myRole }}
-        />
-      </span>
-    </div>
+    <button
+      type="button"
+      className={clsx(styles.nav, on && styles.navOn)}
+      onClick={onClick}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+// Drawn here rather than pulled from an icon set, to match the rail
+// icons the account window already uses.
+function SchoolIcon(): ReactNode {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <path d="M3 21V9l9-6 9 6v12M9 21v-7h6v7M3 21h18" />
+    </svg>
+  );
+}
+
+function InviteIcon(): ReactNode {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <path d="M3 6.5h18v11H3zM3 7l9 6.5L21 7" />
+    </svg>
+  );
+}
+
+function RosterIcon(): ReactNode {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <path d="M4 5.5h16M4 12h16M4 18.5h10" />
+    </svg>
+  );
+}
+
+function AuditIcon(): ReactNode {
+  return (
+    <svg className={styles.railIcon} viewBox="0 0 24 24">
+      <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6zM12 14.2a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4z" />
+    </svg>
   );
 }
 
@@ -207,44 +372,44 @@ function OrgBar({ overview }: { readonly overview: OrgOverview }): ReactNode {
  */
 function Seats({ overview }: { readonly overview: OrgOverview }): ReactNode {
   const { seats, used, lapsed } = overview.seats;
-  if (seats == null) {
-    return (
-      <section>
-        <h2 className={styles.whisper}>
-          <FormattedMessage id="desk.seats" defaultMessage="Seats" />
-        </h2>
-        <p className={styles.note}>
+  return (
+    <SettingsCard
+      caption={<FormattedMessage id="desk.seats" defaultMessage="Seats" />}
+    >
+      {seats == null ? (
+        <p className={styles.cardNote}>
           <FormattedMessage
             id="desk.seats.none"
             defaultMessage="{used, plural, one {# learner} other {# learners}} enrolled, and no seat limit set — nothing here can run out."
             values={{ used }}
           />
         </p>
-      </section>
-    );
-  }
-  const pct = seats === 0 ? 0 : Math.min(100, Math.round((used / seats) * 100));
-  return (
-    <section>
-      <h2 className={styles.whisper}>
-        <FormattedMessage id="desk.seats" defaultMessage="Seats" />
-      </h2>
-      <div className={styles.seats}>
-        <span className={styles.big}>
-          {used}
-          <span>/{seats}</span>
-        </span>
-        <span className={styles.meter}>
-          <i style={{ inlineSize: `${pct}%` }} />
-        </span>
-        <small>
-          <FormattedMessage
-            id="desk.seats.when"
-            defaultMessage="taken when an invite is accepted, released on unenrolment"
-          />
-        </small>
-      </div>
-      <p className={lapsed ? styles.lapsed : styles.lapse}>
+      ) : (
+        <>
+          <div className={styles.seats}>
+            <span className={styles.big}>
+              {used}
+              <span>/{seats}</span>
+            </span>
+            <span className={styles.meter}>
+              <i
+                style={{
+                  inlineSize: `${seats === 0 ? 0 : Math.min(100, Math.round((used / seats) * 100))}%`,
+                }}
+              />
+            </span>
+          </div>
+          <p className={styles.cardNote}>
+            <FormattedMessage
+              id="desk.seats.when"
+              defaultMessage="A seat is taken when an invite is accepted and released on unenrolment."
+            />
+          </p>
+        </>
+      )}
+      {/* The promise that stops a Sunday-afternoon panic, next to the
+          number it is about rather than in a billing page. */}
+      <p className={styles.cardNote}>
         {lapsed ? (
           <FormattedMessage
             id="desk.seats.isLapsed"
@@ -257,7 +422,7 @@ function Seats({ overview }: { readonly overview: OrgOverview }): ReactNode {
           />
         )}
       </p>
-    </section>
+    </SettingsCard>
   );
 }
 
@@ -299,11 +464,10 @@ function Classes({
   };
 
   return (
-    <section>
-      <h2 className={styles.whisper}>
-        <FormattedMessage id="desk.classes" defaultMessage="Classes" />
-      </h2>
-      <p className={styles.note}>
+    <SettingsCard
+      caption={<FormattedMessage id="desk.classes" defaultMessage="Classes" />}
+    >
+      <p className={styles.cardNote}>
         <FormattedMessage
           id="desk.classes.note"
           defaultMessage="A teacher sees their own class and nothing else — enforced when the data is fetched, not by hiding it here."
@@ -428,7 +592,7 @@ function Classes({
           />
         </button>
       )}
-    </section>
+    </SettingsCard>
   );
 }
 
@@ -460,18 +624,19 @@ function Roster({
       : (overview.batches.find((b) => b.id === batchId)?.name ?? null);
 
   return (
-    <section>
-      <h2 className={styles.whisper}>
-        <FormattedMessage id="desk.roster" defaultMessage="Who has joined" />
-      </h2>
-      <p className={styles.note}>
+    <SettingsCard
+      caption={
+        <FormattedMessage id="desk.roster.caption" defaultMessage="Invites" />
+      }
+    >
+      <p className={styles.cardNote}>
         <FormattedMessage
           id="desk.roster.count"
           defaultMessage="{joined} of {total} invites accepted."
           values={{ joined, total: invites.length }}
         />
       </p>
-      <div className={styles.roster}>
+      <div>
         {invites.map((invite) => (
           <div key={invite.id} className={styles.rrow}>
             <span className={styles.rwho}>
@@ -528,7 +693,7 @@ function Roster({
         ))}
       </div>
       {waiting.length > 0 && (
-        <p className={styles.note}>
+        <p className={styles.cardNote}>
           <FormattedMessage
             id="desk.roster.chase"
             defaultMessage="{n, plural, one {# invite has} other {# invites have}} not been used yet. They expire on their own; revoking one only stops it early."
@@ -536,7 +701,7 @@ function Roster({
           />
         </p>
       )}
-    </section>
+    </SettingsCard>
   );
 }
 
@@ -558,10 +723,9 @@ function Audit({
     (names.members ?? []).find((m) => m.userId === userId)?.name ?? null;
 
   return (
-    <section>
-      <h2 className={styles.whisper}>
-        <FormattedMessage id="desk.audit" defaultMessage="Access, audited" />
-      </h2>
+    <SettingsCard
+      caption={<FormattedMessage id="desk.audit" defaultMessage="Every look" />}
+    >
       {events.length === 0 ? (
         <p className={styles.empty}>
           <FormattedMessage
@@ -570,7 +734,7 @@ function Audit({
           />
         </p>
       ) : (
-        <div className={styles.audit}>
+        <div>
           {events.map((event, index) => (
             <div key={index} className={styles.arow}>
               <span>
@@ -591,12 +755,12 @@ function Audit({
           ))}
         </div>
       )}
-      <p className={styles.note}>
+      <p className={styles.cardNote}>
         <FormattedMessage
           id="desk.audit.note"
           defaultMessage="Guardians can see who looked at their own child. Unenrolment ends access within one request."
         />
       </p>
-    </section>
+    </SettingsCard>
   );
 }

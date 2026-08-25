@@ -18,9 +18,9 @@ import * as styles from "./ForSchoolsPage.module.less";
  */
 export function ForSchoolsPage(): ReactNode {
   return (
-    <div className={styles.paper}>
+    <div className={styles.page}>
       <header>
-        <h1 className={styles.nameplate}>
+        <h1 className={styles.headline}>
           <FormattedMessage
             id="forSchools.nameplate"
             defaultMessage="KeyLearn <em>for schools</em>"
@@ -29,7 +29,7 @@ export function ForSchoolsPage(): ReactNode {
             }}
           />
         </h1>
-        <p className={styles.lede}>
+        <p className={styles.intro}>
           <FormattedMessage
             id="forSchools.lede"
             defaultMessage="Your school gets classes and reports. The families keep their children's accounts — that is the design, not a setting. Community and non-profit schools use the whole thing free."
@@ -108,20 +108,17 @@ function Promises(): ReactNode {
   ];
   return (
     <section>
-      <h2 className={styles.whisper}>
+      <h2 className={styles.sectionTitle}>
         <FormattedMessage id="forSchools.what" defaultMessage="What it says" />
       </h2>
-      <ol className={styles.rules}>
+      <div className={styles.list}>
         {promises.map((promise, index) => (
-          <li key={index} className={styles.rule}>
-            <span className={styles.ruleNumber}>{index + 1}</span>
-            <div>
-              <h3 className={styles.ruleTitle}>{promise.title}</h3>
-              <p className={styles.ruleBody}>{promise.body}</p>
-            </div>
-          </li>
+          <div key={index} className={styles.card}>
+            <h3 className={styles.cardTitle}>{promise.title}</h3>
+            <p className={styles.cardBody}>{promise.body}</p>
+          </div>
         ))}
-      </ol>
+      </div>
     </section>
   );
 }
@@ -129,12 +126,12 @@ function Promises(): ReactNode {
 function Audiences(): ReactNode {
   return (
     <section>
-      <h2 className={styles.whisper}>
+      <h2 className={styles.sectionTitle}>
         <FormattedMessage id="forSchools.who" defaultMessage="Who it is for" />
       </h2>
-      <div className={styles.who}>
-        <div className={styles.aud}>
-          <div className={styles.audHead}>
+      <div className={styles.two}>
+        <div className={styles.card}>
+          <div className={styles.cardHead}>
             <span className={styles.mark}>
               <svg viewBox="0 0 16 16" aria-hidden={true}>
                 <path d="M2 14V6l6-4 6 4v8M6 14V9.5h4V14M2 14h12" />
@@ -147,15 +144,15 @@ function Audiences(): ReactNode {
               />
             </b>
           </div>
-          <p>
+          <p className={styles.cardBody}>
             <FormattedMessage
               id="forSchools.who1.body"
               defaultMessage="Volunteer teachers, one hour of prep, a hall with uncertain Wi-Fi. Classes, term reports and printable certificates — and the parents keep their children's accounts."
             />
           </p>
         </div>
-        <div className={styles.aud}>
-          <div className={styles.audHead}>
+        <div className={styles.card}>
+          <div className={styles.cardHead}>
             <span className={styles.mark}>
               <svg viewBox="0 0 16 16" aria-hidden={true}>
                 <path d="M2.5 4.5h11a1 1 0 011 1v5a1 1 0 01-1 1h-11a1 1 0 01-1-1v-5a1 1 0 011-1zM4.5 9h7M4.5 6.8h.01M7 6.8h.01M9.5 6.8h.01M12 6.8h.01" />
@@ -168,7 +165,7 @@ function Audiences(): ReactNode {
               />
             </b>
           </div>
-          <p>
+          <p className={styles.cardBody}>
             <FormattedMessage
               id="forSchools.who2.body"
               defaultMessage="Where the centre owns the learner places rather than the families. Batches, learner profiles with a PIN, and progress the whole teaching team can see."
@@ -183,67 +180,67 @@ function Audiences(): ReactNode {
 function Pricing(): ReactNode {
   return (
     <section>
-      <h2 className={styles.whisper}>
+      <h2 className={styles.sectionTitle}>
         <FormattedMessage
           id="forSchools.cost"
           defaultMessage="What it costs — plainly"
         />
       </h2>
-      <div className={styles.price}>
-        <div className={styles.pcol}>
+      <div className={styles.three}>
+        <div className={styles.card}>
           <p className={styles.tag}>
             <FormattedMessage
               id="forSchools.cost1.tag"
               defaultMessage="Families"
             />
           </p>
-          <p className={`${styles.big} ${styles.mint}`}>
+          <p className={`${styles.price} ${styles.mint}`}>
             <FormattedMessage
               id="forSchools.cost1.big"
               defaultMessage="Free, forever"
             />
           </p>
-          <p>
+          <p className={styles.cardBody}>
             <FormattedMessage
               id="forSchools.cost1.body"
               defaultMessage="Every lesson, every language, every learner in the household. That does not change because schools now exist."
             />
           </p>
         </div>
-        <div className={styles.pcol}>
+        <div className={styles.card}>
           <p className={styles.tag}>
             <FormattedMessage
               id="forSchools.cost2.tag"
               defaultMessage="Community & non-profit"
             />
           </p>
-          <p className={`${styles.big} ${styles.mint}`}>
+          <p className={`${styles.price} ${styles.mint}`}>
             <FormattedMessage
               id="forSchools.cost2.big"
               defaultMessage="Also free"
             />
           </p>
-          <p>
+          <p className={styles.cardBody}>
             <FormattedMessage
               id="forSchools.cost2.body"
               defaultMessage="Volunteer-taught community schools, in full — classes, reports, certificates, the lot. Approved by a person, not a form, and it never lapses into read-only."
             />
           </p>
         </div>
-        <div className={styles.pcol}>
+        <div className={styles.card}>
           <p className={styles.tag}>
             <FormattedMessage
               id="forSchools.cost3.tag"
               defaultMessage="Commercial"
             />
           </p>
-          <p className={styles.big}>
+          <p className={styles.price}>
             <FormattedMessage
               id="forSchools.cost3.big"
               defaultMessage="Licensed by seat"
             />
           </p>
-          <p>
+          <p className={styles.cardBody}>
             <FormattedMessage
               id="forSchools.cost3.body"
               defaultMessage="Coaching centres and businesses selling lessons. A seat is one learner place, held while they are enrolled and released the moment they are not."
@@ -345,7 +342,7 @@ function DomainRule(): ReactNode {
   };
   return (
     <section>
-      <h2 className={styles.whisper}>
+      <h2 className={styles.sectionTitle}>
         <FormattedMessage
           id="forSchools.domain"
           defaultMessage="Who may hold a staff role"
@@ -357,7 +354,7 @@ function DomainRule(): ReactNode {
           defaultMessage="Your school may name the email domain its staff accounts use. Then the people who can see every learner must be at the school, not merely invited by someone who was. Parents are never restricted; their addresses are their own. A school with no domain leaves it blank and nothing is restricted."
         />
       </p>
-      <div className={styles.domainTable}>
+      <div className={styles.rolesCard}>
         {rows.map((row, index) => (
           <div key={index} className={styles.drow}>
             <span className={styles.r}>{row.role}</span>
@@ -462,7 +459,7 @@ function Enquiry(): ReactNode {
   if (sent) {
     return (
       <section>
-        <h2 className={styles.whisper}>
+        <h2 className={styles.sectionTitle}>
           <FormattedMessage id="forSchools.ask" defaultMessage="Ask us" />
         </h2>
         <p className={styles.sent}>
@@ -477,11 +474,11 @@ function Enquiry(): ReactNode {
 
   return (
     <section>
-      <h2 className={styles.whisper}>
+      <h2 className={styles.sectionTitle}>
         <FormattedMessage id="forSchools.ask" defaultMessage="Ask us" />
       </h2>
-      <div className={styles.formwrap}>
-        <div className={styles.two}>
+      <div className={styles.form}>
+        <div className={styles.pair}>
           <Field
             label={formatMessage({
               id: "forSchools.f.name",
@@ -512,7 +509,7 @@ function Enquiry(): ReactNode {
             />
           </Field>
         </div>
-        <div className={styles.two}>
+        <div className={styles.pair}>
           <Field
             label={formatMessage({
               id: "forSchools.f.school",
@@ -545,7 +542,7 @@ function Enquiry(): ReactNode {
         {/* The two questions the pricing note points at. Free text, not a
             dropdown: "a nominal term fee that covers the hall" is the
             true answer and no set of options contains it. */}
-        <div className={styles.two}>
+        <div className={styles.pair}>
           <Field
             label={formatMessage({
               id: "forSchools.f.pay",

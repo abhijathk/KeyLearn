@@ -1,4 +1,4 @@
-import { Button } from "@keylearn/widget";
+import { Button, SettingsCard } from "@keylearn/widget";
 import { type ReactNode, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./BulkInvite.module.less";
@@ -40,10 +40,11 @@ export function BulkInvite({
   );
 
   return (
-    <section>
-      <h2 className={styles.whisper}>
-        <FormattedMessage id="bulk.title" defaultMessage="Invite people" />
-      </h2>
+    <SettingsCard
+      caption={
+        <FormattedMessage id="bulk.title" defaultMessage="Who to invite" />
+      }
+    >
       <p className={styles.note}>
         <FormattedMessage
           id="bulk.note"
@@ -126,7 +127,7 @@ export function BulkInvite({
       {role === "guardian" && (
         <OnPaper id={id} batchId={batchId} overview={overview} />
       )}
-    </section>
+    </SettingsCard>
   );
 }
 
