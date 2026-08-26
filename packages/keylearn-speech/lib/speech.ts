@@ -63,12 +63,29 @@ export type VoiceSettings = {
    * for them is what the language match exists to avoid — see below.
    */
   readonly name?: string | null;
+  /**
+   * One of the app's own curated voices — "kid", "lady", "man" — or null for
+   * the browser's engine.
+   *
+   * A customer reported that what their child heard was "very rough and not
+   * kids friendly". It was: whatever engine the device shipped with, and
+   * espeak-ng behind it. Neither is something to ask a five-year-old to listen
+   * to while learning to read.
+   *
+   * Set, the server synthesises in that voice and the browser's engine is not
+   * used at all — not as a fallback from failure but as the first choice, which
+   * is the whole point. The engine remains the last resort beneath it, because
+   * a voice that sometimes does not arrive is worse than a plain one that
+   * always does.
+   */
+  readonly clip?: string | null;
 };
 
 export const defaultVoice: VoiceSettings = {
   rate: 1,
   enabled: true,
   name: null,
+  clip: null,
 };
 
 /**
@@ -313,10 +330,14 @@ function pageLang(): string {
 async function clipFor(
   text: string,
   rate: number,
+  clip: string | null = null,
 ): Promise<AudioBuffer | null> {
   const lang = pageLang();
   const wpm = wpmOf(rate);
-  const key = `${lang}|${wpm}|${text}`;
+  // The voice is part of what the audio IS. Left out, a child would be served
+  // whichever rendering of the phrase happened to be cached first — the
+  // setting silently not working, intermittently, unreproducibly.
+  const key = `${clip ?? "-"}|${lang}|${wpm}|${text}`;
   const hit = clips.get(key);
   if (hit != null) {
     return hit;
@@ -331,7 +352,8 @@ async function clipFor(
   }
   const url =
     `/_/speech.wav?text=${encodeURIComponent(text)}` +
-    `&lang=${encodeURIComponent(lang)}&wpm=${wpm}`;
+    `&lang=${encodeURIComponent(lang)}&wpm=${wpm}` +
+    (clip == null ? "" : `&voice=${encodeURIComponent(clip)}`);
   // The previous phrase is no longer wanted the moment this one is asked for.
   pendingClip?.abort();
   const controller = new AbortController();
@@ -384,7 +406,7 @@ async function serverSay(
 ): Promise<boolean> {
   let buffer: AudioBuffer | null;
   try {
-    buffer = await clipFor(text, voice.rate);
+    buffer = await clipFor(text, voice.rate, voice.clip ?? null);
   } catch {
     buffer = null;
   }
@@ -489,6 +511,36 @@ export function say(
   if (!("speechSynthesis" in window)) {
     setHealth("dead");
   }
+  // A chosen voice goes to the server FIRST, not as a fallback from failure.
+  //
+  // This is the whole of what the customer asked for. The browser's engine is
+  // the thing that sounded rough; reaching it only after the engine has failed
+  // would mean the child keeps hearing the rough voice on every device where
+  // the engine works — which is most of them. So when somebody has picked one
+  // of our voices, that is the voice, and the engine sits underneath as the
+  // last resort rather than the default.
+  //
+  // `serverSay` resolves false when it cannot — offline, or a deployment with
+  // no models — and then this falls through to the engine below, so a chosen
+  // voice never costs a learner their speech.
+  if (voice.clip != null && health !== "mute") {
+    void (async () => {
+      if (!(await serverSay(text, voice, onDone))) {
+        sayWithEngine(text, { ...voice, clip: null }, onDone, clips);
+      }
+    })();
+    return;
+  }
+  sayWithEngine(text, voice, onDone, clips);
+}
+
+/** The browser's own engine, and everything that stands in for it. */
+function sayWithEngine(
+  text: string,
+  voice: VoiceSettings,
+  onDone?: () => void,
+  clips?: readonly string[],
+): void {
   // Past the point of no return for the browser engine, everything goes to the
   // recorded clips, and to the server only for what they cannot say. No
   // retrying the engine per utterance: it does not recover within a page, and

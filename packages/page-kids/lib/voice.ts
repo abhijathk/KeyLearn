@@ -1,3 +1,4 @@
+import { loadA11y } from "@keylearn/pages-shared";
 import { hush, say, unlockSpeech } from "@keylearn/speech";
 
 /**
@@ -77,7 +78,11 @@ export function forSpeech(text: string): string {
 export function speakLine(text: string, rate: number): void {
   const spoken = forSpeech(text);
   if (spoken !== "") {
-    say(spoken, { rate, enabled: true });
+    // Read here rather than passed in by each caller. There are three of them
+    // today, and a fourth added later would otherwise speak in the default
+    // voice — a child hearing the coach in two different voices depending on
+    // which line it is, which is worse than either voice on its own.
+    say(spoken, { rate, enabled: true, clip: loadA11y().appVoice });
   }
 }
 

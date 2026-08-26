@@ -183,6 +183,27 @@ export type A11yPrefs = {
    * one for them is how you end up reading a lesson in a novelty voice.
    */
   readonly speechVoice: string | null;
+  /**
+   * One of the app's own voices — "kid", "lady" or "man" — or null for the
+   * browser's engine.
+   *
+   * A customer reported that the voice their child heard was "very rough and
+   * not kids friendly". It was: whatever engine the device shipped with. This
+   * picks a synthesised voice that was actually listened to before being put
+   * in front of a child.
+   *
+   * Distinct from `speechVoice` above, which names a voice installed on the
+   * device. That one is the learner's own choice among what they happen to
+   * have; this one is a choice among what the app can guarantee, and is the
+   * only one a parent can make on a child's behalf and expect to hold on the
+   * school's computer too.
+   *
+   * Per learner, like everything else here. A household is not one voice: the
+   * six-year-old and the parent using the braille drill want different ones,
+   * and a braille learner who is a child should get the child's voice — being
+   * blind is not a reason to be read to by an adult.
+   */
+  readonly appVoice: "kid" | "lady" | "man" | null;
 };
 
 export const defaultA11y: A11yPrefs = {
@@ -205,6 +226,7 @@ export const defaultA11y: A11yPrefs = {
   timers: true,
   speechRate: 1,
   speechVoice: null,
+  appVoice: null,
 };
 
 function clampIn(
@@ -265,6 +287,12 @@ export function loadA11y(profileId?: string | null): A11yPrefs {
       cues: json.cues === true,
       timers: json.timers !== false,
       speechRate: clampRate(json.speechRate),
+      appVoice:
+        json.appVoice === "kid" ||
+        json.appVoice === "lady" ||
+        json.appVoice === "man"
+          ? json.appVoice
+          : null,
       speechVoice:
         typeof json.speechVoice === "string" && json.speechVoice !== ""
           ? json.speechVoice

@@ -4,7 +4,13 @@ import { HttpError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { allLocales } from "@keylearn/intl";
 import { rateLimit } from "../auth/ratelimit.ts";
-import { findSynth, MAX_TEXT } from "./synth.ts";
+import {
+  findSynth,
+  installedVoices,
+  isVoiceId,
+  MAX_TEXT,
+  type VoiceId,
+} from "./synth.ts";
 
 /**
  * A phrase rendered to audio, kept because a drill says the same things over
@@ -73,6 +79,7 @@ export class Controller {
     const text = String(query.get("text") ?? "").trim();
     const lang = String(query.get("lang") ?? "en");
     const wpm = Number(query.get("wpm") ?? "175");
+    const voiceParam = String(query.get("voice") ?? "").trim();
 
     if (text === "" || text.length > MAX_TEXT) {
       throw new HttpError(400, "Nothing to say, or too much of it.");
@@ -83,8 +90,22 @@ export class Controller {
     if (!Number.isFinite(wpm) || wpm < 80 || wpm > 450) {
       throw new HttpError(400, "Speech rate out of range.");
     }
+    // An allow-list, checked here rather than trusted from the picker that
+    // offered it: this value selects a model file and becomes a subprocess
+    // argument, and the request does not have to have come from our own page.
+    let voice: VoiceId | null = null;
+    if (voiceParam !== "") {
+      if (!isVoiceId(voiceParam)) {
+        throw new HttpError(400, "Unknown voice.");
+      }
+      voice = voiceParam;
+    }
 
-    const key = `${lang}|${wpm}|${text}`;
+    // The voice is part of what the bytes are. Leaving it out of the key would
+    // serve a child the phrase a previous request happened to render in the
+    // man's voice, which is not a subtle wrongness — it is the setting simply
+    // not working, intermittently, in a way no one could reproduce.
+    const key = `${voice ?? "-"}|${lang}|${wpm}|${text}`;
     const hit = cache.get(key);
     if (hit != null) {
       send(ctx, hit);
@@ -104,7 +125,7 @@ export class Controller {
     }
     let wav: Buffer;
     try {
-      wav = await synth.render(text, lang, wpm);
+      wav = await synth.render(text, lang, wpm, voice);
     } catch {
       throw new HttpError(503, "Speech synthesis failed.");
     }
@@ -113,6 +134,21 @@ export class Controller {
     }
     remember(key, wav);
     send(ctx, wav);
+  }
+
+  /**
+   * Which curated voices this deployment can speak.
+   *
+   * Asked before the picker is drawn, so a parent is not offered a voice that
+   * will fall back to something else the moment they choose it. An empty list
+   * is a real answer — a machine with no models still has the browser's own
+   * engine, which is what everyone has today.
+   */
+  @http.GET("/_/speech/voices")
+  async voices(ctx: Context) {
+    ctx.response.type = "application/json";
+    ctx.response.body = { voices: await installedVoices() };
+    ctx.response.headers.set("Cache-Control", "public, max-age=300");
   }
 }
 

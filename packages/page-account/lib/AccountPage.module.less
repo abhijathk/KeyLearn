@@ -684,6 +684,34 @@
   background: var(--accent);
 }
 
+// The preview button beside the voice picker. Sized to sit level with the
+// select rather than to compete with it: choosing the voice is the action,
+// hearing it is how you choose.
+.prefButton {
+  flex: none;
+  margin-inline-start: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border: var(--separator-border);
+  border-radius: 0.5rem;
+  color: var(--text-color);
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+  font: inherit;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  cursor: pointer;
+
+  // Disabled first: it is the less specific selector, and stylelint holds the
+  // file to that order so a later rule cannot quietly lose to an earlier one.
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--text-color) 10%, transparent);
+  }
+}
+
 .prefSelect {
   flex: none;
   max-inline-size: 12rem;

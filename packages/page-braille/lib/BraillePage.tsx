@@ -149,8 +149,13 @@ function Practice(): ReactNode {
       rate: a11y.speechRate,
       enabled: prefs.speech,
       name: a11y.speechVoice,
+      // A braille learner who is a child gets the child's voice, if that is
+      // what their profile says. Being blind is not a reason to be read to by
+      // an adult, and the rate stays their own either way — somebody who
+      // listens all day listens fast, whichever voice is doing the talking.
+      clip: a11y.appVoice,
     }),
-    [a11y.speechRate, prefs.speech, a11y.speechVoice],
+    [a11y.speechRate, prefs.speech, a11y.speechVoice, a11y.appVoice],
   );
   // Spell-out is a hint like any other: hearing "b, dots one two" while
   // being assessed on recall of the cell is the assessment answering itself.

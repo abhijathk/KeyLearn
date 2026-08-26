@@ -33,6 +33,7 @@ import {
 import { SpeedUnit, uiProps } from "@keylearn/result";
 import { openResultStorage } from "@keylearn/result-loader";
 import { useSettings } from "@keylearn/settings";
+import { say } from "@keylearn/speech";
 import { useTheme } from "@keylearn/themes";
 import { OptionList } from "@keylearn/widget";
 import { clsx } from "clsx";
@@ -903,6 +904,149 @@ function Row({
 
 const SPEECH_RATES: readonly number[] = [0.75, 1, 1.5, 2, 2.5, 3];
 
+/**
+ * The app's own voices, and a way to hear one before choosing it.
+ *
+ * A customer reported that the voice their child heard was "very rough and not
+ * kids friendly" — the device's own engine, or espeak-ng behind it. These three
+ * were listened to first.
+ *
+ * The preview is the point of the control, not a decoration on it. Nobody can
+ * choose a voice for a child from a word in a dropdown: "kid" and "lady" are
+ * labels, and what matters is whether this particular child will sit and listen
+ * to it. So the button speaks a real sentence in the voice as it will actually
+ * be heard — at this learner's own rate, through the same path the app uses —
+ * rather than describing it.
+ */
+function AppVoiceRow({
+  prefs,
+  set,
+}: {
+  readonly prefs: A11yPrefs;
+  readonly set: (patch: Partial<A11yPrefs>) => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const [offered, setOffered] = useState<readonly string[] | null>(null);
+  const [speaking, setSpeaking] = useState(false);
+  useEffect(() => {
+    // Asked rather than assumed: the voices exist only where the models are
+    // installed, and offering one that silently falls back to something else
+    // is how a parent concludes the setting does not work.
+    let live = true;
+    void (async () => {
+      try {
+        const response = await fetch("/_/speech/voices");
+        const body = response.ok ? await response.json() : null;
+        if (live) {
+          setOffered(Array.isArray(body?.voices) ? body.voices : []);
+        }
+      } catch {
+        if (live) {
+          setOffered([]);
+        }
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
+  // Nothing to choose from: this deployment has no models, and the browser's
+  // engine is all there is. Showing an empty picker would promise otherwise.
+  if (offered != null && offered.length === 0) {
+    return null;
+  }
+  const LABELS: Record<string, string> = {
+    kid: formatMessage({
+      id: "account.a11y.appVoice.kid",
+      defaultMessage: "Child",
+    }),
+    lady: formatMessage({
+      id: "account.a11y.appVoice.lady",
+      defaultMessage: "Woman",
+    }),
+    man: formatMessage({
+      id: "account.a11y.appVoice.man",
+      defaultMessage: "Man",
+    }),
+  };
+  const preview = () => {
+    setSpeaking(true);
+    // The learner's own rate, not a demonstration rate. Somebody who listens
+    // at 2.5× is choosing a voice they can bear AT 2.5×, and a preview at
+    // normal speed would be answering a different question.
+    say(
+      formatMessage({
+        id: "account.a11y.appVoice.sample",
+        defaultMessage:
+          "Hello! I am the voice that will read your lessons. Ready when you are.",
+      }),
+      {
+        rate: prefs.speechRate,
+        enabled: true,
+        clip: prefs.appVoice,
+      },
+      () => setSpeaking(false),
+    );
+  };
+  return (
+    <div className={styles.row}>
+      <div className={styles.rowText}>
+        <span className={styles.rowLabel}>
+          <FormattedMessage
+            id="account.a11y.appVoice"
+            defaultMessage="Reading voice"
+          />
+        </span>
+        <span className={styles.rowSub}>
+          <FormattedMessage
+            id="account.a11y.appVoice.sub"
+            defaultMessage="A voice for this learner, the same on every device they sign in on. Listen to one before you choose it."
+          />
+        </span>
+      </div>
+      <select
+        className={styles.prefSelect}
+        value={prefs.appVoice ?? ""}
+        onChange={(ev) => {
+          set({
+            appVoice: (ev.target.value || null) as A11yPrefs["appVoice"],
+          });
+        }}
+      >
+        <option value="">
+          {formatMessage({
+            id: "account.a11y.appVoice.device",
+            defaultMessage: "This device's own voice",
+          })}
+        </option>
+        {(offered ?? []).map((id) => (
+          <option key={id} value={id}>
+            {LABELS[id] ?? id}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        className={styles.prefButton}
+        disabled={speaking}
+        onClick={preview}
+      >
+        {speaking ? (
+          <FormattedMessage
+            id="account.a11y.appVoice.speaking"
+            defaultMessage="Speaking…"
+          />
+        ) : (
+          <FormattedMessage
+            id="account.a11y.appVoice.preview"
+            defaultMessage="Listen"
+          />
+        )}
+      </button>
+    </div>
+  );
+}
+
 function VoiceRows({
   prefs,
   set,
@@ -929,6 +1073,8 @@ function VoiceRows({
   }, []);
   return (
     <>
+      <AppVoiceRow prefs={prefs} set={set} />
+
       <div className={styles.row}>
         <div className={styles.rowText}>
           <span className={styles.rowLabel}>
