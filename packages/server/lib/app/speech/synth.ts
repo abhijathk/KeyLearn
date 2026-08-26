@@ -92,13 +92,13 @@ const VOICE_MODELS: Record<
   kid: {
     bundle: "vits-piper-en_US-amy-medium",
     model: "en_US-amy-medium",
-    // Nudged up from 1.28, and slowed a little. Higher alone starts to sound
-    // pinched rather than young; taking the pace down with it is what reads as
-    // a small person talking to you rather than an adult sped up. Both moves
-    // are deliberately small — past about 1.4 the vowels go thin and it stops
-    // sounding like a child at all.
-    pitch: 1.33,
-    pace: 0.94,
+    // 1.28 and unhurried. It was briefly taken to 1.33 and slowed to 0.94 to
+    // sound "a bit cuter" and that was worse on the ear, so it is back where it
+    // was. Past about 1.4 the vowels go thin and it stops sounding like a child
+    // at all; this is comfortably short of that, and it is the version that was
+    // chosen by listening.
+    pitch: 1.28,
+    pace: 1,
   },
   // Roughly nine to thirteen. Lifted, but only a little — enough not to be an
   // adult, not so much as to sound like a cartoon to somebody old enough to
