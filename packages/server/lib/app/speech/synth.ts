@@ -67,15 +67,38 @@ export function isVoiceId(value: string): value is VoiceId {
  * voices are adult voices raised in pitch. See `render` for why that costs
  * nothing in quality.
  */
+/**
+ * `pace` corrects for how fast a model speaks of its own accord.
+ *
+ * These are separately trained voices and they do not agree on what a normal
+ * speaking rate is: given the same sentence at the same nominal speed, Ryan
+ * finishes in about three seconds where Amy takes nearly five. "The man talks
+ * too fast" is not a setting anybody chose, and turning down the rate control
+ * would slow every voice to fix one.
+ *
+ * Below one is slower. Applied before the pitch shift, so it changes the
+ * delivery rather than falling out of the resampling.
+ */
 const VOICE_MODELS: Record<
   VoiceId,
-  { readonly bundle: string; readonly model: string; readonly pitch: number }
+  {
+    readonly bundle: string;
+    readonly model: string;
+    readonly pitch: number;
+    readonly pace: number;
+  }
 > = {
   // Roughly five to eight: the band that cannot read the coaching at all.
   kid: {
     bundle: "vits-piper-en_US-amy-medium",
     model: "en_US-amy-medium",
-    pitch: 1.28,
+    // Nudged up from 1.28, and slowed a little. Higher alone starts to sound
+    // pinched rather than young; taking the pace down with it is what reads as
+    // a small person talking to you rather than an adult sped up. Both moves
+    // are deliberately small — past about 1.4 the vowels go thin and it stops
+    // sounding like a child at all.
+    pitch: 1.33,
+    pace: 0.94,
   },
   // Roughly nine to thirteen. Lifted, but only a little — enough not to be an
   // adult, not so much as to sound like a cartoon to somebody old enough to
@@ -84,16 +107,20 @@ const VOICE_MODELS: Record<
     bundle: "vits-piper-en_GB-jenny_dioco-medium",
     model: "en_GB-jenny_dioco-medium",
     pitch: 1.15,
+    pace: 1,
   },
   lady: {
     bundle: "vits-piper-en_US-amy-medium",
     model: "en_US-amy-medium",
     pitch: 1,
+    pace: 1,
   },
   man: {
     bundle: "vits-piper-en_US-ryan-medium",
     model: "en_US-ryan-medium",
     pitch: 1,
+    // Ryan runs well ahead of the others; brought into line with them.
+    pace: 0.8,
   },
 };
 
@@ -243,7 +270,7 @@ const neural: Synth = {
     const result = engineFor(id).generate({
       text,
       sid: 0,
-      speed: rate / pitch,
+      speed: (rate * VOICE_MODELS[id].pace) / pitch,
     });
     return wavOf(resample(result.samples, pitch), result.sampleRate);
   },

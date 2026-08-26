@@ -103,22 +103,36 @@ export function VoicePicker({
   if (offered != null && offered.length === 0) {
     return null;
   }
+  /**
+   * Named, not described.
+   *
+   * "Child (5–8)" names a category; a parent choosing for one particular child
+   * is choosing them a companion. A name also survives the band being wrong —
+   * a small nine-year-old who wants the younger voice picks Pip without being
+   * told they are a five-to-eight.
+   *
+   * The band stays as a suffix, because somebody who has never heard Pip
+   * cannot choose from a name alone. The Listen button does the real work.
+   *
+   * Not translated. A name is a name, and these were picked to be sayable
+   * across the locales this ships in rather than to mean anything in English.
+   */
   const LABELS: Record<string, string> = {
     kid: formatMessage({
       id: "profiles.voice.kid",
-      defaultMessage: "Child (5–8)",
+      defaultMessage: "Pip — child (5–8)",
     }),
     tween: formatMessage({
       id: "profiles.voice.tween",
-      defaultMessage: "Older child (9–13)",
+      defaultMessage: "Robin — older child (9–13)",
     }),
     lady: formatMessage({
       id: "profiles.voice.lady",
-      defaultMessage: "Woman",
+      defaultMessage: "Maya — woman",
     }),
     man: formatMessage({
       id: "profiles.voice.man",
-      defaultMessage: "Man",
+      defaultMessage: "Theo — man",
     }),
   };
   return (
@@ -134,17 +148,26 @@ export function VoicePicker({
             onChange(ev.target.value || null);
           }}
         >
-          <option value="">
-            {formatMessage({
-              id: "profiles.voice.device",
-              defaultMessage: "This device's own voice",
-            })}
-          </option>
           {(offered ?? []).map((id) => (
             <option key={id} value={id}>
               {LABELS[id] ?? id}
             </option>
           ))}
+          {/* Last, not first.
+              Kept rather than dropped, and for one specific reason: a learner
+              who uses a screen reader has a system voice they know, often at a
+              speed nobody else could follow, and replacing it with one of ours
+              would be a downgrade dressed as an improvement. The braille page's
+              own voice picker also only does anything while this is chosen, so
+              removing it here would quietly strand that setting.
+              It is no longer anybody's default, which is what actually caused
+              the complaint. */}
+          <option value="">
+            {formatMessage({
+              id: "profiles.voice.device",
+              defaultMessage: "Your device's own voice",
+            })}
+          </option>
         </select>
         <button
           type="button"
