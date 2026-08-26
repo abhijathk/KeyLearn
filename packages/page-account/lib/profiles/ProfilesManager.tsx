@@ -44,6 +44,7 @@ import { BrailleBadge } from "./BrailleBadge.tsx";
 import { ConsentDocument } from "./ConsentDocument.tsx";
 import { useProfiles } from "./context.tsx";
 import { KeybrImport } from "./KeybrImport.tsx";
+import { PinPrompt } from "./PinPrompt.tsx";
 import { ProfileAvatar } from "./ProfileAvatar.tsx";
 import * as styles from "./Profiles.module.less";
 import {
@@ -263,8 +264,18 @@ export function ProfilesManager(): ReactNode {
   const pendingVoice = useRef<string | null | undefined>(undefined);
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
-  const { household, active, places, add, update, remove, reorder } =
-    useProfiles();
+  const {
+    household,
+    active,
+    places,
+    add,
+    update,
+    remove,
+    reorder,
+    pinNeeded,
+    provePin,
+    cancelPin,
+  } = useProfiles();
   const sighted = sightedPlaces(isPremiumUser(publicUser));
   const [editing, setEditing] = useState<Editing>(null);
   // Fetched once for the whole list rather than per row: this is one request
@@ -490,6 +501,11 @@ export function ProfilesManager(): ReactNode {
           onClose={() => setImporting(false)}
         />
       )}
+
+      {/* Whatever write is waiting, this is what unblocks it. Rendered from
+          here rather than from the editor, because deleting and reordering go
+          through the same gate and neither has an editor open. */}
+      {pinNeeded && <PinPrompt onProve={provePin} onCancel={cancelPin} />}
 
       {editing != null && (
         <ProfileEditor

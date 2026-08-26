@@ -17,6 +17,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { AccountService, type ProfileInput } from "../service.ts";
@@ -54,6 +55,21 @@ type ProfilesContextValue = {
   readonly add: (data: ProfileInput) => Promise<string | null>;
   readonly update: (id: string, patch: Partial<ProfileInput>) => Promise<void>;
   readonly remove: (id: string) => Promise<void>;
+  /**
+   * Set while a write is waiting on the grown-up PIN.
+   *
+   * Changing a learner needs the PIN once per session on an account that has
+   * one. The server has always enforced that; nothing on this side ever asked
+   * for it, so the write failed with a logged error and the parent saw a save
+   * button that did nothing. Held here rather than in each caller because
+   * every write goes through this provider, and asking three call sites to
+   * each remember the gate is how one of them ends up not.
+   */
+  readonly pinNeeded: boolean;
+  /** Proves the PIN and replays whatever was waiting on it. */
+  readonly provePin: (pin: string) => Promise<boolean>;
+  /** Gives up on the waiting write. */
+  readonly cancelPin: () => void;
   readonly select: (id: string | null) => void;
   /** Move a profile one place up (-1) or down (+1) in the display order. */
   readonly reorder: (id: string, dir: -1 | 1) => void;
@@ -166,6 +182,11 @@ export function ProfilesProvider({
 
   // Profiles come from the server: seeded from page data on first render, then
   // replaced by the full list every mutation returns.
+  const [pinNeeded, setPinNeeded] = useState(false);
+  // The write held back until the PIN is proved. A ref, not state: nothing
+  // renders from it, and a re-render between the failure and the retry would
+  // lose the very thing being kept.
+  const pending = useRef<(() => Promise<void>) | null>(null);
   const [profiles, setProfiles] = useState<readonly Profile[]>(() =>
     signedIn ? [...(pageData.profiles ?? [])] : [],
   );
@@ -237,6 +258,32 @@ export function ProfilesProvider({
     const adults = adultProfiles(household);
     // Adopt the server's returned list; auto-select the newly-created profile
     // (the one whose id we didn't have before) when none is active yet.
+    /**
+     * Runs a write, and holds it back if the server asks for the PIN.
+     *
+     * A 428 with `parentPin` is not a failure to report — it is a step that
+     * has not happened yet. Logging it (which is what used to happen) turns a
+     * missing prompt into a save button that silently does nothing.
+     */
+    const gated = async <T,>(
+      run: () => Promise<T>,
+      fallback: T,
+    ): Promise<T> => {
+      try {
+        return await run();
+      } catch (err: any) {
+        if (err?.status === 428 && err?.body?.error?.parentPin === true) {
+          pending.current = async () => {
+            await run();
+          };
+          setPinNeeded(true);
+          return fallback;
+        }
+        catchError(err);
+        return fallback;
+      }
+    };
+
     const adopt = (list: readonly ProfileDetails[]) => {
       setProfiles(list);
       if (activeId == null) {
@@ -253,34 +300,46 @@ export function ProfilesProvider({
       namespace: historyNamespace(active),
       places: countPlaces(profiles, premium),
       needsPick: signedIn && adults.length >= 2 && !pickDismissed,
-      add: async (data) => {
-        try {
+      add: async (data) =>
+        await gated(async () => {
           const before = profiles.map((p) => p.id);
           const list = await AccountService.createProfile(data);
           adopt(list);
           return list.find((p) => !before.includes(p.id))?.id ?? null;
-        } catch (err) {
-          catchError(err);
-          return null;
-        }
-      },
+        }, null),
       update: async (id, patch) => {
-        try {
+        await gated(async () => {
           setProfiles(await AccountService.updateProfile(id, patch));
-        } catch (err) {
-          catchError(err);
-        }
+        }, undefined);
       },
       remove: async (id) => {
-        try {
+        await gated(async () => {
           const list = await AccountService.deleteProfile(id);
           setProfiles(list);
           if (activeId === id) {
             setActiveId(list[0]?.id ?? null);
           }
-        } catch (err) {
-          catchError(err);
+        }, undefined);
+      },
+      pinNeeded,
+      provePin: async (pin) => {
+        try {
+          await AccountService.verifyParentPin(pin);
+        } catch {
+          return false; // Wrong PIN. The prompt says so and stays open.
         }
+        setPinNeeded(false);
+        const held = pending.current;
+        pending.current = null;
+        // Replayed rather than abandoned: the parent already pressed Save, and
+        // making them press it again after proving who they are is a second
+        // ask for the same thing.
+        await held?.();
+        return true;
+      },
+      cancelPin: () => {
+        pending.current = null;
+        setPinNeeded(false);
       },
       select: (id) => {
         markPicked();
@@ -308,6 +367,11 @@ export function ProfilesProvider({
     pickDismissed,
     markPicked,
     setActiveId,
+    // Without this the context keeps handing out the value it computed while
+    // the gate was still closed, so the prompt is asked for and never appears:
+    // the save looks like it silently did nothing, which is the exact
+    // behaviour this whole change exists to remove.
+    pinNeeded,
   ]);
 
   return (
