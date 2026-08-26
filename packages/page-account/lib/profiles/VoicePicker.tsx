@@ -1,0 +1,140 @@
+import { say } from "@keylearn/speech";
+import { type ReactNode, useEffect, useState } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
+import * as styles from "./Profiles.module.less";
+
+/**
+ * The voice this learner is read to in, chosen while setting them up.
+ *
+ * A customer reported that the voice their child heard was "very rough and not
+ * kids friendly" — the device's own engine, or espeak-ng behind it. These were
+ * listened to first.
+ *
+ * On the learner's own profile rather than in accessibility settings, because
+ * that is what it is: part of making a learner, alongside their name and their
+ * year, decided once by whoever sets them up. It also means it is chosen at the
+ * moment somebody is already thinking about who this learner is — a five-year-
+ * old who cannot read yet, or an adult using the braille drill — rather than
+ * found later in a pane they had no reason to open.
+ *
+ * ## The preview is the control
+ *
+ * Not decoration on it. Nobody can choose a voice for a child from a word in a
+ * dropdown: "Child" and "Woman" are labels, and the only question that matters
+ * is whether this particular child will sit and listen to this particular
+ * voice. So the button speaks a real sentence, through the same path the app
+ * will actually use, rather than describing it.
+ */
+export function VoicePicker({
+  value,
+  onChange,
+}: {
+  readonly value: string | null;
+  readonly onChange: (value: string | null) => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const [offered, setOffered] = useState<readonly string[] | null>(null);
+  const [speaking, setSpeaking] = useState(false);
+  useEffect(() => {
+    // Asked rather than assumed: the voices exist only where the deployment
+    // can speak them, and offering one that silently falls back to something
+    // else is how a parent concludes the setting does not work.
+    let live = true;
+    void (async () => {
+      try {
+        const response = await fetch("/_/speech/voices");
+        const body = response.ok ? await response.json() : null;
+        if (live) {
+          setOffered(Array.isArray(body?.voices) ? body.voices : []);
+        }
+      } catch {
+        if (live) {
+          setOffered([]);
+        }
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
+  // Nothing to choose from: this deployment cannot speak, and the browser's own
+  // engine is all there is. An empty picker would promise otherwise.
+  if (offered != null && offered.length === 0) {
+    return null;
+  }
+  const LABELS: Record<string, string> = {
+    kid: formatMessage({
+      id: "profiles.voice.kid",
+      defaultMessage: "Child (5–8)",
+    }),
+    tween: formatMessage({
+      id: "profiles.voice.tween",
+      defaultMessage: "Older child (9–13)",
+    }),
+    lady: formatMessage({
+      id: "profiles.voice.lady",
+      defaultMessage: "Woman",
+    }),
+    man: formatMessage({
+      id: "profiles.voice.man",
+      defaultMessage: "Man",
+    }),
+  };
+  return (
+    <div className={styles.field2}>
+      <p className={styles.editorLbl}>
+        <FormattedMessage id="profiles.voice" defaultMessage="Reading voice" />
+      </p>
+      <div className={styles.voiceControls}>
+        <select
+          className={styles.voiceSelect}
+          value={value ?? ""}
+          onChange={(ev) => {
+            onChange(ev.target.value || null);
+          }}
+        >
+          <option value="">
+            {formatMessage({
+              id: "profiles.voice.device",
+              defaultMessage: "This device's own voice",
+            })}
+          </option>
+          {(offered ?? []).map((id) => (
+            <option key={id} value={id}>
+              {LABELS[id] ?? id}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className={styles.voiceButton}
+          disabled={speaking}
+          onClick={() => {
+            setSpeaking(true);
+            say(
+              formatMessage({
+                id: "profiles.voice.sample",
+                defaultMessage:
+                  "Hello! I am the voice that will read your lessons. Ready when you are.",
+              }),
+              { rate: 1, enabled: true, clip: value },
+              () => setSpeaking(false),
+            );
+          }}
+        >
+          {speaking ? (
+            <FormattedMessage
+              id="profiles.voice.speaking"
+              defaultMessage="Speaking…"
+            />
+          ) : (
+            <FormattedMessage
+              id="profiles.voice.preview"
+              defaultMessage="Listen"
+            />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}

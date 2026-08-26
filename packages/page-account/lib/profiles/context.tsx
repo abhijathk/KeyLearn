@@ -43,7 +43,15 @@ type ProfilesContextValue = {
    * app should ask who is practising with the profile picker.
    */
   readonly needsPick: boolean;
-  readonly add: (data: ProfileInput) => Promise<void>;
+  /**
+   * Adds a learner, answering with their new id.
+   *
+   * The id is handed back because some of what a learner has is kept against
+   * their id rather than on the profile record — their reading voice, for one
+   * — and that cannot be written until the id exists. Without this the caller
+   * would have to guess which of the returned profiles was the new one.
+   */
+  readonly add: (data: ProfileInput) => Promise<string | null>;
   readonly update: (id: string, patch: Partial<ProfileInput>) => Promise<void>;
   readonly remove: (id: string) => Promise<void>;
   readonly select: (id: string | null) => void;
@@ -247,9 +255,13 @@ export function ProfilesProvider({
       needsPick: signedIn && adults.length >= 2 && !pickDismissed,
       add: async (data) => {
         try {
-          adopt(await AccountService.createProfile(data));
+          const before = profiles.map((p) => p.id);
+          const list = await AccountService.createProfile(data);
+          adopt(list);
+          return list.find((p) => !before.includes(p.id))?.id ?? null;
         } catch (err) {
           catchError(err);
+          return null;
         }
       },
       update: async (id, patch) => {

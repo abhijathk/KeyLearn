@@ -203,7 +203,7 @@ export type A11yPrefs = {
    * and a braille learner who is a child should get the child's voice — being
    * blind is not a reason to be read to by an adult.
    */
-  readonly appVoice: "kid" | "lady" | "man" | null;
+  readonly appVoice: "kid" | "tween" | "lady" | "man" | null;
 };
 
 export const defaultA11y: A11yPrefs = {
@@ -289,6 +289,7 @@ export function loadA11y(profileId?: string | null): A11yPrefs {
       speechRate: clampRate(json.speechRate),
       appVoice:
         json.appVoice === "kid" ||
+        json.appVoice === "tween" ||
         json.appVoice === "lady" ||
         json.appVoice === "man"
           ? json.appVoice
