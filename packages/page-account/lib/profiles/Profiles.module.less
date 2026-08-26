@@ -1162,24 +1162,33 @@
   // Every box used to stretch to the dialog's full width whatever it held, so
   // a four-digit year got the same run of empty space as a full name. That is
   // most of why the form read as loose.
+  // Fields fill the column, so they line up with the Grown-up / Kid pair
+  // above them rather than stopping short of it.
   .field {
     inline-size: 100%;
-    max-inline-size: 12rem;
     padding: 0.45rem 0.6rem;
     font-size: 0.86rem;
   }
 
+  // First name and year share one row and, between them, span exactly the
+  // width of everything else in the column. The year is four characters, so
+  // it takes what it needs and the name takes the rest.
   .two {
     gap: 0.6rem;
 
-    > * {
-      flex: none;
+    > *:first-child {
+      flex: 1;
+      min-inline-size: 0;
     }
 
-    // A year is four characters.
-    > *:last-child .field {
-      inline-size: 6rem;
+    > *:last-child {
+      flex: none;
+      inline-size: 6.5rem;
     }
+  }
+
+  .kindRow {
+    inline-size: 100%;
   }
 
   .field2 {
@@ -1208,4 +1217,47 @@
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
+}
+
+// ── Avatar as one control ──────────────────────────────────────────────────
+//
+// The picture and the button that changes it read as a single thing, so they
+// share a shape rather than sitting beside each other as two. The initial
+// checkbox goes underneath, where it qualifies the picture above it instead of
+// competing with it for the row.
+.editorCols .artRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.editorCols .artArt {
+  display: flex;
+  flex-direction: row;
+  // Flush left and top to bottom, so the pill's rounded end IS the avatar's
+  // own circle rather than a ring drawn a few pixels outside it. Only the
+  // right end is padded, where the pill has to close around the button.
+  gap: 0;
+  align-items: center;
+  padding: 0 0.55rem 0 0;
+  border: var(--separator-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+
+  // The avatar sets the pill's height; nothing else in here is taller.
+  > svg {
+    display: block;
+    flex: none;
+  }
+}
+
+// Centred in whatever room is left beside the avatar, so a wide pill does not
+// leave the button hanging off the picture with empty space trailing after it.
+.editorCols .shuffleBtn {
+  margin-inline: auto;
+}
+
+.editorCols .artPick {
+  display: block;
 }

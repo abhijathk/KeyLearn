@@ -574,7 +574,10 @@ function ProfileEditor({
   readonly onCancel: () => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
-  const [kind, setKind] = useState<ProfileKind>(profile?.kind ?? "kid");
+  // A new learner starts as a grown-up. Whoever is filling this in is one,
+  // and the first profile on an account is almost always theirs; a household
+  // adds the children afterwards.
+  const [kind, setKind] = useState<ProfileKind>(profile?.kind ?? "adult");
   const [firstName, setFirstName] = useState(profile?.firstName ?? "");
   const [lastName, setLastName] = useState(profile?.lastName ?? "");
   const [birthYear, setBirthYear] = useState(
@@ -593,7 +596,7 @@ function ProfileEditor({
       // It used to be the first family seeded from an empty name — a constant,
       // so every learner anyone ever added was offered the identical picture
       // and it read as a fixed icon rather than as something to play with.
-      const families = artFamilies("kid");
+      const families = artFamilies("adult");
       return {
         type: "art",
         family: families[Math.floor(Math.random() * families.length)].id,
@@ -697,7 +700,15 @@ function ProfileEditor({
   const switchKind = (next: ProfileKind) => {
     setKind(next);
     if (avatar.type === "art" && !isArtFamily(avatar.family, next)) {
-      setAvatar({ ...avatar, family: defaultArtFamily(next) });
+      // A family from the new set at random, not the first one. Landing on the
+      // first every time meant that toggling between grown-up and kid always
+      // produced the identical picture — so the six kid families looked like
+      // one family to anybody who found them by switching kind.
+      const families = artFamilies(next);
+      setAvatar({
+        ...avatar,
+        family: families[Math.floor(Math.random() * families.length)].id,
+      });
     }
     if (avatar.type === "icon") {
       const index = presetsFor(kind).findIndex((p) => p.id === avatar.id);
@@ -995,12 +1006,15 @@ function ProfileEditor({
                   />
                 </p>
                 <div className={styles.artRow}>
+                  {/* Avatar and Shuffle read as one control — the picture is what
+                  the button changes, so they belong in the same shape rather
+                  than sitting beside each other as two separate things. */}
                   <div className={styles.artArt}>
                     <ProfileArt
                       family={art.family}
                       seed={art.seed}
                       kind={kind}
-                      size={84}
+                      size={56}
                       letter={art.letter === true ? initial : null}
                     />
                     <button
