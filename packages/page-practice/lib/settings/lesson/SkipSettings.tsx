@@ -1,12 +1,6 @@
 import { uiProps } from "@keylearn/result";
 import { useSettings } from "@keylearn/settings";
-import {
-  Description,
-  Explainer,
-  SettingRow,
-  SettingsCard,
-  Switch,
-} from "@keylearn/widget";
+import { SettingRow, SettingsCard, Switch } from "@keylearn/widget";
 import { type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -65,14 +59,6 @@ export function SkipSettings(): ReactNode {
           }}
         />
       </SettingRow>
-      <Explainer>
-        <Description>
-          <FormattedMessage
-            id="settings.allowSkip.explain"
-            defaultMessage="Turn this off and the skip button is hidden and its shortcut stops working, so a hard lesson has to be attempted rather than passed over. Restarting the lesson still works, and so does leaving the page."
-          />
-        </Description>
-      </Explainer>
     </SettingsCard>
   );
 }

@@ -410,10 +410,16 @@
   display: flex;
   position: relative;
   flex-direction: column;
-  gap: 0.85rem;
-  inline-size: min(31rem, 100%);
+  gap: 0.6rem;
+  // Wide enough for two columns. The single 31rem column ran about 830px tall,
+  // so it scrolled on an ordinary screen while both flanks of the dialog sat
+  // empty — narrow and tall at the same time, which is the worst of both.
+  // Wide enough for two columns AND for the six avatar swatches to show their
+  // names in full. The kid families ("Bubbles", "Zigzag") are the constraint;
+  // at 43rem they were a pixel short and clipped to "Bubbl…".
+  inline-size: min(48rem, 100%);
   max-block-size: 92vb;
-  padding: 1.5rem;
+  padding: 1.1rem 1.2rem 0.9rem;
   border: var(--separator-border);
   border-radius: 0.9rem;
   color: var(--text-color);
@@ -954,13 +960,13 @@
 .artRow {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 1rem;
-  align-items: start;
+  gap: 0.8rem;
+  align-items: center;
 }
 
 .artArt {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-items: center;
 }
 
@@ -983,20 +989,29 @@
   min-inline-size: 0;
 }
 
+// One row, always. `auto-fill` fitted four and wrapped the last two under a
+// gap, which reads as a grid that has gone wrong rather than as a set of six
+// things to choose between. Six equal columns say what they are.
 .familyGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
-  gap: 0.4rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.3rem;
 }
 
 // Each family is shown as itself, drawn on the learner's current seed — the
 // label alone would mean nothing, since these are shapes rather than words.
 .familyBtn {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.15rem;
   justify-items: center;
-  padding-inline: 0.2rem;
-  padding-block: 0.35rem;
+  // Without this a grid item refuses to shrink below its content, so a long
+  // family name does not wrap or clip — it overflows the cell and lands on top
+  // of its neighbour. The grown-up families are all short enough to hide the
+  // bug ("Grid", "Arc"); the kid ones are not ("Bubbles", "Zigzag"), which is
+  // where it showed.
+  min-inline-size: 0;
+  padding-inline: 0.1rem;
+  padding-block: 0.25rem;
   border: 2px solid transparent;
   border-radius: 0.55rem;
   color: var(--text-color-f1);
@@ -1007,6 +1022,18 @@
 
 .familyBtn svg {
   border-radius: 50%;
+}
+
+// The name under each swatch. Held to the width of its own cell and clipped
+// rather than allowed to escape it; the full name is on the button's title, and
+// the picture is what is really being chosen anyway.
+.familyBtn span {
+  max-inline-size: 100%;
+  overflow: hidden;
+  font-size: 0.55rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .familyOn {
@@ -1059,4 +1086,118 @@
   color: var(--text-color-f2);
   font-size: 0.68rem;
   line-height: 1.4;
+}
+
+// The reading-voice row in the learner form. Laid out like the fields above it
+// rather than like the consent statements below: it is a choice being made, not
+// a statement being agreed to.
+// The reading-voice row. Deliberately built from the same pieces as the fields
+// above it — the same caps label, the same control height — because it is one
+// more thing being decided about this learner, not a section of its own.
+.voiceControls {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.voiceSelect {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.voiceSelect,
+.voiceButton {
+  padding: 0.55rem 0.7rem;
+  border: var(--separator-border);
+  border-radius: 0.6rem;
+  color: var(--text-color);
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+  font-family: var(--value-font-family);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.voiceButton {
+  flex: none;
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--text-color) 10%, transparent);
+  }
+}
+
+// ── The two-column learner form ────────────────────────────────────────────
+//
+// Details on the left, appearance and voice on the right. Stacks below the
+// break, and the order is deliberate: the facts about the learner come first,
+// so a narrow screen reads sensibly rather than opening on an avatar picker.
+.editorCols {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1.6rem;
+  align-items: start;
+
+  @media (max-width: 40rem) {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  // ## Fields sized to what goes in them
+  //
+  // Every box used to stretch to the dialog's full width whatever it held, so
+  // a four-digit year got the same run of empty space as a full name. That is
+  // most of why the form read as loose.
+  .field {
+    inline-size: 11rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.86rem;
+  }
+
+  .two {
+    gap: 0.6rem;
+
+    > * {
+      flex: none;
+    }
+
+    // A year is four characters.
+    > *:last-child .field {
+      inline-size: 6rem;
+    }
+  }
+
+  .field2 {
+    margin-block-end: 0.5rem;
+  }
+
+  .editorLbl {
+    margin-block-end: 0.25rem;
+    font-size: 0.6rem;
+  }
+
+  .familyBtn span {
+    font-size: 0.58rem;
+  }
+}
+
+// Names the half of the form it sits above. Only worth having because there
+// are now two halves to tell apart.
+.editorSect {
+  margin: 0 0 0.5rem;
+  padding-block-end: 0.3rem;
+  border-block-end: var(--separator-border);
+  color: var(--accent);
+  font-family: var(--default-font-family);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }

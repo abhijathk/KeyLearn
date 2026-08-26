@@ -11,8 +11,10 @@ import {
 } from "@keylearn/identicon";
 import {
   isPremiumUser,
+  loadA11y,
   PLACES_BRAILLE,
   PROFILE_NAME_MAX,
+  saveA11y,
   sightedPlaces,
   usePageData,
 } from "@keylearn/pages-shared";
@@ -25,6 +27,7 @@ import {
   type ReactNode,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -50,6 +53,7 @@ import {
   type ProfileKind,
 } from "./store.ts";
 import { type ProfileStats, useProfileStats } from "./useProfileStats.ts";
+import { VoicePicker } from "./VoicePicker.tsx";
 
 // Hoisted so formatjs can extract them. A message object built inside a ternary
 // is invisible to static extraction, so the id never reaches the catalogue and
@@ -253,6 +257,10 @@ function ProfileMedals({
 }
 
 export function ProfilesManager(): ReactNode {
+  // A new learner's voice, held from the moment the form is submitted until
+  // the id it belongs to comes back. A ref rather than state: nothing renders
+  // from it, and a re-render between the two would lose it.
+  const pendingVoice = useRef<string | null | undefined>(undefined);
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
   const { household, active, places, add, update, remove, reorder } =
@@ -489,11 +497,24 @@ export function ProfilesManager(): ReactNode {
           brailleOnly={editing.mode === "add" && places.sightedFree === 0}
           onSave={(data) => {
             if (editing.mode === "edit") {
-              update(editing.profile.id, data);
+              void update(editing.profile.id, data);
             } else {
-              add(data);
+              void (async () => {
+                const id = await add(data);
+                // Only now does the learner have an id to keep it against.
+                if (id != null && pendingVoice.current !== undefined) {
+                  saveA11y({ appVoice: pendingVoice.current as any }, id);
+                }
+              })();
             }
             setEditing(null);
+          }}
+          onSaveVoice={(voice) => {
+            if (editing.mode === "edit") {
+              saveA11y({ appVoice: voice as any }, String(editing.profile.id));
+            } else {
+              pendingVoice.current = voice;
+            }
           }}
           onDelete={
             editing.mode === "edit"
@@ -514,6 +535,7 @@ function ProfileEditor({
   profile,
   brailleOnly = false,
   onSave,
+  onSaveVoice,
   onDelete,
   onCancel,
 }: {
@@ -526,6 +548,12 @@ function ProfileEditor({
    */
   readonly brailleOnly?: boolean;
   readonly onSave: (data: ProfileInput) => void;
+  /**
+   * The reading voice, handed over separately because it is not part of the
+   * profile record — it lives against the learner's id, which for a new
+   * learner does not exist until the save has happened.
+   */
+  readonly onSaveVoice: (voice: string | null) => void;
   readonly onDelete: (() => void) | null;
   readonly onCancel: () => void;
 }): ReactNode {
@@ -550,6 +578,11 @@ function ProfileEditor({
         },
   );
   const [consent, setConsent] = useState(false);
+  // Kept against the learner's id rather than on the profile record, so on a
+  // new learner it is held here until the id exists and written straight after.
+  const [appVoice, setAppVoice] = useState<string | null>(
+    profile == null ? null : (loadA11y(String(profile.id)).appVoice ?? null),
+  );
   const [visionSupport, setVisionSupport] = useState(
     brailleOnly || (profile?.visionSupport ?? false),
   );
@@ -675,6 +708,7 @@ function ProfileEditor({
       );
       return;
     }
+    onSaveVoice(appVoice);
     onSave({
       kind,
       firstName: firstName.trim(),
@@ -731,201 +765,237 @@ function ProfileEditor({
             )}
           </h2>
 
-          <div className={styles.field2}>
-            <p className={styles.editorLbl}>
-              <FormattedMessage
-                id="profiles.whoIsThis"
-                defaultMessage="Who is this?"
-              />
-            </p>
-            <div className={styles.kindRow}>
-              <button
-                className={clsx(styles.seg, kind === "adult" && styles.segOn)}
-                disabled={lockedAdult}
-                title={lockedAdult ? lockedWhy : undefined}
-                onClick={() => switchKind("adult")}
-              >
-                <AdultIcon />
+          {/* Two columns: what is true about the learner on one side, how they
+              look and sound on the other. The old single column ran to about
+              830px tall on a dialog 470px wide, so it scrolled on an ordinary
+              screen while leaving both flanks empty. Splitting on that seam
+              keeps reading order sensible when the columns stack on a narrow
+              screen, because the facts still come first. */}
+          <div className={styles.editorCols}>
+            <div>
+              <p className={styles.editorSect}>
                 <FormattedMessage
-                  id="profiles.adult"
-                  defaultMessage="Grown-up"
+                  id="profiles.sect.who"
+                  defaultMessage="Who is this"
                 />
-              </button>
-              <button
-                className={clsx(
-                  styles.seg,
-                  styles.segKid,
-                  kind === "kid" && styles.segOn,
+              </p>
+
+              {/* No label of its own any more: the column heading above already
+              says "Who is this", and the two buttons say the rest. */}
+              <div className={styles.field2}>
+                <div className={styles.kindRow}>
+                  <button
+                    className={clsx(
+                      styles.seg,
+                      kind === "adult" && styles.segOn,
+                    )}
+                    disabled={lockedAdult}
+                    title={lockedAdult ? lockedWhy : undefined}
+                    onClick={() => switchKind("adult")}
+                  >
+                    <AdultIcon />
+                    <FormattedMessage
+                      id="profiles.adult"
+                      defaultMessage="Grown-up"
+                    />
+                  </button>
+                  <button
+                    className={clsx(
+                      styles.seg,
+                      styles.segKid,
+                      kind === "kid" && styles.segOn,
+                    )}
+                    disabled={lockedAdult || growingUp}
+                    title={
+                      lockedAdult || growingUp
+                        ? formatMessage({
+                            id: "profiles.kindKidLocked",
+                            defaultMessage:
+                              "A learner can grow up, but cannot go back to being a kid.",
+                          })
+                        : undefined
+                    }
+                    onClick={() => switchKind("kid")}
+                  >
+                    <KidIcon />
+                    <FormattedMessage id="profiles.kid" defaultMessage="Kid" />
+                  </button>
+                </div>
+                {growUpPending && (
+                  <label className={styles.growUp}>
+                    <input
+                      type="checkbox"
+                      checked={acceptGrowUp}
+                      onChange={(e) => setAcceptGrowUp(e.target.checked)}
+                    />
+                    <span>
+                      <FormattedMessage
+                        id="profiles.growUpWarn"
+                        defaultMessage="{name} keeps every certificate, medal and lesson already earned. They move to the grown-up pages, the kids trail and its rewards end, and this cannot be undone."
+                        values={{ name: firstName.trim() || profile.firstName }}
+                      />
+                    </span>
+                  </label>
                 )}
-                disabled={lockedAdult || growingUp}
-                title={
-                  lockedAdult || growingUp
-                    ? formatMessage({
-                        id: "profiles.kindKidLocked",
-                        defaultMessage:
-                          "A learner can grow up, but cannot go back to being a kid.",
-                      })
-                    : undefined
-                }
-                onClick={() => switchKind("kid")}
-              >
-                <KidIcon />
-                <FormattedMessage id="profiles.kid" defaultMessage="Kid" />
-              </button>
-            </div>
-            {growUpPending && (
-              <label className={styles.growUp}>
+              </div>
+
+              <div className={styles.two}>
+                <div className={styles.field2}>
+                  <p className={styles.editorLbl}>
+                    <FormattedMessage
+                      id="profiles.firstName"
+                      defaultMessage="First name"
+                    />
+                  </p>
+                  <input
+                    className={styles.field}
+                    type="text"
+                    maxLength={PROFILE_NAME_MAX}
+                    value={firstName}
+                    onChange={(ev) => setFirstName(ev.target.value)}
+                  />
+                </div>
+                <div className={styles.field2}>
+                  <p className={styles.editorLbl}>
+                    <FormattedMessage
+                      id="profiles.yearBorn"
+                      defaultMessage="Year born"
+                    />
+                  </p>
+                  <input
+                    className={styles.field}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder={formatMessage({
+                      id: "profiles.yearBorn.hint",
+                      defaultMessage: "e.g. 2016",
+                    })}
+                    value={birthYear}
+                    onChange={(ev) => setBirthYear(ev.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.field2}>
+                <p className={styles.editorLbl}>
+                  <FormattedMessage
+                    id="profiles.lastName"
+                    defaultMessage="Last name"
+                  />
+                  {kind === "kid" && (
+                    <span className={styles.editorOptional}>
+                      <FormattedMessage
+                        id="profiles.optional"
+                        defaultMessage="optional"
+                      />
+                    </span>
+                  )}
+                </p>
                 <input
-                  type="checkbox"
-                  checked={acceptGrowUp}
-                  onChange={(e) => setAcceptGrowUp(e.target.checked)}
+                  className={styles.field}
+                  type="text"
+                  maxLength={PROFILE_NAME_MAX}
+                  value={lastName}
+                  onChange={(ev) => setLastName(ev.target.value)}
                 />
-                <span>
-                  <FormattedMessage
-                    id="profiles.growUpWarn"
-                    defaultMessage="{name} keeps every certificate, medal and lesson already earned. They move to the grown-up pages, the kids trail and its rewards end, and this cannot be undone."
-                    values={{ name: firstName.trim() || profile.firstName }}
-                  />
-                </span>
-              </label>
-            )}
-          </div>
-
-          <div className={styles.two}>
-            <div className={styles.field2}>
-              <p className={styles.editorLbl}>
-                <FormattedMessage
-                  id="profiles.firstName"
-                  defaultMessage="First name"
-                />
-              </p>
-              <input
-                className={styles.field}
-                type="text"
-                maxLength={PROFILE_NAME_MAX}
-                value={firstName}
-                onChange={(ev) => setFirstName(ev.target.value)}
-              />
-            </div>
-            <div className={styles.field2}>
-              <p className={styles.editorLbl}>
-                <FormattedMessage
-                  id="profiles.yearBorn"
-                  defaultMessage="Year born"
-                />
-              </p>
-              <input
-                className={styles.field}
-                type="text"
-                inputMode="numeric"
-                placeholder={formatMessage({
-                  id: "profiles.yearBorn.hint",
-                  defaultMessage: "e.g. 2016",
-                })}
-                value={birthYear}
-                onChange={(ev) => setBirthYear(ev.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className={styles.field2}>
-            <p className={styles.editorLbl}>
-              <FormattedMessage
-                id="profiles.lastName"
-                defaultMessage="Last name"
-              />
-              {kind === "kid" && (
-                <span className={styles.editorOptional}>
-                  <FormattedMessage
-                    id="profiles.optional"
-                    defaultMessage="optional"
-                  />
-                </span>
-              )}
-            </p>
-            <input
-              className={styles.field}
-              type="text"
-              maxLength={PROFILE_NAME_MAX}
-              value={lastName}
-              onChange={(ev) => setLastName(ev.target.value)}
-            />
-            {/* Only while it is empty. Once there is a surname the reminder
+                {/* Only while it is empty. Once there is a surname the reminder
                 has done its job, and a hint that stays put after it has been
                 acted on reads as a warning about something still wrong. */}
-            {kind === "kid" && lastName.trim() === "" && (
-              <p className={styles.editorHint}>
+                {kind === "kid" && lastName.trim() === "" && (
+                  <p className={styles.editorHint}>
+                    <FormattedMessage
+                      id="profiles.lastName.hint"
+                      defaultMessage="Leave it blank if you prefer. A last name here is the one their certificate would carry."
+                    />
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className={styles.editorSect}>
                 <FormattedMessage
-                  id="profiles.lastName.hint"
-                  defaultMessage="Leave it blank if you prefer. A last name here is the one their certificate would carry."
+                  id="profiles.sect.look"
+                  defaultMessage="Appearance & voice"
                 />
               </p>
-            )}
-          </div>
 
-          <div className={styles.field2}>
-            <p className={styles.editorLbl}>
-              <FormattedMessage id="profiles.avatar" defaultMessage="Avatar" />
-            </p>
-            <div className={styles.artRow}>
-              <div className={styles.artArt}>
-                <ProfileArt
-                  family={art.family}
-                  seed={art.seed}
-                  kind={kind}
-                  size={84}
-                  letter={art.letter === true ? initial : null}
-                />
-                <button
-                  type="button"
-                  className={styles.shuffleBtn}
-                  onClick={() => setAvatar({ ...art, seed: newArtSeed() })}
-                >
+              <div className={styles.field2}>
+                <p className={styles.editorLbl}>
                   <FormattedMessage
-                    id="profiles.avatar.shuffle"
-                    defaultMessage="↻ Shuffle"
+                    id="profiles.avatar"
+                    defaultMessage="Avatar"
                   />
-                </button>
-              </div>
-              <div className={styles.artPick}>
-                <div className={styles.familyGrid}>
-                  {artFamilies(kind).map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      className={clsx(
-                        styles.familyBtn,
-                        f.id === art.family && styles.familyOn,
-                      )}
-                      aria-pressed={f.id === art.family}
-                      onClick={() => setAvatar({ ...art, family: f.id })}
-                    >
-                      <ProfileArt
-                        family={f.id}
-                        seed={art.seed}
-                        kind={kind}
-                        size={30}
-                      />
-                      <span>{familyNames[f.id] ?? f.name}</span>
-                    </button>
-                  ))}
-                </div>
-                <label className={styles.letterRow}>
-                  <input
-                    type="checkbox"
-                    checked={art.letter === true}
-                    onChange={(ev) =>
-                      setAvatar({ ...art, letter: ev.target.checked })
-                    }
-                  />
-                  <span>
-                    <FormattedMessage
-                      id="profiles.avatar.letter"
-                      defaultMessage="Put my initial on it"
+                </p>
+                <div className={styles.artRow}>
+                  <div className={styles.artArt}>
+                    <ProfileArt
+                      family={art.family}
+                      seed={art.seed}
+                      kind={kind}
+                      size={84}
+                      letter={art.letter === true ? initial : null}
                     />
-                  </span>
-                </label>
+                    <button
+                      type="button"
+                      className={styles.shuffleBtn}
+                      onClick={() => setAvatar({ ...art, seed: newArtSeed() })}
+                    >
+                      <FormattedMessage
+                        id="profiles.avatar.shuffle"
+                        defaultMessage="↻ Shuffle"
+                      />
+                    </button>
+                  </div>
+                  <div className={styles.artPick}>
+                    <div className={styles.familyGrid}>
+                      {artFamilies(kind).map((f) => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          className={clsx(
+                            styles.familyBtn,
+                            f.id === art.family && styles.familyOn,
+                          )}
+                          aria-pressed={f.id === art.family}
+                          // The visible name is clipped to its cell, so the whole
+                          // one lives here — a truncated label should still be
+                          // readable to somebody who wants it. The plain name
+                          // rather than the translated node, which is markup and
+                          // cannot go in an attribute.
+                          title={f.name}
+                          onClick={() => setAvatar({ ...art, family: f.id })}
+                        >
+                          <ProfileArt
+                            family={f.id}
+                            seed={art.seed}
+                            kind={kind}
+                            size={30}
+                          />
+                          <span>{familyNames[f.id] ?? f.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <label className={styles.letterRow}>
+                      <input
+                        type="checkbox"
+                        checked={art.letter === true}
+                        onChange={(ev) =>
+                          setAvatar({ ...art, letter: ev.target.checked })
+                        }
+                      />
+                      <span>
+                        <FormattedMessage
+                          id="profiles.avatar.letter"
+                          defaultMessage="Put my initial on it"
+                        />
+                      </span>
+                    </label>
+                  </div>
+                </div>
               </div>
+
+              <VoicePicker value={appVoice} onChange={setAppVoice} />
             </div>
           </div>
 
