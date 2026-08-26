@@ -1678,6 +1678,7 @@
   "profiles.addLearner": "Add learner",
   "profiles.adult": "Grown-up",
   "profiles.avatar": "Avatar",
+  "profiles.avatar.current": "What they have now",
   "profiles.avatar.letter": "Put my initial on it",
   "profiles.avatar.shuffle": "↻ Shuffle",
   "profiles.consent.confirmLabel": "I confirm",

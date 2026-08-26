@@ -634,6 +634,20 @@ function ProfileEditor({
    * voice. Rolled once and kept, so it does not change under the parent as
    * they type.
    */
+  /**
+   * The painting this learner already has, as it was when the form opened.
+   *
+   * Shown beside the one being offered so a parent can see what they would be
+   * giving up. Without it, Shuffle asks them to replace something they cannot
+   * see any more — and a child who liked their avatar is not well served by a
+   * grown-up who cannot compare.
+   *
+   * A ref, so shuffling never moves it: it is the "before", and a before that
+   * changes is not one.
+   */
+  const currentArt = useRef<Extract<Avatar, { type: "art" }> | null>(
+    profile?.avatar?.type === "art" ? profile.avatar : null,
+  );
   const adultPick = useRef<"lady" | "man" | null>(null);
   adultPick.current ??= Math.random() < 0.5 ? "lady" : "man";
   const [visionSupport, setVisionSupport] = useState(
@@ -805,6 +819,9 @@ function ProfileEditor({
   const initial = firstName.trim().slice(0, 1).toUpperCase();
   // The block below only ever edits a painting; the state is guaranteed to be
   // one (see the initialiser), and this narrows it for the renderer.
+  // Read out of the ref once: TypeScript will not narrow a mutable property
+  // across the JSX below, and re-reading it there would say nothing anyway.
+  const nowArt = currentArt.current;
   const art =
     avatar.type === "art"
       ? avatar
@@ -877,27 +894,38 @@ function ProfileEditor({
                       defaultMessage="Grown-up"
                     />
                   </button>
-                  <button
-                    className={clsx(
-                      styles.seg,
-                      styles.segKid,
-                      kind === "kid" && styles.segOn,
-                    )}
-                    disabled={lockedAdult || growingUp}
-                    title={
-                      lockedAdult || growingUp
-                        ? formatMessage({
-                            id: "profiles.kindKidLocked",
-                            defaultMessage:
-                              "A learner can grow up, but cannot go back to being a kid.",
-                          })
-                        : undefined
-                    }
-                    onClick={() => switchKind("kid")}
-                  >
-                    <KidIcon />
-                    <FormattedMessage id="profiles.kid" defaultMessage="Kid" />
-                  </button>
+                  {/* Hidden rather than shown greyed out for an existing
+                      grown-up. A learner can grow up but cannot go back, so
+                      this is not a choice being withheld — it is a choice that
+                      does not exist, and a disabled control invites somebody to
+                      work out why it will not move. Grown-up then fills the row
+                      on its own, since `.seg` already flexes. */}
+                  {!lockedAdult && (
+                    <button
+                      className={clsx(
+                        styles.seg,
+                        styles.segKid,
+                        kind === "kid" && styles.segOn,
+                      )}
+                      disabled={growingUp}
+                      title={
+                        growingUp
+                          ? formatMessage({
+                              id: "profiles.kindKidLocked",
+                              defaultMessage:
+                                "A learner can grow up, but cannot go back to being a kid.",
+                            })
+                          : undefined
+                      }
+                      onClick={() => switchKind("kid")}
+                    >
+                      <KidIcon />
+                      <FormattedMessage
+                        id="profiles.kid"
+                        defaultMessage="Kid"
+                      />
+                    </button>
+                  )}
                 </div>
                 {growUpPending && (
                   <label className={styles.growUp}>
@@ -1044,6 +1072,27 @@ function ProfileEditor({
                         defaultMessage="↻ Shuffle"
                       />
                     </button>
+                    {/* Half the size of the one being offered: it is the point
+                        of comparison, not the choice. Only when there is one —
+                        a new learner has no "before", and an empty space where
+                        it would go would read as something failing to load. */}
+                    {nowArt != null && (
+                      <span
+                        className={styles.artNow}
+                        title={formatMessage({
+                          id: "profiles.avatar.current",
+                          defaultMessage: "What they have now",
+                        })}
+                      >
+                        <ProfileArt
+                          family={nowArt.family}
+                          seed={nowArt.seed}
+                          kind={kind}
+                          size={28}
+                          letter={nowArt.letter === true ? initial : null}
+                        />
+                      </span>
+                    )}
                   </div>
                   <div className={styles.artPick}>
                     <label className={styles.letterRow}>

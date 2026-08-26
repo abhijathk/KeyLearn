@@ -113,14 +113,19 @@ const VOICE_MODELS: Record<
     bundle: "vits-piper-en_US-amy-medium",
     model: "en_US-amy-medium",
     pitch: 1,
-    pace: 1,
+    // Amy is unhurried to the point of dragging on a long line; a touch above
+    // one without becoming brisk.
+    pace: 1.08,
   },
   man: {
     bundle: "vits-piper-en_US-ryan-medium",
     model: "en_US-ryan-medium",
     pitch: 1,
-    // Ryan runs well ahead of the others; brought into line with them.
-    pace: 0.8,
+    // Ryan runs well ahead of the others. 0.8 was not enough — still quicker
+    // than Maya, and reported as fast a second time. This lands him a shade
+    // slower than her, which for a voice that reads lessons is the right side
+    // to err on.
+    pace: 0.68,
   },
 };
 
