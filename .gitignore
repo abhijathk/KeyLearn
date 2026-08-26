@@ -30,3 +30,9 @@ deploy.sh
 
 # macOS Finder leaves these in every directory it is asked to display.
 .DS_Store
+
+# Voice-selection mock: generated audio, large, not source.
+root/public/voice-mock/
+.tools/voices/bundles/
+.tools/voices/node_modules/
+root/public/learner-mock/

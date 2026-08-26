@@ -1,20 +1,31 @@
 import { spawn } from "node:child_process";
 import { constants } from "node:fs";
 import { access, mkdtemp, readFile, rm } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 /**
  * Speech synthesised on the server.
  *
- * The browser's own speech engine is the right thing to use when it works: it
- * is the learner's configured voice, at their rate, with no network in the
- * loop. But it fails in a way that cannot be recovered from inside the page —
- * Chrome accepts an utterance, reports it as speaking, and never makes a sound
- * — and on the braille page the voice is not a nicety, it is the interface.
+ * Two separate reasons this exists, and they pull in the same direction.
  *
- * So the server can speak instead. Same words, a plainer voice, and a round
- * trip that a drill can absorb because the phrases repeat and cache.
+ * The first is reliability. The browser's own engine fails in a way that cannot
+ * be recovered from inside the page — Chrome accepts an utterance, reports it
+ * as speaking, and never makes a sound — and on the braille page the voice is
+ * not a nicety, it is the interface.
+ *
+ * The second is quality, and it is why this is now the FIRST choice rather than
+ * a fallback. A customer reported that the voice their child heard was "very
+ * rough and not kids friendly". It was: whatever engine the device shipped
+ * with, or espeak-ng behind it. Both are formant synthesisers, and no amount of
+ * tuning makes one pleasant for a five-year-old who cannot yet read the words
+ * being spoken to them.
+ *
+ * Rendering here also means every learner hears the same voice. The app runs on
+ * mac, windows and linux; the learner's device only plays a WAV, so the voice
+ * is a property of the product rather than of whatever machine a child happens
+ * to be sitting at.
  */
 
 /** The longest phrase we will synthesise. */
@@ -23,30 +34,67 @@ export const MAX_TEXT = 300;
 /**
  * The voices a learner may be given.
  *
- * A curated three rather than whatever the machine has. A customer reported
- * that the voice their child heard was "very rough and not kids friendly",
- * which it was: the browser's default engine on whatever device they had, or
- * espeak-ng behind it, and neither is something a five-year-old should be
- * asked to listen to while learning to read.
+ * Four, chosen by listening to eleven candidates side by side rather than by
+ * reading descriptions of them — see `.tools/voices`, which renders the real
+ * audio for exactly that purpose.
  *
- * Three, not thirty, because each one has to be listened to and judged before
- * it is put in front of a child, and because a list of thirty is a list nobody
- * chooses from. "system" is the browser's own engine — today's behaviour, and
- * still the right answer for an adult who has already configured a voice they
- * like, or for a screen reader user whose voice at speed is part of how they
- * work.
+ * Two child voices because a twelve-year-old being read to in a five-year-
+ * old's voice is being talked down to, and that is its own way of turning a
+ * learner off. The age ranges are guidance for whoever picks, not a rule the
+ * app enforces.
  *
- * An allow-list, not a shape check: the value picks a model file and reaches a
+ * An allow-list, not a shape check: the value selects a model and reaches a
  * subprocess argument, and "looks like a voice name" is a weaker promise than
  * "is one of ours".
  */
-export const VOICES = ["kid", "lady", "man"] as const;
+export const VOICES = ["kid", "tween", "lady", "man"] as const;
 
 export type VoiceId = (typeof VOICES)[number];
 
 export function isVoiceId(value: string): value is VoiceId {
   return (VOICES as readonly string[]).includes(value);
 }
+
+/**
+ * Which model speaks each voice, and how far its pitch is moved.
+ *
+ * Amy carries both the youngest child and the woman. That is a better answer
+ * than three unrelated voices: a household hears one consistent person, higher
+ * for the child and natural for the adult, rather than a cast of strangers.
+ *
+ * There is no child model to be had — Piper's free set has none — so the child
+ * voices are adult voices raised in pitch. See `render` for why that costs
+ * nothing in quality.
+ */
+const VOICE_MODELS: Record<
+  VoiceId,
+  { readonly bundle: string; readonly model: string; readonly pitch: number }
+> = {
+  // Roughly five to eight: the band that cannot read the coaching at all.
+  kid: {
+    bundle: "vits-piper-en_US-amy-medium",
+    model: "en_US-amy-medium",
+    pitch: 1.28,
+  },
+  // Roughly nine to thirteen. Lifted, but only a little — enough not to be an
+  // adult, not so much as to sound like a cartoon to somebody old enough to
+  // notice and be embarrassed by it.
+  tween: {
+    bundle: "vits-piper-en_GB-jenny_dioco-medium",
+    model: "en_GB-jenny_dioco-medium",
+    pitch: 1.15,
+  },
+  lady: {
+    bundle: "vits-piper-en_US-amy-medium",
+    model: "en_US-amy-medium",
+    pitch: 1,
+  },
+  man: {
+    bundle: "vits-piper-en_US-ryan-medium",
+    model: "en_US-ryan-medium",
+    pitch: 1,
+  },
+};
 
 export type Synth = {
   readonly name: string;
@@ -83,19 +131,11 @@ function run(
   command: string,
   args: readonly string[],
   timeoutMs: number,
-  input?: string,
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, [...args], {
-      stdio: [input == null ? "ignore" : "pipe", "pipe", "pipe"],
+      stdio: ["ignore", "pipe", "pipe"],
     });
-    if (input != null && child.stdin != null) {
-      // Piper reads its text from stdin. That is better than an argument, not
-      // worse: the phrase never appears in a process listing, and there is no
-      // length at which it stops being a single value.
-      child.stdin.on("error", () => {}); // The child may exit before we finish.
-      child.stdin.end(input);
-    }
     const out: Buffer[] = [];
     let size = 0;
     // A synthesiser that goes haywire must not be able to fill memory.
@@ -128,87 +168,162 @@ function run(
   });
 }
 
+// ── The neural voices ───────────────────────────────────────────────────────
+
 /**
- * Piper: small neural voices, offline, MIT-licensed, and the reason this work
- * exists. It is the difference between a synthesiser a child tolerates and one
- * they turn off — which for a learner who cannot yet read the coaching is the
- * difference between the app working and not.
+ * Where the models live.
  *
- * The models are data, not code: one .onnx per voice, tens of megabytes, and
- * not something to vendor into a repository. So the paths come from the
- * environment and the voice is available exactly when its model is installed.
- * A machine with piper and two of the three models offers those two.
+ * Beside the data rather than in the repository: they are ~78 MB each, they are
+ * data rather than source, and a git history is the wrong home for either.
+ * `scripts/fetch-voices.mjs` puts them here, and a deployment without them
+ * falls back rather than failing.
  */
-const PIPER_MODELS: Record<VoiceId, string | undefined> = {
-  kid: process.env.KEYLEARN_PIPER_KID,
-  lady: process.env.KEYLEARN_PIPER_LADY,
-  man: process.env.KEYLEARN_PIPER_MAN,
+function voicesDir(): string {
+  const home = process.env.HOME ?? ".";
+  return (
+    process.env.KEYLEARN_VOICES_DIR ||
+    join(
+      (process.env.DATA_DIR || join(home, ".local/state/keylearn")).replace(
+        /^~/,
+        home,
+      ),
+      "voices",
+    )
+  );
+}
+
+/** One loaded model per bundle: loading is slow, and two voices share Amy. */
+const engines = new Map<string, any>();
+
+function engineFor(voice: VoiceId): any {
+  const spec = VOICE_MODELS[voice];
+  const had = engines.get(spec.bundle);
+  if (had != null) {
+    return had;
+  }
+  // Required rather than imported: a native addon, marked external in the
+  // server bundle, and a machine with no models should not pay to load it.
+  const sherpa = createRequire(import.meta.url)("sherpa-onnx-node");
+  const base = join(voicesDir(), spec.bundle);
+  const made = new sherpa.OfflineTts({
+    model: {
+      vits: {
+        model: join(base, `${spec.model}.onnx`),
+        tokens: join(base, "tokens.txt"),
+        // Piper models are phonemised with espeak-ng, so the model alone is not
+        // enough — it needs the phoneme data that ships beside it.
+        dataDir: join(base, "espeak-ng-data"),
+      },
+      numThreads: 2,
+      debug: false,
+      provider: "cpu",
+    },
+    maxNumSentences: 1,
+  });
+  engines.set(spec.bundle, made);
+  return made;
+}
+
+const neural: Synth = {
+  name: "sherpa",
+  render: async (text, _lang, wpm, voice) => {
+    const id = voice ?? "lady";
+    const { pitch } = VOICE_MODELS[id];
+    // 175 wpm is the reference the rest of the app is written against.
+    const rate = wpm / 175;
+    // ## Raising the pitch without stretching anything
+    //
+    // The usual way — overlap-add time-stretching after synthesis — leaves
+    // warble and seams on speech, and a child would then be listening to our
+    // artefacts rather than to the voice. So the shift happens before synthesis
+    // instead: the model is asked to speak proportionally SLOWER, and the
+    // result is resampled faster by the same factor. Speed cancels exactly,
+    // pitch is multiplied, and every sample is one the model really produced.
+    const result = engineFor(id).generate({
+      text,
+      sid: 0,
+      speed: rate / pitch,
+    });
+    return wavOf(resample(result.samples, pitch), result.sampleRate);
+  },
 };
 
-/** Which curated voices this machine can actually speak in. */
-export async function installedVoices(): Promise<readonly VoiceId[]> {
-  if (!(await onPath("piper"))) {
-    return [];
+/** Linear resample. A ratio above one shortens, and so raises the pitch. */
+function resample(samples: Float32Array, ratio: number): Float32Array {
+  if (ratio === 1) {
+    return samples;
   }
+  const out = new Float32Array(Math.floor(samples.length / ratio));
+  for (let i = 0; i < out.length; i++) {
+    const at = i * ratio;
+    const lo = Math.floor(at);
+    const hi = Math.min(lo + 1, samples.length - 1);
+    out[i] = samples[lo] + (samples[hi] - samples[lo]) * (at - lo);
+  }
+  return out;
+}
+
+/** Float samples as a 16-bit mono WAV, which is what the page plays. */
+function wavOf(samples: Float32Array, rate: number): Buffer {
+  const n = samples.length;
+  const buf = Buffer.alloc(44 + n * 2);
+  buf.write("RIFF", 0);
+  buf.writeUInt32LE(36 + n * 2, 4);
+  buf.write("WAVEfmt ", 8);
+  buf.writeUInt32LE(16, 16);
+  buf.writeUInt16LE(1, 20);
+  buf.writeUInt16LE(1, 22);
+  buf.writeUInt32LE(rate, 24);
+  buf.writeUInt32LE(rate * 2, 28);
+  buf.writeUInt16LE(2, 32);
+  buf.writeUInt16LE(16, 34);
+  buf.write("data", 36);
+  buf.writeUInt32LE(n * 2, 40);
+  for (let i = 0; i < n; i++) {
+    const v = Math.max(-1, Math.min(1, samples[i]));
+    buf.writeInt16LE(Math.round(v * 32767), 44 + i * 2);
+  }
+  return buf;
+}
+
+/** Which curated voices have a model on this machine. */
+async function neuralVoices(): Promise<readonly VoiceId[]> {
   const found: VoiceId[] = [];
   for (const id of VOICES) {
-    const model = PIPER_MODELS[id];
-    if (model != null && model !== "") {
-      try {
-        await access(model, constants.R_OK);
-        found.push(id);
-      } catch {
-        // Configured but not there. Better absent than failing per request.
-      }
+    const spec = VOICE_MODELS[id];
+    try {
+      await access(
+        join(voicesDir(), spec.bundle, `${spec.model}.onnx`),
+        constants.R_OK,
+      );
+      found.push(id);
+    } catch {
+      // Not installed. Better absent than failing once per request.
     }
   }
   return found;
 }
 
-const piper: Synth = {
-  name: "piper",
-  render: async (text, _lang, wpm, voice) => {
-    const model = PIPER_MODELS[voice ?? "lady"] ?? PIPER_MODELS.lady;
-    if (model == null || model === "") {
-      throw new Error("no piper model for this voice");
-    }
-    // Piper's length scale is duration, so it runs the opposite way to a rate:
-    // 175 wpm is the reference the rest of the app is written against.
-    const scale = Math.max(0.5, Math.min(2, 175 / wpm));
-    return await run(
-      "piper",
-      [
-        "--model",
-        model,
-        "--length_scale",
-        scale.toFixed(2),
-        "--output_file",
-        "-",
-      ],
-      // A neural model is slower than a formant synthesiser, and a cold start
-      // loads weights. Still bounded: a request that hangs is worse than one
-      // that fails, because the page has a fallback and no way to wait.
-      15000,
-      text,
-    );
-  },
-};
+// ── The fallbacks ───────────────────────────────────────────────────────────
 
 /**
- * espeak-ng: small, offline, packaged everywhere, and the voice a lot of
- * screen reader users already run at speed. Behind piper now rather than in
- * front of it, and kept because a machine without models still has to speak —
- * the braille page's voice is its interface, not a nicety.
+ * espeak-ng: small, offline, packaged everywhere, and the voice a lot of screen
+ * reader users already run at speed.
+ *
+ * Underneath the neural voices now rather than in front of them, and kept
+ * because a machine without models still has to speak — on the braille page the
+ * voice is the interface, and silence there is not a degraded experience but no
+ * experience at all.
  *
  * Its "voices" are variants of one formant synthesiser: a pitch and a timbre,
- * not a person. Offered under the same three names because being read to in a
- * higher, slower voice is still closer to what was asked for than nothing, and
- * because the alternative is a setting that silently does nothing on the very
- * deployment that most needs it.
+ * not a person. They are offered under the same names because being read to in
+ * a higher voice is closer to what was asked for than nothing, and because the
+ * alternative is a setting that silently does nothing on the deployment that
+ * has fallen back.
  */
 const ESPEAK_VARIANT: Record<VoiceId, readonly string[]> = {
-  // Higher and a little slower. The nearest espeak has to a child.
   kid: ["+f5", "-p", "80"],
+  tween: ["+f4", "-p", "65"],
   lady: ["+f3", "-p", "55"],
   man: ["+m3", "-p", "30"],
 };
@@ -237,11 +352,15 @@ const espeak: Synth = {
 /**
  * macOS `say`, so the fallback can be developed and tested on a Mac without
  * installing anything. It has no stdout mode, hence the temp file.
+ *
+ * Named voices rather than chosen by attribute, since the attribute lists
+ * differ between macOS releases and a missing voice fails the whole request.
+ * Distinct ones per role: mapping two roles to the same system voice makes the
+ * setting appear broken, which is exactly the bug this table once had.
  */
 const MAC_VOICE: Record<VoiceId, string> = {
-  // Named rather than chosen by attribute, since the attribute lists differ
-  // between macOS releases and a missing voice fails the whole request.
-  kid: "Samantha",
+  kid: "Junior",
+  tween: "Karen",
   lady: "Samantha",
   man: "Daniel",
 };
@@ -284,11 +403,9 @@ let resolved: Synth | null | undefined;
  */
 export async function findSynth(): Promise<Synth | null> {
   if (resolved === undefined) {
-    // Piper first, and only when it has a model to speak with — the binary
-    // alone would take the request and fail it, which is worse than espeak.
     resolved =
-      (await installedVoices()).length > 0
-        ? piper
+      (await neuralVoices()).length > 0
+        ? neural
         : (await onPath("espeak-ng"))
           ? espeak
           : (await onPath("say"))
@@ -298,7 +415,26 @@ export async function findSynth(): Promise<Synth | null> {
   return resolved;
 }
 
+/**
+ * Which curated voices this machine can actually speak in.
+ *
+ * Asked of the synthesiser that will do the speaking, not of the neural models
+ * alone — which is what this did at first, and it would have shipped the whole
+ * feature dead. Production runs espeak-ng, so the answer would have been "none"
+ * on every deployment that mattered: the picker hides itself when nothing is
+ * offered, so nobody could ever have chosen a voice, while the endpoint behind
+ * it rendered all of them perfectly well if asked directly.
+ */
+export async function installedVoices(): Promise<readonly VoiceId[]> {
+  const synth = await findSynth();
+  if (synth == null) {
+    return [];
+  }
+  return synth.name === "sherpa" ? await neuralVoices() : VOICES;
+}
+
 /** Forgets the probe. Tests only; a deployment's binaries do not move. */
 export function resetSynth(): void {
   resolved = undefined;
+  engines.clear();
 }

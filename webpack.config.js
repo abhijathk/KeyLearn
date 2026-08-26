@@ -136,6 +136,11 @@ export default [
       ],
     },
     externals: {
+      // Native addons: required at runtime from node_modules rather than
+      // bundled. sherpa-onnx carries a prebuilt binary per platform, which is
+      // what lets one set of neural voices ship to mac, windows and linux
+      // without anything being installed on the machine.
+      "sherpa-onnx-node": "commonjs sherpa-onnx-node",
       "sqlite3": "commonjs sqlite3",
       "better-sqlite3": "commonjs better-sqlite3",
       "bufferutil": "commonjs bufferutil",
