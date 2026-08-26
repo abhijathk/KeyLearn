@@ -390,6 +390,155 @@ test("accessibility preferences are refused for somebody else's learner", async 
   );
 });
 
+// ---- the storage mirror ----------------------------------------------------
+
+test("a learner's browser storage is stored and returned, per scope", async (ctx) => {
+  // The customer's report, at the layer that fixes it: everything the app
+  // writes to localStorage — the kids world, the theme, every preference —
+  // carried by one document per learner and one per account.
+
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const user = await findUser("user1@keylearn.org");
+  await Profile.ensureDefault(user);
+  const [profile] = await Profile.listForUser(user.id!);
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(user.id!);
+
+  // Nothing stored is an ordinary answer, not a 404. It is what tells the
+  // client to send this device's copy up rather than take an empty account as
+  // proof the learner has chosen nothing — which would wipe the settings of
+  // every user who had any before this shipped.
+  const empty = await request
+    .GET(`/_/sync/doc/profile/${profile.id!}/local`)
+    .send();
+  equal(empty.status, 200);
+  deepEqual(await empty.body.json(), {});
+
+  const mine = {
+    keys: {
+      [`profile-${profile.id!}.kids.prefs`]: {
+        v: '{"world":"reef","name":"Ada"}',
+        t: 1700,
+      },
+    },
+  };
+  equal(
+    (
+      await request
+        .POST(`/_/sync/doc/profile/${profile.id!}/local`)
+        .type("application/json")
+        .send(JSON.stringify(mine))
+    ).status,
+    204,
+  );
+  deepEqual(
+    await (
+      await request.GET(`/_/sync/doc/profile/${profile.id!}/local`).send()
+    ).body.json(),
+    mine,
+  );
+
+  // The account scope is a different document, not the same one under another
+  // name: a theme belongs to whoever set it, not to one child.
+  const ours = {
+    keys: { "keylearn.theme[background]": { v: "#101820", t: 9 } },
+  };
+  equal(
+    (
+      await request
+        .POST("/_/sync/doc/local")
+        .type("application/json")
+        .send(JSON.stringify(ours))
+    ).status,
+    204,
+  );
+  deepEqual(
+    await (await request.GET("/_/sync/doc/local").send()).body.json(),
+    ours,
+  );
+  // Still the learner's, untouched by the account-level write.
+  deepEqual(
+    await (
+      await request.GET(`/_/sync/doc/profile/${profile.id!}/local`).send()
+    ).body.json(),
+    mine,
+  );
+
+  equal(
+    (await request.DELETE(`/_/sync/doc/profile/${profile.id!}/local`).send())
+      .status,
+    204,
+  );
+  deepEqual(
+    await (
+      await request.GET(`/_/sync/doc/profile/${profile.id!}/local`).send()
+    ).body.json(),
+    {},
+  );
+});
+
+test("only the named documents exist", async (ctx) => {
+  // The allow-list is what keeps this a place for a learner's settings rather
+  // than a key-value store anyone signed in may park anything in, at our
+  // expense and under someone else's account.
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const user = await findUser("user1@keylearn.org");
+  await Profile.ensureDefault(user);
+  const [profile] = await Profile.listForUser(user.id!);
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(user.id!);
+
+  equal(
+    (await request.GET(`/_/sync/doc/profile/${profile.id!}/whatever`).send())
+      .status,
+    400,
+  );
+  equal(
+    (
+      await request
+        .POST(`/_/sync/doc/profile/${profile.id!}/whatever`)
+        .type("application/json")
+        .send(JSON.stringify({ keys: {} }))
+    ).status,
+    400,
+  );
+  equal((await request.GET("/_/sync/doc/whatever").send()).status, 400);
+});
+
+test("the mirror is refused for somebody else's learner", async (ctx) => {
+  // One account must not read another's child. A learner's browser storage
+  // holds their name, their world and their progress, so this is the same rule
+  // as everywhere else through the same resolver — not a lesser one because
+  // the payload happens to be settings.
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const owner = await findUser("user2@keylearn.org");
+  await Profile.ensureDefault(owner);
+  const [theirs] = await Profile.listForUser(owner.id!);
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become((await findUser("user1@keylearn.org")).id!);
+
+  equal(
+    (await request.GET(`/_/sync/doc/profile/${theirs.id!}/local`).send())
+      .status,
+    403,
+  );
+  equal(
+    (
+      await request
+        .POST(`/_/sync/doc/profile/${theirs.id!}/local`)
+        .type("application/json")
+        .send(JSON.stringify({ keys: {} }))
+    ).status,
+    403,
+  );
+});
+
 // ---- braille progress ------------------------------------------------------
 
 test("braille progress is stored and returned per learner", async (ctx) => {

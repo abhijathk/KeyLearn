@@ -108,6 +108,44 @@ export class DataDir {
    * stilled motion — had to rediscover and rebuild every one of them on every
    * device they sat down at. That is the opposite of an accessibility feature.
    */
+  /**
+   * Returns the full path to one of a learner's small documents.
+   *
+   * A generic slot rather than a new method per store. The app kept growing
+   * per-device state — accessibility, the kids world's setup, a custom theme,
+   * streaks, test history — and each one was written straight to
+   * localStorage because giving it an endpoint meant a route, a path helper
+   * and a client module. That cost is why none of them synced.
+   *
+   * `name` is checked against an allow-list at the route, so this is a fixed
+   * set of documents rather than an open blob store on someone's account.
+   */
+  profileDocFile(userId: number, profileId: number, name: string): string {
+    const s = String(userId).padStart(9, "0");
+    return this.dataPath(
+      "profile_doc", //
+      s.substring(0, 3),
+      s.substring(3, 6),
+      s,
+      `${profileId}.${name}`,
+    );
+  }
+
+  /**
+   * The same, for a document that belongs to the account rather than to one
+   * learner — the order the profiles are shown in, for instance.
+   */
+  accountDocFile(userId: number, name: string): string {
+    const s = String(userId).padStart(9, "0");
+    return this.dataPath(
+      "account_doc", //
+      s.substring(0, 3),
+      s.substring(3, 6),
+      s,
+      name,
+    );
+  }
+
   a11yPrefsFile(userId: number, profileId: number): string {
     const s = String(userId).padStart(9, "0");
     return this.dataPath(

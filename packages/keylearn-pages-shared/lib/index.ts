@@ -8,6 +8,7 @@ export * from "./datemark.ts";
 export * from "./desk-session.ts";
 export * from "./download.ts";
 export * from "./LoadingProgress.tsx";
+export * from "./local-sync.ts";
 export * from "./logout.ts";
 export * from "./ngram-store.ts";
 export * from "./NoticeBanner.tsx";

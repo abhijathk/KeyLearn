@@ -10,6 +10,7 @@ import {
   PageDataContext,
   Pages,
   Root,
+  startLocalSync,
   usePageData,
 } from "@keylearn/pages-shared";
 import { SettingsLoader } from "@keylearn/settings-loader";
@@ -32,6 +33,10 @@ import { ThemeProvider } from "./themes/ThemeProvider.tsx";
 import { Title } from "./Title.tsx";
 
 export function main() {
+  // Before the first render, on purpose. Packages write their defaults into
+  // storage as they boot, and the mirror has to see those writes to tell a
+  // default apart from something the learner chose.
+  startLocalSync();
   createRoot(querySelector(Root.selector)).render(<App />);
 }
 

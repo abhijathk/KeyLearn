@@ -18,6 +18,36 @@ import { type ProfileAction, reachProfile } from "../access/resolver.ts";
 import { type AuthState, pProfileOwner } from "../auth/index.ts";
 import { partitionPlausible } from "./plausible.ts";
 
+/**
+ * The documents a learner may keep on their account, and the ones the account
+ * keeps for itself.
+ *
+ * An allow-list rather than a free namespace: these routes are reached with a
+ * user's own credentials, and an open store would be an invitation to park
+ * arbitrary data on someone else's disk.
+ *
+ * `local` is this device's browser storage, mirrored. A customer found that
+ * nothing they set on one device appeared on another — not the theme, not the
+ * accessibility settings, not the kids world, not a single preference — and
+ * the reason was that each of those was written straight to localStorage by
+ * whoever added it. There were about thirty-five such writes across twenty
+ * files. Carrying them one endpoint at a time would have been thirty-five
+ * decisions, each of which someone can forget to make, which is exactly the
+ * mistake that produced the bug. So the mirror carries the storage itself, and
+ * a new setting is portable because it is a setting, not because somebody
+ * remembered.
+ */
+const PROFILE_DOCS: ReadonlySet<string> = new Set(["local"]);
+
+const ACCOUNT_DOCS: ReadonlySet<string> = new Set(["local"]);
+
+function requireDocName(name: string, allowed: ReadonlySet<string>): string {
+  if (!allowed.has(name)) {
+    throw new BadRequestError("Unknown document");
+  }
+  return name;
+}
+
 @injectable()
 @controller()
 export class Controller {
@@ -273,6 +303,110 @@ export class Controller {
   }
 
   /** The file for this learner, once the caller is proved to own them. */
+  // ── The learner's small documents ──────────────────────────────────
+  //
+  // One route for the state that kept being written straight to
+  // localStorage because giving it an endpoint was more work than not: the
+  // kids world's whole setup, a custom theme, streaks and best scores, test
+  // history. Each was a device-local island, and a customer found every one
+  // of them at once by opening the app on a second device.
+  //
+  // A fixed set of names rather than an open store. This is somebody's
+  // account, not a key-value service, and an unbounded namespace is a place
+  // to park arbitrary data at our expense.
+  //
+  // Documents, not merges: each is one learner's current answer, and the last
+  // save wins. Braille progress keeps its own route below precisely because
+  // it is NOT that — it is a record of real practice on both sides, and
+  // merging is the whole point of it.
+
+  @http.GET("/_/sync/doc/profile/{pid:[0-9]+}/{name:[a-z-]+}")
+  async getProfileDoc(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+    @pathParam("name") name: string,
+  ) {
+    const file = await this.#profileDoc(ctx, pid, name, "read");
+    ctx.response.type = "application/json";
+    ctx.response.body = (await file.exists()) ? await file.read("utf8") : "{}";
+  }
+
+  @http.POST("/_/sync/doc/profile/{pid:[0-9]+}/{name:[a-z-]+}")
+  async postProfileDoc(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+    @pathParam("name") name: string,
+    @body.json(null, { maxLength: 262144 }) value: unknown,
+  ) {
+    const file = await this.#profileDoc(ctx, pid, name, "write");
+    if (value == null || typeof value !== "object") {
+      throw new BadRequestError("Not a document");
+    }
+    await file.dir().create(true);
+    await file.write(JSON.stringify(value), "utf8");
+    ctx.response.status = 204;
+  }
+
+  @http.DELETE("/_/sync/doc/profile/{pid:[0-9]+}/{name:[a-z-]+}")
+  async deleteProfileDoc(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+    @pathParam("name") name: string,
+  ) {
+    await (await this.#profileDoc(ctx, pid, name, "write")).delete();
+    ctx.response.status = 204;
+  }
+
+  @http.GET("/_/sync/doc/{name:[a-z-]+}")
+  async getAccountDoc(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("name") name: string,
+  ) {
+    const user = ctx.state.requireUser();
+    const file = new File(
+      this.dataDir.accountDocFile(user.id!, requireDocName(name, ACCOUNT_DOCS)),
+    );
+    ctx.response.type = "application/json";
+    ctx.response.body = (await file.exists()) ? await file.read("utf8") : "{}";
+  }
+
+  @http.POST("/_/sync/doc/{name:[a-z-]+}")
+  async postAccountDoc(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("name") name: string,
+    @body.json(null, { maxLength: 262144 }) value: unknown,
+  ) {
+    const user = ctx.state.requireUser();
+    if (value == null || typeof value !== "object") {
+      throw new BadRequestError("Not a document");
+    }
+    const file = new File(
+      this.dataDir.accountDocFile(user.id!, requireDocName(name, ACCOUNT_DOCS)),
+    );
+    await file.dir().create(true);
+    await file.write(JSON.stringify(value), "utf8");
+    ctx.response.status = 204;
+  }
+
+  async #profileDoc(
+    ctx: Context<RouterState & AuthState>,
+    pid: string,
+    name: string,
+    action: ProfileAction,
+  ): Promise<File> {
+    const safe = requireDocName(name, PROFILE_DOCS);
+    const user = ctx.state.requireUser();
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(pid),
+      action,
+    );
+    if (profile == null) {
+      throw new ForbiddenError();
+    }
+    return new File(this.dataDir.profileDocFile(user.id!, profile.id!, safe));
+  }
+
   // ── A learner's accessibility preferences ──────────────────────────
   //
   // The same shape as the braille routes below, and for the same reason.
