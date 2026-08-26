@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import { access, mkdtemp, readFile, rm } from "node:fs/promises";
 import { createRequire } from "node:module";
@@ -431,6 +432,29 @@ export async function installedVoices(): Promise<readonly VoiceId[]> {
     return [];
   }
   return synth.name === "sherpa" ? await neuralVoices() : VOICES;
+}
+
+/**
+ * A short token that changes whenever the audio would.
+ *
+ * The rendered WAV is cached hard — a week, `immutable` — because the same
+ * words in the same voice really are the same bytes, and a drill says the same
+ * six things over and over. But the URL did not mention which voice table or
+ * which engine produced them, so when the voices changed every browser went on
+ * serving week-old audio from the previous engine. A customer heard exactly
+ * that: three voices still the old rough ones, and the fourth right only
+ * because it was new and had never been cached.
+ *
+ * Derived rather than declared. A hand-bumped constant is one more thing
+ * somebody has to remember, and forgetting it looks precisely like the bug it
+ * was meant to prevent.
+ */
+export async function voiceRev(): Promise<string> {
+  const synth = await findSynth();
+  return createHash("sha256")
+    .update(`${synth?.name ?? "none"}|${JSON.stringify(VOICE_MODELS)}`)
+    .digest("hex")
+    .slice(0, 8);
 }
 
 /** Forgets the probe. Tests only; a deployment's binaries do not move. */

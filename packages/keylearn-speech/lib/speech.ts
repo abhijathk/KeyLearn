@@ -327,17 +327,56 @@ function pageLang(): string {
   return lang.split("-")[0] === lang ? lang : lang.toLowerCase();
 }
 
+/**
+ * Which build of the voices the server is speaking with.
+ *
+ * Part of every audio URL, because the audio is cached for a week and marked
+ * immutable — which is right for "the same words in the same voice", and wrong
+ * the moment the voice itself changes. Without this in the URL, changing a
+ * voice reached nobody who had already heard the old one, for seven days, with
+ * no way to force it. That is not a theoretical risk: it is how three of four
+ * new voices arrived sounding exactly like the old ones they replaced.
+ *
+ * Asked of the server rather than declared here, so nobody has to remember to
+ * bump it — forgetting would look identical to the bug.
+ */
+let voiceRev: string | null = null;
+let revPending: Promise<void> | null = null;
+
+async function ensureRev(): Promise<void> {
+  if (voiceRev != null) {
+    return;
+  }
+  revPending ??= (async () => {
+    try {
+      const response = await fetch("/_/speech/voices");
+      if (response.ok) {
+        const body = (await response.json()) as { rev?: unknown };
+        if (typeof body?.rev === "string" && body.rev !== "") {
+          voiceRev = body.rev;
+        }
+      }
+    } catch {
+      // Offline, or an older server. Fall through to a fixed token: a stale
+      // clip is far better than no speech at all.
+    }
+    voiceRev ??= "0";
+  })();
+  await revPending;
+}
+
 async function clipFor(
   text: string,
   rate: number,
   clip: string | null = null,
 ): Promise<AudioBuffer | null> {
+  await ensureRev();
   const lang = pageLang();
   const wpm = wpmOf(rate);
   // The voice is part of what the audio IS. Left out, a child would be served
   // whichever rendering of the phrase happened to be cached first — the
   // setting silently not working, intermittently, unreproducibly.
-  const key = `${clip ?? "-"}|${lang}|${wpm}|${text}`;
+  const key = `${voiceRev}|${clip ?? "-"}|${lang}|${wpm}|${text}`;
   const hit = clips.get(key);
   if (hit != null) {
     return hit;
@@ -353,7 +392,8 @@ async function clipFor(
   const url =
     `/_/speech.wav?text=${encodeURIComponent(text)}` +
     `&lang=${encodeURIComponent(lang)}&wpm=${wpm}` +
-    (clip == null ? "" : `&voice=${encodeURIComponent(clip)}`);
+    (clip == null ? "" : `&voice=${encodeURIComponent(clip)}`) +
+    `&rev=${encodeURIComponent(voiceRev ?? "0")}`;
   // The previous phrase is no longer wanted the moment this one is asked for.
   pendingClip?.abort();
   const controller = new AbortController();

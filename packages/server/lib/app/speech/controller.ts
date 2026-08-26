@@ -10,6 +10,7 @@ import {
   isVoiceId,
   MAX_TEXT,
   type VoiceId,
+  voiceRev,
 } from "./synth.ts";
 
 /**
@@ -147,7 +148,13 @@ export class Controller {
   @http.GET("/_/speech/voices")
   async voices(ctx: Context) {
     ctx.response.type = "application/json";
-    ctx.response.body = { voices: await installedVoices() };
+    // The revision goes out with the list so the page can put it in the audio
+    // URL. Without it the hard cache on /_/speech.wav outlives the voices it
+    // holds, and changing a voice reaches nobody for a week.
+    ctx.response.body = {
+      voices: await installedVoices(),
+      rev: await voiceRev(),
+    };
     ctx.response.headers.set("Cache-Control", "public, max-age=300");
   }
 }
