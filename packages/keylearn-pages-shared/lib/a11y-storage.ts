@@ -286,6 +286,26 @@ export function saveA11y(
   patch: Partial<A11yPrefs>,
   profileId?: string | null,
 ): boolean {
+  const id = profileId === undefined ? activeProfileId() : profileId;
+  const ok = saveA11yLocal(patch, id);
+  // Sent up from HERE rather than from each caller.
+  //
+  // These settings are saved from a preferences pane, from the braille page's
+  // rate control, and from wherever the next one is added. Asking every call
+  // site to also push is how one of them ends up not doing it, and a setting
+  // that syncs from some screens and not others is worse than one that never
+  // syncs at all — the learner cannot tell which they are looking at.
+  if (ok) {
+    void pushA11y(id);
+  }
+  return ok;
+}
+
+/** The local half on its own — used by a pull, which must not push back. */
+export function saveA11yLocal(
+  patch: Partial<A11yPrefs>,
+  profileId?: string | null,
+): boolean {
   try {
     const id = profileId === undefined ? activeProfileId() : profileId;
     const next = { ...loadA11y(id), ...patch };
@@ -296,6 +316,29 @@ export function saveA11y(
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Pushes this learner's preferences to the account. Never throws.
+ *
+ * Inline rather than in the sync module beside `pullA11y`, so that
+ * `a11y-storage` needs no import from it — the two would otherwise depend on
+ * each other, and this is the half that must run on every save.
+ */
+export async function pushA11y(profileId: string | null): Promise<void> {
+  if (profileId == null || !/^[0-9]+$/.test(profileId)) {
+    return; // Signed out, or no profile chosen: the device's copy is the copy.
+  }
+  try {
+    await fetch(`/_/sync/a11y/profile/${encodeURIComponent(profileId)}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(loadA11y(profileId)),
+    });
+  } catch {
+    // Applied and saved on the device. It goes up on the next change, or the
+    // next time this profile is opened.
   }
 }
 

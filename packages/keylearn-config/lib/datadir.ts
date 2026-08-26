@@ -96,6 +96,30 @@ export class DataDir {
   }
 
   /**
+   * Returns the full path to a learner's accessibility preferences.
+   *
+   * Its own file, beside the braille one and for the same reason: these are
+   * not results and are not settings in the practice sense — they are how a
+   * learner needs the app presented to them at all. Typeface, target size,
+   * motion, spacing, speech rate and voice.
+   *
+   * They lived only in the browser until now, which meant the learners most
+   * dependent on them — a dyslexic reader, someone who needs large targets and
+   * stilled motion — had to rediscover and rebuild every one of them on every
+   * device they sat down at. That is the opposite of an accessibility feature.
+   */
+  a11yPrefsFile(userId: number, profileId: number): string {
+    const s = String(userId).padStart(9, "0");
+    return this.dataPath(
+      "a11y_prefs", //
+      s.substring(0, 3),
+      s.substring(3, 6),
+      s,
+      String(profileId),
+    );
+  }
+
+  /**
    * Returns the full path to a per-profile stats file: one file per learner
    * profile, grouped under its owning account.
    */

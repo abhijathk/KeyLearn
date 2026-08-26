@@ -273,6 +273,75 @@ export class Controller {
   }
 
   /** The file for this learner, once the caller is proved to own them. */
+  // ── A learner's accessibility preferences ──────────────────────────
+  //
+  // The same shape as the braille routes below, and for the same reason.
+  // These settings decide whether the app is usable at all for the person
+  // reading it — typeface, target size, motion, spacing, speech rate and
+  // voice — and until now they lived in one browser's local storage. A
+  // learner who needs them had to rebuild every one on every device.
+  //
+  // A document rather than a merge: unlike braille progress, which is a
+  // record of real practice on both sides and must keep both, these are one
+  // learner's current answer to "how should this look and sound". The last
+  // save wins, and the client only pushes what the learner just changed.
+
+  @http.GET("/_/sync/a11y/profile/{pid:[0-9]+}")
+  async getA11yPrefs(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+  ) {
+    const file = await this.#a11yFile(ctx, pid, "read");
+    ctx.response.type = "application/json";
+    // An empty document, not a 404: "this learner has set nothing yet" is an
+    // ordinary answer, and it is what tells the client to offer its own local
+    // copy up instead of taking defaults from an empty server.
+    ctx.response.body = (await file.exists()) ? await file.read("utf8") : "{}";
+  }
+
+  @http.POST("/_/sync/a11y/profile/{pid:[0-9]+}")
+  async postA11yPrefs(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+    // Re-serialised rather than stored verbatim, so whatever arrives, what
+    // this serves back is JSON. Small: a dozen scalar settings.
+    @body.json(null, { maxLength: 8192 }) value: unknown,
+  ) {
+    const file = await this.#a11yFile(ctx, pid, "write");
+    if (value == null || typeof value !== "object" || Array.isArray(value)) {
+      throw new BadRequestError("Not a preferences document");
+    }
+    await file.dir().create(true);
+    await file.write(JSON.stringify(value), "utf8");
+    ctx.response.status = 204;
+  }
+
+  @http.DELETE("/_/sync/a11y/profile/{pid:[0-9]+}")
+  async deleteA11yPrefs(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+  ) {
+    await (await this.#a11yFile(ctx, pid, "write")).delete();
+    ctx.response.status = 204;
+  }
+
+  async #a11yFile(
+    ctx: Context<RouterState & AuthState>,
+    pid: string,
+    action: ProfileAction,
+  ): Promise<File> {
+    const user = ctx.state.requireUser();
+    const profile = await reachProfile(
+      actorFor(ctx, user),
+      Number(pid),
+      action,
+    );
+    if (profile == null) {
+      throw new ForbiddenError();
+    }
+    return new File(this.dataDir.a11yPrefsFile(user.id!, profile.id!));
+  }
+
   async #brailleFile(
     ctx: Context<RouterState & AuthState>,
     pid: string,

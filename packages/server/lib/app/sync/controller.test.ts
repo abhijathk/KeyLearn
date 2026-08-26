@@ -298,6 +298,98 @@ test("delete existing user data", async (ctx) => {
   isFalse(await userData.exists());
 });
 
+// ---- accessibility preferences ---------------------------------------------
+
+test("accessibility preferences are stored and returned per learner", async (ctx) => {
+  // These decide whether the app is usable at all for the person reading it —
+  // typeface, target size, motion, spacing, speech rate and voice. They lived
+  // in one browser's local storage, so the learners most dependent on them
+  // rebuilt every one on every device.
+
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const user = await findUser("user1@keylearn.org");
+  await Profile.ensureDefault(user);
+  const [profile] = await Profile.listForUser(user.id!);
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(user.id!);
+
+  // Nothing set yet is an ordinary answer, not a 404 — and it is what tells
+  // the client to offer this device's own copy up rather than take defaults
+  // from an empty server, which would wipe the settings of every learner who
+  // had them before this shipped.
+  const empty = await request.GET(`/_/sync/a11y/profile/${profile.id!}`).send();
+  equal(empty.status, 200);
+  deepEqual(await empty.body.json(), {});
+
+  const prefs = {
+    typeface: "dyslexic",
+    targets: "large",
+    motion: "reduce",
+    letterSpacing: 0.12,
+    lineHeight: 1.8,
+    speechRate: 1.4,
+    speechVoice: "alba",
+  };
+  equal(
+    (
+      await request
+        .POST(`/_/sync/a11y/profile/${profile.id!}`)
+        .type("application/json")
+        .send(JSON.stringify(prefs))
+    ).status,
+    204,
+  );
+
+  // The point of the whole exercise: another device asks, and gets what the
+  // learner set on the first one.
+  deepEqual(
+    await (
+      await request.GET(`/_/sync/a11y/profile/${profile.id!}`).send()
+    ).body.json(),
+    prefs,
+  );
+
+  equal(
+    (await request.DELETE(`/_/sync/a11y/profile/${profile.id!}`).send()).status,
+    204,
+  );
+  deepEqual(
+    await (
+      await request.GET(`/_/sync/a11y/profile/${profile.id!}`).send()
+    ).body.json(),
+    {},
+  );
+});
+
+test("accessibility preferences are refused for somebody else's learner", async (ctx) => {
+  // One account must not read or overwrite another's child — the same rule
+  // the braille file follows, through the same resolver.
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const owner = await findUser("user2@keylearn.org");
+  await Profile.ensureDefault(owner);
+  const [theirs] = await Profile.listForUser(owner.id!);
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become((await findUser("user1@keylearn.org")).id!);
+
+  equal(
+    (await request.GET(`/_/sync/a11y/profile/${theirs.id!}`).send()).status,
+    403,
+  );
+  equal(
+    (
+      await request
+        .POST(`/_/sync/a11y/profile/${theirs.id!}`)
+        .type("application/json")
+        .send(JSON.stringify({ typeface: "dyslexic" }))
+    ).status,
+    403,
+  );
+});
+
 // ---- braille progress ------------------------------------------------------
 
 test("braille progress is stored and returned per learner", async (ctx) => {

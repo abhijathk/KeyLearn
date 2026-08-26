@@ -5,6 +5,7 @@ import {
   loadActiveProfileId,
   type PlaceCounts,
   type ProfileDetails,
+  pullA11y,
   saveActiveProfileId,
   usePageData,
 } from "@keylearn/pages-shared";
@@ -171,6 +172,23 @@ export function ProfilesProvider({
     saveActiveProfileId(id);
     setActiveIdState(id);
   }, []);
+  // A learner's accessibility settings belong to them, not to the device.
+  //
+  // Pulled whenever this profile becomes the active one — including on first
+  // load, which is why this watches `activeId` rather than hooking
+  // `setActiveId`: the initial value is set by useState and never passes
+  // through it.
+  //
+  // Best-effort and unawaited. The device's own copy is already applied, so a
+  // learner who is offline sees exactly what they saw before; a slow network
+  // delays the reconciliation, never the page.
+  useEffect(() => {
+    if (activeId == null) {
+      return;
+    }
+    void pullA11y(activeId);
+  }, [activeId]);
+
   const markPicked = useCallback(() => {
     rememberPickDismissed();
     setPickDismissed(true);
