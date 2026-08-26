@@ -53,7 +53,17 @@ type ProfilesContextValue = {
    * would have to guess which of the returned profiles was the new one.
    */
   readonly add: (data: ProfileInput) => Promise<string | null>;
-  readonly update: (id: string, patch: Partial<ProfileInput>) => Promise<void>;
+  /**
+   * Edits a learner, answering whether the change actually went through.
+   *
+   * The caller needs to know: a write can come back waiting on the grown-up
+   * PIN, and closing the form at that point throws away everything the parent
+   * typed.
+   */
+  readonly update: (
+    id: string,
+    patch: Partial<ProfileInput>,
+  ) => Promise<boolean>;
   readonly remove: (id: string) => Promise<void>;
   /**
    * Set while a write is waiting on the grown-up PIN.
@@ -307,11 +317,11 @@ export function ProfilesProvider({
           adopt(list);
           return list.find((p) => !before.includes(p.id))?.id ?? null;
         }, null),
-      update: async (id, patch) => {
+      update: async (id, patch) =>
         await gated(async () => {
           setProfiles(await AccountService.updateProfile(id, patch));
-        }, undefined);
-      },
+          return true;
+        }, false),
       remove: async (id) => {
         await gated(async () => {
           const list = await AccountService.deleteProfile(id);

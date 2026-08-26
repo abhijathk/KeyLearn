@@ -120,19 +120,19 @@ export function VoicePicker({
   const LABELS: Record<string, string> = {
     kid: formatMessage({
       id: "profiles.voice.kid",
-      defaultMessage: "Pip — child (5–8)",
+      defaultMessage: "Pip (5–8)",
     }),
     tween: formatMessage({
       id: "profiles.voice.tween",
-      defaultMessage: "Robin — older child (9–13)",
+      defaultMessage: "Robin (9–13)",
     }),
     lady: formatMessage({
       id: "profiles.voice.lady",
-      defaultMessage: "Maya — woman",
+      defaultMessage: "Maya",
     }),
     man: formatMessage({
       id: "profiles.voice.man",
-      defaultMessage: "Theo — man",
+      defaultMessage: "Theo",
     }),
   };
   return (

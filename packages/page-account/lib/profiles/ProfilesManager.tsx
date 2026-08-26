@@ -502,28 +502,34 @@ export function ProfilesManager(): ReactNode {
         />
       )}
 
-      {/* Whatever write is waiting, this is what unblocks it. Rendered from
-          here rather than from the editor, because deleting and reordering go
-          through the same gate and neither has an editor open. */}
-      {pinNeeded && <PinPrompt onProve={provePin} onCancel={cancelPin} />}
-
       {editing != null && (
         <ProfileEditor
           profile={editing.mode === "edit" ? editing.profile : null}
           brailleOnly={editing.mode === "add" && places.sightedFree === 0}
           onSave={(data) => {
-            if (editing.mode === "edit") {
-              void update(editing.profile.id, data);
-            } else {
-              void (async () => {
-                const id = await add(data);
-                // Only now does the learner have an id to keep it against.
-                if (id != null && pendingVoice.current !== undefined) {
-                  saveA11y({ appVoice: pendingVoice.current as any }, id);
+            // The form closes when the write lands, not when Save is pressed.
+            // It used to close immediately, so a write held back for the PIN
+            // left the parent with the prompt and no form behind it — cancel,
+            // and everything they had typed was gone without being mentioned.
+            // Staying open costs nothing when the save succeeds and saves
+            // their work when it does not.
+            void (async () => {
+              if (editing.mode === "edit") {
+                if (await update(editing.profile.id, data)) {
+                  setEditing(null);
                 }
-              })();
-            }
-            setEditing(null);
+                return;
+              }
+              const id = await add(data);
+              if (id == null) {
+                return; // Held for the PIN, or refused. Their answers stay.
+              }
+              // Only now does the learner have an id to keep it against.
+              if (pendingVoice.current !== undefined) {
+                saveA11y({ appVoice: pendingVoice.current as any }, id);
+              }
+              setEditing(null);
+            })();
           }}
           onSaveVoice={(voice) => {
             if (editing.mode === "edit") {
@@ -540,7 +546,35 @@ export function ProfilesManager(): ReactNode {
                 }
               : null
           }
-          onCancel={() => setEditing(null)}
+          onCancel={() => {
+            // Abandons the write as well as the form. Without this a save that
+            // was waiting on the PIN outlived the editor it belonged to: the
+            // prompt was still pending, so closing the form revealed it and it
+            // looked as though Cancel had asked for the PIN.
+            cancelPin();
+            setEditing(null);
+          }}
+        />
+      )}
+
+      {/* Whatever write is waiting, this is what unblocks it. Rendered from
+          here rather than from the editor, because deleting and reordering go
+          through the same gate and neither has an editor open — and AFTER it,
+          because both are overlays and the later one paints on top. Before it,
+          the prompt was in the page and covered by the form it was blocking. */}
+      {pinNeeded && (
+        <PinPrompt
+          onProve={async (pin) => {
+            const ok = await provePin(pin);
+            if (ok) {
+              // provePin replays the write that was waiting, so by here the
+              // save the parent asked for has happened and the form can go.
+              setEditing(null);
+            }
+            return ok;
+          }}
+          // Abandons the write and leaves the form as it was, edits and all.
+          onCancel={cancelPin}
         />
       )}
     </div>
