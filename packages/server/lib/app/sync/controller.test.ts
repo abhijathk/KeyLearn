@@ -479,6 +479,70 @@ test("a learner's browser storage is stored and returned, per scope", async (ctx
   );
 });
 
+test("a device that knows nothing cannot delete what the account knows", async (ctx) => {
+  // The destructive one, found by running the app rather than by reasoning
+  // about it — and it destroyed a real account in the process.
+  //
+  // A device that has just been signed into holds nothing, so its first push
+  // is nearly empty. When the route replaced the stored document with whatever
+  // arrived, that push deleted every setting the account had: eleven keys down
+  // to one, the learner's whole kids world gone. The endpoint built to stop
+  // settings being lost was the thing losing them.
+  //
+  // So the store merges per key. Being empty says nothing at all, and a client
+  // can only ever change keys it actually names.
+  ctx.mock.timers.enable({ apis: ["Date"], now });
+
+  const user = await findUser("user1@keylearn.org");
+  await Profile.ensureDefault(user);
+
+  const request = startApp(context.get(Application, kMain));
+  await request.become(user.id!);
+
+  const post = async (keys: unknown) =>
+    (
+      await request
+        .POST("/_/sync/doc/local")
+        .type("application/json")
+        .send(JSON.stringify({ keys }))
+    ).status;
+
+  equal(
+    await post({
+      "kids.prefs": { v: '{"world":"hero"}', t: 0 },
+      "keylearn.mode": { v: "grown-ups", t: 0 },
+    }),
+    204,
+  );
+
+  // The new device, with nothing to say.
+  equal(await post({}), 204);
+
+  const kept = (await (
+    await request.GET("/_/sync/doc/local").send()
+  ).body.json()) as any;
+  equal(kept.keys["kids.prefs"].v, '{"world":"hero"}');
+  equal(kept.keys["keylearn.mode"].v, "grown-ups");
+
+  // A device with an older copy does not win either — the account keeps the
+  // newer value rather than accepting whatever arrived last.
+  equal(await post({ "keylearn.mode": { v: "kids", t: 0 } }), 204);
+  equal(await post({ "kids.prefs": { v: '{"world":"reef"}', t: 50 } }), 204);
+  const after = (await (
+    await request.GET("/_/sync/doc/local").send()
+  ).body.json()) as any;
+  equal(after.keys["kids.prefs"].v, '{"world":"reef"}'); // newer, adopted
+  equal(after.keys["keylearn.mode"].v, "kids"); // equal stamp, last writer
+
+  // Deleting has to be said out loud, with a stamp that beats the value.
+  equal(await post({ "kids.prefs": { v: null, t: 900 } }), 204);
+  const gone = (await (
+    await request.GET("/_/sync/doc/local").send()
+  ).body.json()) as any;
+  equal(gone.keys["kids.prefs"].v, null);
+  equal(gone.keys["keylearn.mode"].v, "kids"); // untouched by that deletion
+});
+
 test("only the named documents exist", async (ctx) => {
   // The allow-list is what keeps this a place for a learner's settings rather
   // than a key-value store anyone signed in may park anything in, at our

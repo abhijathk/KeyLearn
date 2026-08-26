@@ -489,8 +489,23 @@ async function pullScope(profileId: string | null): Promise<boolean> {
       ) {
         continue; // Not this scope's to write, or not a value we understand.
       }
-      if (stamped.t <= stampOf(stamps, key) && !bootKeys.has(key)) {
+      // Absent locally means there is nothing to lose, so it is adopted
+      // whatever its stamp says.
+      //
+      // The comparison alone is not enough, and getting this wrong made the
+      // whole thing useless on the only accounts that matter. Every key
+      // migrated from before this shipped carries a stamp of zero — that is
+      // what "we do not know when this was set" is written as — and a fresh
+      // device has no stamp either, which also reads as zero. So `0 <= 0` was
+      // true for every migrated setting, on every new device, and not one of
+      // them was ever adopted. The sync appeared to work in tests, where the
+      // stamps were invented, and did nothing at all in life.
+      const known = key in stamps || localStorage.getItem(key) != null;
+      if (known && stamped.t <= stampOf(stamps, key) && !bootKeys.has(key)) {
         continue; // This device's copy is the same age or newer.
+      }
+      if (!known && stamped.v == null) {
+        continue; // A deletion of something this device never had.
       }
       try {
         if (stamped.v == null) {

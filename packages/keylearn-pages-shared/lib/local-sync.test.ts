@@ -358,3 +358,57 @@ test("installing the hook actually intercepts a write", async () => {
     restore();
   }
 });
+
+test("a migrated account reaches a fresh device — the whole point, and it did not work", async () => {
+  // This is the customer's report, in the shape it actually occurs, and it is
+  // the test that was missing when the feature shipped.
+  //
+  // Every key migrated from before this existed carries a stamp of zero: that
+  // is how "we do not know when this was set" is written. A device that has
+  // never synced has no stamp for those keys either, which also reads as zero.
+  // So the "is the remote newer" comparison was 0 <= 0 — true — and every
+  // migrated setting was skipped on every new device.
+  //
+  // The earlier tests all invented stamps like 5000, so they passed while the
+  // feature did nothing whatsoever in life. Running the real app is what found
+  // it: 74 keys were wiped from a browser, the page reloaded, and none of the
+  // eleven on the server came back.
+  localStorage.clear();
+  const { restore } = withFetch((url) =>
+    url.includes("/profile/")
+      ? empty()
+      : json(
+          mirror({
+            "kids.prefs": { v: '{"world":"hero","name":"Rexy"}', t: 0 },
+            "keylearn.mode": { v: "grown-ups", t: 0 },
+            "kids.best": { v: "27", t: 0 },
+          }),
+        ),
+  );
+  try {
+    isTrue(await pullLocal());
+    equal(localStorage.getItem("kids.prefs"), '{"world":"hero","name":"Rexy"}');
+    equal(localStorage.getItem("keylearn.mode"), "grown-ups");
+    equal(localStorage.getItem("kids.best"), "27");
+  } finally {
+    restore();
+  }
+});
+
+test("a tombstone for a key this device never had is not resurrected as one", async () => {
+  // The other side of adopting unknown keys: "absent locally so take it" must
+  // not turn a deletion into a stored null, nor stamp a key that does not
+  // exist and never did.
+  localStorage.clear();
+  const { restore } = withFetch((url) =>
+    url.includes("/profile/")
+      ? empty()
+      : json(mirror({ "ui.hideKeyboard": { v: null, t: 900 } })),
+  );
+  try {
+    isFalse(await pullLocal());
+    equal(localStorage.getItem("ui.hideKeyboard"), null);
+  } finally {
+    restore();
+  }
+});

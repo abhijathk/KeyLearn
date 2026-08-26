@@ -41,6 +41,75 @@ const PROFILE_DOCS: ReadonlySet<string> = new Set(["local"]);
 
 const ACCOUNT_DOCS: ReadonlySet<string> = new Set(["local"]);
 
+/**
+ * Folds one device's copy into the stored one, key by key, newest wins.
+ *
+ * A merge rather than a replace, and the difference is not academic — the
+ * replace destroyed a real account during testing. A device that has just been
+ * signed into holds nothing, so its first push is nearly empty; overwriting
+ * with it deleted every setting the account had, which is the exact loss this
+ * whole endpoint exists to prevent, caused by the thing meant to prevent it.
+ *
+ * With a merge, a device can only ever change the keys it actually knows
+ * about. Being empty says nothing, and no client — however new, confused, or
+ * badly behaved — can delete what it has never heard of. A deletion has to be
+ * stated: a tombstone carrying a newer stamp than the value it removes.
+ *
+ * The stamps come from the client's clock, which is not to be trusted for
+ * ordering across devices in general. It is enough here because the failure it
+ * can cause is bounded — a device with a wrong clock wins or loses its own
+ * settings — and because the alternative, stamping on arrival, would make
+ * every offline change appear newer than the changes it was made before.
+ */
+async function writeMerged(file: File, value: unknown): Promise<void> {
+  if (value == null || typeof value !== "object") {
+    throw new BadRequestError("Not a document");
+  }
+  const incoming = (value as { keys?: unknown }).keys;
+  if (incoming == null || typeof incoming !== "object") {
+    throw new BadRequestError("Not a document");
+  }
+  let merged: Record<string, { v: string | null; t: number }> = {};
+  if (await file.exists()) {
+    try {
+      const stored = JSON.parse(await file.read("utf8")) as {
+        keys?: Record<string, { v: string | null; t: number }>;
+      };
+      if (stored?.keys != null && typeof stored.keys === "object") {
+        merged = { ...stored.keys };
+      }
+    } catch {
+      // Unreadable. Better to start again than to refuse the learner's write.
+    }
+  }
+  let count = 0;
+  for (const [key, entry] of Object.entries(
+    incoming as Record<string, unknown>,
+  )) {
+    const one = entry as { v?: unknown; t?: unknown };
+    if (
+      one == null ||
+      typeof one.t !== "number" ||
+      !Number.isFinite(one.t) ||
+      (one.v != null && typeof one.v !== "string")
+    ) {
+      continue; // Not a shape we store.
+    }
+    if (++count > MAX_DOC_KEYS) {
+      break;
+    }
+    const had = merged[key];
+    if (had == null || one.t >= had.t) {
+      merged[key] = { v: (one.v as string | null) ?? null, t: one.t };
+    }
+  }
+  await file.dir().create(true);
+  await file.write(JSON.stringify({ keys: merged }), "utf8");
+}
+
+/** A ceiling on how many keys one learner may accumulate. */
+const MAX_DOC_KEYS = 400;
+
 function requireDocName(name: string, allowed: ReadonlySet<string>): string {
   if (!allowed.has(name)) {
     throw new BadRequestError("Unknown document");
@@ -339,11 +408,7 @@ export class Controller {
     @body.json(null, { maxLength: 262144 }) value: unknown,
   ) {
     const file = await this.#profileDoc(ctx, pid, name, "write");
-    if (value == null || typeof value !== "object") {
-      throw new BadRequestError("Not a document");
-    }
-    await file.dir().create(true);
-    await file.write(JSON.stringify(value), "utf8");
+    await writeMerged(file, value);
     ctx.response.status = 204;
   }
 
@@ -383,8 +448,7 @@ export class Controller {
     const file = new File(
       this.dataDir.accountDocFile(user.id!, requireDocName(name, ACCOUNT_DOCS)),
     );
-    await file.dir().create(true);
-    await file.write(JSON.stringify(value), "utf8");
+    await writeMerged(file, value);
     ctx.response.status = 204;
   }
 
