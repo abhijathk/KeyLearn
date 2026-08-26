@@ -5,10 +5,11 @@
   /* Every element inside is sized in percentages of this box; without
      this the padding pushes the rows past its edge. */
   box-sizing: border-box;
-  /* Four short choices and a line of explanation do not need thirty rems.
-     Narrower keeps each row's label and note on one line each, which is what
-     makes a list like this scannable rather than four paragraphs. */
-  inline-size: min(26rem, 82vi);
+  /* Fills the compact shell rather than setting a width of its own. Two
+     things each deciding how wide this dialog is means one of them is wrong
+     the moment the other changes — and it was: the box had been narrowed while
+     the window around it stayed at its default. */
+  inline-size: 100%;
 }
 
 .lead {

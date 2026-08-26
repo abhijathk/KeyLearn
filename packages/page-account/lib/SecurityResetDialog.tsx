@@ -109,6 +109,11 @@ export function SecurityResetDialog({
 
   return (
     <FloatingShell
+      // Four checkboxes and a line of explanation were being given the default
+      // 58rem × 44rem window — a sheet of empty space with a short list adrift
+      // in the top-left of it. `compact` hugs the content, which is what this
+      // has always been.
+      compact={true}
       title={formatMessage({
         id: "sec.reset.title",
         defaultMessage: "Reset security settings",
