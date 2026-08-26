@@ -1,4 +1,5 @@
 @import "../../styles/components.less";
+@import "../../styles/motion.less";
 
 .root {
   .is-blurred();
@@ -14,10 +15,22 @@
   background: none;
   line-height: @field-height;
   cursor: pointer;
+  transition:
+    transform 0.06s ease-out,
+    filter 0.12s ease-out;
+  .motion-respect-reduced();
 }
 
 .root:focus-visible {
   .is-focused();
+}
+
+/* The same answer to a press as the labelled button — see Button.module.less.
+   Icon buttons are the ones most often tapped repeatedly, because there is no
+   word to confirm what was hit. */
+.root:active:not(.disabled) {
+  filter: brightness(0.9);
+  transform: translateY(1px) scale(0.94);
 }
 
 .disabled {

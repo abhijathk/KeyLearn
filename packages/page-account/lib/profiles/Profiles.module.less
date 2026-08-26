@@ -1347,3 +1347,27 @@
   display: flex;
   justify-content: center;
 }
+
+// The form's own buttons are plain elements rather than the widget component,
+// so they need the same answer to a press. Same shape of feedback as
+// Button.module.less: a small dip while held, nothing once released.
+.seg,
+.shuffleBtn,
+.familyBtn {
+  transition:
+    transform 0.06s ease-out,
+    filter 0.12s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:active:not(:disabled) {
+      transform: none;
+    }
+  }
+
+  &:active:not(:disabled) {
+    filter: brightness(0.94);
+    transform: translateY(1px) scale(0.98);
+  }
+}

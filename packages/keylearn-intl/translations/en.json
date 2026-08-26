@@ -1725,6 +1725,7 @@
   "profiles.progressLetters": "{n} of {total} letters",
   "profiles.progressSpeed": "{wpm} wpm · {streak}-day streak",
   "profiles.save": "Save",
+  "profiles.save.nothing": "Nothing has changed yet.",
   "profiles.sect.look": "Appearance & voice",
   "profiles.sect.who": "Who is this",
   "profiles.tooYoung": "KeyLearn is designed for learners aged 5 and up. You can create the profile once they turn five.",

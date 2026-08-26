@@ -1,5 +1,6 @@
 @import "../../styles/components.less";
 @import "../../styles/text.less";
+@import "../../styles/motion.less";
 
 .root {
   .is-blurred();
@@ -25,6 +26,11 @@
   text-align: center;
   text-transform: none;
   cursor: pointer;
+  transition:
+    transform 0.06s ease-out,
+    background-color 0.12s ease-out,
+    filter 0.12s ease-out;
+  .motion-respect-reduced();
 }
 
 /*
@@ -46,6 +52,32 @@
   color: var(--Button--focused__color);
   background-color: var(--Button--focused__background-color);
   outline: none;
+}
+
+/*
+ * What a press feels like.
+ *
+ * There was nothing at all: no hover, no pressed state, on the button
+ * component the whole app is built from. A control that does not answer when
+ * you touch it reads as broken, and the person worst served is the one on a
+ * slow connection or a laggy tablet — they press, nothing happens, so they
+ * press again, and now the form is submitted twice.
+ *
+ * Small on purpose. The button dips and darkens for as long as it is held;
+ * that is enough to say "yes, you hit me" without turning every tap into an
+ * animation. `transform` and `background-color` only, so it composites on the
+ * GPU and costs nothing on the devices that need it most.
+ */
+.root:hover:not(.disabled) {
+  background-color: var(
+    --Button--hover__background-color,
+    var(--Button--focused__background-color)
+  );
+}
+
+.root:active:not(.disabled) {
+  filter: brightness(0.94);
+  transform: translateY(1px) scale(0.985);
 }
 
 .disabled {

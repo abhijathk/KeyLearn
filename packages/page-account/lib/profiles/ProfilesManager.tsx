@@ -687,6 +687,36 @@ function ProfileEditor({
   const [visionSupport, setVisionSupport] = useState(
     brailleOnly || (profile?.visionSupport ?? false),
   );
+
+  /**
+   * Whether anything has actually been changed.
+   *
+   * Save used to be live from the moment the form opened, so the ordinary way
+   * to leave a learner alone — open, look, press Save — sent a write, took the
+   * grown-up PIN, and wrote an audit entry, all to store exactly what was
+   * already there.
+   *
+   * Compared against a snapshot taken when the form opened rather than against
+   * the profile record, because some of what this form edits is not on that
+   * record: the avatar can be shuffled and the reading voice derived from the
+   * age without either touching the learner's saved details.
+   *
+   * A new learner is always "changed" — there is nothing yet to be the same
+   * as, and Add has its own guard for an empty name.
+   */
+  const opened = useRef({
+    kind: profile?.kind ?? "adult",
+    firstName: profile?.firstName ?? "",
+    lastName: profile?.lastName ?? "",
+    birthYear: profile?.birthYear != null ? String(profile.birthYear) : "",
+    avatarKey:
+      profile?.avatar?.type === "art"
+        ? `art:${profile.avatar.family}:${profile.avatar.seed}:${profile.avatar.letter === true}`
+        : null,
+    appVoice:
+      profile != null ? (loadA11y(String(profile.id)).appVoice ?? null) : null,
+    visionSupport: profile?.visionSupport ?? false,
+  });
   const [confirmVision, setConfirmVision] = useState<"on" | "off" | null>(null);
   const [showConsent, setShowConsent] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -850,6 +880,22 @@ function ProfileEditor({
 
   // Swatches echo the learner’s initial once a name is typed; before that they
   // stay as plain colour chips rather than showing a placeholder glyph.
+  const was = opened.current;
+  const dirty =
+    profile == null ||
+    kind !== was.kind ||
+    firstName !== was.firstName ||
+    lastName !== was.lastName ||
+    birthYear !== was.birthYear ||
+    appVoice !== was.appVoice ||
+    visionSupport !== was.visionSupport ||
+    (avatar.type === "art"
+      ? `art:${avatar.family}:${avatar.seed}:${avatar.letter === true}`
+      : null) !== was.avatarKey ||
+    // Consent is a statement being made now, not a field being edited, so
+    // ticking it counts as a change even though nothing else moved.
+    consent;
+
   const initial = firstName.trim().slice(0, 1).toUpperCase();
   // The block below only ever edits a painting; the state is guaranteed to be
   // one (see the initialiser), and this narrows it for the renderer.
@@ -1282,7 +1328,19 @@ function ProfileEditor({
             <button className={styles.actionGhost} onClick={onCancel}>
               <FormattedMessage id="t_Cancel" defaultMessage="Cancel" />
             </button>
-            <button className={styles.actionPrimary} onClick={save}>
+            <button
+              className={styles.actionPrimary}
+              disabled={!dirty}
+              title={
+                dirty
+                  ? undefined
+                  : formatMessage({
+                      id: "profiles.save.nothing",
+                      defaultMessage: "Nothing has changed yet.",
+                    })
+              }
+              onClick={save}
+            >
               {profile != null ? (
                 <FormattedMessage id="profiles.save" defaultMessage="Save" />
               ) : (
