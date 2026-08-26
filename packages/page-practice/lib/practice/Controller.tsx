@@ -56,7 +56,15 @@ export const Controller = memo(function Controller({
   useHotkeys({
     // Asked for, so nothing is announced — they know, they pressed it.
     ["Ctrl+ArrowLeft"]: () => handleResetLesson(),
-    ["Ctrl+ArrowRight"]: handleSkipLesson,
+    // Gated with the button, not just alongside it. Hiding the control while
+    // leaving the shortcut live would make the setting decorative: the learner
+    // it is meant for is the one skipping every hard lesson, and they will find
+    // the key combination the tooltip taught them.
+    ["Ctrl+ArrowRight"]: () => {
+      if (settings.get(uiProps.allowSkip)) {
+        handleSkipLesson();
+      }
+    },
     ["Escape"]: () => handleResetLesson(),
   });
   // Leaving the page is the one worth naming; coming back to a line that is

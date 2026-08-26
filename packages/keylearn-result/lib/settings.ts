@@ -14,4 +14,16 @@ export const uiProps = {
   // conflating them meant the tour reappeared on every visit for anybody who
   // simply never opened the settings screen, closing the tour notwithstanding.
   tourSeen: booleanProp("ui.tourSeen", false),
+  // Whether the learner may move past a lesson without finishing it.
+  //
+  // Asked for by a customer whose learners were skipping every lesson that got
+  // hard — which is exactly the lesson worth staying on, and the one the
+  // guided course would otherwise have kept bringing back until it was
+  // learned. Off, the skip control is not shown and its shortcut does nothing.
+  //
+  // Defaults to allowed, because taking a control away from every existing
+  // learner is not a decision this setting's existence is entitled to make.
+  // It is a setting per profile like the rest, so a learner who needs to move
+  // on from a lesson they cannot type is not stuck with somebody else's rule.
+  allowSkip: booleanProp("ui.allowSkip", true),
 } as const;

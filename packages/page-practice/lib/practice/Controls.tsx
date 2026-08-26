@@ -107,6 +107,16 @@ export const Controls = memo(function Controls({
     usingSlider.current = false;
     scheduleClose();
   };
+  const restartButton = (
+    <IconButton
+      icon={<StrokeIcon name="restart" />}
+      title={formatMessage({
+        id: "practice.widget.resetLesson.description",
+        defaultMessage: "Restart this lesson (Ctrl + Left Arrow).",
+      })}
+      onClick={pick(onResetLesson)}
+    />
+  );
   return (
     <div
       id={names.controls}
@@ -127,24 +137,25 @@ export const Controls = memo(function Controls({
             })}
             onClick={pick(onHelp)}
           />
-          <Dir swap="icon">
-            <IconButton
-              icon={<StrokeIcon name="restart" />}
-              title={formatMessage({
-                id: "practice.widget.resetLesson.description",
-                defaultMessage: "Restart this lesson (Ctrl + Left Arrow).",
-              })}
-              onClick={pick(onResetLesson)}
-            />
-            <IconButton
-              icon={<StrokeIcon name="skip" />}
-              title={formatMessage({
-                id: "practice.widget.skipLesson.description",
-                defaultMessage: "Move to the next lesson (Ctrl + Right Arrow).",
-              })}
-              onClick={pick(onSkipLesson)}
-            />
-          </Dir>
+          {/* Paired so the arrows read outward in either direction; alone
+              when skipping is turned off, since `Dir` swaps a pair and there
+              is nothing to swap with. */}
+          {settings.get(uiProps.allowSkip) ? (
+            <Dir swap="icon">
+              {restartButton}
+              <IconButton
+                icon={<StrokeIcon name="skip" />}
+                title={formatMessage({
+                  id: "practice.widget.skipLesson.description",
+                  defaultMessage:
+                    "Move to the next lesson (Ctrl + Right Arrow).",
+                })}
+                onClick={pick(onSkipLesson)}
+              />
+            </Dir>
+          ) : (
+            restartButton
+          )}
           <IconButton
             icon={
               <StrokeIcon name={keyboardHidden ? "keyboardOff" : "keyboard"} />

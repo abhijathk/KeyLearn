@@ -26,6 +26,7 @@ import { GuidedLessonSettings } from "./lesson/GuidedLessonSettings.tsx";
 import { LessonPreview } from "./lesson/LessonPreview.tsx";
 import { NumbersLessonSettings } from "./lesson/NumbersLessonSettings.tsx";
 import { QuotesLessonSettings } from "./lesson/QuotesLessonSettings.tsx";
+import { SkipSettings } from "./lesson/SkipSettings.tsx";
 import { WordListLessonSettings } from "./lesson/WordListLessonSettings.tsx";
 import * as styles from "./SettingsScreen.module.less";
 
@@ -173,6 +174,7 @@ export function LessonSettings(): ReactNode {
             <LessonPreview lesson={lesson} />
             {tabBody(settings, lesson)}
             <DailyGoalSettings />
+            <SkipSettings />
           </>
         )}
       </LessonLoader>
