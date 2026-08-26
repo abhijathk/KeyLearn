@@ -25,6 +25,47 @@ import * as styles from "./Profiles.module.less";
  * voice. So the button speaks a real sentence, through the same path the app
  * will actually use, rather than describing it.
  */
+/**
+ * The voice a learner starts with, before anyone chooses one.
+ *
+ * Chosen rather than left blank because "this device's own voice" is the
+ * rough one the customer complained about, and a default nobody sets is the
+ * default almost everybody keeps. A five-year-old should not have to wait for
+ * a parent to find this control before being read to in a voice made for them.
+ *
+ * The bands are guidance, not a rule: whatever is picked here is only a
+ * starting point, and the control sits right beside it.
+ *
+ * `adultPick` is passed in rather than rolled here so it stays put while the
+ * form is open. Rolling it inside would hand the learner a different voice on
+ * every keystroke in the year field.
+ */
+export function defaultVoiceFor(
+  kind: "adult" | "kid",
+  birthYear: number | null,
+  adultPick: "lady" | "man",
+): "kid" | "tween" | "lady" | "man" {
+  if (kind === "adult") {
+    return adultPick;
+  }
+  if (birthYear == null) {
+    // A kid profile with no year given. The kids world is built for the
+    // youngest band, so that is the safer guess — being read to in too young
+    // a voice is a smaller injury than not following the words at all.
+    return "kid";
+  }
+  const age = new Date().getFullYear() - birthYear;
+  if (age <= 8) {
+    return "kid";
+  }
+  if (age <= 13) {
+    return "tween";
+  }
+  // Older than the child voices are for. They are on a kid profile, but they
+  // are not a child to be read to like one.
+  return adultPick;
+}
+
 export function VoicePicker({
   value,
   onChange,

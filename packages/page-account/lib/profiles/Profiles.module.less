@@ -414,10 +414,10 @@
   // Wide enough for two columns. The single 31rem column ran about 830px tall,
   // so it scrolled on an ordinary screen while both flanks of the dialog sat
   // empty — narrow and tall at the same time, which is the worst of both.
-  // Wide enough for two columns AND for the six avatar swatches to show their
-  // names in full. The kid families ("Bubbles", "Zigzag") are the constraint;
-  // at 43rem they were a pixel short and clipped to "Bubbl…".
-  inline-size: min(48rem, 100%);
+  // Two columns' worth, and no more. It was 48rem only so that six avatar
+  // swatches could show names like "Bubbles" without clipping; with the
+  // swatches replaced by one Shuffle button, that width bought nothing.
+  inline-size: min(42rem, 100%);
   max-block-size: 92vb;
   padding: 1.1rem 1.2rem 0.9rem;
   border: var(--separator-border);
@@ -1141,8 +1141,15 @@
 // so a narrow screen reads sensibly rather than opening on an avatar picker.
 .editorCols {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.4rem 1.6rem;
+  // Details take the room; appearance takes what it needs. They were even
+  // before, which gave the names and the year a cramped column while the
+  // avatar had space it was not using — and the six family swatches, now gone,
+  // were the only reason that side ever needed width.
+  // minmax(0, …) because an fr track will not shrink below its content, and
+  // the voice row's select-plus-button was quietly holding the right column
+  // as wide as the left however the ratio was written.
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 0.4rem 1.4rem;
   align-items: start;
 
   @media (max-width: 40rem) {
@@ -1156,7 +1163,8 @@
   // a four-digit year got the same run of empty space as a full name. That is
   // most of why the form read as loose.
   .field {
-    inline-size: 11rem;
+    inline-size: 100%;
+    max-inline-size: 12rem;
     padding: 0.45rem 0.6rem;
     font-size: 0.86rem;
   }

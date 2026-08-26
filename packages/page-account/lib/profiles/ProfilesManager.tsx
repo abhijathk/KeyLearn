@@ -54,7 +54,7 @@ import {
   type ProfileKind,
 } from "./store.ts";
 import { type ProfileStats, useProfileStats } from "./useProfileStats.ts";
-import { VoicePicker } from "./VoicePicker.tsx";
+import { defaultVoiceFor, VoicePicker } from "./VoicePicker.tsx";
 
 // Hoisted so formatjs can extract them. A message object built inside a ternary
 // is invisible to static extraction, so the id never reaches the catalogue and
@@ -584,21 +584,55 @@ function ProfileEditor({
   // one of the old lettered avatars is shown a painting seeded from their name
   // — already theirs, and stable until somebody presses shuffle — and it is
   // saved as one when they save.
-  const [avatar, setAvatar] = useState<Avatar>(() =>
-    profile?.avatar?.type === "art"
-      ? profile.avatar
-      : {
-          type: "art",
-          family: defaultArtFamily(profile?.kind ?? "kid"),
-          seed: artSeedFromName(profile?.firstName ?? ""),
-        },
-  );
+  const [avatar, setAvatar] = useState<Avatar>(() => {
+    if (profile?.avatar?.type === "art") {
+      return profile.avatar; // Theirs already. Nothing here may change it.
+    }
+    if (profile == null) {
+      // A new learner gets a fresh painting each time the form is opened.
+      // It used to be the first family seeded from an empty name — a constant,
+      // so every learner anyone ever added was offered the identical picture
+      // and it read as a fixed icon rather than as something to play with.
+      const families = artFamilies("kid");
+      return {
+        type: "art",
+        family: families[Math.floor(Math.random() * families.length)].id,
+        seed: newArtSeed(),
+      };
+    }
+    // An existing learner carrying one of the old lettered avatars: seeded
+    // from their name, so it is stable and recognisably theirs rather than
+    // changing under them every time somebody opens the form.
+    return {
+      type: "art",
+      family: defaultArtFamily(profile.kind),
+      seed: artSeedFromName(profile.firstName ?? ""),
+    };
+  });
   const [consent, setConsent] = useState(false);
   // Kept against the learner's id rather than on the profile record, so on a
   // new learner it is held here until the id exists and written straight after.
   const [appVoice, setAppVoice] = useState<string | null>(
     profile == null ? null : (loadA11y(String(profile.id)).appVoice ?? null),
   );
+  /**
+   * Whether the voice is somebody's choice rather than one derived from the
+   * age. Once it is theirs, nothing here overrules it — changing the year
+   * afterwards must not quietly swap a voice they picked on purpose.
+   */
+  const [voiceChosen, setVoiceChosen] = useState(
+    profile != null && loadA11y(String(profile.id)).appVoice != null,
+  );
+  /**
+   * Which adult voice this form will suggest, decided once when it opens.
+   *
+   * There is no reason to prefer the woman or the man, and always suggesting
+   * the same one would mean every grown-up in every household hearing one
+   * voice. Rolled once and kept, so it does not change under the parent as
+   * they type.
+   */
+  const adultPick = useRef<"lady" | "man" | null>(null);
+  adultPick.current ??= Math.random() < 0.5 ? "lady" : "man";
   const [visionSupport, setVisionSupport] = useState(
     brailleOnly || (profile?.visionSupport ?? false),
   );
@@ -606,6 +640,23 @@ function ProfileEditor({
   const [showConsent, setShowConsent] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // The voice follows the age until somebody says otherwise. Runs on kind and
+  // year rather than once on mount, because a parent typically picks "Kid" and
+  // fills the year in after — deciding at mount would read a blank form.
+  useEffect(() => {
+    if (voiceChosen) {
+      return;
+    }
+    const year = Number(birthYear.trim());
+    setAppVoice(
+      defaultVoiceFor(
+        kind,
+        birthYear.trim() !== "" && Number.isFinite(year) ? year : null,
+        adultPick.current!,
+      ),
+    );
+  }, [kind, birthYear, voiceChosen]);
 
   // A brand-new child profile needs the grown-up’s consent; an existing kid
   // already has it recorded, so we don’t re-ask on edit.
@@ -955,7 +1006,24 @@ function ProfileEditor({
                     <button
                       type="button"
                       className={styles.shuffleBtn}
-                      onClick={() => setAvatar({ ...art, seed: newArtSeed() })}
+                      // Family as well as seed. Six labelled swatches asked a
+                      // parent to have an opinion about "Zigzag" versus "Ripple",
+                      // which is not an opinion anybody has — and the names had to
+                      // be legible at 47px, which drove the whole dialog's width.
+                      // One button that produces a new painting is the thing they
+                      // actually wanted, and it can reach every family rather than
+                      // the six that fitted on a row.
+                      onClick={() => {
+                        const families = artFamilies(kind);
+                        setAvatar({
+                          ...art,
+                          family:
+                            families[
+                              Math.floor(Math.random() * families.length)
+                            ].id,
+                          seed: newArtSeed(),
+                        });
+                      }}
                     >
                       <FormattedMessage
                         id="profiles.avatar.shuffle"
@@ -964,34 +1032,6 @@ function ProfileEditor({
                     </button>
                   </div>
                   <div className={styles.artPick}>
-                    <div className={styles.familyGrid}>
-                      {artFamilies(kind).map((f) => (
-                        <button
-                          key={f.id}
-                          type="button"
-                          className={clsx(
-                            styles.familyBtn,
-                            f.id === art.family && styles.familyOn,
-                          )}
-                          aria-pressed={f.id === art.family}
-                          // The visible name is clipped to its cell, so the whole
-                          // one lives here — a truncated label should still be
-                          // readable to somebody who wants it. The plain name
-                          // rather than the translated node, which is markup and
-                          // cannot go in an attribute.
-                          title={f.name}
-                          onClick={() => setAvatar({ ...art, family: f.id })}
-                        >
-                          <ProfileArt
-                            family={f.id}
-                            seed={art.seed}
-                            kind={kind}
-                            size={30}
-                          />
-                          <span>{familyNames[f.id] ?? f.name}</span>
-                        </button>
-                      ))}
-                    </div>
                     <label className={styles.letterRow}>
                       <input
                         type="checkbox"
@@ -1011,7 +1051,13 @@ function ProfileEditor({
                 </div>
               </div>
 
-              <VoicePicker value={appVoice} onChange={setAppVoice} />
+              <VoicePicker
+                value={appVoice}
+                onChange={(next) => {
+                  setVoiceChosen(true);
+                  setAppVoice(next);
+                }}
+              />
             </div>
           </div>
 
