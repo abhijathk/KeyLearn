@@ -2382,6 +2382,30 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     </div>
   ) : null;
 
+  /**
+   * What the scene shows, for somebody who cannot see it.
+   *
+   * Deliberately a description and not a narration. It names where they are,
+   * who is with them and how far they have come — the things that would be
+   * obvious at a glance and are otherwise completely absent — and it does not
+   * try to keep up with the running game. A learner using a screen reader
+   * previously got the lesson text and no indication that a world existed at
+   * all.
+   *
+   * It changes as the journey does, so asking again after crossing a land
+   * gives the new one; the moments themselves are announced by the coach
+   * line, which is a live region.
+   */
+  const sceneDescription = classic
+    ? "Typing practice."
+    : [
+        landName !== "" ? `Chapter ${chapter}, ${landName}.` : "On the trail.",
+        prefs.world === "hero"
+          ? `${dinoName()} the hero is walking with you.`
+          : `${dinoName()} is walking with you.`,
+        `${included} ${included === 1 ? "key" : "keys"} unlocked so far.`,
+      ].join(" ");
+
   return (
     <div
       className={clsx(styles.root, prefs.night && styles.rootDark)}
@@ -2439,7 +2463,26 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       {!classic && (
         <>
           <div className={styles.sceneCard} ref={sceneCardRef}>
-            <canvas className={styles.canvas} ref={canvasRef} />
+            {/* Described, not narrated.
+                The scene is a canvas, which to a screen reader is a blank
+                box: a learner using one got the lesson text and no idea
+                there was a world around it — no companion, no land, no
+                sense of having travelled anywhere.
+                What it says is what is DRAWN, refreshed as the journey
+                moves. Narrating the running game was considered and
+                rejected: a combo or a step announced per keystroke is
+                noise that would bury the lesson text underneath it. The
+                moments that matter — a key unlocked, a land crossed, a
+                companion hatched — are already announced by the coach line
+                below, which is a polite live region.
+                `role="img"` because that is what it is here: a picture of
+                where they are, not a control and not a document. */}
+            <canvas
+              className={styles.canvas}
+              ref={canvasRef}
+              role="img"
+              aria-label={sceneDescription}
+            />
             <span className={styles.keysChip}>
               <b>{included}</b> keys on your trail
             </span>

@@ -143,23 +143,36 @@ Tiers 1 and 2 are in and verified. What was scoped as tier 3 stands as:
 | --- | --- |
 | An announcement when a lesson finishes | **Done** — `PracticeScreen` writes one sentence to a polite live region after every result, since the figures otherwise change in place and silently |
 | The kids coach's line announced | **Done** — the `.say` line is a polite live region; it is the only thing on that page saying what to do next |
-| A fuller screen-reader pass over the kids game | **Deferred** |
+| A fuller screen-reader pass over the kids game | **Done** — the scene describes itself; see below |
 | A plain-language toggle | **Not recommended** — see below |
 
 ### The kids game and a screen reader
 
-What is left is the game itself rather than its captions: the world is a
-canvas with no accessible name, the score, combo and hero-level chips update
-silently, and nothing announces a hatching or a new land. It is reachable and
-typable by keyboard today — that is how it is played — but a learner using a
-screen reader gets the lesson text and none of the game around it.
+**Done, and less was missing than this entry claimed.**
 
-Doing it properly means deciding what a screen reader should say about a
-running game at all: every combo would be noise, and nothing at all is what it
-does now. The likely answer is a small set of announced moments — a letter
-unlocked, a land reached, a companion hatched — and an accessible name and
-description on the canvas that says what is being drawn rather than trying to
-narrate it.
+The plan here was a small set of announced moments plus a described canvas.
+Reading the code found the moments already announced: `speak("grow")`,
+`speak("crossed")` and `speak("hatch")` all set the coach line, and that line
+is a polite live region — so a key unlocked, a land crossed and a companion
+hatched have been reaching a screen reader all along. This entry said
+"nothing announces a hatching or a new land", and that had stopped being true.
+
+What was genuinely missing was the canvas, which is what a screen reader meets
+first and which announced nothing at all. It now carries `role="img"` and a
+description of what is drawn, refreshed as the journey moves:
+
+> Chapter 1, Sunny Glade. Rexy the hero is walking with you. 6 keys unlocked
+> so far.
+
+Described rather than narrated, which was this entry's own conclusion and is
+still the right one. A combo or a step announced per keystroke would bury the
+lesson text under commentary; what a learner needs is to know there is a world,
+where they are in it, and who is with them — the things that are obvious at a
+glance and were otherwise entirely absent.
+
+The chips were listed as "updating silently". They are ordinary text and a
+screen reader reads them on demand; leaving them off the live region is
+deliberate for the same reason.
 
 ### Why the plain-language toggle is not recommended
 
