@@ -71,7 +71,11 @@ import {
   messageWithResetLink,
   resetScopeLines,
 } from "./email.ts";
-import { accountGateStatus, revokeSupportPin } from "./parent-pin.ts";
+import {
+  accountGateStatus,
+  requireParentPin,
+  revokeSupportPin,
+} from "./parent-pin.ts";
 import { pAdapter } from "./pipe.ts";
 import { clientIp, rateLimit } from "./ratelimit.ts";
 import { encryptTotpSecret, resolveTotpSecret } from "./totp-crypto.ts";
@@ -190,10 +194,9 @@ const PProfilePatch = zod(TProfilePatch, () => {
   throw new ApplicationError("Invalid profile");
 });
 
-// How long a proved grown-up PIN stands before it is asked for again. Long
-// enough to manage several profiles in one sitting, short enough that a tablet
-// left unattended does not stay unlocked.
-const PARENT_PIN_TTL_MS = 15 * 60 * 1000;
+// How long a proved PIN lasts — long enough to manage several profiles in one
+// sitting, short enough that a tablet left unattended does not stay unlocked —
+// now lives with the gate that enforces it, in parent-pin.ts.
 
 const MIN_PASSWORD = 8;
 // COPPA: children under 13 may not create their own account. Whole years.
@@ -570,16 +573,17 @@ export class Controller {
   // because the on-screen gate is only a speed bump and a curious child with
   // devtools (or a direct fetch) walks straight past it.
   #requireParentPin(ctx: Context<SessionState & AuthState>, user: User): void {
-    if (user.parentPinHash == null) {
-      return;
-    }
-    const at = Number(ctx.state.session.get("parentPinAt") ?? 0);
-    if (at === 0 || Date.now() - at > PARENT_PIN_TTL_MS) {
-      throw new ApplicationError("Enter the grown-up PIN to continue.", {
-        status: 428,
-        body: { error: { message: "Grown-up PIN required", parentPin: true } },
-      });
-    }
+    // The shared gate, not a second copy of it. This used to reimplement the
+    // check — same window, same message, same 428 — beside its own private
+    // copy of the TTL. Two sources of truth for one security window, and
+    // nothing to stop them drifting apart silently: change the exported
+    // constant and the routes that actually matter keep the old one.
+    //
+    // Not hypothetical. Shortening the exported TTL to force the gate during
+    // testing appeared to do nothing, because this is the copy the profile
+    // routes run — which cost an afternoon and produced a confident, wrong
+    // diagnosis about the account not having a PIN at all.
+    requireParentPin(ctx, user);
   }
 
   // Remove a profile's on-disk typing history — its data files, separate from

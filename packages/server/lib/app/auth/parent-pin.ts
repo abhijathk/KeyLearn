@@ -90,9 +90,9 @@ export async function revokeSupportPin(
  */
 export function requireParentPin(ctx: Context<SessionState>, user: User): void {
   // Both conditions, or this is a gate that never opens: it used to throw
-  // whenever a PIN was set, proved or not. No caller had reached it yet —
-  // the auth controller keeps its own correct copy — so nothing was broken
-  // by it, but the next person to use it would have been.
+  // whenever a PIN was set, proved or not. The auth controller kept its own
+  // correct copy at the time, so nothing was broken by it — the profile
+  // routes call THIS one now, and a mistake here reaches them.
   if (user.parentPinHash == null || parentPinProved(ctx)) {
     return;
   }
