@@ -26,6 +26,7 @@ import {
   useNavigate,
 } from "react-router";
 import { Captions } from "./Captions.tsx";
+import { CursorFog } from "./CursorFog.tsx";
 import { IntlLoader } from "./loader/IntlLoader.tsx";
 import { kidRestrictedRedirect, practiceRedirect } from "./surface.ts";
 import { Template } from "./Template.tsx";
@@ -86,6 +87,11 @@ export function App() {
                       does not stop at a page boundary and neither should the
                       writing-down of it. */}
                   <Captions />
+                  {/* Inside ThemeProvider, because the fog is painted in the
+                      learner's own accent and reads it off the live custom
+                      property. Outside the router, because a page change is
+                      not a reason for a trail to blink out. */}
+                  <CursorFog />
                 </ThemeProvider>
               </SettingsLoader>
             </ProfileScope>

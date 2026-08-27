@@ -1524,6 +1524,118 @@ function NotificationsCard(): ReactNode {
   );
 }
 
+/**
+ * The pointer-fog toggle, under Display mode.
+ *
+ * Two things it says out loud rather than hiding:
+ *
+ * The subtitle names the automatic behaviour, because a setting that is on
+ * while the effect is invisible looks broken. It stops itself while keys are
+ * landing, and it does not run on a touch screen at all — a learner on a
+ * tablet who turns this on and sees nothing would reasonably file a bug.
+ *
+ * And when the device asks for reduced motion, the row is disabled with the
+ * reason given, instead of being hidden or silently ignored. The system
+ * setting wins; saying so is more respectful than pretending the choice is
+ * available and then not honouring it.
+ */
+function CursorEffectRow(): ReactNode {
+  const { settings, updateSettings } = useSettings();
+  const on = settings.get(uiProps.cursorEffect);
+
+  const [stilled, setStilled] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setStilled(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  return (
+    <>
+      <div className={styles.row}>
+        <div className={styles.rowText}>
+          <span className={styles.rowLabel}>
+            <FormattedMessage
+              id="account.prefs.cursorEffect"
+              defaultMessage="Pointer trail"
+            />
+          </span>
+          {/* No explanation in the ordinary case — the switch is next to the
+            label and the effect is visible the moment it is on. The one line
+            worth keeping is the one that explains a control that will not
+            respond, which is otherwise indistinguishable from a broken one. */}
+          {stilled ? (
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.prefs.cursorEffect.stilled"
+                defaultMessage="Unavailable because this device asks for reduced motion. Nothing on this screen will move until that is changed in your system settings."
+              />
+            </span>
+          ) : null}
+        </div>
+        <Toggle
+          on={on && !stilled}
+          disabled={stilled}
+          onChange={(next) =>
+            updateSettings(settings.set(uiProps.cursorEffect, next))
+          }
+        />
+      </div>
+      {on && !stilled ? <CursorIntensityRow /> : null}
+    </>
+  );
+}
+
+/**
+ * How much of it — shown only while the trail is on.
+ *
+ * Hidden rather than disabled when the switch is off. A disabled slider is a
+ * thing to wonder about; an absent one is simply not a question yet, and the
+ * switch above it is the only decision at that point.
+ *
+ * No number is printed beside it. There is no correct value here and nobody
+ * is going to write theirs down — showing "62" would invite treating it as a
+ * measurement rather than a feel, and the effect itself is the readout.
+ */
+function CursorIntensityRow(): ReactNode {
+  const { formatMessage } = useIntl();
+  const { settings, updateSettings } = useSettings();
+  const value = settings.get(uiProps.cursorEffectIntensity);
+
+  return (
+    <div className={styles.tuneRow}>
+      <span className={styles.subLabel}>
+        <FormattedMessage
+          id="account.prefs.cursorEffect.intensity"
+          defaultMessage="Intensity"
+        />
+      </span>
+      <input
+        type="range"
+        className={styles.thinSlider}
+        min={10}
+        max={100}
+        step={5}
+        value={value}
+        aria-label={formatMessage({
+          id: "account.prefs.cursorEffect.intensity",
+          defaultMessage: "Intensity",
+        })}
+        onChange={(ev) =>
+          updateSettings(
+            settings.set(
+              uiProps.cursorEffectIntensity,
+              Number(ev.target.value),
+            ),
+          )
+        }
+      />
+    </div>
+  );
+}
+
 function AppearanceCard(): ReactNode {
   const { color, switchColor } = useTheme();
 
@@ -1557,6 +1669,8 @@ function AppearanceCard(): ReactNode {
             options={THEME_OPTIONS}
           />
         </div>
+
+        <CursorEffectRow />
       </div>
 
       <div className={styles.prefCard}>

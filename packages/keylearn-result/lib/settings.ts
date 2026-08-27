@@ -1,4 +1,4 @@
-import { booleanProp, itemProp } from "@keylearn/settings";
+import { booleanProp, itemProp, numberProp } from "@keylearn/settings";
 import { SpeedUnit } from "./speedunit.ts";
 
 export const uiProps = {
@@ -26,4 +26,28 @@ export const uiProps = {
   // It is a setting per profile like the rest, so a learner who needs to move
   // on from a lesson they cannot type is not stuck with somebody else's rule.
   allowSkip: booleanProp("ui.allowSkip", true),
+  // A slow curl of fog trailing the mouse pointer. Decoration, nothing else.
+  //
+  // Lives here rather than in `accountProps` because it is a fact about how
+  // the chrome behaves, like `hideHeaderWhileTyping` above, and because both
+  // the settings screen and the browser shell have to read it — `accountProps`
+  // is not exported past the account page.
+  //
+  // Off by default, and that is not the usual caution about changing things
+  // for existing learners: this is an app people come to in order to
+  // concentrate, and motion near the text is the last thing to opt somebody
+  // into. It is also per profile like the rest, so a parent can have it
+  // without their child getting it.
+  cursorEffect: booleanProp("ui.cursorEffect", false),
+  // How much of it, 10–100. Scales density, opacity and turbulence together,
+  // because those are the three that read as "more" and moving one alone just
+  // looks wrong — denser fog at the same opacity turns into a solid smear.
+  //
+  // Defaults to the top of the range rather than the middle: this is off
+  // unless somebody asks for it, and somebody who has just asked for it means
+  // the version they were shown.
+  cursorEffectIntensity: numberProp("ui.cursorEffectIntensity", 100, {
+    min: 10,
+    max: 100,
+  }),
 } as const;

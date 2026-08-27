@@ -36,3 +36,4 @@ root/public/voice-mock/
 .tools/voices/bundles/
 .tools/voices/node_modules/
 root/public/learner-mock/
+root/public/cursor-mock/

@@ -143,6 +143,72 @@
   font-size: 0.76rem;
 }
 
+// A deliberately small slider, for a setting where the exact number does not
+// matter and only the feel does. Short and thin so it reads as a trim on the
+// switch above it rather than as a control in its own right.
+//
+// The thumb stays big enough to find. Shrinking the track is a visual
+// decision; shrinking the thing you have to hit is an accessibility one, and
+// the block-size keeps the pointer target taller than the 2px line suggests.
+.thinSlider {
+  inline-size: 5rem;
+  block-size: 1.1rem;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.thinSlider::-webkit-slider-runnable-track {
+  block-size: 2px;
+  border-radius: 1px;
+  background: var(--separator-color, rgba(128, 128, 128, 0.3));
+}
+
+.thinSlider::-moz-range-track {
+  block-size: 2px;
+  border-radius: 1px;
+  background: var(--separator-color, rgba(128, 128, 128, 0.3));
+}
+
+.thinSlider::-webkit-slider-thumb {
+  inline-size: 10px;
+  block-size: 10px;
+  margin-block-start: -4px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.thinSlider::-moz-range-thumb {
+  inline-size: 10px;
+  block-size: 10px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+// The intensity row, tied to the switch above it.
+//
+// `.subRow` was doing this job, and its 0.7rem top margin stacked on the
+// card's own 0.42rem gap — so the space above Intensity was nearly three
+// times the space above every other row, and the group read as two groups.
+// This keeps the indent and the rule that say "and when it does...", and
+// lets the card's gap do the spacing.
+.tuneRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  max-inline-size: 52rem;
+  margin-inline-start: 0.85rem;
+  padding-inline-start: 0.85rem;
+  padding-block: 0.1rem;
+  border-inline-start: 1px solid
+    var(--separator-color, rgba(128, 128, 128, 0.2));
+}
+
 // ---------------------------------------------------------------- premium
 
 .perks {

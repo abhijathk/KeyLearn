@@ -1,0 +1,39 @@
+/**
+ * The fog canvas.
+ *
+ * `position: fixed` over the whole viewport with `pointer-events: none`, so it
+ * cannot intercept a click, a hover, a drag or a text selection anywhere in
+ * the app. That one property is what keeps a decoration from becoming a bug
+ * report about a button that will not press.
+ *
+ * The z-index sits above ordinary page content and below anything portalled to
+ * the body — dialogs, the PIN prompt, toasts. Fog drifting over a modal would
+ * read as a rendering fault, and the overlay layer starts at 1000.
+ *
+ * Hidden outright under `prefers-reduced-motion`. The component already
+ * refuses to emit in that case, so this is belt and braces — but it is the
+ * belt that survives somebody later changing the JavaScript.
+ */
+.fog {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  inline-size: 100%;
+  block-size: 100%;
+  pointer-events: none;
+  /* Nothing here is content. Keep it out of print, and out of the way of
+     anyone dragging a selection across the page. */
+  user-select: none;
+}
+
+@media print {
+  .fog {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fog {
+    display: none;
+  }
+}

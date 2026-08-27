@@ -2660,5 +2660,8 @@
   "verify.title": "Check a certificate",
   "verify.unnamed": "The holder is not named here. Children never are, and a grown-up is named only if they chose to be.",
   "verify.valid": "This certificate was issued by KeyLearn.",
-  "weekDayNames": "M|T|W|T|F|S|S"
+  "weekDayNames": "M|T|W|T|F|S|S",
+  "account.prefs.cursorEffect": "Pointer trail",
+  "account.prefs.cursorEffect.stilled": "Unavailable because this device asks for reduced motion. Nothing on this screen will move until that is changed in your system settings.",
+  "account.prefs.cursorEffect.intensity": "Intensity"
 }
