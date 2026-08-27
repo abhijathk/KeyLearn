@@ -20,6 +20,7 @@ import { NavLink, useLocation } from "react-router";
 import { AccountMenu } from "./AccountMenu.tsx";
 import * as styles from "./Header.module.less";
 import { ThemeSwitcher } from "./themes/ThemeSwitcher.tsx";
+import { Wordmark } from "./Wordmark.tsx";
 
 const toggleFocusMode = () => {
   window.dispatchEvent(new window.CustomEvent("keylearn:focus-mode"));
@@ -293,9 +294,12 @@ export function Header({
             }),
           )}
         >
-          <StrokeIcon className={styles.glyph} name="keyboard" />
-          <span className={styles.mark}>Key</span>
-          <span className={styles.markAlt}>Learn</span>
+          <Wordmark className={styles.logo} />
+          {/* The link's own title is the accessible name for sighted-mouse
+              users, but a title attribute is not reliably announced — this is
+              what a screen reader actually reads, and what a search engine
+              indexes. The mark itself is aria-hidden. */}
+          <span className={styles.srOnly}>KeyLearn</span>
           {kids && <span className={styles.kidsMark}>Kids</span>}
         </NavLink>
         {practice && <PracticeStamp />}

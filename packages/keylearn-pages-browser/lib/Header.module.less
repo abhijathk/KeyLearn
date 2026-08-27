@@ -88,6 +88,31 @@
   color: var(--accent);
 }
 
+// The wordmark, sized by height so the 433x120 artwork keeps its proportions
+// whatever the header does. Sized a touch above the old two-span lockup's cap
+// height: the keycaps carry more visual weight than plain letters did, and at
+// the matched height the mark read smaller than the text it replaced.
+.logo {
+  align-self: center;
+  // Width follows from the viewBox; pinning it would squash the caps.
+  inline-size: auto;
+  // The lockup is 3.6:1. On a narrow header it is the first thing that should
+  // give, and it may shrink to two thirds before anything else is touched.
+  min-inline-size: 0;
+  block-size: 2.4rem;
+}
+
+// Read by screen readers, never seen. Not `display: none` — that removes it
+// from the accessibility tree, which is the opposite of the point.
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
 // The headset glyph reads bulkier than the keyboard glyph at the same
 // size, since QDesk's wordmark also carries a badge after it — a touch
 // smaller keeps the whole lockup from feeling top-heavy.
