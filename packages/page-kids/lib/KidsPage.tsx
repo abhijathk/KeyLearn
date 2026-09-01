@@ -251,7 +251,22 @@ type Prefs = {
    * them, so they come off — the glowing next key does not depend on them.
    */
   fingerColours: boolean;
+  /**
+   * Which board is drawn.
+   *
+   * "crayon" is the white cap ringed in its finger colour that the kids mode
+   * has always drawn. "rainbow" is the primary-colour learning board: green
+   * for the frame, red for the numbers and punctuation, blue for the
+   * alphabet, with the vowels set apart in a lighter blue.
+   *
+   * A finish, not a second keyboard — the key positions, sizes and labels are
+   * identical, so this follows the learner between Classic and the trail
+   * without either having to know about it.
+   */
+  board: KidsBoard;
 };
+
+export type KidsBoard = "crayon" | "rainbow";
 
 // Kids defaults: light mode, quiet sounds, a silent session, and the text
 // size, helper hands, keyboard guide and timer length tuned to the learner's
@@ -286,6 +301,7 @@ function defaultPrefs(): Prefs {
     classic: cfg.classic,
     textScale: 1.25,
     fingerColours: true,
+    board: "crayon",
   };
 }
 
@@ -2332,8 +2348,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // lit while the screen is still saying "press Enter" is inviting a press
   // that will be thrown away.
   const showNext = !classic || armed;
+  const rainbow = prefs.board === "rainbow";
   const board = kbVisible ? (
-    <div className={clsx(styles.kb, classic && styles.kbClassic)}>
+    <div
+      className={clsx(
+        styles.kb,
+        classic && styles.kbClassic,
+        rainbow && styles.kbRainbow,
+      )}
+    >
       {(kbFull ? FULL_ROWS : SIMPLE_ROWS).map((row, r) => (
         <div key={r} className={styles.krow}>
           {row.map((def, i) => (
@@ -2346,6 +2369,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               urgent={helpLevel >= 2}
               wrong={def.char != null && def.char === wrongKey}
               colours={prefs.fingerColours}
+              rainbow={rainbow}
               // The full board mirrors the real keyboard: lowercase by
               // default, capitals while Caps/Shift are on.
               upper={kbFull ? capsOn !== shiftOn : undefined}
@@ -2365,6 +2389,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           def={SPACE_KEY_DEF}
           space={true}
           colours={prefs.fingerColours}
+          rainbow={rainbow}
           next={showNext && nextChar === " "}
           pressed={pressed === " "}
           stuck={stuckHelp}
@@ -3204,6 +3229,23 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 // with a fresh object literal every render.
 const SPACE_KEY_DEF: KeyDef = { char: " ", label: "" };
 
+/**
+ * Rainbow's frame keys, as signs rather than as words.
+ *
+ * The reference board draws them this way and it is not decoration: "back"
+ * and "enter" are words a five-year-old cannot yet read, and Rainbow is the
+ * board for the band that cannot read them. A sign can be shown once; a word
+ * has to be told. Crayon keeps the words — it is the board a learner meets
+ * later, by which time reading them is free.
+ */
+const RAINBOW_SIGN: Readonly<Record<string, string>> = {
+  back: "\u2190",
+  tab: "\u21e5",
+  caps: "\u21ea",
+  enter: "\u21b5",
+  shift: "\u2191",
+};
+
 // A pure, prop-only tile — memoized so a keystroke that changes one or two
 // keys' state (old "next" key, new "next" key, pressed key) doesn't force
 // React to diff every tile on the board (up to 47 in full-keyboard mode).
@@ -3218,6 +3260,7 @@ const Key = memo(function Key({
   colours = true,
   upper,
   active = false,
+  rainbow = false,
 }: {
   readonly def: KeyDef;
   readonly next: boolean;
@@ -3234,6 +3277,8 @@ const Key = memo(function Key({
   readonly upper?: boolean;
   /** A modifier key currently held/latched (Caps, Shift, Tab, …). */
   readonly active?: boolean;
+  /** The primary-colour board: the cap carries the key's kind as its fill. */
+  readonly rainbow?: boolean;
 }) {
   // Only the character keys carry a finger colour. Tab, Caps, Shift, Enter,
   // Backspace and the space bar keep the neutral cap: they are the frame the
@@ -3249,6 +3294,19 @@ const Key = memo(function Key({
         ? def.char!.toUpperCase()
         : def.char!
       : def.label;
+  /* Rainbow paints the cap by what KIND of key this is — the frame, a
+     number or punctuation mark, a consonant, a vowel — and leaves the finger
+     colour to the legend. Crayon does the opposite: the cap IS the finger
+     colour. Both read `zone` above; only this decides what to do with it. */
+  const kind = !rainbow
+    ? null
+    : space || (def.mod === true && zone == null)
+      ? "g"
+      : def.char == null
+        ? "r"
+        : "aeiou".includes(def.char)
+          ? "v"
+          : "b";
   return (
     <div
       className={clsx(
@@ -3267,18 +3325,44 @@ const Key = memo(function Key({
         active && styles.keyModOn,
       )}
       style={{
+        // Crayon's cap IS the finger colour, so `--kz` always resolves —
+        // its ring is built with it and an unset value would invalidate the
+        // whole box-shadow. Rainbow prints its LEGEND in the finger colour,
+        // and its frame keys have no finger, so that reads a separate
+        // variable which is simply absent on the keys that have no zone.
         ["--kz" as never]:
           colours && zone != null ? `var(--${zone})` : "var(--clay)",
+        ...(colours && zone != null
+          ? { ["--kl" as never]: `var(--${zone})` }
+          : {}),
+        ...(kind != null
+          ? {
+              ["--kc" as never]: `var(--k${kind})`,
+              ["--kc-d" as never]: `var(--k${kind}-d)`,
+            }
+          : {}),
       }}
       // Lets Classic find the home keys and the space bar in the DOM, so the
       // resting hands can be anchored to them rather than eyeballed.
       data-key={space ? " " : (def.char ?? undefined)}
     >
       {def.shift != null ? (
-        <>
-          <span className={styles.kTop}>{def.shift}</span>
-          <span className={styles.kBot}>{def.label}</span>
-        </>
+        rainbow ? (
+          // The shifted symbol small and to the top right, the way the
+          // reference board prints it. Stacked, as Crayon does it, both
+          // glyphs end up too small to read on a cap this size.
+          <>
+            <span className={styles.kMainBig}>{def.label}</span>
+            <span className={styles.kShiftUp}>{def.shift}</span>
+          </>
+        ) : (
+          <>
+            <span className={styles.kTop}>{def.shift}</span>
+            <span className={styles.kBot}>{def.label}</span>
+          </>
+        )
+      ) : rainbow && RAINBOW_SIGN[def.label] != null ? (
+        <span className={styles.kSign}>{RAINBOW_SIGN[def.label]}</span>
       ) : (
         face
       )}
@@ -3986,6 +4070,38 @@ function SettingsCard({
                                 : { kbMode: mode },
                           )
                         }
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.srow}>
+                  <span
+                    className={styles.ri}
+                    style={{ background: "var(--seafoam)" }}
+                  >
+                    <KeysIcon color="#0b4a37" />
+                  </span>
+                  <div>
+                    <div className={styles.sl}>Key style</div>
+                    <div className={styles.sd}>
+                      how the keys are painted &mdash; the keys themselves do
+                      not move
+                    </div>
+                  </div>
+                  <div className={styles.ctl}>
+                    {(
+                      [
+                        ["crayon", "Crayon"],
+                        ["rainbow", "Rainbow"],
+                      ] as const
+                    ).map(([id, label]) => (
+                      <button
+                        key={id}
+                        type="button"
+                        className={pill(prefs.board === id)}
+                        onClick={() => savePrefs({ board: id })}
                       >
                         {label}
                       </button>

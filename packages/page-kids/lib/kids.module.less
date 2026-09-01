@@ -664,6 +664,158 @@
   }
 }
 
+// ── Rainbow ──────────────────────────────────────────────────────────────
+// The primary-colour learning board, ported from the approved mock. Colour
+// means something here rather than decorating: green is the frame, red is
+// everything that is not a letter, blue is the alphabet, and the vowels are
+// set apart in a lighter blue so the five keys every word needs are findable
+// before the letters are known.
+//
+// A finish and nothing more — the rows, the widths and the labels are the
+// ones every other kids board uses, so Classic and the trail both get this
+// for free.
+.kbRainbow {
+  // One gap token. The wide keys have to span N caps AND the N-1 gaps
+  // between them, so hard-coding both left every wide key a few pixels short
+  // and the right edge of the board ragged.
+  --kgap: calc(var(--ku) * 0.44);
+  // Held back from the reference board's own inks by about a tenth: straight
+  // poster primaries are a good deal louder on a screen than on moulded
+  // plastic, and this board sits under a passage a child has to read.
+  --kg: #4ab86a;
+  --kg-d: #2f9a4e;
+  --kr: #e35d51;
+  --kr-d: #c13e33;
+  --kb: #4a5fb8;
+  --kb-d: #33448f;
+  --kv: #6fb8e4;
+  --kv-d: #4b95c4;
+
+  .krow {
+    gap: var(--kgap);
+    margin-block-start: var(--kgap);
+
+    &:first-child {
+      margin-block-start: 0;
+    }
+  }
+
+  .key {
+    border-radius: calc(var(--ku) * 0.62);
+    // The cap says what KIND of key this is; the legend says which FINGER
+    // owns it. Two signals that cannot contradict each other, which is the
+    // arrangement the grown-up Flat and Mechanical boards already use. The
+    // hue is carried most of the way to white because it has to read on a
+    // saturated cap — at full strength sand-on-red and terra-on-red vanish.
+    color: color-mix(in srgb, var(--kl, #fff) 68%, #fff);
+    background: var(--kc);
+    box-shadow:
+      0 calc(var(--ku) * 0.34) 0 var(--kc-d),
+      inset 0 calc(var(--ku) * 0.12) 0 rgb(255 255 255 / 28%);
+    text-shadow: 0 1px 1px rgb(0 0 0 / 18%);
+  }
+
+  .keyW15 {
+    inline-size: calc(var(--ku) * 3.4 * 1.5 + var(--kgap) * 0.5);
+  }
+
+  .keyW2 {
+    inline-size: calc(var(--ku) * 3.4 * 2 + var(--kgap));
+  }
+
+  .keyW25 {
+    inline-size: calc(var(--ku) * 3.4 * 2.5 + var(--kgap) * 1.5);
+  }
+
+  // Only the corner. The width is Crayon's, because Rainbow is the same
+  // keyboard in a different finish and the one key a learner uses most must
+  // not change size between them.
+  .keySpace {
+    border-radius: calc(var(--ku) * 0.62);
+  }
+
+  .keyMod {
+    color: color-mix(in srgb, var(--kl, #fff) 68%, #fff);
+    font-size: calc(var(--ku) * 0.66);
+  }
+
+  .bump {
+    background: rgb(255 255 255 / 75%);
+  }
+}
+
+// The shifted symbol, small and to the top right, the way the reference
+// prints it — not stacked over the main legend, which on a cap this size
+// leaves two glyphs both too small to read.
+.kShiftUp {
+  position: absolute;
+  inset-inline-end: calc(var(--ku) * 0.38);
+  inset-block-start: calc(var(--ku) * 0.3);
+  font-size: calc(var(--ku) * 0.82);
+  line-height: 1;
+}
+
+.kMainBig {
+  font-size: calc(var(--ku) * 1.34);
+}
+
+// A sign is read at a glance, so it is drawn at the size of a letter rather
+// than at the size of the word it replaces. "back" and "enter" are words a
+// five-year-old cannot yet read, and this board is for the band that cannot
+// read them.
+.kSign {
+  font-size: calc(var(--ku) * 1.5);
+  line-height: 1;
+  text-transform: none;
+}
+
+// The next key, in the app's own accent rather than in a keyset colour: it is
+// the app speaking, and it has to read the same on a green cap, a red one and
+// a blue one. It FILLS the cap rather than ringing it — ringing a coloured
+// key in another colour puts two saturated hues edge to edge and the eye
+// reads the boundary instead of the key.
+.kbRainbow .keyNext {
+  color: var(--sunny-ink);
+  background: var(--sunny);
+  box-shadow:
+    0 calc(var(--ku) * 0.34) 0 var(--sunny-d),
+    inset 0 calc(var(--ku) * 0.12) 0 rgb(255 255 255 / 30%);
+  animation: rainbowpulse 1.1s infinite;
+}
+
+@keyframes rainbowpulse {
+  50% {
+    box-shadow:
+      0 calc(var(--ku) * 0.34) 0 var(--sunny-d),
+      0 0 calc(var(--ku) * 1.6)
+        color-mix(in srgb, var(--sunny) 70%, transparent),
+      inset 0 calc(var(--ku) * 0.12) 0 rgb(255 255 255 / 30%);
+    transform: scale(1.06);
+  }
+}
+
+// Rainbow's frame keys are already green, so the shared mint "held" state
+// vanished into them — and `.keyModOn` loses to `.kbRainbow .key` on
+// specificity anyway, which left Tab, Caps and Shift with no visible state at
+// all. A latched modifier inverts instead: the cap goes pale and the legend
+// takes the cap's own colour. Nothing else on this board is pale, so it can
+// never be confused with the next key, which is the accent.
+.kbRainbow .keyModOn {
+  color: var(--kc-d);
+  background: #fff;
+  box-shadow:
+    0 calc(var(--ku) * 0.34) 0 var(--kc-d),
+    inset 0 calc(var(--ku) * 0.12) 0 rgb(0 0 0 / 6%);
+  text-shadow: none;
+}
+
+.kbRainbow .keyPressed {
+  box-shadow:
+    0 0 0 var(--kc-d),
+    inset 0 calc(var(--ku) * 0.12) 0 rgb(0 0 0 / 14%);
+  transform: translateY(calc(var(--ku) * 0.34));
+}
+
 .bump {
   position: absolute;
   inset-inline-start: 50%;
