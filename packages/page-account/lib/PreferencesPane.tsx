@@ -1159,7 +1159,7 @@ function LanguageRegionCard(): ReactNode {
                 nobody in a settings list reads. */}
             <FormattedMessage
               id="account.prefs.timezone.sub"
-              defaultMessage="Sets when your day rolls over, and how dates, times, prices and phone numbers are written. Your language doesn't change."
+              defaultMessage="Sets when your day rolls over, and how dates, times, prices and phone numbers are written. Your language doesn’t change."
             />
           </span>
           {/* Prose can describe the effect; showing it is quicker to read and

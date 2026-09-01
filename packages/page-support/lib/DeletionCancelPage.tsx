@@ -121,7 +121,7 @@ export function DeletionCancelPage(): ReactNode {
             <p className={styles.intro}>
               <FormattedMessage
                 id="deletionCancel.alreadyBody"
-                defaultMessage="This deletion isn't pending any more — there's nothing to cancel."
+                defaultMessage="This deletion isn’t pending any more — there’s nothing to cancel."
               />
             </p>
           </>
@@ -156,7 +156,7 @@ function PendingScreen({
       <p className={styles.intro}>
         <FormattedMessage
           id="deletionCancel.pendingBody"
-          defaultMessage="A member of KeyLearn support requested that this account be deleted, scheduled for {when}. If that wasn't you, cancel it now."
+          defaultMessage="A member of KeyLearn support requested that this account be deleted, scheduled for {when}. If that wasn’t you, cancel it now."
           values={{ when: <b>{when}</b> }}
         />
       </p>

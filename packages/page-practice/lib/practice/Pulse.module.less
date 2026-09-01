@@ -539,9 +539,16 @@
   flex-wrap: wrap;
   row-gap: 0.2rem;
   justify-content: center;
+  // Edge to edge: the negative margins cancel the card's own 1.5rem inline
+  // padding so the divider runs the full width of the panel, the same span
+  // as the hairline at the card's top seam — two rules of one card should
+  // not stop at two different widths. The padding is restored inside so the
+  // metrics keep exactly the alignment they had.
+  margin-inline: -1.5rem;
   margin-block-start: 0.9rem;
+  padding-inline-start: 1.5rem;
   // leave room so centred metrics never slide under the pinned chevron
-  padding-inline-end: 1.4rem;
+  padding-inline-end: calc(1.5rem + 1.4rem);
   padding-block-start: 0.7rem;
   border-block-start: 1px solid
     color-mix(in srgb, var(--primary-d2) 70%, transparent);

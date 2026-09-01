@@ -157,12 +157,12 @@ function LearnerRow({
           {schoolOwned ? (
             <FormattedMessage
               id="learners.mode.a"
-              defaultMessage="This centre's learner · signs in with a PIN"
+              defaultMessage="This centre’s learner · signs in with a PIN"
             />
           ) : (
             <FormattedMessage
               id="learners.mode.b"
-              defaultMessage="Their family's account, lent to this class"
+              defaultMessage="Their family’s account, lent to this class"
             />
           )}
           {learner.pinLocked && (
@@ -277,7 +277,7 @@ function LearnerRow({
         <ConfirmDialog
           title={formatMessage({
             id: "learners.unenrol.title",
-            defaultMessage: "End this class's view?",
+            defaultMessage: "End this class’s view?",
           })}
           message={formatMessage(
             {

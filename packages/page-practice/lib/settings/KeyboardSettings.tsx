@@ -131,7 +131,7 @@ function StyleProp(): ReactNode {
             description={
               <FormattedMessage
                 id="settings.keyboardColour.short"
-                defaultMessage="The board keeps this colour on both themes — a keyboard on a desk doesn't repaint itself when the lamp goes off. Only the light follows the page."
+                defaultMessage="The board keeps this colour on both themes — a keyboard on a desk doesn’t repaint itself when the lamp goes off. Only the light follows the page."
               />
             }
           >

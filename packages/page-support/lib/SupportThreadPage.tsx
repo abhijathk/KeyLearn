@@ -78,7 +78,7 @@ export function SupportThreadPage(): ReactNode {
         <p className={styles.notice}>
           <FormattedMessage
             id="supportThread.pending"
-            defaultMessage="Check your email and follow the confirmation link — the conversation opens once you do. It's how we make sure the address is really yours."
+            defaultMessage="Check your email and follow the confirmation link — the conversation opens once you do. It’s how we make sure the address is really yours."
           />
         </p>
       </Shell>
@@ -91,7 +91,7 @@ export function SupportThreadPage(): ReactNode {
         <p className={styles.notice}>
           <FormattedMessage
             id="supportThread.expired"
-            defaultMessage="This conversation was closed a while ago and is no longer available. Start a new one and we'll pick it up from there."
+            defaultMessage="This conversation was closed a while ago and is no longer available. Start a new one and we’ll pick it up from there."
           />
         </p>
         <RouterLink to={Pages.support.path} className={styles.newLink}>
@@ -110,7 +110,7 @@ export function SupportThreadPage(): ReactNode {
         <p className={styles.notice}>
           <FormattedMessage
             id="supportThread.missing"
-            defaultMessage="We couldn't find that conversation. The link may have been replaced by a newer one — check the most recent email we sent you."
+            defaultMessage="We couldn’t find that conversation. The link may have been replaced by a newer one — check the most recent email we sent you."
           />
         </p>
       </Shell>
@@ -159,7 +159,7 @@ export function SupportThreadPage(): ReactNode {
         <p className={styles.closed}>
           <FormattedMessage
             id="supportThread.closed"
-            defaultMessage="This conversation is closed. Reply below if it isn't sorted after all — that reopens it."
+            defaultMessage="This conversation is closed. Reply below if it isn’t sorted after all — that reopens it."
           />
         </p>
       ) : null}

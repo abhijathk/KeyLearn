@@ -105,7 +105,7 @@ export function LoginPrompt({ path }: { readonly path: string }): ReactNode {
       <p className={styles.intro}>
         <FormattedMessage
           id="loginPrompt.intro"
-          defaultMessage="It only takes a moment, and it's free."
+          defaultMessage="It only takes a moment, and it’s free."
         />
       </p>
       <ul className={styles.benefits}>

@@ -63,7 +63,7 @@ export function HelpCentrePage(): ReactNode {
       <p className={styles.intro}>
         <FormattedMessage
           id="helpCentre.intro"
-          defaultMessage="Answers to the things people ask us most. Can't find it here? Send us a message and a person will read it."
+          defaultMessage="Answers to the things people ask us most. Can’t find it here? Send us a message and a person will read it."
         />
       </p>
 
@@ -88,7 +88,7 @@ export function HelpCentrePage(): ReactNode {
         <p className={styles.note}>
           <FormattedMessage
             id="helpCentre.empty"
-            defaultMessage="Nothing here yet. Send us a message and we'll answer it — and add it here for whoever asks next."
+            defaultMessage="Nothing here yet. Send us a message and we’ll answer it — and add it here for whoever asks next."
           />
         </p>
       )}

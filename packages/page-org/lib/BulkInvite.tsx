@@ -324,7 +324,7 @@ function ByEmail({
         placeholder={formatMessage({
           id: "bulk.paste",
           defaultMessage:
-            "…or paste addresses, one per line. From a CSV we read the email and, if it is there, a reference column — the child's name — so you can tell later who has not joined.",
+            "…or paste addresses, one per line. From a CSV we read the email and, if it is there, a reference column — the child’s name — so you can tell later who has not joined.",
         })}
         onChange={(event) => {
           take(event.target.value, null);
@@ -500,7 +500,7 @@ function ReadBack({
       <p className={styles.note}>
         <FormattedMessage
           id="bulk.addressNote"
-          defaultMessage="The address is who we write to, never who may accept. Parents often hold the school's address at work and their KeyLearn account at home, and some couples share one account. The invite still works exactly once, so the count is still the count."
+          defaultMessage="The address is who we write to, never who may accept. Parents often hold the school’s address at work and their KeyLearn account at home, and some couples share one account. The invite still works exactly once, so the count is still the count."
         />
       </p>
     </>

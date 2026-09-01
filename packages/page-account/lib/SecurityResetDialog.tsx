@@ -57,7 +57,7 @@ export function SecurityResetDialog({
         setErr(
           formatMessage({
             id: "sec.reset.loadFailed",
-            defaultMessage: "We couldn't load your security settings just now.",
+            defaultMessage: "We couldn’t load your security settings just now.",
           }),
         ),
       );
@@ -75,7 +75,7 @@ export function SecurityResetDialog({
       setErr(
         formatMessage({
           id: "sec.reset.sendFailed",
-          defaultMessage: "We couldn't send the code. Try again in a moment.",
+          defaultMessage: "We couldn’t send the code. Try again in a moment.",
         }),
       );
     } finally {
@@ -126,7 +126,7 @@ export function SecurityResetDialog({
             <p className={styles.lead}>
               <FormattedMessage
                 id="sec.reset.lead"
-                defaultMessage="Choose what to reset. We'll email a code to {email} to confirm it's you."
+                defaultMessage="Choose what to reset. We’ll email a code to {email} to confirm it’s you."
                 values={{
                   email: <strong>{options?.email ?? "…"}</strong>,
                 }}
@@ -325,7 +325,7 @@ export function SecurityResetDialog({
             <p className={styles.note}>
               <FormattedMessage
                 id="sec.reset.doneNote"
-                defaultMessage="Anyone else signed in to this account has been signed out. You're still signed in here."
+                defaultMessage="Anyone else signed in to this account has been signed out. You’re still signed in here."
               />
             </p>
             <div className={styles.actions}>

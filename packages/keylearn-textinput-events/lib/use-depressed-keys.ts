@@ -27,14 +27,36 @@ export function deleteKey(
   return keys.filter((k) => k !== key);
 }
 
+/**
+ * A physical key the on-screen board does not draw, shown on the key that
+ * stands in for it.
+ *
+ * Apple's ISO keyboards emit `IntlBackslash` from the key ABOVE TAB — the
+ * one printed §± or \`~ depending on region — and `Backquote` from the key
+ * beside the left shift, the reverse of every other ISO board. On the ANSI
+ * layout the app draws, `IntlBackslash` has no cap at all, so a Mac ISO
+ * learner pressing their top-left key watched nothing move. The board's own
+ * render is fine (a depressed Backquote travels like any letter); the id
+ * just never arrived. When the board has no shape for the code, hand the
+ * press to the cap occupying that position.
+ */
+function standIn(keyboard: Keyboard, code: KeyId): KeyId {
+  if (code === "IntlBackslash" && keyboard.getShape(code) == null) {
+    return "Backquote";
+  }
+  return code;
+}
+
 export function useDepressedKeys(
   settings: Settings,
   keyboard: Keyboard,
 ): readonly KeyId[] {
   const [depressedKeys, setDepressedKeys] = useState<readonly KeyId[]>([]);
   const listener = emulateLayout(settings, keyboard, {
-    onKeyDown: ({ code }) => setDepressedKeys(addKey(depressedKeys, code)),
-    onKeyUp: ({ code }) => setDepressedKeys(deleteKey(depressedKeys, code)),
+    onKeyDown: ({ code }) =>
+      setDepressedKeys(addKey(depressedKeys, standIn(keyboard, code))),
+    onKeyUp: ({ code }) =>
+      setDepressedKeys(deleteKey(depressedKeys, standIn(keyboard, code))),
     onInput: () => {},
   });
   useWindowEvent("keydown", (event) => {

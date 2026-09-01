@@ -32,7 +32,7 @@ export function ForSchoolsPage(): ReactNode {
         <p className={styles.intro}>
           <FormattedMessage
             id="forSchools.lede"
-            defaultMessage="Your school gets classes and reports. The families keep their children's accounts — that is the design, not a setting. Community and non-profit schools use the whole thing free."
+            defaultMessage="Your school gets classes and reports. The families keep their children’s accounts — that is the design, not a setting. Community and non-profit schools use the whole thing free."
           />
         </p>
       </header>
@@ -59,7 +59,7 @@ function Promises(): ReactNode {
       body: (
         <FormattedMessage
           id="forSchools.p1.body"
-          defaultMessage="A teacher sees their class's progress because each parent said yes — one tap, on their own account. The profile stays with the family, the history stays with the family, and a parent can end it whenever they like."
+          defaultMessage="A teacher sees their class’s progress because each parent said yes — one tap, on their own account. The profile stays with the family, the history stays with the family, and a parent can end it whenever they like."
         />
       ),
     },
@@ -73,7 +73,7 @@ function Promises(): ReactNode {
       body: (
         <FormattedMessage
           id="forSchools.p2.body"
-          defaultMessage="You invite your teachers; your teachers invite their parents. Each invite is single-use and expires. There is no public door into your school's data, because there is no public door at all."
+          defaultMessage="You invite your teachers; your teachers invite their parents. Each invite is single-use and expires. There is no public door into your school’s data, because there is no public door at all."
         />
       ),
     },
@@ -147,7 +147,7 @@ function Audiences(): ReactNode {
           <p className={styles.cardBody}>
             <FormattedMessage
               id="forSchools.who1.body"
-              defaultMessage="Volunteer teachers, one hour of prep, a hall with uncertain Wi-Fi. Classes, term reports and printable certificates — and the parents keep their children's accounts."
+              defaultMessage="Volunteer teachers, one hour of prep, a hall with uncertain Wi-Fi. Classes, term reports and printable certificates — and the parents keep their children’s accounts."
             />
           </p>
         </div>
@@ -465,7 +465,7 @@ function Enquiry(): ReactNode {
         <p className={styles.sent}>
           <FormattedMessage
             id="forSchools.sent"
-            defaultMessage="Thanks — that's with us. A person reads this queue, and you'll get a reply by email."
+            defaultMessage="Thanks — that’s with us. A person reads this queue, and you’ll get a reply by email."
           />
         </p>
       </section>

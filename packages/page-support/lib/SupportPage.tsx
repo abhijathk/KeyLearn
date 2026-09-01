@@ -29,7 +29,7 @@ const FAQ: {
     a: (
       <FormattedMessage
         id="support.faq.password.a"
-        defaultMessage="Use “Forgot password” on the sign-in page. If you signed up with Google, Microsoft or Facebook, sign in with that provider instead — there's no separate password to reset."
+        defaultMessage="Use “Forgot password” on the sign-in page. If you signed up with Google, Microsoft or Facebook, sign in with that provider instead — there’s no separate password to reset."
       />
     ),
   },
@@ -59,7 +59,7 @@ const FAQ: {
     a: (
       <FormattedMessage
         id="support.faq.data.a"
-        defaultMessage="Yes, any time — from Account → Security you can export everything or erase a single learner's progress without affecting the rest of the household."
+        defaultMessage="Yes, any time — from Account → Security you can export everything or erase a single learner’s progress without affecting the rest of the household."
       />
     ),
   },
@@ -74,7 +74,7 @@ const FAQ: {
     a: (
       <FormattedMessage
         id="support.faq.certificate.a"
-        defaultMessage="It's honest evidence of a measured speed and accuracy on a given date — not a qualification any school, exam board or employer has agreed to recognise."
+        defaultMessage="It’s honest evidence of a measured speed and accuracy on a given date — not a qualification any school, exam board or employer has agreed to recognise."
       />
     ),
   },
@@ -89,7 +89,7 @@ const FAQ: {
     a: (
       <FormattedMessage
         id="support.faq.kids.a"
-        defaultMessage="There's no chat, no strangers and no way to share personal details — it's a solo typing game. A parent or guardian still needs to create the profile and give consent."
+        defaultMessage="There’s no chat, no strangers and no way to share personal details — it’s a solo typing game. A parent or guardian still needs to create the profile and give consent."
       />
     ),
   },
@@ -131,7 +131,7 @@ function GrownUpOnly(): ReactNode {
       <p className={styles.intro}>
         <FormattedMessage
           id="support.grownUpOnly"
-          defaultMessage="Messages to us are sent by the grown-up who owns this account. Ask them to switch to their own profile and write to us — they'll get our reply by email."
+          defaultMessage="Messages to us are sent by the grown-up who owns this account. Ask them to switch to their own profile and write to us — they’ll get our reply by email."
         />
       </p>
       <p className={styles.intro}>
@@ -182,7 +182,7 @@ function ParentPinGate({
         <p className={styles.intro}>
           <FormattedMessage
             id="support.pin.setupNeeded"
-            defaultMessage="There's a kid profile on this account, so writing to us needs a grown-up PIN. Set one up in your account settings and come back — it takes a moment, and it keeps these conversations out of small hands."
+            defaultMessage="There’s a kid profile on this account, so writing to us needs a grown-up PIN. Set one up in your account settings and come back — it takes a moment, and it keeps these conversations out of small hands."
           />
         </p>
         <p className={styles.intro}>
@@ -422,7 +422,7 @@ export function SupportPage({
         toast(
           <FormattedMessage
             id="support.form.sentToast"
-            defaultMessage="Sent — thanks, we'll reply by email."
+            defaultMessage="Sent — thanks, we’ll reply by email."
           />,
         );
       })
@@ -491,7 +491,7 @@ export function SupportPage({
       <p className={styles.intro}>
         <FormattedMessage
           id="support.intro"
-          defaultMessage="Most answers are below. Can't find yours? Send a message and we'll reply by email."
+          defaultMessage="Most answers are below. Can’t find yours? Send a message and we’ll reply by email."
         />
       </p>
 
@@ -619,7 +619,7 @@ export function SupportPage({
                 maxLength={4000}
                 placeholder={formatMessage({
                   id: "support.form.message",
-                  defaultMessage: "What's going on?",
+                  defaultMessage: "What’s going on?",
                 })}
                 value={message}
                 onChange={setMessage}

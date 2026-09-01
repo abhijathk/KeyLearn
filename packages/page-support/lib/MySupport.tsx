@@ -322,7 +322,7 @@ export function OfflineNote({
       <Icon name="wifiOff" />
       <FormattedMessage
         id="support.my.offline"
-        defaultMessage="You're offline. Anything you write is kept here and will send when you're back."
+        defaultMessage="You’re offline. Anything you write is kept here and will send when you’re back."
       />
     </div>
   );

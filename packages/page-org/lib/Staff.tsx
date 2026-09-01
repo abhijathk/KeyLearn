@@ -228,7 +228,7 @@ function DomainRule({
       <p className={styles.note}>
         <FormattedMessage
           id="staff.domain.note"
-          defaultMessage="Name the domain your school's own addresses use and only people at the school can hold owner or admin. Teachers are encouraged to use it but never blocked — at a community school the volunteer teachers are the parents. Guardians are never restricted."
+          defaultMessage="Name the domain your school’s own addresses use and only people at the school can hold owner or admin. Teachers are encouraged to use it but never blocked — at a community school the volunteer teachers are the parents. Guardians are never restricted."
         />
       </p>
       <div className={styles.addRow}>

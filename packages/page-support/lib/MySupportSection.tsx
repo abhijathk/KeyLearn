@@ -268,7 +268,7 @@ export function MySupportSection(): ReactNode {
           <p className={styles.centredText}>
             <FormattedMessage
               id="support.my.rateLimited"
-              defaultMessage="That's five new messages in an hour, which is as many as we can take at once. Add anything else to one of your open conversations, or try again in a little while."
+              defaultMessage="That’s five new messages in an hour, which is as many as we can take at once. Add anything else to one of your open conversations, or try again in a little while."
             />
           </p>
           <Button
@@ -343,7 +343,7 @@ export function MySupportSection(): ReactNode {
               <p className={styles.centredText}>
                 <FormattedMessage
                   id="support.my.loadFailed"
-                  defaultMessage="We couldn't load your messages just now."
+                  defaultMessage="We couldn’t load your messages just now."
                 />
               </p>
               <Button
@@ -447,7 +447,7 @@ export function MySupportSection(): ReactNode {
             <p className={styles.centredText}>
               <FormattedMessage
                 id="support.my.empty"
-                defaultMessage="Nothing here yet. Tell us what's happening and we'll reply here, and by email."
+                defaultMessage="Nothing here yet. Tell us what’s happening and we’ll reply here, and by email."
               />
             </p>
             <Button
@@ -892,7 +892,7 @@ function NewTicket({
           hideSend={true}
           placeholder={formatMessage({
             id: "support.my.whatPlaceholder",
-            defaultMessage: "Tell us what's happening…",
+            defaultMessage: "Tell us what’s happening…",
           })}
         />
       </div>
@@ -1241,7 +1241,7 @@ function Thread({
           <p className={styles.centredText}>
             <FormattedMessage
               id="support.my.threadFailed"
-              defaultMessage="We couldn't open this conversation just now."
+              defaultMessage="We couldn’t open this conversation just now."
             />
           </p>
           <Button
@@ -1500,7 +1500,7 @@ function Thread({
                   <Icon name="alert" size={13} />
                   <FormattedMessage
                     id="support.my.didntSend"
-                    defaultMessage="Didn't send."
+                    defaultMessage="Didn’t send."
                   />
                   <button
                     type="button"
@@ -1625,7 +1625,7 @@ function Thread({
             <p>
               <FormattedMessage
                 id="support.my.cannotReopen"
-                defaultMessage="This conversation is closed and can't be reopened. If you need help with something else, start a new one."
+                defaultMessage="This conversation is closed and can’t be reopened. If you need help with something else, start a new one."
               />
             </p>
             <Button
@@ -1765,7 +1765,7 @@ function ConfirmDelete({
       <p className={styles.floatSub} id="support-del-d" style={{ margin: 0 }}>
         <FormattedMessage
           id="support.my.deleteBody"
-          defaultMessage="It goes from your list straight away. Our team keeps a copy of the conversation and anything you attached, filed away — so if you write again about the same thing, they can still see what was said. To have it erased entirely, ask us and we'll do that."
+          defaultMessage="It goes from your list straight away. Our team keeps a copy of the conversation and anything you attached, filed away — so if you write again about the same thing, they can still see what was said. To have it erased entirely, ask us and we’ll do that."
         />
       </p>
       <div className={styles.actionsRow}>
@@ -1856,11 +1856,11 @@ function ReplyFeedback({
         aria-pressed={rating === "bad"}
         title={formatMessage({
           id: "support.my.replyDidNotHelp",
-          defaultMessage: "This reply didn't help",
+          defaultMessage: "This reply didn’t help",
         })}
         aria-label={formatMessage({
           id: "support.my.replyDidNotHelp",
-          defaultMessage: "This reply didn't help",
+          defaultMessage: "This reply didn’t help",
         })}
         onClick={() => rate("bad")}
       >
@@ -2117,7 +2117,7 @@ function RatingCard({
             <span className={styles.fieldLabel}>
               <FormattedMessage
                 id="support.my.csatNote"
-                defaultMessage="Anything you'd like to add? (optional)"
+                defaultMessage="Anything you’d like to add? (optional)"
               />
             </span>
             <TextField
@@ -2146,7 +2146,7 @@ function RatingCard({
                       formatMessage({
                         id: "support.my.csatFailed",
                         defaultMessage:
-                          "That didn't send. Try again in a moment.",
+                          "That didn’t send. Try again in a moment.",
                       }),
                     ),
                   );
@@ -2193,7 +2193,7 @@ function ParentPinGate({
           <p className={styles.centredText}>
             <FormattedMessage
               id="support.my.setupNeeded"
-              defaultMessage="There's a kid profile on this account, so writing to us needs a grown-up PIN. Set one up in Security and come back — it takes a moment, and it keeps these conversations out of small hands."
+              defaultMessage="There’s a kid profile on this account, so writing to us needs a grown-up PIN. Set one up in Security and come back — it takes a moment, and it keeps these conversations out of small hands."
             />
           </p>
           <div className={styles.actionsRow}>
@@ -2272,7 +2272,7 @@ function ParentPinGate({
         <p className={styles.centredText}>
           <FormattedMessage
             id="support.my.pinIntro"
-            defaultMessage="There's a kid profile on this account, so messages to us are a grown-up's. Enter the PIN to open support."
+            defaultMessage="There’s a kid profile on this account, so messages to us are a grown-up’s. Enter the PIN to open support."
           />
         </p>
         <PinField
@@ -2385,7 +2385,7 @@ function PinLapseOverlay({
         <p className={styles.centredText}>
           <FormattedMessage
             id="support.pin.lapsed"
-            defaultMessage="The grown-up PIN needs entering again. {saved} — it'll be right where you left it."
+            defaultMessage="The grown-up PIN needs entering again. {saved} — it’ll be right where you left it."
             values={{
               saved: (
                 <b>

@@ -162,13 +162,13 @@ function InviteBand({
             ) : (
               <FormattedMessage
                 id="join.band.guardianPlain"
-                defaultMessage="You've been invited to enrol your learners."
+                defaultMessage="You’ve been invited to enrol your learners."
               />
             )
           ) : preview.batchName != null ? (
             <FormattedMessage
               id="join.band.roleBatch"
-              defaultMessage="You've been invited as {role} for {batch}."
+              defaultMessage="You’ve been invited as {role} for {batch}."
               values={{
                 role: <RoleName role={preview.role} />,
                 batch: preview.batchName,
@@ -177,7 +177,7 @@ function InviteBand({
           ) : (
             <FormattedMessage
               id="join.band.role"
-              defaultMessage="You've been invited as {role}."
+              defaultMessage="You’ve been invited as {role}."
               values={{ role: <RoleName role={preview.role} /> }}
             />
           )}
@@ -337,7 +337,7 @@ function AcceptStep({
             <p className={styles.intro}>
               <FormattedMessage
                 id="join.accept.asRole"
-                defaultMessage="You'll join as {role}{batch, select, none {} other { for {batch}}}."
+                defaultMessage="You’ll join as {role}{batch, select, none {} other { for {batch}}}."
                 values={{
                   role: <RoleName role={preview.role} />,
                   batch: preview.batchName ?? "none",

@@ -102,7 +102,7 @@ function NotStaff(): ReactNode {
       <p className={styles.standaloneBody}>
         <FormattedMessage
           id="desk.none.body"
-          defaultMessage="This page is for people who run a school or class. You join one by accepting an invite — there is no way to sign yourself up, which is what keeps a school's data closed."
+          defaultMessage="This page is for people who run a school or class. You join one by accepting an invite — there is no way to sign yourself up, which is what keeps a school’s data closed."
         />
       </p>
       <Button
@@ -511,7 +511,7 @@ function Dashboard({
             label={
               <FormattedMessage
                 id="desk.chip.ours"
-                defaultMessage="this centre's"
+                defaultMessage="this centre’s"
               />
             }
           />
@@ -724,7 +724,7 @@ function Classes({
                   {modeA > 0 && (
                     <FormattedMessage
                       id="desk.classes.owned"
-                      defaultMessage=", {n} this centre's own"
+                      defaultMessage=", {n} this centre’s own"
                       values={{ n: modeA }}
                     />
                   )}
@@ -743,7 +743,7 @@ function Classes({
             maxLength={64}
             placeholder={formatMessage({
               id: "desk.classes.namePlaceholder",
-              defaultMessage: "Class name — usually the teacher's",
+              defaultMessage: "Class name — usually the teacher’s",
             })}
             value={name}
             onChange={setName}

@@ -250,7 +250,7 @@ function AccountGate({
       >
         <FormattedMessage
           id="account.pin.forgot"
-          defaultMessage="Can't remember it?"
+          defaultMessage="Can’t remember it?"
         />
       </button>
 

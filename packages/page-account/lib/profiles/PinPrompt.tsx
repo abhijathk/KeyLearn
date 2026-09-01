@@ -108,7 +108,7 @@ export function PinPrompt({
             <div className={styles.pinWrong}>
               <FormattedMessage
                 id="profiles.pin.wrong"
-                defaultMessage="That's not the PIN. Try again."
+                defaultMessage="That’s not the PIN. Try again."
               />
             </div>
           )}

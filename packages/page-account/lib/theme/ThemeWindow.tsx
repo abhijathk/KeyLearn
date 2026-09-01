@@ -842,7 +842,7 @@ function ZonePicker({
           >
             <FormattedMessage
               id="theme.maker.zonesApp"
-              defaultMessage="KeyLearn's"
+              defaultMessage="KeyLearn’s"
             />
           </button>
           <button
