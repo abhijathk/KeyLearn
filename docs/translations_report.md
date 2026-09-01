@@ -1,1517 +1,1517 @@
 # English
 
-Translated: 2209 messages, 20177 words
+Translated: 2338 messages, 21652 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 1814 messages, 17745 words
+Translated: 1799 messages, 17416 words
 
-Untranslated: 335 messages, 2122 words
+Untranslated: 489 messages, 3838 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
 * *wpm*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *Stop*
-* *About*
-* *Audit*
-* *Close*
+* *Save*
+* *Send*
 * ...
 
 # Arabic
 
-Translated: 1831 messages, 17768 words
+Translated: 1815 messages, 17438 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Assamese
 
-Translated: 1828 messages, 17763 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 323 messages, 2109 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Bulgarian
 
-Translated: 1830 messages, 17766 words
+Translated: 1814 messages, 17436 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Bangla
 
-Translated: 1829 messages, 17764 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Catalan
 
-Translated: 1815 messages, 17749 words
+Translated: 1800 messages, 17420 words
 
-Untranslated: 334 messages, 2119 words
+Untranslated: 488 messages, 3835 words
 
 * *s*
-* *AI*
+* *as*
+* *Add*
 * *Arc*
-* *Now*
-* *Off*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
 * *Mode*
 * *Mode*
-* *Name*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *Text*
-* *Text*
 * ...
 
 # Czech
 
-Translated: 1818 messages, 17751 words
+Translated: 1803 messages, 17422 words
 
-Untranslated: 332 messages, 2119 words
+Untranslated: 486 messages, 3835 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *Stop*
-* *Text*
-* *Text*
-* *About*
-* *Audit*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Danish
 
-Translated: 1807 messages, 17738 words
+Translated: 1792 messages, 17409 words
 
-Untranslated: 343 messages, 2132 words
+Untranslated: 497 messages, 3848 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
 * *Mine*
-* *Name*
+* *Open*
 * *pink*
 * *Save*
-* *Send*
-* *spam*
-* *Spam*
-* *Stop*
-* *About*
+* *Save*
 * ...
 
 # German
 
-Translated: 1804 messages, 17740 words
+Translated: 1789 messages, 17411 words
 
-Untranslated: 347 messages, 2132 words
+Untranslated: 501 messages, 3848 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
 * *Name*
 * *Name*
-* *Name*
+* *Open*
 * *pink*
 * *Save*
-* *spam*
-* *Spam*
-* *Text*
-* *Text*
 * ...
 
 # Greek
 
-Translated: 1826 messages, 17761 words
+Translated: 1811 messages, 17432 words
 
-Untranslated: 325 messages, 2111 words
+Untranslated: 479 messages, 3827 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Spanish
 
-Translated: 1818 messages, 17753 words
+Translated: 1803 messages, 17424 words
 
-Untranslated: 332 messages, 2118 words
+Untranslated: 486 messages, 3834 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Estonian
 
-Translated: 1823 messages, 17758 words
+Translated: 1807 messages, 17428 words
 
-Untranslated: 328 messages, 2114 words
+Untranslated: 483 messages, 3831 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Persian
 
-Translated: 1831 messages, 17768 words
+Translated: 1815 messages, 17438 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Finnish
 
-Translated: 1826 messages, 17762 words
+Translated: 1810 messages, 17432 words
 
-Untranslated: 325 messages, 2110 words
+Untranslated: 480 messages, 3827 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # French
 
-Translated: 1806 messages, 17742 words
+Translated: 1790 messages, 17412 words
 
-Untranslated: 345 messages, 2130 words
+Untranslated: 500 messages, 3847 words
 
 * *s*
-* *AI*
+* *as*
+* *Add*
 * *Arc*
-* *Now*
-* *Off*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
 * *Zen*
 * *Auto*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
 * *Mode*
 * *Mode*
-* *Name*
-* *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
+* *Open*
 * ...
 
 # Gujarati
 
-Translated: 1828 messages, 17763 words
+Translated: 1812 messages, 17433 words
 
-Untranslated: 323 messages, 2109 words
+Untranslated: 478 messages, 3826 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
 * *wpm*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Hebrew
 
-Translated: 1830 messages, 17766 words
+Translated: 1814 messages, 17436 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Hindi
 
-Translated: 1829 messages, 17764 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Croatian
 
-Translated: 1822 messages, 17757 words
+Translated: 1807 messages, 17428 words
 
-Untranslated: 329 messages, 2115 words
+Untranslated: 483 messages, 3831 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Hungarian
 
-Translated: 1828 messages, 17764 words
+Translated: 1813 messages, 17435 words
 
-Untranslated: 324 messages, 2110 words
+Untranslated: 478 messages, 3826 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Indonesian
 
-Translated: 1819 messages, 17754 words
+Translated: 1804 messages, 17425 words
 
-Untranslated: 332 messages, 2118 words
+Untranslated: 486 messages, 3834 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
 * *wpm*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
 * *mint*
 * *Mode*
 * *Mode*
-* *Name*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
 * ...
 
 # Icelandic
 
-Translated: 1828 messages, 17764 words
+Translated: 1812 messages, 17434 words
 
-Untranslated: 324 messages, 2110 words
+Untranslated: 479 messages, 3827 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
 * *Sun*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Italian
 
-Translated: 1820 messages, 17755 words
+Translated: 1805 messages, 17426 words
 
-Untranslated: 331 messages, 2117 words
+Untranslated: 485 messages, 3833 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Japanese
 
-Translated: 1828 messages, 17763 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 324 messages, 2110 words
+Untranslated: 478 messages, 3826 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
 * *wpm*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Kannada
 
-Translated: 1830 messages, 17766 words
+Translated: 1814 messages, 17436 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Korean
 
-Translated: 1828 messages, 17763 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 324 messages, 2110 words
+Untranslated: 478 messages, 3826 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
 * *wpm*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Lithuanian
 
-Translated: 1826 messages, 17761 words
+Translated: 1810 messages, 17431 words
 
-Untranslated: 325 messages, 2111 words
+Untranslated: 480 messages, 3828 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Latvian
 
-Translated: 1822 messages, 17756 words
+Translated: 1806 messages, 17426 words
 
-Untranslated: 328 messages, 2114 words
+Untranslated: 483 messages, 3831 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Malayalam
 
-Translated: 1829 messages, 17764 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Mongolian
 
-Translated: 1831 messages, 17768 words
+Translated: 1815 messages, 17438 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Marathi
 
-Translated: 1829 messages, 17764 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 1820 messages, 17754 words
+Translated: 1804 messages, 17424 words
 
-Untranslated: 330 messages, 2116 words
+Untranslated: 485 messages, 3833 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
 * *Mine*
-* *Name*
+* *Open*
+* *Save*
 * *Save*
 * *Send*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
 * ...
 
 # Nepali
 
-Translated: 1828 messages, 17763 words
+Translated: 1812 messages, 17433 words
 
-Untranslated: 323 messages, 2109 words
+Untranslated: 478 messages, 3826 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
 * *wpm*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Dutch
 
-Translated: 1803 messages, 17736 words
+Translated: 1787 messages, 17406 words
 
-Untranslated: 347 messages, 2134 words
+Untranslated: 502 messages, 3851 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
 * *wpm*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *Stop*
-* *About*
-* *Audit*
-* *Close*
-* *Coach*
+* *Save*
+* *Send*
 * ...
 
 # Odia
 
-Translated: 1828 messages, 17763 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 323 messages, 2109 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Punjabi
 
-Translated: 1828 messages, 17763 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 323 messages, 2109 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Polish
 
-Translated: 1822 messages, 17756 words
+Translated: 1807 messages, 17427 words
 
-Untranslated: 328 messages, 2114 words
+Untranslated: 482 messages, 3830 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Brazilian Portuguese
 
-Translated: 1818 messages, 17751 words
+Translated: 1803 messages, 17422 words
 
-Untranslated: 332 messages, 2118 words
+Untranslated: 486 messages, 3834 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # European Portuguese
 
-Translated: 1821 messages, 17756 words
+Translated: 1806 messages, 17427 words
 
-Untranslated: 330 messages, 2116 words
+Untranslated: 484 messages, 3832 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Romanian
 
-Translated: 1814 messages, 17747 words
+Translated: 1799 messages, 17418 words
 
-Untranslated: 336 messages, 2122 words
+Untranslated: 490 messages, 3838 words
 
 * *s*
-* *AI*
+* *as*
+* *Add*
 * *Arc*
-* *Now*
-* *Off*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Calm*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *Text*
-* *Text*
-* *About*
+* *Save*
 * ...
 
 # Russian
 
-Translated: 1831 messages, 17768 words
+Translated: 1815 messages, 17438 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Slovak
 
-Translated: 1819 messages, 17753 words
+Translated: 1804 messages, 17424 words
 
-Untranslated: 332 messages, 2119 words
+Untranslated: 486 messages, 3835 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *Stop*
-* *Text*
-* *Text*
-* *About*
-* *Audit*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Slovenian
 
-Translated: 1821 messages, 17755 words
+Translated: 1806 messages, 17426 words
 
-Untranslated: 329 messages, 2115 words
+Untranslated: 483 messages, 3831 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Albanian
 
-Translated: 1822 messages, 17757 words
+Translated: 1807 messages, 17428 words
 
-Untranslated: 329 messages, 2115 words
+Untranslated: 483 messages, 3831 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
+* *Save*
+* *Send*
+* *Send*
 * ...
 
 # Swedish
 
-Translated: 1813 messages, 17748 words
+Translated: 1797 messages, 17418 words
 
-Untranslated: 338 messages, 2124 words
+Untranslated: 493 messages, 3841 words
 
 * *s*
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
 * *mint*
-* *Name*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *Text*
-* *Text*
-* *About*
-* *Audit*
-* *Close*
+* *Save*
+* *Send*
 * ...
 
 # Tamil
 
-Translated: 1829 messages, 17764 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Telugu
 
-Translated: 1829 messages, 17764 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Thai
 
-Translated: 1831 messages, 17768 words
+Translated: 1815 messages, 17438 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Turkish
 
-Translated: 1826 messages, 17761 words
+Translated: 1811 messages, 17432 words
 
-Untranslated: 325 messages, 2111 words
+Untranslated: 479 messages, 3827 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
 * *PIN*
+* *Yes*
 * *Zen*
-* *Body*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Ukrainian
 
-Translated: 1830 messages, 17766 words
+Translated: 1814 messages, 17436 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Urdu
 
-Translated: 1829 messages, 17764 words
+Translated: 1813 messages, 17434 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Vietnamese
 
-Translated: 1828 messages, 17763 words
+Translated: 1812 messages, 17433 words
 
-Untranslated: 323 messages, 2109 words
+Untranslated: 478 messages, 3826 words
 
-* *AI*
-* *Now*
-* *Off*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
 * *wpm*
-* *Body*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
 * ...
 
 # Simplified Chinese
 
-Translated: 1831 messages, 17767 words
+Translated: 1815 messages, 17437 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...
 
 # Traditional Chinese
 
-Translated: 1830 messages, 17766 words
+Translated: 1814 messages, 17436 words
 
-Untranslated: 322 messages, 2108 words
+Untranslated: 477 messages, 3825 words
 
-* *AI*
-* *Now*
-* *Off*
-* *Body*
+* *as*
+* *Add*
+* *for*
+* *New*
+* *PIN*
+* *Yes*
+* *Back*
+* *Back*
 * *Edit*
-* *Kids*
-* *Kind*
-* *Live*
-* *Name*
+* *Font*
+* *Help*
+* *Join*
+* *Maya*
+* *Open*
 * *Save*
-* *spam*
-* *Spam*
-* *About*
-* *Audit*
-* *Close*
-* *Email*
-* *Inbox*
-* *Shift*
-* *Title*
-* *Today*
+* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Sent*
 * ...

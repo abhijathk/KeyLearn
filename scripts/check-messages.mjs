@@ -133,6 +133,63 @@ if (stale.length > 0) {
   process.exit(1);
 }
 
+// A third trap, and one neither check above can see: an id can be present in
+// a locale's catalogue carrying the ENGLISH string as its value. Presence is
+// all the checks above measure, so a catalogue back-filled from the defaults
+// reads as complete while the screen is still in English.
+//
+// Reported, never fatal. An untranslated string is a backlog item, not a
+// regression, and failing the build on one would only teach everyone to skip
+// the check.
+const localeValue = (v) =>
+  typeof v === "string" ? v : (v?.defaultMessage ?? null);
+const english = Object.fromEntries(
+  Object.entries(readJsonSync(translationsPath(defaultLocale))).map(([k, v]) => [
+    k,
+    localeValue(v),
+  ]),
+);
+const englishCount = Object.keys(english).length;
+const translationsDir = join(
+  import.meta.dirname,
+  "..",
+  "packages",
+  "keylearn-intl",
+  "translations",
+);
+const gaps = [];
+for (const file of readdirSync(translationsDir)) {
+  const matched = /^([a-z-]+)-merged\.json$/.exec(file);
+  if (matched == null || matched[1] === defaultLocale) {
+    continue;
+  }
+  const theirs = readJsonSync(join(translationsDir, file));
+  let untranslated = 0;
+  for (const [id, value] of Object.entries(english)) {
+    if (value == null || value === "") {
+      continue; // Nothing to compare against.
+    }
+    const mine = theirs[id];
+    if (mine == null || localeValue(mine) === value) {
+      untranslated += 1;
+    }
+  }
+  if (untranslated > 0) {
+    gaps.push([matched[1], untranslated]);
+  }
+}
+if (gaps.length > 0) {
+  gaps.sort((a, b) => b[1] - a[1]);
+  const worst = gaps
+    .slice(0, 5)
+    .map(([locale, n]) => `${locale} ${Math.round((100 * n) / englishCount)}%`)
+    .join(", ");
+  console.log(
+    `note: ${gaps.length} locale(s) still render some strings in English ` +
+      `(worst: ${worst})`,
+  );
+}
+
 console.log(
   `all message ids are in translations/${defaultLocale}.json and compiled`,
 );

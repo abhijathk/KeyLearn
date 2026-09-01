@@ -350,7 +350,7 @@ function AcceptStep({
               <p className={styles.deadWhy}>
                 <FormattedMessage
                   id="join.accept.staffDomain"
-                  defaultMessage="{org}'s {role}s sign in with a {domains} address."
+                  defaultMessage="{org}’s {role}s sign in with a {domains} address."
                   values={{
                     org: preview.organization.name,
                     role: <RoleName role={preview.role} />,

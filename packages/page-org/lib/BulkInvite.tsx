@@ -308,9 +308,10 @@ function ByEmail({
       {fileName != null && (
         <p className={styles.fileCard}>
           <b>{fileName}</b>
+          {" · "}
           <FormattedMessage
             id="bulk.fileRows"
-            defaultMessage=" · {n, plural, one {# address} other {# addresses}} read"
+            defaultMessage="{n, plural, one {# address} other {# addresses}} read"
             values={{ n: entries.length }}
           />
         </p>
