@@ -696,9 +696,14 @@
 
 // The expand chevron is pinned to the far-right edge of the whisper row
 // (the metrics stay centred), and rotates when the panel opens.
+//
+// Both pins measure from the CONTENT edge, not the row's own edge: the row
+// bleeds 1.5rem past the card's padding so its divider can run full width,
+// and pinning to the bled edge slid these 1.5rem right of the header's
+// sliders-and-gear column they line up with.
 .chevron {
   position: absolute;
-  inset-inline-end: 0.2rem;
+  inset-inline-end: calc(1.5rem + 0.2rem);
   inset-block-start: 50%;
   inline-size: 0.9rem;
   block-size: 0.9rem;
@@ -739,7 +744,7 @@
 .pin {
   display: flex;
   position: absolute;
-  inset-inline-end: 2rem;
+  inset-inline-end: calc(1.5rem + 2rem);
   inset-block-start: 50%;
   align-items: center;
   justify-content: center;
