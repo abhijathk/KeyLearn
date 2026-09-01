@@ -39,10 +39,11 @@ test("render", async () => {
     // the event loop on purpose (see useProgress), and jsdom's loop is slow
     // enough that the default 1s wait expires mid-seed. The wait is for the
     // seed, not for a bug.
-    await r.findByTitle("Adjust lesson settings", {
-      exact: false,
-      timeout: 10_000,
-    }),
+    await r.findByTitle(
+      "Adjust lesson settings",
+      { exact: false },
+      { timeout: 10_000 },
+    ),
   );
   fireEvent.click(await r.findByText("Save & Close"));
 
