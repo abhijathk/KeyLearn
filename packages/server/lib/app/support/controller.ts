@@ -922,6 +922,11 @@ export class Controller {
       confirmed,
       ip: clientIp(ctx),
       country: country != null && country !== "" ? country : null,
+      // Stored with the submission, not merely forwarded from it: a ticket
+      // in the holding queue forwards at CONFIRM time, from a request that
+      // carries no browser and therefore no zone. What was true at
+      // submission is the only copy there will ever be.
+      timeZone: input.timeZone ?? null,
     });
 
     if (confirmed) {
@@ -1111,6 +1116,14 @@ export class Controller {
       message: ticket.message!,
       userId: ticket.userId ?? null,
       messageId: confirmedFirst.id!,
+      // The same two facts the direct path sends — read back off the
+      // ticket, because the confirm click arrives with neither. Without
+      // these, every ticket that went through the holding queue (which is
+      // every signed-out submission) reached the desk with no country and
+      // no local time: no emergency number for the crisis script, no sense
+      // of the customer's clock for the agent.
+      country: ticket.country ?? null,
+      timeZone: ticket.timeZone ?? null,
     });
     if (ticket.kind === "support" && !qdeskConfigured()) {
       await this.#tryAutoReply(ticket.id!, ticket.message!);
@@ -1398,7 +1411,15 @@ export class Controller {
       return;
     }
     try {
-      const threadToken = await SupportTicket.reissueThreadToken(ticket.id!);
+      // The token is minted before the send but the OLD one is revoked only
+      // after it. Rotating first meant a failed send — an SMTP outage, a
+      // provider rejecting this IP — destroyed the guest's only way back
+      // into the conversation: the fresh link died in the catch below and
+      // the link they already held had just been invalidated. Verified
+      // live: the desk's reply landed, the mail failed, and the thread 404d
+      // for its own customer. Send first; a link is only retired once its
+      // replacement is actually on its way to them.
+      const threadToken = SupportTicket.mintThreadToken();
       await this.mailer.sendMail(
         messageThreadReply({
           to: ticket.email!,
@@ -1413,6 +1434,7 @@ export class Controller {
           authorName,
         }),
       );
+      await SupportTicket.adoptThreadToken(ticket.id!, threadToken);
     } catch {
       // Best-effort — see doc comment.
     }

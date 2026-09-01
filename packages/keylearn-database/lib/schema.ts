@@ -336,6 +336,13 @@ export async function createSchema(knex: Knex): Promise<void> {
   await addColumn("support_ticket", "confirm_token_hash", (table) => {
     table.string("confirm_token_hash", 64).nullable();
   });
+  // The submitter's own IANA zone, captured with the submission so the
+  // confirm-time forward to QDesk can still say what time it is where they
+  // are. Without it, every ticket through the holding queue reached the
+  // desk zoneless — and the holding queue is every signed-out submission.
+  await addColumn("support_ticket", "time_zone", (table) => {
+    table.string("time_zone", 64).nullable();
+  });
   await addColumn("support_ticket", "closed_at", (table) => {
     table.timestamp("closed_at").nullable();
   });

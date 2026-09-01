@@ -129,10 +129,15 @@ function initErrorHandlers() {
   process.on("warning", (warning) => {
     Logger.warn("Warning", warning);
   });
-  process.on("multipleResolves", (type, promise, reason) => {
-    Logger.error("Multiple resolvers", { type, promise, reason });
-    process.exit(1);
-  });
+  // No handler for "multipleResolves" — deliberately. The event is
+  // deprecated (Node DEP0160) because it fires on legitimate library
+  // internals: nodemailer's SMTP transport rejects the same promise twice
+  // on a connection failure, and Promise.race leaves its losers "multiply
+  // resolved" by design. Exiting on it meant an SMTP auth failure inside
+  // the daily digest sweep — an error the sweep itself catches and logs —
+  // still killed every worker at digest hour, which is how the server kept
+  // "dying overnight". A doubly-resolved promise in a dependency is not a
+  // corrupt process; the two handlers below cover the states that are.
   process.on("uncaughtException", (error) => {
     Logger.error("Uncaught exception", error);
     process.exit(1);

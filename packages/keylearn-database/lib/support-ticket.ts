@@ -87,6 +87,12 @@ export class SupportTicket extends TimestampMixin(Model) {
       // Captured once at creation from CF-IPCountry, same rule as
       // User.signupCountry — never updated again.
       country: { type: ["string", "null"], minLength: 2, maxLength: 2 },
+      // The submitter's own IANA zone, captured at creation and forwarded
+      // to QDesk at confirm time. Declared here or Objection's jsonSchema
+      // filter drops it silently from the insert — which is exactly what
+      // happened: the column existed, the create() call passed it, and it
+      // still landed null because it was not on this list.
+      timeZone: { type: ["string", "null"], maxLength: 64 },
       // How many times a guest reply has moved this ticket from closed back
       // to open — see replyToThread.
       reopenCount: { type: "integer" },
@@ -123,6 +129,7 @@ export class SupportTicket extends TimestampMixin(Model) {
     table.timestamp("closed_at").nullable();
     table.boolean("archived").notNullable().defaultTo(false);
     table.string("country", 2).nullable();
+    table.string("time_zone", 64).nullable();
     table.integer("reopen_count").unsigned().notNullable().defaultTo(0);
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
@@ -160,6 +167,7 @@ export class SupportTicket extends TimestampMixin(Model) {
   closedAt?: Date | null;
   archived?: number | boolean;
   country?: string | null;
+  timeZone?: string | null;
   reopenCount?: number;
   createdAt?: Date;
   updatedAt?: Date;
@@ -182,6 +190,7 @@ export class SupportTicket extends TimestampMixin(Model) {
     confirmed = true,
     ip = null,
     country = null,
+    timeZone = null,
   }: {
     readonly userId?: number | null;
     readonly kind: SupportTicketKind;
@@ -193,6 +202,7 @@ export class SupportTicket extends TimestampMixin(Model) {
     readonly confirmed?: boolean;
     readonly ip?: string | null;
     readonly country?: string | null;
+    readonly timeZone?: string | null;
   }): Promise<{ ticket: SupportTicket; threadToken: string }> {
     const threadToken = Random.string(20);
     const ticket = await SupportTicket.query().insertAndFetch({
@@ -207,6 +217,7 @@ export class SupportTicket extends TimestampMixin(Model) {
       threadTokenHash: hashToken(threadToken),
       ip,
       country,
+      timeZone,
     });
     return { ticket, threadToken };
   }
@@ -339,10 +350,31 @@ export class SupportTicket extends TimestampMixin(Model) {
    */
   static async reissueThreadToken(ticketId: number): Promise<string> {
     const token = Random.string(20);
+    await SupportTicket.adoptThreadToken(ticketId, token);
+    return token;
+  }
+
+  /**
+   * Make an already-minted token the ticket's live one.
+   *
+   * Split from {@link reissueThreadToken} for the reply-notification path,
+   * which mints the token, EMAILS it, and only then retires the old link —
+   * rotating before the send meant a failed email left the guest with no
+   * valid link at all: the fresh one died with the send, the old one had
+   * just been revoked.
+   */
+  /** A fresh thread token, minted but not yet live — see adoptThreadToken. */
+  static mintThreadToken(): string {
+    return Random.string(20);
+  }
+
+  static async adoptThreadToken(
+    ticketId: number,
+    token: string,
+  ): Promise<void> {
     await SupportTicket.query()
       .findById(ticketId)
       .patch({ threadTokenHash: hashToken(token) });
-    return token;
   }
 
   /** @deprecated Kept for existing rows; new replies go through SupportMessage instead. */
