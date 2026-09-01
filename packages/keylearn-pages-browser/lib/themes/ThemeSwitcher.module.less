@@ -4,7 +4,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  block-size: 3rem;
+  // 2.3rem to match every other control in the header row. At 3rem this one
+  // wrapper was the tallest thing in the header and set its height on its
+  // own, padding the whole bar out by 0.7rem for a button the same size as
+  // its neighbours.
+  block-size: 2.3rem;
 }
 
 .menu {

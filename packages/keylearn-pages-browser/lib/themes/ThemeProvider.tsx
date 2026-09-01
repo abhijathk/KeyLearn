@@ -40,7 +40,7 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
   // The cookie carries the ground; the accent is a per-learner fact, so it is
   // read from that learner's slot and the cookie only mirrors it afterwards
   // (see storePrefs) to keep the server-rendered first paint honest.
-  const [{ color, font }, setPrefs] = useState(() => readPrefs());
+  const [{ color, font, textSize }, setPrefs] = useState(() => readPrefs());
   const [accent, setAccent] = useState(() => loadAccent());
   const [hash, setHash] = useState(0);
   usePreferredColorScheme();
@@ -91,7 +91,7 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
     // rewrites an identical cookie is churn, and it would also quietly repair
     // a cookie the app is supposed to leave alone.
     if (readPrefs().accent !== accent) {
-      storePrefs(new ThemePrefs({ color, font, accent }));
+      storePrefs(new ThemePrefs({ color, font, textSize, accent }));
     }
     // The Appearance panel does not re-render this provider, so it says when
     // the preference moved and the night/day question stays answered here.
@@ -110,7 +110,7 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
       window.removeEventListener(A11Y_CHANGED_EVENT, applyAdaptations);
       window.removeEventListener(PROFILE_CHANGED_EVENT, applyAdaptations);
     };
-  }, [accent, color, font]);
+  }, [accent, color, font, textSize]);
 
   return (
     <ThemeContext.Provider
@@ -118,18 +118,26 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
         fullscreenState,
         color,
         font,
+        textSize,
         accent,
         hash,
         toggleFullscreen,
         switchColor: (id) => {
-          const prefs = new ThemePrefs({ color: id, font, accent });
+          const prefs = new ThemePrefs({ color: id, font, textSize, accent });
           switchTheme(prefs);
           setPrefs(prefs);
           setHash(hash + 1);
           storePrefs(prefs);
         },
         switchFont: (id) => {
-          const prefs = new ThemePrefs({ color, font: id, accent });
+          const prefs = new ThemePrefs({ color, font: id, textSize, accent });
+          switchTheme(prefs);
+          setPrefs(prefs);
+          setHash(hash + 1);
+          storePrefs(prefs);
+        },
+        switchTextSize: (id) => {
+          const prefs = new ThemePrefs({ color, font, textSize: id, accent });
           switchTheme(prefs);
           setPrefs(prefs);
           setHash(hash + 1);
@@ -162,6 +170,7 @@ function switchTheme(prefs: ThemePrefs) {
   ((elem) => {
     elem.setAttribute(ThemePrefs.colorAttrName, prefs.color);
     elem.setAttribute(ThemePrefs.fontAttrName, prefs.font);
+    elem.setAttribute(ThemePrefs.textSizeAttrName, prefs.textSize);
     elem.setAttribute(ThemePrefs.accentAttrName, prefs.accent);
   })(document.documentElement);
 }
@@ -225,7 +234,7 @@ function shade(hex: string, amount: number): string {
  * whether the keyboard can be read beats how it looks. Then the theme's own
  * derived set, if asked for. Otherwise nothing is written and the stylesheet's
  * own zones stand — removing rather than restoring, so switching themes later
- * does not leave last theme's colours frozen in place.
+ * does not leave last theme’s colours frozen in place.
  */
 function paintZones(day: boolean, accentId: string) {
   if (loadSafeZones()) {

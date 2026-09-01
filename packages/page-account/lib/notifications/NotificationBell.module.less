@@ -22,12 +22,22 @@
  * rows run edge to edge and a hairline separates them, which is all a
  * list of short messages needs.
  */
+/*
+ * Fixed and portalled, with `top`/`left` set by the component.
+ *
+ * It used to be absolute against the bell. That works everywhere except the
+ * one page it matters on: the practice header sits in a clipping slot so it
+ * can slide away while typing, and this panel was cut off at the header's
+ * bottom edge with only a few pixels showing. See the note in the component
+ * for why `position: fixed` on its own does not escape either.
+ *
+ * z-index above the header (30) and the drawer scrim (100), because it is
+ * now a sibling of those rather than a child of the header.
+ */
 .drop {
   display: flex;
-  position: absolute;
-  inset-inline-end: 0;
-  inset-block-start: 2.4rem;
-  z-index: 20;
+  position: fixed;
+  z-index: 120;
   flex-direction: column;
   /* Wide enough that a date stops wrapping mid-value — "20 Aug," on one
      line and "07:23" on the next was the whole complaint. */

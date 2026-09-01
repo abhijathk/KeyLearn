@@ -10,7 +10,17 @@ export function Portal({
   readonly children: ReactNode;
   readonly key?: null | string;
 }): ReactNode {
-  return createPortal(children, PortalContainer.query(), key);
+  // The container is rendered by the page template, and this portal is not
+  // entitled to assume it won: a page rendered without the template — a test,
+  // a storybook, an embed — used to crash its ENTIRE tree here, because a
+  // throw during render has no boundary to land in. The body is where the
+  // container itself lives, so falling back to it keeps the one property a
+  // portal exists for: escaping the ancestors' overflow and stacking.
+  return createPortal(
+    children,
+    PortalContainer.tryQuery() ?? document.body,
+    key,
+  );
 }
 
 export function PortalContainer(): ReactNode {
@@ -20,3 +30,7 @@ export function PortalContainer(): ReactNode {
 PortalContainer.id = styles.root;
 
 PortalContainer.query = () => querySelector(`#${PortalContainer.id}`);
+
+/** The container if it is mounted, or null — never a throw. */
+PortalContainer.tryQuery = (): Element | null =>
+  document.getElementById(PortalContainer.id);

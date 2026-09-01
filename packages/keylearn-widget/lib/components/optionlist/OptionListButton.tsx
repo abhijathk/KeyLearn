@@ -52,8 +52,19 @@ export function OptionListButton({
     >
       <span className={styles.placeholder} onClick={onClick}>
         <span className={styles.placeholderName}>{option.name}</span>
+        {/* A drawn chevron, not the \u25BC/\u25BA glyphs this used to set. Those are
+            solid triangles from the text font: they take the text colour at
+            full strength, sit on the baseline rather than centred, and end up
+            the heaviest mark in a field whose job is to show a value. A
+            stroked chevron reads as an affordance rather than as punctuation. */}
         <span className={styles.placeholderArrow}>
-          {open ? "\u25BC" : "\u25BA"}
+          <svg
+            className={clsx(styles.chevron, open && styles.chevronOpen)}
+            viewBox="0 0 24 24"
+            aria-hidden={true}
+          >
+            <path d="m7 10 5 5 5-5" />
+          </svg>
         </span>
       </span>
       {children}

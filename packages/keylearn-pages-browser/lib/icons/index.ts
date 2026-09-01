@@ -1,1 +1,6 @@
-export { StrokeIcon, type StrokeIconName } from "@keylearn/widget";
+export {
+  ColorIcon,
+  type ColorIconName,
+  StrokeIcon,
+  type StrokeIconName,
+} from "@keylearn/widget";

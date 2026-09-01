@@ -25,7 +25,10 @@
   margin-block-end: 0.35rem;
   color: var(--accent-d1);
   font-family: var(--default-font-family);
-  font-size: 0.62rem;
+  // Matched to the account panel's section headings, which had the same
+  // problem: 0.62rem of uppercase at 0.15em tracking is 9.9px, and tracking
+  // that wide makes a small size read smaller still.
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -147,19 +150,52 @@
 // An exclusive choice between a handful of options that each need a sentence
 // of explanation — a lesson source, a test style. A row of pills cannot carry
 // that, so each option gets a tile that says what it is.
+// Smaller tiles, more of them per row. At 11rem these were eight large boxes
+// filling the top of the settings screen before a single setting had been
+// read; the choice they carry is worth one glance, not half the panel.
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 0.5rem;
-  margin-block-end: 0.9rem;
+  // Four to a row, always. Auto-fit packed these by width, which at the
+  // dialog's size dealt eight sources as six-and-two — a layout that reads
+  // as six options plus an afterthought. Four columns deals them 4 + 4,
+  // and a picker with fewer options simply leaves trailing tracks empty.
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+  margin-block-end: 0.7rem;
 }
 
+@media (width <= 44rem) {
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// A filled surface, not an outline. Everything else in the app — chips,
+// panels, the account rows — is a tinted surface on the page; a grid of
+// hollow bordered boxes was the one place that read as a form rather than
+// as part of the app.
+//
+// The border stays, at low contrast, because these are radio buttons and the
+// selected one has to be unmistakable — which it cannot be if selected and
+// unselected differ only by a slightly different fill.
+//
+// Not transparent: measured on the night theme, the fill alone lands within
+// a hair of the panel behind it (contrast 1.0), which left eight clickable
+// tiles with no visible edge at all. The border is what says "target".
 .tile {
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--separator-color, rgba(128, 128, 128, 0.2));
-  border-radius: 0.6rem;
+  // A stretched grid row gives every tile the tallest one's height, and a
+  // button centres its content in the extra space — so short descriptions
+  // floated mid-tile. Pin everything to the top-left; the empty space
+  // belongs at the bottom.
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid color-mix(in oklab, var(--separator-color) 65%, transparent);
+  border-radius: 0.7rem;
   color: var(--text-color);
-  background: transparent;
+  background: color-mix(in srgb, var(--primary-l1) 70%, transparent);
   font-family: inherit;
   text-align: start;
   cursor: pointer;
@@ -169,6 +205,7 @@
 
   &:hover {
     border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+    background: var(--primary-l1);
   }
 }
 
@@ -187,9 +224,12 @@
   }
 }
 
+// Name and description move together, by the same 0.1rem. Raising only the
+// description would have closed the gap between them to 0.02rem and left the
+// tile with no hierarchy at all.
 .tileName {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   font-weight: 700;
 }
 
@@ -199,10 +239,10 @@
 
 .tileDesc {
   display: block;
-  margin-block-start: 0.15rem;
+  margin-block-start: 0.1rem;
   color: var(--text-color-f2);
-  font-size: 0.68rem;
-  line-height: 1.4;
+  font-size: 0.74rem;
+  line-height: 1.35;
 }
 
 // A mark on the one or two tiles worth pointing at. Small and set in the
@@ -217,7 +257,10 @@
   color: var(--primary);
   background: var(--accent);
   font-family: var(--default-font-family);
-  font-size: 0.55rem;
+  // Still the smallest thing on the tile — it is a one-word aside — but off
+  // 8.8px, which was small enough that the recommendation it carries could
+  // not be read without leaning in.
+  font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;

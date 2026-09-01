@@ -1,0 +1,103 @@
+/**
+ * Colour icons: quiet at rest, saturated under the pointer.
+ *
+ * The whole header is a row of these. At full strength they compete with the
+ * typing surface, which is the only thing on the page that should be loud —
+ * so they sit desaturated until you go looking, and bloom when you do.
+ *
+ * `saturate()` rather than two hand-tuned palettes: each icon carries three
+ * or four fills, so a second palette would be a dozen more colours to keep in
+ * step for a state that lasts as long as a hover. The filter also animates,
+ * which discrete colours would not.
+ */
+.root {
+  display: inline-block;
+  vertical-align: middle;
+  inline-size: 1.8rem;
+  block-size: 1.8rem;
+
+  /* No fill/stroke reset here — unlike StrokeIcon, every shape carries its
+     own fills and must keep them. */
+  /* Held back, not drained.
+     Two earlier passes overshot in both directions. Draining the saturation
+     made these pastels vanish into a pale page; darkening them instead made
+     them muddy — legible, but dull rather than quiet. On a light ground the
+     colour IS the contrast, so the rest state keeps most of it and the hover
+     pushes past full strength. Measured against the day theme at 1.15rem,
+     which is how small they actually render. */
+  filter: saturate(0.78) brightness(0.93);
+  transition: filter 180ms ease;
+}
+
+/* The icon almost always sits inside a control, and it is the CONTROL that is
+   hovered — the pointer is over the button's padding as often as the glyph.
+   Hovering the icon itself is the fallback for the few places it stands
+   alone. `:focus-visible` gets the same treatment so the keyboard sees what
+   the mouse sees. */
+.root:hover,
+:is(button, a, [role="button"], label):hover .root,
+:is(button, a, [role="button"], label):focus-visible .root {
+  filter: saturate(1.28) brightness(1.03);
+}
+
+/* A disabled control is not going to do anything, so it should not light up. */
+:is(button, a, [role="button"]):disabled .root,
+:is(button, a, [role="button"])[aria-disabled="true"] .root {
+  filter: saturate(0.15) brightness(0.9) opacity(0.45);
+}
+
+/* Dark ground.
+ *
+ * The artwork is pastel, drawn for a light page; desaturating it against a
+ * dark surface pushes it toward the background rather than away from it. So
+ * the resting state keeps a little more colour and a touch more brightness
+ * here.
+ *
+ * Which grounds are dark: "keylearn" is the night theme and "auto" resolves
+ * to it unless the device asks for light (see theme-14-auto.less). Listing
+ * the dark cases rather than the light ones keeps this in step with that
+ * file — it is the same two conditions, written the same way round.
+ */
+.dark() {
+  filter: saturate(0.44) brightness(1.06) opacity(0.86);
+}
+
+.darkHover() {
+  filter: saturate(1.06) brightness(1.08) opacity(1);
+}
+
+:global(html[data-color="keylearn"]) .root {
+  .dark();
+}
+
+:global(html[data-color="keylearn"]) .root:hover,
+:global(html[data-color="keylearn"])
+  :is(button, a, [role="button"], label):hover
+  .root,
+:global(html[data-color="keylearn"])
+  :is(button, a, [role="button"], label):focus-visible
+  .root {
+  .darkHover();
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(html[data-color="auto"]) .root {
+    .dark();
+  }
+
+  :global(html[data-color="auto"]) .root:hover,
+  :global(html[data-color="auto"])
+    :is(button, a, [role="button"], label):hover
+    .root,
+  :global(html[data-color="auto"])
+    :is(button, a, [role="button"], label):focus-visible
+    .root {
+    .darkHover();
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    transition: none;
+  }
+}

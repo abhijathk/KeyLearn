@@ -3,6 +3,7 @@ import { FakeIntlProvider } from "@keylearn/intl";
 import { ProfilesProvider } from "@keylearn/page-account";
 import { SupportService } from "@keylearn/page-support";
 import { PageDataContext } from "@keylearn/pages-shared";
+import { FakeSettingsContext } from "@keylearn/settings";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { isNotNull } from "rich-assert";
@@ -22,30 +23,32 @@ function stubNoticeFetch(ctx: TestContext): void {
 test("render", (ctx) => {
   stubNoticeFetch(ctx);
   const r = render(
-    <PageDataContext.Provider
-      value={{
-        base: "https://www.keylearn.org/",
-        locale: "en",
-        user: null,
-        publicUser: {
-          id: null,
-          name: "name",
-          imageUrl: null,
-        },
-        settings: null,
-        profiles: [],
-      }}
-    >
-      <FakeIntlProvider>
-        <MemoryRouter>
-          <ProfilesProvider>
-            <Template path="/page">
-              <div>hello</div>
-            </Template>
-          </ProfilesProvider>
-        </MemoryRouter>
-      </FakeIntlProvider>
-    </PageDataContext.Provider>,
+    <FakeSettingsContext>
+      <PageDataContext.Provider
+        value={{
+          base: "https://www.keylearn.org/",
+          locale: "en",
+          user: null,
+          publicUser: {
+            id: null,
+            name: "name",
+            imageUrl: null,
+          },
+          settings: null,
+          profiles: [],
+        }}
+      >
+        <FakeIntlProvider>
+          <MemoryRouter>
+            <ProfilesProvider>
+              <Template path="/page">
+                <div>hello</div>
+              </Template>
+            </ProfilesProvider>
+          </MemoryRouter>
+        </FakeIntlProvider>
+      </PageDataContext.Provider>
+    </FakeSettingsContext>,
   );
 
   isNotNull(r.queryByText("hello"));
@@ -56,31 +59,33 @@ test("render", (ctx) => {
 test("render alt", (ctx) => {
   stubNoticeFetch(ctx);
   const r = render(
-    <PageDataContext.Provider
-      value={{
-        base: "https://www.keylearn.org/",
-        locale: "en",
-        user: null,
-        publicUser: {
-          id: "abc",
-          name: "name",
-          imageUrl: null,
-          premium: true,
-        },
-        settings: null,
-        profiles: [],
-      }}
-    >
-      <FakeIntlProvider>
-        <MemoryRouter>
-          <ProfilesProvider>
-            <Template path="/page">
-              <div>hello</div>
-            </Template>
-          </ProfilesProvider>
-        </MemoryRouter>
-      </FakeIntlProvider>
-    </PageDataContext.Provider>,
+    <FakeSettingsContext>
+      <PageDataContext.Provider
+        value={{
+          base: "https://www.keylearn.org/",
+          locale: "en",
+          user: null,
+          publicUser: {
+            id: "abc",
+            name: "name",
+            imageUrl: null,
+            premium: true,
+          },
+          settings: null,
+          profiles: [],
+        }}
+      >
+        <FakeIntlProvider>
+          <MemoryRouter>
+            <ProfilesProvider>
+              <Template path="/page">
+                <div>hello</div>
+              </Template>
+            </ProfilesProvider>
+          </MemoryRouter>
+        </FakeIntlProvider>
+      </PageDataContext.Provider>
+    </FakeSettingsContext>,
   );
 
   isNotNull(r.queryByText("hello"));

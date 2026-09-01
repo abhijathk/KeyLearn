@@ -34,20 +34,26 @@
   filter: blur(3px);
 }
 
+// The passage has exactly one size control, and it is `--text-scale` in the
+// practice settings. `--ui-scale` is the interface size chosen in the account
+// (see keylearn-themes/lib/text-size.less), and it works by scaling the root
+// — which these rem values would otherwise pick up, multiplying the two
+// together and moving the passage every time somebody resized the menus
+// around it. Dividing it back out is what keeps the two settings independent.
 .size_X0 {
-  font-size: calc(2rem * var(--text-scale, 1));
+  font-size: calc(2rem * var(--text-scale, 1) / var(--ui-scale, 1));
 }
 
 .size_X1 {
-  font-size: calc(3rem * var(--text-scale, 1));
+  font-size: calc(3rem * var(--text-scale, 1) / var(--ui-scale, 1));
 }
 
 .size_X2 {
-  font-size: calc(4rem * var(--text-scale, 1));
+  font-size: calc(4rem * var(--text-scale, 1) / var(--ui-scale, 1));
 }
 
 .size_X3 {
-  font-size: calc(5rem * var(--text-scale, 1));
+  font-size: calc(5rem * var(--text-scale, 1) / var(--ui-scale, 1));
 }
 
 // The Ink Road focus band: past lines recede, the caret's line owns the

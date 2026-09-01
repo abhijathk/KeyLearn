@@ -28,7 +28,7 @@ import * as styles from "./Profiles.module.less";
 /**
  * The voice a learner starts with, before anyone chooses one.
  *
- * Chosen rather than left blank because "this device's own voice" is the
+ * Chosen rather than left blank because "this device’s own voice" is the
  * rough one the customer complained about, and a default nobody sets is the
  * default almost everybody keeps. A five-year-old should not have to wait for
  * a parent to find this control before being read to in a voice made for them.
@@ -165,7 +165,7 @@ export function VoicePicker({
           <option value="">
             {formatMessage({
               id: "profiles.voice.device",
-              defaultMessage: "Your device's own voice",
+              defaultMessage: "Your device’s own voice",
             })}
           </option>
         </select>

@@ -39,6 +39,7 @@ export type StrokeIconName =
   | "keyboardOff"
   | "focus"
   | "back"
+  | "chevronLeft"
   | "sun"
   | "moon"
   | "auto"
@@ -199,6 +200,11 @@ const shapes: Record<StrokeIconName, ReactNode> = {
     </>
   ),
   back: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  // The same direction as `back` with the shaft removed. A separate name
+  // rather than a change to `back`, because that one also labels Log out in
+  // the menu drawer, where a bare chevron would point without saying
+  // anything.
+  chevronLeft: <path d="M15 5.5 8.5 12 15 18.5" />,
   // A circular arrow — "do this one again".
   restart: (
     <>

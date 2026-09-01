@@ -17,6 +17,7 @@ export * from "./course/language-line.ts";
 // other.
 export * from "./notifications/NotificationBell.tsx";
 export * from "./Overlay.tsx";
+export { accountProps } from "./prefs.ts";
 export * from "./profiles/BrailleBadge.tsx";
 export * from "./profiles/context.tsx";
 export * from "./profiles/ProfileAvatar.tsx";

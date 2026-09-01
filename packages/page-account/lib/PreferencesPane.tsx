@@ -34,7 +34,7 @@ import { SpeedUnit, uiProps } from "@keylearn/result";
 import { openResultStorage } from "@keylearn/result-loader";
 import { useSettings } from "@keylearn/settings";
 import { say } from "@keylearn/speech";
-import { useTheme } from "@keylearn/themes";
+import { FONTS, useTheme } from "@keylearn/themes";
 import { OptionList } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -660,7 +660,7 @@ export function AccessibilityPane(): ReactNode {
               sub={
                 <FormattedMessage
                   id="account.a11y.motion.sub"
-                  defaultMessage="Your device's own setting is already followed. This one is for wanting the rest of the machine to move and this page not to."
+                  defaultMessage="Your device’s own setting is already followed. This one is for wanting the rest of the machine to move and this page not to."
                 />
               }
               on={prefs.motion === "reduce"}
@@ -865,7 +865,7 @@ export function AccessibilityPane(): ReactNode {
                 here — it is part of setting a learner up, like their name and
                 their year, rather than an accessibility adjustment made
                 afterwards. What stays here is the braille drill's rate and the
-                device's own voice list, which belong to its learners. */}
+                device’s own voice list, which belong to its learners. */}
             {chosen?.visionSupport === true && (
               <>
                 <div className={styles.prefSect}>
@@ -974,7 +974,7 @@ function VoiceRows({
           <span className={styles.rowSub}>
             <FormattedMessage
               id="account.a11y.speechVoice.sub"
-              defaultMessage="Your device's voices. Left alone, the app uses whichever one matches the language of the page."
+              defaultMessage="Your device’s voices. Left alone, the app uses whichever one matches the language of the page."
             />
           </span>
         </div>
@@ -1316,6 +1316,34 @@ function LanguageRegionCard(): ReactNode {
 
       <div className={styles.hr} />
 
+      {/* Font sits with language rather than with the display switches: both
+          are choices about how words are set on the page, and somebody who
+          has just changed the language is the same person most likely to
+          want a face that suits it. Same row shape as the two controls above
+          it, so the card reads as one set of decisions. */}
+      <div className={styles.row}>
+        <div className={styles.rowText}>
+          <span className={styles.rowLabel}>
+            <FormattedMessage
+              id="account.prefs.fontSect"
+              defaultMessage="Font"
+            />
+          </span>
+          <span className={styles.rowSub}>
+            <FormattedMessage
+              id="account.prefs.font.sub"
+              defaultMessage="Used across every page. The text you type in practice is set separately and does not change."
+            />
+          </span>
+        </div>
+        <div className={styles.prefStack}>
+          <FontPicker />
+          <TextSizePicker />
+        </div>
+      </div>
+
+      <div className={styles.hr} />
+
       <div className={styles.row}>
         <div className={styles.rowText}>
           <span className={styles.rowLabel}>
@@ -1545,6 +1573,11 @@ function CursorEffectRow(): ReactNode {
 
   const [stilled, setStilled] = useState(false);
   useEffect(() => {
+    // A browser API, not a DOM one — jsdom has neither the media query nor a
+    // motion preference to report, so absent the API nothing is stilled.
+    if (typeof window.matchMedia !== "function") {
+      return;
+    }
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sync = () => setStilled(mq.matches);
     sync();
@@ -1562,10 +1595,11 @@ function CursorEffectRow(): ReactNode {
               defaultMessage="Pointer trail"
             />
           </span>
-          {/* No explanation in the ordinary case — the switch is next to the
-            label and the effect is visible the moment it is on. The one line
-            worth keeping is the one that explains a control that will not
-            respond, which is otherwise indistinguishable from a broken one. */}
+          {/* Two different lines. The reduced-motion one explains a control
+            that will not respond, which is otherwise indistinguishable from a
+            broken one; the ordinary one says what the effect actually is,
+            since "Pointer trail" names it without describing it and every
+            other row on this card carries a description. */}
           {stilled ? (
             <span className={styles.rowSub}>
               <FormattedMessage
@@ -1573,7 +1607,14 @@ function CursorEffectRow(): ReactNode {
                 defaultMessage="Unavailable because this device asks for reduced motion. Nothing on this screen will move until that is changed in your system settings."
               />
             </span>
-          ) : null}
+          ) : (
+            <span className={styles.rowSub}>
+              <FormattedMessage
+                id="account.prefs.cursorEffect.sub"
+                defaultMessage="A soft glow that follows your pointer around the page."
+              />
+            </span>
+          )}
         </div>
         <Toggle
           on={on && !stilled}
@@ -1636,6 +1677,185 @@ function CursorIntensityRow(): ReactNode {
   );
 }
 
+/**
+ * Whether the header announces who is signed in.
+ *
+ * Lives beside the display mode rather than under privacy: what a learner is
+ * deciding here is what their header looks like. The privacy benefit — a name
+ * not sitting on screen in a classroom or an office — is real, but it is a
+ * consequence of the choice, not the framing of it.
+ */
+/**
+ * The body font for every page of the site.
+ *
+ * The app's own OptionList, like the language and time zone controls it sits
+ * with — but every option is set in its own face, open and closed alike.
+ * `name` takes a ReactNode, so the preview costs nothing structural, and a
+ * list of font names all set in one font would answer none of the only
+ * question anybody brings here.
+ *
+ * Grouped, because seventeen ungrouped options are read by scanning
+ * seventeen. Grouped by what they FEEL like rather than by classification —
+ * somebody picking a font wants "rounded", not "geometric humanist sans".
+ *
+ * Nothing new is persisted: `font` has always been part of ThemePrefs and
+ * applied as `data-font` on the root. It simply had no control anywhere.
+ */
+/**
+ * Group order, and the order options must be handed over in.
+ *
+ * OptionListMenu writes a heading whenever an option's group differs from the
+ * one before it — so an unsorted list does not group, it just prints the same
+ * heading again every time the list wanders back. The FONTS registry is in
+ * the order the fonts were added, which interleaves them, so the options are
+ * sorted into this order before they go in.
+ */
+const GROUP_ORDER = ["Rounded", "Plain", "Serif", "Handwritten", "System"];
+
+const FONT_GROUPS: Record<string, string> = {
+  "nunito": "Rounded",
+  "lexend": "Rounded",
+  "questrial": "Rounded",
+  "sora": "Rounded",
+  "rubik": "Rounded",
+  "roboto": "Plain",
+  "open-sans": "Plain",
+  "inter": "Plain",
+  "manrope": "Plain",
+  "ubuntu": "Plain",
+  "spectral": "Serif",
+  "cormorant": "Serif",
+  "shantell-sans": "Handwritten",
+};
+
+/**
+ * What to set each preview in.
+ *
+ * The families the app ships need naming explicitly — an option's id is a
+ * slug ("open-sans"), not a family name, so `font-family: open-sans` would
+ * fall through to the default and every preview would look identical. The
+ * four generics pass straight through, which is the whole point of them.
+ */
+const FONT_STACK: Record<string, string> = {
+  "roboto": '"Roboto", sans-serif',
+  "open-sans": '"Open Sans", sans-serif',
+  "rubik": '"Rubik", sans-serif',
+  "shantell-sans": '"Shantell Sans", cursive',
+  "spectral": '"Spectral", serif',
+  "nunito": '"Nunito", sans-serif',
+  "ubuntu": '"Ubuntu", sans-serif',
+  "cormorant": '"Cormorant", serif',
+  "inter": '"Inter", sans-serif',
+  "manrope": '"Manrope", sans-serif',
+  "lexend": '"Lexend", sans-serif',
+  "questrial": '"Questrial", sans-serif',
+  "sora": '"Sora", sans-serif',
+};
+
+function FontPicker(): ReactNode {
+  const { formatMessage } = useIntl();
+  const { font, switchFont } = useTheme();
+  return (
+    <OptionList
+      title={formatMessage({
+        id: "account.prefs.fontSect",
+        defaultMessage: "Font",
+      })}
+      value={font}
+      options={[...FONTS]
+        .map(({ id, name }) => ({
+          value: id,
+          name: (
+            <span style={{ fontFamily: FONT_STACK[id] ?? id }}>{name}</span>
+          ),
+          group: FONT_GROUPS[id] ?? "System",
+        }))
+        .sort(
+          (a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group),
+        )}
+      onSelect={switchFont}
+    />
+  );
+}
+
+/**
+ * How large the interface is set, under the face it is set in.
+ *
+ * Listed small-to-large because that is the order the words are read in,
+ * which is not the order TEXT_SIZES declares them: medium is first there
+ * because ThemeList treats its first entry as the default. The two orders
+ * answer different questions and are meant to differ.
+ */
+const TEXT_SIZE_OPTIONS: readonly { id: string; label: ReactNode }[] = [
+  {
+    id: "small",
+    label: (
+      <FormattedMessage
+        id="account.prefs.textSize.small"
+        defaultMessage="Small"
+      />
+    ),
+  },
+  {
+    id: "medium",
+    label: (
+      <FormattedMessage
+        id="account.prefs.textSize.medium"
+        defaultMessage="Medium"
+      />
+    ),
+  },
+  {
+    id: "large",
+    label: (
+      <FormattedMessage
+        id="account.prefs.textSize.large"
+        defaultMessage="Large"
+      />
+    ),
+  },
+];
+
+function TextSizePicker(): ReactNode {
+  const { textSize, switchTextSize } = useTheme();
+  return (
+    <Segmented
+      value={textSize}
+      onChange={switchTextSize}
+      options={TEXT_SIZE_OPTIONS}
+    />
+  );
+}
+
+function HeaderIdentityRow(): ReactNode {
+  const { settings, updateSettings } = useSettings();
+  const on = settings.get(accountProps.showHeaderIdentity);
+  return (
+    <div className={styles.row}>
+      <div className={styles.rowText}>
+        <span className={styles.rowLabel}>
+          <FormattedMessage
+            id="account.prefs.headerIdentity"
+            defaultMessage="Show me in the header"
+          />
+        </span>
+        <span className={styles.rowSub}>
+          <FormattedMessage
+            id="account.prefs.headerIdentity.sub"
+            defaultMessage="Your avatar and first name, beside the header controls. Off by default — your account and profiles are always in the menu either way."
+          />
+        </span>
+      </div>
+      <Toggle
+        on={on}
+        onChange={(v) =>
+          updateSettings(settings.set(accountProps.showHeaderIdentity, v))
+        }
+      />
+    </div>
+  );
+}
+
 function AppearanceCard(): ReactNode {
   const { color, switchColor } = useTheme();
 
@@ -1671,6 +1891,7 @@ function AppearanceCard(): ReactNode {
         </div>
 
         <CursorEffectRow />
+        <HeaderIdentityRow />
       </div>
 
       <div className={styles.prefCard}>

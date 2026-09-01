@@ -1,5 +1,5 @@
 import { useTheme } from "@keylearn/themes";
-import { IconButton, StrokeIcon } from "@keylearn/widget";
+import { ColorIcon, IconButton } from "@keylearn/widget";
 import * as styles from "./ThemeSwitcher.module.less";
 
 // The header theme control cycles through three modes: Auto (follow the
@@ -35,7 +35,7 @@ export function ThemeSwitcher() {
       }}
     >
       <IconButton
-        icon={<StrokeIcon name={ICON[current]} />}
+        icon={<ColorIcon name={ICON[current]} />}
         title={`Theme: ${LABEL[current]}. Tap to switch — Auto, Day, Night.`}
         onClick={() => {
           switchColor(next);

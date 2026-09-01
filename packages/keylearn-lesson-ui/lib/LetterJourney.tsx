@@ -240,7 +240,11 @@ export function LetterJourney({
 
 function readinessNote(confidence: number): string {
   if (confidence >= 1) {
-    return "ready to unlock";
+    // NOT "ready to unlock": this letter is already unlocked and already at
+    // the bar — what is about to happen is that the NEXT letter opens. The old
+    // wording read as an instruction to go and unlock something, which is why
+    // it was reported as confusing.
+    return "next letter unlocking";
   }
   if (confidence <= 0) {
     return "you are here";

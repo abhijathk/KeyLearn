@@ -1,8 +1,19 @@
 import { parseReply, plainText } from "@keylearn/page-support";
 import { type NotificationDetails, usePageData } from "@keylearn/pages-shared";
 import { NOTIFICATIONS_CHANGED } from "@keylearn/pages-shared";
-import { IconButton, renderMessageText, StrokeIcon } from "@keylearn/widget";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  ColorIcon,
+  IconButton,
+  Portal,
+  renderMessageText,
+} from "@keylearn/widget";
+import {
+  type ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { AccountService } from "../service.ts";
 import * as styles from "./NotificationBell.module.less";
@@ -43,6 +54,10 @@ export function NotificationBell(): ReactNode {
   >(null);
   const [unread, setUnread] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState<{ top: number; left: number } | null>(
+    null,
+  );
 
   /**
    * Polled, and refreshed the moment the tab comes back.
@@ -106,12 +121,71 @@ export function NotificationBell(): ReactNode {
     };
   }, [signedIn]);
 
+  /**
+   * Placed against the bell, from outside the header.
+   *
+   * The panel is portalled to the page root rather than rendered where it
+   * sits in the tree, because on the practice page the header lives inside a
+   * clipping slot — `overflow: hidden`, so it can slide down behind the
+   * telemetry island while the learner types. An absolutely positioned panel
+   * inside that box gets sliced off at the header's own bottom edge: 50px of
+   * notifications, 4px of it visible.
+   *
+   * `position: fixed` alone does not get out. The header carries a
+   * `backdrop-filter` and a `transform`, and either one makes it the
+   * containing block for fixed descendants, so the panel would still be
+   * measured — and clipped — against the header.
+   *
+   * Which leaves placing it by hand, since it no longer has the bell as an
+   * offset parent. Right edges aligned, then clamped into the viewport: the
+   * bell sits near the trailing edge, which is the left one in Arabic and
+   * Hebrew, and an unclamped panel would hang off the side there.
+   */
+  useLayoutEffect(() => {
+    if (!open) {
+      setPlace(null);
+      return;
+    }
+    const position = () => {
+      const anchor = rootRef.current?.getBoundingClientRect();
+      if (anchor == null) {
+        return;
+      }
+      // Measured, not assumed: the panel's width is a clamp in the
+      // stylesheet, so only the rendered box knows what it came out as.
+      const width = dropRef.current?.getBoundingClientRect().width ?? 0;
+      const margin = 12;
+      const left = Math.max(
+        margin,
+        Math.min(anchor.right - width, window.innerWidth - width - margin),
+      );
+      setPlace({ top: anchor.bottom + 6, left });
+    };
+    position();
+    window.addEventListener("resize", position);
+    // Capture: the scroller that moves the bell is the page, but on other
+    // pages it can be a column inside it, and those do not bubble scroll.
+    window.addEventListener("scroll", position, true);
+    return () => {
+      window.removeEventListener("resize", position);
+      window.removeEventListener("scroll", position, true);
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) {
       return;
     }
     const onClickOutside = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) {
+      // Both boxes, because the panel is no longer a descendant of the root.
+      // Testing only the root closed the panel on mousedown over its own
+      // rows — which unmounted the button before its click could land, so
+      // dismissing a notification or opening a thread did nothing at all.
+      const target = e.target as Node;
+      if (
+        !rootRef.current?.contains(target) &&
+        !dropRef.current?.contains(target)
+      ) {
         setOpen(false);
       }
     };
@@ -150,7 +224,7 @@ export function NotificationBell(): ReactNode {
   return (
     <div className={styles.root} ref={rootRef}>
       <IconButton
-        icon={<StrokeIcon name="bell" />}
+        icon={<ColorIcon name="bell" />}
         title={formatMessage(
           defineMessage({
             id: "notifications.bell.title",
@@ -161,38 +235,52 @@ export function NotificationBell(): ReactNode {
       />
       {unread > 0 && <span className={styles.dot} aria-hidden="true" />}
       {open && (
-        <div className={styles.drop}>
-          {notifications == null && (
-            <p className={styles.empty}>
-              <FormattedMessage
-                id="staffDesk.loading"
-                defaultMessage="Loading…"
-              />
-            </p>
-          )}
-          {notifications != null && notifications.length === 0 && (
-            <p className={styles.empty}>
-              <FormattedMessage
-                id="notifications.empty"
-                defaultMessage="Nothing here yet."
-              />
-            </p>
-          )}
+        <Portal>
+          <div
+            ref={dropRef}
+            className={styles.drop}
+            style={{
+              top: place?.top ?? 0,
+              left: place?.left ?? 0,
+              // Placed before it is painted — the layout effect above runs
+              // after the commit and before paint — but the very first pass
+              // has to measure the box to know its width, and that pass has
+              // it parked at 0,0. Hidden until placed, so that corner never
+              // reaches the screen.
+              visibility: place == null ? "hidden" : "visible",
+            }}
+          >
+            {notifications == null && (
+              <p className={styles.empty}>
+                <FormattedMessage
+                  id="staffDesk.loading"
+                  defaultMessage="Loading…"
+                />
+              </p>
+            )}
+            {notifications != null && notifications.length === 0 && (
+              <p className={styles.empty}>
+                <FormattedMessage
+                  id="notifications.empty"
+                  defaultMessage="Nothing here yet."
+                />
+              </p>
+            )}
 
-          {notifications?.map((n) => (
-            <div
-              key={n.id}
-              className={
-                n.read ? styles.item : `${styles.item} ${styles.unread}`
-              }
-            >
-              <button
-                type="button"
-                className={styles.itemMain}
-                onClick={() => openThread(n)}
+            {notifications?.map((n) => (
+              <div
+                key={n.id}
+                className={
+                  n.read ? styles.item : `${styles.item} ${styles.unread}`
+                }
               >
-                <span className={styles.body}>
-                  {/* The plain reading of the reply, not the raw text.
+                <button
+                  type="button"
+                  className={styles.itemMain}
+                  onClick={() => openThread(n)}
+                >
+                  <span className={styles.body}>
+                    {/* The plain reading of the reply, not the raw text.
                       A preview is one line of a dropdown — there is no
                       room for a keycap rail, and showing the source
                       instead put literal asterisks in front of the
@@ -200,57 +288,58 @@ export function NotificationBell(): ReactNode {
                       plainText() derives the fallback from the parsed
                       blocks, so it can never disagree with what the
                       thread itself displays. */}
-                  {n.body != null ? (
-                    renderMessageText(previewOf(n.body), undefined, locale)
-                  ) : (
-                    <FormattedMessage
-                      id="notifications.ticketReply"
-                      defaultMessage="Your support ticket got a reply"
-                    />
-                  )}
-                </span>
-                {/* Under the message, not above it: leading with the date
+                    {n.body != null ? (
+                      renderMessageText(previewOf(n.body), undefined, locale)
+                    ) : (
+                      <FormattedMessage
+                        id="notifications.ticketReply"
+                        defaultMessage="Your support ticket got a reply"
+                      />
+                    )}
+                  </span>
+                  {/* Under the message, not above it: leading with the date
                     put "when" in front of "what", and wrapped it mid-value
                     at this width. */}
-                <span className={styles.time}>
-                  {new Date(n.createdAt).toLocaleString(undefined, {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </button>
+                  <span className={styles.time}>
+                    {new Date(n.createdAt).toLocaleString(undefined, {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </button>
 
-              <button
-                type="button"
-                className={styles.dismiss}
-                aria-label={formatMessage(
-                  defineMessage({
-                    id: "notifications.clear",
-                    defaultMessage: "Clear this notification",
-                  }),
-                )}
-                onClick={() => dismiss(n)}
-              >
-                <svg
-                  viewBox="0 0 16 16"
-                  width="11"
-                  height="11"
-                  aria-hidden="true"
+                <button
+                  type="button"
+                  className={styles.dismiss}
+                  aria-label={formatMessage(
+                    defineMessage({
+                      id: "notifications.clear",
+                      defaultMessage: "Clear this notification",
+                    }),
+                  )}
+                  onClick={() => dismiss(n)}
                 >
-                  <path
-                    d="M4 4l8 8M12 4l-8 8"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="11"
+                    height="11"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 4l8 8M12 4l-8 8"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </Portal>
       )}
     </div>
   );

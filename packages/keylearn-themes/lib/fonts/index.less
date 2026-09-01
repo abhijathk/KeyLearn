@@ -90,12 +90,28 @@
 @import "ubuntu-mono-700.css";
 @import "ubuntu-mono-700italic.css";
 
+@import "inter-400.css";
+@import "inter-400italic.css";
+@import "inter-700.css";
+@import "inter-700italic.css";
+@import "manrope-400.css";
+@import "manrope-700.css";
+@import "lexend-400.css";
+@import "lexend-700.css";
+@import "questrial-400.css";
+@import "sora-400.css";
+@import "sora-700.css";
+
 @import "whitespace-em1000.css";
 
 :where(html) {
-  --default-font-family: "Open Sans", sans-serif;
-  --header-font-family: "Open Sans", sans-serif;
-  --value-font-family: "JetBrains Mono", "Ubuntu Mono", monospace;
+  // Matches what `data-font="roboto"` sets, because Roboto is the default —
+  // it is first in the FONTS list, which is what ThemeList.default returns.
+  // This block only applies before the attribute lands, so a different face
+  // here was a flash of a font the app never actually defaults to.
+  --default-font-family: "Roboto", sans-serif;
+  --header-font-family: "Roboto", sans-serif;
+  --value-font-family: "Roboto Mono", monospace;
   --monospace-font-family: "JetBrains Mono", "Ubuntu Mono", monospace;
 }
 
@@ -121,6 +137,31 @@ html[data-font="roboto"] {
   --default-font-family: "Roboto", sans-serif;
   --header-font-family: "Roboto", sans-serif;
   --value-font-family: "Roboto Mono", monospace;
+}
+
+html[data-font="inter"] {
+  --default-font-family: "Inter", sans-serif;
+  --header-font-family: "Inter", sans-serif;
+}
+
+html[data-font="manrope"] {
+  --default-font-family: "Manrope", sans-serif;
+  --header-font-family: "Manrope", sans-serif;
+}
+
+html[data-font="lexend"] {
+  --default-font-family: "Lexend", sans-serif;
+  --header-font-family: "Lexend", sans-serif;
+}
+
+html[data-font="questrial"] {
+  --default-font-family: "Questrial", sans-serif;
+  --header-font-family: "Questrial", sans-serif;
+}
+
+html[data-font="sora"] {
+  --default-font-family: "Sora", sans-serif;
+  --header-font-family: "Sora", sans-serif;
 }
 
 html[data-font="rubik"] {

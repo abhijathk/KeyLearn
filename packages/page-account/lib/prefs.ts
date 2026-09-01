@@ -33,6 +33,16 @@ export const accountProps = {
   emailProductNews: booleanProp("account.emailProductNews", false),
   // "major" | "all" — how much news counts as news.
   newsLevel: stringProp("account.newsLevel", "major", { maxLength: 8 }),
+  /**
+   * Whether the header shows who is signed in — the avatar and first name.
+   *
+   * Off by default (owner decision). The chip is a passive indicator, not a
+   * control: Account, Log out and the learner switcher all live in the menu
+   * drawer, so hiding it costs nothing but a shoulder-surfer reading a name
+   * off a screen. Signed-OUT visitors keep their log-in chip regardless —
+   * that one IS a control, and this setting cannot reach them anyway.
+   */
+  showHeaderIdentity: booleanProp("account.showHeaderIdentity", false),
   analytics: booleanProp("account.analytics", false),
 } as const;
 

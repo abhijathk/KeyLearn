@@ -51,7 +51,7 @@ test("mount and switch styles", async () => {
   equal(
     document.cookie,
     "prefs=%7B%22color%22%3A%22keylearn-day%22%2C%22font%22%3A%22spectral%22" +
-      "%2C%22accent%22%3A%22keylearn%22%7D",
+      "%2C%22textSize%22%3A%22medium%22%2C%22accent%22%3A%22keylearn%22%7D",
   );
   equal(document.documentElement.dataset["color"], "keylearn-day");
   equal(document.documentElement.dataset["font"], "spectral");
@@ -65,7 +65,7 @@ test("mount and switch styles", async () => {
   equal(
     document.cookie,
     "prefs=%7B%22color%22%3A%22keylearn-day%22%2C%22font%22%3A%22open-sans%22" +
-      "%2C%22accent%22%3A%22keylearn%22%7D",
+      "%2C%22textSize%22%3A%22medium%22%2C%22accent%22%3A%22keylearn%22%7D",
   );
   equal(document.documentElement.dataset["color"], "keylearn-day");
   equal(document.documentElement.dataset["font"], "open-sans");

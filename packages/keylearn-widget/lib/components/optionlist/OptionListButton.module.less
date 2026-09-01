@@ -6,7 +6,10 @@
   display: inline-block;
   position: relative;
   vertical-align: middle;
-  min-inline-size: 20rem;
+  // 20rem made this 340px — wider than the setting it belongs to and wider
+  // than anything else on the panel. It only ever needs to hold a value like
+  // "United States", and it still grows past this when one is longer.
+  min-inline-size: 11rem;
   margin: 0;
   padding: 0;
   border: 1px solid var(--TextField__border-color);
@@ -14,7 +17,10 @@
   color: var(--TextField__color);
   background-color: var(--TextField__background-color);
   font-family: var(--default-font-family);
-  font-size: 1rem;
+  // Matched to the label beside it. At 1rem the value was set LARGER than
+  // the setting's own name, which put the emphasis on the answer rather than
+  // on the question.
+  font-size: 0.85rem;
   font-weight: normal;
   font-style: normal;
   text-align: start;
@@ -49,10 +55,44 @@
 }
 
 .placeholderArrow {
+  display: inline-flex;
+  align-items: center;
   vertical-align: middle;
   block-size: @field-height;
   margin: 0;
-  padding-inline: 0 1.5rem;
+  padding-inline: 0 0.9rem;
   padding-block: 0;
-  line-height: @field-height;
+}
+
+// Subtle on purpose: the value is what somebody reads here, and the mark
+// saying "this opens" should be the quietest thing in the field, not the
+// darkest. Same line language as the app's other icons — 1.7 stroke,
+// rounded caps — so it belongs to the same set.
+.chevron {
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.45;
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.root:hover .chevron {
+  opacity: 0.75;
+}
+
+.chevronOpen {
+  opacity: 0.75;
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
 }

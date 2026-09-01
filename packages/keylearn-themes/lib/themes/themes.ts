@@ -75,6 +75,26 @@ export const FONTS = new ThemeList([
     name: "Cormorant",
   },
   {
+    id: "inter",
+    name: "Inter",
+  },
+  {
+    id: "manrope",
+    name: "Manrope",
+  },
+  {
+    id: "lexend",
+    name: "Lexend",
+  },
+  {
+    id: "questrial",
+    name: "Questrial",
+  },
+  {
+    id: "sora",
+    name: "Sora",
+  },
+  {
     id: "sans-serif",
     name: "sans-serif",
   },
@@ -89,5 +109,30 @@ export const FONTS = new ThemeList([
   {
     id: "cursive",
     name: "cursive",
+  },
+]);
+
+/**
+ * How large the interface is set — the companion to FONTS above.
+ *
+ * The same scope as the font: every page of the app, and not the passage the
+ * learner types, which has its own size control in the practice settings and
+ * would otherwise be scaled twice (see TextLines.module.less, which divides
+ * this back out).
+ *
+ * Medium is first, which is what makes it the default for a fresh visit.
+ */
+export const TEXT_SIZES = new ThemeList([
+  {
+    id: "medium",
+    name: "Medium",
+  },
+  {
+    id: "small",
+    name: "Small",
+  },
+  {
+    id: "large",
+    name: "Large",
   },
 ]);

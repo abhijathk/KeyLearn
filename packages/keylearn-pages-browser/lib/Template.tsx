@@ -115,13 +115,34 @@ function storedMode(): string | null {
   }
 }
 
-// The drawer's open state survives the subtree remount that a learner
-// switch triggers, so flipping profiles doesn't slam the panel shut.
+// The drawer's open state survives the subtree remount that a learner switch
+// triggers, so flipping profiles doesn't slam the panel shut.
+//
+// The flag exists for exactly one hop — the remount that happens moments
+// after it is written. Left in place it survived the whole session instead:
+// open the drawer, then press Back or reload, and the panel reappeared over
+// the page with its scrim, on every load, until something closed it.
+//
+// So it is consumed — but in an effect, not here. This function is a
+// useState initialiser and must stay pure: StrictMode calls it twice in
+// development, and a version that cleared the flag on read consumed it on
+// the first call and returned false on the second, so the drawer never
+// reopened at all.
 function loadMenuOpen(): boolean {
   try {
     return sessionStorage.getItem("keylearn.drawer") === "open";
   } catch {
     return false;
+  }
+}
+
+/** Spend the one hop the flag was written for. Idempotent, so a second
+    StrictMode pass costs nothing. */
+function clearMenuOpen(): void {
+  try {
+    sessionStorage.removeItem("keylearn.drawer");
+  } catch {
+    // Storage may be unavailable.
   }
 }
 
@@ -141,6 +162,11 @@ export function Template({
   readonly children: ReactNode;
 }) {
   const [menuOpen, setMenuOpenState] = useState(loadMenuOpen);
+  // Consumed after mount: the state above has taken its value, and leaving
+  // the flag set is what made the drawer reopen on every later load.
+  useEffect(() => {
+    clearMenuOpen();
+  }, []);
   const setMenuOpen = (open: boolean) => {
     saveMenuOpen(open);
     setMenuOpenState(open);

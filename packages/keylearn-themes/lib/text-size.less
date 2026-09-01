@@ -1,0 +1,42 @@
+// How large the interface is set — the size companion to fonts/index.less.
+//
+// Done by scaling the ROOT font size rather than by touching any rule, which
+// is the only approach that reaches all of it: the app is written in rem
+// almost throughout, so one number at the root moves every label, field,
+// heading and gap together and nothing has to be kept in step by hand.
+//
+// Percentages, not pixels. `100%` is whatever the visitor's browser is set
+// to, so somebody who has already raised their default text size keeps that
+// and gets our step applied on top of it. Pinning `16px` here would quietly
+// throw their setting away — which is the one group of people this control
+// exists for.
+//
+// `--ui-scale` carries the same number for the places that must NOT follow.
+// The practice passage is the whole of that list: it has its own size control
+// in the practice settings, and scaling the root as well would multiply the
+// two together. TextLines.module.less divides this straight back out, which
+// is why the font row promises "the text you type in practice is set
+// separately and does not change" and stays honest.
+:where(html) {
+  --ui-scale: 1;
+}
+
+html[data-text-size="small"] {
+  --ui-scale: 0.9375;
+
+  font-size: 93.75%;
+}
+
+// Named rather than left to the fallback above: the attribute is always
+// written, and a visitor switching back from Large has to land on something.
+html[data-text-size="medium"] {
+  --ui-scale: 1;
+
+  font-size: 100%;
+}
+
+html[data-text-size="large"] {
+  --ui-scale: 1.125;
+
+  font-size: 112.5%;
+}

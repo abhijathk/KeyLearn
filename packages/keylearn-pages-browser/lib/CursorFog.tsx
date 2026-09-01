@@ -303,7 +303,7 @@ export function CursorFog(): ReactNode {
      * This component is a child of the theme provider, and React runs child
      * effects BEFORE parent effects — so re-running this effect on a theme
      * change reads the custom properties before the provider has applied the
-     * new ones, and the fog keeps the old theme's colours until something
+     * new ones, and the fog keeps the old theme’s colours until something
      * else forces a rebuild. That is the "needs a refresh" bug exactly.
      *
      * Deferring the read to the first animation frame sidesteps the ordering

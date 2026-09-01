@@ -61,6 +61,26 @@ import { speedTrend } from "./trend.ts";
  * stack in one lane beside it, rhyming dot above dot; and every other number
  * collapses into a whisper line of pure typography underneath.
  */
+/**
+ * Whether the header above has collapsed.
+ *
+ * Listens to the same `keylearn:header-hide` broadcast the header itself
+ * obeys, rather than re-deriving "is the learner typing" here. The two halves
+ * of this card meet at a seam, and a seam whose sides answer to two different
+ * signals is a seam that steps mid-animation.
+ */
+function useHeaderHidden(): boolean {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    const onHide = (ev: Event) => {
+      setHidden(Boolean((ev as CustomEvent<boolean>).detail));
+    };
+    window.addEventListener("keylearn:header-hide", onHide);
+    return () => window.removeEventListener("keylearn:header-hide", onHide);
+  }, []);
+  return hidden;
+}
+
 export const Pulse = memo(function Pulse({
   summaryStats,
   speeds,
@@ -194,9 +214,10 @@ export const Pulse = memo(function Pulse({
     [focusedKey?.samples, settings],
   );
   const learningRate = learningRateInfo?.learningRate ?? null;
+  const headerHidden = useHeaderHidden();
 
   return (
-    <div className={styles.root}>
+    <div className={clsx(styles.root, headerHidden && styles.alone)}>
       <div className={styles.l1}>
         {speeds.length > 1 && (
           <div

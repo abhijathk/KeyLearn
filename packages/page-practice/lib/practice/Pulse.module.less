@@ -4,14 +4,60 @@
 .root {
   inline-size: min(72rem, calc(100% - 2.5rem));
   margin-inline: auto;
-  margin-block-start: 0.6rem;
+  // No gap to the header above: it is the top half of this same card and has
+  // grown down to meet this edge (Header.module.less .joined). The rule at the
+  // join is the same hairline this panel already draws between its own two
+  // lines (see .l2) — one card, one way of separating its bands.
+  //
+  // Drawn on THIS edge rather than the header's, because the header slides
+  // away and its border would go with it; the divider belongs to the seam,
+  // which stays.
+  margin-block-start: 0;
   padding-inline: 1.5rem;
-  padding-block: 1rem 0.85rem;
+  // Tighter at the top than the bottom: above it is the seam with the header
+  // band, which needs far less breathing room than the open edge of the card.
+  padding-block: 0.7rem 0.85rem;
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--primary-d2) 70%, transparent);
   border-radius: 1.25rem;
+  // Square where it meets the header, which is the top half of the same card
+  // (Header.module.less .joined). Restored the moment that half collapses —
+  // see .alone.
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
   background-color: color-mix(in srgb, var(--primary-l1) 78%, transparent);
-  box-shadow: 0 0.9rem 2.5rem
-    color-mix(in srgb, var(--shadow-color) 45%, transparent);
+  // Kept deliberately shallow (owner decision). A deep drop shadow reads as
+  // the panel hovering well above the page; this is closer to a card resting
+  // on it. Header and telemetry island share the value — they are the same
+  // material, and a mismatch would show at the seam between them.
+  box-shadow: 0 0.3rem 0.9rem
+    color-mix(in srgb, var(--shadow-color) 28%, transparent);
+  // Matched to the header's slide, curve for curve. The corners and the seam
+  // rule belong to the same movement as the half sliding away — snap them and
+  // the card shows square corners against a header that is still half in
+  // frame, which reads as the two pieces disagreeing.
+  transition:
+    border-radius 0.9s cubic-bezier(0.33, 0, 0.2, 1),
+    border-block-start-color 0.9s cubic-bezier(0.33, 0, 0.2, 1);
   backdrop-filter: blur(16px);
+}
+
+// The header above has collapsed, so this is the whole card again and gets
+// its top corners back. Driven by the SAME broadcast the header obeys
+// (`keylearn:header-hide`) rather than by this component's own idea of when
+// typing starts — two sources for one seam is how the two halves end up
+// disagreeing mid-animation and showing a step.
+.alone {
+  // Nothing above to be divided from once the header has gone.
+  border-block-start-color: transparent;
+  border-start-start-radius: 1.25rem;
+  border-start-end-radius: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    transition: none;
+  }
 }
 
 // ---- line one: hero + roads ----------------------------------------------

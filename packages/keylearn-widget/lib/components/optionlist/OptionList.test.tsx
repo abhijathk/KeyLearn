@@ -23,11 +23,11 @@ test("props", () => {
   );
   const element = r.getByTitle("underTest");
 
-  equal(element.textContent, "One►");
+  equal(element.textContent, "One");
   r.rerender(<OptionList options={options} value="2" />);
-  equal(element.textContent, "Two►");
+  equal(element.textContent, "Two");
   r.rerender(<OptionList options={options} value="X" />);
-  equal(element.textContent, "-►");
+  equal(element.textContent, "-");
 
   r.unmount();
 });

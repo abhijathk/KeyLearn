@@ -375,7 +375,7 @@ function ThemedZonesRow({
         <span className={styles.zoneLabel}>
           <FormattedMessage
             id="account.appearance.themedZones"
-            defaultMessage="Keyboard in my theme's colours"
+            defaultMessage="Keyboard in my theme’s colours"
           />
         </span>
         <span className={styles.zoneSub}>
