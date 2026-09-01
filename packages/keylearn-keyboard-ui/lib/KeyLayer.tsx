@@ -4,7 +4,9 @@ import {
   type KeyShape,
   useKeyboard,
 } from "@keylearn/keyboard";
+import { useSettings } from "@keylearn/settings";
 import {
+  cloneElement,
   type ComponentType,
   memo,
   type ReactElement,
@@ -12,12 +14,17 @@ import {
   useRef,
 } from "react";
 import { type KeyProps, makeKeyComponent } from "./Key.tsx";
+import { useSkin } from "./lighting.ts";
 import { Surface } from "./shapes.tsx";
+import { makeSkinnedKeyComponent } from "./SkinnedKey.tsx";
+import { type Skin } from "./skins.ts";
 
 export const KeyLayer = memo(function KeyLayer({
   depressedKeys = [],
   toggledKeys = [],
   showColors = false,
+  cuedKey = null,
+  cuedRing = false,
   onKeyHoverIn,
   onKeyHoverOut,
   onKeyClick,
@@ -25,13 +32,25 @@ export const KeyLayer = memo(function KeyLayer({
   readonly depressedKeys?: readonly KeyId[];
   readonly toggledKeys?: readonly KeyId[];
   readonly showColors?: boolean;
+  /** The key the learner should press next, if any. */
+  readonly cuedKey?: KeyId | null;
+  /** Ring the cued key, for a board with no light to carry the cue. */
+  readonly cuedRing?: boolean;
   readonly onKeyHoverIn?: (key: KeyId, elem: Element) => void;
   readonly onKeyHoverOut?: (key: KeyId, elem: Element) => void;
   readonly onKeyClick?: (key: KeyId, elem: Element) => void;
 }) {
   const keyboard = useKeyboard();
   const svgRef = useRef<SVGSVGElement>(null);
-  const children = useMemo(() => getKeyElements(keyboard), [keyboard]);
+  // Which keyset draws the caps. Threaded into the memo key so switching
+  // style rebuilds the components — they are built once per key and cached,
+  // so a stale cache would leave the old board on screen.
+  const { settings } = useSettings();
+  const skin = useSkin(settings);
+  const children = useMemo(
+    () => getKeyElements(keyboard, skin),
+    [keyboard, skin],
+  );
   return (
     <Surface
       ref={svgRef}
@@ -46,7 +65,13 @@ export const KeyLayer = memo(function KeyLayer({
       }}
     >
       {children.map((child) =>
-        child.select(depressedKeys, toggledKeys, showColors),
+        child.select(
+          depressedKeys,
+          toggledKeys,
+          showColors,
+          cuedKey ?? null,
+          cuedRing,
+        ),
       )}
     </Surface>
   );
@@ -71,9 +96,12 @@ function relayEvent(
   }
 }
 
-function getKeyElements(keyboard: Keyboard): MemoizedKeyElements[] {
+function getKeyElements(
+  keyboard: Keyboard,
+  skin: Skin | null,
+): MemoizedKeyElements[] {
   return [...keyboard.shapes.values()].map(
-    (shape) => new MemoizedKeyElements(keyboard, shape),
+    (shape) => new MemoizedKeyElements(keyboard, shape, skin),
   );
 }
 
@@ -91,8 +119,12 @@ class MemoizedKeyElements {
   constructor(
     readonly keyboard: Keyboard,
     readonly shape: KeyShape,
+    skin: Skin | null,
   ) {
-    const Component = makeKeyComponent(keyboard.layout.language, shape);
+    const Component =
+      skin != null
+        ? makeSkinnedKeyComponent(keyboard.layout.language, shape, skin)
+        : makeKeyComponent(keyboard.layout.language, shape);
     this.component = Component;
     this.state0 = (
       <Component
@@ -161,6 +193,24 @@ class MemoizedKeyElements {
   }
 
   select(
+    depressedKeys: readonly KeyId[],
+    toggledKeys: readonly KeyId[],
+    showColors: boolean,
+    cuedKey: KeyId | null = null,
+    cuedRing = false,
+  ): ReactElement<KeyProps> {
+    const chosen = this.pick(depressedKeys, toggledKeys, showColors);
+    // The next key wears the cue colour and breathes with the light. Cloning
+    // keeps the eight memoised states intact — the cued key changes on every
+    // keystroke, so baking it in would rebuild every key each time.
+    return cuedKey != null && cuedKey === this.shape.id
+      ? // No cast: KeyProps declares these now, so a component that stops
+        // accepting them turns this into a type error instead of a DOM leak.
+        cloneElement(chosen, { cued: true, cuedRing })
+      : chosen;
+  }
+
+  private pick(
     depressedKeys: readonly KeyId[],
     toggledKeys: readonly KeyId[],
     showColors: boolean,

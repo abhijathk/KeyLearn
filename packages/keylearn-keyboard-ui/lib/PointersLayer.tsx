@@ -5,7 +5,9 @@ import {
   useKeyboard,
 } from "@keylearn/keyboard";
 import { Tasks } from "@keylearn/lang";
+import { useSettings } from "@keylearn/settings";
 import { type CodePoint } from "@keylearn/unicode";
+import { clsx } from "clsx";
 import {
   type CSSProperties,
   memo,
@@ -14,6 +16,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { useCapRadius } from "./lighting.ts";
+import { cueIsLight } from "./lighting.ts";
 import * as styles from "./PointersLayer.module.less";
 import { keyGap, keySize, Surface } from "./shapes.tsx";
 
@@ -37,6 +41,11 @@ export const PointersLayer = memo(function PointersLayer({
   readonly helpLevel?: number;
 }): ReactNode {
   const keyboard = useKeyboard();
+  const { settings } = useSettings();
+  const radius = useCapRadius(settings);
+  // With the board lit, the light IS the cue. Drawing a ring as well would be
+  // two markers for one instruction.
+  const asLight = cueIsLight(settings);
   const svgRef = useRef<SVGSVGElement>(null);
   const [combo, setCombo] = useState<KeyCombo | null>(null);
   // Only the very next character decides which key is cued. The suffix itself
@@ -80,6 +89,8 @@ export const PointersLayer = memo(function PointersLayer({
         // A whole word in capitals is what Caps Lock is for; one capital is
         // what Shift is for. Suggesting the wrong one teaches a slower habit.
         capsLock !== capsRun(suffix, !capsLock),
+        asLight,
+        radius,
       )}
       {mainShape != null && guideArrow(mainShape)}
     </Surface>
@@ -136,20 +147,33 @@ function pointers(
   helpLevel = 0,
   capsLockApplies = false,
   suggestCapsLock = false,
+  asLight = false,
+  /* Passed in rather than looked up: these are plain functions, not
+     components, so they cannot ask the board what shape its caps are. */
+  radius: (h: number) => number = () => 7,
 ): ReactNode[] {
   const children = [];
   let main = true;
   while (combo != null) {
     const shape = keyboard.getShape(combo.id);
     if (shape != null) {
-      children.unshift(cometPointer(shape, main && helpLevel >= 2));
+      // When the board is lit the cue is drawn by CueGlowLayer, which renders
+      // BEFORE the keys so the light comes from under the cap. Nothing to add
+      // here beyond the shift/caps hints below.
+      if (!asLight) {
+        children.unshift(cometPointer(shape, main && helpLevel >= 2, radius));
+      }
       main = false;
       if (suggestCapsLock) {
         // The run ahead is long enough to be worth latching. Point at Caps
         // Lock instead of Shift — including when it is already on and the
         // coming word is lower-case, where the advice is to turn it off.
         children.unshift(
-          pointer(keyboard.getShape("CapsLock"), styles.modifierPointer),
+          pointer(
+            keyboard.getShape("CapsLock"),
+            styles.modifierPointer,
+            radius,
+          ),
         );
       } else if (
         // The same exclusive-or the keycaps use: Caps Lock and Shift each flip
@@ -161,15 +185,15 @@ function pointers(
         const r = keyboard.getShape("ShiftRight");
         switch (shape.hand) {
           case "left":
-            children.unshift(pointer(r, styles.modifierPointer));
+            children.unshift(pointer(r, styles.modifierPointer, radius));
             break;
           case "right":
-            children.unshift(pointer(l, styles.modifierPointer));
+            children.unshift(pointer(l, styles.modifierPointer, radius));
             break;
           default:
             children.unshift(
-              pointer(l, styles.modifierPointer),
-              pointer(r, styles.modifierPointer),
+              pointer(l, styles.modifierPointer, radius),
+              pointer(r, styles.modifierPointer, radius),
             );
             break;
         }
@@ -179,15 +203,15 @@ function pointers(
         const r = keyboard.getShape("AltRight");
         switch (shape.hand) {
           case "left":
-            children.unshift(pointer(r, styles.modifierPointer));
+            children.unshift(pointer(r, styles.modifierPointer, radius));
             break;
           case "right":
-            children.unshift(pointer(l, styles.modifierPointer));
+            children.unshift(pointer(l, styles.modifierPointer, radius));
             break;
           default:
             children.unshift(
-              pointer(l, styles.modifierPointer),
-              pointer(r, styles.modifierPointer),
+              pointer(l, styles.modifierPointer, radius),
+              pointer(r, styles.modifierPointer, radius),
             );
             break;
         }
@@ -203,7 +227,11 @@ function pointers(
  * faint rail, with a fading trail behind it. Three rects share one rounded
  * geometry; the dash pattern and an animated dash offset make the light move.
  */
-function cometPointer(shape: KeyShape | null, urgent: boolean): ReactNode {
+function cometPointer(
+  shape: KeyShape | null,
+  urgent: boolean,
+  radius: (h: number) => number = () => 7,
+): ReactNode {
   if (shape == null) {
     return null;
   }
@@ -211,7 +239,10 @@ function cometPointer(shape: KeyShape | null, urgent: boolean): ReactNode {
   const y = shape.y * keySize + 1;
   const w = shape.w * keySize - keyGap - 2;
   const h = shape.h * keySize - keyGap - 2;
-  const r = 7;
+  /* From the board, not a constant. With r = h/2 on a square key the formula
+     below collapses to pi*h — the circumference of the circle the cap
+     actually is — so the spark still travels at one speed everywhere. */
+  const r = radius(h);
   // Rounded-rect perimeter: the straight stretches plus the corner arcs.
   const perimeter = 2 * (w + h) - 8 * r + 2 * Math.PI * r;
   const rect = { x, y, width: w, height: h, rx: r, ry: r };
@@ -271,15 +302,22 @@ function cometPointer(shape: KeyShape | null, urgent: boolean): ReactNode {
   );
 }
 
-function pointer(shape: KeyShape | null, className: string): ReactNode {
+function pointer(
+  shape: KeyShape | null,
+  className: string,
+  radius: (h: number) => number,
+): ReactNode {
   if (shape == null) {
     return null;
   }
-  // A rounded ring hugging the keycap (used for modifier hints).
+  // A ring hugging the keycap (used for modifier hints). Its radius comes
+  // from the board, not from a constant: on the round board a cap is a circle
+  // or a stadium, and a rounded square around one sits outside it at the ends.
   const x = shape.x * keySize;
   const y = shape.y * keySize;
   const w = shape.w * keySize - keyGap;
   const h = shape.h * keySize - keyGap;
+  const r = radius(h - 2);
   return (
     <rect
       className={className}
@@ -287,8 +325,8 @@ function pointer(shape: KeyShape | null, className: string): ReactNode {
       y={y + 1}
       width={w - 2}
       height={h - 2}
-      rx={7}
-      ry={7}
+      rx={r}
+      ry={r}
     >
       <animate
         attributeName="opacity"

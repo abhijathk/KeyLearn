@@ -1,3 +1,9 @@
+/* stylelint-disable no-descending-specificity, no-duplicate-selectors --
+   This file styles one component under several mutually exclusive board
+   scopes ([data-kbd-style="mechanical"], [data-kbd-style="flat"], …). The
+   scopes repeat as section headers so each finish reads as one block, and
+   specificity order across scopes that can never both match is meaningless —
+   the two rules only fire on the pattern, not on a real cascade hazard. */
 .button {
   fill: var(--KeyboardKey-button__color);
 }
@@ -229,4 +235,223 @@
 
 :root:not([data-finger-marks="on"]) .fingerMark {
   display: none;
+}
+
+// =============================================================================
+// Keyboard styles
+//
+// KeyLearn's own board is everything above; these two are alternative finishes
+// selected in Keyboard settings. Key positions, sizes and labels are identical
+// on all three — only the finish changes — so everything below is colour,
+// radius and depth. The board root carries `data-kbd-style`, and the flat
+// board additionally carries `data-kbd-face` for its day and night colourways.
+// =============================================================================
+
+// ---- Mechanical: matte PBT, two-tone keyset, orange escape and enter --------
+:global([data-kbd-style="mechanical"]) {
+  .button {
+    fill: #464c54; // charcoal alphas
+  }
+
+  // Modifiers wear the slate blue. The wall is a real change of plane, so it
+  // keeps a gradient-ish darker fill rather than sharing the face colour.
+  .neutralKey .button {
+    fill: #8497ab;
+  }
+
+  .side {
+    fill: #25282d;
+    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 45%));
+  }
+
+  .neutralKey .side {
+    fill: #57677a;
+  }
+
+  .symbol {
+    fill: #eef1f4;
+    font-family: var(--default-font-family);
+  }
+
+  .neutralKey .symbol {
+    fill: #f4f7fa;
+  }
+
+  // Matte: no specular band, and the cap edge is barely there.
+  .cap {
+    filter: none;
+  }
+}
+
+// The escape and enter caps carry the accent, as they do on the keyset this
+// finish is drawn from. Targeted by key id so the rule survives a relayout.
+:global([data-kbd-style="mechanical"]) {
+  :global([data-key="Backquote"]),
+  :global([data-key="Enter"]) {
+    .button {
+      fill: #f4551f;
+    }
+
+    .side {
+      fill: #a5310a;
+    }
+
+    .symbol {
+      fill: #ffffff;
+    }
+  }
+}
+
+// ---- Flat: low profile, almost no wall -------------------------------------
+:global([data-kbd-style="flat"]) {
+  .side {
+    // A flat cap has a hairline of wall, not a 3 px ledge.
+    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 28%));
+  }
+
+  .symbol {
+    font-family: var(--default-font-family);
+  }
+}
+
+// Silver by day: pale bead-blasted anodising, one even tone. The face carries
+// no gradient on purpose — across a 34 px cap a ramp reads as banding rather
+// than as the turn of a metal surface, and the grain does the work instead.
+:global([data-kbd-style="flat"][data-kbd-face="silver"]) {
+  .button {
+    fill: #dfe3e8;
+  }
+
+  .neutralKey .button {
+    fill: #d3d8de;
+  }
+
+  .side {
+    fill: #a5aab2;
+  }
+
+  .symbol {
+    fill: #2b2d33;
+  }
+
+  .neutralKey .symbol {
+    fill: #4d5058;
+  }
+}
+
+// Midnight Grey by night: the same finish in the dark anodising.
+:global([data-kbd-style="flat"][data-kbd-face="midnight"]) {
+  .button {
+    fill: #363b43;
+  }
+
+  .neutralKey .button {
+    fill: #2f333a;
+  }
+
+  .side {
+    fill: #191b20;
+  }
+
+  .symbol {
+    fill: #e8eaef;
+  }
+
+  .neutralKey .symbol {
+    fill: #b6bac4;
+  }
+}
+
+// ---- Legends, as the two new keysets print them -----------------------------
+// Mechanical prints high on the cap and lays the pair side by side; flat keeps
+// a single centred legend. Both dim the punctuation so the letters and numbers
+// a learner is practising stay loudest.
+
+:global([data-kbd-style="mechanical"]) {
+  // The pair sits in the top third, not stacked. The base glyph leads on a
+  // digit key (1! 2@) and the shifted one leads everywhere else ({[ <,) —
+  // which is how the two are printed on a real keyset.
+  .baseSymbol,
+  .shiftSymbol {
+    font-size: 11.5px;
+  }
+
+  .shiftSymbol {
+    transform: translate(-5px, 15px);
+  }
+
+  .baseSymbol {
+    transform: translate(5px, 0);
+  }
+
+  .digitKey {
+    .baseSymbol {
+      transform: translate(-5px, -15px);
+    }
+
+    .shiftSymbol {
+      transform: translate(5px, 15px);
+    }
+  }
+
+  // Letters ride high too, and take the same foreshortening as the cap face.
+  .primarySymbol {
+    transform: translateY(-5px);
+  }
+
+  .specialSymbol {
+    opacity: 0.55;
+  }
+}
+
+:global([data-kbd-style="flat"]) {
+  .specialSymbol {
+    opacity: 0.55;
+  }
+}
+
+// ---- Press: a real switch bottoms out short of flush ------------------------
+// KeyLearn's own board keeps its 3 px drop. The mechanical cap has a taller
+// wall, so it travels further but still leaves a sliver showing.
+:global([data-kbd-style="mechanical"]) .depressedKey .cap {
+  transform: translateY(3.5px);
+}
+
+:global([data-kbd-style="flat"]) .depressedKey .cap {
+  transform: translateY(1.5px);
+}
+
+// ---- The next key ------------------------------------------------------------
+// Its legend wears the cue colour and breathes on the same beat as the glow, so
+// the two read as one signal. It bottoms out at .72 rather than fading away —
+// a letter you can barely see is harder to find, not easier.
+@keyframes keyCueInk {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+:global([data-kbd-lit]) .cueKey {
+  .primarySymbol,
+  .baseSymbol,
+  .shiftSymbol {
+    fill: var(--KeyboardKey-pointer__color);
+    animation: keyCueInk 1.7s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global([data-kbd-lit]) .cueKey {
+    .primarySymbol,
+    .baseSymbol,
+    .shiftSymbol {
+      opacity: 1;
+      animation: none;
+    }
+  }
 }

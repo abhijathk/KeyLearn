@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import { KeyboardContext, Layout, loadKeyboard } from "@keylearn/keyboard";
+import { FakeSettingsContext } from "@keylearn/settings";
 import { act, render } from "@testing-library/react";
 import { equal } from "rich-assert";
 import { PointersLayer } from "./PointersLayer.tsx";
@@ -10,9 +11,11 @@ test("empty", (ctx) => {
   const keyboard = loadKeyboard(Layout.EN_US);
 
   const r = render(
-    <KeyboardContext.Provider value={keyboard}>
-      <PointersLayer suffix={[]} />
-    </KeyboardContext.Provider>,
+    <FakeSettingsContext>
+      <KeyboardContext.Provider value={keyboard}>
+        <PointersLayer suffix={[]} />
+      </KeyboardContext.Provider>
+    </FakeSettingsContext>,
   );
 
   act(() => {
@@ -30,9 +33,11 @@ test("unknown", (ctx) => {
   const keyboard = loadKeyboard(Layout.EN_US);
 
   const r = render(
-    <KeyboardContext.Provider value={keyboard}>
-      <PointersLayer suffix={[0x0000]} />
-    </KeyboardContext.Provider>,
+    <FakeSettingsContext>
+      <KeyboardContext.Provider value={keyboard}>
+        <PointersLayer suffix={[0x0000]} />
+      </KeyboardContext.Provider>
+    </FakeSettingsContext>,
   );
 
   act(() => {
@@ -50,9 +55,11 @@ test("without modifiers", (ctx) => {
   const keyboard = loadKeyboard(Layout.EN_US);
 
   const r = render(
-    <KeyboardContext.Provider value={keyboard}>
-      <PointersLayer suffix={[/* "a" */ 0x0061]} />
-    </KeyboardContext.Provider>,
+    <FakeSettingsContext>
+      <KeyboardContext.Provider value={keyboard}>
+        <PointersLayer suffix={[/* "a" */ 0x0061]} />
+      </KeyboardContext.Provider>
+    </FakeSettingsContext>,
   );
 
   act(() => {
@@ -71,9 +78,11 @@ test("with modifiers", (ctx) => {
   const keyboard = loadKeyboard(Layout.EN_US);
 
   const r = render(
-    <KeyboardContext.Provider value={keyboard}>
-      <PointersLayer suffix={[/* "A" */ 0x0041]} />
-    </KeyboardContext.Provider>,
+    <FakeSettingsContext>
+      <KeyboardContext.Provider value={keyboard}>
+        <PointersLayer suffix={[/* "A" */ 0x0041]} />
+      </KeyboardContext.Provider>
+    </FakeSettingsContext>,
   );
 
   act(() => {

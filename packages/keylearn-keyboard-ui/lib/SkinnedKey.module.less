@@ -1,0 +1,37 @@
+// Keycaps drawn to the approved mock. Geometry and colour live in the
+// component and in skins.ts, because in the mock they are values rather than
+// stylesheet rules; only the things that are genuinely CSS live here.
+
+.key {
+  cursor: default;
+  user-select: none;
+}
+
+.legend {
+  font-family: var(--default-font-family);
+}
+
+// The next key's legend breathes on the same 1.7s beat as its glow, so the two
+// read as one signal. It bottoms out at .72, not at .30 like the light — a
+// letter that fades most of the way out is harder to read, not easier.
+@keyframes skinnedCueInk {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.cueInk {
+  animation: skinnedCueInk 1.7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cueInk {
+    opacity: 1;
+    animation: none;
+  }
+}

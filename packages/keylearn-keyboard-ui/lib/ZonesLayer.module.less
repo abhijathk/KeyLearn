@@ -26,9 +26,66 @@
   .motion-respect-reduced();
 }
 
+// No `fill` here: the hand is painted with a gradient built in ZonesLayer,
+// whose id it carries as a presentation attribute. A `fill` declaration in
+// this rule would quietly win over that attribute — CSS always beats one —
+// and put the flat fill back.
 .hand {
-  fill: var(--secondary);
   fill-opacity: 0.58;
+}
+
+// The two ends of that gradient.
+//
+// Ink comes from the board where the hand lies ON the board: a skinned keyset
+// publishes `--hand-ink` as the colour it prints its own legends in, which is
+// the one colour guaranteed to read against its own caps. Off the board it is
+// the page's colour, as it always was. The fallback makes the unskinned board
+// — whose caps follow the theme anyway — resolve both stops to one colour.
+//
+// Without this a dark keyset on a light page drew a near-black hand on
+// near-black plastic and the fingers simply disappeared.
+.inkBoard {
+  stop-color: var(--hand-ink, var(--secondary));
+}
+
+// The stop that sits on the board's own edge, halfway between the two inks.
+// A linear gradient interpolates in sRGB, and sRGB runs two very different
+// colours through a dead grey in the middle — which on a long ramp is a
+// visible grey band rather than a blend. Mixing in oklab and pinning the
+// result at the edge keeps the middle of the ramp on a straight line between
+// the two colours instead of sagging through grey.
+.inkMid {
+  stop-color: color-mix(
+    in oklab,
+    var(--hand-ink, var(--secondary)),
+    var(--secondary)
+  );
+}
+
+.inkPage {
+  stop-color: var(--secondary);
+}
+
+// The cast shadow, under the hand. Always the ground colour rather than a flat
+// black: on a night theme the ground IS near-black, and on a daylight one a
+// black shadow under a pale hand reads as a smudge rather than as shade.
+.cast {
+  fill: var(--hand-cast, var(--primary));
+  fill-opacity: 0.5;
+}
+
+// By day the board is light and the hand is dark, so the silhouette already
+// has all the edge it needs; the shadow only has to seat the hand on the page.
+:global(html[data-color="light"]) .cast,
+:global(html[data-color="material-light"]) .cast,
+:global(html[data-color="keylearn-day"]) .cast,
+:global(html[data-color="kids"]) .cast,
+:global(html[data-color="coffee"]) .cast,
+:global(html[data-color="garden"]) .cast,
+:global(html[data-color="honey"]) .cast,
+:global(html[data-color="yellow"]) .cast {
+  fill: #000;
+  fill-opacity: 0.16;
 }
 
 // On light themes the hands are painted in the on-surface colour, which is dark

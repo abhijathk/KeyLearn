@@ -3,7 +3,7 @@ import { type Point } from "@keylearn/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
 import handLeft from "../assets/hand-left.png";
 import handRight from "../assets/hand-right.png";
-import { getKeyCenter, Surface } from "./shapes.tsx";
+import { getKeyCenter, keyGap, keySize, Surface } from "./shapes.tsx";
 import * as styles from "./ZonesLayer.module.less";
 
 export const ZonesLayer = memo(function ZonesLayer(): ReactNode {
@@ -24,10 +24,29 @@ export const ZonesLayer = memo(function ZonesLayer(): ReactNode {
   const space = keyboard.getShape("Space");
   if (l != null && r != null) {
     const restY = space != null ? getKeyCenter(space).y : null;
+    // Where the plastic stops and the page starts. A hand is drawn across both
+    // and has to read on both, so this is the line its ink changes on.
+    let boardBottom = 0;
+    for (const shape of keyboard.shapes.values()) {
+      boardBottom = Math.max(
+        boardBottom,
+        shape.y * keySize + shape.h * (keySize - keyGap),
+      );
+    }
     return (
       <Surface>
-        <Hand side="left" center={getKeyCenter(l)} restY={restY} />
-        <Hand side="right" center={getKeyCenter(r)} restY={restY} />
+        <Hand
+          side="left"
+          center={getKeyCenter(l)}
+          restY={restY}
+          boardBottom={boardBottom}
+        />
+        <Hand
+          side="right"
+          center={getKeyCenter(r)}
+          restY={restY}
+          boardBottom={boardBottom}
+        />
       </Surface>
     );
   } else {
@@ -82,14 +101,25 @@ const hands = {
   },
 } as const;
 
+/**
+ * How much of a hand's height the ink takes to change over, as a fraction.
+ *
+ * A quarter is a lot, and that is the point: the eye finds a gradient's ends
+ * long before it finds its middle, so the only way to hide the change is to
+ * make it longer than the feature it crosses.
+ */
+const RAMP = 0.26;
+
 const Hand = memo(function Hand({
   side,
   center: { x, y },
   restY,
+  boardBottom,
 }: {
   side: keyof typeof hands;
   center: Point;
   restY: number | null;
+  boardBottom: number;
 }): ReactNode {
   const hand = hands[side];
   const { href, width, height, tipX, tipY, thumbY } = hand;
@@ -98,15 +128,83 @@ const Hand = memo(function Hand({
   // the fingertip only if the board has no space bar to rest on.
   const left = x - tipX * width;
   const top = restY != null ? restY - thumbY * height : y - tipY * height;
+  // The board's edge, as a fraction of this hand's own height — which is what
+  // an objectBoundingBox gradient measures its stops in.
+  const edge = Math.min(1, Math.max(0, (boardBottom - top) / height));
   return (
     <g className={styles.figure} transform={`translate(${left} ${top})`}>
       <defs>
         <mask id={id} maskContentUnits="objectBoundingBox">
           <image href={href} width="1" height="1" preserveAspectRatio="none" />
         </mask>
+        {/* One hand, two grounds. The fingers lie on the keyset and the wrist
+            lies on the page, and on a dark board over a light theme those two
+            want opposite ink: pale to read against near-black caps, dark to
+            read against the page below them. A single flat fill can only ever
+            get one of them right — filling it dark lost the fingers, filling
+            it pale lost the two thirds of the hand that hangs off the board.
+            So the ink changes where the ground does. Above the line it is the
+            colour the keyset prints its own legends in; below it, the page's.
+            On the unskinned board both stops resolve to the same value and
+            this is exactly the flat fill it has always been. */}
+        <linearGradient
+          id={`${id}-ink`}
+          x1="0"
+          y1="0"
+          x2="0"
+          y2="1"
+          gradientUnits="objectBoundingBox"
+        >
+          {/* The ramp is long on purpose. At a 2% band the two inks met in a
+              visible straight line across the palms — a seam exactly where
+              there is nothing in the artwork to justify one. Over a quarter
+              of the hand there is no edge to find: the change happens across
+              the palm, which is the widest, flattest, least detailed part of
+              the drawing and the one place a colour can move without anything
+              appearing to happen.
+
+              It is also carried mostly ABOVE the board's edge rather than
+              centred on it. The fingers have to stay in the board's own ink to
+              read against the caps, and they occupy the top of the hand — so
+              the ramp starts late enough to leave them alone and finishes just
+              past the edge, where the wrist is already over the page. */}
+          <stop
+            offset={Math.max(0, edge - RAMP * 0.72)}
+            className={styles.inkBoard}
+          />
+          {/* A midpoint at the board's own line. Two stops alone put the
+              halfway colour halfway along the ramp, which on an asymmetric
+              ramp is not where the ground actually changes. */}
+          <stop offset={edge} className={styles.inkMid} />
+          <stop
+            offset={Math.min(1, edge + RAMP * 0.28)}
+            className={styles.inkPage}
+          />
+        </linearGradient>
+        {/* One blur for a whole hand, not one per part. */}
+        <filter id={`${id}-cast`} x="-10%" y="-10%" width="125%" height="125%">
+          <feGaussianBlur stdDeviation={4} />
+        </filter>
       </defs>
+      {/* The shadow the hand casts on whatever is under it.
+          The pale fill alone has no edge: over the near-black caps of the Flat,
+          Mechanical and Round boards a hand became a milky wash you could not
+          read a finger out of. A hand resting on a keyboard darkens the keys
+          beneath it, and that darkening is what draws the silhouette — so the
+          same artwork is drawn once more underneath, offset down-right, soft,
+          and nearly black. It is the shadow doing the outlining, which means
+          nothing has to be drawn as an outline. */}
+      <g transform="translate(3 4)" filter={`url(#${id}-cast)`}>
+        <rect
+          className={styles.cast}
+          width={width}
+          height={height}
+          mask={`url(#${id})`}
+        />
+      </g>
       <rect
         className={styles.hand}
+        fill={`url(#${id}-ink)`}
         width={width}
         height={height}
         mask={`url(#${id})`}

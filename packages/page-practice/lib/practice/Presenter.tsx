@@ -1,6 +1,7 @@
 import { codeThemeFor, codeThemeVars } from "@keylearn/content-snippets";
 import { keyboardProps } from "@keylearn/keyboard";
 import { type KeyId } from "@keylearn/keyboard";
+import { useSkin } from "@keylearn/keyboard-ui";
 import { lessonProps, LessonType, Target } from "@keylearn/lesson";
 import { names } from "@keylearn/lesson-ui";
 import {
@@ -539,6 +540,32 @@ function NormalLayout({
   readonly onStart: () => void;
   readonly tour: ReactNode;
 }) {
+  /* The Enter cap on the invitation, dressed as the board's own Enter key.
+     Every skinned keyset marks its accent caps by id, and Enter is one of
+     them on the round board, so it is asked rather than assumed — a keyset
+     that stops accenting Enter must not leave this button lit on its own.
+     Null skin is KeyLearn's own board, which has no keyset to borrow from;
+     the fallbacks in the stylesheet are the accent look it has always worn. */
+  const capSkin = useSkin(state.settings);
+  const startCapStyle = ((): CSSProperties | undefined => {
+    if (capSkin == null) {
+      return undefined;
+    }
+    const accent =
+      capSkin.accentIds.includes("Enter") && capSkin.accentTop != null;
+    const top = accent ? capSkin.accentTop! : capSkin.modTop;
+    const skirt = accent ? capSkin.accentSkirt! : capSkin.modSkirt;
+    return {
+      ["--sk-face" as never]: `linear-gradient(180deg, ${top[0]}, ${top[top.length - 1]})`,
+      ["--sk-edge" as never]: skirt[0],
+      ["--sk-ink" as never]: accent ? capSkin.accentInk : capSkin.modInk,
+      // A round board's caps are stadiums, so its Enter is too. Everything
+      // else keeps the soft square this button has always been.
+      ["--sk-radius" as never]:
+        capSkin.geom.round === true ? "999px" : "0.55rem",
+    };
+  })();
+
   // The set of keys in play, and how sure each one is, changes when a lesson
   // does — not when a key is pressed. Rebuilding the array every keystroke
   // handed the keyboard a new prop each time and cost it its memo.
@@ -585,10 +612,12 @@ function NormalLayout({
         <ResetNotice />
         <GuideRetired lessonKeys={state.lessonKeys} />
         {focus || (
-          // The invitation as a self-pressing Enter keycap in the app's own
-          // key style, with the message riding under it as a micro-label.
+          // The invitation as a self-pressing Enter keycap, wearing the cap of
+          // whichever board is actually on screen a few centimetres below it.
+          // Drawn in the theme accent it was the one keycap on the page that
+          // belonged to no keyboard.
           <button type="button" className={styles.startHint} onClick={onStart}>
-            <span className={styles.startKeycap}>
+            <span className={styles.startKeycap} style={startCapStyle}>
               <svg viewBox="0 0 24 24" aria-hidden={true}>
                 <path d="M19 6v6a2 2 0 0 1-2 2H6.8M10 10l-4 4 4 4" />
               </svg>

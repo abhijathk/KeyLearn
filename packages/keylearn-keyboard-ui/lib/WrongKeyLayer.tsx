@@ -1,7 +1,9 @@
 import { useKeyboard } from "@keylearn/keyboard";
+import { useSettings } from "@keylearn/settings";
 import { type CodePoint } from "@keylearn/unicode";
 import { clsx } from "clsx";
 import { memo, type ReactNode } from "react";
+import { useCapRadius } from "./lighting.ts";
 import { keyGap, keySize, Surface } from "./shapes.tsx";
 import * as styles from "./WrongKeyLayer.module.less";
 
@@ -17,6 +19,8 @@ export const WrongKeyLayer = memo(function WrongKeyLayer({
   readonly depressedKeys?: readonly string[];
 }): ReactNode {
   const keyboard = useKeyboard();
+  const { settings } = useSettings();
+  const radius = useCapRadius(settings);
   const combo = keyboard.getCombo(codePoint);
   if (combo == null) {
     return null;
@@ -29,6 +33,7 @@ export const WrongKeyLayer = memo(function WrongKeyLayer({
   const y = shape.y * keySize;
   const w = shape.w * keySize - keyGap;
   const h = shape.h * keySize - keyGap;
+  const r = radius(h - 2);
   // The flash rides the keycap face, dropping with it while held down.
   const pressed = depressedKeys.includes(combo.id);
   return (
@@ -39,8 +44,8 @@ export const WrongKeyLayer = memo(function WrongKeyLayer({
         y={y + 1}
         width={w - 2}
         height={h - 2}
-        rx={7}
-        ry={7}
+        rx={r}
+        ry={r}
       />
     </Surface>
   );

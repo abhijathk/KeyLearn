@@ -1,0 +1,42 @@
+// The next key's light breathes on the same 1.7s beat as its legend, so the
+// glow and the letter read as one signal rather than two things happening near
+// each other. The animation is on the group that CONTAINS the blur filters —
+// animating a filter's input re-runs the blur every frame.
+@keyframes cueBreathe {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes cueBreatheUrgent {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.breathe {
+  animation: cueBreathe 1.7s ease-in-out infinite;
+}
+
+// Escalated help: the same light, faster and never fully dim.
+.urgent {
+  animation: cueBreatheUrgent 0.9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breathe,
+  .urgent {
+    opacity: 0.75;
+    animation: none;
+  }
+}

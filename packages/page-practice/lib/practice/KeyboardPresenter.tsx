@@ -1,5 +1,6 @@
 import { keyboardProps, useKeyboard } from "@keylearn/keyboard";
 import {
+  CueGlowLayer,
   flatten,
   type HeatRing,
   HeatRingLayer,
@@ -12,6 +13,7 @@ import {
   WrongKeyLayer,
   ZonesLayer,
 } from "@keylearn/keyboard-ui";
+import { useBacklightOn, useCueIsLight, useSkin } from "@keylearn/keyboard-ui";
 import { useSettings } from "@keylearn/settings";
 import { ModifierState } from "@keylearn/textinput-events";
 import { type CodePoint } from "@keylearn/unicode";
@@ -35,7 +37,14 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
   readonly masteryKeys?: readonly MasteryKey[];
 }): ReactNode {
   const { settings } = useSettings();
+  const skin = useSkin(settings);
+  const cueLit = useCueIsLight(settings);
+  const litNow = useBacklightOn(settings);
   const keyboard = useKeyboard();
+  // Which key the learner should press next. The skinned caps tint and breathe
+  // its legend in the cue colour so the glow and the letter read as one signal.
+  const cuedKey =
+    suffix.length > 0 ? (keyboard.getCombo(suffix[0])?.id ?? null) : null;
   const colors = settings.get(keyboardProps.colors);
   const pointers = settings.get(keyboardProps.pointers);
   const [wrongKey, setWrongKey] = useState<{
@@ -107,13 +116,39 @@ export const KeyboardPresenter = memo(function KeyboardPresenter({
   );
   return (
     <div style={{ display: "contents" }} data-kbd-upper={upper}>
-      <VirtualKeyboard keyboard={keyboard} height="19rem">
+      <VirtualKeyboard
+        keyboard={keyboard}
+        height="19rem"
+        cuedKey={cuedKey}
+        depressedKeys={depressedKeys}
+      >
+        {/* Before KeyLayer on purpose: SVG paints in document order, so the
+            cue light has to be drawn first to sit UNDER the cap. */}
+        {cueLit && (
+          <CueGlowLayer
+            cuedKey={cuedKey}
+            urgent={helpLevel >= 2}
+            lip={skin?.geom.lip ?? 0}
+            cue={skin?.cue}
+            // The cue is the only light when a mechanical board has its
+            // backlight off, and has to punch harder for a lit room.
+            soleLight={!litNow}
+            intensity={settings.get(keyboardProps.backlightIntensity)}
+          />
+        )}
         <KeyLayer
           depressedKeys={depressedKeys}
           toggledKeys={effectiveToggledKeys}
           showColors={colors}
+          cuedKey={cuedKey}
+          cuedRing={skin != null && !cueLit}
         />
-        <MasteryLayer keys={masteryKeys} depressedKeys={depressedKeys} />
+        {/* The per-key learning bar belongs to KeyLearn's own board. The two
+            alternative keysets keep the cap face clean — their teaching signal
+            is the finger-coloured legend and the backlight. */}
+        {skin == null && (
+          <MasteryLayer keys={masteryKeys} depressedKeys={depressedKeys} />
+        )}
         {wrongKey != null && (
           <WrongKeyLayer
             key={wrongKey.at}

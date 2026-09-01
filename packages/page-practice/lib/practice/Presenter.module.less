@@ -161,13 +161,18 @@
   place-items: center;
   inline-size: 3rem;
   block-size: 2.7rem;
-  border: 1px solid color-mix(in oklab, var(--accent) 55%, transparent);
-  border-radius: 0.55rem;
-  color: var(--accent);
-  background-color: var(--primary-l1);
+  // Every value here falls back to the accent look this button wore before
+  // there were keysets to borrow from — which is exactly what KeyLearn's own
+  // board still gets, since it publishes no skin.
+  border: 1px solid
+    var(--sk-edge, color-mix(in oklab, var(--accent) 55%, transparent));
+  border-radius: var(--sk-radius, 0.55rem);
+  color: var(--sk-ink, var(--accent));
+  background: var(--sk-face, var(--primary-l1));
   // the keycap's own 3D edge, like the virtual keyboard's keys
   box-shadow:
-    0 3px 0 color-mix(in oklab, var(--accent) 35%, var(--primary-d2)),
+    0 3px 0
+      var(--sk-edge, color-mix(in oklab, var(--accent) 35%, var(--primary-d2))),
     0 0 0 3px color-mix(in oklab, var(--accent) 12%, transparent),
     0 0.4rem 1.4rem color-mix(in oklab, var(--accent) 25%, transparent);
   animation: keycap-press 2.6s ease-in-out infinite;

@@ -1,4 +1,9 @@
-import { KeyboardOptions, useKeyboard } from "@keylearn/keyboard";
+import {
+  KeyboardOptions,
+  keyboardProps,
+  KeyboardStyle,
+  useKeyboard,
+} from "@keylearn/keyboard";
 import { Tasks } from "@keylearn/lang";
 import { Settings, useSettings } from "@keylearn/settings";
 import {
@@ -78,7 +83,6 @@ export function TypingSettings() {
         <RowSeparator />
         <SoundVolumeProp />
         <RowSeparator />
-        <SoundsThemeProp />
       </SettingsCard>
     </>
   );
@@ -500,7 +504,14 @@ function SoundVolumeProp() {
   );
 }
 
-function SoundsThemeProp() {
+/**
+ * Which set of key sounds to use.
+ *
+ * Lives in Keyboard settings rather than here: the pack belongs to the board
+ * you chose. The list is filtered by that board, because a flat keyboard that
+ * clacks like a mechanical one is a small lie the ear catches immediately.
+ */
+export function SoundsThemeProp() {
   const { settings, updateSettings } = useSettings();
   return (
     <SettingRow
@@ -518,14 +529,23 @@ function SoundsThemeProp() {
       }
     >
       <OptionList
-        options={SoundTheme.ALL.map((item) => ({
+        options={packsFor(settings.get(keyboardProps.style)).map((item) => ({
           value: item.id,
           name: item.name,
         }))}
         value={settings.get(soundProps.soundTheme).id}
         onSelect={(id) => {
+          // Picking a pack turns key sounds on. `playSounds` defaults to None,
+          // so without this the learner chooses a sound, hears nothing, and has
+          // no way of knowing the control they wanted is a different one.
+          const next = settings.set(
+            soundProps.soundTheme,
+            SoundTheme.ALL.get(id),
+          );
           updateSettings(
-            settings.set(soundProps.soundTheme, SoundTheme.ALL.get(id)),
+            settings.get(soundProps.playSounds) === PlaySounds.None
+              ? next.set(soundProps.playSounds, PlaySounds.All)
+              : next,
           );
         }}
       />
@@ -572,4 +592,26 @@ function SoundThemePreview() {
       }}
     />
   );
+}
+
+/**
+ * The packs offered for a given board.
+ *
+ * Typewriter belongs to neither keyboard and is offered on both as a
+ * deliberate novelty; Default is the soft click a flat board actually makes.
+ */
+function packsFor(style: KeyboardStyle): readonly SoundTheme[] {
+  if (style === KeyboardStyle.MECHANICAL) {
+    return [
+      SoundTheme.MECHANICAL1,
+      SoundTheme.TYPEWRITER1,
+      SoundTheme.TYPEWRITER2,
+    ];
+  }
+  // Round is a low-profile board like Flat, so it makes the same soft click —
+  // a mechanical pack under a 3-unit wall would sound like a different object.
+  if (style.lowProfile || style === KeyboardStyle.ROUND) {
+    return [SoundTheme.DEFAULT, SoundTheme.TYPEWRITER1, SoundTheme.TYPEWRITER2];
+  }
+  return [...SoundTheme.ALL];
 }

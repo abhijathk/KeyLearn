@@ -17,6 +17,16 @@ export type KeyProps = {
   readonly depressed?: boolean;
   readonly toggled?: boolean;
   readonly showColors?: boolean;
+  /**
+   * Declared here even though this board ignores them: KeyLayer clones the
+   * cued key with these set, and a prop the component does not name falls
+   * through the rest-spread onto the <svg> as an unknown DOM attribute —
+   * which is exactly what happened, one React warning per keystroke. The
+   * KeyLearn board's cue is drawn by PointersLayer, so swallowing them is
+   * correct, not an omission.
+   */
+  readonly cued?: boolean;
+  readonly cuedRing?: boolean;
 } & MouseProps;
 
 // Keys the KeyLearn board hides entirely: the mockup shows a floating space
@@ -102,10 +112,24 @@ export function makeKeyComponent(
   // Letters get one centred glyph; keys whose shift layer differs (numbers,
   // punctuation) show both symbols stacked, like the original keyboard.
   if (ta && !ab) {
-    children.push(makeCodePointLabel(a, lx, 27, styles.secondarySymbol));
+    children.push(
+      makeCodePointLabel(
+        a,
+        lx,
+        27,
+        clsx(styles.secondarySymbol, styles.baseSymbol, plainOf(a)),
+      ),
+    );
   }
   if (tb && !ab) {
-    children.push(makeCodePointLabel(b, lx, 12, styles.secondarySymbol));
+    children.push(
+      makeCodePointLabel(
+        b,
+        lx,
+        12,
+        clsx(styles.secondarySymbol, styles.shiftSymbol, plainOf(b)),
+      ),
+    );
   }
   if (tc && !cd) {
     children.push(makeCodePointLabel(c, 25, 27, styles.secondarySymbol));
@@ -170,6 +194,8 @@ export function makeKeyComponent(
     depressed,
     toggled,
     showColors,
+    cued: _cued,
+    cuedRing: _cuedRing,
     ...props
   }: KeyProps): ReactNode {
     const marked = fingerMark != null && !neutralKey;
@@ -178,6 +204,11 @@ export function makeKeyComponent(
         {...props}
         className={clsx(
           styles.key,
+          // Space and the modifiers. Emitted so the two-tone keysets can give
+          // them their own cap colour — a modifier that matches the alphas is
+          // the main thing that makes a rendered board look like a diagram.
+          neutralKey && styles.neutralKey,
+          isDigit(a) && styles.digitKey,
           depressed && styles.depressedKey,
           toggled && styles.toggledKey,
           showColors && !neutralKey && zoneClassName,
@@ -327,6 +358,25 @@ function fingerMarkOf({ finger }: KeyShape): string | null {
       return "4";
   }
   return null;
+}
+
+/**
+ * Letters and numbers are what a learner is practising; the punctuation
+ * printed beside them sits back. Returns the class that dims a glyph, or null
+ * when it should stay at full strength.
+ */
+function plainOf(character: unknown): string | null {
+  const ch = charOf(character);
+  return ch != null && /[A-Za-z0-9]/.test(ch) ? null : styles.specialSymbol;
+}
+
+function isDigit(character: unknown): boolean {
+  const ch = charOf(character);
+  return ch != null && /[0-9]/.test(ch);
+}
+
+function charOf(character: unknown): string | null {
+  return typeof character === "number" ? String.fromCodePoint(character) : null;
 }
 
 function zoneClassNameOf(shape: KeyShape): string | null {
