@@ -9,6 +9,28 @@
   cursor: pointer;
 }
 
+// The identity as the drawer's learner chip, laid on its side: a raised
+// surface with the painting filling one end and the name beside it. Same
+// radius and the same surface the drawer chips use, so a household recognises
+// the object in both places.
+//
+// The gap goes to zero — the band has to reach the chip's own edge, and a
+// flex gap would hold it off by 0.45rem. The name carries its own padding
+// instead.
+.anchorChip {
+  gap: 0;
+  padding: 0.35rem 0.7rem 0.35rem 0.5rem;
+  border-radius: 0.7rem;
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--primary-l1) 60%, transparent);
+  box-shadow: 0 0.1rem 0.35rem
+    color-mix(in srgb, var(--shadow-color) 14%, transparent);
+}
+
+.anchorChip .name {
+  margin-inline-start: 0.5rem;
+}
+
 // Signed-out log-in chip: mirrors the header control geometry (see
 // Header.module.less .controls button) so it sits flush with the focus / theme
 // / menu icons — a 2.3rem rounded square holding a 1.15rem glyph.
@@ -113,6 +135,36 @@
   inline-size: 1.8rem;
   block-size: 1.8rem;
   border-radius: 50%;
+}
+
+// The drawer chip's art band, turned on its side. Square-cornered but for the
+// control's own radius, and stretched to the full height of the row so it
+// touches top and bottom the way the chip's band touches its sides.
+.faceStrip {
+  display: block;
+  position: relative;
+  flex: none;
+  align-self: stretch;
+  inline-size: 2.6rem;
+  min-block-size: 1.8rem;
+  margin-inline-start: -0.5rem;
+  // Pulled out to the control's own edges: the row pads its contents, and a
+  // band that honoured that padding would float in the middle of the chip
+  // instead of filling one end of it.
+  margin-block: -0.35rem;
+  overflow: hidden;
+}
+
+// ArtMotif covers and slices, so it fills the box at any ratio on its own —
+// it needs no bleed to do it. Bleeding it sideways while ALSO pinning its
+// height gave it a square box shoved 40px out of the strip, which is why the
+// band came out as a sliver: almost all of the painting was outside the only
+// part of it anyone could see.
+.faceArt {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
 }
 
 .name {

@@ -44,11 +44,42 @@
 
 .rail {
   display: flex;
+  position: relative;
   flex-direction: column;
   gap: 0.15rem;
   padding: 1.3rem 1rem;
   border-inline-end: 1px solid var(--primary-d2);
   background-color: color-mix(in oklab, var(--primary) 55%, var(--primary-l1));
+}
+
+// The learner's painting behind the rail, exactly as the account window does
+// it. Covers and slices, so it fills a tall narrow column without stretching;
+// the rail's own background stays underneath, which keeps the wash even
+// whatever ground the painting happens to have.
+//
+// Faded at both ends: the title sits at the top and the items run down from
+// it, so the empty tail below them is where the picture is allowed to be
+// strongest and the type is never asked to compete with it.
+.railArt {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  pointer-events: none;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 45%,
+    #000 70%,
+    transparent
+  );
+}
+
+// Everything in the rail sits on the wash, never under it.
+.rail > *:not(.railArt) {
+  position: relative;
+  z-index: 1;
 }
 
 .railTitle {

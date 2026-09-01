@@ -19,25 +19,35 @@
   }
 }
 
+// A floating panel rather than a wall welded to the window edge — the same
+// object the header and the practice telemetry island are, so all three read
+// as one material lifted off the stage. Inset on every side, with the slide-in
+// travel widened to cover the new gap.
 .panel {
   display: flex;
   position: fixed;
-  inset-inline-end: 0;
-  inset-block: 0;
+  inset-inline-end: 0.6rem;
+  inset-block: 0.6rem;
   z-index: 101;
   flex-direction: column;
   gap: 0.5rem;
   inline-size: min(19.5rem, 86vi);
   padding: 0.85rem 1.2rem 1.2rem;
-  border-inline-start: 1px solid var(--primary-d2);
+  border-radius: 1.25rem;
   // The header (tape + wordmark) and footer are pinned; only the middle
-  // scrolls — so the panel itself never scrolls.
+  // scrolls — so the panel itself never scrolls. `hidden` also does the
+  // corner clipping now that there are corners to clip.
   overflow: hidden;
   color: var(--text-color);
-  background-color: var(--primary);
+  background-color: color-mix(in srgb, var(--primary) 92%, transparent);
+  box-shadow: 0 0.25rem 0.75rem
+    color-mix(in srgb, var(--shadow-color) 20%, transparent);
   font-family: var(--value-font-family);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateX(100%);
+  // Past 100%: the panel now starts 0.6rem in from the edge, so a plain
+  // translateX(100%) would leave a sliver of it parked on screen.
+  transform: translateX(calc(100% + 1.2rem));
+  backdrop-filter: blur(16px);
 
   &.open {
     transform: translateX(0);
@@ -81,11 +91,134 @@
 
 // ---- head: one whisper line ---------------------------------------------
 
+// Only the close button lives here now, so it sits at the end of the row.
 .head {
   display: flex;
+  position: relative;
   gap: 0.55rem;
   align-items: center;
-  margin-block-end: 0.1rem;
+  justify-content: flex-end;
+  // Tall enough to be a band rather than a strip. The row used to be exactly
+  // as tall as the one button in it, which is fine for a header holding
+  // nothing and far too tight for one holding a picture.
+  min-block-size: 3rem;
+  // Flush to three of the panel's edges, so the band's top corners are cut by
+  // the PANEL's own radius rather than by one of its own — which is the only
+  // way two curves can actually agree. Its inner edge stays square, because
+  // that edge is a seam with the body below and not an outside corner.
+  //
+  // No radius here on purpose: the panel clips (`overflow: hidden`), so a
+  // radius on this box would round the corners a second time, inside the
+  // panel's, and leave a sliver of panel showing through each one.
+  margin-inline: -1.2rem;
+  margin-block-start: -0.85rem;
+  margin-block-end: 0.35rem;
+  // Put back exactly what the negative margin took away, or the close button
+  // ends up flush against the panel's edge while the Manage link and the
+  // learner chips below it still sit on the 1.2rem line.
+  padding-inline: 1.2rem;
+  overflow: hidden;
+}
+
+// The learner's own painting, run the full width of the header.
+//
+// ArtMotif covers its box and is cropped by it. No feathering: this band is
+// the top counterpart of the palette strip at the foot of the panel, and that
+// one is a solid bar with a hairline. Fading one end of a pair that is meant
+// to read as a pair only makes it look unfinished.
+//
+// Bled past the block edges so the slice taken is the middle of the painting,
+// where the composition is, rather than its top corner.
+.headArt {
+  position: absolute;
+  inset-inline: 0;
+  inset-block: -70%;
+  inline-size: 100%;
+  pointer-events: none;
+}
+
+// Everything else in the header sits on top of the wash rather than under it.
+.head > *:not(.headArt) {
+  position: relative;
+}
+
+// Small and round. IconButton takes no className, so this reaches it as a
+// descendant — the head holds exactly one button, and the avatar beside it is
+// a span, which is what keeps that safe. A dismiss is the least important control on the panel and
+// should be the smallest thing on it.
+.head button {
+  // Centred by the box rather than by the baseline. IconButton is an
+  // inline-block whose `line-height` is the full field height — sized for a
+  // 2.5rem control — and shrinking the box to 1.75rem here leaves that tall
+  // line box behind, resting the glyph well below the middle of the circle.
+  // Flex centring ignores the baseline entirely, and `line-height: 1` stops
+  // the inherited value reserving space that is no longer there.
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.75rem;
+  min-inline-size: 1.75rem;
+  block-size: 1.75rem;
+  min-block-size: 1.75rem;
+  padding: 0;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--primary-l1) 70%, transparent);
+  line-height: 1;
+
+  // It is the only way out of the panel, so it has to answer to the pointer.
+  // Hover fills it and brings the glyph up to full strength; the press takes
+  // it down a touch, which is the whole of the feedback a 1.75rem target can
+  // carry without drawing attention to itself.
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+
+  svg {
+    inline-size: 0.8rem;
+    block-size: 0.8rem;
+  }
+
+  // Red on hover, not the learner's accent. The accent is the colour every
+  // ACTIVE thing on this panel wears — the current page, the selected
+  // learner — so wearing it here read as "press this", which is the opposite
+  // of what a dismiss should say. Red is the one colour that means the thing
+  // goes away. The wash is tinted to match so the circle and the glyph are
+  // not arguing about which colour the control is.
+  &:hover {
+    color: var(--error-color, #d0322e);
+    background-color: color-mix(
+      in oklab,
+      var(--error-color, #d0322e) 14%,
+      var(--primary-l1)
+    );
+  }
+
+  // No transform here: IconButton's own `.root:active:not(.disabled)` is the
+  // more specific selector and already answers the press with a scale, so a
+  // second one at this level would never apply.
+  &:active {
+    background-color: color-mix(
+      in oklab,
+      var(--error-color, #d0322e) 24%,
+      var(--primary-l1)
+    );
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .head button {
+    transition: none;
+
+    &:active {
+      transform: none;
+    }
+  }
 }
 
 // A section label with a "Manage" shortcut on the right (Learners).
@@ -118,21 +251,6 @@
   &:hover {
     text-decoration: underline;
   }
-}
-
-.headIcon {
-  inline-size: 1.15rem;
-  block-size: 1.15rem;
-  color: var(--accent);
-}
-
-.title {
-  flex: 1;
-  color: var(--text-color-f2);
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
 }
 
 // ---- whisper section labels with a trailing hairline ---------------------
@@ -280,26 +398,90 @@ img.utilIcon {
   gap: 0.35rem;
 }
 
+// The language list, held in a chip of its own — the same raised surface the
+// learner chips use. Wrapped here rather than styled inside LanguagePanel,
+// which also renders on the account preferences page where it is already
+// inside a card and a second surface would be a box in a box.
+.langChip {
+  padding: 0.5rem;
+  border-radius: 0.9rem;
+  background-color: color-mix(in srgb, var(--primary-l1) 60%, transparent);
+  // Just enough to lift it off the panel. Deeper than this and a chip
+  // inside a floating panel starts competing with the panel itself.
+  box-shadow: 0 0.1rem 0.35rem
+    color-mix(in srgb, var(--shadow-color) 14%, transparent);
+}
+
+// Each learner is its own floating chip, in the same language as the panels
+// they sit inside — a raised surface with generously rounded corners, rather
+// than a bordered outline that only appears once selected. The chips now read
+// as objects you pick up before you pick one; the border is reserved for
+// saying which one is active.
 .learner {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.25rem;
   align-items: center;
   min-inline-size: 0;
-  padding: 0.45rem 0.15rem;
+  // No padding at the top: the face is meant to touch three of the chip's
+  // edges, and a chip that pads its own artwork away from its corners is the
+  // thing this replaced. `overflow: hidden` is what makes the band take the
+  // chip's radius instead of squaring its corners off.
+  padding: 0 0 0.4rem;
   border: 2px solid transparent;
-  border-radius: 0.7rem;
-  background: transparent;
+  border-radius: 0.9rem;
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--primary-l1) 60%, transparent);
+  box-shadow: 0 0.1rem 0.35rem
+    color-mix(in srgb, var(--shadow-color) 14%, transparent);
   cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 
   &:hover {
     border-color: var(--accent-d1);
+    box-shadow: 0 0.2rem 0.5rem
+      color-mix(in srgb, var(--shadow-color) 20%, transparent);
+    transform: translateY(-1px);
   }
+}
+
+// The band the artwork fills. Deliberately shorter than a square: a 1:1 face
+// at the chip's full width is taller than the round avatar it replaced, and
+// the chip was asked to get shorter, not taller. Square-cornered except where
+// the chip's own radius clips it.
+.learnerFace {
+  display: block;
+  position: relative;
+  inline-size: 100%;
+  block-size: 2.1rem;
+  overflow: hidden;
+}
+
+// ArtMotif covers its box and slices, so it fills the band at any ratio.
+// Bled past the block edges so the slice is the middle of the painting.
+.learnerArt {
+  position: absolute;
+  inset-inline: 0;
+  inset-block: -60%;
+  inline-size: 100%;
 }
 
 .learnerOn {
   border-color: var(--accent);
   background-color: var(--primary-l1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learner {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
 }
 
 .learnerName {

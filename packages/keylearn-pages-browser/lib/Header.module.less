@@ -1,36 +1,137 @@
 @import "@keylearn/widget/lib/index.less";
 
+// A floating frosted panel, the same object the practice telemetry island is
+// (see Pulse.module.less .root) — same width rule, same radius, same frosted
+// surface and lift. The header and that island are the two things riding
+// above the stage, so they are one material rather than two.
 .header {
   display: flex;
   gap: 1rem;
   align-items: center;
   justify-content: space-between;
-  padding-inline: 1.25rem;
+  inline-size: min(72rem, calc(100% - 2.5rem));
+  margin-inline: auto;
+  margin-block-start: 0.6rem;
+  padding-inline: 1rem;
   padding-block: 0.4rem;
+  border-radius: 1.25rem;
+  background-color: color-mix(in srgb, var(--primary-l1) 78%, transparent);
+  // Kept deliberately shallow (owner decision). A deep drop shadow reads as
+  // the panel hovering well above the page; this is closer to a card resting
+  // on it. Header and telemetry island share the value — they are the same
+  // material, and a mismatch would show at the seam between them.
+  box-shadow: 0 0.3rem 0.9rem
+    color-mix(in srgb, var(--shadow-color) 28%, transparent);
   // A slow, gentle glide so the header never snaps in or out and pulls the
   // eye away from the practice text.
-  transition:
-    transform 0.9s cubic-bezier(0.33, 0, 0.2, 1),
-    opacity 0.9s ease;
+  transition: transform 0.9s cubic-bezier(0.33, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+}
+
+// On the practice page this header is the TOP HALF of one card whose bottom
+// half is the telemetry island directly beneath it (Pulse.module.less .root).
+// They were already the same width, radius, surface and shadow sitting 0.6rem
+// apart, so the seam between them carried no meaning. Squaring the two
+// adjoining corners and closing the gap makes them one object.
+//
+// Only on practice: this header is global, and every other page has nothing
+// below it to join.
+.joined {
+  margin-block-end: 0;
+  // Grown downward by exactly the island's old top margin, which is removed
+  // to match (Pulse.module.less .root). The two edges now meet with no gap —
+  // and because the header absorbs the space rather than the island giving it
+  // up, the island does not move and neither does the stage below it.
+  padding-block-end: 0.3rem;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+  // The island paints its own; two stacked shadows at the seam read as a
+  // crease down the middle of the card.
+  box-shadow: none;
+}
+
+// The kids worlds keep the older full-bleed header rather than the floating
+// panel (owner decision). Classic, Dino Run and Hero Trials each fill the
+// window edge to edge with a scene of their own, and a rounded panel hovering
+// over that reads as a second card competing with the world rather than as
+// the frame around it.
+//
+// Only the things that MAKE it float are undone here — width, lift, radius,
+// blur. `body[data-kids="day"|"night"]` below then paints this header from the
+// game's own paper or night sky, and outranks this rule on background-color,
+// which is what should happen.
+//
+// The opaque background here is the floor under that, not a second opinion.
+// The floating header is 78% transparent and relies on its own backdrop blur
+// to stay legible; take the blur away, as this does, and for the frames before
+// `data-kids` is set the world's scene would show straight through the header
+// unblurred.
+.full {
+  inline-size: auto;
+  margin-block-start: 0;
+  padding-inline: 1.25rem;
+  border-block-end: var(--separator-border);
+  border-radius: 0;
+  background-color: var(--background-color);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+// A 0.9s clipping edge travelling down the card is a large moving thing;
+// for anyone who has asked for stillness it should simply be gone or not.
+@media (prefers-reduced-motion: reduce) {
+  .header {
+    transition: none;
+  }
 }
 
 // The support desk scrolls its own main column (long dashboards, long
 // ticket threads) — pinning the header keeps the nav-adjacent identity/
 // log-out control and the desk label reachable without scrolling back up.
+// The desk header is a different object: pinned to the top of a scrolling
+// column, edge to edge. It opts out of the floating panel above.
 .deskSticky {
   position: sticky;
   inset-block-start: 0;
   z-index: 30;
+  inline-size: auto;
+  margin-block-start: 0;
+  padding-inline: 1.25rem;
   border-block-end: var(--separator-border);
+  border-radius: 0;
   background-color: var(--background-color);
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
-// Auto-hide while typing: slide up out of view and fade, without taking the
-// header out of layout (so nothing below jumps).
+// Auto-hide while typing: the header slides DOWN into the telemetry island
+// beneath it and tucks behind its top edge, then rises again when the learner
+// stops. Down rather than up because the two are one card (see .joined) — the
+// top half sliding into the bottom half reads as the card closing, where
+// sliding up reads as a separate thing flying off over it.
+//
+// The stationary edge it disappears behind is `.slot`, which clips. Transform
+// only, no height change: the header keeps its box, so the passage and the
+// keyboard below stay exactly where they are. Collapsing the height instead
+// moves the whole stage up 75px at the very moment the learner starts typing
+// — measured — which is when their eyes are locked to the text.
+//
+// It stays fully opaque on the way down. Fading it too would read as
+// vanishing rather than as going somewhere.
 .hidden {
-  opacity: 0;
   pointer-events: none;
-  transform: translateY(-135%);
+  transform: translateY(100%);
+}
+
+// The fixed opening the header slides into. It only clips when the header is
+// joined to the island below: on every other page the header casts a shadow,
+// and an overflow-hidden box would shave it off.
+.slot {
+  overflow: visible;
+}
+
+.slotJoined {
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -53,13 +154,16 @@
   align-items: center;
 }
 
+// A circle, not a rounded square: this is the one control that means "go
+// back" rather than "do a thing", and the round shape sets it apart from the
+// rounded-square controls at the other end of the bar.
 .back {
   display: grid;
   place-items: center;
   min-inline-size: 2.5rem;
   min-block-size: 2.5rem;
   border: var(--separator-border);
-  border-radius: 0.7rem;
+  border-radius: 50%;
   color: var(--text-color);
   background-color: var(--primary-l1);
 
@@ -213,7 +317,11 @@
     border: none;
     border-radius: 0.7rem;
     color: inherit;
-    background-color: var(--primary-l1);
+    // No plate behind the glyph (owner decision). The header is itself a
+    // panel now, so a second surface per control was a box inside a box.
+    // The hit area stays 2.3rem square; only the paint is gone, and the
+    // icons' own colour bloom on hover is the affordance the plate was.
+    background-color: transparent;
     line-height: normal;
     text-decoration: none;
 
@@ -321,6 +429,12 @@
 }
 
 .kidsMark {
+  // The row aligns on the baseline, which is right for the two halves of
+  // "KeyLearn" and wrong for anything sitting beside the logo: an SVG's
+  // baseline is its bottom edge, so a word baselined against it sits a third
+  // of a cap-height low. The logo already opts out with `align-self: center`;
+  // this is the same opt-out for the mark that follows it.
+  align-self: center;
   margin-inline-start: 0.45rem;
   color: var(--accent);
   font-weight: 700;

@@ -42,7 +42,14 @@ export function Wordmark({
   return (
     <svg
       className={className}
-      viewBox="0 0 433 120"
+      // Cropped from y=5.4, not 0, so that `align-items: center` centres the
+      // ink rather than the box. The drawing runs from y=31.4 (the keycap top
+      // face) to y=99.4 (the front wall's bottom edge), which left 31.4 units
+      // of air above it and 20.6 below — so the logo rendered 1.8px lower than
+      // every other item in the header, all of which sit on a 32.3px centre
+      // line. Shifting the window down by half that difference puts 26 units
+      // either side. Width and height are untouched, so nothing reflows.
+      viewBox="0 5.4 412 120"
       fill="none"
       aria-hidden={true}
       focusable={false}
@@ -112,7 +119,17 @@ export function Wordmark({
           </g>
         </g>
       </g>
-      <g fill="currentColor" transform="translate(254.0, 95.6)">
+      {/* "learn" set smaller than the keycaps and centred on THEIR height
+          rather than sitting on their baseline. The caps' faces run y=31.4 to
+          y=88.5, so their middle is y=60; the word's x-height band is centred
+          a shade below that, which is where a lowercase word reads as level
+          with something taller beside it.
+
+          The whole group is scaled rather than each glyph: the five inner
+          translates are the font's own advances, computed for 0.068, and
+          scaling them here keeps the spacing correct without recomputing
+          five numbers by hand. */}
+      <g fill="currentColor" transform="translate(254.0, 78.5) scale(0.853)">
         <g transform="translate(0.0, 0) scale(0.068, -0.068)">
           <path d="M184 0Q138 0 109 24Q80 48 80 100V710H164V107Q164 74 197 74H243V0Z" />
         </g>

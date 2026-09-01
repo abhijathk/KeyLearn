@@ -1,7 +1,7 @@
+import { artKindOf, ArtMotif } from "@keylearn/identicon";
 import {
   BrailleAvatar,
   ConfirmDialog,
-  ProfileAvatar,
   useProfiles,
 } from "@keylearn/page-account";
 import {
@@ -141,9 +141,34 @@ export function MenuDrawer({
         className={clsx(styles.panel, open && styles.open)}
         aria-hidden={!open}
       >
+        {/* No wordmark here (owner decision). The panel opens from the
+            header, which carries the mark a few centimetres away; repeating
+            it inside spent the top of the drawer telling you where you
+            already knew you were. Only the way out remains. */}
         <div className={styles.head}>
-          <StrokeIcon className={styles.headIcon} name="keyboard" />
-          <span className={styles.title}>KeyLearn</span>
+          {/* Whose session this is, painted across the whole header.
+              It is their own generated artwork rather than a second copy of
+              their avatar: the learner switcher is a few centimetres below
+              with the faces at full weight, and a bright avatar up here would
+              read as another control. As a wash it is recognised by colour
+              before it is read at all, which is the only job it has.
+
+              Only the generated art qualifies. A lettered preset is an
+              initial in a circle with nothing behind it — stretched across a
+              header that is a placeholder, not an identity — so the header
+              stays empty instead, which is what it has always been. */}
+          {active?.avatar?.type === "art" && (
+            <ArtMotif
+              className={styles.headArt}
+              family={active.avatar.family}
+              seed={active.avatar.seed}
+              kind={
+                artKindOf(active.avatar.family) ??
+                (active.kind === "kid" ? "kid" : "adult")
+              }
+              opacity={0.5}
+            />
+          )}
           <IconButton
             icon={<StrokeIcon name="close" />}
             title={formatMessage(
@@ -198,13 +223,46 @@ export function MenuDrawer({
                         title={p.firstName}
                         onClick={() => switchTo(p.id, p.kind, p.visionSupport)}
                       >
-                        <BrailleAvatar
-                          avatar={p.avatar}
-                          name={p.firstName}
-                          size={36}
-                          braille={p.visionSupport}
-                          accessible={accessibilityActive(p.id)}
-                        />
+                        {/* The learner's own painting run edge to edge
+                            across the top of their chip, square-cornered but
+                            for the chip's own radius, and shorter than the
+                            round avatar it replaces — which is where the
+                            chip's lost height comes from.
+
+                            Only plain generated art takes the band. A braille
+                            or accessibility learner keeps the round avatar,
+                            because their badge is pinned to a circular face
+                            and a corner marker on a full-bleed band would
+                            land on the artwork rather than on them. */}
+                        {p.avatar?.type === "art" &&
+                        !p.visionSupport &&
+                        !accessibilityActive(p.id) ? (
+                          <span className={styles.learnerFace}>
+                            <ArtMotif
+                              className={styles.learnerArt}
+                              family={p.avatar.family}
+                              seed={p.avatar.seed}
+                              kind={
+                                artKindOf(p.avatar.family) ??
+                                (p.kind === "kid" ? "kid" : "adult")
+                              }
+                              letter={
+                                p.avatar.letter === true
+                                  ? (p.firstName.trim()[0] ?? null)
+                                  : null
+                              }
+                              letterSize={20}
+                            />
+                          </span>
+                        ) : (
+                          <BrailleAvatar
+                            avatar={p.avatar}
+                            name={p.firstName}
+                            size={30}
+                            braille={p.visionSupport}
+                            accessible={accessibilityActive(p.id)}
+                          />
+                        )}
                         <span className={styles.learnerName}>
                           {p.firstName}
                         </span>
@@ -306,7 +364,9 @@ export function MenuDrawer({
                         defaultMessage="App language"
                       />
                     </div>
-                    <LanguagePanel currentPath={path} />
+                    <div className={styles.langChip}>
+                      <LanguagePanel currentPath={path} />
+                    </div>
                   </>
                 )}
               </div>
@@ -415,6 +475,15 @@ export function MenuDrawer({
             }),
           )}
           onConfirm={() => {
+            // Close the drawer before the request, not after it. `logout`
+            // awaits a POST and only then navigates, so the drawer would
+            // otherwise stay open for the whole round-trip — still listing
+            // the profiles, the account and the learner switcher of somebody
+            // who has just asked to leave. The navigation tears it all down
+            // eventually; the point is that it should be gone the moment the
+            // decision is made, not whenever the network gets round to it.
+            setConfirmLogout(false);
+            onClose();
             void logout();
           }}
           onCancel={() => setConfirmLogout(false)}

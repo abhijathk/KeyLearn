@@ -1,3 +1,4 @@
+import { artKindOf, ArtMotif } from "@keylearn/identicon";
 import { MySupportSection, SupportService } from "@keylearn/page-support";
 import {
   type AnyUser,
@@ -34,6 +35,7 @@ import {
   AppearancePane,
   PreferencesPane,
 } from "./PreferencesPane.tsx";
+import { useProfiles } from "./profiles/context.tsx";
 import { ProfilesManager } from "./profiles/ProfilesManager.tsx";
 import { SecurityCard } from "./SecurityCard.tsx";
 import { SecurityResetDialog } from "./SecurityResetDialog.tsx";
@@ -291,6 +293,18 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   // the same path: the section unmounts and hands its PIN proof back.
   const closeWindow = useCallback(() => navigate("/"), [navigate]);
   const closingIn = useIdleClose(closeWindow);
+  /* The learner whose account this is, for the wash behind the rail. Only
+     generated art qualifies — a lettered preset is an initial in a circle,
+     and a circle stretched down a rail is a placeholder rather than a
+     picture. */
+  const { active: railProfile } = useProfiles();
+  const railArt =
+    railProfile?.avatar?.type === "art" ? railProfile.avatar : null;
+  const railKind =
+    railArt != null
+      ? (artKindOf(railArt.family) ??
+        (railProfile?.kind === "kid" ? "kid" : "adult"))
+      : "adult";
   const [supportUnread, setSupportUnread] = useState(0);
   useEffect(() => {
     // Standing in the section clears the dot. It is an aggregate "there is
@@ -364,6 +378,24 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
       <div className={styles.b5}>
         {/* ── Left rail ── */}
         <nav className={styles.rail}>
+          {/* The learner this window belongs to, washed across the rail's own
+              empty middle. The rail is a column of five items above a column
+              of four, with a hand's breadth of nothing between them — and the
+              account window is the one place where WHOSE account this is
+              matters most. Held right back so it stays a ground for the list
+              rather than a picture the list is sitting on.
+
+              Only generated art, and only ever behind: a lettered preset
+              stretched down a rail is a placeholder, not an identity. */}
+          {railArt != null && (
+            <ArtMotif
+              className={styles.railArt}
+              family={railArt.family}
+              seed={railArt.seed}
+              kind={railKind}
+              opacity={0.4}
+            />
+          )}
           <RailItem
             on={pane === "appearance"}
             onClick={() => setPane("appearance")}

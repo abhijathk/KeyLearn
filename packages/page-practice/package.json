@@ -12,6 +12,7 @@
     "@keylearn/content": "*",
     "@keylearn/content-snippets": "*",
     "@keylearn/debug": "*",
+    "@keylearn/identicon": "*",
     "@keylearn/intl": "*",
     "@keylearn/keyboard": "*",
     "@keylearn/keyboard-ui": "*",

@@ -36,6 +36,8 @@ export function ArtMotif({
   kind = "adult",
   opacity = 1,
   vivid = 0,
+  letter = null,
+  letterSize = 44,
   className,
 }: {
   readonly family: string;
@@ -47,6 +49,27 @@ export function ArtMotif({
    * mixed for a 28px avatar and reads as washed out at card size.
    */
   readonly vivid?: number;
+  /**
+   * The initial to ink over the painting, or nothing. Off by default: the
+   * card and the panel header this was written for are backdrops, and a
+   * letter across a backdrop is a watermark nobody asked for.
+   *
+   * It lives HERE rather than in the caller's stylesheet because the ink is
+   * the palette's own, and the palette is resolved from the seed in this
+   * function — an overlay drawn outside would have to guess a colour, and
+   * would drift from the round avatar of the same learner the moment either
+   * side changed.
+   */
+  readonly letter?: string | null;
+  /**
+   * Cap height for that letter, in viewBox units, where 100 is the whole
+   * painting. Defaults to ProfileArt's 44 — right for a circular avatar,
+   * where the letter IS the subject. On a band sliced out of the painting the
+   * scale is driven by the band's WIDTH, so 44 comes out nearly as tall as
+   * the band itself and the artwork becomes a background for a letter rather
+   * than a painting with an initial on it.
+   */
+  readonly letterSize?: number;
   readonly className?: ClassName;
 }): ReactNode {
   const owner = artKindOf(family);
@@ -88,6 +111,23 @@ export function ArtMotif({
       {shapes.map((shape, i) => (
         <MotifShape key={i} shape={shape} />
       ))}
+      {/* Same position, size, weight, colour and opacity ProfileArt uses, so
+          a learner's initial reads identically whether it is sitting on their
+          round avatar or on a band sliced out of the same painting. */}
+      {letter != null && letter !== "" && (
+        <text
+          x={50}
+          y={52}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={letterSize}
+          fontWeight={700}
+          fill={palette.ink}
+          fillOpacity={0.85}
+        >
+          {letter.toUpperCase()}
+        </text>
+      )}
     </svg>
   );
 }

@@ -12,7 +12,7 @@ import {
 } from "@keylearn/page-kids/lib/icons.tsx";
 import { useSettings } from "@keylearn/settings";
 import { supportUrl } from "@keylearn/thirdparties";
-import { IconButton, StrokeIcon } from "@keylearn/widget";
+import { ColorIcon, IconButton, StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
@@ -264,216 +264,232 @@ export function Header({
   }
 
   return (
-    <header className={clsx(styles.header, hidden && styles.hidden)}>
-      <div className={styles.left}>
-        {showBack && !kids && !braille && (
+    // The slot the header slides down into while the learner types. It holds
+    // the header's space open, so nothing below shifts when the header leaves.
+    <div className={clsx(styles.slot, practice && styles.slotJoined)}>
+      <header
+        className={clsx(
+          styles.header,
+          // Joined to the telemetry island below it — practice only, because
+          // that is the only page with anything underneath to join.
+          practice && styles.joined,
+          // The kids worlds keep the older full-bleed header instead.
+          kids && styles.full,
+          hidden && styles.hidden,
+        )}
+      >
+        <div className={styles.left}>
+          {showBack && !kids && !braille && (
+            <NavLink
+              to="/"
+              className={styles.back}
+              title={formatMessage(
+                defineMessage({
+                  id: "nav.backToPractice",
+                  defaultMessage: "Back to practice",
+                }),
+              )}
+            >
+              <StrokeIcon name="chevronLeft" />
+            </NavLink>
+          )}
           <NavLink
-            to="/"
-            className={styles.back}
+            to={kids ? "/kids" : "/"}
+            className={styles.wordmark}
+            // "KeyLearn" is a brand wordmark built from two spans; pin it LTR so
+            // right-to-left locales (Arabic, Hebrew…) don't reorder it to
+            // "LearnKey".
+            dir="ltr"
             title={formatMessage(
               defineMessage({
-                id: "nav.backToPractice",
-                defaultMessage: "Back to practice",
+                id: "nav.home",
+                defaultMessage: "KeyLearn home",
               }),
             )}
           >
-            <StrokeIcon name="back" />
-          </NavLink>
-        )}
-        <NavLink
-          to={kids ? "/kids" : "/"}
-          className={styles.wordmark}
-          // "KeyLearn" is a brand wordmark built from two spans; pin it LTR so
-          // right-to-left locales (Arabic, Hebrew…) don't reorder it to
-          // "LearnKey".
-          dir="ltr"
-          title={formatMessage(
-            defineMessage({
-              id: "nav.home",
-              defaultMessage: "KeyLearn home",
-            }),
-          )}
-        >
-          <Wordmark className={styles.logo} />
-          {/* The link's own title is the accessible name for sighted-mouse
+            <Wordmark className={styles.logo} />
+            {/* The link's own title is the accessible name for sighted-mouse
               users, but a title attribute is not reliably announced — this is
               what a screen reader actually reads, and what a search engine
               indexes. The mark itself is aria-hidden. */}
-          <span className={styles.srOnly}>KeyLearn</span>
-          {kids && <span className={styles.kidsMark}>Kids</span>}
-        </NavLink>
-        {practice && <PracticeStamp />}
-      </div>
-      <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
-        {streak > 0 && (
-          <span
-            className={styles.streak}
-            title={formatMessage(
-              defineMessage({
-                id: "header.streak.description",
-                defaultMessage:
-                  "Days in a row with at least one completed lesson.",
-              }),
-            )}
-          >
-            <svg
-              className={styles.flame}
-              viewBox="0 0 24 24"
-              aria-hidden={true}
+            <span className={styles.srOnly}>KeyLearn</span>
+            {kids && <span className={styles.kidsMark}>Kids</span>}
+          </NavLink>
+          {practice && <PracticeStamp />}
+        </div>
+        <div className={clsx(styles.controls, typing && styles.controlsDimmed)}>
+          {streak > 0 && (
+            <span
+              className={styles.streak}
+              title={formatMessage(
+                defineMessage({
+                  id: "header.streak.description",
+                  defaultMessage:
+                    "Days in a row with at least one completed lesson.",
+                }),
+              )}
             >
-              <path d="M12 3.5c.6 2.8-1.3 4.6-2.5 6.2-1.2 1.6-2 3.2-2 5a6.5 6.5 0 0 0 13 0c0-1.4-.4-2.7-1.1-3.8-.9 1.1-2 1.4-2.9.9.9-2.4.1-5.8-4.5-8.3z" />
-            </svg>
-            <FormattedMessage
-              id="practice.streak.days"
-              defaultMessage="{days} {days, plural, =1 {day} other {days}}"
-              values={{ days: streak }}
-            />
-          </span>
-        )}
-        {!hideAccount && <AccountMenu kids={kids} />}
-        {kids && (
-          <>
-            {(kidsState.streak ?? 0) > 1 && (
-              // Days in a row, said the way the other chips say things. Not a
-              // button — there is nothing to press about having turned up.
-              <span
-                className={clsx(styles.kidsChip, styles.kidsChipWide)}
+              <svg
+                className={styles.flame}
+                viewBox="0 0 24 24"
+                aria-hidden={true}
+              >
+                <path d="M12 3.5c.6 2.8-1.3 4.6-2.5 6.2-1.2 1.6-2 3.2-2 5a6.5 6.5 0 0 0 13 0c0-1.4-.4-2.7-1.1-3.8-.9 1.1-2 1.4-2.9.9.9-2.4.1-5.8-4.5-8.3z" />
+              </svg>
+              <FormattedMessage
+                id="practice.streak.days"
+                defaultMessage="{days} {days, plural, =1 {day} other {days}}"
+                values={{ days: streak }}
+              />
+            </span>
+          )}
+          {!hideAccount && <AccountMenu kids={kids} />}
+          {kids && (
+            <>
+              {(kidsState.streak ?? 0) > 1 && (
+                // Days in a row, said the way the other chips say things. Not a
+                // button — there is nothing to press about having turned up.
+                <span
+                  className={clsx(styles.kidsChip, styles.kidsChipWide)}
+                  style={{
+                    background: "color-mix(in srgb, #b8b2a6 38%, #ffffff)",
+                  }}
+                  title={formatMessage(
+                    defineMessage({
+                      id: "kids.header.streak",
+                      defaultMessage: "{days} days of practice in a row",
+                    }),
+                    { days: kidsState.streak },
+                  )}
+                >
+                  <KidFlameIcon />
+                  <span className={styles.kidsChipCount}>
+                    {kidsState.streak}
+                  </span>
+                </span>
+              )}
+              <button
+                type="button"
+                className={styles.kidsChip}
                 style={{
-                  background: "color-mix(in srgb, #b8b2a6 38%, #ffffff)",
+                  background: "color-mix(in srgb, #f2c94c 34%, #ffffff)",
                 }}
                 title={formatMessage(
                   defineMessage({
-                    id: "kids.header.streak",
-                    defaultMessage: "{days} days of practice in a row",
+                    id: "kids.header.sound",
+                    defaultMessage: "Sounds on or off",
                   }),
-                  { days: kidsState.streak },
                 )}
+                onClick={() => kidsToggle("sound")}
               >
-                <KidFlameIcon />
-                <span className={styles.kidsChipCount}>{kidsState.streak}</span>
-              </span>
-            )}
-            <button
-              type="button"
-              className={styles.kidsChip}
-              style={{
-                background: "color-mix(in srgb, #f2c94c 34%, #ffffff)",
+                <SoundIcon muted={!kidsState.sounds} />
+              </button>
+              <button
+                type="button"
+                className={styles.kidsChip}
+                style={{
+                  background: "color-mix(in srgb, #5fc9a7 34%, #ffffff)",
+                }}
+                title={formatMessage(
+                  defineMessage({
+                    id: "kids.header.night",
+                    defaultMessage: "Day or night",
+                  }),
+                )}
+                onClick={() => kidsToggle("night")}
+              >
+                {kidsState.night ? <SunIcon /> : <MoonIcon />}
+              </button>
+              <button
+                type="button"
+                className={styles.kidsChip}
+                style={{
+                  background: "color-mix(in srgb, #3aa0ff 28%, #ffffff)",
+                }}
+                title={formatMessage(
+                  defineMessage({
+                    id: "kids.header.settings",
+                    defaultMessage: "Settings",
+                  }),
+                )}
+                onClick={() => kidsToggle("settings")}
+              >
+                <GearIcon />
+              </button>
+            </>
+          )}
+          {/* Focus mode rides beside the day/night switch. */}
+          {showFocus && (
+            <span
+              onMouseDown={(ev) => {
+                // Keep the focus in the text area so entering focus mode
+                // doesn't blur the practice and reset the lesson.
+                ev.preventDefault();
               }}
-              title={formatMessage(
-                defineMessage({
-                  id: "kids.header.sound",
-                  defaultMessage: "Sounds on or off",
-                }),
-              )}
-              onClick={() => kidsToggle("sound")}
             >
-              <SoundIcon muted={!kidsState.sounds} />
-            </button>
-            <button
-              type="button"
-              className={styles.kidsChip}
-              style={{
-                background: "color-mix(in srgb, #5fc9a7 34%, #ffffff)",
-              }}
-              title={formatMessage(
-                defineMessage({
-                  id: "kids.header.night",
-                  defaultMessage: "Day or night",
-                }),
-              )}
-              onClick={() => kidsToggle("night")}
-            >
-              {kidsState.night ? <SunIcon /> : <MoonIcon />}
-            </button>
-            <button
-              type="button"
-              className={styles.kidsChip}
-              style={{
-                background: "color-mix(in srgb, #3aa0ff 28%, #ffffff)",
-              }}
-              title={formatMessage(
-                defineMessage({
-                  id: "kids.header.settings",
-                  defaultMessage: "Settings",
-                }),
-              )}
-              onClick={() => kidsToggle("settings")}
-            >
-              <GearIcon />
-            </button>
-          </>
-        )}
-        {/* Focus mode rides beside the day/night switch. */}
-        {showFocus && (
-          <span
-            onMouseDown={(ev) => {
-              // Keep the focus in the text area so entering focus mode
-              // doesn't blur the practice and reset the lesson.
-              ev.preventDefault();
-            }}
-          >
+              <IconButton
+                icon={<ColorIcon name="focus" />}
+                title={formatMessage(
+                  defineMessage({
+                    id: "practice.widget.focusMode.enter",
+                    defaultMessage:
+                      "Focus mode: just you, the words, nothing else.",
+                  }),
+                )}
+                onClick={() => {
+                  window.dispatchEvent(
+                    new window.CustomEvent("keylearn:focus-mode"),
+                  );
+                }}
+              />
+            </span>
+          )}
+          {!kids && <ThemeSwitcher />}
+          {!kids && supportUrl !== "" && (
+            // An IconButton like the bell and the theme switch beside it,
+            // now that it is a stroke icon rather than a fixed-colour image
+            // that had to size itself.
             <IconButton
-              icon={<StrokeIcon name="focus" />}
+              icon={<ColorIcon name="coffee" />}
               title={formatMessage(
                 defineMessage({
-                  id: "practice.widget.focusMode.enter",
-                  defaultMessage:
-                    "Focus mode: just you, the words, nothing else.",
+                  id: "footer.supportLink.text",
+                  defaultMessage: "Buy me a coffee",
                 }),
               )}
-              onClick={() => {
-                window.dispatchEvent(
-                  new window.CustomEvent("keylearn:focus-mode"),
-                );
-              }}
+              onClick={onOpenSupport}
             />
-          </span>
-        )}
-        {!kids && <ThemeSwitcher />}
-        {!kids && supportUrl !== "" && (
-          // An IconButton like the bell and the theme switch beside it,
-          // now that it is a stroke icon rather than a fixed-colour image
-          // that had to size itself.
-          <IconButton
-            icon={<StrokeIcon name="coffee" />}
-            title={formatMessage(
-              defineMessage({
-                id: "footer.supportLink.text",
-                defaultMessage: "Buy me a coffee",
-              }),
-            )}
-            onClick={onOpenSupport}
-          />
-        )}
-        {!kids && <NotificationBell />}
-        {kids ? (
-          <button
-            type="button"
-            className={styles.kidsChip}
-            style={{ background: "color-mix(in srgb, #8bc34a 30%, #ffffff)" }}
-            title={formatMessage(
-              defineMessage({
-                id: "nav.openMenu",
-                defaultMessage: "Open navigation",
-              }),
-            )}
-            onClick={onOpenMenu}
-          >
-            <KidMenuIcon />
-          </button>
-        ) : (
-          <IconButton
-            icon={<StrokeIcon name="menu" />}
-            title={formatMessage(
-              defineMessage({
-                id: "nav.openMenu",
-                defaultMessage: "Open navigation",
-              }),
-            )}
-            onClick={onOpenMenu}
-          />
-        )}
-      </div>
-    </header>
+          )}
+          {!kids && <NotificationBell />}
+          {kids ? (
+            <button
+              type="button"
+              className={styles.kidsChip}
+              style={{ background: "color-mix(in srgb, #8bc34a 30%, #ffffff)" }}
+              title={formatMessage(
+                defineMessage({
+                  id: "nav.openMenu",
+                  defaultMessage: "Open navigation",
+                }),
+              )}
+              onClick={onOpenMenu}
+            >
+              <KidMenuIcon />
+            </button>
+          ) : (
+            <IconButton
+              icon={<ColorIcon name="menu" />}
+              title={formatMessage(
+                defineMessage({
+                  id: "nav.openMenu",
+                  defaultMessage: "Open navigation",
+                }),
+              )}
+              onClick={onOpenMenu}
+            />
+          )}
+        </div>
+      </header>
+    </div>
   );
 }

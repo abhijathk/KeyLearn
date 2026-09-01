@@ -1,4 +1,6 @@
+import { artKindOf, ArtMotif } from "@keylearn/identicon";
 import { KeyboardProvider } from "@keylearn/keyboard";
+import { activeProfileArt, activeProfileKind } from "@keylearn/pages-shared";
 import { SettingsContext, useSettings } from "@keylearn/settings";
 import { TypingSettings } from "@keylearn/textinput-ui";
 import { StrokeIcon, type StrokeIconName, useView } from "@keylearn/widget";
@@ -97,6 +99,11 @@ function SettingsWindow({
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [onCancel]);
+  /* Only generated art takes the wash; a lettered preset stretched down a
+     rail is a placeholder rather than a picture. `activeProfileArt` already
+     returns null for everything else. */
+  const railArt = activeProfileArt();
+  const railKind = activeProfileKind() === "kid" ? "kid" : "adult";
   return (
     <div className={styles.overlay}>
       <div
@@ -109,6 +116,20 @@ function SettingsWindow({
         })}
       >
         <div className={styles.rail}>
+          {/* The learner's own painting behind the rail, the same wash the
+              account window's rail wears. Read straight from stored page data
+              rather than through the profiles context: this dialog lives in
+              the practice page, which has no business depending on the
+              account package to draw a background. */}
+          {railArt != null && (
+            <ArtMotif
+              className={styles.railArt}
+              family={railArt.family}
+              seed={railArt.seed}
+              kind={artKindOf(railArt.family) ?? railKind}
+              opacity={0.4}
+            />
+          )}
           <div className={styles.railTitle}>
             <FormattedMessage id="t_Settings" defaultMessage="Settings" />
           </div>

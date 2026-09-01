@@ -117,7 +117,12 @@
 
 .rowSub {
   color: var(--text-color-f2);
-  font-size: 0.72rem;
+  // 0.82rem, not the 0.72rem this was. These lines are the only explanation
+  // a setting gets, and the whole panel is set in the value face — a mono,
+  // whose smaller x-height makes it read a size down from the same number in
+  // the body face. At 0.72 that landed at 11.5px of mono, which is under the
+  // size anything meant to be READ should be.
+  font-size: 0.82rem;
   line-height: 1.4;
 }
 
@@ -326,12 +331,43 @@
 
 .rail {
   display: flex;
+  position: relative;
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.9rem 0.7rem 0.8rem;
   border-inline-end: 1px solid var(--primary-d2);
   background: color-mix(in oklab, var(--primary-d2) 32%, var(--primary-l1));
   overflow-y: auto;
+}
+
+// The learner's painting behind the rail. Covers the whole column and slices,
+// so it fills a tall narrow box without distorting; the rail's own background
+// stays underneath, which is what keeps the wash consistent whatever the
+// painting's ground happens to be.
+//
+// Faded from the top down as well as held back overall: the rail's items live
+// at both ends and the empty middle is the only part of it with nothing to
+// read, so that is where the picture is allowed to be strongest.
+.railArt {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  pointer-events: none;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 38%,
+    #000 62%,
+    transparent
+  );
+}
+
+// Every item sits on the wash, never under it.
+.rail > *:not(.railArt) {
+  position: relative;
+  z-index: 1;
 }
 
 .who {
@@ -536,7 +572,10 @@
   // more row that happens to be in capitals.
   margin-block-start: 0.9rem;
   color: var(--accent-d1);
-  font-size: 0.62rem;
+  // An eyebrow can sit below the body size, but not this far below it. At
+  // 0.62rem these headings came out at 9.9px — and uppercase with 0.12em of
+  // tracking, in a mono, which is the hardest combination to read small.
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -820,7 +859,12 @@
   // wide for a settings row — it pushed the control past the edge of the
   // card. Brought back to the size of the plain selects above and below,
   // so the column of controls reads as one column.
-  > span {
+  // `:not(.seg)` because the segmented control's root is a <span> too, and
+  // this rule was reshaping it into a picker: a full-width block with a
+  // 0.5rem radius, where every other segmented control on the page is a
+  // shrink-to-fit pill. Structural selectors cannot tell two widgets apart
+  // on their own, so the one that is NOT the picker has to be named.
+  > span:not(.seg) {
     display: block;
     inline-size: 100%;
     min-inline-size: 0;
@@ -828,11 +872,22 @@
     font-size: 0.82rem;
   }
 
-  > span > span > span:first-child {
+  // The grid stretches its items, which would pull the pill to the column's
+  // full width and undo the shrink-to-fit every other segmented control has.
+  //
+  // `end`, not `start`: controls on this page are right-aligned — every pill
+  // in the card and the font picker directly above this one all finish on the
+  // same line. Hugging the left instead left this one ending 19px short of
+  // that line, which is exactly the sort of near-miss that reads as broken.
+  > .seg {
+    justify-self: end;
+  }
+
+  > span:not(.seg) > span > span:first-child {
     padding-inline-start: 0.6rem;
   }
 
-  > span > span > span:last-child {
+  > span:not(.seg) > span > span:last-child {
     padding-inline-end: 0.6rem;
   }
 }
@@ -1304,7 +1359,9 @@
   margin-block-start: 0.35rem;
   color: var(--text-color-f2);
   font-family: var(--value-font-family);
-  font-size: 0.7rem;
+  // Lifted with .rowSub above it: this is a worked example of what the
+  // setting produces, so it has to be legible to do its job at all.
+  font-size: 0.8rem;
   line-height: 1.5;
   font-variant-numeric: tabular-nums;
 

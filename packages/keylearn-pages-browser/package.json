@@ -11,6 +11,7 @@
     "@keylearn/intl": "*",
     "@keylearn/keyboard": "*",
     "@keylearn/lesson": "*",
+    "@keylearn/identicon": "*",
     "@keylearn/page-account": "*",
     "@keylearn/page-braille": "*",
     "@keylearn/page-help": "*",

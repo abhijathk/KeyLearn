@@ -7,11 +7,18 @@
   display: flex;
   flex: none;
   align-items: center;
+  // Inset and rounded, the same object the learner chips and the header band
+  // are. It used to cancel the panel's padding and run to the panel's own
+  // edges like a status bar; with the header now sitting inside its margins,
+  // a bar bleeding off the bottom was the only thing on the panel still doing
+  // that.
+  // The header band's mirror image: flush to three edges so the PANEL rounds
+  // its bottom corners, square along the top where it meets the body, and the
+  // one hairline it wears is on that seam.
   margin-inline: -1.2rem;
   margin-block-start: 0.7rem;
   margin-block-end: -1.2rem;
-  padding: 0.1rem 1.2rem;
-  border-block-start: 1px solid var(--secondary-f2);
+  padding: 0.28rem 1.2rem;
   overflow: hidden;
 }
 
