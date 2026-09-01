@@ -121,11 +121,26 @@ export function skinFor(
  * happened to re-render it, which is why switching theme appeared to take
  * seconds. A MutationObserver on the one attribute makes the swap immediate.
  */
-function subscribeToTheme(onChange: () => void): () => void {
+// One observer and one media listener for the whole board, however many
+// layers subscribe. Every key layer, glow layer and pointer layer calls
+// useDarkTheme, and each subscription used to arm its own MutationObserver
+// plus matchMedia listener — six to eight watchers all watching the same
+// attribute. The multiplexer keeps a listener set and arms the machinery
+// only while somebody is listening, so an idle page holds none of it.
+const themeListeners = new Set<() => void>();
+let themeWatch: (() => void) | null = null;
+
+function notifyThemeChange(): void {
+  for (const listener of themeListeners) {
+    listener();
+  }
+}
+
+function armThemeWatch(): () => void {
   if (typeof document === "undefined") {
     return () => {};
   }
-  const observer = new MutationObserver(onChange);
+  const observer = new MutationObserver(notifyThemeChange);
   observer.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["data-color"],
@@ -138,10 +153,24 @@ function subscribeToTheme(onChange: () => void): () => void {
     };
   }
   const media = window.matchMedia("(prefers-color-scheme: light)");
-  media.addEventListener("change", onChange);
+  media.addEventListener("change", notifyThemeChange);
   return () => {
     observer.disconnect();
-    media.removeEventListener("change", onChange);
+    media.removeEventListener("change", notifyThemeChange);
+  };
+}
+
+function subscribeToTheme(onChange: () => void): () => void {
+  themeListeners.add(onChange);
+  if (themeListeners.size === 1) {
+    themeWatch = armThemeWatch();
+  }
+  return () => {
+    themeListeners.delete(onChange);
+    if (themeListeners.size === 0 && themeWatch != null) {
+      themeWatch();
+      themeWatch = null;
+    }
   };
 }
 

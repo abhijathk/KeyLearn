@@ -2933,6 +2933,13 @@ export function createKidsWorld(
       scene.environment = null;
       pmrem.dispose();
       renderer.dispose();
+      // dispose() frees the renderer's GL objects but never loses the
+      // CONTEXT — and Chrome pins a canvas (and several megabytes of
+      // renderer-side JS state) for as long as its WebGL context is alive.
+      // Measured with WeakRefs across an unmount: the scene and every model
+      // collected, the renderer and canvas never did, ~6 MB per visit.
+      // Losing the context is what lets the browser release the pair.
+      renderer.forceContextLoss();
     },
   };
 }
@@ -3036,6 +3043,13 @@ export function createLoaderScene(
       disposed = true;
       disposeScene(scene);
       renderer.dispose();
+      // dispose() frees the renderer's GL objects but never loses the
+      // CONTEXT — and Chrome pins a canvas (and several megabytes of
+      // renderer-side JS state) for as long as its WebGL context is alive.
+      // Measured with WeakRefs across an unmount: the scene and every model
+      // collected, the renderer and canvas never did, ~6 MB per visit.
+      // Losing the context is what lets the browser release the pair.
+      renderer.forceContextLoss();
     },
   };
 }

@@ -115,44 +115,18 @@ function storedMode(): string | null {
   }
 }
 
-// The drawer's open state survives the subtree remount that a learner switch
-// triggers, so flipping profiles doesn't slam the panel shut.
+// Whether the drawer is open, held OUTSIDE the component on purpose. Each
+// route wraps its page in its own <Template>, so a client-side navigation
+// unmounts one Template and mounts another — and drawer state kept in
+// useState died with the old one. That is why switching learners closed the
+// panel: the first hop was saved by a one-shot sessionStorage flag, and the
+// second hop found the flag already spent.
 //
-// The flag exists for exactly one hop — the remount that happens moments
-// after it is written. Left in place it survived the whole session instead:
-// open the drawer, then press Back or reload, and the panel reappeared over
-// the page with its scrim, on every load, until something closed it.
-//
-// So it is consumed — but in an effect, not here. This function is a
-// useState initialiser and must stay pure: StrictMode calls it twice in
-// development, and a version that cleared the flag on read consumed it on
-// the first call and returned false on the second, so the drawer never
-// reopened at all.
-function loadMenuOpen(): boolean {
-  try {
-    return sessionStorage.getItem("keylearn.drawer") === "open";
-  } catch {
-    return false;
-  }
-}
-
-/** Spend the one hop the flag was written for. Idempotent, so a second
-    StrictMode pass costs nothing. */
-function clearMenuOpen(): void {
-  try {
-    sessionStorage.removeItem("keylearn.drawer");
-  } catch {
-    // Storage may be unavailable.
-  }
-}
-
-function saveMenuOpen(open: boolean): void {
-  try {
-    sessionStorage.setItem("keylearn.drawer", open ? "open" : "closed");
-  } catch {
-    // Storage may be unavailable.
-  }
-}
+// A module variable has exactly the wanted lifetime. It survives every SPA
+// hop, because the module lives as long as the page's JS — and it dies on a
+// real reload, so the drawer never reopens on a fresh visit, which is the
+// problem the old flag's one-hop design existed to avoid.
+let drawerOpen = false;
 
 export function Template({
   path,
@@ -161,14 +135,9 @@ export function Template({
   readonly path: string;
   readonly children: ReactNode;
 }) {
-  const [menuOpen, setMenuOpenState] = useState(loadMenuOpen);
-  // Consumed after mount: the state above has taken its value, and leaving
-  // the flag set is what made the drawer reopen on every later load.
-  useEffect(() => {
-    clearMenuOpen();
-  }, []);
+  const [menuOpen, setMenuOpenState] = useState(() => drawerOpen);
   const setMenuOpen = (open: boolean) => {
-    saveMenuOpen(open);
+    drawerOpen = open;
     setMenuOpenState(open);
   };
   const [supportOpen, setSupportOpen] = useState(false);
