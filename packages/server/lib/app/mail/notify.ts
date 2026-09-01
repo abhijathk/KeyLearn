@@ -1,5 +1,5 @@
 import { inject, injectable } from "@fastr/invert";
-import { User } from "@keylearn/database";
+import { maskEmail, User } from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
 import { SettingsDatabase } from "@keylearn/settings-database";
 import {
@@ -116,7 +116,11 @@ export class Notifier {
           }),
         );
       } catch (err: any) {
-        Logger.warn(err, "Could not send security alert to '%s'", email);
+        Logger.warn(
+          err,
+          "Could not send security alert to '%s'",
+          maskEmail(email),
+        );
       }
     })();
   }
@@ -164,7 +168,11 @@ export class Notifier {
         .patch({ remindedAt: new Date(now) } as any);
       return true;
     } catch (err: any) {
-      Logger.warn(err, "Could not send practice reminder to '%s'", email);
+      Logger.warn(
+        err,
+        "Could not send practice reminder to '%s'",
+        maskEmail(email),
+      );
       return false;
     }
   }
@@ -213,7 +221,7 @@ export class Notifier {
       );
       return true;
     } catch (err: any) {
-      Logger.warn(err, "Could not send product news to '%s'", email);
+      Logger.warn(err, "Could not send product news to '%s'", maskEmail(email));
       return false;
     }
   }

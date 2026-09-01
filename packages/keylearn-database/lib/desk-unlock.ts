@@ -1,5 +1,5 @@
 import { type Knex } from "knex";
-import { type JSONSchema, Model, snakeCaseMappers } from "objection";
+import { type JSONSchema, Model, type Pojo, snakeCaseMappers } from "objection";
 import { TimestampMixin } from "./model.ts";
 import { hashPassword, verifyPassword } from "./password.ts";
 
@@ -49,6 +49,29 @@ export class DeskUnlock extends TimestampMixin(Model) {
     table.string("last_failure_ip", 45).nullable();
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+  }
+
+  /**
+   * Timestamps come back as whatever the driver hands over — mysql2 casts to
+   * Date, sqlite returns the stored number — and the lockout check calls
+   * `.getTime()` on the result. Under sqlite that was a crash in place of a
+   * lockout, which is the worst possible failure mode for a rate limit.
+   * Normalising on read makes every consumer see a Date on every driver.
+   */
+  override $parseDatabaseJson(json: Pojo): Pojo {
+    json = super.$parseDatabaseJson(json);
+    for (const key of [
+      "lockedUntil",
+      "lastFailureAt",
+      "createdAt",
+      "updatedAt",
+    ]) {
+      const value = json[key];
+      if (value != null && !(value instanceof Date)) {
+        json[key] = new Date(value);
+      }
+    }
+    return json;
   }
 
   readonly id?: number;

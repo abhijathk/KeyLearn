@@ -633,7 +633,11 @@ export class Controller {
     try {
       await this.mailer.sendMail(messageWithCode({ email, code, purpose }));
     } catch (err: any) {
-      Logger.warn(err, "Error sending verification code to '%s'", email);
+      Logger.warn(
+        err,
+        "Error sending verification code to '%s'",
+        maskEmail(email),
+      );
       throw new ApplicationError("Error sending e-mail message");
     }
   }
@@ -781,7 +785,11 @@ export class Controller {
     try {
       await this.mailer.sendMail(messageWithLink({ email, link }));
     } catch (err: any) {
-      Logger.warn(err, "Error sending e-mail message to '%s'", email);
+      Logger.warn(
+        err,
+        "Error sending e-mail message to '%s'",
+        maskEmail(email),
+      );
       throw new ApplicationError("Error sending e-mail message");
     }
     ctx.response.body = { email };
@@ -992,7 +1000,11 @@ export class Controller {
       try {
         await this.mailer.sendMail(messageWithResetLink({ email, link }));
       } catch (err: any) {
-        Logger.warn(err, "Error sending reset e-mail to '%s'", email);
+        Logger.warn(
+          err,
+          "Error sending reset e-mail to '%s'",
+          maskEmail(email),
+        );
       }
     }
     ctx.response.body = { ok: true };

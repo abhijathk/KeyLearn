@@ -11,6 +11,7 @@
     "@keylearn/keyboard-ui": "*",
     "@keylearn/phonetic-model": "*",
     "@keylearn/phonetic-model-loader": "*",
+    "@keylearn/settings": "*",
     "@keylearn/widget": "*"
   },
   "devDependencies": {},

@@ -206,7 +206,11 @@ test("create user from resource owner with null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -259,7 +263,11 @@ test("create user from resource owner with non-null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -312,7 +320,11 @@ test("create user from resource owner with invalid values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -371,7 +383,11 @@ test("update user from resource owner with null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -430,7 +446,11 @@ test("update user from resource owner with non-null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -477,7 +497,11 @@ test("update user from resource owner with non-null values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -536,7 +560,11 @@ test("update user from resource owner with invalid values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -583,7 +611,11 @@ test("update user from resource owner with invalid values", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -636,7 +668,11 @@ test("merge multiple resource owners", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -686,7 +722,11 @@ test("merge multiple resource owners", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -828,7 +868,11 @@ test("generates unique name for resource owner", async (ctx) => {
       totpEnabled: 0,
       recoveryCodes: null,
       parentPinHash: null,
+      parentPinLength: null,
       staff: 0,
+      locale: null,
+      signupCountry: null,
+      supportPinRequired: 0,
       remindedAt: null,
       externalIds: [
         {
@@ -1022,7 +1066,11 @@ test("login with a valid access token", async (ctx) => {
     totpEnabled: 0,
     recoveryCodes: null,
     parentPinHash: null,
+    parentPinLength: null,
     staff: 0,
+    locale: null,
+    signupCountry: null,
+    supportPinRequired: 0,
     remindedAt: null,
     externalIds: [],
     order: null,
@@ -1107,6 +1155,7 @@ test("convert to user details", async (ctx) => {
     ],
     order: null,
     dateOfBirth: null,
+    signupCountry: null,
     hasPassword: false,
     twoFactorEnabled: false,
     parentPinSet: false,
@@ -1152,7 +1201,11 @@ test("make public user from user name", (ctx) => {
         totpEnabled: 0,
         recoveryCodes: null,
         parentPinHash: null,
+        parentPinLength: null,
         staff: 0,
+        locale: null,
+        signupCountry: null,
+        supportPinRequired: 0,
         remindedAt: null,
         externalIds: [],
         createdAt: new Date(0),
@@ -1188,7 +1241,11 @@ test("make public user from external user id", (ctx) => {
         totpEnabled: 0,
         recoveryCodes: null,
         parentPinHash: null,
+        parentPinLength: null,
         staff: 0,
+        locale: null,
+        signupCountry: null,
+        supportPinRequired: 0,
         remindedAt: null,
         externalIds: [
           {
@@ -1230,7 +1287,11 @@ test("make public user from external user id", (ctx) => {
         totpEnabled: 0,
         recoveryCodes: null,
         parentPinHash: null,
+        parentPinLength: null,
         staff: 0,
+        locale: null,
+        signupCountry: null,
+        supportPinRequired: 0,
         remindedAt: null,
         externalIds: [
           {

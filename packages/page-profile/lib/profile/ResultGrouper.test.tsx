@@ -129,10 +129,13 @@ test("offer only the character classes that were practised", async () => {
     </FakeIntlProvider>,
   );
 
-  // The faked session is letters only. A filter for a class this learner has
-  // never typed leads to an empty chart, which reads as a broken page rather
-  // than as "nothing here yet".
-  isNotNull(await r.findByText("Letters"));
+  // The faked session is letters only, so there is exactly one class on
+  // offer — and one option is not a choice. The whole filter row stays off
+  // the page (see `hasChoice` in ResultGrouper): a lone chip that cannot be
+  // turned off is a label wearing a button's clothes. The child must still
+  // render, filtered to letters, without the row existing.
+  isNotNull(await r.findByTitle("alphabet"));
+  isNull(r.queryByText("Letters"));
   isNull(r.queryByText("Digits"));
   isNull(r.queryByText("Punctuation marks"));
   isNull(r.queryByText("Symbols"));
