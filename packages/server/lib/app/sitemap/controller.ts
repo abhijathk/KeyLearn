@@ -4,6 +4,7 @@ import { inject, injectable } from "@fastr/invert";
 import { allLocales, defaultLocale } from "@keylearn/intl";
 import { Pages } from "@keylearn/pages-shared";
 import { js2xml } from "xml-js";
+import { multiplayerEnabled } from "../multiplayer.ts";
 
 @injectable()
 @controller()
@@ -32,7 +33,10 @@ export function generateSitemapXml(canonicalUrl: string): any {
     Pages.help,
     Pages.highScores,
     Pages.layouts,
-    Pages.multiplayer,
+    // Only while the page exists: a sitemap entry that answers 404 is a
+    // crawl error, not a listing. Read once, here, because the body is
+    // built once in the constructor.
+    ...(multiplayerEnabled() ? [Pages.multiplayer] : []),
     Pages.typingTest,
   ]) {
     for (const locale of sortedLocales) {

@@ -192,6 +192,10 @@ function KidAccountGuard(): ReactNode {
 
 function PageRoutes() {
   const { locale } = useIntl();
+  // Whether the multiplayer route exists at all. The server already answers
+  // 404 for a direct hit while it is off; this keeps the in-app router from
+  // mounting a page the server would refuse, so the two agree.
+  const { multiplayer } = usePageData();
   return (
     <BrowserRouter basename={Pages.intlBase(locale)}>
       <FirstRunRedirect />
@@ -444,17 +448,19 @@ function PageRoutes() {
             </Template>
           }
         />
-        <Route
-          path={Pages.multiplayer.path}
-          element={
-            <Template path={Pages.multiplayer.path}>
-              <Title page={Pages.multiplayer} />
-              <Suspense fallback={<LoadingProgress />}>
-                <MultiplayerPage />
-              </Suspense>
-            </Template>
-          }
-        />
+        {multiplayer && (
+          <Route
+            path={Pages.multiplayer.path}
+            element={
+              <Template path={Pages.multiplayer.path}>
+                <Title page={Pages.multiplayer} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <MultiplayerPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
         <Route
           path={Pages.layouts.path}
           element={

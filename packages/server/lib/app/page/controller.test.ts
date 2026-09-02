@@ -18,7 +18,6 @@ for (const path of [
   "/help",
   "/high-scores",
   "/layouts",
-  "/multiplayer",
   "/profile",
   "/profile/example1",
   "/profile/example2",
@@ -52,6 +51,57 @@ for (const path of [
     equal($("#root").length, 1);
   });
 }
+
+/**
+ * Multiplayer is the one page a flag can remove. Off (the shipped default)
+ * must mean the URL is gone on both the plain and the locale route, not
+ * merely unlisted; on must mean it renders like any other page. Read live,
+ * so the same app answers differently as the flag changes.
+ */
+test("multiplayer answers 404 while MULTIPLAYER_ENABLED is off", async () => {
+  const request = startApp(context.get(Application, kMain));
+  const saved = process.env.MULTIPLAYER_ENABLED;
+  delete process.env.MULTIPLAYER_ENABLED;
+  try {
+    for (const path of ["/multiplayer", "/de/multiplayer"]) {
+      const response = await request
+        .GET(path)
+        .header("X-Forwarded-Host", "www.keylearn.org")
+        .header("X-Forwarded-Proto", "https")
+        .send();
+      equal(response.status, 404, path);
+      equal(response.headers.get("Content-Type"), "text/html; charset=UTF-8");
+    }
+  } finally {
+    if (saved != null) {
+      process.env.MULTIPLAYER_ENABLED = saved;
+    }
+  }
+});
+
+test("multiplayer renders while MULTIPLAYER_ENABLED is on", async () => {
+  const request = startApp(context.get(Application, kMain));
+  const saved = process.env.MULTIPLAYER_ENABLED;
+  process.env.MULTIPLAYER_ENABLED = "true";
+  try {
+    for (const path of ["/multiplayer", "/de/multiplayer"]) {
+      const response = await request
+        .GET(path)
+        .header("X-Forwarded-Host", "www.keylearn.org")
+        .header("X-Forwarded-Proto", "https")
+        .send();
+      equal(response.status, 200, path);
+      const $ = load(await response.body.text());
+      equal($("script#page-data").length, 1);
+    }
+  } finally {
+    if (saved == null) {
+      delete process.env.MULTIPLAYER_ENABLED;
+    } else {
+      process.env.MULTIPLAYER_ENABLED = saved;
+    }
+  }
+});
 
 test(`load custom theme from cookie`, async () => {
   // Arrange.

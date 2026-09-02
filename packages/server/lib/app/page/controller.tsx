@@ -1,5 +1,6 @@
 import { controller, http, pathParam, use } from "@fastr/controller";
 import { Context } from "@fastr/core";
+import { NotFoundError } from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { CanonicalHandler } from "@fastr/middleware-canonical";
 import { type RouterState } from "@fastr/middleware-router";
@@ -25,6 +26,7 @@ import { type IntlShape, RawIntlProvider } from "react-intl";
 import { type AuthState } from "../auth/index.ts";
 import { cspNonce } from "../headers.ts";
 import { leaderboardReady } from "../highscores/readiness.ts";
+import { multiplayerEnabled } from "../multiplayer.ts";
 import { localePattern, pIntl, preferredLocale } from "./intl.ts";
 
 @injectable()
@@ -380,8 +382,16 @@ export class Controller {
     return this.renderPage(ctx, Pages.typingTest, intl);
   }
 
+  // Off means gone. MULTIPLAYER_ENABLED=false used to hide only the menu
+  // link while the page stayed reachable by URL; now the URL answers 404
+  // like any page that does not exist, on both the plain and the locale
+  // route, so a bookmark or a typed address cannot reach a switched-off
+  // room. Live-read on every request (see multiplayer.ts).
   @http.GET(`${Pages.multiplayer.path}`)
   async ["multiplayer"](ctx: Context<RouterState & AuthState>) {
+    if (!multiplayerEnabled()) {
+      throw new NotFoundError();
+    }
     return this.renderPage(ctx, Pages.multiplayer);
   }
 
@@ -390,6 +400,9 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @pathParam("locale", pIntl) intl: IntlShape,
   ) {
+    if (!multiplayerEnabled()) {
+      throw new NotFoundError();
+    }
     return this.renderPage(ctx, Pages.multiplayer, intl);
   }
 
@@ -491,8 +504,9 @@ export class Controller {
       gameUrl: Env.getString("GAME_URL", ""),
       // Drives whether the leaderboard link appears at all.
       leaderboard: await this.#leaderboardReady(),
-      // Off until live practice is finished — see PageData.multiplayer.
-      multiplayer: Env.getBoolean("MULTIPLAYER_ENABLED", false),
+      // Off until live practice is finished — see PageData.multiplayer. The
+      // same reader gates the page route and the game socket.
+      multiplayer: multiplayerEnabled(),
       locale,
       // What the network says about where this request came from —
       // Cloudflare's edge, so it is absent in development and on any

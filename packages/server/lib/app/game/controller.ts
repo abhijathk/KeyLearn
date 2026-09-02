@@ -1,6 +1,6 @@
 import { controller, http } from "@fastr/controller";
 import { Context } from "@fastr/core";
-import { ForbiddenError } from "@fastr/errors";
+import { ForbiddenError, NotFoundError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { websocket } from "@fastr/middleware-websocket";
@@ -10,6 +10,7 @@ import { WebSocketServer } from "ws";
 import { actorFor } from "../access/actor.ts";
 import { reachProfile } from "../access/resolver.ts";
 import { type AuthState, clientIp } from "../auth/index.ts";
+import { multiplayerEnabled } from "../multiplayer.ts";
 import { allowWebSocketOrigin } from "./origin.ts";
 import { SessionFactory } from "./session.ts";
 
@@ -48,6 +49,11 @@ export class Controller {
 
   @http.GET("/_/game/server")
   async connect(ctx: Context<RouterState & AuthState>) {
+    // Off means gone: with multiplayer switched off, the socket and the room
+    // list do not exist, rather than existing and refusing.
+    if (!multiplayerEnabled()) {
+      throw new NotFoundError();
+    }
     const { sessionId, user } = ctx.state;
     // Which learner is playing. The client asserts it, so it is VERIFIED here:
     // the profile must belong to this session's account and be a grown-up one
@@ -119,6 +125,11 @@ export class Controller {
    */
   @http.GET("/_/game/rooms")
   async rooms(ctx: Context<RouterState & AuthState>) {
+    // Off means gone: with multiplayer switched off, the socket and the room
+    // list do not exist, rather than existing and refusing.
+    if (!multiplayerEnabled()) {
+      throw new NotFoundError();
+    }
     ctx.response.body = this.sessions.peek();
     // Short enough to feel live while the dialog is open, long enough that a
     // page left sitting on it does not poll the room list at full rate.
@@ -127,6 +138,11 @@ export class Controller {
 
   @http.GET("/_/game/stats")
   async stats(ctx: Context<RouterState & AuthState>) {
+    // Off means gone: with multiplayer switched off, the socket and the room
+    // list do not exist, rather than existing and refusing.
+    if (!multiplayerEnabled()) {
+      throw new NotFoundError();
+    }
     // Room stats name every connected player, so this is not public. Signed-in
     // callers only; use MULTIPLAYER_STATS_PUBLIC=true to restore the old
     // behaviour for an internal dashboard.

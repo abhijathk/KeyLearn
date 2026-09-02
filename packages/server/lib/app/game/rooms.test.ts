@@ -1,4 +1,4 @@
-import { test } from "node:test";
+import { after, before, test } from "node:test";
 import { Application } from "@fastr/core";
 import { equal, isTrue, like } from "rich-assert";
 import { kGame } from "../module.ts";
@@ -6,6 +6,21 @@ import { TestContext } from "../test/context.ts";
 import { startApp } from "../test/request.ts";
 
 const context = new TestContext();
+
+// Rooms exist only while multiplayer is on (the off case is covered in
+// controller.test.ts).
+let savedFlag: string | undefined;
+before(() => {
+  savedFlag = process.env.MULTIPLAYER_ENABLED;
+  process.env.MULTIPLAYER_ENABLED = "true";
+});
+after(() => {
+  if (savedFlag == null) {
+    delete process.env.MULTIPLAYER_ENABLED;
+  } else {
+    process.env.MULTIPLAYER_ENABLED = savedFlag;
+  }
+});
 
 /**
  * The door has to be answerable before a socket exists — that is the whole

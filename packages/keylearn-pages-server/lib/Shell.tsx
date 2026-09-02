@@ -85,6 +85,7 @@ function Body({ children }: { readonly children?: ReactNode }) {
 
 function Content({ page }: { readonly page: PageInfo }) {
   const { formatMessage, locale } = useIntl();
+  const { multiplayer } = usePageData();
   return (
     <>
       <h1>{formatMessage(page.link.label)}</h1>
@@ -95,7 +96,9 @@ function Content({ page }: { readonly page: PageInfo }) {
             Pages.practice,
             Pages.profile,
             Pages.typingTest,
-            Pages.multiplayer,
+            // Same rule as the in-app menu: a link to a page that answers
+            // 404 is worse than no link.
+            ...(multiplayer ? [Pages.multiplayer] : []),
             Pages.layouts,
             Pages.help,
           ].map(({ path, link }, index) => (
