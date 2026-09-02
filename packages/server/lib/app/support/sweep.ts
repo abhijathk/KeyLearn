@@ -2,6 +2,7 @@ import { inject, injectable } from "@fastr/invert";
 import { Env, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
+  StaffAuditEvent,
   StaffSettings,
   SupportMessage,
   SupportTicket,
@@ -360,6 +361,67 @@ export class AccountDeletionSweep {
     } catch (err: any) {
       Logger.warn(err, "Account deletion sweep failed");
       return deleted;
+    }
+  }
+}
+
+/**
+ * How long staff audit rows are kept. 0 keeps them forever, which is the
+ * shipped value: the log had no retention at all before this, and the
+ * control centre (spec §6.2, `retention.staffAuditDays`) is where a window
+ * gets chosen. The learner-facing sign-in history already ages out at 30
+ * days; this is the staff-side counterpart, deliberately separate because
+ * accountability for staff actions is worth keeping longer than a
+ * household's sign-in trail.
+ */
+export function staffAuditRetentionDays(): number {
+  return Env.getNumber("STAFF_AUDIT_RETENTION_DAYS", 0);
+}
+
+/**
+ * Ages the staff audit log out past its retention window, once a day in the
+ * cluster's primary, same as the other sweeps in this file. Does nothing
+ * while the window is 0.
+ */
+@injectable({ singleton: true })
+export class StaffAuditSweep {
+  #timer: NodeJS.Timeout | null = null;
+
+  start(): void {
+    if (this.#timer != null) {
+      return;
+    }
+    this.#timer = setInterval(() => {
+      void this.runOnce();
+    }, DAY_MS);
+    this.#timer.unref?.();
+    const days = staffAuditRetentionDays();
+    Logger.info("Staff audit sweep scheduled", {
+      retentionDays: days > 0 ? days : "forever",
+    });
+  }
+
+  stop(): void {
+    if (this.#timer != null) {
+      clearInterval(this.#timer);
+      this.#timer = null;
+    }
+  }
+
+  /** One pass. Returns how many rows were dropped. */
+  async runOnce(now: number = Date.now()): Promise<number> {
+    try {
+      const dropped = await StaffAuditEvent.deleteExpired(
+        staffAuditRetentionDays() * DAY_MS,
+        now,
+      );
+      if (dropped > 0) {
+        Logger.info("Staff audit sweep dropped %d expired rows", dropped);
+      }
+      return dropped;
+    } catch (err: any) {
+      Logger.warn(err, "Staff audit sweep failed");
+      return 0;
     }
   }
 }

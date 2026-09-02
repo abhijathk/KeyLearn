@@ -16,6 +16,7 @@ import {
   HoldingQueueSweep,
   IdleTicketCloseSweep,
   QdeskRetrySweep,
+  StaffAuditSweep,
 } from "./app/support/index.ts";
 import { DataSnapshot } from "./app/sync/index.ts";
 import { ServerModule } from "./server/module.ts";
@@ -63,6 +64,8 @@ if (cluster.isPrimary) {
   // Forwarding to the desk is fire-and-forget so an outage can't fail a
   // customer's send; this is what makes that safe rather than lossy.
   container.get(QdeskRetrySweep).start();
+  // Staff audit rows age out past STAFF_AUDIT_RETENTION_DAYS; 0 keeps them.
+  container.get(StaffAuditSweep).start();
   // Learner data lives in files on this machine's disk; the database is what
   // gets backed up. Copy one into the other at intervals.
   container.get(DataSnapshot).start();

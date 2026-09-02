@@ -110,6 +110,28 @@ export class StaffAuditEvent extends TimestampMixin(Model) {
     }
   }
 
+  /**
+   * Drops rows older than the window. Called by the daily sweep, never on
+   * the write path: an audit row must land regardless of what else is going
+   * on, and a DELETE beside every INSERT buys nothing when the cutoff moves
+   * by the day.
+   *
+   * A window of zero (or less) keeps everything, which was the only
+   * behaviour before this existed — there was no retention at all, so rows
+   * carrying staff IP addresses were kept for the life of the deployment.
+   */
+  static async deleteExpired(
+    retentionMs: number,
+    now: number = Date.now(),
+  ): Promise<number> {
+    if (!(retentionMs > 0)) {
+      return 0;
+    }
+    return await StaffAuditEvent.query()
+      .where("createdAt", "<", new Date(now - retentionMs))
+      .delete();
+  }
+
   static async listRecent(limit = 100): Promise<StaffAuditEvent[]> {
     return await StaffAuditEvent.query()
       .orderBy("createdAt", "desc")
