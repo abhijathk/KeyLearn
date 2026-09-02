@@ -12,6 +12,7 @@ import {
   guideFor,
   renderRich,
 } from "./guide-content.tsx";
+import { legalDate } from "./legal-dates.ts";
 import { ReleaseNotesDialog } from "./ReleaseNotesDialog.tsx";
 import * as styles from "./road.module.less";
 
@@ -458,7 +459,7 @@ export function AboutPage() {
 }
 
 export function TermsOfServicePage() {
-  const { formatMessage } = useIntl();
+  const { formatDate, formatMessage } = useIntl();
   return (
     <div className={styles.paper}>
       <Masthead
@@ -470,10 +471,20 @@ export function TermsOfServicePage() {
           id: "terms.title",
           defaultMessage: "Terms of Service",
         })}
-        dateline={formatMessage({
-          id: "terms.dateline",
-          defaultMessage: "Plain English · Updated August 2026",
-        })}
+        dateline={formatMessage(
+          {
+            id: "legal.dateline.updated",
+            defaultMessage: "Plain English · Updated {date}",
+          },
+          {
+            // One constant per document (legal-dates.ts), formatted in the
+            // reader's language, so no locale file can state its own date.
+            date: formatDate(legalDate("termsOfService"), {
+              month: "long",
+              year: "numeric",
+            }),
+          },
+        )}
       />
 
       <div className={styles.glance}>
@@ -682,7 +693,7 @@ export function TermsOfServicePage() {
 }
 
 export function PrivacyPolicyPage() {
-  const { formatMessage } = useIntl();
+  const { formatDate, formatMessage } = useIntl();
   return (
     <div className={styles.paper}>
       <Masthead
@@ -694,10 +705,20 @@ export function PrivacyPolicyPage() {
           id: "privacy.title",
           defaultMessage: "Privacy Policy",
         })}
-        dateline={formatMessage({
-          id: "privacy.dateline",
-          defaultMessage: "Plain English · Updated August 2026",
-        })}
+        dateline={formatMessage(
+          {
+            id: "legal.dateline.updated",
+            defaultMessage: "Plain English · Updated {date}",
+          },
+          {
+            // One constant per document (legal-dates.ts), formatted in the
+            // reader's language, so no locale file can state its own date.
+            date: formatDate(legalDate("privacyPolicy"), {
+              month: "long",
+              year: "numeric",
+            }),
+          },
+        )}
       />
 
       <div className={styles.glance}>
@@ -1126,7 +1147,7 @@ export function GuidePage() {
  * conformance claim only invites "show me the audit".
  */
 export function AccessibilityPage() {
-  const { formatMessage } = useIntl();
+  const { formatDate, formatMessage } = useIntl();
   return (
     <div className={styles.paper}>
       <Masthead
@@ -1138,10 +1159,20 @@ export function AccessibilityPage() {
           id: "account.accessibility.title",
           defaultMessage: "Accessibility",
         })}
-        dateline={formatMessage({
-          id: "accessibility.dateline",
-          defaultMessage: "Plain English · Reviewed August 2026",
-        })}
+        dateline={formatMessage(
+          {
+            id: "legal.dateline.reviewed",
+            defaultMessage: "Plain English · Reviewed {date}",
+          },
+          {
+            // One constant per document (legal-dates.ts), formatted in the
+            // reader's language, so no locale file can state its own date.
+            date: formatDate(legalDate("accessibility"), {
+              month: "long",
+              year: "numeric",
+            }),
+          },
+        )}
       />
 
       <div className={styles.glance}>

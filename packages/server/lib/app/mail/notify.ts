@@ -64,6 +64,22 @@ function strPref(
  * Nothing here is allowed to throw into a request: an email that fails to send
  * must never turn a successful password change into an error.
  */
+/**
+ * The headers that let a mail client offer "unsubscribe" in its own UI, on
+ * the mail a person can opt out of. The link is the same preferences page
+ * the body already points at, so there is one place to change a preference,
+ * not two that could disagree. A one-click POST endpoint (RFC 8058) is a
+ * later step; until then clients show the link rather than a button.
+ *
+ * Never attached to security alerts: those cannot be unsubscribed from, and
+ * advertising an unsubscribe on them would be a lie the mail client repeats.
+ */
+export function unsubscribeHeaders(
+  settingsLink: string,
+): Readonly<Record<string, string>> {
+  return { "List-Unsubscribe": `<${settingsLink}>` };
+}
+
 @injectable({ singleton: true })
 export class Notifier {
   constructor(
@@ -152,15 +168,17 @@ export class Notifier {
       return false;
     }
     try {
-      await this.mailer.sendMail(
-        messagePracticeReminder({
+      const settingsLink = this.#link("/account#prefs");
+      await this.mailer.sendMail({
+        ...messagePracticeReminder({
           email,
           name: user.name ?? "there",
           days,
           practiceLink: this.#link("/"),
-          settingsLink: this.#link("/account#prefs"),
+          settingsLink,
         }),
-      );
+        headers: unsubscribeHeaders(settingsLink),
+      });
       // Stamped only after the send succeeded, so a mail outage does not burn
       // someone's monthly slot on an email they never received.
       await User.query()
@@ -210,15 +228,17 @@ export class Notifier {
       return false;
     }
     try {
-      await this.mailer.sendMail(
-        messageProductNews({
+      const settingsLink = this.#link("/account#prefs");
+      await this.mailer.sendMail({
+        ...messageProductNews({
           email,
           title,
           body,
           link,
-          settingsLink: this.#link("/account#prefs"),
+          settingsLink,
         }),
-      );
+        headers: unsubscribeHeaders(settingsLink),
+      });
       return true;
     } catch (err: any) {
       Logger.warn(err, "Could not send product news to '%s'", maskEmail(email));

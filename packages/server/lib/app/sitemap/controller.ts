@@ -10,9 +10,11 @@ import { multiplayerEnabled } from "../multiplayer.ts";
 @controller()
 export class Controller {
   readonly #body: string;
+  readonly #robots: string;
 
   constructor(@inject("canonicalUrl") canonicalUrl: string) {
     this.#body = generateSitemapXml(canonicalUrl);
+    this.#robots = generateRobotsTxt(canonicalUrl);
   }
 
   @http.GET("/sitemap.xml")
@@ -20,6 +22,56 @@ export class Controller {
     ctx.response.body = this.#body;
     ctx.response.type = "application/xml";
   }
+
+  @http.GET("/robots.txt")
+  async robots(ctx: Context) {
+    ctx.response.body = this.#robots;
+    ctx.response.type = "text/plain";
+  }
+}
+
+/**
+ * Which paths a crawler should not fetch, and where the sitemap is.
+ *
+ * Every page here already carries a `noindex` meta, but a meta only works on
+ * a page the crawler has fetched, and the static file this replaces listed
+ * only the auth paths and the API — so account pages and token links were
+ * still being requested. Served by the app rather than as a static file so
+ * the sitemap line follows the canonical URL on every deployment.
+ * Nothing on this list is content: it is the signed-in surface, the
+ * token-only surface and the API. Each path is listed twice, plain and under
+ * a locale prefix, because every page has locale twins.
+ */
+export function generateRobotsTxt(canonicalUrl: string): string {
+  const private_ = [
+    "/_/",
+    // Sign-in flows and magic-link tokens: the old static file listed these
+    // two and nothing else, and it is folded in here.
+    "/auth/",
+    "/login/",
+    Pages.account.path,
+    Pages.profiles.path,
+    Pages.profile.path,
+    Pages.design.path,
+    Pages.assessment.path,
+    Pages.login.path,
+    Pages.register.path,
+    Pages.forgotPassword.path,
+    "/reset-password/",
+    Pages.org.path,
+    "/join/",
+    "/support/t/",
+    "/support/deletion-cancel/",
+  ];
+  const lines = ["User-agent: *"];
+  for (const path of private_) {
+    lines.push(`Disallow: ${path}`);
+    if (path !== "/_/") {
+      lines.push(`Disallow: /*${path}`);
+    }
+  }
+  lines.push(`Sitemap: ${String(new URL("/sitemap.xml", canonicalUrl))}`);
+  return lines.join("\n") + "\n";
 }
 
 export function generateSitemapXml(canonicalUrl: string): any {

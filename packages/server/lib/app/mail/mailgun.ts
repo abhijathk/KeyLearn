@@ -30,6 +30,7 @@ export class MailgunMailer extends Mailer {
     subject,
     text,
     html,
+    headers,
   }: Mailer.Message): Promise<void> {
     const body = new URLSearchParams([
       ["from", from],
@@ -41,6 +42,10 @@ export class MailgunMailer extends Mailer {
     }
     if (html) {
       body.append("html", html);
+    }
+    // Mailgun takes arbitrary headers as `h:Name` form fields.
+    for (const [name, value] of Object.entries(headers ?? {})) {
+      body.append(`h:${name}`, value);
     }
 
     const response = await request

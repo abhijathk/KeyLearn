@@ -52,7 +52,15 @@ export class SmtpMailer extends Mailer {
     subject,
     text,
     html,
+    headers,
   }: Mailer.Message): Promise<void> {
-    await this.#transporter.sendMail({ from, to, subject, text, html });
+    await this.#transporter.sendMail({
+      from,
+      to,
+      subject,
+      text,
+      html,
+      headers,
+    });
   }
 }
