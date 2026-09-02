@@ -7,7 +7,6 @@ import { Env } from "@keylearn/config";
 // here deliberately rather than discovering later that anything goes.
 const SCRIPT_HOSTS = [
   "https://www.googletagmanager.com",
-  "https://pagead2.googlesyndication.com",
   "https://cdn.paddle.com",
   "https://challenges.cloudflare.com",
   "https://static.cloudflareinsights.com",

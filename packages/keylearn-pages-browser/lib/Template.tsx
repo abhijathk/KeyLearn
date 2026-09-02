@@ -1,12 +1,10 @@
-import { CompleteProfileGate, useProfiles } from "@keylearn/page-account";
+import { CompleteProfileGate } from "@keylearn/page-account";
 import { SupportService } from "@keylearn/page-support";
 import { type NoticeDetails, Pages, SiteNotice } from "@keylearn/pages-shared";
-import { AdBanner, adSenseClientId } from "@keylearn/thirdparties";
 import { PortalContainer, Toaster } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
-import { showAds } from "./ads.ts";
 import { Header } from "./Header.tsx";
 import { LoginPrompt } from "./LoginPrompt.tsx";
 import { MenuDrawer } from "./MenuDrawer.tsx";
@@ -101,20 +99,6 @@ function SiteNoticeBanner(): ReactNode {
   );
 }
 
-// The household's remembered grown-ups/kids preference. Absent for most of
-// them — it is only written when somebody uses the drawer's switch — which is
-// exactly why it cannot be the only thing the ad gate consults (see ads.ts).
-function storedMode(): string | null {
-  try {
-    return localStorage.getItem("keylearn.mode");
-  } catch {
-    // Storage unavailable (private mode, an embedded webview). Unknown, which
-    // showAds() already treats as a reason for caution rather than a green
-    // light.
-    return null;
-  }
-}
-
 // Whether the drawer is open, held OUTSIDE the component on purpose. Each
 // route wraps its page in its own <Template>, so a client-side navigation
 // unmounts one Template and mounts another — and drawer state kept in
@@ -141,13 +125,6 @@ export function Template({
     setMenuOpenState(open);
   };
   const [supportOpen, setSupportOpen] = useState(false);
-  const { active } = useProfiles();
-  const ads = showAds({
-    adNetworkConfigured: adSenseClientId !== "0",
-    path,
-    activeProfileKind: active?.kind ?? null,
-    storedMode: storedMode(),
-  });
   return (
     // "desk-app" is a plain, un-hashed marker class (not a CSS-module one):
     // accents.less reaches for it via `html:has(.desk-app)` from a different
@@ -178,17 +155,6 @@ export function Template({
         <PortalContainer />
         <Toaster />
       </main>
-      {ads && (
-        <div className={styles.adSlot}>
-          <div className={styles.adLabel}>
-            <FormattedMessage
-              id="template.adLabel"
-              defaultMessage="Advertisement"
-            />
-          </div>
-          <AdBanner />
-        </div>
-      )}
       <MenuDrawer
         open={menuOpen}
         onClose={() => setMenuOpen(false)}

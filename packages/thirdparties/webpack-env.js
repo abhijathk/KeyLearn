@@ -35,8 +35,6 @@ for (const key of [
   "COOKIEBOT_CLIENT_ID",
   "PADDLE_TOKEN",
   "PADDLE_PRICE_ID",
-  "ADSENSE_CLIENT_ID",
-  "ADSENSE_SLOT_ID",
   "SUPPORT_URL",
 ]) {
   ENV[`process.env.${key}`] = JSON.stringify(process.env[key]);
