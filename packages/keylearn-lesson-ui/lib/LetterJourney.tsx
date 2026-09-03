@@ -1,28 +1,25 @@
 import { type LessonKey, type LessonKeys } from "@keylearn/lesson";
 import { type ClassName } from "@keylearn/widget";
 import { clsx } from "clsx";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode } from "react";
 import * as styles from "./LetterJourney.module.less";
 import { useKeyStyles } from "./styles.ts";
 
-// Sized to the keycaps in the header wordmark (owner, 4 Sep 2026): square,
-// small, and read as a row of chips rather than a row of keys. The strip sits
-// under the keyboard and the resting hands, where anything key-sized competes
-// with the board above it for the same glance.
-const CAP_W = 22;
-const CAP_H = 22;
-const STEP = 30; // cap width + gap between stops
-const PAD = 14; // side padding (>= CAP_W / 2)
-const PAD_TOP = 26; // room for the focused key's note above the first lane
-const ROW_H = 42;
-
 /**
- * The Letter Journey: every key laid out in unlock order as a keycap sitting on
- * a straight road — no curves. The road you've travelled is solid; the road
- * ahead (locked keys) is dashed with ghosted caps. Each unlocked cap is tinted
- * by its confidence (slow → fast) with a matching coloured border, and the
- * current key is ringed in the accent with how close it is to unlocking noted
- * above. The whole thing wraps into stacked straight lanes to fit the width.
+ * The Letter Journey: every key in unlock order, as letters rather than keys.
+ *
+ * It used to draw twenty-six keycaps on a road, and it sat directly beneath a
+ * keyboard made of keycaps — so the eye read it as a second, broken keyboard
+ * and had to work out that it was not one. The information was never the
+ * problem; the boxes were. Drawn as type, the same row reads as a caption to
+ * the board above instead of a rival to it (owner, 4 Sep 2026).
+ *
+ * Nothing was given up to do it. Confidence still shows, now as the colour of
+ * the letter itself rather than the fill of a chip behind it; the key in play
+ * carries the accent and a rule beneath it; every letter is still its own
+ * hover target, so the detail popup works exactly as before. The row wraps on
+ * its own, which is also how the big scripts (Devanagari, Malayalam) stopped
+ * needing the lane arithmetic this component used to carry.
  */
 export function LetterJourney({
   id,
@@ -42,46 +39,6 @@ export function LetterJourney({
   const n = keys.length;
   const unlocked = keys.filter(({ isIncluded }) => isIncluded).length;
 
-  // A Latin-sized alphabet (English is 26) always rides a single line — the SVG
-  // scales to fit the width. Only the big scripts (Devanagari, Malayalam, …)
-  // wrap, into balanced lanes sized to the available width.
-  const ONE_LINE_MAX = 30;
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [availWidth, setAvailWidth] = useState(0);
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (el == null) {
-      return;
-    }
-    const measure = () => {
-      setAvailWidth(el.clientWidth || 0);
-    };
-    measure();
-    if (typeof ResizeObserver === "undefined") {
-      return;
-    }
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-    };
-  }, []);
-
-  let per = Math.max(1, n);
-  if (n > ONE_LINE_MAX && availWidth > 0) {
-    const fit = Math.floor((availWidth - 72 - PAD * 2) / STEP) + 1;
-    const maxPer = Math.max(10, Number.isFinite(fit) ? fit : n);
-    const laneRows = Math.max(1, Math.ceil(n / maxPer));
-    per = Math.ceil(n / laneRows); // balance the lanes
-  }
-  const rows = Math.max(1, Math.ceil(n / per));
-  const laneLen = Math.min(n, per);
-  const width = PAD * 2 + Math.max(0, laneLen - 1) * STEP;
-  const height = PAD_TOP + rows * ROW_H;
-  const pos = (i: number) => {
-    const row = Math.floor(i / per);
-    return { x: PAD + (i - row * per) * STEP, y: PAD_TOP + row * ROW_H, row };
-  };
   const confOf = (k: LessonKey) => Math.max(0, Math.min(1, k.confidence ?? 0));
   /**
    * How close this key is to letting the next letter through.
@@ -95,55 +52,24 @@ export function LetterJourney({
    */
   const readyOf = (k: LessonKey) =>
     Math.max(0, Math.min(1, k.bestConfidence ?? 0));
-  // Readiness notes need breathing room: when several focused keys sit close
-  // together their labels would overlap, so only keys at least three stops
-  // apart (left to right) get the text — the rest keep just their pin.
-  const noted = new Set<number>();
-  {
-    let last = -Infinity;
-    keys.forEach((key, i) => {
-      if (key.isFocused && i - last >= 3) {
-        noted.add(i);
-        last = i;
-      }
-    });
-  }
+
+  /**
+   * Where the readiness words go: above the key they are about.
+   *
+   * Not spliced between two letters, which breaks the unlock order the row
+   * exists to show, and not parked at the end, where they dangle after the
+   * alphabet belonging to nothing. They sit over the key in play and point at
+   * it, which is the only position that needs no explaining. They are drawn
+   * out of flow, so the row's height and the letter spacing do not move.
+   *
+   * Only the first key in play is captioned. Several can be focused at once,
+   * and a caption over each turned one line into a thicket.
+   */
+  const firstFocused = keys.findIndex(({ isFocused }) => isFocused);
 
   return (
-    <div id={id} ref={wrapRef} className={clsx(styles.journey, className)}>
-      <svg
-        className={styles.map}
-        width={width}
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-      >
-        {/* the road: a segment between each pair of same-lane neighbours */}
-        {keys.slice(1).map((b, idx) => {
-          const i = idx + 1;
-          const a = keys[i - 1];
-          const pa = pos(i - 1);
-          const pb = pos(i);
-          if (pa.row !== pb.row) {
-            return null;
-          }
-          const enabled = a.isIncluded && b.isIncluded;
-          const segColor =
-            enabled && a.confidence != null && b.confidence != null
-              ? String(confidenceColor((confOf(a) + confOf(b)) / 2))
-              : undefined;
-          return (
-            <line
-              key={`seg${i}`}
-              className={enabled ? styles.seg : styles.segAhead}
-              x1={pa.x + CAP_W / 2}
-              y1={pa.y}
-              x2={pb.x - CAP_W / 2}
-              y2={pb.y}
-              style={segColor != null ? { stroke: segColor } : undefined}
-            />
-          );
-        })}
-        {/* the caps */}
+    <div id={id} className={clsx(styles.journey, className)}>
+      <div className={styles.letters}>
         {keys.map((key, i) => {
           const {
             letter: { codePoint, label },
@@ -151,89 +77,43 @@ export function LetterJourney({
             isIncluded,
             isFocused,
           } = key;
-          const conf = confOf(key);
-          const { x, y } = pos(i);
-          const color =
-            isIncluded && confidence != null
-              ? String(confidenceColor(conf))
+          // The letter is tinted by how confident this key is, so the row still
+          // shows at a glance which of the cleared letters are the slow ones.
+          // The key in play takes the accent from CSS instead.
+          const tint =
+            isIncluded && confidence != null && !isFocused
+              ? String(confidenceColor(confOf(key)))
               : undefined;
-          // Tint the cap by its confidence (a subtle fill). The current key is
-          // fully styled from CSS — a solid accent chip — so no inline fill.
-          const capStyle =
-            color != null && !isFocused
-              ? {
-                  fill: `color-mix(in oklab, ${color} 20%, var(--primary-l1))`,
-                  stroke: color,
-                }
-              : undefined;
-          const nx = Math.max(CAP_W, Math.min(width - CAP_W, x));
           return (
-            <g
-              key={codePoint}
-              className={clsx(
-                styles.stop,
-                isFocused
-                  ? styles.here
-                  : isIncluded
-                    ? styles.done
-                    : styles.locked,
-              )}
-              onMouseEnter={(ev) => {
-                onKeyHoverIn?.(key, ev.currentTarget);
-              }}
-              onMouseLeave={(ev) => {
-                onKeyHoverOut?.(key, ev.currentTarget);
-              }}
-            >
-              {isFocused && (
-                <>
-                  {noted.has(i) &&
-                    (() => {
-                      // The note is wider than the chip it belongs to, and on
-                      // any row but the first it is drawn across the lane
-                      // above. A backing plate keeps it legible instead of
-                      // letting it tangle with the letters behind it.
-                      const note = readinessNote(readyOf(key));
-                      const w = note.length * 7.2 + 12;
-                      const ny = y - CAP_H / 2 - 10;
-                      return (
-                        <>
-                          <rect
-                            className={styles.notePlate}
-                            x={nx - w / 2}
-                            y={ny - 11}
-                            width={w}
-                            height={15}
-                            rx={4}
-                          />
-                          <text className={styles.note} x={nx} y={ny}>
-                            {note}
-                          </text>
-                        </>
-                      );
-                    })()}
-                  <path
-                    className={styles.pin}
-                    d={`M ${nx - 5} ${y - CAP_H / 2 - 6} L ${nx + 5} ${y - CAP_H / 2 - 6} L ${nx} ${y - CAP_H / 2 - 1} Z`}
-                  />
-                </>
-              )}
-              <rect
-                className={styles.cap}
-                x={x - CAP_W / 2}
-                y={y - CAP_H / 2}
-                width={CAP_W}
-                height={CAP_H}
-                rx={5}
-                style={capStyle}
-              />
-              <text className={styles.label} x={x} y={y + 4.5}>
+            <span key={codePoint} className={styles.stop}>
+              <span
+                className={clsx(
+                  styles.glyph,
+                  isFocused
+                    ? styles.here
+                    : isIncluded
+                      ? styles.done
+                      : styles.locked,
+                )}
+                style={tint != null ? { color: tint } : undefined}
+                onMouseEnter={(ev) => {
+                  onKeyHoverIn?.(key, ev.currentTarget);
+                }}
+                onMouseLeave={(ev) => {
+                  onKeyHoverOut?.(key, ev.currentTarget);
+                }}
+              >
                 {label}
-              </text>
-            </g>
+              </span>
+              {isFocused && i === firstFocused && (
+                <span className={styles.note}>
+                  {readinessNote(readyOf(key))}
+                </span>
+              )}
+            </span>
           );
         })}
-      </svg>
+      </div>
       <span className={styles.count}>
         {unlocked}
         <i>/{n}</i>
@@ -242,16 +122,25 @@ export function LetterJourney({
   );
 }
 
+/**
+ * The caption over the key in play. One short line, always.
+ *
+ * It used to read "next letter unlocking", which is the right sentence and
+ * the wrong place for it: three words stacked over a single letter wrapped
+ * to three lines and reached out past the alphabet. The words survive in the
+ * hover card, where there is room; here the caption says only how close this
+ * key is, which is the part that changes and the part worth watching.
+ *
+ * "Unlocking" rather than "100%" at the top of the range, because what
+ * happens at the bar is not a number going up — it is the next letter
+ * arriving, and that is the thing a learner is waiting for.
+ */
 function readinessNote(confidence: number): string {
   if (confidence >= 1) {
-    // NOT "ready to unlock": this letter is already unlocked and already at
-    // the bar — what is about to happen is that the NEXT letter opens. The old
-    // wording read as an instruction to go and unlock something, which is why
-    // it was reported as confusing.
-    return "next letter unlocking";
+    return "unlocking";
   }
   if (confidence <= 0) {
-    return "you are here";
+    return "here";
   }
-  return `${Math.round(confidence * 100)}% ready`;
+  return `${Math.round(confidence * 100)}%`;
 }

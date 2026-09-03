@@ -150,9 +150,11 @@ function Curve({
   readonly speeds: readonly number[];
   readonly target: number;
 }): ReactNode {
-  const width = 340;
-  const height = 110;
-  const pad = 6;
+  // Matches the card's new height so the curve is drawn at its own
+  // proportions rather than stretched into the box.
+  const width = 260;
+  const height = 68;
+  const pad = 5;
   const lo = Math.min(...speeds, target) * 0.92;
   const hi = Math.max(...speeds, target) * 1.08;
   const span = hi - lo || 1;

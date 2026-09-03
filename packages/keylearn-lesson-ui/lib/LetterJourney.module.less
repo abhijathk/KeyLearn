@@ -1,132 +1,148 @@
 @import "@keylearn/widget/lib/index.less";
 
+// The letter journey as type rather than keys. It sits under the keyboard and
+// the resting hands, so everything here is chosen to read as a caption to that
+// board and never as a second one: no boxes, no rules, no fills. Compact
+// enough to be one line of the page's furniture.
 .journey {
   display: flex;
   // The keyboard above overflows its own box — the resting hands reach well
   // down past the board and across this row. Claiming a layer keeps the letters
   // drawn on top of them and, more importantly, keeps them hoverable: without
-  // it the overflowing artwork sat between the pointer and these chips.
+  // it the overflowing artwork sat between the pointer and these letters.
   position: relative;
   z-index: 1;
   gap: 0.6rem;
-  align-items: center;
+  align-items: baseline;
   justify-content: center;
-  padding-block: 0.1rem 0.25rem;
+  // Room above the row for the readiness caption, which is drawn out of flow
+  // and would otherwise be clipped by whatever sits over the strip.
+  padding-block: 0.95rem 0.2rem;
 }
 
-.map {
-  max-inline-size: 100%;
-  block-size: auto;
-  overflow: visible;
+.letters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.55rem;
+  align-items: baseline;
+  justify-content: center;
+  // A long script wraps on its own; nothing here needs to know how many rows
+  // that takes, which is the arithmetic the drawn version used to carry.
+  min-inline-size: 0;
 }
 
 .stop {
-  cursor: default;
+  display: inline-flex;
+  position: relative;
+  align-items: baseline;
 }
 
-// ---- the road ------------------------------------------------------------
-
-// The blueprint drops the connecting road: the journey reads as a calm row of
-// floating chips, so the segments stay in the markup but draw nothing.
-.seg,
-.segAhead {
-  display: none;
-}
-
-// ---- the caps ------------------------------------------------------------
-
-.cap {
-  fill: var(--primary-l1);
-  stroke: var(--primary-d2);
-  stroke-width: 1;
-  transition:
-    fill 0.3s ease,
-    stroke 0.3s ease;
-  // A chip's corner, not a keycap's.
-  rx: 6px;
-}
-
-// cleared keys carry a confidence-tinted fill and coloured border, both set
-// inline; the base above is the fallback before there's data. A whisper of
-// shadow floats each cleared chip off the ground.
-.done .cap {
-  filter: drop-shadow(
-    0 1.5px 3px color-mix(in srgb, var(--shadow-color) 55%, transparent)
-  );
-}
-
-// locked keys: quiet solid chips, waiting their turn.
-.locked .cap {
-  fill: var(--primary-l1);
-  stroke: transparent;
-  opacity: 0.45;
-}
-
-// the current key: a solid accent chip with a soft halo, so "you are here"
-// reads from across the room.
-.here .cap {
-  fill: var(--accent);
-  stroke: none;
-  filter: drop-shadow(
-    0 0 6px color-mix(in oklab, var(--accent) 55%, transparent)
-  );
-}
-
-.label {
+.glyph {
+  position: relative;
+  padding-inline: 0.1rem;
   font-family: var(--monospace-font-family);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 0.82rem;
+  line-height: 1.5;
   text-transform: uppercase;
-  text-anchor: middle;
+  cursor: default;
+  transition: color 0.3s ease;
 }
 
-.done .label {
-  fill: var(--text-color);
+// A cleared letter is solid, and carries its own confidence colour inline.
+// The fallback here is what shows before there is any data for it.
+.done {
+  color: var(--text-color);
+  font-weight: 700;
 }
 
-.locked .label {
-  fill: var(--secondary-f2);
+// Locked letters recede rather than disappear: the alphabet ahead is part of
+// what the row is saying.
+.locked {
+  color: var(--secondary-f2);
+  opacity: 0.55;
+  font-weight: 400;
 }
 
-.here .label {
-  fill: var(--primary);
+// The key in play: the accent, and a rule under it. The rule is the only mark
+// on the whole row, which is what makes it findable at a glance.
+.here {
+  color: var(--accent);
   font-weight: 800;
 }
 
-// the readiness note above the current cap, and its little pin.
+.here::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: -0.15rem;
+  block-size: 2px;
+  border-radius: 2px;
+  background-color: var(--accent);
+}
+
+// The readiness words beside the key in play. Small and light on purpose
+// (owner, 4 Sep 2026): it is a caption to a caption, and at any more weight it
+// competes with the letters it is explaining.
+// The readiness words, over the key they are about and pointing at it. Out of
+// flow on purpose: in the row they either split the alphabet or dangle off the
+// end of it, and either way the letter spacing moves as the words change
+// length. Small and light (owner, 4 Sep 2026) — a caption to a caption.
 .note {
-  fill: var(--accent);
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: calc(100% + 0.15rem);
+  // Wrapped into a narrow block rather than run on one line: over a letter
+  // near the start of the row a single line reached out past the alphabet and
+  // stopped looking attached to anything. Two short lines stay over the
+  // letter they point at.
+  max-inline-size: 4.5rem;
+  color: var(--accent);
+  opacity: 0.85;
   font-family: var(--default-font-family);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 0.56rem;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.11em;
+  text-align: center;
   text-transform: uppercase;
-  text-anchor: middle;
+  text-wrap: balance;
+  pointer-events: none;
+  translate: -50% 0;
 }
 
-.pin {
-  fill: var(--accent);
+// A caption centred over the first or last letter hangs off the end of the
+// row and stops looking attached to it. At the edges it aligns with the row
+// instead, which keeps it inside and still over its own letter.
+.stop:first-child .note {
+  inset-inline-start: 0;
+  text-align: start;
+  translate: 0;
 }
 
-// "6/26" progress tag.
+.stop:last-child .note {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+  text-align: end;
+  translate: 0;
+}
+
+// "14/26"
 .count {
   color: var(--text-color);
   font-family: var(--value-font-family);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 
   i {
     color: var(--text-color-f1);
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-style: normal;
   }
 }
 
-// A plate behind the focused key's readiness note. Without it the note — which
-// is wider than a key cap — is drawn straight across the lane above.
-.notePlate {
-  fill: var(--primary-l1);
-  stroke: color-mix(in oklab, var(--accent) 35%, transparent);
-  stroke-width: 1;
+@media (prefers-reduced-motion: reduce) {
+  .glyph {
+    transition: none;
+  }
 }
