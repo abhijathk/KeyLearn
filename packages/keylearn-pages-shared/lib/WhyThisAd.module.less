@@ -1,0 +1,192 @@
+@import "@keylearn/widget/lib/index.less";
+
+// "Why am I seeing this?" as a floating window over the page rather than a
+// page of its own. Somebody asking the question is mid-practice and owed an
+// answer, not a navigation: taking them away from what they were doing to
+// explain an advertisement would be a second imposition on top of the first.
+.scrim {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  place-items: start center;
+  padding: 2rem 1rem;
+  overflow: auto;
+  background: rgb(0 0 0 / 45%);
+  backdrop-filter: blur(3px);
+}
+
+.window {
+  inline-size: min(38rem, 100%);
+  max-block-size: calc(100vb - 4rem);
+  padding: 1.2rem 1.4rem 1.4rem;
+  border-radius: 0.9rem;
+  overflow: auto;
+  background: var(--background-color);
+  box-shadow: 0 2rem 5rem rgb(0 0 0 / 45%);
+}
+
+.head {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.close {
+  flex: none;
+  inline-size: 1.9rem;
+  block-size: 1.9rem;
+  border: 1px solid color-mix(in oklab, var(--text-color) 14%, transparent);
+  border-radius: 0.5rem;
+  color: var(--text-color);
+  background: none;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close:hover {
+  background-color: color-mix(in oklab, var(--text-color) 6%, transparent);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.lede {
+  margin: 0.5rem 0 0;
+  color: var(--text-color-f1);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+// The line they clicked from, quoted back so there is no doubt which
+// advertisement is being explained.
+.quoted {
+  margin-block: 0.9rem;
+  border: 1px solid color-mix(in oklab, var(--text-color) 12%, transparent);
+  border-radius: 0.6rem;
+  overflow: hidden;
+}
+
+.quotedLabel {
+  padding: 0.35rem 0.7rem;
+  border-block-end: 1px solid
+    color-mix(in oklab, var(--text-color) 12%, transparent);
+  color: var(--text-color-f1);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.facts {
+  display: grid;
+  gap: 0;
+  margin: 0 0 1rem;
+}
+
+.facts > div {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 0.15rem 0.9rem;
+  padding: 0.45rem 0;
+  border-block-end: 1px solid
+    color-mix(in oklab, var(--text-color) 8%, transparent);
+}
+
+.facts > div:last-child {
+  border-block-end: 0;
+}
+
+.facts dt {
+  color: var(--text-color-f1);
+  font-size: 0.76rem;
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.section {
+  margin: 1.1rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.list {
+  display: grid;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.list li {
+  position: relative;
+  padding-inline-start: 1.2rem;
+  color: var(--text-color-f1);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.list li::before {
+  content: "\2014";
+  position: absolute;
+  inset-inline-start: 0;
+  color: var(--text-color-f1);
+}
+
+.list b {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: 1.1rem;
+}
+
+.btn {
+  padding: 0.45rem 0.95rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.5rem;
+  color: var(--accent-ink);
+  background-color: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btnQuiet {
+  border-color: color-mix(in oklab, var(--text-color) 14%, transparent);
+  color: var(--text-color);
+  background: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.foot {
+  margin: 1.1rem 0 0;
+  color: var(--text-color-f1);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}

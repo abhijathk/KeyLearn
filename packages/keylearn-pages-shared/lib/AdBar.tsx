@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import * as styles from "./AdBar.module.less";
+import { WhyThisAd } from "./WhyThisAd.tsx";
 
 /**
  * The paid line above the header.
@@ -74,6 +75,15 @@ function prefersReducedMotion(): boolean {
   }
 }
 
+/** The host a click lands on, so the window can say where it goes. */
+function hostOf(href: string): string | null {
+  try {
+    return new URL(href).host;
+  } catch {
+    return null;
+  }
+}
+
 function background(palette: AdPaletteView, dark: boolean): string {
   const base = colour(
     dark ? (palette.barDark ?? palette.bar) : palette.bar,
@@ -112,6 +122,7 @@ export function AdBar({
   const [fading, setFading] = useState(false);
   const [held, setHeld] = useState(false);
   const [dark, setDark] = useState(prefersDark);
+  const [whyOpen, setWhyOpen] = useState(false);
   const reduced = useRef(prefersReducedMotion());
   const seen = useRef(new Set<string>());
 
@@ -229,9 +240,26 @@ export function AdBar({
           ))}
         </span>
       )}
-      <a className={styles.why} href="/why-this-ad">
+      {/* A window, not a page: somebody asking one question mid-lesson
+          should not lose their place to get it answered. The page still
+          exists for a shared link and for a reader without JavaScript. */}
+      <button
+        type="button"
+        className={styles.why}
+        onClick={() => setWhyOpen(true)}
+      >
         Why this ad?
-      </a>
+      </button>
+      {whyOpen && (
+        <WhyThisAd
+          advertiser={ad.advertiser}
+          destination={hostOf(screen.href)}
+          onClose={() => setWhyOpen(false)}
+          onSeePremium={() => {
+            window.location.href = "/account";
+          }}
+        />
+      )}
       {ad.dismissible && onDismiss != null && (
         <button
           type="button"

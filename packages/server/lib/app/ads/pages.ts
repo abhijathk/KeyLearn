@@ -258,7 +258,7 @@ export function whyThisAdPage(live: readonly AdCampaignDetails[]): string {
   <div class="panel">
     <h2>If you would rather not see it</h2>
     <ul class="plain">
-      <li><b>Close it.</b> The cross on the right hides it for the rest of your visit.</li>
+      <li><b>Close it.</b> The cross on the right hides it until you next load a page.</li>
       <li><b>Go premium.</b> A subscription removes advertising completely, along with more learner places and printable certificates.</li>
     </ul>
     <div class="actions">

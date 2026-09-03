@@ -129,7 +129,7 @@ function AdSlot({ path }: { readonly path: string }): ReactNode {
   const [ads, setAds] = useState<readonly AdView[]>([]);
   const [dwell, setDwell] = useState(8);
   const [typing, setTyping] = useState(false);
-  const [hidden, setHidden] = useState(loadAdsHidden);
+  const [hidden, setHidden] = useState(() => adsHiddenThisLoad);
   const [kind, setKind] = useState(activeProfileKind);
 
   useEffect(() => {
@@ -189,11 +189,7 @@ function AdSlot({ path }: { readonly path: string }): ReactNode {
           void SupportService.countAdView(id, screen).catch(() => {});
         }}
         onDismiss={() => {
-          try {
-            sessionStorage.setItem("keylearn.adsHidden", "1");
-          } catch {
-            // Storage unavailable; the line returns on the next load.
-          }
+          adsHiddenThisLoad = true;
           setHidden(true);
         }}
       />
@@ -201,13 +197,18 @@ function AdSlot({ path }: { readonly path: string }): ReactNode {
   );
 }
 
-function loadAdsHidden(): boolean {
-  try {
-    return sessionStorage.getItem("keylearn.adsHidden") === "1";
-  } catch {
-    return false;
-  }
-}
+/**
+ * Whether the reader closed the paid line, for THIS page load only.
+ *
+ * A module variable rather than session storage, on purpose (owner, 4 Sep
+ * 2026): closing it should quiet the line while somebody is working, and a
+ * reload should bring it back. Session storage outlived the reload and made
+ * the cross behave like an opt-out the advertiser had not agreed to. This
+ * lives exactly as long as the page's JavaScript — so it survives a
+ * client-side hop between pages, which would otherwise undo the close a
+ * second after it was clicked, and dies on a real refresh.
+ */
+let adsHiddenThisLoad = false;
 
 function loadDismissedCardId(): number | null {
   try {
