@@ -4,7 +4,7 @@ import { NotFoundError } from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { CanonicalHandler } from "@fastr/middleware-canonical";
 import { type RouterState } from "@fastr/middleware-router";
-import { Env } from "@keylearn/config";
+import { Env, isAdminEmail } from "@keylearn/config";
 import { Profile } from "@keylearn/database";
 import { HighScoresFactory } from "@keylearn/highscores";
 import {
@@ -12,7 +12,7 @@ import {
   loadIntl,
   PreferredLocaleContext,
 } from "@keylearn/intl";
-import { Shell, View } from "@keylearn/pages-server";
+import { ErrorPage, Shell, View } from "@keylearn/pages-server";
 import {
   NonceContext,
   type PageData,
@@ -27,6 +27,27 @@ import { type AuthState } from "../auth/index.ts";
 import { cspNonce } from "../headers.ts";
 import { leaderboardReady } from "../highscores/readiness.ts";
 import { multiplayerEnabled } from "../multiplayer.ts";
+import { criteriaSnapshot } from "../site-config/criteria-version.ts";
+import {
+  certificatesIssue,
+  certificatesNamedAdults,
+  certificatesPublicVerify,
+  kidsCertificates,
+  learnerDefaults,
+  learnerOverrides,
+  minAge,
+  minPasswordLength,
+  type PageName,
+  pageNameOf,
+  pageState,
+  pageStates,
+  premiumSell,
+  profileCaps,
+  registrationMode,
+  siteLocalesAllowed,
+  smartPractice,
+  typingLanguagesAllowed,
+} from "../site-config/readers.ts";
 import { localePattern, pIntl, preferredLocale } from "./intl.ts";
 
 @injectable()
@@ -235,7 +256,7 @@ export class Controller {
 
   @http.GET(`${Pages.profile.path}/{id:[a-zA-Z0-9]+}`)
   async ["public-profile"](ctx: Context<RouterState & AuthState>) {
-    return this.renderPage(ctx, Pages.profile);
+    return this.renderPage(ctx, Pages.profile, null, "publicProfiles");
   }
 
   @http.GET(`/{locale:${localePattern}}${Pages.profile.path}/{id:[a-zA-Z0-9]+}`)
@@ -243,7 +264,7 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @pathParam("locale", pIntl) intl: IntlShape,
   ) {
-    return this.renderPage(ctx, Pages.profile, intl);
+    return this.renderPage(ctx, Pages.profile, intl, "publicProfiles");
   }
 
   @http.GET(`${Pages.help.path}`)
@@ -507,6 +528,29 @@ export class Controller {
       // Off until live practice is finished — see PageData.multiplayer. The
       // same reader gates the page route and the game socket.
       multiplayer: multiplayerEnabled(),
+      // The control centre's switches the client renders from (spec phase
+      // 1): page states, the language allowlists, who may register, and
+      // whether this viewer is an admin who may preview a page that is off.
+      pages: pageStates(),
+      admin: user?.email != null && isAdminEmail(user.email),
+      siteLocales: siteLocalesAllowed(),
+      typingLanguages: typingLanguagesAllowed(),
+      registration: registrationMode(),
+      minAge: minAge(),
+      minPasswordLength: minPasswordLength(),
+      profileCaps: profileCaps(),
+      learnerDefaults: learnerDefaults(),
+      // Phase 3.4: the learner defaults the site forces or hides.
+      learnerOverrides: learnerOverrides(),
+      certificates: {
+        ...(await criteriaSnapshot()),
+        issue: certificatesIssue(),
+        namedAdults: certificatesNamedAdults(),
+        kids: kidsCertificates(),
+      },
+      premiumSell: premiumSell(),
+      // Whether KeyLearn's adaptive helpers run at all (control centre).
+      smartPractice: smartPractice(),
       locale,
       // What the network says about where this request came from —
       // Cloudflare's edge, so it is absent in development and on any
@@ -542,7 +586,38 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     page: PageInfo,
     intl: IntlShape | null = null,
+    gate: PageName | null = pageNameOf(page),
   ): Promise<string> {
+    // The control centre's page state (spec phase 1.3). Off refuses the URL
+    // at the router, not just the link: 404 for everyone but an admin, who
+    // can still open the page to check it; "coming soon" is a branded page
+    // that says so, also 404 to a crawler. Read live on every request.
+    if (gate != null) {
+      let state = pageState(gate);
+      if (gate === "verify" && !certificatesPublicVerify()) {
+        state = "404";
+      }
+      const { user } = ctx.state;
+      const admin = user?.email != null && isAdminEmail(user.email);
+      if (state !== "live" && !admin) {
+        if (state === "404") {
+          throw new NotFoundError();
+        }
+        ctx.response.status = 404;
+        ctx.response.type = "text/html";
+        ctx.response.headers.set("Cache-Control", "no-store");
+        return this.view.renderPage(
+          <ErrorPage
+            error={{
+              status: 404,
+              message: "Coming soon",
+              expose: true,
+              description: "This page is not open yet. Check back soon.",
+            }}
+          />,
+        );
+      }
+    }
     if (intl == null) {
       intl = await loadIntl(defaultLocale);
     }

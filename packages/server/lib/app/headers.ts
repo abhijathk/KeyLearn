@@ -71,7 +71,7 @@ export function securityHeaders(): Middleware {
       // primitive, which is most of what this policy exists to prevent.
       `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval' ${SCRIPT_HOSTS.join(" ")}`,
       "style-src 'self' 'unsafe-inline'",
-      // Avatars are stored as data: URLs; ad and provider images are remote.
+      // Avatars are stored as data: URLs; OAuth provider avatars are remote.
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       // blob: — the kids world streams its decoded 3D assets from blob URLs
@@ -93,7 +93,14 @@ export function securityHeaders(): Middleware {
     // Superseded by frame-ancestors, kept for older browsers.
     headers.set("X-Frame-Options", "DENY");
     headers.set("X-Content-Type-Options", "nosniff");
-    headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    // The site-wide default, and only a default: a route may have already
+    // set a TIGHTER policy for itself, and overwriting it here would
+    // quietly loosen it. The sponsor redirect does exactly that, because
+    // "the advertiser learns nothing about you" is a promise made in
+    // writing on the "why this ad" page.
+    if (!headers.has("Referrer-Policy")) {
+      headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    }
     headers.set(
       "Permissions-Policy",
       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",

@@ -1,9 +1,11 @@
 import { deviceTimeZone } from "@keylearn/intl";
 import {
   type AccountDeletionRequestDetails,
+  type AdView,
   type AnswerDetails,
   type AnswerRuleDetails,
   DESK_SESSION_HEADER,
+  type LearnerResponseState,
   type NoticeDetails,
   type NoticeDisplay,
   type NoticeKind,
@@ -917,6 +919,38 @@ export namespace SupportService {
       .send({});
   }
 
+  // ── Sponsored line (control centre phase 4) ──
+
+  /**
+   * The campaigns this reader may see, and how long each screen holds.
+   *
+   * Eligibility is settled on the server, so an empty list here is the
+   * normal answer for a child profile, a paying household, a school
+   * account or a site with the slot switched off. The browser never has to
+   * know which of those it was.
+   */
+  export async function getAds(): Promise<{
+    readonly ads: readonly AdView[];
+    readonly dwellSeconds: number;
+  }> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/ads")
+      .send();
+    return (await response.json()) as {
+      ads: readonly AdView[];
+      dwellSeconds: number;
+    };
+  }
+
+  /** Counts one view. Deduplicated per reader per day on the server. */
+  export async function countAdView(id: number, screen: number): Promise<void> {
+    await request
+      .use(expectType("application/json"))
+      .POST("/_/ads/view")
+      .send({ id, screen });
+  }
+
   // ── Notices ──
 
   /**
@@ -934,7 +968,52 @@ export namespace SupportService {
     const { notices } = (await response.json()) as {
       notices: NoticeDetails[];
     };
-    return notices[0] ?? null;
+    return (
+      notices.find((n) => n.display === "banner" || n.display === "window") ??
+      null
+    );
+  }
+
+  /** The one live poll or feedback card, for the corner slot (spec §8). */
+  export async function getLearnerVoiceNotice(): Promise<NoticeDetails | null> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET("/_/support/notice")
+      .send();
+    const { notices } = (await response.json()) as {
+      notices: NoticeDetails[];
+    };
+    return (
+      notices.find((n) => n.display === "poll" || n.display === "feedback") ??
+      null
+    );
+  }
+
+  /** The signed-in account's own answer to a card, and the running result. */
+  export async function getLearnerResponse(
+    noticeId: number,
+  ): Promise<LearnerResponseState> {
+    const response = await request
+      .use(expectType("application/json"))
+      .GET(`/_/support/my/voice/${Math.abs(noticeId)}`)
+      .send();
+    return (await response.json()) as LearnerResponseState;
+  }
+
+  /** One answer per account; sending again replaces it. */
+  export async function putLearnerResponse(
+    noticeId: number,
+    input: {
+      readonly choice?: number;
+      readonly stars?: number;
+      readonly text?: string;
+    },
+  ): Promise<LearnerResponseState> {
+    const response = await request
+      .use(expectType("application/json"))
+      .PUT(`/_/support/my/voice/${Math.abs(noticeId)}`)
+      .send(input);
+    return (await response.json()) as LearnerResponseState;
   }
 
   /** Every notice, live or not — the desk's own management list. */

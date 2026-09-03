@@ -1,3 +1,4 @@
+import { ManagedSetting } from "@keylearn/pages-shared";
 import { useSettings } from "@keylearn/settings";
 import { SettingTiles } from "@keylearn/widget";
 import { useIntl } from "react-intl";
@@ -50,13 +51,15 @@ export function TextGeneratorSettings() {
   const selected = settings.get(typingTestProps.type);
   return (
     <>
-      <SettingTiles
-        value={selected}
-        onChange={(type) => {
-          updateSettings(settings.set(typingTestProps.type, type));
-        }}
-        options={sources}
-      />
+      <ManagedSetting prop="typingTest.textSource.type">
+        <SettingTiles
+          value={selected}
+          onChange={(type) => {
+            updateSettings(settings.set(typingTestProps.type, type));
+          }}
+          options={sources}
+        />
+      </ManagedSetting>
 
       {selected === TextSourceType.CommonWords && <CommonWordsSettings />}
       {selected === TextSourceType.PseudoWords && <PseudoWordsSettings />}

@@ -1,5 +1,6 @@
 import { useIntlDurations } from "@keylearn/intl";
 import { lessonProps } from "@keylearn/lesson";
+import { ManagedSetting } from "@keylearn/pages-shared";
 import { useSettings } from "@keylearn/settings";
 import {
   Description,
@@ -17,44 +18,49 @@ export function DailyGoalSettings(): ReactNode {
   const { settings, updateSettings } = useSettings();
   const dailyGoal = settings.get(lessonProps.dailyGoal);
   return (
-    <SettingsCard
-      caption={
-        <FormattedMessage
-          id="settings.group.goal"
-          defaultMessage="Daily goal"
-        />
-      }
-    >
-      <SettingRow
-        label={
+    <ManagedSetting prop="lesson.dailyGoal">
+      <SettingsCard
+        caption={
           <FormattedMessage
-            id="settings.dailyGoal.label"
-            defaultMessage="Practice each day for"
+            id="settings.group.goal"
+            defaultMessage="Daily goal"
           />
-        }
-        description={
-          <FormattedMessage
-            id="settings.dailyGoal.short"
-            defaultMessage="A gentle reminder, never a limit — you can stop whenever you like."
-          />
-        }
-        value={
-          dailyGoal === 0
-            ? formatMessage({ id: "t_Not_set", defaultMessage: "No goal set" })
-            : formatDuration({ minutes: dailyGoal })
         }
       >
-        <Range
-          size={10}
-          min={0}
-          max={24}
-          step={1}
-          value={Math.round(dailyGoal / 5)}
-          onChange={(value) => {
-            updateSettings(settings.set(lessonProps.dailyGoal, value * 5));
-          }}
-        />
-      </SettingRow>
-    </SettingsCard>
+        <SettingRow
+          label={
+            <FormattedMessage
+              id="settings.dailyGoal.label"
+              defaultMessage="Practice each day for"
+            />
+          }
+          description={
+            <FormattedMessage
+              id="settings.dailyGoal.short"
+              defaultMessage="A gentle reminder, never a limit — you can stop whenever you like."
+            />
+          }
+          value={
+            dailyGoal === 0
+              ? formatMessage({
+                  id: "t_Not_set",
+                  defaultMessage: "No goal set",
+                })
+              : formatDuration({ minutes: dailyGoal })
+          }
+        >
+          <Range
+            size={10}
+            min={0}
+            max={24}
+            step={1}
+            value={Math.round(dailyGoal / 5)}
+            onChange={(value) => {
+              updateSettings(settings.set(lessonProps.dailyGoal, value * 5));
+            }}
+          />
+        </SettingRow>
+      </SettingsCard>
+    </ManagedSetting>
   );
 }

@@ -14,6 +14,7 @@ import {
   profileStorageKey,
   saveNgramStats,
   streakGraceDays,
+  usePageData,
 } from "@keylearn/pages-shared";
 import {
   DailyStatsMap,
@@ -53,6 +54,7 @@ import {
   classicOffered,
   currentAge,
   currentBand,
+  setKidsPaceOverrides,
 } from "./age.ts";
 import {
   type Album,
@@ -949,6 +951,17 @@ const finishPool = (world: "dino" | "hero") =>
   world === "hero" ? HERO_FINISH : DINO_FINISH;
 
 export function KidsPage() {
+  // Control centre: the unlock target floor/ceiling per band, and whether
+  // children's certificates are on at all.
+  const { learnerDefaults } = usePageData();
+  useEffect(() => {
+    const floor = learnerDefaults?.["kids.paceFloor"];
+    const ceil = learnerDefaults?.["kids.paceCeil"];
+    setKidsPaceOverrides(
+      Array.isArray(floor) ? (floor as number[]) : null,
+      Array.isArray(ceil) ? (ceil as number[]) : null,
+    );
+  }, [learnerDefaults]);
   return (
     <KeyboardProvider>
       <KidsSettings>
@@ -1707,7 +1720,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   }, [prefs.kbMode, prefs.hands, prefs.classic]);
 
   // Refs mirror the bits of state the one-time key listener needs.
-  const assessment = useAssessment();
+  const assessmentOffered = useAssessment();
+  // Control centre, kids.certificates: off hides the test and its certificate.
+  const kidsCertificatesOn = usePageData().certificates?.kids !== false;
+  const assessment = kidsCertificatesOn ? assessmentOffered : null;
   // Read through a ref inside the global keydown handler, which is installed
   // once: closing over the session directly would freeze it at whatever it was
   // when the game mounted.

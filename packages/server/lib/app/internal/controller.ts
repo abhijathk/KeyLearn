@@ -7,7 +7,7 @@ import {
   queryParam,
 } from "@fastr/controller";
 import { Context } from "@fastr/core";
-import { ApplicationError, NotFoundError } from "@fastr/errors";
+import { ApplicationError, ForbiddenError, NotFoundError } from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { DataDir, Env, isAdminEmail, listStaffEmails } from "@keylearn/config";
@@ -15,6 +15,7 @@ import {
   AccountDeletionRequest,
   checkUnlockPasscode,
   Credential,
+  LearnerResponse,
   maskEmail,
   PracticeSession,
   Profile,
@@ -41,6 +42,15 @@ import { resolveTotpSecret } from "../auth/totp-crypto.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
+import { criteriaVersion } from "../site-config/criteria-version.ts";
+import { impactCounts } from "../site-config/impact.ts";
+import {
+  envOverrideCount,
+  showLastLoginLocation,
+  SiteConfigService,
+} from "../site-config/index.ts";
+import { learnerReferenceRows } from "../site-config/learner-reference.ts";
+import { learnerDefaultRows } from "../site-config/readers.ts";
 import { deriveSignInMethod } from "../support/controller.ts";
 
 const TStaffAuthVerify = z.object({
@@ -87,6 +97,49 @@ const TSiteSettingsUpdate = z.object({
 type TSiteSettingsUpdate = z.infer<typeof TSiteSettingsUpdate>;
 const PSiteSettingsUpdate = zod(TSiteSettingsUpdate);
 
+// Control centre (spec phase 0.7). `restore: true` puts the key back to its
+// shipped default; otherwise `value` is validated by the registry.
+const TSiteConfigPut = z.object({
+  value: z.unknown().optional(),
+  restore: z.boolean().optional(),
+  reason: z.string().trim().max(500).optional(),
+  /** Phase 3.4: an operations number tuned outside its bounds, with a reason. */
+  beyondBounds: z.boolean().optional(),
+  actingStaffUserId: z.number().int().positive(),
+});
+
+const TFeedbackHide = z.object({
+  reason: z.string().trim().max(500).optional(),
+  actingStaffUserId: z.number().int().positive(),
+});
+type TFeedbackHide = z.infer<typeof TFeedbackHide>;
+const PFeedbackHide = zod(TFeedbackHide);
+const pFeedbackLimit = zod(
+  z.coerce.number().int().positive().max(200).optional().catch(undefined),
+);
+const pOptionalId = zod(
+  z.coerce.number().int().positive().optional().catch(undefined),
+);
+type TSiteConfigPut = z.infer<typeof TSiteConfigPut>;
+const PSiteConfigPut = zod(TSiteConfigPut);
+
+const TSiteConfigRevert = z.object({
+  historyId: z.number().int().positive(),
+  reason: z.string().trim().max(500).optional(),
+  actingStaffUserId: z.number().int().positive(),
+});
+type TSiteConfigRevert = z.infer<typeof TSiteConfigRevert>;
+const PSiteConfigRevert = zod(TSiteConfigRevert);
+
+const pSettingKey = zod(z.string().trim().min(1).max(64));
+const pHistoryLimit = zod(
+  z.coerce.number().int().positive().max(500).optional().catch(undefined),
+);
+const pHistoryKey = zod(
+  z.string().trim().min(1).max(64).optional().catch(undefined),
+);
+const siteConfigJson = { maxLength: 64 * 1024 };
+
 const pId = zod(z.coerce.number().int().positive());
 const pQuery = zod(z.string().trim().max(200).optional().catch(undefined));
 const pActingStaffUserId = zod(
@@ -111,6 +164,7 @@ export class Controller {
     readonly mailer: Mailer,
     readonly userData: UserDataFactory,
     @inject(DataDir) readonly dataDir: DataDir,
+    readonly siteConfig: SiteConfigService,
   ) {}
 
   #link(path: string): string {
@@ -492,15 +546,15 @@ export class Controller {
    * from KeyLearn's own desk directly — not a separate, disconnected
    * control living only in the ops app.
    */
+  /**
+   * Kept for the desk's Settings page while it migrates (phase 1.9): the
+   * one setting it surfaced now lives in site_config and is written
+   * through the same validated, audited path as the control centre.
+   */
   @http.GET("/_/internal/site-settings")
   async getSiteSettings(ctx: Context<RouterState & AuthState>) {
     ctx.state.requireOpsApi();
-    const settings = await StaffSettings.siteDefault();
-    ctx.response.body = {
-      showLastLoginLocation: Boolean(
-        settings.toDetails().showLastLoginLocation,
-      ),
-    };
+    ctx.response.body = { showLastLoginLocation: showLastLoginLocation() };
   }
 
   @http.PUT("/_/internal/site-settings")
@@ -509,20 +563,211 @@ export class Controller {
     @body.json(PSiteSettingsUpdate) input: TSiteSettingsUpdate,
   ) {
     ctx.state.requireOpsApi();
-    const settings = await StaffSettings.upsert(input.actingStaffUserId, {
-      showLastLoginLocation: input.showLastLoginLocation,
+    await this.#requireAdminActor(
+      ctx,
+      input.actingStaffUserId,
+      "privacy.showLastLoginLocation",
+    );
+    await this.siteConfig.set(
+      "privacy.showLastLoginLocation",
+      input.showLastLoginLocation,
+      { userId: input.actingStaffUserId, ip: clientIp(ctx) },
+    );
+    ctx.response.body = { showLastLoginLocation: showLastLoginLocation() };
+  }
+
+  /**
+   * The control centre's view of every site setting (spec phase 0.7): the
+   * registry row, the value in force, where it came from, and why the row
+   * is locked if it is. Reads are open to the ops key; writes below also
+   * require the acting staff member to be an admin, checked here against
+   * ADMIN_EMAILS rather than trusted from the desk, because this is the
+   * door and the desk's own gate is a second layer, not the only one.
+   */
+  @http.GET("/_/internal/site-config")
+  async getSiteConfig(ctx: Context<RouterState & AuthState>) {
+    ctx.state.requireOpsApi();
+    ctx.response.body = {
+      refreshSeconds: this.siteConfig.refreshSeconds(),
+      envOverrides: envOverrideCount(),
+      settings: await this.siteConfig.describe(),
+      // Phase 2: the numbers a risky switch shows first, the read-only
+      // learner defaults list, and the certificate criteria version.
+      impact: await impactCounts(),
+      learnerDefaults: learnerDefaultRows(),
+      // The read-only reference of every small per-learner setting (spec
+      // §5): fonts, caret shapes, keyboard colours, sound volume, lesson
+      // knobs. Generated from the settings props themselves, so it cannot
+      // drift from what a new learner is actually given.
+      learnerReference: learnerReferenceRows(),
+      criteriaVersion: await criteriaVersion(),
+      // Phase 3.3: whether premium can be sold at all.
+      paddle: this.siteConfig.paddleStatus(),
+    };
+  }
+
+  @http.GET("/_/internal/site-config/history")
+  async getSiteConfigHistory(
+    ctx: Context<RouterState & AuthState>,
+    @queryParam("limit", pHistoryLimit) limit: number | undefined,
+    @queryParam("key", pHistoryKey) key: string | undefined,
+  ) {
+    ctx.state.requireOpsApi();
+    ctx.response.body = {
+      history: await this.siteConfig.history(limit ?? 100, key),
+    };
+  }
+
+  @http.PUT("/_/internal/site-config/{key}")
+  async putSiteConfig(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("key", pSettingKey) key: string,
+    @body.json(PSiteConfigPut, siteConfigJson) input: TSiteConfigPut,
+  ) {
+    ctx.state.requireOpsApi();
+    await this.#requireAdminActor(ctx, input.actingStaffUserId, key);
+    ctx.response.body = await this.siteConfig.set(
+      key,
+      input.restore ? undefined : input.value,
+      {
+        userId: input.actingStaffUserId,
+        ip: clientIp(ctx),
+        reason: input.reason ?? null,
+      },
+      null,
+      { beyondBounds: input.beyondBounds === true },
+    );
+  }
+
+  // ── Polls and feedback (control centre phase 3.1 / 3.2) ──
+
+  /** The live tally for a desk notice's poll or feedback card. Never any text. */
+  @http.GET("/_/internal/notices/{id}/results")
+  async noticeResults(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+  ) {
+    ctx.state.requireOpsApi();
+    ctx.response.body = { results: await LearnerResponse.resultsFor(id) };
+  }
+
+  /**
+   * The Feedback inbox: comments with their star, newest first, with the
+   * account they came from. Read by the desk for its KeyLearn-scope staff;
+   * the desk decides who may open the inbox, KeyLearn decides what is in it.
+   */
+  @http.GET("/_/internal/feedback")
+  async listFeedback(
+    ctx: Context<RouterState & AuthState>,
+    @queryParam("noticeId", pOptionalId) noticeId: number | undefined,
+    @queryParam("before", pOptionalId) before: number | undefined,
+    @queryParam("limit", pFeedbackLimit) limit: number | undefined,
+  ) {
+    ctx.state.requireOpsApi();
+    const rows = await LearnerResponse.listFeedback({
+      noticeId: noticeId ?? null,
+      before: before ?? null,
+      limit: limit ?? 50,
     });
+    const userIds = [...new Set(rows.map((row) => row.userId!))];
+    const users = new Map<number, User>();
+    for (const userId of userIds) {
+      const user = await User.findById(userId);
+      if (user != null) {
+        users.set(userId, user);
+      }
+    }
+    ctx.response.body = {
+      feedback: rows.map((row) => {
+        const user = users.get(row.userId!) ?? null;
+        return {
+          ...row.toDetails(),
+          account:
+            user == null
+              ? null
+              : {
+                  id: user.id!,
+                  email: user.email ?? null,
+                  name: user.name ?? null,
+                },
+        };
+      }),
+    };
+  }
+
+  /**
+   * Moderation: a staff member drops one comment's text; the star stays.
+   * Any staff member with KeyLearn scope may — the desk gates the scope,
+   * this side checks the actor is on the roster at all.
+   */
+  @http.POST("/_/internal/feedback/{id}/hide")
+  async hideFeedback(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @body.json(PFeedbackHide) input: TFeedbackHide,
+  ) {
+    ctx.state.requireOpsApi();
+    const actor = await User.findById(input.actingStaffUserId);
+    if (
+      actor == null ||
+      actor.email == null ||
+      !listStaffEmails().includes(actor.email)
+    ) {
+      throw new ForbiddenError("Only a staff member can moderate feedback.");
+    }
+    const hidden = await LearnerResponse.hide(id);
+    if (!hidden) {
+      throw new NotFoundError();
+    }
     void StaffAuditEvent.record({
-      userId: input.actingStaffUserId,
-      action: "settings-changed",
-      detail: "showLastLoginLocation (via ops app)",
+      userId: actor.id!,
+      action: "feedback-hidden",
+      detail: `response ${id}${input.reason ? `: ${input.reason.slice(0, 120)}` : ""} (via ops app)`,
       ip: clientIp(ctx),
     });
-    ctx.response.body = {
-      showLastLoginLocation: Boolean(
-        settings.toDetails().showLastLoginLocation,
-      ),
-    };
+    ctx.response.body = { ok: true };
+  }
+
+  @http.POST("/_/internal/site-config/revert")
+  async revertSiteConfig(
+    ctx: Context<RouterState & AuthState>,
+    @body.json(PSiteConfigRevert) input: TSiteConfigRevert,
+  ) {
+    ctx.state.requireOpsApi();
+    await this.#requireAdminActor(
+      ctx,
+      input.actingStaffUserId,
+      `revert ${input.historyId}`,
+    );
+    ctx.response.body = await this.siteConfig.revert(input.historyId, {
+      userId: input.actingStaffUserId,
+      ip: clientIp(ctx),
+      reason: input.reason ?? null,
+    });
+  }
+
+  /**
+   * The acting staff member must be an admin by ADMIN_EMAILS, which is
+   * env-only and never a database row — the same invariant that makes the
+   * desk-managed roster safe. A non-admin staff member holding a valid
+   * desk session cannot change the site through the desk's own key.
+   */
+  async #requireAdminActor(
+    ctx: Context<RouterState & AuthState>,
+    actingStaffUserId: number,
+    what: string,
+  ): Promise<User> {
+    const user = await User.findById(actingStaffUserId);
+    if (user == null || user.email == null || !isAdminEmail(user.email)) {
+      void StaffAuditEvent.record({
+        userId: actingStaffUserId,
+        action: "site-config-refused",
+        detail: `${what}: not an admin (via ops app)`,
+        ip: clientIp(ctx),
+      });
+      throw new ForbiddenError("Only an admin can change site settings.");
+    }
+    return user;
   }
 
   /**
@@ -676,8 +921,8 @@ export class Controller {
       .where("userId", id)
       .orderBy("createdAt", "desc")
       .limit(10);
-    const siteSettings = await StaffSettings.siteDefault();
-    const showLocation = siteSettings.toDetails().showLastLoginLocation;
+    // Control centre, phase 1.9: the switch lives in site_config now.
+    const showLocation = showLastLoginLocation();
     const deletionRequest = await AccountDeletionRequest.findPendingForUser(id);
     ctx.response.body = {
       id: user.id!,

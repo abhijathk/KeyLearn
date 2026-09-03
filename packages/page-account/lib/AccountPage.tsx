@@ -62,6 +62,8 @@ type Pane =
  *
  * See docs/premium-and-ai.md. Turn this on with F1 (tier structure).
  */
+// Premium is on sale only when the control centre says so (premium.sell),
+// which itself refuses to turn on until the Paddle keys exist.
 const PREMIUM_VISIBLE = false;
 
 /**
@@ -82,7 +84,7 @@ const PANES: readonly Pane[] = [
   "prefs",
   "accessibility",
   ...(SUPPORT_VISIBLE ? (["support"] as const) : []),
-  ...(PREMIUM_VISIBLE ? (["premium"] as const) : []),
+  "premium",
 ];
 
 // The window can be deep-linked to a pane via the URL hash, e.g.
@@ -284,6 +286,7 @@ function LockIcon(): ReactNode {
 }
 
 function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
+  const premiumVisible = usePageData().premiumSell === true || PREMIUM_VISIBLE;
   const { formatMessage } = useIntl();
   const { user, publicUser, actions } = useAccountActions(props);
   const premium = isPremiumUser(publicUser);
@@ -452,7 +455,7 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               />
             }
           />
-          {PREMIUM_VISIBLE && (
+          {premiumVisible && (
             <div
               className={clsx(
                 styles.promo,
@@ -630,7 +633,7 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
               </div>
             )}
 
-            {PREMIUM_VISIBLE && pane === "premium" && (
+            {premiumVisible && pane === "premium" && (
               <div className={styles.paneScroll}>
                 <PremiumPane
                   premium={premium}

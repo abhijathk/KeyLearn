@@ -263,3 +263,130 @@
   flex: none;
   padding-inline: 1.8rem;
 }
+
+// ── the learner-voice cards: floating windows, like the notice window ──
+// (owner decision 3 Sep 2026: only a banner sits above the header; a poll or
+// a feedback card interrupts as a window, with its exit button.)
+
+.cardStamp {
+  transform: none;
+}
+
+.options {
+  display: grid;
+  gap: 0.35rem;
+  margin-block-end: 0.6rem;
+}
+
+.option {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid color-mix(in oklab, var(--text-color) 14%, transparent);
+  border-radius: 0.65rem;
+  overflow: hidden;
+  color: var(--text-color);
+  background-color: transparent;
+  font-family: var(--value-font-family);
+  // `font: inherit` here also reset the size set on the next line, because a
+  // shorthand fills in every longhand it covers. The two properties the
+  // button actually needs from its parent are named instead.
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.optionOn {
+  border-color: var(--accent);
+}
+
+.optionBar {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  background-color: color-mix(in oklab, var(--accent) 22%, transparent);
+  transition: inline-size 0.4s ease;
+}
+
+.optionLabel,
+.optionPct {
+  position: relative;
+}
+
+.optionPct {
+  font-family: var(--value-font-family);
+  font-size: 0.8rem;
+}
+
+.stars {
+  display: flex;
+  gap: 0.2rem;
+  margin-block-end: 0.7rem;
+}
+
+.star {
+  padding: 0 0.15rem;
+  border: none;
+  color: color-mix(in oklab, var(--text-color) 22%, transparent);
+  background: none;
+  font-size: 1.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.starOn {
+  color: var(--warn, #e8a819);
+}
+
+.stars:hover .star {
+  color: var(--warn, #e8a819);
+}
+
+.stars:hover .star:hover ~ .star {
+  color: color-mix(in oklab, var(--text-color) 22%, transparent);
+}
+
+.comment {
+  inline-size: 100%;
+  margin-block-end: 0.7rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid color-mix(in oklab, var(--text-color) 14%, transparent);
+  border-radius: 0.65rem;
+  color: var(--text-color);
+  background-color: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  resize: block;
+}
+
+// The card's own action row. It was sharing `.windowActions` and then
+// re-declaring it further down the file, which stylelint was right to
+// refuse: the second block also turned the notice window's two buttons
+// from flex:1 into flex:none, which was never intended.
+.cardActions {
+  display: flex;
+  gap: 0.6rem;
+  margin-block-end: 0.7rem;
+}
+
+.cardActions .primaryBtn {
+  flex: none;
+  padding: 0.75rem 1.6rem;
+}
+
+.cardNote {
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.cardError {
+  margin: 0.5rem 0 0;
+  color: var(--error);
+  font-size: 0.85rem;
+}

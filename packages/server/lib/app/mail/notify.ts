@@ -7,6 +7,7 @@ import {
   messageProductNews,
   messageSecurityAlert,
 } from "../auth/email.ts";
+import { emailProductNews } from "../site-config/readers.ts";
 import { Mailer } from "./types.ts";
 
 // These keys mirror `accountProps` in page-account/lib/prefs.ts. The
@@ -218,6 +219,10 @@ export class Notifier {
   ): Promise<boolean> {
     const email = user.email;
     if (email == null) {
+      return false;
+    }
+    // The site-wide gate (email.productNews) sits ahead of the learner's own.
+    if (!emailProductNews()) {
       return false;
     }
     const prefs = await this.#prefs(user.id!);

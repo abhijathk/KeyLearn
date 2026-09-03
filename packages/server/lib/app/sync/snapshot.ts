@@ -4,11 +4,13 @@ import { Profile, ProfileData, User } from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
 import { PublicId } from "@keylearn/publicid";
 import { UserDataFactory } from "@keylearn/result-userdata";
+import { siteNumber } from "@keylearn/site-config";
 import { File } from "@sosimple/fsx-file";
+import { repeat } from "../site-config/repeat.ts";
 
 /** How often the snapshot runs. */
 export function snapshotIntervalMs(): number {
-  return Env.getNumber("DATA_SNAPSHOT_MINUTES", 15) * 60 * 1000;
+  return siteNumber("ops.snapshotMin") * 60 * 1000;
 }
 
 /** Set to false to keep everything on disk and nowhere else. */
@@ -38,7 +40,7 @@ export function snapshotEnabled(): boolean {
  */
 @injectable({ singleton: true })
 export class DataSnapshot {
-  #timer: NodeJS.Timeout | null = null;
+  #timer: (() => void) | null = null;
   #running = false;
 
   constructor(
@@ -52,11 +54,9 @@ export class DataSnapshot {
     }
     const interval = snapshotIntervalMs();
     // The first pass waits a full interval: a restart loop must not turn into a
-    // write storm against the database.
-    this.#timer = setInterval(() => {
-      void this.runOnce();
-    }, interval);
-    this.#timer.unref?.();
+    // write storm against the database. Re-read each tick: the period is a
+    // control-centre setting.
+    this.#timer = repeat(snapshotIntervalMs, () => void this.runOnce());
     Logger.info("Data snapshot scheduled", {
       everyMinutes: interval / 60_000,
     });
@@ -64,7 +64,7 @@ export class DataSnapshot {
 
   stop(): void {
     if (this.#timer != null) {
-      clearInterval(this.#timer);
+      this.#timer();
       this.#timer = null;
     }
   }

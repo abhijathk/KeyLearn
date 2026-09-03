@@ -119,6 +119,7 @@ export namespace AccountService {
     readonly lastName: string;
     readonly dateOfBirth: string;
     readonly turnstileToken?: string;
+    readonly inviteCode?: string;
   }): Promise<AuthResult> {
     return await postAuthResult("/auth/register-password", data);
   }

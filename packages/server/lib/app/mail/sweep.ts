@@ -4,13 +4,15 @@ import { Profile, User } from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
 import { PublicId } from "@keylearn/publicid";
 import { UserDataFactory } from "@keylearn/result-userdata";
+import { siteNumber } from "@keylearn/site-config";
+import { emailPracticeReminders } from "../site-config/readers.ts";
 import { Notifier } from "./notify.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** How long someone must have been away before a nudge is warranted. */
 export function quietDays(): number {
-  return Env.getNumber("REMINDER_AFTER_DAYS", 3);
+  return siteNumber("ops.reminderAfterDays");
 }
 
 /** How often the sweep looks. Daily is plenty for a weekly-or-rarer email. */
@@ -77,6 +79,11 @@ export class ReminderSweep {
    */
   async runOnce(now: number = Date.now()): Promise<number> {
     let sent = 0;
+    // The site-wide gate (email.practiceReminders) sits ahead of each
+    // learner's own preference, which the Notifier still honours.
+    if (!emailPracticeReminders()) {
+      return 0;
+    }
     try {
       const users = await User.query()
         .where("emailVerified", true)

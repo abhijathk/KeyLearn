@@ -9,6 +9,7 @@
     "@keylearn/intl": "*",
     "@keylearn/keyboard": "*",
     "@keylearn/keyboard-ui": "*",
+    "@keylearn/pages-shared": "*",
     "@keylearn/phonetic-model": "*",
     "@keylearn/phonetic-model-loader": "*",
     "@keylearn/settings": "*",

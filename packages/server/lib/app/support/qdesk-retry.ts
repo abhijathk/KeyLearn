@@ -2,6 +2,7 @@ import { injectable } from "@fastr/invert";
 import { Env } from "@keylearn/config";
 import { SupportMessage, SupportTicket } from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
+import { siteNumber } from "@keylearn/site-config";
 import {
   forwardReplyToQdesk,
   forwardTicketToQdesk,
@@ -33,7 +34,7 @@ import {
 
 /** Long enough that a message still in its first attempt is left alone. */
 export function retryAfterMs(): number {
-  return Env.getNumber("QDESK_RETRY_AFTER_MINUTES", 5) * 60 * 1000;
+  return siteNumber("ops.qdeskRetryAfterMin") * 60 * 1000;
 }
 
 /**
@@ -42,7 +43,7 @@ export function retryAfterMs(): number {
  * grinds on a permanently broken delivery hides that from whoever could.
  */
 export function retryGiveUpMs(): number {
-  return Env.getNumber("QDESK_RETRY_GIVE_UP_HOURS", 48) * 60 * 60 * 1000;
+  return siteNumber("ops.qdeskGiveUpHours") * 60 * 60 * 1000;
 }
 
 export function retryIntervalMs(): number {

@@ -27,6 +27,8 @@ export type VerifyResult =
       readonly language: string;
       readonly kind: string;
       readonly issued: string;
+      /** The criteria version the certificate was issued under. */
+      readonly criteriaVersion?: number;
       /** Null unless the holder asked to be named, and never for a child. */
       readonly name: string | null;
     };

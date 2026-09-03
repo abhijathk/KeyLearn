@@ -27,6 +27,10 @@ import { clientIp, rateLimit } from "../auth/ratelimit.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
+import {
+  schoolsAcceptInvites,
+  schoolsNewOrganisations,
+} from "../site-config/readers.ts";
 
 /**
  * The organisation tier's API — docs/organisations.md revision 2.
@@ -209,6 +213,13 @@ export class OrgController {
     @body.json(PCreateOrg) data: TCreateOrg,
   ) {
     const staff = await ctx.state.requireStaff();
+    // Control centre, schools.newOrganisations (decision 3: open or closed).
+    if (schoolsNewOrganisations() === "closed") {
+      throw new ApplicationError(
+        "New organisations are closed right now; the control centre can reopen them.",
+        { status: 403 },
+      );
+    }
     const org = await Organization.query().insertAndFetch({
       name: data.name,
       type: data.type,
@@ -761,6 +772,13 @@ export class OrgController {
     // token endpoints.
     rateLimit(ctx, "org-invite", 20, 300_000);
     const user = ctx.state.requireUser();
+    // Control centre, schools.acceptInvites.
+    if (!schoolsAcceptInvites()) {
+      throw new ApplicationError(
+        "Organisation invites are switched off right now. Ask your school to try again later.",
+        { status: 403 },
+      );
+    }
     const invite = await OrgInvite.findLive(data.token);
     if (invite == null) {
       throw new ApplicationError(

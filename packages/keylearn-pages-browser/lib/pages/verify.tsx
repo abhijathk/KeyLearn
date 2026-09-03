@@ -158,6 +158,17 @@ export default function Page(): ReactNode {
                     />
                   </dt>
                   <dd>{new Date(result.issued).toLocaleDateString()}</dd>
+                  {result.criteriaVersion != null && (
+                    <>
+                      <dt>
+                        <FormattedMessage
+                          id="verify.criteriaVersion"
+                          defaultMessage="Criteria version"
+                        />
+                      </dt>
+                      <dd>{result.criteriaVersion}</dd>
+                    </>
+                  )}
                   {result.name != null && (
                     <>
                       <dt>

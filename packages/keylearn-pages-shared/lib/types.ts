@@ -18,6 +18,52 @@ export type PageData = {
    */
   readonly multiplayer?: boolean;
   /**
+   * The control centre's page states, by registry page key ("kids",
+   * "braille", …): "live", "404" or "soon". A page that is not live is
+   * refused by the server for everyone but an admin, and the client hides
+   * its route and link the same way. Absent means everything is live.
+   */
+  readonly pages?: Readonly<Record<string, "live" | "404" | "soon">>;
+  /** Whether the signed-in account is an admin (ADMIN_EMAILS). */
+  readonly admin?: boolean;
+  /** Site locales the control centre has switched on; absent means all. */
+  readonly siteLocales?: readonly string[];
+  /** Typing languages switched on; absent means all. */
+  readonly typingLanguages?: readonly string[];
+  /** Who may create an account: "open", "invite" or "closed". */
+  readonly registration?: "open" | "invite" | "closed";
+  /** Control-centre limits the client mirrors: minimum age, password length, profile caps. */
+  readonly minAge?: number;
+  readonly minPasswordLength?: number;
+  readonly profileCaps?: { readonly free: number; readonly premium: number };
+  /**
+   * Site-wide learner defaults (control centre, Features): applied as the
+   * defaults layer under every learner's own settings. Keys are the
+   * settings props' own keys plus a few page-level ones.
+   */
+  readonly learnerDefaults?: Readonly<Record<string, unknown>>;
+  /**
+   * Learner defaults the site forces on every learner ("forced") or forces
+   * and removes from their settings ("hidden"), keyed like
+   * `learnerDefaults`. Absent or empty means the learner decides.
+   */
+  readonly learnerOverrides?: Readonly<Record<string, "forced" | "hidden">>;
+  /** The certificate criteria in force and their version, for the assessment UI. */
+  readonly certificates?: {
+    readonly version: number;
+    readonly criteria: unknown;
+    readonly issue: boolean;
+    readonly namedAdults: boolean;
+    readonly kids: boolean;
+  };
+  /** Whether premium is on sale (premium.sell). */
+  readonly premiumSell?: boolean;
+  /**
+   * Whether KeyLearn's adaptive helpers run at all. False takes the four
+   * guided layers away from every learner and removes their controls.
+   */
+  readonly smartPractice?: boolean;
+  /**
    * Base URL.
    */
   readonly base: string;
@@ -228,7 +274,8 @@ export type NoticeKind = "incident" | "maintenance" | "feature";
  * (the rare, deliberate exception for a message someone actually needs to
  * stop and read).
  */
-export type NoticeDisplay = "banner" | "window";
+/** The two learner-voice cards (spec §8) sit in a corner and always have an exit button. */
+export type NoticeDisplay = "banner" | "window" | "poll" | "feedback";
 
 /** A short site-wide announcement staff can post and later retract. */
 export type NoticeDetails = {
@@ -245,7 +292,45 @@ export type NoticeDetails = {
   /** `"everyone"`, `"signed-in"`, `"kids"`, or a locale code. */
   readonly audience: string;
   readonly dismissible: boolean;
+  /** A poll's two to four options. */
+  readonly options?: readonly string[] | null;
+  /** Whether learners see the running result after they answer. */
+  readonly showResults?: boolean;
+  /** Whether a feedback card asks for an optional comment. */
+  readonly askComment?: boolean;
   readonly createdAt: string;
+};
+
+/** The live tally behind a poll or feedback card. Never any comment text. */
+export type LearnerResults = {
+  readonly count: number;
+  readonly choices: readonly number[];
+  readonly stars: readonly number[];
+  readonly average: number | null;
+  readonly comments: number;
+};
+
+/** The signed-in account's own answer to a card. */
+export type LearnerResponseDetails = {
+  readonly id: number;
+  readonly noticeId: number;
+  readonly choice: number | null;
+  readonly stars: number | null;
+  readonly text: string | null;
+  readonly textDropped: boolean;
+  readonly flagged: boolean;
+  readonly hidden: boolean;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+};
+
+/** What `/_/support/notice/{id}/response` answers with. */
+export type LearnerResponseState = {
+  /** Whether the card is still live on the desk. */
+  readonly open: boolean;
+  readonly response: LearnerResponseDetails | null;
+  /** Null when the card does not show its running result. */
+  readonly results: LearnerResults | null;
 };
 
 /** A short published article the support desk can hand back automatically. */

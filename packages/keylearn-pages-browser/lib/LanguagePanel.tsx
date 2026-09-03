@@ -5,7 +5,7 @@ import {
   useIntlDisplayNames,
   usePreferredLocale,
 } from "@keylearn/intl";
-import { Pages, usePageData } from "@keylearn/pages-shared";
+import { Pages, usePageData, useSiteLocales } from "@keylearn/pages-shared";
 import { Link as StaticLink } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -42,8 +42,10 @@ export function LanguagePanel({
     return () => el.removeEventListener("scroll", update);
   }, []);
 
+  // Only the site languages the control centre has switched on.
+  const siteLocales = useSiteLocales();
   const groups = new Map<string, LocaleId[]>();
-  for (const locale of allLocales) {
+  for (const locale of siteLocales) {
     const base = baseOf(locale);
     groups.set(base, [...(groups.get(base) ?? []), locale]);
   }

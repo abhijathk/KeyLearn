@@ -1,3 +1,4 @@
+import { ManagedSetting } from "@keylearn/pages-shared";
 import { useSettings } from "@keylearn/settings";
 import { clsx } from "clsx";
 import { memo } from "react";
@@ -37,29 +38,31 @@ export const DurationSwitcher = memo(function DurationSwitcher({
   const { settings, updateSettings } = useSettings();
   const compositeSettings = toCompositeSettings(settings);
   return (
-    <span className={styles.seg}>
-      {durations.map(({ duration, label }) => (
-        <button
-          key={label}
-          type="button"
-          className={clsx(
-            styles.segItem,
-            duration.type === compositeSettings.duration.type &&
-              duration.value === compositeSettings.duration.value &&
-              styles.segOn,
-          )}
-          onClick={() => {
-            updateSettings(
-              settings
-                .set(typingTestProps.duration.type, duration.type)
-                .set(typingTestProps.duration.value, duration.value),
-            );
-            onChange();
-          }}
-        >
-          {label}
-        </button>
-      ))}
-    </span>
+    <ManagedSetting prop="typingTest.duration.value">
+      <span className={styles.seg}>
+        {durations.map(({ duration, label }) => (
+          <button
+            key={label}
+            type="button"
+            className={clsx(
+              styles.segItem,
+              duration.type === compositeSettings.duration.type &&
+                duration.value === compositeSettings.duration.value &&
+                styles.segOn,
+            )}
+            onClick={() => {
+              updateSettings(
+                settings
+                  .set(typingTestProps.duration.type, duration.type)
+                  .set(typingTestProps.duration.value, duration.value),
+              );
+              onChange();
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </span>
+    </ManagedSetting>
   );
 });

@@ -19,6 +19,7 @@ import { deskAwareSession } from "./desk-session.ts";
 import { ErrorHandler } from "./error/index.ts";
 import { securityHeaders } from "./headers.ts";
 import { MailModule } from "./mail/index.ts";
+import { MaintenanceGate } from "./maintenance.tsx";
 import { gameRoutes, mainRoutes } from "./routes.ts";
 import { SessionModule } from "./session.ts";
 import { noStoreSupport } from "./support/no-store.ts";
@@ -68,6 +69,9 @@ export class ApplicationModule implements Module {
         // way the route ends — including the 428 that asks for the PIN.
         .use(noStoreSupport())
         .use(loadUser())
+        // Website-only maintenance mode: after loadUser (it lets admins
+        // through) and before the router. See maintenance.tsx.
+        .use(MaintenanceGate)
         // After the session loads, so a rejection is logged with the real path,
         // and before any route can act on the request.
         .use(csrfGuard())

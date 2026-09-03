@@ -19,6 +19,7 @@ import {
   VirtualKeyboard,
 } from "@keylearn/keyboard-ui";
 import { Tasks } from "@keylearn/lang";
+import { useTypingLanguages } from "@keylearn/pages-shared";
 import { useSettings } from "@keylearn/settings";
 import { ModifierState, useDepressedKeys } from "@keylearn/textinput-events";
 import { SoundsThemeProp } from "@keylearn/textinput-ui";
@@ -238,6 +239,8 @@ function LayoutProp(): ReactNode {
   const { compare } = useCollator();
   const { settings, updateSettings } = useSettings();
   const options = KeyboardOptions.from(settings);
+  // Typing languages the control centre has switched on; null means all.
+  const typing = useTypingLanguages();
   return (
     <>
       <SettingRow
@@ -257,6 +260,7 @@ function LayoutProp(): ReactNode {
         <OptionList
           options={options
             .selectableLanguages()
+            .filter((item) => typing == null || typing.has(item.id))
             .map((item) => ({
               value: item.id,
               name: formatLanguageName(item),

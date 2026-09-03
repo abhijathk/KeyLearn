@@ -1,6 +1,8 @@
 import { Env, setStaffEmails } from "@keylearn/config";
 import { Staff } from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
+import { siteNumber } from "@keylearn/site-config";
+import { repeat } from "../site-config/repeat.ts";
 
 /**
  * Keeps each worker's synchronous staff set in step with the database.
@@ -23,10 +25,10 @@ import { Logger } from "@keylearn/logger";
  * takes effect on the next request.
  */
 export function staffRefreshIntervalMs(): number {
-  return Env.getNumber("STAFF_REFRESH_SECONDS", 60) * 1000;
+  return siteNumber("ops.staffRefreshS") * 1000;
 }
 
-let timer: NodeJS.Timeout | null = null;
+let timer: (() => void) | null = null;
 
 /**
  * Loads the roster once.
@@ -52,15 +54,14 @@ export function startStaffCache(): void {
     return;
   }
   void refreshStaffCache();
-  timer = setInterval(() => void refreshStaffCache(), staffRefreshIntervalMs());
-  // Never a reason to hold the process open — a pending roster refresh is not
-  // work worth delaying a shutdown for.
-  timer.unref?.();
+  // Re-read each tick: the period is a control-centre setting. A pending
+  // refresh never holds the process open.
+  timer = repeat(staffRefreshIntervalMs, () => void refreshStaffCache());
 }
 
 export function stopStaffCache(): void {
   if (timer != null) {
-    clearInterval(timer);
+    timer();
     timer = null;
   }
 }

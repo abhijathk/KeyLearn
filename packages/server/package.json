@@ -10,7 +10,9 @@
     "@keylearn/database": "*",
     "@keylearn/highscores": "*",
     "@keylearn/intl": "*",
+    "@keylearn/keyboard": "*",
     "@keylearn/logger": "*",
+    "@keylearn/moderation": "*",
     "@keylearn/multiplayer-server": "*",
     "@keylearn/multiplayer-shared": "*",
     "@keylearn/oauth": "*",
@@ -22,6 +24,8 @@
     "@keylearn/result-userdata": "*",
     "@keylearn/settings": "*",
     "@keylearn/settings-database": "*",
+    "@keylearn/site-config": "*",
+    "@keylearn/textinput-sounds": "*",
     "@keylearn/themes": "*",
     "@paddle/paddle-node-sdk": "^3.6.0",
     "@simplewebauthn/server": "^13.3.2",
@@ -31,7 +35,7 @@
     "ws": "^8.20.0"
   },
   "devDependencies": {
-    "@keylearn/keyboard": "*",
+    "@keylearn/lesson": "*",
     "@keylearn/textinput": "*",
     "@types/nodemailer": "^7.0.0"
   },

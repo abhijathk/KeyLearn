@@ -402,10 +402,27 @@ export type DeskNotice = {
   readonly id: number;
   readonly message: string;
   readonly kind: "incident" | "maintenance" | "feature";
-  readonly display: "banner" | "window";
+  readonly display: "banner" | "window" | "poll" | "feedback";
+  readonly audience?: string;
   readonly dismissible: boolean;
+  /** A poll's two to four options (phase 3.1). */
+  readonly options?: readonly string[] | null;
+  /** Whether learners see the running result after answering. */
+  readonly showResults?: boolean;
+  /** Whether a feedback card asks for an optional comment (phase 3.2). */
+  readonly askComment?: boolean;
   readonly createdAt: string;
 };
+
+/** Forgets the cached feed, so a test (or a retracted card) is seen at once. */
+export function resetDeskNoticeCache(): void {
+  noticeCache = null;
+}
+
+/** One live desk notice by id, or null when it is not live right now. */
+export async function fetchDeskNotice(id: number): Promise<DeskNotice | null> {
+  return (await fetchDeskNotices()).find((n) => n.id === id) ?? null;
+}
 
 // Same shape and reasoning as the article cache above: an incident
 // notice changing within a minute is fine, the desk being down must not

@@ -21,6 +21,7 @@ import {
   loadContrast,
   loadSafeZones,
   loadThemedZones,
+  ManagedSetting,
   myCertificates,
   Pages,
   saveA11y,
@@ -28,6 +29,7 @@ import {
   saveSafeZones,
   saveThemedZones,
   usePageData,
+  useSiteLocales,
   ZONES_CHANGED_EVENT,
 } from "@keylearn/pages-shared";
 import { SpeedUnit, uiProps } from "@keylearn/result";
@@ -503,43 +505,45 @@ export function AccessibilityPane(): ReactNode {
                   />
                 </span>
               </div>
-              <Segmented<ContrastPref>
-                value={contrast}
-                onChange={(next) => {
-                  setContrast(next);
-                  saveContrast(next, id);
-                  announce();
-                }}
-                options={[
-                  {
-                    id: "default",
-                    label: (
-                      <FormattedMessage
-                        id="account.a11y.contrast.default"
-                        defaultMessage="Theme"
-                      />
-                    ),
-                  },
-                  {
-                    id: "clearer",
-                    label: (
-                      <FormattedMessage
-                        id="account.a11y.contrast.clearer"
-                        defaultMessage="Clearer"
-                      />
-                    ),
-                  },
-                  {
-                    id: "strongest",
-                    label: (
-                      <FormattedMessage
-                        id="account.a11y.contrast.strongest"
-                        defaultMessage="Strongest"
-                      />
-                    ),
-                  },
-                ]}
-              />
+              <ManagedSetting prop="a11y.contrast">
+                <Segmented<ContrastPref>
+                  value={contrast}
+                  onChange={(next) => {
+                    setContrast(next);
+                    saveContrast(next, id);
+                    announce();
+                  }}
+                  options={[
+                    {
+                      id: "default",
+                      label: (
+                        <FormattedMessage
+                          id="account.a11y.contrast.default"
+                          defaultMessage="Theme"
+                        />
+                      ),
+                    },
+                    {
+                      id: "clearer",
+                      label: (
+                        <FormattedMessage
+                          id="account.a11y.contrast.clearer"
+                          defaultMessage="Clearer"
+                        />
+                      ),
+                    },
+                    {
+                      id: "strongest",
+                      label: (
+                        <FormattedMessage
+                          id="account.a11y.contrast.strongest"
+                          defaultMessage="Strongest"
+                        />
+                      ),
+                    },
+                  ]}
+                />
+              </ManagedSetting>
             </div>
 
             {SafeRow({ safe, setSafe, profileId: id })}
@@ -650,22 +654,24 @@ export function AccessibilityPane(): ReactNode {
               onChange={(next) => set({ fingerMarks: next })}
             />
 
-            <Row
-              label={
-                <FormattedMessage
-                  id="account.a11y.motion"
-                  defaultMessage="Hold animations still"
-                />
-              }
-              sub={
-                <FormattedMessage
-                  id="account.a11y.motion.sub"
-                  defaultMessage="Your device’s own setting is already followed. This one is for wanting the rest of the machine to move and this page not to."
-                />
-              }
-              on={prefs.motion === "reduce"}
-              onChange={(next) => set({ motion: next ? "reduce" : "system" })}
-            />
+            <ManagedSetting prop="a11y.motion">
+              <Row
+                label={
+                  <FormattedMessage
+                    id="account.a11y.motion"
+                    defaultMessage="Hold animations still"
+                  />
+                }
+                sub={
+                  <FormattedMessage
+                    id="account.a11y.motion.sub"
+                    defaultMessage="Your device’s own setting is already followed. This one is for wanting the rest of the machine to move and this page not to."
+                  />
+                }
+                on={prefs.motion === "reduce"}
+                onChange={(next) => set({ motion: next ? "reduce" : "system" })}
+              />
+            </ManagedSetting>
 
             <Row
               label={
@@ -1049,6 +1055,7 @@ function SafeRow({
 function LanguageRegionCard(): ReactNode {
   const { locale, networkCountry } = usePageData();
   const { formatMessage } = useIntl();
+  const siteLocales = useSiteLocales();
   const { formatLocalLanguageName, formatRegionName } = useIntlDisplayNames();
   // Sorted the way the reader's own language sorts, so "Österreich" lands
   // where a German speaker expects it rather than after "Z".
@@ -1134,7 +1141,7 @@ function LanguageRegionCard(): ReactNode {
               defaultMessage: "App & email language",
             })}
             value={allLocales.includes(locale) ? locale : defaultLocale}
-            options={[...allLocales]
+            options={[...siteLocales]
               .map((id) => ({ value: id, name: formatLocalLanguageName(id) }))
               .sort((a, b) => collate(a.name, b.name))}
             onSelect={switchLocale}

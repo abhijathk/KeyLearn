@@ -1,9 +1,11 @@
 import { controller, http } from "@fastr/controller";
 import { Context } from "@fastr/core";
+import { NotFoundError } from "@fastr/errors";
 import { HttpError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { allLocales } from "@keylearn/intl";
 import { rateLimit } from "../auth/ratelimit.ts";
+import { brailleServerSpeech } from "../site-config/readers.ts";
 import {
   findSynth,
   installedVoices,
@@ -76,6 +78,11 @@ export class Controller {
    */
   @http.GET("/_/speech.wav")
   async get(ctx: Context) {
+    // Control centre, braille.serverSpeech: off means the endpoint is gone;
+    // the browser voice still works.
+    if (!brailleServerSpeech()) {
+      throw new NotFoundError();
+    }
     const query = ctx.request.query;
     const text = String(query.get("text") ?? "").trim();
     const lang = String(query.get("lang") ?? "en");

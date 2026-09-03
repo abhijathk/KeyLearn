@@ -2,6 +2,7 @@ import { type WordList, wordListStats } from "@keylearn/content";
 import { WordListLoader } from "@keylearn/content-words";
 import { useIntlDisplayNames, useIntlNumbers } from "@keylearn/intl";
 import { Language } from "@keylearn/keyboard";
+import { useTypingLanguages } from "@keylearn/pages-shared";
 import { useSettings } from "@keylearn/settings";
 import {
   OptionList,
@@ -36,6 +37,7 @@ function Content({ wordList }: { wordList: WordList }) {
   const { formatMessage } = useIntl();
   const { formatLanguageName } = useIntlDisplayNames();
   const { formatNumber } = useIntlNumbers();
+  const typing = useTypingLanguages();
   const { wordCount, avgWordLength } = wordListStats(wordList);
   return (
     <SettingsCard
@@ -61,7 +63,9 @@ function Content({ wordList }: { wordList: WordList }) {
         }
       >
         <OptionList
-          options={Language.ALL.map((item) => ({
+          options={Language.ALL.filter(
+            (item) => typing == null || typing.has(item.id),
+          ).map((item) => ({
             value: item.id,
             name: formatLanguageName(item.id),
           }))}

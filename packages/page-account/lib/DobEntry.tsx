@@ -1,3 +1,4 @@
+import { usePageData } from "@keylearn/pages-shared";
 import { TextField } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -63,7 +64,9 @@ export function DobEntry({
   const [age, setAge] = useState("");
 
   const years = enteredAge(mode, dob, age);
-  const tooYoung = years != null && years < MIN_AGE;
+  // The control centre can raise the minimum age (never below the shipped 13).
+  const minAge = Math.max(MIN_AGE, usePageData().minAge ?? MIN_AGE);
+  const tooYoung = years != null && years < minAge;
   const dateOfBirth = birthDateISO(mode, dob, age);
 
   useEffect(() => {

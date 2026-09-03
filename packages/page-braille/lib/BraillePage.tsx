@@ -30,8 +30,11 @@ import {
   A11Y_CHANGED_EVENT,
   hasA11y,
   loadA11y,
+  ManagedSetting,
   saveA11y,
   Screen,
+  useLearnerDefault,
+  useLearnerOverride,
 } from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import {
@@ -75,7 +78,15 @@ import {
   wordAt,
 } from "./lesson.ts";
 import { type Mode } from "./mode.ts";
-import { GOALS, loadPrefs, type Prefs, RATES, savePrefs } from "./prefs.ts";
+import {
+  GOALS,
+  loadPrefs,
+  type Prefs,
+  RATES,
+  savePrefs,
+  setBrailleDefaultGoal,
+  setBrailleForcedGoal,
+} from "./prefs.ts";
 import {
   buzz,
   chime,
@@ -118,6 +129,17 @@ function Practice(): ReactNode {
   const [shake, setShake] = useState(0);
   const [hits, setHits] = useState(0);
   const [misses, setMisses] = useState(0);
+  const siteGoal = useLearnerDefault<number | null>(
+    "braille.goalMinutes",
+    null,
+  );
+  setBrailleDefaultGoal(typeof siteGoal === "number" ? siteGoal : null);
+  const goalOverride = useLearnerOverride("braille.goalMinutes");
+  setBrailleForcedGoal(
+    goalOverride !== "default" && typeof siteGoal === "number"
+      ? siteGoal
+      : null,
+  );
   const [prefs, setPrefsState] = useState<Prefs>(() => loadPrefs(profileId));
   const setPrefs = useCallback(
     (patch: Partial<Prefs>) => {
@@ -1187,35 +1209,37 @@ function Practice(): ReactNode {
           reads as failure where the same message after four hundred keystrokes
           would not.
         */}
-        <label className={styles.control}>
-          <span className={styles.controlLabel}>
-            <FormattedMessage id="braille.goal" defaultMessage="Daily goal" />
-          </span>
-          <select
-            className={styles.rateSelect}
-            value={String(prefs.goalMinutes)}
-            onChange={(ev) =>
-              setPrefs({ goalMinutes: Number(ev.target.value) })
-            }
-          >
-            {GOALS.map((minutes) => (
-              <option key={minutes} value={String(minutes)}>
-                {minutes === 0
-                  ? formatMessage({
-                      id: "braille.goal.none",
-                      defaultMessage: "No goal",
-                    })
-                  : formatMessage(
-                      {
-                        id: "braille.goal.minutes",
-                        defaultMessage: "{minutes} min",
-                      },
-                      { minutes },
-                    )}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ManagedSetting prop="braille.goalMinutes">
+          <label className={styles.control}>
+            <span className={styles.controlLabel}>
+              <FormattedMessage id="braille.goal" defaultMessage="Daily goal" />
+            </span>
+            <select
+              className={styles.rateSelect}
+              value={String(prefs.goalMinutes)}
+              onChange={(ev) =>
+                setPrefs({ goalMinutes: Number(ev.target.value) })
+              }
+            >
+              {GOALS.map((minutes) => (
+                <option key={minutes} value={String(minutes)}>
+                  {minutes === 0
+                    ? formatMessage({
+                        id: "braille.goal.none",
+                        defaultMessage: "No goal",
+                      })
+                    : formatMessage(
+                        {
+                          id: "braille.goal.minutes",
+                          defaultMessage: "{minutes} min",
+                        },
+                        { minutes },
+                      )}
+                </option>
+              ))}
+            </select>
+          </label>
+        </ManagedSetting>
 
         <Segmented
           label={formatMessage({

@@ -4,6 +4,7 @@ import {
   loadKeyboard,
   useFormattedNames,
 } from "@keylearn/keyboard";
+import { useTypingLanguages } from "@keylearn/pages-shared";
 import { Alphabet } from "@keylearn/phonetic-model";
 import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import { useState } from "react";
@@ -16,6 +17,7 @@ export function LayoutsPage() {
   const { formatMessage } = useIntl();
   const { formatLanguageName } = useFormattedNames();
   const [language, setLanguage] = useState(Language.EN);
+  const typing = useTypingLanguages();
   const keyboards = Layout.ALL.filter(
     (layout) => layout.language === language,
   ).map((layout) => loadKeyboard(layout));
@@ -123,7 +125,9 @@ export function LayoutsPage() {
             defaultMessage: "Language:",
           })}
         >
-          {Language.ALL.map((item) => (
+          {Language.ALL.filter(
+            (item) => typing == null || typing.has(item.id),
+          ).map((item) => (
             <option key={item.id} value={item.id}>
               {formatLanguageName(item)}
             </option>

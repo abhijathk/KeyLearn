@@ -1,6 +1,18 @@
 import { CompleteProfileGate } from "@keylearn/page-account";
 import { SupportService } from "@keylearn/page-support";
-import { type NoticeDetails, Pages, SiteNotice } from "@keylearn/pages-shared";
+import {
+  activeProfileKind,
+  AdBar,
+  type AdView,
+  type LearnerResponseState,
+  LearnerVoiceCard,
+  type LearnerVoiceInput,
+  type NoticeDetails,
+  Pages,
+  PROFILE_CHANGED_EVENT,
+  SiteNotice,
+  usePageData,
+} from "@keylearn/pages-shared";
 import { PortalContainer, Toaster } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -99,6 +111,208 @@ function SiteNoticeBanner(): ReactNode {
   );
 }
 
+/**
+ * The paid line above the header (spec, phase 4).
+ *
+ * Three of the four reasons a reader does not see one are settled on the
+ * server, which answers with an empty list; the two settled here are the
+ * two the server cannot see. Which profile is active is a choice this
+ * browser holds and never sends, and whether a lesson is running is a fact
+ * about this second. So a child profile and the kids world are closed off
+ * on this side, and the bar steps aside the moment keys start landing,
+ * exactly as the site notice does.
+ */
+function AdSlot({ path }: { readonly path: string }): ReactNode {
+  const [ads, setAds] = useState<readonly AdView[]>([]);
+  const [dwell, setDwell] = useState(8);
+  const [typing, setTyping] = useState(false);
+  const [hidden, setHidden] = useState(loadAdsHidden);
+  const [kind, setKind] = useState(activeProfileKind);
+
+  useEffect(() => {
+    const onChange = () => setKind(activeProfileKind());
+    window.addEventListener(PROFILE_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(PROFILE_CHANGED_EVENT, onChange);
+  }, []);
+
+  useEffect(() => {
+    const onTyping = (ev: Event) => {
+      setTyping(Boolean((ev as CustomEvent<boolean>).detail));
+    };
+    window.addEventListener("keylearn:typing", onTyping);
+    return () => window.removeEventListener("keylearn:typing", onTyping);
+  }, []);
+
+  useEffect(() => {
+    if (hidden || kind === "kid" || path === "/kids") {
+      return;
+    }
+    let cancelled = false;
+    const fetchAds = () => {
+      SupportService.getAds()
+        .then(({ ads, dwellSeconds }) => {
+          if (!cancelled) {
+            setAds(ads);
+            setDwell(dwellSeconds);
+          }
+        })
+        .catch(() => {
+          // No line this load. Never worth an error on every page.
+        });
+    };
+    fetchAds();
+    const id = window.setInterval(fetchAds, NOTICE_POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [hidden, kind, path]);
+
+  if (hidden || kind === "kid" || path === "/kids" || ads.length === 0) {
+    return null;
+  }
+  return (
+    <div
+      className={clsx(
+        styles.noticeTransition,
+        typing && styles.noticeTransitionHidden,
+      )}
+      aria-hidden={typing}
+    >
+      <AdBar
+        ads={ads}
+        dwellSeconds={dwell}
+        onView={(id, screen) => {
+          void SupportService.countAdView(id, screen).catch(() => {});
+        }}
+        onDismiss={() => {
+          try {
+            sessionStorage.setItem("keylearn.adsHidden", "1");
+          } catch {
+            // Storage unavailable; the line returns on the next load.
+          }
+          setHidden(true);
+        }}
+      />
+    </div>
+  );
+}
+
+function loadAdsHidden(): boolean {
+  try {
+    return sessionStorage.getItem("keylearn.adsHidden") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function loadDismissedCardId(): number | null {
+  try {
+    const raw = sessionStorage.getItem("keylearn.dismissedCard");
+    return raw == null ? null : Number(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The corner slot for a poll or a feedback card (spec §8, phase 3). Shown
+ * only to a signed-in account on an adult profile — a kid profile is never
+ * asked — and gone for the session once its exit button is pressed.
+ */
+function LearnerVoiceSlot(): ReactNode {
+  const { user } = usePageData();
+  const [notice, setNotice] = useState<NoticeDetails | null>(null);
+  const [state, setState] = useState<LearnerResponseState | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState(loadDismissedCardId);
+  const [kind, setKind] = useState(activeProfileKind);
+
+  useEffect(() => {
+    const onChange = () => setKind(activeProfileKind());
+    window.addEventListener(PROFILE_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(PROFILE_CHANGED_EVENT, onChange);
+  }, []);
+
+  useEffect(() => {
+    if (user == null) {
+      return;
+    }
+    let cancelled = false;
+    const fetchCard = () => {
+      SupportService.getLearnerVoiceNotice()
+        .then((n) => {
+          if (!cancelled) {
+            setNotice((prev) => (prev?.id === n?.id ? prev : n));
+          }
+        })
+        .catch(() => {});
+    };
+    fetchCard();
+    const id = window.setInterval(fetchCard, NOTICE_POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (notice == null || user == null) {
+      setState(null);
+      return;
+    }
+    let cancelled = false;
+    SupportService.getLearnerResponse(notice.id)
+      .then((s) => {
+        if (!cancelled) {
+          setState(s);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [notice, user]);
+
+  if (
+    user == null ||
+    kind === "kid" ||
+    notice == null ||
+    notice.id === dismissed ||
+    (state != null && !state.open)
+  ) {
+    return null;
+  }
+  const submit = (input: LearnerVoiceInput) => {
+    setBusy(true);
+    setError(null);
+    SupportService.putLearnerResponse(notice.id, input)
+      .then((s) => setState(s))
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => setBusy(false));
+  };
+  return (
+    <LearnerVoiceCard
+      notice={notice}
+      state={state}
+      busy={busy}
+      error={error}
+      onSubmit={submit}
+      onExit={() => {
+        try {
+          sessionStorage.setItem("keylearn.dismissedCard", String(notice.id));
+        } catch {
+          // Storage unavailable; the card just returns next load.
+        }
+        setDismissed(notice.id);
+      }}
+    />
+  );
+}
+
 // Whether the drawer is open, held OUTSIDE the component on purpose. Each
 // route wraps its page in its own <Template>, so a client-side navigation
 // unmounts one Template and mounts another — and drawer state kept in
@@ -141,6 +355,14 @@ export function Template({
           defaultMessage="Skip to the main content"
         />
       </a>
+      {/* Above the header, not below it (owner decision 3 Sep 2026): a
+          site-wide message is about the whole page, so it sits over the
+          chrome rather than between the chrome and the work. */}
+      <SiteNoticeBanner />
+      {/* Under the notice and still above the header: a message from us
+          always outranks a message somebody paid for, and a campaign that
+          asked to stand aside for one is not in this list at all. */}
+      <AdSlot path={path} />
       <Header
         onOpenMenu={() => setMenuOpen(true)}
         onOpenSupport={() => setSupportOpen(true)}
@@ -149,7 +371,7 @@ export function Template({
         kids={path === "/kids"}
         practice={path === "/"}
       />
-      <SiteNoticeBanner />
+      <LearnerVoiceSlot />
       <main className={styles.main} id="main" tabIndex={-1}>
         {children}
         <PortalContainer />

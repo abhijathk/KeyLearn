@@ -1,6 +1,7 @@
 import { allToRoutes } from "@fastr/controller";
 import { type Middleware } from "@fastr/core";
 import { Router } from "@fastr/middleware-router";
+import { AdsController, AdsInternalController } from "./ads/index.ts";
 import { Controller as AuthController } from "./auth/index.ts";
 import { Controller as CertificateController } from "./certificate/index.ts";
 import { Controller as CheckoutController } from "./checkout/index.ts";
@@ -23,6 +24,8 @@ export function mainRoutes(): Middleware<any> {
   return new Router()
     .registerAll(
       allToRoutes(
+        AdsController,
+        AdsInternalController,
         AuthController,
         CertificateController,
         CheckoutController,

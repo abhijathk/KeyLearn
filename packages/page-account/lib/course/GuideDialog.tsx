@@ -6,6 +6,7 @@ import {
   planFor,
   RETENTION,
 } from "@keylearn/certificate";
+import { usePageData } from "@keylearn/pages-shared";
 import { hush, say } from "@keylearn/speech";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -39,8 +40,12 @@ export function GuideDialog({
   const braille = evidence.kind === "braille";
   const plan = planFor(evidence.audience, evidence.age);
   const bar = braille ? ADULT_BRAILLE : ADULT_TYPING;
+  // Read once, unconditionally: this is a hook, and a hook called from
+  // inside a ternary is called on some renders and not others.
+  const siteRetention = useSiteRetention();
   const retention = Math.round(
-    (evidence.audience === "kid" ? RETENTION.kid : RETENTION.adult) * 100,
+    (evidence.audience === "kid" ? siteRetention.kid : siteRetention.adult) *
+      100,
   );
   // Read-aloud speaks this element rather than a second copy of the words.
   // A hand-written script beside the prose is one more thing to drift, and it
@@ -426,4 +431,12 @@ function ListenBar({
       </span>
     </div>
   );
+}
+
+/** The retention criterion in force (control centre), falling back to the shipped one. */
+function useSiteRetention(): { readonly adult: number; readonly kid: number } {
+  const criteria = usePageData().certificates?.criteria as
+    | { retention?: { adult: number; kid: number } }
+    | undefined;
+  return criteria?.retention ?? RETENTION;
 }

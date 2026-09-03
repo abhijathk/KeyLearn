@@ -1,4 +1,5 @@
 import { type SecurityEventDetails } from "@keylearn/pages-shared";
+import { siteNumber } from "@keylearn/site-config";
 import { type Knex } from "knex";
 import { type JSONSchema, Model, snakeCaseMappers } from "objection";
 import { TimestampMixin } from "./model.ts";
@@ -83,7 +84,12 @@ export class SecurityEvent extends TimestampMixin(Model) {
    * from where — which is precisely the sort of thing that should not accumulate
    * on an app used by children.
    */
-  static readonly retentionMs = 30 * 24 * 3600 * 1000;
+  /** Shipped value; the control centre can tighten it (retention.securityEventDays). */
+  static readonly defaultRetentionDays = 30;
+
+  static get retentionMs(): number {
+    return siteNumber("retention.securityEventDays") * 24 * 3600 * 1000;
+  }
 
   /** A secondary cap, so one noisy account cannot fill the table. */
   static readonly keepPerUser = 200;

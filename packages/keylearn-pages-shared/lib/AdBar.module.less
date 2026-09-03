@@ -1,0 +1,189 @@
+@import "@keylearn/widget/lib/index.less";
+
+// The paid line above the header. It is deliberately the same height and
+// the same shape as the site notice, because it occupies the same slot and
+// a reader should be able to tell them apart by what they say rather than
+// by how much of the page they take.
+.bar {
+  display: flex;
+  position: relative;
+  gap: 0.7rem;
+  align-items: center;
+  min-block-size: 2.4rem;
+  padding: 0.32rem 1rem;
+  // Set inline from the campaign's own palette; these are the fallbacks
+  // for a campaign that sent no colours at all.
+  color: #eaf4fa;
+  background: #0b2b3f;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+// "Ad", always, in every campaign and every template. It is the one part
+// of the line an advertiser cannot restyle or remove.
+.tag {
+  flex: none;
+  padding: 0.03rem 0.3rem;
+  border: 1px solid currentcolor;
+  border-radius: 0.3rem;
+  opacity: 0.85;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.logo {
+  flex: none;
+  object-fit: contain;
+  inline-size: 1.4rem;
+  block-size: 1.4rem;
+  border-radius: 0.3rem;
+}
+
+.text {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.who {
+  font-weight: 700;
+}
+
+.support {
+  opacity: 0.8;
+}
+
+.code {
+  flex: none;
+  padding: 0.04rem 0.4rem;
+  border: 1px dashed currentcolor;
+  border-radius: 0.3rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.cta {
+  flex: none;
+  padding: 0.22rem 0.7rem;
+  border: 0;
+  border-radius: 0.4rem;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.meter {
+  flex: none;
+  inline-size: 5rem;
+  block-size: 0.34rem;
+  border-radius: 0.2rem;
+  overflow: hidden;
+  background: rgb(255 255 255 / 28%);
+}
+
+.meterFill {
+  display: block;
+  block-size: 100%;
+}
+
+.why,
+.close {
+  flex: none;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  opacity: 0.7;
+  font: inherit;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.why {
+  text-decoration: underline;
+}
+
+.close {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.why:hover,
+.close:hover {
+  opacity: 1;
+}
+
+.why:focus-visible,
+.close:focus-visible,
+.cta:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+// The rotation between screens. A fade, never a slide: the bar sits
+// directly above the page's own content and anything that moves sideways
+// there pulls the eye off the work.
+.screen {
+  display: contents;
+}
+
+.fading {
+  opacity: 0;
+}
+
+.screenWrap {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 0.7rem;
+  align-items: center;
+  min-inline-size: 0;
+  transition: opacity 220ms ease;
+}
+
+// A step marker per screen, so a reader can see the line will change and
+// how many there are rather than wondering whether they misread it.
+.dots {
+  display: flex;
+  flex: none;
+  gap: 0.22rem;
+}
+
+.dot {
+  inline-size: 0.3rem;
+  block-size: 0.3rem;
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: 0.3;
+}
+
+.dotOn {
+  opacity: 0.85;
+}
+
+@media (width <= 40rem) {
+  .why,
+  .code,
+  .dots {
+    display: none;
+  }
+
+  .support {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screenWrap {
+    transition: none;
+  }
+}

@@ -61,6 +61,33 @@ export const PRACTICE_MARGIN = { typing: 3, braille: 5 } as const;
  */
 export const RETENTION = { adult: 0.85, kid: 0.8 } as const;
 
+/**
+ * The editable criteria, as one object. The constants above are the shipped
+ * values; the control centre can move them (spec §6.3), so the functions
+ * below take the criteria in force rather than reading the constants —
+ * and a certificate records the criteria it was issued under (versioned),
+ * so a later change never re-judges an issued one.
+ */
+export type CertificateCriteria = {
+  readonly adultTyping: { readonly speed: number; readonly accuracy: number };
+  readonly adultBraille: { readonly speed: number; readonly accuracy: number };
+  readonly practiceMargin: {
+    readonly typing: number;
+    readonly braille: number;
+  };
+  readonly retention: { readonly adult: number; readonly kid: number };
+  /** Sittings counted towards the verdict. */
+  readonly sittingsCounted: number;
+};
+
+export const DEFAULT_CRITERIA: CertificateCriteria = {
+  adultTyping: ADULT_TYPING,
+  adultBraille: ADULT_BRAILLE,
+  practiceMargin: PRACTICE_MARGIN,
+  retention: RETENTION,
+  sittingsCounted: 3,
+};
+
 type Band = {
   readonly maxAge: number;
   readonly typing: readonly [number, number, number];
@@ -165,14 +192,20 @@ function check(
  * and accuracy here is a median over a window, because one exceptional lesson
  * among hundreds is not a standard — it is a good day.
  */
-export function assess(evidence: CertificateEvidence): CertificateVerdict {
+export function assess(
+  evidence: CertificateEvidence,
+  criteria: CertificateCriteria = DEFAULT_CRITERIA,
+): CertificateVerdict {
   const { kind, audience, age } = evidence;
   const shape = SHAPE[audience];
   const volume = kind === "braille" ? shape.brailleVolume : shape.volume;
   const [bronze, silver, gold] = bandFor(age, kind);
-  const adultBar = kind === "braille" ? ADULT_BRAILLE : ADULT_TYPING;
+  const adultBar =
+    kind === "braille" ? criteria.adultBraille : criteria.adultTyping;
   const margin =
-    kind === "braille" ? PRACTICE_MARGIN.braille : PRACTICE_MARGIN.typing;
+    kind === "braille"
+      ? criteria.practiceMargin.braille
+      : criteria.practiceMargin.typing;
   // Practice must sit above the standard, not on it, so that clearing the gate
   // means being comfortably there rather than exactly there.
   const speedBar = (audience === "kid" ? bronze : adultBar.speed) + margin;

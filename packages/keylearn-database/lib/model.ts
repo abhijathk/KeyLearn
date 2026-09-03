@@ -1577,6 +1577,7 @@ export class CertificateSitting extends Model {
     table.float("accuracy").notNullable();
     table.integer("runs").notNullable().defaultTo(1);
     table.integer("seconds").notNullable().defaultTo(0);
+    table.integer("criteria_version").unsigned().notNullable().defaultTo(1);
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     // The verdict reads the most recent sittings for one learner in one
     // language, which is exactly this index.
@@ -1591,6 +1592,7 @@ export class CertificateSitting extends Model {
   accuracy?: number;
   runs?: number;
   seconds?: number;
+  criteriaVersion?: number;
   createdAt?: Date;
 }
 
@@ -1657,6 +1659,10 @@ export class Certificate extends Model {
     table.float("accuracy").notNullable();
     table.string("name", 80).notNullable();
     table.boolean("name_visible").notNullable().defaultTo(false);
+    // The criteria the certificate was issued under (control centre,
+    // versioned): a later change never re-judges an issued one.
+    table.integer("criteria_version").unsigned().notNullable().defaultTo(1);
+    table.text("criteria_json").nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     // One certificate per learner per language per level: sitting again at the
     // same level reissues nothing, but reaching a higher one does.
@@ -1674,6 +1680,8 @@ export class Certificate extends Model {
   sheet?: string;
   speed?: number;
   accuracy?: number;
+  criteriaVersion?: number;
+  criteriaJson?: string | null;
   name?: string;
   nameVisible?: boolean;
   createdAt?: Date;

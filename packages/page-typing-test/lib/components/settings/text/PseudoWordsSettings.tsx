@@ -1,5 +1,6 @@
 import { useIntlDisplayNames } from "@keylearn/intl";
 import { Language } from "@keylearn/keyboard";
+import { useTypingLanguages } from "@keylearn/pages-shared";
 import { Alphabet, Filter, type PhoneticModel } from "@keylearn/phonetic-model";
 import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import { useSettings } from "@keylearn/settings";
@@ -25,6 +26,7 @@ export function PseudoWordsSettings() {
 function Content({ model }: { model: PhoneticModel }) {
   const { settings, updateSettings } = useSettings();
   const { formatLanguageName } = useIntlDisplayNames();
+  const typing = useTypingLanguages();
   const words = [];
   for (let i = 0; i < 50; i++) {
     words.push(model.nextWord(Filter.empty));
@@ -53,7 +55,9 @@ function Content({ model }: { model: PhoneticModel }) {
         }
       >
         <OptionList
-          options={Language.ALL.map((item) => ({
+          options={Language.ALL.filter(
+            (item) => typing == null || typing.has(item.id),
+          ).map((item) => ({
             value: item.id,
             name: formatLanguageName(item.id),
           }))}

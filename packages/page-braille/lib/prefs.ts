@@ -72,35 +72,58 @@ const isMode = (v: unknown): v is Mode => v === "reading" || v === "listening";
 const isHints = (v: unknown): v is Prefs["hints"] =>
   v === "auto" || v === "on" || v === "off";
 
+/** Site-wide default daily goal from the control centre (braille.defaultGoalMin). */
+let siteGoalMinutes: number | null = null;
+export function setBrailleDefaultGoal(minutes: number | null): void {
+  siteGoalMinutes = minutes;
+}
+/** Phase 3.4: when set, the site's goal replaces every learner's own on read. */
+let forcedGoalMinutes: number | null = null;
+export function setBrailleForcedGoal(minutes: number | null): void {
+  forcedGoalMinutes = minutes;
+}
+function withSiteDefaults(prefs: Prefs, stored: boolean): Prefs {
+  if (forcedGoalMinutes != null) {
+    return { ...prefs, goalMinutes: forcedGoalMinutes };
+  }
+  return stored || siteGoalMinutes == null
+    ? prefs
+    : { ...prefs, goalMinutes: siteGoalMinutes };
+}
+
 export function loadPrefs(profileId: string | null = null): Prefs {
   try {
     const raw = window.localStorage.getItem(keyFor(profileId));
     const value: unknown = raw == null ? null : JSON.parse(raw);
     if (value == null || typeof value !== "object") {
-      return defaultPrefs;
+      return withSiteDefaults(defaultPrefs, false);
     }
     const it = value as Partial<Prefs>;
-    return {
-      mode: isMode(it.mode) ? it.mode : defaultPrefs.mode,
-      speech: typeof it.speech === "boolean" ? it.speech : defaultPrefs.speech,
-      echoLetters:
-        typeof it.echoLetters === "boolean"
-          ? it.echoLetters
-          : defaultPrefs.echoLetters,
-      // Clamped rather than trusted: a rate of zero is a page that has gone
-      // silent with no way to work out why.
-      rate:
-        typeof it.rate === "number" && Number.isFinite(it.rate)
-          ? Math.max(0.5, Math.min(4, it.rate))
-          : defaultPrefs.rate,
-      hints: isHints(it.hints) ? it.hints : defaultPrefs.hints,
-      goalMinutes:
-        typeof it.goalMinutes === "number" && Number.isFinite(it.goalMinutes)
-          ? Math.max(0, Math.min(120, Math.round(it.goalMinutes)))
-          : defaultPrefs.goalMinutes,
-    };
+    return withSiteDefaults(
+      {
+        mode: isMode(it.mode) ? it.mode : defaultPrefs.mode,
+        speech:
+          typeof it.speech === "boolean" ? it.speech : defaultPrefs.speech,
+        echoLetters:
+          typeof it.echoLetters === "boolean"
+            ? it.echoLetters
+            : defaultPrefs.echoLetters,
+        // Clamped rather than trusted: a rate of zero is a page that has gone
+        // silent with no way to work out why.
+        rate:
+          typeof it.rate === "number" && Number.isFinite(it.rate)
+            ? Math.max(0.5, Math.min(4, it.rate))
+            : defaultPrefs.rate,
+        hints: isHints(it.hints) ? it.hints : defaultPrefs.hints,
+        goalMinutes:
+          typeof it.goalMinutes === "number" && Number.isFinite(it.goalMinutes)
+            ? Math.max(0, Math.min(120, Math.round(it.goalMinutes)))
+            : defaultPrefs.goalMinutes,
+      },
+      true,
+    );
   } catch {
-    return defaultPrefs;
+    return withSiteDefaults(defaultPrefs, false);
   }
 }
 

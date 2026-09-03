@@ -8,7 +8,14 @@
 // exact moment somebody is most nervous, and the only thing that needs to
 // change is what the page will show them while they type.
 
-import { ADULT_BRAILLE, ADULT_TYPING, bandFor, RETENTION } from "./criteria.ts";
+import {
+  ADULT_BRAILLE,
+  ADULT_TYPING,
+  bandFor,
+  type CertificateCriteria,
+  DEFAULT_CRITERIA,
+  RETENTION,
+} from "./criteria.ts";
 import {
   type CertificateAudience,
   type CertificateEvidence,
@@ -141,6 +148,7 @@ export function judge(
    * makes the ratio moot, which is the right behaviour when it is unknown.
    */
   practiceSpeed = 0,
+  criteria: CertificateCriteria = DEFAULT_CRITERIA,
 ): AssessmentVerdict {
   const bar =
     evidence.audience === "kid"
@@ -149,8 +157,14 @@ export function judge(
           accuracy: 0.9,
         }
       : evidence.kind === "braille"
-        ? { speed: ADULT_BRAILLE.speed, accuracy: ADULT_BRAILLE.accuracy }
-        : { speed: ADULT_TYPING.speed, accuracy: ADULT_TYPING.accuracy };
+        ? {
+            speed: criteria.adultBraille.speed,
+            accuracy: criteria.adultBraille.accuracy,
+          }
+        : {
+            speed: criteria.adultTyping.speed,
+            accuracy: criteria.adultTyping.accuracy,
+          };
 
   const scored = sittings
     .map(scoreSitting)
@@ -159,12 +173,15 @@ export function judge(
   const window = scored.slice(-WINDOW);
 
   const retentionRequired =
-    evidence.audience === "kid" ? RETENTION.kid : RETENTION.adult;
+    evidence.audience === "kid"
+      ? criteria.retention.kid
+      : criteria.retention.adult;
+  const minSittings = Math.max(1, Math.round(criteria.sittingsCounted));
 
-  if (scored.length < MIN_SITTINGS) {
+  if (scored.length < minSittings) {
     return {
       sittings: scored.length,
-      remaining: MIN_SITTINGS - scored.length,
+      remaining: minSittings - scored.length,
       retained: null,
       retentionRequired,
       speed: null,

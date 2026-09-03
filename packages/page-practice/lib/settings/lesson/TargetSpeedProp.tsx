@@ -1,6 +1,7 @@
 import { Dir } from "@keylearn/intl";
 import { lessonProps } from "@keylearn/lesson";
 import { useFormatter } from "@keylearn/lesson-ui";
+import { ManagedSetting } from "@keylearn/pages-shared";
 import { useSettings } from "@keylearn/settings";
 import {
   Description,
@@ -19,7 +20,7 @@ export function TargetSpeedProp(): ReactNode {
   const { settings, updateSettings } = useSettings();
   const targetSpeed = settings.get(lessonProps.targetSpeed);
   return (
-    <>
+    <ManagedSetting prop="lesson.targetSpeed">
       <SettingRow
         label={
           <FormattedMessage
@@ -72,6 +73,6 @@ export function TargetSpeedProp(): ReactNode {
           />
         </Dir>
       </SettingRow>
-    </>
+    </ManagedSetting>
   );
 }

@@ -11,7 +11,8 @@
     "@keylearn/oauth": "*",
     "@keylearn/pages-shared": "*",
     "@keylearn/publicid": "*",
-    "@keylearn/rand": "*"
+    "@keylearn/rand": "*",
+    "@keylearn/site-config": "*"
   },
   "devDependencies": {},
   "scripts": {

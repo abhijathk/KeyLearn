@@ -1,3 +1,4 @@
+import { usePageData } from "@keylearn/pages-shared";
 import {
   Description,
   Explainer,
@@ -16,6 +17,12 @@ import { SpacedRepetitionProp } from "./lesson/SpacedRepetitionProp.tsx";
  * instead of being scattered through the guided-lesson options.
  */
 export function SmartPracticeSettings(): ReactNode {
+  // The site can switch the adaptive engine off for everyone (control
+  // centre, Practice & lessons). Then the card goes: four switches that
+  // change nothing are worse than no card.
+  if (usePageData().smartPractice === false) {
+    return null;
+  }
   return (
     <>
       <SettingsCard

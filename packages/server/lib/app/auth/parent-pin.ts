@@ -2,6 +2,7 @@ import { type Context } from "@fastr/core";
 import { ApplicationError } from "@fastr/errors";
 import { type SessionState } from "@fastr/middleware-session";
 import { Profile, SupportPinProof, type User } from "@keylearn/database";
+import { parentPinWindowMs } from "../site-config/readers.ts";
 
 /**
  * The grown-up PIN gate, shared.
@@ -21,7 +22,8 @@ export const PARENT_PIN_TTL_MS = 15 * 60 * 1000;
 /** Has this browser proved the PIN recently enough? */
 export function parentPinProved(ctx: Context<SessionState>): boolean {
   const at = Number(ctx.state.session.get("parentPinAt") ?? 0);
-  return at !== 0 && Date.now() - at <= PARENT_PIN_TTL_MS;
+  // The window is a control-centre setting (tighten-only from the shipped 15 min).
+  return at !== 0 && Date.now() - at <= parentPinWindowMs();
 }
 
 /**

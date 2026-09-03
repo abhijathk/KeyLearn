@@ -4,7 +4,7 @@ import {
   useIntlDisplayNames,
   usePreferredLocale,
 } from "@keylearn/intl";
-import { Pages, usePageData } from "@keylearn/pages-shared";
+import { Pages, usePageData, useSiteLocales } from "@keylearn/pages-shared";
 import { Link as StaticLink } from "@keylearn/widget";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink } from "react-router";
@@ -117,8 +117,10 @@ function LocaleSwitcher({ currentPath }: { readonly currentPath: string }) {
       </StaticLink>,
     );
   }
+  // Only the site languages the control centre has switched on.
+  const siteLocales = useSiteLocales();
   const secondary = [];
-  for (const locale of allLocales) {
+  for (const locale of siteLocales) {
     if (locale !== preferredLocale && locale !== defaultLocale) {
       if (secondary.length > 0) {
         secondary.push(" ");

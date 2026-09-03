@@ -1,5 +1,10 @@
 import { useProfiles } from "@keylearn/page-account";
-import { type PageInfo, Pages, usePageData } from "@keylearn/pages-shared";
+import {
+  type PageInfo,
+  Pages,
+  usePageData,
+  usePageLive,
+} from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
 import { useIntl } from "react-intl";
@@ -26,7 +31,9 @@ export function NavMenu({
   readonly currentPath?: string;
   readonly onNavigate?: () => void;
 }) {
-  const { leaderboard, multiplayer } = usePageData();
+  const { leaderboard } = usePageData();
+  // Control-centre page states: a switched-off page gets no link.
+  const live = usePageLive();
   const { active } = useProfiles();
   const visionSupport = active?.visionSupport === true;
   if (visionSupport) {
@@ -59,28 +66,34 @@ export function NavMenu({
 
       <MenuItemLink page={Pages.profile} onNavigate={onNavigate} />
 
-      <MenuItemLink page={Pages.typingTest} onNavigate={onNavigate} />
+      {live("typingTest") && (
+        <MenuItemLink page={Pages.typingTest} onNavigate={onNavigate} />
+      )}
 
       {/* Off until live practice is finished: a link into a half-built room is
           worse than no link. */}
-      {multiplayer && (
+      {live("multiplayer") && (
         <MenuItemLink page={Pages.multiplayer} onNavigate={onNavigate} />
       )}
 
-      <MenuItemLink page={Pages.layouts} onNavigate={onNavigate} />
+      {live("layouts") && (
+        <MenuItemLink page={Pages.layouts} onNavigate={onNavigate} />
+      )}
 
-      <MenuItemLink page={Pages.texts} onNavigate={onNavigate} />
+      {live("texts") && (
+        <MenuItemLink page={Pages.texts} onNavigate={onNavigate} />
+      )}
 
       {/* Only for a learner who has said they need it. Braille entry is a
           specialised mode, and putting it in everyone's list would bury the
           things they actually came for. */}
-      {visionSupport && (
+      {visionSupport && live("braille") && (
         <MenuItemLink page={Pages.braille} onNavigate={onNavigate} />
       )}
 
       {/* Only once there is a community to rank. Until then the link would lead
           to a board that says "not yet", which is worse than no link. */}
-      {leaderboard && (
+      {leaderboard && live("highScores") && (
         <MenuItemLink page={Pages.highScores} onNavigate={onNavigate} />
       )}
 

@@ -9,10 +9,34 @@ export type SettingsStorage = {
 type Json = Record<string, unknown>;
 
 let defaultJson: Json = createJson();
+/**
+ * The site's forced values (control centre phase 3.4): a prop here wins
+ * over the learner's own stored value on every read, without touching what
+ * they stored — lifting the override gives them their own choice back.
+ */
+let forcedJson: Json = createJson();
+/** The forced props whose controls are removed from the settings screens too. */
+let hiddenKeys: ReadonlySet<string> = new Set();
 
 export class Settings {
   static addDefaults(settings: Settings): void {
     defaultJson = mergeJson(defaultJson, settings.#json);
+  }
+
+  /** Replaces the forced layer wholesale; `hidden` names the props to hide as well. */
+  static setForced(settings: Settings, hidden: readonly string[] = []): void {
+    forcedJson = cloneJson(settings.#json);
+    hiddenKeys = new Set(hidden);
+  }
+
+  /** Whether the site decides this prop for every learner. */
+  static isForced(prop: AnyProp<any>): boolean {
+    return prop.key in forcedJson;
+  }
+
+  /** Whether the site decides this prop and hides its control as well. */
+  static isHidden(prop: AnyProp<any>): boolean {
+    return hiddenKeys.has(prop.key);
   }
 
   readonly #json: Json;
@@ -32,7 +56,7 @@ export class Settings {
 
   get<T>(prop: AnyProp<T>, defaultValue?: T): T {
     return prop.fromJson(
-      this.#json[prop.key] ?? defaultJson[prop.key],
+      forcedJson[prop.key] ?? this.#json[prop.key] ?? defaultJson[prop.key],
       defaultValue,
     );
   }

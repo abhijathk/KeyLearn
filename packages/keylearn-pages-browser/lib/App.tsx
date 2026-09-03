@@ -10,9 +10,15 @@ import {
   PageDataContext,
   Pages,
   Root,
+  setSiteA11yDefaults,
+  setSiteA11yForced,
+  setSiteContrastDefault,
+  setSiteContrastForced,
   startLocalSync,
   usePageData,
+  usePageLive,
 } from "@keylearn/pages-shared";
+import { Settings } from "@keylearn/settings";
 import { SettingsLoader } from "@keylearn/settings-loader";
 import { querySelector } from "@keylearn/widget";
 import { lazy, type ReactNode, Suspense, useEffect } from "react";
@@ -72,6 +78,70 @@ const GuidePage = lazy(() => import("./pages/guide.tsx"));
 const HighScoresPage = lazy(() => import("./pages/high-scores.tsx"));
 const BraillePage = lazy(() => import("./pages/braille.tsx"));
 const MultiplayerPage = lazy(() => import("./pages/multiplayer.tsx"));
+
+/**
+ * Site-wide learner defaults from the control centre (Features tab) go in
+ * as the defaults layer under every learner's own settings, and the
+ * accessibility defaults into their stores, before the first page renders.
+ */
+function applySiteLearnerDefaults(
+  defaults: Readonly<Record<string, unknown>>,
+  overrides: Readonly<Record<string, "forced" | "hidden">>,
+) {
+  const json: Record<string, unknown> = {};
+  for (const key of [
+    "lesson.type",
+    "lesson.targetSpeed",
+    "lesson.dailyGoal",
+    "typingTest.duration.value",
+    // Smart practice: the site can switch the adaptive layers off for
+    // everyone, which arrives as these four booleans.
+    "lesson.guided.smartConfidence",
+    "lesson.guided.skillDecay",
+    "lesson.guided.spacedRepetition",
+    "lesson.guided.bottleneckDrill",
+  ]) {
+    if (defaults[key] !== undefined) {
+      json[key] = defaults[key];
+    }
+  }
+  // The typing-test source is a numeric enum on this side; the registry
+  // names it (commonWords / pseudoWords / book).
+  const source = { commonWords: 1, pseudoWords: 2, book: 3 }[
+    String(defaults["typingTest.textSource.type"])
+  ];
+  if (source != null) {
+    json["typingTest.textSource.type"] = source;
+  }
+  if (Object.keys(json).length > 0) {
+    Settings.addDefaults(new Settings(json as any));
+  }
+  // Phase 3.4: a forced or hidden prop wins over the learner's own value on
+  // every read; hidden props lose their control as well.
+  const forced: Record<string, unknown> = {};
+  const hidden: string[] = [];
+  for (const [key, mode] of Object.entries(overrides)) {
+    if (json[key] !== undefined) {
+      forced[key] = json[key];
+      if (mode === "hidden") {
+        hidden.push(key);
+      }
+    }
+  }
+  Settings.setForced(new Settings(forced as any), hidden);
+  const motion = defaults["a11y.motion"];
+  const motionValue =
+    motion === "reduce" ? "reduce" : motion === "system" ? "system" : null;
+  setSiteA11yDefaults(motionValue);
+  setSiteA11yForced(overrides["a11y.motion"] != null ? motionValue : null);
+  const contrast = defaults["a11y.contrast"];
+  const contrastValue =
+    contrast === "clearer" || contrast === "strongest" ? contrast : "default";
+  setSiteContrastDefault(contrastValue);
+  setSiteContrastForced(
+    overrides["a11y.contrast"] != null ? contrastValue : null,
+  );
+}
 
 export function App() {
   return (
@@ -195,7 +265,13 @@ function PageRoutes() {
   // Whether the multiplayer route exists at all. The server already answers
   // 404 for a direct hit while it is off; this keeps the in-app router from
   // mounting a page the server would refuse, so the two agree.
-  const { multiplayer } = usePageData();
+  // Page states from the control centre: a route the server would refuse
+  // is not mounted here either, so the two agree; an admin sees every page.
+  const live = usePageLive();
+  const { learnerDefaults, learnerOverrides } = usePageData();
+  useEffect(() => {
+    applySiteLearnerDefaults(learnerDefaults ?? {}, learnerOverrides ?? {});
+  }, [learnerDefaults, learnerOverrides]);
   return (
     <BrowserRouter basename={Pages.intlBase(locale)}>
       <FirstRunRedirect />
@@ -228,17 +304,19 @@ function PageRoutes() {
         />
         {/* The one org page a visitor can find on their own. Public,
             no sign-in, and not a second way to log in — see spec §8. */}
-        <Route
-          path={Pages.forSchools.path}
-          element={
-            <Template path={Pages.forSchools.path}>
-              <Title page={Pages.forSchools} />
-              <Suspense fallback={<LoadingProgress />}>
-                <ForSchoolsPage />
-              </Suspense>
-            </Template>
-          }
-        />
+        {live("forSchools") && (
+          <Route
+            path={Pages.forSchools.path}
+            element={
+              <Template path={Pages.forSchools.path}>
+                <Title page={Pages.forSchools} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <ForSchoolsPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
         {/* The invite link. Only reachable with a token — there is no
             path to it by clicking around, which is the invite-only rule
             (docs/organisations.md §5.3) expressed as routing. */}
@@ -266,20 +344,21 @@ function PageRoutes() {
         />
         {/* Two routes for one page: the bare form, and a link somebody was
             handed with the number already in it. */}
-        {[Pages.verify.path, `${Pages.verify.path}/:number`].map((path) => (
-          <Route
-            key={path}
-            path={path}
-            element={
-              <Template path={Pages.verify.path}>
-                <Title page={Pages.verify} />
-                <Suspense fallback={<LoadingProgress />}>
-                  <VerifyPage />
-                </Suspense>
-              </Template>
-            }
-          />
-        ))}
+        {live("verify") &&
+          [Pages.verify.path, `${Pages.verify.path}/:number`].map((path) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <Template path={Pages.verify.path}>
+                  <Title page={Pages.verify} />
+                  <Suspense fallback={<LoadingProgress />}>
+                    <VerifyPage />
+                  </Suspense>
+                </Template>
+              }
+            />
+          ))}
         <Route
           path={Pages.assessment.path}
           element={
@@ -313,28 +392,32 @@ function PageRoutes() {
             </Template>
           }
         />
-        <Route
-          path={Pages.support.path}
-          element={
-            <Template path={Pages.support.path}>
-              <Title page={Pages.support} />
-              <Suspense fallback={<LoadingProgress />}>
-                <SupportPage />
-              </Suspense>
-            </Template>
-          }
-        />
-        <Route
-          path={Pages.helpCentre.path}
-          element={
-            <Template path={Pages.helpCentre.path}>
-              <Title page={Pages.helpCentre} />
-              <Suspense fallback={<LoadingProgress />}>
-                <HelpCentrePage />
-              </Suspense>
-            </Template>
-          }
-        />
+        {live("support") && (
+          <Route
+            path={Pages.support.path}
+            element={
+              <Template path={Pages.support.path}>
+                <Title page={Pages.support} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <SupportPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
+        {live("helpCentre") && (
+          <Route
+            path={Pages.helpCentre.path}
+            element={
+              <Template path={Pages.helpCentre.path}>
+                <Title page={Pages.helpCentre} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <HelpCentrePage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
         {/* The customer's own conversation, reached by the token in our
             emails — a public route, no sign-in, since a signed-out guest
             has no other way back to it. */}
@@ -415,40 +498,46 @@ function PageRoutes() {
             </Template>
           }
         />
-        <Route
-          path={Pages.kids.path}
-          element={
-            <Template path={Pages.kids.path}>
-              <Title page={Pages.kids} />
-              <Suspense fallback={<LoadingProgress />}>
-                <KidsPage />
-              </Suspense>
-            </Template>
-          }
-        />
-        <Route
-          path={Pages.highScores.path}
-          element={
-            <Template path={Pages.highScores.path}>
-              <Title page={Pages.highScores} />
-              <Suspense fallback={<LoadingProgress />}>
-                <HighScoresPage />
-              </Suspense>
-            </Template>
-          }
-        />
-        <Route
-          path={Pages.braille.path}
-          element={
-            <Template path={Pages.braille.path}>
-              <Title page={Pages.braille} />
-              <Suspense fallback={<LoadingProgress />}>
-                <BraillePage />
-              </Suspense>
-            </Template>
-          }
-        />
-        {multiplayer && (
+        {live("kids") && (
+          <Route
+            path={Pages.kids.path}
+            element={
+              <Template path={Pages.kids.path}>
+                <Title page={Pages.kids} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <KidsPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
+        {live("highScores") && (
+          <Route
+            path={Pages.highScores.path}
+            element={
+              <Template path={Pages.highScores.path}>
+                <Title page={Pages.highScores} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <HighScoresPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
+        {live("braille") && (
+          <Route
+            path={Pages.braille.path}
+            element={
+              <Template path={Pages.braille.path}>
+                <Title page={Pages.braille} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <BraillePage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
+        {live("multiplayer") && (
           <Route
             path={Pages.multiplayer.path}
             element={
@@ -461,28 +550,32 @@ function PageRoutes() {
             }
           />
         )}
-        <Route
-          path={Pages.layouts.path}
-          element={
-            <Template path={Pages.layouts.path}>
-              <Title page={Pages.layouts} />
-              <Suspense fallback={<LoadingProgress />}>
-                <LayoutsPage />
-              </Suspense>
-            </Template>
-          }
-        />
-        <Route
-          path={Pages.texts.path}
-          element={
-            <Template path={Pages.texts.path}>
-              <Title page={Pages.texts} />
-              <Suspense fallback={<LoadingProgress />}>
-                <TextsPage />
-              </Suspense>
-            </Template>
-          }
-        />
+        {live("layouts") && (
+          <Route
+            path={Pages.layouts.path}
+            element={
+              <Template path={Pages.layouts.path}>
+                <Title page={Pages.layouts} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <LayoutsPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
+        {live("texts") && (
+          <Route
+            path={Pages.texts.path}
+            element={
+              <Template path={Pages.texts.path}>
+                <Title page={Pages.texts} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <TextsPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
         <Route
           path={`${Pages.profile.path}`}
           element={
@@ -494,28 +587,32 @@ function PageRoutes() {
             </Template>
           }
         />
-        <Route
-          path={`${Pages.profile.path}/:userId`}
-          element={
-            <Template path={Pages.profile.path}>
-              <Title page={Pages.profile} />
-              <Suspense fallback={<LoadingProgress />}>
-                <ProfilePage />
-              </Suspense>
-            </Template>
-          }
-        />
-        <Route
-          path={Pages.typingTest.path}
-          element={
-            <Template path={Pages.typingTest.path}>
-              <Title page={Pages.typingTest} />
-              <Suspense fallback={<LoadingProgress />}>
-                <TypingTestPage />
-              </Suspense>
-            </Template>
-          }
-        />
+        {live("publicProfiles") && (
+          <Route
+            path={`${Pages.profile.path}/:userId`}
+            element={
+              <Template path={Pages.profile.path}>
+                <Title page={Pages.profile} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <ProfilePage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
+        {live("typingTest") && (
+          <Route
+            path={Pages.typingTest.path}
+            element={
+              <Template path={Pages.typingTest.path}>
+                <Title page={Pages.typingTest} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <TypingTestPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
         <Route
           path={Pages.termsOfService.path}
           element={
@@ -549,28 +646,32 @@ function PageRoutes() {
             </Template>
           }
         />
-        <Route
-          path={Pages.about.path}
-          element={
-            <Template path={Pages.about.path}>
-              <Title page={Pages.about} />
-              <Suspense fallback={<LoadingProgress />}>
-                <AboutPage />
-              </Suspense>
-            </Template>
-          }
-        />
-        <Route
-          path={Pages.guide.path}
-          element={
-            <Template path={Pages.guide.path}>
-              <Title page={Pages.guide} />
-              <Suspense fallback={<LoadingProgress />}>
-                <GuidePage />
-              </Suspense>
-            </Template>
-          }
-        />
+        {live("about") && (
+          <Route
+            path={Pages.about.path}
+            element={
+              <Template path={Pages.about.path}>
+                <Title page={Pages.about} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <AboutPage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
+        {live("guide") && (
+          <Route
+            path={Pages.guide.path}
+            element={
+              <Template path={Pages.guide.path}>
+                <Title page={Pages.guide} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <GuidePage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
         <Route
           path="*"
           element={

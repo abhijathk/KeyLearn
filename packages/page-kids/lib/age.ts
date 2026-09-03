@@ -188,8 +188,33 @@ export function currentBand(): AgeBand {
   return "11+";
 }
 
+/**
+ * Site-wide floor and ceiling per band from the control centre
+ * (kids.paceFloorByBand / kids.paceCeilByBand), applied over the shipped
+ * figures; null means the shipped ones.
+ */
+const BAND_ORDER: readonly AgeBand[] = ["5-6", "7-8", "9-10", "11+"];
+let paceFloor: readonly number[] | null = null;
+let paceCeil: readonly number[] | null = null;
+export function setKidsPaceOverrides(
+  floor: readonly number[] | null,
+  ceil: readonly number[] | null,
+): void {
+  paceFloor = floor != null && floor.length === 4 ? floor : null;
+  paceCeil = ceil != null && ceil.length === 4 ? ceil : null;
+}
+
 export function bandConfig(band: AgeBand = currentBand()): BandConfig {
-  return CONFIGS[band];
+  const base = CONFIGS[band];
+  const index = BAND_ORDER.indexOf(band);
+  if (paceFloor == null && paceCeil == null) {
+    return base;
+  }
+  return {
+    ...base,
+    paceFloor: paceFloor?.[index] ?? base.paceFloor,
+    paceCeil: paceCeil?.[index] ?? base.paceCeil,
+  };
 }
 
 /**

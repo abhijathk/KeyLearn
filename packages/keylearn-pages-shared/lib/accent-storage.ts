@@ -218,13 +218,32 @@ const CONTRAST_KEY = "keylearn.contrast";
  */
 export type ContrastPref = "default" | "clearer" | "strongest";
 
+/** Site-wide default from the control centre (a11y.defaultContrast). */
+let siteContrast: ContrastPref = "default";
+export function setSiteContrastDefault(level: ContrastPref): void {
+  siteContrast = level;
+}
+/** Phase 3.4: when set, the site's contrast replaces every learner's own on read. */
+let forcedContrast: ContrastPref | null = null;
+export function setSiteContrastForced(level: ContrastPref | null): void {
+  forcedContrast = level;
+}
+export function siteDefaultContrast(): ContrastPref {
+  return siteContrast;
+}
+
 export function loadContrast(profileId?: string | null): ContrastPref {
+  if (forcedContrast != null) {
+    return forcedContrast;
+  }
   try {
     const id = profileId === undefined ? activeProfileId() : profileId;
     const raw = localStorage.getItem(profileStorageKeyFor(id, CONTRAST_KEY));
-    return raw === "clearer" || raw === "strongest" ? raw : "default";
+    return raw === "clearer" || raw === "strongest"
+      ? raw
+      : siteDefaultContrast();
   } catch {
-    return "default";
+    return siteDefaultContrast();
   }
 }
 

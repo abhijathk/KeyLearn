@@ -18,13 +18,26 @@ export const PLACES_PREMIUM = 8;
 /** Extra places for learners on braille and audio, on every plan. */
 export const PLACES_BRAILLE = 4;
 
-export function sightedPlaces(premium: boolean): number {
-  return premium ? PLACES_PREMIUM : PLACES_FREE;
+/** The caps in force; the control centre can move them (profiles.places*). */
+export type ProfileCaps = { readonly free: number; readonly premium: number };
+export const SHIPPED_CAPS: ProfileCaps = {
+  free: PLACES_FREE,
+  premium: PLACES_PREMIUM,
+};
+
+export function sightedPlaces(
+  premium: boolean,
+  caps: ProfileCaps = SHIPPED_CAPS,
+): number {
+  return premium ? caps.premium : caps.free;
 }
 
 /** The most profiles of any kind, for a household that uses both allowances. */
-export function totalPlaces(premium: boolean): number {
-  return sightedPlaces(premium) + PLACES_BRAILLE;
+export function totalPlaces(
+  premium: boolean,
+  caps: ProfileCaps = SHIPPED_CAPS,
+): number {
+  return sightedPlaces(premium, caps) + PLACES_BRAILLE;
 }
 
 /**
@@ -47,10 +60,11 @@ export type PlaceCounts = {
 export function countPlaces(
   profiles: readonly Countable[],
   premium: boolean,
+  caps: ProfileCaps = SHIPPED_CAPS,
 ): PlaceCounts {
   const braille = profiles.filter((p) => Boolean(p.visionSupport)).length;
   const sighted = profiles.length - braille;
-  const sightedFree = Math.max(0, sightedPlaces(premium) - sighted);
+  const sightedFree = Math.max(0, sightedPlaces(premium, caps) - sighted);
   const brailleFree = Math.max(0, PLACES_BRAILLE - braille);
   return {
     sighted,

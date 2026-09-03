@@ -4,22 +4,25 @@ import { inject, injectable } from "@fastr/invert";
 import { allLocales, defaultLocale } from "@keylearn/intl";
 import { Pages } from "@keylearn/pages-shared";
 import { js2xml } from "xml-js";
-import { multiplayerEnabled } from "../multiplayer.ts";
+import { pageState, siteLocalesAllowed } from "../site-config/readers.ts";
 
 @injectable()
 @controller()
 export class Controller {
-  readonly #body: string;
+  readonly #canonicalUrl: string;
   readonly #robots: string;
 
   constructor(@inject("canonicalUrl") canonicalUrl: string) {
-    this.#body = generateSitemapXml(canonicalUrl);
+    this.#canonicalUrl = canonicalUrl;
     this.#robots = generateRobotsTxt(canonicalUrl);
   }
 
+  // Built per request rather than once: which pages and locales are listed
+  // follows the control centre, and a sitemap entry that answers 404 is a
+  // crawl error, not a listing.
   @http.GET("/sitemap.xml")
   async get(ctx: Context) {
-    ctx.response.body = this.#body;
+    ctx.response.body = generateSitemapXml(this.#canonicalUrl);
     ctx.response.type = "application/xml";
   }
 
@@ -78,18 +81,22 @@ export function generateSitemapXml(canonicalUrl: string): any {
   const makeUrl = (path: string): string => {
     return String(new URL(path, canonicalUrl));
   };
-  const sortedLocales = [...new Set([defaultLocale, ...allLocales])];
+  const allowed = new Set(siteLocalesAllowed());
+  const sortedLocales = [...new Set([defaultLocale, ...allLocales])].filter(
+    (locale) => allowed.has(locale),
+  );
   const url: unknown[] = [];
+  // Only while the page is live: a switched-off page answers 404 to the
+  // public and must not be listed.
+  const live = (name: Parameters<typeof pageState>[0]) =>
+    pageState(name) === "live";
   for (const page of [
-    Pages.practice,
+    ...(live("practice") ? [Pages.practice] : []),
     Pages.help,
-    Pages.highScores,
+    ...(live("highScores") ? [Pages.highScores] : []),
     Pages.layouts,
-    // Only while the page exists: a sitemap entry that answers 404 is a
-    // crawl error, not a listing. Read once, here, because the body is
-    // built once in the constructor.
-    ...(multiplayerEnabled() ? [Pages.multiplayer] : []),
-    Pages.typingTest,
+    ...(live("multiplayer") ? [Pages.multiplayer] : []),
+    ...(live("typingTest") ? [Pages.typingTest] : []),
   ]) {
     for (const locale of sortedLocales) {
       const alternate: any[] = [];

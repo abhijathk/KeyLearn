@@ -9,6 +9,7 @@ import {
   logout,
   Pages,
   usePageData,
+  usePageLive,
 } from "@keylearn/pages-shared";
 import { IconButton, StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
@@ -40,6 +41,8 @@ export function MenuDrawer({
   readonly path: string;
 }): ReactNode {
   const { formatMessage } = useIntl();
+  // The drawer's own links follow their page state (control centre, Pages).
+  const live = usePageLive();
   // A kid profile gets a locked-down drawer: navigation, settings, language
   // and the utility links are grown-ups only.
   const navigate = useNavigate();
@@ -377,10 +380,12 @@ export function MenuDrawer({
               inert={kidLock}
             >
               <div className={styles.util}>
-                <RouterLink to={Pages.about.path} onClick={onClose}>
-                  <StrokeIcon className={styles.utilIcon} name="help" />
-                  {formatMessage(Pages.about.link.label)}
-                </RouterLink>
+                {live("about") && (
+                  <RouterLink to={Pages.about.path} onClick={onClose}>
+                    <StrokeIcon className={styles.utilIcon} name="help" />
+                    {formatMessage(Pages.about.link.label)}
+                  </RouterLink>
+                )}
                 {signedIn ? (
                   <RouterLink to={Pages.account.path} onClick={onClose}>
                     <StrokeIcon className={styles.utilIcon} name="user" />
@@ -407,14 +412,18 @@ export function MenuDrawer({
                     at all. Without an entry here their only way in is a link
                     somebody sent them, which is the very thing they came to
                     check. */}
-                <RouterLink to={Pages.verify.path} onClick={onClose}>
-                  <StrokeIcon className={styles.utilIcon} name="trophy" />
-                  {formatMessage(Pages.verify.link.label)}
-                </RouterLink>
-                <RouterLink to={Pages.guide.path} onClick={onClose}>
-                  <StrokeIcon className={styles.utilIcon} name="font" />
-                  {formatMessage(Pages.guide.link.label)}
-                </RouterLink>
+                {live("verify") && (
+                  <RouterLink to={Pages.verify.path} onClick={onClose}>
+                    <StrokeIcon className={styles.utilIcon} name="trophy" />
+                    {formatMessage(Pages.verify.link.label)}
+                  </RouterLink>
+                )}
+                {live("guide") && (
+                  <RouterLink to={Pages.guide.path} onClick={onClose}>
+                    <StrokeIcon className={styles.utilIcon} name="font" />
+                    {formatMessage(Pages.guide.link.label)}
+                  </RouterLink>
+                )}
                 <RouterLink to={Pages.termsOfService.path} onClick={onClose}>
                   <StrokeIcon className={styles.utilIcon} name="doc" />
                   {formatMessage(Pages.termsOfService.link.label)}

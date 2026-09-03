@@ -5,11 +5,14 @@ import { Manifest } from "@keylearn/assets";
 import { ConfigModule, Env } from "@keylearn/config";
 import { Logger } from "@keylearn/logger";
 import { Game } from "@keylearn/multiplayer-server";
+import { AdSweep } from "./app/ads/index.ts";
 import { serveRateLimits } from "./app/auth/ratelimit.ts";
 import { startStaffCache } from "./app/auth/staff-cache.ts";
 import { checkProductionConfig } from "./app/config-check.ts";
 import { ApplicationModule, kGame, kMain } from "./app/index.ts";
 import { ReminderSweep } from "./app/mail/index.ts";
+import { startSiteConfigCache } from "./app/site-config/cache.ts";
+import { SiteConfigSweep } from "./app/site-config/sweep.ts";
 import {
   AccountDeletionSweep,
   DigestSweep,
@@ -18,6 +21,7 @@ import {
   QdeskRetrySweep,
   StaffAuditSweep,
 } from "./app/support/index.ts";
+import { LearnerResponseSweep } from "./app/support/learner-response-sweep.ts";
 import { DataSnapshot } from "./app/sync/index.ts";
 import { ServerModule } from "./server/module.ts";
 import { Service } from "./server/service.ts";
@@ -64,8 +68,19 @@ if (cluster.isPrimary) {
   // Forwarding to the desk is fire-and-forget so an outage can't fail a
   // customer's send; this is what makes that safe rather than lossy.
   container.get(QdeskRetrySweep).start();
+  // The sweeps read site settings (audit retention, for one), so the
+  // primary keeps a view of site_config too. See site-config/cache.ts.
+  startSiteConfigCache();
   // Staff audit rows age out past STAFF_AUDIT_RETENTION_DAYS; 0 keeps them.
   container.get(StaffAuditSweep).start();
+  // Maintenance auto-revert and the leaderboard override expiry.
+  container.get(SiteConfigSweep).start();
+  // Feedback comments are reduced to their star after twelve months.
+  container.get(LearnerResponseSweep).start();
+  // The sponsor slot: closes finished campaigns, credits the minutes a
+  // site notice took from them, sends each advertiser's weekly report in
+  // their own zone, and expires the day's view hashes.
+  container.get(AdSweep).start();
   // Learner data lives in files on this machine's disk; the database is what
   // gets backed up. Copy one into the other at intervals.
   container.get(DataSnapshot).start();
@@ -84,6 +99,9 @@ if (cluster.isPrimary) {
   // process's memory so `isStaffEmail` can stay synchronous, and it is this
   // process that answers requests with it. See staff-cache.ts.
   startStaffCache();
+  // Likewise the site configuration: per worker, refreshed on a timer, so
+  // a control-centre change reaches every process inside the window.
+  startSiteConfigCache();
   switch (process.argv[2]) {
     case "http":
       process.title = "keylearn server worker process";

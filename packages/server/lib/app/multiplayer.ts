@@ -1,4 +1,4 @@
-import { Env } from "@keylearn/config";
+import { siteChoice } from "@keylearn/site-config";
 
 /**
  * Whether multiplayer is switched on.
@@ -9,8 +9,11 @@ import { Env } from "@keylearn/config";
  * every surface asks the same question, and off means the URL is gone too.
  *
  * Read live rather than cached at boot, so a test can flip it per case and
- * so the control centre can drive it later (spec phase 1.3) without a restart.
+ * so the control centre can drive it without a restart. The state is the
+ * registry row `pages.multiplayer.state`: MULTIPLAYER_ENABLED in the
+ * environment wins while it is set (true → live, false → 404), otherwise
+ * the stored value, otherwise the shipped default, which is off.
  */
 export function multiplayerEnabled(): boolean {
-  return Env.getBoolean("MULTIPLAYER_ENABLED", false);
+  return siteChoice("pages.multiplayer.state") === "live";
 }

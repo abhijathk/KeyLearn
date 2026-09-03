@@ -3,9 +3,11 @@ import {
   assess,
   bandFor,
   type CertificateCheck,
+  type CertificateCriteria,
   type CertificateEvidence,
   type CertificateTemplate,
   certificateTemplate,
+  DEFAULT_CRITERIA,
 } from "@keylearn/certificate";
 import { medalFor } from "@keylearn/certificate-ui";
 import { artKindOf, ArtMotif } from "@keylearn/identicon";
@@ -288,7 +290,14 @@ function Row({
   const navigate = useNavigate();
   const { select } = useProfiles();
   const [showing, setShowing] = useState<IssuedCertificate | null>(null);
-  const verdict = assess(evidence);
+  // The criteria in force (control centre, versioned) — the same ones the
+  // server judges with.
+  const { certificates } = usePageData();
+  const verdict = assess(
+    evidence,
+    (certificates?.criteria as CertificateCriteria | undefined) ??
+      DEFAULT_CRITERIA,
+  );
   const state = verdict.eligible ? "ready" : "going";
   // How far along, as one number. Every condition counts the same and none can
   // count more than once — a learner who has typed ten times the lessons needed

@@ -17,6 +17,8 @@ import {
   Answer,
   AnswerRule,
   Credential,
+  LEARNER_COMMENT_MAX,
+  LearnerResponse,
   maskEmail,
   Notice,
   Notification,
@@ -34,6 +36,7 @@ import {
   type SupportTicketStatus,
   User,
 } from "@keylearn/database";
+import { hasContactDetails } from "@keylearn/moderation";
 import { type NoticeKind, resolveDateMarks } from "@keylearn/pages-shared";
 import { type Knex } from "knex";
 import { z } from "zod";
@@ -58,8 +61,10 @@ import {
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
+import { threadLinkMs } from "../site-config/readers.ts";
 import { matchAnswers } from "./matching.ts";
 import {
+  fetchDeskNotice,
   fetchDeskNotices,
   fetchHelpArticles,
   forwardReplyToQdesk,
@@ -72,7 +77,7 @@ const jsonOpts = { maxLength: 4096 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** How long a closed thread's guest link keeps working. */
-const THREAD_EXPIRY_MS = 90 * DAY_MS;
+export const THREAD_EXPIRY_MS = 90 * DAY_MS;
 /** How long a duplicate resubmission is folded into an existing ticket. */
 const DEDUP_WINDOW_MS = DAY_MS;
 /** The lookback window for counting an email's recent spam-closed tickets. */
@@ -272,6 +277,15 @@ const TNoticeUpdate = z.object({
 });
 type TNoticeUpdate = z.infer<typeof TNoticeUpdate>;
 const PNoticeUpdate = zod(TNoticeUpdate);
+
+/** A learner's answer to a poll (choice) or a feedback card (stars, optional text). */
+const TLearnerResponse = z.object({
+  choice: z.number().int().min(0).max(3).optional(),
+  stars: z.number().int().min(1).max(5).optional(),
+  text: z.string().trim().max(LEARNER_COMMENT_MAX).optional(),
+});
+type TLearnerResponse = z.infer<typeof TLearnerResponse>;
+const PLearnerResponse = zod(TLearnerResponse);
 
 const TAnswerCreate = z.object({
   title: z.string().trim().min(1).max(128),
@@ -1195,7 +1209,7 @@ export class Controller {
   #threadExpired(ticket: SupportTicket): boolean {
     return (
       ticket.closedAt != null &&
-      Date.now() - new Date(ticket.closedAt).getTime() > THREAD_EXPIRY_MS
+      Date.now() - new Date(ticket.closedAt).getTime() > threadLinkMs()
     );
   }
 
@@ -1294,8 +1308,18 @@ export class Controller {
     // desk notice must never collide with a local one, and this app's own
     // rows can never be negative. Cached and failure-tolerant inside the
     // fetcher — the desk being down never empties the local feed.
+    // Every display travels: banners and windows for everyone, and the
+    // poll and feedback cards (phase 3), which the client shows only to a
+    // signed-in adult profile and this side accepts answers for only from
+    // an account. Audience is applied the same way as for local rows.
     const deskNotices = (await fetchDeskNotices())
-      .filter((n) => n.display === "banner")
+      .filter(
+        (n) =>
+          audience == null ||
+          n.audience == null ||
+          n.audience === "everyone" ||
+          n.audience === audience,
+      )
       .map((n) => ({
         id: -n.id,
         message: n.message,
@@ -1306,14 +1330,116 @@ export class Controller {
         display: n.display,
         startsAt: null,
         endsAt: null,
-        audience: "everyone",
+        audience: n.audience ?? "everyone",
         dismissible: n.dismissible,
+        options: n.options ?? null,
+        showResults: n.showResults ?? true,
+        askComment: n.askComment ?? true,
         createdAt: n.createdAt,
       }));
     ctx.response.body = {
       notices: [...notices.map((n) => n.toDetails()), ...deskNotices],
     };
     ctx.response.headers.set("Cache-Control", "public, max-age=30");
+  }
+
+  // ── Public, signed in: polls and feedback (control centre phase 3) ──
+
+  /**
+   * The account's own answer to a desk poll or feedback card, and the
+   * running result when the card shows one. `id` is the desk's notice id
+   * (positive; the feed negates it so the dismissal memory never collides).
+   * Under `/_/support/my` so it reads the learner's own session, not the
+   * desk's (see desk-session.ts).
+   */
+  @http.GET("/_/support/my/voice/{id}")
+  async getLearnerResponse(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id", pId) id: number,
+  ) {
+    const user = ctx.state.requireUser();
+    const notice = await fetchDeskNotice(id);
+    const open =
+      notice != null &&
+      (notice.display === "poll" || notice.display === "feedback");
+    const mine = await LearnerResponse.findFor(id, user.id!);
+    ctx.response.body = {
+      open,
+      response: mine?.toDetails() ?? null,
+      results:
+        open && notice.showResults !== false
+          ? await LearnerResponse.resultsFor(id)
+          : null,
+    };
+    ctx.response.headers.set("Cache-Control", "private, no-store");
+  }
+
+  /**
+   * One answer per account, changeable until the card closes. Votes are
+   * per account, never per profile; the client never shows the card to a
+   * kid profile, and this route only knows accounts, so there is no way
+   * to count a child. A comment is personal data: the multiplayer
+   * contact-detail detector runs on it and a comment that would take
+   * someone off-platform is refused rather than stored (spec §8).
+   */
+  @http.PUT("/_/support/my/voice/{id}")
+  async putLearnerResponse(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @body.json(PLearnerResponse) input: TLearnerResponse,
+  ) {
+    const user = ctx.state.requireUser();
+    rateLimit(ctx, "learner-response", 30, 60 * 60 * 1000);
+    const notice = await fetchDeskNotice(id);
+    if (
+      notice == null ||
+      (notice.display !== "poll" && notice.display !== "feedback")
+    ) {
+      throw new ApplicationError("This card has closed.");
+    }
+    let choice: number | null = null;
+    let stars: number | null = null;
+    let text: string | null = null;
+    if (notice.display === "poll") {
+      const options = notice.options ?? [];
+      if (input.choice == null || input.choice >= options.length) {
+        throw new ApplicationError("Pick one of the options.");
+      }
+      choice = input.choice;
+    } else {
+      if (input.stars == null) {
+        throw new ApplicationError("Pick a star rating first.");
+      }
+      stars = input.stars;
+      if (
+        notice.askComment !== false &&
+        input.text != null &&
+        input.text !== ""
+      ) {
+        if (hasContactDetails(input.text)) {
+          throw new ApplicationError(
+            "Please leave contact details out of a comment. Staff read these, and your account already tells them who you are.",
+          );
+        }
+        text = input.text;
+      }
+    }
+    const saved = await LearnerResponse.upsert({
+      noticeId: id,
+      userId: user.id!,
+      choice,
+      stars,
+      text,
+    });
+    ctx.response.body = {
+      open: true,
+      response: saved.toDetails(),
+      results:
+        notice.showResults !== false
+          ? await LearnerResponse.resultsFor(id)
+          : null,
+    };
+    ctx.response.headers.set("Cache-Control", "private, no-store");
   }
 
   // ── Staff: access status (unaudited — see doc comment) ──

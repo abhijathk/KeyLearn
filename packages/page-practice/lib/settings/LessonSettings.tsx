@@ -13,6 +13,7 @@ import {
   type WordListLesson,
 } from "@keylearn/lesson";
 import { LessonLoader } from "@keylearn/lesson-loader";
+import { ManagedSetting } from "@keylearn/pages-shared";
 import { type Settings, useSettings } from "@keylearn/settings";
 import { SettingTiles } from "@keylearn/widget";
 import { type ReactNode, useEffect } from "react";
@@ -150,24 +151,29 @@ export function LessonSettings(): ReactNode {
   const selected = LessonType.ALL.indexOf(settings.get(lessonProps.type));
   return (
     <>
-      <SettingTiles
-        value={selected}
-        onChange={(index) => {
-          updateSettings(
-            settings.set(lessonProps.type, LessonType.ALL.at(index)),
-          );
-        }}
-        options={sources.map(
-          ({ label, description, badge, disabled, disabledReason }, index) => ({
-            id: index,
-            label,
-            description,
-            badge,
-            disabled,
-            disabledReason,
-          }),
-        )}
-      />
+      <ManagedSetting prop="lesson.type">
+        <SettingTiles
+          value={selected}
+          onChange={(index) => {
+            updateSettings(
+              settings.set(lessonProps.type, LessonType.ALL.at(index)),
+            );
+          }}
+          options={sources.map(
+            (
+              { label, description, badge, disabled, disabledReason },
+              index,
+            ) => ({
+              id: index,
+              label,
+              description,
+              badge,
+              disabled,
+              disabledReason,
+            }),
+          )}
+        />
+      </ManagedSetting>
       <LessonLoader>
         {(lesson) => (
           <>

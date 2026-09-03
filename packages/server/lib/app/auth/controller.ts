@@ -21,6 +21,7 @@ import {
   EmailVerification,
   generateRecoveryCodes,
   generateTotpSecret,
+  LearnerResponse,
   maskEmail,
   Notification,
   Profile,
@@ -62,6 +63,14 @@ import { actorFor } from "../access/actor.ts";
 import { reachProfile } from "../access/resolver.ts";
 import { Mailer, Notifier } from "../mail/index.ts";
 import { preferredLocale } from "../page/intl.ts";
+import {
+  loginAttemptsPerMin,
+  minAge,
+  minPasswordLength,
+  profileCaps,
+  registrationMode,
+} from "../site-config/readers.ts";
+import { SiteConfigService } from "../site-config/service.ts";
 import { reference } from "../support/my-controller.ts";
 import { isBreached } from "./breached.ts";
 import {
@@ -78,6 +87,11 @@ import {
 } from "./parent-pin.ts";
 import { pAdapter } from "./pipe.ts";
 import { clientIp, rateLimit } from "./ratelimit.ts";
+import {
+  assertMayCreateAccountWithoutCode,
+  assertMayRegister,
+  consumeInviteCode,
+} from "./registration.ts";
 import { encryptTotpSecret, resolveTotpSecret } from "./totp-crypto.ts";
 import {
   clearFailures,
@@ -198,9 +212,21 @@ const PProfilePatch = zod(TProfilePatch, () => {
 // sitting, short enough that a tablet left unattended does not stay unlocked —
 // now lives with the gate that enforces it, in parent-pin.ts.
 
-const MIN_PASSWORD = 8;
+export const MIN_PASSWORD = 8;
 // COPPA: children under 13 may not create their own account. Whole years.
-const MIN_AGE = 13;
+export const MIN_AGE = 13;
+
+/**
+ * The minimum password length is a control-centre setting (raise-only from
+ * the shipped 8). The zod schemas above keep the shipped floor; this is the
+ * live check on every path that sets a password.
+ */
+function requirePasswordLength(password: string): void {
+  const min = minPasswordLength();
+  if (password.length < min) {
+    throw new ApplicationError(`Password must be at least ${min} characters`);
+  }
+}
 
 // Age in whole years from an ISO "YYYY-MM-DD" date of birth.
 function ageInYears(dob: string, now: Date = new Date()): number {
@@ -305,6 +331,8 @@ const TRegister = z.object({
   // ISO "YYYY-MM-DD"; required so the age gate can run server-side.
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   turnstileToken: z.string().max(4096).optional(),
+  // Required only while registration is invite-only (control centre).
+  inviteCode: z.string().trim().max(64).optional(),
 });
 type TRegister = z.infer<typeof TRegister>;
 const PRegister = zod(TRegister, () => {
@@ -539,6 +567,7 @@ export class Controller {
     // Only for seeding a new account's time zone from the network country
     // at registration — see seedTimeZone below.
     readonly settingsDatabase: SettingsDatabase,
+    readonly siteConfig: SiteConfigService,
   ) {}
 
   // Tell the account holder that something changed. Always sent — the point of
@@ -716,14 +745,25 @@ export class Controller {
         // known provider identity: don't silently create one — send them to
         // register first. Registration is the only path that provisions a new
         // SSO account.
-        if (intent !== "register") {
-          const known =
-            (await UserExternalId.findBySubject(
-              resourceOwner.provider,
-              resourceOwner.id,
-            )) != null || (await User.findByEmail(resourceOwner.email)) != null;
-          if (!known) {
-            ctx.response.redirect("/register?sso=noaccount");
+        const known =
+          (await UserExternalId.findBySubject(
+            resourceOwner.provider,
+            resourceOwner.id,
+          )) != null || (await User.findByEmail(resourceOwner.email)) != null;
+        if (intent !== "register" && !known) {
+          ctx.response.redirect("/register?sso=noaccount");
+          return;
+        }
+        if (!known) {
+          // A first sign-in creates the account, which the control centre
+          // may have closed or made invite-only (phase 1.4); OAuth has
+          // nowhere to carry a code, so the register page explains.
+          try {
+            assertMayCreateAccountWithoutCode();
+          } catch {
+            ctx.response.redirect(
+              `/register?sso=${registrationMode() === "closed" ? "closed" : "invite"}`,
+            );
             return;
           }
         }
@@ -778,6 +818,12 @@ export class Controller {
   ) {
     rateLimit(ctx, "magic-link", 5, 300_000);
     await requireCaptchaIfSuspicious(ctx, turnstileToken);
+    // A link for an unknown address would create the account on click;
+    // that is registration, and the control centre decides whether it is
+    // open (phase 1.4). A known address always gets its link.
+    if ((await User.findByEmail(email)) == null) {
+      assertMayCreateAccountWithoutCode();
+    }
     const token = String(await UserLoginRequest.init(email, "login"));
     const link = String(
       new URL(ctx.state.router.makePath("login", { token }), this.canonicalUrl),
@@ -806,14 +852,18 @@ export class Controller {
       lastName,
       dateOfBirth,
       turnstileToken,
+      inviteCode,
     }: TRegister,
   ) {
     rateLimit(ctx, "register", 10, 60_000);
     await requireCaptchaIfSuspicious(ctx, turnstileToken);
+    // Who may create an account is a control-centre setting (phase 1.4).
+    const usedInvite = assertMayRegister(inviteCode);
+    requirePasswordLength(password);
     // COPPA age gate — authoritative check (the client also gates for UX).
     // Under-13s can't own an account; a parent creates it and adds them as a
     // learner profile instead.
-    if (ageInYears(dateOfBirth) < MIN_AGE) {
+    if (ageInYears(dateOfBirth) < minAge()) {
       throw new ForbiddenError(
         "You need to be at least 13 to create an account. Ask a parent or guardian to create one and add you as a learner.",
       );
@@ -842,6 +892,9 @@ export class Controller {
       throw err;
     }
     await captureSignupContext(ctx, user.id!, this.settingsDatabase);
+    if (usedInvite != null) {
+      await consumeInviteCode(usedInvite, this.siteConfig);
+    }
     // The account exists but isn't usable until the email is verified: email a
     // one-time code and let the client collect it. No session is established
     // here, so an unverified account can't be signed in.
@@ -933,7 +986,7 @@ export class Controller {
     @body.json(PLogin, jsonOpts)
     { email, password, turnstileToken, remember }: TLogin,
   ) {
-    rateLimit(ctx, "login", 20, 60_000);
+    rateLimit(ctx, "login", loginAttemptsPerMin(), 60_000);
     // Adaptive CAPTCHA: after several failures from this IP, a challenge must
     // be solved before we even check the password.
     await requireCaptchaIfSuspicious(ctx, turnstileToken);
@@ -1015,6 +1068,7 @@ export class Controller {
     ctx: Context<RouterState & SessionState & AuthState>,
     @body.json(PReset, jsonOpts) { token, password, turnstileToken }: TReset,
   ) {
+    requirePasswordLength(password);
     rateLimit(ctx, "reset", 20, 300_000);
     await requireCaptchaIfSuspicious(ctx, turnstileToken);
     const email = await UserLoginRequest.consume(token);
@@ -1089,7 +1143,7 @@ export class Controller {
     @body.json(PCompleteProfile, jsonOpts) { dateOfBirth }: TCompleteProfile,
   ) {
     const user = ctx.state.requireUser();
-    if (ageInYears(dateOfBirth) < MIN_AGE) {
+    if (ageInYears(dateOfBirth) < minAge()) {
       await user.$query().delete();
       ctx.state.session.destroy();
       throw new ForbiddenError(
@@ -1334,6 +1388,8 @@ export class Controller {
     // The trail goes with the account: keeping it would retain personal data
     // (addresses, device strings) about someone who asked to be erased.
     await SecurityEvent.deleteForUser(user.id!);
+    // Poll votes and feedback comments go with the account (spec §8).
+    await LearnerResponse.deleteForUser(user.id!);
     await user.$query().delete();
   }
 
@@ -1390,6 +1446,7 @@ export class Controller {
     @body.json(PChangePassword, jsonOpts)
     { currentPassword, newPassword }: TChangePassword,
   ) {
+    requirePasswordLength(newPassword);
     rateLimit(ctx, "password", 10, 300_000);
     const user = ctx.state.requireUser();
     // If a password is already set, the current one must be proven.
@@ -1698,6 +1755,11 @@ export class Controller {
       ),
       accountResults,
       profiles: perProfile,
+      // Poll votes and feedback cards answered (control centre §8): the
+      // comment is personal data, so it travels with everything else.
+      responses: (await LearnerResponse.listForUser(user.id!)).map((r) =>
+        r.toDetails(),
+      ),
     };
     ctx.response.headers.set("Cache-Control", "private, no-store");
     ctx.response.headers.set(
@@ -2280,12 +2342,13 @@ export class Controller {
     const counts = countPlaces(
       await Profile.query().where("userId", user.id!),
       premium,
+      profileCaps(),
     );
     if (braille ? counts.brailleFree === 0 : counts.sightedFree === 0) {
       throw new ApplicationError(
         braille
           ? `You can have at most ${PLACES_BRAILLE} learners on braille and audio.`
-          : `You can have at most ${sightedPlaces(premium)} learners. Learners on braille and audio have their own places.`,
+          : `You can have at most ${sightedPlaces(premium, profileCaps())} learners. Learners on braille and audio have their own places.`,
       );
     }
     const consented = data.kind === "kid";
@@ -2372,10 +2435,11 @@ export class Controller {
         const counts = countPlaces(
           await Profile.query().where("userId", user.id!),
           premium,
+          profileCaps(),
         );
         if (counts.sightedFree === 0) {
           throw new ApplicationError(
-            `You can have at most ${sightedPlaces(premium)} learners who are not on braille and audio. Delete one first, or leave braille and audio switched on.`,
+            `You can have at most ${sightedPlaces(premium, profileCaps())} learners who are not on braille and audio. Delete one first, or leave braille and audio switched on.`,
           );
         }
       }

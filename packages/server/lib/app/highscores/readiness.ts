@@ -1,5 +1,6 @@
-import { Env } from "@keylearn/config";
 import { User } from "@keylearn/database";
+import { siteNumber } from "@keylearn/site-config";
+import { leaderboardOverrideUntil } from "../site-config/readers.ts";
 
 /**
  * Whether there is enough of a community for a leaderboard to mean anything.
@@ -19,12 +20,14 @@ import { User } from "@keylearn/database";
  *  - enough distinct learners actually ranked in the current window, since a
  *    large but inactive userbase still produces an empty board.
  */
+// Both read env → site_config → default: the control centre tunes them, and
+// LEADERBOARD_MIN_* in the environment wins while set (spec §6.1).
 export function minAccounts(): number {
-  return Env.getNumber("LEADERBOARD_MIN_ACCOUNTS", 500);
+  return siteNumber("leaderboard.minAccounts");
 }
 
 export function minRanked(): number {
-  return Env.getNumber("LEADERBOARD_MIN_RANKED", 50);
+  return siteNumber("leaderboard.minRanked");
 }
 
 type Snapshot = { ready: boolean; accounts: number; at: number };
@@ -42,6 +45,12 @@ const TTL_MS = 5 * 60 * 1000;
  * the caller already has to hand.
  */
 export async function leaderboardReady(rankedCount: number): Promise<boolean> {
+  // The control centre's override: show the board regardless until the
+  // chosen moment, after which the sweep clears it and the rule returns.
+  const until = leaderboardOverrideUntil();
+  if (until != null && until.getTime() > Date.now()) {
+    return true;
+  }
   if (rankedCount < minRanked()) {
     return false;
   }

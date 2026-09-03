@@ -2,7 +2,11 @@ import { clsx } from "clsx";
 import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./NoticeBanner.module.less";
-import { type NoticeDetails, type NoticeKind } from "./types.ts";
+import {
+  type LearnerResponseState,
+  type NoticeDetails,
+  type NoticeKind,
+} from "./types.ts";
 
 /**
  * The one place a {@link NoticeDetails} becomes pixels — the real site-wide
@@ -191,6 +195,282 @@ export function NoticeWindow({
         </div>
       </div>
     </div>
+  );
+}
+
+/** What the learner sends back from a card. */
+export type LearnerVoiceInput = {
+  readonly choice?: number;
+  readonly stars?: number;
+  readonly text?: string;
+};
+
+/**
+ * The learner-voice cards (spec §8, phase 3): a poll or a feedback card in
+ * the corner of the page, never a scrim, always with an exit button. One
+ * answer per account, changeable until the card closes. The desk's
+ * preview and the real page render this same component.
+ */
+export function LearnerVoiceCard({
+  notice,
+  state,
+  busy = false,
+  error = null,
+  onExit,
+  onSubmit,
+  contained = false,
+}: {
+  readonly notice: NoticeDetails;
+  /** The account's own answer and the running result; null while loading or in a preview. */
+  readonly state: LearnerResponseState | null;
+  readonly busy?: boolean;
+  readonly error?: string | null;
+  readonly onExit?: () => void;
+  readonly onSubmit?: (input: LearnerVoiceInput) => void;
+  /** True inside a preview box that isn't the real page. */
+  readonly contained?: boolean;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const poll = notice.display === "poll";
+  return (
+    <div
+      className={clsx(styles.scrim, contained && styles.scrimContained)}
+      role="presentation"
+    >
+      <div className={styles.window} role="dialog" aria-label={notice.message}>
+        <div className={styles.windowBody}>
+          <div className={styles.windowHead}>
+            <NoticeIcon kind={notice.kind} />
+            <span className={clsx(styles.windowStamp, styles.cardStamp)}>
+              {poll ? (
+                <FormattedMessage id="notice.card.poll" defaultMessage="Poll" />
+              ) : (
+                <FormattedMessage
+                  id="notice.card.feedback"
+                  defaultMessage="Feedback"
+                />
+              )}
+            </span>
+            <button
+              type="button"
+              className={styles.close}
+              aria-label={formatMessage({
+                id: "notice.card.exit",
+                defaultMessage: "Close",
+              })}
+              onClick={onExit}
+            >
+              ✕
+            </button>
+          </div>
+          <p className={styles.windowText}>{notice.message}</p>
+          {poll ? (
+            <PollBody
+              notice={notice}
+              state={state}
+              busy={busy}
+              onSubmit={onSubmit}
+            />
+          ) : (
+            <FeedbackBody
+              notice={notice}
+              state={state}
+              busy={busy}
+              onSubmit={onSubmit}
+            />
+          )}
+          {error != null && <p className={styles.cardError}>{error}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PollBody({
+  notice,
+  state,
+  busy,
+  onSubmit,
+}: {
+  readonly notice: NoticeDetails;
+  readonly state: LearnerResponseState | null;
+  readonly busy: boolean;
+  readonly onSubmit?: (input: LearnerVoiceInput) => void;
+}): ReactNode {
+  const options = notice.options ?? [];
+  const chosen = state?.response?.choice ?? null;
+  const results = chosen != null ? (state?.results ?? null) : null;
+  const total = results?.count ?? 0;
+  return (
+    <>
+      <div className={styles.options} role="radiogroup">
+        {options.map((option, index) => {
+          const votes = results?.choices[index] ?? 0;
+          const pct = total === 0 ? 0 : Math.round((votes / total) * 100);
+          return (
+            <button
+              key={index}
+              type="button"
+              role="radio"
+              aria-checked={chosen === index}
+              className={clsx(
+                styles.option,
+                chosen === index && styles.optionOn,
+              )}
+              disabled={busy}
+              onClick={() => onSubmit?.({ choice: index })}
+            >
+              {results != null && (
+                <span
+                  className={styles.optionBar}
+                  style={{ inlineSize: `${pct}%` }}
+                  aria-hidden={true}
+                />
+              )}
+              <span className={styles.optionLabel}>{option}</span>
+              {results != null && (
+                <span className={styles.optionPct}>{pct}%</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <p className={styles.cardNote}>
+        {results != null ? (
+          <FormattedMessage
+            id="notice.poll.votes"
+            defaultMessage="{count, plural, one {# vote} other {# votes}} so far. You can change yours until the poll closes."
+            values={{ count: total }}
+          />
+        ) : chosen != null ? (
+          <FormattedMessage
+            id="notice.poll.thanks"
+            defaultMessage="Thanks. You can change your answer until the poll closes."
+          />
+        ) : (
+          <FormattedMessage
+            id="notice.poll.hint"
+            defaultMessage="One answer per account."
+          />
+        )}
+      </p>
+    </>
+  );
+}
+
+function FeedbackBody({
+  notice,
+  state,
+  busy,
+  onSubmit,
+}: {
+  readonly notice: NoticeDetails;
+  readonly state: LearnerResponseState | null;
+  readonly busy: boolean;
+  readonly onSubmit?: (input: LearnerVoiceInput) => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const sent = state?.response ?? null;
+  const [stars, setStars] = useState<number>(sent?.stars ?? 0);
+  const [text, setText] = useState<string>(sent?.text ?? "");
+  const [seen, setSeen] = useState(sent?.updatedAt ?? null);
+  if ((sent?.updatedAt ?? null) !== seen) {
+    setSeen(sent?.updatedAt ?? null);
+    setStars(sent?.stars ?? 0);
+    setText(sent?.text ?? "");
+  }
+  const askComment = notice.askComment !== false;
+  const results = sent != null ? (state?.results ?? null) : null;
+  return (
+    <>
+      <div className={styles.stars} role="radiogroup">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            role="radio"
+            aria-checked={stars === n}
+            aria-label={formatMessage(
+              {
+                id: "notice.feedback.star",
+                defaultMessage: "{n, plural, one {# star} other {# stars}}",
+              },
+              { n },
+            )}
+            className={clsx(styles.star, n <= stars && styles.starOn)}
+            disabled={busy}
+            onClick={() => {
+              setStars(n);
+              if (!askComment) {
+                onSubmit?.({ stars: n });
+              }
+            }}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+      {askComment && (
+        <textarea
+          className={styles.comment}
+          rows={2}
+          maxLength={500}
+          placeholder={formatMessage({
+            id: "notice.feedback.placeholder",
+            defaultMessage: "Anything you'd like to add? (optional)",
+          })}
+          value={text}
+          disabled={busy}
+          onChange={(ev) => setText(ev.target.value)}
+        />
+      )}
+      {askComment && (
+        <div className={styles.cardActions}>
+          <button
+            type="button"
+            className={styles.primaryBtn}
+            disabled={busy || stars === 0}
+            onClick={() => onSubmit?.({ stars, text: text.trim() })}
+          >
+            {sent != null ? (
+              <FormattedMessage
+                id="notice.feedback.update"
+                defaultMessage="Update"
+              />
+            ) : (
+              <FormattedMessage
+                id="notice.feedback.send"
+                defaultMessage="Send"
+              />
+            )}
+          </button>
+        </div>
+      )}
+      <p className={styles.cardNote}>
+        {results != null && results.average != null ? (
+          <FormattedMessage
+            id="notice.feedback.average"
+            defaultMessage="Thank you. {average} average from {count, plural, one {# rating} other {# ratings}}."
+            values={{ average: results.average, count: results.count }}
+          />
+        ) : sent != null ? (
+          <FormattedMessage
+            id="notice.feedback.thanks"
+            defaultMessage="Thank you. You can change your rating until the card closes."
+          />
+        ) : askComment ? (
+          <FormattedMessage
+            id="notice.feedback.where"
+            defaultMessage="Comments are read by KeyLearn staff, kept for a year, and go with your account if you export or delete it. Please leave contact details out."
+          />
+        ) : (
+          <FormattedMessage
+            id="notice.feedback.hint"
+            defaultMessage="One rating per account."
+          />
+        )}
+      </p>
+    </>
   );
 }
 

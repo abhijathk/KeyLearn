@@ -206,6 +206,23 @@ export type A11yPrefs = {
   readonly appVoice: "kid" | "tween" | "lady" | "man" | null;
 };
 
+/**
+ * Site-wide defaults from the control centre (a11y.defaultMotion): applied
+ * under the shipped default before any learner's own choice.
+ */
+let siteMotion: A11yPrefs["motion"] | null = null;
+export function setSiteA11yDefaults(motion: A11yPrefs["motion"] | null): void {
+  siteMotion = motion;
+}
+/** Phase 3.4: when set, the site's motion choice replaces every learner's own on read. */
+let forcedMotion: A11yPrefs["motion"] | null = null;
+export function setSiteA11yForced(motion: A11yPrefs["motion"] | null): void {
+  forcedMotion = motion;
+}
+export function siteDefaultMotion(): A11yPrefs["motion"] {
+  return siteMotion ?? defaultA11y.motion;
+}
+
 export const defaultA11y: A11yPrefs = {
   motion: "system",
   calm: false,
@@ -255,6 +272,11 @@ function clampRate(value: unknown): number {
 
 /** One learner's settings, defaulted field by field so a partial read is safe. */
 export function loadA11y(profileId?: string | null): A11yPrefs {
+  const stored = loadA11yStored(profileId);
+  return forcedMotion == null ? stored : { ...stored, motion: forcedMotion };
+}
+
+function loadA11yStored(profileId?: string | null): A11yPrefs {
   try {
     const id = profileId === undefined ? activeProfileId() : profileId;
     const raw = localStorage.getItem(profileStorageKeyFor(id, A11Y_KEY));
@@ -263,7 +285,12 @@ export function loadA11y(profileId?: string | null): A11yPrefs {
     }
     const json = JSON.parse(raw) ?? {};
     return {
-      motion: json.motion === "reduce" ? "reduce" : "system",
+      motion:
+        json.motion === "reduce"
+          ? "reduce"
+          : json.motion === "system"
+            ? "system"
+            : siteDefaultMotion(),
       typeface: json.typeface === "dyslexic" ? "dyslexic" : "default",
       targets: json.targets === "large" ? "large" : "default",
       calm: json.calm === true,

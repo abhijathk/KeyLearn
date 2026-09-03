@@ -1045,6 +1045,7 @@ function RegisterForm({
   readonly email?: string;
 }) {
   const { formatMessage } = useIntl();
+  const passwordMin = usePageData().minPasswordLength ?? 8;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState(initialEmail);
@@ -1061,6 +1062,11 @@ function RegisterForm({
   // Set when an SSO *login* found no matching account and bounced here to
   // register first.
   const ssoNoAccount = ssoParam() === "noaccount";
+  // The control centre's registration mode (phase 1.4): closed shows a
+  // notice instead of the form; invite-only asks for a code.
+  const ssoRefused = ssoParam();
+  const { registration = "open" } = usePageData();
+  const [inviteCode, setInviteCode] = useState("");
 
   // Only flag a mismatch once they've started typing the confirmation.
   const mismatch = confirm !== "" && confirm !== password;
@@ -1095,6 +1101,7 @@ function RegisterForm({
       lastName: lastName.trim(),
       dateOfBirth: dob.dateOfBirth,
       turnstileToken: captcha.token,
+      inviteCode: inviteCode.trim() === "" ? undefined : inviteCode.trim(),
     })
       .then((result) => {
         if ("verify" in result) {
@@ -1198,6 +1205,36 @@ function RegisterForm({
         value={email}
         onChange={setEmail}
       />
+      {registration === "closed" && (
+        <p className={styles.error}>
+          <FormattedMessage
+            id="auth.registration.closed"
+            defaultMessage="KeyLearn is not taking new accounts right now. If you already have one, log in instead."
+          />
+        </p>
+      )}
+      {(ssoRefused === "closed" || ssoRefused === "invite") && (
+        <p className={styles.error}>
+          <FormattedMessage
+            id="auth.registration.ssoRefused"
+            defaultMessage="That sign-in would have created a new account, and registration is not open right now. Existing accounts can always sign in."
+          />
+        </p>
+      )}
+      {registration === "invite" && (
+        <TextField
+          size="full"
+          type="text"
+          autoComplete="off"
+          maxLength={64}
+          placeholder={formatMessage({
+            id: "auth.registration.inviteCode",
+            defaultMessage: "Invite code",
+          })}
+          value={inviteCode}
+          onChange={setInviteCode}
+        />
+      )}
       <DobEntry onResult={setDob} />
       {dob.tooYoung ? (
         <GrownUpGate />
@@ -1205,10 +1242,13 @@ function RegisterForm({
         <>
           <PasswordField
             autoComplete="new-password"
-            placeholder={formatMessage({
-              id: "auth.choosePassword",
-              defaultMessage: "Choose a password (8+ characters)",
-            })}
+            placeholder={formatMessage(
+              {
+                id: "auth.choosePassword",
+                defaultMessage: "Choose a password ({min}+ characters)",
+              },
+              { min: passwordMin },
+            )}
             value={password}
             onChange={setPassword}
           />
@@ -1240,7 +1280,7 @@ function RegisterForm({
                 id: "auth.register.submit",
                 defaultMessage: "Create account",
               })}
-              disabled={busy || mismatch}
+              disabled={busy || mismatch || registration === "closed"}
             />
           </div>
         </>
@@ -1508,6 +1548,7 @@ function MagicForm({ toLogin }: { readonly toLogin: () => void }) {
 
 function ResetForm({ token }: { readonly token: string }) {
   const { formatMessage } = useIntl();
+  const passwordMin = usePageData().minPasswordLength ?? 8;
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1564,10 +1605,13 @@ function ResetForm({ token }: { readonly token: string }) {
     >
       <PasswordField
         autoComplete="new-password"
-        placeholder={formatMessage({
-          id: "auth.newPassword",
-          defaultMessage: "New password (8+ characters)",
-        })}
+        placeholder={formatMessage(
+          {
+            id: "auth.newPassword",
+            defaultMessage: "New password ({min}+ characters)",
+          },
+          { min: passwordMin },
+        )}
         value={password}
         onChange={setPassword}
       />

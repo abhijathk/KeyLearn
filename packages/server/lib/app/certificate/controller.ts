@@ -1,6 +1,6 @@
 import { body, controller, http, pathParam } from "@fastr/controller";
 import { Context } from "@fastr/core";
-import { ForbiddenError } from "@fastr/errors";
+import { ApplicationError, ForbiddenError, NotFoundError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import {
@@ -20,6 +20,14 @@ import { Certificate, CertificateSitting, Profile } from "@keylearn/database";
 import { actorFor } from "../access/actor.ts";
 import { reachProfile } from "../access/resolver.ts";
 import { type AuthState, rateLimit } from "../auth/index.ts";
+import { criteriaSnapshot } from "../site-config/criteria-version.ts";
+import {
+  certificateAttemptsPerDay,
+  certificatesIssue,
+  certificatesNamedAdults,
+  certificatesPublicVerify,
+  kidsCertificates,
+} from "../site-config/readers.ts";
 import { numberingKey } from "./key.ts";
 import { flag, millis } from "./timestamp.ts";
 
@@ -60,7 +68,24 @@ export class Controller {
     // verdict reads.
     rateLimit(ctx, "certificate-sitting", 20, 60_000);
     const profile = await this.owned(ctx, pid);
+    requireCertificatesFor(profile);
     const sitting = readSitting(value);
+    // Control centre, certificates.attemptsPerDay (0 = unlimited).
+    const perDay = certificateAttemptsPerDay();
+    if (perDay > 0) {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const today = await CertificateSitting.query()
+        .where({ profileId: profile.id!, language: sitting.language })
+        .where("createdAt", ">=", since)
+        .resultSize();
+      if (today >= perDay) {
+        throw new ApplicationError(
+          `That's ${perDay} ${perDay === 1 ? "sitting" : "sittings"} today — the limit. Try again tomorrow.`,
+          { status: 429 },
+        );
+      }
+    }
+    const { version } = await criteriaSnapshot();
     await CertificateSitting.query().insert({
       profileId: profile.id!,
       kind: sitting.kind,
@@ -69,6 +94,7 @@ export class Controller {
       accuracy: sitting.accuracy,
       runs: sitting.runs,
       seconds: sitting.seconds,
+      criteriaVersion: version,
     });
     ctx.response.status = 204;
   }
@@ -95,9 +121,19 @@ export class Controller {
     rateLimit(ctx, "certificate-issue", 10, 60_000);
     const user = ctx.state.requireUser();
     const profile = await this.owned(ctx, pid);
-    const { evidence, language, nameVisible } = readClaim(value, profile);
+    requireCertificatesFor(profile);
+    const {
+      evidence,
+      language,
+      nameVisible: askedVisible,
+    } = readClaim(value, profile);
+    // Control centre, certificates.namedAdults: off means every new
+    // certificate is anonymous, whatever was asked.
+    const nameVisible = askedVisible && certificatesNamedAdults();
+    // The criteria in force, versioned: this certificate keeps them.
+    const snapshot = await criteriaSnapshot();
 
-    const eligibility = assess(evidence);
+    const eligibility = assess(evidence, snapshot.criteria);
     if (!eligibility.eligible) {
       ctx.response.status = 409;
       ctx.response.body = {
@@ -131,7 +167,12 @@ export class Controller {
     // retention rule is inert — an absolute speed alone cannot tell somebody
     // typing by touch from somebody typing fast while glancing at the keys,
     // and the second collapses the moment the picture is taken away.
-    const verdict = judge(sittings, evidence, evidence.speed);
+    const verdict = judge(
+      sittings,
+      evidence,
+      evidence.speed,
+      snapshot.criteria,
+    );
     if (!verdict.passed || verdict.level == null) {
       ctx.response.status = 409;
       ctx.response.body = { error: "not-passed", verdict };
@@ -175,6 +216,8 @@ export class Controller {
       accuracy: verdict.accuracy!,
       name,
       nameVisible,
+      criteriaVersion: snapshot.version,
+      criteriaJson: JSON.stringify(snapshot.criteria),
     });
     const saved = await Certificate.query()
       .patchAndFetchById(inserted.id!, { sequence: inserted.id! })
@@ -197,6 +240,12 @@ export class Controller {
     @body.json(null, { maxLength: 256 }) value: unknown,
   ) {
     rateLimit(ctx, "certificate-named", 20, 60_000);
+    if (!certificatesNamedAdults()) {
+      throw new ApplicationError(
+        "Named certificates are switched off right now.",
+        { status: 403 },
+      );
+    }
     const user = ctx.state.requireUser();
     const sequence = sequenceOf(number, this.#key);
     if (sequence == null) {
@@ -258,6 +307,10 @@ export class Controller {
     // of them is still one every few seconds — and far below what walking the
     // register would need.
     rateLimit(ctx, "certificate-verify", 30, 60_000);
+    // Control centre, certificates.publicVerify: off means the check is gone.
+    if (!certificatesPublicVerify()) {
+      throw new NotFoundError();
+    }
     // The check character rejects a mistyped number before any lookup, which
     // also keeps this from being a way to enumerate what exists. Inverting the
     // scramble turns the rest into an indexed read rather than a scan over
@@ -282,6 +335,10 @@ export class Controller {
         found.audience === "kid" || !flag(found.nameVisible)
           ? null
           : found.name,
+      // The criteria it was issued under, which a later change never re-judges.
+      criteriaVersion: found.criteriaVersion ?? 1,
+      criteria:
+        found.criteriaJson == null ? null : JSON.parse(found.criteriaJson),
     };
   }
 
@@ -302,6 +359,24 @@ export class Controller {
   }
 }
 
+/**
+ * Control centre: certificates.issue switches the whole feature off;
+ * kids.certificates switches off the children's test and certificates only.
+ */
+function requireCertificatesFor(profile: Profile): void {
+  if (!certificatesIssue()) {
+    throw new ApplicationError("Certificates are switched off right now.", {
+      status: 403,
+    });
+  }
+  if (profile.kind === "kid" && !kidsCertificates()) {
+    throw new ApplicationError(
+      "Children's certificates are switched off right now.",
+      { status: 403 },
+    );
+  }
+}
+
 function toDetails(row: Certificate, key: NumberingKey) {
   return {
     number: certificateNumber(row.sequence!, key),
@@ -314,6 +389,7 @@ function toDetails(row: Certificate, key: NumberingKey) {
     accuracy: row.accuracy,
     name: row.name,
     nameVisible: flag(row.nameVisible),
+    criteriaVersion: row.criteriaVersion ?? 1,
     // Always ISO. SQLite hands back "2026-08-07 02:00:09", which is not a
     // format `new Date()` is required to parse and which browsers disagree
     // about — so the wire format is pinned here rather than left to whichever

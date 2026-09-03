@@ -1,9 +1,12 @@
 import { envStaffEmails } from "@keylearn/config";
 import { type Knex } from "knex";
 import { AccountDeletionRequest } from "./account-deletion-request.ts";
+import { AdCampaign } from "./ad-campaign.ts";
+import { AdSeen, AdStat } from "./ad-stat.ts";
 import { AgentStatus } from "./agent-status.ts";
 import { Answer, AnswerRule } from "./answer.ts";
 import { DeskUnlock } from "./desk-unlock.ts";
+import { LearnerResponse } from "./learner-response.ts";
 import {
   Certificate,
   CertificateSitting,
@@ -31,6 +34,7 @@ import { ProfileData } from "./profile-data.ts";
 import { SavedReply } from "./saved-reply.ts";
 import { SecurityEvent } from "./security-event.ts";
 import { SecurityReset } from "./security-reset.ts";
+import { SiteConfig, SiteConfigHistory } from "./site-config.ts";
 import { Staff } from "./staff.ts";
 import { StaffAuditEvent } from "./staff-audit-event.ts";
 import { StaffSettings } from "./staff-settings.ts";
@@ -102,6 +106,37 @@ export async function createSchema(knex: Knex): Promise<void> {
   await createTable(AgentStatus);
   await createTable(SupportBlock);
   await createTable(AccountDeletionRequest);
+  // Site configuration (control centre, phase 0.6): no FK dependencies.
+  await createTable(SiteConfig);
+  await createTable(SiteConfigHistory);
+  // Polls and feedback (control centre phase 3.1/3.2): one answer per
+  // account per desk notice. No FK dependencies.
+  await createTable(LearnerResponse);
+  // The sponsor slot (control centre phase 4). Campaigns live in KeyLearn
+  // rather than the desk because delivery, counting and the weekly report
+  // mail are all KeyLearn's work. No FK dependencies.
+  await createTable(AdCampaign);
+  // Additive for a database created before archiving existed.
+  await addColumn("ad_campaign", "archived", (table) => {
+    table.boolean("archived").notNullable().defaultTo(false);
+  });
+  await createTable(AdStat);
+  await createTable(AdSeen);
+  // Control centre phase 1.10: the drift flag needs the default a value was
+  // written against; additive for databases created before it.
+  // Certificate criteria versioning (control centre phase 2.2).
+  await addColumn("certificate", "criteria_version", (table) => {
+    table.integer("criteria_version").unsigned().notNullable().defaultTo(1);
+  });
+  await addColumn("certificate", "criteria_json", (table) => {
+    table.text("criteria_json").nullable();
+  });
+  await addColumn("certificate_sitting", "criteria_version", (table) => {
+    table.integer("criteria_version").unsigned().notNullable().defaultTo(1);
+  });
+  await addColumn("site_config", "default_at_write", (table) => {
+    table.text("default_at_write").nullable();
+  });
 
   // Who may reach the desk, moved out of the STAFF_EMAILS env var.
   //

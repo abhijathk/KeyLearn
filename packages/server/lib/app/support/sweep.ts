@@ -8,16 +8,20 @@ import {
   SupportTicket,
 } from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
+import { siteNumber } from "@keylearn/site-config";
 import { messageDailyDigest } from "../auth/email.ts";
 import { Controller as AuthController } from "../auth/index.ts";
 import { Mailer } from "../mail/index.ts";
+import { emailStaffDigest } from "../site-config/readers.ts";
+import { repeat } from "../site-config/repeat.ts";
 import { QdeskRetrySweep } from "./qdesk-retry.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** How long an unconfirmed holding-queue ticket is kept before it's dropped. */
 export function holdingDays(): number {
-  return Env.getNumber("HOLDING_QUEUE_DAYS", 7);
+  // env → site_config → default (control centre, retention.holdingQueueDays).
+  return siteNumber("retention.holdingQueueDays");
 }
 
 /** How often the sweep looks. Daily is plenty for a week-long window. */
@@ -78,7 +82,7 @@ export class HoldingQueueSweep {
 
 /** The hour (server-local) the daily digest goes out. */
 export function digestHour(): number {
-  return Env.getNumber("DIGEST_HOUR", 8);
+  return siteNumber("ops.digestHour");
 }
 
 /**
@@ -129,6 +133,9 @@ export class DigestSweep {
   async runOnce(now: number = Date.now()): Promise<boolean> {
     const nowDate = new Date(now);
     const today = nowDate.toISOString().slice(0, 10);
+    if (!emailStaffDigest()) {
+      return false;
+    }
     if (nowDate.getHours() < digestHour() || this.#lastSentDay === today) {
       return false;
     }
@@ -244,8 +251,8 @@ export class IdleTicketCloseSweep {
   /** One pass. Returns how many idle tickets were closed (0 while the setting is off). */
   async runOnce(now: number = Date.now()): Promise<number> {
     try {
-      const siteSettings = await StaffSettings.siteDefault();
-      const idleDays = siteSettings.autoCloseIdleDays ?? 0;
+      // Control centre, ops.idleCloseDays (moved out of StaffSettings).
+      const idleDays = siteNumber("ops.idleCloseDays");
       if (idleDays <= 0) {
         return 0;
       }
@@ -292,7 +299,7 @@ export class IdleTicketCloseSweep {
 
 /** How often the sweep checks for a request whose 48-hour window has closed. */
 export function accountDeletionSweepIntervalMs(): number {
-  return Env.getNumber("ACCOUNT_DELETION_SWEEP_MINUTES", 60) * 60 * 1000;
+  return siteNumber("ops.deletionSweepMin") * 60 * 1000;
 }
 
 /**
@@ -309,7 +316,7 @@ export function accountDeletionSweepIntervalMs(): number {
  */
 @injectable({ singleton: true })
 export class AccountDeletionSweep {
-  #timer: NodeJS.Timeout | null = null;
+  #timer: (() => void) | null = null;
 
   constructor(readonly authController: AuthController) {}
 
@@ -317,19 +324,19 @@ export class AccountDeletionSweep {
     if (this.#timer != null) {
       return;
     }
-    const interval = accountDeletionSweepIntervalMs();
-    this.#timer = setInterval(() => {
-      void this.runOnce();
-    }, interval);
-    this.#timer.unref?.();
+    // Re-read each tick: the period is a control-centre setting.
+    this.#timer = repeat(
+      accountDeletionSweepIntervalMs,
+      () => void this.runOnce(),
+    );
     Logger.info("Account deletion sweep scheduled", {
-      everyMinutes: interval / (60 * 1000),
+      everyMinutes: accountDeletionSweepIntervalMs() / (60 * 1000),
     });
   }
 
   stop(): void {
     if (this.#timer != null) {
-      clearInterval(this.#timer);
+      this.#timer();
       this.#timer = null;
     }
   }
@@ -375,7 +382,9 @@ export class AccountDeletionSweep {
  * household's sign-in trail.
  */
 export function staffAuditRetentionDays(): number {
-  return Env.getNumber("STAFF_AUDIT_RETENTION_DAYS", 0);
+  // env → site_config → default, in that order; see the store in
+  // @keylearn/site-config for why env wins.
+  return siteNumber("retention.staffAuditDays");
 }
 
 /**

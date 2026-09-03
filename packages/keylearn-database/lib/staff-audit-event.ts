@@ -49,7 +49,12 @@ export type StaffAuditAction =
   | "agent-sentiment"
   | "agent-flag"
   | "agent-close-spam"
-  | "agent-quota-paused";
+  | "agent-quota-paused"
+  | "site-config-changed"
+  | "site-config-reverted"
+  | "site-config-refused"
+  // Phase 3.2: a staff member dropped a feedback comment's text.
+  | "feedback-hidden";
 
 export class StaffAuditEvent extends TimestampMixin(Model) {
   static override readonly tableName = "staff_audit_event";

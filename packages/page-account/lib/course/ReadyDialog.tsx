@@ -5,6 +5,7 @@ import {
   RETENTION,
 } from "@keylearn/certificate";
 import { Medal, type MedalKind } from "@keylearn/certificate-ui";
+import { usePageData } from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import { type ReactNode, useState } from "react";
 import { createPortal } from "react-dom";
@@ -35,6 +36,9 @@ export function ReadyDialog({
   readonly onStart: () => void;
 }): ReactNode {
   const [guide, setGuide] = useState(false);
+  // Read once, unconditionally, and before the early return below: a hook
+  // called from inside a ternary runs on some renders and not others.
+  const siteRetention = useSiteRetention();
   const sheet = certificateTemplate(evidence.age, evidence.audience);
   const plan = planFor(evidence.audience, evidence.age);
   const braille = evidence.kind === "braille";
@@ -210,8 +214,8 @@ export function ReadyDialog({
                     values={{
                       pc: Math.round(
                         (evidence.audience === "kid"
-                          ? RETENTION.kid
-                          : RETENTION.adult) * 100,
+                          ? siteRetention.kid
+                          : siteRetention.adult) * 100,
                       ),
                     }}
                   />
@@ -269,4 +273,12 @@ export function ReadyDialog({
     </div>,
     document.body,
   );
+}
+
+/** The retention criterion in force (control centre), falling back to the shipped one. */
+function useSiteRetention(): { readonly adult: number; readonly kid: number } {
+  const criteria = usePageData().certificates?.criteria as
+    | { retention?: { adult: number; kid: number } }
+    | undefined;
+  return criteria?.retention ?? RETENTION;
 }

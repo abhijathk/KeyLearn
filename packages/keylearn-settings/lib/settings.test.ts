@@ -56,3 +56,17 @@ test("to json sorts keys", () => {
     ["prop.x", "prop.y", "prop.z"],
   );
 });
+
+test("forced values win over the learner's own, without touching it", () => {
+  const f = stringProp("prop.f", "f");
+  const own = new Settings().set(f, "mine");
+  equal(own.get(f), "mine");
+  Settings.setForced(new Settings().set(f, "site"), ["prop.f"]);
+  equal(own.get(f), "site", "the site decides while forced");
+  equal(Settings.isForced(f), true);
+  equal(Settings.isHidden(f), true);
+  equal(own.toJSON()["prop.f"], "mine", "the learner's own value is kept");
+  Settings.setForced(new Settings());
+  equal(own.get(f), "mine", "lifting the override gives it back");
+  equal(Settings.isForced(f), false);
+});
