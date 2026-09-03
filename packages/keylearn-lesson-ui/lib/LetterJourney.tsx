@@ -5,12 +5,16 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import * as styles from "./LetterJourney.module.less";
 import { useKeyStyles } from "./styles.ts";
 
-const CAP_W = 30;
-const CAP_H = 26;
-const STEP = 42; // cap width + gap between stops
-const PAD = 24; // side padding (>= CAP_W / 2)
-const PAD_TOP = 28; // room for the focused key's note above the first lane
-const ROW_H = 52;
+// Sized to the keycaps in the header wordmark (owner, 4 Sep 2026): square,
+// small, and read as a row of chips rather than a row of keys. The strip sits
+// under the keyboard and the resting hands, where anything key-sized competes
+// with the board above it for the same glance.
+const CAP_W = 22;
+const CAP_H = 22;
+const STEP = 30; // cap width + gap between stops
+const PAD = 14; // side padding (>= CAP_W / 2)
+const PAD_TOP = 26; // room for the focused key's note above the first lane
+const ROW_H = 42;
 
 /**
  * The Letter Journey: every key laid out in unlock order as a keycap sitting on

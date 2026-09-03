@@ -18,13 +18,11 @@ export function WhyThisAd({
   advertiser,
   destination,
   onClose,
-  onSeePremium,
 }: {
   readonly advertiser: string;
   /** The host the line points at, for the "where it goes" row. */
   readonly destination?: string | null;
   readonly onClose: () => void;
-  readonly onSeePremium?: () => void;
 }): ReactNode {
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -83,11 +81,11 @@ export function WhyThisAd({
           </div>
           <div>
             <dt>Shown to</dt>
-            <dd>Everyone reading an adult page this week</dd>
+            <dd>All adult readers for the duration of the booking</dd>
           </div>
           <div>
-            <dt>Chosen because</dt>
-            <dd>They booked this week. Nothing else.</dd>
+            <dt>Selected by</dt>
+            <dd>Their booking for this period, and no other criterion.</dd>
           </div>
           {destination != null && destination !== "" && (
             <div>
@@ -136,17 +134,21 @@ export function WhyThisAd({
             a page.
           </li>
           <li>
-            <b>Go premium.</b> A subscription removes advertising completely,
-            along with more learner places and printable certificates.
+            <b>Go premium.</b> A subscription will remove advertising
+            completely, along with more learner places and printable
+            certificates. It is not on sale yet.
           </li>
         </ul>
 
         <div className={styles.actions}>
-          {onSeePremium != null && (
-            <button type="button" className={styles.btn} onClick={onSeePremium}>
-              See premium
-            </button>
-          )}
+          {/* Premium is not built yet, so the way out of advertising is
+              announced rather than offered: a control that looks live and
+              goes nowhere is worse than one that says it is not ready.
+              When subscriptions ship, this becomes a link to /account. */}
+          <button type="button" className={styles.btn} disabled={true}>
+            See premium
+            <span className={styles.soon}>Coming soon</span>
+          </button>
           <button
             type="button"
             className={`${styles.btn} ${styles.btnQuiet}`}

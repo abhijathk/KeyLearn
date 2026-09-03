@@ -50,12 +50,22 @@
   white-space: nowrap;
 }
 
+// The type ladder on the line: the advertiser's name is the heaviest thing
+// on it, the headline steps down in weight, and the supporting line steps
+// down again in both size and weight. Three levels is as far as a single
+// line of 0.85rem type can go and still read as one sentence.
 .who {
   font-weight: 700;
 }
 
+.headline {
+  font-weight: 400;
+}
+
 .support {
-  opacity: 0.8;
+  opacity: 0.72;
+  font-size: 0.78rem;
+  font-weight: 400;
 }
 
 .code {
@@ -113,6 +123,14 @@
   text-decoration: underline;
 }
 
+// Held in place from the first paint, revealed after five seconds: hiding
+// it with `display` would shift the whole line when it arrived, and
+// `visibility` also keeps it off the tab order until then.
+.closeWaiting {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .close {
   inline-size: 1.2rem;
   block-size: 1.2rem;
@@ -139,17 +157,55 @@
   display: contents;
 }
 
-.fading {
-  opacity: 0;
-}
-
 .screenWrap {
   display: flex;
   flex: 1 1 auto;
   gap: 0.7rem;
   align-items: center;
   min-inline-size: 0;
-  transition: opacity 220ms ease;
+  transition:
+    opacity 260ms ease,
+    transform 260ms ease;
+}
+
+// Four ways one screen gives way to the next, chosen at random per rotation.
+// Each is a fade carrying at most six pixels of travel: the bar sits directly
+// above the practice text, and real movement up there takes the eye off the
+// work. `.out` is where the old screen goes, `.in` is where the new one
+// starts from — mirrored, so the pair reads as one gesture.
+.fade.out,
+.fade.in {
+  opacity: 0;
+}
+
+.rise.out {
+  opacity: 0;
+  transform: translateY(-0.35rem);
+}
+
+.rise.in {
+  opacity: 0;
+  transform: translateY(0.35rem);
+}
+
+.settle.out {
+  opacity: 0;
+  transform: translateY(0.35rem);
+}
+
+.settle.in {
+  opacity: 0;
+  transform: translateY(-0.35rem);
+}
+
+.drift.out {
+  opacity: 0;
+  transform: translateX(-0.4rem);
+}
+
+.drift.in {
+  opacity: 0;
+  transform: translateX(0.4rem);
 }
 
 // A step marker per screen, so a reader can see the line will change and
@@ -184,8 +240,12 @@
   }
 }
 
+// Rotation is already switched off for a reader who asked for less motion
+// (they are shown the first screen and left alone), so this is the belt to
+// that braces: nothing here moves even if a screen is swapped some other way.
 @media (prefers-reduced-motion: reduce) {
   .screenWrap {
     transition: none;
+    transform: none;
   }
 }

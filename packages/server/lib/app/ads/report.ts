@@ -1,6 +1,7 @@
 import { Env } from "@keylearn/config";
 import { type AdCampaignDetails, type AdStatRow } from "@keylearn/database";
 import { type Mailer } from "../mail/index.ts";
+import { payerOf } from "./pages.ts";
 
 /**
  * The weekly report an advertiser is sent, and the confirmation they get
@@ -114,7 +115,7 @@ export function reportText(
   const totals = totalsOf(stats);
   const lines = [
     `KeyLearn weekly report`,
-    `${campaign.advertiser}`,
+    `${payerOf(campaign)}`,
     `${fromDay} to ${toDay}`,
     ``,
     `Views    ${count(totals.views)}`,
@@ -193,7 +194,7 @@ export function reportHtml(
   <tr><td>
     <span style="font-family:${FONT};font-size:20px;font-weight:800;letter-spacing:-.02em;color:${INK}">Key<span style="color:${ACCENT}">Learn</span></span>
     <div style="font-family:${FONT};font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:${MUTED};padding-top:18px">Weekly report</div>
-    <h1 style="font-family:${FONT};font-size:22px;font-weight:700;color:${INK};margin:4px 0 2px">${esc(campaign.advertiser)}</h1>
+    <h1 style="font-family:${FONT};font-size:22px;font-weight:700;color:${INK};margin:4px 0 2px">${esc(payerOf(campaign))}</h1>
     <div style="font-family:${FONT};font-size:13px;color:${MUTED}">${esc(inZone(`${fromDay}T00:00:00Z`, campaign.report.zone))} to ${esc(inZone(`${toDay}T00:00:00Z`, campaign.report.zone))}</div>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:22px">
@@ -227,7 +228,7 @@ export function reportMail(
   fromDay: string,
   toDay: string,
 ): Omit<Mailer.Message, "to"> {
-  const subject = `${campaign.advertiser} on KeyLearn: ${fromDay} to ${toDay}`;
+  const subject = `${payerOf(campaign)} on KeyLearn: ${fromDay} to ${toDay}`;
   const text = reportText(campaign, stats, fromDay, toDay);
   if (campaign.report.format === "text") {
     return { subject, text };
@@ -245,7 +246,7 @@ export function bookingMail(
   const text = [
     `Your KeyLearn campaign is booked.`,
     ``,
-    `Advertiser   ${campaign.advertiser}`,
+    `Advertiser   ${payerOf(campaign)}`,
     `Running      ${from} to ${to}`,
     `Screens      ${campaign.screens.length}`,
     `Reports      every ${DAY_NAMES[campaign.report.day] ?? "Monday"} at ${String(campaign.report.hour).padStart(2, "0")}:00 ${campaign.report.zone}`,
@@ -266,7 +267,7 @@ export function bookingMail(
   <h1 style="font-family:${FONT};font-size:22px;font-weight:700;color:${INK};margin:20px 0 6px">Your campaign is booked</h1>
   <p style="font-family:${FONT};font-size:14px;color:${MUTED};margin:0 0 20px">Here is what will run, and a private link that shows it exactly as readers see it.</p>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-    <tr><td style="font-family:${FONT};font-size:12px;color:${MUTED};padding:9px 0;border-bottom:1px solid ${BORDER};width:150px">Advertiser</td><td style="font-family:${FONT};font-size:14px;color:${INK};padding:9px 0;border-bottom:1px solid ${BORDER}">${esc(campaign.advertiser)}</td></tr>
+    <tr><td style="font-family:${FONT};font-size:12px;color:${MUTED};padding:9px 0;border-bottom:1px solid ${BORDER};width:150px">Advertiser</td><td style="font-family:${FONT};font-size:14px;color:${INK};padding:9px 0;border-bottom:1px solid ${BORDER}">${esc(payerOf(campaign))}</td></tr>
     <tr><td style="font-family:${FONT};font-size:12px;color:${MUTED};padding:9px 0;border-bottom:1px solid ${BORDER}">Running</td><td style="font-family:${FONT};font-size:14px;color:${INK};padding:9px 0;border-bottom:1px solid ${BORDER}">${esc(from)} to ${esc(to)}</td></tr>
     <tr><td style="font-family:${FONT};font-size:12px;color:${MUTED};padding:9px 0;border-bottom:1px solid ${BORDER}">Screens</td><td style="font-family:${FONT};font-size:14px;color:${INK};padding:9px 0;border-bottom:1px solid ${BORDER}">${campaign.screens.length}, rotating</td></tr>
     <tr><td style="font-family:${FONT};font-size:12px;color:${MUTED};padding:9px 0;border-bottom:1px solid ${BORDER}">Reports</td><td style="font-family:${FONT};font-size:14px;color:${INK};padding:9px 0;border-bottom:1px solid ${BORDER}">every ${esc(DAY_NAMES[campaign.report.day] ?? "Monday")} at ${String(campaign.report.hour).padStart(2, "0")}:00 ${esc(campaign.report.zone)}</td></tr>

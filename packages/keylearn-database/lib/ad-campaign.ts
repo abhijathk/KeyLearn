@@ -22,10 +22,16 @@ export class AdCampaign extends TimestampMixin(Model) {
   static override readonly columnNameMappers = snakeCaseMappers();
   static override jsonSchema = {
     type: "object",
-    required: ["advertiser", "startsAt", "endsAt"],
+    required: ["startsAt", "endsAt"],
     properties: {
       id: { type: "integer" },
-      advertiser: { type: "string", minLength: 1, maxLength: 32 },
+      /**
+       * The trading name shown on the line. Optional: an advertiser whose
+       * logo is their recognition may run without it, and the reader is
+       * told who paid either way — see `toPublic` and the why-this-ad page,
+       * which fall back to the destination's host.
+       */
+      advertiser: { type: "string", maxLength: 32 },
       /** draft · scheduled · paused · finished. "Running" is a date range, not a state. */
       status: {
         type: "string",
@@ -63,7 +69,7 @@ export class AdCampaign extends TimestampMixin(Model) {
 
   static createTable(knex: Knex, table: Knex.CreateTableBuilder) {
     table.increments("id").primary();
-    table.string("advertiser", 32).notNullable();
+    table.string("advertiser", 32).notNullable().defaultTo("");
     table.string("status", 16).notNullable().defaultTo("draft");
     table.text("screens").notNullable();
     table.text("palette").notNullable();
@@ -213,7 +219,7 @@ export class AdCampaign extends TimestampMixin(Model) {
   toDetails(): AdCampaignDetails {
     return {
       id: this.id!,
-      advertiser: this.advertiser!,
+      advertiser: this.advertiser ?? "",
       status: this.status ?? "draft",
       screens: this.screenList,
       palette: this.paletteValue,
@@ -249,7 +255,7 @@ export class AdCampaign extends TimestampMixin(Model) {
   toPublic(): AdPublic {
     return {
       id: this.id!,
-      advertiser: this.advertiser!,
+      advertiser: this.advertiser ?? "",
       screens: this.screenList,
       palette: this.paletteValue,
       hasLogo: this.logo != null,

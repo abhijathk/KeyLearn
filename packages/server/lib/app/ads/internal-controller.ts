@@ -56,7 +56,7 @@ const TPalette = z.object({
 });
 
 const TCampaign = z.object({
-  advertiser: z.string().trim().min(1).max(AD_LIMITS.advertiser),
+  advertiser: z.string().trim().max(AD_LIMITS.advertiser),
   screens: z.array(TScreen).min(1).max(AD_LIMITS.screensPerCampaign),
   palette: TPalette,
   /** A data URI; sanitised and re-encoded before it is stored. */
@@ -119,7 +119,9 @@ function checkZone(zone: string): void {
  */
 function checkCopy(input: TCampaign): void {
   const problems = [
-    checkAdText("advertiser", input.advertiser),
+    input.advertiser === ""
+      ? null
+      : checkAdText("advertiser", input.advertiser),
     ...input.screens.flatMap((screen, index) =>
       [
         checkAdText(`screens.${index}.headline`, screen.headline),
@@ -134,6 +136,15 @@ function checkCopy(input: TCampaign): void {
   ].filter((p) => p != null);
   if (problems.length > 0) {
     throw new AdRefused(problems[0]!.field, problems[0]!.reason);
+  }
+  // A line has to say whose it is. The name is optional because a logo can
+  // be an advertiser's recognition, but one of the two has to be there:
+  // an unattributed paid line is the thing the "Ad" tag exists to prevent.
+  if (input.advertiser === "" && (input.logo == null || input.logo === "")) {
+    throw new AdRefused(
+      "advertiser",
+      "Give a name or a logo. A line with neither says nothing about who paid for it.",
+    );
   }
   for (const [index, screen] of input.screens.entries()) {
     if (!screen.href.startsWith("https://")) {

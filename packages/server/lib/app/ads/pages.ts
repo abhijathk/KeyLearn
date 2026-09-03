@@ -15,6 +15,28 @@ import {
  * toggle, which is also what makes them safe to hand to somebody outside.
  */
 
+/**
+ * Who the reader is told paid for the line.
+ *
+ * The trading name when there is one; otherwise the host the click lands
+ * on, which is a real answer rather than a blank. "Paid for by" is a
+ * promise on the why-this-ad page and it cannot be left empty just because
+ * an advertiser chose to run on their logo alone.
+ */
+export function payerOf(campaign: {
+  readonly advertiser: string;
+  readonly screens: readonly { readonly href: string }[];
+}): string {
+  if (campaign.advertiser.trim() !== "") {
+    return campaign.advertiser;
+  }
+  try {
+    return new URL(campaign.screens[0]?.href ?? "").host;
+  } catch {
+    return "an advertiser";
+  }
+}
+
 export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -94,7 +116,7 @@ export function renderBar(
   return `<div class="adBar" data-screen="${index}" style="background:${barBackground(palette, dark)};color:${ink}">
   <span class="adTag">Ad</span>
   ${logo}
-  <span class="adText"><b>${escapeHtml(campaign.advertiser)}</b>${support === "" ? "" : " ·"} ${escapeHtml(screen.headline)}${support}</span>
+  <span class="adText">${campaign.advertiser.trim() === "" ? "" : `<b>${escapeHtml(campaign.advertiser)}</b> `}${escapeHtml(screen.headline)}${support}</span>
   ${meter}
   ${code}
   ${cta}
@@ -222,7 +244,7 @@ export function whyThisAdPage(live: readonly AdCampaignDetails[]): string {
       : live
           .map(
             (campaign) => `<div class="quoted">
-  <div class="quotedLabel"><span>Running now</span><span>${escapeHtml(campaign.advertiser)}</span></div>
+  <div class="quotedLabel"><span>Running now</span><span>${escapeHtml(payerOf(campaign))}</span></div>
   ${renderBar(campaign, campaign.screens[0] ?? { template: "sponsor", headline: "", href: "" }, 0, false)}
 </div>`,
           )
@@ -231,9 +253,9 @@ export function whyThisAdPage(live: readonly AdCampaignDetails[]): string {
     live.length === 0
       ? ""
       : `<dl class="facts">
-  <div><dt>Paid for by</dt><dd>${live.map((c) => escapeHtml(c.advertiser)).join(", ")}</dd></div>
-  <div><dt>Shown to</dt><dd>Everyone reading an adult page this week</dd></div>
-  <div><dt>Chosen because</dt><dd>They booked this week. Nothing else.</dd></div>
+  <div><dt>Paid for by</dt><dd>${live.map((c) => escapeHtml(payerOf(c))).join(", ")}</dd></div>
+  <div><dt>Shown to</dt><dd>All adult readers for the duration of the booking</dd></div>
+  <div><dt>Selected by</dt><dd>Their booking for this period, and no other criterion.</dd></div>
 </dl>`;
   return shell(
     "Why this ad",
@@ -291,13 +313,13 @@ export function previewPage(campaign: AdCampaignDetails): string {
   const money = (campaign.weeklyPence / 100).toFixed(2);
   const dates = `${new Date(campaign.startsAt).toUTCString().slice(5, 16)} to ${new Date(campaign.finishesAt).toUTCString().slice(5, 16)}`;
   return shell(
-    `${campaign.advertiser} preview`,
+    `${payerOf(campaign)} preview`,
     `<div class="page">
   <div class="top">
     <span class="word" aria-hidden="true"><i>K</i><i>E</i><i>Y</i><b>learn</b></span>
     <span style="margin-inline-start:auto;font-size:.78rem;color:var(--ink-3)">Advertiser preview</span>
   </div>
-  <h1>${escapeHtml(campaign.advertiser)}</h1>
+  <h1>${escapeHtml(payerOf(campaign))}</h1>
   <p class="lede">This is your campaign exactly as readers see it, in both themes. Nothing here is live traffic, and the link is private to you.</p>
 
   <h2>Light</h2>

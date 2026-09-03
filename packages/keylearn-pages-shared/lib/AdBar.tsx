@@ -54,6 +54,24 @@ export type AdView = {
   readonly dismissible: boolean;
 };
 
+/** How long the line is on screen before its dismiss control appears. */
+const CLOSE_AFTER_MS = 5000;
+
+/**
+ * How one screen gives way to the next.
+ *
+ * Four of them, picked at random and never the same twice running, so a bar
+ * that rotates all day does not develop a tic. Every one is a fade with at
+ * most six pixels of travel: this sits directly above the practice text, and
+ * anything that slides a real distance up there pulls the eye off the work.
+ * The point is that the line changed, not that it performed.
+ */
+const TRANSITIONS = ["fade", "rise", "settle", "drift"] as const;
+type Transition = (typeof TRANSITIONS)[number];
+
+/** Long enough to read as deliberate, short enough not to be a wait. */
+const SWAP_MS = 260;
+
 /** A colour is only ever a hex literal; anything else falls back to ours. */
 function colour(value: string | undefined, fallback: string): string {
   return value != null && /^#[0-9a-f]{3,8}$/i.test(value) ? value : fallback;
@@ -73,6 +91,20 @@ function prefersReducedMotion(): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Who the reader is told paid for the line.
+ *
+ * The name when there is one; otherwise the host the click lands on. An
+ * advertiser may run on their logo alone, but "paid for by" is a promise
+ * and it never gets to be blank.
+ */
+function payerOf(ad: AdView, href: string): string {
+  if (ad.advertiser.trim() !== "") {
+    return ad.advertiser;
+  }
+  return hostOf(href) ?? "an advertiser";
 }
 
 /** The host a click lands on, so the window can say where it goes. */
@@ -119,12 +151,35 @@ export function AdBar({
     ad.screens.map((screen, index) => ({ ad, screen, index })),
   );
   const [at, setAt] = useState(0);
-  const [fading, setFading] = useState(false);
+  // "out" while the old screen leaves, "in" for the single frame the new one
+  // is placed before it settles — that frame is what gives it something to
+  // animate from.
+  const [phase, setPhase] = useState<"idle" | "out" | "in">("idle");
+  const [motion, setMotion] = useState<Transition>("fade");
   const [held, setHeld] = useState(false);
   const [dark, setDark] = useState(prefersDark);
   const [whyOpen, setWhyOpen] = useState(false);
+  /**
+   * The cross appears five seconds in (owner, 4 Sep 2026).
+   *
+   * A dismiss control under the pointer the instant the page paints gets
+   * clicked reflexively, before the line has been read — which is a worse
+   * deal for the advertiser than no cross at all, and no better for the
+   * reader, who dismissed something they never saw. Five seconds is about
+   * one read of a headline at the dwell the bar rotates on.
+   *
+   * Its space is held from the start, so nothing on the line moves when it
+   * arrives, and `visibility` rather than `display` keeps it out of the tab
+   * order until it is really there.
+   */
+  const [canClose, setCanClose] = useState(false);
   const reduced = useRef(prefersReducedMotion());
   const seen = useRef(new Set<string>());
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setCanClose(true), CLOSE_AFTER_MS);
+    return () => window.clearTimeout(id);
+  }, []);
 
   useEffect(() => {
     let media: MediaQueryList;
@@ -146,15 +201,51 @@ export function AdBar({
       return;
     }
     const dwell = Math.max(4, dwellSeconds) * 1000;
+    let swap = 0;
     const id = window.setTimeout(() => {
-      setFading(true);
-      window.setTimeout(() => {
+      setMotion((last) => {
+        const others = TRANSITIONS.filter((t) => t !== last);
+        return others[Math.floor(Math.random() * others.length)]!;
+      });
+      setPhase("out");
+      swap = window.setTimeout(() => {
         setAt((n) => (n + 1) % slides.length);
-        setFading(false);
-      }, 220);
+        setPhase("in");
+      }, SWAP_MS);
     }, dwell);
-    return () => window.clearTimeout(id);
+    return () => {
+      window.clearTimeout(id);
+      window.clearTimeout(swap);
+    };
   }, [at, held, slides.length, dwellSeconds]);
+
+  /**
+   * Release the incoming screen from its entry position, one frame later.
+   *
+   * This owns the reset rather than the rotation effect, and that is the
+   * whole point: changing `at` re-runs the rotation effect, so a cleanup
+   * there cancelled the very frame that was going to make the new screen
+   * visible again — which left the line sitting at opacity zero, blank
+   * beside its own "Ad" tag until the next rotation. Keyed on the phase, it
+   * cannot be cancelled by the thing that set it.
+   *
+   * The timeout behind it is a guarantee, not a fallback: whatever happens
+   * to the frames, the line becomes visible again. An advertisement nobody
+   * can see is worse than one that does not animate.
+   */
+  useEffect(() => {
+    if (phase !== "in") {
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setPhase("idle"));
+    });
+    const guarantee = window.setTimeout(() => setPhase("idle"), SWAP_MS * 2);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(guarantee);
+    };
+  }, [phase]);
 
   // A view is counted once per campaign screen per page, and the server
   // counts it once per reader per day on top of that.
@@ -204,9 +295,24 @@ export function AdBar({
           height={22}
         />
       )}
-      <div className={clsx(styles.screenWrap, fading && styles.fading)}>
+      <div
+        className={clsx(
+          styles.screenWrap,
+          phase !== "idle" && styles[motion],
+          phase === "out" && styles.out,
+          phase === "in" && styles.in,
+        )}
+      >
+        {/* One ladder, heaviest first: who is paying, then what they are
+            saying, then the detail. The advertiser's name carries the weight
+            because the reader's first question is whose line this is. */}
         <span className={styles.text}>
-          <span className={styles.who}>{ad.advertiser}</span> {screen.headline}
+          {ad.advertiser.trim() !== "" && (
+            <>
+              <span className={styles.who}>{ad.advertiser}</span>{" "}
+            </>
+          )}
+          <span className={styles.headline}>{screen.headline}</span>
           {screen.support != null && screen.support !== "" && (
             <span className={styles.support}> {screen.support}</span>
           )}
@@ -252,19 +358,18 @@ export function AdBar({
       </button>
       {whyOpen && (
         <WhyThisAd
-          advertiser={ad.advertiser}
+          advertiser={payerOf(ad, screen.href)}
           destination={hostOf(screen.href)}
           onClose={() => setWhyOpen(false)}
-          onSeePremium={() => {
-            window.location.href = "/account";
-          }}
         />
       )}
       {ad.dismissible && onDismiss != null && (
         <button
           type="button"
-          className={styles.close}
+          className={clsx(styles.close, !canClose && styles.closeWaiting)}
           onClick={onDismiss}
+          aria-hidden={!canClose}
+          tabIndex={canClose ? undefined : -1}
           aria-label="Hide this advertisement for now"
         >
           &times;

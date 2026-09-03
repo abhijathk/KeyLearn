@@ -179,6 +179,26 @@
   background: none;
 }
 
+.btn[disabled] {
+  border-color: color-mix(in oklab, var(--text-color) 14%, transparent);
+  color: var(--text-color-f1);
+  background: none;
+  cursor: default;
+}
+
+// The badge that says why the control above is inert.
+.soon {
+  margin-inline-start: 0.45rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.35rem;
+  color: var(--text-color-f1);
+  background-color: color-mix(in oklab, var(--text-color) 10%, transparent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
