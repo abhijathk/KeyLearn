@@ -1,9 +1,19 @@
 import { keyboardProps } from "@keylearn/keyboard";
 import { lessonProps } from "@keylearn/lesson";
+import { accountProps } from "@keylearn/page-account";
+import { typingTestProps } from "@keylearn/page-typing-test/lib/settings.ts";
+import { defaultA11y } from "@keylearn/pages-shared";
 import { uiProps } from "@keylearn/result";
 import { type AnyProp } from "@keylearn/settings";
 import { textDisplayProps, textInputProps } from "@keylearn/textinput";
 import { soundProps } from "@keylearn/textinput-sounds";
+import {
+  COLORS,
+  DEFAULT_ACCENT,
+  findAccent,
+  FONTS,
+  TEXT_SIZES,
+} from "@keylearn/themes";
 
 /**
  * The read-only reference of every small per-learner setting (spec §5, §6.3).
@@ -129,20 +139,138 @@ const LABELS: Readonly<Record<string, string>> = {
   "ui.allowSkip": "May skip a lesson",
   "ui.cursorEffect": "Cursor effect",
   "ui.cursorEffectIntensity": "Cursor effect strength",
+  // Typing test
+  "typingTest.textSource.type": "Test: where the words come from",
+  "typingTest.textSource.language": "Test: language",
+  "typingTest.wordList.wordListSize": "Test: words drawn from",
+  "typingTest.book": "Test: which book",
+  "typingTest.book.paragraphIndex": "Test: starting paragraph",
+  "typingTest.duration.type": "Test: measured by",
+  "typingTest.duration.value": "Test: length",
+  "typingTest.testStyle": "Test: style",
+  // Account and email
+  "account.timeZone": "Time zone",
+  "account.weekStart": "Week starts on",
+  "account.emailReminders": "Practice reminders by email",
+  "account.reminderFrequency": "How often a reminder may be sent",
+  "account.emailProductNews": "Product news by email",
+  "account.newsLevel": "How much news counts as news",
+  "account.showHeaderIdentity": "Show who is signed in, in the header",
+  "account.analytics": "Anonymous analytics",
 };
 
-/** The groups, in the order the section shows them. */
+/**
+ * The groups, named and ordered as the control-centre mock names them.
+ *
+ * A learner's own settings screen groups these the same way, so an admin
+ * looking for "what does the caret do by default" looks in the same place
+ * they would if they were the learner.
+ */
 const GROUPS: readonly {
   readonly group: string;
   readonly props: PropTree;
 }[] = [
+  { group: "Appearance", props: {} as PropTree },
   { group: "Lesson", props: lessonProps as PropTree },
-  { group: "Keyboard", props: keyboardProps as PropTree },
-  { group: "Text on screen", props: textDisplayProps as PropTree },
-  { group: "Typing", props: textInputProps as PropTree },
-  { group: "Sound", props: soundProps as PropTree },
-  { group: "Screen", props: uiProps as PropTree },
+  {
+    group: "Keyboard and typing",
+    props: {
+      ...keyboardProps,
+      ...textDisplayProps,
+      ...textInputProps,
+      ...soundProps,
+      ...uiProps,
+    } as PropTree,
+  },
+  { group: "Typing test", props: typingTestProps as PropTree },
+  { group: "Accessibility and voice", props: {} as PropTree },
+  { group: "Account and email", props: accountProps as PropTree },
 ];
+
+/**
+ * The settings that are not `AnyProp` objects.
+ *
+ * Appearance is stored in a cookie of its own (`ThemePrefs`) and the
+ * accessibility preferences in a per-learner blob (`defaultA11y`), so
+ * neither can be walked like the rest. They are still read from the real
+ * defaults rather than transcribed, which is the part that matters: the
+ * first entry of each theme list IS the default for a fresh visit, and
+ * `defaultA11y` IS what a learner starts from.
+ */
+function looseRows(): readonly LearnerReferenceRow[] {
+  const appearance: LearnerReferenceRow[] = [
+    {
+      key: "prefs.color",
+      label: "Theme",
+      group: "Appearance",
+      value: COLORS.default.name,
+    },
+    {
+      key: "prefs.font",
+      label: "Font",
+      group: "Appearance",
+      value: FONTS.default.name,
+    },
+    {
+      key: "prefs.textSize",
+      label: "Text size",
+      group: "Appearance",
+      value: TEXT_SIZES.default.name,
+    },
+    {
+      key: "prefs.accent",
+      label: "Accent colour",
+      group: "Appearance",
+      // A child's profile starts on a different accent; this is the adult
+      // one, which is what a fresh visit gets.
+      value: findAccent(DEFAULT_ACCENT).name,
+    },
+  ];
+  const a11y: LearnerReferenceRow[] = A11Y_LABELS.map(([key, label]) => ({
+    key: `a11y.${key}`,
+    label,
+    group: "Accessibility and voice",
+    value: readableA11y((defaultA11y as Record<string, unknown>)[key]),
+  }));
+  return [...appearance, ...a11y];
+}
+
+/** The accessibility preferences, in the order the learner's own screen shows them. */
+const A11Y_LABELS: readonly (readonly [string, string])[] = [
+  ["motion", "Motion"],
+  ["calm", "Calm mode"],
+  ["chords", "Chord shortcuts"],
+  ["bounceMs", "Ignore repeated keys within"],
+  ["fingerMarks", "Finger marks on the keys"],
+  ["captions", "Captions on spoken prompts"],
+  ["predictable", "Predictable layout"],
+  ["letterSpacing", "Extra letter spacing"],
+  ["lineHeight", "Line height"],
+  ["plain", "Plain language"],
+  ["scores", "Show scores"],
+  ["streakGrace", "Forgive a broken streak"],
+  ["typeface", "Accessible typeface"],
+  ["targets", "Touch target size"],
+  ["cues", "Extra cues"],
+  ["timers", "Show timers"],
+  ["speechRate", "Speech rate"],
+  ["speechVoice", "Speech voice"],
+  ["appVoice", "App voice"],
+];
+
+/** A11y values are plain data, so "off" reads better than "false". */
+function readableA11y(value: unknown): unknown {
+  if (typeof value === "boolean") {
+    return value ? "on" : "off";
+  }
+  if (value == null) {
+    return "follow the device";
+  }
+  if (Array.isArray(value)) {
+    return value.length === 0 ? "none" : value.join(", ");
+  }
+  return value;
+}
 
 /**
  * A default as a person reads it, not as the code stores it.
@@ -154,6 +282,12 @@ const GROUPS: readonly {
  */
 export function readable(prop: AnyProp<any>, value: unknown): unknown {
   const p = prop as any;
+  // "on" and "off", not "true" and "false": the accessibility rows beside
+  // these already read that way, and a reference page an admin skims should
+  // not switch vocabulary halfway down.
+  if (p.type === "boolean") {
+    return value === true ? "on" : "off";
+  }
   if (p.type === "item" || p.type === "xitem") {
     return (value as any)?.name ?? (value as any)?.id ?? p.toJson(value);
   }
@@ -187,24 +321,45 @@ export function readable(prop: AnyProp<any>, value: unknown): unknown {
 export function learnerReferenceRows(): readonly LearnerReferenceRow[] {
   const rows: LearnerReferenceRow[] = [];
   const seen = new Set<string>();
+  const loose = looseRows();
   for (const { group, props } of GROUPS) {
+    for (const row of loose.filter((r) => r.group === group)) {
+      rows.push(row);
+      seen.add(row.key);
+    }
     for (const prop of walk(props)) {
       if (seen.has(prop.key)) {
-        // `soundProps` and `textInputProps` both declare the three sound
-        // props; the first group to claim one keeps it.
+        // The sound props are declared in two places, and `showHeaderIdentity`
+        // belongs with Appearance rather than with the email preferences it
+        // sits beside in the code. First group to claim one keeps it.
         continue;
       }
       seen.add(prop.key);
       rows.push({
         key: prop.key,
         label: LABELS[prop.key] ?? prop.key,
-        group,
+        group: MOVED[prop.key] ?? group,
         value: readable(prop, prop.defaultValue),
       });
     }
   }
-  return rows;
+  // A moved row is pushed in its source group's turn, so put it back where
+  // it belongs before the page reads the order.
+  const order = GROUPS.map((g) => g.group);
+  return rows.sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
 }
+
+/**
+ * Rows whose group is not the package they are declared in.
+ *
+ * The cursor effect and the header chip are declared beside the settings
+ * they share a store with, and read as appearance to everybody else.
+ */
+const MOVED: Readonly<Record<string, string>> = {
+  "ui.cursorEffect": "Appearance",
+  "ui.cursorEffectIntensity": "Appearance",
+  "account.showHeaderIdentity": "Appearance",
+};
 
 /**
  * For the contract test: props this page reaches that nobody has named.

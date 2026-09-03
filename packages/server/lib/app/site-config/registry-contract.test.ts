@@ -296,7 +296,14 @@ test("the learner reference covers every group and reads real defaults", () => {
   isTrue(rows.length > 40, `only ${rows.length} rows`);
   deepEqual(
     [...new Set(rows.map((row) => row.group))].sort(),
-    ["Keyboard", "Lesson", "Screen", "Sound", "Text on screen", "Typing"],
+    [
+      "Accessibility and voice",
+      "Account and email",
+      "Appearance",
+      "Keyboard and typing",
+      "Lesson",
+      "Typing test",
+    ],
     "a group produced no rows at all",
   );
   const speed = rows.find((row) => row.key === "lesson.targetSpeed");

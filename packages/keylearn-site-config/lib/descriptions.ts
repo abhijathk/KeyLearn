@@ -69,8 +69,10 @@ export const DESCRIPTIONS: Readonly<Record<string, string>> = {
   "signin.google": "Whether Google appears as a way to sign in.",
   "signin.microsoft": "Whether Microsoft appears as a way to sign in.",
   "signin.facebook": "Whether Facebook appears as a way to sign in.",
-  "signin.builtIn":
-    "The ways in that KeyLearn provides itself, without any outside provider.",
+  "signin.emailAndPassword":
+    "A link emailed to the address on the account, or a password, with no outside provider involved.",
+  "signin.passkeys":
+    "Whether a learner can add a passkey or an authenticator app as a second way in.",
 
   // ── Maintenance ──
   "maintenance.enabled":

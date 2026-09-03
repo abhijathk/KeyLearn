@@ -242,17 +242,33 @@ const BASE_REGISTRY: readonly SettingDef[] = [
       "A sign-in button is shown only when its credentials are configured, so nobody is offered one that would fail on click.",
     enforcedAt: "page/controller.tsx oauthProviders",
   },
+  // Two rows rather than one, as the mock has them: a sign-in link is the
+  // floor every account stands on, and a passkey is something a learner
+  // chooses to add on top. They are locked for different reasons and it is
+  // worth an admin being able to see which is which.
   {
-    key: "signin.builtIn",
+    key: "signin.emailAndPassword",
     section: "registration",
-    label: "Email links, passwords, passkeys and authenticator apps",
+    label: "Email sign-in links and passwords",
     type: "info",
     default: true,
     direction: "free",
     protection: "locked",
     reason:
-      "The way in that every account has, and the one staff sign-in depends on. It has no off position: switching it off would lock every account out, this one included.",
-    enforcedAt: "auth/controller.ts sign-in routes",
+      "The way in that every account has. It has no off position: switching it off would lock every account out, this one included.",
+    enforcedAt: "auth/controller.ts sign-in routes, auth/email.ts magic links",
+  },
+  {
+    key: "signin.passkeys",
+    section: "registration",
+    label: "Passkeys and authenticator apps",
+    type: "info",
+    default: true,
+    direction: "free",
+    protection: "locked",
+    reason:
+      "Core: staff sign-in depends on one of the two being set up, so this cannot be taken away.",
+    enforcedAt: "auth/controller.ts passkey routes, auth/totp-crypto.ts",
   },
   {
     key: "maintenance.enabled",
