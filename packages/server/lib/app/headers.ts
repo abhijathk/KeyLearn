@@ -89,7 +89,15 @@ export function securityHeaders(): Middleware {
       "worker-src 'self' blob:",
     ].join("; ");
 
-    headers.set("Content-Security-Policy", csp);
+    // The site-wide policy, and only a default — the same rule as the
+    // referrer policy below, and for the same reason. A route that serves
+    // supplier-supplied bytes from our own origin (an advertiser's logo)
+    // locks itself down to `default-src 'none'`, and overwriting that here
+    // with the application's policy, which necessarily allows scripts and
+    // images, would hand those bytes back the privileges they were denied.
+    if (!headers.has("Content-Security-Policy")) {
+      headers.set("Content-Security-Policy", csp);
+    }
     // Superseded by frame-ancestors, kept for older browsers.
     headers.set("X-Frame-Options", "DENY");
     headers.set("X-Content-Type-Options", "nosniff");

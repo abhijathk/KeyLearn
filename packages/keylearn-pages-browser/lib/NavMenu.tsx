@@ -3,7 +3,7 @@ import {
   type PageInfo,
   Pages,
   usePageData,
-  usePageLive,
+  usePageOffered,
 } from "@keylearn/pages-shared";
 import { clsx } from "clsx";
 import { type ReactNode } from "react";
@@ -32,8 +32,9 @@ export function NavMenu({
   readonly onNavigate?: () => void;
 }) {
   const { leaderboard } = usePageData();
-  // Control-centre page states: a switched-off page gets no link.
-  const live = usePageLive();
+  // Control-centre page states: only a page set to 404 loses its link. A
+  // page coming soon keeps it, and says so when opened.
+  const live = usePageOffered();
   const { active } = useProfiles();
   const visionSupport = active?.visionSupport === true;
   if (visionSupport) {

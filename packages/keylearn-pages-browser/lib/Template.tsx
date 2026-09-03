@@ -8,15 +8,18 @@ import {
   LearnerVoiceCard,
   type LearnerVoiceInput,
   type NoticeDetails,
+  pageNameOfPath,
   Pages,
   PROFILE_CHANGED_EVENT,
   SiteNotice,
+  usePageComingSoon,
   usePageData,
 } from "@keylearn/pages-shared";
 import { PortalContainer, Toaster } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
+import { ComingSoon } from "./ComingSoon.tsx";
 import { Header } from "./Header.tsx";
 import { LoginPrompt } from "./LoginPrompt.tsx";
 import { MenuDrawer } from "./MenuDrawer.tsx";
@@ -339,6 +342,9 @@ export function Template({
     setMenuOpenState(open);
   };
   const [supportOpen, setSupportOpen] = useState(false);
+  const comingSoon = usePageComingSoon();
+  const pageName = pageNameOfPath(path);
+  const soon = pageName != null && comingSoon(pageName);
   return (
     // "desk-app" is a plain, un-hashed marker class (not a CSS-module one):
     // accents.less reaches for it via `html:has(.desk-app)` from a different
@@ -373,7 +379,10 @@ export function Template({
       />
       <LearnerVoiceSlot />
       <main className={styles.main} id="main" tabIndex={-1}>
-        {children}
+        {/* A page the control centre has set to "coming soon" keeps its
+            link, its route and all of this chrome, and shows the panel in
+            place of itself. A page set to 404 never reaches here at all. */}
+        {soon ? <ComingSoon /> : children}
         <PortalContainer />
         <Toaster />
       </main>

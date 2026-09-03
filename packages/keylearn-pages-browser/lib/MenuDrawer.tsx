@@ -9,7 +9,7 @@ import {
   logout,
   Pages,
   usePageData,
-  usePageLive,
+  usePageOffered,
 } from "@keylearn/pages-shared";
 import { IconButton, StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
@@ -41,8 +41,9 @@ export function MenuDrawer({
   readonly path: string;
 }): ReactNode {
   const { formatMessage } = useIntl();
-  // The drawer's own links follow their page state (control centre, Pages).
-  const live = usePageLive();
+  // The drawer's own links follow their page state. A page coming soon
+  // keeps its link; only a page set to 404 loses it.
+  const live = usePageOffered();
   // A kid profile gets a locked-down drawer: navigation, settings, language
   // and the utility links are grown-ups only.
   const navigate = useNavigate();

@@ -1,0 +1,44 @@
+@import "@keylearn/widget/lib/index.less";
+
+// The panel a page shows while it is set to "coming soon". It sits inside
+// the normal chrome — header, menus and all — because the page is announced
+// rather than hidden: somebody followed a link that is still there on
+// purpose, and dropping them onto a bare error screen would read as a fault.
+.root {
+  display: grid;
+  gap: 0.9rem;
+  place-items: center;
+  min-block-size: 22rem;
+  padding: 2rem 1.2rem;
+  text-align: center;
+}
+
+.icon {
+  inline-size: 3rem;
+  block-size: 3rem;
+  color: var(--accent);
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.text {
+  max-inline-size: 30rem;
+  margin: 0;
+  color: var(--text-color-f1);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.back {
+  margin-block-start: 0.4rem;
+}

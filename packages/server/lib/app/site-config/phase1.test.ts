@@ -102,9 +102,14 @@ test("1.3 a page off is 404 to the public, 200 to an admin, and gone from the na
   includes(page, '"admin":true');
   await request.become(null);
 
+  // "Coming soon" is announced, not hidden: the link stays on the menu, so
+  // the page answers 200 with the panel. An error status would tell somebody
+  // who followed a link we are still offering that they made a mistake.
+  // `noindex` is what keeps it out of search results (owner, 4 Sep 2026).
   await service.set("pages.kids.state", "soon", { userId: admin });
   const soon = await request.GET("/kids").header("accept", html.accept).send();
-  equal(soon.status, 404);
+  equal(soon.status, 200);
+  equal(soon.headers.get("x-robots-tag"), "noindex, nofollow");
   includes(await soon.body.text(), "Coming soon");
 
   await service.set("pages.publicProfiles.state", "404", { userId: admin });

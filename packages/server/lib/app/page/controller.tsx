@@ -603,16 +603,22 @@ export class Controller {
         if (state === "404") {
           throw new NotFoundError();
         }
-        ctx.response.status = 404;
+        // 200, not 404. The link to a page that is coming soon is still on
+        // the menu on purpose, so somebody arriving here followed a link we
+        // are still offering — answering that with an error status says they
+        // made a mistake. `noindex` keeps it out of search results, which is
+        // the only thing the 404 status was really buying.
         ctx.response.type = "text/html";
         ctx.response.headers.set("Cache-Control", "no-store");
+        ctx.response.headers.set("X-Robots-Tag", "noindex, nofollow");
         return this.view.renderPage(
           <ErrorPage
             error={{
-              status: 404,
+              status: 200,
               message: "Coming soon",
               expose: true,
-              description: "This page is not open yet. Check back soon.",
+              description:
+                "This page is not open yet. It is on its way — try again before long.",
             }}
           />,
         );

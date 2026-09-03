@@ -16,7 +16,7 @@ import {
   setSiteContrastForced,
   startLocalSync,
   usePageData,
-  usePageLive,
+  usePageOffered,
 } from "@keylearn/pages-shared";
 import { Settings } from "@keylearn/settings";
 import { SettingsLoader } from "@keylearn/settings-loader";
@@ -262,12 +262,9 @@ function KidAccountGuard(): ReactNode {
 
 function PageRoutes() {
   const { locale } = useIntl();
-  // Whether the multiplayer route exists at all. The server already answers
-  // 404 for a direct hit while it is off; this keeps the in-app router from
-  // mounting a page the server would refuse, so the two agree.
-  // Page states from the control centre: a route the server would refuse
-  // is not mounted here either, so the two agree; an admin sees every page.
-  const live = usePageLive();
+  // Control-centre page states: a page set to 404 gets no route at all; a
+  // page set to coming soon keeps its route and shows the panel instead.
+  const live = usePageOffered();
   const { learnerDefaults, learnerOverrides } = usePageData();
   useEffect(() => {
     applySiteLearnerDefaults(learnerDefaults ?? {}, learnerOverrides ?? {});
