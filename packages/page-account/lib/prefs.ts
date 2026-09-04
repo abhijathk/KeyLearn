@@ -5,7 +5,7 @@ import {
   regionsWithZones,
   zonesForRegion,
 } from "@keylearn/intl";
-import { booleanProp, stringProp } from "@keylearn/settings";
+import { booleanProp, numberProp, stringProp } from "@keylearn/settings";
 
 /**
  * Account-level preferences. Unlike per-session Practice settings these apply
@@ -43,6 +43,30 @@ export const accountProps = {
    * that one IS a control, and this setting cannot reach them anyway.
    */
   showHeaderIdentity: booleanProp("account.showHeaderIdentity", false),
+  /**
+   * The learner's avatar painting, washed in behind the practice telemetry.
+   *
+   * OFF by default (owner, 4 Sep 2026). It is decoration on the panel that
+   * carries the numbers somebody is actually working from, and the case for
+   * defaulting anything on to a working surface has to be stronger than "it
+   * looks nice". A learner who wants it will find it in Appearance; one who
+   * never opens Appearance gets a clean panel, which is the safer of the two
+   * to be wrong about.
+   */
+  showStatsArt: booleanProp("account.showStatsArt", false),
+  /**
+   * How strongly that wash reads, as a percentage.
+   *
+   * A slider rather than a fixed value because there is no one right answer:
+   * the paintings differ in how much contrast they carry, the two themes put
+   * them on opposite grounds, and a panel of figures is exactly the place
+   * where one person's "barely there" is another's "in the way". 24 is the
+   * value settled by eye on the day theme (owner, 4 Sep 2026).
+   */
+  statsArtOpacity: numberProp("account.statsArtOpacity", 24, {
+    min: 4,
+    max: 60,
+  }),
   analytics: booleanProp("account.analytics", false),
 } as const;
 

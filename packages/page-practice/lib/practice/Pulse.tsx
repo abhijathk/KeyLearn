@@ -1,4 +1,5 @@
 import { useAssessment } from "@keylearn/assessment";
+import { ProfileArt } from "@keylearn/identicon";
 import { useIntlNumbers } from "@keylearn/intl";
 import {
   type DailyGoal as DailyGoalType,
@@ -11,6 +12,15 @@ import {
   Target,
 } from "@keylearn/lesson";
 import { Key, type Names, useFormatter } from "@keylearn/lesson-ui";
+// A deep import rather than the package root: the barrel re-exports the whole
+// account page, and this needs one settings prop.
+import { accountProps } from "@keylearn/page-account/lib/prefs.ts";
+import {
+  activeProfileId,
+  PROFILE_CHANGED_EVENT,
+  useLearnerOverride,
+  usePageData,
+} from "@keylearn/pages-shared";
 import {
   type Result,
   type StreakList as StreakListType,
@@ -218,6 +228,7 @@ export const Pulse = memo(function Pulse({
 
   return (
     <div className={clsx(styles.root, headerHidden && styles.alone)}>
+      <ProfileWash />
       <div className={styles.l1}>
         {speeds.length > 1 && (
           <div
@@ -1014,15 +1025,98 @@ function SessionRecap({
   );
 }
 
-// A tuning "session" begins at the learner's FIRST nudge and lasts 30s. It's
-// kept at module scope on purpose: changing the target speed re-seeds the
-// practice tree, which briefly remounts this component — module state survives
-// that, so the −/+ doesn't vanish the instant it's clicked. It also means the
-// control stays put for the full 30s even when raising the goal above the
-// current speed momentarily un-reaches it.
+/**
+ * The learner's own painting, behind their numbers.
+ *
+ * Memoised, and it has to be. The panel around it re-renders on every live
+ * speed event — several times a second while somebody is typing — and this
+ * takes no props, so `memo` means it renders when the learner changes and at
+ * no other time. Without it the painting's whole element tree would be
+ * rebuilt on every keystroke to produce the identical picture, which is the
+ * kind of cost that does not show on a fast machine and shows on a school's.
+ *
+ * A household shares one screen and one account, and this island is the same
+ * shape for everybody in it. It is the one place the panel can say whose
+ * session this is without spending any room: the avatar a learner chose is
+ * already their mark everywhere else, so it is the honest thing to put here
+ * rather than a colour wash that means nothing (owner, 4 Sep 2026).
+ *
+ * Only a generated painting qualifies. A lettered preset is a coloured square
+ * with an initial — blown up behind the stats it is a giant letter, not a
+ * texture — and a photo is somebody's face, which is neither subtle nor a
+ * thing to bleach out and put under text. Both fall through to nothing, which
+ * is what "blank if there is no profile graphics" asks for.
+ */
+const ProfileWash = memo(function ProfileWash(): ReactNode {
+  const { settings } = useSettings();
+  const pageData = usePageData();
+  const [id, setId] = useState(() => activeProfileId());
+  useEffect(() => {
+    // A learner switch happens elsewhere in the tree and does not remount this.
+    const onChanged = () => setId(activeProfileId());
+    window.addEventListener(PROFILE_CHANGED_EVENT, onChanged);
+    return () => {
+      window.removeEventListener(PROFILE_CHANGED_EVENT, onChanged);
+    };
+  }, []);
+  const profile = pageData.profiles?.find((each) => each.id === id) ?? null;
+  const avatar = profile?.avatar ?? null;
+  if (!settings.get(accountProps.showStatsArt)) {
+    return null;
+  }
+  if (profile == null || avatar == null || avatar.type !== "art") {
+    return null;
+  }
+  return (
+    <span
+      className={styles.wash}
+      // The learner's own strength, from the Appearance slider. Inline because
+      // it is per-account data, not a design value the stylesheet can know.
+      style={{ opacity: settings.get(accountProps.statsArtOpacity) / 100 }}
+      aria-hidden={true}
+    >
+      <ProfileArt
+        family={avatar.family}
+        seed={avatar.seed}
+        kind={profile.kind}
+        size={WASH_SIZE}
+        // No letter, even when the avatar carries one (owner, 4 Sep 2026:
+        // "only want the design on the info panel, not the avatar"). An
+        // initial stretched across the panel is a monogram behind the
+        // figures — a second thing to read where the point was a texture.
+        // The painting is the part that identifies the learner; the letter
+        // belongs on the avatar, where it is small and beside their name.
+        letter={null}
+      />
+    </span>
+  );
+});
+
+/**
+ * Big enough to fill the band, small enough to stay the learner's own picture.
+ *
+ * The first pass drew it several times the band's height on the theory that a
+ * crop reads as texture where a picture reads as decoration. That was true and
+ * it was the wrong trade: cropped to its middle the painting no longer looked
+ * like the avatar it came from, and the whole point is that a learner
+ * recognises it as theirs — "the graphic should be same as the profile
+ * selected, not a random one" (owner, 4 Sep 2026).
+ *
+ * So the whole composition is in frame now. The stylesheet sizes it to the
+ * band's own height; this number only has to be large enough that the drawing
+ * is not upscaled.
+ */
+const WASH_SIZE = 420;
+
+// How long the control lingers after the last nudge. Changing the target speed
+// re-seeds the practice tree, which briefly remounts this component, and it
+// also un-reaches the goal the moment the new one is above the current speed —
+// so the clock is kept at module scope, where it survives both. Every nudge
+// restarts it: the whole point of the control is to be pressed more than once,
+// and a window that ran from the FIRST press meant a learner who paused to
+// think lost it mid-decision (owner, 4 Sep 2026).
 const TUNE_MS = 30000;
 let tuneStartedAt: number | null = null;
-let tuneSpent = false; // a session already elapsed during the current reach
 
 /**
  * The tiny −/+ that lets the learner retune their goal the moment they reach
@@ -1120,21 +1214,20 @@ function GoalTuner({
   readonly onChange: (next: number) => void;
 }): ReactNode {
   const { formatMessage } = useIntl();
-  const [, bump] = useState(0);
+  const [tick, bump] = useState(0);
   const [fading, setFading] = useState(false);
   const rerender = () => bump((n) => n + 1);
   const sessionActive =
     tuneStartedAt != null && Date.now() - tuneStartedAt < TUNE_MS;
+  // When the site decides the target speed for everyone, this is not the
+  // learner's to move. The settings screen already says so, in words, through
+  // ManagedSetting; here there is no room for a sentence and no point in one,
+  // so the control simply is not offered. Offering it was worse than useless:
+  // the write went through and the read came back forced, so the buttons
+  // looked broken rather than unavailable (owner, 4 Sep 2026).
+  const managed = useLearnerOverride("lesson.targetSpeed") !== "default";
 
-  // Leaving the reached state clears the "already tuned" latch, so the next
-  // time the goal is genuinely reached the control is offered afresh.
-  useEffect(() => {
-    if (!reached) {
-      tuneSpent = false;
-    }
-  }, [reached]);
-
-  // When the 30s window elapses, begin a slow fade rather than snapping away.
+  // When the window elapses, begin a slow fade rather than snapping away.
   useEffect(() => {
     if (tuneStartedAt == null || fading) {
       return;
@@ -1149,7 +1242,10 @@ function GoalTuner({
     return () => {
       clearTimeout(t);
     };
-  }, [sessionActive, reached, fading]);
+    // `tick` is what a nudge changes: without it the effect keeps the timeout
+    // it armed on the FIRST press, which then fires against a clock that has
+    // since been restarted and fades the control while it is still in use.
+  }, [sessionActive, reached, fading, tick]);
 
   // Once the fade has played out, actually retire the session.
   useEffect(() => {
@@ -1157,9 +1253,6 @@ function GoalTuner({
       return;
     }
     const t = setTimeout(() => {
-      if (reached) {
-        tuneSpent = true;
-      }
       tuneStartedAt = null;
       setFading(false);
       rerender();
@@ -1169,7 +1262,13 @@ function GoalTuner({
     };
   }, [fading, reached]);
 
-  if (!fading && !sessionActive && (!reached || tuneSpent)) {
+  if (managed) {
+    return null;
+  }
+  // Offered whenever the goal is beaten, and for a while after the last nudge
+  // so raising it — which un-reaches it by definition — does not pull the
+  // control out from under the next press.
+  if (!fading && !sessionActive && !reached) {
     return null;
   }
 
@@ -1185,10 +1284,9 @@ function GoalTuner({
     if (next !== target) {
       onChange(next);
     }
-    if (tuneStartedAt == null) {
-      tuneStartedAt = Date.now();
-      rerender();
-    }
+    tuneStartedAt = Date.now();
+    setFading(false);
+    rerender();
   };
 
   return (

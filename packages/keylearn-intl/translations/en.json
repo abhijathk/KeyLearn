@@ -249,6 +249,8 @@
   "account.prefs.security.sub": "New sign-ins and account changes. Always on.",
   "account.prefs.speedUnit": "Typing speed shown as",
   "account.prefs.speedUnit.sub": "Words or characters per minute, everywhere across your account.",
+  "account.prefs.statsArt": "Your artwork behind the stats",
+  "account.prefs.statsArt.sub": "A faint wash of your profile painting behind the practice figures, so a shared screen shows whose session it is. Nothing shows for a profile with a letter or a photo instead of a painting.",
   "account.prefs.textSize.large": "Large",
   "account.prefs.textSize.medium": "Medium",
   "account.prefs.textSize.small": "Small",

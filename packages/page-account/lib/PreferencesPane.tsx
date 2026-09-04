@@ -37,7 +37,7 @@ import { openResultStorage } from "@keylearn/result-loader";
 import { useSettings } from "@keylearn/settings";
 import { say } from "@keylearn/speech";
 import { FONTS, useTheme } from "@keylearn/themes";
-import { OptionList } from "@keylearn/widget";
+import { OptionList, Range } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -1863,6 +1863,50 @@ function HeaderIdentityRow(): ReactNode {
   );
 }
 
+function StatsArtRow(): ReactNode {
+  const { settings, updateSettings } = useSettings();
+  const on = settings.get(accountProps.showStatsArt);
+  return (
+    <div className={styles.row}>
+      <div className={styles.rowText}>
+        <span className={styles.rowLabel}>
+          <FormattedMessage
+            id="account.prefs.statsArt"
+            defaultMessage="Your artwork behind the stats"
+          />
+        </span>
+        <span className={styles.rowSub}>
+          <FormattedMessage
+            id="account.prefs.statsArt.sub"
+            defaultMessage="A faint wash of your profile painting behind the practice figures, so a shared screen shows whose session it is. Nothing shows for a profile with a letter or a photo instead of a painting."
+          />
+        </span>
+      </div>
+      <div className={styles.rowControls}>
+        <Toggle
+          on={on}
+          onChange={(v) =>
+            updateSettings(settings.set(accountProps.showStatsArt, v))
+          }
+        />
+        {on && (
+          <Range
+            size={6}
+            min={accountProps.statsArtOpacity.min}
+            max={accountProps.statsArtOpacity.max}
+            step={2}
+            value={settings.get(accountProps.statsArtOpacity)}
+            title={`Strength: ${settings.get(accountProps.statsArtOpacity)}%`}
+            onChange={(value) =>
+              updateSettings(settings.set(accountProps.statsArtOpacity, value))
+            }
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AppearanceCard(): ReactNode {
   const { color, switchColor } = useTheme();
 
@@ -1899,6 +1943,7 @@ function AppearanceCard(): ReactNode {
 
         <CursorEffectRow />
         <HeaderIdentityRow />
+        <StatsArtRow />
       </div>
 
       <div className={styles.prefCard}>

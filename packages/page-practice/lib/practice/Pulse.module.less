@@ -26,12 +26,13 @@
   border-start-start-radius: 0;
   border-start-end-radius: 0;
   background-color: color-mix(in srgb, var(--primary-l1) 78%, transparent);
-  // Kept deliberately shallow (owner decision). A deep drop shadow reads as
-  // the panel hovering well above the page; this is closer to a card resting
-  // on it. Header and telemetry island share the value — they are the same
-  // material, and a mismatch would show at the seam between them.
-  box-shadow: 0 0.3rem 0.9rem
-    color-mix(in srgb, var(--shadow-color) 28%, transparent);
+  // Shallow, but not flat (owner, 4 Sep 2026: a tiny bit more). A deep drop
+  // shadow reads as the panel hovering well above the page; at 0.3rem/28% it
+  // had gone the other way and the card sat ON the page rather than on it.
+  // Header and telemetry island share the value — they are the same material,
+  // and a mismatch would show at the seam between them.
+  box-shadow: 0 0.4rem 1.15rem
+    color-mix(in srgb, var(--shadow-color) 38%, transparent);
   // Matched to the header's slide, curve for curve. The corners and the seam
   // rule belong to the same movement as the half sliding away — snap them and
   // the card shows square corners against a header that is still half in
@@ -40,6 +41,83 @@
     border-radius 0.9s cubic-bezier(0.33, 0, 0.2, 1),
     border-block-start-color 0.9s cubic-bezier(0.33, 0, 0.2, 1);
   backdrop-filter: blur(16px);
+}
+
+/**
+ * The learner's painting behind the numbers.
+ *
+ * Three things keep it a texture rather than a picture, and all three matter:
+ *
+ * It is clipped to the card's own radius by a layer of its own rather than by
+ * `overflow: hidden` on the island — the island has things that legitimately
+ * sit outside it (the readiness caption above the goal, the tools rail in its
+ * corner) and clipping the whole panel to hide a decoration would take those
+ * with it.
+ *
+ * It is drawn several times the band's height and centred, so only the middle
+ * of the painting is in frame. An avatar with its edges visible reads as
+ * somebody's picture parked in the corner; a crop of one reads as material.
+ *
+ * And it fades out from the right. The left half of this band carries the
+ * speed — the largest, most-read number on the page — so the wash is nearly
+ * gone by the time it reaches it. What is left sits under the goal figures
+ * and the empty stretch of track, which is where there is room for it.
+ */
+.wash {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  // No mask (owner, 4 Sep 2026: full width). It was a fade from the right,
+  // which kept the wash off the speed figure — the slider in Appearance does
+  // that job better, because it is the learner's call rather than a guess
+  // baked into the stylesheet.
+  overflow: hidden;
+  // Settled by eye against the live panel (owner, 4 Sep 2026: "no artwork is
+  // showing"). 0.09 was arithmetically subtle and practically invisible — a
+  // pale painting at 9% on a near-white card is nothing at all. 0.24 is the
+  // point where it reads as a tint the panel has rather than a picture behind
+  // it, which is what subtle has to mean here.
+  // The default; the learner's own value arrives inline from the Appearance
+  // slider and wins. This is what shows if that setting is ever missing.
+  opacity: 0.24;
+  pointer-events: none;
+
+  svg,
+  img {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 50%;
+    // Full width of the panel (owner, 4 Sep 2026). The painting is square, so
+    // covering the width means its top and bottom fall outside the band and
+    // the middle stretch of it is what shows — a band of the drawing across
+    // the whole panel rather than a tile parked at one end. Centred, so the
+    // part in frame is the middle of the composition rather than an edge.
+    inline-size: 100%;
+    block-size: auto;
+    // Barely softened. A blur was there to stop a hard colour edge reading as
+    // part of a digit in front of it, and at 1.5px it also erased the
+    // structure of the drawing — the grid family in particular went to a flat
+    // field, which is most of why the wash stopped looking like anybody's
+    // avatar. 0.6px takes the edge off and leaves the picture.
+    filter: blur(0.6px) saturate(1.3);
+    translate: 0 -50%;
+  }
+}
+
+// Every child of the island sits above the wash. Stated once here rather than
+// on each: the wash is the only thing in this panel that belongs underneath,
+// so it is the layer that is unusual, not them.
+.root > *:not(.wash) {
+  position: relative;
+  z-index: 1;
+}
+
+// The island already establishes a positioning context for the tools rail; the
+// wash needs it too, and says so rather than relying on that.
+.root {
+  position: relative;
 }
 
 // The header above has collapsed, so this is the whole card again and gets
@@ -385,7 +463,7 @@
 // accent chips that fade in beside the pulsing flag.
 .tuner {
   display: inline-flex;
-  gap: 0.2rem;
+  gap: 0.05rem;
   margin-inline-start: 0.35rem;
   animation: tunerin 0.25s ease both;
 }
@@ -423,43 +501,55 @@
 .tune {
   display: grid;
   place-items: center;
-  inline-size: 1.05rem;
-  block-size: 1.05rem;
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
   padding: 0;
-  border: 1px solid color-mix(in oklab, var(--text-color-f1) 40%, transparent);
+  border: none;
   border-radius: 50%;
+  // Minimal (owner, 4 Sep 2026): no ring, no fill. Two circled buttons beside
+  // the goal read as a pair of objects competing with the flag and the number;
+  // as bare glyphs they read as what they are, a way to nudge the figure they
+  // sit next to. The hit area stays a comfortable size — the target does not
+  // shrink with the ink.
   color: var(--text-color-f1);
-  background-color: color-mix(in oklab, var(--text-color-f1) 10%, transparent);
+  background: none;
+  opacity: 0.55;
   cursor: pointer;
   transition:
-    transform 0.1s ease,
-    background-color 0.1s ease;
+    opacity 0.12s ease,
+    color 0.12s ease;
 
   svg {
-    inline-size: 0.72rem;
-    block-size: 0.72rem;
+    inline-size: 0.7rem;
+    block-size: 0.7rem;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.7;
+    stroke-width: 1.6;
     stroke-linecap: round;
   }
 
   &:disabled {
-    opacity: 0.35;
+    opacity: 0.2;
     cursor: default;
   }
 
+  &:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 1px;
+    opacity: 1;
+  }
+
+  // Colour, not weight: the accent is already the goal's own colour, so the
+  // button lights up as part of the thing it edits. After :focus-visible,
+  // which is the less specific of the two — stylelint enforces that order so
+  // a focused button cannot lose its outline to a rule written later.
   &:hover:not(:disabled) {
-    background-color: color-mix(
-      in oklab,
-      var(--text-color-f1) 20%,
-      transparent
-    );
-    transform: scale(1.12);
+    color: var(--accent);
+    opacity: 1;
   }
 
   &:active:not(:disabled) {
-    transform: scale(0.94);
+    opacity: 0.75;
   }
 }
 

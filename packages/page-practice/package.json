@@ -21,6 +21,7 @@
     "@keylearn/lesson-loader": "*",
     "@keylearn/lesson-ui": "*",
     "@keylearn/math": "*",
+    "@keylearn/page-account": "*",
     "@keylearn/pages-shared": "*",
     "@keylearn/phonetic-model": "*",
     "@keylearn/phonetic-model-loader": "*",

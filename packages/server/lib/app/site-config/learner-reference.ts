@@ -156,6 +156,8 @@ const LABELS: Readonly<Record<string, string>> = {
   "account.emailProductNews": "Product news by email",
   "account.newsLevel": "How much news counts as news",
   "account.showHeaderIdentity": "Show who is signed in, in the header",
+  "account.showStatsArt": "Your artwork behind the stats",
+  "account.statsArtOpacity": "How strong that artwork is",
   "account.analytics": "Anonymous analytics",
 };
 
@@ -359,6 +361,8 @@ const MOVED: Readonly<Record<string, string>> = {
   "ui.cursorEffect": "Appearance",
   "ui.cursorEffectIntensity": "Appearance",
   "account.showHeaderIdentity": "Appearance",
+  "account.showStatsArt": "Appearance",
+  "account.statsArtOpacity": "Appearance",
 };
 
 /**

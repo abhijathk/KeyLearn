@@ -78,6 +78,19 @@
   line-height: 1.55;
 }
 
+// A row whose control is more than one thing: the switch, and under it the
+// slider that tunes what the switch turns on. Stacked rather than side by
+// side (owner, 4 Sep 2026) — the slider is subordinate to the switch, and
+// beside it the two read as two settings of equal weight. Short, and aligned
+// to the switch's own edge, so the column stays one object.
+.rowControls {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: flex-end;
+}
+
 .row {
   display: flex;
   gap: 0.75rem;
