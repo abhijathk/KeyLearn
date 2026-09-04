@@ -160,6 +160,12 @@ export const GUIDE_EN: GuideDoc = {
         {
           p: "As you type, the floating panel shows your current speed and accuracy, a little sparkline of recent runs, your goal tracks and your streak. It is there to encourage you, not to nag.",
         },
+        {
+          p: "The *− and +* beside the target nudge today's goal up or down there and then, without opening Settings. Set it lower if the same few letters have stopped moving; the speed a letter has to reach is the one thing deciding how fast new ones unlock.",
+        },
+        {
+          p: "If you have picked a profile picture, you can have its artwork sit faintly behind those numbers — Account, Appearance, *Your artwork behind the stats*, with a slider for how strong it is. Off unless you turn it on.",
+        },
       ],
     },
     {
@@ -244,6 +250,9 @@ export const GUIDE_EN: GuideDoc = {
         {
           p: "On the same screen you can choose the keyboard shape, colour the keys by finger zone, and spotlight the next key while you are still learning where things are.",
         },
+        {
+          p: "The board's *finish* — the look of the keys — comes with an account. Signed in, there are five to choose from and the round one comes in six colours; one of those follows the colour of your theme. Everything above is yours either way: the language, the layout, the shape and the finger zones are never held back, because they are what makes the app match the keyboard in front of you.",
+        },
       ],
     },
     {
@@ -253,6 +262,9 @@ export const GUIDE_EN: GuideDoc = {
       blocks: [
         {
           p: "The Display and Text Input settings let you show your speed as words- or characters-per-minute and fine-tune how typing feels. Restore Defaults is always a click away if you want to start fresh.",
+        },
+        {
+          p: "How the whole site looks lives under Account, Appearance: light, dark or follow-the-system, a theme colour, and a text size that holds across every page. Each learner in the household keeps their own, and it travels with them — see *Looking after your data*.",
         },
       ],
     },
@@ -297,6 +309,9 @@ export const GUIDE_EN: GuideDoc = {
         {
           p: "Sign in if you want your history to sync across devices and to share a public profile link. There are no ad networks and no trackers, and you can delete your data — or your whole account — whenever you like.",
         },
+        {
+          p: "Signing in carries more than your results now. Your settings, your theme and text size, the accessibility choices you have made and each learner's own preferences all follow the profile rather than the browser — so a learner who opens KeyLearn on a new computer picks up where they left off, on the same screen, set up the same way, instead of starting again from the defaults.",
+        },
       ],
     },
     {
@@ -332,6 +347,9 @@ export const GUIDE_EN: GuideDoc = {
         },
         {
           p: "Inside you can set the world and character, Big letters, Sounds, Helper hands (the glowing finger guide), the Keyboard (hidden, simple, or the full grown-up board), Letters on the trail (the words shown as blocks right in the game), a session Timer, Cheers (encouraging little messages), and — tucked under Advanced — sliders for Brightness, Colour and how lively the world feels. There is a calm night look as well as the bright day one.",
+        },
+        {
+          p: "*Key style* changes how the keys are painted, and the keys themselves do not move: *Crayon* is the white cap ringed in its finger colour, and *Rainbow* is the primary-colour learning board — green frame, red numbers, blue letters with the vowels set apart — where the frame keys are arrows rather than words, for a child who cannot yet read “enter”. Crayon is where everyone starts. *Finger colours* beside it turns the tinting off altogether for a child who no longer needs it.",
         },
       ],
     },
@@ -525,7 +543,10 @@ export const GUIDE_EN: GuideDoc = {
       heading: "Privacy, in a sentence",
       blocks: [
         {
-          p: "No ads, and no trackers. A child’s profile never leaves your browser. Sign in only if you want syncing or sharing; otherwise everything stays on this device, and you are free to delete it at any time.",
+          p: "No ad networks, and no trackers. A child’s profile never leaves your browser. Sign in only if you want syncing or sharing; otherwise everything stays on this device, and you are free to delete it at any time.",
+        },
+        {
+          p: "You may see a *sponsored line* on some pages. It is one we sold and serve ourselves — there is no ad network here and nothing follows you off the site. It is chosen by the page you are on, never by anything we know about you, and it never appears to a child, inside the kids world, on a school account, or while a lesson is running. Tap *Why am I seeing this?* on any of them for the same explanation in place, and people who have supported the project never see one at all.",
         },
       ],
     },
