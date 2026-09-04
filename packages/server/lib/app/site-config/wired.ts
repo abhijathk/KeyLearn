@@ -110,12 +110,11 @@ export const WIRED_KEYS: ReadonlySet<string> = new Set([
   "email.staffDigest",
   // Phase 3.4 — learner overrides, applied by the client through
   // PageData.learnerOverrides (Settings.setForced in keylearn-settings).
+  // Only the choices: a numeric learner default has no `.override` row at all
+  // (see `mayBeForced` in the registry), because the site sets where a learner
+  // starts and never where they are held.
   "practice.defaultLessonType.override",
-  "practice.defaultTargetSpeedCpm.override",
-  "practice.defaultDailyGoalMin.override",
-  "typingTest.defaultDurationS.override",
   "typingTest.defaultSource.override",
-  "braille.defaultGoalMin.override",
   "a11y.defaultMotion.override",
   "a11y.defaultContrast.override",
   // Phase 4 — the sponsor slot, read by app/ads/readers.ts through the

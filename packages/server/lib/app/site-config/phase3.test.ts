@@ -161,7 +161,14 @@ async function registerVoter(request: any, email: string): Promise<number> {
 test("3.4 overrides: registry rows reach the page, and only an operations number goes beyond bounds with a reason", async () => {
   const { admin, service, request } = await fresh();
   const overrides = REGISTRY.filter((def) => def.overrideOf != null);
-  equal(overrides.length, 8, "one override row per learner-changeable default");
+  // Four, not eight: on 4 Sep 2026 the numeric learner defaults lost their
+  // override rows altogether. The site says where a learner starts — the
+  // speed, the daily minutes, the test length — and never holds them there.
+  equal(overrides.length, 4, "one override row per forceable learner default");
+  isTrue(
+    overrides.every((def) => def.overrideOf?.includes("TargetSpeed") !== true),
+    "target speed must not be forceable",
+  );
   isTrue(
     overrides.every(
       (def) => def.type === "choice" && def.default === "default",
@@ -173,7 +180,7 @@ test("3.4 overrides: registry rows reach the page, and only an operations number
     await request.GET("/").header("accept", "text/html").send()
   ).body.text();
   includes(page, '"learnerOverrides":{}', "nothing forced on a fresh install");
-  await service.set("practice.defaultTargetSpeedCpm.override", "forced", {
+  await service.set("practice.defaultLessonType.override", "forced", {
     userId: admin,
   });
   await service.set("a11y.defaultContrast.override", "hidden", {
@@ -182,7 +189,7 @@ test("3.4 overrides: registry rows reach the page, and only an operations number
   page = await (
     await request.GET("/").header("accept", "text/html").send()
   ).body.text();
-  includes(page, '"lesson.targetSpeed":"forced"');
+  includes(page, '"lesson.type":"forced"');
   includes(page, '"a11y.contrast":"hidden"');
   const rows: any = await (
     await request
@@ -190,11 +197,26 @@ test("3.4 overrides: registry rows reach the page, and only an operations number
       .header("x-ops-api-key", OPS_KEY)
       .send()
   ).body.json();
+  const type = rows.learnerDefaults.find(
+    (row: any) => row.key === "practice.defaultLessonType",
+  );
+  equal(type.override, "forced", "the learner-defaults list carries the mode");
+  equal(type.overrideKey, "practice.defaultLessonType.override");
+  // And the numbers carry no override at all — not "default", none: there is
+  // no row for the control centre to set, which is the point.
   const speed = rows.learnerDefaults.find(
     (row: any) => row.key === "practice.defaultTargetSpeedCpm",
   );
-  equal(speed.override, "forced", "the learner-defaults list carries the mode");
-  equal(speed.overrideKey, "practice.defaultTargetSpeedCpm.override");
+  isNull(speed.overrideKey, "target speed must not be forceable");
+  isNull(speed.override, "target speed must not carry a mode");
+  for (const key of [
+    "practice.defaultDailyGoalMin",
+    "typingTest.defaultDurationS",
+    "braille.defaultGoalMin",
+  ]) {
+    const row = rows.learnerDefaults.find((each: any) => each.key === key);
+    isNull(row.overrideKey, `${key} must not be forceable`);
+  }
   isNull(
     rows.learnerDefaults.find((row: any) => row.key.endsWith(".override")) ??
       null,

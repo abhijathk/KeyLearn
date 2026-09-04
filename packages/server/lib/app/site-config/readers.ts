@@ -336,19 +336,9 @@ const LEARNER_OVERRIDE_PROPS: readonly {
 }[] = [
   { key: "practice.defaultLessonType.override", prop: "lesson.type" },
   {
-    key: "practice.defaultTargetSpeedCpm.override",
-    prop: "lesson.targetSpeed",
-  },
-  { key: "practice.defaultDailyGoalMin.override", prop: "lesson.dailyGoal" },
-  {
-    key: "typingTest.defaultDurationS.override",
-    prop: "typingTest.duration.value",
-  },
-  {
     key: "typingTest.defaultSource.override",
     prop: "typingTest.textSource.type",
   },
-  { key: "braille.defaultGoalMin.override", prop: "braille.goalMinutes" },
   { key: "a11y.defaultMotion.override", prop: "a11y.motion" },
   { key: "a11y.defaultContrast.override", prop: "a11y.contrast" },
 ];

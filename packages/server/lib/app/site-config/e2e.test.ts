@@ -259,7 +259,10 @@ test("every learner override reaches the browser", async () => {
   const overrides = REGISTRY.filter(
     (def) => def.overrideOf != null && WIRED_KEYS.has(def.key),
   );
-  isTrue(overrides.length >= 8, `only ${overrides.length} override rows`);
+  // Four: every NUMERIC learner default lost its override row on 4 Sep 2026,
+  // so what is left is the policy choices. A floor rather than an equality, so
+  // adding an override does not fail this; losing the rest would.
+  isTrue(overrides.length >= 4, `only ${overrides.length} override rows`);
 
   for (const def of overrides) {
     await service.set(def.key, "forced", { userId: admin });

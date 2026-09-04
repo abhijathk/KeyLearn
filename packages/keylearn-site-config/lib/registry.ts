@@ -1312,11 +1312,35 @@ function learnerOverride(base: SettingDef): SettingDef {
   };
 }
 
+/**
+ * Whether the site may take this default away from the learner entirely.
+ *
+ * It may not, if the default is a number (owner, 4 Sep 2026): "control centre
+ * cannot dictate the practice settings numbers — the user can set how they
+ * want to practise." The numbers ARE the practice — the speed a letter has to
+ * reach before the next unlocks, how long a session runs, how many minutes a
+ * day. Pinning one does not tune somebody's practice, it decides whether they
+ * can progress at all, and the learner sitting at the keyboard is the only one
+ * who knows what they can currently type.
+ *
+ * The site still sets every one of them, as the value a new learner starts
+ * from. That is what a default is, and it is the whole of what the control
+ * centre gets here.
+ *
+ * A rule rather than a shorter list, so a numeric default added next year is
+ * covered on the day it is added. The choices that remain overridable are
+ * policy rather than pace: which lesson type the site runs, where its typing
+ * test draws text from, and the two accessibility defaults.
+ */
+function mayBeForced(def: SettingDef): boolean {
+  return def.type !== "number";
+}
+
 export const REGISTRY: readonly SettingDef[] = [
   ...BASE_REGISTRY,
-  ...BASE_REGISTRY.filter((def) => LEARNER_OVERRIDABLE.includes(def.key)).map(
-    learnerOverride,
-  ),
+  ...BASE_REGISTRY.filter(
+    (def) => LEARNER_OVERRIDABLE.includes(def.key) && mayBeForced(def),
+  ).map(learnerOverride),
   // Every row carries its one-line description, attached here rather than
   // written beside each row: a hundred sentences read together stay
   // consistent in a way a hundred scattered ones do not. The contract test
