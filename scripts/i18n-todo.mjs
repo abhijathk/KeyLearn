@@ -11,6 +11,15 @@
 // A message with no letters in it (a bare number, a lone symbol) is skipped:
 // there is nothing in it to translate, and putting it in the batch invites
 // somebody to "translate" punctuation.
+//
+// One thing this count can never reach is zero, and it is not a bug.
+// `translate.js` drops any translation identical to the English, so a word a
+// language genuinely shares with it — Version, Premium, Admin, Alphabet,
+// Cookies, Avatar, PIN, a person's name — reappears here after every sync.
+// Those render correctly through the English fallback, which is the right
+// word in that language. Read the remainder, do not just count it: a locale
+// is finished when what is left is only words a translator would have left
+// alone anyway.
 import { readFileSync, writeFileSync } from "node:fs";
 
 const DIR = "packages/keylearn-intl/translations";
