@@ -1,6 +1,11 @@
 import { injectable } from "@fastr/invert";
 import { DataDir, Env } from "@keylearn/config";
-import { Profile, ProfileData, User } from "@keylearn/database";
+import {
+  Profile,
+  ProfileData,
+  type ProfileDataKind,
+  User,
+} from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
 import { PublicId } from "@keylearn/publicid";
 import { UserDataFactory } from "@keylearn/result-userdata";
@@ -104,6 +109,18 @@ export class DataSnapshot {
           ) {
             written += 1;
           }
+          considered += 1;
+          if (
+            await this.#snapshotFile(
+              userId,
+              null,
+              "local",
+              new File(this.dataDir.accountDocFile(userId, "local")),
+              present,
+            )
+          ) {
+            written += 1;
+          }
           for (const profile of await Profile.listForUser(userId)) {
             const profileId = profile.id!;
             considered += 3;
@@ -135,6 +152,36 @@ export class DataSnapshot {
                 profileId,
                 "braille",
                 new File(this.dataDir.brailleProgressFile(userId, profileId)),
+                present,
+              )
+            ) {
+              written += 1;
+            }
+            // Documents are written through to the database as they change,
+            // so these two are almost always already stored and cost a hash.
+            // The pass still visits them for the two things a write-through
+            // cannot do: repair a row a database outage lost, and mark the
+            // row present so the prune below does not take it for an orphan.
+            considered += 2;
+            if (
+              await this.#snapshotFile(
+                userId,
+                profileId,
+                "a11y",
+                new File(this.dataDir.a11yPrefsFile(userId, profileId)),
+                present,
+              )
+            ) {
+              written += 1;
+            }
+            if (
+              await this.#snapshotFile(
+                userId,
+                profileId,
+                "local",
+                new File(
+                  this.dataDir.profileDocFile(userId, profileId, "local"),
+                ),
                 present,
               )
             ) {
@@ -180,7 +227,7 @@ export class DataSnapshot {
   async #snapshotFile(
     userId: number,
     profileId: number | null,
-    kind: "results" | "braille" | "classic",
+    kind: ProfileDataKind,
     file: File,
     present: Set<string>,
   ): Promise<boolean> {

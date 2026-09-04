@@ -2,8 +2,25 @@ import { createHash } from "node:crypto";
 import { type Knex } from "knex";
 import { type JSONSchema, Model, snakeCaseMappers } from "objection";
 
-/** Which file a row holds. One row per (account, learner, kind). */
-export type ProfileDataKind = "results" | "braille" | "classic";
+/**
+ * Which file a row holds. One row per (account, learner, kind).
+ *
+ * `results` and `classic` are practice history, `braille` is braille progress,
+ * `a11y` is the accessibility preferences, and `local` is the mirror of the
+ * learner's browser storage — the accent, the theme, the kids world, and the
+ * rest of what the app keeps on the device.
+ *
+ * The last two were added on 4 Sep 2026. Until then they were the only learner
+ * state with no copy in the database at all: not a stale one, none. A lost disk
+ * took every household's accessibility settings with it, which for the learners
+ * who need them is the difference between the app being usable and not.
+ */
+export type ProfileDataKind =
+  | "results"
+  | "braille"
+  | "classic"
+  | "a11y"
+  | "local";
 
 /**
  * A durable copy of a learner's data file.

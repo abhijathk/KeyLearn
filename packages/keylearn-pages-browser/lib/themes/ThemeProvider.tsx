@@ -8,6 +8,7 @@ import {
   loadSafeZones,
   loadThemedZones,
   PROFILE_CHANGED_EVENT,
+  profileStorageKeyFor,
   saveAccent,
   ZONES_CHANGED_EVENT,
 } from "@keylearn/pages-shared";
@@ -60,15 +61,31 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
   }, [color]);
 
   // A learner switch happens elsewhere in the tree and does not remount this
-  // component, so the new learner's accent has to be picked up on the event.
+  // component, so the new learner's theme has to be picked up on the event.
+  //
+  // The whole theme, not only the accent. Day or night, the font and the text
+  // size are stored per learner now, exactly like the accent beside them, and
+  // reading back only one of the four would leave a child looking at the
+  // colours their parent chose — and then write those colours into the
+  // child's own key the next time anything moved.
   useEffect(() => {
     const onProfileChanged = () => {
+      setPrefs(readPrefs());
       setAccent(loadAccent());
     };
     window.addEventListener(PROFILE_CHANGED_EVENT, onProfileChanged);
     return () => {
       window.removeEventListener(PROFILE_CHANGED_EVENT, onProfileChanged);
     };
+  }, []);
+
+  // Everyone who already had a theme chose it before there was anywhere for it
+  // to travel: they hold a cookie and no stored copy. Left alone, their theme
+  // would stay on this one machine until the day they happened to change it.
+  // Copying it across on first sight costs one write and makes the setting
+  // portable for people who already set it.
+  useEffect(() => {
+    seedThemeStorage();
   }, []);
 
   useEffect(() => {
@@ -352,15 +369,61 @@ function applyAccent(accent: string, day: boolean) {
   }
 }
 
-function readPrefs() {
-  return ThemePrefs.deserialize(
-    Cookie.parse(document.cookie).get(
-      ThemePrefs.cookieKeyFor(window.location.pathname),
-    ),
-  );
+/**
+ * Where the theme lives, and why it lives in two places.
+ *
+ * The cookie is not optional: the server renders the first paint from it, so
+ * without one every page would arrive in the default theme and jump the
+ * moment the client took over. But a cookie is one browser on one machine,
+ * and a learner who picks night mode and a larger text size on their laptop
+ * expects to find them on the tablet.
+ *
+ * So the choice is also written to browser storage, which the local-sync
+ * mirror carries between devices as a matter of course. Storage is the
+ * learner's answer and the cookie is this device's cache of it: a pull
+ * updates storage and reloads, this reads storage, applies it, and refreshes
+ * the cookie so the next server render already agrees.
+ *
+ * Keyed per learner, like the accent beside it — one household, one account,
+ * and a child's chosen colours are not their parent's (4 Sep 2026).
+ */
+const THEME_KEY = "keylearn.theme";
+
+/** The desk is a different app on the same origin; its theme is staff's own. */
+function isDesk(): boolean {
+  return window.location.pathname.startsWith("/desk");
 }
 
-function storePrefs(prefs: ThemePrefs) {
+function themeStorageKey(): string {
+  return profileStorageKeyFor(activeProfileId(), THEME_KEY);
+}
+
+function readPrefs() {
+  const fromCookie = Cookie.parse(document.cookie).get(
+    ThemePrefs.cookieKeyFor(window.location.pathname),
+  );
+  if (isDesk()) {
+    return ThemePrefs.deserialize(fromCookie);
+  }
+  let stored: string | null = null;
+  try {
+    stored = localStorage.getItem(themeStorageKey());
+  } catch {
+    // Storage denied; the cookie is still a working answer.
+  }
+  if (stored == null) {
+    return ThemePrefs.deserialize(fromCookie);
+  }
+  const prefs = ThemePrefs.deserialize(stored);
+  if (stored !== fromCookie) {
+    // A theme that arrived from another device: cache it so the next server
+    // render paints it rather than the default.
+    writeCookie(prefs);
+  }
+  return prefs;
+}
+
+function writeCookie(prefs: ThemePrefs) {
   document.cookie = String(
     new SetCookie(
       ThemePrefs.cookieKeyFor(window.location.pathname),
@@ -371,4 +434,38 @@ function storePrefs(prefs: ThemePrefs) {
       },
     ),
   );
+}
+
+/** Copy a pre-existing cookie theme into storage once, so it can travel. */
+function seedThemeStorage() {
+  if (isDesk()) {
+    return;
+  }
+  try {
+    if (localStorage.getItem(themeStorageKey()) != null) {
+      return;
+    }
+    const fromCookie = Cookie.parse(document.cookie).get(
+      ThemePrefs.cookieKeyFor(window.location.pathname),
+    );
+    if (fromCookie != null && fromCookie !== "") {
+      localStorage.setItem(themeStorageKey(), fromCookie);
+    }
+  } catch {
+    // Storage denied; nothing to seed and nothing to report.
+  }
+}
+
+function storePrefs(prefs: ThemePrefs) {
+  writeCookie(prefs);
+  if (isDesk()) {
+    return;
+  }
+  try {
+    // The write the mirror is listening for. It happens after the cookie, so
+    // a storage failure costs portability and never the theme itself.
+    localStorage.setItem(themeStorageKey(), ThemePrefs.serialize(prefs));
+  } catch {
+    // Storage denied; this device keeps its cookie and carries nothing.
+  }
 }

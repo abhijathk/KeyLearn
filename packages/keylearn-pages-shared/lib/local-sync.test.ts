@@ -293,6 +293,11 @@ test("what stays on the device is a decision, with a reason", () => {
   isTrue(isPortable("profile-9.kids.prefs"));
   isTrue(isPortable("profile-9.kids.best"));
   isTrue(isPortable("keylearn.theme[background]"));
+  // Day or night, the font and the text size. Kept in a cookie for the
+  // server-rendered first paint AND in storage so they follow the learner —
+  // the cookie alone is one browser on one machine, which is why this was the
+  // one preference that never travelled (4 Sep 2026).
+  isTrue(isPortable("profile-9.keylearn.theme"));
   isTrue(isPortable("keylearn.mode"));
   isTrue(isPortable("prefs.practice.view"));
   isTrue(isPortable("ui.speedUnit"));

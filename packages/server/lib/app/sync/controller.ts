@@ -4,7 +4,7 @@ import { BadRequestError, ForbiddenError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { DataDir } from "@keylearn/config";
-import { Profile, ProfileData } from "@keylearn/database";
+import { Profile, ProfileData, type ProfileDataKind } from "@keylearn/database";
 import { HighScoresFactory } from "@keylearn/highscores";
 import { Logger } from "@keylearn/logger";
 import { type NamedUser } from "@keylearn/pages-shared";
@@ -61,6 +61,42 @@ const ACCOUNT_DOCS: ReadonlySet<string> = new Set(["local"]);
  * settings — and because the alternative, stamping on arrival, would make
  * every offline change appear newer than the changes it was made before.
  */
+/**
+ * Copy a document into the database the moment it is written.
+ *
+ * The snapshot next door exists because practice history is appended to on
+ * every lesson and copying it on every write would be absurd. Documents are
+ * the opposite: a few kilobytes, written when a learner changes a setting or a
+ * device pushes its mirror, which is rare and never hot. There is no reason
+ * for those to sit on a disk for fifteen minutes before anything durable knows
+ * about them, and one good reason not to — accessibility preferences are the
+ * settings a learner cannot use the app without.
+ *
+ * The file stays the source of truth and is written first; this is the backup
+ * copy. So a database that is down or slow costs durability and never the
+ * learner's save, which is why the error is logged rather than thrown.
+ */
+async function mirrorToDb(
+  userId: number,
+  profileId: number | null,
+  kind: ProfileDataKind,
+  file: File,
+): Promise<void> {
+  try {
+    if (!(await file.exists())) {
+      await ProfileData.deleteFor(userId, profileId, kind);
+      return;
+    }
+    const payload = await file.read();
+    if (payload.length === 0) {
+      return;
+    }
+    await ProfileData.store(userId, profileId, kind, payload);
+  } catch (err: any) {
+    Logger.warn(err, "Could not mirror %s for user %s", kind, userId);
+  }
+}
+
 async function writeMerged(file: File, value: unknown): Promise<void> {
   if (value == null || typeof value !== "object") {
     throw new BadRequestError("Not a document");
@@ -351,12 +387,14 @@ export class Controller {
     // verbatim — so whatever arrives, the file this serves back is JSON.
     @body.json(null, { maxLength: 262144 }) value: unknown,
   ) {
+    const user = ctx.state.requireUser();
     const file = await this.#brailleFile(ctx, pid, "write");
     if (value == null || typeof value !== "object" || Array.isArray(value)) {
       throw new BadRequestError("Not a progress document");
     }
     await file.dir().create(true);
     await file.write(JSON.stringify(value), "utf8");
+    await mirrorToDb(user.id!, Number(pid), "braille", file);
     ctx.response.status = 204;
   }
 
@@ -407,8 +445,10 @@ export class Controller {
     @pathParam("name") name: string,
     @body.json(null, { maxLength: 262144 }) value: unknown,
   ) {
+    const user = ctx.state.requireUser();
     const file = await this.#profileDoc(ctx, pid, name, "write");
     await writeMerged(file, value);
+    await mirrorToDb(user.id!, Number(pid), "local", file);
     ctx.response.status = 204;
   }
 
@@ -419,6 +459,11 @@ export class Controller {
     @pathParam("name") name: string,
   ) {
     await (await this.#profileDoc(ctx, pid, name, "write")).delete();
+    await ProfileData.deleteFor(
+      ctx.state.requireUser().id!,
+      Number(pid),
+      "local",
+    );
     ctx.response.status = 204;
   }
 
@@ -449,6 +494,9 @@ export class Controller {
       this.dataDir.accountDocFile(user.id!, requireDocName(name, ACCOUNT_DOCS)),
     );
     await writeMerged(file, value);
+    // Null learner: the account-level mirror belongs to the household, not to
+    // any one of them.
+    await mirrorToDb(user.id!, null, "local", file);
     ctx.response.status = 204;
   }
 
@@ -505,12 +553,14 @@ export class Controller {
     // this serves back is JSON. Small: a dozen scalar settings.
     @body.json(null, { maxLength: 8192 }) value: unknown,
   ) {
+    const user = ctx.state.requireUser();
     const file = await this.#a11yFile(ctx, pid, "write");
     if (value == null || typeof value !== "object" || Array.isArray(value)) {
       throw new BadRequestError("Not a preferences document");
     }
     await file.dir().create(true);
     await file.write(JSON.stringify(value), "utf8");
+    await mirrorToDb(user.id!, Number(pid), "a11y", file);
     ctx.response.status = 204;
   }
 
@@ -520,6 +570,11 @@ export class Controller {
     @pathParam("pid") pid: string,
   ) {
     await (await this.#a11yFile(ctx, pid, "write")).delete();
+    await ProfileData.deleteFor(
+      ctx.state.requireUser().id!,
+      Number(pid),
+      "a11y",
+    );
     ctx.response.status = 204;
   }
 

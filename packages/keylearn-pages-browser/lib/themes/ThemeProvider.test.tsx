@@ -18,6 +18,12 @@ test.beforeEach(() => {
   document.documentElement.dataset["color"] = "dark";
   document.documentElement.dataset["font"] = "spectral";
 
+  // The theme is stored as well as cookied, so it now outlives a test. Clear
+  // it: without this each test inherits the last one's learner, and the one
+  // that checks a corrupt cookie would silently be checking a good stored
+  // theme instead.
+  localStorage.clear();
+
   document.cookie =
     "prefs=%7B%22color%22%3A%22dark%22%2C%22font%22%3A%22spectral%22%7D";
 });
@@ -99,6 +105,91 @@ test("a signed-out visitor cannot wear another accent", async () => {
   r.unmount();
 });
 
+test("a theme set on another device wins over this device's cookie", async () => {
+  // Arrange. This is what a learner's other laptop leaves behind: the mirror
+  // has pulled their choice into storage, and this browser's cookie still
+  // holds whatever was last picked here.
+  localStorage.setItem(
+    "keylearn.theme",
+    '{"color":"keylearn-day","font":"open-sans","textSize":"medium",' +
+      '"accent":"keylearn"}',
+  );
+
+  // Act.
+
+  const r = render(
+    <ThemeProvider>
+      <Switcher />
+    </ThemeProvider>,
+  );
+
+  // Assert. The cookie is brought into line with the stored choice, so the
+  // next server-rendered page already paints it rather than serving the old
+  // theme and flashing to this one once the client takes over.
+  equal(
+    document.cookie,
+    "prefs=%7B%22color%22%3A%22keylearn-day%22%2C%22font%22%3A%22open-sans%22" +
+      "%2C%22textSize%22%3A%22medium%22%2C%22accent%22%3A%22keylearn%22%7D",
+  );
+  // And it is the theme the app is actually wearing, not merely one it wrote
+  // down: the cookie is repaired from the same value the provider mounted on.
+  equal(r.getByTestId("applied").textContent, "keylearn-day/open-sans");
+
+  // Cleanup.
+
+  r.unmount();
+});
+
+test("a theme chosen here is stored, so it can follow the learner", async () => {
+  // Arrange.
+
+  const r = render(
+    <ThemeProvider>
+      <Switcher />
+    </ThemeProvider>,
+  );
+
+  // Act.
+
+  await userEvent.click(r.getByText("keylearn-day"));
+
+  // Assert. The cookie is this device's cache; the stored copy is the one the
+  // mirror carries to the learner's other devices. Both have to be written,
+  // and a cookie without a stored copy is the bug this covers.
+  const stored = localStorage.getItem("keylearn.theme");
+  equal(typeof stored, "string");
+  equal(JSON.parse(stored!)["color"], "keylearn-day");
+
+  // Cleanup.
+
+  r.unmount();
+});
+
+test("a theme already chosen before it could travel is copied across once", () => {
+  // Arrange. Everyone who set a theme before this existed holds a cookie and
+  // nothing else. Left alone their choice would never leave this machine.
+  equal(localStorage.getItem("keylearn.theme"), null);
+
+  // Act.
+
+  const r = render(
+    <ThemeProvider>
+      <Switcher />
+    </ThemeProvider>,
+  );
+
+  // Assert.
+
+  const stored = localStorage.getItem("keylearn.theme");
+  equal(typeof stored, "string");
+  equal(JSON.parse(stored!)["color"], "dark");
+  equal(JSON.parse(stored!)["font"], "spectral");
+
+  // Cleanup.
+
+  r.unmount();
+});
+
 test("ignore invalid cookie value", () => {
   // Arrange.
 
@@ -122,9 +213,12 @@ test("ignore invalid cookie value", () => {
 });
 
 function Switcher() {
-  const { switchColor, switchFont, switchAccent } = useTheme();
+  const { color, font, switchColor, switchFont, switchAccent } = useTheme();
   return (
     <div>
+      <span data-testid="applied">
+        {color}/{font}
+      </span>
       <button
         onClick={() => {
           switchColor("keylearn-day");
