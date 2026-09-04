@@ -230,30 +230,30 @@ Untranslated: 534 messages, 4705 words
 
 # German
 
-Translated: 1777 messages, 17134 words
+Translated: 2325 messages, 22207 words
 
-Untranslated: 538 messages, 4705 words
+Untranslated: 37 messages, 37 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
 * *Name*
 * *Name*
-* *Open*
-* *pink*
-* *Poll*
+* *Text*
+* *Text*
+* *Theo*
+* *Admin*
+* *Admin*
+* *Coach*
+* *Sepia*
+* *Arcade*
+* *Avatar*
+* *Cookies*
+* *Heatmap*
+* *Premium*
+* *Support*
+* *Support*
 * ...
 
 # Greek
