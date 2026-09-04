@@ -29,6 +29,7 @@ import { leaderboardReady } from "../highscores/readiness.ts";
 import { multiplayerEnabled } from "../multiplayer.ts";
 import { criteriaSnapshot } from "../site-config/criteria-version.ts";
 import {
+  boardChoiceNeedsAccount,
   certificatesIssue,
   certificatesNamedAdults,
   certificatesPublicVerify,
@@ -539,6 +540,7 @@ export class Controller {
       minAge: minAge(),
       minPasswordLength: minPasswordLength(),
       profileCaps: profileCaps(),
+      boardChoiceLocked: boardChoiceNeedsAccount() && user?.id == null,
       learnerDefaults: learnerDefaults(),
       // Phase 3.4: the learner defaults the site forces or hides.
       learnerOverrides: learnerOverrides(),

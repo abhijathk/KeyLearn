@@ -200,6 +200,18 @@ export function smartPractice(): boolean {
   return siteSwitch("practice.smartPractice");
 }
 
+/**
+ * Whether a signed-out visitor may change the keyboard's finish.
+ *
+ * The FINISH only — the board's look. Layout, geometry, language and zones
+ * stay open on either setting, and that line is the important part: a visitor
+ * typing on Dvorak or a non-Latin keyboard needs those to use the app at all,
+ * and taking them away reads as broken rather than as locked.
+ */
+export function boardChoiceNeedsAccount(): boolean {
+  return siteChoice("accounts.keyboardFinishes") !== "everyone";
+}
+
 /** The four settings props smart practice governs. */
 export const SMART_PRACTICE_PROPS: readonly string[] = [
   "lesson.guided.smartConfidence",

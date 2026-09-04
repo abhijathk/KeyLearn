@@ -38,6 +38,8 @@ export const DESCRIPTIONS: Readonly<Record<string, string>> = {
     "The contact form a learner or a visitor writes to the support desk with.",
   "pages.helpCentre.state":
     "The self-service answers a learner reads before writing in.",
+  "accounts.keyboardFinishes":
+    "Whether a signed-out visitor may change the keyboard's look, or only somebody with an account.",
   "pages.forSchools.state":
     "The page schools land on, and the enquiry form on it.",
   "pages.verify.state":

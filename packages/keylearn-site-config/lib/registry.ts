@@ -403,6 +403,21 @@ const BASE_REGISTRY: readonly SettingDef[] = [
     enforcedAt: "auth/controller.ts MIN_AGE + page-account DobEntry.tsx",
   },
   {
+    key: "accounts.keyboardFinishes",
+    section: "accounts",
+    label: "Who may change the keyboard finish",
+    type: "choice",
+    default: "account",
+    choices: ["account", "everyone"],
+    direction: "free",
+    protection: "free",
+    impact: "hides",
+    warning:
+      "Only the FINISH — the board's look. Layout, geometry, language and zones stay open to everybody on either setting: a visitor on Dvorak or a non-Latin keyboard needs those, and gating them makes the app look broken rather than locked.",
+    enforcedAt:
+      "page/controller.tsx PageData.boardChoiceLocked → App.tsx Settings.setForced",
+  },
+  {
     key: "privacy.showLastLoginLocation",
     section: "privacy",
     label: "Show last sign-in location to the owner",

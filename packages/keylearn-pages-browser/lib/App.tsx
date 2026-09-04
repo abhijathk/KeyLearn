@@ -87,6 +87,7 @@ const MultiplayerPage = lazy(() => import("./pages/multiplayer.tsx"));
 function applySiteLearnerDefaults(
   defaults: Readonly<Record<string, unknown>>,
   overrides: Readonly<Record<string, "forced" | "hidden">>,
+  boardChoiceLocked = false,
 ) {
   const json: Record<string, unknown> = {};
   for (const key of [
@@ -127,6 +128,21 @@ function applySiteLearnerDefaults(
         hidden.push(key);
       }
     }
+  }
+  // The keyboard finish, when the site keeps it for account holders. Forced
+  // rather than merely hidden from the picker: the board is drawn from
+  // `settings.get(keyboardProps.style)` in half a dozen places, so hiding the
+  // control alone would leave a visitor with a stored choice looking at a
+  // board the settings screen says they are not on. Forcing puts the two back
+  // in agreement everywhere at once, and — because the forced layer sits over
+  // the stored value rather than replacing it — signing in hands their own
+  // board straight back.
+  //
+  // Not added to `hidden`: the row stays on screen saying why, which is both
+  // the honest thing and the only reason a visitor would think to sign in. A
+  // control that silently vanishes teaches nobody anything.
+  if (boardChoiceLocked) {
+    forced["keyboard.style"] = "keylearn";
   }
   Settings.setForced(new Settings(forced as any), hidden);
   const motion = defaults["a11y.motion"];
@@ -265,10 +281,15 @@ function PageRoutes() {
   // Control-centre page states: a page set to 404 gets no route at all; a
   // page set to coming soon keeps its route and shows the panel instead.
   const live = usePageOffered();
-  const { learnerDefaults, learnerOverrides } = usePageData();
+  const { learnerDefaults, learnerOverrides, boardChoiceLocked } =
+    usePageData();
   useEffect(() => {
-    applySiteLearnerDefaults(learnerDefaults ?? {}, learnerOverrides ?? {});
-  }, [learnerDefaults, learnerOverrides]);
+    applySiteLearnerDefaults(
+      learnerDefaults ?? {},
+      learnerOverrides ?? {},
+      boardChoiceLocked === true,
+    );
+  }, [learnerDefaults, learnerOverrides, boardChoiceLocked]);
   return (
     <BrowserRouter basename={Pages.intlBase(locale)}>
       <FirstRunRedirect />

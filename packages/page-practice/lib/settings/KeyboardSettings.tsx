@@ -19,7 +19,11 @@ import {
   VirtualKeyboard,
 } from "@keylearn/keyboard-ui";
 import { Tasks } from "@keylearn/lang";
-import { canChooseAccent, useTypingLanguages } from "@keylearn/pages-shared";
+import {
+  canChooseAccent,
+  usePageData,
+  useTypingLanguages,
+} from "@keylearn/pages-shared";
 import { useSettings } from "@keylearn/settings";
 import { ModifierState, useDepressedKeys } from "@keylearn/textinput-events";
 import { SoundsThemeProp } from "@keylearn/textinput-ui";
@@ -92,6 +96,10 @@ function StyleProp(): ReactNode {
   // list, and a board already wearing it shows as Graphite until they sign
   // in — which is what it looks like anyway.
   const themed = canChooseAccent();
+  // The site keeps the board's finish for account holders, and nobody is
+  // signed in. Decided on the server (PageData.boardChoiceLocked) so one
+  // answer serves every screen.
+  const boardLocked = usePageData().boardChoiceLocked === true;
   const colour =
     !themed && stored === KeyboardColour.THEME
       ? KeyboardColour.GRAPHITE
@@ -100,33 +108,41 @@ function StyleProp(): ReactNode {
   const intensity = settings.get(keyboardProps.backlightIntensity);
   return (
     <>
-      <SettingRow
-        label={
-          <FormattedMessage
-            id="settings.keyboardStyle.label"
-            defaultMessage="Keyboard"
+      {/* The site can keep the board's finish for account holders. The row
+          goes rather than turning inert, on the same reasoning the colour row
+          below already follows: a picker with nothing to pick is worse than
+          no picker. Everything a visitor actually needs to type — the layout,
+          the language, the shape, the finger zones — is in the cards above
+          and is never gated. */}
+      {!boardLocked && (
+        <SettingRow
+          label={
+            <FormattedMessage
+              id="settings.keyboardStyle.label"
+              defaultMessage="Keyboard"
+            />
+          }
+          description={
+            <FormattedMessage
+              id="settings.keyboardStyle.short"
+              defaultMessage="Key positions, sizes and labels are the same on all five — only the finish changes. Flat Silver and Flat Midnight are the same board in two finishes, each worn on whichever theme you like; Round comes in six colours."
+            />
+          }
+        >
+          <OptionList
+            options={[...KeyboardStyle.ALL].map((item) => ({
+              value: item.id,
+              name: item.name,
+            }))}
+            value={style.id}
+            onSelect={(id) => {
+              updateSettings(
+                settings.set(keyboardProps.style, KeyboardStyle.ALL.get(id)),
+              );
+            }}
           />
-        }
-        description={
-          <FormattedMessage
-            id="settings.keyboardStyle.short"
-            defaultMessage="Key positions, sizes and labels are the same on all five — only the finish changes. Flat Silver and Flat Midnight are the same board in two finishes, each worn on whichever theme you like; Round comes in six colours."
-          />
-        }
-      >
-        <OptionList
-          options={[...KeyboardStyle.ALL].map((item) => ({
-            value: item.id,
-            name: item.name,
-          }))}
-          value={style.id}
-          onSelect={(id) => {
-            updateSettings(
-              settings.set(keyboardProps.style, KeyboardStyle.ALL.get(id)),
-            );
-          }}
-        />
-      </SettingRow>
+        </SettingRow>
+      )}
 
       {/* Only the round board is sold in more than one colour, so the row
           only exists under it. A picker with nothing to pick is worse than
@@ -169,7 +185,9 @@ function StyleProp(): ReactNode {
         </>
       )}
 
-      <RowSeparator />
+      {/* Nothing above it when the finish row is gone — a hairline at the top
+          of the card reads as a rule under a heading that isn't there. */}
+      {!boardLocked && <RowSeparator />}
       {/* The pack belongs to the board you picked, so it lives here rather
           than under Text Input, and its options are filtered by that board. */}
       <SoundsThemeProp />

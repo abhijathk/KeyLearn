@@ -41,6 +41,17 @@ export type PageData = {
    * defaults layer under every learner's own settings. Keys are the
    * settings props' own keys plus a few page-level ones.
    */
+  /**
+   * Whether this visitor must sign in to change the keyboard's finish.
+   *
+   * Decided on the server so the policy lives in one place: it is the site's
+   * switch AND whether anybody is signed in, and a client recomputing that
+   * from two fields is a client that can get it wrong on one screen only.
+   * The board's finish is all it covers — layout, geometry, language and
+   * zones are never gated, or a visitor on a non-Latin keyboard would find
+   * the app broken rather than locked.
+   */
+  readonly boardChoiceLocked?: boolean;
   readonly learnerDefaults?: Readonly<Record<string, unknown>>;
   /**
    * Learner defaults the site forces on every learner ("forced") or forces
