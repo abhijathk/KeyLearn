@@ -236,7 +236,7 @@ export function AboutPage() {
           <li>
             <FormattedMessage
               id="about.glance.4"
-              defaultMessage="No ads, no trackers, and your data stays yours."
+              defaultMessage="No ad networks, no trackers, and your data stays yours."
             />
           </li>
         </ul>
@@ -317,7 +317,7 @@ export function AboutPage() {
         <li>
           <FormattedMessage
             id="about.values.3"
-            defaultMessage="<em>Privacy by default.</em> No ads, no trackers, no selling data. Practise as a guest and nothing ever leaves your device."
+            defaultMessage="<em>Privacy by default.</em> No ad networks, no trackers, no selling data. Practise as a guest and nothing ever leaves your device."
             values={{ em }}
           />
         </li>
@@ -377,6 +377,20 @@ export function AboutPage() {
 
       <Sect>
         <FormattedMessage
+          id="about.help.h"
+          defaultMessage="If something goes wrong"
+        />
+      </Sect>
+      <p>
+        <FormattedMessage
+          id="about.help.p"
+          defaultMessage="There is a real support desk behind <supportLink>the help page</supportLink>, and writing to it starts a conversation you can come back to rather than an email into the dark. An assistant answers first and says that it is one; a person takes over whenever that is the better answer, or whenever you ask. Every thread keeps its own reference number and lives under Account, so nothing you were told goes missing."
+          values={{ supportLink }}
+        />
+      </p>
+
+      <Sect>
+        <FormattedMessage
           id="about.oss.h"
           defaultMessage="Open source, and yours"
         />
@@ -384,7 +398,7 @@ export function AboutPage() {
       <p>
         <FormattedMessage
           id="about.oss.p"
-          defaultMessage="KeyLearn is published under the GNU AGPL license: the whole source code is open for you to read, run, or improve. Learning to type is free — every lesson, every learner in your household, and no advertising. If you find it useful you can support the project, but nothing here is held back until you do. Your practice data belongs to you: export it or erase it whenever you like. <a>View the source on GitHub</a>."
+          defaultMessage="KeyLearn is published under the GNU AGPL license: the whole source code is open for you to read, run, or improve. Learning to type is free — every lesson, every learner in your household, and never an advertising network watching you. If you find it useful you can support the project, but nothing here is held back until you do. Your practice data belongs to you: export it or erase it whenever you like. <a>View the source on GitHub</a>."
           values={{
             a: (chunks: ReactNode) => (
               <a
@@ -498,7 +512,7 @@ export function TermsOfServicePage() {
           <li>
             <FormattedMessage
               id="terms.glance.1"
-              defaultMessage="KeyLearn is <em>open source</em>, and learning to type is <em>free</em> — every lesson, every learner, no ads. Supporting the project is voluntary and unlocks nothing."
+              defaultMessage="KeyLearn is <em>open source</em>, and learning to type is <em>free</em> — every lesson, every learner, and no advertising network. Supporting the project is voluntary and unlocks nothing."
               values={{ em }}
             />
           </li>
@@ -537,7 +551,7 @@ export function TermsOfServicePage() {
       <p>
         <FormattedMessage
           id="terms.what.p"
-          defaultMessage="KeyLearn is an open-source touch-typing tutor. The entire source code is published under the GNU AGPL license, and you’re welcome to read it, run your own copy, or improve it. Learning to type is free: every lesson and every learner in your household, with no advertising. You can support the project voluntarily, and where you pay us anything the payment terms below apply. Using the site means you accept the terms on this page; if you ever disagree with them, simply stop using the service."
+          defaultMessage="KeyLearn is an open-source touch-typing tutor. The entire source code is published under the GNU AGPL license, and you’re welcome to read it, run your own copy, or improve it. Learning to type is free: every lesson and every learner in your household, and never an advertising network. You can support the project voluntarily, and where you pay us anything the payment terms below apply. Using the site means you accept the terms on this page; if you ever disagree with them, simply stop using the service."
         />
       </p>
 
@@ -657,6 +671,31 @@ export function TermsOfServicePage() {
 
       <Sect>
         <FormattedMessage
+          id="terms.support.h"
+          defaultMessage="Writing to support"
+        />
+      </Sect>
+      <p>
+        <FormattedMessage
+          id="terms.support.p1"
+          defaultMessage="An assistant answers first. It always says that it is one, it will tell you plainly when it does not know something, and a person takes over whenever that is the better answer — anything about money, your data or your safety, and any time you simply ask. You never have to argue for a human."
+        />
+      </p>
+      <p>
+        <FormattedMessage
+          id="terms.support.p2"
+          defaultMessage="Two things the desk is not. It is not an emergency service: if a message reads like a genuine emergency you will get the emergency number where you are, from a fixed script rather than the assistant, and we cannot make that call for you. And it is not a place for other people’s private details — send us what is yours to send, and no more than the problem needs."
+        />
+      </p>
+      <p>
+        <FormattedMessage
+          id="terms.support.p3"
+          defaultMessage="We answer as quickly as we can and promise no particular speed; the desk tells you what a first reply is currently taking rather than a figure we invented. Marking a conversation as sorted closes it on both sides, and writing again reopens it — nothing you say is lost by closing it, and nothing is held open to chase you."
+        />
+      </p>
+
+      <Sect>
+        <FormattedMessage
           id="terms.warranty.h"
           defaultMessage="No warranty, honestly"
         />
@@ -739,13 +778,13 @@ export function PrivacyPolicyPage() {
           <li>
             <FormattedMessage
               id="privacy.glance.2"
-              defaultMessage="Sign in and we store your e-mail, a name, your learner profiles and your typing statistics — and nothing else about you."
+              defaultMessage="Sign in and we store your e-mail, a name, your learner profiles and your typing statistics. Anything beyond that is something you did — a message to support, a certificate, a payment — and every one of them is listed below."
             />
           </li>
           <li>
             <FormattedMessage
               id="privacy.glance.3"
-              defaultMessage="No ads, no third-party trackers, no analytics scripts, and we <em>never sell your data</em> — to anyone, for any reason."
+              defaultMessage="No ad networks, no third-party trackers, no analytics scripts, and we <em>never sell your data</em> — to anyone, for any reason. If a sponsored line ever appears, we serve it ourselves and it never follows you anywhere."
               values={{ em }}
             />
           </li>
@@ -882,7 +921,7 @@ export function PrivacyPolicyPage() {
         <li>
           <FormattedMessage
             id="privacy.never.2"
-            defaultMessage="We don’t show ads or embed advertising networks."
+            defaultMessage="We don’t embed advertising networks, and no advert here is targeted at you. A sponsored line, where one runs at all, is one we sold and serve ourselves: it is chosen by the page you are on, never by anything we know about you, and it is never shown to a child, inside the kids world, on a school account, or during a lesson."
           />
         </li>
         <li>
@@ -1213,7 +1252,7 @@ export function AccessibilityPage() {
           <li>
             <FormattedMessage
               id="accessibility.glance.5b"
-              defaultMessage="Something in your way? <supportLink>Tell us</supportLink> and a person will read it."
+              defaultMessage="Something in your way? <supportLink>Tell us</supportLink> — an assistant answers first and says so, and a person takes over the moment that is the better answer, or whenever you ask."
               values={{ supportLink }}
             />
           </li>

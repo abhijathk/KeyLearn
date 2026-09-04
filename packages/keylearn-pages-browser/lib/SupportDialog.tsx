@@ -26,7 +26,7 @@ export function SupportDialog({
         <p className={styles.body}>
           <FormattedMessage
             id="supportDialog.body"
-            defaultMessage="KeyLearn is free for every learner — no ads, no subscriptions. If it’s helped you or your kids, a coffee helps keep it that way."
+            defaultMessage="KeyLearn is free for every learner — no advertising network, no subscriptions. If it’s helped you or your kids, a coffee helps keep it that way."
           />
         </p>
         <div className={styles.actions}>

@@ -12,9 +12,9 @@
  * month and year, which is the precision the documents themselves promise.
  */
 export const LEGAL_EFFECTIVE = {
-  termsOfService: "2026-08-15",
-  privacyPolicy: "2026-08-15",
-  accessibility: "2026-08-15",
+  termsOfService: "2026-09-04",
+  privacyPolicy: "2026-09-04",
+  accessibility: "2026-09-04",
 } as const;
 
 export type LegalDocument = keyof typeof LEGAL_EFFECTIVE;

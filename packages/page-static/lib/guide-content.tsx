@@ -295,7 +295,7 @@ export const GUIDE_EN: GuideDoc = {
           ],
         },
         {
-          p: "Sign in if you want your history to sync across devices and to share a public profile link. There are no ads and no trackers, and you can delete your data — or your whole account — whenever you like.",
+          p: "Sign in if you want your history to sync across devices and to share a public profile link. There are no ad networks and no trackers, and you can delete your data — or your whole account — whenever you like.",
         },
       ],
     },
