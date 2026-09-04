@@ -43,6 +43,12 @@ export type AdPaletteView = {
   readonly barDark?: string;
   readonly accent?: string;
   readonly treatment?: "solid" | "flag" | "gradient" | "accent";
+  /** The colours a split or a blend runs through; falls back to bar + accent. */
+  readonly stops?: readonly string[];
+  /** Relative share of the bar per stop; normalised, so any total works. */
+  readonly weights?: readonly number[];
+  /** Transition width between stops, 0-100, for `gradient` only. */
+  readonly blend?: number;
 };
 
 export type AdView = {
@@ -52,6 +58,14 @@ export type AdView = {
   readonly palette: AdPaletteView;
   readonly hasLogo: boolean;
   readonly dismissible: boolean;
+  /**
+   * This campaign asked to stand aside for site notices, and one is up.
+   *
+   * The server states the fact and the client decides, because whether the
+   * notice is actually OCCUPYING the bar is a question about this reader's
+   * screen: they may have dismissed it a minute ago.
+   */
+  readonly standsAside?: boolean;
 };
 
 /** How long the line is on screen before its dismiss control appears. */
@@ -116,20 +130,99 @@ function hostOf(href: string): string | null {
   }
 }
 
-function background(palette: AdPaletteView, dark: boolean): string {
-  const base = colour(
+/**
+ * Where each stop starts and ends along the bar, as percentages.
+ *
+ * Weights are relative and normalised, so staff can say "twice as much of the
+ * first" as 2/1/1 rather than working out 50/25/25 — and a campaign that
+ * carries no weights at all gets equal shares, which is what the old
+ * two-colour bar drew.
+ */
+function segments(
+  count: number,
+  weights: readonly number[] | undefined,
+): { start: number; end: number }[] {
+  const raw = Array.from({ length: count }, (_, i) => {
+    const w = weights?.[i];
+    return typeof w === "number" && Number.isFinite(w) && w > 0 ? w : 1;
+  });
+  const total = raw.reduce((a, b) => a + b, 0);
+  const out = [];
+  let at = 0;
+  for (let i = 0; i < count; i++) {
+    const end = i === count - 1 ? 100 : at + (raw[i]! / total) * 100;
+    out.push({ start: at, end });
+    at = end;
+  }
+  return out;
+}
+
+/**
+ * The bar's background: one colour, a hard split, or a blend.
+ *
+ * Split and blend are the same picture at two settings of one dial. A split is
+ * a blend with a transition of zero, and pushing `blend` to 100 shrinks every
+ * flat run to a point, leaving colour moving the whole width. Drawing them
+ * through one function is what keeps a staff member's preview honest: they are
+ * adjusting the thing itself, not choosing between two renderers.
+ *
+ * Kept in step with the copy in the desk's SponsoredSection.tsx by hand, the
+ * same way `payerOf` is. Both draw the same declaration from the same palette,
+ * so the composer's preview is the bar.
+ */
+function backgroundOf(
+  palette: {
+    readonly bar?: string;
+    readonly barDark?: string;
+    readonly accent?: string;
+    readonly treatment?: string;
+    readonly stops?: readonly string[];
+    readonly weights?: readonly number[];
+    readonly blend?: number;
+  },
+  dark: boolean,
+  safe: (value: string | undefined, fallback: string) => string,
+): string {
+  const base = safe(
     dark ? (palette.barDark ?? palette.bar) : palette.bar,
     dark ? "#16202b" : "#0b2b3f",
   );
-  const accent = colour(palette.accent, base);
-  switch (palette.treatment) {
-    case "gradient":
-      return `linear-gradient(90deg, ${base}, ${accent})`;
-    case "flag":
-      return `linear-gradient(90deg, ${base} 0 60%, ${accent} 60% 100%)`;
-    default:
-      return base;
+  if (palette.treatment !== "flag" && palette.treatment !== "gradient") {
+    return base;
   }
+  // At most five: past that the bar is a rainbow and the line on top of it
+  // stops being readable, which is the one thing this must not cost.
+  const listed = (palette.stops ?? [])
+    .filter((each) => each !== "")
+    .slice(0, 5);
+  const colours = (
+    listed.length >= 2 ? listed : [base, palette.accent ?? base]
+  ).map((each, i) => safe(each, i === 0 ? base : base));
+  const spans = segments(colours.length, palette.weights);
+  if (palette.treatment === "flag") {
+    return `linear-gradient(90deg, ${colours
+      .map(
+        (c, i) =>
+          `${c} ${spans[i]!.start.toFixed(2)}% ${spans[i]!.end.toFixed(2)}%`,
+      )
+      .join(", ")})`;
+  }
+  // A blend of t: each flat run is pulled in towards its own centre, so t=0 is
+  // exactly the split above and t=1 leaves no flat colour at all.
+  const t = Math.min(1, Math.max(0, (palette.blend ?? 100) / 100));
+  return `linear-gradient(90deg, ${colours
+    .map((c, i) => {
+      const { start, end } = spans[i]!;
+      const mid = (start + end) / 2;
+      const from = start + (mid - start) * t;
+      const to = end - (end - mid) * t;
+      return `${c} ${from.toFixed(2)}% ${to.toFixed(2)}%`;
+    })
+    .join(", ")})`;
+}
+
+function background(palette: AdPaletteView, dark: boolean): string {
+  return backgroundOf(palette, dark, colour);
 }
 
 export function AdBar({

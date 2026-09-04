@@ -27,22 +27,45 @@ import { SmallScreenGate } from "./SmallScreenGate.tsx";
 import { SupportDialog } from "./SupportDialog.tsx";
 import * as styles from "./Template.module.less";
 
-// Which notice the visitor already dismissed, so retracting and reposting a
-// DIFFERENT notice still shows — only the exact one they closed stays hidden.
-function loadDismissedNoticeId(): number | null {
+/**
+ * What the reader actually closed — the message, not the row.
+ *
+ * This used to be the notice's id, on the reasoning that retracting one and
+ * posting a DIFFERENT one should still show. That is right and the id is the
+ * wrong way to say it: EDITING a notice keeps its id, so staff who fixed a
+ * wrong date or a broken link published to everyone except the people who had
+ * already read and closed the wrong version — the ones most in need of the
+ * correction (owner, 4 Sep 2026).
+ *
+ * So it keys on what was on screen. Change the words, the display or a poll's
+ * options and it is a different notice to a reader, whatever the database
+ * calls it; leave them alone and the close still holds. The desk does carry an
+ * `updated_at`, but it does not send it and an edit that fails to bump it
+ * would fail silently — the content cannot lie about itself.
+ */
+function noticePrint(n: NoticeDetails): string {
+  return JSON.stringify([
+    n.id,
+    n.message,
+    n.display,
+    n.level,
+    n.options ?? null,
+  ]);
+}
+
+function loadDismissed(key: string): string | null {
   try {
-    const raw = sessionStorage.getItem("keylearn.dismissedNotice");
-    return raw == null ? null : Number(raw);
+    return sessionStorage.getItem(key);
   } catch {
     return null;
   }
 }
 
-function saveDismissedNoticeId(id: number): void {
+function saveDismissed(key: string, print: string): void {
   try {
-    sessionStorage.setItem("keylearn.dismissedNotice", String(id));
+    sessionStorage.setItem(key, print);
   } catch {
-    // Storage may be unavailable; the banner will simply reappear.
+    // Storage may be unavailable; the notice will simply reappear.
   }
 }
 
@@ -51,9 +74,16 @@ function saveDismissedNoticeId(id: number): void {
 // just on the next full page load.
 const NOTICE_POLL_MS = 30_000;
 
-function SiteNoticeBanner(): ReactNode {
+function SiteNoticeBanner({
+  onShowing,
+}: {
+  /** Told whenever a notice starts or stops occupying the bar for this reader. */
+  readonly onShowing?: (showing: boolean) => void;
+}): ReactNode {
   const [notice, setNotice] = useState<NoticeDetails | null>(null);
-  const [dismissed, setDismissed] = useState(loadDismissedNoticeId);
+  const [dismissed, setDismissed] = useState(() =>
+    loadDismissed("keylearn.dismissedNotice"),
+  );
   // Steps aside the moment keys start landing — an incident notice has no
   // close button by design (see NoticeBanner.tsx), so without this it would
   // sit fixed over (or above) the practice text for the entire session.
@@ -89,7 +119,11 @@ function SiteNoticeBanner(): ReactNode {
     };
   }, []);
 
-  if (notice == null || notice.id === dismissed) {
+  const showing = notice != null && noticePrint(notice) !== dismissed;
+  useEffect(() => {
+    onShowing?.(showing);
+  }, [showing, onShowing]);
+  if (!showing) {
     return null;
   }
   // Stays mounted and fades/collapses via CSS rather than unmounting outright
@@ -106,8 +140,9 @@ function SiteNoticeBanner(): ReactNode {
       <SiteNotice
         notice={notice}
         onDismiss={() => {
-          saveDismissedNoticeId(notice.id);
-          setDismissed(notice.id);
+          const print = noticePrint(notice);
+          saveDismissed("keylearn.dismissedNotice", print);
+          setDismissed(print);
         }}
       />
     </div>
@@ -125,7 +160,13 @@ function SiteNoticeBanner(): ReactNode {
  * on this side, and the bar steps aside the moment keys start landing,
  * exactly as the site notice does.
  */
-function AdSlot({ path }: { readonly path: string }): ReactNode {
+function AdSlot({
+  path,
+  noticeShowing,
+}: {
+  readonly path: string;
+  readonly noticeShowing: boolean;
+}): ReactNode {
   const [ads, setAds] = useState<readonly AdView[]>([]);
   const [dwell, setDwell] = useState(8);
   const [typing, setTyping] = useState(false);
@@ -171,7 +212,13 @@ function AdSlot({ path }: { readonly path: string }): ReactNode {
     };
   }, [hidden, kind, path]);
 
-  if (hidden || kind === "kid" || path === "/kids" || ads.length === 0) {
+  // A campaign that asked to stand aside steps out only while a notice is
+  // ACTUALLY on this reader's screen. Once they close it the bar is theirs
+  // again — which is the whole point of standing aside rather than being
+  // switched off, and what used to leave a reader with neither on every load
+  // until the notice was retracted (owner, 4 Sep 2026).
+  const free = ads.filter((ad) => !(ad.standsAside === true && noticeShowing));
+  if (hidden || kind === "kid" || path === "/kids" || free.length === 0) {
     return null;
   }
   return (
@@ -183,7 +230,7 @@ function AdSlot({ path }: { readonly path: string }): ReactNode {
       aria-hidden={typing}
     >
       <AdBar
-        ads={ads}
+        ads={free}
         dwellSeconds={dwell}
         onView={(id, screen) => {
           void SupportService.countAdView(id, screen).catch(() => {});
@@ -210,13 +257,10 @@ function AdSlot({ path }: { readonly path: string }): ReactNode {
  */
 let adsHiddenThisLoad = false;
 
-function loadDismissedCardId(): number | null {
-  try {
-    const raw = sessionStorage.getItem("keylearn.dismissedCard");
-    return raw == null ? null : Number(raw);
-  } catch {
-    return null;
-  }
+// The same rule as the banner: a card whose question or options were edited
+// is a different card, and a reader who answered the old one has not seen it.
+function loadDismissedCardPrint(): string | null {
+  return loadDismissed("keylearn.dismissedCard");
 }
 
 /**
@@ -230,7 +274,7 @@ function LearnerVoiceSlot(): ReactNode {
   const [state, setState] = useState<LearnerResponseState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState(loadDismissedCardId);
+  const [dismissed, setDismissed] = useState(loadDismissedCardPrint);
   const [kind, setKind] = useState(activeProfileKind);
 
   useEffect(() => {
@@ -283,7 +327,7 @@ function LearnerVoiceSlot(): ReactNode {
     user == null ||
     kind === "kid" ||
     notice == null ||
-    notice.id === dismissed ||
+    noticePrint(notice) === dismissed ||
     (state != null && !state.open)
   ) {
     return null;
@@ -306,12 +350,9 @@ function LearnerVoiceSlot(): ReactNode {
       error={error}
       onSubmit={submit}
       onExit={() => {
-        try {
-          sessionStorage.setItem("keylearn.dismissedCard", String(notice.id));
-        } catch {
-          // Storage unavailable; the card just returns next load.
-        }
-        setDismissed(notice.id);
+        const print = noticePrint(notice);
+        saveDismissed("keylearn.dismissedCard", print);
+        setDismissed(print);
       }}
     />
   );
@@ -338,6 +379,16 @@ export function Template({
   readonly children: ReactNode;
 }) {
   const [menuOpen, setMenuOpenState] = useState(() => drawerOpen);
+  /**
+   * Whether a site notice is on THIS reader's screen right now.
+   *
+   * The one thing the notice and the ad both need and neither owns: a campaign
+   * that stands aside for notices must step out while one is up and come back
+   * the moment the reader closes it. The server cannot answer that — it knows
+   * only that a notice is live site-wide — so the answer is here, where the
+   * banner either rendered or did not.
+   */
+  const [noticeShowing, setNoticeShowing] = useState(false);
   const setMenuOpen = (open: boolean) => {
     drawerOpen = open;
     setMenuOpenState(open);
@@ -365,11 +416,11 @@ export function Template({
       {/* Above the header, not below it (owner decision 3 Sep 2026): a
           site-wide message is about the whole page, so it sits over the
           chrome rather than between the chrome and the work. */}
-      <SiteNoticeBanner />
+      <SiteNoticeBanner onShowing={setNoticeShowing} />
       {/* Under the notice and still above the header: a message from us
           always outranks a message somebody paid for, and a campaign that
           asked to stand aside for one is not in this list at all. */}
-      <AdSlot path={path} />
+      <AdSlot path={path} noticeShowing={noticeShowing} />
       <Header
         onOpenMenu={() => setMenuOpen(true)}
         onOpenSupport={() => setSupportOpen(true)}

@@ -242,10 +242,19 @@ test("a site notice takes the strip, and the campaign is credited the time", asy
     },
   ];
   resetDeskNoticeCache();
-  deepEqual(
-    (await feed(request)).ads,
-    [],
-    "a campaign that stands aside for a notice is not served while one is up",
+  // Sent, and flagged (4 Sep 2026). It used to be withheld outright, which
+  // meant a reader who DISMISSED the banner was left with neither it nor the
+  // ad — on every load, until the notice was retracted. Whether the notice is
+  // occupying the bar is a question about one reader's screen, so the server
+  // states the fact and the client, which knows whether the banner rendered,
+  // decides. Crediting below is unchanged and still keyed to the notice being
+  // live site-wide.
+  const held = (await feed(request)).ads;
+  equal(held.length, 1, "the campaign is still served while a notice is up");
+  equal(
+    (held[0] as { standsAside?: boolean }).standsAside,
+    true,
+    "and it is flagged as standing aside, for the client to act on",
   );
 
   const sweep = context.get(AdSweep);

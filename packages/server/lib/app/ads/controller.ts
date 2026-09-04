@@ -81,15 +81,31 @@ export class AdsController {
     // A site notice owns this line while it is up. A campaign that chose
     // to stand aside for one steps out here and is credited the minutes by
     // the sweep, so the promise costs the advertiser nothing.
+    // A site notice owns this line while it is up — but "up" is a question
+    // about one reader's screen, not about the site. A notice the reader has
+    // already dismissed is not occupying anything, and holding the bar for it
+    // left them with neither the notice nor the ad, on every load, until the
+    // notice was retracted (owner, 4 Sep 2026).
+    //
+    // So the fact travels instead of the filter: the campaigns that chose to
+    // stand aside are still sent, flagged, and the client — the only side that
+    // knows whether the banner is on the reader's screen right now — decides
+    // whether to draw them. Crediting is unchanged and still keyed to the
+    // notice being live site-wide, which errs in the advertiser's favour.
     const held = all.length > 0 && (await noticeHoldsTheBar());
-    const live = held ? all.filter((row) => !row.pauseForNotices) : all;
     // Sole occupancy is a bought guarantee: the first live campaign that
     // asked for the bar to itself takes it, and the rest wait their turn
     // on another day rather than sharing it.
-    const sole = live.find((row) => Boolean(row.soleOccupancy));
-    const shown = (sole != null ? [sole] : live).slice(0, adMaxRotation());
+    const sole = all.find((row) => Boolean(row.soleOccupancy));
+    const shown = (sole != null ? [sole] : all).slice(0, adMaxRotation());
     ctx.response.body = {
-      ads: shown.map((row) => row.toPublic()),
+      ads: shown.map((row) => ({
+        ...row.toPublic(),
+        // True when this campaign asked to stand aside for site notices AND
+        // one is up. The client draws it only once its reader has no notice
+        // on screen.
+        standsAside: held && Boolean(row.pauseForNotices),
+      })),
       dwellSeconds: adDwellSeconds(),
     };
     // Short, and private: two readers are not entitled to the same answer,

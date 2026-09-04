@@ -288,6 +288,20 @@ export type AdPalette = {
   readonly barDark?: string;
   readonly accent?: string;
   readonly treatment?: "solid" | "flag" | "gradient" | "accent";
+  /**
+   * The colours a split or a blend runs through, in order (4 Sep 2026).
+   *
+   * Absent, the pair that was always here — `bar` then `accent` — is used, so
+   * a campaign booked before this renders exactly as it did. The palette is
+   * JSON in a text column, which is why widening it needs no migration; what
+   * it does need is for the bar to distrust every value, since this arrives
+   * from the desk and ends up in a CSS declaration.
+   */
+  readonly stops?: readonly string[];
+  /** Relative shares of the bar, one per stop. Normalised, so any total works. */
+  readonly weights?: readonly number[];
+  /** Transition width between stops, 0–100, for `gradient` only. */
+  readonly blend?: number;
 };
 
 export type AdCampaignDetails = {
