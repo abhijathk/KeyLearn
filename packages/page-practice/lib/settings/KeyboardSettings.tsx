@@ -19,7 +19,7 @@ import {
   VirtualKeyboard,
 } from "@keylearn/keyboard-ui";
 import { Tasks } from "@keylearn/lang";
-import { useTypingLanguages } from "@keylearn/pages-shared";
+import { canChooseAccent, useTypingLanguages } from "@keylearn/pages-shared";
 import { useSettings } from "@keylearn/settings";
 import { ModifierState, useDepressedKeys } from "@keylearn/textinput-events";
 import { SoundsThemeProp } from "@keylearn/textinput-ui";
@@ -83,7 +83,19 @@ export function KeyboardSettings(): ReactNode {
 function StyleProp(): ReactNode {
   const { settings, updateSettings } = useSettings();
   const style = settings.get(keyboardProps.style);
-  const colour = settings.get(keyboardProps.colour);
+  const stored = settings.get(keyboardProps.colour);
+  // "Graphite + theme colour" wears `--accent`, and the accent is an
+  // account's to choose — a signed-out visitor always gets the default one.
+  // Offering the colourway to them is offering a choice that does nothing,
+  // which is the same trap the style picker's own comment warns about: a
+  // control that invites a change and then looks identical. So it leaves the
+  // list, and a board already wearing it shows as Graphite until they sign
+  // in — which is what it looks like anyway.
+  const themed = canChooseAccent();
+  const colour =
+    !themed && stored === KeyboardColour.THEME
+      ? KeyboardColour.GRAPHITE
+      : stored;
   const backlight = settings.get(keyboardProps.backlight);
   const intensity = settings.get(keyboardProps.backlightIntensity);
   return (
@@ -137,10 +149,12 @@ function StyleProp(): ReactNode {
             }
           >
             <OptionList
-              options={[...KeyboardColour.ALL].map((item) => ({
-                value: item.id,
-                name: item.name,
-              }))}
+              options={[...KeyboardColour.ALL]
+                .filter((item) => themed || item !== KeyboardColour.THEME)
+                .map((item) => ({
+                  value: item.id,
+                  name: item.name,
+                }))}
               value={colour.id}
               onSelect={(id) => {
                 updateSettings(
