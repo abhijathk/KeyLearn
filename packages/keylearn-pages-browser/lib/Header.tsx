@@ -12,7 +12,7 @@ import {
 } from "@keylearn/page-kids/lib/icons.tsx";
 import { useSettings } from "@keylearn/settings";
 import { supportUrl } from "@keylearn/thirdparties";
-import { ColorIcon, IconButton, StrokeIcon } from "@keylearn/widget";
+import { IconButton, StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
@@ -428,7 +428,7 @@ export function Header({
               }}
             >
               <IconButton
-                icon={<ColorIcon name="focus" />}
+                icon={<StrokeIcon name="focus" />}
                 title={formatMessage(
                   defineMessage({
                     id: "practice.widget.focusMode.enter",
@@ -450,7 +450,7 @@ export function Header({
             // now that it is a stroke icon rather than a fixed-colour image
             // that had to size itself.
             <IconButton
-              icon={<ColorIcon name="coffee" />}
+              icon={<StrokeIcon name="coffee" />}
               title={formatMessage(
                 defineMessage({
                   id: "footer.supportLink.text",
@@ -478,7 +478,7 @@ export function Header({
             </button>
           ) : (
             <IconButton
-              icon={<ColorIcon name="menu" />}
+              icon={<StrokeIcon name="menu" />}
               title={formatMessage(
                 defineMessage({
                   id: "nav.openMenu",

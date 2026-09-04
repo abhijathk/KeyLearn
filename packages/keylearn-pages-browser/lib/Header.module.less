@@ -20,8 +20,8 @@
   // the panel hovering well above the page; this is closer to a card resting
   // on it. Header and telemetry island share the value — they are the same
   // material, and a mismatch would show at the seam between them.
-  box-shadow: 0 0.3rem 0.9rem
-    color-mix(in srgb, var(--shadow-color) 28%, transparent);
+  box-shadow: 0 0.4rem 1.15rem
+    color-mix(in srgb, var(--shadow-color) 38%, transparent);
   // A slow, gentle glide so the header never snaps in or out and pulls the
   // eye away from the practice text.
   transition: transform 0.9s cubic-bezier(0.33, 0, 0.2, 1);
@@ -316,7 +316,10 @@
     padding: 0.4rem;
     border: none;
     border-radius: 0.7rem;
-    color: inherit;
+    // No colour here on purpose: IconButton sets the chrome ink for every icon
+    // button in the app, and a rule at this depth would beat it and put the
+    // header back out of step. Anything in this row that is NOT an icon button
+    // still inherits from the header.
     // No plate behind the glyph (owner decision). The header is itself a
     // panel now, so a second surface per control was a box inside a box.
     // The hit area stays 2.3rem square; only the paint is gone, and the
@@ -325,9 +328,24 @@
     line-height: normal;
     text-decoration: none;
 
+    // 20px, settled by eye over three passes on 4 Sep 2026.
+    //
+    // It started at 1.15rem — 18.4px, a scale of 0.766 from the 24 grid these
+    // are drawn on, which put the 1.45 stroke on 1.11 device pixels. On a
+    // display with no retina factor to hide it that is a line with no whole
+    // pixel to sit in: every stroke smears across two, and neighbouring
+    // strokes — the cup's seam against its rim, the gear's teeth — merge into
+    // grey. The fix for a thin stroke at low DPI is room, not a thinner line.
+    //
+    // 24px was the theoretical best, mapping the viewBox 1:1 to CSS pixels,
+    // and it was too big in the bar; 22 was closer; 20 is where it sat right.
+    // The complaint that started this was strokes merging into each other,
+    // and they still clear at this size — the floor is somewhere below it,
+    // not here. It gives up the exact grid (the stroke lands on 1.21px),
+    // which `shape-rendering: geometricPrecision` on StrokeIcon absorbs.
     svg {
-      inline-size: 1.15rem;
-      block-size: 1.15rem;
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
     }
   }
 }

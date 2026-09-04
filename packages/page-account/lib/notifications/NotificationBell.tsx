@@ -2,10 +2,10 @@ import { parseReply, plainText } from "@keylearn/page-support";
 import { type NotificationDetails, usePageData } from "@keylearn/pages-shared";
 import { NOTIFICATIONS_CHANGED } from "@keylearn/pages-shared";
 import {
-  ColorIcon,
   IconButton,
   Portal,
   renderMessageText,
+  StrokeIcon,
 } from "@keylearn/widget";
 import {
   type ReactNode,
@@ -224,7 +224,7 @@ export function NotificationBell(): ReactNode {
   return (
     <div className={styles.root} ref={rootRef}>
       <IconButton
-        icon={<ColorIcon name="bell" />}
+        icon={<StrokeIcon name="bell" />}
         title={formatMessage(
           defineMessage({
             id: "notifications.bell.title",

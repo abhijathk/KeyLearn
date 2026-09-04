@@ -9,23 +9,39 @@
   z-index: 10;
   gap: 0.1rem;
   align-items: center;
-  opacity: 0.55;
-  transition: opacity 0.2s ease;
+  // No opacity, and no colour either (owner, 4 Sep 2026: uniform with the
+  // header).
+  //
+  // The old 0.55 opacity made this row a grey no token names, one that shifted
+  // with whatever showed through the panel behind it. Setting a colour here
+  // did not fix it: IconButton colours the button itself, so a colour on this
+  // container was inherited and then overridden, and the row stayed darker
+  // than the header. Both now take the same ink from IconButton and there is
+  // nothing left to disagree about.
 
-  &:hover,
-  &.open {
-    opacity: 1;
-  }
-
-  // Keep the whole toolbar small and unobtrusive.
+  // Unobtrusive, but not small enough to have to aim at (owner, 4 Sep 2026).
+  // At 1.05rem these were the smallest targets on the page and the hardest to
+  // tell apart at a glance; the restraint that keeps the toolbar quiet is the
+  // 0.55 opacity above, which lifts on hover, not the size of the glyphs. The
+  // padding grows with them so the touch target stays comfortably past 2rem.
   button {
-    padding: 0.25rem;
+    padding: 0.34rem;
   }
 
   svg {
-    inline-size: 1.05rem;
-    block-size: 1.05rem;
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
   }
+}
+
+// While the tools panel is open the row is live, so it wears the accent hover
+// would give it. Without this, opening the menu leaves the control that opened
+// it looking as inert as the ones it did not.
+// While the tools panel is open the row is live, so it wears the ink hover
+// would give it. On the BUTTONS, not the container — IconButton sets its own
+// colour, so an inherited one never reaches them.
+.controls.open button {
+  color: var(--text-color);
 }
 
 // The revealed cluster of tools: a small frosted panel dropping down from
@@ -84,8 +100,10 @@
   }
 }
 
+// "Aa" stands in for a glyph in the same row, so it grows with them or the
+// row goes uneven.
 .sizerIcon {
   color: var(--text-color-f1);
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 700;
 }

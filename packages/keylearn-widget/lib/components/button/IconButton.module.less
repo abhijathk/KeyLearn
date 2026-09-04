@@ -11,25 +11,66 @@
   margin: 0;
   padding: 0;
   border: none;
-  color: var(--text-color);
+  // The muted chrome ink, for every icon button in the app (owner, 4 Sep 2026:
+  // make it uniform). Set HERE rather than inherited, because that is the only
+  // way it can be uniform: this rule wins over whatever colour the surrounding
+  // panel happens to carry, so the header, the practice toolbar and the
+  // settings rows cannot drift apart by sitting on different backgrounds. The
+  // hover below takes it to full-strength ink.
+  color: var(--text-color-f1);
   background: none;
   line-height: @field-height;
   cursor: pointer;
   transition:
     transform 0.06s ease-out,
-    filter 0.12s ease-out;
+    color 0.14s ease-out,
+    filter 0.16s ease-out;
   .motion-respect-reduced();
 }
 
 .root:focus-visible {
   .is-focused();
+  color: var(--text-color);
+}
+
+/* The answer to a pointer: the icon takes the learner's own accent and lights
+   from behind (owner, 4 Sep 2026 — "theme colour and glow").
+   
+   Colour rather than a grey wash, because every icon here draws in
+   `currentColor`: changing the text colour changes the whole glyph, and the
+   accent is the one colour on the page that is the learner's own choice. The
+   glow is a drop-shadow of that same colour rather than a box-shadow — a box
+   would light a rectangle around a shape that is not one, and at the sizes
+   these run the halo has to follow the strokes to read as the icon lighting
+   up rather than a plate appearing behind it. */
+/* The answer to a pointer: the glyph goes to full-strength ink and gains a
+   soft halo of its own colour (owner, 4 Sep 2026 — dark on hover, and the
+   practice toolbar behaves the same as the header).
+   
+   At rest these draw in `--text-color-f1`, the muted chrome ink; hovering
+   takes them to `--text-color`. Deepening rather than recolouring is what
+   suits a row of controls that is read past rather than at — an accent on
+   hover made every passing pointer light the header up.
+   
+   The halo is a drop-shadow of `currentColor`, so it follows the strokes
+   rather than lighting a rectangle around a shape that is not one, and it
+   deepens with the ink instead of introducing a second colour. */
+.root:hover:not(.disabled) {
+  color: var(--text-color);
+  filter: drop-shadow(
+    0 0 0.26rem color-mix(in oklab, currentColor 32%, transparent)
+  );
 }
 
 /* The same answer to a press as the labelled button — see Button.module.less.
    Icon buttons are the ones most often tapped repeatedly, because there is no
    word to confirm what was hit. */
 .root:active:not(.disabled) {
-  filter: brightness(0.9);
+  /* Keeps the hover glow: `filter` is one property, so setting brightness
+     alone here would drop the drop-shadow at the moment of the press — the
+     icon would go dark exactly when it should feel most alive. */
+  filter: brightness(0.9)
+    drop-shadow(0 0 0.2rem color-mix(in oklab, currentColor 28%, transparent));
   transform: translateY(1px) scale(0.94);
 }
 

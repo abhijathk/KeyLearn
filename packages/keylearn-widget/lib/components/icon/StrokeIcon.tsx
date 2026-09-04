@@ -67,7 +67,7 @@ const shapes: Record<StrokeIconName, ReactNode> = {
     </>
   ),
   heart: (
-    <path d="M12 20s-7-4.5-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.5-7 9-7 9Z" />
+    <path d="M12 20.2s-7.6-4.6-7.6-9.6a4.3 4.3 0 0 1 7.6-2.8 4.3 4.3 0 0 1 7.6 2.8c0 5-7.6 9.6-7.6 9.6Z" />
   ),
   keyboard: (
     <>
@@ -83,9 +83,10 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   ),
   gauge: (
     <>
-      <path d="M4 16a8 8 0 0 1 16 0" />
-      <path d="M12 16l4-3.5" />
-      <circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none" />
+      <path d="M3.8 16.8a8.2 8.2 0 1 1 16.4 0" />
+      <path d="m12 16.8 4.6-5.6" />
+      <circle cx="12" cy="16.8" r="1.2" />
+      <path d="M5.6 13.4h1.4M17 13.4h1.4M12 6.6V8" />
     </>
   ),
   crown: <path d="M4 8l3.5 3L12 6l4.5 5L20 8l-1.5 9h-13z" />,
@@ -113,19 +114,19 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   ),
   help: (
     <>
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M9.5 9.5a2.5 2.5 0 0 1 4.6 1.3c0 1.7-2.1 2-2.1 3.4" />
-      <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="8.6" />
+      <path d="M9.5 9.4a2.6 2.6 0 0 1 5 .9c0 1.7-2.4 2.1-2.4 3.7" />
+      <path d="M12 17.2h0" />
     </>
   ),
   user: (
     <>
-      <circle cx="12" cy="8.5" r="3.4" />
-      <path d="M5.5 20c.8-3.7 3.3-5.5 6.5-5.5s5.7 1.8 6.5 5.5" />
+      <circle cx="12" cy="8.4" r="3.9" />
+      <path d="M4.2 20.2a7.8 7.8 0 0 1 15.6 0" />
     </>
   ),
-  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
-  close: <path d="M6 6l12 12M18 6L6 18" />,
+  menu: <path d="M3.6 7.2h16.8M3.6 12h16.8M3.6 16.8h16.8" />,
+  close: <path d="M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8" />,
   mail: (
     <>
       <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
@@ -134,8 +135,9 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   ),
   bell: (
     <>
-      <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" />
-      <path d="M10 20a2 2 0 0 0 4 0" />
+      <path d="M12 3.4a6.1 6.1 0 0 0-6.1 6.1c0 4.4-1.7 6.3-1.7 6.3h15.6S18.1 13.9 18.1 9.5A6.1 6.1 0 0 0 12 3.4Z" />
+      <path d="M9.7 18.6a2.3 2.3 0 0 0 4.6 0" />
+      <path d="M12 2v1.4" />
     </>
   ),
   code: <path d="M9 8l-4 4 4 4M15 8l4 4-4 4" />,
@@ -170,33 +172,38 @@ const shapes: Record<StrokeIconName, ReactNode> = {
       <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none" />
     </>
   ),
-  font: <path d="M5 19l5-14 5 14M6.5 14.5h7M15.5 19l3-8 3 8M16.7 16.5h3.6" />,
+  font: (
+    <>
+      <path d="M5.6 19 12 5l6.4 14" />
+      <path d="M8.2 14.2h7.6" />
+    </>
+  ),
   expand: (
-    <path d="M9 4H5a1 1 0 0 0-1 1v4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M4 15v4a1 1 0 0 0 1 1h4" />
+    <path d="M9.4 3.6H4.8a1.2 1.2 0 0 0-1.2 1.2v4.6M14.6 3.6h4.6a1.2 1.2 0 0 1 1.2 1.2v4.6M20.4 14.6v4.6a1.2 1.2 0 0 1-1.2 1.2h-4.6M3.6 14.6v4.6a1.2 1.2 0 0 0 1.2 1.2h4.6" />
   ),
   collapse: (
-    <path d="M4 8h4a1 1 0 0 0 1-1V3M20 8h-4a1 1 0 0 1-1-1V3M15 16h4a1 1 0 0 1 1 1v4M9 16H5a1 1 0 0 0-1 1v4" />
+    <path d="M3.6 9.4h4.6a1.2 1.2 0 0 0 1.2-1.2V3.6M20.4 9.4h-4.6a1.2 1.2 0 0 1-1.2-1.2V3.6M14.6 20.4v-4.6a1.2 1.2 0 0 1 1.2-1.2h4.6M9.4 20.4v-4.6a1.2 1.2 0 0 0-1.2-1.2H3.6" />
   ),
   settings: (
     <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="6.3" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M12 3.2v2.5M12 18.3v2.5M20.8 12h-2.5M5.7 12H3.2M18.2 5.8l-1.8 1.8M7.6 16.4l-1.8 1.8M18.2 18.2l-1.8-1.8M7.6 7.6 5.8 5.8" />
     </>
   ),
   tune: (
     <>
-      <path d="M5 6h14M5 12h14M5 18h14" />
-      <circle cx="9" cy="6" r="2.2" />
-      <circle cx="15" cy="12" r="2.2" />
-      <circle cx="8" cy="18" r="2.2" />
+      <path d="M3.6 7.6h9.4M17.4 7.6h3M3.6 16.4h3M11 16.4h9.4" />
+      <circle cx="15.2" cy="7.6" r="2.1" />
+      <circle cx="8.8" cy="16.4" r="2.1" />
     </>
   ),
   undo: <path d="M8 5L4 9l4 4M4 9h10a6 6 0 0 1 0 12h-3" />,
   redo: <path d="M16 5l4 4-4 4M20 9H10a6 6 0 0 0 0 12h3" />,
   focus: (
     <>
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M4 9V6.5A2.5 2.5 0 0 1 6.5 4H9M15 4h2.5A2.5 2.5 0 0 1 20 6.5V9M20 15v2.5a2.5 2.5 0 0 1-2.5 2.5H15M9 20H6.5A2.5 2.5 0 0 1 4 17.5V15" />
+      <path d="M3.4 8.6V5.4a2 2 0 0 1 2-2h3.2M15.4 3.4h3.2a2 2 0 0 1 2 2v3.2M20.6 15.4v3.2a2 2 0 0 1-2 2h-3.2M8.6 20.6H5.4a2 2 0 0 1-2-2v-3.2" />
+      <circle cx="12" cy="12" r="2.8" />
     </>
   ),
   back: <path d="M19 12H5M11 6l-6 6 6 6" />,
@@ -208,29 +215,38 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   // A circular arrow — "do this one again".
   restart: (
     <>
-      <path d="M20 11.5a8 8 0 1 1-2.3-5.4" />
-      <path d="M20 4v4h-4" />
+      <path d="M20 12a8 8 0 1 1-2.9-6.2" />
+      <path d="M20.4 4.4v4.9h-4.9" />
     </>
   ),
-  // A chevron and a bar — "move on to the next one".
   skip: (
     <>
-      <path d="M7 6l6 6-6 6" />
-      <path d="M16 6v12" />
+      <path d="M6.2 5.6v12.8L16 12 6.2 5.6Z" />
+      <path d="M18.4 5.6v12.8" />
     </>
   ),
-  // Day: a sun.
   sun: (
     <>
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7" />
+      <circle cx="12" cy="12" r="4.4" />
+      <path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4M5.35 5.35l1.7 1.7M16.95 16.95l1.7 1.7M18.65 5.35l-1.7 1.7M7.05 16.95l-1.7 1.7" />
     </>
   ),
-  // Night: a crescent moon.
-  moon: <path d="M20 14.4A8 8 0 0 1 9.6 4 8 8 0 1 0 20 14.4z" />,
-  // Auto (follow the device): the letter A.
-  auto: <path d="M6 19l6-14 6 14M8.7 14.4h6.6" />,
-  // An open book — the practice-texts library.
+  moon: (
+    <>
+      <path d="M20.4 14.6A8.6 8.6 0 0 1 9.4 3.6a8.6 8.6 0 1 0 11 11Z" />
+      <path d="M16.6 3.4v2.6M15.3 4.7h2.6" />
+    </>
+  ),
+  auto: (
+    <>
+      <circle cx="12" cy="12" r="6.2" />
+      <path
+        d="M12 5.8a6.2 6.2 0 0 1 0 12.4Z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </>
+  ),
   book: (
     <path d="M12 6.4C10.4 5 7.9 4.6 4.5 4.9V17c3.4-.3 5.9.1 7.5 1.6M12 6.4c1.6-1.4 4.1-1.8 7.5-1.5V17c-3.4-.3-5.9.1-7.5 1.6M12 6.4V18.6" />
   ),
@@ -260,12 +276,11 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   // The keyboard, struck through — "hide it".
   keyboardOff: (
     <>
-      <rect x="3" y="6" width="18" height="12" rx="2.5" />
-      <path d="M7 10h0M15 10h0M7 13.5h6" />
-      <path d="M4 4l16 16" />
+      <path d="M8.6 5.6h10.6a2.4 2.4 0 0 1 2.4 2.4v8a2.4 2.4 0 0 1-1 1.9M17 18.4H4.8A2.4 2.4 0 0 1 2.4 16V8a2.4 2.4 0 0 1 2.1-2.4" />
+      <path d="M6.2 9.6h0M9.6 13.6h5.6" />
+      <path d="M3 3l18 18" />
     </>
   ),
-  // A support agent's headset — the desk's own wordmark glyph.
   headset: (
     <>
       <path d="M4 13v-1a8 8 0 0 1 16 0v1" />
@@ -280,11 +295,9 @@ const shapes: Record<StrokeIconName, ReactNode> = {
   arrowRight: <path d="M5 12h13M12 5l7 7-7 7" />,
   coffee: (
     <>
-      <path d="M4.5 9h11v5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4z" />
-      <path d="M15.5 10.2h1.6a2.4 2.4 0 0 1 0 4.8h-1.6" />
-      <path d="M3 20.5h14" />
-      <path d="M8 3.2c-.7 1 0 1.7.6 2.6" />
-      <path d="M11.6 3.2c-.7 1 0 1.7.6 2.6" />
+      <path d="M9.2 4.8V3.4a.8.8 0 0 1 .8-.8h4a.8.8 0 0 1 .8.8v1.4" />
+      <path d="M4.5 8.8 5.9 5.5a1.2 1.2 0 0 1 1.1-.7h10a1.2 1.2 0 0 1 1.1.7l1.4 3.3Z" />
+      <path d="M5.4 8.8h13.2l-1.5 11.1a1.6 1.6 0 0 1-1.59 1.4H8.49a1.6 1.6 0 0 1-1.59-1.4Z" />
     </>
   ),
 };

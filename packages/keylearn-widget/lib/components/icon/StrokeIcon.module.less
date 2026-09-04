@@ -5,7 +5,15 @@
   block-size: 1.8rem;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.7;
+  // Set 02 "Hairline", one step heavier (owner, 4 Sep 2026): thin enough to
+  // recede behind the text it sits beside, with enough ink to hold its own
+  // next to the monospace figures and to survive 16px on a phone.
+  stroke-width: 1.45;
   stroke-linejoin: round;
   stroke-linecap: round;
+  // Curves are drawn from the real geometry rather than the browser's speed
+  // heuristics. It costs nothing at these sizes and it is what keeps a 1.45
+  // stroke on a display with no retina factor reading as a line instead of a
+  // row of grey squares.
+  shape-rendering: geometricPrecision;
 }
