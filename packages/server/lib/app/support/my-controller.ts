@@ -31,6 +31,7 @@ import {
   forwardCsatToQdesk,
   forwardFeedbackToQdesk,
   forwardReplyToQdesk,
+  forwardResolutionToQdesk,
   forwardTicketToQdesk,
   tellDeskCustomerTyping,
 } from "./qdesk-forward.ts";
@@ -815,6 +816,9 @@ export class MyTicketsController {
       body: "Marked as sorted.",
       kind: "handover",
     });
+    // Fire-and-forget, like every other forward: the desk being unreachable
+    // must not fail the customer's click. Their side is closed either way.
+    forwardResolutionToQdesk(id, true);
     ctx.response.body = { ok: true };
   }
 
@@ -847,6 +851,7 @@ export class MyTicketsController {
       body: "Still open. Tell us what's not right and we'll keep working on it.",
       kind: "handover",
     });
+    forwardResolutionToQdesk(id, false);
     ctx.response.body = { ok: true };
   }
 

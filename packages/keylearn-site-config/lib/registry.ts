@@ -106,7 +106,12 @@ const BASE_REGISTRY: readonly SettingDef[] = [
   }),
   page("support", "Support page", "/support"),
   page("helpCentre", "Help centre", "/support/help"),
-  page("forSchools", "For schools page", "/for-schools"),
+  // Off by default until the schools tier ships. The page, the enquiry form
+  // and the signpost on the sign-in screen all hang off this one switch, so
+  // turning it on in the control centre is the whole of launching it — there
+  // is nothing to deploy. Admins still see the page, which is how it gets
+  // checked before that happens.
+  page("forSchools", "For schools page", "/for-schools", { default: "404" }),
   page("verify", "Certificate check", "/verify, /verify/:number"),
   page("publicProfiles", "Public profiles", "/profile/:userId"),
   // The drawer's own links. These are pages a visitor reaches from the menu

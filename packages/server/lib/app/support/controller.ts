@@ -68,6 +68,7 @@ import {
   fetchDeskNotices,
   fetchHelpArticles,
   forwardReplyToQdesk,
+  forwardResolutionToQdesk,
   forwardTicketToQdesk,
   qdeskConfigured,
 } from "./qdesk-forward.ts";
@@ -1287,6 +1288,10 @@ export class Controller {
       sender: "system",
       body: "Marked resolved by the sender.",
     });
+    // The guest thread's half of the same sync as the signed-in "sorted"
+    // button: QDesk holds the record, so its copy has to close too or the
+    // queue keeps counting a conversation that is over.
+    forwardResolutionToQdesk(ticket.id!, true);
     ctx.response.body = { ok: true };
   }
 

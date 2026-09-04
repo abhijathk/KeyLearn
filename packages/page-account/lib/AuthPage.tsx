@@ -1,4 +1,9 @@
-import { Pages, PROFILE_NAME_MAX, usePageData } from "@keylearn/pages-shared";
+import {
+  Pages,
+  PROFILE_NAME_MAX,
+  usePageData,
+  usePageOffered,
+} from "@keylearn/pages-shared";
 import { Button, CheckBox, Icon, TextField } from "@keylearn/widget";
 import { AnimatedHeight, FloatingShell } from "@keylearn/widget";
 import {
@@ -175,7 +180,14 @@ export function AuthPage({
  * send families down a dead end.
  */
 function ForSchoolsSignpost(): ReactNode {
+  const offered = usePageOffered();
   if (useContext(InvitedContext)) {
+    return null;
+  }
+  // The signpost goes wherever the page goes. A link that 404s is worse than
+  // no link at all, and while the schools tier is unreleased this offers
+  // something we cannot yet honour.
+  if (!offered("forSchools")) {
     return null;
   }
   return (

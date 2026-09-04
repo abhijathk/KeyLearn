@@ -296,6 +296,26 @@ export function forwardArchiveToQdesk(ticketId: number): void {
 }
 
 /**
+ * The customer said it is sorted — or changed their mind.
+ *
+ * Until this, "yes, that sorted it" closed the thread here and left the
+ * desk's copy open: the queue counted work nobody was waiting on, and a
+ * staffer could pick up a ticket the customer had finished with and answer
+ * into silence. QDesk is the system of record for the conversation, so its
+ * copy has to hear about a status the customer set on this side.
+ *
+ * Both directions travel, because closing on somebody's word is only safe
+ * if their change of mind lands too — a one-way sync would leave a "not
+ * really" stranded against a closed desk ticket.
+ */
+export function forwardResolutionToQdesk(
+  ticketId: number,
+  resolved: boolean,
+): void {
+  void post(`/_/apps/tickets/${ticketId}/resolution`, { resolved });
+}
+
+/**
  * Whether the desk is writing on this ticket right now.
  *
  * Asked rather than assumed: the "someone is answering" indicator used
