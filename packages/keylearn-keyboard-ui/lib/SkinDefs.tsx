@@ -105,7 +105,13 @@ function grad(id: string, stops: readonly string[]): ReactNode {
         <stop
           key={i}
           offset={(i / Math.max(1, stops.length - 1)).toFixed(3)}
-          stopColor={c}
+          // As a STYLE, not the `stop-color` attribute. Every keyset here is
+          // fixed hexes and either would do — except the theme colourway,
+          // whose accent is `var(--accent)` so the board can follow whatever
+          // the learner picked. An SVG presentation attribute does not resolve
+          // a custom property; the CSS property does, and silently rendering
+          // black is exactly the kind of failure that ships (4 Sep 2026).
+          style={{ stopColor: c }}
         />
       ))}
     </linearGradient>

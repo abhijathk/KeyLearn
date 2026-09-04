@@ -4,17 +4,29 @@
 // pastel mint accent.
 .keylearn-theme-props() {
   @colors: {
-    @primary: #141620;
+    // The page ground, taken four points of lightness further down (owner,
+    // 4 Sep 2026: blacker). Every panel, chip and border on this theme is
+    // derived from it by `lighten()`, so dropping it alone would have taken
+    // them all with it — the four steps below are each raised by the same
+    // four points, which leaves them exactly where they were and moves only
+    // the ground behind them.
+    //
+    // The two panel steps were then taken back down by two points (owner,
+    // 4 Sep 2026: the chips a tiny bit darker), so they sit slightly closer to
+    // the new ground than they did to the old one. The border steps below are
+    // untouched — they are the edges of those panels, and pulling them in as
+    // well would have flattened the panel against its own outline.
+    @primary: #0b0d14;
     @secondary: #e6e8ee;
     @accent: #8fd9b6;
     @error: #ff7a6b;
   };
 
-  --primary-d2: lighten(@colors[@primary], 12);
-  --primary-d1: lighten(@colors[@primary], 7);
+  --primary-d2: lighten(@colors[@primary], 16);
+  --primary-d1: lighten(@colors[@primary], 11);
   --primary: @colors[@primary];
-  --primary-l1: lighten(@colors[@primary], 3);
-  --primary-l2: lighten(@colors[@primary], 5);
+  --primary-l1: lighten(@colors[@primary], 5);
+  --primary-l2: lighten(@colors[@primary], 7);
   --secondary-d1: lighten(@colors[@secondary], 5);
   --secondary: @colors[@secondary];
   --secondary-l1: darken(@colors[@secondary], 15);
@@ -66,6 +78,22 @@
   --KeyboardKey-button__color: lighten(@colors[@primary], 8);
   // Deep keycap edge so the 3d side reads as shadow, not a grey ledge.
   --KeyboardKey-edge__color: #0e1118;
+  // How strong the sheen on a cap is. Low here: a white radial at the day
+  // board's value is a glare on a dark cap (owner, 4 Sep 2026).
+  // What a finger-zone WALL mixes into. The edge colour here, so a tinted
+  // cap keeps its hue down the side but drops a step in value — on this
+  // ground a wall level with its own face has no lip at all (owner,
+  // 4 Sep 2026). The day theme leaves this unset and the wall stays flat.
+  --KeyboardKey-zone-wall__into: var(--KeyboardKey-edge__color);
+  // And less of the tint in the wall than in the face, so the side drops a
+  // real step rather than the eight levels that changing only the far end
+  // of the mix bought (owner, 4 Sep 2026: "a bit more dark").
+  --KeyboardKey-zone-wall__tint: 58%;
+  --KeyboardKey-mould__opacity: 0.55;
+  --KeyboardKey-wall__mix: 26%;
+  --KeyboardKey-spec__opacity: 0.13;
+  --KeyboardKey-bounce__opacity: 0.07;
+  --KeyboardKey-crest__opacity: 0.13;
   --syntax-keyword: #8fd9b6;
   --syntax-string: #72b172;
   --syntax-number: #b281d3;

@@ -44,6 +44,31 @@ const modLabelText: Record<string, string> = {
   "Esc": "esc",
 };
 
+/**
+ * The visible wall below the face, in board pixels.
+ *
+ * Five (owner, 4 Sep 2026: taller keys). It was three, which is a low-profile
+ * wall — a chiclet. MECH's own lip is 5 units on a 55-unit cap and this board
+ * draws 34s, so five PIXELS is proportionally deeper than any of the skinned
+ * boards: a cap with somewhere to travel to. That is the point of it, and the
+ * press below spends most of it.
+ */
+const LIP = 5;
+
+/**
+ * How far the face travels on a press, as a fraction of the lip.
+ *
+ * MECH's number. What makes a press read as mechanical rather than as a
+ * button going flat is that it does NOT bottom out: a sliver of wall is still
+ * showing at the end of the stroke, so the cap has visibly moved DOWN rather
+ * than been switched off. This board used to drop the face 3px and take the
+ * wall's opacity to zero, which is the flat press it was drawn for.
+ */
+const TRAVEL = 0.62;
+
+/** How far the face is inset each side, so the body reads as a lip. */
+const FACE_IN = 0.6;
+
 export function makeKeyComponent(
   { letterName }: Language,
   shape: KeyShape,
@@ -72,18 +97,85 @@ export function makeKeyComponent(
     ) : (
       <rect
         className={styles.button}
-        x={0}
+        // Inset each side so the body shows as a lip the face stands on.
+        // ROUND's `faceInX` is 1 unit on a 55-unit cap; this board's caps are
+        // 34, so the same lip is 0.6px here.
+        x={FACE_IN}
         y={0}
-        width={w}
+        width={w - FACE_IN * 2}
         height={h}
-        rx={9}
-        ry={9}
+        rx={9 - FACE_IN}
+        ry={9 - FACE_IN}
       />
     ),
   );
-  if (shape.homing) {
+  // The moulding, over whatever colour the face ended up.
+  children.push(
+    shape.shape ? (
+      <path className={styles.mould} d={shape.shape} />
+    ) : (
+      <rect
+        className={styles.mould}
+        x={FACE_IN}
+        y={0}
+        width={w - FACE_IN * 2}
+        height={h}
+        rx={9 - FACE_IN}
+        ry={9 - FACE_IN}
+      />
+    ),
+  );
+  if (shape.shape == null) {
+    // One overhead light, in the same three marks Round Graphite uses: the
+    // sheen high and a little left, the bounce off the desk along the inside
+    // of the bottom edge, and the hairline along the top. Stroking the whole
+    // outline instead would ring the cap in light, which reads as an embossed
+    // button rather than a keycap.
     children.push(
-      <circle className={styles.bump} cx={w / 2} cy={h - 5} r={3} />,
+      <ellipse
+        className={styles.spec}
+        cx={w * 0.42}
+        cy={h * 0.3}
+        rx={w * 0.36}
+        ry={h * 0.26}
+      />,
+    );
+    children.push(
+      <path className={styles.bounce} d={`M 9 ${h - 0.75} H ${w - 9}`} />,
+    );
+    children.push(<path className={styles.crest} d={`M 9 0.45 H ${w - 9}`} />);
+  }
+  if (shape.homing) {
+    // The home-row bar, as the round board draws it (owner, 4 Sep 2026):
+    // MOULDED, not printed — a shadow with a thin highlight under it, so it
+    // reads as a ridge raised out of the cap rather than a dot inked onto it.
+    // That is what the two keys actually have, and it is the one mark on the
+    // board a learner is meant to find without looking.
+    //
+    // The round board's numbers, scaled from its 55-unit cap to this 34.
+    const k = h / 55;
+    const bw = w * 0.3;
+    const bx = w / 2 - bw / 2;
+    const by = h / 2 + 13 * k;
+    children.push(
+      <rect
+        className={styles.bumpShadow}
+        x={bx}
+        y={by}
+        width={bw}
+        height={2 * k}
+        rx={k}
+      />,
+    );
+    children.push(
+      <rect
+        className={styles.bumpLight}
+        x={bx}
+        y={by + 2 * k}
+        width={bw}
+        height={k}
+        rx={k / 2}
+      />,
     );
   }
   for (const label of shape.labels) {
@@ -176,16 +268,28 @@ export function makeKeyComponent(
   // character in the corner of the cap costs the sighted reader nothing and
   // gives that learner the whole answer.
   const fingerMark = fingerMarkOf(shape);
-  // The solid darker side of the keycap; the face drops onto it when pressed.
-  const side = shape.shape ? (
+  /**
+   * The cap body: full height PLUS the lip, in the wall colour, with the face
+   * inset on top of it.
+   *
+   * This used to be the FACE shape pushed 3px down, with the face put back
+   * over it — two copies of one rounded rect, so the cap had no lip at all.
+   * Nothing was inset, nothing stepped in, and the only thing separating face
+   * from wall was a change of colour. That is the structural difference from
+   * the skinned keysets (`SkinnedKey.tsx` says so in as many words), and it is
+   * why shading alone never made this board read as moulded: you cannot light
+   * a shape that has no moulding in it (owner, 4 Sep 2026, from the Round
+   * Graphite study).
+   */
+  const body = shape.shape ? (
     <path className={styles.side} d={shape.shape} transform="translate(0 3)" />
   ) : (
     <rect
       className={styles.side}
       x={0}
-      y={3}
+      y={0}
       width={w}
-      height={h}
+      height={h + LIP}
       rx={9}
       ry={9}
     />
@@ -219,8 +323,9 @@ export function makeKeyComponent(
         height={h}
         overflow="visible"
         data-key={id}
+        style={{ "--kl-travel": `${(LIP * TRAVEL).toFixed(2)}px` } as never}
       >
-        {side}
+        {body}
         <g className={styles.cap}>
           {...children}
           {marked && (

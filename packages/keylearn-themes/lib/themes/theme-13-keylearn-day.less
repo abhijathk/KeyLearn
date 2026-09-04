@@ -4,7 +4,12 @@
 // a soft paper-white ground with a deeper green accent for contrast.
 .keylearn-day-theme-props() {
   @colors: {
-    @primary: #f5f6fa;
+    // A hint more grey (owner, 4 Sep 2026). It was a near-white with a blue
+    // cast; this keeps the cast and takes a little of the brightness and a
+    // little of the saturation out, so the page reads as paper rather than as
+    // a lit screen. Everything else on this theme derives from it, which is
+    // the point — the whole surface moves together.
+    @primary: #eef0f3;
     @secondary: #1f2433;
     @accent: #2f8a5d;
     @error: #cf5a4a;
@@ -63,6 +68,17 @@
   --KeyboardKey-button__color: #ffffff;
   // Pale blue-grey keycap edge for the day board (mockup --key-edge).
   --KeyboardKey-edge__color: #b2bdd6;
+  // Low on both boards, for opposite reasons (owner, 4 Sep 2026). On a dark
+  // cap a white sheen is a glare; on a WHITE one there is almost no colour
+  // left for it to brighten, so most of what it adds is a pale patch with an
+  // edge — a smear on the plastic rather than light on it. The moulding
+  // gradient does the work in both themes; the sheen only says where the
+  // light is.
+  --KeyboardKey-mould__opacity: 1;
+  --KeyboardKey-wall__mix: 45%;
+  --KeyboardKey-spec__opacity: 0.14;
+  --KeyboardKey-bounce__opacity: 0.06;
+  --KeyboardKey-crest__opacity: 0.12;
   // The comet cue needs weight against white keycaps: the shared #3fbf8e
   // washes out, so the day board points with the deep accent green.
   --KeyboardKey-pointer__color: @colors[@accent];

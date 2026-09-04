@@ -8,21 +8,92 @@
   fill: var(--KeyboardKey-button__color);
 }
 
+// The moulding, as a separate layer over the face rather than as the face's
+// own fill.
+//
+// It started as a gradient fill on `.button` and that was wrong: the finger
+// zones colour `.button` too, and being more specific they won — so every
+// zone-tinted cap lost its moulding and only the neutral ones kept it. A
+// neutral light-to-dark overlay carries the same shape of light over ANY
+// fill, which is what a cap actually is: one piece of plastic in whatever
+// colour, lit from above.
+.mould {
+  fill: url("#kl-face");
+  // Scaled per theme (owner, 4 Sep 2026: on dark, the top and side had no
+  // separation). The moulding darkens the foot of the face, and on a dark cap
+  // that sank it to the wall's own value — the two met with nothing between
+  // them and the lip disappeared. On a white cap there is far more room to
+  // fall, so day keeps the full gradient.
+  opacity: var(--KeyboardKey-mould__opacity, 1);
+  pointer-events: none;
+}
+
 // The visible 3d side of the keycap under the face. The edge colour is a
 // theme token (deep in night, pale in day) with the old neutral as fallback.
+// The cap body, which the face is inset on. Two shadows rather than one: an
+// object standing on a surface casts a tight dark contact right under it AND
+// a wide soft ambient around it, and a single offset blur doing both jobs is
+// exactly what makes a shape read as a sticker lying on the page. The offsets
+// and blurs are ROUND's own (`shTight` / `shWide` in skins.ts), scaled from
+// its 55-unit cap to this board's 34.
 .side {
+  // How far the wall sits from the cap. A token, because the distance that
+  // reads on a white cap is not the distance that reads on a near-black one:
+  // the darker the cap, the less room there is below it, so the night theme
+  // pushes the wall further toward the edge colour.
   fill: color-mix(
     in oklab,
-    var(--KeyboardKey-button__color) 45%,
+    var(--KeyboardKey-button__color) var(--KeyboardKey-wall__mix, 45%),
     var(--KeyboardKey-edge__color, #666b7a)
   );
-  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 28%));
+  filter: drop-shadow(0 1.2px 2px rgb(0 0 0 / 45%))
+    drop-shadow(0 2.5px 6.8px rgb(0 0 0 / 30%));
   transition: opacity 90ms ease;
+}
+
+// One soft light overhead, high and a little left. Its strength is a theme
+// token: on a white cap this is barely present, and the same value on a dark
+// one is a glare (owner, 4 Sep 2026 — "the glare on the dark should be
+// subtle"). So night and day set their own, and neither is a compromise.
+.spec {
+  fill: url("#kl-spec");
+  opacity: var(--KeyboardKey-spec__opacity, 0.2);
+  pointer-events: none;
+  transition: opacity 90ms ease;
+}
+
+// A cap that has dropped is a little further from the light.
+.depressedKey .spec {
+  opacity: calc(var(--KeyboardKey-spec__opacity, 0.2) * 0.7);
+}
+
+// Bounce off the desk, along the INSIDE of the bottom edge only.
+.bounce {
+  fill: none;
+  stroke: #ffffff;
+  stroke-opacity: var(--KeyboardKey-bounce__opacity, 0.08);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+// The lit rim along the top edge, where the moulding turns over. Not the whole
+// outline — a ring of light reads as an embossed button, not a keycap.
+.crest {
+  fill: none;
+  stroke: #ffffff;
+  stroke-opacity: var(--KeyboardKey-crest__opacity, 0.17);
+  stroke-width: 1.1;
+  pointer-events: none;
 }
 
 .symbol {
   fill: var(--KeyboardKey-symbol__color);
-  font-family: var(--monospace-font-family);
+  // The same face the skinned boards print in (owner, 4 Sep 2026: like Round
+  // Graphite). A monospace legend is a typing-app reflex and it is wrong on a
+  // keycap: a real keyset is printed in the same grotesque as everything else
+  // — the letters are a LABEL for a key, not a sample of the text you are
+  // about to type, and the monospace read as the latter.
+  font-family: var(--default-font-family);
   font-size: 10px;
   cursor: default;
   user-select: none;
@@ -64,8 +135,17 @@
   fill: var(--KeyboardKey-symbol--ligature__color);
 }
 
-.bump {
-  fill: var(--KeyboardKey-symbol__color);
+// The home-row ridge: the groove, then the lit edge below it. Black and white
+// rather than the legend colour, because it is a shape in the plastic and not
+// a printed mark — the same two rects the round board draws.
+.bumpShadow {
+  fill: #000000;
+  opacity: 0.34;
+}
+
+.bumpLight {
+  fill: #ffffff;
+  opacity: 0.1;
 }
 
 .handLeft {
@@ -82,84 +162,192 @@
 
 .fingerPinky {
   .button {
-    fill: var(--pinky-zone-color);
+    // Mixed back toward the cap rather than used neat, then lifted again
+    // (owner, 4 Sep 2026: subtler, then "a little bit more"). 68% is where
+    // the zone reads at a glance without being the loudest thing on the
+    // page — the letters are what a learner is reading.
+    //
+    // The WALL below carries the same tint at the same strength; what it
+    // mixes into is the variable (owner, 4 Sep 2026, in two passes).
+    //
+    // It first mixed the zone colour into the dark edge token, which laid a
+    // band of a DIFFERENT colour along the bottom of every tinted key — a
+    // coloured sticker on a grey key rather than a key that is that colour.
+    // Matching it to the face fixed that and cost the dark board its lip:
+    // on a near-black ground a tinted wall the same value as its face has
+    // nothing to separate it.
+    //
+    // So both ends of the mix are variables, and NIGHT is the only theme that
+    // moves them: it drops to 58% and mixes into the edge, which is the same
+    // hue a clear step darker. Moving only the far end was not enough there —
+    // the two mixes differed by about eight levels, nothing on that ground.
+    //
+    // Day deliberately leaves both unset and keeps the wall level with the
+    // face (owner, 4 Sep 2026, having seen it both ways). It does not need
+    // the step: a tinted cap on a white board is already separated from what
+    // is under it, and the darker side read as a rim around the colour.
+    fill: color-mix(
+      in oklab,
+      var(--pinky-zone-color) 68%,
+      var(--KeyboardKey-button__color)
+    );
   }
 
   .side {
     fill: color-mix(
       in oklab,
-      var(--pinky-zone-color) 45%,
-      var(--KeyboardKey-edge__color, #666b7a)
+      var(--pinky-zone-color) var(--KeyboardKey-zone-wall__tint, 68%),
+      var(--KeyboardKey-zone-wall__into, var(--KeyboardKey-button__color))
     );
   }
 }
 
 .fingerRing {
   .button {
-    fill: var(--ring-zone-color);
+    // Mixed back toward the cap rather than used neat, then lifted again
+    // (owner, 4 Sep 2026: subtler, then "a little bit more"). 68% is where
+    // the zone reads at a glance without being the loudest thing on the
+    // page — the letters are what a learner is reading.
+    //
+    // The WALL below takes the SAME tint, exactly (owner, 4 Sep 2026: remove
+    // the edge gradient). It used to mix the zone colour into the dark edge
+    // token, which laid a band of a different, darker colour along the bottom
+    // of every tinted key — a coloured sticker on a grey key rather than a
+    // key that IS that colour. With the wall matched, depth comes from the
+    // two shadows under the body and the moulding over the face, which is
+    // where it should come from anyway.
+    fill: color-mix(
+      in oklab,
+      var(--ring-zone-color) 68%,
+      var(--KeyboardKey-button__color)
+    );
   }
 
   .side {
     fill: color-mix(
       in oklab,
-      var(--ring-zone-color) 45%,
-      var(--KeyboardKey-edge__color, #666b7a)
+      var(--ring-zone-color) var(--KeyboardKey-zone-wall__tint, 68%),
+      var(--KeyboardKey-zone-wall__into, var(--KeyboardKey-button__color))
     );
   }
 }
 
 .fingerMiddle {
   .button {
-    fill: var(--middle-zone-color);
+    // Mixed back toward the cap rather than used neat, then lifted again
+    // (owner, 4 Sep 2026: subtler, then "a little bit more"). 68% is where
+    // the zone reads at a glance without being the loudest thing on the
+    // page — the letters are what a learner is reading.
+    //
+    // The WALL below takes the SAME tint, exactly (owner, 4 Sep 2026: remove
+    // the edge gradient). It used to mix the zone colour into the dark edge
+    // token, which laid a band of a different, darker colour along the bottom
+    // of every tinted key — a coloured sticker on a grey key rather than a
+    // key that IS that colour. With the wall matched, depth comes from the
+    // two shadows under the body and the moulding over the face, which is
+    // where it should come from anyway.
+    fill: color-mix(
+      in oklab,
+      var(--middle-zone-color) 68%,
+      var(--KeyboardKey-button__color)
+    );
   }
 
   .side {
     fill: color-mix(
       in oklab,
-      var(--middle-zone-color) 45%,
-      var(--KeyboardKey-edge__color, #666b7a)
+      var(--middle-zone-color) var(--KeyboardKey-zone-wall__tint, 68%),
+      var(--KeyboardKey-zone-wall__into, var(--KeyboardKey-button__color))
     );
   }
 }
 
 .fingerLeftIndex {
   .button {
-    fill: var(--left-index-zone-color);
+    // Mixed back toward the cap rather than used neat, then lifted again
+    // (owner, 4 Sep 2026: subtler, then "a little bit more"). 68% is where
+    // the zone reads at a glance without being the loudest thing on the
+    // page — the letters are what a learner is reading.
+    //
+    // The WALL below takes the SAME tint, exactly (owner, 4 Sep 2026: remove
+    // the edge gradient). It used to mix the zone colour into the dark edge
+    // token, which laid a band of a different, darker colour along the bottom
+    // of every tinted key — a coloured sticker on a grey key rather than a
+    // key that IS that colour. With the wall matched, depth comes from the
+    // two shadows under the body and the moulding over the face, which is
+    // where it should come from anyway.
+    fill: color-mix(
+      in oklab,
+      var(--left-index-zone-color) 68%,
+      var(--KeyboardKey-button__color)
+    );
   }
 
   .side {
     fill: color-mix(
       in oklab,
-      var(--left-index-zone-color) 45%,
-      var(--KeyboardKey-edge__color, #666b7a)
+      var(--left-index-zone-color) var(--KeyboardKey-zone-wall__tint, 68%),
+      var(--KeyboardKey-zone-wall__into, var(--KeyboardKey-button__color))
     );
   }
 }
 
 .fingerRightIndex {
   .button {
-    fill: var(--right-index-zone-color);
+    // Mixed back toward the cap rather than used neat, then lifted again
+    // (owner, 4 Sep 2026: subtler, then "a little bit more"). 68% is where
+    // the zone reads at a glance without being the loudest thing on the
+    // page — the letters are what a learner is reading.
+    //
+    // The WALL below takes the SAME tint, exactly (owner, 4 Sep 2026: remove
+    // the edge gradient). It used to mix the zone colour into the dark edge
+    // token, which laid a band of a different, darker colour along the bottom
+    // of every tinted key — a coloured sticker on a grey key rather than a
+    // key that IS that colour. With the wall matched, depth comes from the
+    // two shadows under the body and the moulding over the face, which is
+    // where it should come from anyway.
+    fill: color-mix(
+      in oklab,
+      var(--right-index-zone-color) 68%,
+      var(--KeyboardKey-button__color)
+    );
   }
 
   .side {
     fill: color-mix(
       in oklab,
-      var(--right-index-zone-color) 45%,
-      var(--KeyboardKey-edge__color, #666b7a)
+      var(--right-index-zone-color) var(--KeyboardKey-zone-wall__tint, 68%),
+      var(--KeyboardKey-zone-wall__into, var(--KeyboardKey-button__color))
     );
   }
 }
 
 .fingerThumb {
   .button {
-    fill: var(--thumb-zone-color);
+    // Mixed back toward the cap rather than used neat, then lifted again
+    // (owner, 4 Sep 2026: subtler, then "a little bit more"). 68% is where
+    // the zone reads at a glance without being the loudest thing on the
+    // page — the letters are what a learner is reading.
+    //
+    // The WALL below takes the SAME tint, exactly (owner, 4 Sep 2026: remove
+    // the edge gradient). It used to mix the zone colour into the dark edge
+    // token, which laid a band of a different, darker colour along the bottom
+    // of every tinted key — a coloured sticker on a grey key rather than a
+    // key that IS that colour. With the wall matched, depth comes from the
+    // two shadows under the body and the moulding over the face, which is
+    // where it should come from anyway.
+    fill: color-mix(
+      in oklab,
+      var(--thumb-zone-color) 68%,
+      var(--KeyboardKey-button__color)
+    );
   }
 
   .side {
     fill: color-mix(
       in oklab,
-      var(--thumb-zone-color) 45%,
-      var(--KeyboardKey-edge__color, #666b7a)
+      var(--thumb-zone-color) var(--KeyboardKey-zone-wall__tint, 68%),
+      var(--KeyboardKey-zone-wall__into, var(--KeyboardKey-button__color))
     );
   }
 }
@@ -175,13 +363,23 @@
 }
 
 .depressedKey {
+  // Most of the lip, not all of it (owner, 4 Sep 2026). A mechanical press
+  // bottoms out against a switch, not against the board: a sliver of wall is
+  // still showing at the end of the stroke, and that is the whole difference
+  // between a cap that went DOWN and a button that went flat.
   .cap {
-    transform: translateY(3px);
+    transform: translateY(var(--kl-travel, 3.1px));
   }
 
-  // The side vanishes as the face drops onto it — reads as pressed flat.
+  // The wall stays. It used to fade to nothing, which is the flat press this
+  // board was drawn for; with a real lip above it there is something left to
+  // see. What changes is the shadow: the cap is closer to the board now, so
+  // the contact tightens and the ambient shrinks — the same thing that
+  // happens when you put an object down.
   .side {
-    opacity: 0;
+    opacity: 1;
+    filter: drop-shadow(0 0.6px 1px rgb(0 0 0 / 40%))
+      drop-shadow(0 1.2px 3px rgb(0 0 0 / 22%));
   }
 
   .button {

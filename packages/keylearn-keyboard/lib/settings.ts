@@ -117,6 +117,19 @@ export class KeyboardColour implements EnumItem {
   static readonly SAND = new KeyboardColour("sand", "Sand");
   static readonly LAVENDER = new KeyboardColour("lavender", "Lavender");
   static readonly BLUEBERRY = new KeyboardColour("blueberry", "Blueberry");
+  /**
+   * Graphite caps, with the learner's own accent on the two keys the round
+   * board accents (owner, 4 Sep 2026).
+   *
+   * The other five are a keyset's colours, fixed the way a real one is. This
+   * one takes its accent from the theme, so the board matches whatever the
+   * learner has chosen everywhere else — the only colourway that changes when
+   * they change something.
+   */
+  static readonly THEME = new KeyboardColour(
+    "theme",
+    "Graphite + theme colour",
+  );
 
   static readonly ALL = new Enum<KeyboardColour>(
     KeyboardColour.GRAPHITE,
@@ -125,6 +138,7 @@ export class KeyboardColour implements EnumItem {
     KeyboardColour.SAND,
     KeyboardColour.LAVENDER,
     KeyboardColour.BLUEBERRY,
+    KeyboardColour.THEME,
   );
 
   private constructor(

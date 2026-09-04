@@ -293,7 +293,7 @@ export function makeSkinnedKeyComponent(
                 x={modEnd ? w - MOD_INSET * k : MOD_INSET * k}
                 y={cyc + 4 * k}
                 textAnchor={modEnd ? "end" : "start"}
-                fill={ink}
+                style={{ fill: ink }}
                 fontSize={(G.legWord ?? 12) * k}
                 fontWeight={skin.weight}
                 letterSpacing=".03em"
@@ -310,7 +310,7 @@ export function makeSkinnedKeyComponent(
                   x={cxc}
                   y={cyc - (G.legPairUp ?? 3) * k}
                   textAnchor="middle"
-                  fill={ink}
+                  style={{ fill: ink }}
                   fontSize={(G.legPair ?? 13) * k}
                   fontWeight={skin.weight}
                   letterSpacing=".01em"
@@ -325,7 +325,7 @@ export function makeSkinnedKeyComponent(
                   x={cxc}
                   y={cyc + (G.legPairDown ?? 13) * k}
                   textAnchor="middle"
-                  fill={ink}
+                  style={{ fill: ink }}
                   fontSize={(G.legPair ?? 13) * k}
                   fontWeight={skin.weight}
                   letterSpacing=".01em"
@@ -339,7 +339,7 @@ export function makeSkinnedKeyComponent(
                 x={cxc}
                 y={cyc + 6 * k}
                 textAnchor="middle"
-                fill={ink}
+                style={{ fill: ink }}
                 fontSize={(G.legSingle ?? 17) * k}
                 fontWeight={skin.weight}
                 letterSpacing=".03em"
@@ -501,7 +501,7 @@ export function makeSkinnedKeyComponent(
             transform={persp(cy)}
             textAnchor={modEndFlat ? "end" : "start"}
             dominantBaseline="central"
-            fill={ink}
+            style={{ fill: ink }}
             fontSize={skin.size - 2.5}
             fontWeight={skin.weight}
             letterSpacing=".02em"
@@ -517,7 +517,7 @@ export function makeSkinnedKeyComponent(
               transform={persp(cy)}
               textAnchor="end"
               dominantBaseline="central"
-              fill={ink}
+              style={{ fill: ink }}
               fillOpacity={alnum(leftText) ? 1 : 0.55}
               fontSize={skin.size - 1.5}
               fontWeight={skin.weight}
@@ -531,7 +531,7 @@ export function makeSkinnedKeyComponent(
               transform={persp(cy)}
               textAnchor="start"
               dominantBaseline="central"
-              fill={ink}
+              style={{ fill: ink }}
               fillOpacity={alnum(rightText) ? 1 : 0.55}
               fontSize={skin.size - 1.5}
               fontWeight={skin.weight}
@@ -548,7 +548,7 @@ export function makeSkinnedKeyComponent(
               transform={persp(cy - 5.9)}
               textAnchor="middle"
               dominantBaseline="central"
-              fill={ink}
+              style={{ fill: ink }}
               fillOpacity={0.66}
               fontSize={skin.size - 3}
               fontWeight={skin.weight}
@@ -562,7 +562,7 @@ export function makeSkinnedKeyComponent(
               transform={persp(cy + 4.9)}
               textAnchor="middle"
               dominantBaseline="central"
-              fill={ink}
+              style={{ fill: ink }}
               fontSize={skin.size}
               fontWeight={skin.weight}
             >
@@ -577,7 +577,7 @@ export function makeSkinnedKeyComponent(
             transform={persp(cy)}
             textAnchor="middle"
             dominantBaseline="central"
-            fill={ink}
+            style={{ fill: ink }}
             fillOpacity={alnum(prim) ? 1 : 0.55}
             fontSize={skin.size}
             fontWeight={skin.weight}
@@ -592,7 +592,7 @@ export function makeSkinnedKeyComponent(
             width={10}
             height={1.6}
             rx={0.8}
-            fill={ink}
+            style={{ fill: ink }}
             fillOpacity={0.6}
           />
         )}

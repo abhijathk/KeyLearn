@@ -8,6 +8,7 @@ import { useSettings } from "@keylearn/settings";
 import { type ZoomableProps } from "@keylearn/widget";
 import { type CSSProperties, memo, type ReactNode } from "react";
 import { BacklightLayer } from "./BacklightLayer.tsx";
+import { KeyLearnDefs } from "./KeyLearnDefs.tsx";
 import { useBacklightOn, useDarkTheme, useSkin } from "./lighting.ts";
 import { getFrameSize } from "./shapes.tsx";
 import { SkinDefs } from "./SkinDefs.tsx";
@@ -89,6 +90,9 @@ export const VirtualKeyboard = memo(function VirtualKeyboard({
           these every cap resolves its fill to nothing and the board renders
           blank, so they must be inside the same <svg> as the keys. */}
       {skin != null && <SkinDefs skin={skin} />}
+      {/* The same, for KeyLearn's own caps: their face and wall gradients and
+          the sheen, defined once for the whole board. */}
+      {style === KeyboardStyle.KEYLEARN && <KeyLearnDefs />}
       <KeyboardContext.Provider value={keyboard}>
         {lit && (
           <BacklightLayer

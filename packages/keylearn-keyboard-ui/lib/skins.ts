@@ -345,6 +345,28 @@ const roundSkin = (
 });
 
 export const ROUND_SKINS: Record<string, Skin> = {
+  /**
+   * Graphite, with the learner's accent on the two accent keys.
+   *
+   * The accent is `var(--accent)` rather than a hex, and that works because
+   * every colour in a skin ends up as an SVG gradient `stop-color`, which
+   * resolves CSS custom properties like any other declaration. So this one
+   * keyset follows the theme while the other five stay the fixed colours a
+   * real keyset has. The wall and the legend ink are mixed FROM the accent
+   * for the same reason — a hand-picked pair would be wrong for five of the
+   * six accents a learner can choose.
+   */
+  theme: roundSkin(
+    "theme",
+    ["#4b4f56", "#3b3f45"],
+    "#26292e",
+    "#dfe2e6",
+    ["#41454b", "#33373c"],
+    "#212428",
+    ["var(--accent)", "color-mix(in oklab, var(--accent) 86%, #000)"],
+    "color-mix(in oklab, var(--accent) 55%, #000)",
+    "color-mix(in oklab, var(--accent) 22%, #000)",
+  ),
   graphite: roundSkin(
     "graphite",
     ["#4b4f56", "#3b3f45"],
