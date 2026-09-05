@@ -1166,6 +1166,30 @@ type AccountStats = {
     readonly finished: number;
     readonly archived: number;
   };
+  /** Accounts with no sign-in for 28 days (or never), longest-quiet first. */
+  readonly inactive: {
+    readonly count: number;
+    readonly neverSignedIn: number;
+    readonly longest: readonly {
+      readonly userId: number;
+      readonly name: string;
+      readonly daysSinceLogin: number;
+    }[];
+  };
+  /** Account deletion requests by state, with the most recent few. */
+  readonly deletions: {
+    readonly pending: number;
+    readonly completed30d: number;
+    readonly cancelled30d: number;
+    readonly recent: readonly {
+      readonly userId: number;
+      readonly name: string;
+      readonly state: "pending" | "completed" | "cancelled";
+      readonly requestedAt: string;
+      readonly executeAt: string;
+      readonly reason: string | null;
+    }[];
+  };
   readonly topCountry: string | null;
   readonly computedAt: string;
 };
@@ -1234,7 +1258,9 @@ async function computeAccountStats(): Promise<AccountStats> {
     .select("createdAt")
     .orderBy("createdAt", "asc")
     .first();
-  const allUsers = await User.query().select("createdAt");
+  // id and name as well: the inactive and deletion lists further down name
+  // people, and this is the one read of the table.
+  const allUsers = await User.query().select("id", "name", "createdAt");
   const byMonth = new Map<string, number>();
   for (const u of allUsers) {
     const monthKey = new Date(u.createdAt!).toISOString().slice(0, 7);
@@ -1381,6 +1407,97 @@ async function computeAccountStats(): Promise<AccountStats> {
     else campaignCounts.finished += 1;
   }
 
+  // Who has gone quiet, and who is leaving. Both are questions the desk gets
+  // asked by name, so each carries a short list beside its count — names
+  // only, never addresses; the desk's customer pages hold those behind their
+  // own reveal.
+  const lastLoginRows = (await knex("security_event")
+    .select("user_id")
+    .max({ at: "created_at" })
+    .where("type", "login")
+    .groupBy("user_id")) as { user_id: number; at: string | number | Date }[];
+  const lastLoginByUser = new Map(
+    lastLoginRows.map((r) => [r.user_id, new Date(r.at).getTime()]),
+  );
+  const INACTIVE_AFTER = 28 * DAY_MS;
+  const inactiveList = allUsers
+    .map((u) => {
+      const id = u.id!;
+      const created =
+        u.createdAt != null ? new Date(u.createdAt).getTime() : now;
+      const last = lastLoginByUser.get(id) ?? created;
+      return {
+        userId: id,
+        name: u.name ?? "",
+        daysSinceLogin: Math.floor((now - last) / DAY_MS),
+        everSignedIn: lastLoginByUser.has(id),
+        quietFor: now - last,
+      };
+    })
+    .filter((u) => u.quietFor >= INACTIVE_AFTER)
+    .sort((a, b) => b.daysSinceLogin - a.daysSinceLogin);
+  const inactive = {
+    count: inactiveList.length,
+    neverSignedIn: inactiveList.filter((u) => !u.everSignedIn).length,
+    longest: inactiveList
+      .slice(0, 6)
+      .map(({ userId, name, daysSinceLogin }) => ({
+        userId,
+        name,
+        daysSinceLogin,
+      })),
+  };
+
+  const deletionRows = (await knex("account_deletion_request")
+    .select(
+      "user_id",
+      "reason",
+      "execute_at",
+      "cancelled_at",
+      "completed_at",
+      "created_at",
+    )
+    .orderBy("created_at", "desc")
+    .limit(200)) as {
+    user_id: number;
+    reason: string | null;
+    execute_at: string | number | Date;
+    cancelled_at: string | number | Date | null;
+    completed_at: string | number | Date | null;
+    created_at: string | number | Date;
+  }[];
+  const nameOf = new Map(allUsers.map((u) => [u.id!, u.name ?? ""]));
+  const since30 = now - 30 * DAY_MS;
+  const stateOf = (
+    r: (typeof deletionRows)[number],
+  ): "pending" | "completed" | "cancelled" =>
+    r.completed_at != null
+      ? "completed"
+      : r.cancelled_at != null
+        ? "cancelled"
+        : "pending";
+  const deletions = {
+    pending: deletionRows.filter((r) => stateOf(r) === "pending").length,
+    completed30d: deletionRows.filter(
+      (r) =>
+        stateOf(r) === "completed" &&
+        new Date(r.completed_at!).getTime() >= since30,
+    ).length,
+    cancelled30d: deletionRows.filter(
+      (r) =>
+        stateOf(r) === "cancelled" &&
+        new Date(r.cancelled_at!).getTime() >= since30,
+    ).length,
+    recent: deletionRows.slice(0, 6).map((r) => ({
+      userId: r.user_id,
+      name: nameOf.get(r.user_id) ?? "",
+      state: stateOf(r),
+      requestedAt: new Date(r.created_at).toISOString(),
+      executeAt: new Date(r.execute_at).toISOString(),
+      reason: r.reason ?? null,
+    })),
+  };
+
   const sinceDays = 28;
   const sinceLogin = new Date(now - sinceDays * DAY_MS);
   const loginRow = (await knex("security_event")
@@ -1421,6 +1538,8 @@ async function computeAccountStats(): Promise<AccountStats> {
     householdsWithKid,
     mostProfilesInOne,
     campaignCounts,
+    inactive,
+    deletions,
     topCountry,
     computedAt: new Date(now).toISOString(),
   };
