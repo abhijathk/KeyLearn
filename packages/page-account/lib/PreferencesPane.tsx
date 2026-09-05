@@ -1849,7 +1849,7 @@ function HeaderIdentityRow(): ReactNode {
         <span className={styles.rowSub}>
           <FormattedMessage
             id="account.prefs.headerIdentity.sub"
-            defaultMessage="Your avatar and first name, beside the header controls. Off by default — your account and profiles are always in the menu either way."
+            defaultMessage="Your avatar and first name, beside the header controls."
           />
         </span>
       </div>
@@ -1878,7 +1878,7 @@ function StatsArtRow(): ReactNode {
         <span className={styles.rowSub}>
           <FormattedMessage
             id="account.prefs.statsArt.sub"
-            defaultMessage="A faint wash of your profile painting behind the practice figures, so a shared screen shows whose session it is. Nothing shows for a profile with a letter or a photo instead of a painting."
+            defaultMessage="A faint wash of your profile painting, so a shared screen shows whose session it is. Painted profiles only."
           />
         </span>
       </div>
