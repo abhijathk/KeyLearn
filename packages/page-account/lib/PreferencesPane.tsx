@@ -1575,6 +1575,7 @@ function NotificationsCard(): ReactNode {
  * available and then not honouring it.
  */
 function CursorEffectRow(): ReactNode {
+  const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
   const on = settings.get(uiProps.cursorEffect);
   const isDark = useIsDark();
@@ -1640,64 +1641,47 @@ function CursorEffectRow(): ReactNode {
             </span>
           )}
         </div>
-        <Toggle
-          on={on && !stilled}
-          disabled={stilled}
-          onChange={(next) =>
-            updateSettings(settings.set(uiProps.cursorEffect, next))
-          }
-        />
+        {/* Toggle and slider side by side, exactly as the artwork row two
+            below does it. They are the same kind of control — a thing that
+            is on or off, and how much of it — and they were laid out two
+            different ways in one card: this one put its slider on a row of
+            its own under a second label, which made one setting look like
+            two. */}
+        <div className={styles.rowControls}>
+          <Toggle
+            on={on && !stilled}
+            disabled={stilled}
+            onChange={(next) =>
+              updateSettings(settings.set(uiProps.cursorEffect, next))
+            }
+          />
+          {/* Absent rather than disabled while the trail is off: a disabled
+              slider is a thing to wonder about, an absent one is simply not
+              a question yet. */}
+          {on && !stilled && (
+            <Range
+              size={6}
+              min={10}
+              max={100}
+              step={5}
+              value={settings.get(uiProps.cursorEffectIntensity)}
+              title={formatMessage(
+                {
+                  id: "account.prefs.cursorEffect.intensityValue",
+                  defaultMessage: "Intensity: {value}%",
+                },
+                { value: settings.get(uiProps.cursorEffectIntensity) },
+              )}
+              onChange={(next) =>
+                updateSettings(
+                  settings.set(uiProps.cursorEffectIntensity, next),
+                )
+              }
+            />
+          )}
+        </div>
       </div>
-      {on && !stilled ? <CursorIntensityRow /> : null}
     </>
-  );
-}
-
-/**
- * How much of it — shown only while the trail is on.
- *
- * Hidden rather than disabled when the switch is off. A disabled slider is a
- * thing to wonder about; an absent one is simply not a question yet, and the
- * switch above it is the only decision at that point.
- *
- * No number is printed beside it. There is no correct value here and nobody
- * is going to write theirs down — showing "62" would invite treating it as a
- * measurement rather than a feel, and the effect itself is the readout.
- */
-function CursorIntensityRow(): ReactNode {
-  const { formatMessage } = useIntl();
-  const { settings, updateSettings } = useSettings();
-  const value = settings.get(uiProps.cursorEffectIntensity);
-
-  return (
-    <div className={styles.tuneRow}>
-      <span className={styles.subLabel}>
-        <FormattedMessage
-          id="account.prefs.cursorEffect.intensity"
-          defaultMessage="Intensity"
-        />
-      </span>
-      <input
-        type="range"
-        className={styles.thinSlider}
-        min={10}
-        max={100}
-        step={5}
-        value={value}
-        aria-label={formatMessage({
-          id: "account.prefs.cursorEffect.intensity",
-          defaultMessage: "Intensity",
-        })}
-        onChange={(ev) =>
-          updateSettings(
-            settings.set(
-              uiProps.cursorEffectIntensity,
-              Number(ev.target.value),
-            ),
-          )
-        }
-      />
-    </div>
   );
 }
 
@@ -1881,6 +1865,7 @@ function HeaderIdentityRow(): ReactNode {
 }
 
 function StatsArtRow(): ReactNode {
+  const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
   const on = settings.get(accountProps.showStatsArt);
   // The mirror of the pointer trail, and hidden for the same reason: that
@@ -1922,7 +1907,16 @@ function StatsArtRow(): ReactNode {
             max={accountProps.statsArtOpacity.max}
             step={2}
             value={settings.get(accountProps.statsArtOpacity)}
-            title={`Strength: ${settings.get(accountProps.statsArtOpacity)}%`}
+            // Was a bare template literal, so this tooltip read English in
+            // all 55 locales — invisible in review because a `title` only
+            // appears on hover.
+            title={formatMessage(
+              {
+                id: "account.prefs.statsArt.strengthValue",
+                defaultMessage: "Strength: {value}%",
+              },
+              { value: settings.get(accountProps.statsArtOpacity) },
+            )}
             onChange={(value) =>
               updateSettings(settings.set(accountProps.statsArtOpacity, value))
             }
