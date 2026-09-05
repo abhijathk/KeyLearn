@@ -310,9 +310,9 @@ Untranslated: 14 messages, 14 words
 
 # French
 
-Translated: 2323 messages, 22205 words
+Translated: 2322 messages, 22204 words
 
-Untranslated: 39 messages, 39 words
+Untranslated: 40 messages, 40 words
 
 * *s*
 * *Arc*

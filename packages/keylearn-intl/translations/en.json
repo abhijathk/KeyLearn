@@ -1136,7 +1136,7 @@
   "notice.dismiss": "Dismiss",
   "notice.feedback.average": "Thank you. {average} average from {count, plural, one {# rating} other {# ratings}}.",
   "notice.feedback.hint": "One rating per account.",
-  "notice.feedback.placeholder": "Anything you'd like to add? (optional)",
+  "notice.feedback.placeholder": "Anything you’d like to add? (optional)",
   "notice.feedback.send": "Send",
   "notice.feedback.star": "{n, plural, one {# star} other {# stars}}",
   "notice.feedback.thanks": "Thank you. You can change your rating until the card closes.",

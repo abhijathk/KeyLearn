@@ -417,7 +417,7 @@ function FeedbackBody({
           maxLength={500}
           placeholder={formatMessage({
             id: "notice.feedback.placeholder",
-            defaultMessage: "Anything you'd like to add? (optional)",
+            defaultMessage: "Anything you’d like to add? (optional)",
           })}
           value={text}
           disabled={busy}
