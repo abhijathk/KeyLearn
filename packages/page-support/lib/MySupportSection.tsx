@@ -1280,15 +1280,18 @@ function Thread({
     );
   }
 
-  const cannotReopen = thread.status === "spam";
-  const closed = thread.status === "closed";
+  // Resolved is final, like spam. Reopening used to be a reply away, which
+  // read as kind but meant the desk's copy — closed, out of the queue, with
+  // a note saying nothing is needed — could be woken by a message nobody
+  // was watching for. A new ticket starts where somebody is looking, and
+  // can name the old one to bring its history with it.
+  const cannotReopen = thread.status === "spam" || thread.status === "closed";
   const last = thread.messages.at(-1);
   // Asked in the thread, at the end of the answer, while it is still fresh
   // — and it is a question about the problem, not about us. The rating card
   // is a different question and comes later, once the case has closed.
   const askSorted =
     !answered &&
-    !closed &&
     !cannotReopen &&
     last != null &&
     last.sender !== "them" &&
@@ -1680,16 +1683,6 @@ function Thread({
               id: "support.my.reply",
               defaultMessage: "Write a reply…",
             })}
-            hint={
-              closed ? (
-                <span className={styles.hint}>
-                  <FormattedMessage
-                    id="support.my.reopens"
-                    defaultMessage="Replying reopens this conversation"
-                  />
-                </span>
-              ) : undefined
-            }
           />
         )}
       </div>

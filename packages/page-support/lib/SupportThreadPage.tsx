@@ -159,31 +159,33 @@ export function SupportThreadPage(): ReactNode {
         <p className={styles.closed}>
           <FormattedMessage
             id="supportThread.closed"
-            defaultMessage="This conversation is closed. Reply below if it isn’t sorted after all — that reopens it."
+            defaultMessage="This conversation is resolved, so it can’t be replied to. If something else comes up, send a new message — you can quote this ticket’s number and we’ll pick up the history."
           />
         </p>
       ) : null}
 
-      <div className={styles.composer}>
-        <span className={styles.field}>
-          <TextField
-            value={reply}
-            placeholder={formatMessage({
-              id: "supportThread.placeholder",
-              defaultMessage: "Write a reply…",
+      {closed ? null : (
+        <div className={styles.composer}>
+          <span className={styles.field}>
+            <TextField
+              value={reply}
+              placeholder={formatMessage({
+                id: "supportThread.placeholder",
+                defaultMessage: "Write a reply…",
+              })}
+              onChange={setReply}
+            />
+          </span>
+          <Button
+            label={formatMessage({
+              id: "supportThread.send",
+              defaultMessage: "Send",
             })}
-            onChange={setReply}
+            disabled={busy || reply.trim() === ""}
+            onClick={send}
           />
-        </span>
-        <Button
-          label={formatMessage({
-            id: "supportThread.send",
-            defaultMessage: "Send",
-          })}
-          disabled={busy || reply.trim() === ""}
-          onClick={send}
-        />
-      </div>
+        </div>
+      )}
     </Shell>
   );
 }

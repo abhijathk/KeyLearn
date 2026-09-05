@@ -1231,6 +1231,16 @@ export class Controller {
       ctx.response.status = 410;
       return;
     }
+    // Resolved is final here too. The emailed link is the same conversation
+    // seen from the inbox, and a rule about whether a thread can come back
+    // from the dead cannot depend on which door somebody walked through.
+    if (ticket.status === "closed") {
+      ctx.response.status = 403;
+      ctx.response.body = {
+        error: { message: "This conversation is resolved." },
+      };
+      return;
+    }
     const guestReply = await SupportMessage.create({
       ticketId: ticket.id!,
       sender: "them",
@@ -1247,16 +1257,10 @@ export class Controller {
     await ticket.clearAutoAttribution();
     // A reply from the person means staff needs to look again — "waiting on
     // them" (the chip's meaning from staff's point of view) no longer holds.
-    // Only a reply after "closed" is a real reopen (a "waiting" ticket was
-    // never resolved in the first place, so it doesn't count toward the
-    // second-reopen-auto-flag threshold).
+    // A "closed" ticket cannot arrive here at all now, so the reopen path
+    // and its second-reopen-auto-flag threshold are gone with it.
     let updated = ticket;
-    if (ticket.status === "closed") {
-      const siteSettings = await StaffSettings.siteDefault();
-      updated = await ticket.reopen({
-        autoFlag: Boolean(siteSettings.secondReopenAutoFlag),
-      });
-    } else if (ticket.status === "waiting") {
+    if (ticket.status === "waiting") {
       updated = await ticket.setStatus("open");
     }
     const messages = (await SupportMessage.listForTicket(updated.id!)).map(

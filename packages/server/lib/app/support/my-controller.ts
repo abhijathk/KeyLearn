@@ -559,6 +559,20 @@ export class MyTicketsController {
     if (ticket.status === "spam") {
       throw new ForbiddenError("This conversation is closed.");
     }
+    // So does resolved. A thread that reached "closed" was marked sorted by
+    // the person themselves, or sat unchallenged while the desk said it was
+    // — either way both sides have written it off, the desk's copy is closed
+    // and out of the queue, and its staff note tells whoever finds it that
+    // nothing is needed. A reply that quietly reopened all of that would
+    // land in a queue nobody is watching for it.
+    //
+    // The client hides the composer for this case; this is the half that
+    // holds when the request does not come from the client.
+    if (ticket.status === "closed") {
+      throw new ForbiddenError(
+        "This conversation is resolved. Please start a new one.",
+      );
+    }
 
     const message = await SupportMessage.create({
       ticketId: id,
@@ -574,9 +588,9 @@ export class MyTicketsController {
     );
     await SupportDraft.clear(user.id!, id);
 
-    // A reply reopens a finished conversation rather than sending them off
-    // to start again: the context is here and it is the same problem.
-    if (ticket.status === "closed" || ticket.status === "waiting") {
+    // "waiting" is the desk waiting on THEM, so their reply is the thing it
+    // was waiting for. "closed" is refused above and never arrives here.
+    if (ticket.status === "waiting") {
       await ticket.setStatus("open");
     }
     forwardReplyToQdesk(id, input.message, message.id!);
