@@ -9,3 +9,4 @@ export * from "./locale.ts";
 export * from "./messages.ts";
 export * from "./numbers.ts";
 export * from "./region.ts";
+export * from "./weekday.ts";

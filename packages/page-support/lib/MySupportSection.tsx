@@ -1,3 +1,4 @@
+import { weekdayInSentence } from "@keylearn/intl";
 import { notificationsChanged } from "@keylearn/pages-shared";
 import {
   Button,
@@ -2074,7 +2075,12 @@ function deadlineLabel(iso: string, locale: string): string {
     (then.getTime() - Date.now()) / (24 * 60 * 60 * 1000),
   );
   if (daysAhead > 0 && daysAhead < 7) {
-    return then.toLocaleDateString(locale, { weekday: "long" });
+    // Not the formatter's own weekday: thirteen of the catalogue's languages
+    // need a case-inflected or preposition-bearing form here ("tiistaina",
+    // "we wtorek") and Intl only ever returns the dictionary form. See
+    // weekdayInSentence — every other locale falls through to exactly the
+    // call this replaces.
+    return weekdayInSentence(then, locale);
   }
   return then.toLocaleDateString(locale, {
     day: "numeric",
