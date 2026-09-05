@@ -15,6 +15,7 @@ import { startSiteConfigCache } from "./app/site-config/cache.ts";
 import { SiteConfigSweep } from "./app/site-config/sweep.ts";
 import {
   AccountDeletionSweep,
+  CloseConfirmSweep,
   DigestSweep,
   HoldingQueueSweep,
   IdleTicketCloseSweep,
@@ -65,6 +66,11 @@ if (cluster.isPrimary) {
   container.get(AccountDeletionSweep).start();
   // Off (0 days) unless a staff member turns on auto-close-idle in Settings.
   container.get(IdleTicketCloseSweep).start();
+  // Chases the desk's "is this sorted?" question and, after
+  // ops.closeConfirmDays of silence, answers it. Distinct from the sweep
+  // above: that one closes threads nobody has touched, this one closes
+  // threads a staffer has already proposed closing.
+  container.get(CloseConfirmSweep).start();
   // Forwarding to the desk is fire-and-forget so an outage can't fail a
   // customer's send; this is what makes that safe rather than lossy.
   container.get(QdeskRetrySweep).start();

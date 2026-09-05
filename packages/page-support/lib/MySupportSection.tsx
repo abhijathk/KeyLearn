@@ -1,6 +1,7 @@
 import { notificationsChanged } from "@keylearn/pages-shared";
 import {
   Button,
+  ConfirmDialog,
   PinField,
   renderMessageText,
   TextField,
@@ -969,6 +970,7 @@ function Thread({
   );
   const [showAll, setShowAll] = useState(false);
   const [answered, setAnswered] = useState(false);
+  const [confirmSorted, setConfirmSorted] = useState(false);
   // Bumped to put the cursor in the reply box after "Not really".
   const [focusReply, setFocusReply] = useState(0);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -1290,9 +1292,17 @@ function Thread({
   // Asked in the thread, at the end of the answer, while it is still fresh
   // — and it is a question about the problem, not about us. The rating card
   // is a different question and comes later, once the case has closed.
+  // A staffer has marked this resolved at the desk and we are waiting on
+  // an answer. Stronger than the question below — it has a deadline, and
+  // saying nothing has a consequence — so it replaces that question rather
+  // than sitting beside it. Two prompts asking the same thing with
+  // different stakes is how somebody answers the wrong one.
+  const closeRequested =
+    !answered && !cannotReopen && thread.closeRequestedAt != null;
   const askSorted =
     !answered &&
     !cannotReopen &&
+    !closeRequested &&
     last != null &&
     last.sender !== "them" &&
     last.kind == null;
@@ -1527,6 +1537,89 @@ function Thread({
             </div>
           ))}
 
+          {confirmSorted && (
+            <ConfirmDialog
+              title={formatMessage({
+                id: "support.my.sortedConfirm.title",
+                defaultMessage: "Mark this as resolved?",
+              })}
+              message={formatMessage({
+                id: "support.my.sortedConfirm.message",
+                defaultMessage:
+                  "This closes the conversation for good — replying won’t reopen it. If something else comes up you can start a new message and quote this ticket’s number, and we’ll pick up the history.",
+              })}
+              confirmLabel={formatMessage({
+                id: "support.my.sortedConfirm.yes",
+                defaultMessage: "Yes, it’s resolved",
+              })}
+              onConfirm={() => {
+                setConfirmSorted(false);
+                void SupportService.markSorted(id)
+                  .then(() => {
+                    setAnswered(true);
+                    return load(showAll);
+                  })
+                  // Marked answered only once it landed: setting it first
+                  // made the card vanish with nothing recorded.
+                  .catch((err) => isPinLapse(err) && onLapse());
+              }}
+              onCancel={() => setConfirmSorted(false)}
+            />
+          )}
+
+          {closeRequested && (
+            <div className={styles.closedNote}>
+              <p className={styles.sortedQ}>
+                <FormattedMessage
+                  id="support.my.deskClosed"
+                  defaultMessage="Support think this one is sorted"
+                />
+              </p>
+              <p className={styles.sortedSub}>
+                {thread.closeConfirmDueAt != null ? (
+                  <FormattedMessage
+                    id="support.my.deskClosed.due"
+                    defaultMessage="If it is, you don’t need to do anything — it will close itself on {when}. If it isn’t, keep it open and we’ll carry on."
+                    values={{
+                      when: deadlineLabel(thread.closeConfirmDueAt, locale),
+                    }}
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="support.my.deskClosed.sub"
+                    defaultMessage="If it is, you don’t need to do anything. If it isn’t, keep it open and we’ll carry on."
+                  />
+                )}
+              </p>
+              <div className={styles.actionsRow}>
+                <Button
+                  label={formatMessage({
+                    id: "support.my.deskClosed.yes",
+                    defaultMessage: "Yes, it’s resolved",
+                  })}
+                  // Same dialog as the lighter question below: this still
+                  // ends the conversation for good, and being asked by the
+                  // desk first does not make that less final.
+                  onClick={() => setConfirmSorted(true)}
+                />
+                <Button
+                  label={formatMessage({
+                    id: "support.my.deskClosed.no",
+                    defaultMessage: "Keep it open",
+                  })}
+                  onClick={() => {
+                    void SupportService.notSorted(id)
+                      .then(() => {
+                        setFocusReply((n) => n + 1);
+                        return load(showAll);
+                      })
+                      .catch((err) => isPinLapse(err) && onLapse());
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {askSorted && (
             <div className={styles.closedNote}>
               <p className={styles.sortedQ}>
@@ -1541,16 +1634,12 @@ function Thread({
                     id: "support.my.sortedYes",
                     defaultMessage: "Yes",
                   })}
-                  onClick={() => {
-                    void SupportService.markSorted(id)
-                      .then(() => {
-                        setAnswered(true);
-                        return load(showAll);
-                      })
-                      // Marked answered only once it landed: setting it
-                      // first made the card vanish with nothing recorded.
-                      .catch((err) => isPinLapse(err) && onLapse());
-                  }}
+                  // Asked before it happens, because it cannot be taken
+                  // back: this closes the thread on both sides and no
+                  // reply reopens it. A tap meant for "Not really" that
+                  // lands one button to the left should not cost somebody
+                  // the conversation they were in the middle of.
+                  onClick={() => setConfirmSorted(true)}
                 />
                 <Button
                   label={formatMessage({
@@ -1961,6 +2050,37 @@ function waitWords(minutes: number, intl: IntlShape): string {
   return intl.formatMessage({
     id: "support.my.waitDay",
     defaultMessage: "a day",
+  });
+}
+
+/**
+ * A date in the future, named.
+ *
+ * Separate from {@link dayLabel} because that one counts backwards: its
+ * `daysBack` goes negative for anything ahead of now and lands on the
+ * "Today" branch, so a deadline three days away rendered as "it will close
+ * itself on Today".
+ *
+ * Deliberately a weekday or a date and never "tomorrow" — the string this
+ * fills has a preposition in front of it in most languages, chosen by the
+ * translators for exactly those two shapes, and "on tomorrow" is wrong in
+ * all of them. Within the week a weekday reads better than a date for a
+ * deadline somebody is deciding about; past that a date is the only thing
+ * that is unambiguous.
+ */
+function deadlineLabel(iso: string, locale: string): string {
+  const then = new Date(iso);
+  const daysAhead = Math.ceil(
+    (then.getTime() - Date.now()) / (24 * 60 * 60 * 1000),
+  );
+  if (daysAhead > 0 && daysAhead < 7) {
+    return then.toLocaleDateString(locale, { weekday: "long" });
+  }
+  return then.toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    year:
+      then.getFullYear() === new Date().getFullYear() ? undefined : "numeric",
   });
 }
 

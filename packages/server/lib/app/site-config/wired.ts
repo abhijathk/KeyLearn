@@ -102,6 +102,7 @@ export const WIRED_KEYS: ReadonlySet<string> = new Set([
   "ops.reminderAfterDays",
   "ops.digestHour",
   "ops.idleCloseDays",
+  "ops.closeConfirmDays",
   "ops.deletionSweepMin",
   "ops.snapshotMin",
   "ops.staffRefreshS",

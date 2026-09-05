@@ -636,6 +636,31 @@ export async function createSchema(knex: Knex): Promise<void> {
   await addColumn("org_invite", "reference", (table) => {
     table.string("reference", 64).nullable();
   });
+
+  /**
+   * The desk asking "is this sorted?" and waiting for an answer.
+   *
+   * Deliberately two nullable timestamps rather than a seventh `status`
+   * value. A ticket whose staffer has proposed closing it is still open —
+   * the learner may well say "no, not yet" — and giving that state its own
+   * status would make every existing `whereIn("status", ["open",
+   * "waiting"])` in the codebase silently stop seeing it, including the
+   * idle-close sweep and the learner's own thread list.
+   *
+   * `close_requested_at` is when the desk asked; the auto-close deadline is
+   * that plus `ops.closeConfirmDays`. `close_reminded_at` is the last time
+   * we nudged, and is what keeps "remind them daily" from becoming "remind
+   * them every time the sweep runs".
+   */
+  await addColumn("profile", "exam_announced_at", (table) => {
+    table.timestamp("exam_announced_at").nullable();
+  });
+  await addColumn("support_ticket", "close_requested_at", (table) => {
+    table.timestamp("close_requested_at").nullable();
+  });
+  await addColumn("support_ticket", "close_reminded_at", (table) => {
+    table.timestamp("close_reminded_at").nullable();
+  });
   await migrateProfileOwnership(knex);
 
   /**

@@ -260,6 +260,8 @@ export const DESCRIPTIONS: Readonly<Record<string, string>> = {
   "ops.digestHour": "What time of day the staff digest email is sent.",
   "ops.idleCloseDays":
     "How long a ticket sits untouched before it closes itself. Zero leaves them open.",
+  "ops.closeConfirmDays":
+    "How long a learner has to answer the desk asking whether a ticket is sorted, before it is taken as a yes.",
   "ops.deletionSweepMin":
     "How often requested account deletions past their cooling-off are carried out.",
   "ops.snapshotMin":

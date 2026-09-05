@@ -2,6 +2,7 @@ import { inject, injectable } from "@fastr/invert";
 import { Env, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
+  Notification,
   StaffAuditEvent,
   StaffSettings,
   SupportMessage,
@@ -14,6 +15,7 @@ import { Controller as AuthController } from "../auth/index.ts";
 import { Mailer } from "../mail/index.ts";
 import { emailStaffDigest } from "../site-config/readers.ts";
 import { repeat } from "../site-config/repeat.ts";
+import { forwardResolutionToQdesk } from "./qdesk-forward.ts";
 import { QdeskRetrySweep } from "./qdesk-retry.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -284,6 +286,12 @@ export class IdleTicketCloseSweep {
           sender: "system",
           body: `Automatically closed after ${idleDays} days of inactivity.`,
         });
+        // The desk is told, same as every other resolution. Without this
+        // an auto-close left the two copies disagreeing indefinitely: shut
+        // here, still sitting in someone's queue there, with no event
+        // anywhere to explain the discrepancy. Fire-and-forget, like every
+        // other forward — the sweep must not fail on an unreachable desk.
+        forwardResolutionToQdesk(ticket.id!, true);
         closed++;
       }
       if (closed > 0) {
@@ -296,6 +304,166 @@ export class IdleTicketCloseSweep {
     }
   }
 }
+
+/**
+ * How often the close-confirmation sweep looks.
+ *
+ * Four hours rather than daily, and the reason is the reminder rather than
+ * the close. A daily sweep would fire the reminder at whatever time of day
+ * the server last restarted — three in the morning, for as long as that
+ * process lives. Looking more often, and letting `closeRemindedAt` decide
+ * whether anything is actually sent, keeps the *nudge* daily while letting
+ * it land at a more or less sane hour relative to when the desk asked.
+ */
+export function closeConfirmSweepIntervalMs(): number {
+  return Env.getNumber("CLOSE_CONFIRM_SWEEP_HOURS", 4) * 60 * 60 * 1000;
+}
+
+/**
+ * Chases the "is this sorted?" question the desk asked, and eventually
+ * answers it on the learner's behalf.
+ *
+ * Two jobs on one pass, because they are the same query:
+ *
+ *  - **Remind**, at most once a day, while the window is open. The learner
+ *    already has the question in the thread and a badge on the bell; this
+ *    is a second and third nudge for someone who has not been back.
+ *  - **Close**, once the window has run out, with a system line in the
+ *    thread saying so and a notification saying so — because a thread that
+ *    closes itself in silence is indistinguishable from one that was
+ *    ignored.
+ *
+ * Silence taken as consent is a real decision, and the honest defence of it
+ * is that the alternative is worse: threads that nobody can ever close pile
+ * up in front of the people who could be answering the next question. The
+ * window is a site setting (`ops.closeConfirmDays`, three days by default),
+ * the learner is told the deadline before it passes, and a closed ticket
+ * costs them a new conversation rather than anything irreversible.
+ *
+ * Guests get neither the reminder nor the notice — both are account
+ * surfaces. Their window still runs; they were told in the thread.
+ */
+@injectable({ singleton: true })
+export class CloseConfirmSweep {
+  #timer: NodeJS.Timeout | null = null;
+
+  start(): void {
+    if (this.#timer != null) {
+      return;
+    }
+    const interval = closeConfirmSweepIntervalMs();
+    this.#timer = setInterval(() => {
+      void this.runOnce();
+    }, interval);
+    this.#timer.unref?.();
+    Logger.info("Close-confirmation sweep scheduled", {
+      everyHours: interval / (60 * 60 * 1000),
+    });
+  }
+
+  stop(): void {
+    if (this.#timer != null) {
+      clearInterval(this.#timer);
+      this.#timer = null;
+    }
+  }
+
+  /** One pass. Returns what it did, so a test can assert on both halves. */
+  async runOnce(
+    now: number = Date.now(),
+  ): Promise<{ readonly closed: number; readonly reminded: number }> {
+    let closed = 0;
+    let reminded = 0;
+    try {
+      const days = siteNumber("ops.closeConfirmDays");
+      const pending = await SupportTicket.query()
+        .whereNotNull("closeRequestedAt")
+        // Belt and braces. `setStatus` clears the request on every
+        // transition, so a pending ticket should always be open — but this
+        // sweep closes things, and a query that trusts an invariant is one
+        // refactor away from closing a conversation somebody is mid-way
+        // through.
+        .whereIn("status", ["open", "waiting", "flagged"])
+        .whereNot("archived", true);
+
+      for (const ticket of pending) {
+        const askedAt = new Date(ticket.closeRequestedAt!).getTime();
+        const dueAt = askedAt + days * DAY_MS;
+
+        if (now >= dueAt) {
+          await ticket.setStatus("closed");
+          await SupportMessage.create({
+            ticketId: ticket.id!,
+            sender: "system",
+            body: `Closed automatically after ${days} ${days === 1 ? "day" : "days"} without a reply. Send a new message any time \u2014 quote this ticket\u2019s number and we\u2019ll pick up where this left off.`,
+          });
+          // The desk asked; the desk is told what the answer turned out to
+          // be. Fire-and-forget, like every other forward.
+          forwardResolutionToQdesk(ticket.id!, true);
+          await this.#notify(ticket, "ticket-auto-closed", CLOSED_NOTE);
+          closed++;
+          continue;
+        }
+
+        // Not due yet — nudge, but not twice in a day, and never on the
+        // same pass that asked.
+        const lastNudge =
+          ticket.closeRemindedAt != null
+            ? new Date(ticket.closeRemindedAt).getTime()
+            : askedAt;
+        if (now - lastNudge < DAY_MS) {
+          continue;
+        }
+        const hoursLeft = Math.round((dueAt - now) / (60 * 60 * 1000));
+        await this.#notify(
+          ticket,
+          "ticket-close-confirm",
+          hoursLeft <= 24
+            ? "This conversation closes tomorrow unless you tell us it is not sorted."
+            : `This conversation closes in ${Math.round(hoursLeft / 24)} days unless you tell us it is not sorted.`,
+        );
+        await ticket.markCloseReminded();
+        reminded++;
+      }
+      if (closed > 0 || reminded > 0) {
+        Logger.info("Close-confirmation sweep finished", { closed, reminded });
+      }
+    } catch (err: any) {
+      Logger.warn(err, "Close-confirmation sweep failed");
+    }
+    return { closed, reminded };
+  }
+
+  /**
+   * Best-effort, and deliberately not fatal: the thread carries the same
+   * information, and failing to raise a badge must never leave a ticket
+   * half-closed.
+   */
+  async #notify(
+    ticket: SupportTicket,
+    kind: "ticket-close-confirm" | "ticket-auto-closed",
+    body: string,
+  ): Promise<void> {
+    if (ticket.userId == null) {
+      return;
+    }
+    try {
+      await Notification.create({
+        userId: ticket.userId,
+        kind,
+        ticketId: ticket.id!,
+        body,
+        authorName: null,
+        fromAssistant: false,
+      });
+    } catch {
+      // See doc comment.
+    }
+  }
+}
+
+const CLOSED_NOTE =
+  "This conversation closed itself because nobody replied. Start a new one if it turns out not to be sorted.";
 
 /** How often the sweep checks for a request whose 48-hour window has closed. */
 export function accountDeletionSweepIntervalMs(): number {

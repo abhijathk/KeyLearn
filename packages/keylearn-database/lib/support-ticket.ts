@@ -165,6 +165,14 @@ export class SupportTicket extends TimestampMixin(Model) {
   csatRatedAt?: Date | null;
   csatDismissedAt?: Date | null;
   closedAt?: Date | null;
+  /**
+   * When a staffer on the desk proposed closing this, and we asked the
+   * learner to confirm. Null the rest of the time — including while the
+   * ticket is genuinely closed, because by then the question is answered.
+   */
+  closeRequestedAt?: Date | null;
+  /** Last time we nudged about that question. Keeps a daily reminder daily. */
+  closeRemindedAt?: Date | null;
   archived?: number | boolean;
   country?: string | null;
   timeZone?: string | null;
@@ -401,6 +409,49 @@ export class SupportTicket extends TimestampMixin(Model) {
     return await this.$query().patchAndFetch({
       status,
       closedAt: status === "closed" ? new Date() : null,
+      // Any status change answers the "is this sorted?" question, whichever
+      // way it went — the learner confirmed, the learner said not yet and
+      // wrote back, or a staffer moved the ticket for some other reason. A
+      // request that outlives its own resolution is how a thread ends up
+      // being nagged about a close that already happened.
+      closeRequestedAt: null,
+      closeRemindedAt: null,
+      updatedAt: new Date(),
+    });
+  }
+
+  /**
+   * The desk has proposed closing this and we are waiting on the learner.
+   *
+   * Deliberately does NOT touch `status`: the ticket stays open, because
+   * the learner is entitled to say no. See the schema comment on
+   * `close_requested_at` for why this is not a status value.
+   *
+   * Re-requesting restarts the clock and clears the reminder stamp, so a
+   * staffer who asks twice gives the learner the full window again rather
+   * than a truncated one.
+   */
+  async requestClose(): Promise<SupportTicket> {
+    return await this.$query().patchAndFetch({
+      closeRequestedAt: new Date(),
+      closeRemindedAt: null,
+      updatedAt: new Date(),
+    });
+  }
+
+  /** Records that we nudged, so the sweep does not nudge again today. */
+  async markCloseReminded(): Promise<SupportTicket> {
+    return await this.$query().patchAndFetch({ closeRemindedAt: new Date() });
+  }
+
+  /**
+   * "Not yet" — the learner wants it left open. Drops the request without
+   * touching status, which is already open.
+   */
+  async cancelCloseRequest(): Promise<SupportTicket> {
+    return await this.$query().patchAndFetch({
+      closeRequestedAt: null,
+      closeRemindedAt: null,
       updatedAt: new Date(),
     });
   }
@@ -424,6 +475,9 @@ export class SupportTicket extends TimestampMixin(Model) {
       status,
       reopenCount,
       closedAt: null,
+      // Writing again is itself an answer to "is this sorted?" — no.
+      closeRequestedAt: null,
+      closeRemindedAt: null,
       updatedAt: new Date(),
     });
   }

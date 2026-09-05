@@ -287,6 +287,15 @@ export namespace SupportService {
     readonly reference: string;
     readonly subject: string;
     readonly status: string;
+    /**
+     * Set while a staffer has proposed closing this and we are waiting on
+     * the owner. The status stays "open" throughout — it is a question, not
+     * a state — so this is what the confirm prompt renders off.
+     */
+    readonly closeRequestedAt?: string | null;
+    /** When silence will be taken as a yes. Computed server-side, so the
+     * date shown is the one the sweep will actually use. */
+    readonly closeConfirmDueAt?: string | null;
     readonly createdAt: string;
     readonly hasEarlier: boolean;
     /** Somebody at the desk is writing right now — not a guess. */
