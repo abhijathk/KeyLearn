@@ -6,226 +6,171 @@ Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 1787 messages, 17139 words
+Translated: 2335 messages, 22213 words
 
-Untranslated: 526 messages, 4695 words
+Untranslated: 24 messages, 25 words
 
 * *s*
 * *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
 * *wpm*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
+* *Stop*
+* *Theo*
+* *Later*
+* *Sepia*
+* *Shift*
+* *Arcade*
+* *Avatar*
+* *indigo*
+* *Medium*
+* *Letters*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Arabic
 
-Translated: 1803 messages, 17161 words
+Translated: 2358 messages, 22242 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Assamese
 
-Translated: 1801 messages, 17157 words
+Translated: 2353 messages, 22234 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 9 messages, 10 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Bulgarian
 
-Translated: 1802 messages, 17159 words
+Translated: 2358 messages, 22241 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 6 messages, 7 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Bangla
 
-Translated: 1801 messages, 17157 words
+Translated: 2357 messages, 22240 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Catalan
 
-Translated: 1788 messages, 17143 words
+Translated: 2335 messages, 22215 words
 
-Untranslated: 525 messages, 4692 words
+Untranslated: 24 messages, 24 words
 
 * *s*
-* *as*
-* *Add*
 * *Arc*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
 * *Mode*
 * *Mode*
-* *Open*
-* *Poll*
+* *Text*
+* *Text*
+* *Theo*
+* *Paper*
+* *Avatar*
+* *Errors*
+* *Recent*
+* *Classes*
+* *Premium*
+* *Incident*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Czech
 
-Translated: 1791 messages, 17145 words
+Translated: 2341 messages, 22221 words
 
-Untranslated: 523 messages, 4692 words
+Untranslated: 21 messages, 23 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
+* *Stop*
+* *Text*
+* *Text*
+* *Theo*
+* *Shift*
+* *Trend*
+* *Avatar*
+* *Cookies*
+* *Incident*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Fair play*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
 * ...
 
 # Danish
 
-Translated: 1780 messages, 17132 words
+Translated: 2322 messages, 22200 words
 
-Untranslated: 534 messages, 4705 words
+Untranslated: 40 messages, 44 words
 
 * *s*
-* *as*
-* *Add*
 * *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
 * *Mine*
-* *Open*
-* *pink*
-* *Poll*
-* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Send*
+* *Send*
+* *Stop*
+* *Theo*
+* *Sepia*
+* *Shift*
+* *Avatar*
+* *citron*
+* *indigo*
+* *Layout*
+* *orange*
 * ...
 
 # German
@@ -258,1260 +203,893 @@ Untranslated: 37 messages, 37 words
 
 # Greek
 
-Translated: 1799 messages, 17155 words
+Translated: 2349 messages, 22231 words
 
-Untranslated: 516 messages, 4684 words
+Untranslated: 14 messages, 15 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Email*
+* *Shift*
+* *Cookies*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Spanish
 
-Translated: 1791 messages, 17147 words
+Translated: 2341 messages, 22222 words
 
-Untranslated: 523 messages, 4691 words
+Untranslated: 20 messages, 21 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Sepia*
+* *Shift*
+* *Arcade*
+* *Avatar*
+* *Zigzag*
+* *Cookies*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Chocolate*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Estonian
 
-Translated: 1795 messages, 17151 words
+Translated: 2344 messages, 22225 words
 
-Untranslated: 520 messages, 4688 words
+Untranslated: 18 messages, 19 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
 * *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *Trend*
+* *Avatar*
+* *Number*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Persian
 
-Translated: 1803 messages, 17161 words
+Translated: 2359 messages, 22243 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 6 messages, 7 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Finnish
 
-Translated: 1798 messages, 17155 words
+Translated: 2348 messages, 22230 words
 
-Untranslated: 517 messages, 4684 words
+Untranslated: 14 messages, 14 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Avatar*
+* *indigo*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # French
 
-Translated: 1778 messages, 17135 words
+Translated: 2323 messages, 22205 words
 
-Untranslated: 537 messages, 4704 words
+Untranslated: 39 messages, 39 words
 
 * *s*
-* *as*
-* *Add*
 * *Arc*
-* *for*
-* *New*
-* *PIN*
-* *Yes*
 * *Zen*
 * *Auto*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
 * *Mode*
 * *Mode*
-* *Open*
+* *Theo*
+* *Coach*
+* *Style*
+* *Arcade*
+* *Avatar*
+* *citron*
+* *Effort*
+* *indigo*
+* *orange*
+* *Zigzag*
+* *Classes*
+* *Cookies*
+* *Passage*
 * ...
 
 # Gujarati
 
-Translated: 1800 messages, 17156 words
+Translated: 2357 messages, 22240 words
 
-Untranslated: 515 messages, 4683 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *wpm*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Hebrew
 
-Translated: 1802 messages, 17159 words
+Translated: 2358 messages, 22242 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Hindi
 
-Translated: 1801 messages, 17157 words
+Translated: 2357 messages, 22240 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Croatian
 
-Translated: 1795 messages, 17151 words
+Translated: 2343 messages, 22224 words
 
-Untranslated: 520 messages, 4688 words
+Untranslated: 19 messages, 20 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
 * *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *Trend*
+* *Avatar*
+* *indigo*
+* *Premium*
+* *Incident*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Hungarian
 
-Translated: 1801 messages, 17158 words
+Translated: 2351 messages, 22233 words
 
-Untranslated: 515 messages, 4683 words
+Untranslated: 12 messages, 13 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Indonesian
 
-Translated: 1792 messages, 17148 words
+Translated: 2337 messages, 22220 words
 
-Untranslated: 523 messages, 4691 words
+Untranslated: 26 messages, 27 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *wpm*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
 * *Edit*
 * *Font*
-* *Help*
-* *Join*
 * *Maya*
 * *mint*
 * *Mode*
 * *Mode*
-* *Open*
-* *Poll*
+* *Theo*
+* *admin*
+* *Admin*
+* *Admin*
+* *Email*
+* *Sepia*
+* *Shift*
+* *Avatar*
+* *Zigzag*
+* *Premium*
+* *Keyboard*
+* *KeyLearn*
 * ...
 
 # Icelandic
 
-Translated: 1800 messages, 17157 words
+Translated: 2350 messages, 22232 words
 
-Untranslated: 516 messages, 4684 words
+Untranslated: 13 messages, 14 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
 * *Sun*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Sent*
+* *Theo*
+* *Shift*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Italian
 
-Translated: 1793 messages, 17149 words
+Translated: 2342 messages, 22223 words
 
-Untranslated: 522 messages, 4690 words
+Untranslated: 20 messages, 21 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *Arcade*
+* *Avatar*
+* *Zigzag*
+* *Account*
+* *Account*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Password*
+* *Password*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Japanese
 
-Translated: 1801 messages, 17157 words
+Translated: 2353 messages, 22234 words
 
-Untranslated: 515 messages, 4683 words
+Untranslated: 10 messages, 11 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
 * *wpm*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Kannada
 
-Translated: 1802 messages, 17159 words
+Translated: 2356 messages, 22238 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Korean
 
-Translated: 1801 messages, 17157 words
+Translated: 2356 messages, 22239 words
 
-Untranslated: 515 messages, 4683 words
+Untranslated: 9 messages, 10 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *wpm*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Lithuanian
 
-Translated: 1798 messages, 17154 words
+Translated: 2349 messages, 22230 words
 
-Untranslated: 517 messages, 4685 words
+Untranslated: 13 messages, 14 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *indigo*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Latvian
 
-Translated: 1794 messages, 17149 words
+Translated: 2348 messages, 22229 words
 
-Untranslated: 520 messages, 4688 words
+Untranslated: 14 messages, 15 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *indigo*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Progress*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Malayalam
 
-Translated: 1801 messages, 17157 words
+Translated: 2351 messages, 22232 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 11 messages, 12 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Mongolian
 
-Translated: 1803 messages, 17161 words
+Translated: 2357 messages, 22240 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Marathi
 
-Translated: 1801 messages, 17157 words
+Translated: 2357 messages, 22240 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Norwegian Bokmål
 
-Translated: 1792 messages, 17147 words
+Translated: 2338 messages, 22219 words
 
-Untranslated: 522 messages, 4690 words
+Untranslated: 24 messages, 25 words
 
 * *s*
-* *as*
-* *Add*
 * *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
 * *Mine*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
+* *Send*
+* *Send*
+* *Send*
+* *Send*
+* *Send*
+* *Theo*
+* *Sepia*
+* *Trend*
+* *Avatar*
+* *indigo*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Nepali
 
-Translated: 1800 messages, 17156 words
+Translated: 2354 messages, 22235 words
 
-Untranslated: 515 messages, 4683 words
+Untranslated: 8 messages, 9 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
 * *wpm*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Dutch
 
-Translated: 1775 messages, 17129 words
+Translated: 2320 messages, 22199 words
 
-Untranslated: 539 messages, 4708 words
+Untranslated: 41 messages, 43 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
 * *wpm*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
 * *Open*
-* *Poll*
-* *Save*
-* *Save*
+* *Stop*
+* *Theo*
+* *Coach*
+* *Hints*
+* *Later*
+* *Score*
+* *Sepia*
+* *Shift*
+* *Arcade*
+* *Avatar*
+* *Detail*
+* *indigo*
+* *Recent*
+* *Zigzag*
+* *Account*
 * ...
 
 # Odia
 
-Translated: 1801 messages, 17157 words
+Translated: 2355 messages, 22236 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Punjabi
 
-Translated: 1801 messages, 17157 words
+Translated: 2355 messages, 22236 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Polish
 
-Translated: 1795 messages, 17150 words
+Translated: 2346 messages, 22227 words
 
-Untranslated: 519 messages, 4687 words
+Untranslated: 16 messages, 17 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Sepia*
+* *Shift*
+* *Trend*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Brazilian Portuguese
 
-Translated: 1791 messages, 17145 words
+Translated: 2342 messages, 22223 words
 
-Untranslated: 523 messages, 4691 words
+Untranslated: 20 messages, 21 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *Arcade*
+* *Avatar*
+* *Layout*
+* *Cookies*
+* *Layouts*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Chocolate*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # European Portuguese
 
-Translated: 1794 messages, 17150 words
+Translated: 2344 messages, 22225 words
 
-Untranslated: 521 messages, 4689 words
+Untranslated: 18 messages, 19 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *Arcade*
+* *Avatar*
+* *Cookies*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Chocolate*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Romanian
 
-Translated: 1787 messages, 17141 words
+Translated: 2335 messages, 22214 words
 
-Untranslated: 527 messages, 4695 words
+Untranslated: 26 messages, 27 words
 
 * *s*
-* *as*
-* *Add*
 * *Arc*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
 * *Calm*
-* *Edit*
 * *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
+* *Text*
+* *Text*
+* *Theo*
+* *Sepia*
+* *Shift*
+* *Arcade*
+* *Avatar*
+* *indigo*
+* *Zigzag*
+* *Premium*
+* *Incident*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Russian
 
-Translated: 1803 messages, 17161 words
+Translated: 2357 messages, 22240 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Slovak
 
-Translated: 1792 messages, 17147 words
+Translated: 2341 messages, 22221 words
 
-Untranslated: 523 messages, 4692 words
+Untranslated: 21 messages, 23 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
+* *Stop*
+* *Text*
+* *Text*
+* *Theo*
+* *Shift*
+* *Trend*
+* *Avatar*
+* *Premium*
+* *Incident*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Fair play*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
 * ...
 
 # Slovenian
 
-Translated: 1794 messages, 17149 words
+Translated: 2344 messages, 22225 words
 
-Untranslated: 520 messages, 4688 words
+Untranslated: 18 messages, 19 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *Trend*
+* *Avatar*
+* *indigo*
+* *Premium*
+* *Incident*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Albanian
 
-Translated: 1795 messages, 17151 words
+Translated: 2342 messages, 22223 words
 
-Untranslated: 520 messages, 4688 words
+Untranslated: 19 messages, 20 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* ...
+* *Theo*
+* *Draft*
+* *Email*
+* *Sepia*
+* *Shift*
+* *indigo*
+* *Premium*
+* *Incident*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Swedish
 
-Translated: 1785 messages, 17141 words
+Translated: 2330 messages, 22211 words
 
-Untranslated: 530 messages, 4698 words
+Untranslated: 32 messages, 33 words
 
 * *s*
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
 * *mint*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
+* *Text*
+* *Text*
+* *Theo*
+* *Coach*
+* *Sepia*
+* *Shift*
+* *Trend*
+* *Avatar*
+* *citron*
+* *indigo*
+* *Layout*
+* *orange*
+* *Period*
+* *Premium*
+* *Support*
 * ...
 
 # Tamil
 
-Translated: 1801 messages, 17157 words
+Translated: 2352 messages, 22234 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 11 messages, 12 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Telugu
 
-Translated: 1801 messages, 17157 words
+Translated: 2356 messages, 22238 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Thai
 
-Translated: 1803 messages, 17161 words
+Translated: 2357 messages, 22240 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Turkish
 
-Translated: 1799 messages, 17155 words
+Translated: 2350 messages, 22232 words
 
-Untranslated: 516 messages, 4684 words
+Untranslated: 13 messages, 14 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
 * *Zen*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *Avatar*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Ukrainian
 
-Translated: 1802 messages, 17159 words
+Translated: 2358 messages, 22241 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 6 messages, 7 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Urdu
 
-Translated: 1801 messages, 17157 words
+Translated: 2356 messages, 22238 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 7 messages, 8 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
 * *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Vietnamese
 
-Translated: 1800 messages, 17156 words
+Translated: 2352 messages, 22234 words
 
-Untranslated: 515 messages, 4683 words
+Untranslated: 11 messages, 12 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
-* *wpm*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Email*
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
 
 # Simplified Chinese
 
-Translated: 1803 messages, 17160 words
+Translated: 2359 messages, 22242 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 6 messages, 7 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
-* *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
 
 # Traditional Chinese
 
-Translated: 1802 messages, 17159 words
+Translated: 2356 messages, 22239 words
 
-Untranslated: 514 messages, 4682 words
+Untranslated: 8 messages, 9 words
 
-* *as*
-* *Add*
-* *for*
-* *New*
-* *PIN*
-* *Yes*
-* *Back*
-* *Back*
-* *Edit*
-* *Font*
-* *Help*
-* *Join*
 * *Maya*
-* *Open*
-* *Poll*
-* *Save*
-* *Save*
-* *Send*
-* *Send*
-* *Send*
-* ...
+* *Theo*
+* *Shift*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
