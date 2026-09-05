@@ -1585,6 +1585,7 @@
   "sec.2fa.copyKey": "Kopioi avain",
   "sec.2fa.currentCode": "Nykyinen 6-numeroinen koodi",
   "sec.2fa.download": "Lataa koodit",
+  "sec.2fa.loading": "Ladataan…",
   "sec.2fa.manage": "Hallinnoi",
   "sec.2fa.off": "Kaksivaiheinen vahvistus on pois päältä.",
   "sec.2fa.on": "Kaksivaiheinen tunnistautuminen on käytössä.",

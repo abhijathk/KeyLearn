@@ -1570,6 +1570,7 @@
   "sec.2fa.copyKey": "Kopiér nøgle",
   "sec.2fa.currentCode": "Nuværende 6-cifrede kode",
   "sec.2fa.download": "Hent koder",
+  "sec.2fa.loading": "Indlæser…",
   "sec.2fa.manage": "Administrer",
   "sec.2fa.off": "Totrinsbekræftelse er slået fra.",
   "sec.2fa.on": "To-trinsbekræftelse er slået til.",

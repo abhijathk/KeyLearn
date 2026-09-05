@@ -1589,6 +1589,7 @@
   "sec.2fa.copyKey": "키 복사",
   "sec.2fa.currentCode": "현재 6자리 코드",
   "sec.2fa.download": "코드 내려받기",
+  "sec.2fa.loading": "불러오는 중…",
   "sec.2fa.manage": "관리",
   "sec.2fa.off": "2단계 인증이 꺼져 있습니다.",
   "sec.2fa.on": "2단계 인증이 켜져 있어요.",

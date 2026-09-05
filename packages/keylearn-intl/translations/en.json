@@ -1596,6 +1596,7 @@
   "sec.2fa.copyKey": "Copy key",
   "sec.2fa.currentCode": "Current 6-digit code",
   "sec.2fa.download": "Download codes",
+  "sec.2fa.loading": "Loading…",
   "sec.2fa.manage": "Manage",
   "sec.2fa.off": "Two-step verification is off.",
   "sec.2fa.on": "Two-step verification is on.",

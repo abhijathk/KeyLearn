@@ -1585,6 +1585,7 @@
   "sec.2fa.copyKey": "Anahtarı kopyala",
   "sec.2fa.currentCode": "Geçerli 6 haneli kod",
   "sec.2fa.download": "Kodları indir",
+  "sec.2fa.loading": "Yükleniyor…",
   "sec.2fa.manage": "Yönet",
   "sec.2fa.off": "İki adımlı doğrulama kapalı.",
   "sec.2fa.on": "İki adımlı doğrulama açık.",

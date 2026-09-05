@@ -1579,6 +1579,7 @@
   "sec.2fa.copyKey": "Skopírovať kľúč",
   "sec.2fa.currentCode": "Aktuálny 6-miestny kód",
   "sec.2fa.download": "Stiahnuť kódy",
+  "sec.2fa.loading": "Načítava sa…",
   "sec.2fa.manage": "Spravovať",
   "sec.2fa.off": "Dvojfázové overenie je vypnuté.",
   "sec.2fa.on": "Dvojstupňové overenie je zapnuté.",

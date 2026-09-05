@@ -1583,6 +1583,7 @@
   "sec.2fa.copyKey": "Kopiuj klucz",
   "sec.2fa.currentCode": "Bieżący kod sześciocyfrowy",
   "sec.2fa.download": "Pobierz kody",
+  "sec.2fa.loading": "Wczytywanie…",
   "sec.2fa.manage": "Zarządzaj",
   "sec.2fa.off": "Weryfikacja dwuetapowa jest wyłączona.",
   "sec.2fa.on": "Weryfikacja dwuetapowa jest włączona.",

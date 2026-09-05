@@ -1584,6 +1584,7 @@
   "sec.2fa.copyKey": "Kopēt atslēgu",
   "sec.2fa.currentCode": "Pašreizējais 6 ciparu kods",
   "sec.2fa.download": "Lejupielādēt kodus",
+  "sec.2fa.loading": "Ielādē…",
   "sec.2fa.manage": "Pārvaldīt",
   "sec.2fa.off": "Divpakāpju verifikācija ir izslēgta.",
   "sec.2fa.on": "Divpakāpju verifikācija ir ieslēgta.",

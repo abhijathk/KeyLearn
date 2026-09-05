@@ -1586,6 +1586,7 @@
   "sec.2fa.copyKey": "Kulcs másolása",
   "sec.2fa.currentCode": "Jelenlegi 6 számjegyű kód",
   "sec.2fa.download": "Kódok letöltése",
+  "sec.2fa.loading": "Betöltés…",
   "sec.2fa.manage": "Kezelés",
   "sec.2fa.off": "A kétlépcsős ellenőrzés ki van kapcsolva.",
   "sec.2fa.on": "A kétlépcsős azonosítás be van kapcsolva.",

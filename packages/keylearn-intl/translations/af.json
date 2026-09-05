@@ -1576,6 +1576,7 @@
   "sec.2fa.copyKey": "Kopieer sleutel",
   "sec.2fa.currentCode": "Huidige 6-syfer-kode",
   "sec.2fa.download": "Laai kodes af",
+  "sec.2fa.loading": "Laai tans…",
   "sec.2fa.manage": "Bestuur",
   "sec.2fa.off": "Tweestapverifikasie is af.",
   "sec.2fa.on": "Twee-stap-verifikasie is aan.",

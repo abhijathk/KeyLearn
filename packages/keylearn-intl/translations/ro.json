@@ -1576,6 +1576,7 @@
   "sec.2fa.copyKey": "Copiază cheia",
   "sec.2fa.currentCode": "Codul actual din 6 cifre",
   "sec.2fa.download": "Descarcă codurile",
+  "sec.2fa.loading": "Se încarcă…",
   "sec.2fa.manage": "Gestionează",
   "sec.2fa.off": "Verificarea în doi pași este dezactivată.",
   "sec.2fa.on": "Verificarea în doi pași este activată.",

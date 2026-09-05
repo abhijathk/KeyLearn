@@ -1567,6 +1567,7 @@
   "sec.2fa.copyKey": "Sleutel kopiëren",
   "sec.2fa.currentCode": "Huidige 6-cijferige code",
   "sec.2fa.download": "Codes downloaden",
+  "sec.2fa.loading": "Bezig met laden…",
   "sec.2fa.manage": "Beheren",
   "sec.2fa.off": "Verificatie in twee stappen staat uit.",
   "sec.2fa.on": "Verificatie in twee stappen staat aan.",

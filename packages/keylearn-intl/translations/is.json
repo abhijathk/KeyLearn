@@ -1584,6 +1584,7 @@
   "sec.2fa.copyKey": "Afrita lykil",
   "sec.2fa.currentCode": "Núverandi 6 stafa kóði",
   "sec.2fa.download": "Sækja kóðana",
+  "sec.2fa.loading": "Hleð…",
   "sec.2fa.manage": "Stjórna",
   "sec.2fa.off": "Tveggja þrepa staðfesting er slökkt.",
   "sec.2fa.on": "Tveggja þrepa staðfesting er virk.",

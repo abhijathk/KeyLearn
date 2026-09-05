@@ -1581,6 +1581,7 @@
   "sec.2fa.copyKey": "Copia la chiave",
   "sec.2fa.currentCode": "Codice a 6 cifre attuale",
   "sec.2fa.download": "Scarica i codici",
+  "sec.2fa.loading": "Caricamento…",
   "sec.2fa.manage": "Gestisci",
   "sec.2fa.off": "La verifica in due passaggi è disattivata.",
   "sec.2fa.on": "La verifica in due passaggi è attiva.",

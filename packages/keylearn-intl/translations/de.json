@@ -1573,6 +1573,7 @@
   "sec.2fa.copyKey": "Schlüssel kopieren",
   "sec.2fa.currentCode": "Aktueller 6-stelliger Code",
   "sec.2fa.download": "Codes herunterladen",
+  "sec.2fa.loading": "Wird geladen…",
   "sec.2fa.manage": "Verwalten",
   "sec.2fa.off": "Die Zwei-Schritt-Bestätigung ist aus.",
   "sec.2fa.on": "Die Bestätigung in zwei Schritten ist eingeschaltet.",

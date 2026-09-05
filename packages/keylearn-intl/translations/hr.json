@@ -1580,6 +1580,7 @@
   "sec.2fa.copyKey": "Kopiraj ključ",
   "sec.2fa.currentCode": "Trenutačni šesteroznamenkasti kod",
   "sec.2fa.download": "Preuzmi kodove",
+  "sec.2fa.loading": "Učitavanje…",
   "sec.2fa.manage": "Upravljaj",
   "sec.2fa.off": "Dvostupanjska provjera je isključena.",
   "sec.2fa.on": "Provjera u dva koraka je uključena.",

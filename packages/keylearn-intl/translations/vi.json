@@ -1585,6 +1585,7 @@
   "sec.2fa.copyKey": "Sao chép khóa",
   "sec.2fa.currentCode": "Mã 6 chữ số hiện tại",
   "sec.2fa.download": "Tải mã về",
+  "sec.2fa.loading": "Đang tải…",
   "sec.2fa.manage": "Quản lý",
   "sec.2fa.off": "Xác minh hai bước đang tắt.",
   "sec.2fa.on": "Xác minh hai bước đang bật.",

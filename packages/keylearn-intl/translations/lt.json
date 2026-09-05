@@ -1584,6 +1584,7 @@
   "sec.2fa.copyKey": "Kopijuoti raktą",
   "sec.2fa.currentCode": "Dabartinis 6 skaitmenų kodas",
   "sec.2fa.download": "Atsisiųsti kodus",
+  "sec.2fa.loading": "Įkeliama…",
   "sec.2fa.manage": "Valdyti",
   "sec.2fa.off": "Dviejų veiksnių patvirtinimas išjungtas.",
   "sec.2fa.on": "Dviejų žingsnių patvirtinimas įjungtas.",

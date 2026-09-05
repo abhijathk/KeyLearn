@@ -1577,6 +1577,7 @@
   "sec.2fa.copyKey": "Salin kunci",
   "sec.2fa.currentCode": "Kode 6 digit saat ini",
   "sec.2fa.download": "Unduh kode",
+  "sec.2fa.loading": "Memuat…",
   "sec.2fa.manage": "Kelola",
   "sec.2fa.off": "Verifikasi dua langkah nonaktif.",
   "sec.2fa.on": "Verifikasi dua langkah aktif.",

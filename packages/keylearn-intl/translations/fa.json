@@ -1592,6 +1592,7 @@
   "sec.2fa.copyKey": "رونوشت کلید",
   "sec.2fa.currentCode": "کد ۶ رقمی کنونی",
   "sec.2fa.download": "دریافت کدها",
+  "sec.2fa.loading": "در حال بارگذاری…",
   "sec.2fa.manage": "مدیریت",
   "sec.2fa.off": "تأیید دومرحله‌ای خاموش است.",
   "sec.2fa.on": "تأیید دومرحله‌ای روشن است.",

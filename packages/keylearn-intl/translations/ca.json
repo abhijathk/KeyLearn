@@ -1574,6 +1574,7 @@
   "sec.2fa.copyKey": "Copia la clau",
   "sec.2fa.currentCode": "Codi actual de 6 xifres",
   "sec.2fa.download": "Baixa els codis",
+  "sec.2fa.loading": "Carregant…",
   "sec.2fa.manage": "Gestiona",
   "sec.2fa.off": "La verificació en dos passos està desactivada.",
   "sec.2fa.on": "La verificació en dos passos està activada.",

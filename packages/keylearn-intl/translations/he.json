@@ -1592,6 +1592,7 @@
   "sec.2fa.copyKey": "העתק מפתח",
   "sec.2fa.currentCode": "הקוד הנוכחי בן 6 הספרות",
   "sec.2fa.download": "הורד קודים",
+  "sec.2fa.loading": "טוען…",
   "sec.2fa.manage": "ניהול",
   "sec.2fa.off": "אימות דו־שלבי כבוי.",
   "sec.2fa.on": "אימות דו־שלבי מופעל.",

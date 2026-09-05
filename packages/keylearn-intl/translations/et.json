@@ -1581,6 +1581,7 @@
   "sec.2fa.copyKey": "Kopeeri võti",
   "sec.2fa.currentCode": "Praegune 6-kohaline kood",
   "sec.2fa.download": "Laadi koodid alla",
+  "sec.2fa.loading": "Laadimine…",
   "sec.2fa.manage": "Halda",
   "sec.2fa.off": "Kaheastmeline kinnitus on väljas.",
   "sec.2fa.on": "Kaheastmeline kinnitamine on sisse lülitatud.",

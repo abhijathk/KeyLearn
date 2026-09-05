@@ -1575,6 +1575,7 @@
   "sec.2fa.copyKey": "Kopiera nyckel",
   "sec.2fa.currentCode": "Nuvarande 6-siffriga kod",
   "sec.2fa.download": "Ladda ner koder",
+  "sec.2fa.loading": "Laddar…",
   "sec.2fa.manage": "Hantera",
   "sec.2fa.off": "Tvåstegsverifiering är avstängd.",
   "sec.2fa.on": "Tvåstegsverifiering är på.",

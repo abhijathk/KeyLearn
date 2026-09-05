@@ -6,7 +6,7 @@ import {
 } from "@keylearn/pages-shared";
 import { FloatingShell, StrokeIcon, TextField } from "@keylearn/widget";
 import { toDataURL } from "qrcode";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { PasswordField } from "./AuthPage.tsx";
@@ -141,6 +141,22 @@ function TwoFactorWindow({
     }
   };
 
+  // Opening this window from "Turn it on" is already the decision to set up,
+  // so it lands on the QR code rather than on a screen whose only content is
+  // a button that says what the one just clicked said.
+  //
+  // Read once, at mount: somebody who turns two-step OFF in here leaves the
+  // window open with it disabled, and must not be marched straight back into
+  // enrolling again.
+  const autoStart = useRef(!user.twoFactorEnabled);
+  const started = useRef(false);
+  useEffect(() => {
+    if (autoStart.current && !started.current) {
+      started.current = true;
+      void begin();
+    }
+  });
+
   const confirm = async () => {
     setErr(null);
     setBusy(true);
@@ -220,20 +236,26 @@ function TwoFactorWindow({
           </button>
         </>
       ) : step === "idle" ? (
-        <>
-          {err != null && <p className={styles.secErr}>{err}</p>}
-          <button
-            type="button"
-            className={styles.secBtn}
-            disabled={busy}
-            onClick={begin}
-          >
-            <FormattedMessage
-              id="sec.2fa.setUp"
-              defaultMessage="Set up two-step verification"
-            />
-          </button>
-        </>
+        autoStart.current && err == null ? (
+          <p className={styles.note}>
+            <FormattedMessage id="sec.2fa.loading" defaultMessage="Loading…" />
+          </p>
+        ) : (
+          <>
+            {err != null && <p className={styles.secErr}>{err}</p>}
+            <button
+              type="button"
+              className={styles.secBtn}
+              disabled={busy}
+              onClick={begin}
+            >
+              <FormattedMessage
+                id="sec.2fa.setUp"
+                defaultMessage="Set up two-step verification"
+              />
+            </button>
+          </>
+        )
       ) : step === "scan" ? (
         <>
           <p className={styles.prefHint}>

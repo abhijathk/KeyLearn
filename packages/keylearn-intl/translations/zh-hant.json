@@ -1589,6 +1589,7 @@
   "sec.2fa.copyKey": "複製金鑰",
   "sec.2fa.currentCode": "目前的 6 位數驗證碼",
   "sec.2fa.download": "下載備用碼",
+  "sec.2fa.loading": "載入中……",
   "sec.2fa.manage": "管理",
   "sec.2fa.off": "兩步驟驗證目前為關閉狀態。",
   "sec.2fa.on": "兩步驟驗證已開啟。",

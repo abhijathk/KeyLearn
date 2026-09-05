@@ -1586,6 +1586,7 @@
   "sec.2fa.copyKey": "キーをコピー",
   "sec.2fa.currentCode": "現在の6桁のコード",
   "sec.2fa.download": "コードをダウンロード",
+  "sec.2fa.loading": "読み込み中…",
   "sec.2fa.manage": "管理",
   "sec.2fa.off": "2段階認証はオフです。",
   "sec.2fa.on": "2段階認証はオンです。",

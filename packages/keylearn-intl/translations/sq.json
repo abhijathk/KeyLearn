@@ -1582,6 +1582,7 @@
   "sec.2fa.copyKey": "Kopjo çelësin",
   "sec.2fa.currentCode": "Kodi aktual me 6 shifra",
   "sec.2fa.download": "Shkarko kodet",
+  "sec.2fa.loading": "Duke u ngarkuar…",
   "sec.2fa.manage": "Menaxho",
   "sec.2fa.off": "Verifikimi me dy hapa është fikur.",
   "sec.2fa.on": "Verifikimi në dy hapa është i ndezur.",

@@ -1579,6 +1579,7 @@
   "sec.2fa.copyKey": "Kopier nøkkel",
   "sec.2fa.currentCode": "Gjeldende 6-sifrede kode",
   "sec.2fa.download": "Last ned koder",
+  "sec.2fa.loading": "Laster…",
   "sec.2fa.manage": "Administrer",
   "sec.2fa.off": "Totrinnsbekreftelse er av.",
   "sec.2fa.on": "Tostegsbekreftelse er slått på.",

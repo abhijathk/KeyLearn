@@ -1591,6 +1591,7 @@
   "sec.2fa.copyKey": "复制密钥",
   "sec.2fa.currentCode": "当前的 6 位验证码",
   "sec.2fa.download": "下载恢复码",
+  "sec.2fa.loading": "正在加载……",
   "sec.2fa.manage": "管理",
   "sec.2fa.off": "两步验证已关闭。",
   "sec.2fa.on": "两步验证已开启。",

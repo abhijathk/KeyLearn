@@ -1581,6 +1581,7 @@
   "sec.2fa.copyKey": "Kopiraj ključ",
   "sec.2fa.currentCode": "Trenutna 6-mestna koda",
   "sec.2fa.download": "Prenesi kode",
+  "sec.2fa.loading": "Nalaganje…",
   "sec.2fa.manage": "Upravljaj",
   "sec.2fa.off": "Dvostopenjsko preverjanje je izklopljeno.",
   "sec.2fa.on": "Dvostopenjsko preverjanje je vklopljeno.",
