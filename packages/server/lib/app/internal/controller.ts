@@ -13,6 +13,7 @@ import { type RouterState } from "@fastr/middleware-router";
 import { DataDir, Env, isAdminEmail, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
+  AdCampaign,
   checkUnlockPasscode,
   Credential,
   LearnerResponse,
@@ -1148,6 +1149,23 @@ type AccountStats = {
     readonly kind: string;
     readonly count: number;
   }[];
+  /** Accounts whose address is confirmed; the rest cannot be written to. */
+  readonly accountsVerified: number;
+  /** When the most recent account was created, ISO, or null on an empty desk. */
+  readonly newestSignupAt: string | null;
+  /** Accounts with at least one kid profile — households, counted once each. */
+  readonly householdsWithKid: number;
+  /** The largest number of profiles on any single account. */
+  readonly mostProfilesInOne: number;
+  /** Ad campaigns by state; "running" means on screen right now. */
+  readonly campaignCounts: {
+    readonly running: number;
+    readonly paused: number;
+    readonly scheduled: number;
+    readonly draft: number;
+    readonly finished: number;
+    readonly archived: number;
+  };
   readonly topCountry: string | null;
   readonly computedAt: string;
 };
@@ -1308,6 +1326,61 @@ async function computeAccountStats(): Promise<AccountStats> {
     count: Number(r.count),
   }));
 
+  // What the desk's "Who signed up" panel asks next, once it has shown the
+  // split: of these accounts, how many are reachable, when did the last one
+  // arrive, and how many households actually put a child on the product.
+  // Each is one aggregate over a table already being read here.
+  const verifiedRow = (await knex("user")
+    .where("email_verified", true)
+    .count({ count: "*" })
+    .first()) as { count: number | string } | undefined;
+  const accountsVerified = Number(verifiedRow?.count ?? 0);
+
+  const newestRow = (await knex("user").max({ at: "created_at" }).first()) as
+    | { at: string | number | Date | null }
+    | undefined;
+  const newestSignupAt =
+    newestRow?.at == null ? null : new Date(newestRow.at).toISOString();
+
+  // Households, not profiles: an account with three children counts once,
+  // because the question is how many families use the kid side at all.
+  const kidHouseholdRow = (await knex("profile")
+    .where("kind", "kid")
+    .countDistinct({ count: "user_id" })
+    .first()) as { count: number | string } | undefined;
+  const householdsWithKid = Number(kidHouseholdRow?.count ?? 0);
+
+  const perAccountRows = (await knex("profile")
+    .select("user_id")
+    .count({ count: "*" })
+    .groupBy("user_id")) as { user_id: number; count: number | string }[];
+  const mostProfilesInOne = perAccountRows.reduce(
+    (max, r) => Math.max(max, Number(r.count)),
+    0,
+  );
+
+  // Campaigns by state, for the desk's Notices & campaigns panel. "Running"
+  // is derived the way the sponsor slot derives it — scheduled, inside its
+  // window, not archived — so the desk's count and what learners actually
+  // see can never disagree. Everything else is the stored status.
+  const campaigns = await AdCampaign.query();
+  const campaignCounts = {
+    running: 0,
+    paused: 0,
+    scheduled: 0,
+    draft: 0,
+    finished: 0,
+    archived: 0,
+  };
+  for (const c of campaigns) {
+    if (c.archived) campaignCounts.archived += 1;
+    else if (c.live(now)) campaignCounts.running += 1;
+    else if (c.status === "paused") campaignCounts.paused += 1;
+    else if (c.status === "scheduled") campaignCounts.scheduled += 1;
+    else if (c.status === "draft") campaignCounts.draft += 1;
+    else campaignCounts.finished += 1;
+  }
+
   const sinceDays = 28;
   const sinceLogin = new Date(now - sinceDays * DAY_MS);
   const loginRow = (await knex("security_event")
@@ -1343,6 +1416,11 @@ async function computeAccountStats(): Promise<AccountStats> {
     byLanguage,
     bySignupMethod,
     kidsVsGrownups,
+    accountsVerified,
+    newestSignupAt,
+    householdsWithKid,
+    mostProfilesInOne,
+    campaignCounts,
     topCountry,
     computedAt: new Date(now).toISOString(),
   };
