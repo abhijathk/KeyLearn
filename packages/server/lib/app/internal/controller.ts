@@ -17,6 +17,7 @@ import {
   Credential,
   LearnerResponse,
   maskEmail,
+  Notification,
   PracticeSession,
   Profile,
   SecurityEvent,
@@ -1063,6 +1064,32 @@ export class Controller {
         contactLink: this.#link("/support"),
       }),
     );
+    // On the bell as well as in the email.
+    //
+    // This is the one notification in the app where silence is the
+    // destructive option: the window closes by itself and the account goes.
+    // The email is the formal notice and carries the cancel link, but an
+    // email can sit unread in a folder for two days — the bell is seen by
+    // anybody who opens the app at all, which is exactly the population
+    // whose account is about to be deleted.
+    try {
+      await Notification.create({
+        userId: id,
+        kind: "account-deletion-scheduled",
+        ticketId: null,
+        body: `This account is scheduled for deletion on ${new Date(
+          request.executeAt!,
+        ).toLocaleString(undefined, {
+          dateStyle: "long",
+          timeStyle: "short",
+        })}. Check your email for the link to stop it, or contact support.`,
+        authorName: null,
+        fromAssistant: false,
+      });
+    } catch {
+      // Best-effort, like every other notification: the email is the notice
+      // of record and has already been sent.
+    }
     void StaffAuditEvent.record({
       userId: input.actingStaffUserId ?? null,
       action: "account-deletion-requested",

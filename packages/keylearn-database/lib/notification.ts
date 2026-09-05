@@ -1,9 +1,21 @@
-import { type NotificationDetails } from "@keylearn/pages-shared";
+import {
+  type NotificationDetails,
+  type NotificationKind,
+} from "@keylearn/pages-shared";
 import { type Knex } from "knex";
 import { type JSONSchema, Model, snakeCaseMappers } from "objection";
 import { TimestampMixin } from "./model.ts";
 
-export type NotificationKind = "ticket-reply";
+/** Re-exported rather than redeclared: the wire type is the source of truth. */
+export type { NotificationKind };
+
+const NOTIFICATION_KINDS = [
+  "ticket-reply",
+  "ticket-close-confirm",
+  "ticket-auto-closed",
+  "exam-eligible",
+  "account-deletion-scheduled",
+] as const;
 
 /**
  * A signed-in account's in-app "you have an update" indicator — the
@@ -21,7 +33,7 @@ export class Notification extends TimestampMixin(Model) {
     properties: {
       id: { type: "integer" },
       userId: { type: "integer" },
-      kind: { type: "string", enum: ["ticket-reply"] },
+      kind: { type: "string", enum: [...NOTIFICATION_KINDS] },
       ticketId: { type: ["integer", "null"] },
       // A short snapshot of the reply, denormalized onto the row rather
       // than requiring a separate authenticated thread-view page — that's

@@ -10,6 +10,7 @@ export { ConfirmDialog } from "@keylearn/widget";
 // The course pieces the assessment page needs: it gathers the same evidence
 // and prints the same language line, and a second copy of either would be a
 // second definition of what counts.
+export * from "./course/announce.ts";
 export * from "./course/evidence.ts";
 export * from "./course/language-line.ts";
 // Lives in @keylearn/widget now, so the support desk can use the same

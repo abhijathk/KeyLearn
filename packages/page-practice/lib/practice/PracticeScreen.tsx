@@ -1,10 +1,19 @@
 import { useAssessment } from "@keylearn/assessment";
+import { type CertificateCriteria } from "@keylearn/certificate";
 import { catchError } from "@keylearn/debug";
 import { KeyboardProvider } from "@keylearn/keyboard";
 import { schedule } from "@keylearn/lang";
 import { type Lesson, lessonProps } from "@keylearn/lesson";
 import { LessonLoader } from "@keylearn/lesson-loader";
-import { LoadingProgress, profileStorageKey } from "@keylearn/pages-shared";
+// A deep import rather than the package root, same reason as Pulse.tsx: the
+// barrel re-exports the whole account page for one helper.
+import { maybeAnnounceEligibility } from "@keylearn/page-account/lib/course/announce.ts";
+import {
+  activeProfileId,
+  LoadingProgress,
+  profileStorageKey,
+  usePageData,
+} from "@keylearn/pages-shared";
 import { DailyStatsMap, type Result, useResults } from "@keylearn/result";
 import { useSettings } from "@keylearn/settings";
 import {
@@ -157,6 +166,7 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
   const { settings } = useSettings();
   const assessment = useAssessment();
   const { results, appendResults } = useResults();
+  const pageData = usePageData();
   const [progress, { total, current }] = useProgress(lesson, results);
   const [ceremony, setCeremony] = useState<Ceremony | null>(null);
   const [goal, setGoal] = useState<GoalStats | null>(null);
@@ -235,6 +245,26 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
                 }
               });
               appendResults([result]);
+              // The one moment worth telling somebody they can sit for the
+              // certificate: they are here, they have just practised, and the
+              // lesson they finished may be the one that crossed the line.
+              // Silent and at most once — see maybeAnnounceEligibility.
+              const learner =
+                pageData.profiles?.find((p) => p.id === activeProfileId()) ??
+                null;
+              if (learner != null) {
+                maybeAnnounceEligibility({
+                  profile: learner,
+                  results: all,
+                  letters: lesson.letters,
+                  // Same cast the Course pane uses: PageData carries the
+                  // criteria as opaque JSON so pages-shared need not depend
+                  // on the certificate package.
+                  criteria: pageData.certificates?.criteria as
+                    | CertificateCriteria
+                    | undefined,
+                });
+              }
               // Said out loud to a screen reader, because nothing else on this
               // page is: the figures update in place, and an element that
               // changes silently is an element somebody listening never learns

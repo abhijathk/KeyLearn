@@ -854,6 +854,13 @@ export class Profile extends TimestampMixin(Model) {
     table.integer("pin_failed_attempts").unsigned().notNullable().defaultTo(0);
     table.timestamp("pin_locked_until").nullable();
     table.boolean("pin_permanently_locked").notNullable().defaultTo(false);
+    // When this learner was told they can sit for the certificate.
+    //
+    // On the profile rather than on the notification because it is a fact
+    // about the learner, not about a badge: dismissing the notification
+    // must not cause it to be announced again on the next lesson, and
+    // there is exactly one such moment per learner worth interrupting for.
+    table.timestamp("exam_announced_at").nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table
       .foreign("user_id")
@@ -877,6 +884,8 @@ export class Profile extends TimestampMixin(Model) {
   anonymized?: number | boolean;
   consentAt?: Date | string | null;
   pinHash?: string | null;
+  /** Set once, when the certificate became available to this learner. */
+  examAnnouncedAt?: Date | null;
   pinFailedAttempts?: number;
   pinLockedUntil?: Date | string | null;
   pinPermanentlyLocked?: number | boolean;

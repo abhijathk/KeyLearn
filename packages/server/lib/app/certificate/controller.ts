@@ -16,7 +16,12 @@ import {
   type Sitting,
 } from "@keylearn/certificate";
 import { DataDir } from "@keylearn/config";
-import { Certificate, CertificateSitting, Profile } from "@keylearn/database";
+import {
+  Certificate,
+  CertificateSitting,
+  Notification,
+  Profile,
+} from "@keylearn/database";
 import { actorFor } from "../access/actor.ts";
 import { reachProfile } from "../access/resolver.ts";
 import { type AuthState, rateLimit } from "../auth/index.ts";
@@ -97,6 +102,69 @@ export class Controller {
       criteriaVersion: version,
     });
     ctx.response.status = 204;
+  }
+
+  /**
+   * "You can sit for the certificate now."
+   *
+   * The one thing on the bell that isn't somebody writing to you, and the
+   * reason it exists: a learner who has quietly met every condition has no
+   * way of finding that out except by opening a pane they have no reason
+   * to open. Everything else the app could congratulate them about — a
+   * faster day, a longer streak — is already on the screen they are
+   * looking at, and belongs there rather than here.
+   *
+   * The claim comes from the client because that is where practice history
+   * lives (see `issue`), and it is re-judged here for the same reason it is
+   * re-judged there: a bug on one page must not be able to manufacture an
+   * announcement. What a forged claim buys is a single notification saying
+   * something the certificate route will then refuse to act on.
+   *
+   * Announced at most once per learner, recorded on the profile rather than
+   * on the notification, so dismissing the badge does not bring it back on
+   * the next lesson.
+   */
+  @http.POST("/_/certificate/eligible/{pid:[0-9]+}")
+  async announceEligible(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("pid") pid: string,
+    @body.json(null, { maxLength: 4096 }) value: unknown,
+  ) {
+    rateLimit(ctx, "certificate-eligible", 20, 60_000);
+    const user = ctx.state.requireUser();
+    const profile = await this.owned(ctx, pid);
+    requireCertificatesFor(profile);
+    // Already told. Cheapest check first — this route is called after
+    // ordinary lessons, so the overwhelmingly common answer is "no-op".
+    if (profile.examAnnouncedAt != null) {
+      ctx.response.body = { announced: false };
+      return;
+    }
+    const { evidence } = readClaim(value, profile);
+    const snapshot = await criteriaSnapshot();
+    if (!assess(evidence, snapshot.criteria).eligible) {
+      ctx.response.body = { announced: false };
+      return;
+    }
+    // Stamped before the notification is written, and outside its failure
+    // path: a notification that fails to save is a missed badge, while a
+    // stamp that fails to save is a learner told again tomorrow, and the
+    // next day, for as long as they keep practising.
+    await profile.$query().patch({ examAnnouncedAt: new Date() });
+    try {
+      await Notification.create({
+        userId: user.id!,
+        kind: "exam-eligible",
+        ticketId: null,
+        body: EXAM_ELIGIBLE_NOTE,
+        authorName: null,
+        fromAssistant: false,
+      });
+    } catch {
+      // Best-effort, like every other notification: the Course pane says
+      // the same thing to anyone who goes looking.
+    }
+    ctx.response.body = { announced: true };
   }
 
   /**
@@ -417,6 +485,14 @@ function readSitting(value: unknown) {
     seconds: Math.max(0, Math.min(600, Math.round(num(v.seconds)))),
   } as const;
 }
+
+/**
+ * Deliberately an invitation and not a congratulation. Nothing has been
+ * achieved yet — the practice qualifies them to sit, and the sitting is
+ * still ahead of them.
+ */
+const EXAM_ELIGIBLE_NOTE =
+  "You\u2019ve practised enough to sit for your certificate whenever you\u2019re ready.";
 
 function readClaim(value: unknown, profile: Profile) {
   const v = (value ?? {}) as Record<string, unknown>;

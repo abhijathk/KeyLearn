@@ -433,13 +433,39 @@ export type StaffSettingsDetails = {
 };
 
 /**
- * A signed-in account's in-app "you have an update" indicator — currently
- * only fired when a support ticket gets a reply while signed in, in place
- * of an email (see `page-support`'s email-vs-notification split).
+ * What a notification is about. The bell is deliberately reserved for
+ * things a learner would want to be interrupted for — a person (or the
+ * assistant) has written to them, a conversation is about to be closed
+ * without them, or they have become eligible for something they cannot
+ * discover on their own. A better practice score is not on this list and
+ * should not join it: the stats already say that, on the page where it
+ * means something.
+ */
+export type NotificationKind =
+  /** The desk replied to a support conversation. */
+  | "ticket-reply"
+  /** A staffer proposed closing a conversation; we are waiting on an answer. */
+  | "ticket-close-confirm"
+  /** Nobody answered in time, so the conversation closed itself. */
+  | "ticket-auto-closed"
+  /** Enough practice has accumulated to sit a certificate exam. */
+  | "exam-eligible"
+  /**
+   * This account is scheduled for deletion and the cooling-off window is
+   * running. On the bell as well as in email because doing nothing is what
+   * destroys the account — the one event here where a missed message is
+   * unrecoverable, and email is the channel most easily missed.
+   */
+  | "account-deletion-scheduled";
+
+/**
+ * A signed-in account's in-app "you have an update" indicator — used in
+ * place of an email for someone who is signed in and can just look (see
+ * `page-support`'s email-vs-notification split).
  */
 export type NotificationDetails = {
   readonly id: number;
-  readonly kind: "ticket-reply";
+  readonly kind: NotificationKind;
   readonly ticketId: number | null;
   /** A short snapshot of the reply. Clicking opens the conversation. */
   readonly body: string | null;

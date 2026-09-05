@@ -198,10 +198,15 @@ export function NotificationBell(): ReactNode {
   }
 
   /**
-   * Opens the conversation it is about, marking it read on the way.
+   * Opens whatever it is about, marking it read on the way.
    *
    * Clicking used only to mark it read, which is the one thing somebody
-   * clicking a reply notification is not trying to do.
+   * clicking a notification is not trying to do.
+   *
+   * The destination follows the kind rather than being fixed at Support:
+   * every notification used to be a ticket reply, and sending somebody who
+   * tapped "you can sit the exam" to their support conversations would be
+   * worse than not linking at all.
    */
   const openThread = (n: NotificationDetails) => {
     if (!n.read) {
@@ -209,7 +214,8 @@ export function NotificationBell(): ReactNode {
       void AccountService.markNotificationRead(n.id);
     }
     setOpen(false);
-    window.location.href = "/account#support";
+    window.location.href =
+      n.kind === "exam-eligible" ? "/account#course" : "/account#support";
   };
 
   /** Removed from the list. The conversation it points at is untouched. */
