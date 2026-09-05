@@ -36,7 +36,7 @@ import { SpeedUnit, uiProps } from "@keylearn/result";
 import { openResultStorage } from "@keylearn/result-loader";
 import { useSettings } from "@keylearn/settings";
 import { say } from "@keylearn/speech";
-import { FONTS, useTheme } from "@keylearn/themes";
+import { FONTS, useIsDark, useTheme } from "@keylearn/themes";
 import { OptionList, Range } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
@@ -1577,6 +1577,7 @@ function NotificationsCard(): ReactNode {
 function CursorEffectRow(): ReactNode {
   const { settings, updateSettings } = useSettings();
   const on = settings.get(uiProps.cursorEffect);
+  const isDark = useIsDark();
 
   const [stilled, setStilled] = useState(false);
   useEffect(() => {
@@ -1591,6 +1592,22 @@ function CursorEffectRow(): ReactNode {
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  // Gone entirely on a light ground, rather than present and inert.
+  //
+  // The trail is light thrown onto the page, so on a pale one it reads as a
+  // smudge; there is no version of this setting that works there. A row
+  // explaining that is still a row — it asks to be read, and offers a
+  // decision that does not exist. The Mode switch is three lines above this
+  // one, so the option appears and disappears beside the control that
+  // governs it, which reads as cause and effect rather than as a bug.
+  //
+  // A learner who had it on keeps the setting; it simply does nothing until
+  // they are back on a dark ground, which is already true of the effect
+  // itself (see CursorFog).
+  if (!isDark) {
+    return null;
+  }
 
   return (
     <>
@@ -1866,6 +1883,15 @@ function HeaderIdentityRow(): ReactNode {
 function StatsArtRow(): ReactNode {
   const { settings, updateSettings } = useSettings();
   const on = settings.get(accountProps.showStatsArt);
+  // The mirror of the pointer trail, and hidden for the same reason: that
+  // effect needs a dark ground, this one needs a light one. The wash works
+  // by fading a painting towards the page behind it, and a dark page gives
+  // it nothing to fade towards — so on dark the row is not shown at all
+  // rather than shown and inert. See CursorEffectRow for the full argument.
+  const isDark = useIsDark();
+  if (isDark) {
+    return null;
+  }
   return (
     <div className={styles.row}>
       <div className={styles.rowText}>

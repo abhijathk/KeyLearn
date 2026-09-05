@@ -1,7 +1,7 @@
 import { usePageData } from "@keylearn/pages-shared";
 import { uiProps } from "@keylearn/result";
 import { useSettings } from "@keylearn/settings";
-import { useTheme } from "@keylearn/themes";
+import { useIsDark, useTheme } from "@keylearn/themes";
 import { type ReactNode, useEffect, useRef } from "react";
 import * as styles from "./CursorFog.module.less";
 
@@ -274,10 +274,16 @@ export function CursorFog(): ReactNode {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  // Dark grounds only. The fog is light thrown onto a page, and light on a
+  // pale page is grey smudge — it read as a rendering fault rather than an
+  // effect. Live rather than read once, because "auto" is the default theme
+  // and the device can change its mind at sunset.
+  const isDark = useIsDark();
+
   // Signed out is decided here rather than inside the effect so the canvas is
   // not in the document at all for a visitor — nothing to inspect, nothing to
   // paint, no listener.
-  const enabled = user != null && settings.get(uiProps.cursorEffect);
+  const enabled = user != null && isDark && settings.get(uiProps.cursorEffect);
   const intensity = settings.get(uiProps.cursorEffectIntensity);
 
   useEffect(() => {

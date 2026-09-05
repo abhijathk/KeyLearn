@@ -28,6 +28,7 @@ import {
   timeToSpeed,
 } from "@keylearn/result";
 import { useSettings } from "@keylearn/settings";
+import { useIsDark } from "@keylearn/themes";
 import { StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
 import {
@@ -1050,6 +1051,7 @@ function SessionRecap({
 const ProfileWash = memo(function ProfileWash(): ReactNode {
   const { settings } = useSettings();
   const pageData = usePageData();
+  const isDark = useIsDark();
   const [id, setId] = useState(() => activeProfileId());
   useEffect(() => {
     // A learner switch happens elsewhere in the tree and does not remount this.
@@ -1061,6 +1063,13 @@ const ProfileWash = memo(function ProfileWash(): ReactNode {
   }, []);
   const profile = pageData.profiles?.find((each) => each.id === id) ?? null;
   const avatar = profile?.avatar ?? null;
+  // Light grounds only. The wash works by bleaching a painting towards the
+  // page behind it; on a dark page there is nothing to bleach towards, so it
+  // sits as a muddy patch under the numbers instead of disappearing under
+  // them. Read live — "auto" is the default theme and follows the device.
+  if (isDark) {
+    return null;
+  }
   if (!settings.get(accountProps.showStatsArt)) {
     return null;
   }

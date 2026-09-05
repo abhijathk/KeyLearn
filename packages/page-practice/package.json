@@ -7,6 +7,7 @@
   "types": ".types/index.d.ts",
   "dependencies": {
     "@keylearn/assessment": "*",
+    "@keylearn/certificate": "*",
     "@keylearn/chart": "*",
     "@keylearn/code": "*",
     "@keylearn/content": "*",
@@ -32,6 +33,7 @@
     "@keylearn/textinput-events": "*",
     "@keylearn/textinput-sounds": "*",
     "@keylearn/textinput-ui": "*",
+    "@keylearn/themes": "*",
     "@keylearn/unicode": "*",
     "@keylearn/widget": "*"
   },
