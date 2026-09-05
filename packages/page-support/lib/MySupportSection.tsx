@@ -1307,6 +1307,9 @@ function Thread({
     last != null &&
     last.sender !== "them" &&
     last.kind == null;
+  // The always-available way to end a conversation. Suppressed only while a
+  // card is already asking the same thing — see the button's own note.
+  const canResolve = !cannotReopen && !closeRequested && !askSorted;
 
   let dayShown: string | null = null;
 
@@ -1346,6 +1349,31 @@ function Thread({
               values={{ wait: waitWords(thread.expectedReplyMinutes, intl) }}
             />
           </p>
+        )}
+        {/* Resolving a conversation on purpose, rather than only when
+            something else thinks to ask.
+
+            The two cards below ask "did that sort it?" — but only after the
+            desk has replied, and only once. Somebody who worked the answer
+            out themselves, or whose question stopped mattering, had no way
+            to say so and their thread sat open in a queue. The endpoint has
+            always existed; it simply had no door.
+
+            Hidden while either card is on screen: they offer the same
+            decision, and two controls for one decision is how somebody ends
+            up answering the wrong one. */}
+        {canResolve && (
+          <button
+            type="button"
+            className={styles.resolveAction}
+            onClick={() => setConfirmSorted(true)}
+          >
+            <Icon name="tick" size={13} />
+            <FormattedMessage
+              id="support.my.markResolved"
+              defaultMessage="Mark as resolved"
+            />
+          </button>
         )}
       </div>
 

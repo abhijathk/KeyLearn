@@ -1881,6 +1881,7 @@
   "support.my.loadEarlier": "過去のメッセージを読み込む",
   "support.my.loadFailed": "メッセージを読み込めませんでした。",
   "support.my.lockedIntro": "サポートはこのアカウントを所有する保護者向けです。",
+  "support.my.markResolved": "解決済みにする",
   "support.my.needTitle": "短いタイトルを付けていただければ送信できます。",
   "support.my.new": "チケットを起票する",
   "support.my.newHere": "新規",

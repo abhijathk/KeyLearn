@@ -3,6 +3,7 @@ import { siteNumber } from "@keylearn/site-config";
 import { type Knex } from "knex";
 import { type JSONSchema, Model, snakeCaseMappers } from "objection";
 import { TimestampMixin } from "./model.ts";
+import { Notification } from "./notification.ts";
 
 /**
  * Things worth telling an account owner about after the fact.
@@ -106,6 +107,41 @@ export class SecurityEvent extends TimestampMixin(Model) {
    * Records an event. Never throws: an audit write must not be able to turn a
    * successful password change into a failed request.
    */
+  /**
+   * The changes worth interrupting somebody for, and what to call them.
+   *
+   * The "was this you?" set: every one of these is something only the
+   * account holder should be able to do, and every one of them is what an
+   * attacker does first after getting in — change the password so the owner
+   * cannot, move the address so the reset goes elsewhere, add a passkey to
+   * keep the door open, turn off the second factor that would have stopped
+   * any of it.
+   *
+   * Deliberately NOT here: `login`, which happens constantly and would
+   * train people to ignore the bell — the exact outcome that makes the
+   * alerts above worthless. `login-failed` for the same reason, plus it is
+   * the one an attacker can trigger at will to bury a real alert under
+   * noise. Both stay in the security log, where somebody investigating will
+   * find them.
+   */
+  static readonly ALERTABLE: Readonly<
+    Partial<Record<SecurityEventType, string>>
+  > = {
+    "password-changed": "Your password was changed.",
+    "password-reset": "Your password was reset.",
+    "email-changed": "The email address on this account was changed.",
+    "email-change-requested":
+      "Somebody asked to change the email address on this account.",
+    "passkey-added": "A new passkey was added to this account.",
+    "passkey-removed": "A passkey was removed from this account.",
+    "two-factor-enabled": "Two-step verification was turned on.",
+    "two-factor-disabled": "Two-step verification was turned off.",
+    "sso-linked": "A sign-in service was linked to this account.",
+    "signed-out-everywhere": "This account was signed out on every device.",
+    "security-reset": "This account's security settings were reset.",
+    "parent-pin-set": "The grown-up PIN on this account was changed.",
+  };
+
   static async record({
     userId = null,
     type,
@@ -128,8 +164,43 @@ export class SecurityEvent extends TimestampMixin(Model) {
         detail: truncate(detail, 256),
       });
       await SecurityEvent.#pruneOccasionally();
+      await SecurityEvent.#alert(userId, type);
     } catch {
       // Deliberately swallowed — see above.
+    }
+  }
+
+  /**
+   * Raise the bell for a change the owner needs to have noticed.
+   *
+   * Here rather than at each call site because there are a dozen of those
+   * and they are added to: a security act that forgets to announce itself is
+   * indistinguishable from one nobody performed. Recording the event is the
+   * one thing every such act already does, so it is the one place this
+   * cannot be forgotten.
+   *
+   * Its own try/catch inside the caller's: a failed notification must not
+   * cost the audit row, which is the record of last resort.
+   */
+  static async #alert(
+    userId: number | null,
+    type: SecurityEventType,
+  ): Promise<void> {
+    const body = SecurityEvent.ALERTABLE[type];
+    if (userId == null || body == null) {
+      return;
+    }
+    try {
+      await Notification.create({
+        userId,
+        kind: "security-alert",
+        ticketId: null,
+        body: `${body} If that was not you, change your password and contact support.`,
+        authorName: null,
+        fromAssistant: false,
+      });
+    } catch {
+      // Best-effort, like every other notification.
     }
   }
 

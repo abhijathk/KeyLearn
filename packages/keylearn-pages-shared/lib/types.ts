@@ -456,7 +456,15 @@ export type NotificationKind =
    * destroys the account — the one event here where a missed message is
    * unrecoverable, and email is the channel most easily missed.
    */
-  | "account-deletion-scheduled";
+  | "account-deletion-scheduled"
+  /**
+   * Something changed on this account that only its owner should be able
+   * to change — a password, an email address, a second factor, a passkey.
+   * The "was this you?" class, and the reason it is on the bell rather than
+   * only in the security log: a log is somewhere you go once you already
+   * suspect something, which is exactly too late.
+   */
+  | "security-alert";
 
 /**
  * A signed-in account's in-app "you have an update" indicator — used in

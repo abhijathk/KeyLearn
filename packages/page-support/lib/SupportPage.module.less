@@ -1089,6 +1089,32 @@
   font-size: 0.78rem;
 }
 
+/* "Mark as resolved" in the thread head.
+
+   Quiet by design: it sits under the subject of a conversation somebody is
+   reading, and a solid button there would compete with the reply box for
+   the eye. It is an action available when wanted, not one being urged —
+   the confirm dialog is where the weight belongs, because that is the step
+   that cannot be undone. */
+.resolveAction {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  margin-block-start: 0.5rem;
+  padding: 0;
+  border: 0;
+  color: var(--secondary-l1);
+  background: none;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.resolveAction:hover,
+.resolveAction:focus-visible {
+  color: var(--secondary);
+  text-decoration: underline;
+}
+
 .sortedQ {
   color: var(--secondary) !important;
   font-size: 0.86rem !important;

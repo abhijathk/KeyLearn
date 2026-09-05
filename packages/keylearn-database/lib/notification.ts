@@ -15,6 +15,7 @@ const NOTIFICATION_KINDS = [
   "ticket-auto-closed",
   "exam-eligible",
   "account-deletion-scheduled",
+  "security-alert",
 ] as const;
 
 /**
