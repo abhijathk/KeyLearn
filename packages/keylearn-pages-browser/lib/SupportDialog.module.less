@@ -19,6 +19,20 @@
   opacity: 1;
 }
 
+/* The wait before the artwork is ready.
+
+   Sized to roughly what the finished dialog occupies — the banner's cap plus
+   the sentence and the buttons — so the panel does not visibly grow when the
+   real content replaces it. Matching it exactly would mean hard-coding a
+   height that the copy's own line count changes per language, so this is
+   close rather than pixel-equal, and it errs small: a panel that settles
+   slightly taller reads better than one that shrinks. */
+.loading {
+  display: grid;
+  place-items: center;
+  min-block-size: 15rem;
+}
+
 .content {
   text-align: center;
 }
