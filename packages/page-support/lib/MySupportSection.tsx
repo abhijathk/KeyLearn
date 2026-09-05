@@ -152,6 +152,13 @@ export function MySupportSection(): ReactNode {
   >(null);
   const [query, setQuery] = useState("");
   const [rating, setRating] = useState<SupportService.MyTicket | null>(null);
+  // The list's own "I'm done with this", beside its "remove this". Both are
+  // decisions about a whole conversation, so both belong on the row rather
+  // than only inside the thread — somebody clearing a list should not have
+  // to open five conversations to end them.
+  const [resolving, setResolving] = useState<SupportService.MyTicket | null>(
+    null,
+  );
   const [deleting, setDeleting] = useState<SupportService.MyTicket | null>(
     null,
   );
@@ -421,6 +428,25 @@ export function MySupportSection(): ReactNode {
           <StatusBadge status={t.status} />
         </span>
       </button>
+      {/* Only on a conversation that is actually still going. A resolved or
+          spam thread has nothing to resolve, and an icon that does nothing
+          is worse than no icon. */}
+      {t.status !== "closed" && t.status !== "spam" && (
+        <button
+          type="button"
+          className={`${styles.iconButton} ${styles.resolveButton}`}
+          aria-label={formatMessage(
+            {
+              id: "support.my.resolveRef",
+              defaultMessage: "Mark {ref} as resolved",
+            },
+            { ref: t.reference },
+          )}
+          onClick={() => setResolving(t)}
+        >
+          <Icon name="tick" />
+        </button>
+      )}
       <button
         type="button"
         className={styles.iconButton}
@@ -492,6 +518,26 @@ export function MySupportSection(): ReactNode {
                   </summary>
                   <div className={styles.chips}>{resolved.map(chipOf)}</div>
                 </details>
+              )}
+
+              {resolving != null && (
+                <ConfirmResolve
+                  ticket={resolving}
+                  onCancel={() => setResolving(null)}
+                  onConfirm={() => {
+                    const id = resolving.id;
+                    setResolving(null);
+                    void SupportService.markSorted(id)
+                      .then(() => refresh())
+                      .catch((err) => {
+                        if (isPinLapse(err)) {
+                          onLapse();
+                        } else {
+                          void refresh();
+                        }
+                      });
+                  }}
+                />
               )}
 
               {deleting != null && (
@@ -1567,20 +1613,8 @@ function Thread({
           ))}
 
           {confirmSorted && (
-            <ConfirmDialog
-              title={formatMessage({
-                id: "support.my.sortedConfirm.title",
-                defaultMessage: "Mark this as resolved?",
-              })}
-              message={formatMessage({
-                id: "support.my.sortedConfirm.message",
-                defaultMessage:
-                  "This closes the conversation for good — replying won’t reopen it. If something else comes up you can start a new message and quote this ticket’s number, and we’ll pick up the history.",
-              })}
-              confirmLabel={formatMessage({
-                id: "support.my.sortedConfirm.yes",
-                defaultMessage: "Yes, it’s resolved",
-              })}
+            <ConfirmResolve
+              ticket={thread}
               onConfirm={() => {
                 setConfirmSorted(false);
                 void SupportService.markSorted(id)
@@ -1809,6 +1843,131 @@ function Thread({
 }
 
 // ── floating cards ─────────────────────────────────────────────────────
+
+/**
+ * Resolving a conversation, asked the same way removing one is.
+ *
+ * Deliberately this component rather than the generic ConfirmDialog: these
+ * two questions are reached from icons sitting next to each other on the
+ * same row, and a learner who has just seen one shape should not have to
+ * re-read a different one to answer the same class of question about the
+ * same ticket. So it names the reference and the subject the same way, puts
+ * its buttons in the same order, and closes on Escape from the same handler.
+ *
+ * What differs is only what differs in fact: the primary button carries the
+ * colour of the state it produces rather than the red of a warning, and the
+ * cancel says "keep it open" instead of "keep it" — because the thing being
+ * preserved here is the conversation continuing, not the record existing.
+ *
+ * Every string except the title is one the app already had: the body, the
+ * confirm and the cancel are the same sentences this decision is described
+ * with elsewhere, which is both less to translate and, more importantly,
+ * one wording for one idea.
+ */
+function ConfirmResolve({
+  ticket,
+  onCancel,
+  onConfirm,
+}: {
+  // Structural rather than SupportService.MyTicket, because the two callers
+  // hold different objects — the list has a MyTicket, the open thread has
+  // its own richer shape — and both know these three facts. Naming what is
+  // needed instead of a concrete type is what lets one dialog serve both,
+  // which is the point: one decision should not have two looks.
+  readonly ticket: {
+    readonly reference: string;
+    readonly subject: string;
+    readonly createdAt: string;
+  };
+  readonly onCancel: () => void;
+  readonly onConfirm: () => void;
+}): ReactNode {
+  const intl = useIntl();
+  const { formatMessage } = intl;
+  const first = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    first.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
+  return (
+    <div
+      className={styles.floatCard}
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="support-res-q"
+      aria-describedby="support-res-d"
+    >
+      <div className={styles.floatTop}>
+        <div>
+          <div className={styles.floatQ} id="support-res-q">
+            <FormattedMessage
+              id="support.my.resolveTitle"
+              defaultMessage="Mark {ref} as resolved?"
+              values={{ ref: ticket.reference }}
+            />
+          </div>
+          <div className={styles.floatSub}>
+            {/* The same line the removal card shows, from the same id: it
+                identifies which of two similar conversations this is, and
+                that job does not change with the question being asked. */}
+            <FormattedMessage
+              id="support.my.deleteSub"
+              defaultMessage="{subject} · opened {when}"
+              values={{
+                subject: ticket.subject,
+                when: dayLabel(ticket.createdAt, intl),
+              }}
+            />
+          </div>
+        </div>
+        <button
+          type="button"
+          className={styles.floatClose}
+          onClick={onCancel}
+          aria-label={formatMessage({
+            id: "support.my.cancel",
+            defaultMessage: "Cancel",
+          })}
+        >
+          <Icon name="x" size={13} />
+        </button>
+      </div>
+      <p className={styles.floatSub} id="support-res-d" style={{ margin: 0 }}>
+        <FormattedMessage
+          id="support.my.sortedConfirm.message"
+          defaultMessage="This closes the conversation for good — replying won’t reopen it. If something else comes up you can start a new message and quote this ticket’s number, and we’ll pick up the history."
+        />
+      </p>
+      <div className={styles.actionsRow}>
+        <button
+          ref={first}
+          type="button"
+          className={styles.confirmButton}
+          onClick={onConfirm}
+        >
+          <FormattedMessage
+            id="support.my.sortedConfirm.yes"
+            defaultMessage="Yes, it’s resolved"
+          />
+        </button>
+        <Button
+          label={formatMessage({
+            id: "support.my.deskClosed.no",
+            defaultMessage: "Keep it open",
+          })}
+          onClick={onCancel}
+        />
+      </div>
+    </div>
+  );
+}
 
 function ConfirmDelete({
   ticket,

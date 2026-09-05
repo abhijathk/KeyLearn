@@ -403,6 +403,18 @@
   color: var(--error);
 }
 
+/* The same button, a different promise.
+
+   Red on hover is right for the bin beside it and wrong here: resolving a
+   conversation is not destructive in the way removing it is, and colouring
+   the two identically would make the row read as two ways to throw
+   something away. This takes the colour the Resolved badge already uses,
+   so hovering it previews the state it produces. */
+.resolveButton:hover,
+.resolveButton:focus-visible {
+  color: var(--fast-key-color);
+}
+
 /* ── the conversation ── */
 
 /* Pinned. The reference and the subject are what tell you which
@@ -1141,6 +1153,24 @@
   border-radius: 0.5rem;
   color: var(--primary);
   background: var(--error);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* The same weight as the destructive action beside it, in the colour of the
+   state it produces rather than the colour of a warning.
+
+   Resolving a conversation is irreversible, so it earns a filled primary
+   button and a confirmation step — but it is not the same KIND of act as
+   throwing the conversation away, and painting the two identically is how
+   somebody learns to click red without reading it. */
+.confirmButton {
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: var(--primary);
+  background: var(--fast-key-color);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
