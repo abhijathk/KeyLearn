@@ -387,6 +387,22 @@
   color: var(--secondary-l1);
 }
 
+/* The row's actions, as one grid cell.
+
+   .iconButton carries a negative inline-end margin so a lone icon sits
+   flush with the card edge, and that margin is shared with three other
+   buttons elsewhere in this file — so it is neutralised HERE rather than
+   removed there. Left on both buttons it would pull the bin back over the
+   tick and close the gap between them to nothing. The group takes the
+   pull instead, once, so a two-icon row ends exactly where a one-icon row
+   above it does. */
+.chipActions {
+  display: flex;
+  gap: 0.15rem;
+  align-items: center;
+  margin-inline-end: -0.3rem;
+}
+
 .iconButton {
   display: grid;
   place-items: center;
@@ -401,6 +417,12 @@
 
 .iconButton:hover {
   color: var(--error);
+}
+
+/* Neutralised inside the group; see .chipActions for why it is overridden
+   here rather than removed from the shared rule above. */
+.chipActions .iconButton {
+  margin-inline-end: 0;
 }
 
 /* The same button, a different promise.
@@ -1099,32 +1121,6 @@
   margin: 0;
   color: var(--secondary-l1);
   font-size: 0.78rem;
-}
-
-/* "Mark as resolved" in the thread head.
-
-   Quiet by design: it sits under the subject of a conversation somebody is
-   reading, and a solid button there would compete with the reply box for
-   the eye. It is an action available when wanted, not one being urged —
-   the confirm dialog is where the weight belongs, because that is the step
-   that cannot be undone. */
-.resolveAction {
-  display: inline-flex;
-  gap: 0.35rem;
-  align-items: center;
-  margin-block-start: 0.5rem;
-  padding: 0;
-  border: 0;
-  color: var(--secondary-l1);
-  background: none;
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-
-.resolveAction:hover,
-.resolveAction:focus-visible {
-  color: var(--secondary);
-  text-decoration: underline;
 }
 
 .sortedQ {

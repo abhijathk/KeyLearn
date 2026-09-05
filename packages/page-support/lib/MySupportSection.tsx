@@ -428,36 +428,42 @@ export function MySupportSection(): ReactNode {
           <StatusBadge status={t.status} />
         </span>
       </button>
-      {/* Only on a conversation that is actually still going. A resolved or
-          spam thread has nothing to resolve, and an icon that does nothing
-          is worse than no icon. */}
-      {t.status !== "closed" && t.status !== "spam" && (
+      {/* One grid cell for however many actions a row has.
+
+          `.chip` is a four-column grid and `.chipOpen` is display:contents,
+          so the reference, subject and meta ARE grid items — a bare second
+          icon button became a fifth item in a four-column track and wrapped
+          the bin onto a line of its own. Grouping them means the template
+          does not have to know how many icons a row happens to show. */}
+      <span className={styles.chipActions}>
+        {t.status !== "closed" && t.status !== "spam" && (
+          <button
+            type="button"
+            className={`${styles.iconButton} ${styles.resolveButton}`}
+            aria-label={formatMessage(
+              {
+                id: "support.my.resolveRef",
+                defaultMessage: "Mark {ref} as resolved",
+              },
+              { ref: t.reference },
+            )}
+            onClick={() => setResolving(t)}
+          >
+            <Icon name="tick" />
+          </button>
+        )}
         <button
           type="button"
-          className={`${styles.iconButton} ${styles.resolveButton}`}
+          className={styles.iconButton}
           aria-label={formatMessage(
-            {
-              id: "support.my.resolveRef",
-              defaultMessage: "Mark {ref} as resolved",
-            },
+            { id: "support.my.delete", defaultMessage: "Remove {ref}" },
             { ref: t.reference },
           )}
-          onClick={() => setResolving(t)}
+          onClick={() => setDeleting(t)}
         >
-          <Icon name="tick" />
+          <Icon name="trash" />
         </button>
-      )}
-      <button
-        type="button"
-        className={styles.iconButton}
-        aria-label={formatMessage(
-          { id: "support.my.delete", defaultMessage: "Remove {ref}" },
-          { ref: t.reference },
-        )}
-        onClick={() => setDeleting(t)}
-      >
-        <Icon name="trash" />
-      </button>
+      </span>
     </div>
   );
 
@@ -1353,9 +1359,6 @@ function Thread({
     last != null &&
     last.sender !== "them" &&
     last.kind == null;
-  // The always-available way to end a conversation. Suppressed only while a
-  // card is already asking the same thing — see the button's own note.
-  const canResolve = !cannotReopen && !closeRequested && !askSorted;
 
   let dayShown: string | null = null;
 
@@ -1395,31 +1398,6 @@ function Thread({
               values={{ wait: waitWords(thread.expectedReplyMinutes, intl) }}
             />
           </p>
-        )}
-        {/* Resolving a conversation on purpose, rather than only when
-            something else thinks to ask.
-
-            The two cards below ask "did that sort it?" — but only after the
-            desk has replied, and only once. Somebody who worked the answer
-            out themselves, or whose question stopped mattering, had no way
-            to say so and their thread sat open in a queue. The endpoint has
-            always existed; it simply had no door.
-
-            Hidden while either card is on screen: they offer the same
-            decision, and two controls for one decision is how somebody ends
-            up answering the wrong one. */}
-        {canResolve && (
-          <button
-            type="button"
-            className={styles.resolveAction}
-            onClick={() => setConfirmSorted(true)}
-          >
-            <Icon name="tick" size={13} />
-            <FormattedMessage
-              id="support.my.markResolved"
-              defaultMessage="Mark as resolved"
-            />
-          </button>
         )}
       </div>
 
