@@ -102,12 +102,19 @@ export function skinFor(
     case KeyboardStyle.FLAT_MIDNIGHT:
       return MIDNIGHT_SKIN;
     // The round board has ONE face per colour, worn on both themes: the theme
-    // changes the light, not the plastic. So `dark` does not appear here.
-    case KeyboardStyle.ROUND:
-      return (
+    // changes the light, not the plastic. The single exception is the accent
+    // legend, and it is an exception that proves the rule — the accent caps
+    // are the lit ones, so with the backlight off they sit several shades
+    // down and a legend chosen for the lit cap stops reading against the
+    // unlit one. The plastic is unchanged; only what the light does to it is.
+    case KeyboardStyle.ROUND: {
+      const skin =
         ROUND_SKINS[settings.get(keyboardProps.colour).id] ??
-        ROUND_SKINS.graphite
-      );
+        ROUND_SKINS.graphite;
+      return !dark && skin.accentInkLight != null
+        ? { ...skin, accentInk: skin.accentInkLight }
+        : skin;
+    }
     default:
       return null;
   }

@@ -170,6 +170,21 @@ export type Skin = {
   readonly ink: string;
   readonly modInk: string;
   readonly accentInk: string;
+  /**
+   * The accent legend on a light page, where one is needed.
+   *
+   * The round board wears one face on both themes — the theme changes the
+   * light, not the plastic — and that holds for every cap here. But the
+   * accent caps are lit by the backlight, which is off by default on a light
+   * page, so the same lemon that carries a near-black legend under the light
+   * sits several shades down without it and the dark legend stops reading.
+   *
+   * A legend colour is part of the lighting, not part of the keyset, which is
+   * why this is a second ink rather than a second skin. Absent, the accent
+   * ink is used on both themes, which is right for every skin whose accent
+   * cap is pale enough not to move.
+   */
+  readonly accentInkLight?: string;
   readonly size: number;
   readonly weight: number;
 };
@@ -322,6 +337,7 @@ const roundSkin = (
   acc: readonly [string, string],
   accWall: string,
   accInk: string,
+  accInkLight?: string,
 ): Skin => ({
   id: `round-${id}`,
   cue: "#8fd9b6",
@@ -340,6 +356,7 @@ const roundSkin = (
   ink,
   modInk: ink,
   accentInk: accInk,
+  ...(accInkLight != null ? { accentInkLight: accInkLight } : {}),
   size: 17,
   weight: 300,
 });
@@ -366,6 +383,10 @@ export const ROUND_SKINS: Record<string, Skin> = {
     ["var(--accent)", "color-mix(in oklab, var(--accent) 86%, #000)"],
     "color-mix(in oklab, var(--accent) 55%, #000)",
     "color-mix(in oklab, var(--accent) 22%, #000)",
+    // Unlit, the accent cap sits well below the near-black legend it carries
+    // under the backlight. Mixed towards white from the same accent, so it
+    // still belongs to the key rather than being a flat grey pasted on it.
+    "color-mix(in oklab, var(--accent) 18%, #fff)",
   ),
   graphite: roundSkin(
     "graphite",
@@ -377,6 +398,10 @@ export const ROUND_SKINS: Record<string, Skin> = {
     ["#e8db35", "#cbbe1e"],
     "#847c0e",
     "#2b290f",
+    // The lemon reads as a deep olive with the backlight off, and #2b290f on
+    // it is very nearly unreadable — the reported bug, on Backquote and
+    // Enter. The board's own legend colour carries there instead.
+    "#f2eecf",
   ),
 
   offwhite: roundSkin(
