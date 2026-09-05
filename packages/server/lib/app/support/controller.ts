@@ -63,6 +63,7 @@ import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
 import { threadLinkMs } from "../site-config/readers.ts";
 import { matchAnswers } from "./matching.ts";
+import { priorTicketsFor } from "./prior-ticket.ts";
 import {
   fetchDeskNotice,
   fetchDeskNotices,
@@ -171,6 +172,23 @@ const TStaffMessage = z.object({
 });
 type TStaffMessage = z.infer<typeof TStaffMessage>;
 const PStaffMessage = zod(TStaffMessage);
+
+/**
+ * What the thread says when the desk proposes a close. Written once here
+ * rather than composed at the call site so the sweep, the thread and the
+ * bell all quote the same sentence.
+ */
+const CLOSE_REQUEST_NOTE =
+  "Support have marked this as sorted. If that\u2019s right, you don\u2019t need to do anything \u2014 otherwise let us know and we\u2019ll keep it open.";
+
+const TCloseRequest = z.object({
+  /** Optional override for the system line; the desk normally sends none. */
+  body: z.string().trim().min(1).max(500).nullable().optional(),
+  /** Who proposed it, for the bell. Null keeps the generic label. */
+  authorName: z.string().trim().max(64).nullable().optional(),
+});
+type TCloseRequest = z.infer<typeof TCloseRequest>;
+const PCloseRequest = zod(TCloseRequest);
 
 const TDeliverReply = z.object({
   body: z.string().trim().min(1).max(4000),
@@ -952,6 +970,16 @@ export class Controller {
         sender: "them",
         body: input.message,
       });
+      // The typed-reference pickup, same as the signed-in path. A guest is
+      // matched on the address they filed with rather than an account id —
+      // weaker, but it is the standard the guest thread view already applies,
+      // and a guest has no account to match on. See priorTicketsFor.
+      const priorTickets = await priorTicketsFor({
+        text: `${input.subject} ${input.message}`,
+        userId: ctx.state.user?.id ?? null,
+        email: input.email,
+        excludeId: ticket.id!,
+      }).catch(() => []);
       forwardTicketToQdesk({
         id: ticket.id!,
         kind: input.kind,
@@ -961,6 +989,7 @@ export class Controller {
         message: input.message,
         userId: ctx.state.user?.id ?? null,
         messageId: first.id!,
+        priorTickets,
         // Same two independent facts my-controller sends (see the note
         // there): country from the network edge, zone from the browser.
         // They were missing here, so every ticket filed through the
@@ -1122,6 +1151,16 @@ export class Controller {
       sender: "them",
       body: ticket.message!,
     });
+    // Resolved here too, not only on the direct path: every signed-out
+    // submission goes through this queue, and a guest quoting an old number
+    // is precisely the case the promise was written for — they cannot reply
+    // to their resolved thread, so a new ticket is their only route back.
+    const priorTickets = await priorTicketsFor({
+      text: `${ticket.subject ?? ""} ${ticket.message ?? ""}`,
+      userId: ticket.userId ?? null,
+      email: ticket.email!,
+      excludeId: ticket.id!,
+    }).catch(() => []);
     forwardTicketToQdesk({
       id: ticket.id!,
       kind: (ticket.kind ?? "support") as "support" | "business",
@@ -1131,6 +1170,7 @@ export class Controller {
       message: ticket.message!,
       userId: ticket.userId ?? null,
       messageId: confirmedFirst.id!,
+      priorTickets,
       // The same two facts the direct path sends — read back off the
       // ticket, because the confirm click arrives with neither. Without
       // these, every ticket that went through the holding queue (which is
@@ -1513,6 +1553,85 @@ export class Controller {
       );
     }
     ctx.response.body = { ok: true, status: updated.status };
+  }
+
+  /**
+   * The desk proposing a close, rather than performing one.
+   *
+   * A staffer marking a ticket resolved on their side is a judgement made
+   * without the person who raised it in the room. Usually right; sometimes
+   * not. So it lands here as a question — the ticket stays open, the
+   * learner is asked, and only silence turns it into a close (see
+   * {@link CloseConfirmSweep}).
+   *
+   * Idempotent on purpose. The desk has no delivery receipt for this call
+   * and its own bridge swallows failures, so a staffer toggling a status
+   * twice, or a retry, must not extend the deadline into the distance.
+   * A ticket already awaiting an answer keeps the deadline it has.
+   */
+  @http.POST("/_/internal/tickets/{id}/close-request")
+  async requestClose(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @body.json(PCloseRequest, jsonOpts) input: TCloseRequest,
+  ) {
+    ctx.state.requireOpsApi();
+    const ticket = await SupportTicket.findById(id);
+    if (ticket == null) {
+      ctx.response.status = 404;
+      return;
+    }
+    // Nothing to ask about. A closed ticket is already closed, and spam
+    // must never generate a notification — answering it is exactly the
+    // engagement the sender wanted.
+    if (
+      ticket.status === "closed" ||
+      ticket.status === "spam" ||
+      ticket.status === "holding"
+    ) {
+      ctx.response.body = { ok: true, asked: false, status: ticket.status };
+      return;
+    }
+    if (ticket.closeRequestedAt != null) {
+      ctx.response.body = { ok: true, asked: false, status: ticket.status };
+      return;
+    }
+    const updated = await ticket.requestClose();
+    await SupportMessage.create({
+      ticketId: id,
+      sender: "system",
+      body: input.body ?? CLOSE_REQUEST_NOTE,
+    });
+    void this.#notifyCloseConfirm(updated, input.authorName ?? null);
+    ctx.response.body = { ok: true, asked: true, status: updated.status };
+  }
+
+  /**
+   * The bell entry for "is this sorted?".
+   *
+   * Best-effort, like {@link #notifyReply}: the question is in the thread
+   * whether or not the badge appears, and the sweep's deadline runs off the
+   * ticket, not off this row.
+   */
+  async #notifyCloseConfirm(
+    ticket: SupportTicket,
+    authorName: string | null,
+  ): Promise<void> {
+    if (ticket.userId == null) {
+      return;
+    }
+    try {
+      await Notification.create({
+        userId: ticket.userId,
+        kind: "ticket-close-confirm",
+        ticketId: ticket.id!,
+        body: CLOSE_REQUEST_NOTE,
+        authorName,
+        fromAssistant: false,
+      });
+    } catch {
+      // Best-effort — see #notifyReply.
+    }
   }
 
   /**

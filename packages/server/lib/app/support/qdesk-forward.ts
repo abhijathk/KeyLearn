@@ -1,6 +1,7 @@
 import { Env } from "@keylearn/config";
 import { SupportAttachment, SupportMessage } from "@keylearn/database";
 import { reference } from "./my-controller.ts";
+import { type PriorTicket } from "./prior-ticket.ts";
 
 /**
  * Forwarding bridge to QDesk, the ops app — plain HTTP against its
@@ -156,6 +157,14 @@ export function forwardTicketToQdesk(ticket: {
   readonly country?: string | null;
   /** The browser's own IANA zone. */
   readonly timeZone?: string | null;
+  /**
+   * Earlier conversations this person quoted the number of, and owns.
+   *
+   * Already ownership-checked by the time it reaches here — see
+   * `priorTicketsFor`. Optional so a desk build that does not read it, and
+   * a caller that has not resolved any, both behave as before.
+   */
+  readonly priorTickets?: readonly PriorTicket[];
 }): void {
   const cfg = config();
   void attachmentsFor(ticket.messageId)
@@ -177,6 +186,12 @@ export function forwardTicketToQdesk(ticket: {
           keylearnUserId: ticket.userId,
           country: ticket.country ?? null,
           timeZone: ticket.timeZone ?? null,
+          // Only sent when there is something to send: an empty array on
+          // every ordinary ticket is noise in the desk's logs and one more
+          // thing for its schema to have an opinion about.
+          ...(ticket.priorTickets != null && ticket.priorTickets.length > 0
+            ? { priorTickets: ticket.priorTickets }
+            : {}),
         },
         cfg,
       ),

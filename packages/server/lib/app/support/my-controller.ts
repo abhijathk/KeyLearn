@@ -14,6 +14,7 @@ import {
   SupportMessage,
   SupportTicket,
 } from "@keylearn/database";
+import { siteNumber } from "@keylearn/site-config";
 import { z } from "zod";
 import {
   proveSupportPin,
@@ -24,6 +25,7 @@ import { rateLimit } from "../auth/ratelimit.ts";
 import { requireCaptchaIfSuspicious } from "../auth/turnstile.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
+import { priorTicketsFor } from "./prior-ticket.ts";
 import {
   deskIsTyping,
   fetchExpectedReplyMinutes,
@@ -382,6 +384,23 @@ export class MyTicketsController {
       reference: reference(ticket.id!),
       subject: ticket.subject,
       status: ticket.status,
+      // The desk has proposed closing this and is waiting on an answer.
+      // Null the rest of the time. The status stays "open" throughout —
+      // the prompt is a question, not a state the ticket is in.
+      closeRequestedAt:
+        ticket.closeRequestedAt != null
+          ? new Date(ticket.closeRequestedAt).toISOString()
+          : null,
+      // When silence will be taken as a yes. Sent rather than computed on
+      // the client so the deadline the sweep will actually use is the one
+      // the learner is shown — the window is a site setting and can change.
+      closeConfirmDueAt:
+        ticket.closeRequestedAt != null
+          ? new Date(
+              new Date(ticket.closeRequestedAt).getTime() +
+                siteNumber("ops.closeConfirmDays") * 24 * 60 * 60 * 1000,
+            ).toISOString()
+          : null,
       createdAt: new Date(ticket.createdAt!).toISOString(),
       hasEarlier: messages.length > shown.length,
       // Whether somebody at the desk is writing, right now. Asked on the
@@ -473,6 +492,18 @@ export class MyTicketsController {
     // as a machine covering itself.
     await SupportDraft.clear(user.id!, null);
 
+    // "Quote this ticket's number and we'll pick up the history" — this is
+    // the half that keeps that promise. Resolved before the forward rather
+    // than after, because the desk's agent reads the ticket the moment it
+    // lands and a second call would arrive too late to shape the first
+    // reply, which is the one this exists to improve.
+    const priorTickets = await priorTicketsFor({
+      text: `${ticket.subject ?? ""} ${ticket.message ?? ""}`,
+      userId: user.id!,
+      email: ticket.email!,
+      excludeId: ticket.id!,
+    }).catch(() => []);
+
     forwardTicketToQdesk({
       id: ticket.id!,
       kind: "support",
@@ -482,6 +513,7 @@ export class MyTicketsController {
       message: ticket.message!,
       userId: user.id!,
       messageId: first.id!,
+      priorTickets,
       // Two independent facts, deliberately: the country comes from the
       // network (Cloudflare's edge, not something a customer can set),
       // and the zone from the browser. Together they answer "where are
@@ -822,12 +854,27 @@ export class MyTicketsController {
     ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("id", pId) id: number,
   ) {
+    const user = ctx.state.requireUser();
     const ticket = await this.#mine(ctx, id);
     await ticket.setStatus("closed");
+    // Says who, not just what.
+    //
+    // A KeyLearn account is a household — the spec is explicit that this is
+    // one account for several learners — so "Marked as sorted." in a shared
+    // thread leaves everyone in that house asking which of them ended the
+    // conversation. It also reads identically to an automated close, which
+    // is the one thing it must not be confused with: this line is somebody
+    // exercising a choice, and the sweep's line is nobody.
+    //
+    // The acting account's name rather than the ticket's, because the
+    // question is who pressed the button, and the two differ whenever one
+    // person files on another's behalf. Falls back to the neutral phrasing
+    // when an account has no name set, which is allowed.
+    const who = (user.name ?? "").trim();
     await SupportMessage.create({
       ticketId: id,
       sender: "system",
-      body: "Marked as sorted.",
+      body: who === "" ? "Marked as sorted." : `Marked as sorted by ${who}.`,
       kind: "handover",
     });
     // Fire-and-forget, like every other forward: the desk being unreachable
@@ -857,6 +904,20 @@ export class MyTicketsController {
     @pathParam("id", pId) id: number,
   ) {
     const ticket = await this.#mine(ctx, id);
+    // The same door the reply route closes, and for the same reason.
+    //
+    // This route reopens unconditionally, which was safe while its only
+    // caller was the "Did that sort it?" card — that card never appears on
+    // a closed thread. It is not safe now: the desk-close prompt shares
+    // this endpoint, an auto-close can land between the page rendering and
+    // the tap, and a stale tab keeps its buttons for as long as it is open.
+    // Any of those would resurrect a conversation both sides had written
+    // off, into a queue nobody is watching.
+    if (ticket.status === "closed" || ticket.status === "spam") {
+      throw new ForbiddenError(
+        "This conversation is resolved. Please start a new one.",
+      );
+    }
     // "open" is what a reply sets, and what the assistant picks up.
     await ticket.setStatus("open");
     await SupportMessage.create({
