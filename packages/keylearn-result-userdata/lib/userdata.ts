@@ -46,6 +46,26 @@ export class UserData {
     return await this.file.exists();
   }
 
+  /**
+   * When practice was last written here, or null if it never was.
+   *
+   * The file is appended to at the end of every session, so its
+   * modification time IS the last practice — available from one stat,
+   * without parsing a stream that grows for the life of the account. The
+   * support desk asks this per profile to answer "which of these people
+   * actually uses it", and reading every result to find the last one
+   * would make that page cost more the longer somebody has been a
+   * customer.
+   */
+  async lastWrittenAt(): Promise<Date | null> {
+    try {
+      const stats = await this.file.stat();
+      return stats.mtime;
+    } catch {
+      return null;
+    }
+  }
+
   async *read(): AsyncIterable<Result> {
     if (await this.exists()) {
       const buffer = await this.file.read();

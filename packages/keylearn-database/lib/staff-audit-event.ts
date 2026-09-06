@@ -27,6 +27,12 @@ export type StaffAuditAction =
   | "account-lookup"
   | "account-viewed"
   | "account-email-revealed"
+  // A data request answered on the person's behalf: the whole record
+  // leaving the system in one file is the single most consequential read
+  // a staff member can perform, so it is named separately from a look.
+  | "account-data-exported"
+  // Two records, one person: profiles and tickets moved, nothing deleted.
+  | "account-merged"
   | "account-deletion-requested"
   | "account-deletion-cancelled"
   | "answer-changed"

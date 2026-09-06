@@ -7,7 +7,12 @@ import {
   queryParam,
 } from "@fastr/controller";
 import { Context } from "@fastr/core";
-import { ApplicationError, ForbiddenError, NotFoundError } from "@fastr/errors";
+import {
+  ApplicationError,
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { DataDir, Env, isAdminEmail, listStaffEmails } from "@keylearn/config";
@@ -19,6 +24,9 @@ import {
   LearnerResponse,
   maskEmail,
   Notification,
+  Order,
+  Organization,
+  OrgMember,
   PracticeSession,
   Profile,
   SecurityEvent,
@@ -28,6 +36,7 @@ import {
   SupportAttachment,
   SupportTicket,
   User,
+  UserExternalId,
   verifyTotp,
 } from "@keylearn/database";
 import { UserDataFactory } from "@keylearn/result-userdata";
@@ -36,6 +45,7 @@ import {
   verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
 import { z } from "zod";
+import { buildAccountExport } from "../account-export.ts";
 import { messageAccountDeletionRequested } from "../auth/email.ts";
 import { clientIp, rateLimit } from "../auth/ratelimit.ts";
 import { staffAccessStatus } from "../auth/staff-access.ts";
@@ -199,6 +209,12 @@ function readVisibleSettings(
   say("theme", blob["theme"] ?? blob["color.theme"]);
   say("sound", blob["sound"] ?? blob["sounds"]);
   say("textSize", blob["textSize"] ?? blob["fontSize"]);
+  // The accessibility switches. Half the tickets this desk gets are "why
+  // does it look like this", and the answer is almost always one of these
+  // three — so they are worth the same allow-list slot as the layout.
+  say("kidsMode", blob["kidsMode"] ?? blob["kids"]);
+  say("reducedMotion", blob["reducedMotion"] ?? blob["motion.reduced"]);
+  say("largeText", blob["largeText"] ?? blob["a11y.largeText"]);
   return Object.keys(out).length === 0 ? null : out;
 }
 
@@ -1005,6 +1021,58 @@ export class Controller {
     // Control centre, phase 1.9: the switch lives in site_config now.
     const showLocation = showLastLoginLocation();
     const deletionRequest = await AccountDeletionRequest.findPendingForUser(id);
+
+    // Three facts the desk asks for on nearly every ticket, and had to
+    // guess at: what they are paying for, whether they belong to a
+    // school, and whether this is the same person as an account they
+    // already have. Guessing the third is how a household ends up with
+    // two records and a support conversation that contradicts itself.
+    const order = await Order.query().findOne({ userId: id });
+    const memberships = await OrgMember.membershipsFor(id);
+    const org =
+      memberships.length === 0
+        ? null
+        : await Organization.query().findById(memberships[0]!.organizationId!);
+
+    // A duplicate is a name and a country that match, registered within a
+    // week either side. Deliberately narrow: a false positive here invites
+    // a staff member to merge two real people, and unpicking that is not
+    // a thing this system can do. It suggests; a person decides.
+    const NEAR_MS = 7 * 24 * 60 * 60 * 1000;
+    const registeredAt = new Date(user.createdAt!).getTime();
+    const sameName =
+      user.name == null || user.name.trim() === ""
+        ? []
+        : await User.query()
+            .where("name", user.name)
+            .whereNot("id", id)
+            .orderBy("createdAt", "desc")
+            .limit(5);
+    const possibleDuplicates = sameName
+      .filter((u) => (u.signupCountry ?? null) === (user.signupCountry ?? null))
+      .filter(
+        (u) =>
+          Math.abs(new Date(u.createdAt!).getTime() - registeredAt) <= NEAR_MS,
+      )
+      .map((u) => {
+        const theirs = new Date(u.createdAt!).getTime();
+        const days = Math.round(
+          Math.abs(theirs - registeredAt) / (24 * 60 * 60 * 1000),
+        );
+        const when =
+          days === 0
+            ? "the same day"
+            : `${days} day${days === 1 ? "" : "s"} ${theirs < registeredAt ? "earlier" : "later"}`;
+        return {
+          id: u.id!,
+          name: u.name!,
+          email: maskEmail(u.email!),
+          signInMethod: deriveSignInMethod(u),
+          createdAt: new Date(u.createdAt!).toISOString(),
+          why: `same name, same country, registered ${when}`,
+        };
+      });
+
     ctx.response.body = {
       id: user.id!,
       name: user.name!,
@@ -1030,6 +1098,19 @@ export class Controller {
         createdAt: new Date(t.createdAt!).toISOString(),
       })),
       deletionRequest: deletionRequest?.toDetails() ?? null,
+      // "Free" is the absence of an order, not a stored plan — said here
+      // rather than left for the desk to work out, so both sides cannot
+      // disagree about what somebody is paying for.
+      plan: order == null ? "free" : "premium",
+      organisation:
+        org == null
+          ? null
+          : {
+              id: org.id!,
+              name: org.name!,
+              role: memberships[0]!.role ?? null,
+            },
+      possibleDuplicates,
     };
   }
 
@@ -1086,6 +1167,25 @@ export class Controller {
         .first(),
     ]);
 
+    // When each learner last actually practised — one stat per profile,
+    // not a walk of their whole result history. "Which of these people
+    // uses it" is the question behind most household tickets.
+    const practised = await Promise.all(
+      profiles.map(async (p) => {
+        const at = await this.userData
+          .loadProfile(id, p.id!)
+          .lastWrittenAt()
+          .catch(() => null);
+        return [p.id!, at] as const;
+      }),
+    );
+    const lastPractised = new Map(practised);
+
+    // Feedback cards and poll answers they left. The desk shows these
+    // because a person who has already told you what they think of the
+    // product should not be asked again in a support reply.
+    const responses = await LearnerResponse.listForUser(id);
+
     ctx.response.body = {
       memberSince: new Date(user.createdAt!).toISOString(),
       profileCount: profiles.length,
@@ -1102,13 +1202,158 @@ export class Controller {
         // implementation detail and carries far more than a support
         // agent has any business seeing.
         settings: readVisibleSettings(p.prefs ?? null),
+        lastPractisedAt: lastPractised.get(p.id!)?.toISOString() ?? null,
       })),
+      feedback: responses
+        .filter((r) => r.stars != null || (r.text ?? "") !== "")
+        .map((r) => ({
+          at: new Date(r.createdAt ?? Date.now()).toISOString(),
+          stars: r.stars ?? null,
+          // Hidden means a staff member dropped the text; the star stays.
+          text: r.hiddenAt != null ? null : (r.text ?? null),
+        })),
       signIns28d,
       lastSignInAt:
         lastLogin?.createdAt == null
           ? null
           : new Date(lastLogin.createdAt).toISOString(),
     };
+  }
+
+  /**
+   * A data request, answered by a staff member on the person's behalf.
+   *
+   * The same bytes the account holder would download themselves — see
+   * {@link buildAccountExport}. A staff member answers these because the
+   * person asking usually cannot sign in; that is often WHY they are
+   * asking, and a desk that can only say "download it yourself" cannot
+   * answer a request from somebody locked out of the account.
+   *
+   * Logged against the staff member who asked. There is no reason to
+   * take a copy of somebody's whole record that does not survive being
+   * written down next to a name.
+   */
+  @http.GET("/_/internal/accounts/{id}/export")
+  async exportAccountForStaff(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @queryParam("actingStaffUserId", pActingStaffUserId)
+    actingStaffUserId: number | undefined,
+    @queryParam("reason", pQuery) reason: string | undefined,
+  ) {
+    ctx.state.requireOpsApi();
+    const user = await User.query().findById(id);
+    if (user == null) {
+      ctx.response.status = 404;
+      return;
+    }
+    void StaffAuditEvent.record({
+      userId: actingStaffUserId ?? null,
+      action: "account-data-exported",
+      detail:
+        `account ${id}` +
+        (reason ? `: ${reason.slice(0, 160)}` : "") +
+        " (via ops app)",
+      ip: clientIp(ctx),
+    });
+    ctx.response.body = await buildAccountExport(this.userData, user);
+    ctx.response.headers.set("Cache-Control", "private, no-store");
+  }
+
+  /**
+   * Two records, one person.
+   *
+   * Households do this constantly: a magic link one week, "sign in with
+   * Google" the next, and now there are two accounts with one child's
+   * progress split between them. The desk finds them; a staff member
+   * decides; this moves them.
+   *
+   * What it does is deliberately narrow, and it is exactly what the
+   * button promises. Profiles and tickets move to the account being kept.
+   * Sign-in methods move too, so both ways in still work — unless the
+   * kept account already has that provider, in which case its own is left
+   * alone rather than overwritten.
+   *
+   * NOTHING is deleted. The merged-from account stays, empty, and the
+   * audit row on both sides says where its contents went. An account
+   * merge that deletes is a merge that cannot be argued with afterwards,
+   * and this is precisely the operation somebody will need to argue with.
+   */
+  @http.POST("/_/internal/accounts/{id}/merge")
+  async mergeAccount(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @body.json() input: unknown,
+  ) {
+    ctx.state.requireOpsApi();
+    const parsed = z
+      .object({
+        fromId: z.number().int().positive(),
+        reason: z.string().min(1).max(200),
+        actingStaffUserId: z.number().int().positive().nullable().optional(),
+      })
+      .safeParse(input);
+    if (!parsed.success) {
+      throw new BadRequestError(
+        "An account to merge from, and a reason, are needed.",
+      );
+    }
+    const { fromId, reason } = parsed.data;
+    if (fromId === id) {
+      throw new BadRequestError("An account cannot be merged into itself.");
+    }
+    const [keep, gone] = await Promise.all([
+      User.query().findById(id),
+      User.query().findById(fromId),
+    ]);
+    if (keep == null || gone == null) {
+      ctx.response.status = 404;
+      return;
+    }
+
+    const providersHere = new Set(
+      (await UserExternalId.query().where("userId", id)).map(
+        (x) => x.provider!,
+      ),
+    );
+    const movable = (
+      await UserExternalId.query().where("userId", fromId)
+    ).filter((x) => !providersHere.has(x.provider!));
+
+    const moved = await User.transaction(async (trx) => {
+      const profiles = await Profile.query(trx)
+        .where("userId", fromId)
+        .patch({ userId: id });
+      const tickets = await SupportTicket.query(trx)
+        .where("userId", fromId)
+        .patch({ userId: id });
+      const credentials = await Credential.query(trx)
+        .where("userId", fromId)
+        .patch({ userId: id });
+      let signIns = 0;
+      for (const row of movable) {
+        await UserExternalId.query(trx).findById(row.id!).patch({ userId: id });
+        signIns++;
+      }
+      return { profiles, tickets, credentials, signIns };
+    });
+
+    // Written against BOTH accounts, because somebody investigating will
+    // start from whichever one they were handed.
+    for (const target of [id, fromId]) {
+      void StaffAuditEvent.record({
+        userId: parsed.data.actingStaffUserId ?? null,
+        action: "account-merged",
+        detail:
+          `account ${fromId} merged into ${id}: ` +
+          `${moved.profiles} profile(s), ${moved.tickets} ticket(s), ` +
+          `${moved.signIns} sign-in method(s) — ${reason.slice(0, 160)} (via ops app)`,
+        ip: clientIp(ctx),
+      });
+      void target;
+    }
+
+    ctx.response.body = { ...moved, keptId: id, mergedFromId: fromId };
   }
 
   @http.POST("/_/internal/accounts/{id}/reveal-email")

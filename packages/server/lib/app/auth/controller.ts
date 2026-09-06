@@ -61,6 +61,7 @@ import { File } from "@sosimple/fsx-file";
 import { z } from "zod";
 import { actorFor } from "../access/actor.ts";
 import { reachProfile } from "../access/resolver.ts";
+import { buildAccountExport } from "../account-export.ts";
 import { Mailer, Notifier } from "../mail/index.ts";
 import { preferredLocale } from "../page/intl.ts";
 import {
@@ -1720,47 +1721,7 @@ export class Controller {
   async exportAccount(ctx: Context<RouterState & SessionState & AuthState>) {
     const user = ctx.state.requireUser();
     rateLimit(ctx, "export", 5, 3_600_000);
-    const profiles = await Profile.listForUser(user.id!);
-
-    const perProfile = [];
-    for (const profile of profiles) {
-      const store = this.userData.loadProfile(user.id!, profile.id!);
-      const results = [];
-      if (await store.exists()) {
-        for await (const result of store.read()) {
-          results.push(result.toJSON());
-        }
-      }
-      perProfile.push({ profile: profile.toDetails(), results });
-    }
-
-    // The account-level history, kept separately from the per-learner ones.
-    const accountResults = [];
-    const accountStore = this.userData.load(new PublicId(user.id!));
-    if (await accountStore.exists()) {
-      for await (const result of accountStore.read()) {
-        accountResults.push(result.toJSON());
-      }
-    }
-
-    ctx.response.body = {
-      exportedAt: new Date().toISOString(),
-      account: user.toDetails(),
-      // The security trail is part of what is held about them.
-      securityEvents: (await SecurityEvent.listForUser(user.id!, 200)).map(
-        (e) => e.toDetails(),
-      ),
-      passkeys: (await Credential.listForUser(user.id!)).map((c) =>
-        c.toDetails(),
-      ),
-      accountResults,
-      profiles: perProfile,
-      // Poll votes and feedback cards answered (control centre §8): the
-      // comment is personal data, so it travels with everything else.
-      responses: (await LearnerResponse.listForUser(user.id!)).map((r) =>
-        r.toDetails(),
-      ),
-    };
+    ctx.response.body = await buildAccountExport(this.userData, user);
     ctx.response.headers.set("Cache-Control", "private, no-store");
     ctx.response.headers.set(
       "Content-Disposition",
