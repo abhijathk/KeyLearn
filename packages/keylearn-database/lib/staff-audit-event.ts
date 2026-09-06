@@ -16,6 +16,9 @@ import { TimestampMixin } from "./model.ts";
 export type StaffAuditAction =
   // The organisation tier: the platform issuing a licence is a staff act.
   | "org-created"
+  // What an organisation is on, and the nudge when it runs out.
+  | "org-plan-changed"
+  | "org-reminder-sent"
   | "staff-signin"
   | "staff-access-denied"
   | "reveal-email"

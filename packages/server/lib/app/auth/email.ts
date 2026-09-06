@@ -869,3 +869,69 @@ If you were not expecting this, you can ignore this email — nothing happens un
   );
   return { to: email, subject, text, html };
 }
+
+/**
+ * A nudge about a plan that has run out, or is about to.
+ *
+ * Sent by a person on the support desk, not by a scheduler — which is why
+ * it says who sent it. An automated dunning email that a customer cannot
+ * reply to is how a renewal conversation turns into a complaint.
+ */
+export function messagePlanReminder({
+  email,
+  organisation,
+  seats,
+  validUntil,
+  lapsed,
+  fromName,
+  contactLink,
+}: {
+  readonly email: string;
+  readonly organisation: string;
+  readonly seats: number | null;
+  readonly validUntil: string | null;
+  readonly lapsed: boolean;
+  readonly fromName: string;
+  readonly contactLink: string;
+}): Mailer.Message {
+  const subject = lapsed
+    ? `${organisation}: your KeyLearn plan has run out`
+    : `${organisation}: your KeyLearn plan is coming up for renewal`;
+  const when = validUntil == null ? "no end date on file" : validUntil;
+  const text = `Hello!
+
+This is ${fromName} from KeyLearn support, about the plan for ${organisation}.
+
+Seats: ${seats == null ? "not set" : seats}
+${lapsed ? "Ran out" : "Runs until"}: ${when}
+
+${
+  lapsed
+    ? "While it is out of date, staff screens are read-only. Nobody is locked out of a lesson and no learner data is touched."
+    : "Nothing changes today. This is so it does not come as a surprise."
+}
+
+Reply to this message and we will pick it up:
+${contactLink}
+
+Happy typing!`;
+  const html = shell(
+    lapsed
+      ? `The KeyLearn plan for ${organisation} has run out`
+      : `The KeyLearn plan for ${organisation} is coming up for renewal`,
+    heading(lapsed ? "Your plan has run out" : "Your plan is up for renewal") +
+      paragraph(
+        `This is ${fromName} from KeyLearn support, about the plan for <b>${organisation}</b>.`,
+      ) +
+      paragraph(
+        `Seats: ${seats == null ? "not set" : seats}<br>${lapsed ? "Ran out" : "Runs until"}: ${when}`,
+      ) +
+      paragraph(
+        lapsed
+          ? "While it is out of date, staff screens are read-only. Nobody is locked out of a lesson and no learner data is touched."
+          : "Nothing changes today. This is so it does not come as a surprise.",
+      ) +
+      paragraph(`<a href="${contactLink}">Reply and we will pick it up</a>`),
+  );
+  return { to: email, subject, text, html };
+}

@@ -211,6 +211,7 @@ export class OrgMember extends TimestampMixin(Model) {
       organizationId: { type: "integer" },
       userId: { type: "integer" },
       role: { type: "string", minLength: 1, maxLength: 16 },
+      designation: { type: ["string", "null"], maxLength: 64 },
       batchId: { type: ["integer", "null"] },
     },
   } satisfies JSONSchema;
@@ -232,6 +233,7 @@ export class OrgMember extends TimestampMixin(Model) {
       .inTable("user")
       .onDelete("CASCADE");
     table.string("role", 16).notNullable();
+    table.string("designation", 64).nullable();
     // A teacher's whole world (spec rev 2): sight and action end at this
     // batch. Null for owners and admins, whose scope is the organisation.
     table.integer("batch_id").unsigned().nullable();
@@ -243,6 +245,8 @@ export class OrgMember extends TimestampMixin(Model) {
   organizationId?: number;
   userId?: number;
   role?: string;
+  /** Their job at the organisation. Shown to staff; grants nothing. */
+  designation?: string | null;
   batchId?: number | null;
   createdAt?: Date;
 
@@ -357,6 +361,11 @@ export class OrganizationPlan extends Model {
     properties: {
       organizationId: { type: "integer" },
       seats: { type: "integer", minimum: 1 },
+      kind: { type: "string", maxLength: 16 },
+      bodyKind: { type: ["string", "null"], maxLength: 24 },
+      registrationNumber: { type: ["string", "null"], maxLength: 64 },
+      registrationCountry: { type: ["string", "null"], maxLength: 64 },
+      evidence: { type: ["string", "null"], maxLength: 255 },
       provider: { type: ["string", "null"], maxLength: 32 },
       providerRef: { type: ["string", "null"], maxLength: 128 },
     },
@@ -373,6 +382,12 @@ export class OrganizationPlan extends Model {
       .onDelete("CASCADE");
     table.integer("seats").unsigned().notNullable();
     table.timestamp("valid_until").nullable();
+    table.string("kind", 16).notNullable().defaultTo("paid");
+    table.string("body_kind", 24).nullable();
+    table.string("registration_number", 64).nullable();
+    table.string("registration_country", 64).nullable();
+    table.string("evidence", 255).nullable();
+    table.timestamp("reviewed_at").nullable();
     table.string("provider", 32).nullable();
     table.string("provider_ref", 128).nullable();
   }
@@ -380,6 +395,13 @@ export class OrganizationPlan extends Model {
   organizationId?: number;
   seats?: number;
   validUntil?: Date | string | null;
+  /** "paid" | "nonprofit" | "setup". Two of the three are free. */
+  kind?: string;
+  bodyKind?: string | null;
+  registrationNumber?: string | null;
+  registrationCountry?: string | null;
+  evidence?: string | null;
+  reviewedAt?: Date | string | null;
   provider?: string | null;
   providerRef?: string | null;
 }

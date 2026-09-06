@@ -137,6 +137,9 @@ export class User extends TimestampMixin(Model) {
   anonymized?: number;
   publicProfile?: number | boolean;
   passwordHash?: string | null;
+  /** Set when a staff member chose the password; cleared when they choose their own. */
+  mustChangePassword?: number | boolean;
+  tempPasswordExpiresAt?: Date | null;
   dateOfBirth?: string | null;
   emailVerified?: number | boolean;
   sessionEpoch?: number;

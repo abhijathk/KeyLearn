@@ -774,6 +774,48 @@ export async function createSchema(knex: Knex): Promise<void> {
     );
   }
 
+  // The Accounts wizard: a plan is one of three kinds, and two of them are
+  // free. A non-profit grant is not "a paid plan with the price left
+  // blank" — it needs the evidence that justified it, or nobody can
+  // answer why one school pays and another does not.
+  await addColumn("organization_plan", "kind", (table) => {
+    table.string("kind", 16).notNullable().defaultTo("paid");
+  });
+  await addColumn("organization_plan", "body_kind", (table) => {
+    table.string("body_kind", 24).nullable();
+  });
+  await addColumn("organization_plan", "registration_number", (table) => {
+    table.string("registration_number", 64).nullable();
+  });
+  await addColumn("organization_plan", "registration_country", (table) => {
+    table.string("registration_country", 64).nullable();
+  });
+  await addColumn("organization_plan", "evidence", (table) => {
+    table.string("evidence", 255).nullable();
+  });
+  await addColumn("organization_plan", "reviewed_at", (table) => {
+    table.timestamp("reviewed_at").nullable();
+  });
+
+  // What this person does at the school, for the staff member picking up
+  // their ticket. It grants nothing — the role beside it does that.
+  await addColumn("org_member", "designation", (table) => {
+    table.string("designation", 64).nullable();
+  });
+
+  // An account somebody else set the password for.
+  //
+  // The flag is what makes a temporary password temporary: without it a
+  // staff-set password is simply that person's password, known to two
+  // people, for as long as they never change it. Cleared the moment they
+  // choose their own.
+  await addColumn("user", "must_change_password", (table) => {
+    table.boolean("must_change_password").notNullable().defaultTo(false);
+  });
+  await addColumn("user", "temp_password_expires_at", (table) => {
+    table.timestamp("temp_password_expires_at").nullable();
+  });
+
   async function addColumn(
     tableName: string,
     columnName: string,

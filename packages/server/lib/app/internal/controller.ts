@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import {
   body,
@@ -26,9 +27,12 @@ import {
   Notification,
   Order,
   Organization,
+  OrganizationPlan,
+  OrgInvite,
   OrgMember,
   PracticeSession,
   Profile,
+  ProfileAccess,
   SecurityEvent,
   Staff,
   StaffAuditEvent,
@@ -46,7 +50,10 @@ import {
 } from "@simplewebauthn/server";
 import { z } from "zod";
 import { buildAccountExport } from "../account-export.ts";
-import { messageAccountDeletionRequested } from "../auth/email.ts";
+import {
+  messageAccountDeletionRequested,
+  messagePlanReminder,
+} from "../auth/email.ts";
 import { clientIp, rateLimit } from "../auth/ratelimit.ts";
 import { staffAccessStatus } from "../auth/staff-access.ts";
 import { refreshStaffCache } from "../auth/staff-cache.ts";
@@ -217,6 +224,80 @@ function readVisibleSettings(
   say("largeText", blob["largeText"] ?? blob["a11y.largeText"]);
   return Object.keys(out).length === 0 ? null : out;
 }
+
+/**
+ * What the Accounts wizard sends.
+ *
+ * Validated as one shape rather than field by field, so a half-filled
+ * request is refused before anything is written — which is what makes
+ * "nothing is written until you press create" true rather than hopeful.
+ */
+const NewAccount = z
+  .object({
+    name: z.string().trim().min(1).max(128),
+    type: z.enum(["group", "school", "tutor"]),
+    parentId: z.number().int().positive().nullable().optional(),
+    staffEmailDomains: z.string().max(255).nullable().optional(),
+    plan: z
+      .object({
+        kind: z.enum(["paid", "nonprofit", "setup"]),
+        seats: z.number().int().min(1).max(100000),
+        validUntil: z.string().nullable().optional(),
+        bodyKind: z.string().max(24).nullable().optional(),
+        registrationNumber: z.string().max(64).nullable().optional(),
+        registrationCountry: z.string().max(64).nullable().optional(),
+        evidence: z.string().max(255).nullable().optional(),
+        provider: z.string().max(32).nullable().optional(),
+        providerRef: z.string().max(128).nullable().optional(),
+      })
+      .nullable()
+      .optional(),
+    owner: z.discriminatedUnion("mode", [
+      z.object({
+        mode: z.literal("existing"),
+        userId: z.number().int().positive(),
+      }),
+      z.object({
+        mode: z.literal("create"),
+        email: z.string().email().max(128),
+        title: z.string().max(16).nullable().optional(),
+        firstName: z.string().trim().min(1).max(32),
+        middleName: z.string().max(32).nullable().optional(),
+        lastName: z.string().max(32).nullable().optional(),
+        designation: z.string().max(64).nullable().optional(),
+        temporaryPassword: z.string().min(8).max(72).nullable().optional(),
+      }),
+      z.object({
+        mode: z.literal("invite"),
+        email: z.string().email().max(128),
+        note: z.string().max(300).nullable().optional(),
+      }),
+    ]),
+    schools: z
+      .array(
+        z.object({
+          name: z.string().trim().min(1).max(128),
+          principalEmail: z.string().max(128).nullable().optional(),
+        }),
+      )
+      .max(200)
+      .optional(),
+    reason: z.string().trim().min(1).max(200),
+    actingStaffUserId: z.number().int().positive().nullable().optional(),
+  })
+  // A non-profit grant without its evidence is a discount nobody can
+  // justify later. Refused here rather than saved half-recorded.
+  .refine(
+    (v) =>
+      v.plan?.kind !== "nonprofit" ||
+      (v.plan.registrationNumber ?? "").trim() !== "",
+    { message: "A non-profit account needs its registration number." },
+  )
+  // Schools belong to a group. Attaching them to a single school would
+  // build a hierarchy the rest of the desk does not expect.
+  .refine((v) => v.type === "group" || (v.schools ?? []).length === 0, {
+    message: "Only a group holds schools.",
+  });
 
 /**
  * How many accounts one look-up returns.
@@ -485,6 +566,589 @@ export class Controller {
     );
     ctx.response.headers.set("x-content-type-options", "nosniff");
     ctx.response.body = bytes;
+  }
+
+  /**
+   * The organisations that own customers, for the desk's Accounts page.
+   *
+   * An account here is the ORGANISATION — a school, a tutor — and the
+   * plan behind it. The people are Customers; this is who pays, for how
+   * many, and whether the seats they bought are being used.
+   *
+   * Seats "active" is not seats assigned. A school can hand out two
+   * hundred places and have forty learners who ever practise, and the
+   * difference between those two numbers is the single most useful thing
+   * on the page: it is a renewal conversation six months early. Assigned
+   * comes from the seat ledger; active is read from each learner's own
+   * result file, whose modification time is when they last practised.
+   *
+   * The member user ids travel with each row because the desk holds the
+   * tickets and this side holds the people, and neither can score an
+   * account alone.
+   */
+  /**
+   * Creates a whole account in one go: the organisation, its plan, the
+   * person at the top, and — for a group — its schools and their
+   * principals.
+   *
+   * One route rather than five, because half a created account is worse
+   * than none. A group whose owner failed to be made is a record nobody
+   * can administer, and a school created without its parent is a school
+   * that quietly bills separately. It is a transaction for the same
+   * reason: the wizard promised "nothing is written until you press
+   * create", and a partial write breaks that promise in the way that is
+   * hardest to notice.
+   *
+   * A group's schools are child organisations, and a principal is the
+   * owner of their own school — not an admin of the group. That is the
+   * hierarchy the desk shows and the one a trust actually has: the group
+   * owner can add and remove schools; a principal runs theirs and cannot
+   * see the others.
+   */
+  @http.POST("/_/internal/organizations")
+  async createOrganization(
+    ctx: Context<RouterState & AuthState>,
+    @body.json() input: unknown,
+  ) {
+    ctx.state.requireOpsApi();
+    const parsed = NewAccount.safeParse(input);
+    if (!parsed.success) {
+      throw new BadRequestError(
+        parsed.error.issues[0]?.message ?? "That account could not be created.",
+      );
+    }
+    const a = parsed.data;
+    const staffUserId = a.actingStaffUserId ?? null;
+
+    // Checked before the transaction so the answer is a sentence rather
+    // than a constraint violation: "that name is taken" is something a
+    // person can act on, and the wizard has a screen for it.
+    const clash = await Organization.query().findOne({ name: a.name.trim() });
+    if (clash != null) {
+      ctx.response.status = 409;
+      ctx.response.body = {
+        error: "name-taken",
+        message: `There is already an organisation called ${a.name.trim()}.`,
+        existing: { id: clash.id!, name: clash.name!, type: clash.type! },
+      };
+      return;
+    }
+
+    // The owner is resolved BEFORE anything is written. Creating the
+    // organisation and then failing to find its owner leaves exactly the
+    // orphan this route exists to prevent.
+    let ownerUser: User | null = null;
+    let tempPassword: string | null = null;
+    if (a.owner.mode === "existing") {
+      ownerUser = (await User.query().findById(a.owner.userId)) ?? null;
+      if (ownerUser == null) {
+        throw new BadRequestError("That account no longer exists.");
+      }
+    } else if (a.owner.mode === "create") {
+      const already = await User.findByEmail(a.owner.email);
+      if (already != null) {
+        throw new BadRequestError(
+          `${a.owner.email} already has an account — choose "an existing account" instead.`,
+        );
+      }
+      tempPassword =
+        a.owner.temporaryPassword ?? randomBytes(12).toString("base64url");
+    }
+
+    const created = await Organization.transaction(async (trx) => {
+      const org = await Organization.query(trx).insertAndFetch({
+        name: a.name.trim(),
+        type: a.type,
+        parentId: a.parentId ?? null,
+        staffEmailDomains: a.staffEmailDomains?.trim() || null,
+      });
+
+      if (a.plan != null) {
+        await OrganizationPlan.query(trx).insert({
+          organizationId: org.id!,
+          seats: a.plan.seats,
+          validUntil:
+            a.plan.validUntil == null ? null : new Date(a.plan.validUntil),
+          kind: a.plan.kind,
+          bodyKind: a.plan.bodyKind ?? null,
+          registrationNumber: a.plan.registrationNumber ?? null,
+          registrationCountry: a.plan.registrationCountry ?? null,
+          evidence: a.plan.evidence ?? null,
+          // A free grant is reviewed, not forgotten. Stamped now so the
+          // first review is a year from when it was given.
+          reviewedAt: a.plan.kind === "nonprofit" ? new Date() : null,
+          provider: a.plan.kind === "paid" ? (a.plan.provider ?? null) : null,
+          providerRef:
+            a.plan.kind === "paid" ? (a.plan.providerRef ?? null) : null,
+        });
+      }
+
+      // The person at the top.
+      if (a.owner.mode === "create") {
+        ownerUser = await User.registerWithPassword(
+          a.owner.email,
+          tempPassword!,
+          a.owner.firstName,
+          a.owner.lastName ?? "",
+        );
+        await User.query(trx)
+          .findById(ownerUser.id!)
+          .patch({
+            emailVerified: true,
+            mustChangePassword: true,
+            tempPasswordExpiresAt: new Date(
+              Date.now() + 7 * 24 * 60 * 60 * 1000,
+            ),
+          });
+      }
+      if (ownerUser != null) {
+        await OrgMember.query(trx).insert({
+          organizationId: org.id!,
+          userId: ownerUser.id!,
+          role: "owner",
+          designation:
+            a.owner.mode === "create" ? (a.owner.designation ?? null) : null,
+        });
+      }
+
+      // A group's schools, each its own organisation under this one.
+      const schools = [];
+      for (const school of a.schools ?? []) {
+        const child = await Organization.query(trx).insertAndFetch({
+          name: school.name.trim(),
+          type: "school",
+          parentId: org.id!,
+          staffEmailDomains: null,
+        });
+        schools.push({
+          id: child.id!,
+          name: child.name!,
+          principalEmail: school.principalEmail ?? null,
+        });
+      }
+      return { org, schools };
+    });
+
+    // Invitations are sent AFTER the transaction commits. An email about
+    // an account that was rolled away is worse than a missing email.
+    const invites: { email: string; organizationId: number; token: string }[] =
+      [];
+    if (a.owner.mode === "invite" && staffUserId != null) {
+      const { token } = await OrgInvite.issue({
+        organizationId: created.org.id!,
+        role: "owner",
+        issuedByUserId: staffUserId,
+        email: a.owner.email,
+      });
+      invites.push({
+        email: a.owner.email,
+        organizationId: created.org.id!,
+        token,
+      });
+    }
+    for (const school of created.schools) {
+      if (
+        school.principalEmail != null &&
+        school.principalEmail !== "" &&
+        staffUserId != null
+      ) {
+        const { token } = await OrgInvite.issue({
+          organizationId: school.id,
+          role: "owner",
+          issuedByUserId: staffUserId,
+          email: school.principalEmail,
+        });
+        invites.push({
+          email: school.principalEmail,
+          organizationId: school.id,
+          token,
+        });
+      }
+    }
+
+    void StaffAuditEvent.record({
+      userId: staffUserId,
+      action: "org-created",
+      detail:
+        `${a.type} "${a.name.trim()}"` +
+        (a.plan == null
+          ? " (no plan)"
+          : ` (${a.plan.kind}, ${a.plan.seats} seats)`) +
+        (created.schools.length > 0
+          ? `, ${created.schools.length} school(s)`
+          : "") +
+        `: ${a.reason.slice(0, 160)} (via ops app)`,
+      ip: clientIp(ctx),
+    });
+
+    ctx.response.body = {
+      id: created.org.id!,
+      name: created.org.name!,
+      type: created.org.type!,
+      schools: created.schools.map((s) => ({ id: s.id, name: s.name })),
+      owner:
+        ownerUser == null
+          ? null
+          : {
+              userId: ownerUser.id!,
+              name: ownerUser.name!,
+              email: maskEmail(ownerUser.email!),
+            },
+      // Returned once, never stored in readable form and never logged.
+      // The desk shows it and then it is gone from everywhere.
+      temporaryPassword: tempPassword,
+      invitesSent: invites.length,
+    };
+  }
+
+  @http.GET("/_/internal/organizations")
+  async listOrganizations(
+    ctx: Context<RouterState & AuthState>,
+    @queryParam("actingStaffUserId", pActingStaffUserId)
+    actingStaffUserId: number | undefined,
+  ) {
+    ctx.state.requireOpsApi();
+    const orgs = await Organization.query().orderBy("name", "asc").limit(200);
+    const out = [];
+    for (const org of orgs) {
+      out.push(await this.describeOrganization(org));
+    }
+    void StaffAuditEvent.record({
+      userId: actingStaffUserId ?? null,
+      action: "account-lookup",
+      detail: `organisations (${out.length}) (via ops app)`,
+      ip: clientIp(ctx),
+    });
+    ctx.response.body = out;
+  }
+
+  /**
+   * Changes what an organisation is on — seats, end date, kind of plan.
+   *
+   * "Add seats" and "Change plan" are the same write with different
+   * defaults on the screen; a separate route for each would be two
+   * places to keep the seat rules in step. Creating the plan row when
+   * there is none is deliberate: an organisation set up before billing
+   * existed is exactly the one somebody is now selling to.
+   */
+  @http.PUT("/_/internal/organizations/{id}/plan")
+  async setOrganizationPlan(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @body.json() input: unknown,
+  ) {
+    ctx.state.requireOpsApi();
+    const parsed = z
+      .object({
+        kind: z.enum(["paid", "nonprofit", "setup"]),
+        seats: z.number().int().min(1).max(100000).nullable().optional(),
+        validUntil: z.string().nullable().optional(),
+        bodyKind: z.string().max(24).nullable().optional(),
+        registrationNumber: z.string().max(64).nullable().optional(),
+        registrationCountry: z.string().max(64).nullable().optional(),
+        evidence: z.string().max(255).nullable().optional(),
+        provider: z.string().max(32).nullable().optional(),
+        providerRef: z.string().max(128).nullable().optional(),
+        reason: z.string().trim().min(1).max(200),
+        actingStaffUserId: z.number().int().positive().nullable().optional(),
+      })
+      .safeParse(input);
+    if (!parsed.success) {
+      throw new BadRequestError("That plan change is not valid.");
+    }
+    const org = await Organization.query().findById(id);
+    if (org == null) {
+      ctx.response.status = 404;
+      return;
+    }
+    const p = parsed.data;
+    const existing = await OrganizationPlan.query().findOne({
+      organizationId: id,
+    });
+    const before = existing?.seats ?? null;
+
+    if (p.kind === "setup") {
+      // Back to unlimited-while-onboarding. The row is removed rather
+      // than kept with a null seat count: a plan row IS the statement
+      // that something was sold.
+      if (existing != null) {
+        await OrganizationPlan.query().delete().where("organizationId", id);
+      }
+    } else {
+      const patch = {
+        seats: p.seats ?? existing?.seats ?? 1,
+        validUntil:
+          p.validUntil == null || p.validUntil === ""
+            ? null
+            : new Date(p.validUntil),
+        kind: p.kind,
+        bodyKind:
+          p.kind === "nonprofit"
+            ? (p.bodyKind ?? existing?.bodyKind ?? null)
+            : null,
+        registrationNumber:
+          p.kind === "nonprofit"
+            ? (p.registrationNumber ?? existing?.registrationNumber ?? null)
+            : null,
+        registrationCountry:
+          p.kind === "nonprofit"
+            ? (p.registrationCountry ?? existing?.registrationCountry ?? null)
+            : null,
+        evidence:
+          p.kind === "nonprofit"
+            ? (p.evidence ?? existing?.evidence ?? null)
+            : null,
+        reviewedAt: p.kind === "nonprofit" ? new Date() : null,
+        provider: p.kind === "paid" ? (p.provider ?? null) : null,
+        providerRef: p.kind === "paid" ? (p.providerRef ?? null) : null,
+      };
+      if (existing == null) {
+        await OrganizationPlan.query().insert({ organizationId: id, ...patch });
+      } else {
+        await OrganizationPlan.query().where("organizationId", id).patch(patch);
+      }
+    }
+
+    void StaffAuditEvent.record({
+      userId: p.actingStaffUserId ?? null,
+      action: "org-plan-changed",
+      detail:
+        `organisation ${id}: ${p.kind}` +
+        (p.seats != null ? `, seats ${before ?? "none"} → ${p.seats}` : "") +
+        `: ${p.reason.slice(0, 160)} (via ops app)`,
+      ip: clientIp(ctx),
+    });
+    ctx.response.body = {
+      ok: true,
+      seats: p.kind === "setup" ? null : (p.seats ?? before),
+    };
+  }
+
+  /**
+   * Emails the owner about a plan that has run out, or is about to.
+   *
+   * Sent by a named person, not by a scheduler, and it says so — a
+   * customer who cannot tell whether a machine or a person wrote to them
+   * cannot reply usefully to either.
+   */
+  @http.POST("/_/internal/organizations/{id}/remind")
+  async remindOrganization(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @body.json() input: unknown,
+  ) {
+    ctx.state.requireOpsApi();
+    const parsed = z
+      .object({
+        fromName: z.string().trim().min(1).max(64),
+        actingStaffUserId: z.number().int().positive().nullable().optional(),
+      })
+      .safeParse(input);
+    if (!parsed.success) {
+      throw new BadRequestError("A reminder needs the name it is from.");
+    }
+    const org = await Organization.query().findById(id);
+    if (org == null) {
+      ctx.response.status = 404;
+      return;
+    }
+    const members = await OrgMember.query().where("organizationId", id);
+    const owner =
+      members.find((m) => m.role === "owner") ??
+      members.find((m) => m.role === "admin");
+    const user =
+      owner == null ? null : await User.query().findById(owner.userId!);
+    if (user?.email == null) {
+      throw new BadRequestError(
+        "There is nobody to remind — this organisation has no owner with an address.",
+      );
+    }
+    const plan = await OrganizationPlan.query().findOne({ organizationId: id });
+    const lapsed =
+      plan?.validUntil != null &&
+      new Date(plan.validUntil).getTime() < Date.now();
+    // A send failure is reported as itself. Letting it become a 500 makes
+    // the desk say "couldn't reach KeyLearn", which sends whoever
+    // investigates to look at a perfectly healthy service — the reach
+    // worked, the mail provider refused.
+    try {
+      await this.mailer.sendMail(
+        messagePlanReminder({
+          email: user.email,
+          organisation: org.name!,
+          seats: plan?.seats ?? null,
+          validUntil:
+            plan?.validUntil == null
+              ? null
+              : new Date(plan.validUntil).toLocaleDateString(undefined, {
+                  dateStyle: "long",
+                }),
+          lapsed: Boolean(lapsed),
+          fromName: parsed.data.fromName,
+          contactLink: this.#link("/support"),
+        }),
+      );
+    } catch (err) {
+      throw new ApplicationError(
+        `The reminder could not be sent: ${err instanceof Error ? err.message : String(err)}`,
+        { status: 502 },
+      );
+    }
+    void StaffAuditEvent.record({
+      userId: parsed.data.actingStaffUserId ?? null,
+      action: "org-reminder-sent",
+      detail: `organisation ${id} → ${maskEmail(user.email)} (via ops app)`,
+      ip: clientIp(ctx),
+    });
+    ctx.response.body = {
+      sent: true,
+      to: maskEmail(user.email),
+      lapsed: Boolean(lapsed),
+    };
+  }
+
+  @http.GET("/_/internal/organizations/{id}")
+  async getOrganization(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("id", pId) id: number,
+    @queryParam("actingStaffUserId", pActingStaffUserId)
+    actingStaffUserId: number | undefined,
+  ) {
+    ctx.state.requireOpsApi();
+    const org = await Organization.query().findById(id);
+    if (org == null) {
+      ctx.response.status = 404;
+      return;
+    }
+    const base = await this.describeOrganization(org);
+    const members = await OrgMember.query()
+      .where("organizationId", id)
+      .limit(500);
+    const users = await User.query().findByIds(members.map((m) => m.userId!));
+    const byId = new Map(users.map((u) => [u.id!, u]));
+    void StaffAuditEvent.record({
+      userId: actingStaffUserId ?? null,
+      action: "account-viewed",
+      detail: `organisation ${id} (via ops app)`,
+      ip: clientIp(ctx),
+    });
+    ctx.response.body = {
+      ...base,
+      // Staff by name, and only the staff. Learners on an organisation
+      // are children in a classroom: they are counted here and read
+      // under Customers, where the shield rules apply.
+      people: members
+        .filter((m) => m.role !== "learner")
+        .map((m) => ({
+          userId: m.userId!,
+          name: byId.get(m.userId!)?.name ?? "—",
+          email: maskEmail(byId.get(m.userId!)?.email ?? ""),
+          role: m.role!,
+        })),
+    };
+  }
+
+  /** One organisation, as both routes describe it. */
+  private async describeOrganization(org: Organization) {
+    const seats = await org.seatStatus();
+    const members = await OrgMember.query()
+      .where("organizationId", org.id!)
+      .limit(1000);
+    const owner =
+      members.find((m) => m.role === "owner") ??
+      members.find((m) => m.role === "admin");
+    const ownerUser =
+      owner == null ? null : await User.query().findById(owner.userId!);
+    const plan = await OrganizationPlan.query().findOne({
+      organizationId: org.id!,
+    });
+
+    // Active in the last 30 days, from each learner's own result file —
+    // one stat per profile rather than a walk of anybody's history.
+    //
+    // A seat is filled two ways (spec §9.4). Mode A is a profile the
+    // organisation created; mode B is a family's own profile granted to
+    // it. Both are counted, because both are a place somebody paid for.
+    //
+    // A mode-A profile with no owning account has nowhere for its result
+    // file to live, so its practice cannot be read here. Those are
+    // reported as UNMEASURED rather than counted as idle: scoring "we
+    // cannot see it" the same as "nobody used it" would mark a school
+    // that is doing fine as about to leave, and the score is meant to
+    // start a conversation about renewal.
+    const owned = await Profile.query()
+      .where("organizationId", org.id!)
+      .limit(1000);
+    const granted = (await ProfileAccess.query()
+      .where("organizationId", org.id!)
+      .whereNull("revokedAt")
+      .limit(1000)) as unknown as { profileId?: number }[];
+    const grantedProfiles =
+      granted.length === 0
+        ? []
+        : await Profile.query().findByIds(
+            granted.map((g) => g.profileId!).filter(Boolean),
+          );
+
+    const seen = new Map<number, Profile>();
+    for (const p of [...owned, ...grantedProfiles]) {
+      seen.set(p.id!, p);
+    }
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    let seatsActive = 0;
+    let seatsUnmeasured = 0;
+    for (const p of seen.values()) {
+      if (p.userId == null) {
+        seatsUnmeasured++;
+        continue;
+      }
+      const at = await this.userData
+        .loadProfile(p.userId, p.id!)
+        .lastWrittenAt()
+        .catch(() => null);
+      if (at != null && at.getTime() >= cutoff) {
+        seatsActive++;
+      }
+    }
+    const profiles = [...seen.values()];
+
+    return {
+      id: org.id!,
+      name: org.name!,
+      type: org.type!,
+      createdAt: new Date(org.createdAt!).toISOString(),
+      plan:
+        plan == null
+          ? null
+          : {
+              seats: plan.seats ?? null,
+              validUntil:
+                plan.validUntil == null
+                  ? null
+                  : new Date(plan.validUntil).toISOString(),
+              // Where the money actually lives. KeyLearn stores a
+              // reference, not an invoice — see the desk's Accounts page,
+              // which says so rather than drawing an amount it made up.
+              provider: plan.provider ?? null,
+              providerRef: plan.providerRef ?? null,
+              lapsed: seats.lapsed,
+            },
+      seats: seats.seats,
+      seatsAssigned: seats.used,
+      seatsActive,
+      seatsUnmeasured,
+      learners: profiles.length,
+      owner:
+        ownerUser == null
+          ? null
+          : {
+              userId: ownerUser.id!,
+              name: ownerUser.name!,
+              email: maskEmail(ownerUser.email!),
+              role: owner!.role!,
+            },
+      memberUserIds: members.map((m) => m.userId!),
+    };
   }
 
   @http.GET("/_/internal/accounts/search")
