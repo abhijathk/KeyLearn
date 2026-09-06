@@ -180,9 +180,19 @@ export class LearnerResponse extends TimestampMixin(Model) {
     readonly before?: number | null;
     readonly limit?: number;
   } = {}): Promise<LearnerResponse[]> {
+    // A star with no words is still feedback.
+    //
+    // This used to require a comment as well, which hid exactly the state
+    // the Feedback page describes as normal — "a comment is kept twelve
+    // months, then only the star remains". Four cards existed, one had
+    // words, and the page showed one while the dashboard counted four.
+    // Worse, the average it drew was the average of the ones that
+    // happened to be chatty.
+    //
+    // Stars are still required: a poll vote is a `choice` with no rating
+    // and belongs to a different card entirely.
     let query = LearnerResponse.query()
       .whereNotNull("stars")
-      .where((b) => b.whereNotNull("text").orWhereNotNull("textDroppedAt"))
       .orderBy("id", "desc")
       .limit(Math.max(1, Math.min(200, limit)));
     if (noticeId != null) {
@@ -198,14 +208,12 @@ export class LearnerResponse extends TimestampMixin(Model) {
   static async hide(id: number): Promise<boolean> {
     const now = new Date();
     return (
-      (await LearnerResponse.query()
-        .findById(id)
-        .patch({
-          text: null,
-          hiddenAt: now,
-          textDroppedAt: now,
-          updatedAt: now,
-        })) > 0
+      (await LearnerResponse.query().findById(id).patch({
+        text: null,
+        hiddenAt: now,
+        textDroppedAt: now,
+        updatedAt: now,
+      })) > 0
     );
   }
 
