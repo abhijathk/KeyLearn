@@ -158,6 +158,50 @@ const pActingStaffUserId = zod(
  * KeyLearn's audit log attributes the action correctly instead of
  * recording a generic "ops app" actor.
  */
+/**
+ * The handful of client settings a support agent may see.
+ *
+ * An allow-list, never a pass-through. `prefs` is the client's own blob
+ * and grows whenever the app grows; forwarding it whole would mean every
+ * new preference silently becoming visible to staff, which is not a
+ * decision anybody would have made deliberately. These five answer the
+ * questions the desk actually gets — why does it look like this, why is
+ * it reading to me, why are the letters wrong — and nothing else does.
+ */
+function readVisibleSettings(
+  prefs: string | null,
+): Record<string, string> | null {
+  if (prefs == null || prefs === "") {
+    return null;
+  }
+  let blob: Record<string, unknown>;
+  try {
+    const parsed = JSON.parse(prefs) as unknown;
+    if (typeof parsed !== "object" || parsed == null) {
+      return null;
+    }
+    blob = parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+  const out: Record<string, string> = {};
+  const say = (key: string, value: unknown) => {
+    if (typeof value === "string" && value !== "") {
+      out[key] = value;
+    } else if (typeof value === "boolean") {
+      out[key] = value ? "on" : "off";
+    } else if (typeof value === "number") {
+      out[key] = String(value);
+    }
+  };
+  say("layout", blob["layout"] ?? blob["keyboard.layout"]);
+  say("language", blob["language"] ?? blob["lang"]);
+  say("theme", blob["theme"] ?? blob["color.theme"]);
+  say("sound", blob["sound"] ?? blob["sounds"]);
+  say("textSize", blob["textSize"] ?? blob["fontSize"]);
+  return Object.keys(out).length === 0 ? null : out;
+}
+
 @injectable()
 @controller()
 export class Controller {
@@ -990,6 +1034,23 @@ export class Controller {
     const profiles = await Profile.query()
       .where("userId", id)
       .orderBy("createdAt", "asc");
+    // How often they have actually been here lately, and what the last
+    // visit looked like. The desk asks because half the tickets it gets
+    // are "why does it look like this", and the answer is usually in the
+    // account's own settings rather than in anything the customer can
+    // describe.
+    const since = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
+    const [signIns28d, lastLogin] = await Promise.all([
+      SecurityEvent.query()
+        .where({ userId: id, type: "login" })
+        .where("createdAt", ">=", since)
+        .resultSize(),
+      SecurityEvent.query()
+        .where({ userId: id, type: "login" })
+        .orderBy("createdAt", "desc")
+        .first(),
+    ]);
+
     ctx.response.body = {
       memberSince: new Date(user.createdAt!).toISOString(),
       profileCount: profiles.length,
@@ -1001,7 +1062,17 @@ export class Controller {
         kind: p.kind ?? "adult",
         visionSupport: Boolean(p.visionSupport),
         createdAt: new Date(p.createdAt!).toISOString(),
+        // What this learner's client is set to. Read out of the prefs
+        // blob rather than passed through whole: the blob is a client
+        // implementation detail and carries far more than a support
+        // agent has any business seeing.
+        settings: readVisibleSettings(p.prefs ?? null),
       })),
+      signIns28d,
+      lastSignInAt:
+        lastLogin?.createdAt == null
+          ? null
+          : new Date(lastLogin.createdAt).toISOString(),
     };
   }
 
