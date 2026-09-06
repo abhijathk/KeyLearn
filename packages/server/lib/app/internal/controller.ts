@@ -202,6 +202,15 @@ function readVisibleSettings(
   return Object.keys(out).length === 0 ? null : out;
 }
 
+/**
+ * How many accounts one look-up returns.
+ *
+ * High enough that the desk's own pager is doing the paging and the count
+ * under the search box means what it says, low enough that a mistyped
+ * single letter does not walk the whole table.
+ */
+const ACCOUNT_SEARCH_LIMIT = 200;
+
 @injectable()
 @controller()
 export class Controller {
@@ -471,6 +480,12 @@ export class Controller {
   ) {
     ctx.state.requireOpsApi();
     const term = query?.trim();
+    // One cap for both branches. The desk shows this as a directory it
+    // pages through, and the old split — 20 for a search, 10 for no
+    // query — meant the page said "every registered account" while
+    // showing ten of them, with a pager that reported ten as the total.
+    // A reader has no way to tell that apart from a desk with ten
+    // customers.
     const users = await (term
       ? User.query()
           .where((q) =>
@@ -479,33 +494,53 @@ export class Controller {
               .orWhere("name", "like", `%${term}%`),
           )
           .orderBy("createdAt", "desc")
-          .limit(20)
-      : User.query().orderBy("createdAt", "desc").limit(10));
+          .limit(ACCOUNT_SEARCH_LIMIT)
+      : User.query().orderBy("createdAt", "desc").limit(ACCOUNT_SEARCH_LIMIT));
 
-    const results = await Promise.all(
-      users.map(async (u) => {
-        const profileCount = await Profile.query()
-          .where("userId", u.id!)
-          .resultSize();
-        const lastLogin = await SecurityEvent.query()
-          .where({ userId: u.id!, type: "login" })
-          .orderBy("createdAt", "desc")
-          .first();
-        return {
-          id: u.id!,
-          name: u.name!,
-          email: maskEmail(u.email!),
-          emailVerified: Boolean(u.emailVerified),
-          createdAt: new Date(u.createdAt!).toISOString(),
-          signInMethod: deriveSignInMethod(u),
-          profileCount,
-          lastSeen:
-            lastLogin?.createdAt != null
-              ? new Date(lastLogin.createdAt).toISOString()
-              : null,
-        };
-      }),
-    );
+    // Counted and dated in two queries rather than two per user. At a cap
+    // of ten the loop was invisible; at two hundred it is four hundred
+    // round trips to build one page.
+    const ids = users.map((u) => u.id!);
+    const profileCounts = new Map<number, number>();
+    const lastSeenAt = new Map<number, number>();
+    if (ids.length > 0) {
+      const counted = (await Profile.query()
+        .whereIn("userId", ids)
+        .select("userId")
+        .count("* as n")
+        .groupBy("userId")) as unknown as { userId: number; n: number }[];
+      for (const row of counted) {
+        profileCounts.set(Number(row.userId), Number(row.n));
+      }
+      const logins = (await SecurityEvent.query()
+        .whereIn("userId", ids)
+        .where("type", "login")
+        .select("userId")
+        .max("createdAt as at")
+        .groupBy("userId")) as unknown as { userId: number; at: unknown }[];
+      for (const row of logins) {
+        if (row.at != null) {
+          lastSeenAt.set(
+            Number(row.userId),
+            new Date(row.at as string).getTime(),
+          );
+        }
+      }
+    }
+
+    const results = users.map((u) => {
+      const seen = lastSeenAt.get(u.id!);
+      return {
+        id: u.id!,
+        name: u.name!,
+        email: maskEmail(u.email!),
+        emailVerified: Boolean(u.emailVerified),
+        createdAt: new Date(u.createdAt!).toISOString(),
+        signInMethod: deriveSignInMethod(u),
+        profileCount: profileCounts.get(u.id!) ?? 0,
+        lastSeen: seen == null ? null : new Date(seen).toISOString(),
+      };
+    });
 
     void StaffAuditEvent.record({
       userId: actingStaffUserId ?? null,
