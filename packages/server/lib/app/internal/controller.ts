@@ -653,6 +653,30 @@ export class Controller {
       }
       tempPassword =
         a.owner.temporaryPassword ?? randomBytes(12).toString("base64url");
+      // Created BEFORE the transaction, not inside it.
+      //
+      // `registerWithPassword` takes its own connection. Called from
+      // within a transaction that already holds SQLite's write lock, it
+      // waits for a connection that cannot be granted until that lock
+      // is released — a deadlock the engine reports as "database is
+      // locked", which reads like contention from somewhere else.
+      //
+      // If the organisation below then fails, this leaves an ordinary
+      // account with no membership: harmless and reusable, and far
+      // better than a wedged database.
+      ownerUser = await User.registerWithPassword(
+        a.owner.email,
+        tempPassword,
+        a.owner.firstName,
+        a.owner.lastName ?? "",
+      );
+      await User.query()
+        .findById(ownerUser.id!)
+        .patch({
+          emailVerified: true,
+          mustChangePassword: true,
+          tempPasswordExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
     }
 
     const created = await Organization.transaction(async (trx) => {
@@ -683,24 +707,8 @@ export class Controller {
         });
       }
 
-      // The person at the top.
-      if (a.owner.mode === "create") {
-        ownerUser = await User.registerWithPassword(
-          a.owner.email,
-          tempPassword!,
-          a.owner.firstName,
-          a.owner.lastName ?? "",
-        );
-        await User.query(trx)
-          .findById(ownerUser.id!)
-          .patch({
-            emailVerified: true,
-            mustChangePassword: true,
-            tempPasswordExpiresAt: new Date(
-              Date.now() + 7 * 24 * 60 * 60 * 1000,
-            ),
-          });
-      }
+      // The person at the top — resolved or created above, so nothing in
+      // here reaches for a second connection.
       if (ownerUser != null) {
         await OrgMember.query(trx).insert({
           organizationId: org.id!,
