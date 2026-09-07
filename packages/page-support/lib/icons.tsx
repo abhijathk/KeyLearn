@@ -19,6 +19,10 @@ const PATHS = {
   back: "M9.5 3L5 8l4.5 5",
   lock: "M4 7V5a4 4 0 018 0v2M4.4 7h7.2a1.6 1.6 0 011.6 1.6v3.8a1.6 1.6 0 01-1.6 1.6H4.4a1.6 1.6 0 01-1.6-1.6V8.6A1.6 1.6 0 014.4 7z",
   x: "M4 4l8 8M12 4l-8 8",
+  // A shield, for the virus check. Drawn with a flat top and a single
+  // point rather than the scalloped crest a heraldic one has: at 13px
+  // the scallops turn to mush and it reads as a blob.
+  shield: "M8 2.2l5 1.9v3.6c0 3-2.1 5.2-5 6.1-2.9-.9-5-3.1-5-6.1V4.1z",
   search: "M10.5 10.5L14 14M11.5 7a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z",
   alert: "M8 2l6 11H2zM8 6.5v3M8 11.3v.2",
   wifiOff: "M2 2l12 12M5 9.5a5 5 0 016-.8M2.5 6.6a9 9 0 0111-1.4M8 12.6v.1",

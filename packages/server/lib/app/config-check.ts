@@ -66,6 +66,26 @@ export function checkProductionConfig(
     }
   }
 
+  // ATTACHMENT_SCAN=off is a laptop convenience that has no honest reading
+  // in production: it means files customers upload are stored without
+  // anything looking at them. Fatal rather than a warning, because the
+  // symptom of getting this wrong is nothing at all — uploads keep
+  // working, which is precisely why nobody would notice.
+  if ((env.ATTACHMENT_SCAN ?? "").toLowerCase() === "off") {
+    fatal.push(
+      "ATTACHMENT_SCAN=off disables virus scanning of customer uploads. " +
+        "Files would be stored without being checked.",
+    );
+  } else if ((env.CLAMAV_HOST ?? "") === "") {
+    // Not fatal: the desk still works, and refusing every attachment is a
+    // visible failure somebody will report within the hour, which is the
+    // opposite of the silent one above.
+    warnings.push(
+      "No CLAMAV_HOST is set, so every customer attachment will be " +
+        "refused until a virus scanner is reachable.",
+    );
+  }
+
   if (!Env.getBoolean("COOKIE_SECURE", true)) {
     fatal.push(
       "COOKIE_SECURE is false, so the session cookie would be sent over " +

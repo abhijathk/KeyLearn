@@ -1912,6 +1912,7 @@
   "support.my.resolvedGroup": "Resolved ({count})",
   "support.my.retry": "Try again",
   "support.my.retryFile": "Retry",
+  "support.my.scanning": "Checking for viruses",
   "support.my.search": "Search your messages",
   "support.my.send": "Send",
   "support.my.sending": "Sending",

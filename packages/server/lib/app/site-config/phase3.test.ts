@@ -482,12 +482,22 @@ test("3.2 feedback: stars, comments, the contact-detail gate, the inbox, moderat
       .header("x-ops-api-key", OPS_KEY)
       .send()
   ).body.json();
-  equal(inbox.feedback.length, 1, "only rows with a comment are inbox rows");
-  equal(inbox.feedback[0].account.email, "user1@keylearn.org");
-  includes(inbox.feedback[0].text, "songs");
+  // A star with no words is feedback too. This asserted the opposite
+  // until the Feedback page and the dashboard widget were found to
+  // disagree — four cards counted, one shown — because the inbox quietly
+  // dropped every rating nobody had written a sentence about.
+  equal(inbox.feedback.length, 2, "a star without a comment is still a row");
+  const commented = inbox.feedback.find((row: any) => row.text != null);
+  const silent = inbox.feedback.find((row: any) => row.text == null);
+  equal(commented.account.email, "user1@keylearn.org");
+  includes(commented.text, "songs");
+  equal(silent.account.email, "voter.two@example.com");
+  equal(silent.stars, 2, "…and it carries its rating");
 
   // Moderation: a non-staff actor cannot, a staff member can; the star stays.
-  const rowId = inbox.feedback[0].id;
+  // Addressed by identity rather than by position, so the assertions below
+  // stay about moderation and not about the inbox's sort order.
+  const rowId = commented.id;
   const notStaff = await request
     .POST(`/_/internal/feedback/${rowId}/hide`)
     .header("x-ops-api-key", OPS_KEY)
@@ -508,12 +518,9 @@ test("3.2 feedback: stars, comments, the contact-detail gate, the inbox, moderat
       .header("x-ops-api-key", OPS_KEY)
       .send()
   ).body.json();
-  equal(
-    inbox.feedback[0].textDropped,
-    true,
-    "the inbox says the comment was removed",
-  );
-  equal(inbox.feedback[0].hidden, true);
+  const afterHide = inbox.feedback.find((row: any) => row.id === rowId);
+  equal(afterHide.textDropped, true, "the inbox says the comment was removed");
+  equal(afterHide.hidden, true);
 
   // Retention: twelve months, then the star alone.
   await request.become("voter.two@example.com");

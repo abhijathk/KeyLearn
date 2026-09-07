@@ -499,9 +499,25 @@ export function Composer({
               )}
             </span>
           ))}
+          {/* Every file is scanned for viruses before it is kept, so an
+              upload is never just a transfer and the wait is longer than
+              a progress bar alone would explain. Saying what the wait is
+              for turns "this is slow" into "this is being checked", and
+              it is the one moment the protection is worth mentioning. */}
           {(uploading ?? []).map((name) => (
-            <span key={name} className={styles.pending}>
+            <span
+              key={name}
+              className={`${styles.pending} ${styles.scanning}`}
+              aria-live="polite"
+            >
+              <Icon name="shield" size={13} />
               {name}
+              <span className={styles.scanWord}>
+                <FormattedMessage
+                  id="support.my.scanning"
+                  defaultMessage="Checking for viruses"
+                />
+              </span>
               <span className={styles.progress}>
                 <i />
               </span>

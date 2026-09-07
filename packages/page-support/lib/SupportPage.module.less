@@ -850,6 +850,76 @@
   font-size: 0.74rem;
 }
 
+/**
+ * The file being passed under a scanner.
+ *
+ * A sweep travelling across the chip rather than a spinner beside it:
+ * the thing being worked on is the file, and a light crossing it says
+ * that far more directly than a wheel turning next to its name. The
+ * chip clips the sweep, so it reads as something passing over the file
+ * rather than an object moving around the page.
+ */
+.scanning {
+  position: relative;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--secondary-l2));
+  overflow: hidden;
+}
+
+.scanning::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  inline-size: 40%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 22%, transparent),
+    transparent
+  );
+  pointer-events: none;
+  animation: supportScanSweep 1.5s ease-in-out infinite;
+}
+
+.scanWord {
+  color: var(--accent);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+@keyframes supportScanSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+/* A sweep that travels left-to-right in Arabic reads as running
+   backwards over the file, so it follows the writing direction. */
+[dir="rtl"] .scanning::after {
+  animation-name: supportScanSweepRtl;
+}
+
+@keyframes supportScanSweepRtl {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-350%);
+  }
+}
+
+/* The sweep is decoration on top of the words; without it the chip still
+   names the file and says what is happening to it. */
+@media (prefers-reduced-motion: reduce) {
+  .scanning::after {
+    opacity: 0;
+    animation: none;
+  }
+}
+
 .pendingBad {
   border-color: var(--error);
 }

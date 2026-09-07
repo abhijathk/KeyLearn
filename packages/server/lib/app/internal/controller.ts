@@ -967,8 +967,12 @@ export class Controller {
     const user =
       owner == null ? null : await User.query().findById(owner.userId!);
     if (user?.email == null) {
+      // ASCII only. An HttpError's message is written into the HTTP
+      // status line, and Node refuses to send a response whose status
+      // line holds a non-ASCII byte — so the em dash that used to sit
+      // here did not produce this message, it hung the request.
       throw new BadRequestError(
-        "There is nobody to remind — this organisation has no owner with an address.",
+        "There is nobody to remind: this organisation has no owner with an address.",
       );
     }
     const plan = await OrganizationPlan.query().findOne({ organizationId: id });

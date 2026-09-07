@@ -8,3 +8,34 @@ services:
     ports:
       - 30044:3000
     restart: unless-stopped
+    # Not depends_on alone: the app starts fine without a scanner, it just
+    # refuses attachments until one answers. Waiting for healthy means the
+    # first customer to attach a screenshot after a deploy is not the one
+    # who discovers clamd was still loading its signatures.
+    depends_on:
+      clamav:
+        condition: service_healthy
+
+  # The virus scanner for customer uploads. Local, free, and never sees
+  # the network: files are streamed to it over the compose network and a
+  # verdict comes back before anything is stored.
+  clamav:
+    image: clamav/clamav:stable
+    volumes:
+      # Signature database. Without this every restart re-downloads ~250 MB
+      # and the scanner is unavailable — so uploads are refused — until it
+      # finishes.
+      - clamav-db:/var/lib/clamav
+    restart: unless-stopped
+    healthcheck:
+      # clamd answers PING with PONG only once the signatures are loaded,
+      # which is the thing worth waiting for. A first start does that
+      # download, hence the long start_period.
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+
+volumes:
+  clamav-db:

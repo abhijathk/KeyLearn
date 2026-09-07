@@ -137,6 +137,15 @@ export async function createSchema(knex: Knex): Promise<void> {
   await addColumn("site_config", "default_at_write", (table) => {
     table.text("default_at_write").nullable();
   });
+  // Virus scanning of customer uploads. Additive for databases created
+  // before the files were being scanned at all — the existing rows keep a
+  // null, which is honest: nothing checked them.
+  await addColumn("support_attachment", "scanned_at", (table) => {
+    table.timestamp("scanned_at").nullable();
+  });
+  await addColumn("support_attachment", "scanner", (table) => {
+    table.string("scanner", 64).nullable();
+  });
 
   // Who may reach the desk, moved out of the STAFF_EMAILS env var.
   //

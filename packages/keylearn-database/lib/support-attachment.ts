@@ -42,6 +42,7 @@ export class SupportAttachment extends TimestampMixin(Model) {
       fileName: { type: "string", minLength: 1, maxLength: 200 },
       mimeType: { type: "string", minLength: 1, maxLength: 100 },
       size: { type: "integer" },
+      scanner: { type: ["string", "null"], maxLength: 64 },
     },
   } satisfies JSONSchema;
 
@@ -62,6 +63,11 @@ export class SupportAttachment extends TimestampMixin(Model) {
     table.string("file_name", 200).notNullable();
     table.string("mime_type", 100).notNullable();
     table.integer("size").unsigned().notNullable();
+    // When the bytes were passed a virus scanner, and which one said so.
+    // Null means no scanner ever saw this file — only possible on a
+    // deployment that deliberately turned scanning off.
+    table.timestamp("scanned_at").nullable();
+    table.string("scanner", 64).nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.index(["ticket_id", "message_id"]);
     // Finding a person's unbound uploads when their ticket is created.
@@ -77,6 +83,8 @@ export class SupportAttachment extends TimestampMixin(Model) {
   fileName?: string;
   mimeType?: string;
   size?: number;
+  scannedAt?: Date | null;
+  scanner?: string | null;
   createdAt?: Date;
 
   /**

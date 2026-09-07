@@ -2,7 +2,11 @@ import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { body, controller, http, pathParam } from "@fastr/controller";
 import { Context } from "@fastr/core";
-import { ForbiddenError, NotFoundError } from "@fastr/errors";
+import {
+  ForbiddenError,
+  NotFoundError,
+  ServiceUnavailableError,
+} from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { type SessionState } from "@fastr/middleware-session";
@@ -37,6 +41,7 @@ import {
   forwardTicketToQdesk,
   tellDeskCustomerTyping,
 } from "./qdesk-forward.ts";
+import { ScannerDown, scanningRequired, scanUpload } from "./virus-scan.ts";
 
 /**
  * The account holder's own support section — the pane inside the account
@@ -754,6 +759,12 @@ export class MyTicketsController {
       }
     }
 
+    // Before the row, before the write, before anything about this file
+    // is remembered anywhere. A scan that runs afterwards has already
+    // lost: by then the bytes are on disk, in a backup, and in whatever
+    // read them in between, and all it can do is describe the problem.
+    const scanner = await this.#scan(bytes, userId);
+
     const row = await SupportAttachment.query().insertAndFetch({
       ticketId,
       messageId: null,
@@ -762,12 +773,71 @@ export class MyTicketsController {
       fileName: input.fileName,
       mimeType: input.mimeType,
       size: bytes.length,
+      scannedAt: scanner == null ? null : new Date(),
+      scanner,
     });
     const path = this.dataDir.supportAttachmentFile(row.id!);
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, bytes);
 
     return row.toDetails();
+  }
+
+  /**
+   * Hands the bytes to ClamAV and returns what scanned them, or null when
+   * scanning is switched off on this deployment.
+   *
+   * Three outcomes, kept apart because they mean different things to the
+   * person waiting:
+   *
+   *   clean      — carry on, and the row records who vouched for it.
+   *   infected   — refused, named. Nothing is written, so there is no
+   *                copy to clean up later and no window in which one
+   *                exists.
+   *   no scanner — also refused, and with a 503 rather than a 403: the
+   *                customer did nothing wrong and their file is fine as
+   *                far as anyone knows. Trying again in a minute is
+   *                honest advice, where "that file can't be attached"
+   *                would send them looking for a fault in a screenshot.
+   */
+  async #scan(bytes: Buffer, userId: number): Promise<string | null> {
+    if (!scanningRequired()) {
+      return null;
+    }
+    let verdict;
+    try {
+      verdict = await scanUpload(bytes);
+    } catch (err) {
+      if (err instanceof ScannerDown) {
+        // The reason is for the log, not the customer — a hostname and a
+        // port tell an attacker about our shape and tell everyone else
+        // nothing they can act on.
+        console.error("support-attachment:", err.message);
+        // ASCII only, and deliberately so: @fastr writes an HttpError's
+        // message into the HTTP status line, where a non-ASCII byte makes
+        // Node refuse to send the response at all. The request then hangs
+        // instead of failing, which is a far worse outage than the one
+        // being reported. An em dash here cost exactly that.
+        throw new ServiceUnavailableError(
+          "Files can't be checked for viruses right now, so this one " +
+            "hasn't been attached. Please try again in a few minutes. " +
+            "Your message is safe.",
+          { expose: true },
+        );
+      }
+      throw err;
+    }
+    if (!verdict.clean) {
+      console.warn(
+        `support-attachment: refused ${String(bytes.length)}-byte upload ` +
+          `from user ${String(userId)} — ${verdict.threat}`,
+      );
+      throw new ForbiddenError(
+        `That file didn't pass the virus check (${verdict.threat}), so it hasn't been attached. If you think that's wrong, tell us in the message and we'll look into it.`,
+        { expose: true },
+      );
+    }
+    return "clamav";
   }
 
   @http.GET("/_/support/my/attachments/{id}")

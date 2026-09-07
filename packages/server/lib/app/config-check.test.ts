@@ -41,6 +41,7 @@ const sane = {
   QDESK_URL: "https://desk.keylearn.org/",
   DATABASE_CLIENT: "mysql",
   TRUSTED_PROXIES: "loopback",
+  CLAMAV_HOST: "clamav",
 };
 
 test("say nothing outside production", () => {
@@ -57,6 +58,32 @@ test("say nothing outside production", () => {
 test("accept a sane production configuration", () => {
   withEnv(sane, () => {
     equal(checkProductionConfig().fatal.length, 0);
+  });
+});
+
+test("refuse production with virus scanning switched off", () => {
+  withEnv({ ...sane, ATTACHMENT_SCAN: "off" }, () => {
+    const { fatal } = checkProductionConfig();
+    isTrue(fatal.some((m) => m.includes("ATTACHMENT_SCAN")));
+  });
+  // A typo is not an off switch, here or in the scanner itself.
+  withEnv({ ...sane, ATTACHMENT_SCAN: "no" }, () => {
+    equal(checkProductionConfig().fatal.length, 0);
+  });
+});
+
+test("warn, but do not refuse, when no scanner is configured", () => {
+  withEnv({ ...sane, CLAMAV_HOST: "" }, () => {
+    const { fatal, warnings } = checkProductionConfig();
+    equal(fatal.length, 0, "refusing attachments is visible, not silent");
+    isTrue(warnings.some((m) => m.includes("CLAMAV_HOST")));
+  });
+});
+
+test("a sane production config says nothing about scanning", () => {
+  withEnv(sane, () => {
+    const { warnings } = checkProductionConfig();
+    isTrue(!warnings.some((m) => m.includes("CLAMAV_HOST")));
   });
 });
 
