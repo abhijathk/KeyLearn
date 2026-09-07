@@ -25,10 +25,22 @@ languages are complete.
   on the header's bell.
 - **A reading voice per learner**: real neural voices, named, and the
   same on every platform rather than whatever the browser offered.
-- **Two new kids boards** — Rainbow, which teaches with its colour, and a
-  Round one — bringing the set to five.
+- **Five keyboard styles** to practise on, chosen in Settings: KeyLearn,
+  Flat Silver, Flat Midnight, Mechanical (tall sculpted caps, two-tone
+  keyset, per-key RGB) and Round (K380-inspired circular caps, six
+  colourways, one warm light).
+- **Rainbow, a second finish for the kids keyboard** — green frame, red
+  numbers and punctuation, blue alphabet, vowels a lighter blue, and signs
+  rather than words on the frame keys, so it reads for a band that cannot
+  read "enter" yet.
 - **Five text sizes** in place of three, scaling the whole app rather
   than only body text.
+- **A face and a voice for every learner by default**, so a new profile is
+  usable without setting anything up — the previous defaults ("this
+  device's own voice", no avatar) were defaults nobody had chosen.
+- **The kids world is announced to a screen reader**: it now has an
+  accessible name and says where in the world the learner is, rather than
+  being a silent canvas beside the lesson text.
 - **Virus scanning on support attachments.** Files are scanned before
   they are stored; an unreachable scanner refuses the file rather than
   keeping it unchecked.
