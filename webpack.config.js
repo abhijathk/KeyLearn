@@ -165,6 +165,19 @@ export default [
     target: "web",
     mode,
     context: import.meta.dirname,
+    resolve: {
+      // three's KTX2Loader names its transcoder with
+      // `new URL("../libs/basis/basis_transcoder.js", import.meta.url)`,
+      // which webpack resolves at build time and then tries to bundle.
+      // That file is emscripten glue: it carries a Node branch requiring
+      // `fs` and `path` which never runs in a browser, and the build
+      // fails on the two imports rather than on anything real.
+      //
+      // We do not want it bundled either way — the kids world calls
+      // `setTranscoderPath("/kids-assets/basis/")` and fetches it at
+      // runtime, so the copy under root/public is the one that is used.
+      fallback: { fs: false, path: false },
+    },
     entry: {
       browser: "./packages/keylearn-pages-browser/lib/entry.ts",
       server: "./packages/keylearn-pages-server/lib/entry.ts",

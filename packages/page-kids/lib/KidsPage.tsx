@@ -907,6 +907,10 @@ function agedPool(
 const HERO_CHARACTERS = [
   { id: "Knight", label: "Knight" },
   { id: "Skeleton_Warrior", label: "Skeleton" },
+  // A child rather than a fantasy figure, for the older band who have
+  // grown out of playing as a skeleton. He is the one character whose
+  // clothes can be recoloured — see character-tint.ts.
+  { id: "Explorer", label: "Explorer" },
 ] as const;
 
 function peekNextLandName(): string {

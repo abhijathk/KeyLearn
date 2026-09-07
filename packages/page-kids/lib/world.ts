@@ -6,6 +6,11 @@ import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
+import {
+  attachTint,
+  type CharacterTint,
+  type ClothingColours,
+} from "./character-tint.ts";
 import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
@@ -359,6 +364,17 @@ export type KidsWorld = {
   readonly land: Land;
   readonly ready: Promise<void>;
   setPlayer(name: string): Promise<void>;
+  /**
+   * Recolour the character's clothes at runtime.
+   *
+   * Only the Explorer carries the masks this needs; for anyone else the
+   * choice is remembered and applied if they switch to him, rather than
+   * being dropped while he is off screen.
+   */
+  setCharacterColors(colours: ClothingColours): void;
+  resetCharacterColors(): void;
+  characterColors(): ClothingColours;
+  canTintCharacter(): boolean;
   setProgress(frac: number): void;
   /** Plant the camp flag a fresh stretch ahead — the runner never rewinds. */
   startRun(): void;
@@ -1067,7 +1083,13 @@ export function createKidsWorld(
     const clips = clipsFor(gltf);
     const pick = (re: RegExp) =>
       clips.find((c) => re.test(c.name.toLowerCase())) ?? null;
-    const runClip = pick(/run|gallop|walk/);
+    // A real run beats a walk when a character ships both.
+    //
+    // `pick` takes the first match, and the Explorer's clips are ordered
+    // Idle, Walk, Run — so a single alternation quietly chose Walk for
+    // running and he ambled through the whole trail. The KayKit heroes
+    // carry one move clip each and are unaffected either way.
+    const runClip = pick(/\brun\b|gallop/) ?? pick(/run|gallop|walk/);
     const idleClip = pick(/idle|stand/);
     let run: THREE.AnimationAction | null = null;
     let idle: THREE.AnimationAction | null = null;
@@ -1775,6 +1797,17 @@ export function createKidsWorld(
   const sizeForAge = (age: number) =>
     0.72 + 0.66 * Math.max(0, Math.min(1, age));
 
+  /**
+   * The tinted character, when the current one can be tinted.
+   *
+   * Rebuilt on every character swap because the handle closes over that
+   * model's own materials — keeping the old one would write uniforms
+   * into a character no longer on screen.
+   */
+  let playerTint: CharacterTint | null = null;
+  /** What was asked for before a model that could take it was loaded. */
+  let pendingColours: ClothingColours = {};
+
   async function setPlayer(name: string) {
     const gltf = await loadModel(
       `${ASSETS}/models/${theme.modelDir}/${name}.glb`,
@@ -1784,6 +1817,15 @@ export function createKidsWorld(
     }
     playerH = theme.playerHeight(name);
     const rig = rigOf(gltf, playerH);
+    // Only a character authored with masks gets one; everyone else keeps
+    // the colours they were painted with and this is null.
+    playerTint = await attachTint(gltf);
+    if (playerTint != null && Object.keys(pendingColours).length > 0) {
+      // Colours chosen before this model finished loading — a child who
+      // set them last session, or who changed character with the panel
+      // already open. Applied now rather than dropped.
+      playerTint.setColors(pendingColours);
+    }
     rig.wrap.position.set(playerX, groundY(playerX), 0);
     rig.wrap.rotation.y = Math.PI / 2;
     if (player) {
@@ -2794,6 +2836,29 @@ export function createKidsWorld(
     land,
     ready,
     setPlayer,
+    /**
+     * Recolour the character's clothes, now.
+     *
+     * Remembered even when the current character has no masks, so the
+     * choice survives switching to the Knight and back rather than being
+     * silently forgotten while he is off screen.
+     */
+    setCharacterColors(colours: ClothingColours) {
+      pendingColours = { ...pendingColours, ...colours };
+      playerTint?.setColors(colours);
+    },
+    resetCharacterColors() {
+      pendingColours = {};
+      playerTint?.reset();
+    },
+    /** What is set right now; empty means every garment is as painted. */
+    characterColors(): ClothingColours {
+      return playerTint?.current() ?? { ...pendingColours };
+    },
+    /** Whether the character on screen can be recoloured at all. */
+    canTintCharacter(): boolean {
+      return playerTint != null;
+    },
     setProgress(frac) {
       targetX = runStart + Math.max(0, Math.min(1, frac)) * (runEnd - runStart);
     },
