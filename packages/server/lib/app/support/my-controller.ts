@@ -101,6 +101,18 @@ const TDraft = z.object({
 type TDraft = z.infer<typeof TDraft>;
 const PDraft = zod(TDraft);
 
+/**
+ * The most a `/attachments` request may weigh.
+ *
+ * MAX_BYTES of file becomes ceil(n/3)*4 bytes of base64, plus the file
+ * name, the type and the JSON around them. Stated HERE, on the read,
+ * rather than only as the size check further down: that check runs after
+ * the whole body has been buffered, JSON-parsed and base64-decoded, so
+ * without this a caller could make the server hold half a gigabyte in
+ * memory for as long as it takes to decide the file is too big.
+ */
+const MAX_UPLOAD_BODY = Math.ceil(SupportAttachment.MAX_BYTES / 3) * 4 + 4096;
+
 const TUpload = z.object({
   fileName: z.string().trim().min(1).max(200),
   mimeType: z.string().trim().min(1).max(100),
@@ -694,7 +706,7 @@ export class MyTicketsController {
   async uploadAttachment(
     ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("id", pId) id: number,
-    @body.json(PUpload) input: TUpload,
+    @body.json(PUpload, { maxLength: MAX_UPLOAD_BODY }) input: TUpload,
   ) {
     const user = ctx.state.requireUser();
     await this.#mine(ctx, id);
@@ -712,7 +724,7 @@ export class MyTicketsController {
   @http.POST("/_/support/my/attachments")
   async uploadUnbound(
     ctx: Context<RouterState & SessionState & AuthState>,
-    @body.json(PUpload) input: TUpload,
+    @body.json(PUpload, { maxLength: MAX_UPLOAD_BODY }) input: TUpload,
   ) {
     const user = ctx.state.requireUser();
     await requireParentPinForSupport(ctx, user);

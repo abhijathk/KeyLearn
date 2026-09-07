@@ -13,6 +13,7 @@ import { staticFiles } from "@fastr/middleware-static-files";
 import { Env } from "@keylearn/config";
 import { ManifestModule } from "./assets.ts";
 import { AuthModule, loadUser } from "./auth/index.ts";
+import { bodyCeiling } from "./body-ceiling.ts";
 import { cacheControl } from "./cachecontrol.ts";
 import { csrfGuard } from "./csrf.ts";
 import { deskAwareSession } from "./desk-session.ts";
@@ -60,6 +61,9 @@ export class ApplicationModule implements Module {
         .use(ErrorHandler)
         // Ahead of the handlers so error pages carry the headers too.
         .use(securityHeaders())
+        // Before anything reads a body. Most routes here set no size
+        // limit of their own, and @fastr's default is none at all.
+        .use(bodyCeiling())
         .use(trailingSlashRedirect())
         .use(conditional())
         .use(compress())
