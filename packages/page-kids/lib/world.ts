@@ -2,6 +2,7 @@ import { profileStorageKey } from "@keylearn/pages-shared";
 import * as THREE from "three";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
@@ -959,6 +960,21 @@ export function createKidsWorld(
   // ── model loading, engine-style de-facet, kid-safe clips ───────────────
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
+  /**
+   * Basis/KTX2 textures, which the Explorer needs and nothing else uses yet.
+   *
+   * Its GLB lists `KHR_texture_basisu` in extensionsREQUIRED, not merely
+   * used — so without a transcoder the loader refuses the file outright
+   * rather than falling back. This is what makes that character loadable
+   * at all.
+   *
+   * `detectSupport` has to see the real renderer to pick a format the GPU
+   * can take, so it gets the one this world already built.
+   */
+  const ktx2 = new KTX2Loader()
+    .setTranscoderPath(`${ASSETS}/basis/`)
+    .detectSupport(renderer);
+  loader.setKTX2Loader(ktx2);
   /**
    * Every model this world parsed.
    *
@@ -2980,6 +2996,11 @@ export function createLoaderScene(
   let disposed = false;
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
+  // The preview needs the transcoder too — it draws the same characters.
+  const previewKtx2 = new KTX2Loader()
+    .setTranscoderPath(`${ASSETS}/basis/`)
+    .detectSupport(renderer);
+  loader.setKTX2Loader(previewKtx2);
   loader
     .loadAsync(`${ASSETS}/models/${theme.modelDir}/${theme.defaultPlayer}.glb`)
     .then((gltf) => {
