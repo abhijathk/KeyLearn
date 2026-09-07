@@ -93,6 +93,16 @@ const TStaffRosterSync = z.object({
 type TStaffRosterSync = z.infer<typeof TStaffRosterSync>;
 const PStaffRosterSync = zod(TStaffRosterSync);
 
+const TStaffTotpVerify = z.object({
+  email: z.string().trim().email().max(320),
+  totp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/),
+});
+type TStaffTotpVerify = z.infer<typeof TStaffTotpVerify>;
+const PStaffTotpVerify = zod(TStaffTotpVerify);
+
 const PStaffAuthVerify = zod(TStaffAuthVerify);
 
 const TStaffAuthPasskeyVerify = z.object({
@@ -321,6 +331,68 @@ export class Controller {
 
   #link(path: string): string {
     return String(new URL(path, this.canonicalUrl));
+  }
+
+  /**
+   * Verifies a TOTP code alone, for somebody already signed in.
+   *
+   * Distinct from `staff-auth/verify`, which is password-plus-TOTP and
+   * answers "is this person who they say". This answers a narrower
+   * question — "is the person already holding this session still at the
+   * keyboard, with their authenticator" — which is what the desk's
+   * control-centre gate needs and what its shared failsafe passcode
+   * could never tell it: a passcode says somebody knows the passcode.
+   *
+   * No password is taken, so it cannot be used to sign in. It only ever
+   * confirms a second factor for an identity the caller has already
+   * established, and it is refused for anyone who is not staff.
+   */
+  @http.POST("/_/internal/staff-auth/totp-verify")
+  async verifyStaffTotp(
+    ctx: Context<RouterState & AuthState>,
+    @body.json(PStaffTotpVerify) input: TStaffTotpVerify,
+  ) {
+    ctx.state.requireOpsApi();
+    // Tighter than the sign-in limiter: six digits is a small space, and
+    // this route is reachable with no password in hand.
+    rateLimit(ctx, `ops-staff-totp:${input.email}`, 5, 300_000);
+    const user = await User.findByEmail(input.email);
+    if (user == null) {
+      ctx.response.body = { ok: false, reason: "invalid" };
+      return;
+    }
+    const status = await staffAccessStatus(user);
+    if (!status.ok) {
+      ctx.response.body = { ok: false, reason: status.reason };
+      return;
+    }
+    if (!user.totpEnabled || user.totpSecret == null) {
+      ctx.response.body = { ok: false, reason: "needs-2fa" };
+      return;
+    }
+    if (
+      !verifyTotp(
+        resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
+        input.totp,
+      )
+    ) {
+      void StaffAuditEvent.record({
+        userId: user.id,
+        action: "staff-access-denied",
+        detail: "authenticator code refused at the desk's unlock gate",
+        ip: clientIp(ctx),
+      });
+      ctx.response.body = { ok: false, reason: "invalid" };
+      return;
+    }
+    ctx.response.body = {
+      ok: true,
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      // Env-only, exactly as the sign-in route reads it.
+      admin: isAdminEmail(user.email),
+    };
   }
 
   /**

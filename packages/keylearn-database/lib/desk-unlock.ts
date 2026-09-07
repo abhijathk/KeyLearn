@@ -110,7 +110,25 @@ export class DeskUnlock extends TimestampMixin(Model) {
     });
   }
 
+  /** The shortest failsafe worth having. */
+  static readonly MIN_PASSCODE = 8;
+
+  /**
+   * Sets the failsafe.
+   *
+   * The length floor is here rather than only at the routes, because
+   * `bootstrap` reads straight from the environment and never passed a
+   * route at all — so ADMIN_UNLOCK_PASSCODE=1 was a working failsafe for
+   * the whole desk. The lockout schedule makes a short secret survivable,
+   * not safe: five guesses every fifteen minutes still finds a four-digit
+   * code inside a day.
+   */
   static async setPasscode(passcode: string): Promise<void> {
+    if (passcode.trim().length < DeskUnlock.MIN_PASSCODE) {
+      throw new Error(
+        `The failsafe passcode must be at least ${DeskUnlock.MIN_PASSCODE} characters.`,
+      );
+    }
     const row = await DeskUnlock.current();
     await row.$query().patch({
       passcodeHash: await hashPassword(passcode),
@@ -136,6 +154,16 @@ export class DeskUnlock extends TimestampMixin(Model) {
    */
   static async bootstrap(fromEnv: string): Promise<boolean> {
     if (fromEnv.trim() === "" || (await DeskUnlock.hasPasscode())) {
+      return false;
+    }
+    if (fromEnv.trim().length < DeskUnlock.MIN_PASSCODE) {
+      // Said out loud and skipped, rather than thrown: refusing to boot
+      // over a weak optional failsafe would take the whole app down for
+      // something the passkey already covers. No passcode is set, so the
+      // gate falls back to the factors that are strong.
+      console.warn(
+        `desk-unlock: ADMIN_UNLOCK_PASSCODE is shorter than ${DeskUnlock.MIN_PASSCODE} characters and was ignored.`,
+      );
       return false;
     }
     await DeskUnlock.setPasscode(fromEnv.trim());
