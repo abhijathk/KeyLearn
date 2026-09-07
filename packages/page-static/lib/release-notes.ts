@@ -5,12 +5,37 @@ export type ReleaseNote = {
   readonly changes: readonly string[];
 };
 
-// Newest first — prepend new entries here. Mirrors CHANGELOG.md at the repo
-// root, which is the source document; keep the two in sync by hand. Kept as
+// Newest first — prepend new entries here. CHANGELOG.md at the repo root is
+// the source document and records everything; THIS list is the customer's
+// half of it — the features they can use and the bugs they would have
+// noticed, in their words. Internal work belongs in the changelog and not
+// here, so the two are kept in step rather than identical. Kept as
 // plain English rather than react-intl catalog entries deliberately: this is
 // fast-moving internal changelog copy, not the app's core translated
 // surface, and 54-locale translation churn on every release isn't worth it.
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
+  {
+    version: "02.00.00",
+    date: "2026-09-07T06:30:00Z",
+    changes: [
+      "You can now message us from inside KeyLearn. Open your account and go to Support: write to us, see our replies in one place, attach a screenshot, and tell us if a reply helped. Only a grown-up profile can write to us.",
+      "A help centre with answers to the questions we get most, so you can often find the answer straight away.",
+      "The bell in the top corner now tells you when we reply, or when something changes on a conversation you started.",
+      "Every learner can have their own reading voice. The voices are real and sound the same on every device — pick one for each learner and give it a name.",
+      "Your settings now follow you. Voice, theme, text size and accessibility settings move with the learner between devices instead of staying on one computer.",
+      "Two new kids boards: Rainbow, which teaches using colour, and a Round one. That makes five.",
+      "Text size now makes everything bigger, not just the writing, and there are five sizes to choose from instead of three.",
+      "KeyLearn is now fully translated into all 54 languages, including everything new.",
+      "Setting up two-step sign-in is simpler — it opens straight on the QR code.",
+      "Files you attach when you write to us are checked for viruses before we keep them.",
+      "Fixed: signing up could fail partway through and leave you without an account.",
+      "Fixed: on some Mac keyboards, one key never lit up when you pressed it.",
+      "Fixed: the kids world used more and more memory the longer it was open, which slowly made it stutter.",
+      "Fixed: changing a learner's reading voice sometimes kept the old one for a while.",
+      "Fixed: signed-out visitors were shown keyboard colours only account holders can use.",
+      "Fixed: on a phone or another narrow screen you now get a clear message instead of a broken layout.",
+    ],
+  },
   {
     version: "01.03.00",
     date: "2026-08-15T09:05:00Z",

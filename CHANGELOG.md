@@ -5,6 +5,63 @@ document for the in-app release notes shown from the About page — keep
 `packages/page-static/lib/release-notes.ts` in sync whenever this file
 changes.
 
+## 02.00.00 — 2026-09-07 06:30 UTC
+
+A major version: support moved inside the app, every learner can have
+their own voice, what they set follows them between devices, and all 54
+languages are complete.
+
+### Added
+
+- **Support inside KeyLearn.** A Support pane in the account window:
+  write to us, read replies in a conversation of your own, attach a
+  screenshot, and say whether a reply helped. Only a grown-up profile can
+  write to us. Tickets are forwarded to the support desk and replies come
+  back to the same conversation.
+- **A help centre**, publishing the same articles the support team
+  answers from.
+- **Notifications** for the things a learner cannot discover on their
+  own — a reply, a change to a conversation, a notice from us — carried
+  on the header's bell.
+- **A reading voice per learner**: real neural voices, named, and the
+  same on every platform rather than whatever the browser offered.
+- **Two new kids boards** — Rainbow, which teaches with its colour, and a
+  Round one — bringing the set to five.
+- **Five text sizes** in place of three, scaling the whole app rather
+  than only body text.
+- **Virus scanning on support attachments.** Files are scanned before
+  they are stored; an unreachable scanner refuses the file rather than
+  keeping it unchecked.
+- Organisations, behind an invitation while the tier is finished: a
+  coordinator's desk, bulk invites, and learner and staff panes. The
+  public offering stays hidden until the tier ships.
+
+### Changed
+
+- **What a learner sets follows them.** Accessibility settings, voice,
+  theme and the rest are carried between devices instead of living in one
+  browser's storage.
+- **All 54 languages complete**, including the newest support and
+  settings text, and weekday names now inflect in the thirteen languages
+  that need it.
+- One grown-up PIN gate across the app; a clearer security reset; two-step
+  setup opens on the QR code rather than behind a second button.
+- Resolved is final — a later reply starts a new conversation rather than
+  reopening a closed one — and a learner can end their own conversation
+  whenever they want.
+- The header's icons, the keycaps' finish and the pointer trail were all
+  brought onto one set of rules.
+
+### Fixed
+
+- An account could deadlock on its own transaction while being created.
+- A star left with no words now counts as feedback, so the figures and
+  the page agree.
+- Multiplayer is genuinely closed by `MULTIPLAYER_ENABLED=false`, not
+  just hidden from the menu.
+- Real pages for a narrow screen and for an unreachable support desk,
+  instead of a broken layout or a bare error.
+
 ## 01.03.00 — 2026-08-15 09:05 UTC
 
 ### Added
