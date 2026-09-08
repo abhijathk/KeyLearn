@@ -219,6 +219,40 @@ function borrowClips(
   donor: { scene: THREE.Object3D; animations: THREE.AnimationClip[] },
   host: THREE.Object3D,
 ): THREE.AnimationClip[] {
+  // Rest orientations, host and donor, per bone.
+  //
+  // This is the part that makes a borrowed clip wearable. The two rigs have
+  // the same bone chain — Hips → Spine02 → Spine01 → Spine → neck → Head, the
+  // same limbs — but they are not posed the same way at rest: the Explorer's
+  // LeftArm rest quaternion matches the six-year-old's by 0.75, his Hips by
+  // 0.92. A rotation track holds a bone's ABSOLUTE local orientation, so
+  // playing the donor's keys on the host does not move the host the way the
+  // donor moved; it forces the host's bones into the DONOR's orientations.
+  // That is what tore the face and stretched the neck, and dropping the
+  // position tracks could not fix it because the rotations were the cause.
+  //
+  // So what transfers is the donor's change FROM ITS OWN REST, applied on top
+  // of the host's rest:  host = hostRest · (donorRest⁻¹ · donorKey).
+  // A donor bone standing at its rest pose then leaves the host at the host's
+  // rest pose, which is the property that makes this safe.
+  const restOf = (root: THREE.Object3D): Map<string, THREE.Quaternion> => {
+    const out = new Map<string, THREE.Quaternion>();
+    root.traverse((n) => {
+      if (n.name !== "") {
+        out.set(n.name, n.quaternion.clone());
+      }
+    });
+    return out;
+  };
+  const hostRest = restOf(host);
+  const donorRest = restOf(donor.scene);
+  const hostNames = new Set(hostRest.keys());
+
+  // Bone-unit conversion for the one translation that survives, the hips'.
+  // The Explorer is authored in centimetres with a 0.01 scale on his
+  // Armature, hips resting at 75.493; the six-year-old is in metres with hips
+  // at 0.720. Read from the two skeletons rather than written down, so it
+  // cannot go stale if either model is re-exported.
   const restY = (root: THREE.Object3D): number | null => {
     let y: number | null = null;
     root.traverse((n) => {
@@ -228,10 +262,6 @@ function borrowClips(
     });
     return y;
   };
-  const hostNames = new Set<string>();
-  host.traverse((n) => {
-    if (n.name !== "") hostNames.add(n.name);
-  });
   const hostHips = restY(host);
   const donorHips = restY(donor.scene);
   const factor =
@@ -262,13 +292,32 @@ function borrowClips(
       (track) =>
         !track.name.endsWith(".position") || /(^|\.)hips\./i.test(track.name),
     );
+    const delta = new THREE.Quaternion();
+    const key = new THREE.Quaternion();
     for (const track of clip.tracks) {
-      if (factor === 1 || !track.name.endsWith(".position")) {
-        continue;
-      }
-      const v = track.values;
-      for (let i = 0; i < v.length; i++) {
-        v[i] *= factor;
+      const bone = track.name.slice(0, track.name.lastIndexOf("."));
+      if (track.name.endsWith(".quaternion")) {
+        const hr = hostRest.get(bone);
+        const dr = donorRest.get(bone);
+        if (hr == null || dr == null) {
+          continue;
+        }
+        const inv = dr.clone().invert();
+        const v = track.values;
+        for (let i = 0; i < v.length; i += 4) {
+          key.set(v[i], v[i + 1], v[i + 2], v[i + 3]);
+          delta.copy(inv).multiply(key);
+          key.copy(hr).multiply(delta);
+          v[i] = key.x;
+          v[i + 1] = key.y;
+          v[i + 2] = key.z;
+          v[i + 3] = key.w;
+        }
+      } else if (factor !== 1 && track.name.endsWith(".position")) {
+        const v = track.values;
+        for (let i = 0; i < v.length; i++) {
+          v[i] *= factor;
+        }
       }
     }
     return clip;
