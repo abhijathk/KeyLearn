@@ -45,6 +45,7 @@ import {
   memo,
   type ReactNode,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useReducer,
   useRef,
@@ -1456,6 +1457,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const worldRef = useRef<KidsWorld | null>(null);
   const textInputRef = useRef<TextInput | null>(null);
   const passageRef = useRef("");
+  // The subtitle strip: the card that clips, the strip that slides, and the
+  // letter the slide is measured against.
+  const wordsViewRef = useRef<HTMLDivElement | null>(null);
+  const wordsTrackRef = useRef<HTMLSpanElement | null>(null);
+  const wordsCurRef = useRef<HTMLSpanElement | null>(null);
   const lastStampRef = useRef(0);
   const lastKeyAtRef = useRef(0);
   const missStreakRef = useRef(0);
@@ -2662,10 +2668,45 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // there is no jumpy per-word rebuild.
     worldRef.current?.setWord(use3dWord ? passage : "", pos);
   }, [use3dWord, passage, pos, loaded, landNonce]);
-  // A sliding window keeps the current letter in view — real lessons are far
-  // longer than the pane is wide.
-  const winStart = Math.max(0, pos - 12);
-  const winChars = [...passage].slice(winStart, winStart + 42);
+  // The whole passage is rendered and the strip is slid under the card, rather
+  // than re-slicing a character window each keystroke.
+  //
+  // The window came first and had to go: it shifted by one character per key,
+  // so the text jumped left at the same moment the transform below moved it
+  // right to compensate. The two cancel in the final position and not in the
+  // animation, which reads as a shudder on every keystroke. A passage is 9-16
+  // words for the kid bands and a few hundred characters at most in classic,
+  // so there is nothing to save by slicing it.
+  const passageChars = [...passage];
+  // Keep the letter being typed at a fixed spot near the left of the card, so
+  // what is coming stays visible. Layout effect, not effect: this runs before
+  // paint, so the strip is never shown at the previous keystroke's offset.
+  useLayoutEffect(() => {
+    const view = wordsViewRef.current;
+    const track = wordsTrackRef.current;
+    if (view == null || track == null) {
+      return;
+    }
+    const vw = view.clientWidth;
+    const tw = track.scrollWidth;
+    // Short enough to fit: leave it alone and let the card shrink around it,
+    // which is the look every passage under about eight words gets.
+    if (tw <= vw) {
+      track.style.transform = "translateX(0px)";
+      return;
+    }
+    const cur = wordsCurRef.current;
+    if (cur == null) {
+      return;
+    }
+    const centre = cur.offsetLeft + cur.offsetWidth / 2;
+    // Clamped at both ends so the strip never pulls away from the card edge
+    // and leaves a gap — at the start it sits flush left, at the end flush
+    // right, and only in between does the letter hold the anchor line.
+    const x = Math.min(0, Math.max(vw - tw, vw * 0.38 - centre));
+    track.style.transform = `translateX(${x}px)`;
+  }, [pos, passage, prefs.bigLetters, use3dWord, loaded]);
+
   const sessionTotal = prefs.timerMin * 60;
   // During a sitting the plan decides, not the saved preference — and for the
   // youngest band the plan leaves the board on, because their certificate is
@@ -3081,12 +3122,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               </div>
             </div>
             {!use3dWord && (
-              <div className={styles.words}>
-                {winChars.map((ch, i) => {
-                  const at = winStart + i;
-                  return (
+              <div className={styles.words} ref={wordsViewRef}>
+                <span className={styles.wordsTrack} ref={wordsTrackRef}>
+                  {passageChars.map((ch, at) => (
                     <span
                       key={at}
+                      ref={at === pos ? wordsCurRef : undefined}
                       className={
                         at < pos
                           ? styles.hit
@@ -3095,19 +3136,18 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                             : undefined
                       }
                     >
-                      {/* A real space, not a non-breaking one. The gaps used to be
-                      U+00A0, so the line had no break opportunity at any word
-                      and simply ran off the edge of the card — and once it
-                      could wrap, the only place left to break was around the
-                      highlighted letter, which split the word being typed. */}
+                      {/* A real space, not U+00A0. The strip is `nowrap`, so
+                      neither one can break a line any more — but a real space
+                      is what the child is being asked to type, and it is what
+                      the measurement above walks over. */}
                       {ch === " "
                         ? " "
                         : prefs.bigLetters
                           ? ch.toUpperCase()
                           : ch}
                     </span>
-                  );
-                })}
+                  ))}
+                </span>
               </div>
             )}
             <div
