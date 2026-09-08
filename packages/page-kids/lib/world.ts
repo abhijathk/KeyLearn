@@ -306,8 +306,24 @@ function borrowClips(
         const v = track.values;
         for (let i = 0; i < v.length; i += 4) {
           key.set(v[i], v[i + 1], v[i + 2], v[i + 3]);
-          delta.copy(inv).multiply(key);
-          key.copy(hr).multiply(delta);
+          // Parent space, not the bone's own.
+          //
+          // A rotation track is the bone's orientation RELATIVE TO ITS
+          // PARENT, so the donor's movement is the rotation carrying its rest
+          // to its key in that parent frame: donorKey · donorRest⁻¹. Applied
+          // to the host's rest, it reproduces the same swing about the same
+          // axis.
+          //
+          // Composed the other way round — hostRest · (donorRest⁻¹ · donorKey)
+          // — the delta is taken in the BONE's own frame. That still lands
+          // every bone on its own rest when the donor is at rest, so the
+          // character stands correctly and the face and neck are right; but
+          // the two rigs' local axes point differently (their LeftArm rests
+          // match by only 0.75), so every rotation swung about the wrong axis
+          // and the motion read as off while the pose looked fine. Which is
+          // exactly the symptom that followed.
+          delta.copy(key).multiply(inv);
+          key.copy(delta).multiply(hr);
           v[i] = key.x;
           v[i + 1] = key.y;
           v[i + 2] = key.z;
