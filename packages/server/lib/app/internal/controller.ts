@@ -16,10 +16,12 @@ import {
 } from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
+import { certificateNumber } from "@keylearn/certificate";
 import { DataDir, Env, isAdminEmail, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
   AdCampaign,
+  Certificate,
   checkUnlockPasscode,
   Credential,
   LearnerResponse,
@@ -60,6 +62,7 @@ import { refreshStaffCache } from "../auth/staff-cache.ts";
 import { resolveTotpSecret } from "../auth/totp-crypto.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
+import { numberingKey } from "../certificate/key.ts";
 import { Mailer } from "../mail/index.ts";
 import { criteriaVersion } from "../site-config/criteria-version.ts";
 import { impactCounts } from "../site-config/impact.ts";
@@ -233,6 +236,58 @@ function readVisibleSettings(
   say("reducedMotion", blob["reducedMotion"] ?? blob["motion.reduced"]);
   say("largeText", blob["largeText"] ?? blob["a11y.largeText"]);
   return Object.keys(out).length === 0 ? null : out;
+}
+
+/**
+ * Whether this learner has moved any accessibility switch off how the app
+ * ships — the same question `a11yAdapted()` answers in the browser, asked
+ * of the durable copy instead of localStorage.
+ *
+ * The desk needs the fact, not the settings: a staff member should be able
+ * to see that a learner is adapted without reading which adaptations they
+ * need, which is health-adjacent and none of support's business. So this
+ * returns a boolean and the caller says nothing more.
+ *
+ * The rule is duplicated rather than imported because the browser copy
+ * lives in a package that reaches for `localStorage` at module scope. If
+ * the switch set grows, both copies move together — the drift shows up as
+ * a learner who is adapted and not marked, which is the safe direction.
+ */
+async function a11yAdapted(file: string): Promise<boolean> {
+  let prefs: Record<string, unknown>;
+  try {
+    const parsed = JSON.parse(await readFile(file, "utf8")) as unknown;
+    if (typeof parsed !== "object" || parsed == null) {
+      return false;
+    }
+    prefs = parsed as Record<string, unknown>;
+  } catch {
+    // No file is the ordinary case: a learner who has never opened the
+    // accessibility page has nothing stored, and that is not adapted.
+    return false;
+  }
+  const on = (key: string) => prefs[key] === true;
+  const off = (key: string) => prefs[key] === false;
+  const num = (key: string, over: number) =>
+    typeof prefs[key] === "number" && (prefs[key] as number) > over;
+  return (
+    (prefs["motion"] != null && prefs["motion"] !== "system") ||
+    (prefs["typeface"] != null && prefs["typeface"] !== "default") ||
+    (prefs["targets"] != null && prefs["targets"] !== "default") ||
+    on("calm") ||
+    off("chords") ||
+    num("bounceMs", 0) ||
+    on("cues") ||
+    on("fingerMarks") ||
+    on("captions") ||
+    on("predictable") ||
+    num("letterSpacing", 0) ||
+    num("lineHeight", 1.2) ||
+    on("plain") ||
+    off("scores") ||
+    on("streakGrace") ||
+    off("timers")
+  );
 }
 
 /**
@@ -1929,6 +1984,43 @@ export class Controller {
     );
     const lastPractised = new Map(practised);
 
+    // Which learners have accessibility switches on. A boolean each, from
+    // the durable per-profile file — never which switches, and never why.
+    const adapted = new Map(
+      await Promise.all(
+        profiles.map(
+          async (p) =>
+            [
+              p.id!,
+              await a11yAdapted(this.dataDir.a11yPrefsFile(id, p.id!)),
+            ] as const,
+        ),
+      ),
+    );
+
+    // The certificates each learner holds: which paper, at what level, in
+    // which language, and its number, so a "my certificate says…" ticket
+    // can be matched to the document. The speed and accuracy printed on
+    // it stay behind: support does not see practice figures, and a
+    // certificate is the one place those figures are written down.
+    const key = numberingKey(this.dataDir.dataPath());
+    const certificates = new Map<number, unknown[]>();
+    for (const c of await Certificate.query()
+      .where("userId", id)
+      .orderBy("createdAt", "asc")) {
+      const list = certificates.get(c.profileId!) ?? [];
+      list.push({
+        number: certificateNumber(c.sequence!, key),
+        kind: c.kind,
+        audience: c.audience,
+        level: c.level,
+        sheet: c.sheet,
+        language: c.language,
+        issuedAt: new Date(c.createdAt!).toISOString(),
+      });
+      certificates.set(c.profileId!, list);
+    }
+
     // Feedback cards and poll answers they left. The desk shows these
     // because a person who has already told you what they think of the
     // product should not be asked again in a support reply.
@@ -1951,6 +2043,9 @@ export class Controller {
         // agent has any business seeing.
         settings: readVisibleSettings(p.prefs ?? null),
         lastPractisedAt: lastPractised.get(p.id!)?.toISOString() ?? null,
+        // The fact, not the adaptations — see a11yAdapted above.
+        accessibility: adapted.get(p.id!) ?? false,
+        certificates: certificates.get(p.id!) ?? [],
       })),
       feedback: responses
         .filter((r) => r.stars != null || (r.text ?? "") !== "")
@@ -2232,6 +2327,8 @@ type AccountStats = {
   readonly signupTrend: readonly number[];
   readonly signupTrendToday: readonly number[];
   readonly signupTrendAllTime: readonly number[];
+  /** One signup count per day for the last 365 days, oldest first. */
+  readonly signupTrendYear: readonly number[];
   readonly byCountry: readonly {
     readonly country: string;
     readonly count: number;
@@ -2365,6 +2462,30 @@ async function computeAccountStats(): Promise<AccountStats> {
     const monthKey = new Date(u.createdAt!).toISOString().slice(0, 7);
     byMonth.set(monthKey, (byMonth.get(monthKey) ?? 0) + 1);
   }
+  /**
+   * One count per day for the last year, for the desk's signup calendar.
+   *
+   * Built from `allUsers`, which is already in memory for the monthly series
+   * and the inactive/deletion lists below — a year of daily buckets is a walk
+   * over a list this read has already paid for, not a second query.
+   *
+   * UTC days, matching every other bucket in this function. A calendar drawn
+   * in the reader's zone would disagree with the monthly totals beside it at
+   * every month boundary, which is a worse problem than a cell that turns
+   * over a few hours early for somebody in Sydney.
+   */
+  const byDayYear = new Map<string, number>();
+  for (const u of allUsers) {
+    const dayKey = new Date(u.createdAt!).toISOString().slice(0, 10);
+    byDayYear.set(dayKey, (byDayYear.get(dayKey) ?? 0) + 1);
+  }
+  const signupTrendYear: number[] = [];
+  for (let i = 364; i >= 0; i--) {
+    signupTrendYear.push(
+      byDayYear.get(new Date(now - i * DAY_MS).toISOString().slice(0, 10)) ?? 0,
+    );
+  }
+
   const signupTrendAllTime: number[] = [];
   const firstMonth = new Date(
     firstUser?.createdAt != null
@@ -2628,6 +2749,7 @@ async function computeAccountStats(): Promise<AccountStats> {
     signupTrend,
     signupTrendToday,
     signupTrendAllTime,
+    signupTrendYear,
     byCountry,
     byLanguage,
     bySignupMethod,
