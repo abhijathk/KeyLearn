@@ -131,6 +131,65 @@ const qMul = (a, b) => [
   a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
 ];
 const qInv = (q) => [-q[0], -q[1], -q[2], q[3]];
+const qRotate = (q, v) => {
+  const [x, y, z, w] = q;
+  const ix = w * v[0] + y * v[2] - z * v[1];
+  const iy = w * v[1] + z * v[0] - x * v[2];
+  const iz = w * v[2] + x * v[1] - y * v[0];
+  const iw = -x * v[0] - y * v[1] - z * v[2];
+  return [
+    ix * w + iw * -x + iy * -z - iz * -y,
+    iy * w + iw * -y + iz * -x - ix * -z,
+    iz * w + iw * -z + ix * -y - iy * -x,
+  ];
+};
+const qSlerp = (a, b, t) => {
+  let d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+  let e = b;
+  if (d < 0) { e = [-b[0], -b[1], -b[2], -b[3]]; d = -d; }
+  if (d > 0.9995) {
+    const r = [
+      a[0] + (e[0] - a[0]) * t, a[1] + (e[1] - a[1]) * t,
+      a[2] + (e[2] - a[2]) * t, a[3] + (e[3] - a[3]) * t,
+    ];
+    const n = Math.hypot(r[0], r[1], r[2], r[3]) || 1;
+    return [r[0] / n, r[1] / n, r[2] / n, r[3] / n];
+  }
+  const th = Math.acos(d);
+  const si = Math.sin(th);
+  const wa = Math.sin((1 - t) * th) / si;
+  const wb = Math.sin(t * th) / si;
+  return [
+    a[0] * wa + e[0] * wb, a[1] * wa + e[1] * wb,
+    a[2] * wa + e[2] * wb, a[3] * wa + e[3] * wb,
+  ];
+};
+
+/** Parent index per node, and a root-first ordering to accumulate along. */
+function hierarchy(json) {
+  const parent = new Array(json.nodes.length).fill(-1);
+  json.nodes.forEach((n, i) => (n.children ?? []).forEach((c) => (parent[c] = i)));
+  const order = [];
+  const seen = new Set();
+  const visit = (i) => {
+    if (seen.has(i)) return;
+    if (parent[i] !== -1) visit(parent[i]);
+    seen.add(i);
+    order.push(i);
+  };
+  json.nodes.forEach((_, i) => visit(i));
+  return { parent, order };
+}
+
+/** World rest rotation per node, accumulated down the tree. */
+function worldRest(json, h) {
+  const out = new Array(json.nodes.length);
+  for (const i of h.order) {
+    const local = json.nodes[i].rotation ?? [0, 0, 0, 1];
+    out[i] = h.parent[i] === -1 ? local : qMul(out[h.parent[i]], local);
+  }
+  return out;
+}
 
 const [, , hostPath, donorPath, outPath, ...keep] = process.argv;
 if (!hostPath || !donorPath || !outPath) {
@@ -189,44 +248,142 @@ const kept = (host.json.animations ?? []).filter((a) => keep.includes(a.name));
 const rebuilt = [];
 const report = [];
 
+// The rigs, as trees rather than as flat node lists. Retargeting is a
+// hierarchical operation: a bone's orientation only means anything relative
+// to where its parent ended up.
+const hostH = hierarchy(host.json);
+const donorH = hierarchy(donor.json);
+const hostWorldRest = worldRest(host.json, hostH);
+const donorWorldRest = worldRest(donor.json, donorH);
+const donorIndex = new Map();
+donor.json.nodes.forEach((n, i) => {
+  if (n.name) donorIndex.set(n.name, i);
+});
+
+const SAMPLE_FPS = 30;
+
 for (const anim of donor.json.animations ?? []) {
+  // Every rotation track, resampled onto one shared timeline.
+  //
+  // A whole pose has to be evaluatable at a single instant to walk it down
+  // the tree, and the donor's tracks do not necessarily share keyframe times.
+  // Resampling at a fixed rate makes every bone answerable at the same
+  // moment, which is what the world-space transfer below needs.
+  const tracks = new Map();
+  let hipsTrack = null;
+  let duration = 0;
+  for (const ch of anim.channels) {
+    const s2 = anim.samplers[ch.sampler];
+    const input = await readAccessor(donor.json, donor.bin, s2.input, donorCache);
+    const output = await readAccessor(donor.json, donor.bin, s2.output, donorCache);
+    duration = Math.max(duration, input.values[input.count - 1] ?? 0);
+    const name = donor.json.nodes[ch.target.node]?.name;
+    if (name == null) continue;
+    if (ch.target.path === "rotation") {
+      tracks.set(name, { times: input.values, values: output.values });
+    } else if (ch.target.path === "translation" && /^hips$/i.test(name)) {
+      hipsTrack = { times: input.values, values: output.values };
+    }
+  }
+  const sampleQ = (track, t) => {
+    const { times, values } = track;
+    let i = 0;
+    while (i < times.length - 1 && times[i + 1] < t) i++;
+    const t0 = times[i];
+    const t1 = times[Math.min(i + 1, times.length - 1)];
+    const a = [values[i * 4], values[i * 4 + 1], values[i * 4 + 2], values[i * 4 + 3]];
+    if (t1 <= t0) return a;
+    const j = Math.min(i + 1, times.length - 1);
+    const b = [values[j * 4], values[j * 4 + 1], values[j * 4 + 2], values[j * 4 + 3]];
+    return qSlerp(a, b, Math.max(0, Math.min(1, (t - t0) / (t1 - t0))));
+  };
+  const sampleV = (track, t) => {
+    const { times, values } = track;
+    let i = 0;
+    while (i < times.length - 1 && times[i + 1] < t) i++;
+    const j = Math.min(i + 1, times.length - 1);
+    const t0 = times[i];
+    const t1 = times[j];
+    const f = t1 > t0 ? Math.max(0, Math.min(1, (t - t0) / (t1 - t0))) : 0;
+    return [0, 1, 2].map((c) => values[i * 3 + c] + (values[j * 3 + c] - values[i * 3 + c]) * f);
+  };
+
+  const frames = Math.max(2, Math.round(duration * SAMPLE_FPS) + 1);
+  const times = Float32Array.from({ length: frames }, (_, i) => (duration * i) / (frames - 1));
+
+  // One output rotation track per host bone that the donor drives.
+  const outRot = new Map();
+  const outHips = hipsTrack ? new Float32Array(frames * 3) : null;
+
+  for (let f = 0; f < frames; f++) {
+    const t = times[f];
+    // Donor world rotations at this instant, root first.
+    const donorWorld = new Array(donor.json.nodes.length);
+    for (const i of donorH.order) {
+      const name = donor.json.nodes[i].name;
+      const local = name != null && tracks.has(name)
+        ? sampleQ(tracks.get(name), t)
+        : donor.json.nodes[i].rotation ?? [0, 0, 0, 1];
+      donorWorld[i] = donorH.parent[i] === -1 ? local : qMul(donorWorld[donorH.parent[i]], local);
+    }
+    // Host world rotations, derived from the donor's, then written back down
+    // into host-local — which is what a glTF rotation track actually stores.
+    const hostWorld = new Array(host.json.nodes.length);
+    for (const i of hostH.order) {
+      const name = host.json.nodes[i].name;
+      const d = name != null ? donorIndex.get(name) : undefined;
+      if (d === undefined) {
+        const local = host.json.nodes[i].rotation ?? [0, 0, 0, 1];
+        hostWorld[i] = hostH.parent[i] === -1 ? local : qMul(hostWorld[hostH.parent[i]], local);
+        continue;
+      }
+      // The donor's world movement, re-expressed on the host's rest frame:
+      //   Wh = Wd · Ad⁻¹ · Bh
+      // Ad and Bh are the two rigs' WORLD rest orientations for this bone, so
+      // this cancels the donor's rest frame and substitutes the host's. Doing
+      // the same with local rotations only is what kept coming out wrong: it
+      // silently assumes both parents ended up pointing the same way.
+      const w = qMul(qMul(donorWorld[d], qInv(donorWorldRest[d])), hostWorldRest[i]);
+      hostWorld[i] = w;
+      const parentW = hostH.parent[i] === -1 ? [0, 0, 0, 1] : hostWorld[hostH.parent[i]];
+      const local = qMul(qInv(parentW), w);
+      if (!outRot.has(i)) outRot.set(i, new Float32Array(frames * 4));
+      const arr = outRot.get(i);
+      arr[f * 4] = local[0]; arr[f * 4 + 1] = local[1];
+      arr[f * 4 + 2] = local[2]; arr[f * 4 + 3] = local[3];
+    }
+    if (hipsTrack && outHips) {
+      // Scaled into host units, and rotated out of the donor's root frame
+      // into the host's, so a step goes the way the character faces.
+      const hipsHost = [...hostH.order].find((i) => /^hips$/i.test(host.json.nodes[i].name ?? ""));
+      const hipsDonor = donorIndex.get(host.json.nodes[hipsHost].name);
+      const rootFix = qMul(hostWorldRest[hostH.parent[hipsHost]] ?? [0, 0, 0, 1],
+        qInv(donorWorldRest[donorH.parent[hipsDonor]] ?? [0, 0, 0, 1]));
+      const v = sampleV(hipsTrack, t).map((c) => c * factor);
+      const r = qRotate(rootFix, v);
+      outHips[f * 3] = r[0]; outHips[f * 3 + 1] = r[1]; outHips[f * 3 + 2] = r[2];
+    }
+  }
+
   const samplers = [];
   const channels = [];
-  let dropped = 0;
-  for (const ch of anim.channels) {
-    const name = donor.json.nodes[ch.target.node]?.name;
-    const target = name != null ? nodeIndex.get(name) : undefined;
-    const path = ch.target.path;
-    if (target === undefined || path === "scale") { dropped++; continue; }
-    if (path === "translation" && !/^hips$/i.test(name)) { dropped++; continue; }
-    const s = anim.samplers[ch.sampler];
-    const input = await readAccessor(donor.json, donor.bin, s.input, donorCache);
-    const output = await readAccessor(donor.json, donor.bin, s.output, donorCache);
-    const values = Float32Array.from(output.values);
-    if (path === "rotation") {
-      const hr = hostRest.rot.get(name);
-      const dr = donorRest.rot.get(name);
-      if (hr == null || dr == null) { dropped++; continue; }
-      const inv = qInv(dr);
-      for (let i = 0; i < values.length; i += 4) {
-        const k = [values[i], values[i + 1], values[i + 2], values[i + 3]];
-        const r = qMul(qMul(k, inv), hr);
-        values[i] = r[0]; values[i + 1] = r[1]; values[i + 2] = r[2]; values[i + 3] = r[3];
-      }
-    } else if (path === "translation") {
-      for (let i = 0; i < values.length; i++) values[i] *= factor;
-    }
-    const times = Float32Array.from(input.values);
-    const inIdx = addAccessor(times, "SCALAR", input.count, {
-      min: [Math.min(...times)], max: [Math.max(...times)],
-    });
-    const outIdx = addAccessor(values, output.type, output.count);
-    samplers.push({ input: inIdx, output: outIdx, interpolation: s.interpolation ?? "LINEAR" });
-    channels.push({ sampler: samplers.length - 1, target: { node: target, path } });
+  const timeIdx = addAccessor(Float32Array.from(times), "SCALAR", frames, {
+    min: [times[0]], max: [times[frames - 1]],
+  });
+  for (const [nodeI, values] of outRot) {
+    const outIdx = addAccessor(values, "VEC4", frames);
+    samplers.push({ input: timeIdx, output: outIdx, interpolation: "LINEAR" });
+    channels.push({ sampler: samplers.length - 1, target: { node: nodeI, path: "rotation" } });
+  }
+  if (outHips) {
+    const hipsHost = [...hostH.order].find((i) => /^hips$/i.test(host.json.nodes[i].name ?? ""));
+    const outIdx = addAccessor(outHips, "VEC3", frames);
+    samplers.push({ input: timeIdx, output: outIdx, interpolation: "LINEAR" });
+    channels.push({ sampler: samplers.length - 1, target: { node: hipsHost, path: "translation" } });
   }
   if (channels.length === 0) { report.push(`  EMPTY  ${anim.name}`); continue; }
   rebuilt.push({ name: anim.name, samplers, channels });
-  report.push(`  ${anim.name.padEnd(24)} ${String(channels.length).padStart(3)} ch${dropped ? `, ${dropped} dropped` : ""}`);
+  report.push(`  ${anim.name.padEnd(24)} ${String(channels.length).padStart(3)} ch, ${frames} frames @${SAMPLE_FPS}fps, ${duration.toFixed(2)}s`);
 }
 
 host.json.animations = [...rebuilt, ...kept];
