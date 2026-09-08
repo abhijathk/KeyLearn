@@ -1544,6 +1544,29 @@ export class Controller {
     // They are already in the conversation — they wrote the message that
     // triggered this — so nothing is lost by staying quiet. A person has
     // been paged and is on the thread either way.
+    // How this reply actually reaches them, reported back to the desk.
+    //
+    // The desk had no way of knowing and was telling staff "they get this by
+    // email" for everyone — untrue for every signed-in customer, who gets an
+    // in-app notification and no email at all (see #notifyReply's early
+    // return). A staffer deciding whether to wait for an answer was reading a
+    // guess dressed as a fact.
+    //
+    // The CHANNEL is known here without doing any of the work — it follows
+    // from whether the ticket has an account behind it — so it is computed
+    // and returned synchronously. The send itself stays fire-and-forget: a
+    // notification or an SMTP round-trip must never delay or fail the desk's
+    // delivery call, which is the whole reason for the `void` below.
+    //
+    // What this does NOT report is whether the send SUCCEEDED. That answer
+    // does not exist yet when this responds, and reporting it would mean
+    // waiting on the mailer. It needs the async tick channel instead.
+    const notifiedVia =
+      input.kind === "crisis"
+        ? "none"
+        : ticket.userId != null
+          ? "app"
+          : "email";
     if (input.kind !== "crisis") {
       void this.#notifyReply(
         ticket,
@@ -1552,7 +1575,7 @@ export class Controller {
         input.sender === "agent",
       );
     }
-    ctx.response.body = { ok: true, status: updated.status };
+    ctx.response.body = { ok: true, status: updated.status, notifiedVia };
   }
 
   /**
