@@ -191,7 +191,19 @@ function worldRest(json, h) {
   return out;
 }
 
-const [, , hostPath, donorPath, outPath, ...keep] = process.argv;
+const [, , hostPath, donorPath, outPath, ...rest] = process.argv;
+// `--host-idle=NAME` keeps the HOST's own standing clip instead of the
+// donor's, renamed to `Idle`.
+//
+// The donor tucks its hands behind its back, and measured on this host that
+// puts them at z -0.077 against a torso whose back edge is -0.15: inside the
+// body, invisible. No rotation of the upper arm and forearm together, to 40°
+// on any axis, gets them clear — the arms are too short to reach past his own
+// chest. His own idle rests them at +0.23, plainly visible, because it was
+// authored for his reach.
+const hostIdleArg = rest.find((a) => a.startsWith("--host-idle="));
+const hostIdleName = hostIdleArg?.slice("--host-idle=".length) ?? null;
+const keep = rest.filter((a) => !a.startsWith("--"));
 if (!hostPath || !donorPath || !outPath) {
   console.error("usage: kids-bake-clips.mjs <host.glb> <donor.glb> <out.glb> [clipToKeep...]");
   process.exit(2);
@@ -263,6 +275,10 @@ donor.json.nodes.forEach((n, i) => {
 const SAMPLE_FPS = 30;
 
 for (const anim of donor.json.animations ?? []) {
+  if (hostIdleName != null && anim.name === "Idle") {
+    report.push(`  ${"Idle".padEnd(24)} skipped — host keeps its own`);
+    continue;
+  }
   // Every rotation track, resampled onto one shared timeline.
   //
   // A whole pose has to be evaluatable at a single instant to walk it down
@@ -386,7 +402,27 @@ for (const anim of donor.json.animations ?? []) {
   report.push(`  ${anim.name.padEnd(24)} ${String(channels.length).padStart(3)} ch, ${frames} frames @${SAMPLE_FPS}fps, ${duration.toFixed(2)}s`);
 }
 
-host.json.animations = [...rebuilt, ...kept];
+// The host's own standing clip goes FIRST and takes the name `Idle`.
+//
+// Both matter. The world finds the idle with /idle|stand/ and takes the first
+// match, and `Crouch_Idle` matches that too — so a standing clip left under
+// its Meshy name of `Idle_3`, sitting after the crouch in the list, would
+// leave the character crouching whenever it stood still.
+const hostIdle = hostIdleName != null
+  ? (host.json.animations ?? []).find((a) => a.name === hostIdleName)
+  : undefined;
+if (hostIdleName != null && hostIdle == null) {
+  throw new Error(`--host-idle=${hostIdleName}: no such clip on the host`);
+}
+if (hostIdle != null) {
+  hostIdle.name = "Idle";
+  report.push(`  ${hostIdleName.padEnd(24)} kept from host as "Idle", placed first`);
+}
+host.json.animations = [
+  ...(hostIdle ? [hostIdle] : []),
+  ...rebuilt,
+  ...kept.filter((a) => a !== hostIdle),
+];
 host.json.buffers[0].byteLength = length;
 
 const jsonBuf = Buffer.from(JSON.stringify(host.json), "utf8");
