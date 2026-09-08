@@ -186,160 +186,25 @@ function withDeadline<T>(work: Promise<T>, url: string): Promise<T> {
  * these so its feet match the ground it covers.
  */
 /**
- * Characters that wear another character's animation, host → donor.
+ * Models whose clips ARE the Explorer's, baked in by
+ * `scripts/kids-bake-clips.mjs`.
  *
- * The six-year-old's own clips were rejected: his crouch, his cross-legged
- * sit, his walk and his run all read wrong, and he never celebrated at the
- * flag. Rather than tune four animations and a bug, he wears the
- * ten-year-old's whole set — which is also the set the trail's travel speed
- * was tuned against, so his legs and the ground agree by construction.
+ * The six-year-old's own animation was rejected, so he ships wearing the
+ * ten-year-old's — retargeted offline through each rig's rest pose, since the
+ * two share a bone chain and neither their units nor their rest orientations.
+ * The corrections below are solved against those clips, so they follow the
+ * clips rather than the character.
  */
-const CLIP_DONOR: Readonly<Record<string, string>> = {
-  Explorer6: "Explorer",
-};
+const WEARS_EXPLORER_CLIPS: ReadonlySet<string> = new Set([
+  "Explorer",
+  "Explorer6",
+]);
 
 /**
- * One rig's clips, made safe to play on another.
- *
- * Bone NAMES are all these two rigs share. Their units are not: the
- * ten-year-old is authored in centimetres with a 0.01 scale on his Armature,
- * hips resting at 75.493, while the six-year-old is in metres with no
- * armature scale and hips at 0.720. Rotation is unitless and carries over
- * untouched; POSITION is not, and played raw it would throw him a hundred
- * times too far on the first step.
- *
- * The factor is read from the two skeletons at runtime rather than written
- * down, so it stays true if either model is re-exported — which is exactly
- * the kind of number that goes stale silently.
- *
- * Tracks naming a bone the host does not have are dropped rather than left to
- * fail at bind time.
+ * The gait cycle lengths the trail's travel speed was tuned against — the
+ * Explorer's own Walk and Run. Every other character's gait is retimed to
+ * these so its feet match the ground it covers.
  */
-function borrowClips(
-  donor: { scene: THREE.Object3D; animations: THREE.AnimationClip[] },
-  host: THREE.Object3D,
-): THREE.AnimationClip[] {
-  // Rest orientations, host and donor, per bone.
-  //
-  // This is the part that makes a borrowed clip wearable. The two rigs have
-  // the same bone chain — Hips → Spine02 → Spine01 → Spine → neck → Head, the
-  // same limbs — but they are not posed the same way at rest: the Explorer's
-  // LeftArm rest quaternion matches the six-year-old's by 0.75, his Hips by
-  // 0.92. A rotation track holds a bone's ABSOLUTE local orientation, so
-  // playing the donor's keys on the host does not move the host the way the
-  // donor moved; it forces the host's bones into the DONOR's orientations.
-  // That is what tore the face and stretched the neck, and dropping the
-  // position tracks could not fix it because the rotations were the cause.
-  //
-  // So what transfers is the donor's change FROM ITS OWN REST, applied on top
-  // of the host's rest:  host = hostRest · (donorRest⁻¹ · donorKey).
-  // A donor bone standing at its rest pose then leaves the host at the host's
-  // rest pose, which is the property that makes this safe.
-  const restOf = (root: THREE.Object3D): Map<string, THREE.Quaternion> => {
-    const out = new Map<string, THREE.Quaternion>();
-    root.traverse((n) => {
-      if (n.name !== "") {
-        out.set(n.name, n.quaternion.clone());
-      }
-    });
-    return out;
-  };
-  const hostRest = restOf(host);
-  const donorRest = restOf(donor.scene);
-  const hostNames = new Set(hostRest.keys());
-
-  // Bone-unit conversion for the one translation that survives, the hips'.
-  // The Explorer is authored in centimetres with a 0.01 scale on his
-  // Armature, hips resting at 75.493; the six-year-old is in metres with hips
-  // at 0.720. Read from the two skeletons rather than written down, so it
-  // cannot go stale if either model is re-exported.
-  const restY = (root: THREE.Object3D): number | null => {
-    let y: number | null = null;
-    root.traverse((n) => {
-      if (y == null && /^hips$/i.test(n.name)) {
-        y = n.position.y;
-      }
-    });
-    return y;
-  };
-  const hostHips = restY(host);
-  const donorHips = restY(donor.scene);
-  const factor =
-    hostHips != null && donorHips != null && donorHips !== 0
-      ? hostHips / donorHips
-      : 1;
-
-  return donor.animations.map((source) => {
-    const clip = source.clone();
-    clip.tracks = clip.tracks.filter((track) =>
-      hostNames.has(track.name.slice(0, track.name.lastIndexOf("."))),
-    );
-    // ROTATION retargets; TRANSLATION mostly does not.
-    //
-    // A bone's translation is its length — where it sits relative to its
-    // parent. Copying the donor's translations onto the host therefore
-    // rebuilds the host's skeleton out of the donor's proportions, and the
-    // six-year-old came back with a stretched neck and a pulled-apart face.
-    // He is not a smaller version of the ten-year-old: his head is larger and
-    // his neck shorter, which is what makes him read as six.
-    //
-    // So every bone keeps its own rest position and takes only the donor's
-    // rotation. The single exception is the hips, whose translation is not a
-    // bone length but the character's own movement through the clip — a
-    // crouch dropping, a jump rising — and that IS wanted, scaled into the
-    // host's units.
-    clip.tracks = clip.tracks.filter(
-      (track) =>
-        !track.name.endsWith(".position") || /(^|\.)hips\./i.test(track.name),
-    );
-    const delta = new THREE.Quaternion();
-    const key = new THREE.Quaternion();
-    for (const track of clip.tracks) {
-      const bone = track.name.slice(0, track.name.lastIndexOf("."));
-      if (track.name.endsWith(".quaternion")) {
-        const hr = hostRest.get(bone);
-        const dr = donorRest.get(bone);
-        if (hr == null || dr == null) {
-          continue;
-        }
-        const inv = dr.clone().invert();
-        const v = track.values;
-        for (let i = 0; i < v.length; i += 4) {
-          key.set(v[i], v[i + 1], v[i + 2], v[i + 3]);
-          // Parent space, not the bone's own.
-          //
-          // A rotation track is the bone's orientation RELATIVE TO ITS
-          // PARENT, so the donor's movement is the rotation carrying its rest
-          // to its key in that parent frame: donorKey · donorRest⁻¹. Applied
-          // to the host's rest, it reproduces the same swing about the same
-          // axis.
-          //
-          // Composed the other way round — hostRest · (donorRest⁻¹ · donorKey)
-          // — the delta is taken in the BONE's own frame. That still lands
-          // every bone on its own rest when the donor is at rest, so the
-          // character stands correctly and the face and neck are right; but
-          // the two rigs' local axes point differently (their LeftArm rests
-          // match by only 0.75), so every rotation swung about the wrong axis
-          // and the motion read as off while the pose looked fine. Which is
-          // exactly the symptom that followed.
-          delta.copy(key).multiply(inv);
-          key.copy(delta).multiply(hr);
-          v[i] = key.x;
-          v[i + 1] = key.y;
-          v[i + 2] = key.z;
-          v[i + 3] = key.w;
-        }
-      } else if (factor !== 1 && track.name.endsWith(".position")) {
-        const v = track.values;
-        for (let i = 0; i < v.length; i++) {
-          v[i] *= factor;
-        }
-      }
-    }
-    return clip;
-  });
-}
-
 const TUNED_WALK_SECONDS = 1.03;
 const TUNED_RUN_SECONDS = 0.63;
 
@@ -1846,11 +1711,10 @@ export function createKidsWorld(
     // Gated on where the CLIP came from, not on who is wearing it. The
     // correction was solved against the Explorer's sit; a character borrowing
     // that sit needs it too, and a character with its own does not.
-    const fixSit =
-      (CLIP_DONOR[name] ?? name) === "Explorer"
-        ? (ramp: "full" | "in" | "out") => (c: THREE.AnimationClip) =>
-            correctSittingArms(c, ramp)
-        : () => undefined;
+    const fixSit = WEARS_EXPLORER_CLIPS.has(name)
+      ? (ramp: "full" | "in" | "out") => (c: THREE.AnimationClip) =>
+          correctSittingArms(c, ramp)
+      : () => undefined;
     const rest: RestClips = {
       wave: oneShot(pose("wave")),
       crouchDown: oneShot(pose("crouch_down")),
@@ -2824,37 +2688,6 @@ export function createKidsWorld(
       return;
     }
     playerH = theme.playerHeight(name);
-    // Some characters wear another character's animation.
-    //
-    // The six-year-old ships with his own Meshy clips and they were rejected
-    // on sight — the crouch, the cross-legged sit, the walk and the run all
-    // read wrong. He borrows the ten-year-old's instead: the set this whole
-    // world was built and timed against.
-    //
-    // Done here rather than offline because every one of these files is
-    // meshopt-compressed, so the clips only exist as numbers once the loader
-    // has decoded them. It costs a second model download for the bands that
-    // use him; worth measuring before it stays.
-    const donorName = CLIP_DONOR[name];
-    if (donorName != null) {
-      const donor = await loadModel(
-        `${ASSETS}/models/${theme.modelDir}/${donorName}.glb`,
-      ).catch((err: unknown) => {
-        // He keeps his own clips rather than losing his animation entirely.
-        console.warn(
-          `kids: "${name}" could not borrow from "${donorName}"`,
-          err,
-        );
-        return null;
-      });
-      if (donor != null) {
-        gltf = {
-          ...gltf,
-          scene: gltf.scene,
-          animations: borrowClips(donor, gltf.scene),
-        } as typeof gltf;
-      }
-    }
     const rig = rigOf(gltf, playerH, name);
     // Recolouring is a nicety; being able to play is not.
     //
