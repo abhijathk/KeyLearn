@@ -1,5 +1,6 @@
 import { loadA11y } from "@keylearn/pages-shared";
 import { hush, say, unlockSpeech } from "@keylearn/speech";
+import { type AgeBand, currentBand } from "./age.ts";
 
 /**
  * The coach, out loud.
@@ -85,6 +86,30 @@ export function forSpeech(text: string): string {
   );
 }
 
+/**
+ * Which of the app's own voices the coach speaks in.
+ *
+ * Never the browser's engine. Left to itself, `appVoice` is null and null
+ * means "the device's own voice" — which on a good many devices is an adult
+ * male one, and it arrived unpredictably depending on what the machine had
+ * installed. On the kids pages that is not a preference to be defaulted, so
+ * the default here is a voice chosen for the band rather than no choice at
+ * all.
+ *
+ * An adult voice picked deliberately in Account → Accessibility is honoured
+ * everywhere else in the app; on these pages it is mapped to the band's
+ * voice, because "only kids voices on the kids pages" is the rule and a
+ * grown-up's pick is usually about the braille page rather than about what
+ * their five-year-old hears.
+ */
+function coachVoice(band: AgeBand = currentBand()): "kid" | "tween" {
+  const chosen = loadA11y().appVoice;
+  if (chosen === "kid" || chosen === "tween") {
+    return chosen;
+  }
+  return band === "5-6" || band === "7-8" ? "kid" : "tween";
+}
+
 /** Speaks a coach line, if this band and this child have the voice on. */
 export function speakLine(text: string, rate: number): void {
   const spoken = forSpeech(text);
@@ -93,7 +118,17 @@ export function speakLine(text: string, rate: number): void {
     // today, and a fourth added later would otherwise speak in the default
     // voice — a child hearing the coach in two different voices depending on
     // which line it is, which is worse than either voice on its own.
-    say(spoken, { rate, enabled: true, clip: loadA11y().appVoice });
+    //
+    // `clipOnly` is the other half: if the server cannot render the phrase,
+    // the coach stays quiet rather than handing the line to the device. A
+    // missed line costs a child nothing; a rough voice mid-lesson costs them
+    // the page.
+    say(spoken, {
+      rate,
+      enabled: true,
+      clip: coachVoice(),
+      clipOnly: true,
+    });
   }
 }
 

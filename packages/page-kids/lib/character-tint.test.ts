@@ -61,8 +61,22 @@ function mappingFromModel(): Record<string, string> {
   return {};
 }
 
-test("the code's mapping is the one the model ships with", () => {
+test("the code's mapping is the one the model ships with", (t) => {
   const model = mappingFromModel();
+  // The shipped character was replaced on 7 Sep 2026 with the 20-animation
+  // export, which carries no `extras.tintMasks` at all — so there is no
+  // contract to check and nothing to disagree with. Tinting is inert on this
+  // model rather than wrong, and the picker that drove it was removed when it
+  // turned out nothing read the pref it wrote.
+  //
+  // Skipped rather than deleted, and conditionally rather than permanently:
+  // the day a masked model ships again this is the test that stops a child
+  // asking for red shoes and getting red socks, and it should come back by
+  // itself on that day rather than waiting for somebody to remember it.
+  if (Object.keys(model).length === 0) {
+    t.skip("the shipped model documents no tint masks");
+    return;
+  }
   isTrue(
     Object.keys(model).length === 5,
     "the GLB no longer documents five garments",

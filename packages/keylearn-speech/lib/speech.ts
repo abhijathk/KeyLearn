@@ -64,6 +64,20 @@ export type VoiceSettings = {
    */
   readonly name?: string | null;
   /**
+   * Refuse the browser's engine entirely: speak in the chosen `clip` or say
+   * nothing at all.
+   *
+   * For the kids pages. The engine is whatever the device shipped with, and
+   * on a good many devices that is an adult male voice with espeak-ng behind
+   * it — the thing a parent reported as "very rough and not kids friendly".
+   * Falling back to it means the rough voice arrives unpredictably, on the
+   * devices where the server voice happens to be unavailable, which is worse
+   * than silence: a child hears the coach in two different voices and nobody
+   * can reproduce it. Silence is recoverable — the caption still fires, and
+   * `Write down what is said aloud` puts the line on screen.
+   */
+  readonly clipOnly?: boolean;
+  /**
    * One of the app's own curated voices — "kid", "lady", "man" — or null for
    * the browser's engine.
    *
@@ -566,9 +580,20 @@ export function say(
   if (voice.clip != null && health !== "mute") {
     void (async () => {
       if (!(await serverSay(text, voice, onDone))) {
+        // Clip-only callers take silence over the engine, and say so.
+        if (voice.clipOnly === true) {
+          onDone?.();
+          return;
+        }
         sayWithEngine(text, { ...voice, clip: null }, onDone, clips);
       }
     })();
+    return;
+  }
+  if (voice.clipOnly === true) {
+    // No clip chosen and the engine refused: nothing to speak with. The
+    // caption has already gone out above.
+    onDone?.();
     return;
   }
   sayWithEngine(text, voice, onDone, clips);
