@@ -178,6 +178,14 @@ type Prefs = {
   dino: string;
   hero: string;
   /**
+   * Who walks the trail beside them, or null for nobody.
+   *
+   * A companion never types and never scores — it copies what the player
+   * does, a beat later. Off by default: a second character on screen is a
+   * second thing to look at, and that is a choice, not a gift.
+   */
+  companion: string | null;
+  /**
    * What the Explorer is wearing.
    *
    * Only the garments a child has actually changed are stored, so an
@@ -309,6 +317,7 @@ function defaultPrefs(): Prefs {
     // size to play as rather than a knight. The older band keeps the Knight
     // default and can still pick either Explorer from the toy-box.
     hero: band === "5-6" || band === "7-8" ? "Explorer6" : "Knight",
+    companion: null,
     explorerColours: {},
     name: "",
     bigLetters: cfg.bigLetters,
@@ -1167,6 +1176,19 @@ const HERO_CHARACTERS = [
   // The same character at six: rounder, shorter, and animated as "cute" and
   // "playful" rather than heroic. The default for the two younger bands, who
   // are being asked to see themselves in him.
+  { id: "Explorer6", label: "Little Explorer" },
+] as const;
+
+/**
+ * Who may come along, for now.
+ *
+ * Only the two children — a companion is somebody a child recognises as
+ * another child, and a skeleton walking behind them is a different idea
+ * entirely. The list is filtered against the current hero at the point of
+ * use, so it can never offer you yourself.
+ */
+const COMPANIONS = [
+  { id: "Explorer", label: "Explorer" },
   { id: "Explorer6", label: "Little Explorer" },
 ] as const;
 
@@ -2081,8 +2103,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         // The runner carries its age (baby → adult, size and all) across
         // rebuilds and character swaps.
         world.setAge(dinoAgeOf(included, lesson.letters.length));
+        // The friend loads after the player, deliberately: the character a
+        // child is actually controlling should never wait behind one they are
+        // only watching.
+        const friend = prefsRef.current.companion;
         if (chosen !== theme.defaultPlayer) {
-          return world.setPlayer(chosen);
+          return world.setPlayer(chosen).then(() => {
+            if (friend != null && prefsRef.current.world === "hero") {
+              return world.setCompanion(friend);
+            }
+            return;
+          });
+        }
+        if (friend != null && prefsRef.current.world === "hero") {
+          return world.setCompanion(friend);
         }
         return;
       })
@@ -3735,8 +3769,18 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             worldRef.current?.setPlayer(dino).catch(() => {});
           }}
           onPickHero={(hero) => {
-            savePrefs({ hero });
+            // Playing as somebody sends them home as your friend — you cannot
+            // walk beside yourself.
+            const companion = prefs.companion === hero ? null : prefs.companion;
+            savePrefs({ hero, companion });
             worldRef.current?.setPlayer(hero).catch(() => {});
+            if (companion !== prefs.companion) {
+              worldRef.current?.setCompanion(companion).catch(() => {});
+            }
+          }}
+          onPickCompanion={(companion) => {
+            savePrefs({ companion });
+            worldRef.current?.setCompanion(companion).catch(() => {});
           }}
           onPickTimer={(timerMin) => {
             savePrefs({ timerMin });
@@ -4040,6 +4084,7 @@ function SettingsCard({
   onOpenAlbum,
   onPickDino,
   onPickHero,
+  onPickCompanion,
   onPickTimer,
   onClose,
 }: {
@@ -4052,10 +4097,15 @@ function SettingsCard({
   readonly onOpenAlbum: () => void;
   readonly onPickDino: (dino: string) => void;
   readonly onPickHero: (hero: string) => void;
+  readonly onPickCompanion: (companion: string | null) => void;
   readonly onPickTimer: (min: number) => void;
   readonly onClose: () => void;
 }) {
   const pill = (on: boolean) => clsx(styles.pill, on && styles.pillOn);
+  // The two children, minus whoever is being played. Derived rather than
+  // listed so it cannot fall out of step with the roster, and so a third
+  // character needs nothing here.
+  const companionChoices = COMPANIONS.filter(({ id }) => id !== prefs.hero);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [tab, setTab] = useState<SetTab>("practise");
   // Classic has no world to dress, no buddy to pick and no hands to show, so
@@ -4382,6 +4432,47 @@ function SettingsCard({
                         </button>
                       </div>
                     </div>
+                    {/*
+            A friend to walk with, offered only in the hero world and only
+            when there is somebody left to offer: the list is the two
+            Explorers minus whoever you are already playing as, so it can
+            never suggest you bring yourself.
+          */}
+                    {prefs.world === "hero" && companionChoices.length > 0 && (
+                      <div className={styles.srow}>
+                        <span
+                          className={styles.ri}
+                          style={{ background: "var(--sky)" }}
+                        >
+                          <PawIcon size={24} color="#2f5d7a" />
+                        </span>
+                        <div>
+                          <div className={styles.sl}>Who comes with you?</div>
+                          <div className={styles.sd}>
+                            they copy what you do, a moment later
+                          </div>
+                        </div>
+                        <div className={styles.ctl}>
+                          <button
+                            type="button"
+                            className={pill(prefs.companion == null)}
+                            onClick={() => onPickCompanion(null)}
+                          >
+                            Nobody
+                          </button>
+                          {companionChoices.map(({ id, label }) => (
+                            <button
+                              key={id}
+                              type="button"
+                              className={pill(prefs.companion === id)}
+                              onClick={() => onPickCompanion(id)}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </>

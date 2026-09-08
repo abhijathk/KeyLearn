@@ -694,6 +694,13 @@ export type KidsWorld = {
   readonly ready: Promise<void>;
   setPlayer(name: string): Promise<void>;
   /**
+   * A second character who walks the trail alongside the first.
+   *
+   * Not a second player: it never types, never scores, and nothing it does
+   * changes the lesson. Pass null to send it home.
+   */
+  setCompanion(name: string | null): Promise<void>;
+  /**
    * Recolour the character's clothes at runtime.
    *
    * Only the Explorer carries the masks this needs; for anyone else the
@@ -1735,6 +1742,37 @@ export function createKidsWorld(
     return { wrap, mixer, run, walk, idle, joy, rest, lifts };
   }
 
+  // ── the companion ──────────────────────────────────────────────────────
+  //
+  // A friend who copies what you are doing, a moment after you do it.
+  //
+  // The delay is the whole idea: with none, two characters move as one object
+  // and the second reads as a mirror or a rendering fault. A beat behind, the
+  // same movement reads as a child noticing what their friend is doing and
+  // joining in — which is why it is measured in frames of "having seen it"
+  // rather than tuned until it looks nice.
+  //
+  // It is a REPLAY, not a simulation. Every frame the player's state goes into
+  // a ring buffer and the companion plays back the entry from FOLLOW_FRAMES
+  // ago, so the two can never drift apart or disagree: whatever the player
+  // did, the companion does, later, once.
+  const FOLLOW_FRAMES = 24; // 0.4s at 60fps — a glance, not a lag
+  /** How far behind along the trail, on top of the delay. */
+  const FOLLOW_GAP = 1.6;
+  /** To one side, so they walk together rather than in single file. */
+  const FOLLOW_SIDE = 1.15;
+  type FollowSample = {
+    x: number;
+    y: number;
+    moveW: number;
+    runShare: number;
+    celebrating: boolean;
+  };
+  const followBuffer: FollowSample[] = [];
+  let companion: DinoRig | null = null;
+  let companionName: string | null = null;
+  let companionCelebrating = false;
+
   // ── population ─────────────────────────────────────────────────────────
   let player: DinoRig | null = null;
   let playerH = 2.6; // fitted height of the current player model
@@ -2658,6 +2696,46 @@ export function createKidsWorld(
   /** What was asked for before a model that could take it was loaded. */
   let pendingColours: ClothingColours = {};
 
+  /**
+   * Bring a friend along, or send them home.
+   *
+   * Deliberately thin: it loads a rig and parks it. Everything the companion
+   * DOES happens in the frame loop, replaying what the player already did.
+   */
+  async function setCompanion(name: string | null) {
+    if (name === companionName) {
+      return;
+    }
+    companionName = name;
+    if (companion != null) {
+      scene.remove(companion.wrap);
+      companion = null;
+    }
+    if (name == null) {
+      return;
+    }
+    const gltf = await loadModel(
+      `${ASSETS}/models/${theme.modelDir}/${name}.glb`,
+    ).catch((err: unknown) => {
+      // A missing friend must never cost anybody their game.
+      console.warn(`kids: companion "${name}" could not be loaded`, err);
+      return null;
+    });
+    // Disposed, or switched again, while this was in flight.
+    if (gltf == null || disposed || companionName !== name) {
+      return;
+    }
+    // A shade smaller than whoever they are walking with, so the eye can tell
+    // at a glance who it is following.
+    const rig = rigOf(gltf, theme.playerHeight(name) * 0.94, name);
+    rig.wrap.rotation.y = Math.PI / 2;
+    rig.wrap.position.set(playerX - FOLLOW_GAP, groundY(playerX), FOLLOW_SIDE);
+    // No hero lamp and no pointer ring: those mark whose turn it is, and it
+    // is never the companion's.
+    scene.add(rig.wrap);
+    companion = rig;
+  }
+
   async function setPlayer(name: string) {
     /**
      * A character that will not load must not take the game with it.
@@ -3438,6 +3516,59 @@ export function createKidsWorld(
         player.idle.weight = 1 - moveW;
       }
 
+      // ── the companion ─────────────────────────────────────────────────
+      //
+      // Recorded every frame whether or not anyone is following, so that
+      // switching a friend on mid-lesson does not start them from a standstill
+      // while the player is already running.
+      followBuffer.push({
+        x: p.x,
+        y: p.y,
+        moveW,
+        runShare,
+        celebrating: celebT > 0,
+      });
+      if (followBuffer.length > FOLLOW_FRAMES + 2) {
+        followBuffer.shift();
+      }
+      if (companion != null) {
+        // The oldest entry we have, which is FOLLOW_FRAMES back once the
+        // buffer has filled and simply the earliest before that — so a
+        // freshly-added companion falls in beside the player rather than
+        // teleporting to where they were half a second ago.
+        const seen = followBuffer[0]!;
+        const cw = companion.wrap;
+        cw.position.x = seen.x - FOLLOW_GAP;
+        cw.position.z = FOLLOW_SIDE;
+        cw.position.y = groundY(cw.position.x);
+        cw.rotation.y = Math.PI / 2;
+        if (companion.run && companion.idle) {
+          if (companion.walk) {
+            companion.walk.weight = seen.moveW * (1 - seen.runShare);
+          }
+          companion.run.weight = seen.moveW * seen.runShare;
+          companion.idle.weight = 1 - seen.moveW;
+        }
+        // The celebration is the one thing they do rather than copy, because
+        // it is a one-shot: replaying the flag every frame it was true would
+        // restart the clip forty times. Fired on the edge instead.
+        if (companion.joy) {
+          if (seen.celebrating && !companionCelebrating) {
+            companion.joy.reset();
+            companion.joy.play();
+          }
+          const w = seen.celebrating
+            ? 1
+            : Math.max(0, companion.joy.weight - 0.04);
+          companion.joy.weight = w;
+          for (const a of [companion.run, companion.walk, companion.idle]) {
+            if (a) a.weight *= 1 - w;
+          }
+        }
+        companionCelebrating = seen.celebrating;
+        companion.mixer.update(dt);
+      }
+
       // ── the idle chain ────────────────────────────────────────────────
       //
       // Runs on the clock rather than on clip-finished events: the sequencing
@@ -4019,6 +4150,7 @@ export function createKidsWorld(
     land,
     ready,
     setPlayer,
+    setCompanion,
     /**
      * Recolour the character's clothes, now.
      *
