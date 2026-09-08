@@ -38,6 +38,37 @@ const CONNECT_HOSTS = [
  * carry it, so it is generated here — before the handler runs — and read back
  * out by the page controller when it renders the shell.
  */
+/**
+ * The one script on this origin that is allowed to build functions from
+ * strings, and the reason it is not a hole in the policy above.
+ *
+ * The kids world decodes the Explorer's Basis-compressed textures with a
+ * transcoder that emscripten emitted: its embind layer assembles every call
+ * wrapper with `new Function(...)`. `wasm-unsafe-eval` does not cover that,
+ * and it must not be granted to the document — a page that can eval a string
+ * turns any future injection into code execution, which is most of what this
+ * policy exists to prevent.
+ *
+ * A dedicated worker fetched from a same-origin URL takes its policy from its
+ * own response headers rather than inheriting the page's, so the grant stops
+ * at the worker boundary. What sits behind that boundary is one generated
+ * file with no DOM, no cookies, no session and no network reach: it receives
+ * texture bytes over postMessage and sends pixels back. That is a far smaller
+ * thing to hand an attacker than the document, and it is the difference
+ * between the Explorer loading and hanging forever.
+ *
+ * three would otherwise run this code from a blob: URL, which DOES inherit
+ * the document policy — which is exactly why the worker is served as a file.
+ * See scripts/build-ktx2-worker.mjs, which generates it.
+ */
+const KTX2_WORKER_CSP: Record<string, string> = {
+  "/kids-assets/basis/ktx2-worker.js": [
+    "default-src 'none'",
+    "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'",
+    "connect-src 'self'",
+  ].join("; "),
+};
+
 export const CSP_NONCE = "cspNonce";
 
 /** The nonce for this request, or "" outside a request that has one. */
@@ -96,7 +127,10 @@ export function securityHeaders(): Middleware {
     // with the application's policy, which necessarily allows scripts and
     // images, would hand those bytes back the privileges they were denied.
     if (!headers.has("Content-Security-Policy")) {
-      headers.set("Content-Security-Policy", csp);
+      headers.set(
+        "Content-Security-Policy",
+        KTX2_WORKER_CSP[ctx.request.path] ?? csp,
+      );
     }
     // Superseded by frame-ancestors, kept for older browsers.
     headers.set("X-Frame-Options", "DENY");

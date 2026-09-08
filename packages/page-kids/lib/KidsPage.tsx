@@ -8,9 +8,11 @@ import { Lesson, lessonProps, LessonType } from "@keylearn/lesson";
 import { LessonLoader } from "@keylearn/lesson-loader";
 import {
   A11Y_CHANGED_EVENT,
+  clearProfileProgress,
   loadA11y,
   loadNgramStats,
   motionStilled,
+  profileIdOfNamespace,
   profileStorageKey,
   saveNgramStats,
   streakGraceDays,
@@ -68,6 +70,13 @@ import {
   type Sticker,
 } from "./album.ts";
 import { kidsAudio } from "./audio.ts";
+import {
+  CLOTHING_REGIONS,
+  type ClothingColours,
+  DEFAULT_COLOURS,
+  REGION_LABEL,
+  SWATCHES,
+} from "./character-tint.ts";
 import { ClassicScreen, ClassicTour, ClassicUnlock } from "./classic.tsx";
 import {
   BranchIcon,
@@ -167,6 +176,14 @@ type Prefs = {
   world: "dino" | "hero";
   dino: string;
   hero: string;
+  /**
+   * What the Explorer is wearing.
+   *
+   * Only the garments a child has actually changed are stored, so an
+   * untouched outfit is an empty object and stays whatever the artist
+   * painted — including if those colours are ever repainted.
+   */
+  explorerColours?: ClothingColours;
   name: string;
   bigLetters: boolean;
   sounds: boolean;
@@ -218,6 +235,12 @@ type Prefs = {
    * override exists so a grown-up can move a child either way.
    */
   nightStyle: NightOverride;
+  /**
+   * The drier voice for older learners (see PLAYFUL_SAYS). Off by default and
+   * only offered from 9-10 up — the younger bands need the plain lines, which
+   * are frequently the only prose on the page they read for themselves.
+   */
+  playful: boolean;
   /** Scene look: brightness (~0.7–1.3) and paleness (0 = full colour, 1 = pale). */
   brightness: number;
   paleness: number;
@@ -282,6 +305,7 @@ function defaultPrefs(): Prefs {
     world: band === "5-6" || band === "7-8" ? "hero" : "dino",
     dino: "TRex",
     hero: "Knight",
+    explorerColours: {},
     name: "",
     bigLetters: cfg.bigLetters,
     sounds: false,
@@ -296,6 +320,7 @@ function defaultPrefs(): Prefs {
     readAloudChosen: false,
     grownupKeys: "off",
     nightStyle: "auto",
+    playful: false,
     brightness: 1,
     paleness: 0,
     motion: 0.7,
@@ -369,6 +394,78 @@ function loadBest(): number {
     return 0;
   }
 }
+
+/**
+ * A drier, cheekier voice for the older bands, mixed in when "playful" is on.
+ *
+ * Written by hand rather than generated from a slang corpus, and the reason is
+ * worth stating because the corpus was the obvious shortcut. StudyBuddy's
+ * Gen Alpha bible is a COMPREHENSION dataset — intent signals, confidence
+ * scores, and sixteen censorship-evasion terms carried expressly so a system
+ * can recognise a child hiding distress ("unalive"). Pointed backwards as a
+ * style source it is a way to have a character say something awful to a
+ * nine-year-old, and every line would need re-curating each time the slang
+ * cycle turned. That bible belongs in the support agent, where the HCL spec
+ * already puts it, and where it is used to understand what a child writes
+ * rather than to imitate it.
+ *
+ * So: no slang, no abbreviations, no emoji. What makes these read as older is
+ * the register — short, dry, understated, occasionally deadpan — which does
+ * not expire. Two rules held throughout:
+ *
+ * - The joke is never at the child's expense. It is always on the character,
+ *   the trail, or nobody. A learner who has just mistyped is not the target.
+ * - Nothing here is instructional. These mix into the pool alongside the
+ *   normal lines, so anything a child actually needs to be told is still said
+ *   plainly by the line next to it.
+ *
+ * Offered from 9-10 upward; the younger bands never see the toggle.
+ */
+const PLAYFUL_SAYS: Partial<Record<string, readonly string[]>> = {
+  start: [
+    "Right. The trail is not going to walk itself.",
+    "Let's make this look easy.",
+    "{name} is ready. The question is the fingers.",
+    "New run, same fingers. Go on then.",
+  ],
+  cheer: [
+    "Okay, that was clean.",
+    "No notes.",
+    "You have clearly done this before.",
+    "That was smooth and you know it.",
+    "Genuinely quick, that.",
+    "{name} is trying to keep up.",
+  ],
+  miss: [
+    "We do not talk about that one.",
+    "Pretend that did not happen. I will.",
+    "One for the bloopers.",
+    "Rogue finger. It happens to everyone.",
+  ],
+  streak: [
+    "You are on one.",
+    "This streak is getting silly.",
+    "Do not look down.",
+  ],
+  grow: [
+    "A new key. Try not to make it weird.",
+    "Fresh letter. Be nice to it.",
+  ],
+  idle: [
+    "{name} is pretending not to check on you.",
+    "The trail is still here. So is {name}.",
+  ],
+  wave: ["{name} waves. Still around?", "{name} is waving. This is your cue."],
+  crouch: [
+    "{name} is pretending not to wait for you.",
+    "{name} has found a rock and is making it a whole thing.",
+  ],
+  sit: [
+    "{name} has fully committed to sitting down.",
+    "{name} is sitting. It has been a journey. Press a key.",
+  ],
+  crossed: ["New chapter. {name} acts unimpressed but is delighted."],
+};
 
 // The say-line between the world and the keyboard. Many voices per moment so
 // the trail never repeats itself — and the praise is for EFFORT, because
@@ -461,6 +558,75 @@ const SAYS = {
     "Ten perfect steps — the herd can't believe it!",
     "10 straight! Your fingers know the trail by heart!",
   ],
+  // ── waiting out a pause ───────────────────────────────────────────────
+  //
+  // Three moments, spaced further and further apart, matching the poses the
+  // character takes when nobody is typing (see world.ts, the idle chain).
+  // They get calmer as the wait gets longer, never naggier: a child who has
+  // wandered off is not helped by being chased, and one who is thinking is
+  // helped by being told there is no hurry. Every line ends with a way back
+  // in, and none of them mentions how long they have been gone.
+  wave: [
+    "{name} waves a paw. Hello — still there?",
+    "Hello! {name} is waving at you.",
+    "{name} stands up tall and waves. Ready when you are!",
+    "A little wave from {name} — shall we walk on?",
+    "{name} turns round and gives you a big wave.",
+    "Hello again! {name} spotted you.",
+    "{name} waves, just in case you were looking.",
+    "A wave from the trail — whenever you're ready.",
+  ],
+  waveYoung: [
+    "Hiiii! {name} is waving BOTH arms!",
+    "{name} waves and waves and waves!",
+    "Yoo-hoo! {name} can see you!",
+    "{name} is doing a great big hello wave!",
+  ],
+  waveOld: [
+    "{name} waves. Still with me?",
+    "A wave from {name}. Ready when you are.",
+    "{name} looks up and waves.",
+  ],
+  crouch: [
+    "{name} crouches down to wait. No rush!",
+    "{name} is having a little rest. Press a key when you're ready.",
+    "Still waiting for your fingers — {name} doesn't mind at all.",
+    "{name} crouches low and watches the trail.",
+    "{name} kneels down in the grass. Take as long as you like.",
+    "A little breather. {name} will be right here.",
+    "{name} rests on one knee and waits for you.",
+    "No rush at all — {name} is happy waiting.",
+  ],
+  crouchYoung: [
+    "{name} is waiting for youuu!",
+    "{name} sits on their heels and waits. Ready?",
+    "{name} is being very, very patient!",
+  ],
+  crouchOld: [
+    "{name} settles in. Take your time.",
+    "{name} drops to a crouch. In your own time.",
+    "No hurry. {name} will hold this spot.",
+  ],
+  sit: [
+    "{name} sits right down. Press any key when you're ready!",
+    "Comfy here! One key and we're off again.",
+    "{name} is sitting in the grass, waiting for you.",
+    "No hurry — {name} will wait. Press a key when you want to go.",
+    "{name} crosses their legs and gets comfy. Come back whenever.",
+    "{name} is watching the clouds go by. One key wakes them up.",
+    "Sitting down for a proper rest. Press a key when you'd like to walk on.",
+    "{name} has found a nice spot to wait. Ready when you are.",
+  ],
+  sitYoung: [
+    "{name} is sitting down! Press a key and we can play!",
+    "{name} is having a sit-down. Wake them up with a key!",
+    "Plonk! {name} sits in the grass. Press a key when you want to go!",
+  ],
+  sitOld: [
+    "{name} takes a seat. Press a key whenever you want to carry on.",
+    "{name} sits down to wait it out. No rush.",
+    "{name} settles cross-legged. Pick it up whenever you like.",
+  ],
   idle: [
     "{name} is waiting — press the glowing key!",
     "{name} looks back at you. Ready to walk on?",
@@ -541,6 +707,18 @@ const HERO_NIGHT_SAYS: Partial<Record<string, readonly string[]>> = {
     "The mist curls round the lanterns while {name} waits for you.",
     "The fire crackles. The party waits. One glowing key walks us on.",
     "It is very quiet out there. Your next key keeps the lanterns bright.",
+  ],
+  wave: [
+    "{name} waves in the lantern light. Still there?",
+    "A wave out of the dark — {name} is still with you.",
+  ],
+  crouch: [
+    "{name} crouches down beside the lantern to wait.",
+    "The mist is cold. {name} settles in and waits for you.",
+  ],
+  sit: [
+    "{name} sits down by the lantern. Press a key when you're ready.",
+    "The fire crackles. {name} is sitting, waiting for you.",
   ],
 };
 
@@ -635,6 +813,69 @@ const HERO_SAYS = {
     "TEN in a row! {name} does a happy hop!",
     "Ten perfect steps — the party can't believe it!",
     "10 straight! Your fingers know the trail by heart!",
+  ],
+  // ── waiting out a pause ───────────────────────────────────────────────
+  // See the note on the dino set: the same three moments, told for the trail.
+  wave: [
+    "{name} waves from the trail. Hello — still there?",
+    "Hello! {name} is waving at you.",
+    "{name} turns and waves. Ready when you are!",
+    "A little wave from {name} — shall we walk on?",
+    "{name} stops on the road and waves back at you.",
+    "Hello again! {name} spotted you.",
+    "{name} waves, just in case you were looking.",
+    "A wave from the trail — whenever you're ready.",
+  ],
+  waveYoung: [
+    "Hiiii! {name} is waving BOTH arms!",
+    "{name} waves and waves and waves!",
+    "Yoo-hoo! {name} can see you!",
+    "{name} is doing a great big hello wave!",
+  ],
+  waveOld: [
+    "{name} waves. Still with me?",
+    "A wave from {name}. Ready when you are.",
+    "{name} looks up and waves.",
+  ],
+  crouch: [
+    "{name} crouches down by the path. No rush!",
+    "{name} is having a little rest. Press a key when you're ready.",
+    "Still waiting for your fingers — {name} doesn't mind at all.",
+    "{name} crouches low and watches the road ahead.",
+    "{name} kneels beside the path. Take as long as you like.",
+    "A little breather. {name} will be right here.",
+    "{name} rests on one knee and waits for you.",
+    "No rush at all — {name} is happy waiting.",
+  ],
+  crouchYoung: [
+    "{name} is waiting for youuu!",
+    "{name} sits on their heels and waits. Ready?",
+    "{name} is being very, very patient!",
+  ],
+  crouchOld: [
+    "{name} settles in. Take your time.",
+    "{name} drops to a crouch. In your own time.",
+    "No hurry. {name} will hold this spot.",
+  ],
+  sit: [
+    "{name} sits right down on the trail. Press any key when you're ready!",
+    "Comfy here! One key and we're off again.",
+    "{name} is sitting by the path, waiting for you.",
+    "No hurry — {name} will wait. Press a key when you want to go.",
+    "{name} sets down the pack and sits cross-legged. Come back whenever.",
+    "{name} is watching the clouds go by. One key wakes them up.",
+    "Sitting down for a proper rest. Press a key when you'd like to walk on.",
+    "{name} has found a good spot to wait. Ready when you are.",
+  ],
+  sitYoung: [
+    "{name} is sitting down! Press a key and we can play!",
+    "{name} is having a sit-down. Wake them up with a key!",
+    "Plonk! {name} sits in the grass. Press a key when you want to go!",
+  ],
+  sitOld: [
+    "{name} takes a seat. Press a key whenever you want to carry on.",
+    "{name} sits down to wait it out. No rush.",
+    "{name} settles cross-legged. Pick it up whenever you like.",
   ],
   idle: [
     "{name} is waiting — press the glowing key!",
@@ -904,12 +1145,20 @@ function agedPool(
 
 // The Hero Trail heroes you can BE — reserved for the main character so the
 // trail companions never look like you.
+
+/**
+ * How many recent keystrokes decide the character's gait.
+ *
+ * Short enough that slowing down shows up within a word or two; long enough
+ * that one slow letter in a fast line does not drop them out of a run.
+ */
+const GAIT_SAMPLE = 6;
+
 const HERO_CHARACTERS = [
   { id: "Knight", label: "Knight" },
   { id: "Skeleton_Warrior", label: "Skeleton" },
   // A child rather than a fantasy figure, for the older band who have
-  // grown out of playing as a skeleton. He is the one character whose
-  // clothes can be recoloured — see character-tint.ts.
+  // grown out of playing as a skeleton.
   { id: "Explorer", label: "Explorer" },
 ] as const;
 
@@ -934,6 +1183,27 @@ function peekNextLandName(): string {
  * this page exists for; pausing on them would be worse than not pausing at all.
  */
 const IDLE_MS = 10_000;
+/**
+ * How still the fingers must be before the coach says anything out loud.
+ *
+ * One second is enough to be sure they have stopped rather than paused
+ * between two letters, and short enough that a line about what just happened
+ * still lands while it is what just happened.
+ */
+const SPEECH_QUIET_MS = 1_000;
+/**
+ * Which bands are offered the drier voice.
+ *
+ * The same line as Classic, and for the same reason: below it the coach's
+ * lines are often the only prose the child reads unaided, and understatement
+ * is the one register that does not survive being read by someone still
+ * decoding the words.
+ */
+function playfulOffered(band: AgeBand = currentBand()): boolean {
+  return band === "9-10" || band === "11+";
+}
+/** After this long unspoken, a queued line is dropped rather than said late. */
+const SPEECH_STALE_MS = 20_000;
 
 // Each world ends the day in its own voice: the herd on its long migration to
 // the green valley, the party on the road home. They used to share one pool,
@@ -1030,7 +1300,51 @@ function KidsSettings({ children }: { readonly children: ReactNode }) {
 
 function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const { settings } = useSettings();
-  const { results, appendResults } = useResults();
+  const { results, appendResults, namespace } = useResults();
+  const kidsPageData = usePageData();
+
+  /**
+   * Local kids progress that the server has no history to justify.
+   *
+   * The best score, album, stars and day count live in this device's
+   * localStorage; the practice history lives on the server, per profile.
+   * Clear the account's data server-side and the two disagree — the trail is
+   * empty and the HUD still reads someone's old best, which looks to a parent
+   * exactly like the deletion did not work.
+   *
+   * Safe to act on ONLY because of how the result store behaves for a
+   * signed-in profile: `load()` flushes anything typed offline up to the
+   * server and then returns what the SERVER holds. Being offline does not
+   * produce an empty list — it falls back to the local copy, and if that is
+   * empty too it throws, which leaves the loader on its loading state and
+   * never reaches here. So results being ready AND empty means the server
+   * genuinely holds nothing for this learner.
+   *
+   * Both guards are load-bearing. Without a namespace there is no profile and
+   * no server history to compare against, and without a signed-in account the
+   * device IS the record — clearing there would delete the only copy of a
+   * child's progress. Kids results with no profile selected never sync at all
+   * (see openResultStorage), so this must never run for them.
+   *
+   * Progress only: preferences are not a record of what they did, and survive.
+   */
+  const reconciledRef = useRef(false);
+  useEffect(() => {
+    // Signed in means the server is the record. Signed out, this device is.
+    const signedIn = (kidsPageData.publicUser?.id ?? null) != null;
+    if (reconciledRef.current || namespace == null || !signedIn) {
+      return;
+    }
+    reconciledRef.current = true;
+    if (results.length > 0) {
+      return;
+    }
+    const profileId = profileIdOfNamespace(namespace);
+    if (Number(localStorage.getItem(BEST_KEY()) ?? 0) > 0) {
+      clearProfileProgress(profileId);
+      setBest(0);
+    }
+  }, [namespace, kidsPageData, results.length]);
   const [, forceTick] = useReducer((n: number) => n + 1, 0);
   // The age band is fixed for the visit; the page remounts on profile switch.
   const band = useMemo(currentBand, []);
@@ -1041,6 +1355,22 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  /**
+   * Timestamps of the last few keystrokes, for the character's gait.
+   *
+   * A ref and not state: this changes on every key and nothing renders from
+   * it — the only reader is the 3-D world, which is told directly.
+   */
+  const recentKeysRef = useRef<number[]>([]);
+  /**
+   * Whether this character has the waiting poses (wave, crouch, sit).
+   *
+   * Set the first time the world reports one. The old ten-second beckon says
+   * the same thing far more crudely — it spins the character round and reads a
+   * line — so where the chain exists it takes over, and where it does not (a
+   * model without the clips) the beckon still covers the wait.
+   */
+  const restChainRef = useRef(false);
   const [loaded, setLoaded] = useState(false);
   const [nameOpen, setNameOpen] = useState(() => loadPrefs().name === "");
   const [mapOpen, setMapOpen] = useState(false);
@@ -1486,6 +1816,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         pool = [...pool, ...extra, ...extra];
       }
     }
+    // The drier lines sit alongside the plain ones rather than replacing
+    // them, so anything a learner actually needs to be told is still said
+    // straight by whichever line comes up next.
+    if (prefsRef.current.playful && playfulOffered(band)) {
+      const extra = PLAYFUL_SAYS[key] ?? [];
+      if (extra.length > 0) {
+        pool = [...pool, ...extra];
+      }
+    }
     const line = fillSay(pickSay(pool), {
       name: dinoName(),
       stage: (world === "hero" ? heroStage : dinoStage)(age),
@@ -1494,14 +1833,53 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     setSay(line);
     // And read it out, for the bands who cannot read it themselves. Only the
     // moments — see `voice.ts` for why the cheers are excluded.
+    //
+    // Queued rather than spoken, and only released once the fingers have been
+    // still for a moment. Most of these lines fire BECAUSE of a keystroke —
+    // a new key unlocked, a streak, a chapter crossed — so speaking on the
+    // spot means talking over the very typing that earned them, and the
+    // stop-on-keypress rule above would cut the sentence off a syllable in.
+    //
+    // Dropping them instead of queueing was the other option and it is worse:
+    // those lines fire at most a keystroke after the last one, so they would
+    // never be spoken at all, which quietly turns the voice off for the
+    // learners who need it.
     if (
       prefsRef.current.readAloud &&
       prefsRef.current.sounds &&
       isSpoken(key)
     ) {
-      speakLine(line, cfg.speechRate);
+      pendingSpeechRef.current = { line, at: performance.now() };
     }
   };
+
+  /**
+   * A line waiting for a gap in the typing, and the gap it is waiting for.
+   *
+   * Checked often enough that the pause does not feel like a delay, and
+   * abandoned if it goes stale — a sentence about a moment thirty seconds gone
+   * is worse than silence.
+   */
+  const pendingSpeechRef = useRef<{ line: string; at: number } | null>(null);
+  useEffect(() => {
+    const id = setInterval(() => {
+      const pending = pendingSpeechRef.current;
+      if (pending == null) {
+        return;
+      }
+      const now = performance.now();
+      if (now - pending.at > SPEECH_STALE_MS) {
+        pendingSpeechRef.current = null;
+        return;
+      }
+      if (now - lastKeyAtRef.current < SPEECH_QUIET_MS) {
+        return;
+      }
+      pendingSpeechRef.current = null;
+      speakLine(pending.line, cfg.speechRate);
+    }, 200);
+    return () => clearInterval(id);
+  }, [cfg.speechRate]);
 
   // A fresh passage whenever the lesson or the stats move on. Kids runs are
   // short — the starting length, the ceiling and the preferred word size all
@@ -1615,6 +1993,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       prefsRef.current.world === "hero"
         ? prefsRef.current.hero
         : prefsRef.current.dino;
+    // Before the world, deliberately. Both want the same character file, and
+    // three de-duplicates requests already in flight — but the world queues
+    // a dozen models of its own, and whichever is asked for first is the one
+    // the browser fetches first. Created after it, the loading screen stood
+    // empty until every tree and companion had been fetched, which is most of
+    // the wait it exists to fill.
+    const loader =
+      loaderRef.current != null
+        ? createLoaderScene(loaderRef.current, theme, chosen)
+        : null;
     const nav = navigator as Navigator & { deviceMemory?: number };
     const world = createKidsWorld(canvas, pickLand(theme.lands), theme, {
       nightStyle: resolveNightStyle(band, prefsRef.current.nightStyle),
@@ -1623,17 +2011,28 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         cores: navigator.hardwareConcurrency,
         dpr: window.devicePixelRatio,
       }),
+      // The character's waiting poses get a voice. `speak` already picks by
+      // age band and by world, so the wave a six-year-old hears is not the one
+      // a ten-year-old does, and the accessibility "predictable" setting still
+      // pins the choice to the first line.
+      onRest: (stage) => {
+        restChainRef.current = true;
+        speak(stage);
+        // The crouch lands where the old beckon used to, so it inherits its
+        // sound — a cue that matters most to anyone not watching the screen.
+        if (stage === "crouch" && prefsRef.current.sounds) {
+          kidsAudio.playIdle();
+        }
+      },
     });
     worldRef.current = world;
+    // A fresh world may be a character without the waiting clips.
+    restChainRef.current = false;
     setLandName(world.land.name);
     // Walking into a land is what earns it, including the one the session
     // opens in — otherwise the very first land is the one land nobody gets.
     collect(`land:${world.land.name}`);
     world.startRun();
-    const loader =
-      loaderRef.current != null
-        ? createLoaderScene(loaderRef.current, theme)
-        : null;
     let cancelled = false;
     world.ready
       .then(() => {
@@ -1736,6 +2135,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
+  // Which screen this session is on. Needed here because the input gate below
+  // asks whether there is a 3-D world to wait for, and Classic has none.
+  const classic = prefs.classic && classicOffered(band);
   const blockedRef = useRef(false);
   blockedRef.current =
     settingsOpen ||
@@ -1748,7 +2150,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     restOpen ||
     tourOpen ||
     hatched != null ||
-    ceremony != null;
+    ceremony != null ||
+    // Keys pressed at the loading screen are not practice. They used to land
+    // on a run that had not started: the letters counted, the mistakes
+    // counted, and the trail they were scored against was still being built.
+    // Classic never sets this — it has no world to wait for — so it is
+    // excluded rather than left permanently blocked.
+    (!classic && !loaded);
 
   useEffect(() => {
     // Back to the top of the same line, and back behind the Enter gate. Told
@@ -1916,6 +2324,32 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       const timeToType =
         lastStampRef.current > 0 ? timeStamp - lastStampRef.current : 0;
       lastStampRef.current = timeStamp;
+      // The character's gait follows the last few keystrokes, and is pushed
+      // from here rather than derived from the WPM shown on the chip. That
+      // figure averages the whole passage, so it can only crawl downwards: a
+      // learner who sprinted through one line and then slowed to hunt for
+      // keys kept sprinting on screen for the rest of the round. A short
+      // window falls as fast as the fingers do, and a pause widens it on its
+      // own — the gap counts as elapsed time the moment the next key lands.
+      // Any key at all wakes him — a wrong one included. It does not advance
+      // the trail, so without this he would still be sitting down while
+      // somebody is very much there and typing.
+      worldRef.current?.wake();
+      {
+        const recent = recentKeysRef.current;
+        recent.push(timeStamp);
+        if (recent.length > GAIT_SAMPLE) {
+          recent.shift();
+        }
+        if (recent.length >= 2) {
+          const span = recent[recent.length - 1]! - recent[0]!;
+          if (span > 0) {
+            worldRef.current?.setPace(
+              (((recent.length - 1) / (span / 1000)) * 60) / 5,
+            );
+          }
+        }
+      }
       const feedback = textInput.appendChar(
         timeStamp,
         key.codePointAt(0)!,
@@ -2169,6 +2603,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       if (blockedRef.current || !loaded || beckonedRef.current) {
         return;
       }
+      // The waiting chain has this covered, and better.
+      if (restChainRef.current) {
+        return;
+      }
       const last = lastKeyAtRef.current;
       if (performance.now() - (last || 0) > IDLE_MS) {
         beckonedRef.current = true;
@@ -2242,8 +2680,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // asked for the grown-up shape.
   // Never for the youngest bands, whatever is in storage — a profile that
   // was switched at eleven and handed down to a younger sibling would
-  // otherwise open on a screen built for somebody else.
-  const classic = prefs.classic && classicOffered(band);
+  // otherwise open on a screen built for somebody else. Declared further up,
+  // beside blockedRef, which needs it before this point.
   // Classic types on a picture of a real board, so it should sound like one
   // — but like the boards these learners have actually used. The mechanical
   // samples are a nostalgia most eleven-year-olds do not share; the soft
@@ -2311,6 +2749,23 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const kbFull = classic || prefs.kbMode === "full";
   const showHands = !classic && !hideHints && prefs.hands;
   const helperVisible = kbVisible || (!hideHints && prefs.hands);
+  /**
+   * Whether the keyboard and hands are actually offered yet.
+   *
+   * They used to draw beside the loading screen, glowing the next key and
+   * pointing a finger at it while the trail behind them was still being built.
+   * A child who took the invitation typed into a world that had not started.
+   *
+   * The card still occupies its space while it waits — `.sceneCard` is
+   * `flex: 1 1 auto`, so taking the card out of the flow hands its height to
+   * the 3-D pane and the scene jumps taller for the length of the load and
+   * back again when it finishes. Held with `visibility` rather than unmounted,
+   * the layout is the same before and after; only the invitation waits.
+   *
+   * Classic has no 3-D world to wait for — its effect bails out before
+   * anything sets `loaded` — so it is never held back.
+   */
+  const helperReady = classic || loaded;
   const wide = kbVisible && (kbFull || prefs.hands);
 
   // Finished passages for this lesson, oldest first — the spark, the delta
@@ -2337,6 +2792,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return ms > 0 ? Math.round(((steps.length / (ms / 1000)) * 60) / 5) : 0;
   })();
   const shownWpm = liveWpm > 0 ? liveWpm : lastWpm;
+
   // Coming back after a break, the first round is a warm-up and its delta
   // means nothing. Without this every learner who returns after school is
   // met by a red minus for something that is not their doing.
@@ -2681,7 +3137,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 styles.kbWrap,
                 prefs.kbMode === "full" && styles.kbWrapFull,
                 wide && styles.kbWrapWide,
+                !helperReady && styles.kbWrapWaiting,
               )}
+              aria-hidden={!helperReady || undefined}
             >
               {!prefs.sounds && (
                 <span
@@ -4010,6 +4468,35 @@ function SettingsCard({
                     </button>
                   </div>
                 </div>
+                {/* Offered from 9-10 up only — see playfulOffered. Below that
+                    the coach's lines are frequently the only prose the child
+                    reads unaided, and understatement is the first register to
+                    fail when somebody is still decoding the words. */}
+                {playfulOffered(band) && (
+                  <div className={styles.srow}>
+                    <span
+                      className={styles.ri}
+                      style={{ background: "var(--sky)" }}
+                    >
+                      <StarIcon />
+                    </span>
+                    <div>
+                      <div className={styles.sl}>Cheeky coach</div>
+                      <div className={styles.sd}>
+                        drier, funnier lines from your buddy
+                      </div>
+                    </div>
+                    <div className={styles.ctl}>
+                      <button
+                        type="button"
+                        className={pill(prefs.playful)}
+                        onClick={() => savePrefs({ playful: !prefs.playful })}
+                      >
+                        {prefs.playful ? "On" : "Off"}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {trail && (
                   <div className={styles.srow}>
                     <span

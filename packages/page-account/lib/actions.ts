@@ -1,5 +1,10 @@
 import { catchError } from "@keylearn/debug";
-import { type AnyUser, logout, type UserDetails } from "@keylearn/pages-shared";
+import {
+  type AnyUser,
+  clearAllProfileStorage,
+  logout,
+  type UserDetails,
+} from "@keylearn/pages-shared";
 import { useState } from "react";
 import { checkoutProduct } from "./checkout.ts";
 import {
@@ -57,6 +62,13 @@ export function useAccountActions(props: {
     AccountService.deleteAccountPasskeyProof();
   const deleteAccount = (proof: DeleteProof, keepStats: boolean) =>
     AccountService.deleteAccount(proof, keepStats).then(() => {
+      // The account is gone from the server; it has to be gone from the device
+      // too. Without this the next person to open KeyLearn on this machine is
+      // met by the last family's best scores and sticker album, and "delete my
+      // account" turns out to have meant one of the two places it was kept.
+      // After the server has confirmed, and before the reload that would
+      // otherwise leave the old data sitting there.
+      clearAllProfileStorage();
       reload("/");
     });
 

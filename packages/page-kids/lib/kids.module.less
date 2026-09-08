@@ -496,6 +496,14 @@
   font-size: clamp(0.6rem, 1.12vi, 1rem);
 }
 
+/* Holds its box while the world loads, so the scene above keeps the height it
+   will have once the board arrives. `visibility` rather than `display` for
+   exactly that reason: the card is still laid out, just not offered yet. */
+.kbWrapWaiting {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .kbWrapFull {
   --ku: clamp(0.54rem, 0.98vi, 0.88rem);
   font-size: clamp(0.54rem, 0.98vi, 0.88rem);

@@ -16,6 +16,260 @@ import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
 const ASSETS = "/kids-assets";
 
+/**
+ * Runs the Basis transcoder from a served file instead of a blob.
+ *
+ * three builds the KTX2 worker in the page and starts it from a blob: URL.
+ * Blob workers inherit the document's Content-Security-Policy, and the
+ * transcoder is emscripten output whose embind layer builds its call wrappers
+ * with `new Function(...)` — which our policy withholds, deliberately. The
+ * throw happens inside the worker's own start-up promise, so nothing rejects:
+ * the transcoder simply never reports ready and every Basis texture load hangs
+ * unresolved. That is what left the Explorer stuck on the loading screen.
+ *
+ * A worker started from a real same-origin URL carries its own policy instead,
+ * so the eval the transcoder needs is granted to that file and to nothing else.
+ * Priming `transcoderPending` here makes `init()` a no-op, which is the whole
+ * of the override — the worker protocol, the config and the wasm binary are
+ * still three's.
+ *
+ * The worker file is generated from three's own KTX2Loader by
+ * scripts/build-ktx2-worker.mjs; its CSP is in server/lib/app/headers.ts.
+ */
+/**
+ * How long a single model may take before the world stops waiting for it.
+ *
+ * Generous: this is a ceiling on a stuck load, not a performance budget. The
+ * largest character is about three megabytes and a slow phone on a slow
+ * connection should still finish well inside it.
+ */
+const MODEL_LOAD_TIMEOUT_MS = 45_000;
+
+/**
+ * Where the character breaks into a run, in words per minute.
+ *
+ * A child pecking out their first letters is not running anywhere, and a
+ * sprint cycle under slow typing reads as the game ignoring them. Below this
+ * they walk; at or above it they run.
+ *
+ * Two numbers rather than one because a single threshold flickers: somebody
+ * typing right at the boundary would toggle gait every few keystrokes. It
+ * takes RUN_WPM to start running and a drop to WALK_WPM to stop, so the gait
+ * changes when the pace really changes.
+ */
+const RUN_WPM = 29;
+const WALK_WPM = 25;
+
+/** How long after a jump a second press still counts as a double. ~0.4s. */
+/**
+ * When the character gives up waiting, in seconds since the last keystroke.
+ *
+ * REST_WAVE_S is a FLOOR, not the wave's start time — see `waveAt`, which
+ * backs the wave off the crouch so the two run together with no idle between.
+ *
+ * The gaps widen deliberately: a wave is a small thing to do after a short
+ * pause, sitting down on the path is a bigger statement and should take a
+ * while to earn. Twenty seconds is long enough that a child who is reading
+ * the words rather than typing them does not get sat down mid-thought, and it
+ * leaves a good eight seconds of crouching in between rather than a glance.
+ */
+/** Frames sampled per gait cycle when deciding where the ground is. */
+const SAMPLES_PER_GAIT = 12;
+
+/** Crossfade between two resting clips. Long enough to hide a seam, short
+ * enough that the pose still lands on the beat it was timed for. */
+const REST_CROSSFADE_S = 0.28;
+
+/**
+ * How the waiting behaviour backs off when somebody pauses a lot.
+ *
+ * The first version ran the whole chain, with a line at every step, on every
+ * pause. For a child who stops to think between words — which is most of them,
+ * most of the time — that is a character waving and talking at them every few
+ * seconds, and the effect of a friendly nudge repeated twenty times is not
+ * friendliness.
+ *
+ * Three separate brakes, because they solve different halves of the problem:
+ *
+ * 1. PATIENCE — the thresholds stretch each time they pause, so someone who
+ *    pauses constantly is simply left alone for longer before anything starts.
+ * 2. SHORTER CHAIN — the wave stops appearing after the first couple of
+ *    pauses, then the crouch does. It has been seen; it is no longer news. By
+ *    the sixth pause he just quietly sits down.
+ * 3. SPEECH BUDGET — at most ONE line per pause (it was three), and never two
+ *    lines within the cooldown. The poses carry the message on their own; the
+ *    words are for the first time and the long absence.
+ *
+ * The poses stay generous and the talking gets rare, which is the right way
+ * round: watching a character sit down is pleasant, being told to press a key
+ * for the fifth time is not.
+ */
+const PATIENCE_STEP = 0.55;
+const PATIENCE_CAP = 4;
+/** After this many pauses the wave is dropped from the chain. */
+const WAVE_UNTIL_PAUSE = 2;
+/** After this many, the crouch goes too and only the sit is left. */
+const CROUCH_UNTIL_PAUSE = 5;
+/** No two spoken lines closer together than this, in seconds. */
+const SPEAK_COOLDOWN_S = 45;
+
+const REST_WAVE_S = 5;
+const REST_CROUCH_S = 10;
+const REST_SIT_S = 20;
+
+const DOUBLE_TAP_FRAMES = 24;
+
+/**
+ * Turns a load that never finishes into one that fails.
+ *
+ * Every caller already handles a model that rejects — a character that will
+ * not load falls back to the one this world ships with, and the game runs. A
+ * promise that neither resolves nor rejects defeats all of that: the loading
+ * screen spins forever with nothing to catch, which is exactly what a decoder
+ * failing inside its own worker start-up produces. Nothing downstream can tell
+ * "slow" from "never" without a clock, so this supplies one.
+ */
+function withDeadline<T>(work: Promise<T>, url: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  return Promise.race([
+    work,
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`kids: timed out loading ${url}`)),
+        MODEL_LOAD_TIMEOUT_MS,
+      );
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
+/**
+ * Removes bone scale tracks from a clip.
+ *
+ * Nothing in these character rigs animates bone scale on purpose. What the
+ * tracks actually contain is a rig-scale artefact: across all twenty of the
+ * Explorer's clips, every scale key is either exactly 1 (72,300 of them) or a
+ * point on a smooth ramp towards 1.1768 — which is 1/0.85, the ratio between
+ * the scale the rig was authored at and the scale it was exported at. Squash
+ * and stretch would differ per axis and cluster on impact frames; this is one
+ * uniform number, interpolated, on the same bone.
+ *
+ * Left in, it does visible damage. `Idle` pinned Hips at 1.1768 for the whole
+ * clip while `Walk` and `Run` sat at 1, so the character stood 17.7% taller
+ * than he ran. The one-shot clips — Wave, Jump, Crouch, Sit — ramp between the
+ * two, so each would swell and shrink as it played.
+ *
+ * An earlier version of this dropped only CONSTANT tracks, which fixed the
+ * standing-taller bug and left every ramp untouched. Dropping all of them is
+ * both simpler and more honest about what the data is: with no scale track the
+ * bind pose governs, which is the pose `fitToHeight` measured and `plantFeet`
+ * planted.
+ */
+/**
+ * How far the upper arms are rotated to bring the hands down onto the knees,
+ * in degrees, per bone. Local to the bone, applied after its own rotation.
+ *
+ * These are solved, not eyeballed. In the shipped `Sit_CrossLegged_Idle` the
+ * hands reach 0.15 forward of and 0.09 below the knees with the arms close to
+ * straight — a bracing pose, which is why the character read as being about to
+ * stand up rather than settled. Searching upper-arm rotations for the one that
+ * puts each hand on its knee, while preferring the smallest rotation that does
+ * it and rejecting any that pulls the elbow inside the torso, gives these:
+ * hand-to-knee distance drops from 0.137 to 0.013 on the left and 0.124 to
+ * 0.006 on the right, elbows staying about 0.25 clear.
+ *
+ * Tune here if the pose still reads wrong — the first number is the one that
+ * lowers the arm.
+ */
+const SIT_ARM_CORRECTION: Readonly<
+  Record<string, readonly [number, number, number]>
+> = {
+  LeftArm: [20, -5, 5],
+  RightArm: [15, -5, -5],
+};
+
+/**
+ * Applies the arm correction to a sitting clip.
+ *
+ * `ramp` decides how the correction is phased across the clip, and getting
+ * this wrong is what would produce a visible snap:
+ *
+ * - `full` — every key corrected. For the looping sit.
+ * - `in` — none at the first key, all at the last. For sitting down, so the
+ *   clip ends exactly where the looping sit begins.
+ * - `out` — all at the first key, none at the last. For standing up, so it
+ *   starts where the sit left off and finishes on the authored pose.
+ *
+ * The sit-down clip already ends on precisely the sit-idle pose (measured: 0.0
+ * degrees of difference on every bone), so correcting one without the others
+ * would introduce a discontinuity where there is currently none.
+ */
+function correctSittingArms(
+  clip: THREE.AnimationClip,
+  ramp: "full" | "in" | "out",
+): THREE.AnimationClip {
+  const identity = new THREE.Quaternion();
+  const offset = new THREE.Quaternion();
+  const partial = new THREE.Quaternion();
+  const key = new THREE.Quaternion();
+  const euler = new THREE.Euler();
+  for (const track of clip.tracks) {
+    if (!track.name.endsWith(".quaternion")) continue;
+    const deg = SIT_ARM_CORRECTION[track.name.slice(0, -".quaternion".length)];
+    if (deg == null) continue;
+    const d = Math.PI / 180;
+    euler.set(deg[0] * d, deg[1] * d, deg[2] * d);
+    offset.setFromEuler(euler);
+    const v = track.values;
+    const keys = v.length / 4;
+    for (let i = 0; i < keys; i++) {
+      const t = keys === 1 ? 1 : i / (keys - 1);
+      const amount = ramp === "full" ? 1 : ramp === "in" ? t : 1 - t;
+      partial.copy(identity).slerp(offset, amount);
+      key
+        .set(v[i * 4], v[i * 4 + 1], v[i * 4 + 2], v[i * 4 + 3])
+        .multiply(partial);
+      v[i * 4] = key.x;
+      v[i * 4 + 1] = key.y;
+      v[i * 4 + 2] = key.z;
+      v[i * 4 + 3] = key.w;
+    }
+  }
+  return clip;
+}
+
+function stripScaleTracks(clip: THREE.AnimationClip): THREE.AnimationClip {
+  clip.tracks = clip.tracks.filter((track) => !track.name.endsWith(".scale"));
+  return clip;
+}
+
+function serveTranscoderFromUrl(ktx2: KTX2Loader): void {
+  const self = ktx2 as unknown as {
+    transcoderPending: Promise<void> | null;
+    transcoderBinary: ArrayBuffer | null;
+    workerConfig: unknown;
+    workerPool: { setWorkerCreator: (fn: () => Worker) => void };
+  };
+  self.transcoderPending = fetch(`${ASSETS}/basis/basis_transcoder.wasm`)
+    .then((r) => {
+      if (!r.ok) throw new Error(`basis_transcoder.wasm: ${r.status}`);
+      return r.arrayBuffer();
+    })
+    .then((binary) => {
+      self.transcoderBinary = binary;
+      self.workerPool.setWorkerCreator(() => {
+        const worker = new Worker(`${ASSETS}/basis/ktx2-worker.js`);
+        const transcoderBinary = (self.transcoderBinary as ArrayBuffer).slice(
+          0,
+        );
+        worker.postMessage(
+          { type: "init", config: self.workerConfig, transcoderBinary },
+          [transcoderBinary],
+        );
+        return worker;
+      });
+    });
+}
+
 export type Land = {
   readonly name: string;
   readonly mood: "day" | "overcast";
@@ -276,7 +530,16 @@ export const HERO_THEME: WorldTheme = {
   modelDir: "hero",
   sceneryDir: "hero",
   defaultPlayer: "Knight",
-  playerHeight: () => 3.4,
+  // 3.4 suits the armoured heroes, who are drawn as adults. The Explorer is a
+  // ten-year-old: fitted to the same total height he reads as small, because a
+  // child's proportions spend more of that height on head and less on body.
+  //
+  // 4 is not a guess — it is 3.4 x 1.1765, the constant his Idle clip used to
+  // pin on the Hips bone. That scale track inflated him only while standing
+  // still (see stripScaleTracks), so idle was the one pose anybody judged
+  // his size by. Applying it as a real fitted height gives him that size in
+  // every pose instead of one.
+  playerHeight: (name) => (name === "Explorer" ? 4.8 : 3.4),
   morphsBody: false,
   animationUrls: ["anims-move.glb", "anims-idle.glb"],
   lands: HERO_LANDS,
@@ -357,7 +620,32 @@ type DinoRig = {
   readonly wrap: THREE.Group;
   readonly mixer: THREE.AnimationMixer;
   readonly run: THREE.AnimationAction | null;
+  /**
+   * A separate, slower gait. Null for the characters that ship one move clip
+   * — they run or they stand, exactly as before.
+   */
+  readonly walk: THREE.AnimationAction | null;
   readonly idle: THREE.AnimationAction | null;
+  /** A one-shot celebration the character performs itself, if it has one. */
+  readonly joy: THREE.AnimationAction | null;
+  /**
+   * What the character does while nobody is typing. All optional — a
+   * character without them simply stands in `idle`, which is what every rig
+   * but the Explorer's does today.
+   */
+  readonly rest: RestClips;
+};
+
+/** One-shot and looping clips for the idle chain, plus the jump. */
+type RestClips = {
+  readonly wave: THREE.AnimationAction | null;
+  readonly crouchDown: THREE.AnimationAction | null;
+  readonly crouchIdle: THREE.AnimationAction | null;
+  readonly standFromCrouch: THREE.AnimationAction | null;
+  readonly sitDown: THREE.AnimationAction | null;
+  readonly sitIdle: THREE.AnimationAction | null;
+  readonly standFromSit: THREE.AnimationAction | null;
+  readonly jump: THREE.AnimationAction | null;
 };
 
 export type KidsWorld = {
@@ -401,6 +689,21 @@ export type KidsWorld = {
    * 0 = they hold still (a calmer, less busy scene). */
   setMotion(intensity: number): void;
   /**
+   * How fast the learner is typing, in words per minute.
+   *
+   * Decides the character's gait: below RUN_WPM they walk, at or above it they
+   * run. Characters carrying a single move clip ignore it.
+   */
+  setPace(wpm: number): void;
+  /**
+   * A keystroke happened. Ends any resting pose and restarts the idle clock.
+   *
+   * Separate from `setPace` because a wrong key is still activity: it does not
+   * advance the trail, so movement alone would leave him sitting down while
+   * somebody is very much still there and typing.
+   */
+  wake(): void;
+  /**
    * Hold the celebrations and the flinches still.
    *
    * Separate from `setMotion`, which is about how lively the scenery is. This
@@ -427,6 +730,14 @@ export function createKidsWorld(
     /** Which night this learner gets; see night.ts. Hero world only. */
     readonly nightStyle?: NightStyle;
     readonly tier?: DeviceTier;
+    /**
+     * Called when the character settles into a waiting pose, so the page can
+     * say something. Fired on the pose the learner actually sees land — the
+     * wave as it starts, the crouch and the sit once they have arrived — not
+     * on the transitions in between, which would make the coach talk over
+     * itself twice in two seconds.
+     */
+    readonly onRest?: (stage: "wave" | "crouch" | "sit") => void;
   } = {},
 ): KidsWorld {
   // Whether dark here means night, and what tonight holds if it does.
@@ -990,6 +1301,7 @@ export function createKidsWorld(
   const ktx2 = new KTX2Loader()
     .setTranscoderPath(`${ASSETS}/basis/`)
     .detectSupport(renderer);
+  serveTranscoderFromUrl(ktx2);
   loader.setKTX2Loader(ktx2);
   /**
    * Every model this world parsed.
@@ -1002,7 +1314,7 @@ export function createKidsWorld(
    */
   const loaded: THREE.Object3D[] = [];
   async function loadModel(url: string) {
-    const gltf = await loader.loadAsync(url);
+    const gltf = await withDeadline(loader.loadAsync(url), url);
     if (disposed) {
       // The world was torn down while this model was in flight. It never
       // entered `loaded`, so dispose() already ran and will never see it —
@@ -1012,9 +1324,9 @@ export function createKidsWorld(
     }
     loaded.push(gltf.scene);
     // Kids app: death, attack and bite clips never make it in.
-    gltf.animations = (gltf.animations ?? []).filter(
-      (c) => !/death|attack|bite/i.test(c.name),
-    );
+    gltf.animations = (gltf.animations ?? [])
+      .filter((c) => !/death|attack|bite/i.test(c.name))
+      .map(stripScaleTracks);
     gltf.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.isMesh && m.geometry) {
@@ -1066,6 +1378,129 @@ export function createKidsWorld(
     wrap.add(root);
     return wrap;
   }
+  /**
+   * Drops the character until its feet are back on the ground.
+   *
+   * `fitToHeight` measures the mesh in its BIND pose — a T-pose with straight
+   * legs — and offsets it so the lowest point sits at zero. That is the right
+   * reference for how tall to draw somebody, but not for where their feet
+   * are once a clip is playing: the idle pose stands with softer knees and
+   * the body a little higher, so the character hovered with its shadow still
+   * printed on the ground beneath it.
+   *
+   * This measures the same quantity the bind-pose fit did — the lowest point
+   * of the character — but with the idle pose actually applied, and moves it
+   * back to zero.
+   *
+   * It walks the skinned vertices rather than the foot bones. Bones were the
+   * cheaper thing to measure and gave the wrong answer: a bone is a point,
+   * and how far the sole of the shoe hangs below that point depends on how
+   * the ankle is rotated, which is exactly what changes between the T-pose
+   * and a standing pose. Correcting by the bone delta therefore overshot and
+   * buried the feet. Skinned vertices carry the rotation with them, so the
+   * number is the real silhouette either way.
+   *
+   * It samples every gait through its cycle rather than the idle pose alone.
+   * Idle looked like the right reference — it is the resting one — but a walk
+   * and a run drop the hips and swing a foot lower than a standstill ever
+   * does, so planting on idle left him correct while still and sunk into the
+   * path for most of a stride. The lowest point across all of them is the one
+   * that has to sit on the ground.
+   */
+  function plantFeet(
+    root: THREE.Object3D,
+    mixer: THREE.AnimationMixer,
+    gaits: readonly (THREE.AnimationAction | null)[],
+  ): void {
+    const v = new THREE.Vector3();
+
+    // Only the vertices that can possibly be the lowest point.
+    //
+    // Skinning all 6,643 of them at every sampled frame measured at 19.4
+    // SECONDS on the Explorer, which is most of what made the kids world take
+    // the best part of a minute to open. Almost all of that work was wasted:
+    // the lowest point of a character standing or walking is on a foot, so
+    // hair, hands and rucksack are computed and thrown away 36 times over.
+    //
+    // Collecting the vertices actually weighted to a foot bone cuts the set to
+    // a few hundred and the cost to milliseconds, and cannot change the answer
+    // — a vertex with no weight on a foot bone was never going to be the one
+    // touching the ground.
+    const meshes: { mesh: THREE.SkinnedMesh; verts: number[] }[] = [];
+    root.traverse((o) => {
+      const m = o as THREE.SkinnedMesh;
+      if (!m.isSkinnedMesh) return;
+      const footBones = new Set<number>();
+      m.skeleton.bones.forEach((b, i) => {
+        if (/toe|foot|ankle/i.test(b.name)) footBones.add(i);
+      });
+      const skinIndex = m.geometry.attributes.skinIndex;
+      const skinWeight = m.geometry.attributes.skinWeight;
+      const verts: number[] = [];
+      if (footBones.size === 0 || skinIndex == null || skinWeight == null) {
+        // No named feet — fall back to every vertex rather than guess wrong.
+        for (let i = 0; i < m.geometry.attributes.position.count; i++)
+          verts.push(i);
+      } else {
+        for (let i = 0; i < skinIndex.count; i++) {
+          for (let c = 0; c < 4; c++) {
+            if (
+              skinWeight.getComponent(i, c) > 0.05 &&
+              footBones.has(skinIndex.getComponent(i, c))
+            ) {
+              verts.push(i);
+              break;
+            }
+          }
+        }
+      }
+      meshes.push({ mesh: m, verts });
+    });
+
+    const lowestNow = (): number => {
+      root.updateMatrixWorld(true);
+      let low = Infinity;
+      for (const { mesh, verts } of meshes) {
+        mesh.skeleton.update();
+        const pos = mesh.geometry.attributes.position;
+        for (const i of verts) {
+          v.fromBufferAttribute(pos, i);
+          mesh.applyBoneTransform(i, v);
+          mesh.localToWorld(v);
+          if (v.y < low) low = v.y;
+        }
+      }
+      return low;
+    };
+
+    // Sample every gait he actually spends time in, across the whole cycle.
+    // Planting on the idle pose alone leaves him correct at a standstill and
+    // sunk into the path for most of a stride, because a walk and a run drop
+    // the hips and swing a foot lower than standing ever does.
+    const live = gaits.filter((a): a is THREE.AnimationAction => a != null);
+    let lowest = Infinity;
+    for (const action of live) {
+      const saved = live.map((a) => a.weight);
+      for (const a of live) a.weight = a === action ? 1 : 0;
+      const dur = action.getClip().duration || 1;
+      for (let i = 0; i < SAMPLES_PER_GAIT; i++) {
+        action.time = (dur * i) / SAMPLES_PER_GAIT;
+        mixer.update(0);
+        lowest = Math.min(lowest, lowestNow());
+      }
+      action.time = 0;
+      live.forEach((a, k) => (a.weight = saved[k]!));
+    }
+    if (live.length === 0) {
+      mixer.update(0);
+      lowest = lowestNow();
+    }
+    if (Number.isFinite(lowest)) {
+      root.position.y -= lowest;
+    }
+    mixer.update(0);
+  }
+
   // Characters carry their own clips (dino/cube); KayKit heroes get them from
   // the shared animation GLBs, bound by matching bone names at runtime.
   let sharedClips: THREE.AnimationClip[] = [];
@@ -1090,20 +1525,82 @@ export function createKidsWorld(
     // running and he ambled through the whole trail. The KayKit heroes
     // carry one move clip each and are unaffected either way.
     const runClip = pick(/\brun\b|gallop/) ?? pick(/run|gallop|walk/);
+    // Only a clip that is genuinely a second, slower gait. Where the fallback
+    // above already claimed the walk as the run — the KayKit heroes carry one
+    // move clip each — there is no walk to blend to and the gait stays binary.
+    const walkClipRaw = pick(/\bwalk\b/);
+    const walkClip = walkClipRaw !== runClip ? walkClipRaw : null;
     const idleClip = pick(/idle|stand/);
+    const joyClip = pick(/joy|celebrat|victory|cheer/);
     let run: THREE.AnimationAction | null = null;
+    let walk: THREE.AnimationAction | null = null;
     let idle: THREE.AnimationAction | null = null;
+    let joy: THREE.AnimationAction | null = null;
     if (runClip) {
       run = mixer.clipAction(runClip);
       run.play();
       run.weight = 0;
     }
-    if (idleClip && idleClip !== runClip) {
+    if (walkClip) {
+      walk = mixer.clipAction(walkClip);
+      walk.play();
+      walk.weight = 0;
+    }
+    if (idleClip && idleClip !== runClip && idleClip !== walkClip) {
       idle = mixer.clipAction(idleClip);
       idle.play();
       idle.weight = 1;
     }
-    return { wrap, mixer, run, idle };
+    if (joyClip) {
+      // Played on demand and held on its last frame rather than looping: a
+      // celebration that restarts behind the finish banner reads as a stutter.
+      joy = mixer.clipAction(joyClip);
+      joy.setLoop(THREE.LoopOnce, 1);
+      joy.clampWhenFinished = true;
+      joy.weight = 0;
+    }
+    const oneShot = (
+      re: RegExp,
+      fix?: (c: THREE.AnimationClip) => THREE.AnimationClip,
+    ) => {
+      const found = pick(re);
+      if (found == null) return null;
+      const clip = fix ? fix(found) : found;
+      const a = mixer.clipAction(clip);
+      a.setLoop(THREE.LoopOnce, 1);
+      a.clampWhenFinished = true;
+      a.weight = 0;
+      return a;
+    };
+    const looping = (
+      re: RegExp,
+      fix?: (c: THREE.AnimationClip) => THREE.AnimationClip,
+    ) => {
+      const found = pick(re);
+      if (found == null) return null;
+      const clip = fix ? fix(found) : found;
+      const a = mixer.clipAction(clip);
+      a.weight = 0;
+      return a;
+    };
+    const rest: RestClips = {
+      wave: oneShot(/^wave$/),
+      crouchDown: oneShot(/^crouch_down$/),
+      crouchIdle: looping(/^crouch_idle$/),
+      standFromCrouch: oneShot(/^stand_from_crouch$/),
+      sitDown: oneShot(/^sit_crosslegged_down$/, (c) =>
+        correctSittingArms(c, "in"),
+      ),
+      sitIdle: looping(/^sit_crosslegged_idle$/, (c) =>
+        correctSittingArms(c, "full"),
+      ),
+      standFromSit: oneShot(/^stand_from_crosslegged$/, (c) =>
+        correctSittingArms(c, "out"),
+      ),
+      jump: oneShot(/^jump$/),
+    };
+    plantFeet(gltf.scene, mixer, [idle, walk, run]);
+    return { wrap, mixer, run, walk, idle, joy, rest };
   }
 
   // ── population ─────────────────────────────────────────────────────────
@@ -1115,6 +1612,103 @@ export function createKidsWorld(
   let runEnd = runStart + RUN_LEN;
   let flagPole: THREE.Mesh | null = null;
   let flagCone: THREE.Mesh | null = null;
+  /**
+   * When the wave starts, so that it finishes exactly as the crouch begins.
+   *
+   * Timing it from the pause instead left a gap: the wave ran 5.0s to 8.3s and
+   * he stood in `Idle` for the next 1.7 seconds before crouching, which is the
+   * one moment in the chain where nothing is happening and the return to idle
+   * is visible as a change rather than a continuation. Backing the start off
+   * the crouch closes the gap entirely — the wave runs straight into it.
+   *
+   * `REST_WAVE_S` survives as a floor, so a very long wave clip could not pull
+   * the gesture forward into the first few seconds of a pause.
+   */
+  function waveAt(r: RestClips): number {
+    const dur = r.wave?.getClip().duration ?? 0;
+    return Math.max(REST_WAVE_S, REST_CROUCH_S - dur);
+  }
+
+  /** How much longer he waits before reacting, given how often they pause. */
+  function patience(): number {
+    return 1 + Math.min(pauses, PATIENCE_CAP) * PATIENCE_STEP;
+  }
+
+  /**
+   * Says a line, if the budget allows. One per pause, and never two inside
+   * the cooldown — so a run of short pauses produces poses and silence.
+   */
+  function maybeSay(stage: "wave" | "crouch" | "sit"): void {
+    const now = clock.elapsedTime;
+    if (spokeThisPause || now - lastSpokeAt < SPEAK_COOLDOWN_S) return;
+    spokeThisPause = true;
+    lastSpokeAt = now;
+    opts.onRest?.(stage);
+  }
+
+  /** Starts a one-shot rest clip and records how long it runs for. */
+  function startRest(stage: RestStage, action: THREE.AnimationAction): void {
+    if (restAction != null && restAction !== action) {
+      restPrev = restAction;
+      restBlend = 0;
+    }
+    action.reset();
+    action.play();
+    restAction = action;
+    restStage = stage;
+    restHold = action.getClip().duration;
+  }
+
+  /** Switches to the looping pose that holds after a one-shot finishes. */
+  function hold(stage: RestStage, action: THREE.AnimationAction | null): void {
+    if (stage === "crouchIdle") maybeSay("crouch");
+    if (stage === "sitIdle") maybeSay("sit");
+    if (action == null) {
+      restStage = "none";
+      return;
+    }
+    if (restAction != null && restAction !== action) {
+      restPrev = restAction;
+      restBlend = 0;
+    }
+    action.reset();
+    action.play();
+    restAction = action;
+    restStage = stage;
+    restHold = Infinity;
+  }
+
+  /**
+   * Gets him back on his feet.
+   *
+   * Crouching and sitting both have a stand-up clip, and using it is the whole
+   * difference between a character who was resting and one who teleported into
+   * a run. A wave needs none — he is already standing — so it just stops.
+   */
+  function leaveRest(): void {
+    const r = player?.rest;
+    if (r == null) return;
+    // Already on his way up — let the clip he is playing finish rather than
+    // restarting a stand from a pose he has half left.
+    if (restStage === "upToSit") {
+      restStage = "standing";
+      return;
+    }
+    const up =
+      restStage === "crouchDown" || restStage === "crouchIdle"
+        ? r.standFromCrouch
+        : restStage === "sitDown" || restStage === "sitIdle"
+          ? r.standFromSit
+          : null;
+    if (up != null) {
+      startRest("standing", up);
+      return;
+    }
+    // No stand-up clip needed (a wave). The fade-out in the loop releases the
+    // action; clearing it here would strand it at its clamped final frame.
+    restStage = "none";
+  }
+
   function placeFlag() {
     if (flagPole != null && flagCone != null) {
       flagPole.position.set(runEnd, groundY(runEnd) + 1.7, 0);
@@ -1124,6 +1718,27 @@ export function createKidsWorld(
   let jumpV = 0;
   let jumpY = 0;
   let jumpCount = 0; // jumps used since last touchdown (max 2 = double jump)
+  /**
+   * Forward speed carried by the current jump, spent over its arc.
+   *
+   * A jump straight up on the spot reads as the trail ignoring the space bar.
+   * This is deliberately additive to the eased walk toward `targetX` rather
+   * than a change to `targetX` itself: how far along the trail the character
+   * belongs is decided by how much of the passage is typed, and a jump must
+   * not be able to argue with that. The lunge decays to nothing, so the eased
+   * position always wins in the end.
+   */
+  let jumpFwdV = 0;
+  /**
+   * Frames since the last jump started, for the double-tap window.
+   *
+   * The big jump used to require the second press while still in the air. The
+   * small hop this change introduces is airborne for about a fifth of a
+   * second, which is a demanding window for a seven-year-old and would have
+   * made the leap feel random. Counting from the press instead means a
+   * deliberate double tap works whether or not they are still off the ground.
+   */
+  let framesSinceJump = 999;
   let playerGhostly = false; // skeleton hero: floats and glides like a ghost
   // Every character root in the scene, so the dark can reach all of their eyes.
   const characterRoots = new Set<THREE.Object3D>();
@@ -1443,6 +2058,65 @@ export function createKidsWorld(
   // Reaching the camp flag. Runs 1 -> 0; the dino spends the first half
   // roaring and the second half hopping, the hero spins the whole way.
   let celebT = 0;
+  /**
+   * How much of the celebration elapses per frame.
+   *
+   * The scripted celebrations are authored against the default; a character
+   * playing its own clip gets a rate that makes the countdown last exactly as
+   * long as the clip, so a two-second animation is not cut off by a
+   * one-and-a-half-second timer.
+   */
+  let celebRate = 0.012;
+  /** Latest typing speed, in WPM, as reported by the page. */
+  let paceWpm = 0;
+  /** 0 = walking, 1 = running. Eased, so the gait changes without a snap. */
+  let runShare = 0;
+  /** 0 = standing, 1 = fully in motion. Eased the same way. */
+  let moveW = 0;
+
+  // ── what he does while nobody is typing ──────────────────────────────
+  //
+  // A character who stands perfectly still is the thing that makes a scene
+  // look switched off. The chain below gives the wait a shape: a wave first,
+  // as though checking someone is still there; then sitting down to wait
+  // properly. Every step is interruptible on the next keystroke, and standing
+  // back up uses the rig's own transition rather than a cut.
+  type RestStage =
+    | "none"
+    | "wave"
+    | "crouchDown"
+    | "crouchIdle"
+    | "upToSit"
+    | "sitDown"
+    | "sitIdle"
+    | "standing";
+  let restStage: RestStage = "none";
+  /** Seconds since the last keystroke or the last step along the trail. */
+  let idleT = 0;
+  /**
+   * How far along the chain this idle period has already gone: 0 none,
+   * 1 waved, 2 crouched, 3 sat. Each step happens once per wait, and the
+   * counter resets the moment he moves.
+   */
+  let restStep = 0;
+  /** Seconds left in the one-shot currently playing, if any. */
+  let restHold = 0;
+  /** The action carrying the rest pose right now. */
+  let restAction: THREE.AnimationAction | null = null;
+  /** The one it is replacing, still fading out. */
+  let restPrev: THREE.AnimationAction | null = null;
+  /** 0 to 1 across the crossfade between two rest clips. */
+  let restBlend = 1;
+  /** How many times they have gone quiet in this world. Drives the backoff. */
+  let pauses = 0;
+  /** One line per pause, at most. */
+  let spokeThisPause = false;
+  /** When the last line was spoken, on the world clock. */
+  let lastSpokeAt = -Infinity;
+  /** Eases the rest pose in and out over the gait, so nothing snaps. */
+  let restW = 0;
+  /** Seconds left of the jump clip. Weight follows it, not the arc height. */
+  let jumpAnimHold = 0;
   let celebHops = 0;
   let growTarget = 1;
   // 0 = just-hatched baby, 1 = fully-grown adult. Drives real proportion,
@@ -1809,23 +2483,69 @@ export function createKidsWorld(
   let pendingColours: ClothingColours = {};
 
   async function setPlayer(name: string) {
-    const gltf = await loadModel(
+    /**
+     * A character that will not load must not take the game with it.
+     *
+     * The Explorer's textures are Basis-compressed, and transcoding them
+     * needs a format the GPU will accept. Where that fails — an old
+     * machine, a driver that reports nothing usable — the model rejects,
+     * and before this the rejection travelled up through world creation
+     * and left a child looking at an empty trail with no way back: the
+     * character picker is inside a game that never started.
+     *
+     * So a failure falls back to the character this world ships with,
+     * which is plain glTF and always loads. The game runs; they are
+     * simply not playing as the one they picked.
+     */
+    let gltf = await loadModel(
       `${ASSETS}/models/${theme.modelDir}/${name}.glb`,
-    );
+    ).catch((err: unknown) => {
+      console.warn(`kids: could not load "${name}", falling back`, err);
+      return null;
+    });
+    if (gltf == null && name !== theme.defaultPlayer) {
+      gltf = await loadModel(
+        `${ASSETS}/models/${theme.modelDir}/${theme.defaultPlayer}.glb`,
+      ).catch(() => null);
+    }
     if (gltf == null) {
       return;
     }
     playerH = theme.playerHeight(name);
     const rig = rigOf(gltf, playerH);
-    // Only a character authored with masks gets one; everyone else keeps
-    // the colours they were painted with and this is null.
-    playerTint = await attachTint(gltf);
-    if (playerTint != null && Object.keys(pendingColours).length > 0) {
-      // Colours chosen before this model finished loading — a child who
-      // set them last session, or who changed character with the panel
-      // already open. Applied now rather than dropped.
-      playerTint.setColors(pendingColours);
-    }
+    // Recolouring is a nicety; being able to play is not.
+    //
+    // This used to be awaited here, which put a texture lookup and a
+    // transcoder worker between a child and their game: anything slow or
+    // stuck in it did not fail the character, it simply never finished,
+    // and the trail sat empty with nothing on screen to say why. It runs
+    // alongside now — the character appears either way, and the clothes
+    // take their colour a moment later if they can.
+    playerTint = null;
+    const forThisModel = gltf;
+    void attachTint(gltf)
+      .then((tint) => {
+        // A slow model that lost the race must not tint whoever replaced
+        // it, so the result is dropped unless it is still the one on
+        // screen.
+        if (disposed || player?.wrap !== rig.wrap || forThisModel !== gltf) {
+          return;
+        }
+        playerTint = tint;
+        if (tint != null && Object.keys(pendingColours).length > 0) {
+          // Colours chosen before this model finished loading — set last
+          // session, or changed with the panel already open.
+          tint.setColors(pendingColours);
+        }
+      })
+      .catch((err: unknown) => {
+        // Said out loud, because a character silently refusing to take a
+        // colour is a bug report nobody can describe.
+        console.warn(
+          "kids: clothing colours unavailable for this character",
+          err,
+        );
+      });
     rig.wrap.position.set(playerX, groundY(playerX), 0);
     rig.wrap.rotation.y = Math.PI / 2;
     if (player) {
@@ -1878,9 +2598,9 @@ export function createKidsWorld(
             `${ASSETS}/models/${theme.modelDir}/${url}`,
           );
           sharedClips = sharedClips.concat(
-            (g.animations ?? []).filter(
-              (c) => !/death|attack|bite|hit/i.test(c.name),
-            ),
+            (g.animations ?? [])
+              .filter((c) => !/death|attack|bite|hit/i.test(c.name))
+              .map(stripScaleTracks),
           );
         } catch {
           // A missing clip file just means no animation — still playable.
@@ -1983,7 +2703,24 @@ export function createKidsWorld(
         // a clip are never bobbing in unison.
         a.time = Math.random() * (clip.duration || 1);
       }
-      friends.push({ wrap, mixer, run: null, idle: null });
+      friends.push({
+        wrap,
+        mixer,
+        run: null,
+        walk: null,
+        idle: null,
+        joy: null,
+        rest: {
+          wave: null,
+          crouchDown: null,
+          crouchIdle: null,
+          standFromCrouch: null,
+          sitDown: null,
+          sitIdle: null,
+          standFromSit: null,
+          jump: null,
+        },
+      });
     };
     /**
      * Who each of the day folk turns out to be after dark.
@@ -2146,7 +2883,24 @@ export function createKidsWorld(
             a.time = Math.random() * (idleClip.duration || 1);
             a.play();
           }
-          friends.push({ wrap, mixer, run: null, idle: null });
+          friends.push({
+            wrap,
+            mixer,
+            run: null,
+            walk: null,
+            idle: null,
+            joy: null,
+            rest: {
+              wave: null,
+              crouchDown: null,
+              crouchIdle: null,
+              standFromCrouch: null,
+              sitDown: null,
+              sitIdle: null,
+              standFromSit: null,
+              jump: null,
+            },
+          });
         };
         // Sheep are meadow animals: most graze the open grass field in front
         // of the trail, a few on the far side — and they keep clear of the
@@ -2437,8 +3191,21 @@ export function createKidsWorld(
 
     if (player) {
       const p = player.wrap.position;
+      framesSinceJump += 1;
       const dx = targetX - p.x;
       p.x += dx * 0.06;
+      if (jumpFwdV > 0) {
+        // Only while there is trail to cover. A jump on the spot must stay on
+        // the spot: nudging x would make the next frame see a gap between the
+        // character and its target, which is the same signal running uses, so
+        // a plain space press at a standstill played a stride and a half of
+        // walking under the hop. Standing still, space is a jump and nothing
+        // else.
+        if (Math.abs(dx) > 0.08) {
+          p.x += jumpFwdV;
+        }
+        jumpFwdV = Math.max(0, jumpFwdV - 0.0016);
+      }
       playerX = p.x;
       jumpY = Math.max(0, jumpY + jumpV);
       jumpV -= 0.03;
@@ -2454,7 +3221,12 @@ export function createKidsWorld(
         wasAirborne = true;
       } else if (wasAirborne) {
         wasAirborne = false; // touchdown — kick up a puff of dust
-        jumpCount = 0; // back on the ground: jumps refresh
+        // Back on the ground, jumps refresh — but not while the double-tap
+        // window is still open, or landing early would cancel the leap the
+        // second press was about to make.
+        if (framesSinceJump > DOUBLE_TAP_FRAMES) {
+          jumpCount = 0;
+        }
         burst(p.x, p.y + 0.15, p.z, [0xcfc4ae, 0xb8ab90], 8, 0.14);
       }
       const moving = Math.abs(dx) > 0.08;
@@ -2464,16 +3236,227 @@ export function createKidsWorld(
       if (player.run && player.idle) {
         // Legs move when moving (skeleton included) — the ghostly feel comes
         // from the faint hover above, not from stiff gliding.
-        player.run.weight += ((moving ? 1 : 0) - player.run.weight) * 0.12;
-        player.idle.weight = 1 - player.run.weight;
+        //
+        // Two independent blends: `moveW` is how much of the character is in
+        // motion at all, and `runShare` splits that motion between the two
+        // gaits. Keeping them separate is what lets the gait change mid-stride
+        // without the character stopping first.
+        moveW += ((moving ? 1 : 0) - moveW) * 0.12;
+        if (player.walk) {
+          // Hysteresis: start running at RUN_WPM, drop back below WALK_WPM.
+          if (paceWpm >= RUN_WPM) {
+            runShare += (1 - runShare) * 0.06;
+          } else if (paceWpm < WALK_WPM) {
+            runShare += (0 - runShare) * 0.06;
+          }
+          player.walk.weight = moveW * (1 - runShare);
+        } else {
+          // One move clip: it is the run, and it carries all the motion.
+          runShare = 1;
+        }
+        player.run.weight = moveW * runShare;
+        player.idle.weight = 1 - moveW;
       }
+
+      // ── the idle chain ────────────────────────────────────────────────
+      //
+      // Runs on the clock rather than on clip-finished events: the sequencing
+      // is a handful of durations and a stage name, and keeping it here means
+      // one place to read when the timings need tuning.
+      const r = player.rest;
+      if (moving) {
+        if (restStep > 0) {
+          // A pause that actually reached the chain is over. Count it, so the
+          // next one is met with more patience and less chain.
+          pauses += 1;
+        }
+        idleT = 0;
+        restStep = 0;
+        spokeThisPause = false;
+        if (restStage !== "none" && restStage !== "standing") {
+          leaveRest();
+        }
+      } else if (restStage !== "standing") {
+        idleT += dt;
+      }
+      restHold = Math.max(0, restHold - dt);
+
+      // Escalation, checked every frame — and deliberately NOT inside the
+      // "a one-shot just finished" branch below.
+      //
+      // That is where it used to live, and a looping pose has no finish to
+      // wait for: `hold()` parks `restHold` at Infinity, so once he was in
+      // Crouch_Idle the branch never ran again and he crouched forever. The
+      // step he is allowed to leave from is a settled one — a standstill or a
+      // looping pose — never the middle of a one-shot, or sitting down would
+      // cut off crouching down halfway.
+      const settled =
+        restStage === "none" ||
+        restStage === "crouchIdle" ||
+        restStage === "sitIdle";
+      if (!moving && settled) {
+        // Thresholds stretch with how often they have paused, and the early
+        // steps drop out of the chain once they have been seen.
+        const p = patience();
+        const sitAt = REST_SIT_S * p;
+        const crouchAt = REST_CROUCH_S * p;
+        const showWave = pauses < WAVE_UNTIL_PAUSE;
+        const showCrouch = pauses < CROUCH_UNTIL_PAUSE;
+        if (idleT >= sitAt && restStep < 3 && r.sitDown) {
+          // He has to stand up before he can sit down.
+          //
+          // `Sit_CrossLegged_Down` is authored from a STANDING pose, so
+          // playing it straight out of a crouch teleported him upright first —
+          // measured at 0.70 of bone movement in a single frame, by far the
+          // largest seam in the chain and the one that read as choppy. Going
+          // via `Stand_From_Crouch` brings that down to 0.13, which the
+          // crossfade then covers.
+          if (restStage === "crouchIdle" && r.standFromCrouch) {
+            startRest("upToSit", r.standFromCrouch);
+          } else {
+            startRest("sitDown", r.sitDown);
+          }
+          restStep = 3;
+        } else if (
+          idleT >= crouchAt &&
+          restStep < 2 &&
+          showCrouch &&
+          r.crouchDown
+        ) {
+          startRest("crouchDown", r.crouchDown);
+          restStep = 2;
+        } else if (
+          idleT >= waveAt(r) * p &&
+          restStep < 1 &&
+          showWave &&
+          r.wave
+        ) {
+          startRest("wave", r.wave);
+          maybeSay("wave");
+          restStep = 1;
+        }
+      }
+      if (restHold <= 0) {
+        // A one-shot has run its length; move to whatever holds that pose.
+        // `restStep` is what stops the wave restarting the moment it ends —
+        // without it he waved on a five-second loop and never reached a crouch.
+        if (restStage === "wave" || restStage === "standing") {
+          restStage = "none";
+        } else if (restStage === "upToSit") {
+          if (r.sitDown) startRest("sitDown", r.sitDown);
+          else restStage = "none";
+        } else if (restStage === "crouchDown") {
+          hold("crouchIdle", r.crouchIdle);
+        } else if (restStage === "sitDown") {
+          hold("sitIdle", r.sitIdle);
+        }
+      }
+
+      // The rest pose fades over the gait rather than replacing it outright,
+      // so a keystroke mid-sit blends back into walking instead of cutting.
+      const restTarget = restStage === "none" ? 0 : 1;
+      restW += (restTarget - restW) * 0.14;
+
+      // Exactly one rest clip may be showing, and the rest must be at zero
+      // AND stopped.
+      //
+      // This is not defensive tidying, it is the whole correctness of the
+      // chain. Every one-shot here sets `clampWhenFinished`, which holds its
+      // final frame at whatever weight it was last given — so releasing an
+      // action by dropping the reference leaves it standing at full weight
+      // forever, on top of everything after it. That is what froze the
+      // character in the last frame of Wave and then blended Crouch and Sit
+      // on top of it. Driving every non-current clip to zero each frame makes
+      // the sequencing bug unrepresentable rather than merely fixed.
+      // Two clips may carry weight at once, and only during a crossfade: the
+      // one arriving and the one it replaced. Everything else is at zero and
+      // stopped.
+      //
+      // Without the fade the stages swapped instantly at full weight, so
+      // every authored difference between the end of one clip and the start
+      // of the next landed in a single frame. That is what the chop was.
+      restBlend = Math.min(1, restBlend + dt / REST_CROSSFADE_S);
+      const arriving = restW * restBlend;
+      const leaving = restW * (1 - restBlend);
+      for (const a of [
+        r.wave,
+        r.crouchDown,
+        r.crouchIdle,
+        r.standFromCrouch,
+        r.sitDown,
+        r.sitIdle,
+        r.standFromSit,
+      ]) {
+        if (a == null) continue;
+        if (a === restAction) {
+          a.weight = arriving;
+        } else if (a === restPrev) {
+          a.weight = leaving;
+          if (leaving <= 0.001) {
+            a.weight = 0;
+            a.stop();
+            restPrev = null;
+          }
+        } else if (a.weight !== 0 || a.isRunning()) {
+          a.weight = 0;
+          a.stop();
+        }
+      }
+      // Once faded out, let go of it — a stopped clip at zero weight costs
+      // nothing, but holding the reference would block the next stage.
+      if (restStage === "none" && restW < 0.002) {
+        restW = 0;
+        for (const a of [restAction, restPrev]) {
+          if (a == null) continue;
+          a.weight = 0;
+          a.stop();
+        }
+        restAction = null;
+        restPrev = null;
+      }
+      if (restW > 0.001) {
+        for (const a of [player.run, player.walk, player.idle]) {
+          if (a) a.weight *= 1 - restW;
+        }
+      }
+
+      // The jump clip rides over the gait at partial weight: full weight would
+      // stop his legs mid-stride, and most jumps happen while he is running.
+      jumpAnimHold = Math.max(0, jumpAnimHold - dt);
+      const jumpAnim = player.rest.jump;
+      if (jumpAnim != null) {
+        const w = jumpAnimHold > 0 ? 0.85 : 0;
+        jumpAnim.weight = w;
+        if (w > 0) {
+          for (const a of [player.run, player.walk, player.idle]) {
+            if (a) a.weight *= 1 - w;
+          }
+        }
+      }
+
       const cur = player.wrap.scale.x;
       player.wrap.scale.setScalar(cur + (growTarget - cur) * 0.06);
       if (celebT > 0) {
-        celebT -= 0.012;
+        celebT -= celebRate;
         const t = 1 - Math.max(0, celebT); // 0 -> 1 across the celebration
-        if (theme.pointerRing) {
-          // A full turn on the spot, landing back where it started.
+        if (player.joy) {
+          // Full weight for the body of the celebration, easing out at the
+          // end so the character settles back into idle rather than snapping.
+          const w = Math.min(1, (1 - t) * 6);
+          player.joy.weight = w;
+          for (const a of [player.run, player.walk, player.idle]) {
+            if (a) a.weight *= 1 - w;
+          }
+        }
+        if (player.joy) {
+          // The character celebrates for itself. A clip authored for this
+          // beats spinning the whole model on the spot, which is what a
+          // character with nothing to play had to make do with.
+          player.wrap.rotation.y = Math.PI / 2;
+          player.wrap.rotation.z = 0;
+        } else if (theme.pointerRing) {
+          // No celebration clip: a full turn on the spot, landing back where
+          // it started.
           player.wrap.rotation.y = Math.PI / 2 + t * Math.PI * 2;
           player.wrap.rotation.z = Math.sin(t * Math.PI) * 0.18;
         } else if (t < 0.5) {
@@ -2505,7 +3488,27 @@ export function createKidsWorld(
         player.wrap.rotation.y = Math.PI / 2 - k;
         player.wrap.rotation.z = Math.sin(beckonT * 14) * 0.05 * k;
       } else {
-        player.wrap.rotation.y = Math.PI / 2;
+        // Facing. Along the trail while he is going somewhere; towards
+        // whoever he is waiting for while he is not.
+        //
+        // A wave to the back of someone's head is not a wave, so the whole
+        // resting chain turns to face the camera and stays turned — waving,
+        // then crouching, then sitting, all addressed to the person who has
+        // stopped typing. He turns back as he stands up, because by then he is
+        // about to run again.
+        //
+        // The angle is computed rather than fixed: the camera trails the
+        // player down the trail, so a hard-coded quarter turn would be right
+        // at the start and increasingly wrong later.
+        const waiting = restStage !== "none" && restStage !== "standing";
+        const facing = waiting
+          ? Math.atan2(cam.position.x - p.x, cam.position.z - p.z)
+          : Math.PI / 2;
+        // Shortest way round, so he never spins the long way to face front.
+        let turn = facing - player.wrap.rotation.y;
+        while (turn > Math.PI) turn -= Math.PI * 2;
+        while (turn < -Math.PI) turn += Math.PI * 2;
+        player.wrap.rotation.y += turn * 0.12;
         player.wrap.rotation.z = 0;
       }
       // Float the pointer just above the hero's head (Hero Trail only) — a
@@ -2870,9 +3873,35 @@ export function createKidsWorld(
     },
     jump() {
       // Single or double jump only — holding/mashing space can't turn into
-      // flight. A second mid-air jump gives a little extra lift.
+      // flight.
+      //
+      // The first press is a small hop: space is pressed once per word, so it
+      // happens constantly, and a big leap every few seconds turns the run
+      // into pogo-sticking. The second, in mid-air, is the big one — that is
+      // the move worth discovering, and it has to clear the first by enough
+      // to read as a different thing rather than a slightly better hop.
+      // A press that arrives after the window is a fresh first hop, not the
+      // second half of a double somebody started seconds ago.
+      if (framesSinceJump > DOUBLE_TAP_FRAMES) {
+        jumpCount = 0;
+      }
       if (jumpCount < 2) {
-        jumpV = jumpCount === 0 ? 0.34 : 0.3;
+        framesSinceJump = 0;
+        // A jump is activity: it ends any rest pose and restarts the clock.
+        idleT = 0;
+        if (restStage !== "none" && restStage !== "standing") leaveRest();
+        const j = player?.rest.jump;
+        if (j != null) {
+          j.reset();
+          j.play();
+          // The clip is longer than the small hop's arc, so it is cut to the
+          // hop rather than left hanging after he has landed.
+          jumpAnimHold = Math.min(0.55, j.getClip().duration);
+        }
+        jumpV = jumpCount === 0 ? 0.2 : 0.34;
+        // Both carry the character forward; the double covers more ground,
+        // which is what makes it feel like a leap rather than a bounce.
+        jumpFwdV = jumpCount === 0 ? 0.05 : 0.085;
         jumpCount += 1;
       }
     },
@@ -2892,6 +3921,19 @@ export function createKidsWorld(
     celebrate() {
       celebT = 1;
       celebHops = 0;
+      celebRate = 0.012;
+      if (player?.joy) {
+        // From the top every time: `clampWhenFinished` leaves it parked on the
+        // last frame, and without a reset the second celebration would play
+        // nothing at all.
+        player.joy.reset();
+        player.joy.play();
+        // Run the countdown at the clip's own length (assuming 60fps, which is
+        // what the rest of these hand-tuned rates assume) so it neither cuts
+        // the animation off nor holds a finished pose.
+        const frames = player.joy.getClip().duration * 60;
+        if (frames > 1) celebRate = 1 / frames;
+      }
       if (player) {
         const p = player.wrap.position;
         burst(
@@ -2969,6 +4011,18 @@ export function createKidsWorld(
       userPale = paleness;
       applyLook();
     },
+    setPace(wpm) {
+      paceWpm = Number.isFinite(wpm) ? Math.max(0, wpm) : 0;
+    },
+    wake() {
+      if (restStep > 0) pauses += 1;
+      idleT = 0;
+      restStep = 0;
+      spokeThisPause = false;
+      if (restStage !== "none" && restStage !== "standing") {
+        leaveRest();
+      }
+    },
     setMotion(intensity) {
       motionScale = Math.max(0, Math.min(1, intensity));
     },
@@ -3013,6 +4067,11 @@ export function createKidsWorld(
       scene.background = null;
       scene.environment = null;
       pmrem.dispose();
+      // The transcoder runs a pool of workers. One world that forgets
+      // them is one pool that outlives it, and a child who flips between
+      // Dino Run and Hero Trail a few times ends up with several — which
+      // is a slow page at best and a loader that never answers at worst.
+      ktx2.dispose();
       renderer.dispose();
       // dispose() frees the renderer's GL objects but never loses the
       // CONTEXT — and Chrome pins a canvas (and several megabytes of
@@ -3033,6 +4092,13 @@ export function createKidsWorld(
 export function createLoaderScene(
   canvas: HTMLCanvasElement,
   theme: WorldTheme = DINO_THEME,
+  /**
+   * Who runs across the loading screen. Defaults to the theme's own
+   * character, but the caller passes whoever the learner actually chose —
+   * waiting behind somebody else's hero, then arriving as your own, reads
+   * as the game having forgotten you.
+   */
+  playerName: string = theme.defaultPlayer,
 ): {
   dispose(): void;
 } {
@@ -3054,9 +4120,26 @@ export function createLoaderScene(
     0.1,
     100,
   );
-  // Straight-on side profile — the runner crosses the frame, no angle.
-  cam.position.set(0, 1.6, 10);
-  cam.lookAt(0, 1.3, 0);
+  // No angle on the camera either way — the character is turned, not the lens.
+  //
+  // Framed on the character's middle rather than its knees. At this focal
+  // length the lens sees about 5.4 units at the character's distance, so a
+  // 4.2-unit character aimed at y=1.3 loses the top of its head; aimed at its
+  // own midpoint it sits inside the frame with room to spare.
+  cam.position.set(0, 2.1, 10);
+  cam.lookAt(0, 2.1, 0);
+  /**
+   * Which way the character faces while the world loads, chosen per load.
+   *
+   * Side-on reads as a journey — someone crossing the frame on their way
+   * somewhere. Head-on reads as company, the character walking towards the
+   * person waiting. Both are worth having and neither wears as well as the
+   * pair alternating, so it is a coin toss each time rather than a setting.
+   *
+   * A quarter turn faces +X, which is the direction the world runs in; zero
+   * faces +Z, which is where the camera is.
+   */
+  const facing = Math.random() < 0.5 ? Math.PI / 2 : 0;
   let mixer: THREE.AnimationMixer | null = null;
   let disposed = false;
   const loader = new GLTFLoader();
@@ -3065,9 +4148,10 @@ export function createLoaderScene(
   const previewKtx2 = new KTX2Loader()
     .setTranscoderPath(`${ASSETS}/basis/`)
     .detectSupport(renderer);
+  serveTranscoderFromUrl(previewKtx2);
   loader.setKTX2Loader(previewKtx2);
   loader
-    .loadAsync(`${ASSETS}/models/${theme.modelDir}/${theme.defaultPlayer}.glb`)
+    .loadAsync(`${ASSETS}/models/${theme.modelDir}/${playerName}.glb`)
     .then((gltf) => {
       if (disposed) {
         return;
@@ -3084,20 +4168,27 @@ export function createLoaderScene(
         }
       });
       const size = box.getSize(new THREE.Vector3());
-      const s = 2.6 / (size.y || 1);
+      const s = 4.2 / (size.y || 1);
       gltf.scene.scale.setScalar(s);
       gltf.scene.position.y = -box.min.y * s;
-      gltf.scene.rotation.y = Math.PI / 2;
+      gltf.scene.rotation.y = facing;
       scene.add(gltf.scene);
       const playRun = (clips: readonly THREE.AnimationClip[]) => {
-        const run = clips.find((c) => /run/i.test(c.name));
-        if (run != null) {
+        // A walk, where the character has one. Nobody is racing on a loading
+        // screen, and a sprint cycle under a progress bar reads as urgency
+        // the screen does not mean.
+        const clip =
+          clips.find((c) => /\bwalk\b/i.test(c.name)) ??
+          clips.find((c) => /run/i.test(c.name));
+        if (clip != null) {
           mixer = new THREE.AnimationMixer(gltf.scene);
-          mixer.clipAction(run).play();
+          // Same export noise the world strips: without this the character
+          // changes size the instant the clip starts.
+          mixer.clipAction(stripScaleTracks(clip)).play();
         }
       };
       const own = gltf.animations ?? [];
-      if (own.some((c) => /run/i.test(c.name)) || !theme.animationUrls) {
+      if (own.some((c) => /run|walk/i.test(c.name)) || !theme.animationUrls) {
         playRun(own);
       } else {
         // KayKit heroes: fetch the shared run clip and bind it by bone name.
@@ -3128,6 +4219,7 @@ export function createLoaderScene(
     dispose() {
       disposed = true;
       disposeScene(scene);
+      previewKtx2.dispose();
       renderer.dispose();
       // dispose() frees the renderer's GL objects but never loses the
       // CONTEXT — and Chrome pins a canvas (and several megabytes of

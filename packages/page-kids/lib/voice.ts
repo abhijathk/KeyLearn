@@ -44,6 +44,17 @@ const SPOKEN = new Set([
   "idle",
   "idleYoung",
   "idleOld",
+  // The waiting poses (world.ts, the idle chain). These say the same kind of
+  // thing `idle` does — "I am still here, press a key" — to a child who has
+  // stopped, which is exactly the moment they are least likely to be reading
+  // the screen. Safe to add despite the note above because the chain rations
+  // them hard: one line per pause at most, never two inside 45 seconds, and
+  // the early steps drop out entirely once somebody has paused a few times.
+  // They also REPLACE the `idle` line for any character that has the poses,
+  // rather than adding to it.
+  "wave",
+  "crouch",
+  "sit",
   "graduate",
 ]);
 

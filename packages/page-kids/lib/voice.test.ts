@@ -7,6 +7,12 @@ test("the moments speak and the chatter does not", () => {
   isTrue(isSpoken("hatch"));
   isTrue(isSpoken("stuck"), "help, said when they cannot read the help");
   isTrue(isSpoken("idle"), "and said exactly when they are not looking");
+  // The waiting poses replace the idle nudge for characters that have them,
+  // so if these went unspoken a child using the voice would simply stop being
+  // told anything during a pause.
+  isTrue(isSpoken("wave"));
+  isTrue(isSpoken("crouch"));
+  isTrue(isSpoken("sit"), "the longest wait is the one most worth saying");
 
   // These two fire constantly — a cheer on up to a third of correct keys and a
   // miss on every wrong one. A voice on either would never stop talking.

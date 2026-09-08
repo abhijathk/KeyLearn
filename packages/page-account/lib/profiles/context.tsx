@@ -1,5 +1,6 @@
 import { catchError } from "@keylearn/debug";
 import {
+  clearProfileStorage,
   countPlaces,
   isPremiumUser,
   loadActiveProfileId,
@@ -325,6 +326,10 @@ export function ProfilesProvider({
       remove: async (id) => {
         await gated(async () => {
           const list = await AccountService.deleteProfile(id);
+          // Only once the server has actually accepted the deletion. Clearing
+          // first and then failing would wipe a learner's device history for a
+          // profile that still exists.
+          clearProfileStorage(id);
           setProfiles(list);
           if (activeId === id) {
             setActiveId(list[0]?.id ?? null);

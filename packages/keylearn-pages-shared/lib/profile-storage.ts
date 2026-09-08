@@ -182,6 +182,74 @@ export function profileIdOfNamespace(
 }
 
 /**
+ * Everything this device holds for one profile, removed.
+ *
+ * Distinct from {@link clearProfileProgress}, and the difference is the whole
+ * point of having both. A *reset* keeps preferences — the world they chose,
+ * their companion's name, sound and keyboard settings — because none of those
+ * is a record of what they did, and a child who resets their score should not
+ * also lose their setup. A *deletion* keeps nothing: the profile is gone, and
+ * anything still keyed to it is a record of a learner who no longer exists.
+ *
+ * Written as a prefix sweep rather than a list of known keys deliberately.
+ * The list version is a standing invitation to add a new per-profile key and
+ * forget this file, and the failure it produces is the worst kind: a deleted
+ * child's practice history sitting on a shared family device, invisible until
+ * somebody notices their old best score on a new profile.
+ */
+export function clearProfileStorage(profileId: string | null): void {
+  if (profileId == null) {
+    return;
+  }
+  const prefix = `profile-${profileId}.`;
+  try {
+    const doomed: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key != null && key.startsWith(prefix)) {
+        doomed.push(key);
+      }
+    }
+    // Collected first: removing while iterating by index skips entries.
+    for (const key of doomed) {
+      localStorage.removeItem(key);
+    }
+  } catch {
+    // Storage may be unavailable; nothing to clear either way.
+  }
+}
+
+/**
+ * Everything this device holds for EVERY profile, plus the active selection.
+ *
+ * For account deletion. The account's data going from the server has to mean
+ * it is gone from the device too — otherwise the next person to open KeyLearn
+ * on this machine is met by the last family's scores, and "delete my account"
+ * turns out to have meant "delete my account on one of the two places it was
+ * kept".
+ */
+export function clearAllProfileStorage(): void {
+  try {
+    const doomed: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (
+        key != null &&
+        (key.startsWith("profile-") ||
+          key.startsWith("keylearn.activeProfile."))
+      ) {
+        doomed.push(key);
+      }
+    }
+    for (const key of doomed) {
+      localStorage.removeItem(key);
+    }
+  } catch {
+    // Storage may be unavailable; nothing to clear either way.
+  }
+}
+
+/**
  * Everything a learner's practice has left in local storage, erased.
  *
  * Results live on the server; the kids game's best score, the land it reached,
