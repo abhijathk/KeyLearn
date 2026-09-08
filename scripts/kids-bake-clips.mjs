@@ -343,25 +343,7 @@ for (const anim of donor.json.animations ?? []) {
       // this cancels the donor's rest frame and substitutes the host's. Doing
       // the same with local rotations only is what kept coming out wrong: it
       // silently assumes both parents ended up pointing the same way.
-      // Rest-relative for the body, absolute for the arms.
-      //
-      // Measured, the two rigs' WORLD rest orientations differ by 10-17° down
-      // the spine, head and legs — and by 118° at the upper arm, 180° at the
-      // shoulder. The arm chain is simply authored on a different axis
-      // convention. Rest-relative transfer keeps each rig's own rest and adds
-      // the donor's world swing, which is right where the rests agree and
-      // wrong where they do not: it carried that 118° straight through, and
-      // the six-year-old ended up walking with his hands behind his back.
-      //
-      // For the arms the donor's absolute world orientation is taken instead,
-      // so they finish where the ten-year-old's finish rather than 118° from
-      // it. Everything else stays rest-relative, which is what keeps this
-      // child's own posture rather than replacing it wholesale.
-      const name2 = host.json.nodes[i].name ?? "";
-      const absolute = /shoulder|arm|hand/i.test(name2);
-      const w = absolute
-        ? donorWorld[d]
-        : qMul(qMul(donorWorld[d], qInv(donorWorldRest[d])), hostWorldRest[i]);
+      const w = qMul(qMul(donorWorld[d], qInv(donorWorldRest[d])), hostWorldRest[i]);
       hostWorld[i] = w;
       const parentW = hostH.parent[i] === -1 ? [0, 0, 0, 1] : hostWorld[hostH.parent[i]];
       const local = qMul(qInv(parentW), w);
