@@ -305,7 +305,10 @@ function defaultPrefs(): Prefs {
     // Either can switch worlds any time in the toy-box.
     world: band === "5-6" || band === "7-8" ? "hero" : "dino",
     dino: "TRex",
-    hero: "Knight",
+    // The little Explorer for the younger bands, who get a child their own
+    // size to play as rather than a knight. The older band keeps the Knight
+    // default and can still pick either Explorer from the toy-box.
+    hero: band === "5-6" || band === "7-8" ? "Explorer6" : "Knight",
     explorerColours: {},
     name: "",
     bigLetters: cfg.bigLetters,
@@ -1161,6 +1164,10 @@ const HERO_CHARACTERS = [
   // A child rather than a fantasy figure, for the older band who have
   // grown out of playing as a skeleton.
   { id: "Explorer", label: "Explorer" },
+  // The same character at six: rounder, shorter, and animated as "cute" and
+  // "playful" rather than heroic. The default for the two younger bands, who
+  // are being asked to see themselves in him.
+  { id: "Explorer6", label: "Little Explorer" },
 ] as const;
 
 function peekNextLandName(): string {

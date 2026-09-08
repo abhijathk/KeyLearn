@@ -180,6 +180,14 @@ function withDeadline<T>(work: Promise<T>, url: string): Promise<T> {
  * Tune here if the pose still reads wrong — the first number is the one that
  * lowers the arm.
  */
+/**
+ * The gait cycle lengths the trail's travel speed was tuned against — the
+ * Explorer's own Walk and Run. Every other character's gait is retimed to
+ * these so its feet match the ground it covers.
+ */
+const TUNED_WALK_SECONDS = 1.03;
+const TUNED_RUN_SECONDS = 0.63;
+
 const SIT_ARM_CORRECTION: Readonly<
   Record<string, readonly [number, number, number]>
 > = {
@@ -539,7 +547,14 @@ export const HERO_THEME: WorldTheme = {
   // still (see stripScaleTracks), so idle was the one pose anybody judged
   // his size by. Applying it as a real fitted height gives him that size in
   // every pose instead of one.
-  playerHeight: (name) => (name === "Explorer" ? 4.8 : 3.4),
+  // Explorer6 is a six-year-old beside a ten-year-old, so he is shorter —
+  // but not by the real-world ratio. A cartoon child of six is drawn with a
+  // proportionally larger head, so scaling him by height alone would read as
+  // "the same boy, further away" rather than "a younger boy". 4.0 against
+  // 4.8 keeps him visibly smaller while leaving his head where the eye
+  // expects a small child's to be.
+  playerHeight: (name) =>
+    name === "Explorer" ? 4.8 : name === "Explorer6" ? 4.35 : 3.4,
   morphsBody: false,
   animationUrls: ["anims-move.glb", "anims-idle.glb"],
   lands: HERO_LANDS,
@@ -634,6 +649,12 @@ type DinoRig = {
    * but the Explorer's does today.
    */
   readonly rest: RestClips;
+  /**
+   * How far each settled rest pose floats above the planted ground, measured
+   * once at load. Added back to the character's Y while that pose plays, so a
+   * crouch or a sit lands on the path instead of hovering over it.
+   */
+  readonly lifts: { readonly crouch: number; readonly sit: number };
 };
 
 /** One-shot and looping clips for the idle chain, plus the jump. */
@@ -1407,11 +1428,25 @@ export function createKidsWorld(
    * path for most of a stride. The lowest point across all of them is the one
    * that has to sit on the ground.
    */
+  /**
+   * Puts the character's feet on the ground, and hands back a probe for
+   * asking how far any OTHER pose sits above it.
+   *
+   * One root offset cannot serve every pose. It is computed from the gaits —
+   * the poses the character spends almost all its time in — and a pose whose
+   * feet sit higher in model space then floats by the difference. The
+   * Explorer never showed it because his crouch happens to land close to his
+   * idle; the six-year-old's does not, and he hovered while crouching.
+   *
+   * The probe measures a pose AFTER planting, so its answer is exactly the
+   * gap to close: 0 for a pose already on the ground, positive for one
+   * floating above it.
+   */
   function plantFeet(
     root: THREE.Object3D,
     mixer: THREE.AnimationMixer,
     gaits: readonly (THREE.AnimationAction | null)[],
-  ): void {
+  ): (pose: THREE.AnimationAction | null) => number {
     const v = new THREE.Vector3();
 
     // Only the vertices that can possibly be the lowest point.
@@ -1499,6 +1534,32 @@ export function createKidsWorld(
       root.position.y -= lowest;
     }
     mixer.update(0);
+
+    return (pose) => {
+      if (pose == null) {
+        return 0;
+      }
+      const others = [...live, pose];
+      const saved = others.map((a) => a.weight);
+      const wasPlaying = pose.isRunning();
+      const t0 = pose.time;
+      for (const a of others) a.weight = a === pose ? 1 : 0;
+      pose.play();
+      let low = Infinity;
+      const dur = pose.getClip().duration || 1;
+      for (let i = 0; i < SAMPLES_PER_GAIT; i++) {
+        pose.time = (dur * i) / SAMPLES_PER_GAIT;
+        mixer.update(0);
+        low = Math.min(low, lowestNow());
+      }
+      pose.time = t0;
+      if (!wasPlaying) {
+        pose.stop();
+      }
+      others.forEach((a, k) => (a.weight = saved[k]!));
+      mixer.update(0);
+      return Number.isFinite(low) ? low : 0;
+    };
   }
 
   // Characters carry their own clips (dino/cube); KayKit heroes get them from
@@ -1512,6 +1573,8 @@ export function createKidsWorld(
   function rigOf(
     gltf: { scene: THREE.Group; animations: THREE.AnimationClip[] },
     targetH: number,
+    /** The model file's name — only pose corrections solved for one rig use it. */
+    name = "",
   ): DinoRig {
     const wrap = fitToHeight(gltf.scene, targetH);
     const mixer = new THREE.AnimationMixer(gltf.scene);
@@ -1524,11 +1587,18 @@ export function createKidsWorld(
     // Idle, Walk, Run — so a single alternation quietly chose Walk for
     // running and he ambled through the whole trail. The KayKit heroes
     // carry one move clip each and are unaffected either way.
-    const runClip = pick(/\brun\b|gallop/) ?? pick(/run|gallop|walk/);
+    // `\b` is the wrong boundary here, because `_` counts as a word
+    // character to it. Meshy names the six-year-old's clips `Run_Cute` and
+    // `Walk_Cute`, so `\brun\b` matched neither and the fallback below —
+    // which takes the FIRST of run/walk in file order — handed him Walk_Cute
+    // as his run. He would have ambled through the whole trail at a sprint's
+    // WPM. Matching on "not a letter" instead reads both naming styles.
+    const runClip =
+      pick(/(?:^|[^a-z])(?:run|gallop)(?:[^a-z]|$)/) ?? pick(/run|gallop|walk/);
     // Only a clip that is genuinely a second, slower gait. Where the fallback
     // above already claimed the walk as the run — the KayKit heroes carry one
     // move clip each — there is no walk to blend to and the gait stays binary.
-    const walkClipRaw = pick(/\bwalk\b/);
+    const walkClipRaw = pick(/(?:^|[^a-z])walk(?:[^a-z]|$)/);
     const walkClip = walkClipRaw !== runClip ? walkClipRaw : null;
     const idleClip = pick(/idle|stand/);
     const joyClip = pick(/joy|celebrat|victory|cheer/);
@@ -1536,13 +1606,31 @@ export function createKidsWorld(
     let walk: THREE.AnimationAction | null = null;
     let idle: THREE.AnimationAction | null = null;
     let joy: THREE.AnimationAction | null = null;
+    // A gait cycle is retimed to the rate the trail actually moves at.
+    //
+    // How far along the path the character belongs is decided by how much of
+    // the passage is typed — never by the clip — so every character travels
+    // at the same speed and only their legs differ. The Explorer's clips are
+    // what that speed was tuned against: a 1.03s walk and a 0.63s run.
+    // Meshy authored the six-year-old's at 2.70s and 2.34s, two and a half to
+    // nearly four times longer, so his feet cycled once for every three
+    // strides of ground he covered. He was not moving too fast; his legs were
+    // moving too slowly for the distance, which looks the same and is fixed
+    // by a rate rather than by different animation.
+    //
+    // Derived from the clips rather than tabled per model, so the next
+    // character needs nothing.
+    const rate = (clip: THREE.AnimationClip, tuned: number) =>
+      clip.duration > 0 ? clip.duration / tuned : 1;
     if (runClip) {
       run = mixer.clipAction(runClip);
+      run.timeScale = rate(runClip, TUNED_RUN_SECONDS);
       run.play();
       run.weight = 0;
     }
     if (walkClip) {
       walk = mixer.clipAction(walkClip);
+      walk.timeScale = rate(walkClip, TUNED_WALK_SECONDS);
       walk.play();
       walk.weight = 0;
     }
@@ -1583,24 +1671,46 @@ export function createKidsWorld(
       a.weight = 0;
       return a;
     };
+    // Anchored on the base name, open at the tail.
+    //
+    // These were exact (`/^wave$/`), which is fine for one character and
+    // breaks on the next: Meshy names the six-year-old's clips `Wave_Cute`,
+    // `Walk_Cute`, `Run_Cute`. He silently had no wave at all — `oneShot`
+    // returns null and the beckon simply never plays, with nothing to say
+    // why. The tail is bounded to `_word` groups so `crouch_down` still
+    // cannot match `crouch_idle`.
+    const pose = (name: string) => new RegExp(`^${name}(?:_[a-z0-9]+)*$`);
+    // The sitting arm correction is solved for ONE rig — see
+    // SIT_ARM_CORRECTION, whose angles were searched against the Explorer's
+    // own `Sit_CrossLegged_Idle` and his arm lengths. Applied to a different
+    // character it is not a correction, it is a random rotation: on the
+    // six-year-old, whose arms are shorter and whose sit is authored
+    // differently, it lifted both hands off his knees into the air.
+    // Applied only to the model it was solved on; anything else sits as its
+    // animator posed it.
+    const fixSit =
+      name === "Explorer"
+        ? (ramp: "full" | "in" | "out") => (c: THREE.AnimationClip) =>
+            correctSittingArms(c, ramp)
+        : () => undefined;
     const rest: RestClips = {
-      wave: oneShot(/^wave$/),
-      crouchDown: oneShot(/^crouch_down$/),
-      crouchIdle: looping(/^crouch_idle$/),
-      standFromCrouch: oneShot(/^stand_from_crouch$/),
-      sitDown: oneShot(/^sit_crosslegged_down$/, (c) =>
-        correctSittingArms(c, "in"),
-      ),
-      sitIdle: looping(/^sit_crosslegged_idle$/, (c) =>
-        correctSittingArms(c, "full"),
-      ),
-      standFromSit: oneShot(/^stand_from_crosslegged$/, (c) =>
-        correctSittingArms(c, "out"),
-      ),
-      jump: oneShot(/^jump$/),
+      wave: oneShot(pose("wave")),
+      crouchDown: oneShot(pose("crouch_down")),
+      crouchIdle: looping(pose("crouch_idle")),
+      standFromCrouch: oneShot(pose("stand_from_crouch")),
+      sitDown: oneShot(pose("sit_crosslegged_down"), fixSit("in")),
+      sitIdle: looping(pose("sit_crosslegged_idle"), fixSit("full")),
+      standFromSit: oneShot(pose("stand_from_crosslegged"), fixSit("out")),
+      jump: oneShot(pose("jump")),
     };
-    plantFeet(gltf.scene, mixer, [idle, walk, run]);
-    return { wrap, mixer, run, walk, idle, joy, rest };
+    const probe = plantFeet(gltf.scene, mixer, [idle, walk, run]);
+    // Measured once, on the two poses he actually settles into. The
+    // transitions ramp between 0 and these, so nothing pops.
+    const lifts = {
+      crouch: probe(rest.crouchIdle),
+      sit: probe(rest.sitIdle),
+    };
+    return { wrap, mixer, run, walk, idle, joy, rest, lifts };
   }
 
   // ── population ─────────────────────────────────────────────────────────
@@ -1676,6 +1786,50 @@ export function createKidsWorld(
     restAction = action;
     restStage = stage;
     restHold = Infinity;
+  }
+
+  /**
+   * How far to lower the character this frame so a crouch or a sit reaches
+   * the ground.
+   *
+   * Measured on the settled poses only (see DinoRig.lifts). The transitions
+   * are ramped by how far through their own clip they are, so he goes down
+   * with the movement instead of snapping at the end of it — and standing up
+   * ramps the same way in reverse.
+   */
+  function restLift(): number {
+    const r = player?.rest;
+    const l = player?.lifts;
+    if (r == null || l == null) {
+      return 0;
+    }
+    const through = (a: THREE.AnimationAction | null): number => {
+      if (a == null) return 1;
+      const dur = a.getClip().duration || 1;
+      return Math.max(0, Math.min(1, a.time / dur));
+    };
+    switch (restStage) {
+      case "crouchIdle":
+        return l.crouch;
+      case "sitIdle":
+        return l.sit;
+      case "crouchDown":
+        return l.crouch * through(r.crouchDown);
+      case "sitDown":
+        return l.sit * through(r.sitDown);
+      case "upToSit":
+        // Crouched, on the way to sitting: between the two.
+        return l.crouch + (l.sit - l.crouch) * through(r.sitDown);
+      case "standing":
+        // Which pose he is leaving decides which lift is ramping away.
+        return restAction === r.standFromSit
+          ? l.sit * (1 - through(r.standFromSit))
+          : restAction === r.standFromCrouch
+            ? l.crouch * (1 - through(r.standFromCrouch))
+            : 0;
+      default:
+        return 0;
+    }
   }
 
   /**
@@ -2512,7 +2666,7 @@ export function createKidsWorld(
       return;
     }
     playerH = theme.playerHeight(name);
-    const rig = rigOf(gltf, playerH);
+    const rig = rigOf(gltf, playerH, name);
     // Recolouring is a nicety; being able to play is not.
     //
     // This used to be awaited here, which put a texture lookup and a
@@ -2720,6 +2874,8 @@ export function createKidsWorld(
           standFromSit: null,
           jump: null,
         },
+        // Scenery, not the player: it never crouches or sits.
+        lifts: { crouch: 0, sit: 0 },
       });
     };
     /**
@@ -2900,6 +3056,8 @@ export function createKidsWorld(
               standFromSit: null,
               jump: null,
             },
+            // Trailside company — they stand and idle, nothing more.
+            lifts: { crouch: 0, sit: 0 },
           });
         };
         // Sheep are meadow animals: most graze the open grass field in front
@@ -3209,7 +3367,7 @@ export function createKidsWorld(
       playerX = p.x;
       jumpY = Math.max(0, jumpY + jumpV);
       jumpV -= 0.03;
-      p.y = groundY(p.x) + jumpY;
+      p.y = groundY(p.x) + jumpY - restLift();
       // Keep the lamp just above and in front of the runner.
       heroLamp.position.set(p.x + 0.9, p.y + 2.1, p.z + 1.6);
       // The skeleton hero still runs on its feet, but with a faint hover and
