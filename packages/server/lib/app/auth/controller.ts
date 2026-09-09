@@ -1898,7 +1898,14 @@ export class Controller {
         messageWithResetCode({ email: user.email, code, scope }),
       );
     } catch (err: any) {
-      Logger.warn(err, "Error sending security-reset code to '%s'", user.email);
+      // Masked, like every other address that reaches a log. A mail
+      // failure is exactly when this line gets written, so the addresses
+      // that end up in the log are a list of accounts in trouble.
+      Logger.warn(
+        err,
+        "Error sending security-reset code to '%s'",
+        maskEmail(user.email),
+      );
     }
     ctx.response.body = { ok: true, scope };
   }
@@ -1969,7 +1976,11 @@ export class Controller {
           messageWithResetLink({ email: user.email, link }),
         );
       } catch (err: any) {
-        Logger.warn(err, "Error sending reset link to '%s'", user.email);
+        Logger.warn(
+          err,
+          "Error sending reset link to '%s'",
+          maskEmail(user.email),
+        );
       }
     }
 
