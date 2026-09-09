@@ -1482,6 +1482,23 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [sessionOver, setSessionOver] = useState(false);
   const [regenNonce, setRegenNonce] = useState(0);
   const [landNonce, setLandNonce] = useState(0);
+  /**
+   * A canvas hands out ONE WebGL context in its lifetime, and
+   * `dispose()` ends it deliberately: `forceContextLoss()` is what lets
+   * Chrome release the canvas and the ~6 MB of renderer state pinned
+   * behind it. The cost is that the element is then spent — ask it for a
+   * context again and you get the same dead one back, so the next
+   * `new WebGLRenderer(canvas)` read `null.precision` out of
+   * `getShaderPrecisionFormat` and took the whole scene down with it.
+   *
+   * The world is rebuilt on exactly these inputs (see the effect's
+   * dependency list), so keying the element on them makes React mint a
+   * fresh canvas for each new world and drop the spent one. The loading
+   * scene never hit this despite disposing the same way — it lives
+   * inside `{!loaded && …}`, so React was already replacing its element
+   * every time.
+   */
+  const worldKey = `${landNonce}:${prefs.world}:${prefs.nightStyle}:${band}`;
   const [finishMsg, setFinishMsg] = useState(DINO_FINISH[0]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -3066,6 +3083,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 `role="img"` because that is what it is here: a picture of
                 where they are, not a control and not a document. */}
             <canvas
+              key={worldKey}
               className={styles.canvas}
               ref={canvasRef}
               role="img"
