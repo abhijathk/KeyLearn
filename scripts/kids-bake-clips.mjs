@@ -229,6 +229,20 @@ const legacyIdle = rest.find((a) => a.startsWith("--host-idle="));
 if (legacyIdle != null) {
   hostClips.set("Idle", legacyIdle.slice("--host-idle=".length));
 }
+// `--widen-arms=DEG` swings the upper arms outward on the locomotion clips.
+//
+// Needed whenever a short-armed host wears a long-armed donor's walk. Measured
+// here: the host's torso is 0.143 at the half, and through the donor's walk
+// and run his hands average well inside that — so a hand spends most of each
+// stride inside his own body and the arm reads as missing. The donor's arm
+// span is 0.87 of its height against the host's 0.55; the reach is not there
+// and no amount of retargeting creates it.
+//
+// Swinging the upper arms out puts the hands back in daylight, and on a small
+// child it also happens to be what the walk should look like.
+const widenArg = rest.find((a) => a.startsWith("--widen-arms="));
+const widenDeg = widenArg == null ? 0 : Number(widenArg.slice("--widen-arms=".length));
+const WIDEN_CLIPS = new Set(["Walk", "Run"]);
 const keep = rest.filter((a) => !a.startsWith("--"));
 if (!hostPath || !donorPath || !outPath) {
   console.error("usage: kids-bake-clips.mjs <host.glb> <donor.glb> <out.glb> [clipToKeep...]");
@@ -404,6 +418,26 @@ for (const anim of donor.json.animations ?? []) {
       const v = sampleV(hipsTrack, t).map((c) => c * factor);
       const r = qRotate(rootFix, v);
       outHips[f * 3] = r[0]; outHips[f * 3 + 1] = r[1]; outHips[f * 3 + 2] = r[2];
+    }
+  }
+
+  // Swing the upper arms outward, if asked, on the locomotion clips only.
+  if (widenDeg !== 0 && WIDEN_CLIPS.has(anim.name)) {
+    const rad = (widenDeg * Math.PI) / 180;
+    for (const [side, sign] of [["LeftArm", 1], ["RightArm", -1]]) {
+      const i = host.json.nodes.findIndex((n) => n.name === side);
+      const arr = i >= 0 ? outRot.get(i) : undefined;
+      if (arr == null) continue;
+      // About the bone's own Z, which is the axis that lifts an arm away from
+      // the ribs; mirrored, so both arms go outward rather than both one way.
+      const half = (rad * sign) / 2;
+      const off = [0, 0, Math.sin(half), Math.cos(half)];
+      for (let f = 0; f < frames; f++) {
+        const k = [arr[f * 4], arr[f * 4 + 1], arr[f * 4 + 2], arr[f * 4 + 3]];
+        const r = qMul(k, off);
+        arr[f * 4] = r[0]; arr[f * 4 + 1] = r[1];
+        arr[f * 4 + 2] = r[2]; arr[f * 4 + 3] = r[3];
+      }
     }
   }
 
