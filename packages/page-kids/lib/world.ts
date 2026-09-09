@@ -3762,8 +3762,16 @@ export function createKidsWorld(
               : 0.03 + Math.min(1, dist / 2.6) * 0.03;
         // Eased, so it leans into a walk and settles out of one.
         companionSpeed += (wantSpeed - companionSpeed) * 0.05;
+        // Arrived means stopped, at once — the eased speed is not allowed to
+        // run on past the arrival. See the gait note below for what that cost.
+        if (wantSpeed === 0) {
+          companionSpeed = 0;
+        }
+        /** Ground actually covered this frame. The legs are driven by this. */
+        let moved = 0;
         if (companionSpeed > 0.0015 && dist > 0.02) {
           const step = Math.min(companionSpeed, dist);
+          moved = step;
           cw.position.x += (dx2 / dist) * step;
           cw.position.z += (dz2 / dist) * step;
           const want = Math.atan2(dx2, -dz2);
@@ -3814,13 +3822,17 @@ export function createKidsWorld(
         }
         cw.position.y = groundY(cw.position.x);
 
-        // Gait read back from its own speed, never from the player's, and off
-        // the smoothed value so the legs cannot stutter where the path bends.
-        const moveW2 = Math.min(1, companionSpeed / 0.05);
+        // Gait read back from the ground it actually covered this frame.
+        //
+        // Not from the speed it would LIKE to be going. Those two agree while
+        // it is travelling and disagree at exactly the moment that matters:
+        // `step` is capped at the distance remaining, so on arrival it stops
+        // moving while the eased speed — and therefore the walk cycle — runs
+        // on for about a second. Legs going, character stationary. Feet are
+        // told by the floor, never by the intention.
+        const moveW2 = Math.min(1, moved / 0.05);
         const runShare2 =
-          companionSpeed > 0.058
-            ? Math.min(1, (companionSpeed - 0.058) / 0.03)
-            : 0;
+          moved > 0.058 ? Math.min(1, (moved - 0.058) / 0.03) : 0;
         if (companion.run && companion.idle) {
           if (companion.walk) {
             companion.walk.weight = moveW2 * (1 - runShare2);
