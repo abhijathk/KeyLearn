@@ -6,33 +6,27 @@ under the terms of the GNU Affero General Public License version 3, as
 published by the Free Software Foundation. See LICENSE for the full text.
 
 
-EXCEPTION: COMMERCIALLY LICENSED 3D CHARACTER MODELS
-----------------------------------------------------
+EXCEPTION: THE AK 3D PACK
+-------------------------
 
 The AGPL above covers the source code of this program. It does NOT cover
-anything in the directory
+the AK 3D Pack, which lives in
 
-    root/public/kids-assets/models/licensed/
+    root/public/kids-assets/models/ak-3d-pack/
 
-That directory holds 3D assets obtained under separate commercial licences,
+That pack holds 3D assets obtained under a commercial licence,
 redistributed here only so that this deployment of KeyLearn can display
-them. The rule is the directory itself: whatever is in it is commercially
-licensed, including anything added after this notice was written. As it
-stands that is:
+them. The rule is the directory itself: whatever is in it belongs to the
+pack and is commercially licensed, including anything added after this
+notice was written.
 
-    root/public/kids-assets/models/licensed/Explorer.glb    (Dave)
-    root/public/kids-assets/models/licensed/Explorer6.glb   (Little Drew)
-    root/public/kids-assets/models/licensed/Peeli.glb       (Peeli)
-    root/public/kids-assets/models/licensed/Robot.glb       (Robot)
-    root/public/kids-assets/models/licensed/Puppy.glb       (Puppy)
+You receive no rights to the AK 3D Pack under the AGPL. If you fork,
+redistribute or self-host KeyLearn, you must either delete that folder or
+obtain your own commercial licence for equivalent assets.
 
-You receive no rights to these five files under the AGPL. If you fork,
-redistribute or self-host KeyLearn, you must either delete the folder
-    root/public/kids-assets/models/licensed/
-or obtain your own commercial licence for equivalent models.
-
-Full details, including exactly what to remove from the code if you delete
-them, are in that folder's COMMERCIAL-LICENSE.md.
+The pack's full inventory — every file, what it is called in the app, and
+exactly what to remove from the code if you delete it — is in that
+folder's COMMERCIAL-LICENSE.md.
 
 This exception applies to that directory only. Every other asset in the
 project carries its own terms and should be checked separately; the source

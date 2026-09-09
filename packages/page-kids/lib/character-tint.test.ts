@@ -29,7 +29,7 @@ import {
 function mappingFromModel(): Record<string, string> {
   const buf = readFileSync(
     new URL(
-      "../../../root/public/kids-assets/models/licensed/Explorer.glb",
+      "../../../root/public/kids-assets/models/ak-3d-pack/Explorer.glb",
       import.meta.url,
     ),
   );

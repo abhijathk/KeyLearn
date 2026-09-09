@@ -307,19 +307,23 @@ function withDeadline<T>(work: Promise<T>, url: string): Promise<T> {
  * clips rather than the character.
  */
 /**
- * The characters that are NOT ours to give away.
+ * The AK 3D Pack — the characters that are NOT ours to give away.
  *
- * KeyLearn's code is AGPL. These five models are not: they were bought
- * under a separate commercial licence and are included so this deployment
- * can show them. They live in their own folder — `models/licensed/` — so
- * the boundary is a directory rather than a paragraph somebody has to
+ * KeyLearn's code is AGPL. The models in this pack are not: they were
+ * bought under a commercial licence and are included so this deployment
+ * can show them. They live in their own folder — `models/ak-3d-pack/` —
+ * so the boundary is a directory rather than a paragraph somebody has to
  * read: anyone forking this can delete one folder and know they have
  * removed everything they have no right to, and this list is what tells
  * the loader where to look.
  *
- * See `root/public/kids-assets/models/licensed/COMMERCIAL-LICENSE.md`.
+ * The directory is `ak-3d-pack` rather than the pack's written name
+ * because it is also a URL path, and a space in one becomes `%20` in
+ * every request for a model.
+ *
+ * See `root/public/kids-assets/models/ak-3d-pack/COMMERCIAL-LICENSE.md`.
  */
-const LICENSED_MODELS: ReadonlySet<string> = new Set([
+const AK_3D_PACK: ReadonlySet<string> = new Set([
   "Explorer", // Dave
   "Explorer6", // Little Drew
   "Peeli",
@@ -327,10 +331,10 @@ const LICENSED_MODELS: ReadonlySet<string> = new Set([
   "Puppy",
 ]);
 
-/** Where a character's model actually lives, licensed ones included. */
+/** Where a character's model actually lives, pack members included. */
 function modelUrl(modelDir: string, name: string): string {
-  return LICENSED_MODELS.has(name)
-    ? `${ASSETS}/models/licensed/${name}.glb`
+  return AK_3D_PACK.has(name)
+    ? `${ASSETS}/models/ak-3d-pack/${name}.glb`
     : `${ASSETS}/models/${modelDir}/${name}.glb`;
 }
 

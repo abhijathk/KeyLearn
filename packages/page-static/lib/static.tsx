@@ -423,7 +423,7 @@ export function AboutPage() {
       <p>
         <FormattedMessage
           id="about.oss.art"
-          defaultMessage="One exception, worth stating plainly: the 3-D characters and companions in the children's game are not covered by that licence. They were bought under separate commercial licences and are included so this site can show them — they are kept in their own folder, apart from everything else. The code is yours under the AGPL; those model files are not. If you fork or self-host KeyLearn, either remove that folder or buy your own licences. Everything else in the game, and all of the code, is free to reuse."
+          defaultMessage="One exception, worth stating plainly: the 3-D characters and companions in the children's game come from the AK 3D Pack, which is commercially licensed and is not covered by the AGPL. It was bought so this site could show them, and it is kept in a folder of its own, apart from everything else. The code is yours under the AGPL; the pack is not. If you fork or self-host KeyLearn, either delete that folder or buy your own licence for equivalent models. Everything else in the game, and all of the code, is free to reuse."
         />
       </p>
 

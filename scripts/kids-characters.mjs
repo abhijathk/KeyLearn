@@ -16,12 +16,12 @@
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 
 const HERO_DIR = "root/public/kids-assets/models/hero";
-// The commercially licensed characters live apart from the free ones; see
-// that folder's COMMERCIAL-LICENSE.md and `LICENSED_MODELS` in world.ts.
-const LICENSED_DIR = "root/public/kids-assets/models/licensed";
+// The AK 3D Pack lives apart from the free assets; see
+// that folder's COMMERCIAL-LICENSE.md and `AK_3D_PACK` in world.ts.
+const PACK_DIR = "root/public/kids-assets/models/ak-3d-pack";
 const modelPath = (name) =>
-  existsSync(`${LICENSED_DIR}/${name}.glb`)
-    ? `${LICENSED_DIR}/${name}.glb`
+  existsSync(`${PACK_DIR}/${name}.glb`)
+    ? `${PACK_DIR}/${name}.glb`
     : `${HERO_DIR}/${name}.glb`;
 
 // ── the world's own matching rules, mirrored ─────────────────────────────
@@ -163,26 +163,26 @@ for (const name of all) {
 
 // ── the licensed folder is a licence boundary, so keep it honest ────────
 //
-// `root/public/kids-assets/models/licensed/` means "commercially licensed,
+// `root/public/kids-assets/models/ak-3d-pack/` is the AK 3D Pack: bought,
 // not AGPL" — that is the rule for the directory, whatever ends up in it.
-// The loader decides where to look from `LICENSED_MODELS` in world.ts, so
+// The loader decides where to look from `AK_3D_PACK` in world.ts, so
 // the two can drift: a bought model dropped in the folder but not listed
 // would simply 404, and a name listed but shipped in `hero/` would be
 // served as though it were free. Both are caught here.
 {
-  const onDisk = readdirSync(LICENSED_DIR)
+  const onDisk = readdirSync(PACK_DIR)
     .filter((f) => f.endsWith(".glb"))
     .map((f) => f.replace(/\.glb$/, ""))
     .sort();
   const src = readFileSync("packages/page-kids/lib/world.ts", "utf8");
-  const block = src.split("const LICENSED_MODELS")[1]?.split("]")[0] ?? "";
+  const block = src.split("const AK_3D_PACK")[1]?.split("]")[0] ?? "";
   const declared = [...block.matchAll(/"([^"]+)"/g)].map((m) => m[1]).sort();
   const missing = onDisk.filter((n) => !declared.includes(n));
   const extra = declared.filter((n) => !onDisk.includes(n));
-  if (missing.length) fail("licensed/", `in the folder but not in LICENSED_MODELS: ${missing.join(", ")}`);
-  if (extra.length) fail("licensed/", `in LICENSED_MODELS but not in the folder: ${extra.join(", ")}`);
+  if (missing.length) fail("AK 3D Pack", `in the folder but not in AK_3D_PACK: ${missing.join(", ")}`);
+  if (extra.length) fail("AK 3D Pack", `in AK_3D_PACK but not in the folder: ${extra.join(", ")}`);
   if (!missing.length && !extra.length) {
-    ok("licensed/", `${onDisk.length} commercially licensed model(s), folder and code agree`);
+    ok("AK 3D Pack", `${onDisk.length} model(s), folder and code agree`);
   }
 }
 
