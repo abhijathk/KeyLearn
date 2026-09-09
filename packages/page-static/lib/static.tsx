@@ -417,13 +417,15 @@ export function AboutPage() {
         That paragraph is where a reader decides the whole thing is theirs
         to take, so it is the one place a reader who is about to be wrong
         will definitely have read. The AGPL covers the code; it does not
-        cover art that was bought, and saying so anywhere else means saying
-        it somewhere nobody looks.
+        cover the AK 3D Pack, which is a product of ours sold separately —
+        and saying so anywhere else means saying it somewhere nobody looks.
+        It points at support rather than only forbidding: somebody who
+        wants the characters is a customer, not a problem.
       */}
       <p>
         <FormattedMessage
           id="about.oss.art"
-          defaultMessage="One exception: the 3-D characters in the children's game are the AK 3D Pack, which is commercially licensed, not AGPL. It sits in a folder of its own — if you fork KeyLearn, delete that folder or buy your own licence for equivalent models. Everything else, code included, is free to reuse."
+          defaultMessage="One exception: the 3-D characters in the children's game are the AK 3D Pack, a KeyLearn product licensed separately from this code, not under the AGPL. It sits in a folder of its own — if you fork KeyLearn, either delete that folder or contact support to license the pack. Everything else, code included, is free to reuse."
         />
       </p>
 

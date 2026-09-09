@@ -14,15 +14,18 @@ the AK 3D Pack, which lives in
 
     root/public/kids-assets/models/ak-3d-pack/
 
-That pack holds 3D assets obtained under a commercial licence,
-redistributed here only so that this deployment of KeyLearn can display
-them. The rule is the directory itself: whatever is in it belongs to the
-pack and is commercially licensed, including anything added after this
-notice was written.
+The AK 3D Pack is KeyLearn's own product, licensed commercially and
+separately from this source code. It is in this repository because this
+deployment uses it. The rule is the directory itself: whatever is in it
+belongs to the pack, including anything added after this notice was
+written.
 
 You receive no rights to the AK 3D Pack under the AGPL. If you fork,
-redistribute or self-host KeyLearn, you must either delete that folder or
-obtain your own commercial licence for equivalent assets.
+redistribute or self-host KeyLearn, you must either license the pack or
+delete that folder.
+
+The pack is for sale. Contact KeyLearn support for pricing rather than
+assuming it has to be stripped out.
 
 The pack's full inventory — every file, what it is called in the app, and
 exactly what to remove from the code if you delete it — is in that
