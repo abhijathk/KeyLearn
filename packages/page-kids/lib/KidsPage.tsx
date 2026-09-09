@@ -313,10 +313,12 @@ function defaultPrefs(): Prefs {
     // Either can switch worlds any time in the toy-box.
     world: band === "5-6" || band === "7-8" ? "hero" : "dino",
     dino: "TRex",
-    // The little Explorer for the younger bands, who get a child their own
-    // size to play as rather than a knight. The older band keeps the Knight
-    // default and can still pick either Explorer from the toy-box.
-    hero: band === "5-6" || band === "7-8" ? "Explorer6" : "Knight",
+    // A child their own size, in both directions.
+    //
+    // Little Drew for 5-6 and 7-8, Dave for 9-10 and 11+. Nobody starts as
+    // the Knight any more: a child playing as a child is the point of these
+    // two, and the fantasy figures stay in the toy-box for whoever wants one.
+    hero: band === "5-6" || band === "7-8" ? "Explorer6" : "Explorer",
     companion: null,
     explorerColours: {},
     name: "",
