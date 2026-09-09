@@ -1525,6 +1525,28 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // grown-ups, accruing across sessions so awkward transitions get smoothed out.
   const ngramsRef = useRef(loadNgramStats());
   const prevLettersRef = useRef<ReadonlySet<number> | null>(null);
+  /**
+   * When the flag celebration finishes, and the timer holding the
+   * new-key ceremony back until it does.
+   *
+   * The two fire from the same keystroke: reaching the flag calls
+   * `celebrate()` and saves the run, the saved run is what lets another
+   * key in, and the ceremony effect below opens on that. So the panel
+   * used to land over the celebration it was caused by — the child
+   * earned the animation and then had it covered up.
+   */
+  const celebrateUntilRef = useRef(0);
+  const ceremonyTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  /**
+   * A ceremony is coming, once the celebration it belongs to has
+   * finished. Input stays blocked meanwhile — which is what the panel
+   * itself used to do by covering the screen, since it opened on the
+   * same frame the flag was reached. Without this the delay would be a
+   * regression rather than a fix: the new key also regenerates the
+   * passage, so the child would start typing a fresh line and have the
+   * panel land on them mid-word.
+   */
+  const [ceremonyPending, setCeremonyPending] = useState(false);
   const ceremonyRef = useRef(ceremony);
   ceremonyRef.current = ceremony;
   const [pressed, setPressed] = useState<string | null>(null);
@@ -1764,7 +1786,25 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       if (fresh != null) {
         const letter = String.fromCodePoint(fresh).toLowerCase();
         if (FINGER_OF[letter] != null) {
-          setCeremony({ letter, presses: 0 });
+          // Wait out the flag celebration first. Usually there IS one —
+          // this key was let in by the run that just reached the flag —
+          // but not always: a child can arrive with results earned on
+          // the grown-up page, and then the wait is zero and nothing is
+          // delayed.
+          const wait = Math.max(
+            0,
+            celebrateUntilRef.current - performance.now(),
+          );
+          clearTimeout(ceremonyTimer.current);
+          if (wait === 0) {
+            setCeremony({ letter, presses: 0 });
+          } else {
+            setCeremonyPending(true);
+            ceremonyTimer.current = setTimeout(() => {
+              setCeremonyPending(false);
+              setCeremony({ letter, presses: 0 });
+            }, wait);
+          }
         }
       }
       // Did the trail reach an egg? The creature arrives here, in the scene
@@ -1823,6 +1863,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     prevIncluded.current = included;
     prevLettersRef.current = letters;
   }, [included, lessonKeys]);
+
+  // Unmount only, deliberately. Clearing this in the effect above would
+  // cancel a ceremony that is still waiting out a celebration: that
+  // effect also re-runs when `lessonKeys` changes without `included`
+  // moving, and the cleanup would fire with no new timer to replace it.
+  // Superseding is already handled where the timer is set.
+  useEffect(() => () => clearTimeout(ceremonyTimer.current), []);
 
   // The first arrival on Classic, and only the first. Anything already open —
   // the settings panel, a ceremony — takes precedence; the walk-through waits
@@ -2220,6 +2267,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     tourOpen ||
     hatched != null ||
     ceremony != null ||
+    ceremonyPending ||
     // Keys pressed at the loading screen are not practice. They used to land
     // on a run that had not started: the letters counted, the mistakes
     // counted, and the trail they were scored against was still being built.
@@ -2494,8 +2542,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         }
         if (textInput.completed) {
           // Reaching the camp flag is the one moment the run is won; the world
-          // decides what that looks like for a dino and for a hero.
-          worldRef.current?.celebrate();
+          // decides what that looks like for a dino and for a hero. It
+          // reports how long that takes so the new-key ceremony can wait
+          // for it rather than land on top of it.
+          const celebrationMs = worldRef.current?.celebrate() ?? 0;
+          celebrateUntilRef.current = performance.now() + celebrationMs;
           setScore((s) => saveBest(s + 10));
           setWords((w) => w + 1);
           speak("camp");

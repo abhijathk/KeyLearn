@@ -728,8 +728,19 @@ export type KidsWorld = {
   beckon(): void;
   stumble(): void;
   roar(): void;
-  /** The flag is reached: celebrate, in this world's own idiom. */
-  celebrate(): void;
+  /**
+   * The flag is reached: celebrate, in this world's own idiom.
+   *
+   * Returns how long the celebration will run, in milliseconds, so a
+   * caller can hold anything that would cover it — the new-key ceremony
+   * is a full-width panel, and opening it on the frame the flag is
+   * reached puts a dialog over the one animation the run was for.
+   *
+   * A measured length rather than a guessed constant: it comes from the
+   * joy clip's own duration below, so a character whose celebration is
+   * re-authored keeps this honest with no second place to update.
+   */
+  celebrate(): number;
   /** A celebratory size-pop when a new key unlocks. */
   grow(): void;
   /** Baby (0) → adult (1): reshapes the dino's body, size, colour and gait. */
@@ -4444,7 +4455,7 @@ export function createKidsWorld(
       pointerHitT = 1; // flash the hero pointer red (Hero Trail)
       targetX = playerX; // a wrong key stops the run
     },
-    celebrate() {
+    celebrate(): number {
       celebT = 1;
       celebHops = 0;
       celebRate = 0.012;
@@ -4478,6 +4489,10 @@ export function createKidsWorld(
         // you have arms.
         jumpV = 0.36;
       }
+      // `celebT` starts at 1 and drops by `celebRate` each frame, so the
+      // celebration lasts `1 / celebRate` frames — expressed here at the
+      // same 60fps the rest of these hand-tuned rates assume.
+      return (1 / celebRate / 60) * 1000;
     },
     roar() {
       roarT = 1;
