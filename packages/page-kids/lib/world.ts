@@ -567,6 +567,13 @@ export const HERO_THEME: WorldTheme = {
   // still (see stripScaleTracks), so idle was the one pose anybody judged
   // his size by. Applying it as a real fitted height gives him that size in
   // every pose instead of one.
+  // Height is a property of the character, never of the role.
+  //
+  // Whoever is asking — the player, a companion, a preview — gets the same
+  // answer for the same name, and no caller may scale it. The gap between
+  // these two numbers IS the age difference, and it is the only thing telling
+  // a child which of them is the older one.
+  //
   // Explorer6 is a six-year-old beside a ten-year-old, so he is shorter —
   // but not by the real-world ratio. A cartoon child of six is drawn with a
   // proportionally larger head, so scaling him by height alone would read as
@@ -2725,9 +2732,19 @@ export function createKidsWorld(
     if (gltf == null || disposed || companionName !== name) {
       return;
     }
-    // A shade smaller than whoever they are walking with, so the eye can tell
-    // at a glance who it is following.
-    const rig = rigOf(gltf, theme.playerHeight(name) * 0.94, name);
+    // Exactly the height this character always has — `theme.playerHeight` and
+    // nothing else.
+    //
+    // A character's height belongs to the CHARACTER, never to the role it is
+    // playing. The ten-year-old is the ten-year-old's height whether he is
+    // being played or walking alongside, and the same for the six-year-old:
+    // that difference is the whole reason a child can tell which of them is
+    // which, and it is the one cue that must not be spent on anything else.
+    // This briefly carried a 0.94 factor to mark out "the one you are not
+    // playing", which made a ten-year-old companion shorter than a
+    // ten-year-old player — a size difference that meant nothing about age,
+    // sitting right next to one that did.
+    const rig = rigOf(gltf, theme.playerHeight(name), name);
     rig.wrap.rotation.y = Math.PI / 2;
     rig.wrap.position.set(playerX - FOLLOW_GAP, groundY(playerX), FOLLOW_SIDE);
     // No hero lamp and no pointer ring: those mark whose turn it is, and it
