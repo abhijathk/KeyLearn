@@ -3490,9 +3490,9 @@ export function createKidsWorld(
     if (calmMode) {
       return;
     }
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
       const m = new THREE.Mesh(
-        new THREE.BoxGeometry(0.04, 0.04, 0.04),
+        new THREE.BoxGeometry(0.025, 0.025, 0.025),
         new THREE.MeshStandardMaterial({
           color: i % 2 === 0 ? 0xcfc4ae : 0xb8ab90,
           transparent: true,
@@ -4340,7 +4340,11 @@ export function createKidsWorld(
         // Dust: spreads and thins. Fading by opacity rather than by scale,
         // because a shrinking cube reads as an object leaving and a fading one
         // reads as air.
-        s.scale.setScalar(1 + (1 - s.userData.life) * 1.6);
+        // Barely spreads. The first version grew 2.6x, which took a 0.04
+        // cube back up to 0.104 — near the 0.16 clod it replaced, and the
+        // reason it still read as lumps of mud after being shrunk. A puff
+        // should soften as it goes, not swell.
+        s.scale.setScalar(1 + (1 - s.userData.life) * 0.5);
         const mat = s.material as THREE.MeshStandardMaterial;
         mat.opacity = 0.5 * Math.max(0, s.userData.life);
       } else {
