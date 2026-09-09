@@ -1774,6 +1774,8 @@ export function createKidsWorld(
     moveW: number;
     runShare: number;
     celebrating: boolean;
+    /** The player is down — crouching or sitting — not merely standing still. */
+    resting: boolean;
   };
   const followBuffer: FollowSample[] = [];
   let companion: DinoRig | null = null;
@@ -1790,15 +1792,23 @@ export function createKidsWorld(
   //
   // It gives up wandering the instant the player moves again, which is what
   // keeps it a companion rather than a second character with its own agenda.
-  /** Still for this many frames before boredom sets in — about two seconds. */
-  const BORED_AFTER = 120;
   /** How far from the player it will drift, along the trail and across it. */
   const WANDER_X = 2.6;
   const WANDER_Z = 1.9;
-  let stillFrames = 0;
   let wandering = false;
   let wanderTarget: { x: number; z: number } | null = null;
-  let wanderPause = 0;
+  /**
+   * Its current speed, carried between frames and eased toward what it wants.
+   *
+   * Movement is driven by this rather than by "how far is the target" each
+   * frame. Proportional-to-distance looks fine in the middle and patchy at
+   * both ends: it creeps as it arrives, then cuts to nothing at whatever
+   * threshold stops it, and the gait blend follows every wobble. A speed that
+   * accelerates and decelerates gives one continuous movement instead.
+   */
+  let companionSpeed = 0;
+  /** Frames left of the current standing-about, and what it is doing in them. */
+  let restFrames = 0;
 
   // ── population ─────────────────────────────────────────────────────────
   let player: DinoRig | null = null;
@@ -3590,6 +3600,12 @@ export function createKidsWorld(
         moveW,
         runShare,
         celebrating: celebT > 0,
+        resting:
+          restStage === "crouchDown" ||
+          restStage === "crouchIdle" ||
+          restStage === "sitDown" ||
+          restStage === "sitIdle" ||
+          restStage === "upToSit",
       });
       if (followBuffer.length > FOLLOW_FRAMES + 2) {
         followBuffer.shift();
@@ -3602,61 +3618,111 @@ export function createKidsWorld(
         const seen = followBuffer[0]!;
         const cw = companion.wrap;
 
-        // Boredom is counted on what the companion has SEEN, not on what the
-        // player is doing this instant — otherwise it starts wandering half a
-        // second before the thing that bored it appears to have happened.
-        stillFrames = seen.moveW < 0.05 ? stillFrames + 1 : 0;
-        if (stillFrames === 0) {
-          wandering = false;
+        // ── it moves itself ───────────────────────────────────────────
+        //
+        // The companion used to sit at a fixed offset from the player and
+        // replay the player's gait, which made the two move as one object
+        // with two bodies: identical pace, identical stride, starting and
+        // stopping on the same frame. Two children walking together do not
+        // do that.
+        //
+        // So it has its own legs. It aims at a spot near where the player was
+        // a moment ago and travels there at ITS OWN speed, and its gait is
+        // read back from how fast it is actually going — which is what makes
+        // the legs match the ground under them. Falling behind and catching
+        // up is then something that happens rather than something animated.
+        // It wanders while the player is DOWN — crouching or sitting — and
+        // only then.
+        //
+        // Standing still is not the same thing. A player pauses constantly
+        // while typing, hunting for a key, and a companion that set off
+        // wandering at every hesitation would never be beside them. Sitting
+        // down is a deliberate stop, long enough that standing over somebody
+        // for the whole of it is the odd thing to do.
+        //
+        // Read from the delayed sample like everything else, so it starts a
+        // beat after they go down rather than at the same instant.
+        wandering = seen.resting;
+        if (!wandering) {
           wanderTarget = null;
-        } else if (stillFrames > BORED_AFTER) {
-          wandering = true;
+          restFrames = 0;
         }
 
-        let moveW2 = seen.moveW;
-        let runShare2 = seen.runShare;
+        const home = seen.x - FOLLOW_GAP;
+        let goalX: number;
+        let goalZ: number;
         if (wandering) {
-          const home = seen.x - FOLLOW_GAP;
-          if (wanderPause > 0) {
-            wanderPause -= 1;
-            moveW2 = 0;
+          if (restFrames > 0) {
+            restFrames -= 1;
+            goalX = cw.position.x;
+            goalZ = cw.position.z;
           } else {
             if (wanderTarget == null) {
-              // Somewhere near the player, never far: a companion that
-              // wanders out of frame has stopped being company.
+              // Forward only, never back down the trail.
+              //
+              // A child following a friend does not walk backwards to fill
+              // time, and on a trail that only ever goes one way it reads as
+              // the character being dragged. So a wander target is always at
+              // or ahead of where it stands — the variety comes from how far
+              // and how far across, not from direction.
               wanderTarget = {
-                x: home + (Math.random() * 2 - 1) * WANDER_X,
+                x: cw.position.x + Math.random() * WANDER_X,
                 z: FOLLOW_SIDE + (Math.random() * 2 - 1) * WANDER_Z,
               };
             }
-            const dx2 = wanderTarget.x - cw.position.x;
-            const dz2 = wanderTarget.z - cw.position.z;
-            const dist = Math.hypot(dx2, dz2);
-            if (dist < 0.12) {
-              // Arrived. Stand and look about for a moment before choosing
-              // somewhere else, because walking without pause reads as
-              // patrolling rather than pottering.
-              wanderTarget = null;
-              wanderPause = 40 + Math.floor(Math.random() * 90);
-              moveW2 = 0;
-            } else {
-              const step = Math.min(0.035, dist);
-              cw.position.x += (dx2 / dist) * step;
-              cw.position.z += (dz2 / dist) * step;
-              // Face where it is going. At rotation.y = PI/2 the character
-              // faces +x, which is the direction of travel along the trail.
-              cw.rotation.y = Math.atan2(dx2, -dz2);
-              moveW2 = 1;
-              runShare2 = 0; // it ambles; it is not in a hurry
-            }
+            goalX = wanderTarget.x;
+            goalZ = wanderTarget.z;
           }
-          cw.position.y = groundY(cw.position.x);
         } else {
-          cw.position.x = seen.x - FOLLOW_GAP;
-          cw.position.z = FOLLOW_SIDE;
-          cw.position.y = groundY(cw.position.x);
-          cw.rotation.y = Math.PI / 2;
+          goalX = home;
+          goalZ = FOLLOW_SIDE;
         }
+
+        const dx2 = goalX - cw.position.x;
+        const dz2 = goalZ - cw.position.z;
+        const dist = Math.hypot(dx2, dz2);
+        // What it would LIKE to be doing: nothing if it is there, an amble if
+        // it is close, a hurry if it has been left behind. Distances rather
+        // than states, so there is no threshold to flicker across.
+        const wantSpeed =
+          dist < 0.14
+            ? 0
+            : dist > 2.6
+              ? 0.088
+              : 0.03 + Math.min(1, dist / 2.6) * 0.03;
+        // Eased, so it leans into a walk and settles out of one.
+        companionSpeed += (wantSpeed - companionSpeed) * 0.05;
+        if (companionSpeed > 0.0015 && dist > 0.02) {
+          const step = Math.min(companionSpeed, dist);
+          cw.position.x += (dx2 / dist) * step;
+          cw.position.z += (dz2 / dist) * step;
+          const want = Math.atan2(dx2, -dz2);
+          let turn = want - cw.rotation.y;
+          while (turn > Math.PI) turn -= Math.PI * 2;
+          while (turn < -Math.PI) turn += Math.PI * 2;
+          cw.rotation.y += turn * 0.12; // eased, so it does not pivot on the spot
+        }
+        if (wandering && wanderTarget != null && dist < 0.14) {
+          // Arrived. Stand about for a while before choosing anywhere else —
+          // and the while is long and variable, because a companion that
+          // walks, pauses, walks, pauses on a fixed beat is patrolling.
+          wanderTarget = null;
+          restFrames = 90 + Math.floor(Math.random() * 240);
+          // Every so often it does something other than stand there.
+          if (companion.rest.wave != null && Math.random() < 0.35) {
+            companion.rest.wave.reset();
+            companion.rest.wave.play();
+          }
+        }
+        cw.position.y = groundY(cw.position.x);
+
+        // Gait read back from its own speed, never from the player's, and off
+        // the smoothed value so the legs cannot stutter where the path bends.
+        const moveW2 = Math.min(1, companionSpeed / 0.05);
+        const runShare2 =
+          companionSpeed > 0.058
+            ? Math.min(1, (companionSpeed - 0.058) / 0.03)
+            : 0;
         if (companion.run && companion.idle) {
           if (companion.walk) {
             companion.walk.weight = moveW2 * (1 - runShare2);
