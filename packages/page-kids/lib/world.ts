@@ -845,7 +845,23 @@ export function createKidsWorld(
   const heroLamp = new THREE.PointLight(0xfff0d0, 0, 3.4, 2);
   heroLamp.layers.set(HERO_LIGHT_LAYER);
   heroLamp.position.set(-6, 4, 3);
-  scene.add(sun, hemi, heroLamp);
+  /**
+   * The companion's own lamp, identical to the hero's.
+   *
+   * Not the hero's lamp reaching further. That one carries a 3.4 range, and
+   * the companion stands 2.6 back and 1.9 across — about 3.65 out, just past
+   * the edge — so widening it enough to catch the companion would also light
+   * a stretch of trail either side of the player and lose the pool-of-light
+   * look the range was chosen for.
+   *
+   * Its own layer as well as its own light, so the two lamps cannot both fall
+   * on the same character: each child is lit once, by their own.
+   */
+  const COMPANION_LIGHT_LAYER = 2;
+  const companionLamp = new THREE.PointLight(0xfff0d0, 0, 3.4, 2);
+  companionLamp.layers.set(COMPANION_LIGHT_LAYER);
+  companionLamp.position.set(-6, 4, 3);
+  scene.add(sun, hemi, heroLamp, companionLamp);
   // The cube world fogs in nearer so the ground dissolves into the flat sky
   // at the horizon — no hard grass/sky seam.
   scene.fog = bright
@@ -855,6 +871,7 @@ export function createKidsWorld(
   const V = theme.view ?? DEFAULT_VIEW;
   const cam = new THREE.OrthographicCamera();
   cam.layers.enable(HERO_LIGHT_LAYER);
+  cam.layers.enable(COMPANION_LIGHT_LAYER);
   function resize() {
     const w = canvas.clientWidth || 800;
     const h = canvas.clientHeight || 300;
@@ -886,6 +903,9 @@ export function createKidsWorld(
     const dark = mood === "night";
     const night = dark && trueNight;
     heroLamp.intensity = night ? 3.2 : 0;
+    // The companion is lit exactly as the player is. Standing in the dark
+    // beside somebody carrying a light is what a background object does.
+    companionLamp.intensity = night && companion != null ? 3.2 : 0;
     renderer.toneMappingExposure =
       grade.exposure * (dark ? (night ? 0.56 : 0.84) : 1);
     hemi.intensity = grade.hemi * (dark ? (night ? 0.42 : 0.78) : 1);
@@ -2782,8 +2802,15 @@ export function createKidsWorld(
     const rig = rigOf(gltf, theme.playerHeight(name), name);
     rig.wrap.rotation.y = Math.PI / 2;
     rig.wrap.position.set(playerX - FOLLOW_GAP, groundY(playerX), FOLLOW_SIDE);
-    // No hero lamp and no pointer ring: those mark whose turn it is, and it
-    // is never the companion's.
+    // Lit like the player, but with no pointer ring.
+    //
+    // The ring marks whose turn it is and that is never the companion's — but
+    // the LIGHT is not a marker, it is how a character reads at night. Without
+    // it the companion stood in the dark beside somebody carrying a lantern,
+    // which is what a piece of scenery does.
+    rig.wrap.traverse((n) => {
+      n.layers.enable(COMPANION_LIGHT_LAYER);
+    });
     scene.add(rig.wrap);
     companion = rig;
   }
@@ -3714,6 +3741,13 @@ export function createKidsWorld(
         while (turn > Math.PI) turn -= Math.PI * 2;
         while (turn < -Math.PI) turn += Math.PI * 2;
         cw.rotation.y += turn * 0.045; // slow, so it is a look and not a snap
+        // Its lamp rides the same offset the hero's does, so the light sits
+        // where a child would carry it rather than where the maths is tidy.
+        companionLamp.position.set(
+          cw.position.x + 0.9,
+          cw.position.y + 2.1,
+          cw.position.z + 1.6,
+        );
 
         // The celebration is the one thing they do rather than copy, because
         // it is a one-shot: replaying the flag every frame it was true would
