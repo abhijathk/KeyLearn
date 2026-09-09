@@ -201,8 +201,34 @@ const [, , hostPath, donorPath, outPath, ...rest] = process.argv;
 // on any axis, gets them clear — the arms are too short to reach past his own
 // chest. His own idle rests them at +0.23, plainly visible, because it was
 // authored for his reach.
-const hostIdleArg = rest.find((a) => a.startsWith("--host-idle="));
-const hostIdleName = hostIdleArg?.slice("--host-idle=".length) ?? null;
+// `--host-clip=Target=Source` keeps one of the HOST's own clips in place of
+// the donor's, renamed to the name the game looks for. Repeatable.
+//
+// Reach is why. The donor's arm span is 0.87 of its height; the host's is 0.55.
+// Any clip of the donor's that relies on the arms reaching — a walk's swing, a
+// sit's hands on the knees — puts the host's shorter arms somewhere they were
+// never meant to be, and no rotation of the shoulder fixes it: solved across
+// the whole walk and run cycle, the best single upper-arm rotation still
+// leaves the hands 0.096 from the centre line against a torso half-width of
+// about 0.22. They stay inside the body.
+//
+// The host's own clips were authored for the host's arms, so where reach
+// matters they are simply right. The donor is kept for everything else.
+const hostClips = new Map(
+  rest
+    .filter((a) => a.startsWith("--host-clip="))
+    .map((a) => {
+      const [target, source] = a.slice("--host-clip=".length).split("=");
+      if (!target || !source) {
+        throw new Error(`bad --host-clip: expected Target=Source, got "${a}"`);
+      }
+      return [target, source];
+    }),
+);
+const legacyIdle = rest.find((a) => a.startsWith("--host-idle="));
+if (legacyIdle != null) {
+  hostClips.set("Idle", legacyIdle.slice("--host-idle=".length));
+}
 const keep = rest.filter((a) => !a.startsWith("--"));
 if (!hostPath || !donorPath || !outPath) {
   console.error("usage: kids-bake-clips.mjs <host.glb> <donor.glb> <out.glb> [clipToKeep...]");
@@ -275,8 +301,8 @@ donor.json.nodes.forEach((n, i) => {
 const SAMPLE_FPS = 30;
 
 for (const anim of donor.json.animations ?? []) {
-  if (hostIdleName != null && anim.name === "Idle") {
-    report.push(`  ${"Idle".padEnd(24)} skipped — host keeps its own`);
+  if (hostClips.has(anim.name)) {
+    report.push(`  ${anim.name.padEnd(24)} skipped — host keeps its own`);
     continue;
   }
   // Every rotation track, resampled onto one shared timeline.
@@ -402,26 +428,29 @@ for (const anim of donor.json.animations ?? []) {
   report.push(`  ${anim.name.padEnd(24)} ${String(channels.length).padStart(3)} ch, ${frames} frames @${SAMPLE_FPS}fps, ${duration.toFixed(2)}s`);
 }
 
-// The host's own standing clip goes FIRST and takes the name `Idle`.
+// The host's own clips are renamed to what the game looks for, and the
+// standing one goes FIRST.
 //
-// Both matter. The world finds the idle with /idle|stand/ and takes the first
-// match, and `Crouch_Idle` matches that too — so a standing clip left under
-// its Meshy name of `Idle_3`, sitting after the crouch in the list, would
-// leave the character crouching whenever it stood still.
-const hostIdle = hostIdleName != null
-  ? (host.json.animations ?? []).find((a) => a.name === hostIdleName)
-  : undefined;
-if (hostIdleName != null && hostIdle == null) {
-  throw new Error(`--host-idle=${hostIdleName}: no such clip on the host`);
+// Both matter. The world finds a clip by pattern and takes the first match, so
+// a standing pose left under its Meshy name of `Idle_3` is not found as one —
+// and `/idle|stand/` also matches `Crouch_Idle`, so ordering alone decides
+// whether the character stands or crouches when it is doing nothing.
+const takenFromHost = [];
+for (const [target, source] of hostClips) {
+  const clip = (host.json.animations ?? []).find((a) => a.name === source);
+  if (clip == null) {
+    throw new Error(`--host-clip=${target}=${source}: no such clip on the host`);
+  }
+  clip.name = target;
+  takenFromHost.push(clip);
+  report.push(`  ${source.padEnd(24)} kept from host as "${target}"`);
 }
-if (hostIdle != null) {
-  hostIdle.name = "Idle";
-  report.push(`  ${hostIdleName.padEnd(24)} kept from host as "Idle", placed first`);
-}
+// Idle first, then the rest of the host's, then the donor's, then extras.
+takenFromHost.sort((a, b) => (a.name === "Idle" ? -1 : b.name === "Idle" ? 1 : 0));
 host.json.animations = [
-  ...(hostIdle ? [hostIdle] : []),
+  ...takenFromHost,
   ...rebuilt,
-  ...kept.filter((a) => a !== hostIdle),
+  ...kept.filter((a) => !takenFromHost.includes(a)),
 ];
 host.json.buffers[0].byteLength = length;
 

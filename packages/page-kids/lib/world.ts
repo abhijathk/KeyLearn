@@ -1782,86 +1782,20 @@ export function createKidsWorld(
   let companionName: string | null = null;
   let companionCelebrating = false;
 
-  // ── being bored ────────────────────────────────────────────────────────
+  // ── standing about ─────────────────────────────────────────────────────
   //
-  // A companion that only ever replays the player has nothing to do the
-  // moment the player stops, and a second child standing perfectly still
-  // beside a sitting one reads as a frozen model rather than as company. So
-  // once the player has been still for a while, the companion wanders: picks
-  // somewhere nearby, walks to it, waits, picks somewhere else.
+  // It once had legs of its own and wandered while the player sat: a leash, a
+  // keep-clear radius, a step length, an arrival threshold, the lot. All gone.
+  // Chasing a goal that drifts with the player meant it was always mid-journey
+  // and never arrived, so it walked without pause — and no tuning of speeds or
+  // distances fixed a problem that was really "it has somewhere to be at all".
   //
-  // It gives up wandering the instant the player moves again, which is what
-  // keeps it a companion rather than a second character with its own agenda.
-  /** How far from the player it will drift, along the trail and across it. */
-  const WANDER_X = 2.6;
-  const WANDER_Z = 1.7;
-  /**
-   * Roughly how far one of its steps carries it.
-   *
-   * A wander used to be a target somewhere in a box, which meant a walk of
-   * whatever distance the box handed out — usually a long one, held at cruise
-   * the whole way. That is a treadmill: the legs cycle and cycle and the
-   * character is plainly not going anywhere in particular.
-   *
-   * A move is now one or two steps and then a stop. Short bursts in random
-   * directions with a long, uneven stand between them is what pottering
-   * actually looks like.
-   */
-  const STEP_LEN = 0.7;
-  /**
-   * How far behind the player it must stay.
-   *
-   * Never in front. The player is sitting when this runs, facing down the
-   * trail, and a companion parked in their eyeline for six seconds is in the
-   * way of the thing they are looking at. It may cross behind and stand to
-   * either side; it may not settle ahead.
-   */
-  const STAY_BEHIND = 0.4;
-  /**
-   * The leash: how far ahead of its following spot it may ever get.
-   *
-   * Wander targets were picked forward of where the companion was STANDING,
-   * which accumulates — each one a little further on than the last, with
-   * nothing pulling it back, so it would amble off up the trail and leave the
-   * player behind. Targets are now placed relative to the player's own
-   * position and clamped to this, so drift cannot compound.
-   */
-  const LEASH_AHEAD = 3.6;
-  /**
-   * The other bound, and the one that actually shows: how close it may get.
-   *
-   * The leash stops it wandering off. Nothing stopped it wandering IN — a
-   * target could land on the player's own line, so it would walk through
-   * them, or stand on top of them while they sat. Two characters occupying
-   * one spot is the single worst thing this feature can do, and it does not
-   * need to be seen to be wrong.
-   *
-   * Kept as a radius around the player rather than a rule about the target,
-   * because the player moves while the companion is walking: a target chosen
-   * clear of them can be crowded by the time it is reached.
-   *
-   * These five numbers are one set and have to move together. This radius has
-   * to stay comfortably UNDER the distance to the following spot, or the spot
-   * itself is inside the exclusion and the companion is shoved out of it every
-   * frame — a character vibrating against its own rule. At the current values
-   * the follow spot sits hypot(2.6, 1.9) = 3.22 away against a 2.4 radius,
-   * which is the margin that keeps the walk quiet.
-   */
-  const KEEP_CLEAR = 2.4;
-  let wandering = false;
-  let wanderTarget: { x: number; z: number } | null = null;
-  /**
-   * Its current speed, carried between frames and eased toward what it wants.
-   *
-   * Movement is driven by this rather than by "how far is the target" each
-   * frame. Proportional-to-distance looks fine in the middle and patchy at
-   * both ends: it creeps as it arrives, then cuts to nothing at whatever
-   * threshold stops it, and the gait blend follows every wobble. A speed that
-   * accelerates and decelerates gives one continuous movement instead.
-   */
-  let companionSpeed = 0;
-  /** Frames left of the current standing-about, and what it is doing in them. */
-  let restFrames = 0;
+  // What is left is turning. Standing and looking about needs no walk cycle,
+  // so it cannot slide, cannot cycle its legs on the spot, and cannot end up
+  // anywhere it should not be.
+  /** Where it is facing, and how long before it looks somewhere else. */
+  let lookTarget = Math.PI / 2;
+  let lookHold = 0;
 
   // ── population ─────────────────────────────────────────────────────────
   let player: DinoRig | null = null;
@@ -3671,175 +3605,61 @@ export function createKidsWorld(
         const seen = followBuffer[0]!;
         const cw = companion.wrap;
 
-        // ── it moves itself ───────────────────────────────────────────
+        // ── it moves only when you do, and looks around when you stop ───
         //
-        // The companion used to sit at a fixed offset from the player and
-        // replay the player's gait, which made the two move as one object
-        // with two bodies: identical pace, identical stride, starting and
-        // stopping on the same frame. Two children walking together do not
-        // do that.
+        // The walking of its own is gone, and this is why.
         //
-        // So it has its own legs. It aims at a spot near where the player was
-        // a moment ago and travels there at ITS OWN speed, and its gait is
-        // read back from how fast it is actually going — which is what makes
-        // the legs match the ground under them. Falling behind and catching
-        // up is then something that happens rather than something animated.
-        // It wanders while the player is DOWN — crouching or sitting — and
-        // only then.
+        // It had its own legs for a while: it aimed at a spot near the player
+        // and travelled there at its own speed, so the two would not move in
+        // lockstep. That worked, and traded the problem for a worse one. The
+        // player advances in bursts — a keystroke at a time, stopping between
+        // them — so a companion chasing a goal that drifts with them is always
+        // mid-journey and never arrives. It walked without pause. Tuning the
+        // speeds, the distances and the rests only moved the symptom, because
+        // the cause was that it had a destination of its own at all.
         //
-        // Standing still is not the same thing. A player pauses constantly
-        // while typing, hunting for a key, and a companion that set off
-        // wandering at every hesitation would never be beside them. Sitting
-        // down is a deliberate stop, long enough that standing over somebody
-        // for the whole of it is the odd thing to do.
+        // Position and gait are the player's again, a beat late. When the
+        // player stops, the sample says stopped and it stops — not because
+        // something decided to, but because there is nothing else it can do.
         //
-        // Read from the delayed sample like everything else, so it starts a
-        // beat after they go down rather than at the same instant.
-        wandering = seen.resting;
-        if (!wandering) {
-          wanderTarget = null;
-          restFrames = 0;
-        }
-
-        const home = seen.x - FOLLOW_GAP;
-        let goalX: number;
-        let goalZ: number;
-        if (wandering) {
-          if (restFrames > 0) {
-            restFrames -= 1;
-            goalX = cw.position.x;
-            goalZ = cw.position.z;
-          } else {
-            if (wanderTarget == null) {
-              // One step, or two. Never a march.
-              //
-              // Three rules meet here and all of them matter. It may not
-              // reverse down the trail, because on a one-way path that reads
-              // as the character being dragged. It may not walk away, because
-              // a companion out of frame is not company. And it may not settle
-              // in front of a sitting player, because that is standing in
-              // front of what they are looking at.
-              //
-              // Together they leave it the space behind and to either side,
-              // which is exactly where somebody waiting for a friend stands.
-              const reach = STEP_LEN * (1 + Math.floor(Math.random() * 2));
-              // Anywhere in the forward half, so it never reverses, with the
-              // sideways headings as likely as the straight ones — which is
-              // what stops it tracking a line.
-              const heading = (Math.random() * 2 - 1) * (Math.PI * 0.42);
-              let tx = cw.position.x + Math.cos(heading) * reach;
-              let tz = cw.position.z + Math.sin(heading) * reach;
-              // Behind the player, inside the leash, on its own side.
-              tx = Math.min(
-                Math.min(home + LEASH_AHEAD, p.x - STAY_BEHIND),
-                Math.max(home - FOLLOW_GAP, tx),
-              );
-              tz = Math.min(
-                FOLLOW_SIDE + WANDER_Z,
-                Math.max(FOLLOW_SIDE - WANDER_Z, tz),
-              );
-              wanderTarget = { x: tx, z: tz };
-            }
-            goalX = wanderTarget.x;
-            goalZ = wanderTarget.z;
-          }
-        } else {
-          goalX = home;
-          goalZ = FOLLOW_SIDE;
-        }
-
-        const dx2 = goalX - cw.position.x;
-        const dz2 = goalZ - cw.position.z;
-        const dist = Math.hypot(dx2, dz2);
-        // What it would LIKE to be doing: nothing if it is there, an amble if
-        // it is close, a hurry if it has been left behind. Distances rather
-        // than states, so there is no threshold to flicker across.
-        const wantSpeed =
-          dist < 0.14
-            ? 0
-            : dist > 2.6
-              ? 0.088
-              : 0.03 + Math.min(1, dist / 2.6) * 0.03;
-        // Eased, so it leans into a walk and settles out of one.
-        companionSpeed += (wantSpeed - companionSpeed) * 0.05;
-        // Arrived means stopped, at once — the eased speed is not allowed to
-        // run on past the arrival. See the gait note below for what that cost.
-        if (wantSpeed === 0) {
-          companionSpeed = 0;
-        }
-        /** Ground actually covered this frame. The legs are driven by this. */
-        let moved = 0;
-        if (companionSpeed > 0.0015 && dist > 0.02) {
-          const step = Math.min(companionSpeed, dist);
-          moved = step;
-          cw.position.x += (dx2 / dist) * step;
-          cw.position.z += (dz2 / dist) * step;
-          const want = Math.atan2(dx2, -dz2);
-          let turn = want - cw.rotation.y;
-          while (turn > Math.PI) turn -= Math.PI * 2;
-          while (turn < -Math.PI) turn += Math.PI * 2;
-          cw.rotation.y += turn * 0.12; // eased, so it does not pivot on the spot
-        }
-        if (wandering && wanderTarget != null && dist < 0.14) {
-          // Arrived. Stand about for a while before choosing anywhere else —
-          // and the while is long and variable, because a companion that
-          // walks, pauses, walks, pauses on a fixed beat is patrolling.
-          wanderTarget = null;
-          // One to seven seconds. Wide, because an even pause is a metronome
-          // and reads as waiting for a cue rather than as standing about.
-          restFrames = 60 + Math.floor(Math.random() * 360);
-          // Every so often it does something other than stand there.
-          if (companion.rest.wave != null && Math.random() < 0.35) {
-            companion.rest.wave.reset();
-            companion.rest.wave.play();
-          }
-        }
-        // Both bounds, enforced rather than trusted. Every rule above keeps it
-        // near the player and out of their way; these are what make that true
-        // even if one of those rules is later changed and another is not.
-        cw.position.x = Math.max(
-          home - FOLLOW_GAP,
-          Math.min(
-            // Whichever bound bites first: the leash, or the player's back.
-            Math.min(home + LEASH_AHEAD, p.x - STAY_BEHIND),
-            cw.position.x,
-          ),
-        );
-        cw.position.z = Math.max(
-          FOLLOW_SIDE - WANDER_Z,
-          Math.min(FOLLOW_SIDE + WANDER_Z, cw.position.z),
-        );
-        // Pushed straight back out if it ever ends up inside the player —
-        // which the walk can do on its own, since the player keeps moving
-        // while the companion is crossing to somewhere that was clear.
-        const gapX = cw.position.x - p.x;
-        const gapZ = cw.position.z;
-        const gap = Math.hypot(gapX, gapZ);
-        if (gap < KEEP_CLEAR) {
-          const k = gap < 1e-4 ? 0 : KEEP_CLEAR / gap;
-          cw.position.x = gap < 1e-4 ? p.x : p.x + gapX * k;
-          cw.position.z = gap < 1e-4 ? FOLLOW_SIDE : gapZ * k;
-        }
+        // The variety that was lost comes back as turning rather than
+        // travelling. Standing and looking about needs no walk cycle, so it
+        // cannot slide, cannot cycle its legs on the spot, and cannot end up
+        // anywhere it should not be. A child waiting for a friend looks
+        // around; it does not pace.
+        cw.position.x = seen.x - FOLLOW_GAP;
+        cw.position.z = FOLLOW_SIDE;
         cw.position.y = groundY(cw.position.x);
-
-        // Gait read back from the ground it actually covered this frame.
-        //
-        // Not from the speed it would LIKE to be going. Those two agree while
-        // it is travelling and disagree at exactly the moment that matters:
-        // `step` is capped at the distance remaining, so on arrival it stops
-        // moving while the eased speed — and therefore the walk cycle — runs
-        // on for about a second. Legs going, character stationary. Feet are
-        // told by the floor, never by the intention.
-        const moveW2 = Math.min(1, moved / 0.05);
-        const runShare2 =
-          moved > 0.058 ? Math.min(1, (moved - 0.058) / 0.03) : 0;
         if (companion.run && companion.idle) {
           if (companion.walk) {
-            companion.walk.weight = moveW2 * (1 - runShare2);
+            companion.walk.weight = seen.moveW * (1 - seen.runShare);
           }
-          companion.run.weight = moveW2 * runShare2;
-          companion.idle.weight = 1 - moveW2;
+          companion.run.weight = seen.moveW * seen.runShare;
+          companion.idle.weight = 1 - seen.moveW;
         }
+
+        // Where it is looking: down the trail while the player is on the move,
+        // since a companion facing the wrong way mid-walk looks lost, and off
+        // at something of its own once they are down.
+        if (seen.resting) {
+          if (lookHold > 0) {
+            lookHold -= 1;
+          } else {
+            lookTarget =
+              Math.PI / 2 + (Math.random() * 2 - 1) * (Math.PI * 0.75);
+            // Held a good while. A head that swings on a beat is scanning; one
+            // that settles somewhere and stays is looking at something.
+            lookHold = 90 + Math.floor(Math.random() * 300);
+          }
+        } else {
+          lookTarget = Math.PI / 2;
+          lookHold = 0;
+        }
+        let turn = lookTarget - cw.rotation.y;
+        while (turn > Math.PI) turn -= Math.PI * 2;
+        while (turn < -Math.PI) turn += Math.PI * 2;
+        cw.rotation.y += turn * 0.045; // slow, so it is a look and not a snap
+
         // The celebration is the one thing they do rather than copy, because
         // it is a one-shot: replaying the flag every frame it was true would
         // restart the clip forty times. Fired on the edge instead.
