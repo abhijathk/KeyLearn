@@ -4397,7 +4397,21 @@ function SettingsCard({
                             {label}
                           </button>
                         ))}
-                        {HATCHLINGS[prefs.world].map(({ id, label, at }) =>
+                        {/*
+              The hero world's cast is fixed: the Knight, the Skeleton, Dave
+              and Little Drew. Its earnable characters — Scout, Ranger, Mage,
+              Bear, Shadow — are no longer offered here, and neither are the
+              locked eggs counting down to them.
+
+              They are NOT deleted from HATCHLINGS. They still hatch, still
+              celebrate, and still earn their album sticker, which is what the
+              "hero world is not left without rewards" test in album.test.ts
+              exists to protect. Only this picker stops listing them.
+            */}
+                        {(prefs.world === "hero"
+                          ? []
+                          : HATCHLINGS[prefs.world]
+                        ).map(({ id, label, at }) =>
                           included >= at ? (
                             <button
                               key={id}
