@@ -1765,9 +1765,9 @@ export function createKidsWorld(
   // did, the companion does, later, once.
   const FOLLOW_FRAMES = 24; // 0.4s at 60fps — a glance, not a lag
   /** How far behind along the trail, on top of the delay. */
-  const FOLLOW_GAP = 2.1;
+  const FOLLOW_GAP = 2.6;
   /** To one side, so they walk together rather than in single file. */
-  const FOLLOW_SIDE = 1.5;
+  const FOLLOW_SIDE = 1.9;
   type FollowSample = {
     x: number;
     y: number;
@@ -1794,7 +1794,38 @@ export function createKidsWorld(
   // keeps it a companion rather than a second character with its own agenda.
   /** How far from the player it will drift, along the trail and across it. */
   const WANDER_X = 2.6;
-  const WANDER_Z = 1.9;
+  const WANDER_Z = 1.7;
+  /**
+   * The leash: how far ahead of its following spot it may ever get.
+   *
+   * Wander targets were picked forward of where the companion was STANDING,
+   * which accumulates — each one a little further on than the last, with
+   * nothing pulling it back, so it would amble off up the trail and leave the
+   * player behind. Targets are now placed relative to the player's own
+   * position and clamped to this, so drift cannot compound.
+   */
+  const LEASH_AHEAD = 3.6;
+  /**
+   * The other bound, and the one that actually shows: how close it may get.
+   *
+   * The leash stops it wandering off. Nothing stopped it wandering IN — a
+   * target could land on the player's own line, so it would walk through
+   * them, or stand on top of them while they sat. Two characters occupying
+   * one spot is the single worst thing this feature can do, and it does not
+   * need to be seen to be wrong.
+   *
+   * Kept as a radius around the player rather than a rule about the target,
+   * because the player moves while the companion is walking: a target chosen
+   * clear of them can be crowded by the time it is reached.
+   *
+   * These five numbers are one set and have to move together. This radius has
+   * to stay comfortably UNDER the distance to the following spot, or the spot
+   * itself is inside the exclusion and the companion is shoved out of it every
+   * frame — a character vibrating against its own rule. At the current values
+   * the follow spot sits hypot(2.6, 1.9) = 3.22 away against a 2.4 radius,
+   * which is the margin that keeps the walk quiet.
+   */
+  const KEEP_CLEAR = 2.4;
   let wandering = false;
   let wanderTarget: { x: number; z: number } | null = null;
   /**
@@ -3658,17 +3689,41 @@ export function createKidsWorld(
             goalZ = cw.position.z;
           } else {
             if (wanderTarget == null) {
-              // Forward only, never back down the trail.
+              // Forward only, and never out of reach.
               //
-              // A child following a friend does not walk backwards to fill
-              // time, and on a trail that only ever goes one way it reads as
-              // the character being dragged. So a wander target is always at
-              // or ahead of where it stands — the variety comes from how far
-              // and how far across, not from direction.
-              wanderTarget = {
-                x: cw.position.x + Math.random() * WANDER_X,
-                z: FOLLOW_SIDE + (Math.random() * 2 - 1) * WANDER_Z,
-              };
+              // Two rules that pull against each other and both matter. A
+              // child does not walk backwards to fill time — on a trail that
+              // goes one way it reads as the character being dragged — but a
+              // companion that only ever steps forward walks away.
+              //
+              // Both hold by clamping against the PLAYER's spot rather than
+              // its own: it may step forward, never past `home + LEASH_AHEAD`,
+              // and once it is at that edge the forward room is gone and the
+              // wandering becomes lateral until the player moves on and opens
+              // it up again. So it never reverses and never leaves.
+              const ceiling = home + LEASH_AHEAD;
+              let tx = Math.min(
+                ceiling,
+                cw.position.x + Math.random() * WANDER_X,
+              );
+              // Across the trail, never onto it: the near half of the range is
+              // folded away from the player instead of being sampled and
+              // rejected, so the sideways spread stays even.
+              const across =
+                (WANDER_Z * 0.35 + Math.random() * WANDER_Z * 0.65) *
+                (Math.random() < 0.5 ? -1 : 1);
+              let tz = FOLLOW_SIDE + across;
+              if (Math.sign(tz) !== Math.sign(FOLLOW_SIDE)) {
+                tz = FOLLOW_SIDE - across; // stay on its own side of the trail
+              }
+              // And finally push the whole target clear of the player.
+              const away = Math.hypot(tx - p.x, tz);
+              if (away < KEEP_CLEAR) {
+                const k = away < 1e-4 ? 0 : KEEP_CLEAR / away;
+                tx = p.x + (tx - p.x) * k;
+                tz = tz * k || FOLLOW_SIDE;
+              }
+              wanderTarget = { x: tx, z: tz };
             }
             goalX = wanderTarget.x;
             goalZ = wanderTarget.z;
@@ -3713,6 +3768,28 @@ export function createKidsWorld(
             companion.rest.wave.reset();
             companion.rest.wave.play();
           }
+        }
+        // Both bounds, enforced rather than trusted. Every rule above keeps it
+        // near the player and out of their way; these are what make that true
+        // even if one of those rules is later changed and another is not.
+        cw.position.x = Math.max(
+          home - FOLLOW_GAP,
+          Math.min(home + LEASH_AHEAD, cw.position.x),
+        );
+        cw.position.z = Math.max(
+          FOLLOW_SIDE - WANDER_Z,
+          Math.min(FOLLOW_SIDE + WANDER_Z, cw.position.z),
+        );
+        // Pushed straight back out if it ever ends up inside the player —
+        // which the walk can do on its own, since the player keeps moving
+        // while the companion is crossing to somewhere that was clear.
+        const gapX = cw.position.x - p.x;
+        const gapZ = cw.position.z;
+        const gap = Math.hypot(gapX, gapZ);
+        if (gap < KEEP_CLEAR) {
+          const k = gap < 1e-4 ? 0 : KEEP_CLEAR / gap;
+          cw.position.x = gap < 1e-4 ? p.x : p.x + gapX * k;
+          cw.position.z = gap < 1e-4 ? FOLLOW_SIDE : gapZ * k;
         }
         cw.position.y = groundY(cw.position.x);
 
