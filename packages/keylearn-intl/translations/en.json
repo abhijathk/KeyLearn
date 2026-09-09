@@ -2376,5 +2376,5 @@
   "verify.unnamed": "The holder is not named here. Children never are, and a grown-up is named only if they chose to be.",
   "verify.valid": "This certificate was issued by KeyLearn.",
   "weekDayNames": "M|T|W|T|F|S|S",
-  "about.oss.art": "One exception, worth stating plainly: the 3-D characters and companions in the children's game come from the AK 3D Pack, which is commercially licensed and is not covered by the AGPL. It was bought so this site could show them, and it is kept in a folder of its own, apart from everything else. The code is yours under the AGPL; the pack is not. If you fork or self-host KeyLearn, either delete that folder or buy your own licence for equivalent models. Everything else in the game, and all of the code, is free to reuse."
+  "about.oss.art": "One exception: the 3-D characters in the children's game are the AK 3D Pack, which is commercially licensed, not AGPL. It sits in a folder of its own — if you fork KeyLearn, delete that folder or buy your own licence for equivalent models. Everything else, code included, is free to reuse."
 }
