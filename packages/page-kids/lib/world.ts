@@ -581,7 +581,7 @@ export const HERO_THEME: WorldTheme = {
   // 4.8 keeps him visibly smaller while leaving his head where the eye
   // expects a small child's to be.
   playerHeight: (name) =>
-    name === "Explorer" ? 4.8 : name === "Explorer6" ? 4.35 : 3.4,
+    name === "Explorer" ? 4.8 : name === "Explorer6" ? 4.15 : 3.4,
   morphsBody: false,
   animationUrls: ["anims-move.glb", "anims-idle.glb"],
   lands: HERO_LANDS,
@@ -1780,6 +1780,26 @@ export function createKidsWorld(
   let companionName: string | null = null;
   let companionCelebrating = false;
 
+  // ── being bored ────────────────────────────────────────────────────────
+  //
+  // A companion that only ever replays the player has nothing to do the
+  // moment the player stops, and a second child standing perfectly still
+  // beside a sitting one reads as a frozen model rather than as company. So
+  // once the player has been still for a while, the companion wanders: picks
+  // somewhere nearby, walks to it, waits, picks somewhere else.
+  //
+  // It gives up wandering the instant the player moves again, which is what
+  // keeps it a companion rather than a second character with its own agenda.
+  /** Still for this many frames before boredom sets in — about two seconds. */
+  const BORED_AFTER = 120;
+  /** How far from the player it will drift, along the trail and across it. */
+  const WANDER_X = 2.6;
+  const WANDER_Z = 1.9;
+  let stillFrames = 0;
+  let wandering = false;
+  let wanderTarget: { x: number; z: number } | null = null;
+  let wanderPause = 0;
+
   // ── population ─────────────────────────────────────────────────────────
   let player: DinoRig | null = null;
   let playerH = 2.6; // fitted height of the current player model
@@ -2693,6 +2713,24 @@ export function createKidsWorld(
     0.72 + 0.66 * Math.max(0, Math.min(1, age));
 
   /**
+   * Characters who do not grow.
+   *
+   * The size curve above is a hatchling's: a dino arrives as a baby and grows
+   * into an adult as letters are unlocked, and its size IS its progress. The
+   * two Explorers are not hatchlings. They are a ten-year-old and a
+   * six-year-old, they are those ages for good, and the difference between
+   * their heights is the only thing telling a child which is which.
+   *
+   * Left to grow, that broke in the way you would least expect to notice: the
+   * PLAYER was scaled by progress and the companion never was, so the pair's
+   * heights said nothing about age and everything about how far through the
+   * alphabet somebody happened to be — the six-year-old could stand taller
+   * than the ten-year-old beside him.
+   */
+  const growsWithAge = (name: string) => !/^Explorer6?$/.test(name);
+  let playerGrows = true;
+
+  /**
    * The tinted character, when the current one can be tinted.
    *
    * Rebuilt on every character swap because the handle closes over that
@@ -2819,10 +2857,18 @@ export function createKidsWorld(
       });
     rig.wrap.position.set(playerX, groundY(playerX), 0);
     rig.wrap.rotation.y = Math.PI / 2;
+    playerGrows = growsWithAge(name);
+    growTarget = playerGrows ? sizeForAge(dinoAge) : 1;
     if (player) {
-      rig.wrap.scale.copy(player.wrap.scale);
+      // The outgoing character's scale is only inherited when the incoming one
+      // is governed by the same rule. Carrying a grown dino's 1.38 onto a
+      // six-year-old is how he ended up taller than the ten-year-old.
+      if (playerGrows) {
+        rig.wrap.scale.copy(player.wrap.scale);
+      }
       scene.remove(player.wrap);
     }
+    rig.wrap.scale.setScalar(playerGrows ? rig.wrap.scale.x : 1);
     player = rig;
     playerGhostly = /skeleton/i.test(name);
     // Only the player answers to the hero lamp.
@@ -3555,16 +3601,68 @@ export function createKidsWorld(
         // teleporting to where they were half a second ago.
         const seen = followBuffer[0]!;
         const cw = companion.wrap;
-        cw.position.x = seen.x - FOLLOW_GAP;
-        cw.position.z = FOLLOW_SIDE;
-        cw.position.y = groundY(cw.position.x);
-        cw.rotation.y = Math.PI / 2;
+
+        // Boredom is counted on what the companion has SEEN, not on what the
+        // player is doing this instant — otherwise it starts wandering half a
+        // second before the thing that bored it appears to have happened.
+        stillFrames = seen.moveW < 0.05 ? stillFrames + 1 : 0;
+        if (stillFrames === 0) {
+          wandering = false;
+          wanderTarget = null;
+        } else if (stillFrames > BORED_AFTER) {
+          wandering = true;
+        }
+
+        let moveW2 = seen.moveW;
+        let runShare2 = seen.runShare;
+        if (wandering) {
+          const home = seen.x - FOLLOW_GAP;
+          if (wanderPause > 0) {
+            wanderPause -= 1;
+            moveW2 = 0;
+          } else {
+            if (wanderTarget == null) {
+              // Somewhere near the player, never far: a companion that
+              // wanders out of frame has stopped being company.
+              wanderTarget = {
+                x: home + (Math.random() * 2 - 1) * WANDER_X,
+                z: FOLLOW_SIDE + (Math.random() * 2 - 1) * WANDER_Z,
+              };
+            }
+            const dx2 = wanderTarget.x - cw.position.x;
+            const dz2 = wanderTarget.z - cw.position.z;
+            const dist = Math.hypot(dx2, dz2);
+            if (dist < 0.12) {
+              // Arrived. Stand and look about for a moment before choosing
+              // somewhere else, because walking without pause reads as
+              // patrolling rather than pottering.
+              wanderTarget = null;
+              wanderPause = 40 + Math.floor(Math.random() * 90);
+              moveW2 = 0;
+            } else {
+              const step = Math.min(0.035, dist);
+              cw.position.x += (dx2 / dist) * step;
+              cw.position.z += (dz2 / dist) * step;
+              // Face where it is going. At rotation.y = PI/2 the character
+              // faces +x, which is the direction of travel along the trail.
+              cw.rotation.y = Math.atan2(dx2, -dz2);
+              moveW2 = 1;
+              runShare2 = 0; // it ambles; it is not in a hurry
+            }
+          }
+          cw.position.y = groundY(cw.position.x);
+        } else {
+          cw.position.x = seen.x - FOLLOW_GAP;
+          cw.position.z = FOLLOW_SIDE;
+          cw.position.y = groundY(cw.position.x);
+          cw.rotation.y = Math.PI / 2;
+        }
         if (companion.run && companion.idle) {
           if (companion.walk) {
-            companion.walk.weight = seen.moveW * (1 - seen.runShare);
+            companion.walk.weight = moveW2 * (1 - runShare2);
           }
-          companion.run.weight = seen.moveW * seen.runShare;
-          companion.idle.weight = 1 - seen.moveW;
+          companion.run.weight = moveW2 * runShare2;
+          companion.idle.weight = 1 - moveW2;
         }
         // The celebration is the one thing they do rather than copy, because
         // it is a one-shot: replaying the flag every frame it was true would
@@ -4301,7 +4399,9 @@ export function createKidsWorld(
     },
     setAge(age) {
       dinoAge = Math.max(0, Math.min(1, age));
-      growTarget = sizeForAge(dinoAge);
+      // A fixed-age character stays at its own fitted height, whatever the
+      // lesson has unlocked.
+      growTarget = playerGrows ? sizeForAge(dinoAge) : 1;
       if (player) {
         // Snap to the current size so switching worlds carries the growth
         // straight over instead of re-growing from a baby.
