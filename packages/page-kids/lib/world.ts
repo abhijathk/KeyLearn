@@ -3434,6 +3434,61 @@ export function createKidsWorld(
         (Math.random() - 0.5) * 0.2,
       );
       m.userData.life = 1;
+      m.userData.gravity = 0.012;
+      m.userData.decay = 0.02;
+      m.userData.spin = 1;
+      scene.add(m);
+      sparks.push(m);
+    }
+  }
+
+  /**
+   * The puff under a foot on landing.
+   *
+   * Not `burst`. Burst is celebration — big tumbling chips of colour thrown
+   * high, which is right for a finished trail and wrong for a shoe touching
+   * a path. Used for both, it read as the character kicking up clods of mud:
+   * eight cubes at 0.16, four per cent of his own height, thrown a third of a
+   * unit into the air, spinning at nearly two turns a second and taking most
+   * of a second to die.
+   *
+   * Real dust does the opposite of all of that. It is small, there is not much
+   * of it, it goes sideways rather than up, it expands as it thins, and it is
+   * gone almost at once. So: quarter the size, half the number, a fifth of the
+   * lift, a third of the life — and it fades by going transparent and
+   * spreading rather than by shrinking, because dust disperses, it does not
+   * retract.
+   */
+  function dust(x: number, y: number, z: number) {
+    if (calmMode) {
+      return;
+    }
+    for (let i = 0; i < 4; i++) {
+      const m = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.04, 0.04),
+        new THREE.MeshStandardMaterial({
+          color: i % 2 === 0 ? 0xcfc4ae : 0xb8ab90,
+          transparent: true,
+          opacity: 0.5,
+        }),
+      );
+      m.position.set(
+        x + (Math.random() - 0.5) * 0.12,
+        y,
+        z + (Math.random() - 0.5) * 0.12,
+      );
+      // Outward and barely up: a foot pushes dust sideways, it does not throw
+      // it. The backward bias is the direction of travel.
+      m.userData.v = new THREE.Vector3(
+        (Math.random() - 0.7) * 0.05,
+        0.012 + Math.random() * 0.02,
+        (Math.random() - 0.5) * 0.05,
+      );
+      m.userData.life = 1;
+      m.userData.gravity = 0.0015;
+      m.userData.decay = 0.055; // about a third of a second
+      m.userData.spin = 0.15;
+      m.userData.grow = true;
       scene.add(m);
       sparks.push(m);
     }
@@ -3545,7 +3600,7 @@ export function createKidsWorld(
         if (framesSinceJump > DOUBLE_TAP_FRAMES) {
           jumpCount = 0;
         }
-        burst(p.x, p.y + 0.15, p.z, [0xcfc4ae, 0xb8ab90], 8, 0.14);
+        dust(p.x, p.y + 0.04, p.z);
       }
       const moving = Math.abs(dx) > 0.08;
       if (moving) {
@@ -4242,11 +4297,21 @@ export function createKidsWorld(
     for (let i = sparks.length - 1; i >= 0; i--) {
       const s = sparks[i];
       s.position.add(s.userData.v);
-      s.userData.v.y -= 0.012;
-      s.userData.life -= 0.02;
-      s.rotation.x += 0.2;
-      s.rotation.y += 0.13;
-      s.scale.setScalar(Math.max(0.01, s.userData.life));
+      s.userData.v.y -= s.userData.gravity ?? 0.012;
+      s.userData.life -= s.userData.decay ?? 0.02;
+      const spin = s.userData.spin ?? 1;
+      s.rotation.x += 0.2 * spin;
+      s.rotation.y += 0.13 * spin;
+      if (s.userData.grow === true) {
+        // Dust: spreads and thins. Fading by opacity rather than by scale,
+        // because a shrinking cube reads as an object leaving and a fading one
+        // reads as air.
+        s.scale.setScalar(1 + (1 - s.userData.life) * 1.6);
+        const mat = s.material as THREE.MeshStandardMaterial;
+        mat.opacity = 0.5 * Math.max(0, s.userData.life);
+      } else {
+        s.scale.setScalar(Math.max(0.01, s.userData.life));
+      }
       if (s.userData.life <= 0) {
         scene.remove(s);
         sparks.splice(i, 1);
