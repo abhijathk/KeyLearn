@@ -1796,6 +1796,28 @@ export function createKidsWorld(
   const WANDER_X = 2.6;
   const WANDER_Z = 1.7;
   /**
+   * Roughly how far one of its steps carries it.
+   *
+   * A wander used to be a target somewhere in a box, which meant a walk of
+   * whatever distance the box handed out — usually a long one, held at cruise
+   * the whole way. That is a treadmill: the legs cycle and cycle and the
+   * character is plainly not going anywhere in particular.
+   *
+   * A move is now one or two steps and then a stop. Short bursts in random
+   * directions with a long, uneven stand between them is what pottering
+   * actually looks like.
+   */
+  const STEP_LEN = 0.7;
+  /**
+   * How far behind the player it must stay.
+   *
+   * Never in front. The player is sitting when this runs, facing down the
+   * trail, and a companion parked in their eyeline for six seconds is in the
+   * way of the thing they are looking at. It may cross behind and stand to
+   * either side; it may not settle ahead.
+   */
+  const STAY_BEHIND = 0.4;
+  /**
    * The leash: how far ahead of its following spot it may ever get.
    *
    * Wander targets were picked forward of where the companion was STANDING,
@@ -3689,40 +3711,33 @@ export function createKidsWorld(
             goalZ = cw.position.z;
           } else {
             if (wanderTarget == null) {
-              // Forward only, and never out of reach.
+              // One step, or two. Never a march.
               //
-              // Two rules that pull against each other and both matter. A
-              // child does not walk backwards to fill time — on a trail that
-              // goes one way it reads as the character being dragged — but a
-              // companion that only ever steps forward walks away.
+              // Three rules meet here and all of them matter. It may not
+              // reverse down the trail, because on a one-way path that reads
+              // as the character being dragged. It may not walk away, because
+              // a companion out of frame is not company. And it may not settle
+              // in front of a sitting player, because that is standing in
+              // front of what they are looking at.
               //
-              // Both hold by clamping against the PLAYER's spot rather than
-              // its own: it may step forward, never past `home + LEASH_AHEAD`,
-              // and once it is at that edge the forward room is gone and the
-              // wandering becomes lateral until the player moves on and opens
-              // it up again. So it never reverses and never leaves.
-              const ceiling = home + LEASH_AHEAD;
-              let tx = Math.min(
-                ceiling,
-                cw.position.x + Math.random() * WANDER_X,
+              // Together they leave it the space behind and to either side,
+              // which is exactly where somebody waiting for a friend stands.
+              const reach = STEP_LEN * (1 + Math.floor(Math.random() * 2));
+              // Anywhere in the forward half, so it never reverses, with the
+              // sideways headings as likely as the straight ones — which is
+              // what stops it tracking a line.
+              const heading = (Math.random() * 2 - 1) * (Math.PI * 0.42);
+              let tx = cw.position.x + Math.cos(heading) * reach;
+              let tz = cw.position.z + Math.sin(heading) * reach;
+              // Behind the player, inside the leash, on its own side.
+              tx = Math.min(
+                Math.min(home + LEASH_AHEAD, p.x - STAY_BEHIND),
+                Math.max(home - FOLLOW_GAP, tx),
               );
-              // Across the trail, never onto it: the near half of the range is
-              // folded away from the player instead of being sampled and
-              // rejected, so the sideways spread stays even.
-              const across =
-                (WANDER_Z * 0.35 + Math.random() * WANDER_Z * 0.65) *
-                (Math.random() < 0.5 ? -1 : 1);
-              let tz = FOLLOW_SIDE + across;
-              if (Math.sign(tz) !== Math.sign(FOLLOW_SIDE)) {
-                tz = FOLLOW_SIDE - across; // stay on its own side of the trail
-              }
-              // And finally push the whole target clear of the player.
-              const away = Math.hypot(tx - p.x, tz);
-              if (away < KEEP_CLEAR) {
-                const k = away < 1e-4 ? 0 : KEEP_CLEAR / away;
-                tx = p.x + (tx - p.x) * k;
-                tz = tz * k || FOLLOW_SIDE;
-              }
+              tz = Math.min(
+                FOLLOW_SIDE + WANDER_Z,
+                Math.max(FOLLOW_SIDE - WANDER_Z, tz),
+              );
               wanderTarget = { x: tx, z: tz };
             }
             goalX = wanderTarget.x;
@@ -3762,7 +3777,9 @@ export function createKidsWorld(
           // and the while is long and variable, because a companion that
           // walks, pauses, walks, pauses on a fixed beat is patrolling.
           wanderTarget = null;
-          restFrames = 90 + Math.floor(Math.random() * 240);
+          // One to seven seconds. Wide, because an even pause is a metronome
+          // and reads as waiting for a cue rather than as standing about.
+          restFrames = 60 + Math.floor(Math.random() * 360);
           // Every so often it does something other than stand there.
           if (companion.rest.wave != null && Math.random() < 0.35) {
             companion.rest.wave.reset();
@@ -3774,7 +3791,11 @@ export function createKidsWorld(
         // even if one of those rules is later changed and another is not.
         cw.position.x = Math.max(
           home - FOLLOW_GAP,
-          Math.min(home + LEASH_AHEAD, cw.position.x),
+          Math.min(
+            // Whichever bound bites first: the leash, or the player's back.
+            Math.min(home + LEASH_AHEAD, p.x - STAY_BEHIND),
+            cw.position.x,
+          ),
         );
         cw.position.z = Math.max(
           FOLLOW_SIDE - WANDER_Z,
