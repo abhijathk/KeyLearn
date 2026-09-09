@@ -32,7 +32,8 @@
     "stylelint-fix": "stylelint '{**/*,*}.{less,css}' --fix",
     "test": "lage test --no-cache",
     "translate": "node scripts/translate.js",
-    "watch": "npm run check-messages && env NODE_ENV=development webpack --watch"
+    "watch": "npm run check-messages && env NODE_ENV=development webpack --watch",
+    "test:kids-characters": "node scripts/kids-characters.mjs"
   },
   "dependencies": {
     "@fastr/client": "^0.1.3",

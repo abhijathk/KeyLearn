@@ -1182,12 +1182,16 @@ const HERO_CHARACTERS = [
   // and they are also what a saved profile has stored. Renaming those would
   // silently reset every child's choice back to the Knight.
   { id: "Explorer6", label: "Little Drew" },
+  // Peeli, nine like Dave and a little shorter. The bravest of the three:
+  // after dark, where her brothers walk past the skeletons on the trail,
+  // she stops and squares up to them (see BRAVE_CLIPS in world.ts).
+  { id: "Peeli", label: "Peeli" },
 ] as const;
 
 /**
  * Who may come along, for now.
  *
- * Only the two children — a companion is somebody a child recognises as
+ * Only the three siblings — a companion is somebody a child recognises as
  * another child, and a skeleton walking behind them is a different idea
  * entirely. The list is filtered against the current hero at the point of
  * use, so it can never offer you yourself.
@@ -1195,6 +1199,11 @@ const HERO_CHARACTERS = [
 const COMPANIONS = [
   { id: "Explorer", label: "Dave" },
   { id: "Explorer6", label: "Little Drew" },
+  { id: "Peeli", label: "Peeli" },
+  // Companion only, and deliberately absent from HERO_CHARACTERS above: it
+  // is somebody's robot, not somebody a child plays as.
+  { id: "Robot", label: "Robot" },
+  { id: "Puppy", label: "Puppy" },
 ] as const;
 
 function peekNextLandName(): string {
@@ -2103,9 +2112,27 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // the browser fetches first. Created after it, the loading screen stood
     // empty until every tree and companion had been fetched, which is most of
     // the wait it exists to fill.
+    // The loading screen is always one of the three children.
+    //
+    // It is the first thing a child sees every session, and it is the only
+    // picture of "who this is for" the page gets to make before the world
+    // arrives. A skeleton jogging on the spot is a fine thing to PLAY as and
+    // a poor thing to be greeted by. So the loader shows Dave, Little Drew
+    // or Peeli — the child's own pick when it is one of them, and otherwise
+    // the sibling their age band opens with.
+    //
+    // Only the hero world has anything else to offer; Dino Run's cast is
+    // dinosaurs, and a child running there is a dinosaur on purpose.
+    const SIBLINGS = ["Explorer", "Explorer6", "Peeli"];
+    const loaderWho =
+      prefsRef.current.world !== "hero" || SIBLINGS.includes(chosen)
+        ? chosen
+        : band === "5-6" || band === "7-8"
+          ? "Explorer6"
+          : "Explorer";
     const loader =
       loaderRef.current != null
-        ? createLoaderScene(loaderRef.current, theme, chosen)
+        ? createLoaderScene(loaderRef.current, theme, loaderWho)
         : null;
     const nav = navigator as Navigator & { deviceMemory?: number };
     const world = createKidsWorld(canvas, pickLand(theme.lands), theme, {

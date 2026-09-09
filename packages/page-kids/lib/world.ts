@@ -104,7 +104,17 @@ const REST_CROSSFADE_S = 0.28;
  * round: watching a character sit down is pleasant, being told to press a key
  * for the fifth time is not.
  */
-const PATIENCE_STEP = 0.55;
+/**
+ * Stretched, but far less than it was.
+ *
+ * At 0.55 the stretch doubled the whole chain after two pauses and tripled
+ * it after four: the wave went from 6.7s to 14s to 21.5s, and by then a
+ * child who had paused a few times was watching a character stand still for
+ * twenty seconds before it acknowledged them at all. The idea is right —
+ * somebody who pauses constantly should not be waved at constantly — but
+ * the size of it turned "patient" into "not responding".
+ */
+const PATIENCE_STEP = 0.3;
 const PATIENCE_CAP = 4;
 /** After this many pauses the wave is dropped from the chain. */
 const WAVE_UNTIL_PAUSE = 2;
@@ -113,9 +123,110 @@ const CROUCH_UNTIL_PAUSE = 5;
 /** No two spoken lines closer together than this, in seconds. */
 const SPEAK_COOLDOWN_S = 45;
 
-const REST_WAVE_S = 5;
-const REST_CROUCH_S = 10;
-const REST_SIT_S = 20;
+/**
+ * Peeli is the brave one, and this is where it shows.
+ *
+ * After dark the villagers on the trail rise as their own skeletons. Dave
+ * and Little Drew walk past them; she squares up. The clips are ordered by
+ * how much they claim — the ready stance is a girl deciding she is not
+ * scared, the strikes are her meaning it — and the weights keep the loud
+ * ones rare, because a nine-year-old shadow-boxing every skeleton on the
+ * path stops reading as brave and starts reading as a cutscene.
+ *
+ * Her two long combos (3.9s each) are deliberately absent. They are the
+ * least subtle thing she owns and they outlast the moment.
+ */
+const BRAVE_CLIPS: readonly { readonly re: RegExp; readonly weight: number }[] =
+  [
+    // Peeli. The ready stance carries most of it — a girl deciding she is not
+    // scared — and the strikes are her meaning it.
+    { re: /^martialarts_ready$/, weight: 6 },
+    { re: /^high_kick_stepin$/, weight: 2 },
+    { re: /^sweeping_kick$/, weight: 1 },
+    { re: /^punch_forward_bothfists$/, weight: 1 },
+    // Dave and Little Drew, who own a different set under different names.
+    // Each character picks up only the clips it actually has, so one list
+    // serves all three and a character without any of them simply never
+    // reacts — which is what every other rig in the game does.
+    //
+    // No ready stance exists for the boys, so a single quick jab does the job
+    // the stance does for her: small, over quickly, and unmistakably "I am
+    // not running". The three-hit combo is the biggest thing either of them
+    // throws and stays rare for the same reason her long combos are left out
+    // altogether.
+    { re: /^punch_right$/, weight: 4 },
+    { re: /^punch_left$/, weight: 4 },
+    { re: /^kick$/, weight: 2 },
+    { re: /^combo_3hit$/, weight: 1 },
+    // Deliberately absent: `Hit_Front` and `Hit_Back` are the character BEING
+    // hit, which would read as the skeleton striking a child; `Dodge_*` reads
+    // as flinching away rather than standing up to it; and Little Drew's
+    // `Kung_Fu_Punch` is 7.4s, long enough to stop being a reaction and start
+    // being a scene.
+  ];
+
+/**
+ * Standing beats for a character with more to say than an idle loop.
+ *
+ * Peeli ships two gestures that are neither locomotion, nor combat, nor a
+ * pose she has to get up from — a delighted one and a "nope". They fill
+ * the two places a standing character otherwise has nothing to do: the
+ * gap before she sits, and the whole time she is somebody's companion
+ * while that somebody is sat down.
+ *
+ * Everything else of hers is already spoken for. Her two long punch
+ * combos are the only other unused clips and they are neither subtle nor
+ * short; `Forward_Charge_InPlace` and `Run_Fast_RootMotion` are travel,
+ * and root motion in particular would fight a trail that decides position
+ * from how much has been typed.
+ */
+const FIDGET_CLIPS: readonly RegExp[] = [
+  /^excited$/,
+  /^no_disagree$/,
+  // The robot's one in-place gesture. It has no celebration and nothing to
+  // say, so this is the whole of what it does while it waits — which is
+  // exactly what a fidget is for.
+  //
+  // Its `Idle` sits EARLIER in the file than `Standing`, and `pick` takes
+  // the first match, so `/idle|stand/` still resolves to the idle rather
+  // than to this. Worth knowing if the clips are ever reordered.
+  /^standing$/,
+];
+
+/**
+ * How close the hero has to be for the trail to notice them.
+ *
+ * One radius, used by both halves of the same moment: it is what makes a
+ * skeleton turn and watch (and a known one loom), and it is what makes
+ * Peeli square up. They were separate numbers — 7 for the watching, 22 for
+ * her — so she was answering something twenty-two units away that had not
+ * so much as looked at her, and by the time it did she was on cooldown.
+ * The standoff only reads as a standoff if both halves start together.
+ */
+const NEAR_HERO_RANGE = 7;
+
+/** Kept as its own name where her reaction is read, but the same distance. */
+const BRAVE_RANGE = NEAR_HERO_RANGE;
+
+/** She does not react to every one — this is the chance she takes it on. */
+const BRAVE_CHANCE = 0.55;
+
+/** And never twice inside this, so the trail is not a running fight. */
+const BRAVE_COOLDOWN_S = 9;
+
+/**
+ * How long the character waits before doing anything about it.
+ *
+ * Shortened across the board (from 5 / 10 / 20). The first version was
+ * tuned by reading the numbers rather than by sitting in front of it: ten
+ * seconds is not long on a stopwatch and is a very long time to watch
+ * somebody stand, and the wave — the one beat that says "I noticed you
+ * stopped" — was the worst of it, arriving at 6.7s on a first pause and
+ * later than that on every one after.
+ */
+const REST_WAVE_S = 3;
+const REST_CROUCH_S = 7;
+const REST_SIT_S = 13;
 
 const DOUBLE_TAP_FRAMES = 24;
 
@@ -195,6 +306,34 @@ function withDeadline<T>(work: Promise<T>, url: string): Promise<T> {
  * The corrections below are solved against those clips, so they follow the
  * clips rather than the character.
  */
+/**
+ * The characters that are NOT ours to give away.
+ *
+ * KeyLearn's code is AGPL. These five models are not: they were bought
+ * under a separate commercial licence and are included so this deployment
+ * can show them. They live in their own folder — `models/licensed/` — so
+ * the boundary is a directory rather than a paragraph somebody has to
+ * read: anyone forking this can delete one folder and know they have
+ * removed everything they have no right to, and this list is what tells
+ * the loader where to look.
+ *
+ * See `root/public/kids-assets/models/licensed/COMMERCIAL-LICENSE.md`.
+ */
+const LICENSED_MODELS: ReadonlySet<string> = new Set([
+  "Explorer", // Dave
+  "Explorer6", // Little Drew
+  "Peeli",
+  "Robot",
+  "Puppy",
+]);
+
+/** Where a character's model actually lives, licensed ones included. */
+function modelUrl(modelDir: string, name: string): string {
+  return LICENSED_MODELS.has(name)
+    ? `${ASSETS}/models/licensed/${name}.glb`
+    : `${ASSETS}/models/${modelDir}/${name}.glb`;
+}
+
 const WEARS_EXPLORER_CLIPS: ReadonlySet<string> = new Set([
   "Explorer",
   "Explorer6",
@@ -231,6 +370,62 @@ const SIT_ARM_CORRECTION: Readonly<
  * degrees of difference on every bone), so correcting one without the others
  * would introduce a discontinuity where there is currently none.
  */
+/**
+ * Puts a standing clip's hips where the idle's hips are.
+ *
+ * Peeli's clips each carry a hips translation track, and every one of them
+ * was authored from its own baseline: measured across her 21 clips, the
+ * hips start at 20 different heights spread over ~0.055 model units, which
+ * at her size on the trail is about 0.15 of a unit. Every other bone agrees
+ * to the fourth decimal, as it must — a bone's translation is its length,
+ * and those cannot differ between two clips on one skeleton.
+ *
+ * So the difference is real, legitimate authoring (a pose sits where the
+ * animator put it) and wrong for us: the crossfade does its job and
+ * interpolates faithfully from one baseline to the other, which is seen as
+ * the character settling or lifting slightly every time a gesture starts
+ * or ends.
+ *
+ * The whole track is shifted by the difference at its first frame, so the
+ * motion inside the clip is untouched and only the baseline moves. Applied
+ * to standing clips only: a sit and a crouch are SUPPOSED to put the hips
+ * somewhere else, and `lifts` already measures them for exactly that.
+ */
+function alignHipsToIdle(
+  clip: THREE.AnimationClip,
+  idleHips: readonly [number, number, number] | null,
+): THREE.AnimationClip {
+  if (idleHips == null) return clip;
+  const out = clip.clone();
+  for (const track of out.tracks) {
+    if (!/(^|\.)Hips\.position$/.test(track.name)) continue;
+    const v = track.values;
+    if (v.length < 3) continue;
+    const dx = idleHips[0] - v[0]!;
+    const dy = idleHips[1] - v[1]!;
+    const dz = idleHips[2] - v[2]!;
+    for (let i = 0; i + 2 < v.length; i += 3) {
+      v[i] = v[i]! + dx;
+      v[i + 1] = v[i + 1]! + dy;
+      v[i + 2] = v[i + 2]! + dz;
+    }
+  }
+  return out;
+}
+
+/** The hips position on a clip's first frame, for `alignHipsToIdle`. */
+function firstHips(
+  clip: THREE.AnimationClip | null,
+): [number, number, number] | null {
+  if (clip == null) return null;
+  for (const track of clip.tracks) {
+    if (!/(^|\.)Hips\.position$/.test(track.name)) continue;
+    const v = track.values;
+    if (v.length >= 3) return [v[0]!, v[1]!, v[2]!];
+  }
+  return null;
+}
+
 function correctSittingArms(
   clip: THREE.AnimationClip,
   ramp: "full" | "in" | "out",
@@ -580,8 +775,29 @@ export const HERO_THEME: WorldTheme = {
   // "the same boy, further away" rather than "a younger boy". 4.0 against
   // 4.8 keeps him visibly smaller while leaving his head where the eye
   // expects a small child's to be.
+  // Peeli is nine like Dave and drawn a little shorter than him — the
+  // sibling difference a child reads at a glance without either of them
+  // looking like the other seen from further away.
   playerHeight: (name) =>
-    name === "Explorer" ? 4.8 : name === "Explorer6" ? 3.95 : 3.4,
+    name === "Explorer"
+      ? 4.8
+      : name === "Peeli"
+        ? 4.55
+        : name === "Explorer6"
+          ? 3.95
+          : // A bit above waist-high on Dave, who is 4.8. Sized against the
+            // TALLEST sibling on purpose: it is a companion to all three,
+            // and a robot that reads as small beside Dave still reads as
+            // small beside Little Drew at 3.95, whereas one sized against
+            // the youngest would come up to Dave's chest and stop being a
+            // gadget. 2.6 was waist exactly and looked lost next to him.
+            name === "Robot"
+            ? 3.0
+            : // Half the robot, so it reads as a puppy at their heel rather
+              // than a dog walking with them.
+              name === "Puppy"
+              ? 1.5
+              : 3.4,
   morphsBody: false,
   animationUrls: ["anims-move.glb", "anims-idle.glb"],
   lands: HERO_LANDS,
@@ -682,6 +898,28 @@ type DinoRig = {
    * crouch or a sit lands on the path instead of hovering over it.
    */
   readonly lifts: { readonly crouch: number; readonly sit: number };
+  /**
+   * Weighted one-shots for a character who answers back — empty for the
+   * ones who do not, which is every rig but Peeli's today.
+   */
+  readonly brave: readonly {
+    readonly action: THREE.AnimationAction;
+    readonly weight: number;
+  }[];
+  /** Standing gestures for the waiting gap — empty for a rig without them. */
+  readonly fidget: readonly THREE.AnimationAction[];
+  /**
+   * A tail wag, for the companion that has a tail. Looping rather than a
+   * one-shot: how LONG it wags is the whole character of it, and that is
+   * decided when it starts, not by the length of the clip.
+   */
+  readonly wag: THREE.AnimationAction | null;
+  /**
+   * Walks on four legs, read from the skeleton rather than from a list of
+   * names. A person turning on the spot to look about is a person looking
+   * about; a dog doing it is a dog spinning, which is what it looked like.
+   */
+  readonly quadruped: boolean;
 };
 
 /** One-shot and looping clips for the idle chain, plus the jump. */
@@ -914,9 +1152,10 @@ export function createKidsWorld(
     const dark = mood === "night";
     const night = dark && trueNight;
     heroLamp.intensity = night ? 3.2 : 0;
-    // The companion is lit exactly as the player is. Standing in the dark
-    // beside somebody carrying a light is what a background object does.
-    companionLamp.intensity = night && companion != null ? 3.2 : 0;
+    // The companion's lamp is driven in the tick (see companionLamp.position
+    // there) — it has to be, because this function runs before a companion
+    // exists. Left out here on purpose rather than set to a value that would
+    // be wrong for a frame.
     renderer.toneMappingExposure =
       grade.exposure * (dark ? (night ? 0.56 : 0.84) : 1);
     hemi.intensity = grade.hemi * (dark ? (night ? 0.42 : 0.78) : 1);
@@ -1399,6 +1638,41 @@ export function createKidsWorld(
    * so they are tracked here and released with everything else.
    */
   const loaded: THREE.Object3D[] = [];
+  /**
+   * Gives back everything a character was holding, and stops the world's
+   * teardown list from pinning it.
+   *
+   * Swapping a character or a companion removed the old rig from the scene
+   * and nothing else. A removed rig is invisible, which is why this was
+   * never obvious — but its geometry, its materials and its three KTX2
+   * textures were all still on the GPU, and the decoded images behind those
+   * textures sit outside the JS heap where no collector reaches them.
+   *
+   * So every change of character leaked a whole character. After dark the
+   * scene already carries roughly twice the cast (every villager has a
+   * skeleton twin), so that is where the ceiling is hit first: enough swaps
+   * and the driver takes the WebGL context away, which looks exactly like
+   * the 3-D pane freezing and needs a reload to come back.
+   *
+   * Safe to free, because `loadModel` parses a fresh scene per call — two
+   * companions of the same character do not share geometry.
+   */
+  function releaseRig(rig: DinoRig | null): void {
+    if (rig == null) return;
+    rig.mixer.stopAllAction();
+    rig.mixer.uncacheRoot(rig.mixer.getRoot() as THREE.Object3D);
+    scene.remove(rig.wrap);
+    // Out of the teardown list first: `dispose()` walks it at the end, and a
+    // rig freed here must not be walked again, nor held until then.
+    for (let i = loaded.length - 1; i >= 0; i--) {
+      const model = loaded[i]!;
+      let inside: THREE.Object3D | null = model;
+      while (inside != null && inside !== rig.wrap) inside = inside.parent;
+      if (inside === rig.wrap) loaded.splice(i, 1);
+    }
+    disposeScene(rig.wrap);
+  }
+
   async function loadModel(url: string) {
     const gltf = await withDeadline(loader.loadAsync(url), url);
     if (disposed) {
@@ -1530,17 +1804,41 @@ export function createKidsWorld(
     root.traverse((o) => {
       const m = o as THREE.SkinnedMesh;
       if (!m.isSkinnedMesh) return;
+      // Two passes, because not every character is a biped.
+      //
+      // The names below are a human's: toes, feet, ankles. The puppy is a
+      // quadruped whose lowest bones are `backleg2` and `frontleg2`, so it
+      // matched NOTHING and dropped straight to the every-vertex fallback —
+      // 46,333 of them, on a path this function's own comment measured at
+      // 19.4 SECONDS for 6,643. That is a main thread wedged for minutes
+      // while the world "loads", which is not a slow load, it is a hang.
+      //
+      // So: ask for feet, then settle for legs, and only give up after that.
+      // A leg bone is a worse guess than a foot — it drags in the thigh —
+      // but it is a few hundred vertices against forty-six thousand, and
+      // the lowest point of a standing animal is still on one of them.
       const footBones = new Set<number>();
-      m.skeleton.bones.forEach((b, i) => {
-        if (/toe|foot|ankle/i.test(b.name)) footBones.add(i);
-      });
+      const collect = (re: RegExp) => {
+        m.skeleton.bones.forEach((b, i) => {
+          if (re.test(b.name)) footBones.add(i);
+        });
+      };
+      collect(/toe|foot|ankle|paw|hoof/i);
+      if (footBones.size === 0) {
+        collect(/leg|shin|calf/i);
+      }
       const skinIndex = m.geometry.attributes.skinIndex;
       const skinWeight = m.geometry.attributes.skinWeight;
       const verts: number[] = [];
       if (footBones.size === 0 || skinIndex == null || skinWeight == null) {
-        // No named feet — fall back to every vertex rather than guess wrong.
-        for (let i = 0; i < m.geometry.attributes.position.count; i++)
-          verts.push(i);
+        // Nothing recognisable to stand on. Every vertex is the honest
+        // answer and an unbounded one, so it is sampled instead: a stride
+        // long enough to keep the work flat no matter how dense the mesh.
+        // A ground height measured from 4,000 spread-out vertices is not
+        // meaningfully worse than one from 46,000, and it cannot hang.
+        const total = m.geometry.attributes.position.count;
+        const stride = Math.max(1, Math.ceil(total / 4000));
+        for (let i = 0; i < total; i += stride) verts.push(i);
       } else {
         for (let i = 0; i < skinIndex.count; i++) {
           for (let c = 0; c < 4; c++) {
@@ -1646,6 +1944,47 @@ export function createKidsWorld(
     const clips = clipsFor(gltf);
     const pick = (re: RegExp) =>
       clips.find((c) => re.test(c.name.toLowerCase())) ?? null;
+    // Front and back legs, and no human foot bones: that is a quadruped.
+    // Asked of the bones so a future animal needs nothing added here.
+    const boneNames: string[] = [];
+    gltf.scene.traverse((o) => {
+      if ((o as THREE.Bone).isBone) boneNames.push(o.name);
+    });
+    const quadruped =
+      !boneNames.some((b) => /toe|foot|ankle/i.test(b)) &&
+      boneNames.some((b) => /frontleg|foreleg/i.test(b)) &&
+      boneNames.some((b) => /backleg|hindleg|rearleg/i.test(b));
+    /**
+     * How much quicker this character's legs must cycle to cover the same
+     * ground.
+     *
+     * Everything on the trail travels at one speed — the trail decides it,
+     * from how much has been typed — so the only thing that keeps feet from
+     * sliding is the cycle length. `TUNED_*` are the Explorer's, measured
+     * against his stride at 4.8 units tall. A puppy drawn 1.5 units tall has
+     * roughly a third of that stride, so it needs roughly three times the
+     * steps, and at the human rate it looks exactly like what was reported:
+     * trotting gamely and falling behind.
+     *
+     * Quadrupeds only. Every biped here has a hand-tuned gait that has been
+     * looked at and approved, and stride does not track height for them
+     * nearly as cleanly — Little Drew is 82% of Dave's height and does not
+     * take 82% strides. Applying this to them would be changing settled work
+     * on the strength of a proportion.
+     */
+    //
+    // The ratio is taken as a SQUARE ROOT, not straight.
+    //
+    // Straight stride-over-height said 0.31, which put the puppy's run at
+    // 7.6x playback — and its Running clip carries an authored 0.85-unit
+    // vertical bound, so what that produced was not a quicker trot but a
+    // dog vibrating. Legs are pendulums: cycle time goes with the square
+    // root of their length, which is also why a small dog's steps are
+    // quicker than a child's but nothing like three times quicker.
+    //
+    // 0.56 for the puppy: a little over half the cycle length, which is a
+    // brisk trot beside a walking child and reads as one.
+    const gaitScale = quadruped ? Math.max(0.5, Math.sqrt(targetH / 4.8)) : 1;
     // A real run beats a walk when a character ships both.
     //
     // `pick` takes the first match, and the Explorer's clips are ordered
@@ -1658,14 +1997,35 @@ export function createKidsWorld(
     // which takes the FIRST of run/walk in file order — handed him Walk_Cute
     // as his run. He would have ambled through the whole trail at a sprint's
     // WPM. Matching on "not a letter" instead reads both naming styles.
+    // Peeli's "Cute" pair was tried here and reverted: both clips are 2.03s,
+    // so reaching the trail's tuned cycle meant running them at 3.2x, and a
+    // bouncy gait played at three times its authored speed reads as frantic
+    // rather than cute. Her `_InPlace` pair is already authored at 1.03s and
+    // 0.70s — all but exactly the rates the trail was tuned against — so it
+    // is both the better-looking gait and the one that needs no retiming.
     const runClip =
-      pick(/(?:^|[^a-z])(?:run|gallop)(?:[^a-z]|$)/) ?? pick(/run|gallop|walk/);
+      pick(/(?:^|[^a-z])(?:run|gallop)(?:ning|s)?(?:[^a-z]|$)/) ??
+      pick(/run|gallop|walk/);
     // Only a clip that is genuinely a second, slower gait. Where the fallback
     // above already claimed the walk as the run — the KayKit heroes carry one
     // move clip each — there is no walk to blend to and the gait stays binary.
-    const walkClipRaw = pick(/(?:^|[^a-z])walk(?:[^a-z]|$)/);
+    // `-ing` and `-s` are part of the word, not the end of it.
+    //
+    // The boundary here is "not a letter", which is right for `Walk_Cute`
+    // and wrong for `Walking_A` — and the KayKit heroes ship exactly that.
+    // They matched no walk at all and ran everywhere, which the comment
+    // above rationalised as "they carry one move clip each". They carry
+    // two; the pattern could not see the second.
+    const walkClipRaw = pick(/(?:^|[^a-z])walk(?:ing|s)?(?:[^a-z]|$)/);
     const walkClip = walkClipRaw !== runClip ? walkClipRaw : null;
-    const idleClip = pick(/idle|stand/);
+    // A name that STARTS with idle, before anything merely containing it.
+    //
+    // The shared clip list puts `anims-move` first, so `/idle|stand/` found
+    // `Jump_Idle` — the pose held in mid-air — and gave it to the Knight and
+    // the Skeleton as their standing idle. `Idle_A` was two files later and
+    // never reached. This also keeps Peeli's `Idle_Calm` ahead of her
+    // `Standing` gesture without relying on clip order.
+    const idleClip = pick(/^idle/) ?? pick(/idle|stand/);
     const joyClip = pick(/joy|celebrat|victory|cheer/);
     let run: THREE.AnimationAction | null = null;
     let walk: THREE.AnimationAction | null = null;
@@ -1689,13 +2049,13 @@ export function createKidsWorld(
       clip.duration > 0 ? clip.duration / tuned : 1;
     if (runClip) {
       run = mixer.clipAction(runClip);
-      run.timeScale = rate(runClip, TUNED_RUN_SECONDS);
+      run.timeScale = rate(runClip, TUNED_RUN_SECONDS * gaitScale);
       run.play();
       run.weight = 0;
     }
     if (walkClip) {
       walk = mixer.clipAction(walkClip);
-      walk.timeScale = rate(walkClip, TUNED_WALK_SECONDS);
+      walk.timeScale = rate(walkClip, TUNED_WALK_SECONDS * gaitScale);
       walk.play();
       walk.weight = 0;
     }
@@ -1712,6 +2072,9 @@ export function createKidsWorld(
       joy.clampWhenFinished = true;
       joy.weight = 0;
     }
+    // The baseline every standing clip is brought onto: wherever this
+    // character's own idle puts its hips.
+    const idleHips = firstHips(idleClip);
     const oneShot = (
       re: RegExp,
       fix?: (c: THREE.AnimationClip) => THREE.AnimationClip,
@@ -1761,15 +2124,52 @@ export function createKidsWorld(
           correctSittingArms(c, ramp)
       : () => undefined;
     const rest: RestClips = {
-      wave: oneShot(pose("wave")),
+      wave: oneShot(pose("wave"), (c) => alignHipsToIdle(c, idleHips)),
       crouchDown: oneShot(pose("crouch_down")),
       crouchIdle: looping(pose("crouch_idle")),
       standFromCrouch: oneShot(pose("stand_from_crouch")),
-      sitDown: oneShot(pose("sit_crosslegged_down"), fixSit("in")),
-      sitIdle: looping(pose("sit_crosslegged_idle"), fixSit("full")),
-      standFromSit: oneShot(pose("stand_from_crosslegged"), fixSit("out")),
+      // Two naming conventions for one pose. Meshy named Peeli's transitions
+      // for where they GO ("Stand_To_CrossLegged") where the Explorer's are
+      // named for where they LAND ("Sit_CrossLegged_Down"), and the anchored
+      // `pose()` sees only its own. She has a perfectly good sit; without the
+      // alias she simply never sat, silently — the third time a new naming
+      // convention has cost a clip here, after `\brun\b` and `^wave$`.
+      sitDown:
+        oneShot(pose("sit_crosslegged_down"), fixSit("in")) ??
+        oneShot(pose("stand_to_crosslegged")),
+      sitIdle:
+        looping(pose("sit_crosslegged_idle"), fixSit("full")) ??
+        looping(pose("crosslegged_idle")),
+      standFromSit:
+        oneShot(pose("stand_from_crosslegged"), fixSit("out")) ??
+        oneShot(pose("crosslegged_to_stand")),
       jump: oneShot(pose("jump")),
     };
+    // Only the clips this character actually has; a rig without them gets an
+    // empty list and the reaction below never fires for it.
+    const brave = BRAVE_CLIPS.flatMap(({ re, weight }) => {
+      const action = oneShot(re, (c) => alignHipsToIdle(c, idleHips));
+      return action == null ? [] : [{ action, weight }];
+    });
+    const fidget = FIDGET_CLIPS.flatMap((re) => {
+      const a = oneShot(re, (c) => alignHipsToIdle(c, idleHips));
+      return a == null ? [] : [a];
+    });
+    // A full-body clip (it keys the legs too), so it stands in for the idle
+    // while it plays rather than layering over it. The paws stay planted —
+    // measured at 0.0000 root travel — so that is safe to do standing still.
+    const wag = looping(/^tail_wag$/, (c) => alignHipsToIdle(c, idleHips));
+    if (wag != null) {
+      // Measured, not dialled in: the authored clip completes ONE sweep in
+      // its three seconds — 0.33 Hz, which is a tail swaying, not wagging.
+      // A pleased dog runs about 2-5 Hz, so this lands near 3: a full sweep
+      // roughly every third of a second.
+      //
+      // Playing it 9x means the renderer samples about twenty points per
+      // sweep at 60fps, which is still plenty to read as a smooth arc
+      // rather than a flicker.
+      wag.timeScale = 9;
+    }
     const probe = plantFeet(gltf.scene, mixer, [idle, walk, run]);
     // Measured once, on the two poses he actually settles into. The
     // transitions ramp between 0 and these, so nothing pops.
@@ -1777,7 +2177,20 @@ export function createKidsWorld(
       crouch: probe(rest.crouchIdle),
       sit: probe(rest.sitIdle),
     };
-    return { wrap, mixer, run, walk, idle, joy, rest, lifts };
+    return {
+      wrap,
+      mixer,
+      run,
+      walk,
+      idle,
+      joy,
+      rest,
+      lifts,
+      brave,
+      fidget,
+      wag,
+      quadruped,
+    };
   }
 
   // ── the companion ──────────────────────────────────────────────────────
@@ -1827,6 +2240,23 @@ export function createKidsWorld(
   /** Where it is facing, and how long before it looks somewhere else. */
   let lookTarget = Math.PI / 2;
   let lookHold = 0;
+  /** The standing gesture a companion is playing, and what is left of it. */
+  let compFidget: THREE.AnimationAction | null = null;
+  let compFidgetT = 0;
+  /** Seconds until it may play another. */
+  let compFidgetCool = 4;
+  /**
+   * The tail wag: how much of this burst is left, and how long until the
+   * next one may start.
+   *
+   * A dog does not wag on a timer. It wags when it is pleased with you, for
+   * as long as it feels like, and then gets on with being a dog — so a burst
+   * has its own random length and is followed by a silence long enough that
+   * the next one reads as a decision rather than a cycle. Continuous wagging
+   * is the one thing this must never look like.
+   */
+  let wagT = 0;
+  let wagCool = 3 + Math.random() * 6;
 
   // ── population ─────────────────────────────────────────────────────────
   let player: DinoRig | null = null;
@@ -2358,6 +2788,8 @@ export function createKidsWorld(
     | "upToSit"
     | "sitDown"
     | "sitIdle"
+    | "brave"
+    | "fidget"
     | "standing";
   let restStage: RestStage = "none";
   /** Seconds since the last keystroke or the last step along the trail. */
@@ -2370,6 +2802,12 @@ export function createKidsWorld(
   let restStep = 0;
   /** Seconds left in the one-shot currently playing, if any. */
   let restHold = 0;
+  /**
+   * Seconds until she may square up again. A countdown rather than a
+   * timestamp, because the tick carries a frame delta and no absolute clock
+   * — the same shape `restHold` above already uses.
+   */
+  let braveCool = 0;
   /** The action carrying the rest pose right now. */
   let restAction: THREE.AnimationAction | null = null;
   /** The one it is replacing, still fading out. */
@@ -2755,8 +3193,32 @@ export function createKidsWorld(
    * alphabet somebody happened to be — the six-year-old could stand taller
    * than the ten-year-old beside him.
    */
-  const growsWithAge = (name: string) => !/^Explorer6?$/.test(name);
+  /**
+   * How much longer than usual this character waits before sitting down.
+   *
+   * Peeli would rather be on her feet, so she sits later than her brothers
+   * — but only a little, and the reason is arithmetic rather than taste.
+   *
+   * She has no crouch, so her chain is wave → sit where theirs is
+   * wave → crouch → sit, and the wave itself stops after the second pause
+   * (WAVE_UNTIL_PAUSE). From the third pause on, whatever this number says
+   * is the whole length of time she stands doing nothing. At 2.2 that was
+   * 44s, and 141s once the patience stretch had run — long enough to read
+   * as a character who had stopped working rather than one who is restless.
+   *
+   * 1.3 puts her at 26s against the boys' 20s: still visibly the one who
+   * stays on her feet, without a dead minute in the middle of it.
+   */
+  const sitPatience = (name: string) => (name === "Peeli" ? 1.3 : 1);
+
+  // The three siblings are the ages they are — Dave nine, Peeli nine, Little
+  // Drew six — so the trail's baby-to-adult growth curve is not theirs to
+  // ride. It stays what it was built for: a dino hatching and growing up.
+  const growsWithAge = (name: string) =>
+    !/^(?:Explorer6?|Peeli|Robot|Puppy)$/.test(name);
   let playerGrows = true;
+  /** Captured at load, like `playerGrows` — see `sitPatience`. */
+  let playerSitsLate = 1;
 
   /**
    * The tinted character, when the current one can be tinted.
@@ -2781,19 +3243,21 @@ export function createKidsWorld(
     }
     companionName = name;
     if (companion != null) {
-      scene.remove(companion.wrap);
+      releaseRig(companion);
       companion = null;
+      // The lamp belonged to the companion that just left.
+      companionLamp.intensity = 0;
     }
     if (name == null) {
       return;
     }
-    const gltf = await loadModel(
-      `${ASSETS}/models/${theme.modelDir}/${name}.glb`,
-    ).catch((err: unknown) => {
-      // A missing friend must never cost anybody their game.
-      console.warn(`kids: companion "${name}" could not be loaded`, err);
-      return null;
-    });
+    const gltf = await loadModel(modelUrl(theme.modelDir, name)).catch(
+      (err: unknown) => {
+        // A missing friend must never cost anybody their game.
+        console.warn(`kids: companion "${name}" could not be loaded`, err);
+        return null;
+      },
+    );
     // Disposed, or switched again, while this was in flight.
     if (gltf == null || disposed || companionName !== name) {
       return;
@@ -2841,15 +3305,15 @@ export function createKidsWorld(
      * which is plain glTF and always loads. The game runs; they are
      * simply not playing as the one they picked.
      */
-    let gltf = await loadModel(
-      `${ASSETS}/models/${theme.modelDir}/${name}.glb`,
-    ).catch((err: unknown) => {
-      console.warn(`kids: could not load "${name}", falling back`, err);
-      return null;
-    });
+    let gltf = await loadModel(modelUrl(theme.modelDir, name)).catch(
+      (err: unknown) => {
+        console.warn(`kids: could not load "${name}", falling back`, err);
+        return null;
+      },
+    );
     if (gltf == null && name !== theme.defaultPlayer) {
       gltf = await loadModel(
-        `${ASSETS}/models/${theme.modelDir}/${theme.defaultPlayer}.glb`,
+        modelUrl(theme.modelDir, theme.defaultPlayer),
       ).catch(() => null);
     }
     if (gltf == null) {
@@ -2893,6 +3357,7 @@ export function createKidsWorld(
     rig.wrap.position.set(playerX, groundY(playerX), 0);
     rig.wrap.rotation.y = Math.PI / 2;
     playerGrows = growsWithAge(name);
+    playerSitsLate = sitPatience(name);
     growTarget = playerGrows ? sizeForAge(dinoAge) : 1;
     if (player) {
       // The outgoing character's scale is only inherited when the incoming one
@@ -2901,7 +3366,9 @@ export function createKidsWorld(
       if (playerGrows) {
         rig.wrap.scale.copy(player.wrap.scale);
       }
-      scene.remove(player.wrap);
+      // Freed, not merely hidden — see releaseRig. The scale above is read
+      // off the outgoing rig first, so this stays after it.
+      releaseRig(player);
     }
     rig.wrap.scale.setScalar(playerGrows ? rig.wrap.scale.x : 1);
     player = rig;
@@ -2996,9 +3463,7 @@ export function createKidsWorld(
     ) => {
       let gltf;
       try {
-        gltf = await loadModel(
-          `${ASSETS}/models/${theme.modelDir}/${model}.glb`,
-        );
+        gltf = await loadModel(modelUrl(theme.modelDir, model));
       } catch {
         return; // a single missing companion never breaks the world
       }
@@ -3074,6 +3539,12 @@ export function createKidsWorld(
         },
         // Scenery, not the player: it never crouches or sits.
         lifts: { crouch: 0, sit: 0 },
+        // Scenery, not a sibling: the villagers and their skeletons have no
+        // opinion about each other.
+        brave: [],
+        fidget: [],
+        wag: null,
+        quadruped: false,
       });
     };
     /**
@@ -3256,6 +3727,12 @@ export function createKidsWorld(
             },
             // Trailside company — they stand and idle, nothing more.
             lifts: { crouch: 0, sit: 0 },
+            // Scenery, not a sibling: the villagers and their skeletons have no
+            // opinion about each other.
+            brave: [],
+            fidget: [],
+            wag: null,
+            quadruped: false,
           });
         };
         // Sheep are meadow animals: most graze the open grass field in front
@@ -3729,22 +4206,152 @@ export function createKidsWorld(
           }
           companion.run.weight = seen.moveW * seen.runShare;
           companion.idle.weight = 1 - seen.moveW;
+          // Reset here, so the two blocks below (gesture, tail) can each
+          // claim the body by simply setting their own weight. Without this
+          // a wag that ended still holds its last frame at full weight.
+          if (companion.wag != null && wagT <= 0) companion.wag.weight = 0;
+        }
+
+        // ── a companion with something to do while you are sat down ──
+        //
+        // The player resting is the longest the companion ever stands
+        // still, and turning its head is all it had. A character that
+        // ships standing gestures can use them here — the one place where
+        // there is time for a whole gesture and nothing competing for the
+        // body.
+        //
+        // Written after the weights above on purpose: that block reassigns
+        // idle every frame from the player's sampled movement, so a
+        // gesture has to be laid over the top of it rather than before.
+        if (compFidgetT > 0) {
+          compFidgetT -= dt;
+          if (compFidgetT <= 0 && compFidget != null) {
+            compFidget.stop();
+            compFidget = null;
+          } else if (compFidget != null && companion.idle) {
+            compFidget.weight = 1;
+            companion.idle.weight = 0;
+          }
+        } else if (
+          seen.resting &&
+          companion.fidget.length > 0 &&
+          companion.idle
+        ) {
+          compFidgetCool -= dt;
+          if (compFidgetCool <= 0) {
+            const f =
+              companion.fidget[
+                Math.floor(Math.random() * companion.fidget.length)
+              ]!;
+            f.reset();
+            f.play();
+            compFidget = f;
+            compFidgetT = f.getClip().duration;
+            // Long and uneven, so two companions never fall into step and
+            // one child never sees the same beat on a rhythm.
+            compFidgetCool = 6 + Math.random() * 10;
+          }
+        } else {
+          // Back on their feet: forget the countdown so the next rest does
+          // not open with a gesture already half-owed.
+          compFidgetCool = Math.max(compFidgetCool, 3);
+        }
+
+        // ── the tail ──────────────────────────────────────────────────
+        //
+        // Only while it is standing with them, never mid-run: a wag is
+        // something a dog does AT somebody, and the companion is only
+        // really with the child when neither is moving.
+        if (companion.wag != null && companion.idle) {
+          const still = seen.moveW < 0.15;
+          // Down on the ground with them, the tail does not stop.
+          //
+          // `resting` is the child crouched or sat cross-legged — the moment
+          // they are at the dog's own height rather than walking above it,
+          // and a dog is simply pleased about that for as long as it lasts.
+          // The random bursts below are for the other kind of stillness:
+          // standing about, waiting to get going again.
+          if (still && seen.resting) {
+            if (wagT <= 0) {
+              companion.wag.reset();
+              companion.wag.play();
+            }
+            // Topped up rather than set once, so standing up ends it by
+            // letting this run out — a tail that stops dead the frame they
+            // move is a tail that was switched off, not one that settled.
+            wagT = Math.max(wagT, 0.6);
+            companion.wag.weight = 1;
+            companion.idle.weight = 0;
+          } else if (wagT > 0) {
+            wagT -= dt;
+            const w = still ? 1 : 0;
+            companion.wag.weight = w;
+            if (w > 0) companion.idle.weight = 0;
+            if (wagT <= 0) {
+              companion.wag.weight = 0;
+              companion.wag.stop();
+              // Long gaps, and sometimes very long ones. Without the second
+              // roll every silence is about the same length, which is its
+              // own kind of metronome.
+              wagCool =
+                5 +
+                Math.random() * 12 +
+                (Math.random() < 0.3 ? 10 + Math.random() * 14 : 0);
+            }
+          } else if (still) {
+            wagCool -= dt;
+            if (wagCool <= 0) {
+              // Short bursts are the common case — two or three sweeps —
+              // and a proper delighted one now and then.
+              wagT =
+                Math.random() < 0.65
+                  ? 1.2 + Math.random() * 1.8
+                  : 4 + Math.random() * 6;
+              companion.wag.reset();
+              companion.wag.play();
+            }
+          }
         }
 
         // Where it is looking: down the trail while the player is on the move,
         // since a companion facing the wrong way mid-walk looks lost, and off
         // at something of its own once they are down.
-        if (seen.resting) {
+        if (seen.resting && !companion.quadruped) {
           if (lookHold > 0) {
             lookHold -= 1;
           } else {
+            // Side first, then how far — rather than one uniform draw
+            // across the whole arc.
+            //
+            // The old draw was symmetric on paper and did not look it. Half
+            // of a uniform spread lands near the middle, where the turn is
+            // too small to see, so the only turns a child actually noticed
+            // were the big ones at the edges — and which edge that happened
+            // to be over a few pauses is what reads as "it always goes the
+            // same way". Choosing the side explicitly and giving every look
+            // a floor means each one is a real turn, and the two directions
+            // come up equally often rather than merely on average.
+            //
+            // Away from where it is already looking, too: turning left twice
+            // from a left-facing rest is a twitch, not a look around.
+            const side =
+              cw.rotation.y > Math.PI / 2 + 0.2
+                ? -1
+                : cw.rotation.y < Math.PI / 2 - 0.2
+                  ? 1
+                  : Math.random() < 0.5
+                    ? -1
+                    : 1;
             lookTarget =
-              Math.PI / 2 + (Math.random() * 2 - 1) * (Math.PI * 0.75);
+              Math.PI / 2 +
+              side * (0.35 + Math.random() * 0.65) * (Math.PI * 0.75);
             // Held a good while. A head that swings on a beat is scanning; one
             // that settles somewhere and stays is looking at something.
             lookHold = 90 + Math.floor(Math.random() * 300);
           }
         } else {
+          // Facing down the trail, always, for a dog: it has a tail for
+          // saying things, and the wag above is doing that job.
           lookTarget = Math.PI / 2;
           lookHold = 0;
         }
@@ -3759,6 +4366,15 @@ export function createKidsWorld(
           cw.position.y + 2.1,
           cw.position.z + 1.6,
         );
+        // Lit here rather than in `applySky`.
+        //
+        // That is where it was, and `applySky` runs while the world is being
+        // built — before `spawnCompanion` has finished, so `companion` was
+        // still null, the lamp was set to intensity 0, and nothing looked at
+        // it again once the companion actually arrived. The hero's lamp is
+        // fine because the hero exists by then. Decided every frame instead:
+        // it is one assignment, and it cannot go stale.
+        companionLamp.intensity = nightLook > 0 ? 3.2 : 0;
 
         // The celebration is the one thing they do rather than copy, because
         // it is a one-shot: replaying the flag every frame it was true would
@@ -3802,6 +4418,7 @@ export function createKidsWorld(
         idleT += dt;
       }
       restHold = Math.max(0, restHold - dt);
+      braveCool = Math.max(0, braveCool - dt);
 
       // Escalation, checked every frame — and deliberately NOT inside the
       // "a one-shot just finished" branch below.
@@ -3817,52 +4434,160 @@ export function createKidsWorld(
         restStage === "crouchIdle" ||
         restStage === "sitIdle";
       if (!moving && settled) {
+        // Set when she squares up, so the waiting chain below is skipped for
+        // this frame WITHOUT returning out of `tick`.
+        let stoodUp = false;
+        // Before the waiting chain: is there a skeleton to stand up to?
+        //
+        // Ahead of wave/sit on purpose. The chain is what a child does when
+        // nothing is happening, and something IS happening — walking past a
+        // skeleton to sit down cross-legged in front of it would undo the
+        // whole character. Only at night, only within sight along the trail,
+        // and only if she owns the clips, which today only Peeli does.
+        const p0 = player;
+        if (
+          p0 != null &&
+          // `nightLook`, not `nightNow`. `nightNow` follows the day/night
+          // TOGGLE, and it is only ever set by `setNight()` — which the page
+          // calls on load solely when the night preference is already on. The
+          // Hero Trail's "Spooky" style makes the world night through
+          // `trueNight` instead, so the scene can be dark, the lanterns lit
+          // and the skeletons up while `nightNow` is still false. This is the
+          // same value that decides whether the hero is carrying a light,
+          // which is the right test for "is it dark enough to meet one".
+          nightLook > 0 &&
+          p0.brave.length > 0 &&
+          braveCool === 0 &&
+          friends.some(
+            (f) =>
+              f.wrap.userData.scary === true &&
+              f.wrap.visible &&
+              Math.abs(f.wrap.position.x - p0.wrap.position.x) < BRAVE_RANGE,
+          )
+        ) {
+          // Only a performance starts the cooldown.
+          //
+          // Setting it on the roll instead meant a failed roll bought nine
+          // seconds of silence exactly as if she had squared up, so the real
+          // rate was the chance AND the cooldown multiplied — she reacted to
+          // roughly one skeleton in four rather than one in two.
+          if (Math.random() < BRAVE_CHANCE) {
+            braveCool = BRAVE_COOLDOWN_S;
+            const total = p0.brave.reduce((sum, b) => sum + b.weight, 0);
+            let roll = Math.random() * total;
+            const chosen =
+              p0.brave.find((b) => (roll -= b.weight) <= 0) ?? p0.brave[0]!;
+            startRest("brave", chosen.action);
+            // Deliberately outside the wave/crouch/sit numbering: standing up
+            // to something is not a step along the waiting chain, and it must
+            // not consume the wave she has not had yet.
+            //
+            // A flag, NOT a `return`. This block is inside `tick()`, which
+            // ends with `renderer.render(...)` followed by
+            // `requestAnimationFrame(tick)` — so returning here skipped the
+            // draw AND the scheduling of the next frame, and the render loop
+            // stopped for good. It only ever showed up after dark because
+            // that is the only time this branch runs: the pane went blank
+            // mid-game, in dark mode, and no amount of reloading explained
+            // why. Nothing in `tick` may return early.
+            stoodUp = true;
+          }
+          // Passed over this time — look again shortly rather than not at
+          // all, or a single unlucky roll while a skeleton is in range means
+          // she walks the whole stretch without noticing it.
+          braveCool = 2;
+        }
         // Thresholds stretch with how often they have paused, and the early
         // steps drop out of the chain once they have been seen.
         const p = patience();
-        const sitAt = REST_SIT_S * p;
-        const crouchAt = REST_CROUCH_S * p;
-        const showWave = pauses < WAVE_UNTIL_PAUSE;
-        const showCrouch = pauses < CROUCH_UNTIL_PAUSE;
-        if (idleT >= sitAt && restStep < 3 && r.sitDown) {
-          // He has to stand up before he can sit down.
-          //
-          // `Sit_CrossLegged_Down` is authored from a STANDING pose, so
-          // playing it straight out of a crouch teleported him upright first —
-          // measured at 0.70 of bone movement in a single frame, by far the
-          // largest seam in the chain and the one that read as choppy. Going
-          // via `Stand_From_Crouch` brings that down to 0.13, which the
-          // crossfade then covers.
-          if (restStage === "crouchIdle" && r.standFromCrouch) {
-            startRest("upToSit", r.standFromCrouch);
-          } else {
-            startRest("sitDown", r.sitDown);
+        if (stoodUp) {
+          // She is already doing something about the skeleton in front of
+          // her; the waiting chain has nothing to add this frame.
+        } else {
+          const sitAt = REST_SIT_S * p * playerSitsLate;
+          const crouchAt = REST_CROUCH_S * p;
+          const showWave = pauses < WAVE_UNTIL_PAUSE;
+          const showCrouch = pauses < CROUCH_UNTIL_PAUSE;
+          if (idleT >= sitAt && restStep < 3 && r.sitDown) {
+            // He has to stand up before he can sit down.
+            //
+            // `Sit_CrossLegged_Down` is authored from a STANDING pose, so
+            // playing it straight out of a crouch teleported him upright first —
+            // measured at 0.70 of bone movement in a single frame, by far the
+            // largest seam in the chain and the one that read as choppy. Going
+            // via `Stand_From_Crouch` brings that down to 0.13, which the
+            // crossfade then covers.
+            if (restStage === "crouchIdle" && r.standFromCrouch) {
+              startRest("upToSit", r.standFromCrouch);
+            } else {
+              startRest("sitDown", r.sitDown);
+            }
+            restStep = 3;
+          } else if (
+            idleT >= crouchAt &&
+            restStep < 2 &&
+            showCrouch &&
+            r.crouchDown
+          ) {
+            startRest("crouchDown", r.crouchDown);
+            restStep = 2;
+          } else if (
+            idleT >= crouchAt &&
+            restStep < 2 &&
+            p0 != null &&
+            p0.fidget.length > 0
+          ) {
+            // The same slot the crouch would have taken.
+            //
+            // Peeli has no crouch, so without this her chain is wave then a
+            // long nothing then sit — and the wave itself stops after the
+            // second pause, leaving the whole wait blank. A standing gesture
+            // costs nothing to reach (she is already on her feet) and is the
+            // one thing that fits a character who would rather not sit down.
+            //
+            // A different one each time, so a child who pauses twice does not
+            // see the same beat twice.
+            startRest(
+              "fidget",
+              p0.fidget[Math.floor(Math.random() * p0.fidget.length)]!,
+            );
+            restStep = 2;
+          } else if (
+            idleT >= waveAt(r) * p &&
+            restStep < 1 &&
+            showWave &&
+            r.wave
+          ) {
+            startRest("wave", r.wave);
+            maybeSay("wave");
+            restStep = 1;
           }
-          restStep = 3;
-        } else if (
-          idleT >= crouchAt &&
-          restStep < 2 &&
-          showCrouch &&
-          r.crouchDown
-        ) {
-          startRest("crouchDown", r.crouchDown);
-          restStep = 2;
-        } else if (
-          idleT >= waveAt(r) * p &&
-          restStep < 1 &&
-          showWave &&
-          r.wave
-        ) {
-          startRest("wave", r.wave);
-          maybeSay("wave");
-          restStep = 1;
         }
       }
       if (restHold <= 0) {
         // A one-shot has run its length; move to whatever holds that pose.
         // `restStep` is what stops the wave restarting the moment it ends —
         // without it he waved on a five-second loop and never reached a crouch.
-        if (restStage === "wave" || restStage === "standing") {
+        // Every standing one-shot ends the same way: back to `none`, with
+        // the fade below releasing the clip.
+        //
+        // `brave` and `fidget` were added to the chain without being added
+        // HERE, and the two failures that caused look unrelated until you
+        // see the cause. `restStage` never returned to a settled value, so
+        // (1) the escalation below — which only runs from `none`,
+        // `crouchIdle` or `sitIdle` — could never reach the sit, and
+        // (2) `restTarget` stayed at 1, holding the clamped final frame at
+        // full weight, which is a character frozen mid-gesture.
+        //
+        // "She stopped sitting down" and "she is stuck in a crouch" were
+        // the same missing branch. Any new one-shot stage must be listed
+        // here or it will do both again.
+        if (
+          restStage === "wave" ||
+          restStage === "brave" ||
+          restStage === "fidget" ||
+          restStage === "standing"
+        ) {
           restStage = "none";
         } else if (restStage === "upToSit") {
           if (r.sitDown) startRest("sitDown", r.sitDown);
@@ -3900,6 +4625,20 @@ export function createKidsWorld(
       restBlend = Math.min(1, restBlend + dt / REST_CROSSFADE_S);
       const arriving = restW * restBlend;
       const leaving = restW * (1 - restBlend);
+      // Every clip the chain can put on the body, not a hand-written
+      // subset of them.
+      //
+      // This list WAS hand-written, and `brave` and `fidget` were added to
+      // the chain without being added to it. The result is the failure that
+      // looks least like its cause: `restW` fades the gait out because a
+      // rest stage is running, the stage's own clip never receives
+      // `arriving` because it is not in this loop, and a character with no
+      // clip at any weight falls to its bind pose. She was not playing the
+      // wrong animation — she was playing none, and a rig with nothing
+      // driving it stands in the pose it was modelled in.
+      //
+      // Derived from the rig now, so a clip that exists cannot be left out
+      // of the thing that gives it weight.
       for (const a of [
         r.wave,
         r.crouchDown,
@@ -3908,6 +4647,8 @@ export function createKidsWorld(
         r.sitDown,
         r.sitIdle,
         r.standFromSit,
+        ...player.brave.map((b) => b.action),
+        ...player.fidget,
       ]) {
         if (a == null) continue;
         if (a === restAction) {
@@ -4260,7 +5001,8 @@ export function createKidsWorld(
       if (ud.homeX == null) {
         continue;
       }
-      const near = player != null && Math.abs(heroX - ud.homeX) < 7;
+      const near =
+        player != null && Math.abs(heroX - ud.homeX) < NEAR_HERO_RANGE;
       // Guards pace back and forth over their patch (both worlds), pausing
       // mid-stride whenever the hero draws alongside.
       if (ud.guard) {
@@ -4694,7 +5436,7 @@ export function createLoaderScene(
   serveTranscoderFromUrl(previewKtx2);
   loader.setKTX2Loader(previewKtx2);
   loader
-    .loadAsync(`${ASSETS}/models/${theme.modelDir}/${playerName}.glb`)
+    .loadAsync(modelUrl(theme.modelDir, playerName))
     .then((gltf) => {
       if (disposed) {
         return;
