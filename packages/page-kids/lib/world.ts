@@ -1765,9 +1765,9 @@ export function createKidsWorld(
   // did, the companion does, later, once.
   const FOLLOW_FRAMES = 24; // 0.4s at 60fps — a glance, not a lag
   /** How far behind along the trail, on top of the delay. */
-  const FOLLOW_GAP = 1.6;
+  const FOLLOW_GAP = 2.1;
   /** To one side, so they walk together rather than in single file. */
-  const FOLLOW_SIDE = 1.15;
+  const FOLLOW_SIDE = 1.5;
   type FollowSample = {
     x: number;
     y: number;
