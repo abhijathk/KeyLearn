@@ -581,7 +581,7 @@ export const HERO_THEME: WorldTheme = {
   // 4.8 keeps him visibly smaller while leaving his head where the eye
   // expects a small child's to be.
   playerHeight: (name) =>
-    name === "Explorer" ? 4.8 : name === "Explorer6" ? 4.15 : 3.4,
+    name === "Explorer" ? 4.8 : name === "Explorer6" ? 3.95 : 3.4,
   morphsBody: false,
   animationUrls: ["anims-move.glb", "anims-idle.glb"],
   lands: HERO_LANDS,
