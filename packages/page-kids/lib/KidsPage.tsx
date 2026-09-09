@@ -1172,11 +1172,14 @@ const HERO_CHARACTERS = [
   { id: "Skeleton_Warrior", label: "Skeleton" },
   // A child rather than a fantasy figure, for the older band who have
   // grown out of playing as a skeleton.
-  { id: "Explorer", label: "Explorer" },
-  // The same character at six: rounder, shorter, and animated as "cute" and
-  // "playful" rather than heroic. The default for the two younger bands, who
-  // are being asked to see themselves in him.
-  { id: "Explorer6", label: "Little Explorer" },
+  { id: "Explorer", label: "Dave" },
+  // Drew, the same character at six: rounder, shorter, and the default for
+  // the two younger bands, who are being asked to see themselves in him.
+  //
+  // The ids stay `Explorer` and `Explorer6` — they are the model filenames,
+  // and they are also what a saved profile has stored. Renaming those would
+  // silently reset every child's choice back to the Knight.
+  { id: "Explorer6", label: "Drew" },
 ] as const;
 
 /**
@@ -1188,8 +1191,8 @@ const HERO_CHARACTERS = [
  * use, so it can never offer you yourself.
  */
 const COMPANIONS = [
-  { id: "Explorer", label: "Explorer" },
-  { id: "Explorer6", label: "Little Explorer" },
+  { id: "Explorer", label: "Dave" },
+  { id: "Explorer6", label: "Drew" },
 ] as const;
 
 function peekNextLandName(): string {
