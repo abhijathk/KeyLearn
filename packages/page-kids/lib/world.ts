@@ -12,6 +12,7 @@ import {
   type ClothingColours,
 } from "./character-tint.ts";
 import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
+import { MAX_UNITS_PER_KEY, RUN_LEN, runLengthFor } from "./run-length.ts";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
 const ASSETS = "/kids-assets";
@@ -856,7 +857,6 @@ export const HERO_THEME: WorldTheme = {
  * round plants the camp flag another stretch ahead. Longer than it looks: a
  * round ends when the passage does, so the distance is what turns a handful of
  * words into a journey worth finishing. */
-const RUN_LEN = 64;
 /** Trail coverage: about four rounds land-to-land, plus a margin. */
 const TRAIL_END = 260;
 const groundY = (x: number) =>
@@ -962,7 +962,14 @@ export type KidsWorld = {
   canTintCharacter(): boolean;
   setProgress(frac: number): void;
   /** Plant the camp flag a fresh stretch ahead — the runner never rewinds. */
-  startRun(): void;
+  /**
+   * Begins a run, sized to the passage it is for.
+   *
+   * The character count decides how far the trail carries them, so that
+   * every keystroke moves the same distance whoever is typing — see
+   * `runLengthFor`. Omitted, the run is the full length.
+   */
+  startRun(passageChars?: number): void;
   jump(): void;
   /** A happy little bounce — for streaks and other proud moments. */
   hop(): void;
@@ -2268,7 +2275,9 @@ export function createKidsWorld(
   let playerX = -6;
   let targetX = -6;
   let runStart = -6;
-  let runEnd = runStart + RUN_LEN;
+  /** This run's length — see runLengthFor. Full until a passage says otherwise. */
+  let runLen = RUN_LEN;
+  let runEnd = runStart + runLen;
   let flagPole: THREE.Mesh | null = null;
   let flagCone: THREE.Mesh | null = null;
   /**
@@ -5148,10 +5157,14 @@ export function createKidsWorld(
     setProgress(frac) {
       targetX = runStart + Math.max(0, Math.min(1, frac)) * (runEnd - runStart);
     },
-    startRun() {
+    startRun(passageChars) {
       scaredThisRun = false;
+      runLen = runLengthFor(passageChars ?? Number.NaN);
+      // Clamped against the full length, not this run's: the window slides
+      // along a 260-unit trail, and a short run must not be allowed to
+      // start further along than a full one could have.
       runStart = Math.min(targetX, TRAIL_END - RUN_LEN);
-      runEnd = runStart + RUN_LEN;
+      runEnd = runStart + runLen;
       placeFlag();
     },
     jump() {

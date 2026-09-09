@@ -1170,22 +1170,28 @@ function agedPool(
 const GAIT_SAMPLE = 6;
 
 const HERO_CHARACTERS = [
+  // The three children first, then the fantasy figures.
+  //
+  // Order is the recommendation: whoever is at the top of the row is what
+  // most children will pick, and a game about a child learning to type
+  // should offer a child before it offers a skeleton. The siblings are in
+  // age order among themselves — Dave and Peeli are both nine, Little Drew
+  // is six — so the row reads oldest to youngest and then out into the
+  // costume box.
+  //
+  // The ids stay `Explorer` and `Explorer6`: they are the model filenames,
+  // and they are what a saved profile has already stored. Renaming those
+  // would silently reset every child's choice back to whoever is first.
+  { id: "Explorer", label: "Dave" },
+  // Nine like Dave and a little shorter. The bravest of the three: after
+  // dark, where her brothers walk past the skeletons on the trail, she
+  // stops and squares up to them (see BRAVE_CLIPS in world.ts).
+  { id: "Peeli", label: "Peeli" },
+  // The same character at six: rounder, shorter, and the default for the
+  // two younger bands, who are being asked to see themselves in him.
+  { id: "Explorer6", label: "Little Drew" },
   { id: "Knight", label: "Knight" },
   { id: "Skeleton_Warrior", label: "Skeleton" },
-  // A child rather than a fantasy figure, for the older band who have
-  // grown out of playing as a skeleton.
-  { id: "Explorer", label: "Dave" },
-  // Little Drew, the same character at six: rounder, shorter, and the default for
-  // the two younger bands, who are being asked to see themselves in him.
-  //
-  // The ids stay `Explorer` and `Explorer6` — they are the model filenames,
-  // and they are also what a saved profile has stored. Renaming those would
-  // silently reset every child's choice back to the Knight.
-  { id: "Explorer6", label: "Little Drew" },
-  // Peeli, nine like Dave and a little shorter. The bravest of the three:
-  // after dark, where her brothers walk past the skeletons on the trail,
-  // she stops and squares up to them (see BRAVE_CLIPS in world.ts).
-  { id: "Peeli", label: "Peeli" },
 ] as const;
 
 /**
@@ -2046,7 +2052,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     textInputRef.current = new TextInput(flat, toTextInputSettings(settings));
     lastStampRef.current = 0;
     missStreakRef.current = 0;
-    worldRef.current?.startRun();
+    // The passage decides how far the trail carries them, so that a
+    // keystroke moves the same distance for a five-year-old typing eight
+    // short words as for a twelve-year-old typing thirty.
+    worldRef.current?.startRun(flat.length);
     forceTick();
   }, [lesson, lessonKeys, included, settings, regenNonce, prefs.classic]);
 
@@ -2163,7 +2172,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // Walking into a land is what earns it, including the one the session
     // opens in — otherwise the very first land is the one land nobody gets.
     collect(`land:${world.land.name}`);
-    world.startRun();
+    // The world is built before the first passage exists; the effect above
+    // starts the properly-sized run as soon as there is one.
+    world.startRun(passageRef.current.length || undefined);
     let cancelled = false;
     world.ready
       .then(() => {
