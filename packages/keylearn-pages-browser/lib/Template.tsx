@@ -17,7 +17,7 @@ import {
 } from "@keylearn/pages-shared";
 import { PortalContainer, Toaster } from "@keylearn/widget";
 import { clsx } from "clsx";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback,useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { ComingSoon } from "./ComingSoon.tsx";
 import { Header } from "./Header.tsx";
@@ -42,8 +42,17 @@ import * as styles from "./Template.module.less";
  * calls it; leave them alone and the close still holds. The desk does carry an
  * `updated_at`, but it does not send it and an edit that fails to bump it
  * would fail silently — the content cannot lie about itself.
+ *
+ * Since 10 Sep 2026 the desk decides this per edit: a desk notice carries a
+ * revision that staff bump only when the change should reach people who
+ * already closed it ("everyone again"), and leave alone when it should not
+ * ("only people who haven't closed it"). So a desk notice keys on id and
+ * revision; a local notice, which has no revision, still keys on content.
  */
 function noticePrint(n: NoticeDetails): string {
+  if (n.revision != null) {
+    return JSON.stringify([n.id, "rev", n.revision]);
+  }
   return JSON.stringify([
     n.id,
     n.message,
@@ -53,17 +62,32 @@ function noticePrint(n: NoticeDetails): string {
   ]);
 }
 
-function loadDismissed(key: string): string | null {
+/*
+ * A close is remembered for good, in this browser, for every notice closed —
+ * not just the last one, and not just for the tab. It used to be one print
+ * in session storage, so a notice paused on the desk and restarted came back
+ * to everyone who had already read and closed it, and so did the previous
+ * notice whenever two alternated (owner, 10 Sep 2026). The print still
+ * changes when the words change, so a corrected notice still reaches them.
+ */
+const DISMISSED_KEEP = 50;
+
+function loadDismissed(key: string): readonly string[] {
   try {
-    return sessionStorage.getItem(key);
+    const raw = localStorage.getItem(key);
+    const parsed: unknown = raw == null ? [] : JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((p): p is string => typeof p === "string")
+      : [];
   } catch {
-    return null;
+    return [];
   }
 }
 
 function saveDismissed(key: string, print: string): void {
   try {
-    sessionStorage.setItem(key, print);
+    const next = [...loadDismissed(key).filter((p) => p !== print), print];
+    localStorage.setItem(key, JSON.stringify(next.slice(-DISMISSED_KEEP)));
   } catch {
     // Storage may be unavailable; the notice will simply reappear.
   }
@@ -77,12 +101,15 @@ const NOTICE_POLL_MS = 30_000;
 function SiteNoticeBanner({
   onShowing,
 }: {
-  /** Told whenever a notice starts or stops occupying the bar for this reader. */
-  readonly onShowing?: (showing: boolean) => void;
+  /**
+   * Told whenever a notice starts or stops occupying the bar for this
+   * reader, and whether it is a floating window rather than a banner.
+   */
+  readonly onShowing?: (showing: boolean, floating: boolean) => void;
 }): ReactNode {
   const [notice, setNotice] = useState<NoticeDetails | null>(null);
-  const [dismissed, setDismissed] = useState(() =>
-    loadDismissed("keylearn.dismissedNotice"),
+  const [dismissed, setDismissed] = useState<readonly string[]>(() =>
+    loadDismissed("keylearn.dismissedNotices"),
   );
   // Steps aside the moment keys start landing — an incident notice has no
   // close button by design (see NoticeBanner.tsx), so without this it would
@@ -119,10 +146,11 @@ function SiteNoticeBanner({
     };
   }, []);
 
-  const showing = notice != null && noticePrint(notice) !== dismissed;
+  const showing = notice != null && !dismissed.includes(noticePrint(notice));
+  const floating = showing && notice.display === "window";
   useEffect(() => {
-    onShowing?.(showing);
-  }, [showing, onShowing]);
+    onShowing?.(showing, floating);
+  }, [showing, floating, onShowing]);
   if (!showing) {
     return null;
   }
@@ -141,8 +169,8 @@ function SiteNoticeBanner({
         notice={notice}
         onDismiss={() => {
           const print = noticePrint(notice);
-          saveDismissed("keylearn.dismissedNotice", print);
-          setDismissed(print);
+          saveDismissed("keylearn.dismissedNotices", print);
+          setDismissed((prev) => [...prev, print]);
         }}
       />
     </div>
@@ -259,8 +287,11 @@ let adsHiddenThisLoad = false;
 
 // The same rule as the banner: a card whose question or options were edited
 // is a different card, and a reader who answered the old one has not seen it.
-function loadDismissedCardPrint(): string | null {
-  return loadDismissed("keylearn.dismissedCard");
+// How long a sent answer's thank-you stays up before the card closes itself.
+const CARD_CLOSE_AFTER_SEND_MS = 1500;
+
+function loadDismissedCards(): readonly string[] {
+  return loadDismissed("keylearn.dismissedCards");
 }
 
 /**
@@ -268,13 +299,24 @@ function loadDismissedCardPrint(): string | null {
  * only to a signed-in account on an adult profile — a kid profile is never
  * asked — and gone for the session once its exit button is pressed.
  */
-function LearnerVoiceSlot(): ReactNode {
+function LearnerVoiceSlot({
+  held = false,
+}: {
+  /**
+   * True while a floating window notice is on screen. The window has
+   * preference: the card waits until it is closed rather than stacking a
+   * second scrim on the first (owner request 10 Sep 2026).
+   */
+  readonly held?: boolean;
+} = {}): ReactNode {
   const { user } = usePageData();
   const [notice, setNotice] = useState<NoticeDetails | null>(null);
   const [state, setState] = useState<LearnerResponseState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState(loadDismissedCardPrint);
+  const [dismissed, setDismissed] = useState(loadDismissedCards);
+  /** True from a successful send until the card closes itself, so the thank-you gets its moment. */
+  const [sent, setSent] = useState(false);
   const [kind, setKind] = useState(activeProfileKind);
 
   useEffect(() => {
@@ -324,23 +366,39 @@ function LearnerVoiceSlot(): ReactNode {
   }, [notice, user]);
 
   if (
+    held ||
     user == null ||
     kind === "kid" ||
     notice == null ||
-    noticePrint(notice) === dismissed ||
-    (state != null && !state.open)
+    dismissed.includes(noticePrint(notice)) ||
+    (state != null && !state.open) ||
+    // Already answered, on any device: the server knows, and asking again
+    // is the annoyance a paused-and-restarted card used to cause.
+    (state?.response != null && !sent)
   ) {
     return null;
   }
+  const exit = () => {
+    const print = noticePrint(notice);
+    saveDismissed("keylearn.dismissedCards", print);
+    setDismissed((prev) => [...prev, print]);
+  };
+  // A sent answer closes the card (owner request 10 Sep 2026). The thank-you
+  // line, and the running result when the desk chose to show one, get a
+  // moment on screen first; the card stays busy so nothing is sent twice.
   const submit = (input: LearnerVoiceInput) => {
     setBusy(true);
     setError(null);
     SupportService.putLearnerResponse(notice.id, input)
-      .then((s) => setState(s))
+      .then((s) => {
+        setSent(true);
+        setState(s);
+        window.setTimeout(exit, CARD_CLOSE_AFTER_SEND_MS);
+      })
       .catch((err) => {
         setError(err instanceof Error ? err.message : String(err));
-      })
-      .finally(() => setBusy(false));
+        setBusy(false);
+      });
   };
   return (
     <LearnerVoiceCard
@@ -349,11 +407,7 @@ function LearnerVoiceSlot(): ReactNode {
       busy={busy}
       error={error}
       onSubmit={submit}
-      onExit={() => {
-        const print = noticePrint(notice);
-        saveDismissed("keylearn.dismissedCard", print);
-        setDismissed(print);
-      }}
+      onExit={exit}
     />
   );
 }
@@ -389,6 +443,12 @@ export function Template({
    * banner either rendered or did not.
    */
   const [noticeShowing, setNoticeShowing] = useState(false);
+  /** A floating window is up: polls and feedback cards wait behind it. */
+  const [windowShowing, setWindowShowing] = useState(false);
+  const onNoticeShowing = useCallback((showing: boolean, floating: boolean) => {
+    setNoticeShowing(showing);
+    setWindowShowing(showing && floating);
+  }, []);
   const setMenuOpen = (open: boolean) => {
     drawerOpen = open;
     setMenuOpenState(open);
@@ -416,7 +476,7 @@ export function Template({
       {/* Above the header, not below it (owner decision 3 Sep 2026): a
           site-wide message is about the whole page, so it sits over the
           chrome rather than between the chrome and the work. */}
-      <SiteNoticeBanner onShowing={setNoticeShowing} />
+      <SiteNoticeBanner onShowing={onNoticeShowing} />
       {/* Under the notice and still above the header: a message from us
           always outranks a message somebody paid for, and a campaign that
           asked to stand aside for one is not in this list at all. */}
@@ -429,7 +489,7 @@ export function Template({
         kids={path === "/kids"}
         practice={path === "/"}
       />
-      <LearnerVoiceSlot />
+      <LearnerVoiceSlot held={windowShowing} />
       <main className={styles.main} id="main" tabIndex={-1}>
         {/* A page the control centre has set to "coming soon" keeps its
             link, its route and all of this chrome, and shows the panel in

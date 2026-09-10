@@ -446,6 +446,8 @@ export type DeskNotice = {
   readonly showResults?: boolean;
   /** Whether a feedback card asks for an optional comment (phase 3.2). */
   readonly askComment?: boolean;
+  /** Bumped by the desk when an edit is meant to reach people who already closed the notice. */
+  readonly revision?: number;
   readonly createdAt: string;
 };
 

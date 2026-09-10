@@ -309,6 +309,11 @@ export type NoticeDetails = {
   readonly showResults?: boolean;
   /** Whether a feedback card asks for an optional comment. */
   readonly askComment?: boolean;
+  /**
+   * A desk notice's revision: the desk bumps it only when an edit should
+   * reach people who already closed the notice. A local notice has none.
+   */
+  readonly revision?: number;
   readonly createdAt: string;
 };
 
@@ -319,6 +324,10 @@ export type LearnerResults = {
   readonly stars: readonly number[];
   readonly average: number | null;
   readonly comments: number;
+  /** Answers per day for the last two weeks, oldest first. */
+  readonly days: readonly number[];
+  readonly firstAt: string | null;
+  readonly latestAt: string | null;
 };
 
 /** The signed-in account's own answer to a card. */

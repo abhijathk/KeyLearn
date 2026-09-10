@@ -167,6 +167,9 @@ function checkCopy(input: TCampaign): void {
  * the logo sanitiser all run on this side, so a campaign written by any
  * other means is held to the same published contract.
  */
+/** How many days of views and clicks per day the list carries for the desk's trend columns. */
+const SERIES_DAYS = 14;
+
 @injectable()
 @controller()
 export class AdsInternalController {
@@ -181,15 +184,34 @@ export class AdsInternalController {
     ctx.state.requireOpsApi();
     const rows = await AdCampaign.listAll(archived);
     const { fromDay, toDay } = weekWindow(new Date());
+    // The last two weeks day by day, today included, for the desk's trend
+    // columns — the same span a poll's tally carries.
+    const dayKeys: string[] = [];
+    for (let ago = SERIES_DAYS - 1; ago >= 0; ago -= 1) {
+      dayKeys.push(
+        new Date(Date.now() - ago * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10),
+      );
+    }
     const campaigns = [];
     for (const row of rows) {
       const stats = await AdStat.forCampaign(row.id!, fromDay, toDay);
+      const perDay = await AdStat.byDay(
+        row.id!,
+        dayKeys[0]!,
+        dayKeys[dayKeys.length - 1]!,
+      );
       campaigns.push({
         ...row.toDetails(),
         thisWeek: {
           views: stats.reduce((sum, s) => sum + s.views, 0),
           clicks: stats.reduce((sum, s) => sum + s.clicks, 0),
           byScreen: stats,
+        },
+        days: {
+          views: dayKeys.map((day) => perDay.get(day)?.views ?? 0),
+          clicks: dayKeys.map((day) => perDay.get(day)?.clicks ?? 0),
         },
       });
     }

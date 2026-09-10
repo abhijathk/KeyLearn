@@ -140,15 +140,37 @@ export class LearnerResponse extends TimestampMixin(Model) {
   static async resultsFor(noticeId: number): Promise<LearnerResults> {
     const rows = await LearnerResponse.query()
       .where("noticeId", noticeId)
-      .select("choice", "stars", "text", "textDroppedAt", "hiddenAt");
+      .select(
+        "choice",
+        "stars",
+        "text",
+        "textDroppedAt",
+        "hiddenAt",
+        "createdAt",
+      );
     const choices = [0, 0, 0, 0];
     const stars = [0, 0, 0, 0, 0];
+    const days = new Array<number>(RESULT_DAYS).fill(0);
+    const today = Math.floor(Date.now() / DAY_MS);
+    let first: number | null = null;
+    let latest: number | null = null;
     let count = 0;
     let comments = 0;
     let starSum = 0;
     let rated = 0;
     for (const row of rows) {
       count += 1;
+      const at = new Date(
+        row.createdAt as unknown as string | number,
+      ).getTime();
+      if (Number.isFinite(at)) {
+        const ago = today - Math.floor(at / DAY_MS);
+        if (ago >= 0 && ago < RESULT_DAYS) {
+          days[RESULT_DAYS - 1 - ago] += 1;
+        }
+        first = first == null || at < first ? at : first;
+        latest = latest == null || at > latest ? at : latest;
+      }
       if (row.choice != null && row.choice >= 0 && row.choice < 4) {
         choices[row.choice] += 1;
       }
@@ -167,6 +189,9 @@ export class LearnerResponse extends TimestampMixin(Model) {
       stars,
       average: rated === 0 ? null : Math.round((starSum / rated) * 10) / 10,
       comments,
+      days,
+      firstAt: first == null ? null : new Date(first).toISOString(),
+      latestAt: latest == null ? null : new Date(latest).toISOString(),
     };
   }
 
@@ -252,6 +277,10 @@ export class LearnerResponse extends TimestampMixin(Model) {
   }
 }
 
+/** How many days of answers-per-day a tally carries: two weeks, the desk draws them as columns. */
+export const RESULT_DAYS = 14;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export type LearnerResults = {
   /** Every account that answered. */
   readonly count: number;
@@ -260,6 +289,11 @@ export type LearnerResults = {
   /** Ratings per star (index 0 is one star), for a feedback card. */
   readonly stars: readonly number[];
   readonly average: number | null;
+  /** Answers per calendar day (UTC) for the last {@link RESULT_DAYS} days, oldest first, today last. */
+  readonly days: readonly number[];
+  /** When the first and the most recent answer landed, ISO; null until anyone answers. */
+  readonly firstAt: string | null;
+  readonly latestAt: string | null;
   /** How many answers carry a comment right now. */
   readonly comments: number;
 };

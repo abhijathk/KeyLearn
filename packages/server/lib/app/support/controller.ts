@@ -1384,6 +1384,7 @@ export class Controller {
         options: n.options ?? null,
         showResults: n.showResults ?? true,
         askComment: n.askComment ?? true,
+        revision: n.revision ?? 1,
         createdAt: n.createdAt,
       }));
     ctx.response.body = {

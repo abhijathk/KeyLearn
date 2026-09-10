@@ -90,6 +90,28 @@ export class AdStat extends Model {
       .map(([screen, at]) => ({ screen, views: at.views, clicks: at.clicks }));
   }
 
+  /** Views and clicks per day for one campaign between two days, inclusive, every screen together. */
+  static async byDay(
+    campaignId: number,
+    fromDay: string,
+    toDay: string,
+  ): Promise<
+    ReadonlyMap<string, { readonly views: number; readonly clicks: number }>
+  > {
+    const rows = await AdStat.query()
+      .where("campaignId", campaignId)
+      .where("day", ">=", fromDay)
+      .where("day", "<=", toDay);
+    const byDay = new Map<string, { views: number; clicks: number }>();
+    for (const row of rows) {
+      const at = byDay.get(row.day!) ?? { views: 0, clicks: 0 };
+      at.views += row.views ?? 0;
+      at.clicks += row.clicks ?? 0;
+      byDay.set(row.day!, at);
+    }
+    return byDay;
+  }
+
   /** Daily rows older than the window are summarised away by the sweep. */
   static async deleteBefore(day: string): Promise<number> {
     return await AdStat.query().where("day", "<", day).delete();

@@ -299,6 +299,14 @@ function PollBody({
 }): ReactNode {
   const options = notice.options ?? [];
   const chosen = state?.response?.choice ?? null;
+  // Picking an option is not sending it: the answer leaves with the Send
+  // button, and the card closes once it has (owner request 10 Sep 2026).
+  const [picked, setPicked] = useState<number | null>(chosen);
+  const [seen, setSeen] = useState(state?.response?.updatedAt ?? null);
+  if ((state?.response?.updatedAt ?? null) !== seen) {
+    setSeen(state?.response?.updatedAt ?? null);
+    setPicked(chosen);
+  }
   const results = chosen != null ? (state?.results ?? null) : null;
   const total = results?.count ?? 0;
   return (
@@ -312,13 +320,13 @@ function PollBody({
               key={index}
               type="button"
               role="radio"
-              aria-checked={chosen === index}
+              aria-checked={picked === index}
               className={clsx(
                 styles.option,
-                chosen === index && styles.optionOn,
+                picked === index && styles.optionOn,
               )}
               disabled={busy}
-              onClick={() => onSubmit?.({ choice: index })}
+              onClick={() => setPicked(index)}
             >
               {results != null && (
                 <span
@@ -335,17 +343,31 @@ function PollBody({
           );
         })}
       </div>
+      <div className={styles.cardActions}>
+        <button
+          type="button"
+          className={styles.primaryBtn}
+          disabled={busy || picked == null}
+          onClick={() => picked != null && onSubmit?.({ choice: picked })}
+        >
+          {chosen != null ? (
+            <FormattedMessage id="notice.poll.update" defaultMessage="Update" />
+          ) : (
+            <FormattedMessage id="notice.poll.send" defaultMessage="Send" />
+          )}
+        </button>
+      </div>
       <p className={styles.cardNote}>
         {results != null ? (
           <FormattedMessage
             id="notice.poll.votes"
-            defaultMessage="{count, plural, one {# vote} other {# votes}} so far. You can change yours until the poll closes."
+            defaultMessage="Thanks. {count, plural, one {# vote} other {# votes}} so far."
             values={{ count: total }}
           />
         ) : chosen != null ? (
           <FormattedMessage
             id="notice.poll.thanks"
-            defaultMessage="Thanks. You can change your answer until the poll closes."
+            defaultMessage="Thanks, your answer is in."
           />
         ) : (
           <FormattedMessage
@@ -456,7 +478,7 @@ function FeedbackBody({
         ) : sent != null ? (
           <FormattedMessage
             id="notice.feedback.thanks"
-            defaultMessage="Thank you. You can change your rating until the card closes."
+            defaultMessage="Thank you, your rating is in."
           />
         ) : askComment ? (
           <FormattedMessage
