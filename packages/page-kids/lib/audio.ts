@@ -8,7 +8,9 @@
  *    typing.
  * Switch with setTheme(); every play* method picks the right voice.
  */
-type Voice = "dino" | "hero";
+
+import type { WorldId } from "./world.ts";
+type Voice = WorldId;
 
 class KidsAudio {
   #ctx: AudioContext | null = null;

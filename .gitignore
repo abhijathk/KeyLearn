@@ -37,3 +37,7 @@ root/public/voice-mock/
 .tools/voices/node_modules/
 root/public/learner-mock/
 root/public/cursor-mock/
+
+# Python bytecode from the asset scripts.
+__pycache__/
+*.pyc

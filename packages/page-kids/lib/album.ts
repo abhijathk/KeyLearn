@@ -1,4 +1,5 @@
 import { profileStorageKey } from "@keylearn/pages-shared";
+import type { WorldId } from "./world.ts";
 import { LANDS } from "./world.ts";
 
 /**
@@ -48,7 +49,7 @@ export type Hatchling = {
  * two characters were free from the start — which meant the default world for
  * the two youngest bands had nothing whatsoever to earn.
  */
-export const HATCHLINGS: Record<"dino" | "hero", readonly Hatchling[]> = {
+export const HATCHLINGS: Record<WorldId, readonly Hatchling[]> = {
   dino: [
     { id: "Velociraptor", label: "Vela", at: 4 },
     { id: "Stegosaurus", label: "Steggy", at: 8 },
@@ -62,6 +63,19 @@ export const HATCHLINGS: Record<"dino" | "hero", readonly Hatchling[]> = {
     { id: "Mage", label: "Mage", at: 12 },
     { id: "Barbarian", label: "Bear", at: 16 },
     { id: "Rogue_Hooded", label: "Shadow", at: 20 },
+  ],
+  // Village Road earns its companions out of the same small cast it is played
+  // with, because it has no villagers yet. Peeli is the world's default and so
+  // is never locked; the rest arrive in the order a child would most like to
+  // meet them, with the buffalo last - it is the only wild thing on the road,
+  // it is already standing in the fields from the first day, and being allowed
+  // to walk with it is a better twentieth-key reward than another person.
+  village: [
+    { id: "Puppy", label: "Puppy", at: 4 },
+    { id: "Robot", label: "Robot", at: 8 },
+    { id: "Explorer6", label: "Little Drew", at: 12 },
+    { id: "Explorer", label: "Dave", at: 16 },
+    { id: "Buffalo", label: "Buffalo", at: 20 },
   ],
 };
 
@@ -112,7 +126,7 @@ export const MILESTONES: readonly Sticker[] = [
 ];
 
 /** Every sticker there is, for the world the child is playing. */
-export function catalogue(world: "dino" | "hero"): readonly Sticker[] {
+export function catalogue(world: WorldId): readonly Sticker[] {
   return [
     ...HATCHLINGS[world].map(
       ({ id, label, at }): Sticker => ({
@@ -209,7 +223,7 @@ export function practiceDays(): number {
 
 /** The next companion still to hatch, or null once they are all out. */
 export function nextHatchling(
-  world: "dino" | "hero",
+  world: WorldId,
   included: number,
 ): Hatchling | null {
   return HATCHLINGS[world].find(({ at }) => included < at) ?? null;

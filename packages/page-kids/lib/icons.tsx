@@ -64,6 +64,41 @@ export function PawIcon({ size = 34, color = "#fff" }: IconProps) {
   );
 }
 
+/**
+ * A PALM-LEAF MANUSCRIPT — the story button.
+ *
+ * Not a book. A book in 1930s Kerala is a European object; what a story was
+ * actually kept on was a stack of dried palm leaves, cut long and narrow,
+ * pierced through the middle and held with a cord. Drawn as the leaves either
+ * side of the binding rather than as a solid block, because the cord down the
+ * centre is the whole silhouette — without it this is three lines.
+ */
+export function LeafBookIcon({ size = 22, color }: IconProps) {
+  return (
+    // `currentColor` when no colour is named, so a caller can dim the icon
+    // from CSS along with whatever it is printed on — see the Village Road
+    // story scrap, which has to go dark with the notice at night.
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill={color ?? "currentColor"}
+    >
+      {/* the leaves, left of the cord */}
+      <rect x="2" y="6.2" width="8.4" height="2.9" rx="1.1" />
+      <rect x="3" y="10.5" width="7.4" height="2.9" rx="1.1" />
+      <rect x="2.4" y="14.8" width="8" height="2.9" rx="1.1" />
+      {/* and right of it, deliberately not the same lengths: a stack of cut
+          leaves is never flush */}
+      <rect x="13.6" y="6.2" width="8" height="2.9" rx="1.1" />
+      <rect x="13.6" y="10.5" width="8.4" height="2.9" rx="1.1" />
+      <rect x="13.6" y="14.8" width="7.2" height="2.9" rx="1.1" />
+      {/* the cord */}
+      <rect x="11.2" y="3.4" width="1.6" height="17.2" rx="0.8" />
+    </svg>
+  );
+}
+
 export function StarIcon({ size = 15, color = "#fff" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill={color}>

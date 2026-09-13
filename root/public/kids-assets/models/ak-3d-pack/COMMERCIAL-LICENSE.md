@@ -32,21 +32,39 @@ space would arrive as `%20` in each request.
 
 | File | Shown in the app as | Role | Size | Triangles | Joints | Animations |
 |---|---|---|---|---|---|---|
+| `Banyan.glb` | Banyan Tree | Village landmark | 0.41 MB | 7,346 | 0 | 0 |
+| `Buffalo.glb` | Buffalo | Random character (wild) | 1.71 MB | 18,126 | 29 | 16 |
+| `Cart.glb` | Wooden Cart | Village dressing | 0.17 MB | 2,526 | 0 | 0 |
 | `Explorer.glb` | Dave | Main character or companion | 3.95 MB | 17,650 | 24 | 20 |
 | `Explorer6.glb` | Little Drew | Main character or companion | 2.81 MB | 18,035 | 28 | 21 |
+| `HouseHearth.glb` | Hearth House | Village dwelling | 0.41 MB | 8,000 | 0 | 0 |
+| `HouseMoss.glb` | Moss-Crowned Homestead | Village dwelling | 0.36 MB | 8,000 | 0 | 0 |
+| `HouseThatch.glb` | Thatch Homestead | Village dwelling | 0.40 MB | 7,656 | 0 | 0 |
+| `Market.glb` | Village Market | Village landmark | 0.42 MB | 5,638 | 0 | 0 |
 | `Peeli.glb` | Peeli | Main character or companion | 3.69 MB | 23,063 | 28 | 21 |
-| `Puppy.glb` | Puppy | Companion only | 1.69 MB | 27,034 | 27 | 4 |
+| `Puppy.glb` | Puppy | Companion only | 1.56 MB | 27,034 | 34 | 18 |
 | `Robot.glb` | Robot | Companion only | 1.00 MB | 8,594 | 28 | 4 |
+| `Temple.glb` | Temple | Village landmark | 0.35 MB | 3,367 | 0 | 0 |
+| `Wall.glb` | Stone Wall | Village dressing | 0.18 MB | 2,990 | 0 | 0 |
 
-**5 models, 13.14 MB in total.**
+**14 models, 17.45 MB in total.**
 
 Animation clips, per model:
 
+- **Banyan Tree** (`Banyan.glb`) — 
+- **Buffalo** (`Buffalo.glb`) — `Walk`, `Idle`, `Idle_Alert`, `Graze`, `Run`, `Turn_Left_90`, `Turn_Right_90`, `Walk_Backward`, `Charge_Start`, `Charge_Loop`, `Attack_Horn`, `Attack_Stomp`, `Aggressive_Threat`, `Hit_Reaction`, `Death`, `Supernatural_Rear_Stomp`
+- **Wooden Cart** (`Cart.glb`) — 
 - **Dave** (`Explorer.glb`) — `Idle`, `Joy_LevelComplete`, `Run`, `Walk`, `Jump`, `Crouch_Down`, `Crouch_Idle`, `Stand_From_Crouch`, `Sit_CrossLegged_Down`, `Sit_CrossLegged_Idle`, `Stand_From_CrossLegged`, `Wave`, `Punch_Right`, `Punch_Left`, `Kick`, `Combo_3Hit`, `Hit_Front`, `Hit_Back`, `Dodge_Left`, `Dodge_Right`
 - **Little Drew** (`Explorer6.glb`) — `Idle`, `Joy_LevelComplete`, `Run`, `Walk`, `Jump`, `Crouch_Down`, `Crouch_Idle`, `Stand_From_Crouch`, `Sit_CrossLegged_Down`, `Sit_CrossLegged_Idle`, `Stand_From_CrossLegged`, `Wave`, `Punch_Right`, `Punch_Left`, `Kick`, `Combo_3Hit`, `Hit_Front`, `Hit_Back`, `Dodge_Left`, `Dodge_Right`, `Kung_Fu_Punch`
+- **Hearth House** (`HouseHearth.glb`) — 
+- **Moss-Crowned Homestead** (`HouseMoss.glb`) — 
+- **Thatch Homestead** (`HouseThatch.glb`) — 
+- **Village Market** (`Market.glb`) — 
 - **Peeli** (`Peeli.glb`) — `Run_InPlace`, `Walk_InPlace`, `Idle_Calm`, `Wave`, `No_Disagree`, `Joy_Victory`, `Excited`, `MartialArts_Ready`, `Walk_Cute`, `Run_Cute`, `Stand_To_CrossLegged`, `CrossLegged_To_Stand`, `Punch_Combo_4`, `Punch_Combo_5`, `Punch_Forward_BothFists`, `CrossLegged_Idle`, `Forward_Charge_InPlace`, `High_Kick_StepIn`, `Sweeping_Kick`, `Run_Fast_RootMotion`, `RestPose`
-- **Puppy** (`Puppy.glb`) — `Walk`, `Idle`, `Tail_Wag`, `Run`
+- **Puppy** (`Puppy.glb`) — `Walk`, `Idle`, `Idle_Alert`, `Trot`, `Run`, `Turn_Left_90`, `Turn_Right_90`, `Sit`, `Lie_Down`, `Sleep`, `Play_Bow`, `Beg`, `Pee`, `Jump`, `Bark`, `Sniff_Ground`, `Shake_Off`, `Tail_Wag`
 - **Robot** (`Robot.glb`) — `Running`, `Monster_Walk`, `Idle`, `Standing`
+- **Temple** (`Temple.glb`) — 
+- **Stone Wall** (`Wall.glb`) — 
 
 <!-- INVENTORY:END -->
 

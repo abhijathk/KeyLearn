@@ -43,7 +43,9 @@ import { useTheme } from "@keylearn/themes";
 import { clsx } from "clsx";
 import {
   memo,
+  type ReactElement,
   type ReactNode,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -91,6 +93,7 @@ import {
   GearIcon,
   HandIcon,
   KeysIcon,
+  LeafBookIcon,
   MoonIcon,
   PawIcon,
   SoundIcon,
@@ -114,6 +117,7 @@ import {
 import * as styles from "./kids.module.less";
 import { deviceTier, type NightOverride, resolveNightStyle } from "./night.ts";
 import { paceTarget } from "./pace.ts";
+import { STORY, type StoryPart } from "./story.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
 import {
   createKidsWorld,
@@ -123,6 +127,8 @@ import {
   type KidsWorld,
   LANDS,
   pickLand,
+  VILLAGE_THEME,
+  type WorldId,
 } from "./world.ts";
 
 // Storage keys are namespaced by the active household profile so every
@@ -173,10 +179,79 @@ const PREFS_KEY = () => profileStorageKey("kids.prefs");
 
 type KbMode = "off" | "simple" | "full";
 
+/**
+ * Worlds whose cast is the children rather than creatures.
+ *
+ * Hero Trail and Village Road are both played as Dave, Little Drew or Peeli,
+ * both offer a walking companion, both carry the pointer ring and both have a
+ * real nightfall. Dino Run does none of that - you ARE the dinosaur there.
+ *
+ * Written as a predicate because the alternative is thirty-odd
+ * `world === "hero"` tests that a third world silently falls out of: every one
+ * of them would have sent Village Road down the dino branch, and every one of
+ * them would still have compiled.
+ */
+const childCast = (w: WorldId) => w !== "dino";
+
 type Prefs = {
-  world: "dino" | "hero";
+  world: WorldId;
   dino: string;
   hero: string;
+  /** Who the child plays as on Village Road. */
+  village: string;
+  /**
+   * Flags reached since the last village, and the gap this run is waiting for.
+   *
+   * Villages fall every four to seven flags, and a flag is a round - but the
+   * world is rebuilt once per session and has no memory of the rounds before
+   * it. The count has to live with the rest of the saved preferences or a
+   * child would meet a village every single session, which is the opposite of
+   * rare. `villageGap` is redrawn each time one is spent so the rhythm never
+   * settles into a pattern a child could learn.
+   */
+  villageFlags?: number;
+  /**
+   * WHAT THIS CHILD HAS ALREADY SEEN FOR THE FIRST TIME.
+   *
+   * A handful of moments are worth saying once and never again — the first
+   * buffalo, the first lamp lit, the first milestone. Not "once per band":
+   * once, ever. Cleared with the rest of a profile, so a fresh profile gets a
+   * fresh village, which is the whole point of clearing one.
+   */
+  seen?: readonly string[];
+  /**
+   * Does the local boy walk with them? On by default.
+   *
+   * Off means every line that mentions him drops out of the pool rather than
+   * being reworded — see `villagePool`. No context can empty out that way;
+   * that is checked, not hoped for.
+   */
+  guide?: boolean;
+  /**
+   * Offer the story at all. On by default.
+   *
+   * Off means no button and no unread mark — but the parts keep unlocking
+   * quietly in the background, so turning it back on months later finds the
+   * story where the child actually is rather than back at part one.
+   */
+  story?: boolean;
+  /**
+   * How many parts have been opened, so the unread mark knows when to show.
+   *
+   * A count rather than a list: the parts only ever unlock in order, so the
+   * number of them read is all there is to know, and a number survives the
+   * story being re-cut far better than a list of titles would.
+   */
+  storyRead?: number;
+  /**
+   * Milestones passed on Village Road, across every session ever played.
+   *
+   * A stone in the ground does not reset because the page reloaded. The
+   * number cut into it is the whole reward, so it counts up forever and the
+   * world starts numbering from there rather than from one.
+   */
+  roadStones?: number;
+  villageGap?: number;
   /**
    * Who walks the trail beside them, or null for nobody.
    *
@@ -184,7 +259,34 @@ type Prefs = {
    * does, a beat later. Off by default: a second character on screen is a
    * second thing to look at, and that is a choice, not a gift.
    */
+  /** @deprecated The single companion. Read through `companionsOf`. */
   companion: string | null;
+  /**
+   * Everyone walking with the child, at most two.
+   *
+   * A list because two people walking with you is two people, and the single
+   * `companion` field could only ever answer "who is it" — a question with
+   * one answer built into its shape. Kept beside the old field rather than
+   * replacing it, so a profile saved before this still knows who its friend
+   * was: `companionsOf` reads the list when there is one and falls back to
+   * the single name when there is not.
+   */
+  companions?: readonly string[];
+  /**
+   * WHO WALKS WITH THE CHILD, KEPT SEPARATELY FOR EACH WORLD.
+   *
+   * The three worlds are three games. Village Road is a place people live and
+   * offers everybody in it; Hero Trail is one hero and a dog; Dino Run has
+   * nobody. One shared list could not mean the right thing in all three — a
+   * child who walked the village road with Peeli and the robot arrived on the
+   * Hero Trail still nominally accompanied by two people that world does not
+   * have. Held per world, so each game remembers its own party and switching
+   * finds it exactly as it was left.
+   *
+   * `companions` above stays as the pre-split value and is read as the
+   * starting point for whichever world a profile was last in.
+   */
+  companionsByWorld?: Partial<Record<WorldId, readonly string[]>>;
   /**
    * What the Explorer is wearing.
    *
@@ -193,6 +295,28 @@ type Prefs = {
    * painted — including if those colours are ever repainted.
    */
   explorerColours?: ClothingColours;
+  /**
+   * What this child calls each character, by model id.
+   *
+   * A NAME BELONGS TO THE CHARACTER, NOT TO THE JOB. Dave renamed while he is
+   * the hero is still called that when he turns up as somebody's companion
+   * next week, because he is the same person — the child did not name a slot,
+   * they named him. Keyed by model id (`Explorer`, `Peeli`, `Puppy`) for the
+   * same reason the pickers are: it is what a saved profile already stores,
+   * and it survives the label beside it being reworded.
+   *
+   * Only characters actually renamed appear here. Everyone else keeps the
+   * name they shipped with, so a name can also be reset by clearing it.
+   */
+  names?: Record<string, string>;
+  /**
+   * The FIRST name a child ever gave, from the card that opens the game.
+   *
+   * Kept because it is what the coach calls them in a dozen lines of copy and
+   * what a returning profile already has stored. `names` is layered over it:
+   * whatever that card set is also written into `names` for the character it
+   * was naming, so the two agree from then on.
+   */
   name: string;
   bigLetters: boolean;
   sounds: boolean;
@@ -243,7 +367,19 @@ type Prefs = {
    * Lost Travellers only appear for children old enough to enjoy them. The
    * override exists so a grown-up can move a child either way.
    */
+  /** @deprecated The shared night setting. Read through `nightStyleOf`. */
   nightStyle: NightOverride;
+  /**
+   * WHAT THE DARK MEANS, PER WORLD.
+   *
+   * Village Road's night is oil lamps and a lit temple; the Hero Trail's is
+   * Lost Travellers and skeletons. They are not the same question, and one of
+   * them does not even offer the spooky answers — so a parent who set "Extra
+   * spooky" for the hero world was silently setting it for the village road
+   * as well, where it is meaningless and where the pill to undo it is not
+   * even on the row.
+   */
+  nightStyleByWorld?: Partial<Record<WorldId, NightOverride>>;
   /**
    * The drier voice for older learners (see PLAYFUL_SAYS). Off by default and
    * only offered from 9-10 up — the younger bands need the plain lines, which
@@ -319,9 +455,21 @@ function defaultPrefs(): Prefs {
     // the Knight any more: a child playing as a child is the point of these
     // two, and the fantasy figures stay in the toy-box for whoever wants one.
     hero: band === "5-6" || band === "7-8" ? "Explorer6" : "Explorer",
+    // The same child, on the village road. Peeli is the world's own default
+    // but a band that opens as Little Drew should stay Little Drew.
+    village: band === "5-6" || band === "7-8" ? "Explorer6" : "Peeli",
+    villageFlags: 0,
+    roadStones: 0,
+    villageGap: 4 + Math.floor(Math.random() * 4),
     companion: null,
+    companions: [],
     explorerColours: {},
     name: "",
+    names: {},
+    seen: [],
+    guide: true,
+    story: true,
+    storyRead: 0,
     bigLetters: cfg.bigLetters,
     sounds: false,
     hands: cfg.hands,
@@ -522,7 +670,7 @@ const SAYS = {
     "{name} nods, impressed.",
     "That's the pace — steady and sharp.",
   ],
-  camp: [
+  milestone: [
     "CAMP! +10 — the whole herd cheers for {name}!",
     "CAMP! You led {name} all the way to the flag!",
     "The tents are up — {name} gets a berry snack. +10!",
@@ -536,7 +684,7 @@ const SAYS = {
     "Not that one — but you're SO close. Look for the glow!",
     "Wrong stone! Peek at the glowing key and try again.",
   ],
-  roar: [
+  stumble: [
     "RAWWRR!! Take a breath — look for the glowing key!",
     "RAWWRR!! Even big dinos rest. Breathe, then find the glow.",
     "A big roar! Shake your hands, smile, and try the glowing key.",
@@ -562,10 +710,10 @@ const SAYS = {
     "{name} lets out a deep, proud roar — almost an adult!",
     "The earth trembles as mighty {name} grows again!",
   ],
-  hatch: [
-    "An egg hatched — {dino} joined the herd!",
-    "Crack… crack… out popped {dino}!",
-    "A wild egg wobbled, and there was {dino}!",
+  joins: [
+    "An egg hatched — {friend} joined the herd!",
+    "Crack… crack… out popped {friend}!",
+    "A wild egg wobbled, and there was {friend}!",
   ],
   streak: [
     "{name} is SO proud — 10 in a row!",
@@ -784,7 +932,7 @@ const HERO_SAYS = {
     "{name} nods, impressed.",
     "That's the pace — steady and sharp.",
   ],
-  camp: [
+  milestone: [
     "CAMP! +10 — the whole party cheers for {name}!",
     "CAMP! You led {name} all the way to the campfire!",
     "The tents are up — {name} gets a warm snack. +10!",
@@ -798,7 +946,7 @@ const HERO_SAYS = {
     "Not that one — but you're SO close. Look for the glow!",
     "Wrong stone! Peek at the glowing key and try again.",
   ],
-  roar: [
+  stumble: [
     "HYAA!! Take a breath — look for the glowing key!",
     "Even brave heroes rest. Breathe, then find the glow.",
     "A mighty shout! Shake your hands, smile, and try the glowing key.",
@@ -966,7 +1114,7 @@ const CLASSIC_SAYS = {
     "Steady and sharp.",
     "That's how it's done.",
   ],
-  camp: [
+  milestone: [
     "Set finished. +10.",
     "Whole line, done. +10!",
     "That's the set — nicely held together. +10.",
@@ -979,7 +1127,7 @@ const CLASSIC_SAYS = {
     "Wrong key — the glow shows the way.",
     "Easy does it. The glowing key next.",
   ],
-  roar: [
+  stumble: [
     "Take a breath — then the glowing key.",
     "Pause a second. Shake out your hands.",
     "Slow is smooth, smooth is fast.",
@@ -1001,7 +1149,7 @@ const CLASSIC_SAYS = {
     "New letter unlocked. Not many left now.",
     "That's one more off the list.",
   ],
-  hatch: [
+  joins: [
     "Something new unlocked!",
     "A new one joins the set!",
     "Unlocked — nice work.",
@@ -1042,12 +1190,560 @@ const CLASSIC_SAYS = {
   ],
 } as const;
 
-const saysOf = (world: "dino" | "hero", classic = false) =>
+// Village Road's voice. Warmer and slower than the hero world's, and about
+// walking and arriving rather than questing and winning - the road is not a
+// challenge to beat, it is a place to go through.
+/**
+ * THE YEAR THE ROAD IS SET IN, and how long ago that is.
+ *
+ * One constant, and the distance counted from today — never written down. The
+ * first draft of these lines said "about ninety years", which was already
+ * wrong when it was typed (it was ninety-six) and would have been wrong again
+ * every January.
+ */
+const VILLAGE_YEAR = 1930;
+/**
+ * The local boy, by model id.
+ *
+ * Named once, here. Every line says {guide}, so if the character is ever
+ * swapped for a different one this is the only line that changes.
+ */
+/**
+ * The local boy, so he has a shipped name like everybody else.
+ *
+ * He is on none of the three cast lists — he is not somebody you play as and
+ * not somebody you pick as a friend — so without this his "name" was the model
+ * id falling through, which reads correctly today only because the file
+ * happens to be called Abee. Rename the asset and the settings row would have
+ * shown the filename.
+ */
+const GUIDE_CAST = [{ id: "Abee", label: "Abee" }] as const;
+
+const VILLAGE_GUIDE = GUIDE_CAST[0].id;
+
+/**
+ * Everything that can be said.
+ *
+ * The shared contexts plus the ones only this road has. Village-only keys
+ * resolve to nothing in the other two worlds and `speak` returns without
+ * saying anything, which is the correct behaviour rather than a fallback: a
+ * dinosaur valley has no buffalo to warn anybody about.
+ */
+type SayKey =
+  | keyof typeof SAYS
+  | "buffaloNotice"
+  | "buffaloWarn"
+  | "buffaloCharge"
+  | "buffaloSafe"
+  | "stared"
+  | "nightfall"
+  | "village";
+const yearsBack = () =>
+  String(Math.max(1, new Date().getFullYear() - VILLAGE_YEAR));
+
+/**
+ * HOW MUCH OF THE VILLAGE THIS CHILD HAS SEEN, 1 to 3.
+ *
+ * Driven by milestones walked, ever — not by keys learned, which is what the
+ * `Young`/`Old` variants already follow. A child can be fluent at the keyboard
+ * and new to the village, or the reverse, and the two axes say different
+ * things: one is how well they type, this one is whether the buffalo is still
+ * astonishing.
+ */
+export const bandOf = (stones: number): 1 | 2 | 3 =>
+  stones <= 5 ? 1 : stones <= 18 ? 2 : 3;
+
+/**
+ * Which lines this context offers, given how far along this child is.
+ *
+ * Pure, exported and tested, because it is where four rules meet and any one
+ * of them going wrong is silent: a child simply hears a slightly wrong line
+ * and nobody ever knows. The rules, in order —
+ *
+ *   1. a once-ever line, if the pool has one and this child has not had it;
+ *   2. otherwise the line set for their familiarity band;
+ *   3. the guide's lines removed if he is switched off — but never all of
+ *      them, because an empty pool means silence at a moment that wanted
+ *      something said;
+ *   4. and the ORDER preserved, because `pickSay` hands `list[0]` to every
+ *      child using the "predictable" accessibility setting, so position one
+ *      is not a draft, it is somebody's only line.
+ */
+export function villagePool(
+  table: Readonly<Record<string, readonly string[] | undefined>>,
+  key: string,
+  band: 1 | 2 | 3,
+  seen: readonly string[],
+  guideOn: boolean,
+): { lines: readonly string[]; firstEver: boolean } {
+  const once = table[`${key}First`];
+  const isFirst = once != null && once.length > 0 && !seen.includes(key);
+  /*
+   * A BARE KEY IS A REAL KEY.
+   *
+   * This used to read `${key}B${band}` and nothing else, which quietly made
+   * every context written without bands unsayable: `buffaloWarn` and
+   * `buffaloCharge` have one list each and no banded variants, so they
+   * resolved to an empty pool on every single call and the two most urgent
+   * lines in the game were never once shown to anybody. The comment on the
+   * table below had said "a bare key is said at any distance" the whole time;
+   * only the resolver disagreed.
+   *
+   * The fallback is deliberately narrow. It applies only when the key has NO
+   * banded variants at all — because `VILLAGE_SAYS` is spread over the shared
+   * table, so a banded village context whose own band happened to be missing
+   * would otherwise fall through to the shared bare key and say something
+   * about a dinosaur on a road in Malabar.
+   */
+  const banded = table[`${key}B${band}`];
+  const anyBand =
+    table[`${key}B1`] != null ||
+    table[`${key}B2`] != null ||
+    table[`${key}B3`] != null;
+  const chosen = isFirst
+    ? once
+    : (banded ?? (anyBand ? [] : (table[key] ?? [])));
+  if (guideOn) {
+    return { lines: chosen, firstEver: isFirst };
+  }
+  const without = chosen.filter((l) => !l.includes("{guide}"));
+  return {
+    lines: without.length > 0 ? without : chosen,
+    firstEver: isFirst,
+  };
+}
+
+/**
+ * Village Road's own voice.
+ *
+ * Generated from the script document rather than typed out, so what ships is
+ * exactly what was reviewed. Suffixes: `First` is said once ever, `B1`/`B2`/`B3`
+ * are the familiarity bands, and a bare key is said at any distance.
+ */
+export const VILLAGE_SAYS = {
+  ...SAYS,
+  startFirst: [
+    "You're {years} years from home, and the road only goes one way. Off we go.",
+  ],
+  startB1: [
+    "No cars, no phones, no wires — just a red road. Off we go!",
+    "{name} steps onto the road. None of this has been invented yet!",
+    "Coconut palms, red earth, and not one screen anywhere. Let's walk!",
+  ],
+  startB2: [
+    "Back on the red road. Every letter is a step.",
+    "{guide} is waiting up ahead. Every letter is a step towards him.",
+    "The paddy is up again. Let's walk!",
+  ],
+  startB3: [
+    "You know the way by now. Off we go.",
+    "{guide} doesn't even wave any more — he just falls in beside you.",
+    "Same road, same stones. Let's see how far today.",
+  ],
+  cheer: [
+    "Lovely steady walking!",
+    "You kept going — that's the whole trick!",
+    "Nice and steady, just like that!",
+    "The road is easy when you walk it like that!",
+    "{guide} can barely keep up with you!",
+  ],
+  cheerYoung: [
+    "WOW! Look at those fingers go!",
+    "You did that all by yourself!",
+    "{guide} has never seen anybody move like that!",
+    "{name} does a little skip down the red road!",
+    "Super typing! The village is getting closer!",
+  ],
+  cheerCool: [
+    "Clean. Keep that rhythm.",
+    "Smooth — {guide} is jogging to keep up.",
+    "Nice run building.",
+    "{name} nods, impressed.",
+    "That's the pace. Steady and sharp.",
+  ],
+  streak: [
+    "TEN perfect steps down the red road!",
+    "Ten in a row! {guide} is counting on his fingers.",
+    "Ten straight — your fingers know {year} by heart!",
+    "Ten in a row. Even the buffalo looked up.",
+  ],
+  miss: [
+    "Whoops — {name} stopped. The glowing key shows the way.",
+    "Oops! No rush — find the glowing key.",
+    "{name} stubbed a toe on a stone. {guide} helps them up!",
+    "Not that one — but you're SO close. Look for the glow!",
+    "Wrong step! Peek at the glowing key and try again.",
+  ],
+  stumble: [
+    "Oof! Take a breath — then look for the glowing key.",
+    "That one got away. Shake your hands out and try the glow.",
+    "{guide} waits. Nobody hurries anybody on this road.",
+    "Everybody stumbles here. Breathe, then find the glow.",
+  ],
+  stuck: [
+    "Look — the {letter} key! Your {finger} presses it.",
+    "The {letter} key is right there, under your {finger}.",
+    "Try this: find your {finger}, then press {letter} gently.",
+  ],
+  stuckSpace: [
+    "Look — the space bar! A thumb presses it.",
+    "The big long key at the bottom — give it a thumb tap.",
+    "The gap between two words is the space bar. Thumb!",
+  ],
+  wake: [
+    "The {letter} key is awake — back to the road!",
+    "{letter} is your friend now. Onward!",
+    "You woke {letter} up! The road carries on.",
+  ],
+  wave: [
+    "{name} waves. Hello — still there?",
+    "{name} stops and waves. Ready when you are!",
+    "{guide} waves from further up the road. Shall we?",
+    "{name} turns round and gives you a big wave.",
+    "{name} waves, just in case you were looking.",
+  ],
+  waveYoung: [
+    "Hiiii! {name} is waving BOTH arms!",
+    "{name} waves and waves and waves!",
+    "Yoo-hoo! {name} can see you!",
+    "{name} is doing a great big hello wave!",
+  ],
+  waveOld: [
+    "{name} waves. Still with me?",
+    "A wave from {name}. Ready when you are.",
+    "{name} looks back up the road and waves.",
+  ],
+  crouch: [
+    "{name} crouches down at the roadside. No rush!",
+    "{name} is having a little rest. Press a key when you're ready.",
+    "{name} kneels in the red earth — they've never seen soil this colour.",
+    "A breather by the road. {guide} waits too.",
+    "{name} rests on one knee and watches the paddy.",
+  ],
+  crouchYoung: [
+    "{name} is waiting for youuu!",
+    "{name} sits on their heels by the road. Ready?",
+    "{name} is being very, very patient!",
+  ],
+  crouchOld: [
+    "{name} settles by the roadside. Take your time.",
+    "{name} drops to a crouch. In your own time.",
+    "No hurry. {name} will hold this spot.",
+  ],
+  sit: [
+    "{name} sits down in the shade. Press any key when you're ready!",
+    "Comfy here! One key and we're off again.",
+    "{name} is sitting under a palm, watching the fields.",
+    "{name} crosses their legs by the road. Come back whenever.",
+    "{name} watches the paddy shift in the wind. One key wakes them.",
+  ],
+  sitYoung: [
+    "{name} is sitting down! Press a key and we can go!",
+    "{name} is having a sit-down in the shade. Wake them with a key!",
+    "Plonk! {name} sits in the red earth. Press a key when you want to walk!",
+  ],
+  sitOld: [
+    "{name} takes a seat. Press a key whenever you want to carry on.",
+    "{name} sits down to wait it out. No rush.",
+    "{name} settles cross-legged in the shade. Pick it up whenever.",
+  ],
+  idleFirst: [
+    "{name} is staring at a lamp burning on a stone. No switch. No wire.",
+  ],
+  idleB1: [
+    "{name} is staring at an oil lamp. They've only ever seen bulbs.",
+    "{guide} is showing {name} something. One key and you're off.",
+    "{name} is trying to work out where the wires go. There aren't any.",
+  ],
+  idleB2: [
+    "{name} is waiting — press the glowing key!",
+    "{name} looks back at you. Ready to walk on?",
+    "A dragonfly lands on {name}'s shoulder. Press a key to shoo it!",
+  ],
+  idleB3: [
+    "{name} knows the next vazhivilakku is round the bend. Press a key.",
+    "Still here. {name} could walk this stretch with their eyes shut.",
+    "{name} is counting the stones to the market. One key and off you go.",
+  ],
+  idleYoung: [
+    "{name} peeps up at you — press the glowing key!",
+    "{name} is poking a stick into the red mud. Press a key!",
+    "{name} chews a blade of grass and blinks — one glowing key, please!",
+    "{name} plops down in the dust. Press a key to bounce them up!",
+    "{name} is counting coconuts. The glowing key stops them!",
+  ],
+  idleOld: [
+    "{name} stands tall, waiting for your next key.",
+    "{name} scans the road ahead. One glowing key and you walk on.",
+    "{name} watches smoke rise from a cooking fire. Press the glowing key.",
+    "{name} gives a slow, steady nod. Ready when you are.",
+    "{name} shades their eyes and waits, calm and patient.",
+  ],
+  milestoneFirst: [
+    "Your first milestone! +10. Somebody carved that number by hand.",
+    "Your first milestone! +10. {guide} explains: the number is how far you have come.",
+  ],
+  milestoneB1: [
+    "You reached the stone! +10. Older than all of you, that stone.",
+    "MILESTONE! +10 — {guide} reads the number out loud.",
+    "That number was carved long before you were born. +10!",
+  ],
+  milestoneB2: [
+    "Another milestone behind you. +10!",
+    "Stone passed! {name} looks back at how far you've come. +10.",
+    "That's another one. +10.",
+  ],
+  milestoneB3: [
+    "Stone {stone}. +10. You know this road now.",
+    "{name} touches the stone as they pass, the way {guide} does. +10.",
+    "Another one down. +10. The market is two stones ahead.",
+  ],
+  grow: [
+    "A new key joined your trail — the road opens up!",
+    "New key! You're a {stage} now.",
+    "Another letter is yours. {stage} suits you.",
+    "A new key — the road ahead just got longer.",
+    "One more letter learned. {guide} is impressed, and says so.",
+  ],
+  growYoung: [
+    "A NEW KEY! That's another letter you know!",
+    "Look — a brand new key on your road!",
+    "One more letter! You're a {stage} now!",
+  ],
+  growOld: [
+    "Another key. Not many left on this road now.",
+    "A new letter — {stage}, and earning it.",
+    "One more key. The whole board is nearly yours.",
+  ],
+  joins: [
+    "{friend} has come to walk with you!",
+    "Look who's caught up — {friend}!",
+    "{friend} falls in beside you. The village has never seen anything like it.",
+  ],
+  crossed: [
+    "A whole new stretch of road, and nobody here has a map.",
+    "Chapter {chapter}! New palms, new stones, same brave typist.",
+    "You crossed over — welcome to {land}!",
+    "New land, new road. The next stone is waiting.",
+  ],
+  graduate: [
+    "That's the WHOLE alphabet — every letter on this road is yours.",
+    "You know every single letter! {guide} has never met anyone who could.",
+    "Twenty-six letters, learned {years} years before you were born.",
+  ],
+  timerEnd: [
+    "Time to head home — all the way home. Wonderful walking today!",
+    "The lamps are being lit. You did wonderfully today.",
+    "{guide} waves goodbye from the roadside. Same time tomorrow?",
+    "That's the day's walking done. Rest those fingers!",
+  ],
+  nightfallFirst: [
+    "The lamps are being lit, one by one, all down the road. Nobody flicked a switch.",
+  ],
+  nightfallB1: [
+    "It's getting dark. Somebody is going round lighting the lamps.",
+    "{name} has never seen a road this dark. Or this full of little fires.",
+    "No street lights. Just oil, in stone.",
+  ],
+  nightfallB2: [
+    "Lamps are going on down the road. Keep walking.",
+    "Evening. The market is still open, though.",
+    "The paddy has gone dark. The road has not.",
+  ],
+  nightfallB3: [
+    "Lamps are lit. You know the way in the dark by now.",
+    "Evening on the road. Same as always.",
+    "{name} doesn't even slow down when the light goes.",
+  ],
+  villageFirst: [
+    "A village! Houses, a market, a temple behind the big tree. People live here.",
+  ],
+  villageB1: [
+    "A temple, behind the banyan. You only see it through the branches.",
+    "There's the market. {guide} says the bright hissing lamp is a petromax.",
+    "The stone bench round the tree is called an althara.",
+  ],
+  villageB2: [
+    "The market is up ahead. Mind the cart.",
+    "Past the althara, then the temple. You know this bit.",
+    "The petromax is lit. Somebody is still trading.",
+  ],
+  villageB3: [
+    "Same cart, same spot, still half unloaded.",
+    "The village again. {guide} nods at somebody outside the market.",
+    "Through the village and out the other side. You barely look up.",
+  ],
+  buffaloNoticeFirst: [
+    "{name} has stopped dead. They have never been near anything this big.",
+  ],
+  buffaloNoticeB1: [
+    "The buffalo has looked up. {name} has only seen these in books.",
+    "A head comes up in the field. {guide} says: don't run.",
+    "{name} goes very quiet. It is much bigger up close.",
+  ],
+  buffaloNoticeB2: [
+    "That buffalo is watching you. Steady now.",
+    "Head up in the paddy. You know this one.",
+    "{guide} has already stopped walking. So should you.",
+  ],
+  buffaloNoticeB3: [
+    "Here we go. It always does this by the third stone.",
+    "The buffalo looks up. {name} barely glances at it.",
+    "Same buffalo, same field, same look.",
+  ],
+  buffaloWarn: [
+    "Head down — keep typing!",
+    "{guide} is shouting something — GO!",
+    "Hooves shifting in the mud — go, go, go!",
+    "Don't stop now — type!",
+    "It's coming. Fingers moving!",
+  ],
+  buffaloCharge: [
+    "It's running! Keep going — don't look back!",
+    "The buffalo is charging — type!",
+    "Hooves behind you — faster!",
+    "Go, {name}, go!",
+  ],
+  buffaloSafeFirst: [
+    "It stopped. It was never going to reach you — but nobody told {name} that.",
+    "It stopped. {guide} is laughing — he knew all along it would.",
+  ],
+  buffaloSafeB1: [
+    "The buffalo stops short and snorts. You're fine.",
+    "Back to the grass it goes. {guide} says they always do that.",
+    "{name} is still shaking. {guide} is not.",
+  ],
+  buffaloSafeB2: [
+    "It pulled up. Just showing off.",
+    "All that fuss — and it only wanted the field. Walk on.",
+    "Back to the grass. You barely broke step.",
+  ],
+  buffaloSafeB3: [
+    "Told you. Walk on.",
+    "It never gets any further than that. Never has.",
+    "{name} does not even look round this time.",
+  ],
+  staredFirst: [
+    "Everyone has stopped to look at you. Nobody here dresses like that.",
+  ],
+  staredB1: [
+    "Two women by the well have stopped talking to watch you pass.",
+    "A boy is staring at your shoes. He has never seen shoes like that.",
+    "They are all looking at the robot. Of course they are.",
+  ],
+  staredB2: [
+    "They know the dog by now. The robot, never.",
+    "Somebody at the market points at the robot and says something to {guide}.",
+    "Heads turn as you pass. You are getting used to it.",
+  ],
+  // ── PLAIN KEYS FOR THE BANDED CONTEXTS ────────────────────────────────
+  //
+  // `VILLAGE_SAYS` spreads `...SAYS`, so any context this table does not name
+  // still answers with the dinosaur valley's words. The three banded contexts
+  // below had no plain key of their own — and while the resolver always finds
+  // a band first, "always" is doing a lot of work there: one missing band, one
+  // typo in a suffix, and a child on a Kerala road is told the herd is walking
+  // home to the Green Valley. These are the safety net, set to what band 2
+  // says, which is the version that reads correctly at any distance.
+  start: [
+    "Back on the red road. Every letter is a step.",
+    "The paddy is up again. Let's walk!",
+  ],
+  idle: [
+    "{name} is waiting — press the glowing key!",
+    "{name} looks back at you. Ready to walk on?",
+  ],
+  milestone: [
+    "Another milestone behind you. +10!",
+    "Stone passed! {name} looks back at how far you've come. +10.",
+  ],
+  staredB3: [
+    "Nobody looks up any more. You are just the children from the road.",
+    "Somebody waves at {name} by name. That's new.",
+    "Only the robot still turns heads, and only the small ones.",
+  ],
+} as const;
+
+/**
+ * WHAT A KERALA ROAD SAYS AFTER DARK.
+ *
+ * Village Road used to borrow the Hero Trail's night lines, because the test
+ * that adds them is `world !== "dino"` — so half of what a child heard after
+ * dark on this road was about lanterns, a party and mist, and if the night
+ * style was not quiet it also pulled in the Lost Travellers, who do not exist
+ * here. Its night is a real and specific thing now: eight in the evening, the
+ * lamps lit one at a time, the market still trading, and a buffalo somewhere
+ * out in the black.
+ */
+const VILLAGE_NIGHT_SAYS: Partial<Record<string, readonly string[]>> = {
+  startB1: [
+    "It is dark already, and the lamps are lit. Off we go.",
+    "The road is a line of little fires tonight. Every letter is a step.",
+  ],
+  startB2: [
+    "Lamps lit, road open. Let's walk.",
+    "Evening on the red road. Off we go!",
+  ],
+  startB3: ["You know this road in the dark by now. Off we go."],
+  idleB1: [
+    "{name} is watching a flame in a stone. It has not gone out yet.",
+    "It is very dark out past the lamps. Press the glowing key.",
+  ],
+  idleB2: [
+    "The road waits between one lamp and the next. One glowing key.",
+    "{name} looks back down the line of lamps. Ready?",
+  ],
+  idleB3: ["{name} could walk this in the dark. Nearly is. Press a key."],
+  wave: [
+    "{name} waves in the lamplight. Still there?",
+    "A wave out of the dark — {name} is still with you.",
+  ],
+  crouch: ["{name} crouches down inside a pool of lamplight, and waits."],
+  sit: ["{name} sits down under a lamp. Press a key when you're ready."],
+  milestoneB2: ["Another stone, found in the dark. +10!"],
+  timerEnd: [
+    "The lamps will burn a while yet. Wonderful walking today!",
+    "Time to stop. The road keeps its lights on.",
+  ],
+};
+
+/**
+ * The dry version, for the Cheeky coach setting — this world's own.
+ *
+ * `PLAYFUL_SAYS` is one table for all three worlds, so a child who turned this
+ * on for Village Road got the dry version of somebody else's jokes. These sit
+ * alongside the plain lines rather than replacing them, exactly as the shared
+ * ones do, so anything a learner actually needs is still said straight by
+ * whichever line comes up next.
+ */
+const VILLAGE_PLAYFUL_SAYS: Partial<Record<string, readonly string[]>> = {
+  cheer: [
+    "The road is not going anywhere, but well done anyway.",
+    "Efficient. The buffalo is taking notes.",
+  ],
+  miss: [
+    "That key was not the one. The glowing one is a clue.",
+    "Bold choice. Wrong, but bold.",
+  ],
+  stumble: ["Everyone stops here. Everyone. Breathe."],
+  idleB2: ["The road is still there. It will wait. It is a road."],
+  idleB3: ["{name} has counted the stones twice now."],
+  milestoneB2: ["Another rock with a number on it. +10, though."],
+  buffaloSafeB2: ["Tremendous running. From a cow, essentially."],
+};
+
+/** What the runner is called before a child gives them a name. */
+const defaultWhoName = (w: WorldId) =>
+  w === "village" ? "Your friend" : w === "hero" ? "Your hero" : "Your dino";
+
+const saysOf = (world: WorldId, classic = false) =>
   classic
     ? (CLASSIC_SAYS as unknown as typeof SAYS)
-    : world === "hero"
-      ? (HERO_SAYS as unknown as typeof SAYS)
-      : SAYS;
+    : world === "village"
+      ? (VILLAGE_SAYS as unknown as typeof SAYS)
+      : world === "hero"
+        ? (HERO_SAYS as unknown as typeof SAYS)
+        : SAYS;
 
 // The dino grows from a just-hatched baby (few keys) to a full adult (whole
 // alphabet). Age is 0→1 across that span; the stage name is shown to the kid.
@@ -1088,6 +1784,34 @@ function heroStage(age: number): string {
   }
   return "Champion";
 }
+
+// Village Road grows as how far along the road you have walked, and how well
+// the village knows you. Not ranks earned and not ages reached: this world has
+// no quest to rise through and the child is not a creature growing up, they
+// are somebody walking a road that people live along.
+function villageStage(age: number): string {
+  if (age < 0.05) {
+    return "Newcomer";
+  }
+  if (age < 0.3) {
+    return "Walker";
+  }
+  if (age < 0.6) {
+    return "Traveller";
+  }
+  if (age < 0.95) {
+    return "Wayfarer";
+  }
+  return "Pathfinder";
+}
+
+/** The growth label for whichever world this is. */
+const stageOf = (w: WorldId) =>
+  w === "village" ? villageStage : w === "hero" ? heroStage : dinoStage;
+
+/** What that growth label is CALLED, above the value. */
+const stageLabel = (w: WorldId) =>
+  w === "village" ? "Road level" : w === "hero" ? "Hero level" : "Dino stage";
 
 /**
  * One of the coach's lines.
@@ -1170,29 +1894,146 @@ function agedPool(
 const GAIT_SAMPLE = 6;
 
 const HERO_CHARACTERS = [
-  // The three children first, then the fantasy figures.
-  //
-  // Order is the recommendation: whoever is at the top of the row is what
-  // most children will pick, and a game about a child learning to type
-  // should offer a child before it offers a skeleton. The siblings are in
-  // age order among themselves — Dave and Peeli are both nine, Little Drew
-  // is six — so the row reads oldest to youngest and then out into the
-  // costume box.
-  //
+  // KNIGHT AND SKELETON FIRST. This is the world where you are a hero out of
+  // a story, and those two are what it is FOR — the two children are here
+  // because a child who does not want to be either of them should not be
+  // shut out, not because they are what this trail is about. Village Road is
+  // where they lead.
+  { id: "Knight", label: "Knight" },
+  { id: "Skeleton_Warrior", label: "Skeleton" },
   // The ids stay `Explorer` and `Explorer6`: they are the model filenames,
   // and they are what a saved profile has already stored. Renaming those
   // would silently reset every child's choice back to whoever is first.
   { id: "Explorer", label: "Dave" },
-  // Nine like Dave and a little shorter. The bravest of the three: after
-  // dark, where her brothers walk past the skeletons on the trail, she
-  // stops and squares up to them (see BRAVE_CLIPS in world.ts).
-  { id: "Peeli", label: "Peeli" },
-  // The same character at six: rounder, shorter, and the default for the
-  // two younger bands, who are being asked to see themselves in him.
   { id: "Explorer6", label: "Little Drew" },
-  { id: "Knight", label: "Knight" },
-  { id: "Skeleton_Warrior", label: "Skeleton" },
 ] as const;
+
+/**
+ * Village Road's cast: the three children, and nobody else.
+ *
+ * No Knight, no Skeleton. A paddy field is not a quest, and the whole reason
+ * this world exists as a third rather than a re-skin of Hero Trail is that
+ * what you meet on it is a place people live in rather than a party of
+ * adventurers. The earnable companions are handled by HATCHLINGS, as
+ * everywhere else.
+ */
+const VILLAGE_CHARACTERS = [
+  // ONE ORDER FOR THE THREE OF THEM, EVERYWHERE: Dave, Peeli, Little Drew.
+  //
+  // Oldest to youngest, which is how they are drawn and how the hero world
+  // already lists them. This row used to open with Peeli on the grounds that
+  // she is the village's default — but a picker that reorders itself by world
+  // makes a child hunt for a face that was second a moment ago, and the
+  // default is shown by the pill that is lit, not by which one is first.
+  { id: "Explorer", label: "Dave" },
+  { id: "Peeli", label: "Peeli" },
+  { id: "Explorer6", label: "Little Drew" },
+] as const;
+
+/**
+ * The name a child knows somebody by, from whichever list they are on.
+ *
+ * The tables are keyed by MODEL FILENAME — `Explorer`, `Explorer6` — because
+ * that is what a saved profile stores, and every one of them carries the real
+ * name beside it. This is the one place that asks all of them, so the loading
+ * card can name the hero before a single byte of the hero has arrived.
+ */
+/**
+ * The longest name a character may be given.
+ *
+ * Ten. The name is printed on the loading card, in the settings pills and in
+ * the coach's lines, and those are laid out for a word rather than a
+ * sentence — the pills wrap and the loading row, which never wraps, simply
+ * runs out of room. Enforced in the code as well as on the input, because
+ * `maxLength` stops typing and does not stop a paste.
+ *
+ * THE SHIPPED NAMES ARE EXEMPT, and deliberately so: "Little Drew" is eleven
+ * characters and has been fitting on that row since the day he was drawn.
+ * The limit is on what a child may ADD, which is the thing that has no
+ * bound; it is not a rule about how long a name may be, so it is applied
+ * where a name is typed rather than where one is read.
+ */
+const NAME_MAX = 10;
+
+const shippedLabel = (id: string): string =>
+  [
+    ...HERO_CHARACTERS,
+    ...VILLAGE_CHARACTERS,
+    ...COMPANIONS,
+    ...GUIDE_CAST,
+  ].find((c) => c.id === id)?.label ?? id;
+
+/**
+ * What to call somebody: the child's own name for them if they gave one,
+ * otherwise the name they shipped with.
+ *
+ * Every label that names a character goes through here — the pickers, the
+ * loading card, the coach — so renaming somebody renames them everywhere at
+ * once rather than in the places somebody remembered to update.
+ */
+const castLabel = (id: string, names?: Record<string, string>): string => {
+  const own = names?.[id]?.trim();
+  return own != null && own !== "" ? own : shippedLabel(id);
+};
+
+/** The cast a world offers as the character a child plays AS. */
+const charactersOf = (w: WorldId) =>
+  w === "village"
+    ? VILLAGE_CHARACTERS
+    : w === "hero"
+      ? HERO_CHARACTERS
+      : ([{ id: "TRex", label: "Rex" }] as const);
+
+/**
+ * Can this world actually be played AS this character?
+ *
+ * Dino Run's cast is the T-Rex and whatever has hatched — its hatchlings are
+ * characters, where the other worlds' are companions. Hero Trail and Village
+ * Road each have a fixed list.
+ */
+const playableIn = (world: WorldId, id: string): boolean =>
+  world === "dino"
+    ? id === "TRex" || HATCHLINGS.dino.some((h) => h.id === id)
+    : (world === "hero" ? HERO_CHARACTERS : VILLAGE_CHARACTERS).some(
+        (c) => c.id === id,
+      );
+
+/** What the dark means in this world — see Prefs.nightStyleByWorld. */
+const nightStyleOf = (
+  p: Pick<Prefs, "nightStyle" | "nightStyleByWorld" | "world">,
+): NightOverride => {
+  const own = p.nightStyleByWorld?.[p.world] ?? p.nightStyle;
+  // The village has no spooky. A value carried in from another world — or
+  // from before the split — resolves to its quiet night rather than to
+  // nothing at all.
+  return p.world === "village" && (own === "mild" || own === "full")
+    ? "auto"
+    : own;
+};
+
+/** Who a world falls back to when the saved choice is not one of its own. */
+const DEFAULT_CHAR: Readonly<Record<WorldId, string>> = {
+  dino: "TRex",
+  hero: "Knight",
+  village: "Peeli",
+};
+
+/**
+ * Who this learner is playing as, in whichever world they are in.
+ *
+ * CHECKED AGAINST THAT WORLD'S CAST, not just read out of storage. A saved
+ * choice can stop being a valid one — Peeli was on the Hero Trail's list
+ * until its cast was cut back to the knight, the skeleton and the two
+ * children — and a stale id is worse than a wrong one: the world happily
+ * loads her, the settings show no pill lit because she is not on the row any
+ * more, and the game and the panel disagree about who the child is. Falling
+ * back here fixes both at once, because both read this.
+ */
+const charOf = (p: Pick<Prefs, "world" | "dino" | "hero" | "village">) => {
+  const saved =
+    p.world === "village" ? p.village : p.world === "hero" ? p.hero : p.dino;
+  return playableIn(p.world, saved) ? saved : DEFAULT_CHAR[p.world];
+};
 
 /**
  * Who may come along, for now.
@@ -1203,14 +2044,492 @@ const HERO_CHARACTERS = [
  * use, so it can never offer you yourself.
  */
 const COMPANIONS = [
+  // The same order the character rows use — see VILLAGE_CHARACTERS.
   { id: "Explorer", label: "Dave" },
-  { id: "Explorer6", label: "Little Drew" },
   { id: "Peeli", label: "Peeli" },
+  { id: "Explorer6", label: "Little Drew" },
   // Companion only, and deliberately absent from HERO_CHARACTERS above: it
   // is somebody's robot, not somebody a child plays as.
   { id: "Robot", label: "Robot" },
   { id: "Puppy", label: "Puppy" },
 ] as const;
+
+/**
+ * Braille, for the loading card — as DOT PATTERNS, not as characters.
+ *
+ * A typing app is a machine for turning a hand movement into a letter, and
+ * braille is the same idea in the other direction — so the world arrives as
+ * cells and resolves into words while the scene is built.
+ *
+ * Braille rather than morse for one specific reason: a braille cell occupies
+ * ONE column, so it can turn into its letter on the spot. Morse runs two to
+ * five characters per letter, so a name resolving out of it shoves the rest
+ * of the line sideways on every step — the text crawls, and what should read
+ * as a word coming into focus reads as a layout bug.
+ *
+ * The numbers below are the six dots as a bitmask (dot 1 = 1, dot 2 = 2, dot
+ * 3 = 4, dot 4 = 8, dot 5 = 16, dot 6 = 32), and the cells are DRAWN from
+ * them rather than written as U+28xx characters. That is not fussiness: the
+ * monospace stack this row is set in carries no Braille Patterns block, so
+ * every single cell came out as the font's missing-glyph box — six dots in a
+ * rectangle, identical for every letter, which is the one thing a braille
+ * cell must never be. Drawing them means the letters are right on every
+ * machine, whatever fonts it happens to have.
+ */
+const BRAILLE: Readonly<Record<string, number>> = {
+  "a": 0b000001,
+  "b": 0b000011,
+  "c": 0b001001,
+  "d": 0b011001,
+  "e": 0b010001,
+  "f": 0b001011,
+  "g": 0b011011,
+  "h": 0b010011,
+  "i": 0b001010,
+  "j": 0b011010,
+  "k": 0b000101,
+  "l": 0b000111,
+  "m": 0b001101,
+  "n": 0b011101,
+  "o": 0b010101,
+  "p": 0b001111,
+  "q": 0b011111,
+  "r": 0b010111,
+  "s": 0b001110,
+  "t": 0b011110,
+  "u": 0b100101,
+  "v": 0b100111,
+  "w": 0b111010,
+  "x": 0b101101,
+  "y": 0b111101,
+  "z": 0b110101,
+  // Digits are the first ten letters in braille; the number sign that
+  // normally precedes them is left off, since this is a decoration
+  // resolving into a word rather than a passage anybody reads as braille.
+  "1": 0b000001,
+  "2": 0b000011,
+  "3": 0b001001,
+  "4": 0b011001,
+  "5": 0b010001,
+  "6": 0b001011,
+  "7": 0b011011,
+  "8": 0b010011,
+  "9": 0b001010,
+  "0": 0b011010,
+};
+
+/**
+ * The six dots, in the order they are laid out in the cell.
+ *
+ * A braille cell reads down the left column and then down the right:
+ *
+ *     1  4
+ *     2  5
+ *     3  6
+ *
+ * The grid fills left-to-right, top-to-bottom, so the bits are listed in the
+ * order the boxes appear rather than in numerical order. Getting this pair
+ * swapped produces cells that look plausible and spell something else.
+ */
+const CELL_ORDER = [0, 3, 1, 4, 2, 5] as const;
+
+/**
+ * A line that arrives in braille and resolves, once, and then stays put.
+ *
+ * The loading card's other line is a ticker of many names; this is for a
+ * single line that is already known when the card goes up — the chapter and
+ * the place — so it resolves left to right and is simply text from then on.
+ * It reveals again only when the text itself changes, which is to say when
+ * the child crosses into a new chapter.
+ */
+function Reveal({ text }: { text: string }): ReactElement {
+  const [cut, setCut] = useState(0);
+  useEffect(() => {
+    setCut(0);
+  }, [text]);
+  useEffect(() => {
+    if (cut >= text.length) {
+      return;
+    }
+    const id = setTimeout(() => setCut((c) => c + 1), STEP_MS);
+    return () => clearTimeout(id);
+  }, [cut, text]);
+  return (
+    <>
+      {text.split("").map((ch, i) => {
+        // A RUNNING EDGE OF CELLS, not the whole word and not just one.
+        //
+        // The whole word in braille resolving left to right shows the shape
+        // of the answer before it is sent, and reads as a word fading in
+        // rather than as one arriving. A single cell reads as a stutter. What
+        // works is a short wave: by the time the first cell has become its
+        // letter the third is already forming, so there is always something
+        // coming as well as something arriving.
+        //
+        // Everything past the wave is an empty slot of exactly the same
+        // width, so the line never moves while it is being written.
+        const mask = BRAILLE[ch.toLowerCase()];
+        const ahead = i - cut;
+        return (
+          <Slot key={i}>
+            {ahead < 0 ? (
+              ch
+            ) : ahead >= CELL_LEAD ? (
+              ""
+            ) : mask == null ? (
+              ch
+            ) : (
+              <Cell mask={mask} />
+            )}
+          </Slot>
+        );
+      })}
+    </>
+  );
+}
+
+/**
+ * ONE CHARACTER'S WORTH OF SPACE, holding either the cell or the letter.
+ *
+ * Both go in the same box, and that is the whole trick. Sitting a drawn cell
+ * and a text glyph next to each other in the line and hoping they agree does
+ * not work: an inline box aligns by its own baseline rule and a glyph by the
+ * font's, so the cell sat low and the letter appeared to rise into place from
+ * underneath it. A fixed slot with the content centred in it has no baseline
+ * to disagree about — the contents are swapped and nothing moves at all.
+ */
+function Slot({ children }: { children: ReactNode }): ReactElement {
+  return <span className={styles.loadSlot}>{children}</span>;
+}
+
+/** One braille cell, drawn. `mask` is the six dots — see BRAILLE. */
+function Cell({ mask }: { mask: number }): ReactElement {
+  return (
+    <span className={styles.loadCell}>
+      {CELL_ORDER.map((bit) => (
+        <i
+          key={bit}
+          className={(mask & (1 << bit)) !== 0 ? styles.dotOn : styles.dotOff}
+        />
+      ))}
+    </span>
+  );
+}
+
+/**
+ * How many cells stand ahead of the resolved text.
+ *
+ * Three, so that the moment the first cell becomes its letter the third is
+ * already on screen forming. Two reads as a stutter and four starts to give
+ * the whole word away before it has been sent.
+ */
+const CELL_LEAD = 3;
+
+/** How long each letter waits before it resolves, and how long a name is held. */
+const STEP_MS = 28;
+const HOLD_MS = 420;
+
+/**
+ * The names of the things being built, arriving in braille and resolving.
+ *
+ * Fed through a REF rather than through state, and that is not a detail: the
+ * world reports two or three dozen pieces as it builds, and routing each one
+ * through `useState` re-rendered the whole of KidsPage — a component with the
+ * lesson, the keyboard, the HUD and the settings inside it — thirty times
+ * during the one stretch where the machine is already busy loading models.
+ * That was the lag. Nothing above this component needs to know which name is
+ * showing, so nothing above it is told: the queue is a box the world drops
+ * names into and this component takes them out on its own clock.
+ */
+function LoadStep({
+  queueRef,
+  active,
+  settling,
+  onDone,
+}: {
+  queueRef: { current: string[] };
+  active: boolean;
+  /** The world itself has finished; the only thing left is this ticker. */
+  settling: boolean;
+  /** Called once, when the last name has been shown and read. */
+  onDone: () => void;
+}): ReactElement {
+  // Everything the ticker owns lives in refs and it asks for one render when
+  // something actually changed. Driving it through `useState` meant writing
+  // `setWord` from inside a `setCut` updater — a side effect in a reducer,
+  // which React is free to call twice, and which duly lost names.
+  const wordRef = useRef("");
+  const cutRef = useRef(0);
+  const heldRef = useRef(0);
+  /** Every name shown so far, replayed when the queue runs dry. */
+  const shownRef = useRef<string[]>([]);
+  const seenAtRef = useRef(0);
+  const [, bump] = useReducer((n: number) => n + 1, 0);
+
+  useEffect(() => {
+    if (!active) {
+      return;
+    }
+    const id = setInterval(() => {
+      // ── THE WORLD IS READY: GET OFF THE SCREEN ────────────────────────
+      //
+      // Finish the name that is on screen, at speed, and go. The backlog is
+      // dropped on the floor deliberately.
+      //
+      // Waiting for the queue to play out was the first attempt and it was
+      // worse than the bug it fixed: the ticker shows one name at a time with
+      // a 420ms hold on each, so a scene with a dozen models still had
+      // seconds of names to get through after the last file had landed, and
+      // the child sat watching a loading screen for a world that was already
+      // built. The queue is a nicety — it tells you what is being added — and
+      // a nicety must never hold the door.
+      //
+      // What is worth keeping is not cutting a name off mid-word: a loader
+      // that vanishes halfway through spelling "Peeli" looks broken. So the
+      // current name finishes, three cells a tick instead of one, gets a
+      // fifth of a second to be read, and that is the whole of the wait.
+      if (settling) {
+        queueRef.current.length = 0;
+        if (wordRef.current === "") {
+          onDone();
+          return;
+        }
+        if (cutRef.current < wordRef.current.length) {
+          cutRef.current = Math.min(wordRef.current.length, cutRef.current + 3);
+          bump();
+          return;
+        }
+        heldRef.current += STEP_MS;
+        if (heldRef.current >= 200) {
+          onDone();
+        }
+        return;
+      }
+      if (wordRef.current === "") {
+        const next = queueRef.current.shift();
+        if (next == null) {
+          return;
+        }
+        wordRef.current = next;
+        cutRef.current = 0;
+        heldRef.current = 0;
+        // Kept for the replay above, so a dry queue still has something true
+        // to show.
+        if (!shownRef.current.includes(next)) {
+          shownRef.current.push(next);
+        }
+        bump();
+        return;
+      }
+      if (cutRef.current < wordRef.current.length) {
+        cutRef.current += 1;
+        bump();
+        return;
+      }
+      // Resolved. Hold it long enough to be read, then take the next — but
+      // only when there IS a next. A name left standing reads as the thing
+      // being built right now; a row that empties itself between names reads
+      // as a loader that has stalled, which is the one impression a loading
+      // screen must never give.
+      heldRef.current += STEP_MS;
+      if (heldRef.current < HOLD_MS) {
+        return;
+      }
+      if (queueRef.current.length > 0) {
+        wordRef.current = "";
+        bump();
+        return;
+      }
+      // NOTHING QUEUED, AND THE WORLD IS NOT DONE EITHER.
+      //
+      // This is the stall. The name used to be left standing here — the
+      // reasoning being that a row which empties itself reads as a loader
+      // that has given up. But the queue runs dry long before the build
+      // does: every model is NAMED early and then spends seconds being
+      // parsed and placed, so the last name sat frozen for most of the load
+      // and read as exactly the thing it was meant to avoid.
+      //
+      // So it goes round again. The names already shown are replayed, oldest
+      // first, which is honest — those are the things in the scene — and the
+      // row never stops moving while there is still work going on.
+      if (shownRef.current.length > 0) {
+        seenAtRef.current = (seenAtRef.current + 1) % shownRef.current.length;
+        wordRef.current = shownRef.current[seenAtRef.current]!;
+        cutRef.current = 0;
+        heldRef.current = 0;
+        bump();
+      }
+    }, STEP_MS);
+    return () => clearInterval(id);
+  }, [active, queueRef, settling, onDone]);
+
+  const word = wordRef.current;
+  const cut = cutRef.current;
+
+  if (word === "") {
+    return <div className={styles.loadStep} aria-hidden="true" />;
+  }
+  return (
+    // aria-hidden: decoration over a load the page already announces, and a
+    // screen reader spelling out braille cells is nobody's idea of progress.
+    <div className={styles.loadStep} aria-hidden="true">
+      {word.split("").map((ch, i) => {
+        // A RUNNING EDGE OF CELLS, not the whole word and not just one.
+        //
+        // The whole word in braille resolving left to right shows the shape
+        // of the answer before it is sent, and reads as a word fading in
+        // rather than as one arriving. A single cell reads as a stutter. What
+        // works is a short wave: by the time the first cell has become its
+        // letter the third is already forming, so there is always something
+        // coming as well as something arriving.
+        //
+        // Everything past the wave is an empty slot of exactly the same
+        // width, so the line never moves while it is being written.
+        const mask = BRAILLE[ch.toLowerCase()];
+        const ahead = i - cut;
+        return (
+          <Slot key={i}>
+            {ahead < 0 ? (
+              ch
+            ) : ahead >= CELL_LEAD ? (
+              ""
+            ) : mask == null ? (
+              ch
+            ) : (
+              <Cell mask={mask} />
+            )}
+          </Slot>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Everyone walking with this child, in the order they line up.
+ *
+ * Sorted by CAST ORDER rather than by the order the pills were tapped: the
+ * line is a fact about the characters, so picking Little Drew and then Peeli
+ * has to put them in the same places as picking Peeli and then Little Drew.
+ * Anything not in the cast list — a hatched puppy, the buffalo — falls in
+ * behind the three children, which is the order they are offered in.
+ */
+const CAST_ORDER: readonly string[] = COMPANIONS.map(({ id }) => id);
+
+/**
+ * May this character walk beside a child in this world?
+ *
+ * Each world has its own answer and the saved list does not — it is one list
+ * for the whole profile, so a child who walks the village road with Peeli and
+ * the robot and then switches to Hero Trail was still shown "Robot and Peeli
+ * come with you" on a trail that offers neither. The stored choice is kept
+ * either way, so switching back finds them where they were left; it is only
+ * hidden while standing somewhere they do not belong.
+ */
+const walksIn = (world: WorldId, id: string): boolean =>
+  world === "village" ? true : world === "hero" ? id === "Puppy" : false;
+
+const companionsOf = (
+  p: Pick<Prefs, "companions" | "companion" | "companionsByWorld" | "world">,
+): string[] => {
+  const raw =
+    p.companionsByWorld?.[p.world] ??
+    p.companions ??
+    (p.companion != null ? [p.companion] : []);
+  return [...raw]
+    .filter((id) => walksIn(p.world, id))
+    .filter((id, i, all) => all.indexOf(id) === i)
+    .sort((a, b) => {
+      const ia = CAST_ORDER.indexOf(a);
+      const ib = CAST_ORDER.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    })
+    .slice(0, 2);
+};
+
+/**
+ * THE STORY, as a manuscript the children are carrying.
+ *
+ * A floating panel over the road rather than a screen of its own: the story is
+ * about the place they are standing in, and covering it up makes the two feel
+ * unrelated. Aged paper in both app themes, because it is a physical object
+ * and a physical object does not repaint itself when the room light changes.
+ *
+ * Locked parts are shown, not hidden. Knowing there are three more to come is
+ * most of why a child walks to the next stone; a hidden part motivates nobody.
+ */
+function StoryDoc({
+  stones,
+  graduated,
+  fill,
+  onRead,
+  onClose,
+}: {
+  readonly stones: number;
+  readonly graduated: boolean;
+  readonly fill: (t: string) => string;
+  readonly onRead: (text: string) => void;
+  readonly onClose: () => void;
+}): ReactElement {
+  const open = (part: StoryPart) =>
+    part.graduate === true ? graduated : stones >= part.stone;
+  return (
+    <div
+      className={styles.storyBack}
+      role="dialog"
+      aria-modal="true"
+      aria-label="The story so far"
+      onClick={onClose}
+    >
+      {/* Stops a click inside the paper from closing it. */}
+      <div className={styles.storyDoc} onClick={(ev) => ev.stopPropagation()}>
+        <h3 className={styles.storyTitle}>The story so far</h3>
+        <p className={styles.storySub}>
+          How three children from a very long way off ended up on this road.
+        </p>
+        {STORY.map((part, i) => {
+          const unlocked = open(part);
+          const body = part.text.map(fill);
+          return (
+            <div
+              key={part.title}
+              className={clsx(styles.storyPart, !unlocked && styles.storyShut)}
+            >
+              <div className={styles.storyHead}>
+                <span className={styles.storyNo}>{`Part ${i + 1}`}</span>
+                <h4>{unlocked ? part.title : "Not yet"}</h4>
+                {unlocked ? (
+                  <button
+                    type="button"
+                    className={styles.storySpeak}
+                    aria-label={`Read part ${i + 1} aloud`}
+                    onClick={() => onRead(body.join(" "))}
+                  >
+                    <SoundIcon size={14} color="#6b5227" />
+                  </button>
+                ) : (
+                  <span className={styles.storyWhen}>
+                    {part.graduate === true
+                      ? "when you know every letter"
+                      : `at stone ${part.stone}`}
+                  </span>
+                )}
+              </div>
+              {unlocked &&
+                body.map((para, k) => (
+                   
+                  <p key={k}>{para}</p>
+                ))}
+            </div>
+          );
+        })}
+        <button type="button" className={styles.storyClose} onClick={onClose}>
+          Back to the road
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function peekNextLandName(): string {
   try {
@@ -1271,8 +2590,22 @@ const HERO_FINISH = [
   "The lanterns are warm and the village is closer. Wonderful typing!",
   "Steady steps the whole way — heroes rest well tonight.",
 ];
-const finishPool = (world: "dino" | "hero") =>
-  world === "hero" ? HERO_FINISH : DINO_FINISH;
+// Village Road ends the day arriving somewhere, rather than migrating to a
+// valley or marching home from a quest. The road goes on; the village is where
+// you stop for the night.
+const VILLAGE_FINISH = [
+  "The lamps are lit in the village — what a walk that was!",
+  "Your fingers carried you a long way down the road today!",
+  "The market is closing up. You typed your way right past it!",
+  "Every letter was a step along the road. Look how far you came!",
+  "Rest by the banyan tree — you earned it. See you tomorrow!",
+];
+const finishPool = (world: WorldId) =>
+  world === "village"
+    ? VILLAGE_FINISH
+    : world === "hero"
+      ? HERO_FINISH
+      : DINO_FINISH;
 
 export function KidsPage() {
   // Control centre: the unlock target floor/ceiling per band, and whether
@@ -1292,6 +2625,99 @@ export function KidsPage() {
         <LessonLoader>{(lesson) => <KidsGame lesson={lesson} />}</LessonLoader>
       </KidsSettings>
     </KeyboardProvider>
+  );
+}
+
+/**
+ * The tears, as SVG filters.
+ *
+ * Each one takes a plain rectangle and pushes its edge about with
+ * four octaves of fractal noise, which is the only way to get an edge
+ * that wanders at every scale at once. A hand-written polygon cannot:
+ * its points are evenly spaced, so its teeth are evenly spaced, and
+ * the eye picks the period out immediately and reads "zigzag border".
+ *
+ * `baseFrequency` is deliberately anisotropic — low across, high down
+ * — so the noise drifts slowly left-to-right and fidgets top-to-
+ * bottom, which is what makes a long ragged rip down the sides rather
+ * than the same even fuzz all the way round.
+ *
+ * The filter region is grown to 160%. Displaced pixels leave the
+ * element's box, and the default region would clip them off — putting
+ * a dead straight edge back on a deliberately ragged one.
+ *
+ * The three scales are one tear seen at three depths: the rim is
+ * pushed furthest, then the fibre, then the printed face. Same seed
+ * for all three, so they are the same rip rather than three rips.
+ *
+ * Ids are document-global — CSS-module hashing does not reach inside
+ * `url(#...)` — hence the `klv` prefix.
+ */
+/**
+ * True for a moment after `value` changes, and false to begin with.
+ *
+ * Used to light the one figure on the notice that just moved. `prev`
+ * starts at the first value, so a fresh page does not flash all four
+ * lines at a child who has not done anything yet.
+ */
+function useFlash(value: unknown, ms = 750): boolean {
+  const [on, setOn] = useState(false);
+  const prev = useRef(value);
+  useEffect(() => {
+    if (prev.current === value) {
+      return;
+    }
+    prev.current = value;
+    setOn(true);
+    const id = setTimeout(() => setOn(false), ms);
+    return () => clearTimeout(id);
+  }, [value, ms]);
+  return on;
+}
+
+/**
+ * The scene pane's height when the keyboard helper is hidden and there has
+ * never been one to measure. It is what a 270px helper caps the pane at, so a
+ * session that starts with the helper off is framed like every other one.
+ */
+const SCENE_CAP_FALLBACK = 405;
+
+function TearDefs(): ReactNode {
+  const rip = (id: string, freq: string, seed: number, scale: number) => (
+    <filter id={id} x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence
+        type="fractalNoise"
+        baseFrequency={freq}
+        numOctaves="4"
+        seed={seed}
+        result="n"
+      />
+      <feDisplacementMap
+        in="SourceGraphic"
+        in2="n"
+        scale={scale}
+        xChannelSelector="R"
+        yChannelSelector="G"
+      />
+    </filter>
+  );
+  return (
+    <svg
+      width="0"
+      height="0"
+      aria-hidden="true"
+      focusable="false"
+      style={{ position: "absolute" }}
+    >
+      <defs>
+        {rip("klvTear", "0.014 0.09", 3, 7)}
+        {rip("klvTearFibre", "0.014 0.09", 3, 11)}
+        {rip("klvTearRim", "0.014 0.09", 3, 14)}
+        {rip("klvScrap", "0.05 0.12", 41, 4)}
+        {rip("klvScrapFibre", "0.05 0.12", 41, 7)}
+        {rip("klvScrapRim", "0.05 0.12", 41, 9)}
+      </defs>
+    </svg>
   );
 }
 
@@ -1421,7 +2847,81 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * model without the clips) the beckon still covers the wait.
    */
   const restChainRef = useRef(false);
+  /**
+   * THE ROAD IS HANDED OVER ONCE, AND ONLY WHEN IT IS ACTUALLY READY.
+   *
+   * `worldReady` is the old `loaded`: the models are parsed and the cast is
+   * placed. That is NOT the same thing as the loading screen being finished,
+   * and treating it as though it were is what let the game start underneath a
+   * loader that was still running. The name ticker shows one name at a time
+   * on its own clock, so with a dozen models it is still several seconds
+   * behind the load when the last file lands — and the overlay was torn away
+   * mid-sentence.
+   *
+   * `loaded` now waits for both, and then for two animation frames on top:
+   * the first puts every rig, texture and shadow on screen for the first
+   * time, and handing the road over before it has been drawn shows the child
+   * a frame of characters standing in their bind pose.
+   */
+  const [worldReady, setWorldReady] = useState(false);
+  const [stepsDone, setStepsDone] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  /**
+   * The pieces of the world, in the order they should be READ OUT.
+   *
+   * Deliberately not the order they load in. What a child wants named first
+   * is themselves, then whoever is walking with them, then the animal in the
+   * field — and the build order has no opinion about any of that: it fetches
+   * thirty files in parallel and they land in whatever order the network
+   * returns them, which on a warm cache is close to random. So the first few
+   * are SEEDED the moment the loading card goes up, from what the page
+   * already knows out of the child's own settings, and the world's own
+   * reports queue up behind them.
+   *
+   * A ref, not state — see LoadStep for why routing these through a render
+   * was the lag.
+   */
+  const loadSteps = useRef<string[]>([]);
+  /**
+   * THE BUFFALO BANNER — the one thing in the game with urgency in it.
+   *
+   * Its own state and its own place on screen rather than the coach line: the
+   * coach line is small and low, and this one has to be read at a glance while
+   * something is running at you. `at` is a timestamp rather than a flag so the
+   * same event firing twice restarts the display.
+   */
+  const [alarmLine, setAlarmLine] = useState("");
+  /** Buffalo lines waiting their turn — see `pushAlarm`. */
+  const alarmQ = useRef<SayKey[]>([]);
+  const alarmBusy = useRef(false);
+  const alarmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * The once-ever moments this child has had, live.
+   *
+   * A ref rather than reading `prefs.seen` directly, so spending one takes
+   * effect on the very next frame without waiting for a render — and so the
+   * write to storage can be deferred past the moment that triggered it. See
+   * where it is spent, in `sayLine`.
+   */
+  const seenRef = useRef<readonly string[]>(loadPrefs().seen ?? []);
+  /** Nobody has typed for a couple of seconds — see the idle interval. */
+  const [restful, setRestful] = useState(true);
+  const [storyOpen, setStoryOpen] = useState(false);
+  const seenSave = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      // Unmounted with a save still pending — write it now rather than losing
+      // a first-ever the child has already been shown.
+      if (seenSave.current != null) {
+        clearTimeout(seenSave.current);
+        savePrefs({ seen: seenRef.current });
+      }
+    },
+     
+    [],
+  );
+  /** Everything already queued, so nothing is named twice. */
+  const loadSeen = useRef<Set<string>>(new Set());
   const [nameOpen, setNameOpen] = useState(() => loadPrefs().name === "");
   const [mapOpen, setMapOpen] = useState(false);
   const [ceremony, setCeremony] = useState<{
@@ -1467,10 +2967,28 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [shiftOn, setShiftOn] = useState(false);
   const [specialKey, setSpecialKey] = useState<string | null>(null);
   const [draftName, setDraftName] = useState(() => loadPrefs().name);
+  /**
+   * WHICH CHARACTER the naming card is naming, by model id.
+   *
+   * Empty on the card that opens the game, which names whoever the child has
+   * just been given and writes the answer to `prefs.name` as it always has.
+   * Set from a Rename button, it names that one character and nobody else —
+   * which is what makes the two Rename buttons different from each other
+   * despite opening the same card.
+   */
+  const [namingWho, setNamingWho] = useState("");
   // What to call the companion before the child names it. Each world has its
   // own, so the placeholder and the sound question agree with the card above
   // them.
-  const companionName = prefs.world === "hero" ? "Robin" : "Rexy";
+  // Who the companion is called when the child has not named them. Village
+  // Road borrows nothing from the other two: a companion on a village road is
+  // a friend walking with you, not a sidekick on a quest.
+  const companionName =
+    prefs.world === "village"
+      ? "Kuttan"
+      : prefs.world === "hero"
+        ? "Robin"
+        : "Rexy";
   // The album, and the creature currently coming out of its egg.
   const [album, setAlbum] = useState<Album>(loadAlbum);
   const [hatched, setHatched] = useState<Hatchling | null>(null);
@@ -1485,13 +3003,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [combo, setCombo] = useState(1);
   const [maxCombo, setMaxCombo] = useState(1);
   const [words, setWords] = useState(0);
-  const [say, setSay] = useState(() =>
-    fillSay(pickSay(saysOf(loadPrefs().world, loadPrefs().classic).start), {
-      name:
-        loadPrefs().name ||
-        (loadPrefs().world === "hero" ? "Your hero" : "Your dino"),
-    }),
-  );
+  /**
+   * The coach line. Empty until the opening one is chosen — see below.
+   *
+   * It used to be computed right here, in the initialiser, by reaching into
+   * the say-table directly. That was the one line in the game that never went
+   * through the resolver, so on Village Road it skipped the familiarity band
+   * and the once-ever opening entirely and read out whatever the plain key
+   * happened to hold. A child's very first sentence in the game was the one
+   * sentence the script did not choose.
+   *
+   * It cannot be done here because `sayLine` is defined further down the
+   * component, so it is done in an effect instead. The card covering the
+   * scene at that moment means nobody sees the blank.
+   */
+  const [say, setSay] = useState("");
   const [growNonce, setGrowNonce] = useState(0);
   const [sessionSecs, setSessionSecs] = useState(prefs.timerMin * 60);
   const [sessionOver, setSessionOver] = useState(false);
@@ -1513,12 +3039,18 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * inside `{!loaded && …}`, so React was already replacing its element
    * every time.
    */
-  const worldKey = `${landNonce}:${prefs.world}:${prefs.nightStyle}:${band}`;
+  /** This world's own night setting — see Prefs.nightStyleByWorld. */
+  const worldNight = nightStyleOf(prefs);
+  const worldKey = `${landNonce}:${prefs.world}:${worldNight}:${band}`;
   const [finishMsg, setFinishMsg] = useState(DINO_FINISH[0]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const loaderRef = useRef<HTMLCanvasElement>(null);
   const sceneCardRef = useRef<HTMLDivElement>(null);
+  /** The last cap measured from the helper — see the capping effect. */
+  const sceneCapRef = useRef(0);
+  /** Read inside the capping effect, which must not re-run per render. */
+  const onVillageRef = useRef(false);
   const kbCardRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<KidsWorld | null>(null);
   const textInputRef = useRef<TextInput | null>(null);
@@ -1607,11 +3139,43 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * silently re-answer a question it never asked.
    */
   const finishNaming = () => {
-    const name = draftName.trim() || "Rexy";
+    // RENAMING ONE CHARACTER, not setting "the name".
+    //
+    // A blank box clears the name rather than setting an empty one, so a
+    // child who changes their mind gets Dave back instead of a nameless
+    // person — which is why this does not fall back to a default the way the
+    // opening card does.
+    if (namingWho !== "") {
+      const chosen = draftName.trim().slice(0, NAME_MAX);
+      const names = { ...(prefs.names ?? {}) };
+      if (chosen === "") {
+        delete names[namingWho];
+      } else {
+        names[namingWho] = chosen;
+      }
+      savePrefs({ names });
+      setNamingWho("");
+      setNameOpen(false);
+      // BACK WHERE THEY CAME FROM. Renaming is reached from the toy box and
+      // is almost never the only thing somebody opened it to do — dropping
+      // them out onto the trail afterwards means reopening settings and
+      // finding their place again for every single change.
+      setSettingsOpen(true);
+      return;
+    }
+    const name = draftName.trim().slice(0, NAME_MAX) || companionName;
+    // The opening card names somebody in particular too — whoever the child
+    // has just been handed — so its answer goes into `names` as well. Without
+    // this, the first name a child ever gives is the one name the pickers and
+    // the loading card do not know about.
+    const first = childCast(prefs.world)
+      ? (companionsOf(prefs)[0] ?? charOf(prefs))
+      : charOf(prefs);
+    const names = { ...(prefs.names ?? {}), [first]: name };
     savePrefs(
       prefs.soundAsked
-        ? { name }
-        : { name, sounds: draftSounds, soundAsked: true },
+        ? { name, names }
+        : { name, names, sounds: draftSounds, soundAsked: true },
     );
     setNameOpen(false);
     // This click is a user gesture, which is the only kind of moment a browser
@@ -1619,10 +3183,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // before any typing has happened.
     if (draftSounds && cfg.readAloud) {
       unlockVoice();
-      speakLine(
-        fillSay(pickSay(saysOf(prefs.world, prefs.classic).start), { name }),
-        cfg.speechRate,
-      );
+      // Through the resolver, like everything else — and `speak` both shows
+      // it and queues the voice, which is what this moment wants.
+      speak("start", { name });
     }
   };
 
@@ -1675,16 +3238,43 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       }),
     );
   }, [prefs.sounds, prefs.night, included, results]);
+
+  /**
+   * How many parts are open, and how many of those have not been read.
+   *
+   * Counted here rather than inside the panel, because the BUTTON needs the
+   * unread number and the button exists whether or not the panel does.
+   */
+  /** Village Road parts company with the other two worlds all over. */
+  const onVillage = prefs.world === "village";
+  onVillageRef.current = onVillage;
+  // Which line on the notice just moved. See `useFlash`.
+  const flashScore = useFlash(score);
+  const flashCombo = useFlash(combo);
+  const flashStage = useFlash(
+    stageOf(prefs.world)(dinoAgeOf(included, lesson.letters.length)),
+  );
+  const flashBest = useFlash(best);
+  const storyOpenCount = STORY.filter((part) =>
+    part.graduate === true
+      ? included >= lesson.letters.length
+      : (prefs.roadStones ?? 0) >= part.stone,
+  ).length;
+  const storyUnread = Math.max(0, storyOpenCount - (prefs.storyRead ?? 0));
   // Each world has its own voice: the dino arcade blips, the hero storybook
   // chimes (and its bored idle babble).
   useEffect(() => {
-    kidsAudio.setTheme(prefs.world === "hero" ? "hero" : "dino");
+    // Village Road borrows Hero Trail's softer chimes rather than Dino Run's
+    // 8-bit blips: it is the gentler of the two moods, and a village road is
+    // not an arcade. A voice of its own can come later - the palette is the
+    // one thing here that is genuinely shared rather than merely defaulted.
+    kidsAudio.setTheme(childCast(prefs.world) ? "hero" : "dino");
   }, [prefs.world]);
   // The night, heard: a far-off cricket now and then, only on the hero
   // world's real night and only with sound on. Quiet enough to be the night
   // being there rather than a soundtrack.
   useEffect(() => {
-    if (prefs.world === "hero" && prefs.night && prefs.sounds) {
+    if (childCast(prefs.world) && prefs.night && prefs.sounds) {
       kidsAudio.startCrickets();
       return () => kidsAudio.stopCrickets();
     }
@@ -1829,7 +3419,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       for (const hatchling of HATCHLINGS[world]) {
         const { id, label, at } = hatchling;
         if (prevIncluded.current < at && included >= at) {
-          speak("hatch", { dino: label });
+          speak("joins", { friend: label });
           if (prefsRef.current.sounds) {
             kidsAudio.playSuccess();
           }
@@ -1906,29 +3496,114 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   }, [prefs.classic, band]);
 
   const dinoName = () =>
-    prefsRef.current.name ||
-    (prefsRef.current.world === "hero" ? "Your hero" : "Your dino");
+    prefsRef.current.name || defaultWhoName(prefsRef.current.world);
+  /**
+   * WHO {name} IS: the character the child plays as.
+   *
+   * Not the companion. It used to be `prefs.name` — the answer to the card
+   * that opens the game, which names whoever the child was just handed — while
+   * the lines that use it plainly mean the person the child IS. The same
+   * reading works in all three worlds: the dino you play as, the hero you play
+   * as, the child you play as.
+   *
+   * The old value is not lost: that opening card writes its answer into the
+   * per-character names too, so whatever a child typed on their first ever run
+   * still comes back out of whichever of these two that character turned out
+   * to be.
+   */
+  const villagerName = () => {
+    const p = prefsRef.current;
+    return p.world === "village" || p.world === "hero"
+      ? castLabel(charOf(p), p.names)
+      : dinoName();
+  };
+  /** {mate}: the first companion walking with them, if there is one. */
+  const companionLabel = () => {
+    const p = prefsRef.current;
+    const first = companionsOf(p)[0];
+    return first == null ? "your friend" : castLabel(first, p.names);
+  };
+  /**
+   * {guide}: the local boy.
+   *
+   * By model id, so renaming him renames him here — and so the story does not
+   * hard-code a name that a child is free to change.
+   */
+  const guideLabel = () => castLabel(VILLAGE_GUIDE, prefsRef.current.names);
   // The runner's current growth (0 → 1), kept fresh for the say-lines.
   const dinoAgeRef = useRef(0);
   dinoAgeRef.current = dinoAgeOf(included, lesson.letters.length);
 
-  const speak = (key: keyof typeof SAYS, vars: Record<string, string> = {}) => {
+  /**
+   * CHOOSE A LINE, WITHOUT SAYING IT.
+   *
+   * Split out of `speak` so the buffalo banner can use exactly the same pools,
+   * the same bands, the same first-ever rule and the same tokens, and then put
+   * the result somewhere that is not the coach line and does not queue the
+   * voice. Two things that pick from the same script must not have two copies
+   * of the picking.
+   *
+   * Returns "" when this world has nothing to say for the key, which is the
+   * right answer rather than a fallback: a dinosaur valley has no buffalo.
+   */
+  const sayLine = (key: SayKey, vars: Record<string, string> = {}): string => {
     const age = dinoAgeRef.current;
-    const world = prefsRef.current.world;
-    let pool = agedPool(saysOf(world, prefsRef.current.classic), key, age);
-    // The after-dark lines describe the Hero Trail's night scene, which
-    // Classic does not draw.
-    if (
-      !prefsRef.current.classic &&
-      world === "hero" &&
-      prefsRef.current.night
-    ) {
-      const extra = [
-        ...(HERO_NIGHT_SAYS[key] ?? []),
-        ...(resolveNightStyle(band, prefsRef.current.nightStyle) !== "quiet"
-          ? (HERO_NIGHT_TRAVELLER_SAYS[key] ?? [])
-          : []),
-      ];
+    const p = prefsRef.current;
+    const world = p.world;
+    const village = world === "village" && !p.classic;
+    // ── WHICH VARIANT OF THIS CONTEXT ────────────────────────────────────
+    //
+    // Village Road resolves in its own order: a once-ever line if this child
+    // has never seen the thing, then the familiarity band, then the existing
+    // age variants, then the plain key. Everywhere else is untouched.
+    const stones = p.roadStones ?? 0;
+    const bandNo = bandOf(stones);
+    const table = saysOf(world, p.classic) as unknown as Record<
+      string,
+      readonly string[] | undefined
+    >;
+    let firstEver = "";
+    let pool: readonly string[] = [];
+    if (village) {
+      const got = villagePool(
+        table,
+        key,
+        bandNo,
+        seenRef.current,
+        p.guide !== false,
+      );
+      pool = got.lines;
+      if (got.firstEver) {
+        firstEver = key;
+      }
+    }
+    if (pool.length === 0 && key in SAYS) {
+      // The age variants only exist for the shared contexts; the village-only
+      // keys are banded instead and have already been resolved above.
+      pool = agedPool(saysOf(world, p.classic), key as keyof typeof SAYS, age);
+    }
+    // The banded pools were already filtered inside `villagePool`; this
+    // catches the shared ones that fell through to it — the age variants and
+    // the plain keys, some of which also name him.
+    if (village && p.guide === false) {
+      const without = pool.filter((l) => !l.includes("{guide}"));
+      if (without.length > 0) {
+        pool = without;
+      }
+    }
+    // The after-dark lines. Village Road has its own; the Hero Trail's are
+    // about lanterns, a party and mist, and were being handed to a Kerala
+    // cart road because the test for them is only "not the dino world".
+    if (!p.classic && childCast(world) && p.night) {
+      const nightKeys = village ? [`${key}B${bandNo}`, key] : [key];
+      const extra = village
+        ? nightKeys.flatMap((k) => VILLAGE_NIGHT_SAYS[k] ?? [])
+        : [
+            ...(HERO_NIGHT_SAYS[key] ?? []),
+            ...(resolveNightStyle(band, nightStyleOf(p)) !== "quiet"
+              ? (HERO_NIGHT_TRAVELLER_SAYS[key] ?? [])
+              : []),
+          ];
       if (extra.length > 0) {
         // Half night lines, half the usual pool, so the dark changes the
         // voice without replacing it.
@@ -1938,17 +3613,56 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // The drier lines sit alongside the plain ones rather than replacing
     // them, so anything a learner actually needs to be told is still said
     // straight by whichever line comes up next.
-    if (prefsRef.current.playful && playfulOffered(band)) {
-      const extra = PLAYFUL_SAYS[key] ?? [];
+    if (p.playful && playfulOffered(band)) {
+      const extra = village
+        ? [
+            ...(VILLAGE_PLAYFUL_SAYS[`${key}B${bandNo}`] ?? []),
+            ...(VILLAGE_PLAYFUL_SAYS[key] ?? []),
+          ]
+        : (PLAYFUL_SAYS[key] ?? []);
       if (extra.length > 0) {
         pool = [...pool, ...extra];
       }
     }
-    const line = fillSay(pickSay(pool), {
-      name: dinoName(),
-      stage: (world === "hero" ? heroStage : dinoStage)(age),
+    if (pool.length === 0) {
+      return ""; // a context this world has nothing to say about
+    }
+    // ── SPENDING A FIRST-EVER, WITHOUT COSTING A FRAME ───────────────────
+    //
+    // Marked in a ref straight away, so it cannot be offered twice even if the
+    // same moment fires again in the next second. The SAVE is deferred,
+    // because `savePrefs` re-renders the whole of this component — the lesson,
+    // the keyboard, the HUD — and the moments this fires on are the worst
+    // possible ones to do that: a buffalo mid-charge, the first milestone
+    // landing. Seven writes in the lifetime of a profile can wait a second and
+    // a half for the road to go quiet.
+    if (firstEver !== "") {
+      seenRef.current = [...seenRef.current, firstEver];
+      if (seenSave.current != null) {
+        clearTimeout(seenSave.current);
+      }
+      seenSave.current = setTimeout(() => {
+        seenSave.current = null;
+        savePrefs({ seen: seenRef.current });
+      }, 1500);
+    }
+    return fillSay(pickSay(pool), {
+      name: villagerName(),
+      mate: companionLabel(),
+      guide: guideLabel(),
+      years: yearsBack(),
+      year: String(VILLAGE_YEAR),
+      stone: String(stones),
+      stage: stageOf(world)(age),
       ...vars,
     });
+  };
+
+  const speak = (key: SayKey, vars: Record<string, string> = {}) => {
+    const line = sayLine(key, vars);
+    if (line === "") {
+      return;
+    }
     setSay(line);
     // And read it out, for the bands who cannot read it themselves. Only the
     // moments — see `voice.ts` for why the cheers are excluded.
@@ -2110,11 +3824,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     }
     // Same engine, different theme: the toggle picks the dino world or the
     // hero world, each with its own cast, companions and biomes.
-    const theme = prefsRef.current.world === "hero" ? HERO_THEME : DINO_THEME;
-    const chosen =
-      prefsRef.current.world === "hero"
-        ? prefsRef.current.hero
-        : prefsRef.current.dino;
+    const theme =
+      prefsRef.current.world === "village"
+        ? VILLAGE_THEME
+        : prefsRef.current.world === "hero"
+          ? HERO_THEME
+          : DINO_THEME;
+    const chosen = charOf(prefsRef.current);
     // Before the world, deliberately. Both want the same character file, and
     // three de-duplicates requests already in flight — but the world queues
     // a dozen models of its own, and whichever is asked for first is the one
@@ -2134,7 +3850,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // dinosaurs, and a child running there is a dinosaur on purpose.
     const SIBLINGS = ["Explorer", "Explorer6", "Peeli"];
     const loaderWho =
-      prefsRef.current.world !== "hero" || SIBLINGS.includes(chosen)
+      !childCast(prefsRef.current.world) || SIBLINGS.includes(chosen)
         ? chosen
         : band === "5-6" || band === "7-8"
           ? "Explorer6"
@@ -2144,8 +3860,129 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         ? createLoaderScene(loaderRef.current, theme, loaderWho)
         : null;
     const nav = navigator as Navigator & { deviceMemory?: number };
+    // `?buffalo` or `?puppy` - one showcase, either animal.
+    // `?puppy` shows the puppy alone. `?buffalo` shows BOTH: the buffalo held
+    // on its idle as a scale reference, with the puppy cycling its clips in
+    // front of it - the puppy is the one being reviewed, and a still animal
+    // beside it is what makes its size legible.
+    const qs =
+      typeof window === "undefined"
+        ? null
+        : new URLSearchParams(window.location.search);
+    const showcaseModel =
+      qs?.has("puppy") || qs?.has("buffalo") ? "Puppy" : undefined;
+    const showcaseIdleModel = qs?.has("buffalo") ? "Buffalo" : undefined;
+    // Is a village due on this trail?
+    //
+    // Decided here rather than in the world, because it depends on how many
+    // flags the child has reached across ALL their sessions and the world is
+    // rebuilt from nothing every time. Reading it here and spending it here
+    // keeps the whole rhythm in one place: the count lives with the saved
+    // preferences, the gap is redrawn whenever a village is spent so the
+    // spacing never settles into something a child could predict, and a world
+    // that is not Village Road never touches either.
+    // `?village` forces one, the way `?buffalo` forces the showcase. Without
+    // it a village is unreviewable: looking at one SPENDS it, so every reload
+    // while working on the layout put the counter back to zero and showed an
+    // empty road.
+    const villageForced = qs?.has("village") === true;
+    const villageDue: boolean | "near" =
+      prefsRef.current.world !== "village"
+        ? false
+        : villageForced
+          ? "near"
+          : (prefsRef.current.villageFlags ?? 0) >=
+            (prefsRef.current.villageGap ?? 4);
+    if (villageDue === true) {
+      savePrefs({
+        villageFlags: 0,
+        villageGap: 4 + Math.floor(Math.random() * 4),
+      });
+    }
+    // THE FIRST FEW NAMES, SET BEFORE ANYTHING IS FETCHED.
+    //
+    // The card goes up now, so the reading starts now — it does not wait for
+    // a model to come back, which on a cold cache is seconds of a bar moving
+    // under a blank line. Three names the page already knows from the child's
+    // own settings, in the order a child cares about them: who they are, who
+    // is coming with them, and then the animal that is going to be standing
+    // in the field. Everything the world reports queues up behind these, and
+    // the dedupe in `onLoadStep` keeps them from being said twice when their
+    // files actually land.
+    // THE CARD GOES BACK UP FOR EVERY REBUILD, not just the first one.
+    //
+    // This effect runs again whenever the world, the night style, the band or
+    // the land changes — and `loaded` was left true through all of it, so
+    // switching from Village Road to Hero Trail tore the old scene down and
+    // built the new one in full view: an empty green plane, then a road, then
+    // trees and people arriving one at a time over several seconds. Every
+    // one of those rebuilds is the same wait the opening one is, and it is
+    // shown the same way.
+    setLoaded(false);
+    setWorldReady(false);
+    setStepsDone(false);
+    loadSteps.current = [];
+    loadSeen.current = new Set();
+    {
+      const say = (label: string) => {
+        if (label !== "" && !loadSeen.current.has(label)) {
+          loadSeen.current.add(label);
+          loadSteps.current.push(label);
+        }
+      };
+      say(castLabel(charOf(prefsRef.current), prefsRef.current.names));
+      if (childCast(prefsRef.current.world)) {
+        for (const mate of companionsOf(prefsRef.current)) {
+          say(castLabel(mate, prefsRef.current.names));
+        }
+      }
+      // The buffalo is the village's own, and the one thing in the field a
+      // child asks about. Named third, before the trees and the houses.
+      if (prefsRef.current.world === "village") {
+        say("a buffalo");
+      }
+    }
     const world = createKidsWorld(canvas, pickLand(theme.lands), theme, {
-      nightStyle: resolveNightStyle(band, prefsRef.current.nightStyle),
+      nightStyle: resolveNightStyle(band, nightStyleOf(prefsRef.current)),
+      villageDue,
+      // `?wild` — the buffalo's charge, brought within reach of a reviewer.
+      wildReview: qs?.has("wild") === true,
+      // Carry on from the last stone this child walked past, and stand the
+      // most recent few behind them so the road reads as already travelled.
+      stonesPassed: prefsRef.current.roadStones ?? 0,
+      chapter,
+      // Dev review aid: `?buffalo` / `?puppy` spawns that animal beside the
+      // player and cycles every clip, naming each in the caption line.
+      showcaseModel,
+      showcaseIdleModel,
+      onShowcaseClip: (name) => setSay(`🐶 ${name.replace(/_/g, " ")}`),
+      // What the world is building, named — see LoadStep. Only while the
+      // card is up: once the road is open these keep arriving for the props
+      // planted along it, and nobody wants a ticker over their game.
+      // ── THINGS THAT HAPPEN ON THE ROAD ─────────────────────────────
+      //
+      // The buffalo's four go to their own banner; everything else is an
+      // ordinary coach line. Nothing here touches the typing — see the banner
+      // itself, which is drawn over the scene and never over the keyboard or
+      // the letters.
+      onEvent: (what) => {
+        if (what.startsWith("buffalo")) {
+          pushAlarm(what as SayKey);
+          return;
+        }
+        speak(what as SayKey);
+      },
+      onLoadStep: (label: string) => {
+        // Dropped in a box for the loader to read at its own pace. No state,
+        // so the page does not re-render once per model loaded. Skipped if
+        // it is already in the list: the hero and the companion were named
+        // before the world started, and the scatter loads the same file for
+        // forty plants.
+        if (!loadSeen.current.has(label)) {
+          loadSeen.current.add(label);
+          loadSteps.current.push(label);
+        }
+      },
       tier: deviceTier({
         memoryGb: nav.deviceMemory,
         cores: navigator.hardwareConcurrency,
@@ -2213,24 +4050,44 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         // The friend loads after the player, deliberately: the character a
         // child is actually controlling should never wait behind one they are
         // only watching.
-        const friend = prefsRef.current.companion;
+        const friends = childCast(prefsRef.current.world)
+          ? companionsOf(prefsRef.current)
+          : [];
+        // THE GUIDE, on the road rather than only in the text.
+        //
+        // He is a village-only character and he is switchable — the settings
+        // row is "{guide} shows you round", and when it is off his lines are
+        // filtered out of every context. It would be strange to strip him from
+        // the script and leave him walking about, so the same flag decides
+        // both.
+        const guide =
+          prefsRef.current.world === "village" &&
+          (prefsRef.current.guide ?? true)
+            ? VILLAGE_GUIDE
+            : null;
+        world.setGuideBand(prefsRef.current.roadStones ?? 0);
         if (chosen !== theme.defaultPlayer) {
-          return world.setPlayer(chosen).then(() => {
-            if (friend != null && prefsRef.current.world === "hero") {
-              return world.setCompanion(friend);
-            }
-            return;
-          });
+          return world
+            .setPlayer(chosen)
+            .then(() => world.setCompanions(friends))
+            .then(() => world.setGuide(guide));
         }
-        if (friend != null && prefsRef.current.world === "hero") {
-          return world.setCompanion(friend);
-        }
-        return;
+        return world.setCompanions(friends).then(() => world.setGuide(guide));
       })
       .finally(() => {
-        loader?.dispose();
+        // NOT `loader.dispose()` HERE.
+        //
+        // Disposing it calls `forceContextLoss`, which permanently spends the
+        // canvas element — and the loading screen is still on screen at this
+        // point, because the reveal waits for the name ticker to finish and
+        // for two frames after that. Killing the context under a canvas the
+        // child is still looking at leaves a dead image box in the middle of
+        // the loader for the last moments of the load. It is handed to the
+        // effect below instead, which lets it go when the loader actually
+        // comes off the screen.
+        loaderSceneRef.current = loader;
         if (!cancelled) {
-          setLoaded(true);
+          setWorldReady(true);
         }
       });
     const observer = new ResizeObserver(() => world.resize());
@@ -2238,7 +4095,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return () => {
       cancelled = true;
       observer.disconnect();
+      // Torn down before the loading screen ever came off — the effect that
+      // normally releases this never ran, so it is released here. Clearing
+      // the ref keeps that effect from disposing it a second time.
       loader?.dispose();
+      loaderSceneRef.current = null;
       world.dispose();
       worldRef.current = null;
     };
@@ -2248,10 +4109,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // Classic is on there is no canvas to draw into, so this effect bails out
     // early. Coming back to the trail must rebuild the world, or the learner
     // lands on an empty scene that never loads.
-  }, [landNonce, prefs.world, prefs.nightStyle, band, prefs.classic]);
+  }, [landNonce, prefs.world, worldNight, band, prefs.classic]);
 
-  // The world pane never grows more than 50% taller than the helper card.
-  useEffect(() => {
+  /**
+   * The world pane never grows more than 50% taller than the helper card.
+   *
+   * `useLayoutEffect`, and that is the whole of the loader's "opens tall then
+   * settles smaller". A `<canvas>` carries its width and height attributes as
+   * its intrinsic size, so before anything measured the keyboard the pane was
+   * as tall as the drawing buffer — 608px — and the cap that brought it to
+   * 405 landed a frame later, in front of the child. Running before the
+   * browser paints means the only height ever shown is the capped one.
+   */
+  useLayoutEffect(() => {
     const scene = sceneCardRef.current;
     const kb = kbCardRef.current;
     if (scene == null) {
@@ -2259,10 +4129,23 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     }
     const cap = () => {
       if (kb != null && prefsRef.current.kbMode !== "off") {
-        scene.style.maxHeight = `${Math.round(kb.offsetHeight * 1.5)}px`;
-      } else {
-        scene.style.maxHeight = "";
+        const h = Math.round(kb.offsetHeight * 1.5);
+        sceneCapRef.current = h;
+        scene.style.maxHeight = `${h}px`;
+        return;
       }
+      // THE HELPER GOING AWAY MUST NOT RESIZE THE WORLD.
+      //
+      // Clearing the cap here let the pane grow into the space the keyboard
+      // had been using — and the canvas is sized to this pane and the camera
+      // framed from it, so turning the helper off pulled the whole view
+      // backwards. Whatever height it had with the helper up, it keeps.
+      //
+      // The fallback covers the case where the helper was already off when
+      // the page loaded, so there is nothing to measure: it is the height the
+      // pane settles at with the keyboard shown, which is the framing every
+      // other session gets.
+      scene.style.maxHeight = `${sceneCapRef.current || SCENE_CAP_FALLBACK}px`;
     };
     cap();
     const observer = new ResizeObserver(cap);
@@ -2300,6 +4183,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     nameOpen ||
     mapOpen ||
     albumOpen ||
+    // The story panel covers the road. A key pressed while it is open is a
+    // key aimed at nothing the child can see.
+    storyOpen ||
     graduated ||
     restOpen ||
     tourOpen ||
@@ -2407,6 +4293,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // own keys is noise: they cannot hear their rhythm and the sentence is
       // about a moment that has already passed.
       stopSpeaking();
+      // And the story invitation goes with it, on the FIRST key rather than
+      // whenever the second-by-second timer next comes round: a button that
+      // lingers for most of a second into a word is exactly the distraction
+      // it exists to avoid. React bails out when the value is unchanged, so
+      // this costs one render at the start of a burst and nothing after.
+      setRestful(false);
       const now = performance.now();
       if (now - lastKeyAtRef.current < 25) {
         return; // synthetic double-dispatch guard
@@ -2587,11 +4479,32 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           celebrateUntilRef.current = performance.now() + celebrationMs;
           setScore((s) => saveBest(s + 10));
           setWords((w) => w + 1);
-          speak("camp");
+          speak("milestone");
           // Reaching a flag is what counts as having practised, not running
           // the timer to zero — most children close the tab long before it
           // gets there, and none of them should lose the day for it.
           collect("first-run");
+          // And it is what a village is measured in. Counted on every world,
+          // not just Village Road: a child who spends a week on Hero Trail and
+          // comes back should find a village waiting rather than have to earn
+          // four more flags for one.
+          savePrefs({
+            villageFlags: (prefsRef.current.villageFlags ?? 0) + 1,
+            // The milestone just reached. Only Village Road plants stones, so
+            // only Village Road counts them — unlike the village itself,
+            // which accrues on every world because a village rewards
+            // practising rather than walking this particular road.
+            ...(prefsRef.current.world === "village"
+              ? { roadStones: (prefsRef.current.roadStones ?? 0) + 1 }
+              : {}),
+          });
+          // And the stone standing at the end of it is earned. Until this is
+          // said, the road treats it as the marker for the lesson still being
+          // walked and will move it rather than plant another — see
+          // `pendingStone` in world.ts.
+          if (prefsRef.current.world === "village") {
+            worldRef.current?.passStone();
+          }
           if (practiceDays() >= 7) {
             collect("week");
           }
@@ -2690,7 +4603,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             kidsAudio.playRoar();
           }
           if (cheers && stuckRef.current.misses < cfg.rescueMisses) {
-            speak("roar");
+            speak("stumble");
           }
         } else {
           // Classic's own miss sound comes from the key player above.
@@ -2758,6 +4671,18 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // A patient dino: after ten quiet seconds it turns around and beckons.
   useEffect(() => {
     const id = setInterval(() => {
+      // ── IS THE ROAD QUIET? ───────────────────────────────────────────
+      //
+      // Drives whether the story button is on screen at all. Piggy-backed on
+      // the beckon timer that is already running rather than starting a
+      // second one: this is a once-a-second question and one interval can
+      // answer both.
+      //
+      // `restful` is deliberately not "has stopped for a moment" — it is
+      // "has stopped for long enough that offering something else to look at
+      // is not a distraction". Two and a half seconds is longer than any gap
+      // inside a word and shorter than a child's patience.
+      setRestful(performance.now() - (lastKeyAtRef.current || 0) > 2500);
       if (blockedRef.current || !loaded || beckonedRef.current) {
         return;
       }
@@ -2778,6 +4703,209 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return () => clearInterval(id);
   }, [loaded]);
 
+  /**
+   * Two frames after both halves are done, hand over the road.
+   *
+   * Two, not one: the first frame is where three.js finally draws every rig,
+   * uploads the textures it has been holding and fills the shadow map, and
+   * that frame is the expensive one. Revealing on it shows the child the
+   * stutter; revealing on the one after shows them the road.
+   */
+  useEffect(() => {
+    if (!worldReady || !stepsDone || loaded) {
+      return;
+    }
+    // rAF, BUT NEVER ONLY rAF.
+    //
+    // A hidden or throttled tab does not run animation frames — Chrome stops
+    // them outright when the page is not visible — so a reveal that waits on
+    // two of them waits for as long as the child is looking at another tab,
+    // and comes back to a loading screen for a world that finished minutes
+    // ago. The timer is the floor: whichever arrives first wins, and both
+    // paths go through `done` so it only ever fires once.
+    let raf = 0;
+    let fired = false;
+    const done = () => {
+      if (!fired) {
+        fired = true;
+        setLoaded(true);
+      }
+    };
+    raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(done);
+    });
+    const fallback = setTimeout(done, 200);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(fallback);
+    };
+  }, [worldReady, stepsDone, loaded]);
+
+  /**
+   * The loading screen's own little scene, released when it is no longer
+   * being looked at — see the `.finally` above for why not sooner.
+   */
+  const loaderSceneRef = useRef<{ dispose(): void } | null>(null);
+  useEffect(() => {
+    if (loaded && loaderSceneRef.current != null) {
+      loaderSceneRef.current.dispose();
+      loaderSceneRef.current = null;
+    }
+  }, [loaded]);
+  useEffect(
+    () => () => {
+      loaderSceneRef.current?.dispose();
+      loaderSceneRef.current = null;
+    },
+    [],
+  );
+
+  /** Told once, by the name ticker, when it has shown the last name. */
+  const onStepsDone = useCallback(() => setStepsDone(true), []);
+
+  /**
+   * The loading screen, built once and placed in one of two spots.
+   *
+   * On Village Road it is a child of the window and covers all of it — the
+   * road, the coach's line and the keyboard together — so the load is one
+   * surface rather than a panel in the top third with an empty card beneath
+   * it. The other two worlds are still three separate cards, where an overlay
+   * spanning them would have nothing to span, so there it stays inside the
+   * scene card exactly as before.
+   */
+  const loaderPane = loaded ? null : (
+    <div className={styles.loading}>
+      <div className={styles.loadStack}>
+        {/*
+          `setSize(canvas.width, canvas.height, false)` treats these numbers
+          as the render size in CSS pixels and multiplies by the device
+          ratio, so 360 across is 720 device pixels at 2x — comfortably more
+          than the 13rem this is ever drawn at. It was briefly raised to 480
+          for a much larger picture; the picture came back down and so has
+          this, because the extra was GPU work paid during the load for
+          resolution nothing could see.
+        */}
+        <canvas
+          ref={loaderRef}
+          className={styles.loadArt}
+          width={360}
+          height={240}
+        />
+        {/* The ground he walks on IS the progress bar — see `.loadGround`. */}
+        <div className={styles.loadGround}>
+          <i />
+        </div>
+        <div className={styles.loadLabel}>
+          <Reveal
+            text={(landName !== ""
+              ? `Chapter ${chapter} · ${landName}`
+              : "Running to the valley"
+            ).toUpperCase()}
+          />
+        </div>
+        <LoadStep
+          queueRef={loadSteps}
+          active={!loaded}
+          settling={worldReady}
+          onDone={onStepsDone}
+        />
+      </div>
+    </div>
+  );
+
+  /**
+   * The world is frozen from the moment it is built and released here.
+   *
+   * See `setHeld` in world.ts. Without it the cast waves, the buffalo wanders
+   * and the light moves behind the loading screen, and what the child is
+   * handed when it lifts is a scene that has plainly been running without
+   * them.
+   */
+  useEffect(() => {
+    if (loaded) {
+      worldRef.current?.setHeld(false);
+    }
+  }, [loaded]);
+
+  /**
+   * THE BUFFALO LINES, ONE AFTER ANOTHER, EACH LONG ENOUGH TO READ.
+   *
+   * A QUEUE, not a variable, and that is the whole point of it.
+   *
+   * The animal's own sequence is far quicker than a sentence. Measured on the
+   * road: the windup clip runs 0.9s, and the charge itself covers the two
+   * units between where it starts and where it always stops — about a fifth
+   * of a second. Each event simply overwrote the last, so `buffaloWarn` got
+   * 0.9s, `buffaloCharge` got long enough to blink, and what a child actually
+   * saw was the relief line for an event they never knew had happened. The
+   * lines were firing correctly the entire time; they were being erased.
+   *
+   * So each one now holds the floor for a minimum before the next is allowed
+   * on. That puts the relief beat a second or so behind the animal, which is
+   * the right way round to be wrong: a warning nobody can read is worthless,
+   * and a relief line a beat late still lands.
+   *
+   * Deliberately not through `speak`: that would set the coach line and queue
+   * the voice, and per the script these are shown and never spoken. It
+   * borrows the same pools and the same band and first-ever rules, and then
+   * puts the result somewhere else.
+   */
+  const runAlarm = useCallback(() => {
+    const next = alarmQ.current.shift();
+    if (next == null) {
+      alarmBusy.current = false;
+      setAlarmLine("");
+      return;
+    }
+    alarmBusy.current = true;
+    setAlarmLine(sayLine(next));
+    // The relief beat is the one anybody has time to read properly, and the
+    // only one that is not telling them to do something this second.
+    const hold = next === "buffaloSafe" ? 2600 : 1600;
+    alarmTimer.current = setTimeout(runAlarm, hold);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pushAlarm = useCallback(
+    (key: SayKey) => {
+      alarmQ.current.push(key);
+      if (!alarmBusy.current) {
+        runAlarm();
+      }
+    },
+    [runAlarm],
+  );
+
+  useEffect(
+    () => () => {
+      if (alarmTimer.current != null) {
+        clearTimeout(alarmTimer.current);
+      }
+    },
+    [],
+  );
+
+  /**
+   * The opening line, once, as soon as the resolver exists.
+   *
+   * Guarded on `say` being empty rather than on a mount flag: crossing into a
+   * new land clears it and this fires again, which is right — a new stretch of
+   * road opens the same way the first one did.
+   */
+  useEffect(() => {
+    // NOT WHILE THE LOADING SCREEN IS UP.
+    //
+    // This used to fire the moment the resolver existed, which is several
+    // seconds before the road appears — so the coach greeted the child, out
+    // loud, over a loading screen, about a world they could not yet see. The
+    // line is an invitation to start walking and it has to arrive when there
+    // is somewhere to walk.
+    if (say === "" && loaded) {
+      speak("start");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [say, loaded]);
+
   const crossIntoNextLand = () => {
     setMapOpen(false);
     const land = peekNextLandName();
@@ -2785,6 +4913,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     collect(`land:${land}`);
     setChapter((c) => c + 1);
     setLoaded(false);
+    setWorldReady(false);
+    setStepsDone(false);
+    loadSteps.current = [];
     setLandNonce((n) => n + 1);
   };
 
@@ -3155,7 +5286,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         />
       )}
       {!classic && (
-        <>
+        <div className={clsx(styles.oneWindow, onVillage && styles.joined)}>
+          {onVillage && loaderPane}
           <div className={styles.sceneCard} ref={sceneCardRef}>
             {/* Described, not narrated.
                 The scene is a canvas, which to a screen reader is a blank
@@ -3178,102 +5310,192 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               role="img"
               aria-label={sceneDescription}
             />
-            <span className={styles.keysChip}>
-              <b>{included}</b> keys on your trail
-            </span>
-            {!loaded && (
-              <div className={styles.loading}>
-                <div>
-                  <canvas
-                    ref={loaderRef}
-                    width={360}
-                    height={240}
-                    style={{ width: "12rem", height: "8rem" }}
-                  />
-                  <div className={styles.loadGround}>
-                    <i />
+            {/*
+              THE STORY BUTTON. Village Road only, and only while nothing is
+              being typed — see `restful`. Absent rather than dimmed: a story
+              invitation in the corner of a typing exercise is a thing to look
+              at instead of the keyboard.
+            */}
+            {prefs.world === "village" &&
+              prefs.story !== false &&
+              loaded &&
+              restful && (
+                <button
+                  type="button"
+                  className={clsx(styles.storyBtn, styles.storyScrap)}
+                  aria-label="The story so far"
+                  title="The story so far"
+                  onClick={() => setStoryOpen(true)}
+                >
+                  <span className={styles.scrapPaper}>
+                    <span className={styles.scrapRim} />
+                    <span className={styles.scrapFibre} />
+                    <span className={styles.scrapFace} />
+                  </span>
+                  <LeafBookIcon size={20} />
+                  {storyUnread > 0 && <span className={styles.storyNew} />}
+                </button>
+              )}
+            {!onVillage && (
+              <span className={styles.keysChip}>
+                <b>{included}</b> keys on your trail
+              </span>
+            )}
+            {!onVillage && loaderPane}
+            {onVillage ? (
+              /*
+                VILLAGE ROAD'S HUD: one torn sheet of newsprint with every
+                figure printed on it, and no icons anywhere. See `.notice`
+                in kids.module.less for how the tear and the paper are
+                made. The other two worlds keep the chip stack below —
+                the three games share no furniture.
+              */
+              <div className={styles.notice}>
+                <TearDefs />
+                <div className={styles.sheet}>
+                  <div className={styles.rim} />
+                  <div className={styles.fibre} />
+                  <div className={styles.face} />
+                </div>
+                <div className={styles.notePrint}>
+                  <span className={styles.noteHead}>
+                    <b>{included}</b> keys on your trail
+                  </span>
+                  {prefs.timerVisible && !noClock() && (
+                    <div className={styles.noteRow}>
+                      <span className={styles.noteLab}>
+                        {timerIdle && !sessionOver ? "Waiting" : "Timer"}
+                      </span>
+                      <span
+                        className={clsx(
+                          styles.noteVal,
+                          sessionSecs <= 60 &&
+                            !sessionOver &&
+                            styles.timerLowNote,
+                        )}
+                      >
+                        {Math.floor(sessionSecs / 60)}:
+                        {String(sessionSecs % 60).padStart(2, "0")}
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    className={clsx(
+                      styles.noteRow,
+                      flashScore && styles.noteFlash,
+                    )}
+                  >
+                    <span className={styles.noteLab}>Score</span>
+                    <span className={styles.noteVal}>{score}</span>
                   </div>
-                  <div className={styles.loadLabel}>
-                    {landName !== ""
-                      ? `Chapter ${chapter} · ${landName}`
-                      : "Running to the valley…"}
+                  <div
+                    className={clsx(
+                      styles.noteRow,
+                      flashCombo && styles.noteFlash,
+                    )}
+                  >
+                    <span className={styles.noteLab}>Combo</span>
+                    <span className={styles.noteVal}>×{combo}</span>
+                  </div>
+                  <div
+                    className={clsx(
+                      styles.noteRow,
+                      flashStage && styles.noteFlash,
+                    )}
+                  >
+                    <span className={styles.noteLab}>
+                      {stageLabel(prefs.world)}
+                    </span>
+                    <span className={styles.noteVal}>
+                      {stageOf(prefs.world)(
+                        dinoAgeOf(included, lesson.letters.length),
+                      )}
+                    </span>
+                  </div>
+                  <div
+                    className={clsx(
+                      styles.noteRow,
+                      flashBest && styles.noteFlash,
+                    )}
+                  >
+                    <span className={styles.noteLab}>Best</span>
+                    <span className={styles.noteVal}>{best}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.hudStack}>
+                {prefs.timerVisible && !noClock() && (
+                  <div className={styles.chip}>
+                    <span
+                      className={styles.ringT}
+                      style={{
+                        ["--tp" as never]: Math.round(
+                          (sessionSecs / Math.max(1, sessionTotal)) * 100,
+                        ),
+                      }}
+                    />
+                    <div>
+                      <div className={styles.chipLab}>
+                        {timerIdle && !sessionOver ? "Waiting…" : "Timer"}
+                      </div>
+                      <div
+                        className={clsx(
+                          styles.chipVal,
+                          sessionSecs <= 60 && !sessionOver && styles.timerLow,
+                          timerIdle && !sessionOver && styles.timerHeld,
+                        )}
+                      >
+                        {Math.floor(sessionSecs / 60)}:
+                        {String(sessionSecs % 60).padStart(2, "0")}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className={styles.chip}>
+                  <span className={styles.ci}>
+                    <StarIcon />
+                  </span>
+                  <div>
+                    <div className={styles.chipLab}>Score</div>
+                    <div className={styles.chipVal}>{score}</div>
+                  </div>
+                </div>
+                <div className={styles.chip}>
+                  <span className={styles.ci}>
+                    <FlameIcon />
+                  </span>
+                  <div>
+                    <div className={styles.chipLab}>Combo</div>
+                    <div className={styles.chipVal}>×{combo}</div>
+                  </div>
+                </div>
+                <div className={styles.chip}>
+                  <span className={styles.ci}>
+                    <SproutIcon />
+                  </span>
+                  <div>
+                    <div className={styles.chipLab}>
+                      {stageLabel(prefs.world)}
+                    </div>
+                    <div className={styles.chipVal}>
+                      {stageOf(prefs.world)(
+                        dinoAgeOf(included, lesson.letters.length),
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.chip}>
+                  <span className={styles.ci}>
+                    <TrophyIcon />
+                  </span>
+                  <div>
+                    <div className={styles.chipLab}>Best</div>
+                    <div className={styles.chipVal}>{best}</div>
                   </div>
                 </div>
               </div>
             )}
-            <div
-              className={clsx(styles.hudRight, use3dWord && styles.hudBottom)}
-            >
-              {prefs.timerVisible && !noClock() && (
-                <div className={styles.chip}>
-                  <span
-                    className={styles.ringT}
-                    style={{
-                      ["--tp" as never]: Math.round(
-                        (sessionSecs / Math.max(1, sessionTotal)) * 100,
-                      ),
-                    }}
-                  />
-                  <div>
-                    <div className={styles.chipLab}>
-                      {timerIdle && !sessionOver ? "Waiting…" : "Timer"}
-                    </div>
-                    <div
-                      className={clsx(
-                        styles.chipVal,
-                        sessionSecs <= 60 && !sessionOver && styles.timerLow,
-                        timerIdle && !sessionOver && styles.timerHeld,
-                      )}
-                    >
-                      {Math.floor(sessionSecs / 60)}:
-                      {String(sessionSecs % 60).padStart(2, "0")}
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div className={styles.chip}>
-                <span className={styles.ci}>
-                  <StarIcon />
-                </span>
-                <div>
-                  <div className={styles.chipLab}>Score</div>
-                  <div className={styles.chipVal}>{score}</div>
-                </div>
-              </div>
-              <div className={styles.chip}>
-                <span className={styles.ci}>
-                  <FlameIcon />
-                </span>
-                <div>
-                  <div className={styles.chipLab}>Combo</div>
-                  <div className={styles.chipVal}>×{combo}</div>
-                </div>
-              </div>
-              <div className={styles.chip}>
-                <span className={styles.ci}>
-                  <SproutIcon />
-                </span>
-                <div>
-                  <div className={styles.chipLab}>
-                    {prefs.world === "hero" ? "Hero level" : "Dino stage"}
-                  </div>
-                  <div className={styles.chipVal}>
-                    {(prefs.world === "hero" ? heroStage : dinoStage)(
-                      dinoAgeOf(included, lesson.letters.length),
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className={styles.chip}>
-                <span className={styles.ci}>
-                  <TrophyIcon />
-                </span>
-                <div>
-                  <div className={styles.chipLab}>Best</div>
-                  <div className={styles.chipVal}>{best}</div>
-                </div>
-              </div>
-            </div>
             {!use3dWord && (
               <div className={styles.words} ref={wordsViewRef}>
                 <span className={styles.wordsTrack} ref={wordsTrackRef}>
@@ -3319,8 +5541,26 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               changing — which for somebody listening rather than looking is a
               page that says nothing at all. Polite, so it lands after
               whatever they were reading. */}
-          <div className={styles.say} role="status" aria-live="polite">
-            {say}
+          {/*
+            The buffalo shouts from HERE rather than from a banner of its
+            own across the scene, which is where it used to be — and which
+            put the one message a child has to act on straight away
+            somewhere they were not looking. Same line, capitals, and
+            assertive so a screen reader interrupts for it, which is the
+            whole point of the warning.
+          */}
+          <div
+            className={styles.say}
+            role="status"
+            aria-live={alarmLine !== "" ? "assertive" : "polite"}
+          >
+            {alarmLine !== "" ? (
+              <span className={clsx(styles.sayText, styles.sayAlarm)}>
+                {alarmLine}
+              </span>
+            ) : (
+              say !== "" && <span className={styles.sayText}>{say}</span>
+            )}
           </div>
 
           {helperVisible && (
@@ -3330,6 +5570,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 styles.kbWrap,
                 prefs.kbMode === "full" && styles.kbWrapFull,
                 wide && styles.kbWrapWide,
+                // Nothing beside it any more, so it takes the middle.
+                !showHands && styles.kbWrapAlone,
                 !helperReady && styles.kbWrapWaiting,
               )}
               aria-hidden={!helperReady || undefined}
@@ -3374,7 +5616,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               {board}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/*
@@ -3451,14 +5693,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 </div>
               </div>
               <div className={styles.fstat}>
-                <div className={styles.sd}>
-                  {prefs.world === "hero" ? "Hero level" : "Dino stage"}
-                </div>
+                <div className={styles.sd}>{stageLabel(prefs.world)}</div>
                 <div
                   className={styles.fstatVal}
                   style={{ color: "var(--leaf-d)" }}
                 >
-                  {(prefs.world === "hero" ? heroStage : dinoStage)(
+                  {stageOf(prefs.world)(
                     dinoAgeOf(included, lesson.letters.length),
                   )}
                 </div>
@@ -3507,7 +5747,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 announcing a dino over a picture of a knight is the first
                 thing a new child sees. */}
             <div className={styles.finishBadge}>
-              {prefs.world === "hero" ? (
+              {childCast(prefs.world) ? (
                 <TentIcon size={34} color="#5c4500" />
               ) : (
                 <EggIcon size={34} color="#5c4500" />
@@ -3517,19 +5757,29 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               className={styles.cardTitle}
               style={{ justifyContent: "center" }}
             >
-              {prefs.world === "hero"
-                ? "Someone joined your trail!"
-                : "Your dino hatched!"}
+              {namingWho !== ""
+                ? `What shall we call ${castLabel(namingWho, prefs.names)}?`
+                : childCast(prefs.world)
+                  ? prefs.world === "village"
+                    ? "Someone joined you on the road!"
+                    : "Someone joined your trail!"
+                  : "Your dino hatched!"}
             </div>
             <div className={styles.finishMsg}>
-              {prefs.world === "hero"
-                ? "They will walk every step of the trail with you. What will you call them?"
-                : "It will run every step of the trail with you. What will you call it?"}
+              {namingWho !== ""
+                ? "Pick any name you like. Leave it empty to give them their own name back."
+                : childCast(prefs.world)
+                  ? prefs.world === "village"
+                    ? "They will walk every step of the road with you. What will you call them?"
+                    : "They will walk every step of the trail with you. What will you call them?"
+                  : "It will run every step of the trail with you. What will you call it?"}
             </div>
             <input
               className={styles.nameInput}
-              maxLength={12}
-              placeholder={companionName}
+              maxLength={NAME_MAX}
+              placeholder={
+                namingWho !== "" ? shippedLabel(namingWho) : companionName
+              }
               value={draftName}
               autoFocus={true}
               onChange={(ev) => setDraftName(ev.target.value)}
@@ -3547,7 +5797,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               require before any audio may play at all, so the answer takes
               effect immediately instead of on some later click.
             */}
-            {!prefs.soundAsked && (
+            {!prefs.soundAsked && namingWho === "" && (
               <div className={styles.askSound}>
                 <span className={styles.askSoundTitle}>
                   Shall {draftName.trim() || companionName} make noises?
@@ -3861,14 +6111,51 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </div>
       )}
 
+      {storyOpen && (
+        <StoryDoc
+          stones={prefs.roadStones ?? 0}
+          graduated={included >= lesson.letters.length}
+          fill={(t) =>
+            fillSay(t, {
+              name: villagerName(),
+              mate: companionLabel(),
+              guide: guideLabel(),
+              years: yearsBack(),
+              year: String(VILLAGE_YEAR),
+            })
+          }
+          onRead={(text) => {
+            // The same voice the coach uses, and the same rule: typing stops
+            // it. `speakLine` already replaces whatever is playing, so a
+            // second tap on another part swaps rather than overlaps.
+            unlockVoice();
+            speakLine(text, cfg.speechRate);
+          }}
+          onClose={() => {
+            stopSpeaking();
+            setStoryOpen(false);
+            // Everything open has now been read, so the mark goes.
+            if (storyUnread > 0) {
+              savePrefs({ storyRead: storyOpenCount });
+            }
+          }}
+        />
+      )}
       {settingsOpen && (
         <SettingsCard
           prefs={prefs}
           included={included}
           savePrefs={savePrefs}
-          onRename={() => {
+          onRename={(who) => {
+            // Hidden rather than closed: the naming card is an overlay and
+            // two stacked overlays read as a mistake. `finishNaming` puts it
+            // back up.
             setSettingsOpen(false);
-            setDraftName(prefs.name);
+            setNamingWho(who);
+            // Pre-filled with whatever they are called now, so Rename opens on
+            // the current name rather than on an empty box a child has to work
+            // out the purpose of.
+            setDraftName(castLabel(who, prefs.names));
             setNameOpen(true);
           }}
           totalLetters={lesson.letters.length}
@@ -3876,23 +6163,78 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             setSettingsOpen(false);
             setAlbumOpen(true);
           }}
-          onPickDino={(dino) => {
-            savePrefs({ dino });
-            worldRef.current?.setPlayer(dino).catch(() => {});
-          }}
-          onPickHero={(hero) => {
-            // Playing as somebody sends them home as your friend — you cannot
-            // walk beside yourself.
-            const companion = prefs.companion === hero ? null : prefs.companion;
-            savePrefs({ hero, companion });
-            worldRef.current?.setPlayer(hero).catch(() => {});
-            if (companion !== prefs.companion) {
-              worldRef.current?.setCompanion(companion).catch(() => {});
+          onPickCharacter={(who, forWorld) => {
+            // One handler for all three worlds, writing to whichever pref
+            // that world keeps its choice in. `forWorld` is the world the
+            // PANEL is showing, which is not always the one running: the
+            // change waits for the way out, so a choice made while browsing
+            // Hero Trail has to land in the Hero Trail's slot.
+            const key =
+              forWorld === "village"
+                ? "village"
+                : forWorld === "hero"
+                  ? "hero"
+                  : "dino";
+            // Playing as somebody sends them home as your friend — you
+            // cannot walk beside yourself. Dino Run has no companions, so
+            // this only ever bites in the two worlds that do.
+            const was = companionsOf({ ...prefs, world: forWorld });
+            const now = childCast(forWorld)
+              ? was.filter((id) => id !== who)
+              : was;
+            savePrefs({
+              [key]: who,
+              companionsByWorld: {
+                ...prefs.companionsByWorld,
+                [forWorld]: now,
+              },
+              companions: now,
+              companion: now[0] ?? null,
+            } as Partial<Prefs>);
+            // The running world is only told when the choice is ITS choice.
+            if (forWorld !== prefs.world) {
+              return;
+            }
+            worldRef.current?.setPlayer(who).catch(() => {});
+            if (now.length !== was.length) {
+              worldRef.current?.setCompanions(now).catch(() => {});
             }
           }}
-          onPickCompanion={(companion) => {
-            savePrefs({ companion });
-            worldRef.current?.setCompanion(companion).catch(() => {});
+          onPickWorld={(world) => {
+            savePrefs({ world });
+          }}
+          onPickCompanion={(who, forWorld) => {
+            // TAPPING SOMEBODY TOGGLES THEM, and `null` is "nobody at all".
+            //
+            // Two is the ceiling, and a third tap takes the one who has been
+            // in the line longest rather than refusing: a pill that does
+            // nothing when pressed is a pill a child presses again harder.
+            const now = companionsOf({ ...prefsRef.current, world: forWorld });
+            const next =
+              who == null
+                ? []
+                : now.includes(who)
+                  ? now.filter((id) => id !== who)
+                  : [...now, who].slice(-2);
+            const ordered = companionsOf({
+              companions: next,
+              companion: null,
+              world: forWorld,
+            });
+            savePrefs({
+              companionsByWorld: {
+                ...prefsRef.current.companionsByWorld,
+                [forWorld]: ordered,
+              },
+              // The pre-split fields are kept in step so a profile written
+              // here still reads correctly anywhere not yet moved over.
+              companions: ordered,
+              companion: ordered[0] ?? null,
+            });
+            // Only if this is the running world's own party — see above.
+            if (forWorld === prefsRef.current.world) {
+              worldRef.current?.setCompanions(ordered).catch(() => {});
+            }
           }}
           onPickTimer={(timerMin) => {
             savePrefs({ timerMin });
@@ -4074,7 +6416,7 @@ function AlbumStrip({
   onOpen,
 }: {
   readonly album: Album;
-  readonly world: "dino" | "hero";
+  readonly world: WorldId;
   readonly included: number;
   readonly onOpen: () => void;
 }) {
@@ -4107,7 +6449,7 @@ function AlbumGrid({
   world,
 }: {
   readonly album: Album;
-  readonly world: "dino" | "hero";
+  readonly world: WorldId;
 }) {
   const all = catalogue(world);
   const got = all.filter(({ id }) => id in album).length;
@@ -4194,9 +6536,9 @@ function SettingsCard({
   savePrefs,
   onRename,
   onOpenAlbum,
-  onPickDino,
-  onPickHero,
+  onPickCharacter,
   onPickCompanion,
+  onPickWorld,
   onPickTimer,
   onClose,
 }: {
@@ -4205,11 +6547,14 @@ function SettingsCard({
   /** Letters in this layout's alphabet, so "all of them" is not hardcoded. */
   readonly totalLetters: number;
   readonly savePrefs: (patch: Partial<Prefs>) => void;
-  readonly onRename: () => void;
+  /** Rename one character, by model id — see Prefs.names. */
+  readonly onRename: (who: string) => void;
   readonly onOpenAlbum: () => void;
-  readonly onPickDino: (dino: string) => void;
-  readonly onPickHero: (hero: string) => void;
-  readonly onPickCompanion: (companion: string | null) => void;
+  readonly onPickCharacter: (who: string, world: WorldId) => void;
+  /** Toggle one companion in or out of the line, or `null` for nobody. */
+  readonly onPickCompanion: (companion: string | null, world: WorldId) => void;
+  /** Change worlds. Called once, on the way out — see worldDraft. */
+  readonly onPickWorld: (world: WorldId) => void;
   readonly onPickTimer: (min: number) => void;
   readonly onClose: () => void;
 }) {
@@ -4217,7 +6562,77 @@ function SettingsCard({
   // The two children, minus whoever is being played. Derived rather than
   // listed so it cannot fall out of step with the roster, and so a third
   // character needs nothing here.
-  const companionChoices = COMPANIONS.filter(({ id }) => id !== prefs.hero);
+  /**
+   * WHO MAY WALK WITH YOU — everyone but yourself.
+   *
+   * Filtered against whoever the child is actually playing AS, which is not
+   * the same thing as `prefs.hero`: that is the Hero Trail's pick and it
+   * holds a value in every world. Village Road stores its choice in
+   * `prefs.village`, so filtering on `prefs.hero` struck Dave off the
+   * companion list on the village road whenever he happened to be somebody's
+   * hero-world character — which, since he is that world's default, was
+   * almost everybody — while cheerfully offering to bring you along with
+   * yourself the moment you played as him here.
+   *
+   * Village Road's earned hatchlings join this list rather than the character
+   * one. They are companions by design — see HATCHLINGS in album.ts, which
+   * says so — and the buffalo at twenty keys is the clearest case: it is a
+   * wild animal a child is finally allowed to WALK WITH, not one they are
+   * asked to be.
+   */
+  /**
+   * THE WORLD IS CHOSEN HERE AND CHANGED ON THE WAY OUT.
+   *
+   * Tapping a world used to save it there and then, which tore the running
+   * scene down and rebuilt it while the settings card was still open — a
+   * child browsing the three of them set three worlds building behind a panel
+   * they were still reading, and whichever they looked at last was the one
+   * they got, several seconds after they had stopped caring. Now the pill
+   * records a choice and "Back to the run!" acts on it, which is also what
+   * makes that button mean something.
+   */
+  const [worldDraft, setWorldDraft] = useState<WorldId>(prefs.world);
+  const leaveSettings = () => {
+    if (worldDraft !== prefs.world) {
+      onPickWorld(worldDraft);
+    }
+    onClose();
+  };
+
+  /**
+   * THE PANEL DESCRIBES THE WORLD BEING CHOSEN, not the one still running.
+   *
+   * The world change waits for "Back to the run!", which is right — but it
+   * left every row below the picker talking about the old game: tap Hero
+   * Trail and the cast row still offered the village's three children and the
+   * friend row still said Robot and Peeli were coming along. A settings panel
+   * that shows one world's options under another world's name is worse than
+   * one that switches immediately.
+   *
+   * So the rows read from a view of the preferences with the DRAFTED world in
+   * it, and the pick handlers are told which world they are writing for. What
+   * is saved is still whichever world's own slot the choice belongs to.
+   */
+  const view: Prefs = { ...prefs, world: worldDraft };
+  const playingAs = charOf(view);
+  /**
+   * WHO MAY WALK WITH YOU, WHICH IS NOT THE SAME LIST IN BOTH WORLDS.
+   *
+   * Hero Trail offers the puppy and nobody else. Its cast is a knight, a
+   * skeleton and two children out of another world's story, and a party of
+   * them walking the same trail turns a hero's road into a school outing —
+   * the one companion that belongs beside a lone hero is a dog.
+   *
+   * Village Road is the opposite case and offers everybody, because it is a
+   * place people live: the three children, the robot, the puppy, and whatever
+   * has been earned along the road — the buffalo at twenty keys included.
+   */
+  const companionChoices = [
+    ...COMPANIONS,
+    ...HATCHLINGS.village.filter(
+      ({ id, at }) => included >= at && !COMPANIONS.some((c) => c.id === id),
+    ),
+  ].filter(({ id }) => id !== playingAs && walksIn(worldDraft, id));
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [tab, setTab] = useState<SetTab>("practise");
   // Classic has no world to dress, no buddy to pick and no hands to show, so
@@ -4336,17 +6751,36 @@ function SettingsCard({
                       <div className={styles.sd}>where you run</div>
                     </div>
                     <div className={styles.ctl}>
+                      {/*
+                        VILLAGE ROAD FIRST. It is the one this app is built
+                        around and the one most children will stay in, and a
+                        row of choices says which is the main one by where it
+                        puts it — the other two were in front of it only
+                        because they were written first.
+
+                        Named "Road" rather than "Trail" on purpose: two of
+                        the three would otherwise end in the same word, and a
+                        child picking by shape — or a parent scanning the row
+                        — would have to read carefully to tell them apart.
+                      */}
                       <button
                         type="button"
-                        className={pill(prefs.world === "dino")}
-                        onClick={() => savePrefs({ world: "dino" })}
+                        className={pill(worldDraft === "village")}
+                        onClick={() => setWorldDraft("village")}
+                      >
+                        Village Road
+                      </button>
+                      <button
+                        type="button"
+                        className={pill(worldDraft === "dino")}
+                        onClick={() => setWorldDraft("dino")}
                       >
                         Dino Run
                       </button>
                       <button
                         type="button"
-                        className={pill(prefs.world === "hero")}
-                        onClick={() => savePrefs({ world: "hero" })}
+                        className={pill(worldDraft === "hero")}
+                        onClick={() => setWorldDraft("hero")}
                       >
                         Hero Trail
                       </button>
@@ -4358,7 +6792,7 @@ function SettingsCard({
           otherwise — the youngest get a starry quiet night with no Lost
           Travellers, and this is where a parent moves a child up or down.
         */}
-                {trail && prefs.world === "hero" && (
+                {trail && childCast(worldDraft) && (
                   <div className={styles.srow}>
                     <span
                       className={styles.ri}
@@ -4386,12 +6820,34 @@ function SettingsCard({
                         .filter(
                           ([value]) => !(band === "5-6" && value === "full"),
                         )
+                        // AND NOTHING SPOOKY ON VILLAGE ROAD AT ALL.
+                        //
+                        // A Kerala cart road after dark is oil lamps, a lit
+                        // temple and a buffalo in the field — it is somewhere
+                        // people live, which is the whole reason this world
+                        // exists as a third rather than a re-skin of Hero
+                        // Trail. Spookiness is that other world's idea, and
+                        // the two pills that offer it were offering to turn
+                        // this one into it.
+                        .filter(
+                          ([value]) =>
+                            worldDraft !== "village" ||
+                            (value !== "mild" && value !== "full"),
+                        )
                         .map(([value, label]) => (
                           <button
                             key={value}
                             type="button"
-                            className={pill(prefs.nightStyle === value)}
-                            onClick={() => savePrefs({ nightStyle: value })}
+                            className={pill(nightStyleOf(view) === value)}
+                            onClick={() =>
+                              savePrefs({
+                                nightStyleByWorld: {
+                                  ...prefs.nightStyleByWorld,
+                                  [worldDraft]: value,
+                                },
+                                nightStyle: value,
+                              })
+                            }
                           >
                             {label}
                           </button>
@@ -4439,29 +6895,99 @@ function SettingsCard({
                 )}
                 {trail && (
                   <>
-                    <div className={styles.srow}>
-                      <span
-                        className={styles.ri}
-                        style={{ background: "var(--sand)" }}
-                      >
-                        <StarIcon size={22} color="#7a5c00" />
-                      </span>
-                      <div>
-                        <div className={styles.sl}>Sticker album</div>
-                        <div className={styles.sd}>
-                          everything you have collected
+                    {/*
+                      The local boy. Village Road only — the other two worlds
+                      have nobody to guide anybody.
+                    */}
+                    {worldDraft === "village" && (
+                      <div className={styles.srow}>
+                        <span
+                          className={styles.ri}
+                          style={{ background: "var(--sand)" }}
+                        >
+                          <PawIcon size={24} color="#7a5c00" />
+                        </span>
+                        <div>
+                          <div className={styles.sl}>
+                            {castLabel(VILLAGE_GUIDE, prefs.names)} shows you
+                            round
+                          </div>
+                          <div className={styles.sd}>
+                            the boy from the village who knows the road
+                          </div>
+                        </div>
+                        <div className={styles.ctl}>
+                          <button
+                            type="button"
+                            className={pill(prefs.guide !== false)}
+                            onClick={() => savePrefs({ guide: true })}
+                          >
+                            Yes
+                          </button>
+                          <button
+                            type="button"
+                            className={pill(prefs.guide === false)}
+                            onClick={() => savePrefs({ guide: false })}
+                          >
+                            No
+                          </button>
+                          {/*
+                            He is renameable like anybody else — which is the
+                            whole reason every line says {guide} rather than
+                            his name. Offered only while he is coming along:
+                            naming somebody who is switched off is a button
+                            with nothing behind it.
+                          */}
+                          {prefs.guide !== false && (
+                            <button
+                              type="button"
+                              className={styles.pill}
+                              onClick={() => onRename(VILLAGE_GUIDE)}
+                            >
+                              Rename
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <div className={styles.ctl}>
-                        <button
-                          type="button"
-                          className={styles.pill}
-                          onClick={onOpenAlbum}
+                    )}
+                    {worldDraft === "village" && (
+                      <div className={styles.srow}>
+                        <span
+                          className={styles.ri}
+                          style={{ background: "var(--sand)" }}
                         >
-                          Open
-                        </button>
+                          <LeafBookIcon size={22} color="#7a5c00" />
+                        </span>
+                        <div>
+                          <div className={styles.sl}>The story</div>
+                          <div className={styles.sd}>
+                            where they came from, a bit at a time
+                          </div>
+                        </div>
+                        <div className={styles.ctl}>
+                          <button
+                            type="button"
+                            className={pill(prefs.story !== false)}
+                            onClick={() => savePrefs({ story: true })}
+                          >
+                            On
+                          </button>
+                          <button
+                            type="button"
+                            className={pill(prefs.story === false)}
+                            onClick={() => savePrefs({ story: false })}
+                          >
+                            Off
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
+                    {/*
+                      NO STICKER ALBUM ROW. The album is still collected —
+                      hatchlings, lands and streaks all still file their
+                      stickers, and album.test.ts still holds that to account —
+                      it simply is not offered from here any more.
+                    */}
                     <div className={styles.srow}>
                       <span
                         className={styles.ri}
@@ -4471,9 +6997,9 @@ function SettingsCard({
                       </span>
                       <div>
                         <div className={styles.sl}>
-                          {prefs.name !== "" ? prefs.name : "Your buddy"}
+                          {castLabel(charOf(view), prefs.names)}
                         </div>
-                        <div className={styles.sd}>who runs with you</div>
+                        <div className={styles.sd}>who you play as</div>
                       </div>
                       {/*
             Both worlds work the same way now: a couple of starters, then a
@@ -4483,25 +7009,14 @@ function SettingsCard({
             all.
           */}
                       <div className={styles.ctl}>
-                        {(prefs.world === "hero"
-                          ? HERO_CHARACTERS
-                          : ([{ id: "TRex", label: "Rex" }] as const)
-                        ).map(({ id, label }) => (
+                        {charactersOf(worldDraft).map(({ id }) => (
                           <button
                             key={id}
                             type="button"
-                            className={pill(
-                              (prefs.world === "hero"
-                                ? prefs.hero
-                                : prefs.dino) === id,
-                            )}
-                            onClick={() =>
-                              prefs.world === "hero"
-                                ? onPickHero(id)
-                                : onPickDino(id)
-                            }
+                            className={pill(charOf(view) === id)}
+                            onClick={() => onPickCharacter(id, worldDraft)}
                           >
-                            {label}
+                            {castLabel(id, prefs.names)}
                           </button>
                         ))}
                         {/*
@@ -4515,44 +7030,41 @@ function SettingsCard({
               "hero world is not left without rewards" test in album.test.ts
               exists to protect. Only this picker stops listing them.
             */}
-                        {(prefs.world === "hero"
-                          ? []
-                          : HATCHLINGS[prefs.world]
-                        ).map(({ id, label, at }) =>
-                          included >= at ? (
+                        {/*
+              THE DINO WORLD'S HATCHLINGS, AND ONLY ONCE THEY HAVE HATCHED.
+              
+              Dino is the one world whose hatchlings are characters a child
+              PLAYS AS — Vela, Steggy, Tops are its whole cast past the first
+              one. Village Road's are companions, which is what album.ts says
+              they are, so Puppy and Robot were being offered here as people
+              to be rather than to walk with; they have moved to the friend
+              row below, the buffalo with them. Hero's were already gone.
+
+              The locked eggs are gone too. They were greyed pills reading
+              "12 keys", "16 keys", "20 keys" — a row of buttons that could
+              not be pressed, in the one place a child comes to press buttons,
+              mostly saying how much of the toy box is shut. A hatchling is a
+              surprise, and announcing the date of a surprise spends it early.
+
+              Nothing stops hatching: they still celebrate and still earn
+              their album sticker — see the album test that protects it.
+            */}
+                        {(worldDraft === "dino" ? HATCHLINGS.dino : [])
+                          .filter(({ at }) => included >= at)
+                          .map(({ id }) => (
                             <button
                               key={id}
                               type="button"
-                              className={pill(
-                                (prefs.world === "hero"
-                                  ? prefs.hero
-                                  : prefs.dino) === id,
-                              )}
-                              onClick={() =>
-                                prefs.world === "hero"
-                                  ? onPickHero(id)
-                                  : onPickDino(id)
-                              }
+                              className={pill(charOf(view) === id)}
+                              onClick={() => onPickCharacter(id, worldDraft)}
                             >
-                              {label}
+                              {castLabel(id, prefs.names)}
                             </button>
-                          ) : (
-                            <button
-                              key={id}
-                              type="button"
-                              className={clsx(styles.pill, styles.pillEgg)}
-                              disabled={true}
-                              title={`This egg hatches at ${at} keys`}
-                            >
-                              <EggIcon size={14} color="currentColor" /> {at}{" "}
-                              keys
-                            </button>
-                          ),
-                        )}
+                          ))}
                         <button
                           type="button"
                           className={styles.pill}
-                          onClick={onRename}
+                          onClick={() => onRename(charOf(view))}
                         >
                           Rename
                         </button>
@@ -4564,7 +7076,7 @@ function SettingsCard({
             Explorers minus whoever you are already playing as, so it can
             never suggest you bring yourself.
           */}
-                    {prefs.world === "hero" && companionChoices.length > 0 && (
+                    {childCast(worldDraft) && companionChoices.length > 0 && (
                       <div className={styles.srow}>
                         <span
                           className={styles.ri}
@@ -4573,29 +7085,56 @@ function SettingsCard({
                           <PawIcon size={24} color="#2f5d7a" />
                         </span>
                         <div>
-                          <div className={styles.sl}>Who comes with you?</div>
+                          <div className={styles.sl}>
+                            {companionsOf(view).length === 0
+                              ? "Who comes with you?"
+                              : `${companionsOf(view)
+                                  .map((id) => castLabel(id, prefs.names))
+                                  .join(" and ")} ${
+                                  companionsOf(view).length > 1
+                                    ? "come"
+                                    : "comes"
+                                } with you`}
+                          </div>
+                          {/*
+                            Says what they ARE, not what they do. The old line
+                            promised "they copy what you do, a moment later",
+                            which is only true of where they walk — they do
+                            not copy the resting, the celebrating or any of
+                            the rest of it, so a child who read that line and
+                            then watched them was being told something the
+                            game does not do.
+                          */}
                           <div className={styles.sd}>
-                            they copy what you do, a moment later
+                            walks the road with you
                           </div>
                         </div>
                         <div className={styles.ctl}>
                           <button
                             type="button"
-                            className={pill(prefs.companion == null)}
-                            onClick={() => onPickCompanion(null)}
+                            className={pill(companionsOf(view).length === 0)}
+                            onClick={() => onPickCompanion(null, worldDraft)}
                           >
                             Nobody
                           </button>
-                          {companionChoices.map(({ id, label }) => (
+                          {companionChoices.map(({ id }) => (
                             <button
                               key={id}
                               type="button"
-                              className={pill(prefs.companion === id)}
-                              onClick={() => onPickCompanion(id)}
+                              className={pill(companionsOf(view).includes(id))}
+                              onClick={() => onPickCompanion(id, worldDraft)}
                             >
-                              {label}
+                              {castLabel(id, prefs.names)}
                             </button>
                           ))}
+                          {/*
+                            NO RENAME BUTTON HERE. A name belongs to the
+                            character, not to the job — renaming Dave in the
+                            row above renames him here too, because he is the
+                            same person. A second button that did the same
+                            thing to the same people would only raise the
+                            question of why there are two.
+                          */}
                         </div>
                       </div>
                     )}
@@ -5090,9 +7629,30 @@ function SettingsCard({
             )}
           </div>
         </div>
-        <button type="button" className={styles.cta} onClick={onClose}>
-          {trail ? "Back to the run!" : "Back to typing!"}
-        </button>
+        <div className={styles.ctaRow}>
+          {/*
+            Only offered when there is something to cancel. A button that
+            does the same thing as the one beside it is a button a child has
+            to think about, and there is nothing to undo until a different
+            world has been picked — everything else on this card takes effect
+            as it is tapped and is undone by tapping it back.
+          */}
+          {worldDraft !== prefs.world && (
+            <button
+              type="button"
+              className={clsx(styles.cta, styles.ctaQuiet)}
+              onClick={() => {
+                setWorldDraft(prefs.world);
+                onClose();
+              }}
+            >
+              Cancel
+            </button>
+          )}
+          <button type="button" className={styles.cta} onClick={leaveSettings}>
+            {trail ? "Back to the run!" : "Back to typing!"}
+          </button>
+        </div>
       </div>
     </div>
   );

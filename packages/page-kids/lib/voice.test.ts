@@ -4,7 +4,7 @@ import { forSpeech, isSpoken } from "./voice.ts";
 
 test("the moments speak and the chatter does not", () => {
   isTrue(isSpoken("grow"), "a new key is the whole point of the page");
-  isTrue(isSpoken("hatch"));
+  isTrue(isSpoken("joins"));
   isTrue(isSpoken("stuck"), "help, said when they cannot read the help");
   isTrue(isSpoken("idle"), "and said exactly when they are not looking");
   // The waiting poses replace the idle nudge for characters that have them,

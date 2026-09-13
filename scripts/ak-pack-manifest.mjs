@@ -21,6 +21,17 @@ const ROLE = {
   Peeli: ["Peeli", "Main character or companion"],
   Robot: ["Robot", "Companion only"],
   Puppy: ["Puppy", "Companion only"],
+  Buffalo: ["Buffalo", "Random character (wild)"],
+  // Village Road scenery. Props rather than characters: no rig, no clips, and
+  // placed as landmarks along the road instead of being chosen by a child.
+  Temple: ["Temple", "Village landmark"],
+  Market: ["Village Market", "Village landmark"],
+  Banyan: ["Banyan Tree", "Village landmark"],
+  HouseMoss: ["Moss-Crowned Homestead", "Village dwelling"],
+  HouseHearth: ["Hearth House", "Village dwelling"],
+  HouseThatch: ["Thatch Homestead", "Village dwelling"],
+  Wall: ["Stone Wall", "Village dressing"],
+  Cart: ["Wooden Cart", "Village dressing"],
 };
 
 function read(file) {

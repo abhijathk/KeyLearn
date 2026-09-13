@@ -61,10 +61,12 @@ function parseGlb(path) {
 
 const [, , inPath, outPath, ...flags] = process.argv;
 if (!inPath || !outPath) {
-  console.error("usage: glb-compress.mjs <in.glb> <out.glb> [--verify]");
+  console.error("usage: glb-compress.mjs <in.glb> <out.glb> [--verify] [--indices]");
   process.exit(2);
 }
 const verify = flags.includes("--verify");
+/** Compress the index buffer too. See the index section for what it costs. */
+const COMPRESS_INDICES = flags.includes("--indices");
 
 await MeshoptEncoder.ready;
 const { json, bin, size: inSize } = parseGlb(inPath);
@@ -84,6 +86,8 @@ for (const im of json.images ?? []) {
 
 /** Element size in bytes for an accessor — the row stride once packed. */
 const strideOf = (a) => COMPONENTS[a.type] * COMPONENT_BYTES[a.componentType];
+/** The stride meshopt will accept: the next multiple of four at or above it. */
+const padStride = (s) => (s % 4 === 0 ? s : s + (4 - (s % 4)));
 
 /** Raw bytes of an accessor, packed tightly. */
 function accessorBytes(a) {
@@ -105,11 +109,20 @@ function accessorBytes(a) {
 // ── group accessors by stride, keeping indices and images out of it ──
 const groups = new Map(); // stride -> accessor indices
 const indexAccessors = [];
+const passthroughAccessors = [];   // valid, just not meshopt-compressible
 json.accessors.forEach((a, i) => {
   if (a.bufferView == null) return; // sparse / zero-filled: left alone
   if (indexViews.has(a.bufferView)) { indexAccessors.push(i); return; }
-  const s = strideOf(a);
-  if (s % 4 !== 0 || s > 256) return; // outside what meshopt accepts
+  // meshopt's vertex codec requires a stride that is a multiple of four, and a
+  // QUANTIZED VEC3 never is: i16 gives 6 bytes, i8 gives 3. Rather than skip
+  // those, each row is PADDED up to the next multiple of four and the merged
+  // view is given an explicit byteStride to match - which is ordinary glTF, and
+  // what byteStride is for. Skipping them instead cost 271 KB on the puppy
+  // (uncompressed normals) and, before that, dropped their bufferView entirely
+  // and produced a correctly sized file that threw the moment three.js
+  // opened it.
+  const s = padStride(strideOf(a));
+  if (s > 256) { passthroughAccessors.push(i); return; }
   if (!groups.has(s)) groups.set(s, []);
   groups.get(s).push(i);
 });
@@ -160,9 +173,18 @@ for (const [stride, accs] of [...groups].sort((a, b) => a[0] - b[0])) {
   const parts = [];
   const placement = [];
   let rows = 0;
+  let padded = false;
   for (const ai of accs) {
     const a = json.accessors[ai];
-    const bytes = accessorBytes(a);
+    const natural = strideOf(a);
+    let bytes = accessorBytes(a);
+    if (natural !== stride) {
+      // widen each row from its natural size to the group's padded stride
+      const wide = Buffer.alloc(a.count * stride);
+      for (let r = 0; r < a.count; r++) bytes.copy(wide, r * stride, r * natural, r * natural + natural);
+      bytes = wide;
+      padded = true;
+    }
     placement.push({ ai, offset: rows * stride });
     parts.push(bytes);
     rows += a.count;
@@ -173,26 +195,77 @@ for (const [stride, accs] of [...groups].sort((a, b) => a[0] - b[0])) {
     json.accessors[ai].bufferView = index;
     json.accessors[ai].byteOffset = offset;
   }
+  // A padded group needs the stride stated, or a reader walks the rows at their
+  // natural size and every attribute after the first is garbage.
+  if (padded) newViews[index].byteStride = stride;
   checks.push({ label: `stride ${stride}`, raw, viewIndex: index });
   report.push(`  stride ${String(stride).padStart(3)}  ${String(accs.length).padStart(4)} accessors  ${(raw.length / 1024).toFixed(0).padStart(6)} KB -> ${(encoded.length / 1024).toFixed(0).padStart(6)} KB`);
 }
 
 // Indices: straight through, untouched.
 //
-// meshopt has an index codec and it is markedly better than the general one —
-// 270 KB down to 170 KB here. It is not used, for two reasons that the
-// --verify pass surfaced rather than my reading the spec: it is lossless
-// about the GEOMETRY but not about the BYTES, because it may rotate which
-// vertex a triangle starts on, and feeding it the source's 16-bit indices
-// meant widening them to 32-bit and rewriting each accessor's componentType.
+// meshopt has an index codec and it is markedly better than the general one.
+// It is OFF by default, for two reasons the --verify pass surfaced rather
+// than my reading the spec: it is lossless about the GEOMETRY but not about
+// the BYTES, because it may rotate which vertex a triangle starts on, and it
+// wants 32-bit indices, so 16-bit ones are widened and each accessor's
+// componentType rewritten.
 //
-// Both are defensible in a normal pipeline and neither is allowed here: the
-// brief asks for keyframe and mesh data preserved, and quietly changing an
-// accessor's component type is not preserving it. 138 KB of indices against a
-// 9.8 MB file is not worth a caveat in the QA report.
+// Neither is a visual change — a rotated triangle is the same triangle, and
+// a widened index addresses the same vertex. Both are a change to the FILE,
+// so this stays opt-in: a pipeline whose brief is "preserve the mesh data"
+// should not quietly rewrite component types, and when this was written 138
+// KB of indices against a 9.8 MB file did not justify the caveat.
+//
+// --indices is for the case where it does. MEASURE BEFORE USING IT: on the
+// buffalo, whose 1 MB budget prompted this, it made the file BIGGER — 106 KB
+// of u16 indices became 127 KB, because widening them to the u32 the codec
+// requires costs more than the codec recovers on a mesh whose index order has
+// poor locality. It is a win on meshes with long triangle strips and a loss
+// on this one, and the only way to tell is to run it both ways.
 for (const ai of indexAccessors) {
   const a = json.accessors[ai];
   const raw = accessorBytes(a);
+  if (COMPRESS_INDICES) {
+    // Widen to 32-bit: the codec's input stride must be 4.
+    const count = a.count;
+    const wide = Buffer.alloc(count * 4);
+    for (let i = 0; i < count; i++) {
+      const v =
+        a.componentType === 5125
+          ? raw.readUInt32LE(i * 4)
+          : a.componentType === 5123
+            ? raw.readUInt16LE(i * 2)
+            : raw.readUInt8(i);
+      wide.writeUInt32LE(v, i * 4);
+    }
+    const enc = MeshoptEncoder.encodeIndexBuffer(new Uint8Array(wide), count, 4);
+    align();
+    newViews.push({
+      buffer: 0,
+      byteLength: count * 4,
+      target: 34963,
+      extensions: {
+        EXT_meshopt_compression: {
+          buffer: 0,
+          byteOffset: outLen,
+          byteLength: enc.length,
+          mode: "TRIANGLES",
+          count,
+          byteStride: 4,
+        },
+      },
+    });
+    outBin.push(Buffer.from(enc));
+    outLen += enc.length;
+    json.accessors[ai].bufferView = newViews.length - 1;
+    json.accessors[ai].byteOffset = 0;
+    json.accessors[ai].componentType = 5125;
+    report.push(
+      `  indices     ${String(count).padStart(4)} values     ${(raw.length / 1024).toFixed(0).padStart(6)} KB -> ${(enc.length / 1024).toFixed(0).padStart(6)} KB    (widened to u32, triangle order may rotate)`,
+    );
+    continue;
+  }
   align();
   newViews.push({ buffer: 0, byteOffset: outLen, byteLength: raw.length, target: 34963 });
   outBin.push(Buffer.from(raw));
@@ -200,6 +273,19 @@ for (const ai of indexAccessors) {
   json.accessors[ai].bufferView = newViews.length - 1;
   json.accessors[ai].byteOffset = 0;
   report.push(`  indices     ${String(a.count).padStart(4)} values     ${(raw.length / 1024).toFixed(0).padStart(6)} KB    uncompressed, unchanged`);
+}
+
+// Accessors meshopt cannot take: straight through, uncompressed, but CARRIED.
+for (const ai of passthroughAccessors) {
+  const a = json.accessors[ai];
+  const raw = accessorBytes(a);
+  align();
+  newViews.push({ buffer: 0, byteOffset: outLen, byteLength: raw.length });
+  outBin.push(Buffer.from(raw));
+  outLen += raw.length;
+  json.accessors[ai].bufferView = newViews.length - 1;
+  json.accessors[ai].byteOffset = 0;
+  report.push(`  passthru    ${String(a.count).padStart(4)} x ${a.type}  ${(raw.length / 1024).toFixed(0).padStart(6)} KB    stride ${strideOf(a)} not a multiple of 4`);
 }
 
 // Images: straight through, uncompressed.
@@ -241,6 +327,22 @@ const out = Buffer.alloc(total);
 out.writeUInt32LE(0x46546c67, 0); out.writeUInt32LE(2, 4); out.writeUInt32LE(total, 8);
 out.writeUInt32LE(jc.length, 12); out.writeUInt32LE(JSON_CHUNK, 16); jc.copy(out, 20);
 out.writeUInt32LE(bc.length, 20 + jc.length); out.writeUInt32LE(BIN_CHUNK, 24 + jc.length); bc.copy(out, 28 + jc.length);
+// Refuse to write a file whose accessors do not all resolve.
+//
+// The merge step groups bufferViews by element size and remaps the accessors it
+// moved. Anything it did not move keeps its ORIGINAL view index, which no longer
+// exists once the views are rebuilt - and the result is a correctly sized GLB
+// that throws inside three.js the moment it is opened. Offline geometry,
+// animation and size checks all pass it. This is the check that does not.
+{
+  let bad = 0;
+  (json.accessors ?? []).forEach((a, i) => {
+    if (a.bufferView === undefined) { if (!a.sparse) { bad++; console.error(`  accessor ${i} has no bufferView`); } }
+    else if (!json.bufferViews[a.bufferView]) { bad++; console.error(`  accessor ${i} -> missing bufferView ${a.bufferView}`); }
+  });
+  if (bad) { console.error(`REFUSING to write ${outPath}: ${bad} dangling accessor reference(s).`); process.exit(1); }
+}
+
 writeFileSync(outPath, out);
 
 console.log(`in  ${(inSize / 1048576).toFixed(2)} MB`);

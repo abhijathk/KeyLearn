@@ -166,6 +166,108 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   VILLAGE ROAD · ONE WINDOW
+
+   The scene, the coach's line and the keyboard are three separate cards
+   on the other two worlds. On this one they are a single window.
+
+   THE JOIN IS THE WHOLE JOB. Two panes that meet have to actually meet:
+   the scene's bottom corners and the keyboard's top corners go square,
+   only the outer four keep the page's `--kr`, and the shadow is cast
+   once by the shell instead of three times by the parts. Get any of
+   those wrong and it reads as two cards pushed together, which looks
+   worse than leaving them apart.
+
+   `display: contents` is what keeps this from touching Dino Run and
+   Hero Trial at all: unjoined, the wrapper has no box and its three
+   children sit in `.root`'s flex column exactly as they always did, so
+   the other two worlds cannot be affected by a layout they do not use.
+
+   THE SCENE DOES NOT CHANGE HEIGHT. `.root` used to put a 0.75rem gap
+   above and below the coach line; merging would have handed those
+   1.5rem straight to the scene, which is `flex: 1 1 auto` and takes
+   whatever is going. The gaps become padding on the line instead, so
+   the sums are identical and the pane is the size it always was.
+   ══════════════════════════════════════════════════════════════════ */
+
+.oneWindow {
+  display: contents;
+}
+
+/*
+ * THE WINDOW IS AS TALL AS WHAT IS IN IT.
+ *
+ * Not `flex: 1 1 auto`. Stretching it to the browser left a band of empty
+ * white inside the window below the keyboard, and the scene could never fill
+ * that band however much free space there was — the effect above this one
+ * caps the pane at one and a half times the keyboard's height, on purpose, so
+ * at a 270px keyboard the scene stops dead at 405 and the rest is slack with
+ * nowhere to go.
+ *
+ * Content-sized, there is no slack to begin with. The scene keeps its own
+ * sizing and its own cap untouched, which matters more than it looks: the
+ * canvas is resized to that pane and the camera is framed from it, so giving
+ * the pane a height here — which was the first attempt — pushes the whole
+ * view backwards.
+ */
+.joined {
+  display: flex;
+  position: relative;
+  flex: 0 0 auto;
+  flex-direction: column;
+  inline-size: min(76rem, 96vi);
+  border-radius: var(--kr);
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: var(--kshadow);
+}
+
+/* The gaps `.root` used to provide, now inside the window. */
+/*
+ * The coach's line sits in the middle of the window.
+ *
+ * Centred as a BOX as well as as text: `text-align` alone centres the words
+ * inside whatever width the line happens to occupy, which is the full window
+ * here and so looks right — but it is one inherited property away from not
+ * being, and this strip is the only thing between the road and the keyboard.
+ * The grid pins the span itself to the centre and stops caring.
+ */
+.joined .say {
+  display: grid;
+  flex: none;
+  place-items: center;
+  padding-inline: 1.3rem;
+  padding-block: 0.75rem;
+  text-align: center;
+}
+
+/*
+ * No background of its own. It kept painting `--card` over the shell, which
+ * is what left the keyboard half a visibly lighter panel than the strip above
+ * it — two colours inside something that is meant to be one window.
+ */
+.joined .kbWrap {
+  flex: none;
+  inline-size: auto;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/*
+ * NIGHT ON THIS ROAD IS DARK.
+ *
+ * Darker than the page behind it rather than lighter, which is the other way
+ * round from the daytime card and is the point: after dark the window is a
+ * lit scene and a keyboard in a room with the light off, not a white card
+ * someone has dimmed. The shared `--card` navy is too close to daylight for
+ * a road whose only lighting is an oil lamp.
+ */
+.rootDark .joined {
+  background: #0e1120;
+}
+
 .sceneCard {
   position: relative;
   flex: 1 1 auto;
@@ -175,6 +277,24 @@
   overflow: hidden;
   background: var(--card);
   box-shadow: var(--kshadow);
+}
+
+/*
+ * The scene keeps the sizing it had as a card of its own, and its height
+ * still comes from the script that caps it against the keyboard — see the
+ * capping effect in KidsPage.
+ *
+ * An `aspect-ratio` here was tried and reverted. It did remove the jump, but
+ * it also took the height away from that cap, and the two do not agree: the
+ * camera's frustum is fixed vertically and widened by the pane's aspect, so a
+ * pane even slightly shorter than the cap produces widens the view and the
+ * whole road reads as zoomed out. Whatever sets this height owns the framing,
+ * and the cap owns it.
+ */
+.joined .sceneCard {
+  inline-size: auto;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .canvas {
@@ -197,6 +317,19 @@
   pointer-events: none;
 }
 
+/*
+ * THE LOADING SCREEN.
+ *
+ * `container-type: inline-size` is what makes the whole thing responsive
+ * without a media query or a line of script: every size below is in `cqi`,
+ * one per cent of THIS box's width, and this box is the window — which is
+ * itself `min(76rem, 96vi)`. So the screen tracks the browser by
+ * construction rather than by being told to.
+ *
+ * The contents used to be sized for the old box, a third of a pane. Once the
+ * loader covered the whole window they were a small cluster adrift in it,
+ * which is the whole of why it read as plain.
+ */
 .loading {
   display: grid;
   position: absolute;
@@ -204,66 +337,879 @@
   z-index: 20;
   place-items: center;
   background: var(--paper);
+  container-type: inline-size;
 }
 
+/*
+ * Wide enough for the longest chapter line. Every character of that line sits
+ * in a fixed-width slot so it cannot reflow while it resolves, which also
+ * means it must never be allowed to wrap — see `.loadLabel`.
+ */
+.loadStack {
+  display: grid;
+  justify-items: center;
+  inline-size: min(64cqi, 46rem);
+}
+
+/**
+ * THE CHARACTER, CENTRED ON PURPOSE.
+ *
+ * A `canvas` is `display: inline` by default, so it sits at the start of its
+ * line box and takes no part in centring. It only LOOKED centred because the
+ * wrapper it lives in is unstyled and was exactly as wide as `.loadGround`
+ * (13rem) — the canvas being 12rem, it was already half a rem off and nobody
+ * could tell. Widening the label past 13rem made the label the widest child,
+ * the wrapper grew to fit it, and he slid visibly to the left.
+ *
+ * Centred explicitly rather than by putting `text-align: center` on the
+ * parent, so it cannot come undone the next time a child changes width.
+ */
+/*
+ * Bigger than it was, and deliberately well short of the room available.
+ *
+ * The character is a game model — a few thousand triangles wearing a texture
+ * sized for something walking about in the middle distance. Blown up to fill
+ * this surface it stops reading as a character and starts reading as its
+ * budget: soft edges, flat shading, every shortcut on show. It wants to be
+ * large enough to be somebody and small enough to still be a drawing.
+ */
+.loadArt {
+  display: block;
+  inline-size: clamp(8rem, 17cqi, 13rem);
+  block-size: auto;
+  aspect-ratio: 3 / 2;
+  margin-inline: auto;
+}
+
+/*
+ * THE CHAPTER.
+ *
+ * Was 0.95rem, at which size the braille resolving into letters was a grey
+ * shimmer rather than an effect anybody could read. At this size you can
+ * watch the cells become the word, which is the point of it.
+ *
+ * `nowrap` is load-bearing: every character sits in a fixed-width slot so the
+ * line cannot reflow while it resolves, and a long land name allowed to wrap
+ * would fold mid-word and jump a line in the middle of the reveal.
+ */
 .loadLabel {
-  margin-block-start: 0.9rem;
+  margin-block-start: clamp(0.8rem, 2cqi, 1.8rem);
   color: var(--kink2);
-  font-size: 0.95rem;
+  font-size: clamp(0.9rem, 2.3cqi, 1.85rem);
   font-weight: 800;
   text-align: center;
+  white-space: nowrap;
 }
 
-.loadGround {
-  position: relative;
-  inline-size: 13rem;
-  block-size: 6px;
-  margin: 0.4rem auto 0;
+/**
+ * What the world is building, under the chapter name.
+ *
+ * Monospaced and letter-spaced on purpose: the text arrives as morse and
+ * resolves into words, and morse only reads as morse if the dots and dashes
+ * sit in even columns. A proportional face closes the gaps up and it turns
+ * into a smear of punctuation.
+ *
+ * A fixed height, so the card does not jump every time a longer name comes
+ * through — the row is always there, it just changes what it says.
+ */
+/* ══ THE STORY ═══════════════════════════════════════════════════════════
+ *
+ * A palm-leaf manuscript, not a dialog. Everything below is aged paper, and
+ * it keeps the same colours in both app themes on purpose: it is a physical
+ * object the children are holding, and a physical object does not repaint
+ * itself when somebody turns the room light off.
+ */
+
+/**
+ * The button. Icon only, bottom-left of the scene — the one corner the HUD
+ * chips and the letter ribbon both leave alone.
+ *
+ * It is absent while typing rather than dimmed. See `.storyBtn[hidden]`: a
+ * story invitation in the corner of a typing exercise is a thing to look at
+ * instead of the keyboard, and the youngest children are the ones who look.
+ */
+.storyBtn {
+  display: grid;
+  position: absolute;
+  inset-inline-start: 0.7rem;
+  inset-block-end: 0.7rem;
+  z-index: 5;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding: 0;
+  border: 0;
   border-radius: 999px;
+  background: rgb(38 26 16 / 55%);
+  cursor: pointer;
+  animation: storyIn 0.25s ease-out both;
+
+  &:hover {
+    background: rgb(38 26 16 / 72%);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+/** The unread mark. A lamp-coloured dot, no sound, no bounce. */
+.storyNew {
+  position: absolute;
+  inset-inline-end: 0.16rem;
+  inset-block-start: 0.16rem;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 999px;
+  background: #f0b429;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   VILLAGE ROAD · THE NOTICE
+
+   Village Road's HUD is not the chip stack the other two worlds use.
+   It is one torn sheet of 1930s newsprint pinned in the corner with
+   every figure printed on it, and it carries NO ICONS — a star and a
+   flame beside a number belong to a game about dinosaurs, not to a
+   road in Malabar.
+
+   THE TEAR is three clipped layers, not one:
+
+     · the RIM, outermost and DARKER than the face. An exposed paper
+       edge has been handled, has taken dirt and oxidised. A bright
+       white fringe is what a sheet torn this morning looks like.
+     · the FIBRE just inside it, pale but buff — the sheet aged right
+       through, so nothing on it is white.
+     · the FACE, the printed surface.
+
+   None of the three is a polygon. A hand-cut clip-path always reads
+   as a zigzag, because evenly spaced points give evenly spaced teeth
+   and the eye finds the period immediately. These are rectangles run
+   through feDisplacementMap with four octaves of fractal noise, so
+   the edge wanders at every scale and nothing repeats. The filters
+   live in KidsPage's <TearDefs>; the ids are prefixed `klv` because
+   SVG filter ids are document-global and CSS-module hashing does not
+   reach them.
+
+   THE PAPER is grain plus mottle. The fine monochrome tooth tiles at
+   200px; the low-frequency mottle stretches across the whole sheet
+   and is what stops it reading as flat colour. Both are one small
+   feTurbulence each, about 400 bytes, rather than a stack of
+   gradients pretending.
+   ══════════════════════════════════════════════════════════════════ */
+
+.notice {
+  position: absolute;
+  inset-inline-start: 0.7rem;
+  inset-block-start: 0.7rem;
+  z-index: 6;
+  inline-size: 12.2rem;
+}
+
+/*
+ * The three torn layers, stacked. They are grouped under `.sheet` so
+ * that night can take the PAPER down without touching the ink: a
+ * brightness filter over the whole notice crushes the lit line back
+ * down along with everything else.
+ */
+.sheet {
+  position: absolute;
+  inset: 0;
+}
+
+.rim {
+  position: absolute;
+  inset: -3px;
+  background: #8c866c;
+  filter: url(#klvTearRim) blur(0.4px)
+    drop-shadow(0 2px 3px rgb(30 26 12 / 38%));
+}
+
+.fibre {
+  position: absolute;
+  inset: -1.5px;
+  background: #cdc7b2;
+  filter: url(#klvTearFibre) blur(0.35px);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  background-color: #ddd7c4;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.30 0 0 0 0 0.27 0 0 0 0 0.20 0.22 0.22 0.22 0 -0.10'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url%28%23g%29'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.013' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.66 0 0 0 0 0.60 0 0 0 0 0.48 0.26 0.26 0.26 0 -0.11'/%3E%3CfeGaussianBlur stdDeviation='0.8'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url%28%23m%29'/%3E%3C/svg%3E"),
+    radial-gradient(
+      132% 116% at 50% 46%,
+      transparent 48%,
+      rgb(96 82 52 / 26%) 100%
+    );
+  background-size:
+    auto,
+    100% 100%,
+    auto;
+  filter: url(#klvTear);
+  background-blend-mode: multiply, multiply, normal;
+}
+
+.notePrint {
+  position: relative;
+  z-index: 1;
+  padding: 0.55rem 0.75rem 0.6rem;
+  color: #23201a;
+}
+
+/* The masthead: the one line that is a sentence rather than a figure. */
+.noteHead {
+  display: block;
+  margin-block-end: 0.26rem;
+  padding-block-end: 0.26rem;
+  border-block-end: 1px solid currentcolor;
+  opacity: 0.72;
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+
+  b {
+    opacity: 1;
+    font-size: 0.74rem;
+  }
+}
+
+.noteRow {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.14rem 0.16rem 0.18rem;
+}
+
+.noteLab {
+  opacity: 0.66;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease,
+    text-shadow 0.2s ease;
+}
+
+.noteVal {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1;
+  transition:
+    color 0.2s ease,
+    text-shadow 0.2s ease;
+  font-variant-numeric: tabular-nums;
+}
+
+.timerLowNote {
+  color: #a8321a;
+}
+
+/*
+ * A figure that has just changed catches the light for a moment.
+ *
+ * Only the line that moved, and only a little: a full flare on the
+ * whole notice every time a key lands is a strobe beside the letters
+ * the child is trying to read. This is the same glow the hover uses,
+ * at roughly a third of it, fading over three quarters of a second.
+ */
+.noteFlash {
+  .noteLab {
+    opacity: 0.86;
+  }
+
+  .noteVal {
+    color: #0f0c07;
+    text-shadow: 0 0 6px rgb(255 246 220 / 85%);
+  }
+}
+
+.rootDark .noteFlash .noteVal {
+  color: #e8c48c;
+  text-shadow: 0 0 7px rgb(255 168 60 / 62%);
+}
+
+/*
+ * After dark the paper goes down and the ink goes down with it, but
+ * separately — see `.sheet` above for why.
+ */
+.rootDark {
+  // Night on this road is properly dark — no street lighting but the
+  // oil lamps, which are not near the corner the notice hangs in.
+  .sheet {
+    filter: brightness(0.3) saturate(0.52);
+  }
+
+  .notePrint {
+    color: #6d6249;
+  }
+}
+
+/*
+ * ILLUMINATION, line by line.
+ *
+ * The LETTERS light, not the paper behind them. A band washed across
+ * the row reads as a menu selection; what is wanted is the ink coming
+ * up as the light reaches it — by day the sun through the canopy,
+ * after dark the vazhivilakku carried over to the sheet. Only the
+ * line under the pointer, never the whole notice.
+ */
+/*
+ * The masthead lights too.
+ *
+ * It was left out because the hover was written against `.noteRow`, and the
+ * "keys on your trail" line is not a row — so the one line at the top of the
+ * notice was the only thing on it that stayed dead under the pointer.
+ */
+.noteHead:hover {
+  color: #120f09;
+  opacity: 1;
+  text-shadow:
+    0 0 6px rgb(255 246 220 / 95%),
+    0 0 13px rgb(255 246 220 / 55%);
+}
+
+.noteRow:hover {
+  .noteLab {
+    color: #1a1610;
+    opacity: 1;
+    text-shadow: 0 0 5px rgb(255 246 220 / 95%);
+  }
+
+  .noteVal {
+    color: #120f09;
+    text-shadow:
+      0 0 7px rgb(255 246 220 / 95%),
+      0 0 14px rgb(255 246 220 / 60%);
+  }
+}
+
+.rootDark .noteHead:hover {
+  color: #ffe0ac;
+  text-shadow:
+    0 0 8px rgb(255 168 60 / 95%),
+    0 0 18px rgb(255 168 60 / 55%);
+}
+
+.rootDark .noteRow:hover {
+  .noteLab {
+    color: #ffcf8c;
+    opacity: 1;
+    text-shadow: 0 0 6px rgb(255 168 60 / 80%);
+  }
+
+  .noteVal {
+    color: #ffe0ac;
+    text-shadow:
+      0 0 9px rgb(255 168 60 / 95%),
+      0 0 20px rgb(255 168 60 / 55%);
+  }
+}
+
+/*
+ * The story button, torn from the same sheet. Village Road only — the
+ * other two worlds keep the plain dark disc.
+ */
+.storyScrap {
+  border-radius: 0;
+  color: #23201a;
+  background: none;
+
+  // The disc the other two worlds use has no place here, and the ink lifts
+  // instead — the icon draws in `currentColor`.
+  &:hover {
+    color: #120f09;
+    background: none;
+  }
+}
+
+/*
+ * The three torn layers of the scrap, grouped — the same arrangement the
+ * notice uses, and for the same reason: night dims the PAPER here, so the
+ * tear filters have to stay on the children where the brightness cannot
+ * overwrite them.
+ */
+.scrapPaper {
+  position: absolute;
+  inset: 0;
+}
+
+.scrapRim {
+  position: absolute;
+  inset: -3px;
+  background: #8c866c;
+  filter: url(#klvScrapRim) blur(0.4px)
+    drop-shadow(0 2px 3px rgb(30 26 12 / 38%));
+}
+
+.scrapFibre {
+  position: absolute;
+  inset: -1.5px;
+  background: #cdc7b2;
+  filter: url(#klvScrapFibre) blur(0.35px);
+}
+
+.scrapFace {
+  position: absolute;
+  inset: 0;
+  background-color: #ddd7c4;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.30 0 0 0 0 0.27 0 0 0 0 0.20 0.22 0.22 0.22 0 -0.10'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url%28%23g%29'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.013' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.66 0 0 0 0 0.60 0 0 0 0 0.48 0.26 0.26 0.26 0 -0.11'/%3E%3CfeGaussianBlur stdDeviation='0.8'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url%28%23m%29'/%3E%3C/svg%3E");
+  background-size:
+    auto,
+    100% 100%;
+  filter: url(#klvScrap);
+  transition: filter 0.2s ease;
+  background-blend-mode: multiply, multiply;
+}
+
+.rootDark .scrapPaper {
+  filter: brightness(0.3) saturate(0.52);
+}
+
+/* and the ink on it goes down with the notice's */
+.rootDark .storyScrap {
+  color: #6d6249;
+}
+
+.storyScrap svg {
+  position: relative;
+  z-index: 1;
+  transition: filter 0.2s ease;
+}
+
+.storyScrap:hover .scrapFace {
+  filter: url(#klvScrap) brightness(1.2) saturate(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .noteLab,
+  .noteVal,
+  .scrapFace,
+  .storyScrap svg {
+    transition: none;
+  }
+}
+
+@keyframes storyIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storyBtn {
+    animation: none;
+  }
+}
+
+/**
+ * The manuscript itself: a floating panel over the scene, never full screen.
+ *
+ * The road stays visible and dimmed behind it, because the story is about the
+ * place they are standing in and covering it makes the two feel unrelated.
+ */
+.storyBack {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  place-items: center;
+  padding: 1.2rem;
+  background: rgb(18 12 6 / 55%);
+  backdrop-filter: blur(2px);
+}
+
+/**
+ * AGED PAPER, built rather than photographed.
+ *
+ * Three layers of gradient: a warm base, a pair of off-centre radial stains
+ * the colour of weak tea, and a very fine repeating line that reads as the
+ * grain of a pressed leaf. No image, so it costs nothing to load and it
+ * cannot be blurry on a big screen.
+ */
+.storyDoc {
+  position: relative;
+  inline-size: min(38rem, 100%);
+  max-block-size: min(80vb, 44rem);
+  padding: 1.6rem 1.5rem 1.9rem;
+  border-radius: 3px;
+  overflow: hidden auto;
+  color: #33281b;
+  background:
+    radial-gradient(60% 40% at 18% 12%, rgb(150 116 62 / 13%), transparent 70%),
+    radial-gradient(50% 35% at 88% 82%, rgb(126 96 48 / 15%), transparent 72%),
+    repeating-linear-gradient(
+      90deg,
+      rgb(120 92 48 / 5%) 0 1px,
+      transparent 1px 4px
+    ),
+    linear-gradient(170deg, #f3e6cd, #e8d7b4);
+  box-shadow:
+    0 18px 50px rgb(0 0 0 / 45%),
+    inset 0 0 0 1px rgb(96 72 36 / 22%);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.storyTitle {
+  margin: 0 0 0.15rem;
+  color: #4a3a22;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.storySub {
+  margin: 0 0 1.1rem;
+  padding-block-end: 0.9rem;
+  border-block-end: 1px solid rgb(96 72 36 / 28%);
+  color: #7b6748;
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+/** One part of the story. */
+.storyPart {
+  padding: 1rem 0;
+  border-block-start: 1px solid rgb(96 72 36 / 18%);
+
+  &:first-of-type {
+    padding-block-start: 0.2rem;
+    border-block-start: 0;
+  }
+}
+
+.storyHead {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+
+.storyNo {
+  color: #9a7c46;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.storyPart h4 {
+  flex: 1 1 auto;
+  margin: 0;
+  color: #3d2f1c;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.storyPart p {
+  margin: 0.65rem 0 0;
+  font-size: 1rem;
+  line-height: 1.62;
+  text-wrap: pretty;
+}
+
+/**
+ * A part not yet reached. Shown, never hidden — knowing there are three more
+ * to come is most of why a child walks to the next stone.
+ */
+.storyShut {
+  opacity: 0.5;
+
+  h4 {
+    font-style: italic;
+  }
+}
+
+.storyWhen {
+  color: #8a7148;
+  font-size: 0.76rem;
+  font-style: italic;
+}
+
+/** Read this part aloud. Icon only, like the button that opened the panel. */
+.storySpeak {
+  display: grid;
+  place-items: center;
+  inline-size: 1.9rem;
+  block-size: 1.9rem;
+  padding: 0;
+  border: 1px solid rgb(96 72 36 / 30%);
+  border-radius: 999px;
+  background: rgb(255 252 244 / 55%);
+  cursor: pointer;
+
+  &:hover {
+    background: rgb(255 252 244 / 95%);
+  }
+}
+
+.storyClose {
+  inline-size: 100%;
+  margin-block-start: 1.4rem;
+  padding: 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  color: #f6ecd8;
+  background: #6b5227;
+  box-shadow: 0 4px 0 #4a3819;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:active {
+    box-shadow: 0 1px 0 #4a3819;
+    transform: translateY(3px);
+  }
+}
+
+/*
+ * THE NAME ROW.
+ *
+ * Braille resolving into "Peeli" and "the banyan tree" is the most
+ * interesting thing on this screen, and it used to be the smallest text on
+ * it.
+ */
+.loadStep {
+  block-size: clamp(1.3rem, 2.6cqi, 2.1rem);
+  margin-block-start: clamp(0.35rem, 1cqi, 0.9rem);
   overflow: hidden;
-  background: var(--kline);
+  color: var(--kink2);
+  opacity: 0.92;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Larger than the row would need for text alone. A braille cell draws six
+     small dots inside the box a letter gets, so at the size that suits the
+     words the unresolved half of a name is a grey haze rather than a code. */
+  font-size: clamp(0.85rem, 1.7cqi, 1.35rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/**
+ * One braille cell, drawn as six dots rather than set as a character.
+ *
+ * The monospace stack this row uses carries no Braille Patterns block, so
+ * every U+28xx character came out as the font's missing-glyph box — the same
+ * six-dot rectangle for every letter, which is the one thing a braille cell
+ * must never be. These are drawn, so the letters are right on any machine.
+ *
+ * Exactly one character wide, so a cell occupies the column its letter will
+ * occupy and turns into it on the spot without moving the rest of the line.
+ */
+/**
+ * One character's worth of space, holding either a cell or its letter.
+ *
+ * A fixed box with the contents centred, so the two cannot disagree about
+ * where they sit: swapping a drawn cell for a text glyph moves nothing,
+ * horizontally or vertically. Without it the cell aligned by its own box
+ * rule and the letter by the font's, and the letter appeared to rise into
+ * place from below the line.
+ */
+.loadSlot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  /*
+   * WIDER THAN THE GLYPH, not equal to it.
+   *
+   * This is the character advance for the whole label, and the label is set
+   * uppercase at weight 800. `1ch` is the width of a ZERO, which is narrower
+   * than most capitals in this face, so every letter was being squeezed into
+   * a box smaller than itself and the line read as one long word.
+   *
+   * Widened here rather than with `letter-spacing` because the slot is what
+   * governs the advance -- spacing on top of a too-narrow box would just move
+   * the crowding somewhere else. It also opens up the braille cells, which
+   * sit in the same slots and were equally tight.
+   */
+  inline-size: 1.34ch;
+  block-size: 1.1em;
+}
+
+.loadCell {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.09em;
+  /* ON THE BASELINE, where the letter will be.
+
+     An inline block's baseline is its bottom margin edge, so nudging the box
+     below the line sat the dots low and the letter that replaced them
+     appeared to rise into place from underneath. Sitting the box on the
+     baseline puts the cell exactly where a capital goes, which is where its
+     letter arrives — the glyph changes and nothing moves. */
+  inline-size: 100%;
+  block-size: 0.72em;
 
   i {
+    border-radius: 50%;
+    background: currentcolor;
+  }
+}
+
+/** A raised dot. */
+.dotOn {
+  opacity: 0.85;
+}
+
+/**
+ * A dot that is NOT raised.
+ *
+ * Drawn, faintly, rather than left out. A braille cell is a fixed frame of
+ * six positions and it is the pattern of filled ones against the empty ones
+ * that carries the letter; with the empties invisible, an `a` is a single
+ * floating dot with nothing to place it against.
+ */
+.dotOff {
+  opacity: 0.16;
+}
+
+/**
+ * THE PROGRESS SLIDER, along the bottom edge of the whole pane.
+ *
+ * Absolute rather than in the flow: `.loading` is the positioned ancestor
+ * (`inset: 0` over the scene), so this spans its full width and sits on its
+ * bottom edge, leaving the character and the chapter line centred on their
+ * own. Square ends, because a pill shape reads as a floating control and this
+ * is now part of the frame.
+ */
+/*
+ * THE GROUND HE WALKS ON IS THE PROGRESS BAR.
+ *
+ * It was a 3px hairline pinned to the bottom edge of the pane — far below
+ * him, with nothing under his feet at all, and a hole in the middle of the
+ * composition where the two should have met. One rule does both jobs: he is
+ * walking the road, and how far the light has got along it is how far the
+ * load has got.
+ */
+.loadGround {
+  position: relative;
+  inline-size: 100%;
+  block-size: clamp(3px, 0.5cqi, 6px);
+  margin-block-start: clamp(0.2rem, 0.5cqi, 0.6rem);
+  border-radius: 999px;
+  background: var(--kline);
+
+  /*
+   * A SWEEP, NOT A COMET.
+   *
+   * There was a hot white head on the leading edge of this. Without it the
+   * streak has to read on its own, so it is longer and tapers at BOTH ends —
+   * a gradient that fades only at the back still points somewhere, and once
+   * there is nothing at the tip that point looks like a mistake rather than a
+   * direction.
+   */
+  i {
     position: absolute;
-    inset-block-start: 0;
-    inline-size: 2.2rem;
-    block-size: 100%;
-    border-radius: 999px;
-    background: var(--leaf);
-    opacity: 0.55;
-    animation: lslide 0.7s linear infinite;
+    inset-block: 0;
+    inline-size: 42%;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--leaf) 45%,
+      var(--leaf) 62%,
+      transparent
+    );
+    /*
+     * COMPOSITOR ONLY. This runs while the world is streaming in, so it must
+     * cost the main thread nothing: transform and opacity are both composited
+     * off-thread, rasterised once and then moved and faded. Animating
+     * `inset-inline-start`, which is what this did, re-runs layout on every
+     * frame during the one stretch of the session where the CPU is already
+     * saturated.
+     */
+    will-change: transform, opacity;
+    animation: lslide 2.2s linear infinite;
   }
 }
 
+/*
+ * Head first, tail behind: it travels WITH the reading direction.
+ *
+ * Percentages here are of the STREAK's own width, not the bar's. It is 30% of
+ * the bar, so -100% parks it just off the left edge and 340% carries it just
+ * past the right.
+ */
+/*
+ * IT ARRIVES FROM NOTHING AND LEAVES AS NOTHING.
+ *
+ * Not edge to edge. A streak that slides in past the left end and out past
+ * the right reads as an object being carried across: you watch it enter, and
+ * then you wait for it to leave. Fading up after it has started and away
+ * before it stops takes the ends off the journey — light gathers on the road
+ * and goes again, and there is nothing to wait for.
+ */
 @keyframes lslide {
-  from {
-    inset-inline-start: 110%;
+  0% {
+    opacity: 0;
+    transform: translate3d(-6%, 0, 0);
   }
 
-  to {
-    inset-inline-start: -25%;
+  22% {
+    opacity: 0.85;
+  }
+
+  78% {
+    opacity: 0.85;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(148%, 0, 0);
   }
 }
 
-.hudRight {
+/*
+ * A streak crossing the screen every 1.6s is exactly the kind of thing that
+ * has to stop when the child has asked for less movement. The bar stays, lit
+ * and still, so it still reads as "working".
+ */
+@media (prefers-reduced-motion: reduce) {
+  .loadGround i {
+    inline-size: 100%;
+    opacity: 0.45;
+    will-change: auto;
+    transform: none;
+    animation: none;
+  }
+
+  .loadGround i::after {
+    display: none;
+  }
+}
+
+// The score chips, stacked down the LEFT edge under the trail counter.
+//
+// They used to sit on the right and hop to the left only when the in-game
+// practice text was on, because the word ribbon owns the bottom of the pane
+// and chips sitting on it covered the very letters being typed. Keeping two
+// placements bought nothing: the chips read the same on either side, and a
+// panel that moves when a setting is toggled is a panel a child has to find
+// again. One place, always, under the counter they belong with.
+.hudStack {
   display: flex;
   position: absolute;
-  inset-inline-end: 0.9rem;
-  inset-block-start: 0.9rem;
+  inset-inline-start: 0.9rem;
+  inset-block-start: 3.1rem;
   z-index: 6;
   flex-direction: column;
   gap: 0.45rem;
-  align-items: flex-end;
-}
-
-// When the in-game practice text is on (3-D letters on the trail), the score
-// chips move to the LEFT edge, stacked under the trail counter — the word
-// ribbon owns the bottom of the pane, and chips sitting on it covered the
-// very letters being typed.
-.hudBottom {
-  inset-inline-start: 0.9rem;
-  inset-inline-end: auto;
-  inset-block-start: 3.1rem;
   align-items: flex-start;
 }
 
@@ -486,6 +1432,41 @@
   font-weight: 700;
 }
 
+/*
+ * What the coach says is SPOKEN, so it is set as speech: italic, in
+ * inverted commas. The quotes are pseudo-elements on the text itself
+ * rather than on `.say`, because `.say` keeps its height when there
+ * is nothing to say and a pair of quote marks round an empty line is
+ * a line that says "".
+ */
+.sayText {
+  font-style: italic;
+
+  &::before {
+    content: "\201C";
+  }
+
+  &::after {
+    content: "\201D";
+  }
+}
+
+/*
+ * The buffalo.
+ *
+ * It used to shout from a banner of its own across the scene, which
+ * put the one message a child must act on immediately somewhere they
+ * were not looking. It now lands in this line — the place they
+ * already read everything the coach says — in capitals, because the
+ * difference between the coach talking and the buffalo coming should
+ * be legible before a single word is.
+ */
+.sayAlarm {
+  color: #b4321a;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 // ── the helper card: hands + keyboard ──────────────────────────────────
 
 // A subtle muted-sound marker in the bottom-right corner of the keyboard card,
@@ -536,6 +1517,20 @@
 .kbWrapWide {
   justify-content: space-evenly;
   inline-size: min(76rem, 96vi);
+}
+
+/*
+ * The keyboard on its own sits in the middle.
+ *
+ * With the hands beside it the two share the row; with the hands turned off
+ * the keys were left where they had been — hard against the left edge, with
+ * the hands' share of the row as empty space to their right.
+ *
+ * After `.kbWrapWide` so it wins: that one spreads the pair out, which is
+ * exactly the wrong thing to do to a single child.
+ */
+.kbWrapAlone {
+  justify-content: center;
 }
 
 .hands {
@@ -1154,6 +2149,40 @@
   background: color-mix(in srgb, var(--kline) 18%, transparent);
 }
 
+/**
+ * The pair of big buttons at the foot of the settings card.
+ *
+ * Two, side by side and both full-height, because this panel is operated by
+ * children. A small "x" in a corner is an adult's affordance — it is tiny, it
+ * is unlabelled, and it does not say whether it keeps the changes or throws
+ * them away. These say so.
+ */
+/* No top margin of its own: both buttons inside carry `.cta`, which brings
+   the same 1.2rem every other card's button has. */
+.ctaRow {
+  display: flex;
+  gap: 0.6rem;
+}
+
+/**
+ * Leave without keeping the world change.
+ *
+ * Quieter than the go button and the same size as it: quieter because it is
+ * not what most children want, the same size because a small one is a small
+ * target for a small hand. It sits on the left, so the primary is where the
+ * thumb already is.
+ */
+.ctaQuiet {
+  flex: 0 0 34%;
+  color: var(--kink2);
+  background: var(--kline);
+  box-shadow: 0 5px 0 rgb(0 0 0 / 12%);
+
+  &:active {
+    box-shadow: 0 1px 0 rgb(0 0 0 / 12%);
+  }
+}
+
 .cta {
   inline-size: 100%;
   margin-block-start: 1.2rem;
@@ -1758,4 +2787,29 @@
   font-size: 0.95rem;
   line-height: 1.6;
   text-align: center;
+}
+
+/*
+ * THE STORY LEAF LIGHTS ON HOVER, which is the part anybody is looking at.
+ *
+ * Brightening the paper under it did nothing after dark: that happens inside
+ * a wrapper already taken down to 30%, so a 1.2 on top of it is invisible.
+ * The icon draws in `currentColor`, so lifting the button's colour lifts the
+ * drawing — sunlit ink by day, lamp-lit by night, the same two lights
+ * everything else on this road answers to.
+ *
+ * Last in the file on purpose: `.storyScrap:hover svg` outranks `.ci svg`,
+ * and the stylesheet is ordered so specificity only ever climbs.
+ */
+.storyScrap:hover svg {
+  filter: drop-shadow(0 0 5px rgb(255 246 220 / 95%));
+}
+
+.rootDark .storyScrap:hover {
+  color: #ffe0ac;
+}
+
+.rootDark .storyScrap:hover svg {
+  filter: drop-shadow(0 0 6px rgb(255 168 60 / 95%))
+    drop-shadow(0 0 14px rgb(255 168 60 / 55%));
 }

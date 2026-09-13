@@ -261,6 +261,14 @@ export function clearAllProfileStorage(): void {
  * Preferences are not progress and are not touched: the world they chose, the
  * name they gave their companion, their sound and keyboard settings all
  * survive, because none of them is a record of what they did.
+ *
+ * EXCEPT THAT A FEW COUNTERS LIVE IN THE PREFERENCES BLOB, and they are
+ * progress however they are stored. The milestones passed on Village Road is
+ * the plainest case: the number is carved into a stone standing at the
+ * child's shoulder, and a reset that leaves it reading 47 has not reset
+ * anything the child can see. Same for the count towards the next village.
+ * Those fields are stripped out of the blob rather than the blob being
+ * deleted, so the genuine preferences around them survive.
  */
 export function clearProfileProgress(profileId: string | null): void {
   const progress = [
@@ -277,5 +285,45 @@ export function clearProfileProgress(profileId: string | null): void {
     } catch {
       // Storage may be unavailable; the results are already gone either way.
     }
+  }
+  // The progress counters kept inside the preferences object.
+  //
+  // `seen` belongs here with the stone count, and for the same reason: it is
+  // the record of which moments this child has already met for the first time
+  // — the first buffalo, the first lamp lit. Clearing a profile is supposed to
+  // hand somebody a village they have never been to, and a village that
+  // remembers your first buffalo is not that.
+  //
+  // `storyRead` is the same kind of thing one level up: how much of the
+  // story this child has already been told. The on/off switch (`story`) is a
+  // preference and stays; the reading position is progress and goes.
+  const inPrefs = [
+    "roadStones",
+    "villageFlags",
+    "villageGap",
+    "seen",
+    "storyRead",
+  ];
+  try {
+    const key = profileStorageKeyFor(profileId, "kids.prefs");
+    const raw = localStorage.getItem(key);
+    if (raw != null) {
+      const prefs: Record<string, unknown> = JSON.parse(raw);
+      let touched = false;
+      for (const field of inPrefs) {
+        if (field in prefs) {
+          delete prefs[field];
+          touched = true;
+        }
+      }
+      // Rewritten only if something was actually there, so a reset on a
+      // profile that never played Village Road leaves the file untouched.
+      if (touched) {
+        localStorage.setItem(key, JSON.stringify(prefs));
+      }
+    }
+  } catch {
+    // Unreadable or unparseable preferences: nothing to strip, and losing
+    // the whole blob to a bad parse would take the real settings with it.
   }
 }
