@@ -2440,11 +2440,48 @@ export const VILLAGE_THEME: WorldTheme = {
     // with the tree standing between it and the road - which is how you
     // actually glimpse a Kerala temple, through the branches of the tree in
     // its own grounds rather than square on.
+    // ── HOW BIG A BUILDING IS, MEASURED AGAINST THE CHILD ────────────────
+    //
+    // These were set by eye against nothing — the village had never once been
+    // seen (see `measureBox`, which was scaling every one of them a million
+    // units across and clipping them out of the world), so a house had been
+    // left the same height as the nine-year-old standing in front of it and a
+    // compound wall came up to his knee.
+    //
+    // There is a real ruler on this road, so it is used. Dave is nine and
+    // stands 4.7 units; a nine-year-old is about 1.35 m, which puts this
+    // world at **3.48 units to the metre**. Everything below is a real
+    // measurement through that:
+    //
+    //   an adult          1.70 m   5.9 u   — a clear head above Dave
+    //   a door head       2.00 m   7.0 u   — an adult walks through it
+    //   house eaves       2.40 m   8.4 u
+    //   house ridge       4.00 m    14 u
+    //   market ridge      3.60 m  12.5 u   — open shed, tall for the shade
+    //   compound wall     1.20 m   4.2 u   — chest-high on an adult
+    //   bullock cart      1.45 m   5.0 u   — to the top of the rail
+    //   temple            5.75 m    20 u   — the tallest roof for a mile
+    //   village banyan    6.90 m    24 u
+    //
+    // The ceiling on all of it is the frame: this camera shows 27.4 units of
+    // height, so the temple at 20 is already most of the sky and a truly
+    // life-sized banyan (10 m, 35 u) would not fit in the world at all. Those
+    // two are the honest numbers bent to the picture; the house, the wall and
+    // the door are not bent at all, because they are the ones a child reads
+    // their own size against.
     heart: [
-      { model: "Market", dx: -6, dz: -5.4, h: 4.2, turn: 0 },
-      // Parked at the market, half on the road, the way a cart is left while
-      // it is being unloaded.
-      { model: "Cart", dx: -1.2, dz: -3.4, h: 1.9, turn: 0.9 },
+      // THE MARKET IS OUT UNTIL THERE IS A NEW ONE.
+      //
+      // The bought asset is too distorted to use at this size: it is four and
+      // a third times wider than it is tall, so sizing it honestly against
+      // the child stretched it across most of the road, and the texture will
+      // not carry the enlargement. A village with no market reads as a small
+      // village; a village with a smeared one reads as broken.
+      //   { model: "Market", dx: -6, dz: -16, h: 12.5, turn: 0 },
+      // The cart stays. It was parked at the market, and a cart left standing
+      // at the roadside is a thing on its own — the strays list already puts
+      // lone ones out on the empty stretches.
+      { model: "Cart", dx: -1.2, dz: -9, h: 5.0, turn: 0.9 },
       // The ALTHARA IS HELD BACK until the new banyan is ready.
       //
       // It only makes sense underneath a tree -- a Kerala village banyan grows
@@ -2453,23 +2490,49 @@ export const VILLAGE_THEME: WorldTheme = {
       // before the tree so the tree stands ON it rather than in it, the moment
       // the new banyan lands.
       //   { model: "village-stone/Stone_Althara", dx: 7, dz: -11.5, h: 0.85 },
-      { model: "Banyan", dx: 7, dz: -11.5, h: 11.5 },
+      // CLOSE TO THE ROAD, AND OFF TO THE SIDE OF THE SHRINE.
+      //
+      // A village banyan grows at the roadside — it is the thing you walk
+      // under, and the shade it throws is the reason the althara and the
+      // market ended up beneath it. Set back at -26 it was just another tree
+      // in the middle distance.
+      //
+      // But brought forward on the shrine's own line (dx 7 against its 5) it
+      // stood directly in front of it and the shrine was gone again. It sits
+      // a good way along the road instead, so the two are met side by side:
+      // the tree first, the shrine past its trunk.
+      //
+      // 18, not 24. At the roadside a banyan is the nearest thing in the
+      // frame, and this camera does not shrink it for being close — at 24 it
+      // was a trunk filling a third of the sky with the village behind it.
+      { model: "Banyan", dx: -13, dz: -16, h: 18 },
       // The VAZHIVILAKKU are not here. They belong to the ROAD, not to the
       // village — and they are no longer even their own object: the lamp head
       // is welded onto the milestone, so one arrives with every marker the
       // whole length of the trail. See `lightTheNiche`.
-      { model: "Temple", dx: 5, dz: -19, h: 7.2, turn: 0.08 },
+      // SMALL. A village shrine, not a great temple — it is the one a few
+      // families walk to, and at 20 it was the tallest thing for a mile and
+      // took most of the sky with it. 11 is about 3.2 m: shorter than the
+      // houses' ridges, taller than their eaves, which is the right size for
+      // the thing you glimpse through the banyan rather than the thing that
+      // announces itself.
+      //
+      // And brought FORWARD to -24, from -42. Behind the banyan still, so it
+      // is met through the branches, but inside the haze rather than beyond
+      // it: at -42 the fog had two thirds of it and a shrine nobody can make
+      // out is the same as no shrine at all.
+      { model: "Temple", dx: 5, dz: -24, h: 11, turn: 0.08 },
     ],
     houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
-    houseHeight: 4.6,
+    houseHeight: 14,
     wall: "Wall",
-    wallHeight: 1.5,
+    wallHeight: 4.2,
     // Out on the empty stretches, very rarely: a house set back off the road,
     // or a cart somebody left. See `strayRate` where these are placed.
     strays: [
-      { model: "HouseThatch", h: 4.6 },
-      { model: "HouseMoss", h: 4.6 },
-      { model: "Cart", h: 1.9 },
+      { model: "HouseThatch", h: 14 },
+      { model: "HouseMoss", h: 14 },
+      { model: "Cart", h: 5.0 },
     ],
   },
   floorOpacity: 1,
@@ -3477,9 +3540,41 @@ export function createKidsWorld(
       refH = h;
     }
     const k = refH > 0 ? Math.min(1.3, Math.max(0.72, h / refH)) : 1;
-    const S = V.frustum * k;
-    cam.left = -S * a;
-    cam.right = S * a;
+    frustumK = k;
+    frustumA = a;
+    applyFrustum();
+    renderer.setSize(w, h, false);
+  }
+  /**
+   * STANDING BACK TO TAKE THE VILLAGE IN.
+   *
+   * This camera is ORTHOGRAPHIC, and that is the whole reason this exists: a
+   * building does not get smaller by being further away, so there is no
+   * distance at which a real house fits a frame too short for it. The frame
+   * shows 9.8 units above the look-at point. A house measured honestly
+   * against the child is 14 to the ridge and the temple is 20, so the only
+   * two ways to have both were to keep building a village out of dollhouses —
+   * which is what it was, a house exactly as tall as the nine-year-old
+   * standing in front of it — or to widen the view when there is something
+   * worth widening it for.
+   *
+   * So the road keeps its framing and the village borrows a wider one, eased
+   * over a second and a half as the child walks in and handed back as they
+   * walk out. It reads as the thing a person does on arriving somewhere:
+   * stop, and take it in.
+   */
+  let frustumK = 1;
+  let frustumA = 2;
+  /** 0 on the open road, 1 in the middle of a village; eased in the tick. */
+  let villageWide = 0;
+  // Half again as wide. With the market gone and the shrine brought down to
+  // 11, the tallest built thing is a 14-unit house, so the view only has to
+  // open enough to clear a roof — not enough to make the children small.
+  const VILLAGE_WIDEN = 0.5;
+  function applyFrustum(): void {
+    const S = V.frustum * frustumK * (1 + villageWide * VILLAGE_WIDEN);
+    cam.left = -S * frustumA;
+    cam.right = S * frustumA;
     // The frustum reaches further below the look-at point than above it, so
     // the trail (and the runner) sit clear of the floating words bar.
     cam.top = S * V.topF;
@@ -3487,7 +3582,6 @@ export function createKidsWorld(
     cam.near = -100;
     cam.far = 300;
     cam.updateProjectionMatrix();
-    renderer.setSize(w, h, false);
   }
   resize();
   cam.position.set(-10, V.camY, V.camZ);
@@ -5411,13 +5505,28 @@ export function createKidsWorld(
         const px = -40 + Math.random() * (TRAIL_END + 40);
         const side = Math.random() > 0.5 ? 1 : -1;
         const pz = meander(px) + side * (1.3 + Math.random() * 1.6);
-        dummy.position.set(px, groundY(px) + 0.05, pz);
+        // BEDDED INTO THE ROAD, NOT RESTING ON IT.
+        //
+        // Two things were wrong and they compounded. `groundY` is the height
+        // of the FIELD and takes no z at all, while Village Road sinks its
+        // own surface up to 0.22 below that — so on this road every pebble
+        // was already floating a fifth of a unit clear of the ground it was
+        // meant to be lying on. The `+ 0.05` then lifted the whole stone
+        // clear of even that, and a shadow under a stone that is not touching
+        // anything is what gives it away.
+        //
+        // `surfaceY` raycasts the real ground mesh and takes a sink, so the
+        // stone is placed on the road it is actually on and pushed into it by
+        // a little under half its own radius. Grit on a cart road is trodden
+        // in; what shows is the top of it.
+        const sc = 0.5 + Math.random() * 1.1;
+        dummy.position.set(px, surfaceY(px, pz, 0.14 * sc * 0.45), pz);
         dummy.rotation.set(
           Math.random() * Math.PI,
           Math.random() * Math.PI,
           Math.random() * Math.PI,
         );
-        dummy.scale.setScalar(0.5 + Math.random() * 1.1);
+        dummy.scale.setScalar(sc);
         dummy.updateMatrix();
         pebbles.setMatrixAt(i, dummy.matrix);
         tint
@@ -5594,18 +5703,74 @@ export function createKidsWorld(
         tmp.copy(m.boundingBox!).applyMatrix4(m.matrixWorld);
         box.union(tmp);
       } else if ((o as THREE.Mesh).isMesh) {
-        box.expandByObject(o);
+        // MEASURED, NEVER TAKEN ON TRUST.
+        //
+        // `expandByObject` uses `geometry.boundingBox` and only computes one
+        // if it is missing — and GLTFLoader always supplies one, built from
+        // the accessor's own `min`/`max`. For most of this world's models
+        // that is the same answer and cheaper.
+        //
+        // The AK pack's buildings ship POSITION as a NORMALISED Uint16
+        // (`KHR_mesh_quantization` + `EXT_meshopt_compression`) and declare
+        // the accessor's min/max in the normalised [0,1] units rather than in
+        // the raw integers the flag says they are. The loader normalises them
+        // again, so the cached box comes back 65,535 times too small — and
+        // `fitToHeight`, dividing by it, scaled a market to a million units
+        // across. Every face then sat outside the camera's -100..300 range
+        // and was clipped, so the whole village loaded, placed itself
+        // correctly and drew nothing at all.
+        //
+        // Recomputing reads the attribute through `getX/getY/getZ`, which
+        // apply the normalisation exactly once and give the unit cube these
+        // meshes really occupy. It costs one pass over the positions at load
+        // time and nothing per frame.
+        const m2 = o as THREE.Mesh;
+        m2.geometry.computeBoundingBox();
+        if (m2.geometry.boundingBox != null) {
+          tmp.copy(m2.geometry.boundingBox).applyMatrix4(m2.matrixWorld);
+          box.union(tmp);
+        }
       }
     });
     return box;
   }
+  /**
+   * Scale a model to a height and stand it on the wrap's own origin.
+   *
+   * ALL THREE AXES, and the two that were missing are why the village was
+   * invisible for so long. This used to re-base y alone — feet on the floor —
+   * and leave x and z wherever the file happened to put them. For a model
+   * authored around its origin that is a difference of nothing, which is what
+   * every character in this world is, so it held for a long time.
+   *
+   * The AK pack's BUILDINGS are not authored that way. They ship quantized
+   * (`KHR_mesh_quantization` + `EXT_meshopt_compression`) with POSITION
+   * normalised into the unit cube and the real size and placement carried on
+   * the node — a market's node reads scale [1.88, 0.43, 0.44] against a
+   * translation of [-0.94, -0.22, -0.23]. Measured here they come back about
+   * 65,535 times smaller than that, so `s` lands around three hundred
+   * thousand instead of ten — and THE OFFSET IS MULTIPLIED BY IT TOO. The
+   * height came out perfectly right, because that is the one axis this
+   * normalised; the market was then planted six hundred thousand units off
+   * the map. Every building in the village was standing correctly, in a
+   * field beyond the horizon, which is why the models fetched 200 and nothing
+   * appeared and why nothing ever threw.
+   *
+   * Centring x and z is the same promise the y re-base makes — "this is where
+   * the thing stands" — and for anything already centred it is a shift of
+   * approximately zero, so the cast is untouched.
+   */
   function fitToHeight(root: THREE.Object3D, targetH: number) {
     const box = measureBox(root);
     const size = box.getSize(new THREE.Vector3());
     const s = targetH / (size.y || 1);
     const wrap = new THREE.Group();
     root.scale.setScalar(s);
-    root.position.y = -box.min.y * s;
+    root.position.set(
+      (-(box.min.x + box.max.x) / 2) * s,
+      -box.min.y * s,
+      (-(box.min.z + box.max.z) / 2) * s,
+    );
     wrap.add(root);
     return wrap;
   }
@@ -10955,6 +11120,37 @@ export function createKidsWorld(
       // Remembered so the tick can say when the child reaches it — see
       // `insideVillage`. There is at most one per trail, so one number does.
       villageX = vx;
+      // ── AND NOTHING WITH HORNS INSIDE IT ─────────────────────────────
+      //
+      // The herd stands at three fixed points on the trail and the village
+      // lands somewhere random along it, so sooner or later a water buffalo
+      // was going to be grazing between somebody's house and the shrine. It
+      // is not a frightening sight, it is a nonsensical one: a tonne of
+      // animal is kept in a yard or out in the paddy, never loose in the
+      // lane, and the charge this road is built around only reads as a
+      // charge because it happens in the open.
+      //
+      // The village cannot dodge them — its houses reach from vx-46 to
+      // vx+72, which is wider than the gaps between the herd — so the herd
+      // moves instead. Walked off down the road rather than deleted: the
+      // buffalo is a thing this road promises and losing one to a village
+      // would quietly cost a child the encounter.
+      {
+        const near = (x: number) => x > vx - 56 && x < vx + 82;
+        for (const w of wilds) {
+          const p = w.wrap.position;
+          if (!near(p.x)) {
+            continue;
+          }
+          // Out past whichever end of the village it is nearer to, and back
+          // onto its own verge.
+          const out = p.x < vx ? vx - 70 : vx + 96;
+          p.x = Math.max(12, Math.min(TRAIL_END - 12, out));
+          p.z = meander(p.x) - roadClear * 1.4;
+          p.y = surfaceY(p.x, p.z);
+          (w.wrap.userData as { wildBaseY?: number }).wildBaseY = p.y;
+        }
+      }
       const propCache = new Map<string, THREE.Object3D | null>();
       const prop = async (name: string) => {
         if (!propCache.has(name)) {
@@ -11160,11 +11356,30 @@ export function createKidsWorld(
       // same depth reads as a stage flat; what makes a village look lived-in
       // is that somebody built close to the road and somebody else built
       // behind them.
+      // SET BACK IN PROPORTION TO THEIR SIZE.
+      //
+      // These offsets were drawn around houses 4.6 units tall — about a
+      // nine-year-old — and a house is 14 now that the village is measured
+      // against the child (see `heart`). The models scale uniformly, so a
+      // house that is three times taller is also three times deeper: at the
+      // old setbacks the first one stood in the middle of the road with the
+      // children inside its porch. Everything is pushed out by the same
+      // factor the buildings grew by, which keeps the arrangement — somebody
+      // built close to the road, somebody else built behind them — and gives
+      // it the room it now needs.
+      // EVERY ONE OF THEM BEHIND THE ROAD, and none on the child's side.
+      //
+      // There used to be one across the road at +z, which is the verge the
+      // child walks and the side the camera is on — so the house stood
+      // between the viewer and the entire village, and at the honest size it
+      // filled the frame and hid the party walking past it. The far verge is
+      // where a village is met from a road anyway: you walk along it and it
+      // is over there.
       const spots: readonly (readonly [number, number])[] = [
-        [-23, -6.8], // hard against the road
-        [24, -20], // well back behind the others
-        [-13, 9.5], // the far side of the road
-        [37, -8.5],
+        [-46, -20], // nearest the road
+        [50, -42], // well back behind the others
+        [-28, -30], // and one more set back, still behind
+        [72, -24],
       ];
       for (let i = 0; i < Math.min(3, pool.length); i++) {
         const [ox, oz] = spots[i];
@@ -11173,19 +11388,25 @@ export function createKidsWorld(
           vx + ox + (Math.random() - 0.5) * 5,
           oz + (Math.random() - 0.5) * 3,
           V.houseHeight,
-          (Math.random() - 0.5) * 0.7 + (oz > 0 ? Math.PI : 0),
+          // No `oz > 0` half-turn any more: nothing stands on the near side,
+          // so every house already faces the road it fronts.
+          (Math.random() - 0.5) * 0.7,
         );
       }
 
       // Wall segments along the road, enclosing the yards. Laid end to end
       // with a gap where the market fronts the road, so the child can see in.
-      const seg = 7.5;
+      // The wall model is five and a half times wider than it is tall, so a
+      // segment grew from 8 units long to 23 when the wall itself went from
+      // knee-high to chest-high on an adult. Laid at the old 7.5 they now sit
+      // three deep inside each other.
+      const seg = 23;
       for (let i = -4; i <= 4; i++) {
         if (i >= -1 && i <= 1) {
           continue; // the way in
         }
         const wx = vx + i * seg;
-        await stand(V.wall, wx, -4.6, V.wallHeight, 0);
+        await stand(V.wall, wx, -10, V.wallHeight, 0);
       }
     }
 
@@ -14418,6 +14639,15 @@ export function createKidsWorld(
         opts.onEvent?.("village");
       } else if (!near && Math.abs(heroX - villageX) > 26) {
         insideVillage = null;
+      }
+      // And the view opens out for it — see `applyFrustum`. Eased on the same
+      // 1.5s a person takes to stop and look up, and only re-projected while
+      // it is actually moving: the matrix is the same every frame the child
+      // spends on the open road.
+      const wantWide = insideVillage != null ? 1 : 0;
+      if (Math.abs(wantWide - villageWide) > 0.0015) {
+        villageWide += (wantWide - villageWide) * Math.min(1, dt / 1.5);
+        applyFrustum();
       }
     }
     const heroRunning = heroSpeed > 1.4;
