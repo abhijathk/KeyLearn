@@ -1,3 +1,79 @@
+// ── THE PAGE'S DAY AND NIGHT, CROSSING RATHER THAN CUTTING ────────────────
+//
+// `.rootDark` swaps this page's whole palette in the frame the moon button is
+// pressed, while the world behind it takes four and a half seconds to cross.
+// So the paper, the keys and the hands all snapped to night around a sky that
+// was still broad daylight — which is the half of the picture a child is
+// actually looking at while they type.
+//
+// A custom property is not animatable until it has been REGISTERED with a
+// type, at which point it interpolates like any other value and every rule
+// that reads it follows for free. That is the whole reason this is done here
+// rather than by adding a `transition` to each of the forty-odd rules that
+// paint one of these — and it is why `.rootDark` needs no transition of its
+// own: it only changes the values, and the values now know how to move.
+//
+// ONLY THE ONES THIS PAGE OWNS. Custom property names are global — CSS
+// modules rewrite class names, never these — and registering a name gives it
+// an initial value, which means `var(--name, fallback)` anywhere in the app
+// stops falling back because the name is now always set. `--card` is left out
+// for exactly that reason: the account pages read it as
+// `var(--card, var(--primary, #fff))` and rely on it being unset.
+//
+// Browsers without `@property` ignore the whole block and keep the instant
+// flip, with `.root`'s own transition below still carrying the page ground.
+@property --paper {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #fdfcf9;
+}
+
+@property --kink {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #3a3a4e;
+}
+
+@property --kink2 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #6a6a7e;
+}
+
+@property --key-bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --kline {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #e4dfd0;
+}
+
+@property --disc {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #e8ecdc;
+}
+
+@property --glass {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffffee;
+}
+
+@property --classic-hand-opacity {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+// How long this page takes to cross between its day and night palettes.
+// See `.root` — it is a beat shorter than the world's own 4.5s nightfall.
+@dark-cross: 1.8s;
+
 // KeyLearn Kids: the locked mock, ported. A clean white kid system over the
 // Dino Run world — light by default, with its own playful night mode.
 
@@ -70,6 +146,58 @@
   color: var(--kink);
   background: var(--paper);
   font-family: "Arial Rounded MT Bold", ui-rounded, "Trebuchet MS", sans-serif;
+  // NIGHTFALL IS ONE EVENT, NOT TWO.
+  //
+  // `.rootDark` swaps this page's whole palette in the frame the moon button
+  // is pressed, while the world behind it takes four and a half seconds to
+  // cross — so the paper, the keys and the header all snapped to night around
+  // a sky that was still broad daylight, which is the half of the effect a
+  // child actually looks at while they are typing.
+  //
+  // Custom properties are not animatable, so it is the CONSUMERS that carry
+  // the crossing: every rule below transitions the real colour property it
+  // paints, at a rate that lands while the sky is still moving. Shorter than
+  // the world's on purpose — the room's lights come up before the sky has
+  // finished going down, which is the order it happens in.
+}
+
+// ON THE BUTTON, NOT ON THE WAY IN.
+//
+// The transition lives behind `body[data-kids-cross]`, which KidsPage sets a
+// frame after it first publishes `data-kids` — so a page OPENED at night
+// opens at night, and only a press of the moon button crosses. Sitting the
+// rule on `.root` itself meant every night-time load began with a sunrise.
+//
+// `color` and `background-color` are in the list twice over: once through
+// `--kink`/`--paper`, and once as plain properties. Redundant where
+// `@property` is supported, and the only thing that moves where it is not —
+// which is the point, since an older browser still crosses the two surfaces a
+// child spends the whole session looking at.
+:global(body[data-kids-cross]) .root {
+  /*
+   * A registered custom property is a perfectly valid `transition-property`
+   * — that is the entire point of registering one — but stylelint's value
+   * parser only models the named properties, so it reads `--paper` here as
+   * a typo rather than as the thing this rule exists to animate.
+   */
+  /* stylelint-disable-next-line declaration-property-value-no-unknown */
+  transition:
+    --paper @dark-cross ease,
+    --kink @dark-cross ease,
+    --kink2 @dark-cross ease,
+    --key-bg @dark-cross ease,
+    --kline @dark-cross ease,
+    --disc @dark-cross ease,
+    --glass @dark-cross ease,
+    --classic-hand-opacity @dark-cross ease,
+    color @dark-cross ease,
+    background-color @dark-cross ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(body[data-kids-cross]) .root {
+    transition: none;
+  }
 }
 
 .rootDark {
@@ -117,9 +245,33 @@
   font-size: 0.72rem;
   font-weight: 700;
 
+  /* Bigger than the words around it, and tabular so it does not shuffle the
+     line as it grows -- see the note on `.noteHead b`. */
   b {
     color: var(--kink);
+    font-size: 1.3em;
+    font-variant-numeric: tabular-nums;
   }
+}
+
+// A row of choices that wraps, for a setting with more than two states. The
+// existing `.ctl` holds ONE control hard against the right edge, which is
+// right for an on/off pill and puts six of them in a column one per line.
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-block-start: 0.45rem;
+}
+
+// Tabular, so the hour does not shuffle the line about as it ticks, and a
+// shade quieter than the count: the number of keys is what the board is for
+// and the time is the thing printed in the corner of it.
+.noteClock {
+  flex: none;
+  opacity: 0.78;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .chipBtn {
@@ -211,16 +363,45 @@
  * the pane a height here — which was the first attempt — pushes the whole
  * view backwards.
  */
+/*
+ * THE WINDOW IS BOUNDED BY THE BROWSER'S HEIGHT AS WELL AS ITS WIDTH.
+ *
+ * Width alone used to decide the size, so when the browser got short the
+ * scene was the only part that gave way -- it is the only one with a flexible
+ * height -- and the keyboard, whose height is fixed by its own type size, ate
+ * the game. Bounding the WIDTH by the available height instead shrinks the
+ * whole window as one object: the keys scale with it (see the container query
+ * below), the pane's cap follows the keys, and the road keeps its shape
+ * instead of being squashed into a letterbox.
+ *
+ * The numbers are solved from the real layout, not estimated. Measured: the
+ * window is 2.5 keyboards tall plus 45px of coach line and padding that does
+ * NOT scale, the keyboard is 0.2122 of the window's width, and the page keeps
+ * 79px of its own chrome above and below. That gives
+ *     height = 0.5305 * width + 47      ->   width = (available - 126px) * 1.885
+ * and 8rem is that with two pixels of headroom -- solved from the measured
+ * layout at four window sizes, not estimated. An earlier guess of `(100vb - 5rem) * 1.82` was about
+ * 42px too generous at a 700px-tall browser, so the window still overran and
+ * the pane's own clamp ate the difference out of the ROAD -- which is exactly
+ * the bug this is here to stop. On any window tall enough for the full 76rem
+ * this term is the largest of the three and nothing changes.
+ *
+ * In CSS rather than in script, and that is the point: the first version of
+ * this scaled the window from a ResizeObserver, which resized the keyboard,
+ * which toggled the page scrollbar, which resized the document element, which
+ * ran it again. It froze the renderer. Viewport units cannot feed back.
+ */
 .joined {
   display: flex;
   position: relative;
   flex: 0 0 auto;
   flex-direction: column;
-  inline-size: min(76rem, 96vi);
+  inline-size: min(76rem, 96vi, max(34rem, calc((100vb - 8rem) * 1.885)));
   border-radius: var(--kr);
   overflow: hidden;
   background: var(--card);
   box-shadow: var(--kshadow);
+  container-type: inline-size;
 }
 
 /* The gaps `.root` used to provide, now inside the window. */
@@ -271,7 +452,7 @@
 .sceneCard {
   position: relative;
   flex: 1 1 auto;
-  inline-size: min(76rem, 96vi);
+  inline-size: min(76rem, 96vi, max(34rem, calc((100vb - 8rem) * 1.885)));
   min-block-size: 10rem;
   border-radius: var(--kr);
   overflow: hidden;
@@ -498,12 +679,21 @@
    gradients pretending.
    ══════════════════════════════════════════════════════════════════ */
 
+/*
+ * Sized from the scene, not from the page.
+ *
+ * `--kscale` is set on `.sceneCard` from its measured box -- see the capping
+ * effect in KidsPage -- and is 1 at the pane the notice was drawn for. Every
+ * length below is in `em` off this one `font-size`, so the whole board scales
+ * as one object instead of each part needing its own clamp.
+ */
 .notice {
   position: absolute;
-  inset-inline-start: 0.7rem;
-  inset-block-start: 0.7rem;
+  inset-inline-start: calc(0.7rem * var(--kscale, 1));
+  inset-block-start: calc(0.7rem * var(--kscale, 1));
   z-index: 6;
-  inline-size: 12.2rem;
+  inline-size: calc(12.2rem * var(--kscale, 1));
+  font-size: calc(1rem * var(--kscale, 1));
 }
 
 /*
@@ -561,33 +751,50 @@
 
 /* The masthead: the one line that is a sentence rather than a figure. */
 .noteHead {
-  display: block;
-  margin-block-end: 0.26rem;
-  padding-block-end: 0.26rem;
+  // The count on the left and the hour on the right, on one ruled line —
+  // which is how a real notice board carries a heading and a date.
+  display: flex;
+  gap: 0.6em;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-block-end: 0.26em;
+  padding-block-end: 0.26em;
   border-block-end: 1px solid currentcolor;
   opacity: 0.72;
-  font-size: 0.54rem;
+  font-size: 0.54em;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 
+  /*
+   * THE NUMBER IS THE POINT OF THE LINE.
+   *
+   * At 0.74em of a 0.54em head it came out around 0.40em -- small, and set
+   * in an uppercase face with 0.12em of tracking, which is a treatment for
+   * words and a poor one for digits: a tracked-out "13" reads as a 1 and a 3
+   * standing apart rather than as thirteen. It now sets at nearly twice
+   * that, drops the tracking the words need, and takes tabular figures so
+   * the count does not jump sideways as it climbs past 9 and 99.
+   */
   b {
     opacity: 1;
-    font-size: 0.74rem;
+    font-size: 1.34em;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
   }
 }
 
 .noteRow {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.6em;
   align-items: baseline;
   justify-content: space-between;
-  padding: 0.14rem 0.16rem 0.18rem;
+  padding: 0.14em 0.16em 0.18em;
 }
 
 .noteLab {
   opacity: 0.66;
-  font-size: 0.5rem;
+  font-size: 0.5em;
   font-weight: 800;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -599,7 +806,7 @@
 }
 
 .noteVal {
-  font-size: 0.92rem;
+  font-size: 0.92em;
   font-weight: 800;
   line-height: 1;
   transition:
@@ -841,11 +1048,17 @@
  * grain of a pressed leaf. No image, so it costs nothing to load and it
  * cannot be blurry on a big screen.
  */
+/*
+ * The story page is a prop lying on the road, so it takes the road's scale
+ * too -- and its height is capped against the PANE rather than the viewport,
+ * because it is inside the pane and `vb` knows nothing about that.
+ */
 .storyDoc {
   position: relative;
-  inline-size: min(38rem, 100%);
-  max-block-size: min(80vb, 44rem);
-  padding: 1.6rem 1.5rem 1.9rem;
+  inline-size: min(calc(38rem * var(--kscale, 1)), 100%);
+  max-block-size: min(80vb, calc(44rem * var(--kscale, 1)));
+  padding: calc(1.6rem * var(--kscale, 1)) calc(1.5rem * var(--kscale, 1))
+    calc(1.9rem * var(--kscale, 1));
   border-radius: 3px;
   overflow: hidden auto;
   color: #33281b;
@@ -862,22 +1075,23 @@
     0 18px 50px rgb(0 0 0 / 45%),
     inset 0 0 0 1px rgb(96 72 36 / 22%);
   font-family: Georgia, "Times New Roman", serif;
+  font-size: calc(1rem * var(--kscale, 1));
 }
 
 .storyTitle {
-  margin: 0 0 0.15rem;
+  margin: 0 0 0.15em;
   color: #4a3a22;
-  font-size: 1.45rem;
+  font-size: 1.45em;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 
 .storySub {
-  margin: 0 0 1.1rem;
-  padding-block-end: 0.9rem;
+  margin: 0 0 1.1em;
+  padding-block-end: 0.9em;
   border-block-end: 1px solid rgb(96 72 36 / 28%);
   color: #7b6748;
-  font-size: 0.82rem;
+  font-size: 0.82em;
   font-style: italic;
 }
 
@@ -1321,6 +1535,38 @@
   transform: translate(-50%, -50%) scale(0);
 }
 
+/*
+ * THE SAME BANNER, IN THIS ROAD'S OWN MATERIALS.
+ *
+ * The shared one is a bright green lozenge — right for a dinosaur valley,
+ * and on a 1930s cart road it reads as a notification from a different
+ * application laid over the scene. This is the sheet the scoreboard and the
+ * cards are printed on: torn-paper colours, carved ink, and a lamp-warm rim
+ * instead of a drop shadow, so it belongs to the world it appears in.
+ */
+.growBannerRoad {
+  padding: 0.55rem 1.4rem;
+  border-radius: 0.35rem;
+  color: #23201a;
+  background: #ddd7c4;
+  box-shadow:
+    0 0 0 1px rgb(122 108 79 / 45%),
+    0 0 22px rgb(255 176 74 / 30%),
+    0 10px 26px rgb(20 16 8 / 40%);
+  font-family: "Nunito Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+.rootDark .growBannerRoad {
+  color: #e8dcb8;
+  background: #4c4636;
+  box-shadow:
+    0 0 0 1px rgb(163 148 107 / 40%),
+    0 0 26px rgb(255 168 60 / 34%),
+    0 10px 26px rgb(6 8 16 / 55%);
+}
+
 .growBannerShow {
   animation: gpop 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
@@ -1501,6 +1747,53 @@
   font-size: clamp(0.6rem, 1.12vi, 1rem);
 }
 
+/*
+ * INSIDE THE WINDOW, THE KEYS MEASURE THEMSELVES AGAINST THE WINDOW.
+ *
+ * `vi` is the browser's width, which knows nothing about the height the
+ * window has just been bounded by -- so on a short browser the window shrank
+ * and the keyboard did not, which is the whole complaint. `cqi` is one per
+ * cent of `.joined`, so the board now follows the window it is part of.
+ *
+ * 1.179cqi of a 1216 window is 14.34px, which is exactly what 1.12vi gave at
+ * the viewport this was tuned on: nothing moves for a full-size window.
+ */
+.joined .kbWrap {
+  --ku: clamp(0.6rem, 1.179cqi, 1rem);
+  font-size: clamp(0.6rem, 1.179cqi, 1rem);
+}
+
+/*
+ * TOO SHORT FOR BOTH? THE HELPER GOES, NOT THE GAME.
+ *
+ * Below this there is no scale at which a road and a keyboard both fit and
+ * either is worth looking at. The keys are the part a child can manage
+ * without -- they can still see their hands -- so the road keeps the space.
+ * A media query rather than script, so it cannot fight the sizing pass.
+ */
+@media (height <= 520px) {
+  .kbWrap {
+    display: none;
+  }
+}
+
+/*
+ * AFTER DARK THE BOARD SITS BACK A LITTLE.
+ *
+ * At night the road is lit by one oil lamp and the keyboard was still at full
+ * daylight brightness underneath it, which put the brightest thing on the
+ * page below the thing the child is meant to be watching. A touch of
+ * brightness off the whole area -- keys, hands and card together -- settles
+ * it behind the scene without dimming any one part enough to hurt reading.
+ *
+ * Deliberately small, and deliberately on the wrapper rather than on the keys
+ * themselves: the lit key under the child's finger keeps all of its contrast
+ * against its neighbours, because every one of them moved by the same amount.
+ */
+.rootDark .kbWrap {
+  filter: brightness(0.92);
+}
+
 /* Holds its box while the world loads, so the scene above keeps the height it
    will have once the board arrives. `visibility` rather than `display` for
    exactly that reason: the card is still laid out, just not offered yet. */
@@ -1514,9 +1807,18 @@
   font-size: clamp(0.54rem, 0.98vi, 0.88rem);
 }
 
+// Same key, sized off the window's own container rather than the viewport --
+// see `.joined .kbWrap` above for why. It sits AFTER the plain rule it
+// overrides, which is the order the cascade wants anyway and the one
+// stylelint insists on.
+.joined .kbWrapFull {
+  --ku: clamp(0.54rem, 1.031cqi, 0.88rem);
+  font-size: clamp(0.54rem, 1.031cqi, 0.88rem);
+}
+
 .kbWrapWide {
   justify-content: space-evenly;
-  inline-size: min(76rem, 96vi);
+  inline-size: min(76rem, 96vi, max(34rem, calc((100vb - 8rem) * 1.885)));
 }
 
 /*
@@ -1610,6 +1912,10 @@
     inset 0 0 0 2.5px var(--kz);
   font-size: calc(var(--ku) * 1.5);
   font-weight: 800;
+  // The press stays instant — it is feedback, and feedback that eases is
+  // feedback that feels broken. The key's PALETTE crosses with everything
+  // else, and it does it through the registered properties at the top of this
+  // file rather than through another entry here. See `@property`.
   transition: transform 0.08s ease;
 }
 
@@ -2812,4 +3118,753 @@
 .rootDark .storyScrap:hover svg {
   filter: drop-shadow(0 0 6px rgb(255 168 60 / 95%))
     drop-shadow(0 0 14px rgb(255 168 60 / 55%));
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   THE ROAD CARD — one object for every window this world raises.
+
+   Ported from the approved mock (village-windows.html) rather than
+   re-derived, so the card on the road is the card that was signed off:
+   the same measurements, the same palette, and the same three
+   animations. Only the names changed — the mock's `.card` is
+   `.roadCard`, its `[data-t="night"]` is `.rootDark`, and its palette
+   tokens are prefixed `--rc` because this page already means something
+   else by `--paper` and `--kink`.
+   ══════════════════════════════════════════════════════════════════ */
+
+/*
+ * The scrim is the mock's, not the page's.
+ *
+ * `.overlay` dims with a blue glass that belongs to the rest of this app;
+ * over a red-earth road at dusk it reads as a screen laid on top of the
+ * world. This is warm and darker, so the card looks lit BY the scene rather
+ * than pasted over it, and at night it goes almost to black — there is no
+ * street lighting on this road.
+ */
+.roadScrim {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  place-items: center;
+  background: rgb(28 24 16 / 42%);
+}
+
+.rootDark .roadScrim {
+  background: rgb(6 8 16 / 62%);
+}
+
+.roadCard {
+  /* The mock's palette, scoped to the card so it cannot reach the page. */
+  --rcPrint: #23201a;
+  --rcRim: #8c866c;
+  --rcFibre: #cdc7b2;
+  --rcPaper: #ddd7c4;
+  --rcEyebrow: #7a6c4f;
+  --rcGrain: multiply;
+  --rcKink: var(--kink);
+  /* Andika for the reading text and Nunito for the key caps, exactly as
+     the mock pairs them. Named here rather than inherited: the page font
+     follows the age band, and a card is not the place to change type. */
+  --rcKid: "Andika Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif;
+  --rcUi: "Nunito Kids", "Arial Rounded MT Bold", ui-rounded, sans-serif;
+
+  position: relative;
+  /* The mock sat in a fixed stage; this one sits in the viewport, so the
+     width falls back to the viewport and the height is capped. */
+  inline-size: min(29rem, 86vi);
+  padding: 1.4rem 1.5rem 1.1rem;
+  color: var(--rcPrint);
+  /* On the CARD, so the ragged alpha of the tear casts the shadow rather
+     than a rectangle floating behind it. */
+  filter: drop-shadow(0 14px 30px rgb(20 16 8 / 55%));
+  text-align: center;
+}
+
+/* ── one card, used by all six ───────────────────────────────── */
+
+/*
+ * THE SAME SHEET THE SCOREBOARD IS PRINTED ON.
+ *
+ * Three clipped layers, exactly as `.notice` does it: a grubby rim, pale
+ * fibre inside that, then the printed face. The edge is not drawn — each
+ * layer is a plain rectangle whose edge is pushed about by
+ * feDisplacementMap, because a hand-written polygon has evenly spaced
+ * points and so gives evenly spaced teeth.
+ *
+ * AND THE SEED IS DRAWN FRESH EACH TIME. One fixed tear used on six
+ * different cards is a shape the eye learns in an afternoon; a seed picked
+ * when the card opens means no two are ever torn alike, for no cost at all —
+ * the filter is rasterised once either way.
+ */
+/*
+ * The three layers are grouped so night can take the PAPER down without
+ * touching the tear. The seeds are written to each layer as an inline
+ * `filter`, and an inline style beats the stylesheet — so dimming them
+ * individually simply never happened.
+ */
+.roadCard > .roadSheet {
+  position: absolute;
+  inset: 0;
+}
+
+.roadRim,
+.roadFibre,
+.roadFace {
+  position: absolute;
+  inset: 0;
+}
+
+.roadRim {
+  inset: -5px;
+  background: var(--rcRim);
+}
+.roadFibre {
+  inset: -2.5px;
+  background: var(--rcFibre);
+}
+
+.roadFace {
+  background-color: var(--rcPaper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.34 0 0 0 0 0.30 0 0 0 0 0.22 0.14 0.14 0.14 0 -0.06'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url%28%23g%29'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-blend-mode: var(--rcGrain);
+}
+
+.roadCard > .roadBody {
+  position: relative;
+  z-index: 1;
+  /* NOT on the card: the rim and fibre are laid out beyond the card's own
+     box, so any overflow other than `visible` there clips the tear back
+     into a rectangle -- found by eye, the card came out with four hard
+     corners. Here it only ever clips the printing. */
+  max-block-size: 84vb;
+  overflow-y: auto;
+}
+
+/* Registered, or they cannot be animated — an unregistered custom property
+   is a string and jumps from one value to the next. */
+@property --g1 {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+@property --g2 {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+@property --lit {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/*
+ * The glow is declared HERE, on the card, not up at the root with the other
+ * night colours — and that is not tidiness, it is the only place it works.
+ * A custom property's `var()`s are resolved against the element that
+ * DECLARES it, so a `--roadGlow` written at the root reads the root's `--lit`,
+ * which is the un-animated 0. The card is where the animation runs, so the
+ * card is where the value has to be built.
+ */
+.rootDark .roadCard {
+  --rcPrint: #c9b98f;
+  --rcRim: #24221b;
+  --rcFibre: #3e392c;
+  --rcPaper: #4c4636;
+  --rcEyebrow: #a3946b;
+  --rcGrain: screen;
+  --roadGlow: 0 0 7px
+    rgb(
+      255 168 60 /
+        calc(var(--lit) * (0.62 * var(--g1) + 0.38 * var(--g2)) * 34%)
+    );
+  animation:
+    roadLit 900ms ease-out both,
+    roadFlick1 2.9s ease-in-out infinite alternate,
+    roadFlick2 1.224s ease-in-out infinite alternate;
+}
+
+@keyframes roadLit {
+  from {
+    --lit: 0;
+  }
+  to {
+    --lit: 1;
+  }
+}
+@keyframes roadFlick1 {
+  from {
+    --g1: 0.42;
+  }
+  to {
+    --g1: 0.96;
+  }
+}
+@keyframes roadFlick2 {
+  from {
+    --g2: 0.5;
+  }
+  to {
+    --g2: 0.92;
+  }
+}
+
+/* A child who asked for less movement gets the light, not the flicker. */
+@media (prefers-reduced-motion: reduce) {
+  .rootDark .roadCard {
+    animation: roadLit 900ms ease-out both;
+  }
+}
+
+/* The grain is the same tile either way; only which direction it pushes
+   changes — see `--rcGrain`. */
+.rootDark .roadFace {
+  background-blend-mode: screen;
+}
+
+.roadEyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--rcEyebrow);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: var(--roadGlow);
+}
+
+.roadTitle {
+  margin: 0 0 0.45rem;
+  font-size: 1.25rem;
+  text-shadow: var(--roadGlow);
+}
+
+.roadBody p {
+  margin: 0 0 0.6rem;
+  font-family: var(--rcKid);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  /* Explicit, because a bare `p { text-align: start }` in the shared reset
+     beats the `center` inherited from the card -- an element selector wins
+     over inheritance no matter how specific the ancestor's rule is. */
+  text-align: center;
+  text-shadow: var(--roadGlow);
+}
+
+/*
+ * THE LETTER IS STILL THE CUTOUT. Only the stone behind it has gone.
+ *
+ * The milestone image was a second object on a card that is already a torn
+ * sheet, and two textures arguing over one small surface is one too many.
+ * The letter itself is unchanged: a shape cut clean through, with an oil
+ * lamp in the recess behind it, and what you see through the glyph is that
+ * roadFlame.
+ *
+ * Back to front, the layers are the inside of the recess:
+ *
+ *   · the CAVITY — near-black where it is roofed over, warming toward the
+ *     floor where the light lands;
+ *   · the BOUNCE — the pool the roadFlame throws on the walls round it, which
+ *     is what gives the recess depth rather than a flat dark fill;
+ *   · the FLAME, small and amber, low where a wick sits.
+ *
+ * Only the last two move. A cavity does not.
+ *
+ * (`.roadBody p` is one class and one type, so a bare `.letter` loses to it and
+ * the letter came out at body size.)
+ */
+.roadBody p.roadLetter {
+  --spill: 7%;
+  --spill-wide: 0%;
+  margin: 0.1rem auto 0.45rem;
+  color: transparent;
+  background-image:
+    radial-gradient(
+      50% 58% at 50% 50%,
+      #ffd48a 0%,
+      #ffb257 28%,
+      #e8842a 56%,
+      rgb(210 110 30 / 0%) 80%
+    ),
+    radial-gradient(
+      50% 50% at 50% 50%,
+      rgb(226 132 46 / 62%) 0%,
+      rgb(198 104 30 / 18%) 44%,
+      rgb(190 100 28 / 0%) 78%
+    ),
+    linear-gradient(#0b0603 0%, #1d0d05 44%, #351708 76%, #4d240c 100%);
+  background-position:
+    50% 74%,
+    50% 78%,
+    center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-size:
+    63% 72%,
+    127% 125%,
+    auto;
+  background-repeat: no-repeat;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 4.4rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow:
+    /* the thickness of the cut: stone overhangs it up and to the left */
+    -2px -2px 0 rgb(24 28 20 / 92%),
+    -1px -1px 0 rgb(24 28 20 / 72%),
+    1px 1px 0 rgb(255 236 190 / 18%),
+    /* and light getting out of it onto the paper */ 0 0 9px
+      rgb(255 176 74 / var(--spill)),
+    0 0 26px rgb(255 150 40 / var(--spill-wide));
+  animation: roadFlame 3.7s ease-in-out infinite;
+}
+
+.rootDark .roadBody p.roadLetter {
+  --spill: calc(var(--lit) * (0.62 * var(--g1) + 0.38 * var(--g2)) * 26%);
+  --spill-wide: calc(var(--lit) * (0.62 * var(--g1) + 0.38 * var(--g2)) * 13%);
+}
+
+/*
+ * THE WINDOW IS WHAT IS LIT.
+ *
+ * With the stone gone the light belongs to the card itself: a notice pinned
+ * up on a dark road and read by the lamp standing next to it, so the whole
+ * sheet breathes rather than one object on it.
+ *
+ * On `.sheet` and not on `.roadCard`, deliberately. A `filter` animation
+ * freezes other animations on the same element — measured three separate
+ * times while building this — and `.roadCard` is where the text glow's
+ * `--g1`/`--g2` run. Different elements, nothing to fight.
+ */
+.rootDark .roadCard > .roadSheet {
+  animation: roadGutter 7.3s linear infinite;
+}
+
+/*
+ * A WANDER, NOT A PULSE.
+ *
+ * Two things were making this read as a heartbeat. The stops were chosen by
+ * hand, and anything a person picks comes out rhythmic however hard they
+ * try not to — so these are a seeded random walk, pulled back toward a
+ * quiet level each step with an occasional catch on top. And the timing was
+ * `ease-in-out`, which rounds every step into a swell; `linear` between
+ * closely spaced stops is what reads as flicker.
+ *
+ * The range is deliberately narrow and low. An oil lamp does not strobe; it
+ * sits at one modest brightness and shifts around it.
+ */
+@keyframes roadGutter {
+  0.0% {
+    filter: brightness(0.858) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  3.4% {
+    filter: brightness(0.87) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  7.1% {
+    filter: brightness(0.89) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  11.1% {
+    filter: brightness(0.885) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  14.5% {
+    filter: brightness(0.844) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  16.1% {
+    filter: brightness(0.834) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  17.6% {
+    filter: brightness(0.838) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  20.3% {
+    filter: brightness(0.848) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  24.2% {
+    filter: brightness(0.825) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  26.4% {
+    filter: brightness(0.848) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  30.6% {
+    filter: brightness(0.867) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  33.0% {
+    filter: brightness(0.899) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  36.7% {
+    filter: brightness(0.917) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  38.1% {
+    filter: brightness(0.885) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  42.2% {
+    filter: brightness(0.868) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  45.2% {
+    filter: brightness(0.9) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  47.6% {
+    filter: brightness(0.903) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  48.7% {
+    filter: brightness(0.924) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  51.5% {
+    filter: brightness(0.891) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  54.5% {
+    filter: brightness(0.905) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  56.1% {
+    filter: brightness(0.881) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  58.5% {
+    filter: brightness(0.907) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  61.0% {
+    filter: brightness(0.905) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  65.4% {
+    filter: brightness(0.877) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  68.1% {
+    filter: brightness(0.856) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  69.7% {
+    filter: brightness(0.86) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  72.0% {
+    filter: brightness(0.868) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  73.2% {
+    filter: brightness(0.934) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  74.6% {
+    filter: brightness(0.905) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  78.7% {
+    filter: brightness(0.917) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  82.0% {
+    filter: brightness(0.968) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  85.9% {
+    filter: brightness(0.894) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  89.0% {
+    filter: brightness(0.85) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  90.8% {
+    filter: brightness(0.863) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  93.9% {
+    filter: brightness(0.869) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  96.3% {
+    filter: brightness(0.852) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  97.6% {
+    filter: brightness(0.845) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  98.8% {
+    filter: brightness(0.856) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+
+  100% {
+    filter: brightness(0.858) drop-shadow(0 4px 7px rgb(20 26 14 / 45%));
+  }
+}
+
+/*
+ * The roadFlame wanders, in ONE animation that touches only the background.
+ *
+ * Measured three times over: a second background animation, or any `filter`
+ * animation on this same element, freezes it on its first keyframe — the
+ * filter promotes the letter to its own composited layer and the paint
+ * stops being redone. That is why the window's roadGutter lives on `.sheet`.
+ */
+@keyframes roadFlame {
+  0% {
+    background-position:
+      50% 74%,
+      50% 78%,
+      center;
+    background-size:
+      63% 72%,
+      127% 125%,
+      auto;
+  }
+
+  14% {
+    background-position:
+      53% 70%,
+      52% 74%,
+      center;
+    background-size:
+      57% 83%,
+      121% 133%,
+      auto;
+  }
+
+  29% {
+    background-position:
+      48% 72%,
+      47% 76%,
+      center;
+    background-size:
+      68% 66%,
+      132% 120%,
+      auto;
+  }
+
+  43% {
+    background-position:
+      52% 68%,
+      51% 72%,
+      center;
+    background-size:
+      59% 80%,
+      124% 130%,
+      auto;
+  }
+
+  58% {
+    background-position:
+      49% 75%,
+      50% 79%,
+      center;
+    background-size:
+      66% 69%,
+      129% 122%,
+      auto;
+  }
+
+  72% {
+    background-position:
+      51% 69%,
+      49% 73%,
+      center;
+    background-size:
+      56% 84%,
+      120% 134%,
+      auto;
+  }
+
+  87% {
+    background-position:
+      50% 73%,
+      51% 77%,
+      center;
+    background-size:
+      65% 70%,
+      128% 124%,
+      auto;
+  }
+
+  100% {
+    background-position:
+      50% 74%,
+      50% 78%,
+      center;
+    background-size:
+      63% 72%,
+      127% 125%,
+      auto;
+  }
+}
+
+/* A child who asked for less movement keeps the light and loses the roadGutter. */
+@media (prefers-reduced-motion: reduce) {
+  .roadBody p.roadLetter,
+  .rootDark .roadCard > .roadSheet {
+    animation: none;
+  }
+}
+
+.roadFinger {
+  margin: 0 0 0.9rem;
+  color: var(--rcEyebrow);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow: var(--roadGlow);
+}
+
+/* ── the keys, drawn as the game draws them ──────────────────── */
+
+/*
+ * FIGURES ON THE CARD — printed, not boxed.
+ *
+ * The old finish card put each number in its own rounded panel, which on a
+ * torn sheet reads as four stickers stuck on afterwards. Ruled off above and
+ * below instead, the way a number would be set on a printed form.
+ */
+.roadStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem 0.9rem;
+  margin-block: 0.9rem 0.7rem;
+  padding-block: 0.75rem;
+  border-block: 1px solid rgb(122 108 79 / 35%);
+}
+
+.roadStatVal {
+  display: block;
+  font-family: var(--rcUi);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-shadow: var(--roadGlow);
+  font-variant-numeric: tabular-nums;
+}
+
+.roadStatLab {
+  display: block;
+  color: var(--rcEyebrow);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: var(--roadGlow);
+}
+
+.roadBest {
+  margin: 0 0 0.2rem;
+  color: var(--rcEyebrow);
+  font-family: var(--rcUi);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-shadow: var(--roadGlow);
+}
+
+/*
+ * THREE PRESSES, SCORED ON THE PAPER.
+ *
+ * The old ceremony counted them with grey UI chips, which on a torn sheet
+ * look like buttons somebody forgot to style. These are tally marks — the
+ * way you would actually keep a count of three on a piece of paper in 1930 —
+ * and they fill in as the child presses.
+ */
+.roadTally {
+  display: flex;
+  gap: 0.55rem;
+  justify-content: center;
+  margin-block: 0.2rem 0.9rem;
+}
+
+.roadTick {
+  inline-size: 0.22rem;
+  block-size: 1.35rem;
+  border-radius: 0.11rem;
+  background: color-mix(in srgb, var(--rcEyebrow) 32%, transparent);
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+  transform: rotate(-9deg);
+}
+
+.roadTickOn {
+  background: var(--rcPrint);
+  box-shadow: 0 0 6px rgb(255 176 74 / 35%);
+}
+
+.roadKeys {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-block-start: 0.9rem;
+  padding-block-start: 0.8rem;
+  border-block-start: 1px solid rgb(122 108 79 / 35%);
+}
+
+.roadCapWhat {
+  color: var(--rcEyebrow);
+  font-size: 0.78rem;
+  text-shadow: var(--roadGlow);
+}
+
+/*
+ * The same cap as the keyboard below the road: `.key` in kids.module.less —
+ * the 3.5px bottom edge, the 2.5px inset ring, the same `--key-bg` and the
+ * same `--kz`. It is not a picture of a key, it is the key.
+ *
+ * The LABEL comes from the live layout, which is why these are data-driven
+ * below rather than typed in: a child on a layout that calls it "Intro" or
+ * "⏎" must be told the key they actually have.
+ */
+.roadCap {
+  display: grid;
+  place-items: center;
+  min-inline-size: 2.6rem;
+  block-size: 2.1rem;
+  padding-inline: 0.7rem;
+  border-radius: 0.6rem;
+  color: var(--rcKink);
+  background: var(--key-bg);
+  box-shadow:
+    0 3.5px 0 color-mix(in srgb, var(--kz) 78%, #6a6a5a),
+    inset 0 0 0 2.5px var(--kz);
+  font-family: var(--rcUi);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/*
+ * THE FINGER COLOURS, which these two keys have never had.
+ *
+ * `keyboard-data.ts` leaves tab, caps, shift, enter, back and the space bar
+ * uncoloured on purpose — on the board they would compete with the letter a
+ * learner is being pointed at. On a card where they are the only keys shown
+ * that reason does not apply, so they take the colour of the finger that
+ * presses them, the same way every letter key does.
+ *
+ * Enter is the right little finger, so it is `--rose` and no new decision.
+ * SPACE IS THE THUMB, AND THE THUMB HAS NEVER HAD A COLOUR — it presses one
+ * key and so never needed one. `--sky` is proposed: it is already in the
+ * palette, no letter zone uses it, and it cannot be mistaken for one of the
+ * eight fingers.
+ */
+
+.roadCapWide {
+  min-inline-size: 7.5rem;
 }

@@ -162,3 +162,41 @@ test("a banded context never falls through to the shared table", () => {
     "village line",
   );
 });
+
+test("every cheer band keeps a line that does not name the guide", () => {
+  // The cheers are picked on their own path, from their own pool, and they
+  // fire far more often than anything else on the page — so a child who has
+  // switched the guide off hears about him constantly if this is not true.
+  // The filter that enforces it can only work if there is something left to
+  // pick, which is what this checks.
+  for (const key of ["cheer", "cheerYoung", "cheerCool"]) {
+    const lines = table[key];
+    if (lines == null || lines.length === 0) {
+      continue;
+    }
+    const without = lines.filter((l) => !l.includes("{guide}"));
+    isTrue(
+      without.length > 0,
+      `${key} is nothing but guide lines — with him switched off there is nothing to say`,
+    );
+    // And most of them, not one survivor: a pool that falls back to a single
+    // line repeats it until a child notices.
+    isTrue(
+      without.length >= Math.ceil(lines.length / 2),
+      `${key} loses more than half its lines with the guide away (${without.length}/${lines.length})`,
+    );
+  }
+});
+
+test("no line names the guide without the token", () => {
+  // The filter matches `{guide}`, so a line that spells his name out is
+  // invisible to it and ships to a child who has turned him off.
+  for (const [key, lines] of Object.entries(table)) {
+    for (const line of lines ?? []) {
+      isTrue(
+        !/\bAbee\b/.test(line),
+        `${key} names Abee outright; it has to be {guide} or the filter cannot see it`,
+      );
+    }
+  }
+});

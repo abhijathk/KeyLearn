@@ -362,7 +362,7 @@ const OWN_MODELS: ReadonlyMap<string, string> = new Map([["Abee", "abee"]]);
  * What to CALL each thing while the world is being built.
  *
  * Only the names a child would use. The files are called `MegaBroadleaf` and
- * `Ancient_Milestone_Blank`, which is right for a folder and no good at all
+ * `Milestone_Vazhivilakku`, which is right for a folder and no good at all
  * on a loading screen; anything not listed falls back to its filename with
  * the underscores taken out, which reads acceptably for the rest.
  */
@@ -396,8 +396,8 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["MegaPebbles", "loose pebbles"],
   ["KeralaBambooGroves", "a bamboo grove"],
   // The roadside.
-  ["Ancient_Milestone_Blank", "the milestones"],
-  ["Stone_Vazhivilakku", "the vazhivilakku"],
+  // One stone, not two: the milestone carries its own vazhivilakku head.
+  ["Milestone_Vazhivilakku", "the milestones"],
   ["Laterite_Rock", "laterite rock"],
   ["Granite_Boulder", "granite boulders"],
   ["Mossy_Stone", "mossy stones"],
@@ -547,6 +547,188 @@ function correctSittingArms(
     }
   }
   return clip;
+}
+
+/**
+ * Hair that answers to what the head just did.
+ *
+ * Peeli's hair used to be part of her skull -- 30,080 of her 38,786 vertices
+ * were weighted to `Head` -- so it could only ever move exactly as the head
+ * moved, which is to say it looked painted on. She now carries a four-bone
+ * chain down the length of it, and this swings it.
+ *
+ * A spring per bone, driven by the HEAD'S OWN ACCELERATION rather than by the
+ * clip that is playing. That is the whole trick: it means every animation
+ * gets hair for free, including ones written years before the hair existed,
+ * and the hair is always answering the real movement rather than a guess
+ * about which clip this is.
+ *
+ * Each bone lags the one above it, which is what reads as weight: the root
+ * starts to swing, the tip is still catching up, and by the time the tip
+ * arrives the root is already coming back.
+ */
+type HairSim = {
+  readonly bones: readonly THREE.Object3D[];
+  readonly rest: readonly THREE.Quaternion[];
+  /** Current deflection and its rate, per bone, in radians. */
+  readonly ax: number[];
+  readonly az: number[];
+  readonly vx: number[];
+  readonly vz: number[];
+  /** Last head position, for working out acceleration. */
+  readonly lastPos: THREE.Vector3;
+  readonly lastVel: THREE.Vector3;
+  /** Where she is in her stride, for the sway. See `stepHair`. */
+  phase: number;
+  ready: boolean;
+};
+
+const HAIR_TMP_P = new THREE.Vector3();
+const HAIR_TMP_V = new THREE.Vector3();
+const HAIR_TMP_A = new THREE.Vector3();
+const HAIR_TMP_Q = new THREE.Quaternion();
+const HAIR_TMP_E = new THREE.Euler();
+
+function makeHairSim(root: THREE.Object3D): HairSim | null {
+  const bones: THREE.Object3D[] = [];
+  root.traverse((o) => {
+    if (/^Hair_\d+$/.test(o.name)) {
+      bones.push(o);
+    }
+  });
+  if (
+    typeof window !== "undefined" &&
+    window.location.search.includes("perf")
+  ) {
+    const w = window as unknown as Record<string, unknown>;
+    ((w.__hair ??= []) as string[]).push(
+      `${root.name || "(scene)"}: ${bones.length} hair bones ${bones.map((b) => b.name).join(",")}`,
+    );
+  }
+  if (bones.length === 0) {
+    return null;
+  }
+  bones.sort((a, b) => a.name.localeCompare(b.name));
+  return {
+    bones,
+    rest: bones.map((b) => b.quaternion.clone()),
+    ax: bones.map(() => 0),
+    az: bones.map(() => 0),
+    vx: bones.map(() => 0),
+    vz: bones.map(() => 0),
+    lastPos: new THREE.Vector3(),
+    lastVel: new THREE.Vector3(),
+    phase: 0,
+    ready: false,
+  };
+}
+
+/**
+ * One step of the hair, run after the mixer has posed the skeleton.
+ *
+ * `gain` is how hard this character is moving -- a run throws the hair about,
+ * an idle barely stirs it. Passed in rather than measured here because the
+ * caller already knows it.
+ */
+function stepHair(sim: HairSim | null, dt: number, gain: number): void {
+  if (sim == null || dt <= 0) {
+    return;
+  }
+  const head = sim.bones[0]!.parent;
+  if (head == null) {
+    return;
+  }
+  head.getWorldPosition(HAIR_TMP_P);
+  if (!sim.ready) {
+    sim.lastPos.copy(HAIR_TMP_P);
+    sim.ready = true;
+    return;
+  }
+  // Acceleration of the head, in the head's OWN frame: hair does not care
+  // which way she is facing, only whether her head just moved and which way
+  // relative to her.
+  HAIR_TMP_V.copy(HAIR_TMP_P).sub(sim.lastPos).divideScalar(dt);
+  sim.lastPos.copy(HAIR_TMP_P);
+  HAIR_TMP_A.copy(HAIR_TMP_V).sub(sim.lastVel).divideScalar(dt);
+  sim.lastVel.copy(HAIR_TMP_V);
+  head.getWorldQuaternion(HAIR_TMP_Q);
+  HAIR_TMP_A.applyQuaternion(HAIR_TMP_Q.invert());
+  // Clamped before it is used, not after: one long frame (a tab coming back,
+  // a model finishing loading) produces an acceleration in the thousands and
+  // would fire the hair straight through her shoulders.
+  // SIDEWAYS IS THE MOVEMENT; FORE-AFT IS THE ARTEFACT.
+  //
+  // Measured on her walk, the head travels 0.0144 sideways, 0.0328 in bob and
+  // 0.0259 fore-and-aft. Fed in raw, the fore-aft term is the larger of the
+  // two the hair uses -- and fore-aft rotation is precisely the motion that
+  // folds the hair into her back, which is what it was doing. Hair on a
+  // walking person swings ACROSS her, so the lateral term is weighted up and
+  // the fore-aft one held right down.
+  //
+  // The bob is the strongest of the three and deliberately unused: a pendulum
+  // hanging from a pivot that moves straight up and down does not swing, it
+  // only gets heavier and lighter.
+  const ax = Math.max(-60, Math.min(60, HAIR_TMP_A.z)) * 0.42;
+  const az = Math.max(-60, Math.min(60, HAIR_TMP_A.x)) * 2.7;
+  // THE SWAY COMES FROM THE STRIDE, NOT FROM THE HEAD.
+  //
+  // Measured on her walk, the head travels 0.0144 sideways over a whole
+  // cycle -- about four millimetres at her scale. There is simply not enough
+  // lateral movement in the clip to swing anything from, which is why
+  // weighting the measured term up did not produce a walk swing: it was
+  // amplifying almost nothing, and what it did amplify was noise.
+  //
+  // So the side-to-side is driven by where she is in her stride instead. A
+  // walking person's hair crosses once per stride because her shoulders
+  // counter-rotate against her hips; the clip under-states that at this size,
+  // and this is that rotation made visible. The phase advances with how hard
+  // she is moving, so it speeds up into a run and stops dead when she does.
+  sim.phase += gain * 3.4 * dt;
+  if (sim.phase > Math.PI * 2) {
+    sim.phase -= Math.PI * 2;
+  }
+  // Fixed sub-steps, so the spring behaves the same at 30fps as at 60 and a
+  // dropped frame cannot make it explode.
+  const steps = Math.min(4, Math.max(1, Math.ceil(dt / 0.012)));
+  const h = dt / steps;
+  for (let i = 0; i < sim.bones.length; i++) {
+    // Further down the chain: softer spring, so the tip trails the root.
+    // Softer at the root than it was. This is a parent chain, so Hair_01
+    // carries the whole sheet -- at 150 it barely moved, and only the tip,
+    // which accumulates all four rotations, went anywhere.
+    const k = 64 - i * 9;
+    const c = 7.4 - i * 0.7;
+    // SOLVED, not guessed. A spring settles where the drive balances the
+    // spring, at `drive * a / k` radians. Walking bobs her head at roughly
+    // 3 units/s^2, and the first version used a drive of 0.016 -- which
+    // against k=150 is 0.0003 radians, a hundredth of a degree. It ran
+    // perfectly and moved nothing.
+    //
+    // For a visible 0.12 rad (about 7 degrees) at a walk: drive = k*0.12/3,
+    // so about 6. Running throws four times that and the clamp catches it,
+    // which is what gives the run its whip.
+    const drive = (4.6 + i * 1.1) * gain;
+    // Each bone a little later in the stride than the one above it, so the
+    // swing travels down the hair instead of the whole sheet moving as a
+    // board. A tenth of a cycle per bone -- enough to see, not so much that
+    // the tip is going one way while the root goes the other.
+    const sway = Math.sin(sim.phase - i * 0.62) * 5.0 * gain;
+    for (let s = 0; s < steps; s++) {
+      sim.vx[i]! += (-k * sim.ax[i]! - c * sim.vx[i]! + ax * drive) * h;
+      sim.vz[i]! += (-k * sim.az[i]! - c * sim.vz[i]! + az * drive + sway) * h;
+      sim.ax[i]! += sim.vx[i]! * h;
+      sim.az[i]! += sim.vz[i]! * h;
+    }
+    // Fore-aft kept on a short rein whichever way it goes -- into her back it
+    // clips, away from it the hair stands off her shoulders like a board. The
+    // sideways swing is the one allowed a full arc.
+    sim.ax[i] = Math.max(-0.13, Math.min(0.13, sim.ax[i]!));
+    sim.az[i] = Math.max(-0.46, Math.min(0.46, sim.az[i]!));
+    HAIR_TMP_E.set(sim.ax[i]!, 0, sim.az[i]!);
+    sim.bones[i]!.quaternion.copy(sim.rest[i]!).multiply(
+      HAIR_TMP_Q.setFromEuler(HAIR_TMP_E),
+    );
+  }
 }
 
 function stripScaleTracks(clip: THREE.AnimationClip): THREE.AnimationClip {
@@ -861,6 +1043,265 @@ function scaleHead(root: THREE.Object3D, scale: number): void {
   });
 }
 
+/**
+ * THE TWO HOURS A CLOCK TIME STAGES AS.
+ *
+ * Village Road is lit by the hour the child is actually playing at, folded
+ * onto a twelve-hour face: at ten in the morning the day is a ten o'clock
+ * morning and the night is ten at night; at eight in the evening the day is
+ * eight in the morning and the night is eight at night.
+ *
+ * THE FOLD HAS TO PICK THE RIGHT ONE OF THE TWO. A clock position `h` has two
+ * candidate hours, `h` and `h + 12`, and only one of them is daylight. Taking
+ * the AM reading for day and the PM reading for night works for six through
+ * twelve and breaks badly for one through five — two in the AFTERNOON, which
+ * is one of the commonest times a child plays, would have been staged as two
+ * in the morning. So each mode takes whichever candidate falls in its own
+ * half of the day:
+ *
+ *   10am -> day 10am, night 10pm      2pm -> day 2pm,  night 2am
+ *    8pm -> day  8am, night  8pm      3am -> day 3pm,  night 3am
+ *
+ * Which is a rule you can say in one line — day mode shows the daylight hour
+ * nearest your clock, night mode shows the night hour nearest it — and which
+ * never stages a sky that could not exist.
+ *
+ * Fractional, so half past reads between the two hours rather than snapping.
+ */
+/**
+ * WHERE THE SUN ACTUALLY IS OVER KERALA.
+ *
+ * The road is a real place at about ten and a half degrees north, and the sun
+ * behaves in a way a generic arc does not reproduce. Two things matter and
+ * both of them show:
+ *
+ *   - The tropics barely have seasons in the CLOCK. Sunrise sits between
+ *     about 6:10 and 6:30 all year and sunset between 6:15 and 6:50, against
+ *     the four-hour swing a temperate latitude gets. A child in Kerala walks
+ *     out at half past six into the same light in January as in July.
+ *   - But the noon sun swings a very long way in HEIGHT — from about 56
+ *     degrees at the December solstice to directly overhead twice a year, in
+ *     April and again in August, when a stone at noon has no shadow at all.
+ *
+ * And the detail that gives it away if you get it wrong: north of the equator
+ * but south of the tropic, the midday sun is in the SOUTH for half the year
+ * and in the NORTH for the other half. Shadows at noon fall one way in
+ * December and the other in June. No hand-placed vector does that.
+ *
+ * Standard astronomy, to the accuracy this needs (a fraction of a degree):
+ * declination from the day of the year, hour angle from solar time, then the
+ * spherical triangle. `hour` is read as local solar time — the child's own
+ * clock, staged over Kerala, which is the whole conceit.
+ */
+const KERALA_LAT = (10.5 * Math.PI) / 180;
+const D2R = Math.PI / 180;
+
+/** The sun's tilt for a date, +23.44 deg at midsummer and -23.44 at midwinter. */
+function declination(now: Date): number {
+  const start = Date.UTC(now.getUTCFullYear(), 0, 0);
+  const day = (now.getTime() - start) / 86400000;
+  // The usual Cooper approximation. Good to about half a degree, which is a
+  // long way inside what a light in a game can show.
+  return 23.44 * D2R * Math.sin(((360 / 365.24) * (day - 81) * Math.PI) / 180);
+}
+
+/**
+ * The sun's height and bearing at an hour, over Kerala.
+ *
+ * Elevation in radians above the horizon (negative below it), and azimuth in
+ * radians clockwise from north — so a quarter turn is due east, a half turn
+ * due south.
+ */
+function solarAngles(
+  hour: number,
+  now: Date,
+): { readonly elev: number; readonly az: number } {
+  const dec = declination(now);
+  const H = (hour - 12) * 15 * D2R; // hour angle: zero at solar noon
+  const sinElev =
+    Math.sin(KERALA_LAT) * Math.sin(dec) +
+    Math.cos(KERALA_LAT) * Math.cos(dec) * Math.cos(H);
+  const elev = Math.asin(Math.min(1, Math.max(-1, sinElev)));
+  // atan2 form rather than the acos one: acos loses the sign and puts the
+  // afternoon sun back in the east.
+  const az = Math.atan2(
+    -Math.sin(H) * Math.cos(dec),
+    Math.sin(dec) * Math.cos(KERALA_LAT) -
+      Math.cos(dec) * Math.sin(KERALA_LAT) * Math.cos(H),
+  );
+  return { elev, az };
+}
+
+/**
+ * When the sun is up over Kerala on a date, in local solar hours.
+ *
+ * Used by the fold below, so "is this hour daylight" is answered by the sky
+ * rather than by a hardcoded six and eighteen.
+ */
+export function daylightWindow(now: Date = new Date()): {
+  readonly rise: number;
+  readonly set: number;
+} {
+  const dec = declination(now);
+  const cosH = -Math.tan(KERALA_LAT) * Math.tan(dec);
+  // At this latitude the sun rises and sets every day of the year, so the
+  // polar cases cannot happen — clamped anyway rather than returning NaN.
+  const H = Math.acos(Math.min(1, Math.max(-1, cosH))) / D2R / 15;
+  return { rise: 12 - H, set: 12 + H };
+}
+
+export function stagedHours(now: Date = new Date()): {
+  readonly day: number;
+  readonly night: number;
+} {
+  const h = (((now.getHours() + now.getMinutes() / 60) % 12) + 12) % 12;
+  // "Daylight" is asked of the SKY, not of a hardcoded six and eighteen: over
+  // Kerala the sun is up from about ten past six to about half past, and the
+  // window shifts by a few minutes across the year. Close to 6-18, and the
+  // few minutes are exactly the ones a fold gets wrong.
+  const { rise, set } = daylightWindow(now);
+  const isDay = (t: number) => t >= rise && t <= set;
+  return isDay(h) ? { day: h, night: h + 12 } : { day: h + 12, night: h };
+}
+
+/**
+ * WHERE THE SUN IS AT A GIVEN HOUR, as an offset from what it looks at.
+ *
+ * Elevation is taken through the SINE, not applied to the angle: the sun's
+ * height goes as `sin(elevation) = sin(peak) * sin(hour angle)`, and ramping
+ * the angle itself instead puts eight in the morning at forty-six degrees
+ * when it belongs at about thirty. The difference is the whole character of a
+ * morning — one of them lays long shadows down the road and the other does
+ * not.
+ *
+ * FLOORED AT `LOW`, and that is a hard constraint rather than a taste. Shadow
+ * length is height over the tangent of the elevation, and the shadow camera
+ * reaches 45 units behind the child: a ten-unit palm at twelve degrees throws
+ * forty-seven and is cut off mid-shadow. At eighteen it throws thirty-one and
+ * fits. Dawn and dusk are long, not infinite — which is also the only way the
+ * road stays readable at either end.
+ *
+ * `lat` keeps the sun off the road's own line all day, so shadows fall ACROSS
+ * the track rather than straight along it; at noon it is the only thing left
+ * deciding which way they point.
+ */
+/**
+ * WHERE TO STAND THE LIGHT FOR AN HOUR, in the scene's own axes.
+ *
+ * Taken straight from `solarAngles` rather than from a shaped curve, so the
+ * height, the bearing and the length of every shadow are Kerala's at that
+ * hour on today's date — including the one nothing hand-placed would do: the
+ * noon sun crossing from the southern side of the sky to the northern one in
+ * April and back in August, which swings every midday shadow across the road.
+ *
+ * THE SCENE'S AXES: the road runs along +x and the camera looks from +z, so
+ * +x is taken as east and +z as south. A bearing therefore lands as
+ * (sin az, ., -cos az) — due east at sunrise is straight down the road ahead
+ * of a child walking it, which is exactly where the sun is at half past six.
+ *
+ * AT NIGHT it is the moon, and the moon is roughly opposite the sun: the same
+ * geometry with the bearing turned half round and the height taken off the
+ * night hour. Near enough for a light in a game, and it is what puts night
+ * shadows somewhere the day never puts them.
+ *
+ * `LOW` is not a taste. Shadow length is height over the tangent of the
+ * elevation, so as the sun touches the horizon it goes to infinity and the
+ * whole ground becomes one shadow; half past six is 7 degrees and untouched,
+ * and only the last few minutes either side are held off the floor. The
+ * shadow box is grown to match — see `fitShadowCamera`.
+ */
+function sunAtHour(
+  hour: number,
+  night: boolean,
+  now: Date = new Date(),
+): THREE.Vector3 {
+  const LOW = 6.5 * D2R;
+  const Y = 30;
+  // THE MOON IS NOT WHERE THE SUN IS TWELVE HOURS ON.
+  //
+  // That was the model, and combined with the fold it cancelled exactly: the
+  // fold stages night as day + 12, so asking for the sun twelve hours past
+  // THAT asks for the sun at the day hour, and the moon came out standing in
+  // precisely the same place as the sun with the same shadows. The whole
+  // point of a night is that it is lit from somewhere else.
+  //
+  // It lags the sun by its AGE — fifty minutes a day, a full cycle over a
+  // month — so `age * 24` hours back is where it is. At full that is twelve
+  // hours and the old model was right by accident; at every other phase it is
+  // somewhere else entirely, which is what a crescent low in the west after
+  // sunset actually looks like.
+  const back = night ? moonAge(now) * 24 : 0;
+  const { elev, az } = solarAngles(hour - back, now);
+  const up = Math.max(LOW, elev);
+  // How far out it has to stand to be that high.
+  const run = Y / Math.tan(up);
+  // NO FLIP. The half-turn that used to be here was reasoning about the moon
+  // being "opposite the sun", which is true of where it sits in the sky
+  // relative to the sun and NOT of the path it walks: taking the sun's
+  // position twelve hours away already puts it opposite, and turning the
+  // bearing as well turned it back. The result was a moon that rose in the
+  // WEST at dusk and set in the east at dawn, so night shadows swept the
+  // wrong way across the whole night.
+  //
+  // Unflipped, `solarAngles(hour + 12)` is exactly the path of a full moon:
+  // up in the east as the sun goes down, due south and highest at midnight,
+  // down in the west at dawn. A full moon is also the right one to model —
+  // it is the one that is actually up all night.
+  const bearing = az;
+  return new THREE.Vector3(
+    Math.sin(bearing) * run,
+    Y,
+    -Math.cos(bearing) * run,
+  );
+}
+
+/**
+ * TONIGHT'S MOON, FROM THE ACTUAL CALENDAR.
+ *
+ * Returns the lit fraction of the disc: 0 at new moon, 1 at full.
+ *
+ * Not an approximation standing in for a lookup table — the phase genuinely
+ * is closed form. It runs on a 29.530588853 day synodic month, and counting
+ * from a known new moon is good to a few hours for centuries either side,
+ * which is far more precision than a light on a cartoon road can spend. No
+ * data, no network, no dependency. The epoch is the new moon of 6 January
+ * 2000, 18:14 UTC.
+ *
+ * Nothing draws a moon. What this is for is the DARKNESS: a road under a new
+ * moon is close to black and the lamps are the only thing on it, and a week
+ * later the same road is silver and you can see the paddy. That swing is the
+ * thing a child recognises — it matches the sky they can walk outside and
+ * look at, on the night they are playing — and it costs one cosine.
+ */
+const LUNAR_EPOCH = Date.UTC(2000, 0, 6, 18, 14) / 86400000;
+const SYNODIC_DAYS = 29.530588853;
+/**
+ * HOW FAR THROUGH ITS CYCLE THE MOON IS, 0 at new and 0.5 at full.
+ *
+ * Which is also how far BEHIND THE SUN it runs: the moon loses about fifty
+ * minutes a day against it, a whole twenty-four hours over a cycle. So the
+ * moon at a given hour stands where the sun stood `age * 24` hours earlier —
+ * at full, twelve hours earlier, which is why a full moon rises as the sun
+ * sets and is due south at midnight.
+ */
+export function moonAge(now: Date = new Date()): number {
+  const days = now.getTime() / 86400000 - LUNAR_EPOCH;
+  return (((days / SYNODIC_DAYS) % 1) + 1) % 1;
+}
+
+export function moonLit(now: Date = new Date()): number {
+  const days = now.getTime() / 86400000 - LUNAR_EPOCH;
+  // Age through the cycle, 0..1. `%` keeps the sign for dates before the
+  // epoch, so it is folded back round.
+  const age = (((days / SYNODIC_DAYS) % 1) + 1) % 1;
+  // Illuminated fraction, and NOT the age itself: the disc fills as a
+  // cosine, so the nights either side of full are nearly as bright as full
+  // and the ones either side of new nearly as dark as new. A linear ramp
+  // gets both ends wrong, which is exactly where the difference is worth
+  // having.
+  return (1 - Math.cos(age * Math.PI * 2)) / 2;
+}
+
 function castHeight(name: string): number {
   switch (name) {
     // Dave, the eldest-looking. A TINY bit taller than Peeli and no more:
@@ -891,18 +1332,30 @@ function castHeight(name: string): number {
     // wagging is the smallest part of it.
     case "Puppy":
       return 1.9;
-    // Eight, and drawn in the pack's own proportions now — 4.07 heads tall
-    // against Peeli's 4.12, 0.556 wide for his height against her 0.559. So
-    // he simply sits in the sibling band by age: a year under Dave and Peeli
-    // at nine, well over Little Drew at six.
+    // Drawn in the pack's own proportions — 4.07 heads tall against Peeli's
+    // 4.12, 0.556 wide for his height against her 0.559.
+    //
+    // LEVEL WITH PEELI, and a clear head under Dave. He was a year younger
+    // and set a year shorter, which is defensible on paper and wrong in the
+    // frame: he is the one who walks beside the child the whole way, and
+    // stood next to them at 4.35 he read as a little brother tagging along
+    // rather than the boy showing them the road. Eye to eye with Peeli he
+    // reads as what he is.
     //
     // The model he replaced was drawn realistically — 5.98 heads, narrower —
     // and read as a small fifteen-year-old at a child's height. It took three
     // separate corrections to hide that: 6.3 tall, 1.14 girth and a 1.22
     // head. None of them are needed any more, and carrying them over would
     // have put a giant in the opening frame.
+    // SHORTER THAN PEELI, because he is younger than her.
+    //
+    // He was 4.55, exactly her height, so the pair read as the same age and
+    // the only thing telling them apart was the clothes. He is eight and she
+    // is nine, and at this age a year is visible: 4.28 is about six per cent
+    // down, which is roughly the real gap and enough to see without making
+    // him look like a small child beside her.
     case "Abee":
-      return 4.35;
+      return 4.28;
     // Village Road only. A water buffalo stands taller than the children
     // walking past it — that is the whole point of the charge.
     case "Buffalo":
@@ -937,6 +1390,10 @@ export const VILLAGE_LANDS: readonly Land[] = [
     grass: 0x54a840,
     grassVar: 0x6cbd52,
     dirt: 0xa8542c,
+    // NEUTRAL DAYLIGHT, on purpose. These are the land's own colours at the
+    // top of the sky and nothing else — the hour does the warming now, and a
+    // base that was already gold made every hour gold, including noon. See
+    // `warm` in applySky.
     sun: 0xfff4d8,
     fog: 0xd6f0c6,
     path: "mud",
@@ -960,6 +1417,10 @@ export const VILLAGE_LANDS: readonly Land[] = [
     grass: 0x74ab4e,
     grassVar: 0x8bbf60,
     dirt: 0xc99a63,
+    // NEUTRAL DAYLIGHT, on purpose. These are the land's own colours at the
+    // top of the sky and nothing else — the hour does the warming now, and a
+    // base that was already gold made every hour gold, including noon. See
+    // `warm` in applySky.
     sun: 0xffeec2,
     fog: 0xeae4c4,
     path: "mud",
@@ -985,6 +1446,10 @@ export const VILLAGE_LANDS: readonly Land[] = [
     grass: 0x4fa845,
     grassVar: 0x69bb58,
     dirt: 0x7d5a3e,
+    // NEUTRAL DAYLIGHT, on purpose. These are the land's own colours at the
+    // top of the sky and nothing else — the hour does the warming now, and a
+    // base that was already gold made every hour gold, including noon. See
+    // `warm` in applySky.
     sun: 0xe8eee4,
     fog: 0xc6d8c8,
     path: "mud",
@@ -1126,6 +1591,82 @@ export type WorldTheme = {
     number?, // optional per-category size multiplier (e.g. bigger buildings)
   ])[];
   /**
+   * Thickets, as opposed to the even sprinkle `ground` gives.
+   *
+   * One entry per plant, each planted in tight clumps at the milestone
+   * spacing rather than spread over the whole trail. For the low, damp-loving
+   * things that genuinely grow that way.
+   */
+  readonly groundClusters?: readonly {
+    readonly file: string;
+    /** Clump size, drawn per verge per point. */
+    readonly min: number;
+    readonly max: number;
+    /** How far the clump spreads along the road. */
+    readonly spread: number;
+    /** Nearest and furthest from the road's centre line, both positive. */
+    readonly near: number;
+    readonly far: number;
+    /**
+     * Which verge. "near" is the bottom of the frame, "far" is behind the
+     * road, "both" is either.
+     *
+     * Explicit, because inferring it from the SIGN of near/far was a trap I
+     * walked straight into: negative distances put the plot on the far side
+     * as intended and then the both-verges rule mirrored it onto the near
+     * one, so half the banana plantation ended up across the bottom of the
+     * screen -- the exact thing it was set back to avoid.
+     */
+    readonly verge?: "near" | "far" | "both";
+    /**
+     * Spacing along the road. Left out, the clumps land at the milestone
+     * spacing; set small, they run together into a continuous band.
+     */
+    readonly stride?: number;
+    /**
+     * How often a point gets this plant at all, 0-1. Left out, every one
+     * does. For the things that should turn up at SOME milestones and not
+     * others -- one flowering shrub on the third stone is a detail somebody
+     * planted; one on every stone is a pattern.
+     */
+    readonly chance?: number;
+    /**
+     * Measure `near`/`far` from the ROAD rather than from world zero.
+     *
+     * The road meanders, so an absolute z is not a distance from it -- and
+     * `onRoad` rejects anything within `roadClear` of `meander(x)`, which is
+     * why plantings written in absolute z were being thrown away unevenly
+     * along the trail. Anything meant to sit "beside the road" wants this;
+     * the foreground band does not, because it is positioned against the
+     * CAMERA FRAME, which does not wander.
+     */
+    readonly roadRelative?: boolean;
+    /**
+     * Size range, as a multiple of the scenery scale. Defaults to the same
+     * 0.7-1.4 every cluster used to share -- which is why the taro along the
+     * bottom of the frame read as missing: at that range it stands 12 to 23
+     * pixels tall, barely over the grass beside it, and a plant nobody can
+     * pick out is a plant that is not there.
+     */
+    readonly lo?: number;
+    readonly hi?: number;
+    /**
+     * Plant it as a SMALLHOLDING instead of a clump: a few rows running with
+     * the road, roughly evenly spaced, roughly straight. `lines` rows of
+     * `perLine`, `rowGap` apart across, `wobble` being how far each plant may
+     * wander off its mark -- small, because a planted row that wanders too
+     * far stops being a planted row.
+     */
+    readonly plot?: {
+      readonly lines: number;
+      readonly perLine: number;
+      readonly rowGap: number;
+      readonly wobble: number;
+      /** How often a point gets a plot at all, 0-1. */
+      readonly chance: number;
+    };
+  }[];
+  /**
    * How much the ground rolls, 1 being the original hills and 0 dead flat.
    * See RELIEF.
    */
@@ -1223,6 +1764,32 @@ export type WorldTheme = {
   readonly floorOpacity: number;
   /** HDR skybox (dino) vs. a flat 2D gradient sky (cube/hero). */
   readonly sky: "hdr" | "flat";
+  /**
+   * WHERE THIS WORLD'S SUN STANDS, as an offset from what it looks at.
+   *
+   * Per world, because the hour of the day is part of what a world IS and the
+   * three do not share one. Dino Run and the Hero Trail are staged at midday:
+   * the sun nearly overhead, shadows tucked under what casts them, everything
+   * plainly lit. Village Road is eight in the morning.
+   *
+   * Only the RATIO matters — the sun rides with the camera and its target is
+   * the camera, so its world position is meaningless and this vector alone
+   * decides which way shadows fall and how long they are. The painted
+   * shadows under the letter cards are displaced by the same vector, so
+   * every shadow in the scene, cast and painted alike, is thrown by one sun.
+   *
+   * Omitted, a world gets the midday rig.
+   */
+  readonly sunAt?: readonly [x: number, y: number, z: number];
+  /**
+   * Light this world by the CLOCK rather than by a fixed staging.
+   *
+   * Village Road only. The other two are deliberately staged at midday and
+   * are meant to look the same whenever a child opens them; this one is built
+   * around a real place at a real hour, and the hour it shows is the hour
+   * they are playing at. See `stagedHours`.
+   */
+  readonly clockLit?: boolean;
   /**
    * How far this world's night is lifted towards its dusk, 0..1.
    *
@@ -1511,6 +2078,35 @@ export const HERO_THEME: WorldTheme = {
 // them; the buffalo stands about in the fields as a wild thing rather than a
 // companion, which is what it is in the pack's own manifest.
 export const VILLAGE_THEME: WorldTheme = {
+  /**
+   * EIGHT IN THE MORNING, not noon.
+   *
+   * The other two worlds are staged overhead — see `sunAt` — which is the
+   * right light for a dinosaur valley you are meant to read at a glance, and
+   * the wrong one entirely for this road. A Kerala morning is the hour the
+   * whole place is FOR: the light comes in low along the road rather than
+   * down onto it, every palm and every stone lays a long shadow across the
+   * laterite instead of sitting on a disc of its own, and the haze has not
+   * burned off yet.
+   *
+   * 13 of height against 24 of run is about 28 degrees off the horizon, which
+   * is where the sun is at eight. Low enough for the shadows to stretch and
+   * still high enough that they stay inside the shadow camera, which reaches
+   * 45 units behind the child.
+   *
+   * The x is negative, so the sun is BEHIND them as they walk east up the
+   * road and their own shadow goes out ahead of them — which is the thing
+   * anybody who has walked a road at that hour remembers about it.
+   */
+  sunAt: [-24, 13, 9],
+  /**
+   * AND THE HOUR IS THE CHILD'S OWN. See `clockLit` and `stagedHours`.
+   *
+   * `sunAt` above is the fallback for a build that has not staged yet — an
+   * eight o'clock morning, which is what this road was tuned to look like
+   * and a sane thing to be caught showing.
+   */
+  clockLit: true,
   modelDir: "ak-3d-pack",
   // The small scenery still comes from the nature set - coconut palms and
   // broadleaf are already in there and are exactly right for Kerala, so the
@@ -1584,8 +2180,42 @@ export const VILLAGE_THEME: WorldTheme = {
     // cart road, and at 34 of them they were the most repeated object in the
     // world. MegaPlants and Flowers carry the low planting instead, and the
     // stone set now carries the things that are not plants at all.
-    ["MegaPlants", 40, 9, 19, "both"],
-    ["Flowers", 22, 9, 16, "both"],
+    // KERALA PLANTS, rather than the nature set's generic undergrowth.
+    //
+    // Same reasoning as the stone below: `MegaPlants` and `Flowers` were a
+    // temperate scatter set standing in for a tropical one, and `Flowers.glb`
+    // turned out to hold exactly ONE mesh -- so all twenty-two flowers in the
+    // world were the same object, which no amount of rotating hides.
+    //
+    // Counts follow where each thing actually grows: the ground layer close
+    // in and numerous, the crops set back and few. Heights are the models'
+    // own, from 0.48 for a grass tuft to 3.1 for a drumstick tree, so the
+    // planting has a real range instead of one shrub size repeated.
+    // Grass, fern and taro are thinned right down here because they are
+    // planted properly in `groundClusters` below -- these few are the strays
+    // between the thickets, which is what stops the clumps looking placed.
+    ["village-plants/Kerala_Grass_Tuft", 6, 5, 13, "both"],
+    ["village-plants/Kerala_Fern", 4, 6, 15, "both"],
+    ["village-plants/Taro_Chembu", 3, 8, 18, "both"],
+    // A FLOWERING SHRUB IS AN EVENT, not ground cover. At eight it was the
+    // brightest thing on the road several times over, and repeated colour is
+    // what makes a scatter read as wallpaper. Three, well apart.
+    // "back" for everything waist-high and over -- see the foreground band in
+    // `groundClusters`. "both" lets the scatter drop one on the NEAR verge,
+    // which is the bottom of the frame, and a banana plant there is a green
+    // wall across the shot. Only grass, fern and taro belong down there.
+    ["village-plants/Hibiscus_Chemparathi", 3, 12, 24, "back"],
+    // THE CROPS, weighted by what a Kerala smallholding actually carries.
+    //
+    // Banana and tapioca are the staples -- they go in by the dozen, in the
+    // ground nearest the house -- so they lead. Drumstick is the tree in the
+    // corner of the plot: present, never massed. Papaya is the one somebody
+    // planted for the fruit, and two or three is a garden while ten is an
+    // orchard, which this road is not.
+    ["village-plants/Banana_Plant", 16, 12, 30, "back"],
+    ["village-plants/Tapioca_Cassava", 14, 11, 26, "back"],
+    ["village-plants/Drumstick_Muringa", 6, 18, 38, "back"],
+    ["village-plants/Papaya_Tree", 2, 20, 36, "back"],
     // KERALA STONE, rather than the nature set's rocks shrunk to 0.35.
     //
     // Those were a dino valley's boulders scaled down until they stopped
@@ -1601,7 +2231,7 @@ export const VILLAGE_THEME: WorldTheme = {
     ["village-stone/Granite_Boulder", 6, 10, 24, "both"],
     ["village-stone/Mossy_Stone", 6, 9, 22, "both"],
     ["village-stone/River_Stone", 5, 10, 20, "both"],
-    ["village-stone/Stepping_Stone", 7, 6, 14, "both"],
+
     // NO MILESTONE IN THE SCATTER. Blank ones were planted out between the
     // villages as ordinary roadside stone, and they cannot be read that way:
     // a milestone anywhere but at the end of a lesson makes the numbered
@@ -1610,6 +2240,161 @@ export const VILLAGE_THEME: WorldTheme = {
     // Loose stones scattered along and across the road itself, small enough
     // to be grit rather than obstacles.
     ["MegaPebbles", 70, 0, 12, "both", 0.5],
+  ],
+  // The thickets: low, damp-loving planting massed where the milestones fall.
+  // Counts are per verge per stone, so the trail carries roughly ten of these
+  // clumps and each one is different on each side.
+  groundClusters: [
+    {
+      file: "village-plants/Kerala_Grass_Tuft",
+      min: 4,
+      max: 8,
+      spread: 7,
+      near: 9,
+      far: 15,
+      verge: "both",
+      roadRelative: true,
+    },
+    {
+      file: "village-plants/Kerala_Fern",
+      min: 2,
+      max: 6,
+      spread: 6,
+      near: 10,
+      far: 16,
+      verge: "both",
+      roadRelative: true,
+    },
+    {
+      file: "village-plants/Taro_Chembu",
+      min: 1,
+      max: 3,
+      spread: 5,
+      near: 10,
+      far: 16,
+      verge: "both",
+      roadRelative: true,
+    },
+    // ── right up against the milestone ────────────────────────────────
+    //
+    // The stone sits just off the near edge of the road (see the milestone
+    // placement: `meander(x) - roadClear * 0.92`), so "behind it" is FURTHER
+    // from the road and "in front of it" is nearer. Taro goes behind, because
+    // it is the tall one of the three and a broad leaf behind a marker frames
+    // it; fern and grass go in front, where they are low enough to sit around
+    // the foot of the stone.
+    //
+    // The face carrying the number looks back down the road, and nothing here
+    // is tall enough or near enough to cross it: the taro is a metre high and
+    // a clear stride behind, the grass and fern are half that and to the side
+    // of the foot. Tight `spread`, so they gather at the stone rather than
+    // trailing away from it.
+    // NOTE: the planting AT the milestones is not here. It cannot be -- the
+    // stones are placed as the child reaches them, not when the world is
+    // built. See `makeBasePlants`, which is handed the stone's own position.
+    // ── the foreground, along the bottom of the frame ──────────────────
+    //
+    // The word ribbon rides at `wordZ` 28, right at the bottom edge of the
+    // view, over ground that was bare -- so the letters sat on nothing and
+    // the frame simply stopped. A dense band of the low, wet-ground planting
+    // either side of them closes it: growth in front of the text and growth
+    // behind it, which is what gives the shot a foreground at all.
+    //
+    // `stride` small, so the clumps run together into continuous planting
+    // rather than landing every twenty-six units. Both distances positive, so
+    // it is the NEAR side only -- the far verge is already dressed and this
+    // band is about the bottom of the screen specifically.
+    //
+    // Nothing is planted across 27-29: that is where the letters are, and a
+    // taro leaf through the middle of a word is worse than bare ground.
+    // Densities kept in check on purpose: instancing makes these cheap in
+    // DRAW CALLS but not in triangles, and the first pass at this came to
+    // about 290k of them -- roughly what the entire rest of the world costs.
+    {
+      file: "village-plants/Kerala_Grass_Tuft",
+      min: 2,
+      max: 5,
+      spread: 5,
+      near: 30,
+      far: 37,
+      stride: 9,
+      verge: "near",
+    },
+    {
+      file: "village-plants/Kerala_Fern",
+      min: 1,
+      max: 3,
+      spread: 5,
+      near: 31,
+      far: 38,
+      stride: 11,
+      verge: "near",
+    },
+    // SPREAD, NOT CLUMPED. One plant at a time and often, rather than a pair
+    // every sixteen units -- taro along the bottom of the frame is a margin
+    // of planting, and a margin that gathers into knots reads as a hedge with
+    // gaps in it. The wide `spread` against the short `stride` is what keeps
+    // them irregular without letting them bunch.
+    // BIG ENOUGH TO READ. The taro model is a metre tall, so at the shared
+    // 0.7-1.4 it came out barely taller than the grass beside it and was lost
+    // in the band. 1.2-2.2 puts it at 1.4 to 2.5 units -- the broad leaves
+    // that make the bottom of the frame look like wet Kerala ground rather
+    // than the edge of a lawn.
+    {
+      file: "village-plants/Taro_Chembu",
+      min: 1,
+      max: 1,
+      spread: 6,
+      near: 31,
+      far: 39,
+      stride: 6,
+      verge: "near",
+      lo: 1.2,
+      hi: 2.2,
+    },
+    {
+      file: "village-plants/Kerala_Grass_Tuft",
+      min: 1,
+      max: 3,
+      spread: 5,
+      near: 22,
+      far: 26.5,
+      stride: 11,
+      verge: "near",
+    },
+    // ── smallholdings ─────────────────────────────────────────────────
+    //
+    // Banana and tapioca again, but dug in rows this time and only here and
+    // there: `chance` means most points along the road get nothing, so a plot
+    // is something you come across rather than a texture. Two or three short
+    // rows each -- a household's patch, not an estate.
+    //
+    // Set well back (near 20+) so they read as the field behind the verge,
+    // and never at the bottom of the frame.
+    {
+      file: "village-plants/Banana_Plant",
+      min: 0,
+      max: 0,
+      spread: 9,
+      near: 16,
+      far: 24,
+      stride: 34,
+      verge: "far",
+      roadRelative: true,
+      plot: { lines: 2, perLine: 5, rowGap: 3.2, wobble: 0.55, chance: 0.5 },
+    },
+    {
+      file: "village-plants/Tapioca_Cassava",
+      min: 0,
+      max: 0,
+      spread: 8,
+      near: 15,
+      far: 22,
+      stride: 41,
+      verge: "far",
+      roadRelative: true,
+      plot: { lines: 2, perLine: 5, rowGap: 2.6, wobble: 0.45, chance: 0.45 },
+    },
   ],
   sceneryScale: 1.15,
   // Table-flat. Kerala's paddy country has no hills in it, and the rolling
@@ -1669,8 +2454,9 @@ export const VILLAGE_THEME: WorldTheme = {
       //   { model: "village-stone/Stone_Althara", dx: 7, dz: -11.5, h: 0.85 },
       { model: "Banyan", dx: 7, dz: -11.5, h: 11.5 },
       // The VAZHIVILAKKU are not here. They belong to the ROAD, not to the
-      // village — one every lesson, between the milestones, the whole length
-      // of the trail. See makeVazhi.
+      // village — and they are no longer even their own object: the lamp head
+      // is welded onto the milestone, so one arrives with every marker the
+      // whole length of the trail. See `lightTheNiche`.
       { model: "Temple", dx: 5, dz: -19, h: 7.2, turn: 0.08 },
     ],
     houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
@@ -1897,7 +2683,23 @@ type DinoRig = {
    * — they run or they stand, exactly as before.
    */
   readonly walk: THREE.AnimationAction | null;
-  readonly idle: THREE.AnimationAction | null;
+  /**
+   * The calm loop CURRENTLY showing. Not readonly: a character with several
+   * idles moves between them, and the cycler swaps this to whichever is up
+   * so that every weight site downstream keeps driving "the idle" without
+   * needing to know there is more than one.
+   */
+  idle: THREE.AnimationAction | null;
+  /**
+   * Every calm loop the character has, the showing one included. One entry
+   * (or none) means there is nothing to cycle and the cycler stays out of it.
+   */
+  readonly idles: readonly THREE.AnimationAction[];
+  /**
+   * Hair with weight in it, for the characters rigged for it. Null for
+   * everybody else, and the whole feature costs them nothing.
+   */
+  readonly hair: HairSim | null;
   /** A one-shot celebration the character performs itself, if it has one. */
   readonly joy: THREE.AnimationAction | null;
   /**
@@ -1993,6 +2795,13 @@ export type KidsWorld = {
   readonly land: Land;
   readonly ready: Promise<void>;
   setPlayer(name: string): Promise<void>;
+  /**
+   * Stage the light for an hour of the day, or `null` to follow the clock.
+   *
+   * The hour is the DAY hour; night is its twin twelve hours round. Only
+   * `clockLit` worlds listen — see the theme flag.
+   */
+  setHour(hour: number | null): void;
   /**
    * A second character who walks the trail alongside the first.
    *
@@ -2241,7 +3050,18 @@ export function createKidsWorld(
   const villageNear = villageDue === "near";
   const wildReview = opts.wildReview === true;
   const plan = nightPlan(nightStyle, opts.tier ?? "mid");
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  // ASK FOR THE REAL GPU.
+  //
+  // Left at the default, a laptop with both an integrated and a discrete
+  // chip hands WebGL to the integrated one -- which is precisely the machine
+  // this has to run on, and precisely the one that cannot afford a 3072
+  // shadow map and 300k triangles. Costs nothing and changes nothing on a
+  // machine with only one GPU.
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    powerPreference: "high-performance",
+  });
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -2263,6 +3083,8 @@ export function createKidsWorld(
   // read nearly grey under a blue twilight, which no amount of blue light
   // alone achieves while the canvas is still saturating them.
   let nightLook = 0;
+  /** Where the canvas grade is heading. Walked across in the tick. */
+  let nightLookTo = 0;
   const applyLook = () => {
     const sat = Math.max(
       0,
@@ -2291,7 +3113,106 @@ export function createKidsWorld(
    * then moved to -8 on the first frame — so anything derived from the
    * written-down value was derived from a position the sun never occupies.
    */
-  const SUN_AT = new THREE.Vector3(-8, 30, 7);
+  /**
+   * WHAT HOUR THE WORLD IS STAGED AT, or null to read the clock.
+   *
+   * Set from the kids settings — "Time of day: auto" reads the clock, and a
+   * chosen time pins it. Held here rather than baked in at build so changing
+   * it does not cost a world rebuild: `setHour` restages the light in place.
+   */
+  let hourPref: number | null = null;
+  const SUN_DAY = new THREE.Vector3(...(theme.sunAt ?? [-8, 30, 7]));
+  /**
+   * AND WHERE THE MOON STANDS, which is not where the sun stood.
+   *
+   * The night light is the same `DirectionalLight` re-coloured, so before
+   * this every shadow after dark fell exactly where it had at noon — the
+   * same length, the same way, thrown by a light that had supposedly set.
+   * On a road whose whole night is about what the lamps reach, that is the
+   * detail that says none of it is real.
+   *
+   * Over the other shoulder and steeper: 30 of height against 15 of run is
+   * about 63 degrees, so moonlight drops shadows close under what casts them
+   * instead of stretching them up the road the way the eight o'clock sun
+   * does. Shorter, softer, and from the other side — three things the eye
+   * reads instantly without being able to say why.
+   */
+  const SUN_NIGHT = new THREE.Vector3(15, 30, -9);
+  /** Where the light actually is: eased between the two by `nightBlend`. */
+  const SUN_AT = SUN_DAY.clone();
+  /** The hours this world is currently lit for. Day, and its night twin. */
+  let stagedAt = stagedHours();
+  /**
+   * Point the sun and the moon at the staged hour.
+   *
+   * Called at build and again whenever the setting changes. Worlds that are
+   * not `clockLit` keep the fixed rig their theme names and this does
+   * nothing at all to them.
+   */
+  function restageSun(): void {
+    if (theme.clockLit !== true) {
+      return;
+    }
+    stagedAt =
+      hourPref == null
+        ? stagedHours()
+        : { day: hourPref, night: (hourPref + 12) % 24 };
+    SUN_DAY.copy(sunAtHour(stagedAt.day, false));
+    SUN_NIGHT.copy(sunAtHour(stagedAt.night, true));
+    // And the live vector with it. `SUN_AT` is cloned from `SUN_DAY` before
+    // this ever runs, so without this the FIRST frame is lit by the theme's
+    // fallback rig rather than by the staged hour — which matters more now
+    // that the loading screen waits for the staging before it hands over: the
+    // one frame it was wrong for was the opening shot.
+    // `SUN_DAY` unconditionally, and NOT `nightNow ? … : …`: this function
+    // runs during the build, thousands of lines before `nightNow` is
+    // declared, and reading a `let` from its temporal dead zone throws —
+    // which TypeScript cannot see from inside a function body and which
+    // would have taken the whole world build down at load. The tick re-lerps
+    // this every frame by `nightBlend` anyway, so a world staged at night is
+    // right one frame later; all this has to be correct for is the first.
+    SUN_AT.copy(SUN_DAY);
+    fitShadowCamera();
+  }
+  /**
+   * GROW THE SHADOW BOX WHEN THE SUN IS LOW.
+   *
+   * Shadow length is the caster's height over the tangent of the elevation,
+   * so it runs away fast at the ends of the day: the tallest thing on this
+   * road is an 11.5-unit banyan, which throws 21 units at eight in the
+   * morning and NINETY-ONE at half past six. The fixed box reached 45 behind
+   * and 70 ahead, so a dawn shadow was simply cut off in the middle of the
+   * road — the one hour where the shadows are the whole picture.
+   *
+   * Fitted to whichever rig throws further, and only when the hour changes,
+   * so it costs nothing per frame. The map does not grow with it, so a dawn
+   * shadow is drawn at about half the texels per unit that a midday one gets
+   * — which is the right way round: it is enormous, soft-edged and low
+   * contrast, and nobody can see the resolution in it.
+   */
+  function fitShadowCamera(): void {
+    const TALL = 11.5;
+    const reachOf = (v: THREE.Vector3) =>
+      TALL / Math.tan(Math.atan2(v.y, Math.hypot(v.x, v.z)));
+    const reach = Math.min(
+      130,
+      Math.max(reachOf(SUN_DAY), reachOf(SUN_NIGHT)) + 24,
+    );
+    // SYMMETRIC, because the sun crosses. The box used to reach 45 behind and
+    // 70 ahead, which was right while the light was pinned on one side of the
+    // road: shadows only ever fell one way, so there was no reason to pay for
+    // ground on the other. The sun now walks from east to west over the day
+    // and the moon does the same over the night, so shadows fall BOTH ways
+    // and half the box was on the wrong side of the child every morning.
+    const half = Math.max(70, reach);
+    const c = sun.shadow.camera;
+    c.left = -half;
+    c.right = half;
+    c.top = Math.max(52, reach * 0.72);
+    c.bottom = -Math.max(52, reach * 0.72);
+    c.updateProjectionMatrix();
+  }
+  restageSun();
   // HIGH, because it is meant to be midday.
   //
   // z was 18 against a height of 30, which is a sun about thirty degrees off
@@ -2308,6 +3229,14 @@ export function createKidsWorld(
   // overhead gives every object a shadow exactly its own shape underneath
   // it, and the scene loses all its modelling.
   sun.position.copy(SUN_AT);
+  /**
+   * TONIGHT'S MOON, read once when the world is built.
+   *
+   * Once, and not per frame: it moves by three per cent of a cycle in an
+   * evening, which is nothing, and a light that recomputed it every frame
+   * would be spending a cosine to model something slower than the session.
+   */
+  const moonNow = moonLit();
   sun.castShadow = true;
   // BIG ENOUGH TO COVER WHAT IS ON SCREEN.
   //
@@ -2345,10 +3274,124 @@ export function createKidsWorld(
    */
   let sunBase = grade.sun;
   let hemiBase = grade.hemi;
+  /**
+   * WHAT THE KEY LIGHT IS ACTUALLY AT, as opposed to what it is heading for.
+   *
+   * `applySky` sets `sunBase`/`hemiBase` to the values the new sky wants and
+   * it sets them in ONE FRAME. Everything else about nightfall is a blend:
+   * the mist, the stars, the cast cross-fade, the flame coming up in the
+   * milestone's niche, all of it eased over `nightBlend`. The world's key
+   * light was the one thing that snapped — so at the flip the whole road
+   * changed exposure at once, from nothing the child can see, and the lamp
+   * they were meant to read as the CAUSE lit up a second later.
+   *
+   * These ease toward the base at the same rate the night blend runs, so the
+   * sky dims as the lamp comes up rather than before it.
+   */
+  let sunLit = sunBase;
+  let hemiLit = hemiBase;
+  /** False until the first sky is applied, which snaps rather than eases. */
+  let skySettled = false;
+  /**
+   * WHAT THE SKY IS HEADING FOR, as opposed to what it is showing.
+   *
+   * `applySky` computes a whole look in one pass — sun colour, the two
+   * hemisphere colours, fog, exposure and the two scene intensities — and it
+   * used to write every one of them straight onto the scene. Which meant that
+   * however carefully the rest of nightfall was blended, the moment the flag
+   * flipped the world CHANGED COLOUR in a single frame and then spent the
+   * next second and a half easing the brightness of a light that was already
+   * the wrong colour.
+   *
+   * So the function still computes exactly as it did, and what it produces is
+   * captured here and rolled back off the scene; the tick walks the live
+   * values across. Capturing the result rather than refactoring the function
+   * into a "spec" is deliberate — it branches four ways on world, mood,
+   * twilight and sky type, and every one of those branches would have had to
+   * be rewritten to return instead of assign.
+   */
+  const blankLook = () => ({
+    sun: new THREE.Color(),
+    hemi: new THREE.Color(),
+    ground: new THREE.Color(),
+    fog: new THREE.Color(),
+    exposure: 1,
+    env: 1,
+    bg: 1,
+    /** The flat backdrop's two gradient stops, and how far the stars are out. */
+    top: new THREE.Color(),
+    bottom: new THREE.Color(),
+    stars: 0,
+  });
+  const skyNow = blankLook();
+  const skyTo = blankLook();
+  type SkyLook = typeof skyNow;
+  /**
+   * THE LIVE STATE OF THE FLAT BACKDROP.
+   *
+   * The other seven values in a `SkyLook` are properties of something in the
+   * scene, so `readSky` can ask the scene what they are. The backdrop's two
+   * gradient stops are not: they are baked into a canvas the moment they are
+   * chosen, and a texture cannot be asked what colours drew it. So the flat
+   * sky keeps its own live copy here, and it is a full member of the look —
+   * captured, rolled back and walked across exactly like the fog colour.
+   *
+   * This is what stopped the flat worlds from blending at all. `applySky`
+   * used to build the canvas and RETURN from inside the flat branch, before
+   * the capture at the end of the function — so the backdrop, the fog and the
+   * key light's colour all changed in the frame the toggle was pressed, and
+   * `skyTo` was left holding the black it was constructed with. Every one of
+   * this page's three worlds uses the flat sky.
+   */
+  const flatSky = {
+    top: new THREE.Color(),
+    bottom: new THREE.Color(),
+    stars: 0,
+  };
+  /** Redraw the backdrop only when it has actually moved. See `drawFlatSky`. */
+  let flatDrawn = { top: -1, bottom: -1, stars: -1 };
+  const readSky = (into: SkyLook): SkyLook => {
+    into.sun.copy(sun.color);
+    into.hemi.copy(hemi.color);
+    into.ground.copy(hemi.groundColor);
+    into.fog.copy((scene.fog as THREE.Fog).color);
+    into.exposure = renderer.toneMappingExposure;
+    into.env = scene.environmentIntensity;
+    into.bg = scene.backgroundIntensity;
+    into.top.copy(flatSky.top);
+    into.bottom.copy(flatSky.bottom);
+    into.stars = flatSky.stars;
+    return into;
+  };
+  const writeSky = (from: SkyLook): void => {
+    sun.color.copy(from.sun);
+    hemi.color.copy(from.hemi);
+    hemi.groundColor.copy(from.ground);
+    (scene.fog as THREE.Fog).color.copy(from.fog);
+    renderer.toneMappingExposure = from.exposure;
+    scene.environmentIntensity = from.env;
+    scene.backgroundIntensity = from.bg;
+    flatSky.top.copy(from.top);
+    flatSky.bottom.copy(from.bottom);
+    flatSky.stars = from.stars;
+  };
+  /** The hero lamp's night value before any milestone boost. See the tick. */
+  let heroLampBase = 0;
   /** Cloud only crosses the sun in daylight; after dark there is no sun. */
   let driftLit = true;
   const HERO_LIGHT_LAYER = 1;
-  const heroLamp = new THREE.PointLight(0xfff0d0, 0, 3.4, 2);
+  // 5.2, NOT 3.4.
+  //
+  // The hero stands 4.7 units tall and the lamp rides just above and in front
+  // of her, so a 3.4 range with quadratic decay had almost nothing left by
+  // the time it reached her face -- and beside a milestone, whose oil lamp is
+  // a 46-unit flood at twice this intensity, the little she had was simply
+  // washed out. The reach is what was wrong, not the brightness: a lamp you
+  // carry should light YOU first.
+  // 5.2, not 3.4. She stands 4.7 units tall and the lamp rides just above
+  // and in front of her, so at 3.4 with quadratic decay there was almost
+  // nothing left by the time it reached her face.
+  const heroLamp = new THREE.PointLight(0xfff0d0, 0, 5.2, 2);
   heroLamp.layers.set(HERO_LIGHT_LAYER);
   heroLamp.position.set(-6, 4, 3);
   /**
@@ -2367,7 +3410,9 @@ export function createKidsWorld(
   // A LITTLE FURTHER THAN THE HERO'S, because it lights a group rather than
   // a person: hung over the middle of two people walking a couple of units
   // apart, 3.4 left the one at the back on the edge of the pool.
-  const companionLamp = new THREE.PointLight(0xfff0d0, 0, 4.6, 2);
+  // Raised with the hero's, and by the same reasoning -- see above.
+  // Raised with the hero's, by the same reasoning.
+  const companionLamp = new THREE.PointLight(0xfff0d0, 0, 6.2, 2);
   companionLamp.layers.set(COMPANION_LIGHT_LAYER);
   companionLamp.position.set(-6, 4, 3);
   scene.add(sun, hemi, heroLamp, companionLamp);
@@ -2379,13 +3424,59 @@ export function createKidsWorld(
 
   const V = theme.view ?? DEFAULT_VIEW;
   const cam = new THREE.OrthographicCamera();
+  // A way in, for measuring. Off unless the URL asks for it, so it costs a
+  // string compare once per world and nothing at all in normal play.
+  if (
+    typeof window !== "undefined" &&
+    window.location.search.includes("perf")
+  ) {
+    const _w = window as unknown as Record<string, unknown>;
+    _w.__builds = ((_w.__builds as number) ?? 0) + 1;
+    _w.__buildAt = ((_w.__buildAt as number[]) ?? []).concat(
+      Math.round(performance.now()),
+    );
+    (window as unknown as Record<string, unknown>).__world = {
+      scene,
+      cam,
+      renderer,
+      sun,
+      THREE,
+    };
+  }
   cam.layers.enable(HERO_LIGHT_LAYER);
   cam.layers.enable(COMPANION_LIGHT_LAYER);
+  /**
+   * The pane height this world was framed for. Set from the first real
+   * measurement, so the view at load is exactly what it has always been and
+   * only a RESIZE is compensated for.
+   */
+  let refH = 0;
   function resize() {
     const w = canvas.clientWidth || 800;
     const h = canvas.clientHeight || 300;
     const a = w / h;
-    const S = V.frustum;
+    // KEEP THE SCENE THE SAME SIZE WHEN THE WINDOW CHANGES SHAPE.
+    //
+    // The frustum was a constant, so the same 27 world units were mapped onto
+    // however many pixels the pane happened to have. Shorten the pane and
+    // everything in it shrinks -- the road "reads as zoomed out", which is
+    // exactly what the note on `.sceneCard` warns about. Widen it and the
+    // view gains ground sideways while the vertical framing stays put, so the
+    // two axes disagree about what a metre is.
+    //
+    // Scaling the frustum with the pane's height fixes both: world units per
+    // pixel stay constant, so the boy is the same size on a short window as a
+    // tall one, and a wider window simply sees further along the road at the
+    // same scale -- which is what a window onto a place should do.
+    //
+    // Clamped, because the compensation must not run away: on a very short
+    // pane holding the scale exactly would crop the character, and the floor
+    // trades a little zoom-out for keeping him in frame.
+    if (refH === 0 && h > 320) {
+      refH = h;
+    }
+    const k = refH > 0 ? Math.min(1.3, Math.max(0.72, h / refH)) : 1;
+    const S = V.frustum * k;
     cam.left = -S * a;
     cam.right = S * a;
     // The frustum reaches further below the look-at point than above it, so
@@ -2404,31 +3495,339 @@ export function createKidsWorld(
   // ── sky ────────────────────────────────────────────────────────────────
   const pmrem = new THREE.PMREMGenerator(renderer);
   const rgbe = new RGBELoader();
+
+  /**
+   * THE FLAT BACKDROP, DRAWN ONCE AND REPAINTED AS IT MOVES.
+   *
+   * A 2D gradient sky on a canvas texture — no orbiting camera means no
+   * skybox is needed, and a flat backdrop suits the stylized world.
+   *
+   * It used to be a NEW canvas and a NEW `CanvasTexture` per sky change, with
+   * the old one disposed, which is why the sky could only ever cut: you
+   * cannot cross-fade between two textures by replacing one with the other.
+   * One texture is built here and kept for the life of the world, and
+   * nightfall repaints its two gradient stops a frame at a time from the
+   * eased `flatSky` — so the backdrop crosses from blue to navy over the same
+   * four and a half seconds the lights, the fog and the mist take.
+   *
+   * FIVE HUNDRED AND TWELVE WIDE, ALWAYS. A gradient needs sixteen pixels and
+   * the day sky used to get sixteen — but the stars are drawn on the same
+   * canvas now, and a star on a strip sixteen across, stretched over the
+   * whole sky, comes out as a horizontal streak.
+   */
+  const SKY_W = 512;
+  const SKY_H = 256;
+  // The ends of the flat sky's palette, allocated once. `applySky` runs on
+  // every hour change and every toggle, and a `new THREE.Color` per stop per
+  // call is garbage for a value that never varies.
+  /** Where the day sky goes as the sun drops: amber overhead, fire at the treeline. */
+  const SKY_DAWN_TOP = new THREE.Color(0x6fa8d8);
+  const SKY_DAWN_LOW = new THREE.Color(0xffc98a);
+  /** And at the top of the arc: haze back in, contrast off. */
+  const SKY_NOON_TOP = new THREE.Color(0xa8d8f5);
+  const SKY_NOON_LOW = new THREE.Color(0xeaf3e2);
+  /** A full moon's milk, and the silver it puts on the light. */
+  const SKY_MOONHAZE = new THREE.Color(0x54648f);
+  const SKY_MOON_SILVER = new THREE.Color(0xb9c2e0);
+  /** The day sun's two ends: deep amber low, a whisper of cream at noon. */
+  const SKY_SUN_AMBER = new THREE.Color(0xff9a43);
+  const SKY_SUN_CREAM = new THREE.Color(0xfff0d4);
+  const skyCanvas = document.createElement("canvas");
+  skyCanvas.width = SKY_W;
+  skyCanvas.height = SKY_H;
+  const skyCtx = skyCanvas.getContext("2d")!;
+  /**
+   * THE STARS, PAINTED ONCE ONTO THEIR OWN TRANSPARENT LAYER.
+   *
+   * They used to be scattered afresh inside every `applySky`, which was fine
+   * while a sky change was a single hard cut and is not fine now: repainting
+   * the backdrop sixty times a second would re-roll all two hundred and
+   * twenty of them every frame and the night would arrive as static. Rolled
+   * once, then composited at whatever alpha the crossing has reached, so they
+   * come out of the blue where they stand.
+   *
+   * Not scattered evenly over the whole sky either: the bottom of the
+   * gradient is the haze just above the treeline, where in life the
+   * atmosphere has already put out everything but the brightest few. Stars
+   * painted down into it read as dust on the lens.
+   */
+  const starCanvas = document.createElement("canvas");
+  starCanvas.width = SKY_W;
+  starCanvas.height = SKY_H;
+  {
+    const g = starCanvas.getContext("2d")!;
+    for (let i = 0; i < 220; i++) {
+      const y = Math.pow(Math.random(), 1.7) * 168;
+      // Fainter as they near the horizon, and never quite white: a warm white
+      // star on a blue sky is what the eye expects, and pure white on this
+      // background reads as a hole in it.
+      const a = (0.25 + Math.random() * 0.6) * (1 - y / 210);
+      const r = Math.random() < 0.86 ? 0.6 : 1.1;
+      g.fillStyle = `rgba(255,251,236,${a.toFixed(3)})`;
+      g.beginPath();
+      g.arc(Math.random() * SKY_W, y, r, 0, Math.PI * 2);
+      g.fill();
+    }
+  }
+  const skyTexture = new THREE.CanvasTexture(skyCanvas);
+  skyTexture.colorSpace = THREE.SRGBColorSpace;
+
+  /**
+   * Repaint the backdrop from `flatSky`, if it has moved since the last one.
+   *
+   * Called from the tick, so the guard is what keeps it honest: a 512×256
+   * fill plus one composite is cheap, but it is not free, and for all but the
+   * few seconds of a crossing the sky is standing still. Comparing the packed
+   * hex rather than the components is exact and is one number each.
+   */
+  function drawFlatSky(): void {
+    const top = flatSky.top.getHex();
+    const bottom = flatSky.bottom.getHex();
+    const stars = flatSky.stars;
+    if (
+      top === flatDrawn.top &&
+      bottom === flatDrawn.bottom &&
+      Math.abs(stars - flatDrawn.stars) < 0.002
+    ) {
+      return;
+    }
+    flatDrawn = { top, bottom, stars };
+    const grad = skyCtx.createLinearGradient(0, 0, 0, SKY_H);
+    grad.addColorStop(0, `#${flatSky.top.getHexString()}`);
+    grad.addColorStop(1, `#${flatSky.bottom.getHexString()}`);
+    skyCtx.globalAlpha = 1;
+    skyCtx.fillStyle = grad;
+    skyCtx.fillRect(0, 0, SKY_W, SKY_H);
+    if (stars > 0.002) {
+      skyCtx.globalAlpha = Math.min(1, stars);
+      skyCtx.drawImage(starCanvas, 0, 0);
+      skyCtx.globalAlpha = 1;
+    }
+    skyTexture.needsUpdate = true;
+  }
   async function applySky(mood: string) {
+    // Everything this function writes onto the scene is a TARGET, not a
+    // value — see `skyNow`. The look it is replacing is held here so it can
+    // be put back at the end, leaving the tick to walk across.
+    // A REAL COPY, not a spread. `{ ...skyNow }` copies the numbers by value
+    // and the four Colors by REFERENCE, so `readSky` on the result would
+    // write straight through into `skyNow` — half the snapshot aliased to the
+    // thing it was snapshotting and half of it not. It happened to survive,
+    // because the tick keeps `skyNow` equal to the scene anyway; it would not
+    // have survived the next person to touch it.
+    const held = skySettled ? readSky(blankLook()) : null;
+    /**
+     * Hand the finished look to the tick instead of to the scene.
+     *
+     * What this function just computed is where the sky is GOING. Read it
+     * off, then put the old look back so the tick can cross the gap rather
+     * than the scene jumping it. The very first sky of a session is not a
+     * transition — there is nothing to cross from — so that one is left
+     * standing.
+     *
+     * BOTH branches end here. The flat branch used to return before it,
+     * which left `skyTo` holding the black it was constructed with and every
+     * flat world — which is all three of them — cutting between day and
+     * night in a single frame.
+     */
+    const settleSky = (): void => {
+      readSky(skyTo);
+      if (held != null) {
+        writeSky(held);
+      } else {
+        readSky(skyNow);
+      }
+    };
     // What "dark" means depends on the world. Hero Trail gets a real night —
     // deep and blue, lit by the lantern. Dino Run gets a dusk: a gentler,
     // warmer dimming, because it is not a night game and the full darkness
     // read as a broken renderer rather than an evening.
     const dark = mood === "night";
+    /**
+     * HOW LOW THE SUN IS, 0 overhead and 1 on the floor of its arc.
+     *
+     * Everything the hour changes about the palette hangs off this one
+     * number: how gold the light is, how much haze is left in the air, how
+     * far the exposure comes down. Taken from the staged vector rather than
+     * from the hour, so it is right by construction — the angle and the
+     * colour cannot drift apart.
+     */
+    const rig = dark ? SUN_NIGHT : SUN_DAY;
+    const elevNow = Math.atan2(rig.y, Math.hypot(rig.x, rig.z));
+    const elevDeg = (elevNow * 180) / Math.PI;
+    /**
+     * HOW GOLD THE LIGHT IS — and it is a real curve, not a taste.
+     *
+     * Warmth is an atmosphere effect: it climbs steeply in the last twenty
+     * degrees above the horizon and is simply not there higher up. The first
+     * version of this ramped gold linearly from noon to dusk, which made
+     * NINE IN THE MORNING look like an evening — a golden hour that lasts
+     * all day is the thing that makes a scene look filtered rather than lit.
+     *
+     * At half past six this reaches 0.75 and the road is properly amber; by
+     * nine it is under a fifth; past thirty degrees there is none of it.
+     */
+    const warm =
+      theme.clockLit === true
+        ? Math.pow(Math.min(1, Math.max(0, (22 - elevDeg) / 22)), 0.7)
+        : 0;
+    /**
+     * AND THE ONLY PLACE THE HONESTY IS BENT: the top of the arc.
+     *
+     * A true midday is flat, white and hard, which is correct and is the one
+     * hour that would look bad — so noon keeps a little cream in the light
+     * and comes down a touch in exposure. It is worth being clear how small
+     * this is: zero below fifty-two degrees, which is everything before about
+     * half past nine, and full only within a few degrees of noon. Midnight
+     * gets the same treatment at the top of the moon's arc for the same
+     * reason.
+     *
+     * Everything else — the angle, the length of the shadows, the colour on
+     * the way up and down — is left alone.
+     */
+    const soften =
+      theme.clockLit === true
+        ? Math.min(1, Math.max(0, (elevDeg - 52) / 22))
+        : 0;
+    /**
+     * NEVER A HARD LIGHT AT THE TOP OF EITHER ARC.
+     *
+     * The three moments this road can look harsh are the three where the key
+     * light is strongest and comes from straight overhead: noon, midnight
+     * with the moon high, and a full moon at any height. All of them give a
+     * short, hard-edged shadow and a high-contrast picture, which is what a
+     * camera sees and not what those hours feel like.
+     *
+     * So all three get the same treatment — more haze, a little less
+     * contrast, and the light carried away from white. It is a deliberate
+     * departure from the accuracy everywhere else on this road, and it is
+     * confined to the top of the curve: at half past six it is zero, and the
+     * long amber light and the thirty-unit shadows are untouched.
+     */
+    const dreamy = Math.min(
+      1,
+      dark ? Math.max(soften * 0.7, moonNow * 0.85) : soften,
+    );
+    /**
+     * STYLISED, AND THAT IS THE POINT — it never goes fully harsh.
+     *
+     * A true midday is flat white with the haze burned off, which is honest
+     * and is the one look this road must not have: a child who happens to
+     * practise at lunchtime would get the plainest version of the world for
+     * no reason they could help. So noon is brighter, crisper and higher
+     * contrast than eight in the morning, and still warm — `goldFloor` is
+     * how much gold survives at the top of the arc, and it is never zero.
+     *
+     * The swing that IS real is the shadows. Those come from the angle and
+     * are not softened at all: at noon they are tucked under what casts them
+     * and at six they are thirty units long. That is where a child reads the
+     * hour from, so that is where the honesty belongs.
+     */
+
     const night = dark && trueNight;
     // The twilight lift. Every night value below is written as a blend from
     // the night figure to the dusk figure that sits beside it, so a world
     // that asks for a lighter night gets one that is consistent across the
     // exposure, the lights, the sky and the fog at once — rather than an
     // exposure nudge that leaves the fog the colour of midnight.
-    const tw = theme.nightTwilight ?? 0;
+    /**
+     * HOW MUCH LIGHT THE SUN HAS LEFT IN THE SKY, at the staged night hour.
+     *
+     * This was a constant per world — a tenth, applied to every hour of every
+     * night of the year — so ten at night was lifted towards dusk exactly as
+     * much as half past six was, and the road never got properly dark.
+     *
+     * Twilight is just the sun below the horizon, and how far below is a
+     * thing that can be asked. The standard bands: down to six degrees is
+     * civil twilight and still plainly light, twelve is nautical, and by
+     * eighteen it is night by definition. Squared-ish on the way down,
+     * because the glow falls off much faster than the angle does.
+     *
+     * AND THE MONTHS COME OUT OF IT FOR FREE. Over Kerala the sun sets almost
+     * straight down, so twilight is short all year — but not the same: at
+     * half past six the sun is three degrees down in June and eleven in
+     * January, which is the difference between a lit horizon and a dark one.
+     * By eight it is twenty-two to thirty-two degrees down whatever the
+     * month, and there is nothing left in the sky at all.
+     */
+    const twCeil = theme.nightTwilight ?? 0;
+    let tw = twCeil;
+    if (theme.clockLit === true && dark) {
+      const depth =
+        (solarAngles(stagedAt.night, new Date()).elev * 180) / Math.PI;
+      const band = Math.min(1, Math.max(0, (depth + 18) / 18));
+      tw = twCeil * Math.pow(band, 2.2);
+    }
     const lerp = (a: number, b: number) => a + (b - a) * tw;
     const mix = (a: number, b: number) =>
       new THREE.Color(a).lerp(new THREE.Color(b), tw);
-    heroLamp.intensity = night ? 3.2 * (1 - tw * 0.45) : 0;
+    // The base, and NOT gated on `night` any more.
+    //
+    // It used to be `night ? … : 0`, which is a step — the flag flips and the
+    // lamp is simply on, in one frame, while the sky, the mist and the flame
+    // in the milestone's niche all cross-fade over the next second and a
+    // half. A light that snaps on while everything around it fades does not
+    // read as a lamp being lit; it reads as something outside the scene being
+    // switched on, which is exactly what it was.
+    //
+    // The tick multiplies this by `nightBlend`, so it comes up with the rest
+    // of the night and goes down with it at dawn. Reading back what the tick
+    // wrote would compound it a frame at a time, so the un-blended value is
+    // kept here.
+    heroLampBase = 3.2 * (1 - tw * 0.45);
+    heroLamp.intensity = heroLampBase * nightBlend;
     // The companion's lamp is driven in the tick (see companionLamp.position
     // there) — it has to be, because this function runs before a companion
     // exists. Left out here on purpose rather than set to a value that would
     // be wrong for a frame.
+    // THE MOON IS APPLIED ONCE, AND NOT HERE.
+    //
+    // It used to scale the key light, the ambient, the two scene intensities
+    // AND the exposure, on the reasoning that each of them is part of how
+    // dark a night looks. Every one of those multiplies the others: at the
+    // near-new moon of a couple of nights ago the factor was 0.5, and 0.5
+    // through the key light times 0.5 through the exposure times 0.5 through
+    // the ambient left the road at an eighth of its brightness. It read as
+    // broken, because it was — a dark night is not a night with the lights
+    // off.
+    //
+    // The moon is the key light after dark, so the key light is where it
+    // belongs, and the ambient gets a much gentler curve of its own (see
+    // `moonSky`) because sky glow does not vanish at new moon. Exposure is
+    // left out entirely: it is a global multiplier and compounds with
+    // everything downstream of it.
     renderer.toneMappingExposure =
-      grade.exposure * (dark ? (night ? lerp(0.56, 0.84) : 0.84) : 1);
+      grade.exposure *
+      (dark ? (night ? lerp(0.56, 0.84) : 0.84) : 1) *
+      // The softening of both peaks — see `dreamy`. Twelve per cent, which
+      // is a stop and a bit off the top of the curve: enough to take the
+      // glare off noon and a full moon, not enough to read as a grade.
+      (1 - dreamy * 0.12);
+    // Barely touched by the phase: what fills a moonless night is starlight
+    // and the last of the west, and neither of those cares what the moon is
+    // doing. Enough to be felt against a full moon, not enough to put the
+    // road out.
+    const moonSky = 0.8 + 0.15 * moonNow;
+    /**
+     * TONIGHT'S MOON ON THE KEY LIGHT, for the flat worlds.
+     *
+     * The HDR branch below carries the moon as `moonGrade`, an absolute
+     * multiplier on an absolute intensity. The flat branch cannot use that
+     * number: its night figure is already written as a fraction of the day's,
+     * and a 0.38-at-new multiplier on top of it would take a moonless road to
+     * about a sixth of the light it is meant to have. Which is the mistake
+     * `moonGrade`'s own note is about — a dark night is not a night with the
+     * lights off.
+     *
+     * So the same swing, centred on one instead of applied from above: 0.7 at
+     * new, 1.25 at full, and about 0.97 at half. A week of evenings is not
+     * the same evening seven times, and the road is silver one night and
+     * nearly black the next — which is when the oil lamps become the thing a
+     * child reads it by, and the whole reason the milestones carry one.
+     */
+    const moonKey = 0.7 + 0.55 * moonNow;
     hemi.intensity =
-      grade.hemi * (dark ? (night ? lerp(0.42, 0.78) : 0.78) : 1);
+      grade.hemi * (dark ? (night ? lerp(0.42, 0.78) * moonSky : 0.78) : 1);
     // Remembered so the cloud drift has something to be a fraction OF. The
     // tick multiplies these; it must never accumulate on its own last value.
     hemiBase = hemi.intensity;
@@ -2451,83 +3850,99 @@ export function createKidsWorld(
     } else {
       hemi.groundColor.set(dayBounce);
     }
-    nightLook = night ? 1 : 0;
+    // The TARGET for the canvas grade. It used to be assigned outright, and
+    // `applyLook` writes a CSS filter — so the whole picture lost 48% of its
+    // saturation in one frame while the lights it was grading took a second
+    // and a half to follow. The tick walks it across; only the first sky of a
+    // session, which is not a transition, lands on it directly.
+    nightLookTo = night ? 1 : 0;
+    if (!skySettled) {
+      nightLook = nightLookTo;
+      // And the blend with it, so a world OPENED at night opens at night
+      // rather than fading up into it behind the loading screen.
+      nightBlend = nightLookTo;
+    }
     applyLook();
     if (theme.sky === "flat") {
-      // A 2D gradient sky drawn to a canvas — no orbiting camera means no
-      // skybox is needed, and a flat backdrop suits the stylized world.
-      const [top, bottom] = night
-        ? [
-            `#${mix(0x141a35, 0x5a6a9e).getHexString()}`,
-            `#${mix(0x2a3358, 0xa9a2c0).getHexString()}`,
-          ]
-        : dark
-          ? ["#5a6a9e", "#a9a2c0"]
-          : ["#7ec5f2", "#d7f0d2"];
-      // SIXTEEN PIXELS WIDE BY DAY, WHICH IS ALL A GRADIENT NEEDS — and no
-      // use at all at night, because a star drawn on a strip sixteen pixels
-      // across and stretched over the whole sky comes out as a horizontal
-      // streak. The night sky gets a real canvas.
-      const W = night ? 512 : 16;
-      const c = document.createElement("canvas");
-      c.width = W;
-      c.height = 256;
-      const g = c.getContext("2d")!;
-      const grad = g.createLinearGradient(0, 0, 0, 256);
-      grad.addColorStop(0, top);
-      grad.addColorStop(1, bottom);
-      g.fillStyle = grad;
-      g.fillRect(0, 0, W, 256);
+      // The two gradient stops are TARGETS now, written into `flatSky` and
+      // walked across by the tick like every other colour in the look — the
+      // canvas itself is repainted from them in `drawFlatSky`. See `flatSky`
+      // for what this branch used to do instead, and why nightfall was a cut.
       if (night) {
-        // STARS, thinning towards the horizon and stopping well above it.
-        //
-        // Not scattered evenly over the whole sky: the bottom of this
-        // gradient is the haze just above the treeline, where in life the
-        // atmosphere has already put out everything but the brightest few.
-        // Stars painted down into it read as dust on the lens.
-        //
-        // Seeded off nothing — they are redrawn on each sky change and no
-        // two nights have the same stars, which nobody will notice and which
-        // costs nothing to be true.
-        for (let i = 0; i < 220; i++) {
-          const y = Math.pow(Math.random(), 1.7) * 168;
-          // Fainter as they near the horizon, and never quite white: a warm
-          // white star on a blue sky is what the eye expects, and pure white
-          // on this background reads as a hole in it.
-          const a = (0.25 + Math.random() * 0.6) * (1 - y / 210);
-          const r = Math.random() < 0.86 ? 0.6 : 1.1;
-          g.fillStyle = `rgba(255,251,236,${a.toFixed(3)})`;
-          g.beginPath();
-          g.arc(Math.random() * W, y, r, 0, Math.PI * 2);
-          g.fill();
-        }
+        // A HIGH OR FULL MOON PUTS HAZE IN THE AIR, not glare on the ground:
+        // the night goes milky rather than bright. The same `dreamy` that
+        // softens noon, doing the same job at the top of the moon's arc.
+        flatSky.top
+          .copy(mix(0x141a35, 0x5a6a9e))
+          .lerp(SKY_MOONHAZE, dreamy * 0.4);
+        flatSky.bottom
+          .copy(mix(0x2a3358, 0xa9a2c0))
+          .lerp(SKY_MOONHAZE, dreamy * 0.5);
+      } else if (dark) {
+        flatSky.top.set(0x5a6a9e);
+        flatSky.bottom.set(0xa9a2c0);
+      } else {
+        // THE SKY GOES WITH THE HOUR, and it is the same curve the key light
+        // is on: `warm` climbs steeply in the last twenty degrees above the
+        // horizon and is simply not there higher up, so half past six is a
+        // properly amber sky and nine in the morning is not. `dreamy` puts
+        // the haze back at the top of the arc so noon is not clinical.
+        flatSky.top
+          .set(0x7ec5f2)
+          .lerp(SKY_DAWN_TOP, warm * 0.8)
+          .lerp(SKY_NOON_TOP, dreamy * 0.3);
+        flatSky.bottom
+          .set(0xd7f0d2)
+          .lerp(SKY_DAWN_LOW, warm)
+          .lerp(SKY_NOON_LOW, dreamy * 0.34);
       }
-      const sky = new THREE.CanvasTexture(c);
-      sky.colorSpace = THREE.SRGBColorSpace;
-      (scene.background as THREE.Texture | null)?.dispose?.();
+      // The stars, and the two things that put them out: twilight still in
+      // the sky, and a moon bright enough to wash them off it. Never quite
+      // gone at either — a few always survive.
+      flatSky.stars = night ? (1 - tw * 0.55) * (1 - moonNow * 0.3) : 0;
       (scene.environment as THREE.Texture | null)?.dispose?.();
-      scene.background = sky;
+      scene.background = skyTexture;
       scene.backgroundBlurriness = 0;
       scene.environment = null;
       scene.environmentIntensity = 1;
       scene.backgroundIntensity = 1;
       // Fog matches the sky's lower band so the ground fades straight into
-      // the backdrop.
-      // Fog closes in after dark, so the far trail fades into the blue.
-      if (night) {
-        (scene.fog as THREE.Fog).color.copy(mix(0x2a3358, 0xa9a2c0));
-      } else {
-        (scene.fog as THREE.Fog).color.set(dark ? 0xa9a2c0 : 0xd7f0d2);
-      }
-      sun.intensity = grade.sun * (dark ? (night ? lerp(0.46, 0.8) : 0.8) : 1);
+      // the backdrop — and because it is now COPIED from that band rather
+      // than written out again beside it, it goes gold at dusk and milky
+      // under a full moon for free, and the two cannot drift apart.
+      (scene.fog as THREE.Fog).color.copy(flatSky.bottom);
+      sun.intensity =
+        grade.sun * (dark ? (night ? lerp(0.46, 0.8) * moonKey : 0.8) : 1);
       sunBase = sun.intensity;
       if (night) {
         // Moonlight, warmed a touch towards the dusk sun — a tropical
-        // evening is not the same blue as a northern midnight.
-        sun.color.copy(mix(0x7f92cc, 0xe8c8a0));
+        // evening is not the same blue as a northern midnight — and carried
+        // off the hard blue-white towards silver as the moon climbs.
+        sun.color
+          .copy(mix(0x7f92cc, 0xe8c8a0))
+          .lerp(SKY_MOON_SILVER, dreamy * 0.5);
+      } else if (dark) {
+        sun.color.set(0xe8c8a0);
       } else {
-        sun.color.set(dark ? 0xe8c8a0 : land.sun);
+        // THE COLOUR GOES WITH THE ANGLE. A low sun is a gold one — the light
+        // is coming through more air — so the land's own sun colour is
+        // carried towards amber by `warm`, and at the very top of the arc
+        // gets a whisper of cream so noon is not clinical.
+        sun.color
+          .set(land.sun)
+          .lerp(SKY_SUN_AMBER, warm)
+          .lerp(SKY_SUN_CREAM, dreamy * 0.34);
       }
+      if (!skySettled) {
+        // The first sky of a session is not a change, it is the world
+        // arriving — so it lands rather than eases, and the backdrop is
+        // painted here so the opening frame is already the right colour.
+        skySettled = true;
+        sunLit = sunBase;
+        hemiLit = hemiBase;
+        drawFlatSky();
+      }
+      settleSky();
       return;
     }
     // A dusk keeps the day sky, only dimmed and warmed — the night HDR under
@@ -2547,14 +3962,79 @@ export function createKidsWorld(
     scene.background = tex;
     scene.backgroundBlurriness = 0.06;
     scene.environment = pmrem.fromEquirectangular(tex).texture;
+    // ── HOW DARK TONIGHT IS, from the real moon ──────────────────────
+    //
+    // `moonGrade` is 1 at full and about 0.45 at new. Not 0 at new: a moonless
+    // road still has stars, the last of the west, and a child who has to be
+    // able to see where they are walking. What the swing buys is that a week
+    // of evenings is not the same evening seven times — the road is silver
+    // one night and nearly black the next, and it is black on the nights the
+    // sky outside their window is.
+    //
+    // The floor is deliberately high enough that new moon is atmospheric
+    // rather than a fault report. The lamps are what a child reads the road
+    // by then, which is the whole reason the milestones carry one.
+    // 1 at full, 0.45 at new. Not 0: a moonless road still has stars, the
+    // last of the west, and a child who has to see where they are walking —
+    // and on those nights the milestone lamps become the thing they read the
+    // road by, which is the whole reason the stones carry one.
+    // 0.38 at new, 0.72 at full — and the CEILING is the point as much as the
+    // floor. It used to reach 1.0, which is the brightness the night had
+    // before there was a moon in it at all: a full moon lit the road as well
+    // as a heavily overcast afternoon and the whole scene stopped reading as
+    // night. A full moon is bright FOR A NIGHT. It is about a four-hundred-
+    // thousandth of sunlight, and the thing that makes it feel bright is that
+    // your eyes have adjusted — which a screen cannot reproduce and should
+    // not try to.
+    const moonGrade = 0.38 + 0.34 * moonNow;
+    // The environment and the background are not the moon's doing either —
+    // the sky is the sky whatever is hanging in it. See the note on exposure
+    // above: these were two more places the same factor was multiplied in.
     scene.environmentIntensity = dark ? (night ? 0.4 : 0.56) : 0.7;
     scene.backgroundIntensity = dark ? (night ? 0.75 : 0.9) : 1.0;
+    // And the haze with it: thickest and warmest at the ends of the day,
+    // thinnest at noon and never gone. It is the haze rather than the sun
+    // that does most of the dreaminess in a Kerala morning.
     (scene.fog as THREE.Fog).color.set(
-      night ? 0x2c3560 : dark ? 0x6a7396 : land.fog,
+      night
+        ? new THREE.Color(0x2c3560)
+            // A high or full moon puts haze in the air rather than glare on
+            // the ground: the night goes milky, not bright.
+            .lerp(new THREE.Color(0x54648f), dreamy * 0.55)
+        : dark
+          ? 0x6a7396
+          : new THREE.Color(land.fog)
+              .lerp(new THREE.Color(0xf6d9a6), warm)
+              .lerp(new THREE.Color(0xe8eeda), dreamy * 0.3),
     );
-    sun.intensity = dark ? (night ? 1.25 : 1.9) : 2.4;
+    sun.intensity = dark ? (night ? 1.25 * moonGrade : 1.9) : 2.4;
     sunBase = sun.intensity;
-    sun.color.set(night ? 0x8fa2d8 : dark ? 0xe3c49e : land.sun);
+    if (!skySettled) {
+      // The first sky of a session is not a change, it is the world
+      // arriving. Easing into it would open every session on a visible
+      // lighting ramp up from whatever the defaults happened to be.
+      skySettled = true;
+      sunLit = sunBase;
+      hemiLit = hemiBase;
+    }
+    // THE COLOUR GOES WITH THE ANGLE. A low sun is a gold one — the light is
+    // coming through more air — so the land's own sun colour is carried
+    // towards gold by `gold`, which never reaches zero. Night is left alone:
+    // moonlight is moonlight at any height.
+    sun.color.set(
+      night
+        ? new THREE.Color(0x8fa2d8)
+            // Off the hard blue-white and towards a soft silver as it climbs.
+            .lerp(new THREE.Color(0xb9c2e0), dreamy * 0.6)
+        : dark
+          ? 0xe3c49e
+          : new THREE.Color(land.sun)
+              // Up the arc to a deep amber, and at the very top a whisper of
+              // cream so noon is not clinical.
+              .lerp(new THREE.Color(0xff9a43), warm)
+              .lerp(new THREE.Color(0xfff0d4), dreamy * 0.34),
+    );
+    settleSky();
   }
 
   // ── the night itself ───────────────────────────────────────────────────
@@ -2570,6 +4050,19 @@ export function createKidsWorld(
   nightLayer.visible = false;
   scene.add(nightLayer);
   let nightBlend = 0; // 0 = day, 1 = full night; eased in tick()
+  /**
+   * HOW LONG NIGHTFALL TAKES, in seconds.
+   *
+   * One number for the whole crossing — the blend, the key light and the sky
+   * colours all read it, so they cannot drift out of step with each other.
+   *
+   * It was 1.8, which is about as long as a lamp takes to be lit and far too
+   * short for a sky. Sunset is the slowest thing that happens in a day, and
+   * the switch reads as a switch at anything under about three seconds. At
+   * four and a half a child can watch it happen — which is the point, since
+   * it is the one piece of weather on this road they control.
+   */
+  const NIGHTFALL_S = 4.5;
 
   type EyePair = {
     readonly group: THREE.Group;
@@ -2705,6 +4198,170 @@ export function createKidsWorld(
     phase: number;
     rate: number;
   }[] = [];
+  /**
+   * WHERE THE LIGHT ON SOMEBODY IS COMING FROM, AFTER DARK.
+   *
+   * The personal lamps that light the cast are hung just above and in front
+   * of whoever they follow, which is right in the middle of a stretch: there
+   * is nothing else burning out there, and the alternative is a child walking
+   * an unlit road as a silhouette.
+   *
+   * It is wrong the moment they come up to a milestone. There IS a light
+   * then, it is in the niche, and it is off to one side and below head
+   * height — so a runner lit from above and in front while standing beside a
+   * lamp is lit by nothing that exists, and the one place a child can see
+   * exactly where the light is coming from is the one place we contradict it.
+   *
+   * So the lamp slides. Far from a stone it sits where it always did; coming
+   * up to one it eases across to that stone's flame, which puts the light on
+   * the side the stone is on, throws the far side of the face into shadow,
+   * and follows them round as they pass it. Blended rather than switched, or
+   * the cast would flip their shading on one frame.
+   *
+   * `into` is the default follow-position and is moved IN PLACE to where the
+   * light should actually be. What comes back is how much of that light is
+   * the milestone's, 0 to 1 — the caller uses it to brighten, because a child
+   * standing at a lit stone should be easier to see than one out on the dark
+   * road between two of them, and moving the lamp without turning it up only
+   * changes which side of them is dark.
+   */
+  function lampFrom(into: THREE.Vector3, at: THREE.Vector3): number {
+    if (aimed.length === 0 || nightBlend <= 0.001) {
+      return 0;
+    }
+    let best: (typeof aimed)[number] | null = null;
+    let bestD = Infinity;
+    for (const a of aimed) {
+      // In x, like everything else that asks "am I level with that stone":
+      // the stones stand on the far verge and the cast walk the near one, so
+      // a straight-line distance never drops low enough to mean anything.
+      const d = Math.abs(a.x - at.x);
+      if (d < bestD) {
+        bestD = d;
+        best = a;
+      }
+    }
+    // Within about a stone's own width of it the flame owns the lighting
+    // entirely; from there it eases out over the next few paces.
+    const NEAR = 3.2;
+    const FAR = 9;
+    if (best == null || bestD >= FAR) {
+      return 0;
+    }
+    const k = bestD <= NEAR ? 1 : 1 - (bestD - NEAR) / (FAR - NEAR);
+    // Smoothstepped, so there is no moment where the shading visibly starts
+    // or stops moving.
+    const e = k * k * (3 - 2 * k) * nightBlend;
+    // MOST OF THE WAY, NEVER ALL OF IT.
+    //
+    // Handing the lamp over completely put it in the niche and took the
+    // child's own ring of light off them entirely: the flame is low, off to
+    // one side and behind their shoulder, so everything it could not reach
+    // went black at the exact moment they arrived somewhere lit. Stopping
+    // the slide short keeps their own pool on them and still swings the
+    // light round to the stone's side, which is what the eye is reading —
+    // the direction it comes FROM, not whether it is the only source.
+    into.lerp(TMP_LAMP.set(best.x, best.y, best.z), e * LAMP_SHIFT);
+    return e;
+  }
+  /** Scratch for `lampFrom`, so a per-frame call allocates nothing. */
+  const TMP_LAMP = new THREE.Vector3();
+  const TMP_HERO = new THREE.Vector3();
+  /**
+   * How much brighter somebody standing in a milestone's light is.
+   *
+   * A lamp is the brightest thing on this road after dark, and walking up to
+   * one should be the moment a child can see themselves properly rather than
+   * as the same silhouette they were between the stones.
+   */
+  // 2.9, not 1.6.
+  //
+  // This is how much the child's own lamp comes up as they reach a milestone,
+  // and it is the only thing lighting their FACE there -- the niche lamp is a
+  // 46-unit flood with near-linear falloff that lands on everything equally
+  // and so models nothing. At 1.6 the face stayed in the flood's flat orange.
+  // Nearly double puts a readable highlight on it without becoming a torch:
+  // the niche still owns the road, the carried lamp owns the face.
+  // 1.9. It was 4.6, and 4.6 was wrong for a reason worth recording: it was
+  // chosen while the lamp was still sliding six units off her face, so it was
+  // sized to overcome a distance problem rather than to light anybody. With
+  // `LAMP_SHIFT` fixed the same number lands as a hard white pool on her --
+  // the right amount of light, delivered from far too close.
+  //
+  // At 1.9 her face reads about twice as bright as it does on the open road,
+  // which is what walking up to a flame does. A lamp in a stone niche is a
+  // small fire; it should show her, not stage her.
+  const LAMP_LIFT = 1.9;
+  /**
+   * And how much FURTHER it has to reach once it has moved.
+   *
+   * The personal lamps are short-range on purpose — 3.4 and 4.6, tuned to
+   * throw a pool around somebody they are hanging directly over. Slide one
+   * across to a milestone and it is suddenly two or three units away from the
+   * person it is lighting, which on a squared falloff is most of its output
+   * gone: moving it made the child DARKER at the one spot on the road that is
+   * actually lit. The range grows with the slide, so what changes as they
+   * walk up to a stone is where the light comes from, not how much there is.
+   */
+  const LAMP_REACH = 9;
+  /**
+   * AND THE COLOUR IT TURNS AS IT HANDS OVER TO THE STONE.
+   *
+   * The personal lamp is a warm white — right for a light that is nominally
+   * the scene's own and has no source in it. The milestone's lamp is an oil
+   * flame, and the pool IT casts on the road is `0xffb867`. So a child
+   * standing in that pool was still being lit warm WHITE: the ground at her
+   * feet was amber, she was not, and the two lights plainly were not the same
+   * light. That mismatch is most of what read as hard — a white key light
+   * over an amber ground is a studio, not a lamp.
+   *
+   * Carried most of the way to the flame's own amber as it slides. Amber
+   * also simply reads softer than white at the same intensity: the blue end
+   * is what makes a highlight look hot.
+   */
+  const LAMP_WHITE = new THREE.Color(0xfff0d0);
+  const LAMP_AMBER = new THREE.Color(0xffb867);
+  /**
+   * How far towards the stone the lamp is allowed to travel, at most.
+   *
+   * The rest of the distance is what keeps the child lit by their own light
+   * as well as by the milestone's — see `lampFrom`.
+   */
+  // 0.18, NOT 0.6 -- AND THIS WAS THE WHOLE BUG.
+  //
+  // The lamp slides toward the niche so the light reads as coming from the
+  // stone's side. At 0.6 it slid most of the way there, and the stone stands
+  // about 9.5 units across the road from where the child walks -- so the one
+  // light responsible for her face moved nearly six units off it, and the
+  // inverse square did the rest.
+  //
+  // Measured: at 0.6 her face received 0.42 AT a milestone against 0.62
+  // walking between them. Arriving somewhere lit made her DARKER. Three
+  // separate rounds of raising the intensity could not win against that,
+  // because they were fighting a distance term, not a brightness one.
+  //
+  // A fifth of the way still swings the direction the light arrives from,
+  // which is what the eye actually reads, and leaves the source on her.
+  // 0.18, NOT 0.6 -- and this was the real bug behind "no light on her face".
+  //
+  // The lamp slides toward the niche so the light reads as coming from the
+  // stone's side. At 0.6 it slid most of the way, and the stone stands about
+  // 9.5 units across the road -- so the one light responsible for her face
+  // moved nearly six units off it and the inverse square did the rest.
+  // Measured: 0.42 at a milestone against 0.62 walking between them, i.e.
+  // arriving somewhere lit made her DARKER.
+  const LAMP_SHIFT = 0.18;
+  const TMP_MATE = new THREE.Vector3();
+  /**
+   * The group's centre, passed as `at`.
+   *
+   * Its own vector and not `TMP_LAMP`: that one is the lerp target INSIDE
+   * `lampFrom`, so handing it in as the argument would have the function
+   * overwrite what it was asked about. It happens to read `at.x` before it
+   * writes, so it would have worked — right up until somebody moved a line.
+   */
+  const TMP_AT = new THREE.Vector3();
+
   const spotPool: THREE.SpotLight[] = [];
   for (let i = 0; i < AIMED_LIGHTS; i++) {
     // Wide and very soft: this is a flame in an opening, not a torch. The
@@ -2748,6 +4405,69 @@ export function createKidsWorld(
    * lamps the child walks straight past — and everything else borrows the
    * atmosphere they create.
    */
+  /**
+   * STAND A LIGHT IN THE STONE'S OWN LAMP NICHE.
+   *
+   * The model carries a little emissive flame mesh inside the triangular
+   * opening, so the light is placed on THAT rather than at a measured
+   * fraction of the height: find the emissive child, take the centre of its
+   * box. An asset that moves its lamp brings the light with it.
+   *
+   * This used to live inside the separate vazhivilakku's planting function.
+   * The lamp is now welded onto the milestone itself, so the milestone
+   * factory is what calls it — same code, same flame, one stone.
+   */
+  function lightTheNiche(wrap: THREE.Object3D): void {
+    const box = measureBox(wrap);
+    const niche = new THREE.Box3();
+    let found = false;
+    wrap.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      // NOT THE NUMBER. The carved plate is emissive too — that is how it
+      // lights up as somebody comes to read it — so an honest search for
+      // "the glowing thing on this stone" finds the number as well as the
+      // flame and stands the lamp halfway between them, a third of the way
+      // down the shaft. It is flagged rather than guessed at: the plate's
+      // emissive intensity is zero at rest, so testing for that would have
+      // worked here and broken the moment the glow came on.
+      if (m.userData.carving === true) return;
+      const mats = Array.isArray(m.material) ? m.material : [m.material];
+      const glows = mats.some((mm) => {
+        const sm = mm as THREE.MeshStandardMaterial | undefined;
+        return sm?.emissive != null && sm.emissive.getHex() !== 0x000000;
+      });
+      if (!glows) return;
+      const bb = new THREE.Box3().setFromObject(m);
+      if (bb.isEmpty()) return;
+      if (found) niche.union(bb);
+      else niche.copy(bb);
+      found = true;
+    });
+    const flame = found
+      ? niche.getCenter(new THREE.Vector3())
+      : new THREE.Vector3(
+          (box.min.x + box.max.x) / 2,
+          box.min.y + (box.max.y - box.min.y) * 0.72,
+          (box.min.z + box.max.z) / 2,
+        );
+    makeLamp(flame.x, flame.y, flame.z, {
+      // Small: a flame in an opening, not a glow around a post.
+      size: 0.8,
+      peak: 0.92,
+      // EVERY roadside lamp is lit for real. A lamp that puts no pool of
+      // light on the road is a decoration of a lamp, and they stand one per
+      // milestone — far enough apart that only one or two are ever near
+      // enough to matter.
+      lit: 9,
+      // AIMED AT THE ROAD. The stones stand on the far verge at negative z
+      // with the road at zero, so the opening faces +z and the light goes
+      // with it; the closed back of the stone stays dark instead of glowing
+      // through it.
+      aim: new THREE.Vector3(flame.x, 0, flame.z + 9),
+    });
+  }
+
   function makeLamp(
     x: number,
     y: number,
@@ -4268,6 +5988,33 @@ export function createKidsWorld(
       idle.play();
       idle.weight = 1;
     }
+    // EVERY calm loop, not just the first one that matched.
+    //
+    // `pick` returns a single clip, so a character shipping three idles stood
+    // in one of them for the whole visit. Abee carries Idle_A, Idle_B and
+    // Interact and is on screen for minutes at a time as the guide, which is
+    // exactly the case a single three-second loop cannot carry: it stops
+    // reading as somebody waiting and starts reading as scenery.
+    //
+    // Ordered with the showing one first so the cycler starts from what is
+    // already on screen. Gaits are excluded -- a walk is not something to do
+    // while standing still -- and so is anything one-shot, which would end
+    // and leave him frozen on its last frame.
+    const idles: THREE.AnimationAction[] = [];
+    if (idle != null) idles.push(idle);
+    for (const c of clips) {
+      if (c === idleClip || c === runClip || c === walkClip) continue;
+      // Anchored, and nothing that is really a settle. A loose /idle|stand/
+      // also matches `sit_crosslegged_idle`, which is a SEATED pose, and
+      // `stand_from_crosslegged`, which is a one-shot transition -- either
+      // one in the standing pool puts him in a chair that is not there.
+      if (!/^(idle|interact)/i.test(c.name)) continue;
+      if (/sit|crouch|lie|sleep|_from_|from_/i.test(c.name)) continue;
+      const extra = mixer.clipAction(c);
+      extra.play();
+      extra.weight = 0;
+      idles.push(extra);
+    }
     if (joyClip) {
       // Played on demand and held on its last frame rather than looping: a
       // celebration that restarts behind the finish banner reads as a stutter.
@@ -4453,6 +6200,8 @@ export function createKidsWorld(
       run,
       walk,
       idle,
+      idles,
+      hair: makeHairSim(gltf.scene),
       joy,
       rest,
       lifts,
@@ -4480,8 +6229,16 @@ export function createKidsWorld(
   // ago, so the two can never drift apart or disagree: whatever the player
   // did, the companion does, later, once.
   const FOLLOW_FRAMES = 24; // 0.4s at 60fps — a glance, not a lag
-  /** How far behind along the trail, on top of the delay. */
-  const FOLLOW_GAP = 2.6;
+  /**
+   * How far behind along the trail, on top of the delay.
+   *
+   * 3.3 rather than 2.6. At the old spacing the group read as a huddle: with
+   * a 4.7-unit child and a 4.35-unit guide two and a half units apart, the
+   * near one's shoulder overlapped the far one's for most of a stride, and
+   * three characters plus a dog looked like one wide object rather than
+   * several people walking together.
+   */
+  const FOLLOW_GAP = 3.3;
   /**
    * THE MOST PEOPLE WHO MAY WALK WITH YOU.
    *
@@ -4492,9 +6249,25 @@ export function createKidsWorld(
    */
   const MAX_FOLLOWERS = 2;
   /** How much further back each one walks than the one in front. */
-  const FOLLOW_STAGGER = 1.9;
-  /** And how much further out, so they are a line rather than a file. */
-  const FOLLOW_SPREAD = 0.55;
+  const FOLLOW_STAGGER = 2.4;
+  /**
+   * Where the first companion walks once a GUIDE is on the road too.
+   *
+   * In band 2 he falls in at 1.6 behind the child, which is the space the
+   * companions were using. Rather than have him stand in them, they shuffle
+   * back and leave him the gap -- and go back to their ordinary spacing the
+   * moment the guide is turned off, because without him there is nothing
+   * there to make room for.
+   */
+  const FOLLOW_GAP_GUIDED = 4.6;
+  /**
+   * And how much further out, so they are a line rather than a file.
+   *
+   * Widened with the gap: depth alone separates them for the camera looking
+   * along the road, but this one is what stops the second and third reading
+   * as the first one's shadow.
+   */
+  const FOLLOW_SPREAD = 0.8;
   /** To one side, so they walk together rather than in single file. */
   const FOLLOW_SIDE = 1.9;
   /** Which half of the road the pair walk on, and how far apart. */
@@ -4562,9 +6335,72 @@ export function createKidsWorld(
   let guideStones = 0;
   let guidePrevPlayerX: number | null = null;
 
+  /**
+   * One walking step, in world units along the road. Only used to turn "two
+   * to five steps" into a distance; the walk cycle is rate-matched to ground
+   * speed elsewhere, so this need only be about right.
+   */
+  const GUIDE_STEP = 0.55;
+
   /** Milestones ever passed. Decides which of the three bands he is in. */
   function setGuideBand(stones: number): void {
     guideStones = Math.max(0, Math.floor(stones));
+  }
+
+  /**
+   * How much room the companions are currently making for the guide, 0..1.
+   *
+   * Not a yes/no on whether a guide EXISTS -- he is only in their way when he
+   * is actually standing in the space behind the child, which is band 2 and
+   * the moments either side of it. In band 1 he is three units up the road
+   * and in band 3 he is off wandering, and both times the friends should be
+   * back at their ordinary spacing rather than holding a gap for somebody who
+   * is nowhere near it.
+   *
+   * Eased rather than switched, so they open up and close as he arrives and
+   * leaves instead of teleporting a unit and a half the frame he crosses.
+   */
+  let companionRoom = 0;
+
+  /**
+   * The gap each band settles him at, so SPAWN and the per-frame easing agree.
+   *
+   * They did not: he was always placed at -3 (band 1) and then eased to
+   * wherever his band actually wanted him, so a child loading into band 2
+   * watched him walk 4.6 units backwards into position before the game had
+   * started. Band 3 has no fixed place, so it borrows band 2's as an opening
+   * position and drifts off it from there.
+   */
+  function guideBandGap(): number {
+    if (guideStones <= 5) {
+      return -3;
+    }
+    return 1.6;
+  }
+
+  /** Where the guide has to be before the friends bother making room. */
+  function guideInTheirSpace(): boolean {
+    const g = followers.find((f) => f.guide);
+    return g != null && g.gap > 0.4 && g.gap < FOLLOW_GAP_GUIDED - 0.3;
+  }
+
+  /**
+   * Re-space the companions.
+   *
+   * Walks them in order rather than trusting the index they were spawned
+   * with: turning a companion off leaves the rest renumbered, and spacing
+   * them by a stale index puts a gap where nobody is standing.
+   */
+  function respaceCompanions(): void {
+    const base = FOLLOW_GAP + companionRoom * (FOLLOW_GAP_GUIDED - FOLLOW_GAP);
+    let i = 0;
+    for (const f of followers) {
+      if (f.guide) {
+        continue;
+      }
+      f.gap = base + i * FOLLOW_STAGGER;
+      i += 1;
+    }
   }
 
   /**
@@ -4583,6 +6419,117 @@ export function createKidsWorld(
     const ease = (want: number, rate: number) => {
       f.gap += (want - f.gap) * Math.min(1, dt * rate);
     };
+    // THE ROADSIDE REST BELONGS TO EVERY BAND.
+    //
+    // This used to sit below the two band returns, which quietly meant it
+    // only existed once the child had passed eighteen milestones -- so for a
+    // whole first session the guide just stood there while the hero sat. The
+    // bands decide WHERE he walks. They have no business deciding whether he
+    // is allowed to sit down.
+    if (s.sitPhase === "up") {
+      // Getting to his feet. He holds the ground he is on until he is up --
+      // drifting away mid-stand slides him along on his backside.
+      f.gap += advanceX;
+      return;
+    }
+    if (s.dogTravel === "guideStroll") {
+      // A FEW STEPS ON, THEN SIT. Standing motionless while a child works out
+      // where the K is reads as a paused game. Walking a little way up the
+      // road and sitting down reads as a boy who has decided this will take a
+      // minute -- and it leaves him somewhere they have to reach, which is
+      // what he is for.
+      f.gap += advanceX;
+      f.gap -= dt * 1.25;
+      if (f.gap <= s.guideStrollTo) {
+        s.dogTravel = "guideWait";
+        s.guideRest = true;
+      }
+      return;
+    }
+    if (s.dogTravel === "guideWait" && s.guideRest) {
+      // HE KEEPS THE GROUND HE WALKED TO.
+      //
+      // Getting up is not the same as coming back. This used to hand straight
+      // to the drift the moment they typed, and the drift eases him toward
+      // his usual place -- so the five to seventeen steps he had just taken
+      // up the road were undone in front of them, sliding backwards while
+      // they walked forwards.
+      //
+      // He stands (the sit chain watches the same movement) and then simply
+      // stops there. The gap closes because THEY advance into it, which is
+      // the whole point of having walked on ahead, and the rule below hands
+      // him back to the drift once they have drawn level.
+      f.gap += advanceX;
+      if (moving && f.gap > -0.8) {
+        s.guideRest = false;
+        s.dogTravel = "guideDrift";
+        s.dogNextRun = dogWait(60 + Math.random() * 60);
+      }
+      return;
+    }
+    // ONLY ONCE THE CHILD HAS SAT DOWN, AND NOT SOON.
+    //
+    // A pause is not the same as having stopped. Children break off for a few
+    // seconds constantly -- to find a key, to look at the road -- and a guide
+    // who wanders off and sits every time reads as bored of them. So he waits
+    // for the hero's own sit, which is the game saying this is a real rest,
+    // and then he waits again.
+    //
+    // Both numbers are drawn, never fixed: the delay once per settle, and the
+    // step count when he finally goes.
+    const heroSat = restStage === "sitDown" || restStage === "sitIdle";
+    // ── EXCEPT FROM THE LITTLE ONE. HE DOES NOT LEAVE HIM. ───────────────
+    //
+    // Everything below is the guide getting bored of a long rest and
+    // wandering a few steps up the road to wait, which is right for a child
+    // of nine: they have stopped, he has somewhere to be, and he will be in
+    // sight when they look up.
+    //
+    // Little Drew is six. The same behaviour reads completely differently
+    // beside a six-year-old who has sat down on a road in 1930 — the person
+    // showing him the way strolls off and leaves him sitting there. So with
+    // Drew the guide simply never goes: he stays where he is, and the
+    // look-back and the sit-with-them below carry the whole rest.
+    if (playerIsLittle()) {
+      s.guideIdleT = 0;
+      s.guideRestWait = 0;
+      return;
+    }
+    if (moving || !heroSat) {
+      s.guideIdleT = 0;
+      s.guideRestWait = 0;
+    } else if (s.sitPhase === "none") {
+      if (s.guideRestWait <= 0) {
+        s.guideRestWait = 45 + Math.random() * 45; // 45s to a minute and a half
+        s.guideIdleT = 0;
+      }
+      s.guideIdleT += dt;
+      if (s.guideIdleT >= s.guideRestWait) {
+        s.guideIdleT = 0;
+        s.guideRestWait = 0;
+        // TWELVE TO TWENTY-FOUR, and the FLOOR is the point.
+        //
+        // Two to five was a shuffle; five to seventeen fixed the top of the
+        // range and left the bottom of it wrong. At five steps — under three
+        // units — he sits down almost at their elbow, which is not a guide
+        // who has walked on ahead to wait, it is a guide who stood up, took a
+        // couple of paces and sat back down next to them. Sitting close is
+        // the one thing this behaviour must never read as.
+        //
+        // At 0.55 a step the floor is now about six and a half units and the
+        // top about thirteen: far enough up the road that he is plainly
+        // somewhere else, near enough to still be in frame and to be worth
+        // looking back at. Drawn fresh every time, so where he ends up is
+        // never the same spot twice.
+        //
+        // None of this applies to Little Drew — see the guard above. He does
+        // not go at all.
+        const steps = 12 + Math.floor(Math.random() * 13); // 12 to 24
+        s.guideStrollTo = f.gap - steps * GUIDE_STEP;
+        s.dogTravel = "guideStroll";
+        return;
+      }
+    }
     if (guideStones <= 5) {
       // Band 1 — leading, about three units up the road, and he does not fall
       // back. He is showing them the way and the arrangement says so.
@@ -4590,26 +6537,37 @@ export function createKidsWorld(
       return;
     }
     if (guideStones <= 18) {
-      // Band 2 — accompanying rather than leading: a unit ahead, close in,
-      // the same distance whether they speed up or slow down.
-      ease(-1, 1.4);
+      // Band 2 — FALLEN IN BEHIND THEM, between the child and the friends.
+      //
+      // He led in band 1 because they did not know the road; by here they do,
+      // and a guide still walking in front of somebody who knows the way is
+      // in front of them rather than with them. Positive gap, so he is behind
+      // -- and at 1.6 against the companions' 3.3 he sits in the space
+      // between, which is the one place on the road nobody else stands.
+      ease(1.6, 1.4);
       return;
     }
     // Band 3 — no fixed place at all.
-    if (s.sitPhase === "up") {
-      // Getting to his feet. He holds the ground he is on until he is up —
-      // drifting away mid-stand slides him along on his backside.
-      f.gap += advanceX;
-      return;
-    }
     if (s.dogTravel === "guideWait") {
       // Holding station while the trail comes to him. The gap closes by
       // exactly the distance the child covers, which is what makes it read as
       // waiting for THEM rather than counting to a number.
       f.gap += advanceX;
-      if (f.gap > -0.8) {
+      // A REST ENDS THE MOMENT THEY START. If he sat down because they had
+      // stopped, there is no reason to stay down once they are typing again;
+      // waiting for them to draw level would leave him sitting as they walk
+      // past. A wait he took by running on ahead still ends on the gap,
+      // because there the whole point is that they catch him up.
+      if (s.guideRest && moving) {
+        s.guideRest = false;
         s.dogTravel = "guideDrift";
-        s.dogNextRun = 60 + Math.random() * 60;
+        s.dogNextRun = dogWait(60 + Math.random() * 60);
+        return;
+      }
+      if (f.gap > -0.8) {
+        s.guideRest = false;
+        s.dogTravel = "guideDrift";
+        s.dogNextRun = dogWait(60 + Math.random() * 60);
       }
       return;
     }
@@ -4623,6 +6581,18 @@ export function createKidsWorld(
       }
       return;
     }
+    // ONLY ONCE THE CHILD HAS SAT DOWN, AND NOT SOON.
+    //
+    // A pause is not the same as having stopped. Children break off for a few
+    // seconds constantly -- to find a key, to look at the road -- and a guide
+    // who wanders off and sits every time reads as bored of them. So he waits
+    // for the hero's own sit, which is the game's way of saying this has
+    // become a proper rest, and then he waits again.
+    //
+    // Both numbers are drawn, not fixed: the delay once per settle, and the
+    // step count when he finally goes. A boy who always waits the same minute
+    // and always paces the same distance is a mechanism; the whole point of
+    // him is that he is not.
     // Drifting: between about four units behind and six ahead, over twenty or
     // thirty seconds, crossing through the group — what somebody does on a
     // road they have walked their whole life.
@@ -4685,6 +6655,9 @@ export function createKidsWorld(
     wagCool: 3 + Math.random() * 6,
     wagW: 0,
     dogAct: null as THREE.AnimationAction | null,
+    /** Seconds into this rest at which the dog next lies down. Moves each
+     *  time it gets up again, so one settle cannot chain into the next. */
+    dogSettleAt: 75,
     dogT: 0,
     dogRested: 0,
     dogSettled: -1,
@@ -4702,6 +6675,13 @@ export function createKidsWorld(
     dogPrevSeenX: null as number | null,
     dogTurn: null as THREE.AnimationAction | null,
     dogTurnT: 0,
+    /**
+     * The calm loop being faded IN, how far in it is, and how long until the
+     * next swap. Null when he is simply standing in the one he has.
+     */
+    idleAlt: null as THREE.AnimationAction | null,
+    idleFade: 0,
+    idleNext: 6 + Math.random() * 10,
     /** Radians the guide's running turn clip will hand to the wrap when it ends. */
     turnBy: 0,
     /**
@@ -4726,10 +6706,24 @@ export function createKidsWorld(
     turnSpinDur: 0,
     /** Seconds until the guide next glances back down the road at them. */
     guideLookBack: 3 + Math.random() * 5,
+    /** Whether this child has ever set off. Until they have, the guide has
+     *  nobody to look back AT. */
+    guideEverMoved: false,
     /** The guide's roadside sit: which clip is up, and how long is left of it. */
     sitAct: null as THREE.AnimationAction | null,
     sitPhase: "none" as string,
     sitT: 0,
+    /** How long the child has been settled, and where a stroll is heading. */
+    guideIdleT: 0,
+    guideStrollTo: 0,
+    /** The wait drawn for THIS settle. Zero means one has not been drawn. */
+    guideRestWait: 0,
+    /**
+     * True when he sat down because they STOPPED, rather than because he ran
+     * on ahead. The two waits end differently: one ends when they draw level,
+     * the other the moment they start typing again.
+     */
+    guideRest: false,
     dogAhead: 0,
     dogSpeed: 0,
     dogPrevX: 0,
@@ -4836,6 +6830,34 @@ export function createKidsWorld(
   }
   let player: DinoRig | null = null;
   let playerH = 2.6; // fitted height of the current player model
+  /**
+   * WHO THE CHILD IS PLAYING AS, by model id.
+   *
+   * Read by the cast to decide how to treat them. Little Drew is six, and the
+   * road behaves differently around a six-year-old than it does around a
+   * nine-year-old: the guide does not leave him, the buffalo mostly keeps him
+   * company instead of charging, and the puppy plays. None of that is a
+   * difficulty setting the child can see — it is the village knowing how
+   * small he is.
+   */
+  let playerWho = theme.defaultPlayer;
+  /** Little Drew is six. Dave and Peeli are nine. */
+  const LITTLE = "Explorer6";
+  const playerIsLittle = () => playerWho === LITTLE;
+  /**
+   * HOW LONG THE PUPPY WAITS BEFORE IT RUNS OFF AND LOOKS BACK AGAIN.
+   *
+   * The dash — tear ahead, stop, turn, wait for them to catch up — is the
+   * puppy's whole personality, and how OFTEN it does it is the difference
+   * between a dog that happens to be walking the same way and a dog that is
+   * playing with somebody. With Little Drew it is playing: the gap between
+   * dashes is a little over a third of what it is for the older two.
+   *
+   * The wait is never a fixed number anywhere — a child learns a metronome
+   * in an afternoon — so this scales whatever was drawn rather than
+   * replacing it.
+   */
+  const dogWait = (secs: number) => secs * (playerIsLittle() ? 0.38 : 1);
   let playerX = -6;
   let targetX = -6;
   let runStart = -6;
@@ -4889,16 +6911,6 @@ export function createKidsWorld(
     }
   };
   /**
-   * A roadside lamp, planted between one milestone and the next.
-   *
-   * One per lesson, halfway along it: a child walking a stretch of road
-   * passes a stone, then a lamp, then the next stone, which is the rhythm a
-   * real road has and a quiet way of saying how far through the lesson they
-   * are. Null until the model is in, so a slow load costs a lamp rather than
-   * the run.
-   */
-  let makeVazhi: ((x: number, z: number) => void) | null = null;
-  /**
    * A few loose stones round the foot of something standing at the roadside.
    *
    * A post set in the ground has stones packed round its base — that is how
@@ -4908,6 +6920,17 @@ export function createKidsWorld(
    * scenery and a place.
    */
   let makeBaseRocks: ((x: number, z: number) => void) | null = null;
+  /**
+   * Plants the greenery round a milestone, at the stone's OWN position.
+   *
+   * It has to be a callback for the same reason the base rocks are: the
+   * stones are not placed when the world is built, they are placed as the
+   * child reaches them -- `stoneX = max(runEnd, lastStoneX + MIN_STONE_GAP)`,
+   * which follows their progress and is not a multiple of anything. Planting
+   * at build time put the greenery at 26, 52, 78... and the stones somewhere
+   * else entirely, so the two never met.
+   */
+  let makeBasePlants: ((x: number, z: number) => void) | null = null;
 
   /**
    * NINETY YEARS OF WEATHER, applied to a stone that came out of the
@@ -5013,6 +7036,60 @@ export function createKidsWorld(
    */
   const milestones = new Map<number, THREE.Object3D>();
   /**
+   * HOW CLOSE A TONNE OF ANIMAL MAY GET TO A SET STONE.
+   *
+   * The milestones stand on the FAR verge — `meander(x) - roadClear * 0.92` —
+   * and the buffalo's fence holds it at `roadClear * 0.95` on that same side.
+   * The two are three hundredths of the clearance apart, which is to say the
+   * animal charges down the exact line the stones are planted on, and before
+   * this it went straight through them: a stone lamp passing through a
+   * buffalo's ribs, in a game whose whole subject is a road somebody built.
+   */
+  const STONE_CLEAR = 1.7;
+  /**
+   * How far along x something may travel from `fromX` towards `toX` without
+   * walking into a milestone. Returns `toX` when the way is clear.
+   *
+   * X only, and deliberately: the stones and the charge lane are the same
+   * line, so what decides whether the way is blocked is how far up the road
+   * the stone is, not its distance as the crow flies. `z` is used only to
+   * ignore stones on the other verge entirely.
+   */
+  const stoneLimitX = (fromX: number, toX: number, z: number): number => {
+    const dir = Math.sign(toX - fromX);
+    if (dir === 0) {
+      return toX;
+    }
+    let limit = toX;
+    const consider = (o: THREE.Object3D | null) => {
+      if (o == null) {
+        return;
+      }
+      if (Math.abs(o.position.z - z) > 2.2) {
+        return; // a stone on the other side of the road is not in the way
+      }
+      if ((o.position.x - fromX) * dir <= 0) {
+        return; // already past it
+      }
+      // Pull up short of the stone — or, if it is already inside the
+      // clearance, do not move at all rather than reverse out of it.
+      let stop = o.position.x - dir * STONE_CLEAR;
+      if ((stop - fromX) * dir < 0) {
+        stop = fromX;
+      }
+      if ((stop - fromX) * dir < (limit - fromX) * dir) {
+        limit = stop;
+      }
+    };
+    for (const o of milestones.values()) {
+      consider(o);
+    }
+    // The one being walked TOWARDS is not in the map until it has been
+    // passed, and it is the one most likely to be standing in a charge.
+    consider(pendingStone);
+    return limit;
+  };
+  /**
    * Every carved number on the road, so it can light as it is approached.
    *
    * A milestone at night is a dark stone with a dark number on it — the one
@@ -5099,17 +7176,6 @@ export function createKidsWorld(
    */
   let pendingStone: THREE.Object3D | null = null;
   let pendingX = 0;
-  /**
-   * Has the lamp for the stone ahead been planted yet?
-   *
-   * Separate from the stone because the two models load independently. The
-   * vazhivilakku arrives on its own retry loop, and the first `startRun` of a
-   * session usually happens before it lands — so the stone goes in and the
-   * lamp cannot. Every later `startRun` used to try again and one eventually
-   * succeeded; holding the stone means those calls return early instead, and
-   * without this flag the road ends up with milestones and no lamps at all.
-   */
-  let pendingLamp = false;
   /** Where the last stone went in, so the next one can keep its distance. */
   let lastStoneX = -Infinity;
   /**
@@ -5284,17 +7350,6 @@ export function createKidsWorld(
           const pz = meander(stoneX) - roadClear * 0.92;
           const px = laneAlignedX(stoneX, pz, LANE);
           pendingStone.position.set(px, surfaceY(px, pz), pz);
-          // The lamp, if it could not be planted when the stone went in —
-          // see `pendingLamp`. Planted at the stone's position now rather
-          // than where it was, so the pair still reads as one object.
-          if (!pendingLamp && makeVazhi != null) {
-            pendingLamp = true;
-            const lx = stoneX + 1.1;
-            const lz = meander(lx) - roadClear * 0.92;
-            const lax = laneAlignedX(lx, lz, LANE);
-            makeVazhi(lax, lz);
-            makeBaseRocks?.(lax, lz);
-          }
           return;
         }
         if (!milestones.has(key) && makeMilestone != null) {
@@ -5316,6 +7371,7 @@ export function createKidsWorld(
           const mx = laneAlignedX(stoneX, mz, LANE);
           stone.position.set(mx, surfaceY(mx, mz), mz);
           makeBaseRocks?.(mx, mz);
+          makeBasePlants?.(mx, mz);
           // AND A LAMP AHEAD OF THE STONE, not behind it.
           //
           // It used to go at the midpoint of the stretch just started, which
@@ -5326,46 +7382,26 @@ export function createKidsWorld(
           // already standing there as they come up to this one: something to
           // walk towards rather than a gap to cross.
           //
-          // ONE LAMP, AT THE STONE. Nowhere else.
+          // ONE LAMP, AT THE STONE. Nowhere else — and now it IS the stone.
           //
           // Lamps out in the middle of the stretches were tried and dropped:
           // scattered along an empty road they read as street lighting, which
           // a 1930s cart track does not have. A lamp standing WITH the marker
           // is a different object — it is there so the stone can be read, the
-          // way a shrine lamp is there for the shrine — and it makes each
-          // milestone a place rather than an object you pass.
+          // way a shrine lamp is there for the shrine.
           //
-          // It also means the lamps inherit the stones' spacing for free,
-          // including the fact that a short lesson plants its stone sooner.
-          if (makeVazhi != null) {
-            pendingLamp = true;
-            // THE SAME LINE AS THE MILESTONES, exactly — 0.92 is the number
-            // the stones use, and it is deliberately the same one rather than
-            // a near one.
-            //
-            // 0.58 was tried first and put the lamp 4.8 units off the centre
-            // line: outside the worn bowl the ruts are cut into, still inside
-            // the laterite the eye reads as the road, so it stood in the
-            // traffic. Anything between that and the stones leaves a lamp
-            // half a metre proud of them, which reads as carelessness rather
-            // than as a roadside. Things set along a road are set in a line.
-            // A METRE from the stone, not two. They are meant to read as
-            // one thing standing at the roadside — a marker with a lamp by
-            // it — and at any more than about a body's width apart they read
-            // as two separate objects that happen to be near each other.
-            // The stone is 0.7 wide once fitted and the lamp 0.5, so 1.1
-            // leaves a hand's breadth of daylight between them.
-            const lx = stoneX + 1.1;
-            const lz = meander(lx) - roadClear * 0.92;
-            const lax = laneAlignedX(lx, lz, LANE);
-            makeVazhi(lax, lz);
-            makeBaseRocks?.(lax, lz);
-          }
+          // It stood beside the marker for a while, a metre off, because they
+          // were two models. They are one model now: the vazhivilakku's head
+          // is welded onto the milestone from the lamp niche up, so the light
+          // comes with the stone and there is nothing to place, nothing to
+          // line up, and no way for the pair to arrive apart.
           // Turned a little off square to the road, the way a stone set by
           // hand ninety years ago never quite is - and each one differently,
           // so a row of them does not look machined.
           stone.rotation.y = 0.08 + Math.random() * 0.16;
           scene.add(stone);
+          // Lit now it is standing — see `lightTheNiche`.
+          lightTheNiche(stone);
         }
       } else {
         flagPole.position.set(runEnd, groundY(runEnd) + 1.7, 0);
@@ -5950,6 +7986,25 @@ export function createKidsWorld(
    * mechanic; one that does it now and then is an animal with a mood.
    */
   const WILD_ESCORT_CHANCE = 0.06;
+  /**
+   * THE BUFFALO KNOWS THE LITTLE ONE.
+   *
+   * A water buffalo on a village road is not wildlife, it is somebody's
+   * animal, and it has opinions about who is walking past. With Little Drew —
+   * six years old and half its height at the shoulder — it mostly just falls
+   * in beside him and walks, the way a big dog does with a child it has
+   * decided is its own.
+   *
+   * It has not been declawed. The charge is still there and still lands
+   * without warning, roughly one time in six that it would otherwise have
+   * come; what changes is that the DEFAULT is company rather than a threat.
+   * That is the point — a six-year-old who is charged every third stretch
+   * stops walking the road, and one who is never charged at all is not on a
+   * road with a buffalo on it.
+   */
+  const LITTLE_CHARGE_ODDS = 1 / 6;
+  /** How much likelier it is to simply walk with him instead. */
+  const LITTLE_ESCORT_X = 4;
   /** How long it keeps pace before it loses interest and turns for home. */
   const WILD_ESCORT_SECS = [4, 10] as const;
   /** How far ahead of the child it aims, so it runs level rather than behind. */
@@ -6973,6 +9028,11 @@ export function createKidsWorld(
         // figure reads as flat. A small lift is all it takes for the tile to
         // glow rather than merely be a lighter grey — and it has to stay
         // small for the reason above: the roll-off is unforgiving.
+        // 0.8 after dark, not 0.62. The card the child is ON has to be the
+        // one their eye goes to, and at night the whole ribbon is already
+        // lifted to stay legible -- which narrows the gap between "next" and
+        // "the rest" exactly when it matters most. Widening it at the top
+        // rather than dimming the others keeps the row readable ahead.
         bm.emissiveIntensity = nightBlend > 0.5 ? 0.62 : 0.3;
       } else {
         bm.color.copy(TILE_C);
@@ -7230,6 +9290,9 @@ export function createKidsWorld(
         s: freshFollowState(),
       });
     }
+    // The line was just rebuilt, so re-space it: with a guide on the road the
+    // companions stand further back to leave him the place behind the child.
+    respaceCompanions();
   }
 
   /**
@@ -7251,6 +9314,9 @@ export function createKidsWorld(
       releaseRig(f.rig);
       followers.splice(followers.indexOf(f), 1);
     }
+    // Straight away, not after the model loads: turning the guide OFF has to
+    // close the gap immediately, and there is nothing left to wait for.
+    respaceCompanions();
     if (name == null) {
       return;
     }
@@ -7266,13 +9332,24 @@ export function createKidsWorld(
     }
     const rig = rigOf(gltf, theme.playerHeight(name), name);
     rig.wrap.rotation.y = Math.PI / 2;
-    // IN THEIR LANE, on their side. Not on the verge and not out in the
-    // paddy — the far side of the road stays clear for passing villagers,
-    // which is what it was kept clear for. Half the companion offset puts him
-    // on the same worn strip without standing inside anybody.
-    const z = LANE + SIDE * 0.5;
+    // IN THEIR LANE, BUT ON THE OTHER SIDE FROM THE COMPANIONS.
+    //
+    // He used to share their side, which put the guide, the friends and the
+    // dog all on one worn strip with the other half of the road empty -- and
+    // at the follower spacing that reads as a queue rather than as people
+    // walking together. Across from them he frames the child instead: one
+    // ahead on the left, the rest behind on the right.
+    //
+    // A FULL OFFSET, mirroring the companions rather than halving it. At half
+    // he was barely off the child's own centre line -- across the road on
+    // paper, still overlapping them on screen, because the camera looks along
+    // the road and it is the SIDEWAYS distance that separates two people in
+    // that view. Matched to the companions' 1.9 so the child walks down the
+    // middle with the guide out to one side and the friends to the other.
+    const z = LANE - SIDE * 1.1;
     // Band 1 until told otherwise: three units up the road, leading.
-    const gap = -3;
+    // His band's own distance, not band 1's -- see `guideBandGap`.
+    const gap = guideBandGap();
     rig.wrap.position.set(playerX - gap, terrainY(playerX, z), z);
     rig.wrap.traverse((n) => {
       n.layers.enable(COMPANION_LIGHT_LAYER);
@@ -7290,7 +9367,9 @@ export function createKidsWorld(
       s: freshFollowState(),
     });
     followers[followers.length - 1].s.dogTravel = "guideDrift";
-    followers[followers.length - 1].s.dogNextRun = 40 + Math.random() * 50;
+    followers[followers.length - 1].s.dogNextRun = dogWait(
+      40 + Math.random() * 50,
+    );
   }
 
   /** One companion, or none — the old shape, kept for callers that mean it. */
@@ -7328,6 +9407,7 @@ export function createKidsWorld(
       return;
     }
     playerH = theme.playerHeight(name);
+    playerWho = name;
     const rig = rigOf(gltf, playerH, name);
     // Recolouring is a nicety; being able to play is not.
     //
@@ -7555,8 +9635,7 @@ export function createKidsWorld(
     // The road's own furniture, which no theme field declares: it is asked
     // for by name where the milestones and lamps are planted.
     for (const n of [
-      "Ancient_Milestone_Blank",
-      "Stone_Vazhivilakku",
+      "Milestone_Vazhivilakku",
       "Laterite_Rock",
       "Granite_Boulder",
       "Mossy_Stone",
@@ -7890,6 +9969,8 @@ export function createKidsWorld(
         run: null,
         walk: null,
         idle: null,
+        idles: [],
+        hair: null,
         joy: null,
         rest: {
           wave: null,
@@ -8281,6 +10362,8 @@ export function createKidsWorld(
             run: null,
             walk: null,
             idle: null,
+            idles: [],
+            hair: null,
             joy: null,
             rest: {
               wave: null,
@@ -8334,6 +10417,15 @@ export function createKidsWorld(
       }
     }
 
+    /** The last variant each collection handed out, so it can avoid repeating. */
+    const lastVariant = new Map<readonly THREE.Object3D[], number>();
+    /** Five shades per source material, built on demand and shared. */
+    const TINT_STEPS = [0.94, 0.97, 1.0, 1.03, 1.06] as const;
+    const tintPool = new Map<
+      THREE.MeshStandardMaterial,
+      THREE.MeshStandardMaterial[]
+    >();
+
     const placeVariant = (
       variants: readonly THREE.Object3D[],
       i: number,
@@ -8341,7 +10433,22 @@ export function createKidsWorld(
       z: number,
       scaleMul: number,
     ): THREE.Group => {
-      const v = variants[i % variants.length].clone();
+      // RANDOM, AND NOT THE ONE BEFORE IT.
+      //
+      // This was `variants[i % variants.length]`, which is not variety, it is
+      // a cycle: a six-variant collection lays down v0,v1,v2,v3,v4,v5,v0,v1
+      // in planting order, and anywhere two of them land near each other the
+      // repeat is plain to see. Drawing at random fixes the pattern; refusing
+      // the previous draw stops the one thing random does that a cycle never
+      // does, which is hand you the same plant twice in a row.
+      let pick = Math.floor(Math.random() * variants.length);
+      if (variants.length > 1 && pick === lastVariant.get(variants)) {
+        pick =
+          (pick + 1 + Math.floor(Math.random() * (variants.length - 1))) %
+          variants.length;
+      }
+      lastVariant.set(variants, pick);
+      const v = variants[pick].clone();
       const box = new THREE.Box3().setFromObject(v);
       v.position.sub(
         new THREE.Vector3(
@@ -8354,37 +10461,122 @@ export function createKidsWorld(
       wrap.add(v);
       wrap.position.set(x, surfaceY(x, z), z);
       wrap.rotation.y = Math.random() * Math.PI * 2;
-      wrap.scale.setScalar(
-        (0.8 + Math.random() * 0.8) * theme.sceneryScale * scaleMul,
-      );
+      // NOTHING GROWS PLUMB.
+      //
+      // Yaw alone leaves every plant standing to attention, and a row of
+      // upright copies reads as a row of copies however they are turned --
+      // turning a symmetrical thing about its own axis changes nothing you
+      // can see. A few degrees of lean is the cheapest tell that these grew
+      // rather than being placed.
+      wrap.rotation.x = (Math.random() - 0.5) * 0.17; // ~+-5 degrees
+      wrap.rotation.z = (Math.random() - 0.5) * 0.17;
+      // AND THE SILHOUETTE CHANGES, not just the size.
+      //
+      // A uniform scale is the same plant seen from further away: the outline
+      // is identical, which is exactly what the eye picks up in a cluster.
+      // Letting height run separately from girth gives stocky ones and leggy
+      // ones, which are different plants at a glance.
+      const base = (0.8 + Math.random() * 0.8) * theme.sceneryScale * scaleMul;
+      const tall = 0.85 + Math.random() * 0.4;
+      wrap.scale.set(base, base * tall, base);
+      // A LITTLE COLOUR BETWEEN NEIGHBOURS.
+      //
+      // Two identical meshes side by side stay identical through any amount
+      // of rotating and scaling, because they are the same green. A few per
+      // cent either way is below the threshold of looking wrong and above the
+      // one where a cluster stops reading as one object cloned.
+      //
+      // FROM A SHARED POOL, not a clone each. Cloning per plant would give
+      // sixty-odd unique materials where there were two, and every distinct
+      // material is another state change for the GPU on exactly the machines
+      // this has to run on. Five shades, made once and handed round, buy the
+      // whole of the effect for five materials instead of sixty.
+      wrap.traverse((n) => {
+        const mesh = n as THREE.Mesh;
+        const m = mesh.material;
+        if (m == null || Array.isArray(m)) {
+          return;
+        }
+        const std = m as THREE.MeshStandardMaterial;
+        if (std.color == null) {
+          return;
+        }
+        let shades = tintPool.get(std);
+        if (shades == null) {
+          shades = TINT_STEPS.map((k) => {
+            const dup = std.clone();
+            dup.color.multiplyScalar(k);
+            return dup;
+          });
+          tintPool.set(std, shades);
+        }
+        mesh.material = shades[Math.floor(Math.random() * shades.length)]!;
+      });
       scene.add(wrap);
       return wrap;
     };
 
-    for (const [file, count, minD, maxD, side, scaleMul = 1] of [
+    /** Five shades per source material, built on demand and shared. */
+    const GROUND_TINTS = [0.94, 0.97, 1.0, 1.03, 1.06] as const;
+    const groundTint = new Map<
+      THREE.MeshStandardMaterial,
+      THREE.MeshStandardMaterial[]
+    >();
+    // EVERY SCENERY FILE AT ONCE.
+    //
+    // These were fetched one at a time, each awaited before the next was even
+    // asked for -- and with the Kerala planting that is sixteen round trips
+    // laid end to end before the last plant is in the ground. They do not
+    // depend on each other in any way, so the wait was pure sequencing. The
+    // browser still limits how many it runs at once; this just stops us
+    // limiting it to one.
+    //
+    // A name containing "/" is a full path under models/, not a file in this
+    // theme's scenery folder. Village Road needs it: its scenery is the
+    // nature set but its buildings live in the licensed pack folder, and a
+    // theme has only one sceneryDir.
+    const groundSpecs = [
       [land.trees, theme.treeCount ?? 30, 6, 26, "back"] as const,
       ...theme.ground,
-    ]) {
-      let gltf;
-      try {
-        // A name containing "/" is a full path under models/, not a file in
-        // this theme's scenery folder. Village Road needs it: its scenery is
-        // the nature set but its buildings live in the licensed pack folder,
-        // and a theme has only one sceneryDir.
-        gltf = await loadModel(
-          String(file).includes("/")
-            ? `${ASSETS}/models/${file}.glb`
-            : `${ASSETS}/models/${theme.sceneryDir}/${file}.glb`,
-        );
-      } catch {
-        continue; // skip a missing scenery set rather than break the build
-      }
+    ];
+    const groundGltfs = await Promise.all(
+      groundSpecs.map(async ([file]) => {
+        try {
+          return await loadModel(
+            String(file).includes("/")
+              ? `${ASSETS}/models/${file}.glb`
+              : `${ASSETS}/models/${theme.sceneryDir}/${file}.glb`,
+          );
+        } catch {
+          return null; // skip a missing scenery set rather than break the build
+        }
+      }),
+    );
+    for (let gi = 0; gi < groundSpecs.length; gi++) {
+      const [file, count, minD, maxD, side, scaleMul = 1] = groundSpecs[gi]!;
+      const gltf = groundGltfs[gi];
       if (gltf == null) {
         continue;
       }
       const variants = [...gltf.scene.children];
+      let lastPick = -1;
       for (let i = 0; i < count; i++) {
-        const v = variants[i % variants.length].clone();
+        // RANDOM, AND NOT THE ONE BEFORE IT.
+        //
+        // This was `variants[i % variants.length]`, which is not variety, it
+        // is a cycle: a six-variant collection lays down v0,v1,v2,v3,v4,v5,
+        // v0,v1 in planting order, and wherever two of them land near each
+        // other the repeat is plain. Drawing at random fixes the pattern;
+        // refusing the previous draw stops the one thing random does that a
+        // cycle never does, which is give you the same plant twice running.
+        let pick = Math.floor(Math.random() * variants.length);
+        if (variants.length > 1 && pick === lastPick) {
+          pick =
+            (pick + 1 + Math.floor(Math.random() * (variants.length - 1))) %
+            variants.length;
+        }
+        lastPick = pick;
+        const v = variants[pick]!.clone();
         const box = new THREE.Box3().setFromObject(v);
         v.position.sub(
           new THREE.Vector3(
@@ -8421,9 +10613,46 @@ export function createKidsWorld(
         if (onRoad(x, z, String(file), reach)) {
           continue; // eight tries and still in the way: drop this one
         }
-        wrap.position.set(x, surfaceY(x, z), z);
+        // ROCKS SIT IN THE GROUND, NOT ON IT.
+        //
+        // A boulder resting exactly on the surface reads as a prop dropped
+        // there, because a real one has been there long enough for the soil
+        // to come up around it -- and the ones that have not are the ones
+        // somebody moved. A quarter to a half of it goes under, drawn per
+        // stone so a line of them is not a line of the same stone.
+        //
+        // Height, not a fixed distance: a pebble and a laterite block want
+        // the same FRACTION buried, not the same number of units.
+        const buried = /rock|stone|boulder|laterite/i.test(String(file))
+          ? (box.max.y - box.min.y) * scl * (0.25 + Math.random() * 0.25)
+          : 0;
+        wrap.position.set(x, surfaceY(x, z) - buried, z);
         wrap.rotation.y = Math.random() * Math.PI * 2;
-        wrap.scale.setScalar(scl);
+        // NOTHING GROWS PLUMB.
+        //
+        // Yaw alone leaves every plant standing to attention, and turning a
+        // roughly symmetrical thing about its own axis changes very little
+        // you can see -- which is why a row of them still read as a row of
+        // copies. A few degrees of lean is the cheapest tell that these grew
+        // rather than being placed.
+        wrap.rotation.x = (Math.random() - 0.5) * 0.17; // about +-5 degrees
+        wrap.rotation.z = (Math.random() - 0.5) * 0.17;
+        // AND THE SILHOUETTE CHANGES, not merely the size.
+        //
+        // A uniform scale is the same plant seen from further away: the
+        // outline is identical, and the outline is what the eye picks up in a
+        // cluster. Letting height run separately from girth gives stocky ones
+        // and leggy ones, which read as different plants at a glance.
+        wrap.scale.set(scl, scl * (0.85 + Math.random() * 0.4), scl);
+        // NO PER-PLANT TINT ON THIS PATH.
+        //
+        // It was here, from a five-shade pool, and it is why the world went
+        // from 195 materials to 430 -- and every distinct material is a
+        // shader the renderer compiles before the first frame, which turned
+        // the build into a minutes-long stall. The instanced thickets below
+        // still get their colour variation, because `instanceColor` carries
+        // it per copy without a single extra material. Here, the lean and the
+        // stretch do the work instead.
         // GROUND CLUTTER DOES NOT CAST.
         //
         // `loadModel` turns castShadow on for every mesh of every model it
@@ -8491,6 +10720,229 @@ export function createKidsWorld(
           moodScenery.push(wrap);
         }
       }
+    }
+
+    // ── dense planting where the milestones fall ────────────────────────
+    //
+    // The scatter above spreads things EVENLY, because it draws a distance
+    // for each one independently -- and evenly spread is the one thing
+    // vegetation never is. Taro, fern and grass grow in thickets: a dozen
+    // together in the damp, then nothing for twenty metres.
+    //
+    // Put those thickets where the milestones land. Their exact positions are
+    // not known here (they are placed as the child reaches them, at a spacing
+    // of MIN_STONE_GAP), but the spacing IS -- so a clump every 26 units
+    // falls where the stones do, and a stone standing in deep planting reads
+    // as something the road grew around rather than a marker dropped on it.
+    // ALL AT ONCE, not one after another.
+    //
+    // Each of these was awaited in turn, so ten plants meant ten round trips
+    // laid end to end before the first thicket appeared -- and they are
+    // independent, so there was never a reason to wait. The browser caps its
+    // own parallelism; asking for them together simply lets it.
+    const clusterSpecs = theme.groundClusters ?? [];
+    const clusterGltfs = await Promise.all(
+      clusterSpecs.map(async (spec) => {
+        try {
+          return await loadModel(
+            spec.file.includes("/")
+              ? `${ASSETS}/models/${spec.file}.glb`
+              : `${ASSETS}/models/${theme.sceneryDir}/${spec.file}.glb`,
+          );
+        } catch {
+          return null; // a missing plant must not cost the world its road
+        }
+      }),
+    );
+    for (let ci = 0; ci < clusterSpecs.length; ci++) {
+      const spec = clusterSpecs[ci]!;
+      const gltf = clusterGltfs[ci];
+      if (gltf == null) {
+        continue;
+      }
+      // ONE DRAW CALL PER PLANT, NOT ONE PER PLANT.
+      //
+      // A thicket is only a thicket if there are a lot of them, and at the
+      // counts below that is two to five hundred objects -- which as ordinary
+      // meshes would more than triple the draw calls in the whole world,
+      // measured at 155. They are all the same geometry and the same
+      // material, which is exactly what instancing is for: the road's loose
+      // stones are already drawn this way. Per-instance colour survives it
+      // (`setColorAt`), and so do the lean and the stretch, because both are
+      // in the matrix.
+      let src: THREE.Mesh | null = null;
+      gltf.scene.traverse((n) => {
+        if (src == null && (n as THREE.Mesh).isMesh) {
+          src = n as THREE.Mesh;
+        }
+      });
+      if (src == null) {
+        continue;
+      }
+      const proto = src as THREE.Mesh;
+      // Baked into the geometry: the mesh may sit under a transform of its
+      // own inside the file, and an InstancedMesh has no parent chain to
+      // inherit it from.
+      gltf.scene.updateMatrixWorld(true);
+      const geo = proto.geometry.clone().applyMatrix4(proto.matrixWorld);
+      geo.computeBoundingBox();
+      const gb = geo.boundingBox!;
+      geo.translate(
+        -(gb.min.x + gb.max.x) / 2,
+        -gb.min.y,
+        -(gb.min.z + gb.max.z) / 2,
+      );
+      const half = Math.max(gb.max.x - gb.min.x, gb.max.z - gb.min.z) / 2;
+      const mat = (
+        Array.isArray(proto.material) ? proto.material[0] : proto.material
+      ) as THREE.MeshStandardMaterial;
+
+      const mats: THREE.Matrix4[] = [];
+      const tints: THREE.Color[] = [];
+      let rejected = 0;
+      const m4 = new THREE.Matrix4();
+      const q = new THREE.Quaternion();
+      const e = new THREE.Euler();
+      const pos = new THREE.Vector3();
+      const scl3 = new THREE.Vector3();
+      // Two ways to lay a clump down: at the milestones, or as a continuous
+      // band along the whole road. `stride` picks the second.
+      const step = spec.stride ?? MIN_STONE_GAP;
+      for (let stone = 1; stone * step < TRAIL_END + 26; stone++) {
+        const cx = stone * step;
+        // Both verges, drawn separately: a thicket that matches across the
+        // road is a hedge somebody planted.
+        const verges =
+          spec.verge === "near"
+            ? ([1] as const)
+            : spec.verge === "far"
+              ? ([-1] as const)
+              : ([-1, 1] as const);
+        for (const sideSign of verges) {
+          // A SMALLHOLDING, not a clump.
+          //
+          // Banana and tapioca are crops: somebody dug them in, in rows, and
+          // that is the one thing about them that reads instantly as farmed
+          // rather than wild. Straight enough to be deliberate, never straight
+          // enough to be a fence -- each plant wobbles off its mark by a few
+          // tenths, and each ROW starts at its own offset, because a plot dug
+          // by hand does not line up end to end.
+          if (spec.plot != null) {
+            if (Math.random() > spec.plot.chance) {
+              continue;
+            }
+            const z0 = spec.near + Math.random() * (spec.far - spec.near);
+            // `rowZ` below is a signed offset; the meander is added per plant
+            // so a row follows the road's curve instead of cutting across it.
+            const along = spec.spread / Math.max(1, spec.plot.perLine - 1);
+            for (let row = 0; row < spec.plot.lines; row++) {
+              const rowZ = sideSign * (z0 + row * spec.plot.rowGap);
+              const start = cx - spec.spread / 2 + (Math.random() - 0.5) * 1.2;
+              for (let c = 0; c < spec.plot.perLine; c++) {
+                const px =
+                  start + c * along + (Math.random() - 0.5) * spec.plot.wobble;
+                const pz =
+                  (spec.roadRelative ? meander(px) : 0) +
+                  rowZ +
+                  (Math.random() - 0.5) * spec.plot.wobble;
+                const plo = spec.lo ?? 0.8;
+                const phi = spec.hi ?? 1.25;
+                const scl =
+                  (plo + Math.random() * (phi - plo)) * theme.sceneryScale;
+                if (onRoad(px, pz, spec.file, half * scl * 0.66)) {
+                  rejected += 1;
+                  continue;
+                }
+                e.set(
+                  (Math.random() - 0.5) * 0.12,
+                  Math.random() * Math.PI * 2,
+                  (Math.random() - 0.5) * 0.12,
+                );
+                q.setFromEuler(e);
+                // terrainY, NOT surfaceY.
+                //
+                // `surfaceY` raycasts the ground mesh -- sixteen thousand
+                // triangles a call -- and this pass asks for a height nine
+                // hundred times. That was most of the load time on its own.
+                // The analytic height is the same shape of ground and costs
+                // arithmetic; a plant is not a character and does not need
+                // the mesh's exact answer.
+                pos.set(px, terrainY(px, pz) - 0.06, pz);
+                scl3.set(scl, scl * (0.88 + Math.random() * 0.3), scl);
+                mats.push(m4.clone().compose(pos, q, scl3));
+                const tp = 0.94 + Math.random() * 0.12;
+                tints.push(new THREE.Color(tp, tp, tp));
+              }
+            }
+            continue;
+          }
+          if (spec.chance != null && Math.random() > spec.chance) {
+            continue;
+          }
+          const n =
+            spec.min + Math.floor(Math.random() * (spec.max - spec.min + 1));
+          for (let k = 0; k < n; k++) {
+            // Tight, so they touch and overlap rather than dotting a line.
+            const x = cx + (Math.random() - 0.5) * spec.spread;
+            const depth = spec.near + Math.random() * (spec.far - spec.near);
+            const z = spec.roadRelative
+              ? meander(x) + sideSign * depth
+              : sideSign * depth;
+            const lo = spec.lo ?? 0.7;
+            const hi = spec.hi ?? 1.4;
+            const scl = (lo + Math.random() * (hi - lo)) * theme.sceneryScale;
+            if (onRoad(x, z, spec.file, half * scl * 0.66)) {
+              rejected += 1;
+              continue;
+            }
+            e.set(
+              (Math.random() - 0.5) * 0.22, // lean: nothing grows plumb
+              Math.random() * Math.PI * 2,
+              (Math.random() - 0.5) * 0.22,
+            );
+            q.setFromEuler(e);
+            pos.set(x, terrainY(x, z) - 0.06, z);
+            // Height apart from girth, so the cluster has stocky ones and
+            // leggy ones rather than one outline at several sizes.
+            scl3.set(scl, scl * (0.8 + Math.random() * 0.5), scl);
+            mats.push(m4.clone().compose(pos, q, scl3));
+            const t = 0.94 + Math.random() * 0.12;
+            tints.push(new THREE.Color(t, t, t));
+          }
+        }
+      }
+      if (
+        typeof window !== "undefined" &&
+        window.location.search.includes("perf")
+      ) {
+        // Counted rather than eyeballed: a spec that plants nothing looks
+        // exactly like one that was never reached, and the difference is the
+        // whole of the bug.
+        const w = window as unknown as Record<string, unknown>;
+        const log = (w.__plants ??= []) as string[];
+        log.push(
+          `${spec.file}: ${mats.length} placed, ${rejected} refused by onRoad`,
+        );
+      }
+      if (mats.length === 0) {
+        continue;
+      }
+      const inst = new THREE.InstancedMesh(geo, mat, mats.length);
+      for (let k = 0; k < mats.length; k++) {
+        inst.setMatrixAt(k, mats[k]!);
+        inst.setColorAt(k, tints[k]!);
+      }
+      inst.instanceMatrix.needsUpdate = true;
+      if (inst.instanceColor != null) {
+        inst.instanceColor.needsUpdate = true;
+      }
+      inst.castShadow = false; // ground clutter, as above
+      inst.receiveShadow = true;
+      // Its instances span the whole trail, so the default bounds (taken from
+      // the geometry alone) would cull the lot the moment the origin left the
+      // frustum.
+      inst.frustumCulled = false;
+      scene.add(inst);
     }
 
     // ── the village ─────────────────────────────────────────────────────
@@ -8953,6 +11405,186 @@ export function createKidsWorld(
         // until the pool is stocked. Assigning it from inside the async
         // closure instead left the compiler unable to see that it was ever
         // set, which it reports as calling a value of type `never`.
+        // ── the greenery at each milestone ──────────────────────────
+        //
+        // Loaded once here, planted per stone below. Taro BEHIND the marker
+        // (further from the road, where the tallest of the three frames it),
+        // fern and grass IN FRONT of it, and one hibiscus at about a third of
+        // the stones so the flower is a thing you come across rather than a
+        // fixture.
+        //
+        // Nothing is placed between the stone and the road: the stone stands
+        // 7.54 out and the carriageway is 8.2, so "in front" means a little
+        // further out than the stone, on its road side. The number faces back
+        // down the road and the nearest thing to it is knee-high.
+        {
+          const kinds: {
+            readonly file: string;
+            readonly min: number;
+            readonly max: number;
+            /**
+             * Offset across the road from the stone.
+             *
+             * The camera looks from +z, so POSITIVE is toward it -- in front
+             * of the stone -- and negative is away behind it. I had this the
+             * wrong way round: the taro and the hibiscus were standing in
+             * front of the marker and the grass behind it.
+             *
+             * How far forward is limited, and not by taste: the carriageway
+             * is clear to 8.2 and the stone already stands at 7.54, so the
+             * front row sits at the very edge of the verge. Any further and
+             * the grass is growing in the cart track.
+             */
+            readonly out: number;
+            readonly chance?: number;
+            /** Size range, drawn per plant. */
+            readonly lo: number;
+            readonly hi: number;
+          }[] = [
+            // BACK, tallest furthest out, so the group reads as depth rather
+            // than as a row. Taro takes a wide size range because a stand of
+            // it is always a few big leaves and several half-grown ones --
+            // all one size is what made it look stamped.
+            // A SHRUB, standing to about the stone's own shoulder.
+            //
+            // The milestone measures 2.24 tall and the hibiscus model 1.40,
+            // so at the village's 1.15 scenery scale a factor of 1.15-1.55
+            // puts it at 1.85 to 2.50 -- level with the marker or a little
+            // over it. It was 1.13 to 1.61, which is half the height of the
+            // thing it stands behind and reads as another bit of undergrowth
+            // rather than as the one flowering plant on the road.
+            //
+            // And at one stone in five, not one in three. It is the only
+            // colour in the group, so it earns its place by being the stone
+            // you did not expect it at.
+            {
+              file: "Hibiscus_Chemparathi",
+              min: 1,
+              max: 1,
+              out: -2.3,
+              chance: 0.2,
+              lo: 1.15,
+              hi: 1.55,
+            },
+            // Taller, and across a wider span than anything else here: the
+            // big leaves want to stand over the stone rather than beside it,
+            // and the gap between the smallest and the largest is what makes
+            // a stand of taro read as grown rather than placed.
+            {
+              file: "Taro_Chembu",
+              min: 1,
+              max: 4,
+              out: -1.4,
+              lo: 0.8,
+              hi: 2.1,
+            },
+            // FRONT, at the foot of the stone and low enough to leave the
+            // carved face clear.
+            {
+              file: "Kerala_Fern",
+              min: 4,
+              max: 8,
+              out: 0.25,
+              lo: 0.75,
+              hi: 1.15,
+            },
+            {
+              file: "Kerala_Grass_Tuft",
+              min: 7,
+              max: 14,
+              out: 0.55,
+              lo: 0.7,
+              hi: 1.2,
+            },
+          ];
+          const loaded = await Promise.all(
+            kinds.map(async (k) => {
+              try {
+                return await loadModel(
+                  `${ASSETS}/models/village-plants/${k.file}.glb`,
+                );
+              } catch {
+                return null;
+              }
+            }),
+          );
+          // PLANTED ONCE PER STONE, wherever the call comes from.
+          //
+          // `raise()` re-runs -- it clears the standing stones and puts them
+          // back -- and the greenery is added straight to the scene rather
+          // than tracked alongside them, so without this every re-raise would
+          // lay another thicket on top of the last one.
+          const plantedAt = new Set<number>();
+          makeBasePlants = (x: number, z: number) => {
+            const key = Math.round(x);
+            if (plantedAt.has(key)) {
+              return;
+            }
+            plantedAt.add(key);
+            for (let ki = 0; ki < kinds.length; ki++) {
+              const kind = kinds[ki]!;
+              const src = loaded[ki];
+              if (src == null) {
+                continue;
+              }
+              if (kind.chance != null && Math.random() > kind.chance) {
+                continue;
+              }
+              const n =
+                kind.min +
+                Math.floor(Math.random() * (kind.max - kind.min + 1));
+              for (let i = 0; i < n; i++) {
+                // One per frame, like the base rocks: a dozen clones landing
+                // in one frame is what a child feels as the world catching.
+                later(() => {
+                  const v =
+                    src.scene.children[
+                      Math.floor(Math.random() * src.scene.children.length)
+                    ]?.clone(true);
+                  if (v == null) {
+                    return;
+                  }
+                  // Gathered at the foot of the stone, not ringed round it:
+                  // spread along the road, tight across it.
+                  const px = x + (Math.random() - 0.5) * 3.0;
+                  // Tighter across the road than along it: the group gathers
+                  // at the stone in a band rather than a blob, which is what
+                  // keeps the back row behind and the front row in front.
+                  const pz = z + kind.out + (Math.random() - 0.5) * 0.5;
+                  const box = new THREE.Box3().setFromObject(v);
+                  v.position.sub(
+                    new THREE.Vector3(
+                      (box.min.x + box.max.x) / 2,
+                      box.min.y,
+                      (box.min.z + box.max.z) / 2,
+                    ),
+                  );
+                  const wrap = new THREE.Group();
+                  wrap.add(v);
+                  const scl =
+                    (kind.lo + Math.random() * (kind.hi - kind.lo)) *
+                    theme.sceneryScale;
+                  wrap.position.set(px, surfaceY(px, pz), pz);
+                  wrap.rotation.set(
+                    (Math.random() - 0.5) * 0.2,
+                    Math.random() * Math.PI * 2,
+                    (Math.random() - 0.5) * 0.2,
+                  );
+                  wrap.scale.set(scl, scl * (0.85 + Math.random() * 0.4), scl);
+                  wrap.traverse((nd) => {
+                    const mesh = nd as THREE.Mesh;
+                    if (mesh.isMesh) {
+                      mesh.castShadow = false;
+                      mesh.receiveShadow = true;
+                    }
+                  });
+                  scene.add(wrap);
+                });
+              }
+            }
+          };
+        }
+
         makeBaseRocks = (x: number, z: number) => {
           if (pool.length === 0) {
             return;
@@ -9015,14 +11647,28 @@ export function createKidsWorld(
       await (async () => {
         try {
           const g = await loadModel(
-            `${ASSETS}/models/village-stone/Ancient_Milestone_Blank.glb`,
+            `${ASSETS}/models/village-stone/Milestone_Vazhivilakku.glb`,
           );
           if (g == null || disposed) {
             return;
           }
           const src = g.scene;
           makeMilestone = (n: number) => {
-            const wrap = fitToHeight(src.clone(true), 2.0);
+            // TALLER, BECAUSE IT IS NOW TWO STONES IN ONE.
+            //
+            // The marker used to be fitted to 2.0 and the lamp beside it to
+            // 2.6. Welded, the milestone shaft is the bottom 56% of the
+            // model, so fitting the whole thing to 2.0 would have shrunk the
+            // face the number is carved on to just over a unit — the number
+            // is the entire point of a milestone, and it would have been the
+            // part that paid for the lamp.
+            //
+            // 4.2 against a nine-year-old's 4.55 (see `castHeight`): the
+            // number sits at a child's chest and the flame just above their
+            // head, which is where a lamp lit so the stone can be read has to
+            // be. At 3.0 it came barely past their waist and the whole thing
+            // read as a kerbstone.
+            const wrap = fitToHeight(src.clone(true), 4.2);
             // WIDENED TO THE DESIGN'S PROPORTION.
             //
             // The extruded slab this replaces is 0.54 as wide as it is tall,
@@ -9032,13 +11678,13 @@ export function createKidsWorld(
             // number down with it. Stretched on X to the slab's proportion;
             // a weathered stone carries a little anisotropy without
             // complaining, and the alternative is re-cutting the asset.
-            const MS_RATIO = 0.54;
-            const raw = measureBox(wrap);
-            const rw = raw.max.x - raw.min.x;
-            const rh = raw.max.y - raw.min.y;
-            if (rw > 1e-6 && rh > 1e-6) {
-              wrap.scale.x *= (MS_RATIO * rh) / rw;
-            }
+            // NO STRETCHING HERE ANY MORE. The blank was a narrow post and
+            // the code widened it on X at runtime to give four digits a face
+            // to sit on. That trick cannot survive the lamp: the same scale
+            // would take the head with it and flatten the carved opening into
+            // a letterbox. The width is cut into the asset instead -- the
+            // slab flares out below the lamp -- so what loads is already the
+            // right shape and nothing here has to distort it.
             // The plate is measured onto THIS stone rather than sized by
             // hand — and AFTER the widening, so it fills the face it is cut
             // into instead of the one the model shipped with.
@@ -9054,10 +11700,25 @@ export function createKidsWorld(
             plate.scale.setScalar((w * 0.78) / 0.96);
             plate.position.set(
               (box.min.x + box.max.x) / 2 - wrap.position.x,
-              box.min.y + h * 0.56 - wrap.position.y,
+              // LOW ON THE SLAB, where the stone is still at its full width.
+              // 0.56 was the fraction that sat the number high on a plain
+              // marker's face; on the welded stone that lands in the lamp
+              // niche, and anything above about a quarter of the height is
+              // into the flare, where the face is narrowing away behind the
+              // carving. Measured against the profile: the stone holds 94% of
+              // its width to z=0.26 and is down to 88% by z=0.29.
+              box.min.y + h * 0.26 - wrap.position.y,
               box.max.z + 0.012 - wrap.position.z,
             );
+            // Flagged so the lamp search skips it — see `lightTheNiche`.
+            plate.userData.carving = true;
             wrap.add(plate);
+            // The lamp is NOT lit here. `lightTheNiche` measures the flame in
+            // world space, and a stone fresh out of this factory has not been
+            // positioned yet — every caller sets `position` on what it gets
+            // back. Lighting it here put all of them at the world origin: a
+            // pool of lamplight in the middle of the road and every niche
+            // dark. It is lit at each call site, once the stone is standing.
             return wrap;
           };
           // The stones already standing behind the child were built from the
@@ -9068,143 +11729,12 @@ export function createKidsWorld(
           // Keep the slab. Nothing to say: it already works.
         }
       })();
-      {
-        // ONE FAILED FETCH MUST NOT COST THE WHOLE SESSION.
-        //
-        // This is a single load whose result is used for the rest of the
-        // visit, so losing it loses every lamp on the road — and it does get
-        // lost: a world build asks for thirty-odd files at once and the
-        // server answers the odd one 503. Measured on a freshly restarted
-        // server, seven of the eight stones came back 200 and this one did
-        // not, which is exactly why the road had no lamps while every rock
-        // was in place.
-        //
-        // So it keeps trying with a widening pause, and the places it could
-        // not serve are REMEMBERED rather than skipped: when the model lands,
-        // the lamps that were due get planted where they should have been. A
-        // late lamp nobody notices; a missing one is a dark road.
-        const pending: { x: number; z: number }[] = [];
-        let src: THREE.Object3D | null = null;
-        let lit = false;
-        const plant = (x: number, z: number) => {
-          if (src == null) {
-            pending.push({ x, z });
-            return;
-          }
-          // Built over the frames after the lesson starts — see `later`. The
-          // lamp is 26 units up the road from where the child is standing
-          // when it is asked for, so a few frames is nothing.
-          later(() => plantNow(x, z));
-        };
-        const plantNow = (x: number, z: number) => {
-          if (src == null) {
-            return;
-          }
-          const wrap = fitToHeight(src.clone(true), 2.6);
-          wrap.position.set(x, surfaceY(x, z), z);
-          // FACING THE ROAD, which is the whole point of a road lamp.
-          //
-          // The flame is a separate mesh on the model's +z face — 0.13 to
-          // 0.16 deep, against a post 0.46 across. Turning the post by PI put
-          // that face away from the road, so the lit side pointed at the
-          // empty field and a child walking past saw the blank back of a
-          // stone. The lamps stand on the far verge at negative z and the
-          // road is at zero, so +z IS towards it: no rotation at all, give or
-          // take the few degrees that keep a row of them from looking
-          // machined.
-          wrap.rotation.y = (Math.random() - 0.5) * 0.35;
-          // Aged on where it stands, so each lamp keeps its own weathering
-          // across a rebuild the way the milestones keep theirs.
-          weatherStone(wrap, Math.round(Math.abs(x) * 3) + 1);
-          scene.add(wrap);
-          characterRoots.add(wrap);
-          const box = measureBox(wrap);
-          // ON THE MODEL'S OWN FLAME, found rather than assumed.
-          //
-          // This used to sit at a measured 0.88 of the height, on the centre
-          // line, which was right for the stone that shipped first: its lamp
-          // was the flared cap at the top. The asset was remade with the lamp
-          // as a triangular carved niche 58% of the way up the FRONT face,
-          // and the light carried on burning in mid-air above it — the niche
-          // went dark and stopped reading as a lamp at all.
-          //
-          // The model carries its own little emissive flame mesh, so the
-          // light is placed on that: find the emissive child, take the centre
-          // of its box. An asset that moves its lamp again now brings the
-          // light with it.
-          const niche = new THREE.Box3();
-          let found = false;
-          wrap.traverse((o) => {
-            const m = o as THREE.Mesh;
-            if (!m.isMesh) return;
-            const mats = Array.isArray(m.material) ? m.material : [m.material];
-            const glows = mats.some((mm) => {
-              const sm = mm as THREE.MeshStandardMaterial | undefined;
-              return sm?.emissive != null && sm.emissive.getHex() !== 0x000000;
-            });
-            if (!glows) return;
-            const bb = new THREE.Box3().setFromObject(m);
-            if (bb.isEmpty()) return;
-            if (found) niche.union(bb);
-            else niche.copy(bb);
-            found = true;
-          });
-          const flame = found
-            ? niche.getCenter(new THREE.Vector3())
-            : new THREE.Vector3(
-                (box.min.x + box.max.x) / 2,
-                box.min.y + (box.max.y - box.min.y) * 0.88,
-                (box.min.z + box.max.z) / 2,
-              );
-          makeLamp(flame.x, flame.y, flame.z, {
-            // Small: a flame in an opening, not a glow around a post.
-            size: 0.8,
-            peak: 0.92,
-            // EVERY roadside lamp is lit for real. A lamp that puts no
-            // pool of light on the road is a decoration of a lamp, and
-            // they stand one per milestone — far enough apart that only
-            // one or two are ever near enough to matter.
-            lit: 9,
-            // AIMED AT THE ROAD. The lamps stand on the far verge at
-            // negative z with the road at zero, so the opening faces +z
-            // and the light goes with it; the closed back of the stone
-            // stays dark instead of glowing through it.
-            aim: new THREE.Vector3(flame.x, 0, flame.z + 9),
-          });
-          lit = true;
-        };
-        makeVazhi = plant;
-        void (async () => {
-          for (let attempt = 0; attempt < 4 && !disposed; attempt++) {
-            if (attempt > 0) {
-              await new Promise((r) => setTimeout(r, 600 * attempt));
-            }
-            if (disposed) {
-              return;
-            }
-            try {
-              const g = await loadModel(
-                `${ASSETS}/models/village-stone/Stone_Vazhivilakku.glb`,
-              );
-              if (g == null || disposed) {
-                return;
-              }
-              src = g.scene;
-              // Everything the road wanted while it was still loading.
-              const due = pending.splice(0, pending.length);
-              for (const at of due) {
-                plant(at.x, at.z);
-              }
-              return;
-            } catch {
-              // Try again shortly; the failures here are transient.
-            }
-          }
-          console.warn(
-            "[village] the roadside lamp never loaded — the road will be dark",
-          );
-        })();
-      }
+      // THE ROADSIDE LAMP USED TO BE LOADED HERE, as its own model, with a
+      // retry loop of its own and a list of places it owed a lamp to if the
+      // fetch was still in flight when a stone went in. All of that is gone:
+      // the vazhivilakku's head is welded onto the milestone from the lamp
+      // niche up, so the lamp arrives with the marker, in the same fetch, and
+      // cannot be late, missing, or a metre out of line with it.
       // The pair still exists for anything that asks where the goal is, but is
       // never seen - the planted stones are what the child looks at.
       flagPole = new THREE.Mesh(slabGeo, stoneMat);
@@ -9268,8 +11798,14 @@ export function createKidsWorld(
             stone.position.set(ax, surfaceY(ax, sz), sz);
             stone.rotation.y = at.spin;
             scene.add(stone);
+            lightTheNiche(stone);
             behind.push(stone);
             makeBaseRocks?.(ax, sz);
+            // The stones already standing when the session opens get the same
+            // planting as the ones reached later -- the first one especially,
+            // because it is in the opening frame and a bare marker there sets
+            // the tone for every one after it.
+            makeBasePlants?.(ax, sz);
             milestones.set(Math.round(at.sx), stone);
             // The road ahead measures from the last stone actually standing,
             // which is the one at the child's shoulder — without this the
@@ -9279,19 +11815,6 @@ export function createKidsWorld(
         };
         raise();
         rebuild.behind = raise;
-        // AND ONE BESIDE THE STONE AT YOUR SHOULDER.
-        //
-        // Every other lamp goes in with a milestone as that milestone is
-        // planted, and the stone a child starts beside is planted here
-        // instead — so without this the one marker they can see at the
-        // opening is the only one standing in the dark on its own.
-        if (makeVazhi != null) {
-          const fx = runStart - 1.4;
-          const fz = meander(fx) - roadClear * 0.92;
-          const fax = laneAlignedX(fx, fz, LANE);
-          makeVazhi(fax, fz);
-          makeBaseRocks?.(fax, fz);
-        }
       }
 
       // THE NUMBER, CUT INTO THE FACE.
@@ -9327,30 +11850,38 @@ export function createKidsWorld(
           //   1. the shaded upper lip, where the stone overhangs the groove,
           //   2. the lit lower face the sun reaches,
           //   3. a soft dark core between them, because a groove is a hole.
+          //
+          // CUT DEEPER THAN IT LOOKS IT NEEDS TO BE. By day the stone is pale
+          // granite and the lit face of the groove is nearly the same value
+          // as it, so the number came down to a faint shadow a child had to
+          // already know was there. What carries a carving at a distance is
+          // the DARK — the overhang and the floor — so both are taken down
+          // most of the way to black and the lip is thrown a little further,
+          // which is the same thing a deeper chisel would have done.
           const cut = (text: string, cx: number, cy: number, font: string) => {
             g2.font = font;
             // 3 - the depth, blurred, so the cut has a floor rather than an
             // outline
             g2.save();
-            g2.filter = "blur(2.5px)";
-            g2.fillStyle = "rgba(26,30,24,0.7)";
+            g2.filter = "blur(3px)";
+            g2.fillStyle = "rgba(16,19,14,0.9)";
             g2.fillText(text, cx, cy);
             g2.restore();
             // 1 - the shaded lip
-            g2.fillStyle = "rgba(30,34,28,0.9)";
-            g2.fillText(text, cx - 3, cy - 3);
+            g2.fillStyle = "rgba(20,24,18,0.98)";
+            g2.fillText(text, cx - 3.6, cy - 3.6);
             // 2 - the lit face
-            g2.fillStyle = "rgba(236,221,163,0.97)";
-            g2.fillText(text, cx + 1.6, cy + 1.6);
+            g2.fillStyle = "rgba(246,238,202,1)";
+            g2.fillText(text, cx + 1.8, cy + 1.8);
           };
           // A carved rule under the arch, the way the real ones separate the
           // place from the distance.
           g2.save();
           g2.filter = "blur(1.5px)";
-          g2.fillStyle = "rgba(30,34,28,0.75)";
+          g2.fillStyle = "rgba(20,24,18,0.88)";
           g2.fillRect(cvs.width / 2 - 96, 78, 192, 7);
           g2.restore();
-          g2.fillStyle = "rgba(236,221,163,0.85)";
+          g2.fillStyle = "rgba(246,238,202,0.92)";
           g2.fillRect(cvs.width / 2 - 95, 80, 190, 3);
           // The word, small and weathered, then the number large enough to
           // read from the road.
@@ -9711,7 +12242,28 @@ export function createKidsWorld(
     //
     // `runSlices` is deliberately above this: it is the incremental BUILDER,
     // and holding that would mean the world never finished loading at all.
-    const elapsed = clock.getDelta();
+    // AND NEVER MORE THAN A FIFTEENTH OF A SECOND IN ONE FRAME.
+    //
+    // `getDelta` reports real time since the last frame, and there are two
+    // ordinary ways for that to come back enormous: the tab was in the
+    // background, where the browser stops calling `requestAnimationFrame`
+    // altogether, or the machine hitched on a GLB finishing its upload.
+    // Either way the next frame arrives holding ten or twenty seconds.
+    //
+    // Everything timed on this road divides by a duration and clamps, so one
+    // huge delta does not slow anything down — it SKIPS it. Nightfall is
+    // `min(gap, dt / 4.5)`, so a single twenty-second frame crosses the whole
+    // thing at once: the child comes back to the tab, or the world finishes
+    // loading, and the four-and-a-half-second sunset they were meant to watch
+    // has already happened. The same frame completes every cast cross-fade
+    // and every tree dissolve, which is the rest of the effect.
+    //
+    // So the clock is read in full and SPENT at up to a 15fps step. A world
+    // that was not being looked at resumes where it was rather than fast-
+    // forwarding to where it would have been, which is what the hold below
+    // already does for the loading screen and what a typing game wants: the
+    // child was not typing while the tab was hidden either.
+    const elapsed = Math.min(clock.getDelta(), 1 / 15);
     const dt = held ? 0 : elapsed;
     // Turn the next card over — see stepReveal. On the world's own clock, so
     // it stops with everything else when the tab is hidden.
@@ -9761,8 +12313,8 @@ export function createKidsWorld(
         }
         shade *= drift * cloudDeep;
       }
-      sun.intensity = sunBase * (1 - shade);
-      hemi.intensity = hemiBase * (1 + shade * 0.34);
+      sun.intensity = sunLit * (1 - shade);
+      hemi.intensity = hemiLit * (1 + shade * 0.34);
       // The letter cards drift with everything else — their box and their
       // printed face are both lit, so the two real lights above carry them.
       // Their PAINTED shadow is not lit by anything, so it is dimmed by hand:
@@ -9779,15 +12331,69 @@ export function createKidsWorld(
       // the weather stopped, for as long as it stays stopped.
       cloudAt = -1;
       cloudWait = 20 + Math.random() * 28;
-      sun.intensity = sunBase;
-      hemi.intensity = hemiBase;
+      sun.intensity = sunLit;
+      hemi.intensity = hemiLit;
       for (const t of wordTiles) {
         (t.shadow.material as THREE.MeshBasicMaterial).opacity =
           (t.shadow.userData.shadowBase as number) ?? tileShadowBase;
       }
     }
 
+    // ── the sky, crossing over ───────────────────────────────────────────
+    //
+    // Colour, fog and exposure walk to whatever the last `applySky` asked
+    // for, over the same second and a half the rest of nightfall takes. The
+    // three intensities are eased on their own numbers rather than through a
+    // colour lerp, and the colours go through `lerp` in linear space, which
+    // is what stops a blue-to-amber crossing passing through grey.
+    {
+      const k = Math.min(1, dt / NIGHTFALL_S);
+      skyNow.sun.lerp(skyTo.sun, k);
+      skyNow.hemi.lerp(skyTo.hemi, k);
+      skyNow.ground.lerp(skyTo.ground, k);
+      skyNow.fog.lerp(skyTo.fog, k);
+      skyNow.exposure += (skyTo.exposure - skyNow.exposure) * k;
+      skyNow.env += (skyTo.env - skyNow.env) * k;
+      skyNow.bg += (skyTo.bg - skyNow.bg) * k;
+      skyNow.top.lerp(skyTo.top, k);
+      skyNow.bottom.lerp(skyTo.bottom, k);
+      skyNow.stars += (skyTo.stars - skyNow.stars) * k;
+      writeSky(skyNow);
+      // And the backdrop with them. Guarded inside: for all but the few
+      // seconds of a crossing the two gradient stops are standing still and
+      // this costs one hex comparison each.
+      drawFlatSky();
+      // The canvas grade rides with it. Re-applied only when it has actually
+      // moved: it writes a CSS filter string, and setting one every frame
+      // buys a style recalculation a frame for a number that is not changing.
+      if (Math.abs(nightLookTo - nightLook) > 0.004) {
+        nightLook += (nightLookTo - nightLook) * k;
+        applyLook();
+      }
+    }
+
     // ── the night, breathing ─────────────────────────────────────────────
+    // The key light walks to whatever the last sky asked for, at the rate
+    // the night blend runs — see `sunLit`. Linear and clamped rather than an
+    // exponential approach, so it actually arrives instead of creeping at
+    // the last per cent for the rest of the session.
+    {
+      const rate = dt / NIGHTFALL_S;
+      for (const [now, want, set] of [
+        [sunLit, sunBase, (v: number) => (sunLit = v)],
+        [hemiLit, hemiBase, (v: number) => (hemiLit = v)],
+      ] as const) {
+        const gap = want - now;
+        // Scaled by the size of the whole change, or a small adjustment
+        // would crawl and a large one would still take 1.8s.
+        set(
+          now +
+            Math.sign(gap) *
+              Math.min(Math.abs(gap), Math.abs(want) * rate + 0.02),
+        );
+      }
+    }
+
     // One eased blend drives the whole layer — mist, stars, moon, fireflies,
     // eyes — so nightfall arrives over a couple of seconds as the cast
     // cross-fades, instead of everything snapping at once.
@@ -9796,7 +12402,7 @@ export function createKidsWorld(
       const target = nightNow ? 1 : 0;
       nightBlend +=
         Math.sign(target - nightBlend) *
-        Math.min(Math.abs(target - nightBlend), dt / 1.8);
+        Math.min(Math.abs(target - nightBlend), dt / NIGHTFALL_S);
       // ONCE, PART-WAY INTO THE FADE. Not when the flag flips — the world is
       // still broad daylight at that instant and a line about the lamps being
       // lit would arrive before any of them were. A third of the way through
@@ -9831,18 +12437,50 @@ export function createKidsWorld(
         // it, which is a question about x alone.
         if (milestoneGlow.length > 0) {
           const px = player?.wrap.position.x ?? 0;
+          // HALFWAY IS WHEN IT CATCHES THE LIGHT, ARRIVING IS WHEN IT IS LIT.
+          //
+          // The distance was a fixed 8 units either side, which made the glow
+          // a property of the stone rather than of the walk: on a short
+          // passage the number was already burning at the start line, and on
+          // a long one it stayed dark until the last few steps. Measured
+          // against the stretch instead, it means the same thing every time —
+          // nothing until the child is half way to the next stone, then a
+          // steady climb, and full brightness as they draw level with it.
+          //
+          // BEHIND THEM IT GOES OUT IN HALF THAT AGAIN — the stone they have
+          // just passed keeps its number readable for a quarter of the
+          // stretch and is dark by the end of it. The number is what the
+          // marker is for, so it does not blink out the moment they draw
+          // level: they walk on past a stone that is still legible over their
+          // shoulder, and it fades as they leave it.
+          //
+          // Both distances come off `runLen` rather than being fixed, because
+          // a fixed 8 units made the glow a property of the stone instead of
+          // the walk: on a short passage the number was already burning at
+          // the start line, and on a long one it stayed dark until the last
+          // few steps. Measured against the stretch it means the same thing
+          // every time, whatever length the passage turns out to be.
+          //
+          // Twice as long coming as going, on purpose. A number you are
+          // walking towards is an announcement and wants the approach; one
+          // you have passed is a receipt, and lingering on it would have the
+          // road behind lit as brightly as the road ahead.
+          const half = Math.max(4, runLen / 2);
           for (const g of milestoneGlow) {
-            // WITHIN ARM'S REACH OF THE STONE, not within sight of it.
-            //
-            // This was 22 units, which is most of the visible road — so every
-            // stone on screen was lit most of the time and the glow said
-            // nothing. At 8 it is what it was meant to be: the number comes
-            // up as the child draws level with the stone and is dark again a
-            // few steps later, so it reads as somebody arriving at it.
+            const ahead = g.obj.matrixWorld.elements[12] - px;
             const near =
-              1 -
-              Math.min(1, Math.abs(g.obj.matrixWorld.elements[12] - px) / 8);
-            // Eased in, so it comes up as they approach rather than
+              ahead > 0
+                ? 1 - Math.min(1, ahead / half)
+                : 1 - Math.min(1, -ahead / (half / 2));
+            // STEADY, not guttering. It was tied to the lamp's own flicker
+            // for a while — same rate, same phase, on the argument that the
+            // light falling on the number comes out of the niche above it.
+            // It reads worse than it sounds: the carving is the one thing on
+            // the road a child is trying to READ, and a number that breathes
+            // while they are reading it is a number that will not sit still.
+            // The flame above it still gutters; the figure it lights does not.
+            //
+            // Eased on approach, so it comes up as they walk rather than
             // switching on at a threshold.
             g.mat.emissiveIntensity = nightBlend * near * near * 1.5;
           }
@@ -9888,7 +12526,15 @@ export function createKidsWorld(
               Math.sin(t * at.rate + at.phase) * 0.62 +
               Math.sin(t * at.rate * 2.37 + at.phase * 1.7) * 0.38;
             const gutter = 1 - 0.3 * (0.5 - 0.5 * n);
-            spot.intensity = 6.4 * nightBlend * fade * gutter;
+            // 5.1, not 6.4. It is a wick in a stone niche lighting a stretch
+            // of road, and at 6.4 -- twice what the child's own lamp carries,
+            // over a range thirteen times longer -- it stopped being that and
+            // became the only light in the frame, flattening everybody who
+            // walked into it. Down a fifth: still reads the road, no longer
+            // overrules the lamp in her hand.
+            // 5.1, not 6.4: a wick in a stone niche lighting a stretch of
+            // road, not the only light in the frame.
+            spot.intensity = 5.1 * nightBlend * fade * gutter;
           }
         }
         for (const L of lamps) {
@@ -9974,8 +12620,46 @@ export function createKidsWorld(
       // this is the height of the ground actually under their feet, ruts and
       // all.
       p.y = terrainY(p.x, p.z) + jumpY - restLift();
-      // Keep the lamp just above and in front of the runner.
-      heroLamp.position.set(p.x + 0.9, p.y + 2.1, p.z + 1.6);
+      // Just above and in front of the runner — unless they are passing a
+      // milestone, in which case the light is coming out of its niche and
+      // the lamp slides over to it. See `lampFrom`.
+      const lit = lampFrom(TMP_HERO.set(p.x + 0.9, p.y + 2.1, p.z + 1.6), p);
+      heroLamp.position.copy(TMP_HERO);
+      // SQUARED, so the flame gets there first.
+      //
+      // The niche and its pool on the ground come up linearly with the blend;
+      // the light on the cast comes up behind them. Half way through the
+      // fade the lamp is already burning at half and the road is only a
+      // quarter lit, which is the order it happens in — somebody lights a
+      // lamp, and then there is light.
+      // NOT SQUARED ANY MORE, once the milestone is involved.
+      //
+      // The square was there so the niche flame arrives before the light on
+      // the cast -- somebody lights a lamp, and THEN there is light -- and
+      // that reading is right at the moment it is lit. It is wrong for the
+      // rest of the time: at dusk, nightBlend 0.7 gave the child's lamp 0.49
+      // while the niche got the full 0.7, so the one light meant to show her
+      // face was the one being held back. The square now applies only to the
+      // part of the lamp that is NOT the milestone lift.
+      // The square is kept for the lamp's own light -- the niche flame should
+      // arrive before the light on the cast -- but NOT for the milestone
+      // lift. At dusk (0.7) the squared term gave her lamp 0.49 while the
+      // niche got the full 0.7, holding back the one light meant to show her.
+      heroLamp.intensity =
+        heroLampBase * (nightBlend * nightBlend + lit * LAMP_LIFT * nightBlend);
+      // 5.2 to match the lamp as it is BUILT. This line is evaluated every
+      // frame and used to rebuild the range from a hardcoded 3.4, quietly
+      // overriding the constructor -- so raising the reach there did nothing
+      // at all until this agreed with it. A 4.7-unit child needs more than
+      // 3.4 of range before the light reaches her head.
+      // 5.2 to match the lamp as it is BUILT. This line runs every frame and
+      // rebuilt the range from a hardcoded 3.4, quietly overriding the
+      // constructor -- so raising the reach there did nothing until this
+      // agreed with it.
+      heroLamp.distance = 5.2 + lit * LAMP_REACH;
+      // Amber as it arrives, so she is lit by the same fire as the road she
+      // is standing on — see `LAMP_AMBER`.
+      heroLamp.color.copy(LAMP_WHITE).lerp(LAMP_AMBER, lit * 0.85);
       // The skeleton hero still runs on its feet, but with a faint hover and
       // bob so it reads as a little spooky — not fully floating.
       if (playerGhostly) {
@@ -10078,6 +12762,12 @@ export function createKidsWorld(
       const guideAdvance =
         guidePrevPlayerX == null ? 0 : playerX - guidePrevPlayerX;
       guidePrevPlayerX = playerX;
+      // Make room for the guide, or take it back, before anybody is placed.
+      {
+        const want = guideInTheirSpace() ? 1 : 0;
+        companionRoom += (want - companionRoom) * Math.min(1, dt * 1.2);
+        respaceCompanions();
+      }
       for (const follower of followers) {
         if (follower.guide) {
           guideGap(follower, dt, guideAdvance, moveW > 0.25);
@@ -10108,6 +12798,7 @@ export function createKidsWorld(
         let wagCool = follower.s.wagCool;
         let wagW = follower.s.wagW;
         let dogAct = follower.s.dogAct;
+        let dogSettleAt = follower.s.dogSettleAt;
         let dogT = follower.s.dogT;
         let dogRested = follower.s.dogRested;
         let dogSettled = follower.s.dogSettled;
@@ -10125,15 +12816,20 @@ export function createKidsWorld(
         let dogPrevSeenX = follower.s.dogPrevSeenX;
         let dogTurn = follower.s.dogTurn;
         let dogTurnT = follower.s.dogTurnT;
+        let idleAlt = follower.s.idleAlt;
+        let idleFade = follower.s.idleFade;
+        let idleNext = follower.s.idleNext;
         let turnBy = follower.s.turnBy;
         let turnSpin = follower.s.turnSpin;
         let turnSpun = follower.s.turnSpun;
         let turnSpinT = follower.s.turnSpinT;
         let turnSpinDur = follower.s.turnSpinDur;
         let guideLookBack = follower.s.guideLookBack;
+        let guideEverMoved = follower.s.guideEverMoved;
         let sitAct = follower.s.sitAct;
         let sitPhase = follower.s.sitPhase;
         let sitT = follower.s.sitT;
+        const guideRest = follower.s.guideRest;
         let dogAhead = follower.s.dogAhead;
         let dogSpeed = follower.s.dogSpeed;
         let dogPrevX = follower.s.dogPrevX;
@@ -10173,7 +12869,13 @@ export function createKidsWorld(
         // written into the replay so the replay stays the one truth about
         // where the pair are on the trail.
         cw.position.x = seen.x - FOLLOW_GAP + dogOffX + dogAhead;
-        cw.position.z = LANE + SIDE + dogOffZ;
+        // The guide keeps his own side -- see `setGuide`. Without this the
+        // line below put every follower, him included, on the companions'
+        // side at their FULL offset, quietly overriding the half-offset he
+        // was spawned on.
+        cw.position.z = follower.guide
+          ? LANE - SIDE * 1.1 + dogOffZ
+          : LANE + SIDE + dogOffZ;
         // Same as the player: the ground under IT, which is not the same
         // height as the ground under them once it has pottered off to one
         // side of the lane — and minus the same gait lift, or the companion
@@ -10184,15 +12886,22 @@ export function createKidsWorld(
           const l = companion.lifts;
           const moving = l.walk * (1 - seen.runShare) + l.run * seen.runShare;
           const lift = l.idle * (1 - seen.moveW) + moving * seen.moveW;
-          // AND BEDDED IN, the same 0.06 every prop gets from `surfaceY`.
+          // AND BEDDED IN, at least the 0.06 every prop gets from `surfaceY`.
           //
           // Characters read the terrain directly and so sit exactly ON it,
           // while every stone and plant around them is sunk slightly into
-          // it. On a child that difference is nothing; on a puppy 1.5 units
-          // tall it is four per cent of the animal, and it reads as the dog
-          // hovering just clear of the road it is walking on. A light animal
-          // on soft mud should sit into it, not perch on top.
-          cw.position.y = terrainY(cw.position.x, cw.position.z) - lift - 0.06;
+          // it. On a child that difference is nothing; on a dog it reads as
+          // the animal hovering just clear of the road it is walking on. A
+          // light animal on soft mud should sit into it, not perch on top.
+          //
+          // A QUADRUPED NEEDS MORE OF IT THAN A CHILD DOES, for two reasons.
+          // Its contact patches are four paws rather than two shoes, so each
+          // one is small and a gap under it is easy to see against the road
+          // behind. And the dog has since grown from 1.5 units to 1.9, so a
+          // flat 0.06 is a smaller share of it than when that number was
+          // chosen -- it was four per cent of the animal and is now three.
+          const bed = companion.quadruped ? 0.13 : 0.06;
+          cw.position.y = terrainY(cw.position.x, cw.position.z) - lift - bed;
         }
         // How far it travelled this frame, for next frame's gait. One frame
         // of lag, which at sixty a second is invisible, and it means the legs
@@ -10259,7 +12968,7 @@ export function createKidsWorld(
             dogLead -= advanceX;
             if (dogLead <= 0.5) {
               dogTravel = "heel";
-              dogNextRun = 12 + Math.random() * 22;
+              dogNextRun = dogWait(12 + Math.random() * 22);
             }
           }
           dogAhead = Math.max(0, dogLead);
@@ -10310,7 +13019,28 @@ export function createKidsWorld(
         // and stand in the same instant, every frame.
         if (follower.guide) {
           const R = companion.rest;
-          if (sitPhase === "none" && dogTravel === "guideWait") {
+          // FACING THEM FIRST. He has stopped for this child, so he waits
+          // looking at them rather than at the road -- and he turns before he
+          // goes down, not after. Sitting first and rotating afterwards spins
+          // him on his backside, and the turn clip and the sit both claim the
+          // whole body, so they cannot run together anyway.
+          const faceChild = follower.gap < 0 ? Math.PI * 1.5 : Math.PI / 2;
+          let toChild = faceChild - cw.rotation.y;
+          while (toChild > Math.PI) toChild -= Math.PI * 2;
+          while (toChild < -Math.PI) toChild += Math.PI * 2;
+          if (
+            sitPhase === "none" &&
+            dogTravel === "guideWait" &&
+            // NOT WHILE THEY ARE COMING.
+            //
+            // He now holds `guideWait` after standing up, so that he keeps
+            // the ground he walked to rather than sliding back -- but that
+            // left this condition still true the frame after he stood, and
+            // it sat him straight back down. From outside, a guide who never
+            // got up at all. He may only sit while the child is still.
+            seen.moveW < 0.2 &&
+            (!guideRest || Math.abs(toChild) < 0.35)
+          ) {
             const a = R.sitDown ?? R.sitIdle;
             if (a != null) {
               a.reset();
@@ -10336,9 +13066,22 @@ export function createKidsWorld(
               sitPhase = "sat";
             }
           } else if (sitPhase === "sat") {
-            // They have drawn level — see `guideGap`, which stops holding
-            // station once the gap closes.
-            if (dogTravel !== "guideWait") {
+            // UP THE INSTANT THEY TYPE, and off the LIVE movement.
+            //
+            // `seen` is the follow buffer — where the child was, some frames
+            // ago — and that is the right thing for anybody walking BEHIND
+            // them, which is what it was written for. The guide waits AHEAD.
+            // There is no future in a buffer of the past, so the sample he
+            // reads while holding station is not the child starting to move;
+            // he stayed sitting until his travel state changed, which only
+            // happens once they have walked all the way up to him. So he sat
+            // there while they came, which is the opposite of a guide.
+            //
+            // `moveW` is the player's own, this frame. Everything else about
+            // him still keys off the buffer — only standing up had to be
+            // immediate, because it is a reaction to them rather than a thing
+            // he does in their footsteps.
+            if (dogTravel !== "guideWait" || moveW > 0.2) {
               const a = R.standFromSit;
               if (a != null) {
                 a.reset();
@@ -10433,17 +13176,27 @@ export function createKidsWorld(
             // nap because it was halfway through one.
             dogRested = 0;
             dogSettled = -1;
+            dogSettleAt = 75 + Math.random() * 30;
             dogT = 0;
             dogGap = 0;
             dogWander = 0;
           } else {
             dogRested += dt;
-            // SETTLING is checked every frame, not on the trick clock — it is
-            // a progression driven by how long they have been down, and it
-            // only ever goes forward. Down at eighteen seconds, asleep past
-            // forty; a dog that stands up between stages has not settled at
-            // all, so this never steps backwards on its own.
-            const wantStage = dogRested > 40 ? 1 : dogRested > 18 ? 0 : -1;
+            // SETTLING IS AN INTERLUDE, NOT THE DESTINATION.
+            //
+            // It used to take over at eighteen seconds and never let go, so
+            // a child who sat for two minutes watched their dog lie down
+            // after eighteen of them and do nothing else for the rest — the
+            // tail was the only thing still moving, which is exactly how it
+            // looked. Pottering IS the behaviour; lying down is one of the
+            // things a pottering dog occasionally does.
+            //
+            // So: over a minute of sniffing and stretching first, and the
+            // pose itself is timed rather than held (see `dogT` below), after
+            // which it gets up and carries on. Sleep is kept for a genuinely
+            // long sit, where a dog really would be out.
+            const wantStage =
+              dogRested > 150 ? 1 : dogRested > dogSettleAt ? 0 : -1;
             if (wantStage > dogSettled) {
               dogSettled = wantStage;
               const next =
@@ -10455,11 +13208,34 @@ export function createKidsWorld(
                 next.reset();
                 next.play();
                 dogAct = next;
-                // HELD. Lying down and sleeping are poses, not gestures: the
-                // dog stays in them until the child gets up.
-                dogT = 9e9;
+                // TIMED, not held. Sleep still runs until they get up -- a
+                // dog that wakes itself every half minute is not asleep --
+                // but lying down is a rest the animal takes and then leaves,
+                // so it runs half a minute to a minute and hands back to the
+                // pottering above.
+                dogT = wantStage === 1 ? 9e9 : 30 + Math.random() * 30;
                 dogGap = 0;
                 dogWander = 0;
+              }
+            } else if (dogSettled === 0) {
+              // LYING DOWN, AND GETTING UP AGAIN.
+              //
+              // Without this the dog was stuck: with the stage reached and
+              // nothing left wanting a higher one, neither branch ran, so the
+              // timer never ticked and the pose held whatever it was set to.
+              // Here the rest runs out and the animal goes back to pottering,
+              // with the next lie-down pushed well forward so it cannot drop
+              // straight back down again.
+              dogT -= dt;
+              if (dogT <= 0) {
+                if (dogAct != null) {
+                  dogAct.stop();
+                  dogAct = null;
+                }
+                dogSettled = -1;
+                dogSettleAt = dogRested + 60 + Math.random() * 40;
+                dogT = 0;
+                dogGap = 1.5 + Math.random() * 2;
               }
             } else if (dogSettled < 0) {
               // Pottering. The CLIP and the PAUSE are two different clocks,
@@ -10644,8 +13420,31 @@ export function createKidsWorld(
         // left him walking backwards up the road — the locomotion clip plays
         // forward whichever way he happens to face. Stopped, it reads as what
         // it is: he has got ahead and turned to see if they are coming.
-        if (follower.guide && follower.gap < -1.2 && seen.moveW < 0.2) {
-          guideLookBack -= dt;
+        // Latched once and never cleared: the point is whether this child has
+        // EVER set off, not whether they are moving right now.
+        if (seen.moveW > 0.2) {
+          guideEverMoved = true;
+        }
+        if (
+          follower.guide &&
+          (sitPhase !== "none" || (dogTravel === "guideWait" && guideRest))
+        ) {
+          // Sat, going down, or getting up: he is looking at them the whole
+          // way through, so he never swings round mid-pose.
+          lookTarget = follower.gap < 0 ? Math.PI * 1.5 : Math.PI / 2;
+          lookHold = 0;
+        } else if (follower.guide && follower.gap < -1.2 && seen.moveW < 0.2) {
+          // NOT BEFORE THEY HAVE EVER STARTED.
+          //
+          //
+          // The timer ran from the moment he spawned, so on a fresh load he
+          // turned round to check on a child who had not yet typed a key --
+          // three to eight seconds in, which is about when the loading screen
+          // clears. Looking back is something you do at somebody who is
+          // coming, and nobody is coming yet.
+          if (guideEverMoved) {
+            guideLookBack -= dt;
+          }
           if (guideLookBack <= 0) {
             const back = cw.rotation.y < Math.PI ? Math.PI * 1.5 : Math.PI / 2;
             lookTarget = back;
@@ -10654,7 +13453,19 @@ export function createKidsWorld(
             guideLookBack = 6 + Math.random() * 8;
             lookHold = 0;
           }
-        } else if (seen.resting && !companion.quadruped) {
+        } else if (
+          // WHENEVER THEY HAVE STOPPED, not only during the rest chain.
+          //
+          // Gated on `seen.resting` alone this only ran while the child was
+          // crouched or sat cross-legged, and every other kind of standing
+          // still fell through to the `else` below -- which pins the facing
+          // down the trail, i.e. back to the camera. That is why the robot
+          // stood showing its back: not a broken look-around, an unreachable
+          // one.
+          (seen.resting || seen.moveW < 0.15) &&
+          !companion.quadruped &&
+          !follower.guide
+        ) {
           if (lookHold > 0) {
             lookHold -= 1;
           } else {
@@ -10670,22 +13481,24 @@ export function createKidsWorld(
             // a floor means each one is a real turn, and the two directions
             // come up equally often rather than merely on average.
             //
-            // Away from where it is already looking, too: turning left twice
-            // from a left-facing rest is a twitch, not a look around.
-            const side =
-              cw.rotation.y > Math.PI / 2 + 0.2
-                ? -1
-                : cw.rotation.y < Math.PI / 2 - 0.2
-                  ? 1
-                  : Math.random() < 0.5
-                    ? -1
-                    : 1;
+            // PURELY RANDOM, both ways, every time.
+            //
+            // This used to pick the side from where it was already facing --
+            // left of centre had to go right, right of centre had to go left
+            // -- on the reasoning that turning the same way twice is a twitch
+            // rather than a look. In practice that is not randomness, it is a
+            // metronome: left, right, left, right, for as long as you watch.
+            // A coin each time does occasionally repeat a side, and that is
+            // exactly what makes the next turn unguessable.
+            const side = Math.random() < 0.5 ? -1 : 1;
             lookTarget =
               Math.PI / 2 +
               side * (0.35 + Math.random() * 0.65) * (Math.PI * 0.75);
-            // Held a good while. A head that swings on a beat is scanning; one
-            // that settles somewhere and stays is looking at something.
-            lookHold = 90 + Math.floor(Math.random() * 300);
+            // AND IT TAKES ITS TIME. Four to fourteen seconds on one heading,
+            // where it used to be one and a half to six. Something that turns
+            // every couple of seconds is scanning the road for threats; one
+            // that settles and stays has simply found something to look at.
+            lookHold = 240 + Math.floor(Math.random() * 600);
           }
         } else {
           // Facing down the trail, always, for a dog: it has a tail for
@@ -10785,7 +13598,16 @@ export function createKidsWorld(
             cw.rotation.y += turn * 0.045;
           }
         } else {
-          cw.rotation.y += turn * 0.045; // slow, so it is a look and not a snap
+          // SLOWLY. At 0.045 a frame a 90-degree look was over in about half
+          // a second, which on a machine standing still reads as a head
+          // snapping round. A fifth of that takes two and a half seconds to
+          // cover the same arc -- long enough to watch it happen, which is
+          // the point of it happening at all.
+          //
+          // Frame-rate independent, unlike the constant it replaces: at 0.045
+          // per FRAME the same turn took twice as long on a 30fps machine as
+          // on a 60fps one, so the character was quicker on better hardware.
+          cw.rotation.y += turn * Math.min(1, dt * 0.55);
         }
         // Its lamp rides the same offset the hero's does, so the light sits
         // where a child would carry it rather than where the maths is tidy.
@@ -10835,6 +13657,14 @@ export function createKidsWorld(
         }
         companionLastX = cw.position.x;
         companion.mixer.update(dt);
+        // AFTER the mixer, never before: the clip poses the skeleton and the
+        // hair answers the pose it was left in. Run the other way round the
+        // mixer simply overwrites it.
+        //
+        // The gain is how hard she is actually moving -- a run throws it
+        // about, standing still barely stirs it -- plus a floor, so even an
+        // idle has a little life in it rather than hair carved from wood.
+        stepHair(companion.hair, dt, 0.35 + seen.moveW * 1.5);
         follower.lastX = companionLastX;
         follower.dust = companionDust;
         follower.celebrating = companionCelebrating;
@@ -10850,6 +13680,7 @@ export function createKidsWorld(
         follower.s.wagCool = wagCool;
         follower.s.wagW = wagW;
         follower.s.dogAct = dogAct;
+        follower.s.dogSettleAt = dogSettleAt;
         follower.s.dogT = dogT;
         follower.s.dogRested = dogRested;
         follower.s.dogSettled = dogSettled;
@@ -10865,6 +13696,53 @@ export function createKidsWorld(
         follower.s.dogLeadTarget = dogLeadTarget;
         follower.s.dogNextRun = dogNextRun;
         follower.s.dogPrevSeenX = dogPrevSeenX;
+        // MOVE BETWEEN THE IDLES, rather than standing in one all visit.
+        //
+        // Placed last on purpose. Every block above reassigns the idle weight
+        // from scratch each frame -- from movement, from a turn, from the
+        // roadside sit -- so an AnimationMixer crossfade set up when the swap
+        // begins is overwritten before it is ever seen. Instead this takes
+        // whatever weight the idle ended the frame on and splits it between
+        // the loop going out and the one coming in, which leaves every
+        // decision above untouched and still blends.
+        if (companion.idles.length > 1) {
+          const idleW = companion.idle != null ? companion.idle.weight : 0;
+          if (idleAlt == null) {
+            idleNext -= dt;
+            if (idleNext <= 0) {
+              const others = companion.idles.filter(
+                (a) => a !== companion.idle,
+              );
+              const nxt = others[Math.floor(Math.random() * others.length)];
+              if (nxt != null) {
+                nxt.reset();
+                nxt.play();
+                nxt.weight = 0;
+                idleAlt = nxt;
+                idleFade = 0;
+              }
+            }
+          }
+          if (idleAlt != null) {
+            // Slow. These are whole-body poses, and anything quick enough to
+            // notice reads as him being interrupted rather than settling.
+            idleFade = Math.min(1, idleFade + dt / 1.1);
+            const f = idleFade * idleFade * (3 - 2 * idleFade);
+            if (companion.idle != null) companion.idle.weight = idleW * (1 - f);
+            idleAlt.weight = idleW * f;
+            if (idleFade >= 1) {
+              const done = companion.idle;
+              companion.idle = idleAlt;
+              if (done != null) done.weight = 0;
+              idleAlt = null;
+              idleFade = 0;
+              idleNext = 7 + Math.random() * 9;
+            }
+          }
+        }
+        follower.s.idleAlt = idleAlt;
+        follower.s.idleFade = idleFade;
+        follower.s.idleNext = idleNext;
         follower.s.dogTurn = dogTurn;
         follower.s.turnBy = turnBy;
         follower.s.turnSpin = turnSpin;
@@ -10872,6 +13750,7 @@ export function createKidsWorld(
         follower.s.turnSpinT = turnSpinT;
         follower.s.turnSpinDur = turnSpinDur;
         follower.s.guideLookBack = guideLookBack;
+        follower.s.guideEverMoved = guideEverMoved;
         follower.s.sitAct = sitAct;
         follower.s.sitPhase = sitPhase;
         follower.s.sitT = sitT;
@@ -10884,11 +13763,19 @@ export function createKidsWorld(
 
       if (followers.length > 0) {
         const n = followers.length;
-        companionLamp.position.set(
-          lampAtX / n + 0.9,
-          lampAtY / n + 2.1,
-          lampAtZ / n + 1.6,
+        // Hung over the middle of the group — and, like the hero's, handed
+        // over to a milestone's flame when the group comes up to one, so the
+        // whole party is lit from the same place the child is. See
+        // `lampFrom`. Aimed from the group's centre, so a pair straddling a
+        // stone both get it.
+        const cx = lampAtX / n;
+        const cy = lampAtY / n;
+        const cz = lampAtZ / n;
+        const mateLit = lampFrom(
+          TMP_MATE.set(cx + 0.9, cy + 2.1, cz + 1.6),
+          TMP_AT.set(cx, cy, cz),
         );
+        companionLamp.position.copy(TMP_MATE);
         // Lit here rather than in `applySky`, which runs while the world is
         // still being built — before anybody has arrived to be lit.
         // DIMMER THAN THE HERO'S, deliberately.
@@ -10904,7 +13791,15 @@ export function createKidsWorld(
         // somebody with a lantern, which is the whole reason this light
         // exists, and little enough that the child is plainly the brightest
         // person on the road.
-        companionLamp.intensity = nightLook > 0 ? 2.1 : 0;
+        // Blended, not stepped on `nightLook`, and squared like the hero's —
+        // see there.
+        companionLamp.intensity =
+          // 2.1 as it always was. Raising the BASE lifted the companion on
+          // every night frame, not just beside a stone -- the milestone lift
+          // is the `mateLit` term and that is the only part that should move.
+          3.0 * (nightBlend * nightBlend + mateLit * LAMP_LIFT * nightBlend);
+        companionLamp.distance = 6.2 + mateLit * LAMP_REACH;
+        companionLamp.color.copy(LAMP_WHITE).lerp(LAMP_AMBER, mateLit * 0.85);
       }
 
       // ── buffalo showcase: keep it beside the player and cycle its clips ──
@@ -11427,10 +14322,21 @@ export function createKidsWorld(
         }
       }
       cam.position.x += (p.x - 2 - cam.position.x) * 0.06;
-      sun.position.x = cam.position.x + SUN_AT.x;
+      // The sun sets and the moon rises, as one move. `SUN_AT` is eased
+      // between the two rigs by the same blend that fades the rest of the
+      // night, so the shadows swing round and shorten over the same second
+      // and a half rather than jumping at the flip. All three axes, not just
+      // x: y and z used to be written once at build time, back when there
+      // was only ever one place for the light to be.
+      SUN_AT.lerpVectors(SUN_DAY, SUN_NIGHT, nightBlend);
+      sun.position.set(cam.position.x + SUN_AT.x, SUN_AT.y, SUN_AT.z);
       sun.target.position.x = cam.position.x;
       sun.target.updateMatrixWorld();
       player.mixer.update(dt);
+      // See the companion above: after the mixer, and scaled by how much the
+      // child is actually moving. `runShare` on top, because a run should
+      // throw it further than a walk at the same speed does.
+      stepHair(player.hair, dt, 0.35 + moveW * 1.5 + moveW * runShare * 0.9);
       // The 3-D word rides on the trail to the RIGHT of the runner — the way
       // he's heading — held steady on screen by tracking the camera; the
       // current tile lifts + bobs.
@@ -11458,9 +14364,14 @@ export function createKidsWorld(
           const lift = cur ? 0.35 + Math.sin(clock.elapsedTime * 3) * 0.12 : 0;
           // Hover clearly above the ground (still following its contour) so the
           // row reads as floating, not resting on the dirt.
+          //
+          // 1.55 rather than the 1.35 it sat at: a fifth of a unit, which on a
+          // boy four and a third tall is a couple of finger-widths. Enough to
+          // lift the letters off the road they were nearly touching without
+          // moving them far enough to read as a separate band of interface.
           const tileX = wordGroup.position.x + g.position.x;
           const groundH = terrainY(tileX, gz);
-          g.position.y += (groundH + 1.35 + lift - g.position.y) * 0.25;
+          g.position.y += (groundH + 1.55 + lift - g.position.y) * 0.25;
           // PIN THE PAINTED SHADOW TO THE GROUND, AND THROW IT FROM THE SUN.
           //
           // Not directly under the card: that is the shadow of a light hung
@@ -11637,7 +14548,13 @@ export function createKidsWorld(
           return 0;
         }
         const move = Math.min(d, speed * step);
-        const nx = pos.x + (dx / d) * move;
+        // The stones are solid. Clamped HERE rather than in each state, so a
+        // charge, an escort, a wander and a backing-off all respect them
+        // without any of them having to know the stones exist — and because
+        // the charge ends on "have I arrived", pulling it up short of a stone
+        // makes it break off into its bluff there, on its feet, with the
+        // turn-and-toss it would have played anyway.
+        const nx = stoneLimitX(pos.x, pos.x + (dx / d) * move, pos.z);
         const nz = limit(nx, pos.z + (dz / d) * move);
         pos.set(nx, wildGroundY(nx, nz), nz);
         // NO STEERING WHILE WALKING. Every state that moves already checks
@@ -11779,8 +14696,16 @@ export function createKidsWorld(
         gap < WILD_NOTICE_D &&
         gap > WILD_STOP_D + 2
       ) {
-        wildEnter(w, "notice", "Idle_Alert", 1.3);
-        opts.onEvent?.("buffaloNotice");
+        // Decided ONCE per opportunity, not per frame: the cooldown is what
+        // closes the window, so a roll that fails means it has genuinely let
+        // this one go rather than re-rolling sixty times a second until it
+        // succeeds, which would have made the odds meaningless.
+        if (playerIsLittle() && Math.random() > LITTLE_CHARGE_ODDS) {
+          w.cooldown = WILD_COOLDOWN_S * 0.5;
+        } else {
+          wildEnter(w, "notice", "Idle_Alert", 1.3);
+          opts.onEvent?.("buffaloNotice");
+        }
       }
 
       switch (w.state) {
@@ -12099,12 +15024,19 @@ export function createKidsWorld(
             // Kept off the charge's cooldown deliberately — this is play,
             // not a threat, and it must not eat the budget the scare
             // behaviour spends. It has its own, set when it gives up.
-            heroRunning &&
+            // WALKING IS ENOUGH FOR THE LITTLE ONE. For everybody else it
+            // has to see them running before it bothers — see above — but
+            // with Drew it will amble along beside him at any pace, which is
+            // the behaviour that actually reads as the animal liking him.
+            (heroRunning || (playerIsLittle() && heroSpeed > 0.35)) &&
             !midOneShot &&
             gap < WILD_NOTICE_D &&
             gap > WILD_STOP_D &&
             w.cooldown <= 0 &&
-            Math.random() < WILD_ESCORT_CHANCE * step
+            Math.random() <
+              WILD_ESCORT_CHANCE *
+                (playerIsLittle() ? LITTLE_ESCORT_X : 1) *
+                step
           ) {
             wildEnter(
               w,
@@ -12436,6 +15368,35 @@ export function createKidsWorld(
       }
     });
   }
+  // COMPILE BEFORE THE FIRST FRAME, NOT ON FIRST SIGHT.
+  //
+  // A shader is built the first time the thing that uses it is actually
+  // drawn, and building one stalls the whole pipeline. Left alone that means
+  // a hitch the first time each new object comes round the bend -- the
+  // buffalo, the guide sitting, a lamp coming on -- which is exactly when
+  // the child is looking at it. Doing them all here moves every one of those
+  // stalls into the loading screen, where there is already a boy running.
+  //
+  // Wrapped because it is an optimisation, not a requirement: a driver that
+  // refuses should cost us the hitches, not the world.
+  //
+  // ASYNCHRONOUSLY, where the browser offers it. `compile()` builds every
+  // program on the main thread before returning, and with the Kerala planting
+  // in the scene that is a long stall with nothing on screen -- the very
+  // hitch it was added to remove, moved earlier and made bigger.
+  // `compileAsync` does the same work off the critical path; where it is
+  // missing we simply take the hitches, which is what happened before any of
+  // this existed.
+  try {
+    const r = renderer as unknown as {
+      compileAsync?: (s: THREE.Scene, c: THREE.Camera) => Promise<unknown>;
+    };
+    if (typeof r.compileAsync === "function") {
+      void r.compileAsync(scene, cam);
+    }
+  } catch {
+    /* compiled lazily instead */
+  }
   tick();
 
   return {
@@ -12617,6 +15578,16 @@ export function createKidsWorld(
         (-v.y * 0.5 + 0.5) * canvas.clientHeight,
       ];
     },
+    setHour(hour) {
+      if (hourPref === hour) {
+        return;
+      }
+      hourPref = hour;
+      restageSun();
+      // The palette goes with the angle — a low sun is a gold one — so the
+      // sky has to be rebuilt, not just the vector moved.
+      applySky(nightNow ? "night" : land.mood).catch(() => {});
+    },
     setNight(night) {
       nightNow = night;
       applySky(night ? "night" : land.mood).catch(() => {});
@@ -12650,7 +15621,6 @@ export function createKidsWorld(
       lastStoneX = pendingX;
       milestoneNo += 1;
       pendingStone = null;
-      pendingLamp = false;
     },
     setHeld(on) {
       held = on;
@@ -12777,6 +15747,7 @@ export function createLoaderScene(
    */
   const facing = Math.PI / 2;
   let mixer: THREE.AnimationMixer | null = null;
+  let hair: HairSim | null = null;
   let disposed = false;
   const loader = new GLTFLoader();
   meshoptOffMainThread();
@@ -12822,6 +15793,14 @@ export function createLoaderScene(
           // Same export noise the world strips: without this the character
           // changes size the instant the clip starts.
           mixer.clipAction(stripScaleTracks(clip)).play();
+          // HER HAIR MOVES HERE TOO.
+          //
+          // The loading screen builds its own scene, its own mixer and its own
+          // tick -- it shares nothing with the world -- so the hair simulation
+          // wired into the world's frame loop never ran on it. She ran across
+          // the loader with the hair welded to her skull, which is the first
+          // thing anybody sees.
+          hair = makeHairSim(gltf.scene);
         }
       };
       const own = gltf.animations ?? [];
@@ -12847,7 +15826,12 @@ export function createLoaderScene(
     if (disposed) {
       return;
     }
-    mixer?.update(clock.getDelta());
+    const dt = clock.getDelta();
+    mixer?.update(dt);
+    // A steady gain: she is running the whole time she is on screen, so there
+    // is no movement to measure her effort from -- the loader's character
+    // never travels, it runs on the spot.
+    stepHair(hair, dt, 2.1);
     renderer.render(scene, cam);
     requestAnimationFrame(tick);
   }

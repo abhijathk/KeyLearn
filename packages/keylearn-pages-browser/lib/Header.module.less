@@ -535,6 +535,37 @@
   background-color: #fdfcf9;
 }
 
+// AND IT CROSSES, RATHER THAN CUTTING.
+//
+// The kids page's own palette eases between its day and night (see the
+// registered properties at the top of kids.module.less), and the world behind
+// it takes four and a half seconds. This header is outside both — it is the
+// app's, and `body[data-kids]` is the only thing that tells it the hour — so
+// without this it was the one strip of the page that still snapped, a hard
+// light-to-dark edge sitting directly above a sky that was still crossing.
+//
+// The custom properties above are the app's, used on every other page, so
+// they are deliberately NOT registered here: what moves is this rule's own
+// painted colour, and the descendants that read a token follow their own
+// inherited `color`.
+//
+// `data-kids-cross` is the gate, and it arrives a frame after `data-kids`
+// does — see the effect in KidsPage that sets both. The first `data-kids` is
+// the page announcing the hour it opens at, not a change of hour, and a
+// header that eased into it made every night-time load start with a sunrise.
+:global(body[data-kids-cross]) .header {
+  transition:
+    color 1.8s ease,
+    background-color 1.8s ease,
+    box-shadow 1.8s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(body[data-kids-cross]) .header {
+    transition: none;
+  }
+}
+
 :global(body[data-kids="night"]) .header {
   --background-color: #1d2136;
   --primary: #1d2136;

@@ -5,7 +5,6 @@ import {
 } from "@keylearn/assessment";
 import { keyboardProps, KeyboardProvider } from "@keylearn/keyboard";
 import { Lesson, lessonProps, LessonType } from "@keylearn/lesson";
-import { LessonLoader } from "@keylearn/lesson-loader";
 import {
   A11Y_CHANGED_EVENT,
   clearProfileProgress,
@@ -115,8 +114,10 @@ import {
   ZONE_OF_LABEL,
 } from "./keyboard-data.ts";
 import * as styles from "./kids.module.less";
+import { KidsLessonLoader } from "./kids-lesson-loader.tsx";
 import { deviceTier, type NightOverride, resolveNightStyle } from "./night.ts";
 import { paceTarget } from "./pace.ts";
+import { RoadCard } from "./road-card.tsx";
 import { STORY, type StoryPart } from "./story.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
 import {
@@ -127,6 +128,7 @@ import {
   type KidsWorld,
   LANDS,
   pickLand,
+  stagedHours,
   VILLAGE_THEME,
   type WorldId,
 } from "./world.ts";
@@ -386,6 +388,32 @@ type Prefs = {
    * are frequently the only prose on the page they read for themselves.
    */
   playful: boolean;
+  /**
+   * Whether the space bar hops.
+   *
+   * On by default, because it is the one key that does something in the world
+   * and a child finds it in the first minute. Off for the learners it gets in
+   * the way of: space comes once per word, so on a long passage the character
+   * is airborne more often than not, and for a child who is watching their
+   * own hands rather than the road a runner that will not stay on the ground
+   * is one more thing moving. With it off, space is an ordinary keystroke and
+   * they simply keep walking.
+   */
+  spaceJump: boolean;
+  /**
+   * WHAT HOUR VILLAGE ROAD IS LIT FOR.
+   *
+   * `"auto"` — the default — reads the child's own clock and folds it onto a
+   * twelve-hour face, so the road is a ten o'clock morning when they play at
+   * ten and an eight o'clock evening when they play at eight. See
+   * `stagedHours` for why day and night each take a different one of the two
+   * candidate hours.
+   *
+   * A number pins it: that hour by day, and its twin twelve hours round by
+   * night. For a household that always practises after dark and would like
+   * the road to be a morning anyway, and for looking at the thing.
+   */
+  dayHour: "auto" | number;
   /** Scene look: brightness (~0.7–1.3) and paleness (0 = full colour, 1 = pale). */
   brightness: number;
   paleness: number;
@@ -484,6 +512,8 @@ function defaultPrefs(): Prefs {
     grownupKeys: "off",
     nightStyle: "auto",
     playful: false,
+    spaceJump: true,
+    dayHour: "auto",
     brightness: 1,
     paleness: 0,
     motion: 0.7,
@@ -2515,11 +2545,7 @@ function StoryDoc({
                   </span>
                 )}
               </div>
-              {unlocked &&
-                body.map((para, k) => (
-                   
-                  <p key={k}>{para}</p>
-                ))}
+              {unlocked && body.map((para, k) => <p key={k}>{para}</p>)}
             </div>
           );
         })}
@@ -2622,7 +2648,9 @@ export function KidsPage() {
   return (
     <KeyboardProvider>
       <KidsSettings>
-        <LessonLoader>{(lesson) => <KidsGame lesson={lesson} />}</LessonLoader>
+        <KidsLessonLoader>
+          {(lesson) => <KidsGame lesson={lesson} />}
+        </KidsLessonLoader>
       </KidsSettings>
     </KeyboardProvider>
   );
@@ -2681,6 +2709,30 @@ function useFlash(value: unknown, ms = 750): boolean {
  * session that starts with the helper off is framed like every other one.
  */
 const SCENE_CAP_FALLBACK = 405;
+/**
+ * The shortest the world pane may be squeezed to, matching `.sceneCard`'s own
+ * `min-block-size: 10rem`. Below this the road is a letterbox and there is no
+ * point taking more.
+ */
+const SCENE_MIN_PX = 160;
+/**
+ * The pane the overlays were drawn against, in CSS pixels. `--kscale` is the
+ * pane's size relative to this, so a full-size window is exactly 1 and
+ * nothing moves for anyone already comfortable.
+ */
+const SCENE_REF_W = 1216; // the window's own max, 76rem
+const SCENE_REF_H = SCENE_CAP_FALLBACK; // the height the pane settles at
+/**
+ * How far the whole window may be scaled down before the keyboard is dropped
+ * instead. Below about two thirds the key legends stop being readable, and a
+ * keyboard nobody can read is worth less than the road it is covering.
+ */
+const WINDOW_MIN_SCALE = 0.68;
+/**
+ * A browser this short is not going to fit a road AND a keyboard however hard
+ * it is squeezed, so the helper goes and the game keeps the space.
+ */
+const KB_DROP_HEIGHT = 520;
 
 function TearDefs(): ReactNode {
   const rip = (id: string, freq: string, seed: number, scale: number) => (
@@ -2758,13 +2810,15 @@ function KidsSettings({ children }: { readonly children: ReactNode }) {
         // and one in seven words is enough to learn it without the passage
         // turning into a Shift drill.
         .set(lessonProps.capitals, grownupKeys === "off" ? 0 : 0.15)
-        .set(lessonProps.punctuators, grownupKeys === "punct" ? 0.1 : 0)
-        // A new letter arrives only once EVERY letter already known is above
-        // target — and judged on current speed, not best-ever. Without this a
-        // single lucky keystroke pushes bestConfidence over the line and the
-        // next letter appears, which is why the trail kept growing faster than
-        // the child actually was.
-        .set(lessonProps.guided.recoverKeys, true),
+        .set(lessonProps.punctuators, grownupKeys === "punct" ? 0.1 : 0),
+    // How a letter is EARNED is not set from here. It lives in
+    // `KidsLesson` — this app's own copy of the unlock rule — so that
+    // nothing tuned for a six-year-old can ever reach a grown-up's
+    // practice. Two things it settles that a setting used to: keys are
+    // judged on current speed rather than best-ever, so one lucky
+    // keystroke cannot buy the next letter; and the single weakest key is
+    // excused, so a child is not locked out of the whole alphabet by one
+    // letter they are having a bad week with.
     [settings, target, grownupKeys],
   );
   return (
@@ -2917,7 +2971,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         savePrefs({ seen: seenRef.current });
       }
     },
-     
+
     [],
   );
   /** Everything already queued, so nothing is named twice. */
@@ -3042,7 +3096,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   /** This world's own night setting — see Prefs.nightStyleByWorld. */
   const worldNight = nightStyleOf(prefs);
   const worldKey = `${landNonce}:${prefs.world}:${worldNight}:${band}`;
-  const [finishMsg, setFinishMsg] = useState(DINO_FINISH[0]);
+  // Seeded from THIS world, not from the dinosaurs. The message is set again
+  // when the session actually ends, so this default is only ever a fallback —
+  // but a fallback that says "the herd" on a Kerala cart road is the kind of
+  // thing that ships.
+  const [finishMsg, setFinishMsg] = useState(
+    () => finishPool(loadPrefs().world)[0],
+  );
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const loaderRef = useRef<HTMLCanvasElement>(null);
@@ -3052,6 +3112,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   /** Read inside the capping effect, which must not re-run per render. */
   const onVillageRef = useRef(false);
   const kbCardRef = useRef<HTMLDivElement>(null);
+
   const worldRef = useRef<KidsWorld | null>(null);
   const textInputRef = useRef<TextInput | null>(null);
   const passageRef = useRef("");
@@ -3212,10 +3273,38 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
   // Publish the kids day/night theme on <body> so the app header (outside this
   // page's tree) can reskin itself to match while a child is practising.
+  /** False until the opening `data-kids` has been painted. See the effect. */
+  const kidsCrossReady = useRef(false);
   useEffect(() => {
     document.body.dataset.kids = prefs.night ? "night" : "day";
+    // THE HEADER CROSSES BETWEEN DAY AND NIGHT, BUT NOT ON THE WAY IN.
+    //
+    // The header eases between the two palettes so the moon button changes
+    // one thing rather than two (see Header.module.less). This attribute is
+    // what tells it the crossing is allowed, and it is withheld for one frame
+    // on the way in: the FIRST `data-kids` is not a change of hour, it is the
+    // page saying what hour it already is. Without the gap a child who left
+    // the world at night watched the header fade down out of daylight every
+    // time they opened the page.
+    //
+    // The flag is carried on a ref rather than read back off the body,
+    // because this effect re-runs on every toggle and its cleanup clears both
+    // attributes each time — so "is the attribute missing?" is true on every
+    // run, and the crossing would be suppressed on exactly the presses it
+    // exists for.
+    let raf = 0;
+    if (kidsCrossReady.current) {
+      document.body.dataset.kidsCross = "on";
+    } else {
+      raf = window.requestAnimationFrame(() => {
+        kidsCrossReady.current = true;
+        document.body.dataset.kidsCross = "on";
+      });
+    }
     return () => {
+      window.cancelAnimationFrame(raf);
       delete document.body.dataset.kids;
+      delete document.body.dataset.kidsCross;
     };
   }, [prefs.night]);
 
@@ -3245,8 +3334,142 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * Counted here rather than inside the panel, because the BUTTON needs the
    * unread number and the button exists whether or not the panel does.
    */
+  /**
+   * WHICH ONE CARD IS ON SCREEN.
+   *
+   * Every interrupt used to render itself the moment its own flag went up, so
+   * finishing a run, unlocking a key and crossing into a new chapter — which
+   * can all land on a single keystroke — raced each other. The map was on a
+   * 900ms timer, the ceremony had its own pending flag and the finish card
+   * rendered at once, so a child got whichever order they happened to fire in
+   * and dismissed them one at a time with the mouse.
+   *
+   * They are ordered here instead, and exactly one is shown. The order is
+   * what matters rather than the mechanism: health first, then the things
+   * that end a session, then the things that reward one, and the ordinary
+   * end-of-run card last — it is the one that will still be true in a
+   * moment, so it is the one that can wait.
+   *
+   * Nothing about the individual cards changes; each still owns its own flag
+   * and its own dismissal. They simply queue.
+   */
+  type CardKind = "rest" | "graduated" | "key" | "chapter" | "finished";
+  // NOTE there is no "session over" card, and there never was one — the
+  // window inventory lists it as its own entry, but running the timer out
+  // opens the FINISHED card with an end-of-session message in it. Giving
+  // `sessionOver` a rank of its own here suppressed every lower card and
+  // rendered nothing in their place, so the timer ending left a child
+  // looking at a road with no way back into the game.
+  const cardShown: CardKind | null = restOpen
+    ? "rest"
+    : graduated
+      ? "graduated"
+      : ceremony != null
+        ? "key"
+        : mapOpen
+          ? "chapter"
+          : finishOpen
+            ? "finished"
+            : null;
+
+  /**
+   * THE CARDS LEAVE BY KEY, NOT BY MOUSE.
+   *
+   * A child's hands are on home row; reaching for a mouse to dismiss a card
+   * breaks the one posture this whole game exists to teach. Every card can be
+   * answered with the two keys already under their thumbs.
+   *
+   * SPACE IS ARMED LATE, and that is the whole subtlety. Space is a real
+   * letter in the passage, so a keystroke already on its way down when a card
+   * appears would dismiss a card the child never saw — and take their space
+   * with it. Cards ignore every key for 400ms. Enter is live at once, because
+   * nobody presses Enter in the middle of a word.
+   *
+   * The rest card is the exception: it takes Enter only. A nudge to stop for
+   * the day should cost a deliberate key, not a thumb already resting on the
+   * bar.
+   *
+   * The NEW KEY card is deliberately absent from this. It is dismissed by
+   * pressing the letter just earned, three times — a drill rather than an
+   * acknowledgement, and a better thing than any dismissal key.
+   */
+  const [cardArmed, setCardArmed] = useState(false);
+  const cardActionRef = useRef<{
+    space: (() => void) | null;
+    enter: (() => void) | null;
+  }>({ space: null, enter: null });
+
   /** Village Road parts company with the other two worlds all over. */
   const onVillage = prefs.world === "village";
+  /**
+   * THE HOUR THE ROAD IS AT, for the corner of the notice board.
+   *
+   * Read from the same function the lighting is staged by, and given the
+   * same setting, so the board and the sky can never disagree — a clock that
+   * says half past four over a midday sun is worse than no clock.
+   *
+   * Re-read once a minute rather than every render: it is a clock, and the
+   * cheapest correct thing is to let it tick.
+   */
+  const [clockTick, setClockTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setClockTick((n) => n + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  useEffect(() => {
+    // Pushed rather than rebuilt: restaging moves the sun and repaints the
+    // sky in place, which is a frame's work against a world build's several
+    // seconds. `loaded` is in the deps so the hour lands on a world that has
+    // only just arrived, not only on a later change.
+    worldRef.current?.setHour(prefs.dayHour === "auto" ? null : prefs.dayHour);
+  }, [prefs.dayHour, loaded, regenNonce]);
+  // A rebuilt world is a fresh one and has to be lit again before it shows.
+  useEffect(() => {
+    setHourStaged(false);
+  }, [regenNonce, landNonce]);
+
+  /**
+   * THE GUIDE, KEPT IN STEP WITH HIS OWN SWITCH.
+   *
+   * He was handed to the world once, inside the build, and never again — so
+   * turning him off moved his lines out of the script immediately and left
+   * him walking down the road until the page was reloaded. Half the setting
+   * worked and half of it did not, which is the most confusing way for a
+   * switch to be broken.
+   *
+   * An effect rather than another callback on the settings row: the pref is
+   * written from more than one place, and this covers all of them by watching
+   * the value instead of the click. `setGuide` early-returns when the name
+   * has not changed, so the redundant call on every load costs nothing.
+   */
+  useEffect(() => {
+    if (!loaded) {
+      return;
+    }
+    const wanted =
+      prefs.world === "village" && !prefs.classic && (prefs.guide ?? true)
+        ? VILLAGE_GUIDE
+        : null;
+    worldRef.current?.setGuide(wanted).catch(() => {
+      // A guide who cannot be swapped is not worth taking the road down for.
+    });
+  }, [prefs.guide, prefs.world, prefs.classic, loaded, regenNonce]);
+  const roadClock = useMemo(() => {
+    void clockTick;
+    const pinned = prefs.dayHour === "auto" ? null : prefs.dayHour;
+    const at =
+      typeof pinned === "number"
+        ? { day: pinned, night: (pinned + 12) % 24 }
+        : stagedHours();
+    const h24 = prefs.night ? at.night : at.day;
+    const hour = Math.floor(h24);
+    const mins = Math.round((h24 - hour) * 60);
+    // 12-hour, because that is the clock a child reads and the one the whole
+    // staging is folded onto. Midnight and noon are 12, not 0.
+    const face = hour % 12 === 0 ? 12 : hour % 12;
+    const half = hour < 12 ? "am" : "pm";
+    return `${face}:${String(Math.min(59, mins)).padStart(2, "0")} ${half}`;
+  }, [clockTick, prefs.dayHour, prefs.night]);
   onVillageRef.current = onVillage;
   // Which line on the notice just moved. See `useFlash`.
   const flashScore = useFlash(score);
@@ -3535,6 +3758,61 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   dinoAgeRef.current = dinoAgeOf(included, lesson.letters.length);
 
   /**
+   * EVERY TOKEN A SCRIPT LINE MAY USE, IN ONE PLACE.
+   *
+   * It has to be one place. The cheer lines were filled in on their own with
+   * `{ name }` and nothing else, so every cheer that names the local boy —
+   * "{guide} can barely keep up with you!" — reached the child with the
+   * braces still in it. A child who cannot yet read reliably was being shown
+   * punctuation soup, and a child who can was being shown a bug.
+   *
+   * Anything that picks from these pools fills them in through here, so a
+   * token added to the script can never be live in one voice and raw in
+   * another.
+   */
+  /**
+   * DROP THE LINES THAT NAME THE LOCAL BOY, WHEN HE IS NOT ON THE ROAD.
+   *
+   * Switching the guide off removes him from the world, so a line that says
+   * "Abee is counting on his fingers" is not merely chatty, it is a sentence
+   * about somebody who is not there — and for a child who is having the page
+   * read to them it is the most confusing kind of wrong, because there is no
+   * picture to contradict it.
+   *
+   * `villagePool` already does this for the banded context lines, and it is
+   * covered by a test that every context keeps a guide-free line. The CHEERS
+   * were never filtered at all: they are picked from their own pool, on their
+   * own path, and four of them name him. They also fire more often than
+   * anything else on the page. So the filter lives here now and every caller
+   * goes through it.
+   *
+   * Falls back to the unfiltered pool rather than falling silent — but that
+   * is a guard against a script edit, not a case that happens: see the test.
+   */
+  const withoutGuide = (pool: readonly string[]): readonly string[] => {
+    const p = prefsRef.current;
+    if (p.world !== "village" || p.classic || p.guide !== false) {
+      return pool;
+    }
+    const without = pool.filter((l) => !l.includes("{guide}"));
+    return without.length > 0 ? without : pool;
+  };
+
+  const sayVars = (extra: Record<string, string> = {}) => {
+    const p = prefsRef.current;
+    return {
+      name: villagerName(),
+      mate: companionLabel(),
+      guide: guideLabel(),
+      years: yearsBack(),
+      year: String(VILLAGE_YEAR),
+      stone: String(p.roadStones ?? 0),
+      stage: stageOf(p.world)(dinoAgeRef.current),
+      ...extra,
+    };
+  };
+
+  /**
    * CHOOSE A LINE, WITHOUT SAYING IT.
    *
    * Split out of `speak` so the buffalo banner can use exactly the same pools,
@@ -3646,19 +3924,32 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         savePrefs({ seen: seenRef.current });
       }, 1500);
     }
-    return fillSay(pickSay(pool), {
-      name: villagerName(),
-      mate: companionLabel(),
-      guide: guideLabel(),
-      years: yearsBack(),
-      year: String(VILLAGE_YEAR),
-      stone: String(stones),
-      stage: stageOf(world)(age),
-      ...vars,
-    });
+    // Filtered HERE, at the end. The earlier pass ran before the night and
+    // the playful lines were merged in, so anything either of those added
+    // slipped past it — neither names him today, and neither has to keep not
+    // naming him for this to stay correct.
+    return fillSay(pickSay(withoutGuide(pool)), sayVars(vars));
   };
 
+  /**
+   * The buffalo has the floor.
+   *
+   * While it is coming, nothing else talks. Every other line on this page is
+   * a nicety -- a streak, a new key, a chapter -- and the buffalo's are the
+   * only ones that are an instruction to act this second. Two voices at once
+   * is bad enough; a cheerful one over a warning is worse, and `setSay` would
+   * also have overwritten the warning ON SCREEN with a milestone.
+   *
+   * Time-stamped as well as flagged, so a `buffaloSafe` that never arrives
+   * cannot leave the page permanently mute.
+   */
+  const alarmUntilRef = useRef(0);
+  const alarmLive = () => performance.now() < alarmUntilRef.current;
+
   const speak = (key: SayKey, vars: Record<string, string> = {}) => {
+    if (alarmLive()) {
+      return;
+    }
     const line = sayLine(key, vars);
     if (line === "") {
       return;
@@ -3967,6 +4258,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // the letters.
       onEvent: (what) => {
         if (what.startsWith("buffalo")) {
+          if (what === "buffaloSafe") {
+            alarmUntilRef.current = 0;
+          } else {
+            // Cut whatever is mid-sentence rather than letting it finish over
+            // the top, and bin anything queued behind it -- by the time the
+            // animal has gone the line has missed its moment anyway.
+            if (!alarmLive()) {
+              stopSpeaking();
+              pendingSpeechRef.current = null;
+            }
+            // Long enough to cover notice -> warn -> charge -> safe, short
+            // enough that a sequence which never resolves un-mutes itself.
+            alarmUntilRef.current = performance.now() + 30000;
+          }
           pushAlarm(what as SayKey);
           return;
         }
@@ -4128,24 +4433,65 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       return;
     }
     const cap = () => {
-      if (kb != null && prefsRef.current.kbMode !== "off") {
-        const h = Math.round(kb.offsetHeight * 1.5);
-        sceneCapRef.current = h;
-        scene.style.maxHeight = `${h}px`;
-        return;
+      const kb = kbCardRef.current;
+      const kbOn = kb != null && prefsRef.current.kbMode !== "off";
+      let want: number;
+      if (kbOn && kb != null) {
+        want = Math.round(kb.offsetHeight * 1.5);
+        sceneCapRef.current = want;
+      } else {
+        // THE HELPER GOING AWAY MUST NOT RESIZE THE WORLD.
+        //
+        // Clearing the cap here let the pane grow into the space the keyboard
+        // had been using — and the canvas is sized to this pane and the
+        // camera framed from it, so turning the helper off pulled the whole
+        // view backwards. Whatever height it had with the helper up, it keeps.
+        //
+        // The fallback covers the case where the helper was already off when
+        // the page loaded, so there is nothing to measure: it is the height
+        // the pane settles at with the keyboard shown, which is the framing
+        // every other session gets.
+        want = sceneCapRef.current || SCENE_CAP_FALLBACK;
       }
-      // THE HELPER GOING AWAY MUST NOT RESIZE THE WORLD.
+      // NO VIEWPORT CLAMP HERE ANY MORE.
       //
-      // Clearing the cap here let the pane grow into the space the keyboard
-      // had been using — and the canvas is sized to this pane and the camera
-      // framed from it, so turning the helper off pulled the whole view
-      // backwards. Whatever height it had with the helper up, it keeps.
+      // There used to be one, and it was the thing that shrank the game: the
+      // pane is the only part of the window with a flexible height, so every
+      // pixel the window was too tall came off the ROAD and nothing else.
+      // Fitting the browser is the stylesheet's job now -- it bounds the
+      // window's width by the height available, so the keyboard and the pane
+      // come down together and keep their proportions. The pane's height is
+      // once again only ever what it always was: one and a half keyboards.
       //
-      // The fallback covers the case where the helper was already off when
-      // the page loaded, so there is nothing to measure: it is the height the
-      // pane settles at with the keyboard shown, which is the framing every
-      // other session gets.
-      scene.style.maxHeight = `${sceneCapRef.current || SCENE_CAP_FALLBACK}px`;
+      // If a page ever carries more chrome than the stylesheet's model
+      // allows for, it scrolls a little. That is a far better failure than
+      // silently squeezing the one part the child is looking at.
+      scene.style.maxHeight = `${Math.max(SCENE_MIN_PX, want)}px`;
+      // WHAT SITS OVER THE ROAD SCALES WITH THE ROAD.
+      //
+      // The notice board and the story page were fixed in `rem`, so on a
+      // small window they stayed the same physical size over a much smaller
+      // scene and swallowed it. A container query would only track width; the
+      // pane changes in BOTH directions and it is the smaller of the two that
+      // decides whether a panel still fits, so the factor is worked out here,
+      // where both are already measured, and handed to the stylesheet.
+      //
+      // Set on the root as well as the pane: the story page is a
+      // viewport-fixed backdrop, so it cannot rely on inheriting through the
+      // scene card.
+      const kscale = Math.min(
+        1.15,
+        Math.max(
+          0.7,
+          Math.min(
+            scene.clientWidth / SCENE_REF_W,
+            scene.clientHeight / SCENE_REF_H,
+          ),
+        ),
+      );
+      const v = kscale.toFixed(3);
+      scene.style.setProperty("--kscale", v);
+      document.documentElement.style.setProperty("--kscale", v);
     };
     cap();
     const observer = new ResizeObserver(cap);
@@ -4153,7 +4499,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     if (kb != null) {
       observer.observe(kb);
     }
-    return () => observer.disconnect();
+    // AND ON THE WINDOW ITSELF.
+    //
+    // The observer above watches the document element, whose border box is
+    // not always what changed -- browser zoom, a toolbar appearing, a mobile
+    // address bar sliding away all alter how much room the window really has
+    // without resizing it. A plain resize listener catches those, and unlike
+    // observing the window box it cannot feed itself: `cap` writes the pane's
+    // height, which would resize that box, which would call `cap` again.
+    window.addEventListener("resize", cap);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", cap);
+    };
     // Re-measured on the way back from Classic too: while it was on there was
     // no scene card to size, so the cap never ran and the trail returned with
     // a 3-D pane taller than the screen.
@@ -4359,11 +4717,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
       const { sounds, cheers } = prefsRef.current;
       if (key === " ") {
-        worldRef.current?.jump(); // space always jumps, right or wrong
+        // Right or wrong — a hop is not a reward for accuracy, it is what the
+        // space bar does. Unless it has been switched off, in which case
+        // space is an ordinary key and the walk carries on uninterrupted.
+        if (prefsRef.current.spaceJump !== false) {
+          worldRef.current?.jump();
+        }
         // The jump is the trail's own sound effect. On Classic the space bar
         // is just another key and should sound like one — the real key click
-        // is played below with every other press.
-        if (sounds && !prefsRef.current.classic) {
+        // is played below with every other press. And a child who has turned
+        // the hop off should not still hear one.
+        if (
+          sounds &&
+          !prefsRef.current.classic &&
+          prefsRef.current.spaceJump !== false
+        ) {
           kidsAudio.playJump();
         }
       }
@@ -4459,14 +4827,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           setSay(
             fillSay(
               pickSay(
-                cheerPool(
-                  saysOf(prefsRef.current.world, prefsRef.current.classic),
-                  band,
+                withoutGuide(
+                  cheerPool(
+                    saysOf(prefsRef.current.world, prefsRef.current.classic),
+                    band,
+                  ),
                 ),
               ),
-              {
-                name: dinoName(),
-              },
+              sayVars(),
             ),
           );
         }
@@ -4711,8 +5079,28 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * that frame is the expensive one. Revealing on it shows the child the
    * stutter; revealing on the one after shows them the road.
    */
+  /**
+   * Whether the road has been lit for the right hour yet.
+   *
+   * The hour is pushed to the world by an effect of its own, which runs
+   * AFTER the one that reveals — so on a fresh load the first frame a child
+   * saw was the theme's fallback eight o'clock, and the real hour arrived a
+   * beat later as a visible change of light. It is the first thing they look
+   * at, so it has to be right before they look.
+   */
+  const [hourStaged, setHourStaged] = useState(false);
   useEffect(() => {
     if (!worldReady || !stepsDone || loaded) {
+      return;
+    }
+    if (!hourStaged) {
+      // Stage it now and let this effect run again — see `hourStaged` in the
+      // deps. One frame's delay, behind a loading screen that has been up for
+      // seconds, against a lighting pop in the opening shot.
+      worldRef.current?.setHour(
+        prefs.dayHour === "auto" ? null : prefs.dayHour,
+      );
+      setHourStaged(true);
       return;
     }
     // rAF, BUT NEVER ONLY rAF.
@@ -4739,7 +5127,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       cancelAnimationFrame(raf);
       clearTimeout(fallback);
     };
-  }, [worldReady, stepsDone, loaded]);
+  }, [worldReady, stepsDone, loaded, hourStaged, prefs.dayHour]);
 
   /**
    * The loading screen's own little scene, released when it is no longer
@@ -4919,6 +5307,33 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     setLandNonce((n) => n + 1);
   };
 
+  /**
+   * CLOSE THE CARD WITHOUT LEAVING THE GAME LOCKED.
+   *
+   * `sessionOver` blocks every keystroke — that is what makes the end of a
+   * session an end — and it is cleared in exactly one place. So a card whose
+   * second key only hid itself put the child on a live road with a dead
+   * keyboard and nothing on screen to press: no way back but a reload. That
+   * is what "stop here" did.
+   *
+   * It has to put the clock back as well as clear the flag. The timer fires
+   * again the moment it ticks a session that is already at zero, so leaving
+   * the seconds where they were would have re-ended the session on the next
+   * tick and reopened the same card a second and a half later.
+   *
+   * What it does NOT do is reset the score. That is the whole difference
+   * between the two keys: Space starts a fresh run from nothing, Enter stops
+   * this one and leaves what they earned on the board. The clock waits for
+   * their next keystroke either way.
+   */
+  const stopHere = () => {
+    setFinishOpen(false);
+    setSessionOver(false);
+    setSessionSecs(prefs.timerMin * 60);
+    lastKeyAtRef.current = 0;
+    setTimerIdle(true);
+  };
+
   const playAgain = () => {
     setFinishOpen(false);
     setSessionOver(false);
@@ -4934,6 +5349,49 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     comboRunRef.current = 0;
     setRegenNonce((n) => n + 1);
   };
+
+  // What each card answers to. Rebuilt per render so the closures are never
+  // stale; the ref is only so the key handler can read it without re-binding.
+  cardActionRef.current =
+    cardShown === "rest"
+      ? { space: null, enter: () => setRestOpen(false) }
+      : cardShown === "finished"
+        ? { space: playAgain, enter: stopHere }
+        : cardShown === "chapter"
+          ? { space: crossIntoNextLand, enter: crossIntoNextLand }
+          : cardShown === "graduated"
+            ? { space: null, enter: () => setGraduated(false) }
+            : { space: null, enter: null };
+
+  useEffect(() => {
+    if (cardShown == null) {
+      setCardArmed(false);
+      return;
+    }
+    setCardArmed(false);
+    const id = setTimeout(() => setCardArmed(true), 400);
+    return () => clearTimeout(id);
+  }, [cardShown]);
+
+  useEffect(() => {
+    if (cardShown == null || !cardArmed) {
+      return;
+    }
+    const onKey = (ev: KeyboardEvent) => {
+      const { space, enter } = cardActionRef.current;
+      const act =
+        ev.key === "Enter" ? enter : ev.key === " " ? (space ?? enter) : null;
+      if (act == null) {
+        return;
+      }
+      // Or the same press also lands on the run behind the card.
+      ev.preventDefault();
+      ev.stopPropagation();
+      act();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [cardShown, cardArmed]);
 
   // ── render ─────────────────────────────────────────────────────────────
   const textInput = textInputRef.current;
@@ -4995,6 +5453,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // youngest band the plan leaves the board on, because their certificate is
   // about finishing the trail rather than about technique.
   const hideHints = assessment?.plan.hideKeyboard === true;
+  // `kbCramped` is the layout's veto: the browser is too short to hold a road
+  // and a keyboard at once, so the keyboard steps aside. It does not touch
+  // `prefs.kbMode`, so the child's own choice comes back with the space.
   const kbVisible = !hideHints && prefs.kbMode !== "off";
   // ── Classic: the same lesson, wearing the grown-up page's anatomy ──────
   //
@@ -5359,7 +5820,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 </div>
                 <div className={styles.notePrint}>
                   <span className={styles.noteHead}>
-                    <b>{included}</b> keys on your trail
+                    <span>
+                      <b>{included}</b> keys
+                    </span>
+                    {/* The hour the ROAD is at, which after the clock
+                        staging is the hour the child is at — see
+                        `stagedHours`. On the same rule as the light: day
+                        mode shows the daylight hour nearest their clock,
+                        night mode the night hour. */}
+                    <span className={styles.noteClock}>{roadClock}</span>
                   </span>
                   {prefs.timerVisible && !noClock() && (
                     <div className={styles.noteRow}>
@@ -5529,10 +5998,32 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               key={growNonce}
               className={clsx(
                 styles.growBanner,
+                // Village Road prints it on paper — see `.growBannerRoad`.
+                prefs.world === "village" && styles.growBannerRoad,
                 growNonce > 0 && styles.growBannerShow,
               )}
             >
-              <BranchIcon /> NEW KEY UNLOCKED — your dino grew!
+              {/* Each world says this in its own voice. It used to read
+                  "your dino grew" everywhere, so a child walking the village
+                  road was told about a dinosaur. Note what the village does
+                  NOT say: a milestone here is distance walked, not a letter
+                  earned, and borrowing the word would make the two mean the
+                  same thing. */}
+              {prefs.world === "village" ? (
+                <>
+                  <KeysIcon color="#fff" /> NEW KEY UNLOCKED — a new letter for
+                  the road!
+                </>
+              ) : prefs.world === "hero" ? (
+                <>
+                  <FlagIcon size={22} color="#fff" /> NEW KEY UNLOCKED — the
+                  party walks on!
+                </>
+              ) : (
+                <>
+                  <BranchIcon /> NEW KEY UNLOCKED — your dino grew!
+                </>
+              )}
             </div>
           </div>
 
@@ -5626,7 +6117,22 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         is to interrupt. It says the honest reason — the practice keeps
         working while they are away from it — rather than telling them off.
       */}
-      {restOpen && (
+      {cardShown === "rest" && onVillage && (
+        <RoadCard
+          kind="rest"
+          eyebrow="Enough for today"
+          title="Rest your hands"
+          keys={[{ cap: "enter", what: "to stop here", zone: "rose" }]}
+        >
+          <p>
+            You have walked for {restMinutes} minutes today — a long way. Your
+            fingers keep learning while you rest, so the road will be better
+            tomorrow than it would be if you carried on now.
+          </p>
+        </RoadCard>
+      )}
+
+      {cardShown === "rest" && !onVillage && (
         <div className={styles.overlay}>
           <div className={styles.card}>
             <div className={styles.cardTitle}>
@@ -5651,7 +6157,54 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </div>
       )}
 
-      {finishOpen && (
+      {cardShown === "finished" && onVillage && (
+        <RoadCard
+          kind="finished"
+          eyebrow="Enough walking for now"
+          title="Nicely walked"
+          keys={[
+            { cap: "space", what: "walk on", zone: "sky", wide: true },
+            { cap: "enter", what: "stop here", zone: "rose" },
+          ]}
+        >
+          <p>{finishMsg}</p>
+          <div className={styles.roadStats}>
+            <div>
+              <span className={styles.roadStatVal}>{score}</span>
+              <span className={styles.roadStatLab}>Score</span>
+            </div>
+            <div>
+              <span className={styles.roadStatVal}>{words}</span>
+              <span className={styles.roadStatLab}>Words</span>
+            </div>
+            <div>
+              <span className={styles.roadStatVal}>&times;{maxCombo}</span>
+              <span className={styles.roadStatLab}>Best run</span>
+            </div>
+            <div>
+              <span className={styles.roadStatVal}>{included}</span>
+              <span className={styles.roadStatLab}>Keys</span>
+            </div>
+          </div>
+          <p className={styles.roadBest}>
+            {score >= best && score > 0
+              ? "A NEW BEST — WELL WALKED!"
+              : `your best so far: ${best}`}
+          </p>
+          <div className={styles.grownups}>
+            <span className={styles.grownupsTitle}>For grown-ups</span>
+            Practiced{" "}
+            {Math.max(1, Math.round((sessionTotal - sessionSecs) / 60))} min ·{" "}
+            {included} keys on the trail · {words} words typed ·{" "}
+            {grownupsAgeNote(words, sessionTotal - sessionSecs)}
+            <a className={styles.grownupsLink} href="/profile">
+              see the full progress chart
+            </a>
+          </div>
+        </RoadCard>
+      )}
+
+      {cardShown === "finished" && !onVillage && (
         <div className={styles.overlay}>
           <div className={clsx(styles.card, styles.finishCard)}>
             <div className={styles.finishBadge}>
@@ -5860,7 +6413,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         />
       )}
 
-      {ceremony != null && classic && (
+      {cardShown === "key" && ceremony != null && classic && (
         <ClassicUnlock
           letter={ceremony.letter}
           finger={
@@ -5871,7 +6424,52 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         />
       )}
 
-      {ceremony != null && !classic && (
+      {/*
+        THE NEW KEY, EARNED AND THEN USED.
+        The document has this card leave by Space, like the others. It leaves
+        by pressing the new letter three times instead, and that is a
+        deliberate departure: every other card is an interruption to be waved
+        away, and this one is the first three strokes of the thing just
+        earned. A cap that has to be pressed teaches more than a cap that is
+        only looked at.
+      */}
+      {cardShown === "key" && ceremony != null && !classic && onVillage && (
+        <RoadCard
+          kind="key"
+          eyebrow="A new letter"
+          letter={ceremony.letter}
+          finger={
+            FINGER_OF[ceremony.letter] != null
+              ? FINGER_NAMES[FINGER_OF[ceremony.letter]]
+              : null
+          }
+          keys={[
+            {
+              cap: ceremony.letter.toUpperCase(),
+              what: `${3 - ceremony.presses} more to wake it`,
+              zone: ZONE_OF[ceremony.letter] ?? "clay",
+            },
+          ]}
+        >
+          <p>
+            Cut fresh into the stone at the roadside. Press it three times and
+            it is yours.
+          </p>
+          <div className={styles.roadTally} aria-hidden={true}>
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className={clsx(
+                  styles.roadTick,
+                  i < ceremony.presses && styles.roadTickOn,
+                )}
+              />
+            ))}
+          </div>
+        </RoadCard>
+      )}
+
+      {cardShown === "key" && ceremony != null && !classic && !onVillage && (
         <div className={styles.overlay}>
           <div className={clsx(styles.card, styles.finishCard)}>
             <div className={styles.cerEyebrow}>NEW LETTER!</div>
@@ -5914,7 +6512,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         behind this card. The old flow printed "(see settings)" and left a
         five-year-old to go and find a gear icon, which is not a reward.
       */}
-      {hatched != null && ceremony == null && (
+      {/*
+        THE CHARACTER REVEAL, and not on Village Road.
+        It is a hatching-egg idea from Dino Run — a badge announcing that
+        somebody has joined. On this road the cast are time-travellers who
+        catch you up, and the story panel is where that is told. A card
+        popping up to say "Puppy joined!" contradicts it.
+      */}
+      {!onVillage && hatched != null && cardShown == null && (
         <div className={styles.overlay}>
           <div className={clsx(styles.card, styles.finishCard)}>
             <div className={clsx(styles.finishBadge, styles.hatchBadge)}>
@@ -5961,7 +6566,47 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         alphabet has outgrown a game about eggs, and until now nobody told them
         there was anywhere else.
       */}
-      {graduated && (
+      {cardShown === "graduated" && onVillage && (
+        <RoadCard
+          kind="graduated"
+          eyebrow="The whole alphabet"
+          title="Every letter, walked"
+          keys={[{ cap: "enter", what: "to carry on", zone: "rose" }]}
+        >
+          <div className={styles.gradLetters}>
+            {[..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].map((ch, i) => (
+              <span
+                key={ch}
+                className={styles.gradLetter}
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                {ch}
+              </span>
+            ))}
+          </div>
+          <p>
+            Every single letter, {prefs.name || "friend"} — you did that. There
+            are bigger keys out there now.
+          </p>
+          <div className={styles.gradChoices}>
+            <button
+              type="button"
+              className={styles.cta}
+              onClick={() => {
+                savePrefs({ grownupKeys: "caps" });
+                setGraduated(false);
+              }}
+            >
+              Add the BIG letters
+            </button>
+            <a className={styles.gradLink} href="/practice">
+              or move up to the grown-up page
+            </a>
+          </div>
+        </RoadCard>
+      )}
+
+      {cardShown === "graduated" && !onVillage && (
         <div className={styles.overlay}>
           <div className={clsx(styles.card, styles.finishCard)}>
             <div className={styles.gradRibbon}>THE WHOLE ALPHABET</div>
@@ -6027,7 +6672,51 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </div>
       )}
 
-      {mapOpen && (
+      {/*
+        THE MAP AND THE CROSSING WERE TWO WINDOWS FOR ONE EVENT. The trail
+        map opened on a 900ms timer and the land card rendered at once, so
+        crossing a chapter put two overlays on screen in the wrong order.
+        One card now, with the road drawn inside it.
+      */}
+      {cardShown === "chapter" && onVillage && (
+        <RoadCard
+          kind="chapter"
+          eyebrow={`Chapter ${chapter}`}
+          title={peekNextLandName()}
+          keys={[{ cap: "enter", what: "to walk on", zone: "rose" }]}
+        >
+          <p>
+            {landName} is behind you. {dinoName()} walks on, and the road bends
+            toward {peekNextLandName()}.
+          </p>
+          <div className={styles.mapRow}>
+            {LANDS.map(({ name }, i) => {
+              const here = name === landName;
+              const next = name === peekNextLandName();
+              return (
+                <div key={name} className={styles.mapStopWrap}>
+                  {i > 0 && <span className={styles.mapHop} />}
+                  <div
+                    className={clsx(
+                      styles.mapStop,
+                      here && styles.mapStopHere,
+                      next && styles.mapStopNext,
+                    )}
+                  >
+                    <FlagIcon
+                      size={here ? 18 : 16}
+                      color={here ? undefined : next ? "#7a6c4f" : "#b9b9a9"}
+                    />
+                    <span className={styles.mapStopName}>{name}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </RoadCard>
+      )}
+
+      {cardShown === "chapter" && !onVillage && (
         <div className={styles.overlay}>
           <div className={clsx(styles.card, styles.finishCard)}>
             <div className={styles.finishBadge}>
@@ -6159,10 +6848,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             setNameOpen(true);
           }}
           totalLetters={lesson.letters.length}
-          onOpenAlbum={() => {
-            setSettingsOpen(false);
-            setAlbumOpen(true);
-          }}
           onPickCharacter={(who, forWorld) => {
             // One handler for all three worlds, writing to whichever pref
             // that world keeps its choice in. `forWorld` is the world the
@@ -6535,7 +7220,6 @@ function SettingsCard({
   totalLetters,
   savePrefs,
   onRename,
-  onOpenAlbum,
   onPickCharacter,
   onPickCompanion,
   onPickWorld,
@@ -6549,7 +7233,6 @@ function SettingsCard({
   readonly savePrefs: (patch: Partial<Prefs>) => void;
   /** Rename one character, by model id — see Prefs.names. */
   readonly onRename: (who: string) => void;
-  readonly onOpenAlbum: () => void;
   readonly onPickCharacter: (who: string, world: WorldId) => void;
   /** Toggle one companion in or out of the line, or `null` for nobody. */
   readonly onPickCompanion: (companion: string | null, world: WorldId) => void;
@@ -6646,6 +7329,8 @@ function SettingsCard({
   const canToggleWords = band === "7-8" || band === "9-10";
   const canClassic = classicOffered(band);
   const trail = !(prefs.classic && canClassic);
+  /** The hour setting is Village Road's alone — see the row below. */
+  const onRoad = trail && prefs.world === "village";
   // Which sections this learner actually has. A child with no Classic offer
   // would otherwise open the panel on a heading with nothing under it.
   const shown = SET_TABS.filter(({ id }) =>
@@ -7296,6 +7981,77 @@ function SettingsCard({
                         onClick={() => savePrefs({ playful: !prefs.playful })}
                       >
                         {prefs.playful ? "On" : "Off"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {/*
+                  VILLAGE ROAD ONLY. The other two worlds are staged at
+                  midday on purpose and have no hour to set — offering the
+                  control there would be offering a switch that does nothing.
+                */}
+                {onRoad && (
+                  <div className={styles.srow}>
+                    <span
+                      className={styles.ri}
+                      style={{ background: "var(--sand)" }}
+                    >
+                      <ClockIcon color="#7a5c00" />
+                    </span>
+                    <div>
+                      <div className={styles.sl}>Time of day</div>
+                      <div className={styles.sd}>
+                        {prefs.dayHour === "auto"
+                          ? "follows your own clock — the road is lit for the hour you are playing"
+                          : "the road stays at the time you picked"}
+                      </div>
+                      <div className={styles.pillRow}>
+                        {(
+                          [
+                            ["auto", "Auto"],
+                            [7, "Early"],
+                            [9, "Morning"],
+                            [12, "Midday"],
+                            [15, "Afternoon"],
+                            [17, "Evening"],
+                          ] as const
+                        ).map(([value, label]) => (
+                          <button
+                            key={label}
+                            type="button"
+                            className={pill(prefs.dayHour === value)}
+                            onClick={() => savePrefs({ dayHour: value })}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {trail && (
+                  <div className={styles.srow}>
+                    <span
+                      className={styles.ri}
+                      style={{ background: "var(--sky)" }}
+                    >
+                      <KeysIcon color="#1f4f7a" />
+                    </span>
+                    <div>
+                      <div className={styles.sl}>Space bar hop</div>
+                      <div className={styles.sd}>
+                        off, and the space bar is just a key
+                      </div>
+                    </div>
+                    <div className={styles.ctl}>
+                      <button
+                        type="button"
+                        className={pill(prefs.spaceJump !== false)}
+                        onClick={() =>
+                          savePrefs({ spaceJump: prefs.spaceJump === false })
+                        }
+                      >
+                        {prefs.spaceJump !== false ? "On" : "Off"}
                       </button>
                     </div>
                   </div>
