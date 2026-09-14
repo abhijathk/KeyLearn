@@ -3144,17 +3144,39 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * earned the animation and then had it covered up.
    */
   const celebrateUntilRef = useRef(0);
-  const ceremonyTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   /**
-   * A ceremony is coming, once the celebration it belongs to has
-   * finished. Input stays blocked meanwhile — which is what the panel
-   * itself used to do by covering the screen, since it opened on the
-   * same frame the flag was reached. Without this the delay would be a
-   * regression rather than a fix: the new key also regenerates the
-   * passage, so the child would start typing a fresh line and have the
-   * panel land on them mid-word.
+   * THE CEREMONY THAT IS COMING, once the celebration it belongs to has
+   * finished — the letter it is for, and the moment it may open.
+   *
+   * Input stays blocked meanwhile, which is what the panel itself used to do
+   * by covering the screen, since it opened on the same frame the flag was
+   * reached. Without the block the delay would be a regression rather than a
+   * fix: the new key also regenerates the passage, so the child would start
+   * typing a fresh line and have the panel land on them mid-word.
+   *
+   * THIS IS THE ONE BLOCKED STATE WITH NOTHING ON SCREEN, which is why it
+   * owns its timer through an effect rather than through a ref.
+   *
+   * It used to be a boolean set beside a `setTimeout` held in a ref, and the
+   * only thing that ever set it back to false was the body of that one timer.
+   * Clearing the timer without running it — which the unlock effect did on
+   * any superseding unlock — left the flag true with nothing left alive to
+   * lower it. Every keystroke was then swallowed for the rest of the session,
+   * with no card, no cue and no way out but reloading the page. The three
+   * presses of the ceremony still counted and the panel still closed on them,
+   * so it looked like the ceremony had worked and the keyboard had died a
+   * moment later.
+   *
+   * As state with an effect, the pairing cannot come apart: React runs the
+   * cleanup for the old value and the body for the new one, so there is no
+   * arrangement in which this is set and no timer is counting down to clear
+   * it. Superseding is the same mechanism rather than a second one.
    */
-  const [ceremonyPending, setCeremonyPending] = useState(false);
+  const [ceremonyWaiting, setCeremonyWaiting] = useState<{
+    readonly letter: string;
+    readonly until: number;
+  } | null>(null);
+  const ceremonyPending = ceremonyWaiting != null;
   const ceremonyRef = useRef(ceremony);
   ceremonyRef.current = ceremony;
   const [pressed, setPressed] = useState<string | null>(null);
@@ -3619,19 +3641,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           // but not always: a child can arrive with results earned on
           // the grown-up page, and then the wait is zero and nothing is
           // delayed.
-          const wait = Math.max(
-            0,
-            celebrateUntilRef.current - performance.now(),
-          );
-          clearTimeout(ceremonyTimer.current);
-          if (wait === 0) {
+          if (celebrateUntilRef.current <= performance.now()) {
+            setCeremonyWaiting(null);
             setCeremony({ letter, presses: 0 });
           } else {
-            setCeremonyPending(true);
-            ceremonyTimer.current = setTimeout(() => {
-              setCeremonyPending(false);
-              setCeremony({ letter, presses: 0 });
-            }, wait);
+            setCeremonyWaiting({
+              letter,
+              until: celebrateUntilRef.current,
+            });
           }
         }
       }
@@ -3692,12 +3709,34 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     prevLettersRef.current = letters;
   }, [included, lessonKeys]);
 
-  // Unmount only, deliberately. Clearing this in the effect above would
-  // cancel a ceremony that is still waiting out a celebration: that
-  // effect also re-runs when `lessonKeys` changes without `included`
-  // moving, and the cleanup would fire with no new timer to replace it.
-  // Superseding is already handled where the timer is set.
-  useEffect(() => () => clearTimeout(ceremonyTimer.current), []);
+  /**
+   * Open the waiting ceremony once its celebration is over.
+   *
+   * The timer belongs to the state, so the two cannot come apart — see
+   * `ceremonyWaiting`. Unmount, supersession and opening are all the same
+   * path: the cleanup clears whatever was counting down, and anything that
+   * leaves `ceremonyWaiting` set arms a fresh one in the same commit.
+   *
+   * CAPPED, because this is a block with nothing on screen behind it. The
+   * wait is a celebration's own length, reported by the world — about a
+   * second and a half — and the cap is well clear of that, so it only ever
+   * bites if that number comes back wrong. A child should never lose their
+   * keyboard for longer than it takes to notice, whatever else breaks.
+   */
+  useEffect(() => {
+    if (ceremonyWaiting == null) {
+      return;
+    }
+    const wait = Math.min(
+      3000,
+      Math.max(0, ceremonyWaiting.until - performance.now()),
+    );
+    const id = setTimeout(() => {
+      setCeremony({ letter: ceremonyWaiting.letter, presses: 0 });
+      setCeremonyWaiting(null);
+    }, wait);
+    return () => clearTimeout(id);
+  }, [ceremonyWaiting]);
 
   // The first arrival on Classic, and only the first. Anything already open —
   // the settings panel, a ceremony — takes precedence; the walk-through waits
@@ -4614,7 +4653,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           // Three presses teaches a six-year-old where the key is. At the age
           // Classic is for, it is a chore standing between them and the thing
           // they just earned.
-          if (cer.presses + 1 >= (prefsRef.current.classic ? 1 : 3)) {
+          // `classicRef`, not `prefs.classic`: Classic is only OFFERED to the
+          // oldest band, so a younger child carrying the preference — set
+          // when they were older, or inherited from a shared device — was
+          // shown a card counting three presses by a handler that closed it
+          // after one. The render decides what the card says; this has to
+          // read the same answer.
+          if (cer.presses + 1 >= (classicRef.current ? 1 : 3)) {
             setCeremony(null);
             worldRef.current?.hop();
             if (prefsRef.current.sounds) {
