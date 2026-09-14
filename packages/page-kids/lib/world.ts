@@ -13,6 +13,7 @@ import {
 } from "./character-tint.ts";
 import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
 import { MAX_UNITS_PER_KEY, RUN_LEN, runLengthFor } from "./run-length.ts";
+import { MIN_STONE_GAP, stoneXFor } from "./stone-x.ts";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
 const ASSETS = "/kids-assets";
@@ -6925,8 +6926,8 @@ export function createKidsWorld(
    *
    * It has to be a callback for the same reason the base rocks are: the
    * stones are not placed when the world is built, they are placed as the
-   * child reaches them -- `stoneX = max(runEnd, lastStoneX + MIN_STONE_GAP)`,
-   * which follows their progress and is not a multiple of anything. Planting
+   * child reaches them -- see `stoneXFor`, which follows their progress and
+   * is not a multiple of anything. Planting
    * at build time put the greenery at 26, 52, 78... and the stones somewhere
    * else entirely, so the two never met.
    */
@@ -7132,28 +7133,9 @@ export function createKidsWorld(
    * Starts from what the child has already walked past, not from zero.
    */
   let milestoneNo = Math.max(0, Math.floor(opts.stonesPassed ?? 0));
-  /**
-   * THE CLOSEST TWO STONES MAY EVER STAND.
-   *
-   * A milestone goes in at the end of a lesson, and a lesson is only as long
-   * as its passage: `runLengthFor` caps the run at 0.9 units per keystroke so
-   * short passages do not make the character skate, which means an eleven
-   * character passage is a NINE UNIT lesson. Two numbered stones nine units
-   * apart, seen through a 14-unit frustum, stand shoulder to shoulder with
-   * their lamps — 6 and 7 together, then 9 and 10, while 8 stands alone
-   * because its passage happened to be a long one.
-   *
-   * It reads as a bug and it is one, but not a duplicate: both stones are
-   * real and both numbers are right. What is wrong is that the SPACING of
-   * the markers was inherited from the length of the lesson, and those are
-   * not the same measurement. A lesson is as long as its passage; a
-   * milestone is a thing standing in a landscape, and two of them have to be
-   * far enough apart to read as two things.
-   *
-   * Just under twice the frustum, so the one behind has left the frame
-   * before the next one arrives.
-   */
-  const MIN_STONE_GAP = 26;
+  // `MIN_STONE_GAP` and the lead cap live in stone-x.ts, with the arithmetic
+  // they belong to — see `stoneXFor`, and the note there on why the gap is a
+  // preference rather than a promise.
   /**
    * THE STONE STANDING AHEAD, AND NOT YET EARNED.
    *
@@ -7334,12 +7316,16 @@ export function createKidsWorld(
         flagPole.position.set(runEnd, surfaceY(runEnd, mz0), mz0);
         flagCone.position.set(runEnd, surfaceY(runEnd, mz0), mz0);
         // Plant a NEW stone here, once, and leave every earlier one standing.
-        // CARRIED FORWARD IF THE LESSON WAS A SHORT ONE — see MIN_STONE_GAP.
-        // The child still stops at `runEnd`; their stone stands a little way
-        // up the road, and the next stretch opens by walking past it, which
-        // is how a marker at a roadside is met anyway. The alternative is two
-        // of them in one view, and that reads as broken.
-        const stoneX = Math.max(runEnd, lastStoneX + MIN_STONE_GAP);
+        //
+        // Not always exactly at `runEnd`: a lesson shorter than
+        // `MIN_STONE_GAP` puts its stone a little way up the road, so two of
+        // them do not end up in one view reading as broken. The child still
+        // stops at the finish and the next stretch opens by walking past the
+        // stone, which is how a marker at a roadside is met anyway — but how
+        // far "a little way" may go is capped, because the shortfall used to
+        // be carried into every following lesson and the youngest band's
+        // markers walked off up the road. See `stoneXFor`.
+        const stoneX = stoneXFor(runEnd, lastStoneX);
         const key = Math.round(stoneX);
         if (pendingStone != null) {
           // Already standing for this lesson. If the run was rebuilt at a new
