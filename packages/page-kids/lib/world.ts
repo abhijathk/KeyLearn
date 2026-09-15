@@ -12703,6 +12703,37 @@ export function createKidsWorld(
           }
         }
         console.info(`[chapter] ${grazing} animals grazing`);
+
+        // ── AND THE PEOPLE WHOSE LAND THIS IS ──────────────────────────
+        //
+        // The farmer woman through the cultivated land and the orchard, the
+        // headman around the village and the estate, the tea-stall worker on
+        // the market road. Placed the same way as the animals and for the
+        // same reason: a villager standing inside their own wall is worse
+        // than no villager.
+        //
+        // Nearer the road than the herds, because these are people you pass
+        // rather than livestock in a field — and only where the table says.
+        // Lessons 1, 8, 9 and 10 have nobody at all, which is what makes
+        // them read as open land rather than as a village with the people
+        // temporarily out.
+        let folk = 0;
+        for (const l of LESSONS) {
+          const from = CHAPTER[l.n - 1]!;
+          const len = CHAPTER[l.n]! - from;
+          for (const [i, who] of l.folk.entries()) {
+            const x = from + (0.3 + i * 0.28) * len;
+            const z = -hashRange(x, i, 51, 9, 16);
+            const spot = clearSpot(x, z, 2.2);
+            if (spot == null) {
+              continue;
+            }
+            await spawnCompanion(who, spot.x, spot.z, 3.4, false);
+            blockers.push({ x: spot.x, z: spot.z, r: 2.2 });
+            folk++;
+          }
+        }
+        console.info(`[chapter] ${folk} villagers out`);
       }
 
       // ── WHAT WAS MOVED IN THE NIGHT ──────────────────────────────────
