@@ -8607,6 +8607,16 @@ export function createKidsWorld(
      */
     wild = false,
   ): void {
+    // NOT IN THE SHRINE'S PRECINCT. See `hushEyes`.
+    //
+    // Checked here rather than at the one place the flag is set, because the
+    // glow is re-applied every time the hour turns and on every population
+    // swap — clearing a pair of eyes once would simply let them light again
+    // at the next nightfall. The flag travels with the character.
+    if (root.userData.noEyeGlow === true) {
+      setEyeFlare(root, 1, 0, 0x000000);
+      return;
+    }
     const skeletal = /skeleton|skull|undead/i.test(root.name);
     if (skeletal) {
       // Bright after dark, still clearly lit by day.
@@ -12216,6 +12226,31 @@ export function createKidsWorld(
         }
       }
 
+      /**
+       * NOTHING GLOWS AT THE SHRINE.
+       *
+       * Every character in this world carries a catchlight after dark, and a
+       * wild animal keeps a real eyeshine — which is right on the road, where
+       * it says something is alive out there, and wrong at the one building
+       * the village walks to. A dark shrine with two warm points floating
+       * beside it is a haunting, and that is not what this place is: it is
+       * lit, somebody is inside it, and it is where a child would go.
+       *
+       * Done by position rather than by species, because what makes it
+       * spooky is WHERE the eyes are and not whose they are. Anything
+       * standing in the precinct is hushed, and the flag stays on it so the
+       * next nightfall does not light it again.
+       */
+      const hushEyes = (cx: number, cz: number, reach: number) => {
+        for (const root of characterRoots) {
+          const p = root.position;
+          if (Math.hypot(p.x - cx, p.z - cz) < reach) {
+            root.userData.noEyeGlow = true;
+            applyEyeGlow(root, nightNow);
+          }
+        }
+      };
+
       // The heart: temple, market, banyan, and the cart parked at the market.
       // Fixed offsets, because their arrangement relative to each other is the
       // whole point - the market fronts the road and the temple stands behind
@@ -12234,6 +12269,17 @@ export function createKidsWorld(
         // Cleared from the tree's own measured footprint rather than from a
         // guessed radius, so it stays right if the tree is ever resized: a
         // little wider than the canopy, which is where its roots would be.
+        if (w != null && /temple/i.test(h.model)) {
+          const box = measureBox(w);
+          const cx = (box.min.x + box.max.x) / 2;
+          const cz = (box.min.z + box.max.z) / 2;
+          // Its own footprint plus a courtyard's worth. Measured, so it
+          // follows the building if the shrine is ever resized or moved
+          // again — which it has been twice this week.
+          const reach =
+            Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 0.5 + 9;
+          hushEyes(cx, cz, reach);
+        }
         if (w != null && /banyan/i.test(h.model)) {
           const box = measureBox(w);
           const cx = (box.min.x + box.max.x) / 2;
