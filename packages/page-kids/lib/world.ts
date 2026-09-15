@@ -2834,10 +2834,14 @@ export const VILLAGE_THEME: WorldTheme = {
     // now: the painted band's own mist draws over the skirt (see the skirt's
     // `depthWrite`), and covering that join is exactly what the mist is for.
     lookY: 4.25,
-    // 15.4, a hair over 14.4 — seven per cent wider, which is a step back
-    // rather than a zoom out. Enough to give the row of letters and the far
-    // hills room without changing how big the children read.
-    frustum: 15.4,
+    // Back to 14.4 — a step IN, about seven per cent.
+    //
+    // Worth knowing what it spends: the frame's top is `frustum * topF`, so a
+    // narrower view is a lower ceiling, and the ground's far edge does not
+    // move when the ceiling does. Zooming in and lifting the scene both push
+    // that ceiling down towards the edge, and the sky between them is what
+    // closes up.
+    frustum: 14.4,
     // THE FRAME SLIDES UP, AND KEEPS ITS HEIGHT.
     //
     // 0.68/1.22 against 0.92/0.98: the two still sum to 1.90, so the view is
@@ -2876,10 +2880,11 @@ export const VILLAGE_THEME: WorldTheme = {
     // letters are. Trading top for bottom loses the horizon, so the frame has
     // to get bigger instead.
     // The window slides DOWN its wall so the world rises in the picture:
-    // 1.02/1.38 keeps the same 2.40 total, so nothing zooms, and the frame's
-    // top still clears the terrain's far edge at 16.03 with room for the sky.
-    topF: 1.02,
-    botF: 1.38,
+    // 0.96/1.44 keeps the same 2.40 total, so the lift costs no zoom of its
+    // own. The ground is deliberately left alone here — it is the frame that
+    // was asked to move, not the world.
+    topF: 0.96,
+    botF: 1.44,
   },
   // Tropical, and nothing turns. Several broadleaf variants in the nature set
   // carry autumn reds; on a Kerala road they read as a different climate.
