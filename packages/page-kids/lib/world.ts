@@ -3758,7 +3758,7 @@ export function createKidsWorld(
       // and fog does that regardless of which way it runs. Saturating at 100
       // instead of 120 hides it before it can be seen, which is what lets
       // the camera pitch down far enough to see the children on the road.
-      new THREE.Fog(land.fog, 34, 135)
+      new THREE.Fog(land.fog, 30, 108)
     : new THREE.Fog(land.fog, 60, 160);
 
   const V = theme.view ?? DEFAULT_VIEW;
@@ -4596,20 +4596,25 @@ export function createKidsWorld(
    */
   const HORIZON_DRIFT = 0.06;
   /**
-   * HOW FAR BACK THE PAINTED HORIZON SITS, on its own dial.
+   * HOW MUCH OF THE FOG THE PAINTED HORIZON TAKES.
    *
-   * The scene fog alone could not do this. Pulling the fog in far enough to
-   * push the band back took the far trees with it and turned the whole middle
-   * distance to milk; letting the fog off enough for the trees left the band
-   * too present. They are at nearly the same range, so one number cannot
-   * serve both.
+   * The scene fog alone cannot settle this: pulling it in far enough to push
+   * the band back takes the far trees with it and turns the middle distance
+   * to milk, and letting it off enough for the trees leaves the band too
+   * present. They sit at nearly the same range, so one number cannot serve
+   * both.
    *
-   * So the band keeps the fog — it has to, or it would not darken with the
-   * hour or match the trees' colour at all — and takes this on top: a plain
-   * fade that lets the sky through it. 0.62 reads as another few miles of air
-   * without touching anything else in the world.
+   * THIS FADES THE HAZE, NOT THE PICTURE. The obvious dial is opacity, and it
+   * is the wrong one — it makes the hills themselves see-through, so the sky
+   * shows through the land and the art goes ghostly. What wants easing is the
+   * fog laid over the art, so that is what is scaled: the band keeps a full,
+   * solid image and receives 0.30 of the haze its distance would otherwise
+   * give it.
+   *
+   * It still darkens with the hour and still shares the trees' colour,
+   * because it is the same fog — just less of it.
    */
-  const HORIZON_FADE = 0.62;
+  const HORIZON_HAZE = 0.3;
 
   // ══ LAMPLIGHT ════════════════════════════════════════════════════════
   //
@@ -13080,7 +13085,7 @@ export function createKidsWorld(
               // construction, and follows the hour without being told: the
               // fog colour is the one `applySky` is already moving.
               fog: true,
-              opacity: isNight ? 0 : HORIZON_FADE,
+              opacity: isNight ? 0 : 1,
               // The per-vertex alpha above rides on top of `opacity`, so the
               // day/night crossing and the strip dissolve multiply cleanly.
               vertexColors: true,
@@ -13089,6 +13094,26 @@ export function createKidsWorld(
           // Laid with their ramps overlapping, and centred on the group —
           // each on its own measured ridge, so the row is level.
           const cut = strips[i % strips.length];
+          // ONLY A SHARE OF THE FOG — see `HORIZON_HAZE`. The shader chunk is
+          // patched rather than the material faded, so the picture stays solid
+          // and it is the haze over it that thins. Linear fog, which is what
+          // this scene uses, so the factor is the smoothstep between near and
+          // far; scaling that changes nothing else about the fog.
+          {
+            const hm = mesh.material as THREE.MeshBasicMaterial;
+            hm.onBeforeCompile = (shader) => {
+              shader.fragmentShader = shader.fragmentShader.replace(
+                "#include <fog_fragment>",
+                `#ifdef USE_FOG
+                   float hzFog = smoothstep( fogNear, fogFar, vFogDepth ) * ${HORIZON_HAZE.toFixed(3)};
+                   gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, hzFog );
+                 #endif`,
+              );
+            };
+            // Or three reuses the unpatched program it compiled for every other
+            // MeshBasicMaterial in the world.
+            hm.customProgramCacheKey = () => "horizon-haze";
+          }
           mesh.position.x = (i - (n - 1) / 2) * step;
           mesh.position.y = lift(half, cut.v);
           mesh.renderOrder = i;
@@ -13457,7 +13482,7 @@ export function createKidsWorld(
           // curve is precisely a curve out of step, and being out of step
           // with the light is the more visible fault by far. One number, one
           // nightfall.
-          const op = (h.night ? nightBlend : 1 - nightBlend) * HORIZON_FADE;
+          const op = h.night ? nightBlend : 1 - nightBlend;
           for (const strip of h.group.children) {
             const m = (strip as THREE.Mesh).material as THREE.MeshBasicMaterial;
             m.opacity = op;
