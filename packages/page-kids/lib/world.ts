@@ -2473,9 +2473,19 @@ export const VILLAGE_THEME: WorldTheme = {
     // side of a valley. 34 puts the ridge at about a ninth of the frame,
     // which is what a treeline a couple of miles off actually measures.
     height: 20,
-    // And genuinely behind everything: past the trail's end, past the fog's
-    // reach, so nothing in the world can ever intersect it.
-    dist: 260,
+    // BEHIND EVERYTHING, BUT NOT BEHIND THE FAR PLANE.
+    //
+    // This was 260 and invisible, and the reason took measuring: the camera
+    // stands at z = 42, so 260 out is about 302 units of view depth against a
+    // `cam.far` of 300. Its clip-space z came back at 1.08 — a hundredth past
+    // the edge of the volume — and it was thrown away before anything was
+    // drawn. Every other number about it was right, which is why it looked so
+    // much like a texture or an alpha problem.
+    //
+    // It does not need to be far anyway. The band takes no depth test, so
+    // nothing can occlude it and nothing can z-fight with it; the distance
+    // only decides how much of the frame it covers via the skyline solve.
+    dist: 200,
     // 0.58, measured off the art rather than guessed at: the hill ridge sits
     // a little under three fifths of the way up the file, with the mist band
     // under it and cut-out sky above. At 0.42 the whole painted strip was
@@ -2791,8 +2801,8 @@ export const VILLAGE_THEME: WorldTheme = {
     // world in the picture at once. Raising the letters on their own got them
     // back on screen and made them look like a banner hung in the sky; the
     // row belongs where it always was, and it was the frame that was wrong.
-    topF: 0.7,
-    botF: 1.2,
+    topF: 0.66,
+    botF: 1.24,
   },
   // Tropical, and nothing turns. Several broadleaf variants in the nature set
   // carry autumn reds; on a Kerala road they read as a different climate.
@@ -3728,7 +3738,10 @@ export function createKidsWorld(
     cam.top = S * V.topF;
     cam.bottom = -S * V.botF;
     cam.near = -100;
-    cam.far = 300;
+    // 420, not 300. The painted horizon sat a hundredth of a clip unit past
+    // the old far plane and was silently discarded; the volume now has room
+    // for anything that wants to stand behind the world rather than in it.
+    cam.far = 420;
     cam.updateProjectionMatrix();
   }
   resize();
@@ -5555,7 +5568,7 @@ export function createKidsWorld(
       // so 125 is the number: far enough out that the edge is already solid
       // fog and cannot be found, near enough to leave two units of sky above
       // it. At 200 the fog covered the entire picture.
-      const FAR = 125;
+      const FAR = 121;
       const near = -60; // the terrain's own far edge
       // The camera stands at z = 42, so a far edge FAR units away is at
       // z = 42 - FAR, and the skirt runs from the terrain's edge out to it.
@@ -12636,7 +12649,7 @@ export function createKidsWorld(
       // corner. A horizon wants air above it and land below it, and a little
       // under halfway up is where a real one sits when you are walking a
       // road.
-      const wantPeak = V.frustum * V.topF * 0.81;
+      const wantPeak = V.frustum * V.topF * 0.83;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
@@ -12660,11 +12673,20 @@ export function createKidsWorld(
               map: strips[i % strips.length],
               transparent: true,
               depthWrite: false,
-              // IT IS SKY, NOT SCENERY, so it does not queue for a depth test
-              // it cannot win. The ground here is a finite plane whose far
-              // edge projects into the frame, and a horizon placed on the
-              // skyline would otherwise always lose to it.
-              depthTest: false,
+              // IT TAKES THE DEPTH TEST, and it has to.
+              //
+              // It ran with `depthTest: false` while the ground's own far
+              // edge was the thing in the way — a horizon solved onto the
+              // skyline lost to it every time. But ignoring depth means
+              // ignoring the banyan too, and the hills came out painted
+              // across the front of the trees.
+              //
+              // The skirt fixed the original problem properly (the ground now
+              // fades into fog instead of ending in a line), so the band can
+              // stand in the world where it belongs: 200 units out, behind
+              // everything, correctly occluded by every tree and roof in
+              // front of it, with only the part above the fog line showing.
+              depthTest: true,
               fog: false,
               opacity: isNight ? 0 : 1,
             }),
