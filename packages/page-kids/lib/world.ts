@@ -4697,11 +4697,12 @@ export function createKidsWorld(
         if (cloudLayer != null) {
           const cm = cloudLayer.material as THREE.MeshBasicMaterial;
           cm.color.copy(sun.color).lerp(WHITE, 0.45);
-          // Held well under one. A cloud seen just above a ridgeline is mostly
-          // air with a little water in it — at full strength these read as
-          // paint on glass rather than as sky.
+          // Held under one. A cloud just above a ridgeline is mostly air with
+          // a little water in it, and at full strength these read as paint
+          // on glass — but 0.55 went too far the other way and left them as
+          // a suggestion. 0.78 has body without going opaque.
           cm.opacity =
-            (1 - nightLook * 0.82) * (0.35 + cloudCover * 0.65) * 0.55;
+            (1 - nightLook * 0.82) * (0.35 + cloudCover * 0.65) * 0.78;
           cloudLayer.position.x =
             cloudCamX0 + (cam.position.x - cloudCamX0) * (1 - CLOUD_DRIFT);
         }
