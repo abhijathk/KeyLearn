@@ -4031,7 +4031,20 @@ export function createKidsWorld(
     // Where the light is coming from, in screen terms. `SUN_DAY` points at
     // the sun; its x against its z tells us which shoulder it is over.
     const lit = SUN_DAY.x >= 0 ? 1 : -1;
-    /** One cumulus: a heap of puffs sitting on a flat line. */
+    /**
+     * One cumulus: a heap of puffs sitting on a flat line.
+     *
+     * IT IS DRAWN ON ITS OWN CANVAS, whose bottom edge IS the base line.
+     * The flat base then costs nothing — puffs that hang below it simply
+     * fall off the bitmap — and, more to the point, nothing else gets cut.
+     *
+     * The first version clipped to `rect(cx - w, …, w * 2, …)` and called
+     * that the base. A rect clips FOUR sides. Puffs reach `cx ± (w * 0.95 +
+     * pr)`, well outside that box, so every cloud came out guillotined dead
+     * straight down its left and right, with its crown sliced off square on
+     * top. Three hard edges per cloud, which is why they read as pasted
+     * rectangles of weather rather than as clouds.
+     */
     const heap = (
       cx: number,
       baseY: number,
@@ -4039,25 +4052,31 @@ export function createKidsWorld(
       h: number,
       alpha: number,
     ) => {
-      g.save();
-      // THE FLAT BASE, done with a clip rather than by drawing flat puffs —
-      // the billows can then be as round as they like above the line and are
-      // simply cut off at it, which is what condensation actually does.
-      g.beginPath();
-      g.rect(cx - w, baseY - h * 1.3, w * 2, h * 1.3);
-      g.clip();
+      // Room for the widest puff centre plus its own radius, and for the
+      // tallest crown — so the billows end inside the bitmap and fade to
+      // nothing there, rather than meeting its edge.
+      const halfW = Math.ceil(w * 0.95 + h * 0.95 + 6);
+      const ch = Math.ceil(h * 2.1 + 6);
+      const oc = document.createElement("canvas");
+      oc.width = halfW * 2;
+      oc.height = ch;
+      const o = oc.getContext("2d")!;
       const puffs = 9 + Math.floor(Math.random() * 8);
+      // WHERE ITS CROWN IS. A symmetric envelope makes every cloud the same
+      // tent, and a sky of identical tents is the other half of looking
+      // fake. Real cumulus lean: the updraft is off to one side, so the pile
+      // is highest there and trails away to the other.
+      const skew = (Math.random() - 0.5) * 0.5;
       for (let i = 0; i < puffs; i++) {
         const t = i / (puffs - 1) - 0.5;
-        // Wider than tall, and tallest in the middle: a cumulus piles up in
-        // the centre and thins to the edges.
-        const px = cx + t * w * 1.9;
-        const lift = (1 - Math.abs(t) * 1.7) * h;
-        const py =
-          baseY - Math.max(h * 0.12, lift * (0.45 + Math.random() * 0.5));
+        // Wider than tall, and tallest around the crown: a cumulus piles up
+        // where the air is going up and thins to the edges.
+        const px = halfW + t * w * 1.9;
+        const lift = (1 - Math.abs(t - skew) * 1.7) * h;
+        const py = ch - Math.max(h * 0.12, lift * (0.45 + Math.random() * 0.5));
         const pr = h * (0.42 + Math.random() * 0.45) * (1 - Math.abs(t) * 0.45);
         if (pr <= 1) continue;
-        const rg = g.createRadialGradient(
+        const rg = o.createRadialGradient(
           px + pr * 0.22 * lit,
           py - pr * 0.24,
           pr * 0.1,
@@ -4065,24 +4084,57 @@ export function createKidsWorld(
           py,
           pr,
         );
-        // Lit crown, shadowed belly, and a soft edge so nothing has a rim.
-        rg.addColorStop(0, `rgba(255,255,255,${(0.95 * alpha).toFixed(3)})`);
-        rg.addColorStop(0.55, `rgba(238,240,246,${(0.7 * alpha).toFixed(3)})`);
-        rg.addColorStop(0.85, `rgba(198,205,218,${(0.28 * alpha).toFixed(3)})`);
-        rg.addColorStop(1, "rgba(198,205,218,0)");
-        g.fillStyle = rg;
-        g.beginPath();
-        g.arc(px, py, pr, 0, Math.PI * 2);
-        g.fill();
+        // Lit crown, shadowed belly, and a falloff with no step in it.
+        //
+        // FOUR STOPS PUT RINGS INSIDE EVERY PUFF. A radial gradient
+        // interpolates linearly between the stops it is given, so each stop
+        // is a crease in the slope, and where dozens of these overlap the
+        // creases line up into concentric arcs — the airbrushed-sticker look
+        // that reads as fake however good the silhouette is. This walks the
+        // alpha down a curve instead, so there is no radius at which the
+        // rate of change jumps.
+        const tint = [
+          [255, 255, 255],
+          [246, 248, 252],
+          [226, 231, 240],
+          [205, 212, 224],
+        ];
+        for (let k = 0; k <= 10; k++) {
+          const u = k / 10;
+          // Falls away like a gaussian shoulder: nearly flat through the
+          // core, steepest around the middle, asymptotic at the rim so the
+          // edge dissolves rather than stopping.
+          const fade = Math.exp(-3.1 * u * u * u) * (1 - u * u);
+          const col = tint[Math.min(3, Math.floor(u * 3.6))];
+          rg.addColorStop(
+            u,
+            `rgba(${col[0]},${col[1]},${col[2]},${(0.92 * fade).toFixed(4)})`,
+          );
+        }
+        o.fillStyle = rg;
+        o.beginPath();
+        o.arc(px, py, pr, 0, Math.PI * 2);
+        o.fill();
       }
       // And the underside darkens along the base line, where no sun reaches.
-      const sh = g.createLinearGradient(0, baseY - h * 0.55, 0, baseY);
+      // `source-atop` keeps it on the cloud's own pixels, and since the
+      // cloud is alone on this bitmap it cannot reach any other.
+      const sh = o.createLinearGradient(0, ch - h * 0.55, 0, ch);
       sh.addColorStop(0, "rgba(120,132,152,0)");
-      sh.addColorStop(1, `rgba(120,132,152,${(0.5 * alpha).toFixed(3)})`);
-      g.globalCompositeOperation = "source-atop";
-      g.fillStyle = sh;
-      g.fillRect(cx - w, baseY - h * 1.3, w * 2, h * 1.3);
-      g.restore();
+      sh.addColorStop(1, "rgba(120,132,152,0.5)");
+      o.globalCompositeOperation = "source-atop";
+      o.fillStyle = sh;
+      o.fillRect(0, 0, halfW * 2, ch);
+      g.globalAlpha = alpha;
+      // Drawn at its wrapped positions too, so a cloud that overruns the
+      // end of the strip comes back in at the other end instead of being
+      // cut off at the seam the repeat makes.
+      const x = cx - halfW;
+      const y = baseY - ch;
+      g.drawImage(oc, x, y);
+      if (x < 0) g.drawImage(oc, x + W, y);
+      if (x + halfW * 2 > W) g.drawImage(oc, x - W, y);
+      g.globalAlpha = 1;
     };
 
     // HOW MANY, AND WHAT KIND, from today's cover. A clear day gets a few
@@ -4101,7 +4153,7 @@ export function createKidsWorld(
         baseY,
         W * (0.028 + Math.random() * 0.055) * scale,
         H * (0.1 + Math.random() * 0.13) * scale,
-        (0.5 + Math.random() * 0.5) * (1 - depth * 0.45),
+        (0.34 + Math.random() * 0.34) * (1 - depth * 0.45),
       );
     }
     if (cover > 0.62) {
@@ -4645,7 +4697,11 @@ export function createKidsWorld(
         if (cloudLayer != null) {
           const cm = cloudLayer.material as THREE.MeshBasicMaterial;
           cm.color.copy(sun.color).lerp(WHITE, 0.45);
-          cm.opacity = (1 - nightLook * 0.82) * (0.35 + cloudCover * 0.65);
+          // Held well under one. A cloud seen just above a ridgeline is mostly
+          // air with a little water in it — at full strength these read as
+          // paint on glass rather than as sky.
+          cm.opacity =
+            (1 - nightLook * 0.82) * (0.35 + cloudCover * 0.65) * 0.55;
           cloudLayer.position.x =
             cloudCamX0 + (cam.position.x - cloudCamX0) * (1 - CLOUD_DRIFT);
         }
