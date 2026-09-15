@@ -3997,6 +3997,133 @@ export function createKidsWorld(
     }
   }
   const _moonDir = new THREE.Vector3();
+
+  /**
+   * TODAY'S CLOUDS, painted once into their own texture.
+   *
+   * What makes a cloud read as real rather than as a cartoon is not the
+   * outline, it is the LIGHT ON IT, and there are only three things doing
+   * that work here:
+   *
+   *   1. A FLAT BASE. Cumulus condense at one altitude, so they all bottom
+   *      out on the same line — that shared flat underside is the single most
+   *      recognisable thing about a fair-weather sky. Round-bottomed clouds
+   *      are the cartoon tell.
+   *   2. THE TOP IS LIT AND THE BASE IS NOT. The sun is above them, so the
+   *      billows catch it and the underside is in the cloud's own shadow,
+   *      picking up the sky's colour instead. That gradient is what gives
+   *      them volume; without it they are stickers.
+   *   3. THE LIGHT COMES FROM WHERE THE SUN IS. The bright side is solved
+   *      from `SUN_DAY`, the same vector that lights the road, so the clouds
+   *      are lit from the side the shadows already say they should be.
+   *
+   * Built from many overlapping soft puffs rather than from noise. Noise is
+   * what produces lumpy mush; a cumulus really is an aggregate of rounded
+   * cells, so drawing it as one gets the silhouette for free.
+   */
+  function makeCloudTexture(cover: number): THREE.CanvasTexture {
+    const W = 2048;
+    const H = 512;
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    const g = c.getContext("2d")!;
+    // Where the light is coming from, in screen terms. `SUN_DAY` points at
+    // the sun; its x against its z tells us which shoulder it is over.
+    const lit = SUN_DAY.x >= 0 ? 1 : -1;
+    /** One cumulus: a heap of puffs sitting on a flat line. */
+    const heap = (
+      cx: number,
+      baseY: number,
+      w: number,
+      h: number,
+      alpha: number,
+    ) => {
+      g.save();
+      // THE FLAT BASE, done with a clip rather than by drawing flat puffs —
+      // the billows can then be as round as they like above the line and are
+      // simply cut off at it, which is what condensation actually does.
+      g.beginPath();
+      g.rect(cx - w, baseY - h * 1.3, w * 2, h * 1.3);
+      g.clip();
+      const puffs = 9 + Math.floor(Math.random() * 8);
+      for (let i = 0; i < puffs; i++) {
+        const t = i / (puffs - 1) - 0.5;
+        // Wider than tall, and tallest in the middle: a cumulus piles up in
+        // the centre and thins to the edges.
+        const px = cx + t * w * 1.9;
+        const lift = (1 - Math.abs(t) * 1.7) * h;
+        const py =
+          baseY - Math.max(h * 0.12, lift * (0.45 + Math.random() * 0.5));
+        const pr = h * (0.42 + Math.random() * 0.45) * (1 - Math.abs(t) * 0.45);
+        if (pr <= 1) continue;
+        const rg = g.createRadialGradient(
+          px + pr * 0.22 * lit,
+          py - pr * 0.24,
+          pr * 0.1,
+          px,
+          py,
+          pr,
+        );
+        // Lit crown, shadowed belly, and a soft edge so nothing has a rim.
+        rg.addColorStop(0, `rgba(255,255,255,${(0.95 * alpha).toFixed(3)})`);
+        rg.addColorStop(0.55, `rgba(238,240,246,${(0.7 * alpha).toFixed(3)})`);
+        rg.addColorStop(0.85, `rgba(198,205,218,${(0.28 * alpha).toFixed(3)})`);
+        rg.addColorStop(1, "rgba(198,205,218,0)");
+        g.fillStyle = rg;
+        g.beginPath();
+        g.arc(px, py, pr, 0, Math.PI * 2);
+        g.fill();
+      }
+      // And the underside darkens along the base line, where no sun reaches.
+      const sh = g.createLinearGradient(0, baseY - h * 0.55, 0, baseY);
+      sh.addColorStop(0, "rgba(120,132,152,0)");
+      sh.addColorStop(1, `rgba(120,132,152,${(0.5 * alpha).toFixed(3)})`);
+      g.globalCompositeOperation = "source-atop";
+      g.fillStyle = sh;
+      g.fillRect(cx - w, baseY - h * 1.3, w * 2, h * 1.3);
+      g.restore();
+    };
+
+    // HOW MANY, AND WHAT KIND, from today's cover. A clear day gets a few
+    // small ones high up; a middling day gets a proper scattering; an
+    // overcast one stops being separate clouds at all and becomes a sheet.
+    const n = Math.round(3 + cover * 22);
+    for (let i = 0; i < n; i++) {
+      // Nearer the bottom of the strip is nearer the horizon, which is
+      // FURTHER AWAY — so those are smaller, flatter and fainter. That
+      // compression is most of what makes a sky feel deep.
+      const depth = Math.random();
+      const baseY = H * (0.34 + depth * 0.6);
+      const scale = 1 - depth * 0.62;
+      heap(
+        Math.random() * W,
+        baseY,
+        W * (0.028 + Math.random() * 0.055) * scale,
+        H * (0.1 + Math.random() * 0.13) * scale,
+        (0.5 + Math.random() * 0.5) * (1 - depth * 0.45),
+      );
+    }
+    if (cover > 0.62) {
+      // The sheet an overcast day actually is: one broad, soft, low-contrast
+      // mass rather than more cumulus. It goes UNDER what is already there,
+      // so the individual clouds still show against it.
+      g.globalCompositeOperation = "destination-over";
+      const sheet = g.createLinearGradient(0, 0, 0, H);
+      const a = (cover - 0.62) / 0.38;
+      sheet.addColorStop(0, `rgba(203,209,216,${(0.85 * a).toFixed(3)})`);
+      sheet.addColorStop(0.7, `rgba(214,219,224,${(0.6 * a).toFixed(3)})`);
+      sheet.addColorStop(1, "rgba(220,224,228,0)");
+      g.fillStyle = sheet;
+      g.fillRect(0, 0, W, H);
+      g.globalCompositeOperation = "source-over";
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.ClampToEdgeWrapping;
+    return t;
+  }
   const skyTexture = new THREE.CanvasTexture(skyCanvas);
   skyTexture.colorSpace = THREE.SRGBColorSpace;
 
@@ -4505,6 +4632,23 @@ export function createKidsWorld(
         sunLit = sunBase;
         hemiLit = hemiBase;
         drawFlatSky();
+        // THE CLOUDS, DRIFTING AND TAKING THE HOUR.
+        //
+        // Tinted rather than fogged: a cloud is above the haze, not behind it,
+        // and at dusk it goes GOLD where the ground merely goes grey. The tint
+        // is the sun's own colour, which is already on the hour's curve — so
+        // they pink at dawn, burn at sunset and flatten to grey under cloud
+        // without a single number of their own.
+        //
+        // They fade after dark rather than becoming dark shapes: what you see
+        // at night is the sky through the gaps, not the cloud.
+        if (cloudLayer != null) {
+          const cm = cloudLayer.material as THREE.MeshBasicMaterial;
+          cm.color.copy(sun.color).lerp(WHITE, 0.45);
+          cm.opacity = (1 - nightLook * 0.82) * (0.35 + cloudCover * 0.65);
+          cloudLayer.position.x =
+            cloudCamX0 + (cam.position.x - cloudCamX0) * (1 - CLOUD_DRIFT);
+        }
       }
       settleSky();
       return;
@@ -4703,6 +4847,21 @@ export function createKidsWorld(
    * because it is the same fog — just less of it.
    */
   const HORIZON_HAZE = 0.3;
+  /** Today's sky, hung in the world. See `makeCloudTexture`. */
+  const WHITE = new THREE.Color(0xffffff);
+  let cloudLayer: THREE.Mesh | null = null;
+  /** Where the camera stood when it was hung — the drift is measured from it. */
+  let cloudCamX0 = 0;
+  /**
+   * HOW MUCH OF THE WALK THE CLOUDS KEEP.
+   *
+   * They are nearer than the horizon and very much further than the trees, so
+   * they sit between the two: the hills hold back 94 per cent of the journey,
+   * the road none of it, and the sky 82. Slow enough that a child never
+   * catches them moving against a tree, fast enough that the sky is not the
+   * same sky twenty stones later.
+   */
+  const CLOUD_DRIFT = 0.18;
 
   // ══ LAMPLIGHT ════════════════════════════════════════════════════════
   //
@@ -12925,6 +13084,56 @@ export function createKidsWorld(
       }
     }
 
+    // ── THE WEATHER, HUNG UP ───────────────────────────────────────────
+    //
+    // A single wide plane in the sky carrying today's clouds. It sits beyond
+    // the painted horizon so nothing in the world can pass in front of it,
+    // takes no fog — it is above the haze, not behind it — and is tinted
+    // rather than fogged, because a cloud at dusk goes GOLD where the ground
+    // merely goes grey.
+    {
+      const tex = makeCloudTexture(cloudCover);
+      const w = 520;
+      // 16, NOT 130. A plane 130 units tall reaches from well below the road
+      // to far above the frame, and since the cloud strip carries heaps all
+      // the way down its own height, that painted clouds straight over the
+      // hills and the field. The sky is a band about six units deep between
+      // the horizon's ridge and the top of the frame; the sheet belongs in
+      // that band and above it, not across everything.
+      const h = 16;
+      const dist = 150;
+      cam.updateMatrixWorld(true);
+      const up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+      const aim = new THREE.Vector3(0, V.lookY, 0).dot(up);
+      // Centred a good way above the look-at line, so the sheet reaches from
+      // just over the hills to well past the top of the frame. Solved the
+      // same way the horizon is, so it follows any change to the camera.
+      // Positioned so the sheet's BOTTOM edge sits just above the painted
+      // ridge — clouds meeting the horizon rather than hanging in front of
+      // it — and its top runs off the frame, which is what a sky does.
+      const want = V.frustum * V.topF * 1.18;
+      const y = (aim + want + dist * up.z) / up.y;
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, h),
+        new THREE.MeshBasicMaterial({
+          map: tex,
+          transparent: true,
+          depthWrite: false,
+          fog: false,
+          opacity: 1,
+        }),
+      );
+      // The strip repeats across the plane at its own proportion, so no cloud
+      // is ever stretched.
+      tex.repeat.set(w / (h * 4), 1);
+      mesh.position.set(0, y, -dist);
+      mesh.renderOrder = -90;
+      mesh.frustumCulled = false;
+      scene.add(mesh);
+      cloudLayer = mesh;
+      cloudCamX0 = cam.position.x;
+    }
+
     // ── THE PAINTED HORIZON ────────────────────────────────────────────
     //
     // "We need to change the camera angle to see the horizon" — we do not,
@@ -13081,7 +13290,11 @@ export function createKidsWorld(
       // top and what fills the band is treeline and mist rather than air.
       // Over 1.0 on purpose; this is a height from the look-at point, not a
       // fraction of anything, so it is allowed past the frame's own top.
-      const wantPeak = V.frustum * V.topF * 0.9;
+      // 0.45, TO MAKE ROOM FOR WEATHER. At 0.90 the ridge sat at 0.925 in
+      // clip space and left 3.7 per cent of the frame as sky — not enough to
+      // put a cloud in, let alone watch one cross. This gives about a fifth
+      // of the picture back to the air.
+      const wantPeak = V.frustum * V.topF * 0.45;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
