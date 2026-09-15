@@ -5568,8 +5568,19 @@ export function createKidsWorld(
       // so 125 is the number: far enough out that the edge is already solid
       // fog and cannot be found, near enough to leave two units of sky above
       // it. At 200 the fog covered the entire picture.
-      const FAR = 121;
-      const near = -60; // the terrain's own far edge
+      const FAR = 116;
+      // TUCKED UNDER THE TERRAIN, NOT BUTTED AGAINST IT.
+      //
+      // This started at the terrain's own far edge (-60) and level with it,
+      // which is exact and wrong: the terrain has relief, so its edge
+      // undulates while the skirt is flat, and everywhere the ground dipped
+      // below the skirt a gap opened and the sky showed straight through it —
+      // a blue lagoon lying in the middle of a dry field.
+      //
+      // Twelve units of overlap and half a unit lower, so the terrain always
+      // wins in front and the join cannot be found. Both numbers are larger
+      // than the relief ever is.
+      const near = -48;
       // The camera stands at z = 42, so a far edge FAR units away is at
       // z = 42 - FAR, and the skirt runs from the terrain's edge out to it.
       const farZ = V.camZ - FAR;
@@ -5586,7 +5597,7 @@ export function createKidsWorld(
         }),
       );
       skirt.rotation.x = -Math.PI / 2;
-      skirt.position.set(60, terrainY(60, near) - 0.02, near - depth / 2);
+      skirt.position.set(60, terrainY(60, -60) - 0.5, near - depth / 2);
       // Under everything, and never in the depth fight at the seam.
       skirt.renderOrder = -20;
       skirt.receiveShadow = false;
@@ -12649,7 +12660,15 @@ export function createKidsWorld(
       // corner. A horizon wants air above it and land below it, and a little
       // under halfway up is where a real one sits when you are walking a
       // road.
-      const wantPeak = V.frustum * V.topF * 0.83;
+      // ON THE LINE THE FOG DRAWS, and it cannot be moved on its own.
+      //
+      // The band takes the depth test now, so it is hidden wherever the
+      // ground covers it: drop the skyline below the ground's far edge and it
+      // simply disappears behind it. Moving the horizon down means moving the
+      // ground's edge down too, which is why `FAR` above came in from 121 to
+      // 116 at the same time. 0.797 of the frame top is exactly where 116
+      // units of ground now ends.
+      const wantPeak = V.frustum * V.topF * 0.797;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
