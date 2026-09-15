@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Paddy_Rice_Dense",
+    "bytes": 58432,
+    "triangles": 902
+  },
+  {
+    "name": "Paddy_Rice_Sparse",
+    "bytes": 52852,
+    "triangles": 812
+  },
+  {
+    "name": "Varambu_Straight",
+    "bytes": 4660,
+    "triangles": 54
+  },
+  {
+    "name": "Varambu_Corner",
+    "bytes": 4656,
+    "triangles": 54
+  },
+  {
+    "name": "Varambu_T",
+    "bytes": 5804,
+    "triangles": 76
+  },
+  {
+    "name": "Varambu_Cross",
+    "bytes": 6968,
+    "triangles": 98
+  },
+  {
+    "name": "Varambu_End",
+    "bytes": 3496,
+    "triangles": 32
+  }
+]

@@ -382,6 +382,7 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Market", "the market"],
   ["Cart", "a cart"],
   ["Banyan", "the banyan tree"],
+  ["Banyan_Almaram", "the banyan tree"],
   ["Stone_Althara", "the althara"],
   ["Wall", "garden walls"],
   ["HouseThatch", "a thatched house"],
@@ -1734,6 +1735,28 @@ export type WorldTheme = {
     readonly colorNear: number;
     readonly colorFar: number;
   };
+  /**
+   * A PAINTED horizon at the far end of the world, instead of the procedural
+   * ranges — the treeline and hills a Kerala road actually ends in.
+   *
+   * Named without the day/night half or the variant letter: the files are
+   * `<name>_day_<v>.png` and `<name>_night_<v>.png`, and one letter is drawn
+   * per session so the land is not identical every time it is opened.
+   */
+  readonly horizon?: {
+    readonly name: string;
+    readonly variants: readonly string[];
+    /** How tall the band stands, in world units. Its width follows the image. */
+    readonly height: number;
+    /** How far back it sits. Beyond every ridge and every tree. */
+    readonly dist: number;
+    /**
+     * Where the painted skyline sits inside the image, 0 at the bottom edge
+     * and 1 at the top — measured off the art, so the solve can put THAT line
+     * on the horizon rather than the edge of the file.
+     */
+    readonly skyline: number;
+  };
   /** Multiplier on scenery size — cube models are authored larger. */
   readonly sceneryScale: number;
   /** How many per-biome trees to scatter (default 30). */
@@ -2404,6 +2427,22 @@ export const VILLAGE_THEME: WorldTheme = {
   // The Western Ghats on the horizon - the one piece of height in the view,
   // and what tells you which way the land goes.
   mountains: { colorNear: 0x6f8f7a, colorFar: 0x93a9a0 },
+  // The painted far horizon replaces those two ranges on this road — see
+  // `horizonBand`. 0.42 is measured off the art: the hill line sits a little
+  // under halfway up the file, with the mist below it and clear sky above.
+  horizon: {
+    name: "chapter1_far_horizon",
+    // The art has cut-out sky above the hills ON PURPOSE, so the dynamic sky
+    // shows through it: the gradient behind this band is the one that carries
+    // the hour, the twilight, the moon and the stars (see `applySky` and
+    // `flatSky`), and the horizon is a silhouette laid over whatever that
+    // sky happens to be doing. Two files per variant, day and night, cross-
+    // faded on the same blend as everything else.
+    variants: ["A", "B"],
+    height: 62,
+    dist: 190,
+    skyline: 0.42,
+  },
   // FLAT-SHADED fields, like the other two worlds. Photoreal ground was tried
   // here and lost: a repeating photographic surface under stylised characters
   // reads as sand rather than as a grove, its tiling is visible at this camera
@@ -2505,7 +2544,17 @@ export const VILLAGE_THEME: WorldTheme = {
       // 18, not 24. At the roadside a banyan is the nearest thing in the
       // frame, and this camera does not shrink it for being close — at 24 it
       // was a trunk filling a third of the sky with the village behind it.
-      { model: "Banyan", dx: -13, dz: -16, h: 18 },
+      //
+      // OURS, NOT THE PACK'S. `village-plants/` is where this project's own
+      // Kerala flora lives and `ak-3d-pack/` is a product for sale, so the
+      // new tree goes with the papaya and the drumstick. It is better on
+      // every axis than the bought one it replaces — 194 KB against 424,
+      // 3,860 triangles against 7,346, 4,050 vertices against 18,285 — and
+      // its accessor bounds are declared in the raw integers the
+      // quantisation flag says they are, rather than in the already
+      // normalised units that made every building in this village invisible.
+      // See `measureBox`.
+      { model: "village-plants/Banyan_Almaram", dx: -13, dz: -16, h: 18 },
       // The VAZHIVILAKKU are not here. They belong to the ROAD, not to the
       // village — and they are no longer even their own object: the lamp head
       // is welded onto the milestone, so one arrives with every marker the
@@ -2521,7 +2570,7 @@ export const VILLAGE_THEME: WorldTheme = {
       // is met through the branches, but inside the haze rather than beyond
       // it: at -42 the fog had two thirds of it and a shrine nobody can make
       // out is the same as no shrine at all.
-      { model: "Temple", dx: 5, dz: -24, h: 11, turn: 0.08 },
+      { model: "Temple", dx: 5, dz: -24, h: 9, turn: 0.08 },
     ],
     houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
     houseHeight: 14,
@@ -4190,6 +4239,9 @@ export function createKidsWorld(
   } | null = null;
   const mistMats: THREE.ShaderMaterial[] = [];
   const lanternMats: THREE.SpriteMaterial[] = [];
+
+  /** The painted far horizon: a day plane and a night one, cross-faded. */
+  const horizonBand: { mesh: THREE.Mesh; night: boolean }[] = [];
 
   // ══ LAMPLIGHT ════════════════════════════════════════════════════════
   //
@@ -7594,6 +7646,16 @@ export function createKidsWorld(
   const characterRoots = new Set<THREE.Object3D>();
   /** Scenery that comes and goes with the light — thinned trees, dead groves. */
   const moodScenery: THREE.Object3D[] = [];
+
+  /**
+   * Every scattered TREE, so the village can clear a space round the banyan.
+   *
+   * The scatter runs long before a village is placed and spreads trees
+   * evenly down the whole trail, so the roadside the banyan is planted on
+   * already had three or four of them standing in it — and a banyan with a
+   * palm growing through its crown is not a banyan, it is a thicket.
+   */
+  const scatterTrees: THREE.Object3D[] = [];
   let nightNow = false;
 
   // ── the nightfall cross-fade ───────────────────────────────────────────
@@ -10778,6 +10840,11 @@ export function createKidsWorld(
           ? (box.max.y - box.min.y) * scl * (0.25 + Math.random() * 0.25)
           : 0;
         wrap.position.set(x, surfaceY(x, z) - buried, z);
+        // Trees only, and only so the village can clear a space round the
+        // banyan — see `scatterTrees` where it is planted.
+        if (file === land.trees) {
+          scatterTrees.push(wrap);
+        }
         wrap.rotation.y = Math.random() * Math.PI * 2;
         // NOTHING GROWS PLUMB.
         //
@@ -11346,7 +11413,32 @@ export function createKidsWorld(
       // whole point - the market fronts the road and the temple stands behind
       // it, which is how you actually meet a village from its road.
       for (const h of V.heart) {
-        await stand(h.model, vx + h.dx, h.dz, h.h, h.turn ?? 0);
+        const w = await stand(h.model, vx + h.dx, h.dz, h.h, h.turn ?? 0);
+        // ── AND NOTHING ELSE GROWING THROUGH THE BANYAN ──────────────────
+        //
+        // The scatter runs long before a village exists and spreads trees
+        // evenly down the whole trail, so the roadside the banyan is planted
+        // on already had three or four palms standing in it. A banyan with a
+        // coconut coming out of its crown is not a banyan, it is a thicket —
+        // and the banyan is the one tree here that is meant to be looked AT
+        // rather than walked past.
+        //
+        // Cleared from the tree's own measured footprint rather than from a
+        // guessed radius, so it stays right if the tree is ever resized: a
+        // little wider than the canopy, which is where its roots would be.
+        if (w != null && /banyan/i.test(h.model)) {
+          const box = measureBox(w);
+          const cx = (box.min.x + box.max.x) / 2;
+          const cz = (box.min.z + box.max.z) / 2;
+          const reach =
+            Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 0.62;
+          for (const t of scatterTrees) {
+            if (Math.hypot(t.position.x - cx, t.position.z - cz) < reach) {
+              t.visible = false;
+              t.parent?.remove(t);
+            }
+          }
+        }
       }
 
       // Dwellings around it, on both sides of the road but mostly the far
@@ -12271,11 +12363,99 @@ export function createKidsWorld(
         scene.add(mesh);
         return mesh;
       };
-      // Far range first so the near one draws over it.
       // Far range first so the near one draws over it, and higher, so it
       // shows above rather than hiding behind.
-      ridge(150, 15, theme.mountains.colorFar, 1.7, 0.5, 0.94);
-      ridge(120, 11, theme.mountains.colorNear, 4.2, 0.75, 0.74);
+      //
+      // SKIPPED ENTIRELY where a painted horizon is going up: that art has
+      // its own hills in it, and a sine-drawn range behind a photographed one
+      // is two horizons at two different levels of detail.
+      if (theme.horizon == null) {
+        ridge(150, 15, theme.mountains.colorFar, 1.7, 0.5, 0.94);
+        ridge(120, 11, theme.mountains.colorNear, 4.2, 0.75, 0.74);
+      }
+    }
+
+    // ── THE PAINTED HORIZON ────────────────────────────────────────────
+    //
+    // "We need to change the camera angle to see the horizon" — we do not,
+    // and that is the whole point of the solve above. Under an orthographic
+    // camera the screen height of a point is its dot product with the
+    // camera's up vector, so the y that puts a given line on the skyline can
+    // be solved instead of guessed. Tilt the camera, raise it, pull it back,
+    // widen it for a village: the horizon stays on the horizon, because it is
+    // placed from wherever the camera is now rather than from a number
+    // somebody measured once.
+    //
+    // What is solved is the SKYLINE INSIDE THE ART, not the edge of the file
+    // — the image is mostly transparent sky above the hills, and putting the
+    // top of the plane on the horizon would have hung the treeline somewhere
+    // under the road.
+    //
+    // It follows the camera along x and is never fogged. Both are the same
+    // statement: this is the far distance, and the far distance neither slides
+    // past you as you walk nor gets hazier as you approach it. The haze is
+    // painted into it already.
+    if (theme.horizon != null) {
+      const H = theme.horizon;
+      const pick = H.variants[Math.floor(Math.random() * H.variants.length)];
+      // KTX2, through the transcoder this world already stands up for its
+      // models. The art is 2172x724 with a soft mist gradient and a cut-out
+      // sky, and at that size four PNGs were 2.1 MB for what is, in the
+      // frame, a band a few hundred pixels tall. Halved to 1088x364 and
+      // encoded ETC1S they are 164 KB for the set — a twelfth of the bytes,
+      // with the silhouette and the gradient intact. GPU memory is the
+      // bigger win: a block-compressed texture stays compressed on the card,
+      // where a PNG is decoded to raw RGBA.
+      const load = (half: "day" | "night") =>
+        new Promise<THREE.Texture>((res) => {
+          ktx2.load(
+            `${ASSETS}/horizon/${H.name}_${half}_${pick}.ktx2`,
+            (t) => {
+              t.colorSpace = THREE.SRGBColorSpace;
+              res(t);
+            },
+            undefined,
+            // A horizon that fails to load must not take the road with it —
+            // an empty texture on a transparent plane is simply no horizon.
+            () => res(new THREE.Texture()),
+          );
+        });
+      const [dayTex, nightTex] = await Promise.all([
+        load("day"),
+        load("night"),
+      ]);
+      const aspect = 2172 / 724;
+      const w = H.height * aspect;
+      cam.updateMatrixWorld(true);
+      const camUp = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+      const aimUp = new THREE.Vector3(0, V.lookY, 0).dot(camUp);
+      // A shade under the top of the frame, so there is sky over the hills.
+      const wantPeak = V.frustum * V.topF * 0.8;
+      // The plane's centre, given that the painted skyline sits `skyline` of
+      // the way up from its bottom edge.
+      const fromCentre = (H.skyline - 0.5) * H.height;
+      const baseY =
+        (aimUp + wantPeak + H.dist * camUp.z) / camUp.y - fromCentre;
+      for (const [t, isNight] of [
+        [dayTex, false],
+        [nightTex, true],
+      ] as const) {
+        const mesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(w, H.height),
+          new THREE.MeshBasicMaterial({
+            map: t,
+            transparent: true,
+            depthWrite: false,
+            fog: false,
+            opacity: isNight ? 0 : 1,
+          }),
+        );
+        mesh.position.set(0, baseY, -H.dist);
+        mesh.renderOrder = -11;
+        mesh.frustumCulled = false;
+        scene.add(mesh);
+        horizonBand.push({ mesh, night: isNight });
+      }
     }
 
     await applySky(land.mood);
@@ -12570,6 +12750,15 @@ export function createKidsWorld(
       // seconds of a crossing the two gradient stops are standing still and
       // this costs one hex comparison each.
       drawFlatSky();
+      // The painted horizon crosses over with everything else, and rides
+      // along with the camera. Following in x is what makes it read as
+      // distance: the far hills do not slide past a child who is walking,
+      // and an orthographic camera gives no parallax to do it for us.
+      for (const h of horizonBand) {
+        const m = h.mesh.material as THREE.MeshBasicMaterial;
+        m.opacity = h.night ? nightLook : 1 - nightLook;
+        h.mesh.position.x = cam.position.x;
+      }
       // The canvas grade rides with it. Re-applied only when it has actually
       // moved: it writes a CSS filter string, and setting one every frame
       // buys a style recalculation a frame for a number that is not changing.
