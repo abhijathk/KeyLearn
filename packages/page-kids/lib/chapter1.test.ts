@@ -6,7 +6,9 @@ import { equal, isTrue } from "rich-assert";
 import {
   BLEED,
   blendAt,
-  CHAPTER_END,
+  chapterBounds,
+  chapterEnd,
+  DEFAULT_BOUNDS,
   densityAt,
   hash3,
   hashPick,
@@ -16,20 +18,70 @@ import {
   milestoneX,
   placements,
   SEGMENT_COUNT,
-  SEGMENT_LEN,
+  segmentLen,
 } from "./chapter1.ts";
-import { MIN_STONE_GAP } from "./stone-x.ts";
+import { RUN_LEN, runLengthFor } from "./run-length.ts";
 
 /**
- * The chapter has to land on numbers the world already had. If either of
- * these drifts, the milestones stop marking the lessons they are named for
- * and every placement in the table is off by the difference.
+ * A lesson is a passage, and how far it carries a child is decided by how
+ * much they type. A fixed segment is wrong at both ends: the youngest stop
+ * short of their own milestone every lesson, the oldest cover two and a half
+ * segments in one. So the stones follow the typing.
  */
-test("the chapter fits the road exactly", () => {
-  equal(SEGMENT_LEN, MIN_STONE_GAP);
-  equal(CHAPTER_END, 260);
-  equal(SEGMENT_LEN * SEGMENT_COUNT, CHAPTER_END);
+test("a lesson's stretch of road is as long as its passage carries", () => {
+  const bounds = chapterBounds(24, 36);
+  equal(bounds.length, SEGMENT_COUNT + 1);
+  equal(bounds[0], 0);
+  // The first passage of the 5-6 band is 24 characters, and runLengthFor
+  // gives 0.9 units per character.
+  equal(Math.round(segmentLen(1, bounds) * 10) / 10, runLengthFor(24));
+  equal(Math.round(segmentLen(10, bounds) * 10) / 10, runLengthFor(36));
+});
+
+test("the stones march forward and never repeat", () => {
+  for (const [start, full] of [
+    [24, 36],
+    [50, 72],
+    [77, 112],
+    [102, 153],
+  ] as const) {
+    const b = chapterBounds(start, full);
+    for (let i = 1; i < b.length; i++) {
+      isTrue(
+        b[i]! > b[i - 1]!,
+        `stone ${i} did not advance for ${start}/${full}`,
+      );
+    }
+  }
+});
+
+test("each band gets the road it needs", () => {
+  // Measured, and the reason the road cannot be one length: the two older
+  // bands hit the RUN_LEN cap every lesson and need two and a half times the
+  // road the youngest does.
+  equal(Math.round(chapterEnd(chapterBounds(24, 36))), 270);
+  equal(
+    Math.round(chapterEnd(chapterBounds(77, 112))),
+    RUN_LEN * SEGMENT_COUNT,
+  );
+  equal(
+    Math.round(chapterEnd(chapterBounds(102, 153))),
+    RUN_LEN * SEGMENT_COUNT,
+  );
+});
+
+/**
+ * The world is built to the SHORTEST chapter when nobody says otherwise.
+ * Guessing high builds ground nobody reaches; guessing low runs a child off
+ * the end of the terrain, which is the failure that shows.
+ */
+test("the default is the youngest band", () => {
+  equal(DEFAULT_BOUNDS.join(), chapterBounds(24, 36).join());
+});
+
+test("there are ten lessons and eleven stones", () => {
   equal(LESSONS.length, SEGMENT_COUNT);
+  equal(DEFAULT_BOUNDS.length, SEGMENT_COUNT + 1);
 });
 
 test("lessons run end to end with no gap and no overlap", () => {
@@ -41,15 +93,16 @@ test("lessons run end to end with no gap and no overlap", () => {
 });
 
 test("a milestone stands at the boundary of the lesson it names", () => {
+  const b = DEFAULT_BOUNDS;
   for (let n = 0; n <= SEGMENT_COUNT; n++) {
-    equal(milestoneX(n), n * SEGMENT_LEN);
+    equal(milestoneX(n, b), b[n]);
   }
   // Lesson n runs from stone n-1 to stone n, so the point just inside a
   // stone belongs to the lesson the stone opens.
-  equal(lessonAt(0).n, 1);
-  equal(lessonAt(25.9).n, 1);
-  equal(lessonAt(26).n, 2);
-  equal(lessonAt(259.9).n, 10);
+  equal(lessonAt(0, b).n, 1);
+  equal(lessonAt(b[1]! - 0.1, b).n, 1);
+  equal(lessonAt(b[1]!, b).n, 2);
+  equal(lessonAt(chapterEnd(b) - 0.1, b).n, 10);
 });
 
 test("off the end of the road clamps rather than throwing", () => {
@@ -62,13 +115,13 @@ test("off the end of the road clamps rather than throwing", () => {
  * stone and is pasture on the far side reads as two levels glued together.
  */
 test("each lesson still remembers the previous one at its start", () => {
-  const atStone = blendAt(26);
+  const atStone = blendAt(DEFAULT_BOUNDS[1]!);
   equal(atStone.lesson.n, 2);
   equal(atStone.prev.n, 1);
   equal(atStone.mix, 0);
 
   // ...and has finished changing over by the end of the bleed.
-  const past = blendAt(26 + SEGMENT_LEN * BLEED + 0.01);
+  const past = blendAt(DEFAULT_BOUNDS[1]! + segmentLen(2) * BLEED + 0.01);
   equal(past.lesson.n, 2);
   equal(past.prev.n, 2);
   equal(past.mix, 1);
@@ -78,8 +131,8 @@ test("the changeover never runs backwards", () => {
   let last = -1;
   // Past the end of the bleed as well as through it, so the last reading is
   // the settled value rather than the last step before it.
-  for (let d = 0; d <= SEGMENT_LEN * BLEED + 0.5; d += 0.25) {
-    const { mix } = blendAt(52 + d);
+  for (let d = 0; d <= segmentLen(3) * BLEED + 0.5; d += 0.25) {
+    const { mix } = blendAt(DEFAULT_BOUNDS[2]! + d);
     isTrue(mix >= last, `mix fell at +${d}`);
     last = mix;
   }
@@ -96,9 +149,13 @@ test("the first lesson has nothing to bleed from", () => {
 test("density is carried across the bleed, not stepped", () => {
   // Lesson 2 is 1.9 and lesson 3 is 3.4. At the stone the value is still
   // lesson 2's, and it arrives at lesson 3's by the end of the bleed.
-  equal(Math.round(densityAt(52) * 100) / 100, 1.9);
-  equal(Math.round(densityAt(52 + SEGMENT_LEN * BLEED + 0.1) * 100) / 100, 3.4);
-  const mid = densityAt(52 + SEGMENT_LEN * BLEED * 0.5);
+  const m2 = DEFAULT_BOUNDS[2]!;
+  equal(Math.round(densityAt(m2) * 100) / 100, 1.9);
+  equal(
+    Math.round(densityAt(m2 + segmentLen(3) * BLEED + 0.1) * 100) / 100,
+    3.4,
+  );
+  const mid = densityAt(m2 + segmentLen(3) * BLEED * 0.5);
   isTrue(mid > 1.9 && mid < 3.4, `midpoint ${mid} outside the two densities`);
 });
 
@@ -127,7 +184,7 @@ test("different places and different questions give different values", () => {
 test("the hash spreads across its range", () => {
   const buckets = new Array(10).fill(0);
   let n = 0;
-  for (let x = 0; x < CHAPTER_END; x += 0.5) {
+  for (let x = 0; x < chapterEnd(); x += 0.5) {
     for (let z = -30; z < -6; z += 2) {
       const v = hash3(x, z, 7);
       isTrue(v >= 0 && v < 1, `${v} out of range`);
@@ -166,7 +223,7 @@ test("nothing stands on the child's side of the road", () => {
 test("every placement is inside the chapter", () => {
   for (const p of placements()) {
     isTrue(
-      p.x >= 0 && p.x < CHAPTER_END,
+      p.x >= 0 && p.x < chapterEnd(),
       `${p.model} at x=${p.x} is off the road`,
     );
   }

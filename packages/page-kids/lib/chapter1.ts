@@ -1,3 +1,5 @@
+import { runLengthFor } from "./run-length.ts";
+
 /**
  * CHAPTER 1: THE VILLAGE — the authored road, as data.
  *
@@ -5,10 +7,10 @@
  * with no scene, no renderer and no DOM behind it, and importing `world.ts`
  * to reach it drags in three.js and the whole page.
  *
- * THE CHAPTER ALREADY FITS THE ROAD EXACTLY. The trail is 260 units and
- * `MIN_STONE_GAP` is 26; ten gaps of 26 is 260. So the ten lessons are not
- * imposed on the world, they land on numbers it already had, and M0..M10 sit
- * at 0, 26, 52 ... 260 without moving anything.
+ * THE ROAD IS BUILT TO THE CHAPTER, not the chapter fitted to the road. See
+ * `chapterBounds`: a lesson is as long as its passage carries the child, so
+ * the stones stand where the typing actually ends and the terrain is sized
+ * to whichever band is walking it.
  *
  * ONE WORLD, NOT TEN SCENES. There is no day geometry and no night geometry —
  * each lesson has one physical environment and the hour changes only who is
@@ -16,11 +18,61 @@
  * the morning has to be in visibly the same place.
  */
 
-/** One lesson's worth of road. Ten of them make the chapter. */
-export const SEGMENT_LEN = 26;
 export const SEGMENT_COUNT = 10;
-/** Where Milestone 10 stands, and where the chapter ends. */
-export const CHAPTER_END = SEGMENT_LEN * SEGMENT_COUNT;
+
+/**
+ * WHERE THE MILESTONES STAND, AND WHY IT IS NOT A CONSTANT.
+ *
+ * A lesson is a passage, and how far it carries a child is decided by how
+ * much they type — `runLengthFor` gives `chars * 0.9`, capped at RUN_LEN.
+ * Measured across the bands that is 21.6 units for a five-year-old's first
+ * passage and 64 for a nine-year-old's, every lesson:
+ *
+ *   5-6    21.6 -> 32.4     chapter  270
+ *   7-8    45.0 -> 64.0     chapter  548
+ *   9-10   64.0 -> 64.0     chapter  640
+ *   11+    64.0 -> 64.0     chapter  640
+ *
+ * So a fixed 26-unit segment is wrong at both ends: the youngest stop short
+ * of their own milestone every lesson, and the oldest cover two and a half
+ * segments in one passage. The stones have to follow the typing, which means
+ * the chapter is as long as the band needs and the road is built to fit.
+ *
+ * The world is built before any passage exists — it only learns lengths later
+ * through `startRun` — so these are PREDICTED from the band's own curve,
+ * which is measured and does not move. A child who types a shorter passage
+ * than predicted stops a little short of the stone and the next run starts
+ * from where they are; the stone is still the marker it was.
+ */
+export function chapterBounds(
+  startChars: number,
+  fullChars: number,
+): readonly number[] {
+  const out = [0];
+  for (let k = 0; k < SEGMENT_COUNT; k++) {
+    // Passages lengthen as keys unlock, so the curve runs from the band's
+    // first passage to its full one across the ten lessons.
+    const chars =
+      startChars + ((fullChars - startChars) * k) / (SEGMENT_COUNT - 1);
+    out.push(out[k]! + runLengthFor(chars));
+  }
+  return out;
+}
+
+/**
+ * The youngest band, and the default when nobody says otherwise.
+ *
+ * 5-6 is the right default rather than an average: it is the shortest
+ * chapter, so a world built to it is never SHORTER than the road a child
+ * walks. Guessing high would build ground nobody reaches; guessing low runs
+ * them off the end of the terrain, which is the failure that shows.
+ */
+export const DEFAULT_BOUNDS = chapterBounds(24, 36);
+
+/** Where the chapter ends, for a given set of stones. */
+export function chapterEnd(bounds: readonly number[] = DEFAULT_BOUNDS): number {
+  return bounds[bounds.length - 1]!;
+}
 
 /**
  * How much of a segment still remembers the one before it.
@@ -480,14 +532,30 @@ export const LESSONS: readonly Lesson[] = [
 ];
 
 /** Which lesson owns this point on the road. Clamped at both ends. */
-export function lessonAt(x: number): Lesson {
-  const i = Math.floor(x / SEGMENT_LEN);
-  return LESSONS[Math.max(0, Math.min(SEGMENT_COUNT - 1, i))]!;
+export function lessonAt(
+  x: number,
+  bounds: readonly number[] = DEFAULT_BOUNDS,
+): Lesson {
+  for (let i = SEGMENT_COUNT - 1; i > 0; i--) {
+    if (x >= bounds[i]!) return LESSONS[i]!;
+  }
+  return LESSONS[0]!;
 }
 
-/** Where a milestone stands. Stone n is at n * 26. */
-export function milestoneX(n: number): number {
-  return n * SEGMENT_LEN;
+/** Where a milestone stands. Stone n closes lesson n. */
+export function milestoneX(
+  n: number,
+  bounds: readonly number[] = DEFAULT_BOUNDS,
+): number {
+  return bounds[Math.max(0, Math.min(SEGMENT_COUNT, n))]!;
+}
+
+/** How long one lesson's stretch of road is. */
+export function segmentLen(
+  n: number,
+  bounds: readonly number[] = DEFAULT_BOUNDS,
+): number {
+  return bounds[n]! - bounds[n - 1]!;
 }
 
 /**
@@ -499,40 +567,52 @@ export function milestoneX(n: number): number {
  * two are the same lesson and `mix` is 1, which is the common case and costs
  * the caller no special handling.
  */
-export function blendAt(x: number): {
-  readonly lesson: Lesson;
-  readonly prev: Lesson;
-  readonly mix: number;
-} {
-  const lesson = lessonAt(x);
-  const into = (x - lesson.from * SEGMENT_LEN) / SEGMENT_LEN;
+export function blendAt(
+  x: number,
+  bounds: readonly number[] = DEFAULT_BOUNDS,
+): { readonly lesson: Lesson; readonly prev: Lesson; readonly mix: number } {
+  const lesson = lessonAt(x, bounds);
+  const len = segmentLen(lesson.n, bounds);
+  const into = (x - bounds[lesson.n - 1]!) / len;
   if (into >= BLEED || lesson.n === 1) {
     return { lesson, prev: lesson, mix: 1 };
   }
+  const t = into / BLEED;
   return {
     lesson,
     prev: LESSONS[lesson.n - 2]!,
     // Smoothstep rather than a straight ramp: a linear blend changes fastest
     // at the stone itself, which is exactly where the seam would show.
-    mix: (() => {
-      const t = into / BLEED;
-      return t * t * (3 - 2 * t);
-    })(),
+    mix: Math.max(0, t * t * (3 - 2 * t)),
   };
 }
 
 /** Density at a point, carried across the bleed like everything else. */
-export function densityAt(x: number): number {
-  const { lesson, prev, mix } = blendAt(x);
+export function densityAt(
+  x: number,
+  bounds: readonly number[] = DEFAULT_BOUNDS,
+): number {
+  const { lesson, prev, mix } = blendAt(x, bounds);
   return prev.density + (lesson.density - prev.density) * mix;
 }
 
-/** Everything that stands in a fixed place, in world coordinates. */
-export function placements(): readonly (Placed & { readonly x: number })[] {
+/**
+ * Everything that stands in a fixed place, in world coordinates.
+ *
+ * The table stores `at` as a FRACTION of its segment rather than a distance,
+ * which is what lets the same authored village sit on a 270-unit chapter and
+ * a 640-unit one without a second table: the well stays 44 per cent of the
+ * way through Lesson 4 either way.
+ */
+export function placements(
+  bounds: readonly number[] = DEFAULT_BOUNDS,
+): readonly (Placed & { readonly x: number })[] {
   const out: (Placed & { x: number })[] = [];
   for (const l of LESSONS) {
+    const from = bounds[l.n - 1]!;
+    const len = segmentLen(l.n, bounds);
     for (const p of l.props) {
-      out.push({ ...p, x: (l.from + p.at) * SEGMENT_LEN });
+      out.push({ ...p, x: from + p.at * len });
     }
   }
   return out;
