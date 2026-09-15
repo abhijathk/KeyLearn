@@ -6155,6 +6155,45 @@ export function createKidsWorld(
    * the thing stands" — and for anything already centred it is a shift of
    * approximately zero, so the cast is untouched.
    */
+  /**
+   * HOW MUCH SMALLER A THING IS FOR BEING FURTHER BACK.
+   *
+   * This camera is ORTHOGRAPHIC, which means it has no perspective at all: a
+   * house forty units behind the road is drawn exactly the size of one
+   * standing on it, and a companion walking a lane further out is the size of
+   * the child beside them. That is why setting anything back made it look
+   * wrong rather than distant — higher in the picture, same size, which the
+   * eye reads as "enormous and close" instead of "normal and far".
+   *
+   * A perspective camera would give this for nothing and cost a great deal:
+   * the skyline solve, the lane alignment, the word row and the shadows are
+   * all written against an orthographic projection. So the cue is applied
+   * where it is missed instead — by SIZE, which is the only channel an ortho
+   * camera leaves open.
+   *
+   * Apparent size goes as 1/distance and THE ROAD IS THE REFERENCE: anything
+   * standing in the child's own lane is its true size, whatever the lane's z
+   * happens to be, so none of the castHeight figures shift under this.
+   * Things behind shrink from there and the few things in front grow a
+   * little, which is what distance does.
+   *
+   * Softened to seven tenths of the true falloff, because the full curve over
+   * this depth range takes the far houses down to half and they stop reading
+   * as houses.
+   *
+   * Applied at PLACEMENT, not per frame. Every mover here already writes its
+   * own `scale` for its own reasons — the scare loom, the celebration hop,
+   * the girth override — and a second writer every frame would fight all of
+   * them. A companion holds its lane, so its factor is a constant anyway; an
+   * animal that wanders a few units in z changes size by less than a per
+   * cent, which is well under noticing and far cheaper than the alternative.
+   */
+  function perspective(z: number): number {
+    const eye = V.camZ;
+    const dist = Math.max(1, eye - z);
+    const lane = Math.max(1, eye - (theme.laneZ ?? 0));
+    return 1 - 0.7 * (1 - lane / dist);
+  }
   function fitToHeight(root: THREE.Object3D, targetH: number) {
     const box = measureBox(root);
     const size = box.getSize(new THREE.Vector3());
@@ -10445,6 +10484,13 @@ export function createKidsWorld(
       if (gltf == null) {
         return;
       }
+      // NO DEPTH CUE ON THE CAST. The hero, the companion and the guide all
+      // travel the road — they are at the reference distance by definition,
+      // so the factor would be 1 for them anyway — and the roadside villagers
+      // this same function spawns stand close enough to it that shrinking
+      // them would read as a different, smaller person rather than as the
+      // same person further off. The party has to stay one size: a child
+      // compares themselves to Dave, and Dave must not change.
       const wrap = fitToHeight(gltf.scene, h);
       if (girth != null && girth !== 1) {
         // Across and through only; the height was already fitted and must not
@@ -10607,7 +10653,7 @@ export function createKidsWorld(
           m.frustumCulled = false;
         }
       });
-      const wrap = fitToHeight(gltf.scene, h);
+      const wrap = fitToHeight(gltf.scene, h * perspective(z));
       // Measured BEFORE it is turned, so the box's own axes are the
       // animal's: z along the body, x across it. Used to sample the ground
       // under each end when it is standing on a slope.
@@ -11204,7 +11250,16 @@ export function createKidsWorld(
         // outline is identical, and the outline is what the eye picks up in a
         // cluster. Letting height run separately from girth gives stocky ones
         // and leggy ones, which read as different plants at a glance.
-        wrap.scale.set(scl, scl * (0.85 + Math.random() * 0.4), scl);
+        {
+          // The depth cue rides on top of the per-plant variation, so a tree
+          // on the far verge is smaller than the same tree on the near one.
+          const d = perspective(z);
+          wrap.scale.set(
+            scl * d,
+            scl * d * (0.85 + Math.random() * 0.4),
+            scl * d,
+          );
+        }
         // NO PER-PLANT TINT ON THIS PATH.
         //
         // It was here, from a five-shade pool, and it is why the world went
@@ -11591,34 +11646,6 @@ export function createKidsWorld(
         }
         return propCache.get(name) ?? null;
       };
-      /**
-       * HOW MUCH SMALLER A THING IS FOR BEING FURTHER BACK.
-       *
-       * This camera is ORTHOGRAPHIC, which means it has no perspective at
-       * all: a house forty units behind the road is drawn exactly the size of
-       * one standing on it. That is why setting the village back made it look
-       * wrong rather than distant — higher up the picture, same size, which
-       * the eye reads as "enormous and close" instead of "normal and far".
-       *
-       * A perspective camera would give this for nothing, and cost a great
-       * deal: the skyline solve, the lane alignment, the word row and the
-       * shadows are all written against an orthographic projection. So the
-       * cue is applied where it is missed instead — to the buildings, by
-       * size, which is the only channel an ortho camera leaves.
-       *
-       * Apparent size goes as 1/distance, and the road is the reference: a
-       * prop on it is its true size and everything behind shrinks from there.
-       * Softened to seven tenths of the true falloff, because the full curve
-       * over this depth range takes the far houses down to half and they stop
-       * reading as houses.
-       */
-      const perspective = (z: number) => {
-        // `cam.position.z`, not the view's `camZ`: inside this block `V` is
-        // the VILLAGE, not the view — the name is shadowed here.
-        const eye = cam.position.z;
-        const dist = Math.max(1, eye - z);
-        return 1 - 0.7 * (1 - eye / dist);
-      };
       const stand = async (
         name: string,
         x: number,
@@ -11896,7 +11923,10 @@ export function createKidsWorld(
           }
           const x = 20 + Math.random() * (TRAIL_END - 40);
           const z = -(16 + Math.random() * 10);
-          const wrap = fitToHeight(g.scene.clone(true), stray.h);
+          const wrap = fitToHeight(
+            g.scene.clone(true),
+            stray.h * perspective(z),
+          );
           wrap.position.set(x, surfaceY(x, z), z);
           wrap.rotation.y = Math.random() * Math.PI * 2;
           scene.add(wrap);
@@ -12245,7 +12275,16 @@ export function createKidsWorld(
                     Math.random() * Math.PI * 2,
                     (Math.random() - 0.5) * 0.2,
                   );
-                  wrap.scale.set(scl, scl * (0.85 + Math.random() * 0.4), scl);
+                  {
+                    // The depth cue rides on top of the per-plant variation, so a tree
+                    // on the far verge is smaller than the same tree on the near one.
+                    const d = perspective(z);
+                    wrap.scale.set(
+                      scl * d,
+                      scl * d * (0.85 + Math.random() * 0.4),
+                      scl * d,
+                    );
+                  }
                   wrap.traverse((nd) => {
                     const mesh = nd as THREE.Mesh;
                     if (mesh.isMesh) {
