@@ -2478,7 +2478,11 @@ export const VILLAGE_THEME: WorldTheme = {
     // foreground and read as a wall across the road rather than as the far
     // side of a valley. 34 puts the ridge at about a ninth of the frame,
     // which is what a treeline a couple of miles off actually measures.
-    height: 20,
+    // 26, not 20. Raising the ridge to where it can be seen lifts the whole
+    // strip, and the art is transparent below its mist — so a taller band is
+    // what keeps that mist down on the ground instead of leaving a line of
+    // sky under the hills.
+    height: 26,
     // BEHIND EVERYTHING, BUT NOT BEHIND THE FAR PLANE.
     //
     // This was 260 and invisible, and the reason took measuring: the camera
@@ -2834,14 +2838,14 @@ export const VILLAGE_THEME: WorldTheme = {
     // now: the painted band's own mist draws over the skirt (see the skirt's
     // `depthWrite`), and covering that join is exactly what the mist is for.
     lookY: 4.25,
-    // Back to 14.4 — a step IN, about seven per cent.
+    // 13.4 — two steps in from 15.4, about thirteen per cent closer.
     //
     // Worth knowing what it spends: the frame's top is `frustum * topF`, so a
     // narrower view is a lower ceiling, and the ground's far edge does not
     // move when the ceiling does. Zooming in and lifting the scene both push
     // that ceiling down towards the edge, and the sky between them is what
     // closes up.
-    frustum: 14.4,
+    frustum: 13.4,
     // THE FRAME SLIDES UP, AND KEEPS ITS HEIGHT.
     //
     // 0.68/1.22 against 0.92/0.98: the two still sum to 1.90, so the view is
@@ -2880,11 +2884,11 @@ export const VILLAGE_THEME: WorldTheme = {
     // letters are. Trading top for bottom loses the horizon, so the frame has
     // to get bigger instead.
     // The window slides DOWN its wall so the world rises in the picture:
-    // 0.96/1.44 keeps the same 2.40 total, so the lift costs no zoom of its
+    // 0.90/1.50 keeps the same 2.40 total, so the lift costs no zoom of its
     // own. The ground is deliberately left alone here — it is the frame that
     // was asked to move, not the world.
-    topF: 0.96,
-    botF: 1.44,
+    topF: 0.9,
+    botF: 1.5,
   },
   // Tropical, and nothing turns. Several broadleaf variants in the nature set
   // carry autumn reds; on a Kerala road they read as a different climate.
@@ -3880,6 +3884,8 @@ export function createKidsWorld(
   /** The day sun's two ends: deep amber low, a whisper of cream at noon. */
   const SKY_SUN_AMBER = new THREE.Color(0xff9a43);
   const SKY_SUN_CREAM = new THREE.Color(0xfff0d4);
+  /** What the distance fades into by day — the old sky-bottom green. */
+  const FOG_HAZE_DAY = new THREE.Color(0xd7f0d2);
   const skyCanvas = document.createElement("canvas");
   skyCanvas.width = SKY_W;
   skyCanvas.height = SKY_H;
@@ -4239,8 +4245,14 @@ export function createKidsWorld(
           .set(0x7ec5f2)
           .lerp(SKY_DAWN_TOP, warm * 0.8)
           .lerp(SKY_NOON_TOP, dreamy * 0.3);
+        // A PALE BLUE, NOT A PALE GREEN. This stop used to be 0xd7f0d2, a
+        // washed green chosen so the ground could fade into the sky before
+        // there was anything painted on the horizon — which is why a green
+        // band sat above the hills and read as ground hanging in the air.
+        // The painted treeline does that job now, so the sky is allowed to
+        // be sky all the way down to it.
         flatSky.bottom
-          .set(0xd7f0d2)
+          .set(0xbcdcf0)
           .lerp(SKY_DAWN_LOW, warm)
           .lerp(SKY_NOON_LOW, dreamy * 0.34);
       }
@@ -4258,7 +4270,13 @@ export function createKidsWorld(
       // the backdrop — and because it is now COPIED from that band rather
       // than written out again beside it, it goes gold at dusk and milky
       // under a full moon for free, and the two cannot drift apart.
-      (scene.fog as THREE.Fog).color.copy(flatSky.bottom);
+      // The fog keeps the haze colour the ground fades into, which is NOT the
+      // sky's bottom stop any more — see that stop's note. They were one value
+      // while the ground had to melt into the sky; now the horizon separates
+      // them and each can be what it actually is.
+      (scene.fog as THREE.Fog).color.copy(
+        night ? flatSky.bottom : FOG_HAZE_DAY,
+      );
       sun.intensity =
         grade.sun * (dark ? (night ? lerp(0.46, 0.8) * moonKey : 0.8) : 1);
       sunBase = sun.intensity;
@@ -5652,119 +5670,13 @@ export function createKidsWorld(
     groundMesh = ground;
     scene.add(ground);
 
-    // ── AND A SKIRT BEYOND IT, so the horizon is a line and not an EDGE ──
-    //
-    // The terrain is a finite 400 x 120 plane. Once the camera came down to
-    // a walker's pitch its far edge stopped being off the top of the frame
-    // and started being IN it — a hard diagonal running across the sky,
-    // diagonal because the view is yawed twelve degrees and a straight edge
-    // seen at an angle is not straight.
-    //
-    // Extending the terrain itself was the obvious move and the wrong one:
-    // `PlaneGeometry` segments are uniform, so three times the depth is
-    // either three times coarser relief everywhere — including under the
-    // child, where it is the whole modelling of the ground — or triple the
-    // triangles, and `surfaceY` raycasts this mesh.
-    //
-    // So the terrain keeps its shape and a flat skirt carries on past it.
-    // Two triangles. It starts where the ground stops and runs out to 200
-    // units from the camera, where the fog has been solid for a long time
-    // (it saturates at 120), so the skirt's own far edge cannot be seen
-    // either — the picture just stops being ground and starts being sky, at
-    // the level line the fog draws. It is deliberately NOT `groundMesh`, so
-    // nothing raycasts it and no character can be placed on it.
-    {
-      // HOW FAR OUT, and the window is narrower than it looks.
-      //
-      // The edge has to be past the fog's saturation, or it is a visible
-      // line; and it has to stay UNDER the top of the frame, or there is no
-      // sky left. Fog is solid by 120 units from the camera, and the frame
-      // top is 11.8 units of screen height, which at this 4-degree pitch is
-      // 11.8 / sin(4) = 169 units out. So the edge belongs somewhere between
-      // THE WEDGE OF SKY UNDER THE HORIZON WAS THIS NUMBER BEING TOO SMALL.
-      //
-      // The painted band is horizontal and the ground's far edge is not: it
-      // is a straight line in world space seen under a twelve-degree yaw, so
-      // it runs across the screen at an angle. Where the band's mist ended
-      // above that slanted edge, nothing painted at all and the background
-      // showed through — a wedge, wide on one side and closed on the other,
-      // which is exactly the shape a diagonal meeting a horizontal makes.
-      //
-      // The old note below reasoned about keeping this edge UNDER the top of
-      // the frame. That stopped being the constraint the moment the band
-      // moved in front of the ground: the band covers the top now, so the
-      // skirt is free to run out well past it and simply leave no gap to
-      // find. At 140 its own edge is fifty units past the fog's saturation
-      // and far above the frame, which is to say it does not exist on screen.
-      //
-      // (Historic: the window used to be between
-      // 120 and the frame's own top, and it moved whenever the frame did.
-      // With the window down at 0.70 the top is 10.8 units of screen height,
-      // so 125 is the number: far enough out that the edge is already solid
-      // fog and cannot be found, near enough to leave two units of sky above
-      // it. At 200 the fog covered the entire picture.)
-      const FAR = 140;
-      // TUCKED UNDER THE TERRAIN, NOT BUTTED AGAINST IT.
-      //
-      // This started at the terrain's own far edge (-60) and level with it,
-      // which is exact and wrong: the terrain has relief, so its edge
-      // undulates while the skirt is flat, and everywhere the ground dipped
-      // below the skirt a gap opened and the sky showed straight through it —
-      // a blue lagoon lying in the middle of a dry field.
-      //
-      // Twelve units of overlap and half a unit lower, so the terrain always
-      // wins in front and the join cannot be found. Both numbers are larger
-      // than the relief ever is.
-      const near = -36;
-      // The camera stands at z = 42, so a far edge FAR units away is at
-      // z = 42 - FAR, and the skirt runs from the terrain's edge out to it.
-      const farZ = V.camZ - FAR;
-      const depth = near - farZ;
-      const skirt = new THREE.Mesh(
-        new THREE.PlaneGeometry(520, depth),
-        new THREE.MeshStandardMaterial({
-          // The colour it fades FROM. It is four fifths fog at the join and
-          // solid fog within twenty units, so this only has to be right
-          // where the two meet.
-          color: land.grass,
-          roughness: 1,
-          metalness: 0,
-          // IT PAINTS, BUT IT DOES NOT CLAIM THE DEPTH.
-          //
-          // The horizon stands 200 units out and takes the depth test, so
-          // anything nearer that writes depth hides it — and this skirt lies
-          // right across the bottom of the painted band, cutting the mist off
-          // at the ground line and leaving the hills floating on a hard edge.
-          //
-          // Leaving the depth alone lets the band show through the skirt
-          // while the terrain, the trees and the buildings all still occlude
-          // it normally: they write depth, this does not. It is safe because
-          // opaque geometry is drawn front to back, so the skirt — the
-          // furthest opaque thing in the world — is the last one drawn and
-          // there is nothing behind it to leak through.
-          depthWrite: false,
-        }),
-      );
-      skirt.rotation.x = -Math.PI / 2;
-      // ABOVE the terrain, not under it, and starting well inside it.
-      //
-      // It sat half a unit LOW, which is right for hiding a seam and wrong
-      // for everything else: the terrain's far relief still rose in front of
-      // the skirt, and since the terrain writes depth it rose in front of the
-      // painted horizon too — a pale hill standing across the treeline.
-      //
-      // Lifted just clear of the ground and started twenty units nearer, the
-      // skirt is the thing in front out there, so the relief is hidden and
-      // the band — which draws over the skirt, see `depthWrite` above — has
-      // nothing left to be blocked by. Everything it covers at that range is
-      // already solid fog, so nothing is lost behind it.
-      skirt.position.set(60, terrainY(60, -60) + 0.6, near - depth / 2);
-      // Under everything, and never in the depth fight at the seam.
-      skirt.renderOrder = -20;
-      skirt.receiveShadow = false;
-      skirt.castShadow = false;
-      scene.add(skirt);
-    }
+    // THE FAR SKIRT IS GONE. It was a flat plane carrying on past the
+    // terrain so the terrain's own edge could not be seen, and it did that —
+    // but it ran from 36 units out to 98, which at this pitch is most of the
+    // upper frame, so what it actually did was paint a green band across the
+    // sky. The painted horizon does the job properly: it stands in front of
+    // the terrain's edge and covers it, and everything above its ridge is
+    // sky again rather than ground.
 
     // ── the road itself ─────────────────────────────────────────────────
     //
@@ -12917,7 +12829,13 @@ export function createKidsWorld(
       // terrain's far edge this number was pinned to it — drop below and the
       // ground simply ate the hills. At 80 units the band is IN FRONT of that
       // edge, so where it sits is a choice again rather than a constraint.
-      const wantPeak = V.frustum * V.topF * 0.9;
+      // 0.68, so the band's MIST reaches the terrain's edge rather than its
+      // ridge sitting level with it. With the skirt gone the ground stops at
+      // about 2.9 units of screen height and the art is transparent below its
+      // mist, so a ridge set too high leaves a strip of sky between the two.
+      // Dropping it puts the mist on the ground and buys four units of real
+      // sky above the hills — more than the skirt was ever hiding.
+      const wantPeak = V.frustum * V.topF * 0.8;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
