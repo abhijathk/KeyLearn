@@ -2491,7 +2491,18 @@ export const VILLAGE_THEME: WorldTheme = {
     // It does not need to be far anyway. The band takes no depth test, so
     // nothing can occlude it and nothing can z-fight with it; the distance
     // only decides how much of the frame it covers via the skyline solve.
-    dist: 200,
+    // NEARER THAN THE GROUND IT STANDS BEHIND, which sounds backwards and is
+    // the whole fix. The terrain writes depth and reaches 92 units out, so a
+    // band at 200 was behind it and got cut off along the terrain's own edge —
+    // a hard line straight through the treeline. The skirt was never the
+    // culprit; it does not write depth at all.
+    //
+    // At 88 the band is in front of that edge and nothing about it changes
+    // otherwise: this camera is orthographic, so distance has no effect on
+    // size. Everything that should still occlude it does — the scatter ends
+    // at 68 units, the temple stands at 84 — and the only thing it now draws
+    // over is the far ground, which is what it is for.
+    dist: 80,
     // 0.58, measured off the art rather than guessed at: the hill ridge sits
     // a little under three fifths of the way up the file, with the mist band
     // under it and cut-out sky above. At 0.42 the whole painted strip was
@@ -2630,14 +2641,23 @@ export const VILLAGE_THEME: WorldTheme = {
       { model: "Temple", dx: 5, dz: -24, h: 9, turn: 0.08 },
     ],
     houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
-    houseHeight: 14,
+    // SIXTY PER CENT of the 14 they were measured to. 8.4 is about 2.4 m to
+    // the ridge, which is a metre under the human-scale figure above and is a
+    // deliberate departure from it: at 14 the houses were right against a
+    // ruler and too big against the FRAME, crowding the road they are meant
+    // to sit back from. The door comes down with them, to roughly 4.2 — level
+    // with Dave rather than over an adult's head — so the honest measurement
+    // in `heart` above no longer describes these two numbers. Left in place
+    // because it still describes the temple, the wall and the cart, and
+    // because the reasoning is worth keeping when the art is next revisited.
+    houseHeight: 8.4,
     wall: "Wall",
     wallHeight: 4.2,
     // Out on the empty stretches, very rarely: a house set back off the road,
     // or a cart somebody left. See `strayRate` where these are placed.
     strays: [
-      { model: "HouseThatch", h: 14 },
-      { model: "HouseMoss", h: 14 },
+      { model: "HouseThatch", h: 8.4 },
+      { model: "HouseMoss", h: 8.4 },
       { model: "Cart", h: 5.0 },
     ],
   },
@@ -2802,7 +2822,7 @@ export const VILLAGE_THEME: WorldTheme = {
     // three quarters faded and would once have shown as a line. It does not
     // now: the painted band's own mist draws over the skirt (see the skirt's
     // `depthWrite`), and covering that join is exactly what the mist is for.
-    lookY: 6.56,
+    lookY: 4.25,
     // 15.4, a hair over 14.4 — seven per cent wider, which is a step back
     // rather than a zoom out. Enough to give the row of letters and the far
     // hills room without changing how big the children read.
@@ -2844,8 +2864,11 @@ export const VILLAGE_THEME: WorldTheme = {
     // horizon has to sit on, and the bottom is where the children and the
     // letters are. Trading top for bottom loses the horizon, so the frame has
     // to get bigger instead.
-    topF: 0.86,
-    botF: 1.3,
+    // The window slides DOWN its wall so the world rises in the picture:
+    // 1.02/1.38 keeps the same 2.40 total, so nothing zooms, and the frame's
+    // top still clears the terrain's far edge at 16.03 with room for the sky.
+    topF: 1.02,
+    botF: 1.38,
   },
   // Tropical, and nothing turns. Several broadleaf variants in the nature set
   // carry autumn reds; on a Kerala road they read as a different climate.
@@ -4411,6 +4434,23 @@ export function createKidsWorld(
    * A row rather than a single plane because the art is 3:1 — see the build.
    */
   const horizonBand: { group: THREE.Group; night: boolean }[] = [];
+  /** Where the camera stood when the horizon was built. See the drift. */
+  let horizonCamX0 = 0;
+  /**
+   * HOW MUCH OF THE CHILD'S TRAVEL THE HORIZON KEEPS.
+   *
+   * It followed the camera exactly, which is what you do with a backdrop and
+   * is why it read as painted ON the window rather than as country: walk the
+   * whole 260-unit trail and it did not shift by a pixel (measured — two
+   * frames either side of a word, identical).
+   *
+   * Far things do move, just barely. Six per cent means the whole trail
+   * drifts it about sixteen units, a hand's width over a session, which is
+   * under the threshold of noticing frame to frame and plainly there if you
+   * look up after a while. The strips are a cross-faded chain 320 units long,
+   * so there is a great deal more country than the drift can ever use.
+   */
+  const HORIZON_DRIFT = 0.06;
 
   // ══ LAMPLIGHT ════════════════════════════════════════════════════════
   //
@@ -5259,7 +5299,16 @@ export function createKidsWorld(
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
       t.repeat.set(40, 8);
     }
-    const geo = new THREE.PlaneGeometry(400, 120, 200, 40);
+    // 76 DEEP, NOT 120. The far edge is what the painted horizon has to
+    // clear, and at a 9-degree pitch every unit of depth is 0.16 of a unit of
+    // screen height: 120 put it at 17.7, well over a frame top of 15.4, so
+    // the ground filled the picture and there was no sky to put a horizon in.
+    // 84 brings it to 16.0 with a unit of sky above, and every further
+    // degree of pitch takes another bite: the ceiling on tilting this camera
+    // down is how short the ground can get before the village runs off it. The segment count is
+    // unchanged, so the relief under the child is exactly as fine as it was
+    // and `surfaceY` raycasts the same 16,000 triangles.
+    const geo = new THREE.PlaneGeometry(400, 76, 200, 40);
     geo.rotateX(-Math.PI / 2);
     geo.translate(60, 0, 0); // centre the ground on the trail, not the origin
     const pos = geo.attributes.position;
@@ -5621,7 +5670,7 @@ export function createKidsWorld(
       // so 125 is the number: far enough out that the edge is already solid
       // fog and cannot be found, near enough to leave two units of sky above
       // it. At 200 the fog covered the entire picture.
-      const FAR = 106;
+      const FAR = 88;
       // TUCKED UNDER THE TERRAIN, NOT BUTTED AGAINST IT.
       //
       // This started at the terrain's own far edge (-60) and level with it,
@@ -11733,11 +11782,16 @@ export function createKidsWorld(
       // filled the frame and hid the party walking past it. The far verge is
       // where a village is met from a road anyway: you walk along it and it
       // is over there.
+      // SET FURTHER BACK, but not past where they can be seen. The houses
+      // are 60 per cent of the size they were, so they can afford more ground
+      // between them and the road — and the ceiling on that is the fog, not
+      // the terrain: it goes solid 92 units from the camera, which stands at
+      // z = 42, so anything past about -44 is gone whatever is drawn there.
       const spots: readonly (readonly [number, number])[] = [
-        [-46, -20], // nearest the road
-        [50, -42], // well back behind the others
-        [-28, -30], // and one more set back, still behind
-        [72, -24],
+        [-46, -26], // nearest the road
+        [50, -40], // well back behind the others
+        [-28, -36], // and one more set back, still behind
+        [72, -30],
       ];
       for (let i = 0; i < Math.min(3, pool.length); i++) {
         const [ox, oz] = spots[i];
@@ -12759,7 +12813,11 @@ export function createKidsWorld(
       // two overlap rather than meet. The band draws over the skirt anyway,
       // so the overlap costs nothing and the gap cannot come back the next
       // time the camera moves.
-      const wantPeak = V.frustum * V.topF * 0.94;
+      // 0.90, and it is free to move now. While the band sat behind the
+      // terrain's far edge this number was pinned to it — drop below and the
+      // ground simply ate the hills. At 80 units the band is IN FRONT of that
+      // edge, so where it sits is a choice again rather than a constraint.
+      const wantPeak = V.frustum * V.topF * 0.9;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
@@ -12863,6 +12921,7 @@ export function createKidsWorld(
         // same order, and one formula in the tick moving both groups. The
         // registration is a consequence of that rather than something
         // maintained, which is the only way it stays true.
+        horizonCamX0 = cam.position.x;
         group.position.set(0, baseY, -H.dist);
         group.renderOrder = -100;
         scene.add(group);
@@ -13216,10 +13275,17 @@ export function createKidsWorld(
             const m = (strip as THREE.Mesh).material as THREE.MeshBasicMaterial;
             m.opacity = op;
           }
+          // Follows the camera, but keeps a little of the journey for itself
+          // — see `HORIZON_DRIFT`. The depth correction is unchanged: this
+          // camera is yawed, so a plane this far back has to be offset along
+          // x to LOOK centred (the same solve `laneAlignedX` does).
+          const follow =
+            horizonCamX0 +
+            (cam.position.x - horizonCamX0) * (1 - HORIZON_DRIFT);
           h.group.position.x =
             Math.abs(_tmpRight.x) < 1e-4
-              ? cam.position.x
-              : cam.position.x -
+              ? follow
+              : follow -
                 ((h.group.position.z - cam.position.z) * _tmpRight.z) /
                   _tmpRight.x;
         }
