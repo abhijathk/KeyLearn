@@ -1536,6 +1536,17 @@ export type WorldTheme = {
    * why this is the dial even though it is the blunt one.
    */
   readonly wordZ?: number;
+  /**
+   * How high the word row floats, in world units. Default 0 — on the ground.
+   *
+   * `wordZ` moves the row towards or away from the camera, which barely
+   * changes its height on screen: at a 4-degree pitch a unit of depth is
+   * worth 0.07 of a unit of screen height, while a unit of LIFT is worth a
+   * full one. When the camera came down to a walker's eye the row went out
+   * of the bottom of the frame, and no amount of `wordZ` was going to bring
+   * it back — this is the lever that does.
+   */
+  readonly wordY?: number;
   /** How far to the side the companion walks. Defaults to FOLLOW_SIDE. */
   readonly followSide?: number;
   /** Companions dotted along the trail. "$friend" resolves to land.friend. */
@@ -2171,13 +2182,7 @@ export const VILLAGE_THEME: WorldTheme = {
   // walking through them. They take the near half; the far half is the
   // oncoming lane.
   laneZ: 2,
-  // 22, not 28. The frame slid three and a half units up its wall (see
-  // `view.topF`) and the letters did not go with it — they are held down by
-  // `wordZ` on purpose, so everything else rising left them below the bottom
-  // edge and a child could not read the word they were typing. Brought up by
-  // the same amount the frame moved, so the gap between the road and the
-  // letters — which is the thing this number actually tunes — is unchanged.
-  wordZ: 22,
+  wordZ: 28,
   // Tighter than the default 1.9, so the two of them fit in one half of the
   // road instead of the companion trailing off the edge of it.
   followSide: 1.3,
@@ -2763,7 +2768,10 @@ export const VILLAGE_THEME: WorldTheme = {
     // 7.6 against a 10.6 eye over a 42.95-unit reach is
     // atan(3 / 42.95) = 4.0 degrees down.
     lookY: 7.6,
-    frustum: 14.4,
+    // 15.4, a hair over 14.4 — seven per cent wider, which is a step back
+    // rather than a zoom out. Enough to give the row of letters and the far
+    // hills room without changing how big the children read.
+    frustum: 15.4,
     // THE FRAME SLIDES UP, AND KEEPS ITS HEIGHT.
     //
     // 0.68/1.22 against 0.92/0.98: the two still sum to 1.90, so the view is
@@ -2776,8 +2784,15 @@ export const VILLAGE_THEME: WorldTheme = {
     // The road wanted to sit higher in the frame than the first slide left
     // it, so the window comes back down a little: 0.82/1.08 still sums to
     // 1.90, so the view is the same size and the same scale, moved.
-    topF: 0.82,
-    botF: 1.08,
+    // THE WHOLE WINDOW MOVES, not the things inside it.
+    //
+    // 0.70/1.20 still sums to 1.90, so the view is the same size and the same
+    // scale — it just sits lower on its wall, which lifts everything in the
+    // world in the picture at once. Raising the letters on their own got them
+    // back on screen and made them look like a banner hung in the sky; the
+    // row belongs where it always was, and it was the frame that was wrong.
+    topF: 0.7,
+    botF: 1.2,
   },
   // Tropical, and nothing turns. Several broadleaf variants in the nature set
   // carry autumn reds; on a Kerala road they read as a different climate.
@@ -5505,6 +5520,66 @@ export function createKidsWorld(
     ground.updateMatrixWorld(true);
     groundMesh = ground;
     scene.add(ground);
+
+    // ── AND A SKIRT BEYOND IT, so the horizon is a line and not an EDGE ──
+    //
+    // The terrain is a finite 400 x 120 plane. Once the camera came down to
+    // a walker's pitch its far edge stopped being off the top of the frame
+    // and started being IN it — a hard diagonal running across the sky,
+    // diagonal because the view is yawed twelve degrees and a straight edge
+    // seen at an angle is not straight.
+    //
+    // Extending the terrain itself was the obvious move and the wrong one:
+    // `PlaneGeometry` segments are uniform, so three times the depth is
+    // either three times coarser relief everywhere — including under the
+    // child, where it is the whole modelling of the ground — or triple the
+    // triangles, and `surfaceY` raycasts this mesh.
+    //
+    // So the terrain keeps its shape and a flat skirt carries on past it.
+    // Two triangles. It starts where the ground stops and runs out to 200
+    // units from the camera, where the fog has been solid for a long time
+    // (it saturates at 120), so the skirt's own far edge cannot be seen
+    // either — the picture just stops being ground and starts being sky, at
+    // the level line the fog draws. It is deliberately NOT `groundMesh`, so
+    // nothing raycasts it and no character can be placed on it.
+    {
+      // HOW FAR OUT, and the window is narrower than it looks.
+      //
+      // The edge has to be past the fog's saturation, or it is a visible
+      // line; and it has to stay UNDER the top of the frame, or there is no
+      // sky left. Fog is solid by 120 units from the camera, and the frame
+      // top is 11.8 units of screen height, which at this 4-degree pitch is
+      // 11.8 / sin(4) = 169 units out. So the edge belongs somewhere between
+      // 120 and the frame's own top, and it moves whenever the frame does.
+      // With the window down at 0.70 the top is 10.8 units of screen height,
+      // so 125 is the number: far enough out that the edge is already solid
+      // fog and cannot be found, near enough to leave two units of sky above
+      // it. At 200 the fog covered the entire picture.
+      const FAR = 125;
+      const near = -60; // the terrain's own far edge
+      // The camera stands at z = 42, so a far edge FAR units away is at
+      // z = 42 - FAR, and the skirt runs from the terrain's edge out to it.
+      const farZ = V.camZ - FAR;
+      const depth = near - farZ;
+      const skirt = new THREE.Mesh(
+        new THREE.PlaneGeometry(520, depth),
+        new THREE.MeshStandardMaterial({
+          // The colour it fades FROM. It is four fifths fog at the join and
+          // solid fog within twenty units, so this only has to be right
+          // where the two meet.
+          color: land.grass,
+          roughness: 1,
+          metalness: 0,
+        }),
+      );
+      skirt.rotation.x = -Math.PI / 2;
+      skirt.position.set(60, terrainY(60, near) - 0.02, near - depth / 2);
+      // Under everything, and never in the depth fight at the seam.
+      skirt.renderOrder = -20;
+      skirt.receiveShadow = false;
+      skirt.castShadow = false;
+      scene.add(skirt);
+    }
 
     // ── the road itself ─────────────────────────────────────────────────
     //
@@ -12561,7 +12636,7 @@ export function createKidsWorld(
       // corner. A horizon wants air above it and land below it, and a little
       // under halfway up is where a real one sits when you are walking a
       // road.
-      const wantPeak = V.frustum * V.topF * 0.45;
+      const wantPeak = V.frustum * V.topF * 0.81;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
@@ -14924,7 +14999,7 @@ export function createKidsWorld(
           wordGroup.position.x += (targetX - wordGroup.position.x) * 0.18;
         }
         wordGroup.position.z = gz;
-        wordGroup.position.y = 0;
+        wordGroup.position.y = theme.wordY ?? 0;
         for (let i = 0; i < wordTiles.length; i++) {
           const g = wordTiles[i].grp;
           const cur = i === wordIdx;
