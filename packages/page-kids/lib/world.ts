@@ -3758,7 +3758,7 @@ export function createKidsWorld(
       // and fog does that regardless of which way it runs. Saturating at 100
       // instead of 120 hides it before it can be seen, which is what lets
       // the camera pitch down far enough to see the children on the road.
-      new THREE.Fog(land.fog, 30, 108)
+      new THREE.Fog(land.fog, 38, 96)
     : new THREE.Fog(land.fog, 60, 160);
 
   const V = theme.view ?? DEFAULT_VIEW;
