@@ -1767,6 +1767,19 @@ export type WorldTheme = {
      * on the horizon rather than the edge of the file.
      */
     readonly skyline: number;
+    /**
+     * WHERE THE RIDGE ACTUALLY IS IN EACH FILE, as a fraction up from its
+     * bottom edge, measured off the alpha channel rather than assumed.
+     *
+     * The four cuts are not drawn to a common baseline — `night_A` puts its
+     * hills a twentieth of the image lower than `day_A` does, and `night_B`
+     * puts them higher. One `skyline` constant for all of them therefore had
+     * the night jumping up or down against the day as the crossing ran,
+     * depending on which cut a given strip happened to be showing.
+     *
+     * Keyed `<half>_<variant>`. Anything missing falls back to `skyline`.
+     */
+    readonly ridge?: Readonly<Record<string, number>>;
   };
   /** Multiplier on scenery size — cube models are authored larger. */
   readonly sceneryScale: number;
@@ -2513,7 +2526,14 @@ export const VILLAGE_THEME: WorldTheme = {
     // lifted ten units too high and sat above the visible window — the plane
     // was in frame the entire time (forcing its material red filled the sky
     // exactly as it should), and only the pixels were in the wrong place.
-    skyline: 0.58,
+    // The line every cut is registered TO — day_A's own ridge, measured.
+    skyline: 0.462,
+    ridge: {
+      day_A: 0.462,
+      day_B: 0.473,
+      night_A: 0.415,
+      night_B: 0.489,
+    },
   },
   // FLAT-SHADED fields, like the other two worlds. Photoreal ground was tried
   // here and lost: a repeating photographic surface under stylised characters
@@ -12846,11 +12866,23 @@ export function createKidsWorld(
         });
       const tex = await Promise.all(
         (["day", "night"] as const).flatMap((half) =>
-          H.variants.map((v) => load(half, v).then((t) => ({ half, t }))),
+          H.variants.map((v) => load(half, v).then((t) => ({ half, v, t }))),
         ),
       );
       const byHalf = (half: "day" | "night") =>
-        tex.filter((e) => e.half === half).map((e) => e.t);
+        tex.filter((e) => e.half === half);
+      /**
+       * How far to lift this cut so its own ridge lands on the common line.
+       *
+       * The four files are not drawn to a shared baseline — see `ridge` on
+       * the theme — so each strip is nudged by the difference between where
+       * its hills actually are and where `skyline` says they should be. With
+       * that done, day and night are registered to each other whichever pair
+       * of cuts a strip happens to be showing, and the crossing reads as the
+       * light changing rather than as the land moving.
+       */
+      const lift = (half: string, v: string) =>
+        (H.skyline - (H.ridge?.[`${half}_${v}`] ?? H.skyline)) * H.height;
 
       // SMALL, FAR, AND NEVER STRETCHED.
       //
@@ -12925,10 +12957,12 @@ export function createKidsWorld(
       // — the top three per cent of the picture, which is why the hills kept
       // coming out as a sliver however the number was nudged.
       //
-      // 0.45 is 4.94 units up, which is 0.59 in clip space: the upper third,
-      // where a horizon belongs. The mist below it runs past the ground's
-      // edge and is simply hidden by the ground, which is nearer.
-      const wantPeak = V.frustum * V.topF * 0.45;
+      // 0.99 — the ridge sits right about ON the top edge of the frame, which is
+      // what "all the way up, and not much sky" means: the hills run off the
+      // top and what fills the band is treeline and mist rather than air.
+      // Over 1.0 on purpose; this is a height from the look-at point, not a
+      // fraction of anything, so it is allowed past the frame's own top.
+      const wantPeak = V.frustum * V.topF * 0.99;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
@@ -12989,7 +13023,7 @@ export function createKidsWorld(
             geo,
             new THREE.MeshBasicMaterial({
               // Alternating, so no two neighbours are the same cut.
-              map: strips[i % strips.length],
+              map: strips[i % strips.length].t,
               transparent: true,
               depthWrite: false,
               // IT TAKES THE DEPTH TEST, and it has to.
@@ -13013,8 +13047,11 @@ export function createKidsWorld(
               vertexColors: true,
             }),
           );
-          // Laid with their ramps overlapping, and centred on the group.
+          // Laid with their ramps overlapping, and centred on the group —
+          // each on its own measured ridge, so the row is level.
+          const cut = strips[i % strips.length];
           mesh.position.x = (i - (n - 1) / 2) * step;
+          mesh.position.y = lift(half, cut.v);
           mesh.renderOrder = i;
           mesh.frustumCulled = false;
           group.add(mesh);
