@@ -3566,6 +3566,42 @@ export function createKidsWorld(
    * would be spending a cosine to model something slower than the session.
    */
   const moonNow = moonLit();
+  /**
+   * TODAY'S CLOUD COVER, 0 clear to 1 overcast, drawn once per world.
+   *
+   * One number, and everything about the weather reads it — which is the
+   * whole point. Cover decided separately from the light, or from the haze,
+   * or from how hard the sun dims when something crosses it, gives you dark
+   * clouds over a gold-lit road: each part defensible on its own and the
+   * picture incoherent. A real sky does not work that way, so this does not
+   * either.
+   *
+   * Biased towards the middle rather than uniform. A flat random would make
+   * one day in five a flawless blue and one in five a slab of grey, and
+   * neither is what most days are: the common case, in Kerala as anywhere, is
+   * some cloud about. Averaging two draws gives that shape for nothing.
+   *
+   * Drawn from the DATE, not from `Math.random`, so a child who reloads at
+   * ten in the morning gets the same weather they had at nine. Weather that
+   * reshuffles on every refresh is not weather, it is noise — the same
+   * reasoning that keeps the stars and the moon on the real calendar.
+   */
+  const cloudCover = (() => {
+    const d = new Date();
+    const day = Math.floor(d.getTime() / 86400000);
+    // Two cheap uncorrelated hashes of the day, averaged.
+    const h = (n: number) => {
+      const x = Math.sin(day * 12.9898 + n * 78.233) * 43758.5453;
+      return x - Math.floor(x);
+    };
+    return (h(1) + h(2)) / 2;
+  })();
+  /**
+   * How grey the day is, 0..1 — cover past the point where it starts to
+   * matter. A quarter of the sky in cloud changes nothing you can see; it is
+   * the last half that flattens the light and drains the colour out.
+   */
+  const overcast = Math.max(0, (cloudCover - 0.45) / 0.55);
   sun.castShadow = true;
   // BIG ENOUGH TO COVER WHAT IS ON SCREEN.
   //
@@ -3913,6 +3949,12 @@ export function createKidsWorld(
   const SKY_SUN_CREAM = new THREE.Color(0xfff0d4);
   /** What the distance fades into by day — the old sky-bottom green. */
   const FOG_HAZE_DAY = new THREE.Color(0xd7f0d2);
+  /** Where the haze goes when the sun is low: the light has further to travel. */
+  const HAZE_LOW_SUN = new THREE.Color(0xf2cf9e);
+  /** And at the top of the arc, when it is mostly clean air overhead. */
+  const HAZE_NOON = new THREE.Color(0xd3e6ef);
+  /** And under cloud, when nothing is colouring it at all. */
+  const HAZE_OVERCAST = new THREE.Color(0xc3c9c6);
   const skyCanvas = document.createElement("canvas");
   skyCanvas.width = SKY_W;
   skyCanvas.height = SKY_H;
@@ -4283,7 +4325,12 @@ export function createKidsWorld(
       // 0.54, not 0.42 — the sky fill comes up with the key light, so the
       // ground gains where the moon is not reaching rather than only where it
       // is. See the note on `sun.intensity` in the flat-sky branch.
-      grade.hemi * (dark ? (night ? lerp(0.54, 0.78) * moonSky : 0.78) : 1);
+      //
+      // And it RISES with cloud, where the key light falls: an overcast sky
+      // is one enormous soft source. See the same note.
+      grade.hemi *
+      (dark ? (night ? lerp(0.54, 0.78) * moonSky : 0.78) : 1) *
+      (1 + overcast * 0.3);
     // Remembered so the cloud drift has something to be a fraction OF. The
     // tick multiplies these; it must never accumulate on its own last value.
     hemiBase = hemi.intensity;
@@ -4343,10 +4390,14 @@ export function createKidsWorld(
         // horizon and is simply not there higher up, so half past six is a
         // properly amber sky and nine in the morning is not. `dreamy` puts
         // the haze back at the top of the arc so noon is not clinical.
+        // The blue goes out of the top of the sky first and furthest — that
+        // is where you are looking through the least air and so where the
+        // cloud has the most to hide.
         flatSky.top
           .set(0x7ec5f2)
           .lerp(SKY_DAWN_TOP, warm * 0.8)
-          .lerp(SKY_NOON_TOP, dreamy * 0.3);
+          .lerp(SKY_NOON_TOP, dreamy * 0.3)
+          .lerp(HAZE_OVERCAST, overcast * 0.82);
         // A PALE BLUE, NOT A PALE GREEN. This stop used to be 0xd7f0d2, a
         // washed green chosen so the ground could fade into the sky before
         // there was anything painted on the horizon — which is why a green
@@ -4356,7 +4407,8 @@ export function createKidsWorld(
         flatSky.bottom
           .set(0xbcdcf0)
           .lerp(SKY_DAWN_LOW, warm)
-          .lerp(SKY_NOON_LOW, dreamy * 0.34);
+          .lerp(SKY_NOON_LOW, dreamy * 0.34)
+          .lerp(HAZE_OVERCAST, overcast * 0.7);
       }
       // The stars, and the two things that put them out: twilight still in
       // the sky, and a moon bright enough to wash them off it. Never quite
@@ -4376,9 +4428,37 @@ export function createKidsWorld(
       // sky's bottom stop any more — see that stop's note. They were one value
       // while the ground had to melt into the sky; now the horizon separates
       // them and each can be what it actually is.
-      (scene.fog as THREE.Fog).color.copy(
-        night ? flatSky.bottom : FOG_HAZE_DAY,
-      );
+      // THE HAZE IS THE SKY, SEEN SIDEWAYS.
+      //
+      // It was pinned to one washed green — the same colour at six in the
+      // morning, at noon and at dusk — which is why the hour never reached
+      // the far ground or the hills however much the sky itself changed.
+      //
+      // Haze is sunlight scattered by the air between you and the thing you
+      // are looking at, so it takes the colour of the light doing the
+      // scattering. `warm` already measures how low the sun is by its real
+      // elevation, which is exactly how much further that light has had to
+      // travel, so the same curve that golds the sun golds the distance. At
+      // the top of the arc it goes the other way: clean air overhead, a
+      // cooler and slightly blue haze. Under cloud it goes neutral, because
+      // nothing is colouring it.
+      //
+      // AND THIS IS THE CHANNEL THAT CARRIES THE HOUR ONTO THE LANDSCAPE.
+      // Everything is tinted towards this colour in proportion to its
+      // distance — the children 12 per cent, the far trees 52, the ground's
+      // far edge 72, the painted hills their own share — so a change here
+      // lands on the mountains and the floor and barely touches the child.
+      // That falloff IS the "strong far, subtle near" rule; nothing needs to
+      // be special-cased to get it.
+      if (night) {
+        (scene.fog as THREE.Fog).color.copy(flatSky.bottom);
+      } else {
+        (scene.fog as THREE.Fog).color
+          .copy(FOG_HAZE_DAY)
+          .lerp(HAZE_NOON, dreamy * 0.55)
+          .lerp(HAZE_LOW_SUN, warm * 0.8)
+          .lerp(HAZE_OVERCAST, overcast * 0.75);
+      }
       // MORE LIGHT ON THE GROUND AFTER DARK. 0.58, not 0.46.
       //
       // The night figure is written as a fraction of the day's, and it was
@@ -4387,8 +4467,16 @@ export function createKidsWorld(
       // two together left the road darker than a child can read the ground
       // by. This lifts the floor without touching the swing: a full moon is
       // still plainly brighter than a new one.
+      // AND THE WEATHER REACHES THE LIGHT, or the haze goes grey under a sun
+      // that never noticed. Overcast does two things in life and both are
+      // here: the direct sun weakens, because it is coming through cloud, and
+      // the sky fill STRENGTHENS, because the whole dome is now a lamp. That
+      // second half is what makes an overcast day read as flat rather than
+      // simply dark — shadows go soft and shallow instead of black.
       sun.intensity =
-        grade.sun * (dark ? (night ? lerp(0.58, 0.8) * moonKey : 0.8) : 1);
+        grade.sun *
+        (dark ? (night ? lerp(0.58, 0.8) * moonKey : 0.8) : 1) *
+        (1 - overcast * 0.45);
       sunBase = sun.intensity;
       if (night) {
         // Moonlight, warmed a touch towards the dusk sun — a tropical
@@ -13352,7 +13440,13 @@ export function createKidsWorld(
     //
     // Held still when motion is stilled: a child who has asked for less
     // movement has not asked for less movement except the weather.
-    const drift = theme.cloudDrift ?? 0;
+    // HOW OFTEN SOMETHING CROSSES THE SUN follows today's cover. On a clear
+    // day almost nothing does; on a half-clouded one it is steady; under
+    // overcast there is no separate shadow to cast, because the sun is
+    // already behind the whole sky — which is why this FALLS again at the
+    // top of the range rather than climbing.
+    const drift =
+      (theme.cloudDrift ?? 0) * (1 - Math.abs(cloudCover - 0.5) * 1.6);
     if (drift > 0 && driftLit && motionScale > 0) {
       if (cloudAt < 0) {
         cloudWait -= dt;
