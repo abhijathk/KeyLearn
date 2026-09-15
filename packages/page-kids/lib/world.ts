@@ -2838,14 +2838,15 @@ export const VILLAGE_THEME: WorldTheme = {
     // now: the painted band's own mist draws over the skirt (see the skirt's
     // `depthWrite`), and covering that join is exactly what the mist is for.
     lookY: 4.25,
-    // 13.4 — two steps in from 15.4, about thirteen per cent closer.
+    // 12.2 — a fifth closer than the 15.4 this started at, so the children
+    // are big enough to read a face on.
     //
     // Worth knowing what it spends: the frame's top is `frustum * topF`, so a
     // narrower view is a lower ceiling, and the ground's far edge does not
     // move when the ceiling does. Zooming in and lifting the scene both push
     // that ceiling down towards the edge, and the sky between them is what
     // closes up.
-    frustum: 13.4,
+    frustum: 12.2,
     // THE FRAME SLIDES UP, AND KEEPS ITS HEIGHT.
     //
     // 0.68/1.22 against 0.92/0.98: the two still sum to 1.90, so the view is
@@ -3867,8 +3868,14 @@ export function createKidsWorld(
    * canvas now, and a star on a strip sixteen across, stretched over the
    * whole sky, comes out as a horizontal streak.
    */
-  const SKY_W = 512;
-  const SKY_H = 256;
+  // 1024x512, NOT 512x256. The stars are drawn as circles in canvas pixels
+  // and the whole canvas is then stretched across the sky, so their size on
+  // screen is set by how coarse this is: at 512 a "0.6 pixel" star came out
+  // as a visible blob. Doubling the grid halves the angular size of every
+  // dot without changing a single radius below. The gradient does not care,
+  // and the redraw only runs while the sky is actually crossing.
+  const SKY_W = 1024;
+  const SKY_H = 512;
   // The ends of the flat sky's palette, allocated once. `applySky` runs on
   // every hour change and every toggle, and a `new THREE.Color` per stop per
   // call is garbage for a value that never varies.
@@ -3910,12 +3917,16 @@ export function createKidsWorld(
   starCanvas.height = SKY_H;
   {
     const g = starCanvas.getContext("2d")!;
-    for (let i = 0; i < 220; i++) {
-      const y = Math.pow(Math.random(), 1.7) * 168;
+    for (let i = 0; i < 260; i++) {
+      // A third of the way down, in canvas terms, and stopping short of the
+      // haze above the treeline.
+      const y = Math.pow(Math.random(), 1.7) * SKY_H * 0.66;
       // Fainter as they near the horizon, and never quite white: a warm white
       // star on a blue sky is what the eye expects, and pure white on this
       // background reads as a hole in it.
-      const a = (0.25 + Math.random() * 0.6) * (1 - y / 210);
+      const a = (0.25 + Math.random() * 0.6) * (1 - y / (SKY_H * 0.82));
+      // Unchanged numbers on a grid twice as fine, which is the whole point:
+      // the same radii are now half the size in the sky.
       const r = Math.random() < 0.86 ? 0.6 : 1.1;
       g.fillStyle = `rgba(255,251,236,${a.toFixed(3)})`;
       g.beginPath();
@@ -3923,6 +3934,7 @@ export function createKidsWorld(
       g.fill();
     }
   }
+  const _moonDir = new THREE.Vector3();
   const skyTexture = new THREE.CanvasTexture(skyCanvas);
   skyTexture.colorSpace = THREE.SRGBColorSpace;
 
@@ -3956,8 +3968,75 @@ export function createKidsWorld(
       skyCtx.globalAlpha = Math.min(1, stars);
       skyCtx.drawImage(starCanvas, 0, 0);
       skyCtx.globalAlpha = 1;
+      drawMoon(Math.min(1, stars));
     }
     skyTexture.needsUpdate = true;
+  }
+
+  /**
+   * THE MOON, WHICH HAS NEVER ACTUALLY BEEN IN THE SKY.
+   *
+   * Its phase and its position have been modelled for a long time —
+   * `moonLit()` gives tonight's lit fraction and `SUN_NIGHT` is the direction
+   * it hangs in, solved from the staged hour and used to light the whole
+   * road — but nothing ever DREW it. `moonLit`'s own note says as much: "what
+   * this is for is the DARKNESS". So on a clear night a child could see the
+   * road silver over and the shadows swing, and find nothing in the sky to
+   * explain it.
+   *
+   * Drawn into the sky canvas rather than as an object in the world, for the
+   * same reason the stars are: the backdrop is a screen-space quad, so the
+   * canvas IS the screen and placing it is a projection rather than a piece
+   * of scenery to light, cull and dispose.
+   *
+   * WHERE it goes is `SUN_NIGHT` and nothing else — the same vector that
+   * aims the key light, so the moon is always on the side the shadows say it
+   * is. If it has moved off screen, that is the hour: at ten at night in
+   * October it rides high, at four in the morning it has set, and the road
+   * is dark because there is nothing up there.
+   */
+  function drawMoon(alpha: number): void {
+    if (moonNow < 0.04) {
+      return; // new moon: there IS nothing to draw
+    }
+    _moonDir.copy(SUN_NIGHT).normalize().multiplyScalar(240).add(cam.position);
+    _moonDir.project(cam);
+    if (Math.abs(_moonDir.x) > 1.08 || Math.abs(_moonDir.y) > 1.08) {
+      return; // below the horizon or off the side — see the note above
+    }
+    const mx = (_moonDir.x * 0.5 + 0.5) * SKY_W;
+    const my = (1 - (_moonDir.y * 0.5 + 0.5)) * SKY_H;
+    const r = SKY_H * 0.038;
+    skyCtx.save();
+    skyCtx.globalAlpha = alpha;
+    // A halo first, so it sits IN the sky rather than on it.
+    const glow = skyCtx.createRadialGradient(mx, my, r * 0.9, mx, my, r * 3.4);
+    glow.addColorStop(0, "rgba(226,232,246,0.34)");
+    glow.addColorStop(1, "rgba(226,232,246,0)");
+    skyCtx.fillStyle = glow;
+    skyCtx.beginPath();
+    skyCtx.arc(mx, my, r * 3.4, 0, Math.PI * 2);
+    skyCtx.fill();
+    // The disc, then the shadow carved out of it.
+    skyCtx.fillStyle = "rgba(247,249,255,0.96)";
+    skyCtx.beginPath();
+    skyCtx.arc(mx, my, r, 0, Math.PI * 2);
+    skyCtx.fill();
+    if (moonNow < 0.97) {
+      // WAXING SHOWS ITS RIGHT SIDE, waning its left — `moonAge` runs 0 at
+      // new through 0.5 at full, so the first half of the month is waxing and
+      // the shadow is carved from the left. Offsetting a second circle is not
+      // the true terminator, which is a half-ellipse, but at this size the
+      // difference is under a pixel and the crescent leans the right way,
+      // which is the part anybody would notice.
+      const waxing = moonAge() < 0.5;
+      const dx = (1 - moonNow) * 2 * r * (waxing ? -1 : 1);
+      skyCtx.globalCompositeOperation = "destination-out";
+      skyCtx.beginPath();
+      skyCtx.arc(mx + dx, my, r, 0, Math.PI * 2);
+      skyCtx.fill();
+    }
+    skyCtx.restore();
   }
   async function applySky(mood: string) {
     // Everything this function writes onto the scene is a TARGET, not a
