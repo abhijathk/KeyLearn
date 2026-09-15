@@ -7,6 +7,19 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
 import {
+  blendAt,
+  chapterBounds,
+  chapterEnd,
+  DEFAULT_BOUNDS,
+  densityAt,
+  hash3,
+  hashPick,
+  hashRange,
+  lessonAt,
+  placements,
+  SEGMENT_COUNT,
+} from "./chapter1.ts";
+import {
   attachTint,
   type CharacterTint,
   type ClothingColours,
@@ -2951,7 +2964,17 @@ export const VILLAGE_THEME: WorldTheme = {
  * round ends when the passage does, so the distance is what turns a handful of
  * words into a journey worth finishing. */
 /** Trail coverage: about four rounds land-to-land, plus a margin. */
-const TRAIL_END = 260;
+/**
+ * How long the road is.
+ *
+ * MUTABLE, because Chapter 1 sizes it. A lesson carries a child as far as
+ * their passage does — 21.6 units for a five-year-old's first one, 64 for a
+ * nine-year-old's — so ten lessons are 270 units of road for the youngest
+ * band and 640 for the oldest, and the terrain has to be built to whichever
+ * is walking it. See `chapterBounds`. Set once per world, before anything
+ * reads it; the other themes leave it at the figure they were authored to.
+ */
+let TRAIL_END = 260;
 /**
  * How much the ground rolls, as a multiple of the original hills.
  *
@@ -3311,6 +3334,15 @@ export function createKidsWorld(
     readonly wildReview?: boolean;
     /** Which chapter this is, carved into the roadside milestone. */
     readonly chapter?: number;
+    /**
+     * This learner's passage lengths, first and full, in characters.
+     *
+     * The world is built before a single passage exists, so it cannot
+     * measure how far the lessons will carry the child — it predicts them
+     * from the band's own curve, which is measured and does not move. The
+     * page knows the band; the world does not, and should not have to.
+     */
+    readonly chapterChars?: { readonly start: number; readonly full: number };
     /**
      * How many milestones this child has already passed, across every
      * session they have ever played.
@@ -3839,6 +3871,25 @@ export function createKidsWorld(
    */
   const FOG_NEAR_NIGHT = (scene.fog as THREE.Fog).near;
   const FOG_NEAR_DAY = FOG_NEAR_NIGHT * 1.17;
+
+  /**
+   * THE CHAPTER, AND THE ROAD IT NEEDS.
+   *
+   * Set before anything reads `TRAIL_END`, because the ground, the horizon,
+   * the scatter and the milestones are all measured against it. Only the
+   * village world is authored as a chapter; the others keep the road length
+   * they were built to, so `chapterBounds` is asked for nothing unless a
+   * village is what is being built.
+   */
+  const CHAPTER =
+    theme.village != null
+      ? opts.chapterChars != null
+        ? chapterBounds(opts.chapterChars.start, opts.chapterChars.full)
+        : DEFAULT_BOUNDS
+      : null;
+  if (CHAPTER != null) {
+    TRAIL_END = chapterEnd(CHAPTER);
+  }
 
   const V = theme.view ?? DEFAULT_VIEW;
   const cam = new THREE.OrthographicCamera();
@@ -5835,9 +5886,22 @@ export function createKidsWorld(
     // down is how short the ground can get before the village runs off it. The segment count is
     // unchanged, so the relief under the child is exactly as fine as it was
     // and `surfaceY` raycasts the same 16,000 triangles.
-    const geo = new THREE.PlaneGeometry(400, GROUND_DEPTH, 200, 40);
+    // WIDE ENOUGH FOR THE CHAPTER THAT IS ACTUALLY BEING WALKED, with the
+    // same relief under the child either way: the segment count follows the
+    // width at a fixed two units apiece, so a 640-unit chapter gets more
+    // triangles rather than coarser ground. 140 units of margin behind the
+    // start (the camera looks back along the road) and 40 past the last
+    // stone, so the terrain never runs out inside the frame.
+    const GROUND_WIDE = TRAIL_END + 180;
+    const geo = new THREE.PlaneGeometry(
+      GROUND_WIDE,
+      GROUND_DEPTH,
+      Math.round(GROUND_WIDE / 2),
+      40,
+    );
     geo.rotateX(-Math.PI / 2);
-    geo.translate(60, 0, 0); // centre the ground on the trail, not the origin
+    // Centre it on the road it carries, not on the origin.
+    geo.translate((TRAIL_END - 100) / 2, 0, 0);
     const pos = geo.attributes.position;
     const colors = new Float32Array(pos.count * 3);
     const cGrass = new THREE.Color(land.grass);
@@ -8334,7 +8398,27 @@ export function createKidsWorld(
         // far "a little way" may go is capped, because the shortfall used to
         // be carried into every following lesson and the youngest band's
         // markers walked off up the road. See `stoneXFor`.
-        const stoneX = stoneXFor(runEnd, lastStoneX);
+        // IN A CHAPTER THE STONE IS AUTHORED, not computed.
+        //
+        // `chapterBounds` predicted where each lesson would end from the
+        // band's own passage curve, and Milestone n IS that prediction — so
+        // the stone goes where the chapter says and the child walks to it,
+        // rather than the stone being placed wherever the child happened to
+        // stop. When a passage comes out shorter than predicted they finish
+        // a little short of it and the next run starts from where they are,
+        // which is the same way a marker at a roadside has always been met
+        // here.
+        //
+        // It also ends the stones marching off the road. The old rule
+        // stepped MIN_STONE_GAP past the last stone every lesson while
+        // `runStart` clamped at the end of the trail, so a child who had
+        // walked the whole thing kept planting markers further and further
+        // into ground that was never built. There are eleven stones in a
+        // chapter and the eleventh is the end of it.
+        const stoneX =
+          CHAPTER != null && milestoneNo + 1 <= SEGMENT_COUNT
+            ? CHAPTER[milestoneNo + 1]!
+            : stoneXFor(runEnd, lastStoneX);
         const key = Math.round(stoneX);
         if (pendingStone != null) {
           // Already standing for this lesson. If the run was rebuilt at a new
@@ -8436,6 +8520,50 @@ export function createKidsWorld(
   let playerGhostly = false; // skeleton hero: floats and glides like a ghost
   // Every character root in the scene, so the dark can reach all of their eyes.
   const characterRoots = new Set<THREE.Object3D>();
+
+  /**
+   * WHAT STANDS IN THE WAY, so that what moves can go round it.
+   *
+   * A circle per structure: where it is and how much room it needs. Animals
+   * pick their homes from this and walkers steer by it, and neither is
+   * possible in a world that re-rolls its scenery every session — there is
+   * nothing stable to be aware of. That is the real reason the chapter is
+   * placed from a hash of its own coordinates rather than from Math.random,
+   * and this list is what the determinism buys.
+   */
+  const blockers: { x: number; z: number; r: number }[] = [];
+
+  /** Is this spot clear of everything built? */
+  const isClear = (x: number, z: number, need = 1.5): boolean => {
+    for (const b of blockers) {
+      if (Math.hypot(x - b.x, z - b.z) < b.r + need) return false;
+    }
+    return true;
+  };
+
+  /**
+   * The nearest clear spot at or behind a wanted one.
+   *
+   * Pushed ALONG the road rather than away from it: the verge is where these
+   * things belong, and a cow shunted sideways to clear a wall ends up either
+   * in the road or out in the paddy. Gives up after a dozen steps and says
+   * so, so the caller can drop the placement rather than stack one animal
+   * inside another.
+   */
+  const clearSpot = (
+    x: number,
+    z: number,
+    need = 1.5,
+  ): { x: number; z: number } | null => {
+    if (isClear(x, z, need)) return { x, z };
+    for (let step = 1; step <= 12; step++) {
+      for (const dir of [1, -1]) {
+        const tx = x + dir * step * 2.5;
+        if (isClear(tx, z, need)) return { x: tx, z };
+      }
+    }
+    return null;
+  };
   /** Scenery that comes and goes with the light — thinned trees, dead groves. */
   const moodScenery: THREE.Object3D[] = [];
 
@@ -11557,9 +11685,33 @@ export function createKidsWorld(
     // theme's scenery folder. Village Road needs it: its scenery is the
     // nature set but its buildings live in the licensed pack folder, and a
     // theme has only one sceneryDir.
+    // COUNTS ARE FOR A 260-UNIT ROAD, and the road is no longer always 260.
+    // These were tuned as totals, so on a 640-unit chapter the same numbers
+    // would spread the same plants over two and a half times the ground and
+    // the whole world would thin out. Scaled by length, they keep the
+    // density they were tuned to.
+    //
+    // AND HALVED WHERE THE CHAPTER PLANTS. On a chapter road this scatter is
+    // no longer the planting, it is the undergrowth between it — the species
+    // that say which lesson you are in come from the table, and running both
+    // at full strength buries them.
+    const spread = (TRAIL_END / 260) * (CHAPTER != null ? 0.5 : 1);
     const groundSpecs = [
-      [land.trees, theme.treeCount ?? 30, 6, 26, "back"] as const,
-      ...theme.ground,
+      [
+        land.trees,
+        Math.round((theme.treeCount ?? 30) * spread),
+        6,
+        26,
+        "back",
+      ] as const,
+      ...theme.ground.map(
+        ([file, count, ...rest]) =>
+          [
+            file,
+            Math.round(count * spread),
+            ...rest,
+          ] as (typeof theme.ground)[number],
+      ),
     ];
     const groundGltfs = await Promise.all(
       groundSpecs.map(async ([file]) => {
@@ -12001,7 +12153,19 @@ export function createKidsWorld(
       // reviewing it meant typing a whole passage to walk there first, which
       // is a slow way to look at a building; 14 has the market in frame the
       // moment the world opens.
-      const vx = villageNear ? 14 : 78 + Math.random() * 118;
+      // WHERE LESSON 5 SAYS, once this world is a chapter.
+      //
+      // The village centre IS Lesson 5 — its temple, banyan, houses, cart
+      // and wall are the ones already tuned in place — so the chapter does
+      // not re-place them, it tells them where to stand. A third of the way
+      // into the segment, which leaves the bleed at the start of it to the
+      // homestead thinning out of Lesson 4.
+      const vx =
+        CHAPTER != null
+          ? CHAPTER[4]! + (CHAPTER[5]! - CHAPTER[4]!) * 0.33
+          : villageNear
+            ? 14
+            : 78 + Math.random() * 118;
       // Remembered so the tick can say when the child reaches it — see
       // `insideVillage`. There is at most one per trail, so one number does.
       villageX = vx;
@@ -12391,6 +12555,113 @@ export function createKidsWorld(
         }
         const wx = vx + i * seg;
         await stand(V.wall, wx, -10, V.wallHeight, 0);
+        blockers.push({ x: wx, z: -10, r: 8 });
+      }
+
+      // ── THE REST OF THE CHAPTER ──────────────────────────────────────
+      //
+      // Everything the table places outside the village centre: the wells,
+      // the laterite runs, the bamboo stretches, the tether posts, the
+      // homestead and the estate. Lesson 5 is skipped because it is the
+      // village above — it is already standing, already lit, and already
+      // arranged the way it was asked to be.
+      //
+      // Every one of these carries its clearance into `blockers`, which is
+      // the whole reason the positions are authored rather than rolled: an
+      // animal can only route around a thing that is in the same place every
+      // time it looks.
+      if (CHAPTER != null) {
+        for (const p of placements(CHAPTER)) {
+          if (lessonAt(p.x, CHAPTER).n === 5) {
+            continue; // the village centre, already built
+          }
+          const w = await stand(p.model, p.x, p.z, p.h, p.turn ?? 0);
+          if (w != null && (p.clear ?? 0) > 0) {
+            blockers.push({ x: p.x, z: p.z, r: p.clear! });
+          }
+        }
+      }
+
+      // ── THE PLANTING, LESSON BY LESSON ───────────────────────────────
+      //
+      // What actually makes Lesson 3 an orchard and Lesson 10 a fern meadow.
+      // The road is walked end to end at whatever spacing the table's density
+      // asks for at that point, and each plant is drawn from the lesson it
+      // stands in — three layers, because a Kerala orchard is layered and a
+      // meadow is not, and the difference between them is which layers are
+      // populated rather than how many plants there are.
+      //
+      // EVERY DECISION COMES FROM THE PLACE, not from a sequence. Species,
+      // depth, size, lean and heading are each a hash of the coordinates
+      // with their own salt, so the same tree stands in the same spot with
+      // the same lean on every visit — and an animal placed later can be
+      // told to keep out of it.
+      if (CHAPTER != null) {
+        // Layer heights, and what each layer is for. A canopy tree stands
+        // over the road, the middle layer meets it at head height, and the
+        // ground layer is what the child walks past.
+        const LAYERS = [
+          { key: "canopy" as const, lo: 6.5, hi: 11, share: 0.3, clear: 2.2 },
+          { key: "mid" as const, lo: 2.8, hi: 4.6, share: 0.3, clear: 1.2 },
+          { key: "ground" as const, lo: 0.7, hi: 1.7, share: 0.4, clear: 0 },
+        ];
+        let planted = 0;
+        let refused = 0;
+        for (let x = 0; x < TRAIL_END; ) {
+          const here = blendAt(x, CHAPTER);
+          // The bleed picks WHICH lesson this plant belongs to, rather than
+          // averaging the two into something neither of them has. A species
+          // cannot be half a mango; what fades across a milestone is the
+          // proportion of each, and that is a coin weighted by `mix`.
+          const from = hash3(x, 0, 11) < here.mix ? here.lesson : here.prev;
+          const roll = hash3(x, 1, 12);
+          let acc = 0;
+          const layer =
+            LAYERS.find((l) => (acc += l.share) > roll) ?? LAYERS[2]!;
+          const species = from[layer.key];
+          const pick = hashPick(species, x, 2, 13);
+          const step = 1 / Math.max(0.2, densityAt(x, CHAPTER));
+          x += step * hashRange(x, 3, 14, 0.6, 1.5);
+          if (pick == null) {
+            continue; // this lesson has no such layer — a meadow has no canopy
+          }
+          // Behind the road only. The near verge is the child's side and
+          // stays clear, which is the rule the village already follows.
+          const z = -hashRange(x, 4, 15, from.depth[0], from.depth[1]);
+          const spot = clearSpot(x, z, layer.clear);
+          if (spot == null) {
+            refused++;
+            continue;
+          }
+          const src = await prop(pick);
+          if (src == null) {
+            continue;
+          }
+          const h = hashRange(x, 5, 16, layer.lo, layer.hi);
+          const w = fitToHeight(src.clone(true), h * perspective(spot.z));
+          w.position.set(spot.x, surfaceY(spot.x, spot.z), spot.z);
+          w.rotation.y = hashRange(x, 6, 17, 0, Math.PI * 2);
+          // NOTHING GROWS PLUMB — the same few degrees of lean the scatter
+          // uses, for the same reason: yaw alone leaves a row standing to
+          // attention, and a little tilt is the cheapest tell that these
+          // grew rather than being placed.
+          w.rotation.x = hashRange(x, 7, 18, -0.085, 0.085);
+          w.rotation.z = hashRange(x, 8, 19, -0.085, 0.085);
+          // Height running separately from girth, so the outline changes and
+          // not merely the size: a uniform scale is the same plant further
+          // away, and the outline is what the eye picks up in a cluster.
+          w.scale.y *= hashRange(x, 9, 20, 0.85, 1.25);
+          scene.add(w);
+          characterRoots.add(w);
+          if (layer.clear > 0) {
+            blockers.push({ x: spot.x, z: spot.z, r: layer.clear });
+          }
+          planted++;
+        }
+        console.info(
+          `[chapter] ${planted} plants over ${Math.round(TRAIL_END)} units` +
+            `, ${refused} refused for want of room, ${blockers.length} blockers`,
+        );
       }
     }
 
