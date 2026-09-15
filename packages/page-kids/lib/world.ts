@@ -3797,6 +3797,20 @@ export function createKidsWorld(
       new THREE.Fog(land.fog, 38, 96)
     : new THREE.Fog(land.fog, 60, 160);
 
+  /**
+   * WHERE THE HAZE STARTS BY DAY, against where it starts at night.
+   *
+   * One range served both, and it was set for the night — after dark the
+   * haze is what keeps the far edge of the ground from showing as a cut, so
+   * it has to begin early. By day there is nothing to hide and the same
+   * early start put a wash over ground that should still be reading as
+   * ground. This holds it off a sixth longer while the sun is up, which
+   * takes a little of the milkiness out of the middle distance without
+   * touching the far edge, where `far` still does the hiding.
+   */
+  const FOG_NEAR_NIGHT = (scene.fog as THREE.Fog).near;
+  const FOG_NEAR_DAY = FOG_NEAR_NIGHT * 1.17;
+
   const V = theme.view ?? DEFAULT_VIEW;
   const cam = new THREE.OrthographicCamera();
   // A way in, for measuring. Off unless the URL asks for it, so it costs a
@@ -4629,6 +4643,13 @@ export function createKidsWorld(
       // lands on the mountains and the floor and barely touches the child.
       // That falloff IS the "strong far, subtle near" rule; nothing needs to
       // be special-cased to get it.
+      // Eased on `nightLook`, not switched on `night`. `night` is a boolean
+      // and flipping it would jump the start of the haze six units in one
+      // frame, which is a visible lurch in the middle distance at dawn and
+      // again at dusk — exactly when someone is most likely to be watching
+      // the light change.
+      (scene.fog as THREE.Fog).near =
+        FOG_NEAR_DAY + (FOG_NEAR_NIGHT - FOG_NEAR_DAY) * nightLook;
       if (night) {
         (scene.fog as THREE.Fog).color.copy(flatSky.bottom);
       } else {
