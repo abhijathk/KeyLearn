@@ -3758,7 +3758,7 @@ export function createKidsWorld(
       // and fog does that regardless of which way it runs. Saturating at 100
       // instead of 120 hides it before it can be seen, which is what lets
       // the camera pitch down far enough to see the children on the road.
-      new THREE.Fog(land.fog, 34, 92)
+      new THREE.Fog(land.fog, 34, 135)
     : new THREE.Fog(land.fog, 60, 160);
 
   const V = theme.view ?? DEFAULT_VIEW;
@@ -4280,7 +4280,10 @@ export function createKidsWorld(
      */
     const moonKey = 0.7 + 0.55 * moonNow;
     hemi.intensity =
-      grade.hemi * (dark ? (night ? lerp(0.42, 0.78) * moonSky : 0.78) : 1);
+      // 0.54, not 0.42 — the sky fill comes up with the key light, so the
+      // ground gains where the moon is not reaching rather than only where it
+      // is. See the note on `sun.intensity` in the flat-sky branch.
+      grade.hemi * (dark ? (night ? lerp(0.54, 0.78) * moonSky : 0.78) : 1);
     // Remembered so the cloud drift has something to be a fraction OF. The
     // tick multiplies these; it must never accumulate on its own last value.
     hemiBase = hemi.intensity;
@@ -4376,8 +4379,16 @@ export function createKidsWorld(
       (scene.fog as THREE.Fog).color.copy(
         night ? flatSky.bottom : FOG_HAZE_DAY,
       );
+      // MORE LIGHT ON THE GROUND AFTER DARK. 0.58, not 0.46.
+      //
+      // The night figure is written as a fraction of the day's, and it was
+      // set before the moon's phase was also multiplying into it — on a thin
+      // crescent like tonight's `moonKey` takes another quarter off, and the
+      // two together left the road darker than a child can read the ground
+      // by. This lifts the floor without touching the swing: a full moon is
+      // still plainly brighter than a new one.
       sun.intensity =
-        grade.sun * (dark ? (night ? lerp(0.46, 0.8) * moonKey : 0.8) : 1);
+        grade.sun * (dark ? (night ? lerp(0.58, 0.8) * moonKey : 0.8) : 1);
       sunBase = sun.intensity;
       if (night) {
         // Moonlight, warmed a touch towards the dusk sun — a tropical
@@ -4584,6 +4595,21 @@ export function createKidsWorld(
    * so there is a great deal more country than the drift can ever use.
    */
   const HORIZON_DRIFT = 0.06;
+  /**
+   * HOW FAR BACK THE PAINTED HORIZON SITS, on its own dial.
+   *
+   * The scene fog alone could not do this. Pulling the fog in far enough to
+   * push the band back took the far trees with it and turned the whole middle
+   * distance to milk; letting the fog off enough for the trees left the band
+   * too present. They are at nearly the same range, so one number cannot
+   * serve both.
+   *
+   * So the band keeps the fog — it has to, or it would not darken with the
+   * hour or match the trees' colour at all — and takes this on top: a plain
+   * fade that lets the sky through it. 0.62 reads as another few miles of air
+   * without touching anything else in the world.
+   */
+  const HORIZON_FADE = 0.62;
 
   // ══ LAMPLIGHT ════════════════════════════════════════════════════════
   //
@@ -12957,12 +12983,12 @@ export function createKidsWorld(
       // — the top three per cent of the picture, which is why the hills kept
       // coming out as a sliver however the number was nudged.
       //
-      // 0.99 — the ridge sits right about ON the top edge of the frame, which is
+      // 0.90 — the ridge sits a little under the top edge of the frame, which is
       // what "all the way up, and not much sky" means: the hills run off the
       // top and what fills the band is treeline and mist rather than air.
       // Over 1.0 on purpose; this is a height from the look-at point, not a
       // fraction of anything, so it is allowed past the frame's own top.
-      const wantPeak = V.frustum * V.topF * 0.99;
+      const wantPeak = V.frustum * V.topF * 0.9;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
@@ -13040,8 +13066,21 @@ export function createKidsWorld(
               // everything, correctly occluded by every tree and roof in
               // front of it, with only the part above the fog line showing.
               depthTest: true,
-              fog: false,
-              opacity: isNight ? 0 : 1,
+              // IT HAZES LIKE EVERYTHING ELSE OUT THERE.
+              //
+              // This ran unfogged, on the reasoning that the art has its own
+              // mist painted in and the far distance should not change as you
+              // walk towards it. True, and it made the band the only thing at
+              // that range drawn at full contrast — crisp hills behind trees
+              // that the fog had already half dissolved, which reads as a
+              // picture hung at the end of the road rather than as country
+              // beyond it.
+              //
+              // Fogged, it sits at the same remove as the far trees by
+              // construction, and follows the hour without being told: the
+              // fog colour is the one `applySky` is already moving.
+              fog: true,
+              opacity: isNight ? 0 : HORIZON_FADE,
               // The per-vertex alpha above rides on top of `opacity`, so the
               // day/night crossing and the strip dissolve multiply cleanly.
               vertexColors: true,
@@ -13418,7 +13457,7 @@ export function createKidsWorld(
           // curve is precisely a curve out of step, and being out of step
           // with the light is the more visible fault by far. One number, one
           // nightfall.
-          const op = h.night ? nightBlend : 1 - nightBlend;
+          const op = (h.night ? nightBlend : 1 - nightBlend) * HORIZON_FADE;
           for (const strip of h.group.children) {
             const m = (strip as THREE.Mesh).material as THREE.MeshBasicMaterial;
             m.opacity = op;
