@@ -12914,7 +12914,21 @@ export function createKidsWorld(
       // mist, so a ridge set too high leaves a strip of sky between the two.
       // Dropping it puts the mist on the ground and buys four units of real
       // sky above the hills — more than the skirt was ever hiding.
-      const wantPeak = V.frustum * V.topF * 0.8;
+      // 0.45, AND THE UNITS ARE THE TRAP HERE.
+      //
+      // This is a screen height measured from the LOOK-AT POINT, not a
+      // fraction of the visible frame, and those stopped being the same thing
+      // once the window went bottom-heavy: at 0.90 over 1.50 the frame runs
+      // from -18.3 to +10.98, so its centre is at -3.66 and the top is only
+      // a third of the way up from there. Read as a fraction, 0.92 sounds
+      // like "near the top". Measured, it put the ridge at 0.94 in clip space
+      // — the top three per cent of the picture, which is why the hills kept
+      // coming out as a sliver however the number was nudged.
+      //
+      // 0.45 is 4.94 units up, which is 0.59 in clip space: the upper third,
+      // where a horizon belongs. The mist below it runs past the ground's
+      // edge and is simply hidden by the ground, which is nearer.
+      const wantPeak = V.frustum * V.topF * 0.45;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
