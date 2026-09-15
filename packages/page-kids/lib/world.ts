@@ -13105,13 +13105,18 @@ export function createKidsWorld(
       cam.updateMatrixWorld(true);
       const up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
       const aim = new THREE.Vector3(0, V.lookY, 0).dot(up);
-      // Centred a good way above the look-at line, so the sheet reaches from
-      // just over the hills to well past the top of the frame. Solved the
-      // same way the horizon is, so it follows any change to the camera.
-      // Positioned so the sheet's BOTTOM edge sits just above the painted
-      // ridge — clouds meeting the horizon rather than hanging in front of
-      // it — and its top runs off the frame, which is what a sky does.
-      const want = V.frustum * V.topF * 1.18;
+      // Centred so the sheet's bottom edge sits a little BELOW the painted
+      // ridge (8.47 against 9.88) — tucked behind the hills, which is what
+      // stops a gap opening between cloud and skyline — and its top runs
+      // off the frame at 24.47 against a frame top of 10.98. Solved the same
+      // way the horizon is, so it follows any change to the camera.
+      //
+      // What that leaves visible is the bottom ninth of the strip: the
+      // smallest, flattest, faintest heaps, the ones the texture compresses
+      // towards its own horizon. That is the correct slice. When a ridgeline
+      // fills your view you do not see whole cumulus — you see their bases
+      // stacked along the top of the hills.
+      const want = V.frustum * V.topF * 1.5;
       const y = (aim + want + dist * up.z) / up.y;
       const mesh = new THREE.Mesh(
         new THREE.PlaneGeometry(w, h),
@@ -13290,11 +13295,14 @@ export function createKidsWorld(
       // top and what fills the band is treeline and mist rather than air.
       // Over 1.0 on purpose; this is a height from the look-at point, not a
       // fraction of anything, so it is allowed past the frame's own top.
-      // 0.45, TO MAKE ROOM FOR WEATHER. At 0.90 the ridge sat at 0.925 in
-      // clip space and left 3.7 per cent of the frame as sky — not enough to
-      // put a cloud in, let alone watch one cross. This gives about a fifth
-      // of the picture back to the air.
-      const wantPeak = V.frustum * V.topF * 0.45;
+      // IT STAYS AT 0.90. Dropping it to 0.45 to make room for clouds put the
+      // ridge at 0.588 in clip space — which is BEHIND THE FAR EDGE OF THE
+      // CURVED FLOOR, so the ground simply covered the hills and the horizon
+      // read as deleted. The band's height is not free to trade against the
+      // sky: it has to clear the floor, and 0.90 is where it clears it. The
+      // weather goes in the 1.1 units above the ridge instead, which is
+      // where clouds sit when hills fill your view anyway.
+      const wantPeak = V.frustum * V.topF * 0.9;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
