@@ -4697,12 +4697,13 @@ export function createKidsWorld(
         if (cloudLayer != null) {
           const cm = cloudLayer.material as THREE.MeshBasicMaterial;
           cm.color.copy(sun.color).lerp(WHITE, 0.45);
-          // Held under one. A cloud just above a ridgeline is mostly air with
-          // a little water in it, and at full strength these read as paint
-          // on glass — but 0.55 went too far the other way and left them as
-          // a suggestion. 0.78 has body without going opaque.
+          // Just short of full. The worry behind holding this down was that
+          // a solid sheet would read as paint on glass, but that was really
+          // the hard-edged version showing through; with the edges soft the
+          // clouds carry their own falloff and can be drawn at nearly full
+          // strength without flattening. 0.55 -> 0.78 -> 0.94.
           cm.opacity =
-            (1 - nightLook * 0.82) * (0.35 + cloudCover * 0.65) * 0.78;
+            (1 - nightLook * 0.82) * (0.35 + cloudCover * 0.65) * 0.94;
           cloudLayer.position.x =
             cloudCamX0 + (cam.position.x - cloudCamX0) * (1 - CLOUD_DRIFT);
         }
