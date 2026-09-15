@@ -2612,7 +2612,15 @@ export const VILLAGE_THEME: WorldTheme = {
       // The cart stays. It was parked at the market, and a cart left standing
       // at the roadside is a thing on its own — the strays list already puts
       // lone ones out on the empty stretches.
-      { model: "Cart", dx: -1.2, dz: -9, h: 5.0, turn: 0.9 },
+      //
+      // AND OFF THE SHRINE'S LINE. It was at dx -1.2, which was clear of a
+      // temple at dx 5 and stopped being clear the moment the temple came
+      // across to -1: same line, ten units nearer the road, so the cart was
+      // parked square in front of the one building it must never hide. It
+      // goes well along the road instead, past the shrine on the other side
+      // from the banyan — the tree on one hand, the cart on the other, and
+      // the way in between them.
+      { model: "Cart", dx: 12, dz: -8, h: 5.0, turn: 0.9 },
       // The ALTHARA IS HELD BACK until the new banyan is ready.
       //
       // It only makes sense underneath a tree -- a Kerala village banyan grows
