@@ -2183,6 +2183,12 @@ export const VILLAGE_THEME: WorldTheme = {
   // oncoming lane.
   laneZ: 2,
   wordZ: 28,
+  // Exactly the two units the camera just rose by (`view.camY` 10.6 to 12.6,
+  // with `lookY` following so the pitch is unchanged). Raising the eye raises
+  // the whole window with it, which took the letter row out of the bottom of
+  // the frame again; lifting the row by the same amount puts it back where a
+  // child was reading it, without touching the framing that was asked for.
+  wordY: 2,
   // Tighter than the default 1.9, so the two of them fit in one half of the
   // road instead of the companion trailing off the edge of it.
   followSide: 1.3,
@@ -2758,7 +2764,7 @@ export const VILLAGE_THEME: WorldTheme = {
     // top of the frame and the whole view was grass, which is why a painted
     // horizon had nothing to stand against. At three degrees that edge drops
     // to about 3.1 units of screen height, leaving ten units of sky over it.
-    camY: 10.6,
+    camY: 12.6,
     camZ: 42,
     // 9, for a yaw of 12.1 degrees: atan(9 / 42) = 12.098. It was 10, which
     // gave 13.39. The pitch is set by the same single `lookAt` and shifts
@@ -2775,9 +2781,28 @@ export const VILLAGE_THEME: WorldTheme = {
     // sits about four units up the screen with sky over it, which is what a
     // horizon needs to exist at all.
     //
-    // 7.6 against a 10.6 eye over a 42.95-unit reach is
-    // atan(3 / 42.95) = 4.0 degrees down.
-    lookY: 7.6,
+    // TILTED DOWN TO SEE THE CHILDREN. 8.09 against a 12.6 eye over a
+    // 42.95-unit reach is atan(4.51 / 42.95) = 6.0 degrees, up from 4.
+    //
+    // Every degree of pitch is paid for in sky, and the bill is exact: the
+    // ground's far edge lands at `FAR * sin(pitch)` of screen height, so at 4
+    // degrees 116 units of ground reached 8.1 and at 6 the same ground would
+    // reach 12.1 — over the top of the frame, with no sky and no horizon
+    // left. So the skirt comes in to 104 and the frame top goes out to 0.80,
+    // and the edge lands at 10.87 under a top of 12.32.
+    //
+    // 104 AND NOT LESS, and this is the trap. The terrain itself reaches 102
+    // units out, so a skirt shorter than that hides behind it and the edge on
+    // screen is the TERRAIN's — which has relief, so it CURVES, while the
+    // painted band is straight. A wedge of sky then opens between them
+    // wherever the ground dips. The skirt only does its job while it is
+    // longer than the thing it is covering for.
+    //
+    // 100 is nearer than the fog's saturation at 120, so that edge is only
+    // three quarters faded and would once have shown as a line. It does not
+    // now: the painted band's own mist draws over the skirt (see the skirt's
+    // `depthWrite`), and covering that join is exactly what the mist is for.
+    lookY: 6.56,
     // 15.4, a hair over 14.4 — seven per cent wider, which is a step back
     // rather than a zoom out. Enough to give the row of letters and the far
     // hills room without changing how big the children read.
@@ -2801,8 +2826,26 @@ export const VILLAGE_THEME: WorldTheme = {
     // world in the picture at once. Raising the letters on their own got them
     // back on screen and made them look like a banner hung in the sky; the
     // row belongs where it always was, and it was the frame that was wrong.
-    topF: 0.66,
-    botF: 1.24,
+    // MORE GROUND, LESS SKY — and the fog is what pays for it.
+    //
+    // The frame's top has to clear the line where the fog goes solid, or the
+    // ground's far edge shows and the horizon has nothing to sit on. Pitching
+    // down to see the children pushed that line UP the screen (it lands at
+    // `fogFar * sin(pitch)`), so the frame had to grow upwards to keep it,
+    // and the road went out of the bottom.
+    //
+    // Bringing the fog in from 100 to 85 drops the line from 13.9 to 11.8,
+    // which buys back two units of frame at the top and spends them on the
+    // road. 0.80/1.10 still sums to 1.90, so nothing has zoomed.
+    // The frame grows DOWNWARDS, which is the only direction that shows more
+    // road. 0.86/1.30 sums to more than the 1.90 the others keep — a
+    // fourteen per cent step back — because the two ends are not
+    // interchangeable here: the top is pinned by the fog line, which the
+    // horizon has to sit on, and the bottom is where the children and the
+    // letters are. Trading top for bottom loses the horizon, so the frame has
+    // to get bigger instead.
+    topF: 0.86,
+    botF: 1.3,
   },
   // Tropical, and nothing turns. Several broadleaf variants in the nature set
   // carry autumn reds; on a Kerala road they read as a different climate.
@@ -3641,7 +3684,17 @@ export function createKidsWorld(
   // The cube world fogs in nearer so the ground dissolves into the flat sky
   // at the horizon — no hard grass/sky seam.
   scene.fog = bright
-    ? new THREE.Fog(land.fog, 34, 120)
+    ? // 100, not 120. THE GROUND'S FAR EDGE IS A DIAGONAL and cannot be
+      // made otherwise: it is a straight line in world space, and this view
+      // is yawed twelve degrees, so it projects across the screen at an
+      // angle while the painted horizon is level. They meet along one line
+      // and open a wedge of sky everywhere else.
+      //
+      // The edge does not have to be level, though — it has to be INVISIBLE,
+      // and fog does that regardless of which way it runs. Saturating at 100
+      // instead of 120 hides it before it can be seen, which is what lets
+      // the camera pitch down far enough to see the children on the road.
+      new THREE.Fog(land.fog, 34, 92)
     : new THREE.Fog(land.fog, 60, 160);
 
   const V = theme.view ?? DEFAULT_VIEW;
@@ -5568,7 +5621,7 @@ export function createKidsWorld(
       // so 125 is the number: far enough out that the edge is already solid
       // fog and cannot be found, near enough to leave two units of sky above
       // it. At 200 the fog covered the entire picture.
-      const FAR = 116;
+      const FAR = 106;
       // TUCKED UNDER THE TERRAIN, NOT BUTTED AGAINST IT.
       //
       // This started at the terrain's own far edge (-60) and level with it,
@@ -5580,7 +5633,7 @@ export function createKidsWorld(
       // Twelve units of overlap and half a unit lower, so the terrain always
       // wins in front and the join cannot be found. Both numbers are larger
       // than the relief ever is.
-      const near = -48;
+      const near = -28;
       // The camera stands at z = 42, so a far edge FAR units away is at
       // z = 42 - FAR, and the skirt runs from the terrain's edge out to it.
       const farZ = V.camZ - FAR;
@@ -5611,7 +5664,19 @@ export function createKidsWorld(
         }),
       );
       skirt.rotation.x = -Math.PI / 2;
-      skirt.position.set(60, terrainY(60, -60) - 0.5, near - depth / 2);
+      // ABOVE the terrain, not under it, and starting well inside it.
+      //
+      // It sat half a unit LOW, which is right for hiding a seam and wrong
+      // for everything else: the terrain's far relief still rose in front of
+      // the skirt, and since the terrain writes depth it rose in front of the
+      // painted horizon too — a pale hill standing across the treeline.
+      //
+      // Lifted just clear of the ground and started twenty units nearer, the
+      // skirt is the thing in front out there, so the relief is hidden and
+      // the band — which draws over the skirt, see `depthWrite` above — has
+      // nothing left to be blocked by. Everything it covers at that range is
+      // already solid fog, so nothing is lost behind it.
+      skirt.position.set(60, terrainY(60, -60) + 0.6, near - depth / 2);
       // Under everything, and never in the depth fight at the seam.
       skirt.renderOrder = -20;
       skirt.receiveShadow = false;
@@ -12682,7 +12747,19 @@ export function createKidsWorld(
       // ground's edge down too, which is why `FAR` above came in from 121 to
       // 116 at the same time. 0.797 of the frame top is exactly where 116
       // units of ground now ends.
-      const wantPeak = V.frustum * V.topF * 0.797;
+      // A SHADE BELOW THE GROUND'S EDGE, NOT LEVEL WITH IT.
+      //
+      // 0.848 puts the ridge exactly on the line and that is too exact: this
+      // is solved from `aimUp`, which is the look-at point, so any change to
+      // `lookY` lifts the band while the ground's edge — fixed by
+      // `FAR * sin(pitch)` — stays where it is. Raising the camera by two
+      // units did precisely that and opened a strip of sky between them.
+      //
+      // 0.83 tucks the ridge a fifth of a unit under the ground line, so the
+      // two overlap rather than meet. The band draws over the skirt anyway,
+      // so the overlap costs nothing and the gap cannot come back the next
+      // time the camera moves.
+      const wantPeak = V.frustum * V.topF * 0.94;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
@@ -12697,10 +12774,50 @@ export function createKidsWorld(
         // A GROUP, so the tick moves one thing and the strips keep their
         // places inside it.
         const group = new THREE.Group();
-        const n = Math.ceil(span / natural);
+        // ── HOW TWO DIFFERENT HILLS ARE MADE INTO ONE COUNTRY ────────────
+        //
+        // Butted end to end the strips meet in a hard vertical line: the two
+        // cuts have different ridges at different heights, so the seam is
+        // exactly where a horizon must not have one.
+        //
+        // Each strip carries an alpha ramp down its LEFT third and is opaque
+        // the rest of the way, and they are spaced so that ramp lands on its
+        // neighbour's opaque tail — a twenty-unit dissolve from one treeline
+        // into the next, which at this distance reads as haze rather than as
+        // a join.
+        //
+        // The ramp is on ONE edge only, and that is the whole trick. Fading
+        // both and overlapping them looks symmetrical and is wrong: two
+        // half-transparent layers over a background let a quarter of the
+        // background through in the middle, and the seam comes back as a
+        // pale bar. With one opaque and one fading over it the blend is
+        // exactly `a * new + (1 - a) * old`, with nothing behind showing.
+        //
+        // Which means the draw ORDER matters, so each strip is given its own
+        // `renderOrder`: left to right, so every strip dissolves over the one
+        // it overlaps rather than under it.
+        const fade = natural / 3; // the geometry below puts the ramp here
+        const step = natural - fade;
+        const n = Math.ceil(span / step) + 1;
         for (let i = 0; i < n; i++) {
+          // Four columns, so the alpha can hold at 1 across the body and fall
+          // to 0 over the last third. A plain two-triangle plane has no
+          // vertices to ramp between.
+          const geo = new THREE.PlaneGeometry(natural, H.height, 3, 1);
+          const cols = geo.attributes.position.count;
+          const rgba = new Float32Array(cols * 4);
+          for (let v = 0; v < cols; v++) {
+            const x = geo.attributes.position.getX(v);
+            // 0 at the left edge, 1 by a third of the way in.
+            const a = Math.min(1, (x + natural / 2) / fade);
+            rgba[v * 4] = 1;
+            rgba[v * 4 + 1] = 1;
+            rgba[v * 4 + 2] = 1;
+            rgba[v * 4 + 3] = i === 0 ? 1 : a;
+          }
+          geo.setAttribute("color", new THREE.BufferAttribute(rgba, 4));
           const mesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(natural, H.height),
+            geo,
             new THREE.MeshBasicMaterial({
               // Alternating, so no two neighbours are the same cut.
               map: strips[i % strips.length],
@@ -12722,10 +12839,14 @@ export function createKidsWorld(
               depthTest: true,
               fog: false,
               opacity: isNight ? 0 : 1,
+              // The per-vertex alpha above rides on top of `opacity`, so the
+              // day/night crossing and the strip dissolve multiply cleanly.
+              vertexColors: true,
             }),
           );
-          // Laid end to end and centred on the group.
-          mesh.position.x = (i - (n - 1) / 2) * natural;
+          // Laid with their ramps overlapping, and centred on the group.
+          mesh.position.x = (i - (n - 1) / 2) * step;
+          mesh.renderOrder = i;
           mesh.frustumCulled = false;
           group.add(mesh);
         }
@@ -13063,7 +13184,34 @@ export function createKidsWorld(
         // later doing the same.
         _tmpRight.setFromMatrixColumn(cam.matrixWorld, 0);
         for (const h of horizonBand) {
-          const op = h.night ? nightLook : 1 - nightLook;
+          // THE HORIZON CHANGES HOUR FASTER THAN THE ROAD DOES.
+          //
+          // It rode `nightLook` straight, which is the four-and-a-half second
+          // crossing everything else takes — and for most of it the two
+          // paintings were both half there, which on the same silhouette
+          // reads as a smear rather than as dusk. The far distance is also
+          // the part of a landscape that turns first: the hills go blue while
+          // the road you are on is still lit.
+          //
+          // Steepened around the middle, so it is mostly one picture or the
+          // other and spends only the centre of the crossing between them. It
+          // still starts and ends exactly with the rest of nightfall — this
+          // bends the curve, it does not shorten it.
+          // ON THE SAME CLOCK AS THE SHADOWS.
+          //
+          // `nightBlend` is what swings the sun vector from its day rig to
+          // its night one, so it IS the shadow transition — the shadows sweep
+          // across the road exactly as this number runs. The horizon was
+          // reading `nightLook` instead, which is the canvas grade: a
+          // different curve entirely, exponential where this one is linear,
+          // so the hills changed hour on their own schedule.
+          //
+          // It also had a steepening on it, to stop the two paintings smearing
+          // through each other at half opacity. That has to go: a faster
+          // curve is precisely a curve out of step, and being out of step
+          // with the light is the more visible fault by far. One number, one
+          // nightfall.
+          const op = h.night ? nightBlend : 1 - nightBlend;
           for (const strip of h.group.children) {
             const m = (strip as THREE.Mesh).material as THREE.MeshBasicMaterial;
             m.opacity = op;
