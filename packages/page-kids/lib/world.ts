@@ -2662,7 +2662,16 @@ export const VILLAGE_THEME: WorldTheme = {
       // is met through the branches, but inside the haze rather than beyond
       // it: at -42 the fog had two thirds of it and a shrine nobody can make
       // out is the same as no shrine at all.
-      { model: "Temple", dx: 5, dz: -24, h: 9, turn: 0.08 },
+      //
+      // AND CLOSER AGAIN, on both axes: dx 5 -> -1 and dz -24 -> -19. At
+      // eighteen units of road between it and the banyan the two were not
+      // one place, they were a tree and, separately, a shrine somewhere
+      // behind it. Twelve reads as the shrine standing UNDER the tree's
+      // reach, which is the arrangement the banyan exists to make — and it
+      // is still twelve, not zero, because the tree has to stand BESIDE it
+      // and not in front of it. Five units nearer the road on top of that,
+      // so it is met rather than glimpsed.
+      { model: "Temple", dx: -1, dz: -19, h: 9, turn: 0.08 },
     ],
     houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
     // ELEVEN, WITH THE DISTANCE DOING THE REST. 14 was the human-scale
@@ -2971,6 +2980,18 @@ const groundNoise = (x: number, z: number) =>
   Math.sin(x * 0.7 + z * 1.3) * Math.cos(x * 0.31 - z * 0.7);
 /** The full terrain height at any (x, z) — matches the ground-mesh vertices,
  * so props sit exactly on the surface (not just at the trail height). */
+/**
+ * How deep the ground is, and therefore WHERE IT STOPS.
+ *
+ * The plane is centred on z = 0, so the far edge is at -GROUND_DEPTH / 2 and
+ * anything placed past that is standing on nothing — it hangs in the painted
+ * horizon with clear air under its foundations. Named here rather than
+ * written as a literal in the geometry because the village has to be able to
+ * ask where the edge is before it puts a building down.
+ */
+const GROUND_DEPTH = 76;
+const GROUND_BACK = -GROUND_DEPTH / 2;
+
 const terrainY = (x: number, z: number) => {
   let y = groundY(x);
   if (ROAD_SINK > 0) {
@@ -5806,7 +5827,7 @@ export function createKidsWorld(
     // down is how short the ground can get before the village runs off it. The segment count is
     // unchanged, so the relief under the child is exactly as fine as it was
     // and `surfaceY` raycasts the same 16,000 triangles.
-    const geo = new THREE.PlaneGeometry(400, 76, 200, 40);
+    const geo = new THREE.PlaneGeometry(400, GROUND_DEPTH, 200, 40);
     geo.rotateX(-Math.PI / 2);
     geo.translate(60, 0, 0); // centre the ground on the trail, not the origin
     const pos = geo.attributes.position;
@@ -12251,15 +12272,30 @@ export function createKidsWorld(
       // between them and the road — and the ceiling on that is the fog, not
       // the terrain: it goes solid 92 units from the camera, which stands at
       // z = 42, so anything past about -44 is gone whatever is drawn there.
+      // AND NONE OF THEM PAST THE EDGE OF THE FLOOR.
+      //
+      // The ground is 76 deep centred on z = 0, so it stops at -38. These
+      // read -26, -40, -36 — and the loop below takes the first three, so
+      // the second house was standing four units beyond the last of the
+      // terrain with nothing under it, hanging in the painted horizon, and
+      // the third had its back wall through the edge. The ceiling that was
+      // written here was the fog's, at -44; the fog was never the binding
+      // one. The floor runs out first.
+      //
+      // Pulled in to -24/-31/-28. That keeps what the spread is for —
+      // somebody built close to the road, somebody else built behind them —
+      // and `perspective()` in `stand` still takes the far ones down to
+      // about seven units against eleven at the verge, so they read as
+      // further away rather than merely being further away.
       const spots: readonly (readonly [number, number])[] = [
-        [-46, -26], // nearest the road
-        [50, -40], // well back behind the others
-        [-28, -36], // and one more set back, still behind
-        [72, -30],
+        [-46, -24], // nearest the road
+        [50, -31], // well back behind the others
+        [-28, -28], // and one more set back, still behind
+        [72, -26],
       ];
       for (let i = 0; i < Math.min(3, pool.length); i++) {
         const [ox, oz] = spots[i];
-        await stand(
+        const w = await stand(
           pool[i % pool.length],
           vx + ox + (Math.random() - 0.5) * 5,
           oz + (Math.random() - 0.5) * 3,
@@ -12268,6 +12304,24 @@ export function createKidsWorld(
           // so every house already faces the road it fronts.
           (Math.random() - 0.5) * 0.7,
         );
+        // THEN CHECKED AGAINST THE FLOOR IT IS ACTUALLY STANDING ON.
+        //
+        // The table above places an ORIGIN; what has to stay on the ground
+        // is the whole footprint, and a house eleven units tall is about as
+        // many deep, so its back wall is metres behind the number written
+        // down. Jitter moves it again, and any future change to the height
+        // or to the models changes the depth without changing the table.
+        // Measuring the built object and pulling it forward by whatever
+        // overhangs is the only version of this that cannot drift: it costs
+        // one box per house, at build time, and it is right by construction
+        // rather than right until something is edited.
+        if (w != null) {
+          const over = GROUND_BACK + 1.5 - measureBox(w).min.z;
+          if (over > 0) {
+            w.position.z += over;
+            w.position.y = surfaceY(w.position.x, w.position.z);
+          }
+        }
       }
 
       // Wall segments along the road, enclosing the yards. Laid end to end
