@@ -1909,6 +1909,20 @@ export type WorldTheme = {
     readonly camZ: number;
     readonly lookY: number;
     readonly frustum: number;
+    /**
+     * HOW FAR TO THE SIDE THE CAMERA STANDS, which is what sets the yaw.
+     *
+     * `cam.lookAt` runs once at build and the tick only ever translates the
+     * camera along x afterwards, so the rotation is decided here and then
+     * never changes: yaw is `atan2(camX, camZ)`.
+     *
+     * It used to be a bare 10 shared by every world while `camZ` was already
+     * per-theme, which quietly gave the three roads three different angles —
+     * 13.4 degrees here against 16.9 on the Hero Trail and 18.4 on Dino Run.
+     * Naming it per view means changing one road's angle does not silently
+     * re-frame the other two.
+     */
+    readonly camX?: number;
     readonly topF: number;
     readonly botF: number;
   };
@@ -1969,6 +1983,8 @@ const DEFAULT_VIEW = {
   camZ: 22,
   lookY: 2.2,
   frustum: 13.5,
+  // The shared offset every world used before it was named. See `camX`.
+  camX: 10,
   topF: 0.62,
   botF: 1.38,
 } as const;
@@ -2155,7 +2171,13 @@ export const VILLAGE_THEME: WorldTheme = {
   // walking through them. They take the near half; the far half is the
   // oncoming lane.
   laneZ: 2,
-  wordZ: 28,
+  // 22, not 28. The frame slid three and a half units up its wall (see
+  // `view.topF`) and the letters did not go with it — they are held down by
+  // `wordZ` on purpose, so everything else rising left them below the bottom
+  // edge and a child could not read the word they were typing. Brought up by
+  // the same amount the frame moved, so the gap between the road and the
+  // letters — which is the thing this number actually tunes — is unchanged.
+  wordZ: 22,
   // Tighter than the default 1.9, so the two of them fit in one half of the
   // road instead of the companion trailing off the edge of it.
   followSide: 1.3,
@@ -2439,9 +2461,23 @@ export const VILLAGE_THEME: WorldTheme = {
     // sky happens to be doing. Two files per variant, day and night, cross-
     // faded on the same blend as everything else.
     variants: ["A", "B"],
-    height: 62,
-    dist: 190,
-    skyline: 0.42,
+    // SMALL AND FAR. 34, not 62 — under an orthographic camera nothing
+    // shrinks with distance, so "further away" is a thing you can only say by
+    // drawing it smaller. At 62 the hills stood as tall as the banyan in the
+    // foreground and read as a wall across the road rather than as the far
+    // side of a valley. 34 puts the ridge at about a ninth of the frame,
+    // which is what a treeline a couple of miles off actually measures.
+    height: 20,
+    // And genuinely behind everything: past the trail's end, past the fog's
+    // reach, so nothing in the world can ever intersect it.
+    dist: 260,
+    // 0.58, measured off the art rather than guessed at: the hill ridge sits
+    // a little under three fifths of the way up the file, with the mist band
+    // under it and cut-out sky above. At 0.42 the whole painted strip was
+    // lifted ten units too high and sat above the visible window — the plane
+    // was in frame the entire time (forcing its material red filled the sky
+    // exactly as it should), and only the pixels were in the wrong place.
+    skyline: 0.58,
   },
   // FLAT-SHADED fields, like the other two worlds. Photoreal ground was tried
   // here and lost: a repeating photographic surface under stylised characters
@@ -2688,12 +2724,60 @@ export const VILLAGE_THEME: WorldTheme = {
   // here, not either one alone. 39 put them at 29%, which was too low to
   // read comfortably; 28 sits them at 36%, a clear band under the road.
   view: {
-    camY: 11,
+    // ── STOOD ON THE ROAD, NOT FLOATING OVER IT ──────────────────────────
+    //
+    // 11 units up looking 11.6 degrees down is a camera on a ladder. This is
+    // a road you walk, so the eye that watches it is at a walker's height and
+    // looks very nearly level.
+    //
+    // The height is not a taste, it is the same ruler the buildings are
+    // measured with: Dave is nine and 4.7 units, a nine-year-old is about
+    // 1.35 m, so this world runs at 3.48 units to the metre and an adult's
+    // eye at 1.70 m is 5.9. The gaze is three degrees down — what somebody
+    // walking actually does, watching the road a little ahead of their feet
+    // rather than the horizon.
+    //
+    // AND IT IS WHAT PUTS SKY IN THE PICTURE. Under an orthographic camera
+    // nothing shrinks with distance, so the pitch alone decides where the
+    // ground's far edge lands: at 11.6 degrees down it projected ABOVE the
+    // top of the frame and the whole view was grass, which is why a painted
+    // horizon had nothing to stand against. At three degrees that edge drops
+    // to about 3.1 units of screen height, leaving ten units of sky over it.
+    camY: 10.6,
     camZ: 42,
-    lookY: 2.2,
+    // 9, for a yaw of 12.1 degrees: atan(9 / 42) = 12.098. It was 10, which
+    // gave 13.39. The pitch is set by the same single `lookAt` and shifts
+    // with it, from 11.52 degrees down to 11.58 — six hundredths of a degree,
+    // which moves the horizon about a twentieth of a unit in a frame twenty-
+    // seven units tall.
+    camX: 9,
+    // TEN FEET UP, AND STILL LOOKING ALONG THE ROAD.
+    //
+    // 3.05 m at 3.48 units to the metre is 10.6 — near where the camera
+    // started, and that is the point: the height was never the problem. The
+    // ANGLE was. At 11.6 degrees down the ground's far edge projected above
+    // the top of the frame and the entire picture was grass; at 4 degrees it
+    // sits about four units up the screen with sky over it, which is what a
+    // horizon needs to exist at all.
+    //
+    // 7.6 against a 10.6 eye over a 42.95-unit reach is
+    // atan(3 / 42.95) = 4.0 degrees down.
+    lookY: 7.6,
     frustum: 14.4,
-    topF: 0.68,
-    botF: 1.22,
+    // THE FRAME SLIDES UP, AND KEEPS ITS HEIGHT.
+    //
+    // 0.68/1.22 against 0.92/0.98: the two still sum to 1.90, so the view is
+    // exactly as tall as it was and nothing about the scale changes — it is
+    // the same window moved about three and a half units up the wall. What it
+    // spends is the empty grass on the near verge, which nobody looks at, and
+    // what it buys is sky: at 0.68 the ground's own far edge projected above
+    // the top of the frame, so there was no sky in the picture at all and a
+    // painted horizon had nothing to stand against.
+    // The road wanted to sit higher in the frame than the first slide left
+    // it, so the window comes back down a little: 0.82/1.08 still sums to
+    // 1.90, so the view is the same size and the same scale, moved.
+    topF: 0.82,
+    botF: 1.08,
   },
   // Tropical, and nothing turns. Several broadleaf variants in the nature set
   // carry autumn reds; on a Kerala road they read as a different climate.
@@ -3633,7 +3717,7 @@ export function createKidsWorld(
     cam.updateProjectionMatrix();
   }
   resize();
-  cam.position.set(-10, V.camY, V.camZ);
+  cam.position.set(-(V.camX ?? 10), V.camY, V.camZ);
   cam.lookAt(0, V.lookY, 0);
 
   // ── sky ────────────────────────────────────────────────────────────────
@@ -4240,8 +4324,12 @@ export function createKidsWorld(
   const mistMats: THREE.ShaderMaterial[] = [];
   const lanternMats: THREE.SpriteMaterial[] = [];
 
-  /** The painted far horizon: a day plane and a night one, cross-faded. */
-  const horizonBand: { mesh: THREE.Mesh; night: boolean }[] = [];
+  /**
+   * The painted far horizon: a day row of strips and a night one, cross-faded.
+   *
+   * A row rather than a single plane because the art is 3:1 — see the build.
+   */
+  const horizonBand: { group: THREE.Group; night: boolean }[] = [];
 
   // ══ LAMPLIGHT ════════════════════════════════════════════════════════
   //
@@ -12397,7 +12485,11 @@ export function createKidsWorld(
     // painted into it already.
     if (theme.horizon != null) {
       const H = theme.horizon;
-      const pick = H.variants[Math.floor(Math.random() * H.variants.length)];
+      // BOTH STRIPS, LAID END TO END. The art comes in two cuts of the same
+      // country, and alternating them across the width is what makes a wide
+      // horizon out of a 3:1 image without stretching it and without the
+      // mirror seam a simple repeat leaves. Two different hills next to each
+      // other read as more country; the same hill reflected reads as a fold.
       // KTX2, through the transcoder this world already stands up for its
       // models. The art is 2172x724 with a soft mist gradient and a cut-out
       // sky, and at that size four PNGs were 2.1 MB for what is, in the
@@ -12406,10 +12498,19 @@ export function createKidsWorld(
       // with the silhouette and the gradient intact. GPU memory is the
       // bigger win: a block-compressed texture stays compressed on the card,
       // where a PNG is decoded to raw RGBA.
-      const load = (half: "day" | "night") =>
+      // THE KTX2 IS ENCODED Y-FLIPPED, and it has to be.
+      //
+      // three.js cannot apply `flipY` to a CompressedTexture — the flag is
+      // ignored, because there is no cheap way to turn block-compressed data
+      // upside down after the fact. A KTX2 built from a top-left-origin PNG
+      // therefore renders inverted, hills at the bottom and mist in the sky,
+      // which is exactly how this first went in. The flip is done once at
+      // encode time instead (`basisu -y_flip`), so what arrives is already
+      // the right way up.
+      const load = (half: "day" | "night", v: string) =>
         new Promise<THREE.Texture>((res) => {
           ktx2.load(
-            `${ASSETS}/horizon/${H.name}_${half}_${pick}.ktx2`,
+            `${ASSETS}/horizon/${H.name}_${half}_${v}.ktx2`,
             (t) => {
               t.colorSpace = THREE.SRGBColorSpace;
               res(t);
@@ -12420,41 +12521,88 @@ export function createKidsWorld(
             () => res(new THREE.Texture()),
           );
         });
-      const [dayTex, nightTex] = await Promise.all([
-        load("day"),
-        load("night"),
-      ]);
+      const tex = await Promise.all(
+        (["day", "night"] as const).flatMap((half) =>
+          H.variants.map((v) => load(half, v).then((t) => ({ half, t }))),
+        ),
+      );
+      const byHalf = (half: "day" | "night") =>
+        tex.filter((e) => e.half === half).map((e) => e.t);
+
+      // SMALL, FAR, AND NEVER STRETCHED.
+      //
+      // The art is 3:1, so a band short enough to read as a distant treeline
+      // is also too narrow to reach across the frame — 20 units tall is only
+      // 60 wide at its own proportion, against 57.6 units of ordinary view
+      // and 86 once a village opens it out. Scaling the plane to fit would
+      // squash the hills, which is the one thing not to do to a painting.
+      //
+      // So the plane is made generously wide and the IMAGE repeats across it
+      // at exactly its own aspect: `repeat.x` is how many natural-width
+      // copies fit. Mirrored rather than plain repeat, so consecutive copies
+      // meet as a reflection and there is no seam to find — on a soft misty
+      // ridge that reads as more of the same country, which is what it is.
       const aspect = 2172 / 724;
-      const w = H.height * aspect;
+      // One strip, at its own proportion. Never scaled to fit anything.
+      const natural = H.height * aspect;
+      // Wide enough for the widest this view ever opens — an ordinary frame
+      // is 57.6 units across and a village pulls it out to about 86 — with
+      // room to spare either side so the ends are never hunted for.
+      const span = 320;
       cam.updateMatrixWorld(true);
       const camUp = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
       const aimUp = new THREE.Vector3(0, V.lookY, 0).dot(camUp);
       // A shade under the top of the frame, so there is sky over the hills.
-      const wantPeak = V.frustum * V.topF * 0.8;
+      // WHERE THE HILLS SIT IN THE FRAME, as a fraction of the way up.
+      //
+      // 0.45, not 0.8. At 0.8 the solve was right and the result was useless:
+      // measured, the painted skyline landed at 0.96 in clip space, which is
+      // the top two per cent of the picture, behind the card's own rounded
+      // corner. A horizon wants air above it and land below it, and a little
+      // under halfway up is where a real one sits when you are walking a
+      // road.
+      const wantPeak = V.frustum * V.topF * 0.45;
       // The plane's centre, given that the painted skyline sits `skyline` of
       // the way up from its bottom edge.
       const fromCentre = (H.skyline - 0.5) * H.height;
       const baseY =
         (aimUp + wantPeak + H.dist * camUp.z) / camUp.y - fromCentre;
-      for (const [t, isNight] of [
-        [dayTex, false],
-        [nightTex, true],
-      ] as const) {
-        const mesh = new THREE.Mesh(
-          new THREE.PlaneGeometry(w, H.height),
-          new THREE.MeshBasicMaterial({
-            map: t,
-            transparent: true,
-            depthWrite: false,
-            fog: false,
-            opacity: isNight ? 0 : 1,
-          }),
-        );
-        mesh.position.set(0, baseY, -H.dist);
-        mesh.renderOrder = -11;
-        mesh.frustumCulled = false;
-        scene.add(mesh);
-        horizonBand.push({ mesh, night: isNight });
+      for (const half of ["day", "night"] as const) {
+        const isNight = half === "night";
+        const strips = byHalf(half);
+        if (strips.length === 0) {
+          continue;
+        }
+        // A GROUP, so the tick moves one thing and the strips keep their
+        // places inside it.
+        const group = new THREE.Group();
+        const n = Math.ceil(span / natural);
+        for (let i = 0; i < n; i++) {
+          const mesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(natural, H.height),
+            new THREE.MeshBasicMaterial({
+              // Alternating, so no two neighbours are the same cut.
+              map: strips[i % strips.length],
+              transparent: true,
+              depthWrite: false,
+              // IT IS SKY, NOT SCENERY, so it does not queue for a depth test
+              // it cannot win. The ground here is a finite plane whose far
+              // edge projects into the frame, and a horizon placed on the
+              // skyline would otherwise always lose to it.
+              depthTest: false,
+              fog: false,
+              opacity: isNight ? 0 : 1,
+            }),
+          );
+          // Laid end to end and centred on the group.
+          mesh.position.x = (i - (n - 1) / 2) * natural;
+          mesh.frustumCulled = false;
+          group.add(mesh);
+        }
+        group.position.set(0, baseY, -H.dist);
+        group.renderOrder = -100;
+        scene.add(group);
+        horizonBand.push({ group, night: isNight });
       }
     }
 
@@ -12754,10 +12902,36 @@ export function createKidsWorld(
       // along with the camera. Following in x is what makes it read as
       // distance: the far hills do not slide past a child who is walking,
       // and an orthographic camera gives no parallax to do it for us.
-      for (const h of horizonBand) {
-        const m = h.mesh.material as THREE.MeshBasicMaterial;
-        m.opacity = h.night ? nightLook : 1 - nightLook;
-        h.mesh.position.x = cam.position.x;
+      if (horizonBand.length > 0) {
+        // WHERE IT LOOKS CENTRED, NOT WHERE THE CAMERA IS.
+        //
+        // This camera is offset along x and tilted, so its right vector
+        // carries a z component — and depth therefore leaks into screen-x.
+        // Parking the band at `cam.position.x` looked obviously correct and
+        // put a 186-unit backdrop 190 units away almost entirely off the left
+        // of the frame: measured, its centre projected to -1.86 in clip space
+        // and its right edge reached only -0.25, so the horizon covered the
+        // quarter of the screen hidden behind the score card and nothing
+        // else. The milestones hit this years earlier and it is solved the
+        // same way there — see `laneAlignedX`.
+        //
+        // Solved from the camera's own right vector rather than nudged by
+        // eye, so it survives the village widening the view and anything
+        // later doing the same.
+        _tmpRight.setFromMatrixColumn(cam.matrixWorld, 0);
+        for (const h of horizonBand) {
+          const op = h.night ? nightLook : 1 - nightLook;
+          for (const strip of h.group.children) {
+            const m = (strip as THREE.Mesh).material as THREE.MeshBasicMaterial;
+            m.opacity = op;
+          }
+          h.group.position.x =
+            Math.abs(_tmpRight.x) < 1e-4
+              ? cam.position.x
+              : cam.position.x -
+                ((h.group.position.z - cam.position.z) * _tmpRight.z) /
+                  _tmpRight.x;
+        }
       }
       // The canvas grade rides with it. Re-applied only when it has actually
       // moved: it writes a CSS filter string, and setting one every frame
