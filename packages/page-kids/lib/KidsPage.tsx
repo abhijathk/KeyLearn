@@ -4281,6 +4281,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // most recent few behind them so the road reads as already travelled.
       stonesPassed: prefsRef.current.roadStones ?? 0,
       chapter,
+      // How long this child's chapter is. Ten lessons of a five-year-old's
+      // passages is 270 units of road; of an eleven-year-old's, 640.
+      ageBand: band,
       // Dev review aid: `?buffalo` / `?puppy` spawns that animal beside the
       // player and cycles every clip, naming each in the caption line.
       showcaseModel,

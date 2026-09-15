@@ -60,6 +60,30 @@ export function chapterBounds(
 }
 
 /**
+ * WHAT EACH BAND TYPES, first passage and full.
+ *
+ * Measured, not chosen — these are the figures `run-length.test.ts` took off
+ * the real curriculum, and the same ones `stone-x.test.ts` walks its bands
+ * with. Passages lengthen as keys unlock, so every band starts short and
+ * settles, and that is why a chapter's first lesson is its shortest stretch
+ * of road.
+ */
+export const BAND_CHARS: Readonly<
+  Record<string, { readonly start: number; readonly full: number }>
+> = {
+  "5-6": { start: 24, full: 36 },
+  "7-8": { start: 50, full: 72 },
+  "9-10": { start: 77, full: 112 },
+  "11+": { start: 102, full: 153 },
+};
+
+/** This band's chapter, or the youngest band's if the name is unknown. */
+export function boundsForBand(band: string | undefined): readonly number[] {
+  const c = BAND_CHARS[band ?? ""] ?? BAND_CHARS["5-6"]!;
+  return chapterBounds(c.start, c.full);
+}
+
+/**
  * The youngest band, and the default when nobody says otherwise.
  *
  * 5-6 is the right default rather than an average: it is the shortest

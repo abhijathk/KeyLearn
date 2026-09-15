@@ -8,14 +8,14 @@ import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
 import {
   blendAt,
-  chapterBounds,
+  boundsForBand,
   chapterEnd,
-  DEFAULT_BOUNDS,
   densityAt,
   hash3,
   hashPick,
   hashRange,
   lessonAt,
+  LESSONS,
   placements,
   SEGMENT_COUNT,
 } from "./chapter1.ts";
@@ -3335,14 +3335,14 @@ export function createKidsWorld(
     /** Which chapter this is, carved into the roadside milestone. */
     readonly chapter?: number;
     /**
-     * This learner's passage lengths, first and full, in characters.
+     * Which band is walking this road, and therefore how long it is.
      *
      * The world is built before a single passage exists, so it cannot
      * measure how far the lessons will carry the child — it predicts them
-     * from the band's own curve, which is measured and does not move. The
-     * page knows the band; the world does not, and should not have to.
+     * from the band's own curve, which is measured and does not move. A
+     * five-year-old's chapter is 270 units and an eleven-year-old's is 640.
      */
-    readonly chapterChars?: { readonly start: number; readonly full: number };
+    readonly ageBand?: string;
     /**
      * How many milestones this child has already passed, across every
      * session they have ever played.
@@ -3881,12 +3881,7 @@ export function createKidsWorld(
    * they were built to, so `chapterBounds` is asked for nothing unless a
    * village is what is being built.
    */
-  const CHAPTER =
-    theme.village != null
-      ? opts.chapterChars != null
-        ? chapterBounds(opts.chapterChars.start, opts.chapterChars.full)
-        : DEFAULT_BOUNDS
-      : null;
+  const CHAPTER = theme.village != null ? boundsForBand(opts.ageBand) : null;
   if (CHAPTER != null) {
     TRAIL_END = chapterEnd(CHAPTER);
   }
@@ -12662,6 +12657,120 @@ export function createKidsWorld(
           `[chapter] ${planted} plants over ${Math.round(TRAIL_END)} units` +
             `, ${refused} refused for want of room, ${blockers.length} blockers`,
         );
+      }
+
+      // ── THE ANIMALS, WHERE THE LESSON KEEPS THEM ─────────────────────
+      //
+      // Buffalo open and close the chapter, cows arrive with cultivation in
+      // Lesson 2, and the grazing land and pasture are theirs. The table
+      // says which; this says where, and "where" is the point — each one is
+      // put down through `clearSpot`, so it grazes in the open ground of its
+      // own segment rather than standing inside the wall, the well or the
+      // tree that was planted a moment ago.
+      //
+      // An animal that cannot find room is DROPPED rather than nudged
+      // somewhere else. A herd that quietly slides down the road to wherever
+      // there happens to be space stops belonging to the lesson it was
+      // written for, and two cows stacked in one spot is worse than one cow.
+      if (CHAPTER != null) {
+        let grazing = 0;
+        for (const l of LESSONS) {
+          if (l.herd.length === 0) {
+            continue;
+          }
+          const from = CHAPTER[l.n - 1]!;
+          const len = CHAPTER[l.n]! - from;
+          // Two or three head, spread through the middle of the segment so
+          // they are met while walking it rather than at a milestone.
+          const n = 2 + Math.floor(hash3(l.n, 0, 31) * 2);
+          for (let i = 0; i < n; i++) {
+            const at = 0.2 + ((i + hash3(l.n, i, 32)) / n) * 0.6;
+            const x = from + at * len;
+            const z = -hashRange(x, i, 33, 13, 25);
+            const model = hashPick(l.herd, x, i, 34);
+            const spot = clearSpot(x, z, 3.5);
+            if (model == null || spot == null) {
+              continue;
+            }
+            await spawnWild(
+              model,
+              spot.x,
+              spot.z,
+              model.includes("Calf") ? 1.6 : 2.5,
+            );
+            blockers.push({ x: spot.x, z: spot.z, r: 3.5 });
+            grazing++;
+          }
+        }
+        console.info(`[chapter] ${grazing} animals grazing`);
+      }
+
+      // ── WHAT WAS MOVED IN THE NIGHT ──────────────────────────────────
+      //
+      // The Kuttichathan corridor, M4 to M7, and TRACES ONLY — no figure.
+      // The character is held back until its animation is ready, so what is
+      // authored now is the evidence it leaves: a stone out of its line at
+      // the foot of a wall, something shifted at the well, a thing off the
+      // path that was on it. Nothing you can point at, which is also the
+      // version of this folklore that belongs in a typing game for children.
+      //
+      // Placed against the blockers already standing rather than at written
+      // coordinates, so a trace turns up AT something — the wall, the well,
+      // the bamboo — which is what makes it read as disturbance rather than
+      // as one more pebble. It is the payoff for the positions being fixed:
+      // there is a wall to be found the foot of.
+      //
+      // `nightOnly` is the world's existing convention for this, so these
+      // follow the same hour everything else does. The 10 PM to 4 AM window
+      // is what the real clock produces on its own; a child toggling night
+      // in the afternoon is asking to see the night, and gets it.
+      if (CHAPTER != null && trueNight) {
+        const LITTER = [
+          "village-stone/River_Stone",
+          "village-stone/Stepping_Stone",
+          "village-stone/Laterite_Rock",
+        ];
+        let traces = 0;
+        for (const l of LESSONS.filter((x) => x.corridor)) {
+          const near = blockers.filter((b) => {
+            const ls = lessonAt(b.x, CHAPTER);
+            return ls.n === l.n && b.r >= 2;
+          });
+          for (let i = 0; i < 3 && near.length > 0; i++) {
+            const host = near[Math.floor(hash3(l.n, i, 41) * near.length)]!;
+            // Just outside whatever it was taken from — close enough to
+            // belong to it, far enough to be plainly not where it sat.
+            const a = hashRange(l.n, i, 42, 0, Math.PI * 2);
+            const d = host.r + hashRange(l.n, i, 43, 0.6, 2.2);
+            const tx = host.x + Math.cos(a) * d;
+            const tz = Math.min(-6, host.z + Math.sin(a) * d);
+            const model = hashPick(LITTER, l.n, i, 44);
+            const src = model == null ? null : await prop(model);
+            if (src == null) {
+              continue;
+            }
+            const h = hashRange(l.n, i, 45, 0.35, 0.7);
+            const w = fitToHeight(src.clone(true), h * perspective(tz));
+            // NOT SITTING FLAT. Everything else in this world that rests on
+            // the ground is levelled and part-buried, because it has been
+            // there long enough for the soil to come up round it. This has
+            // not: it is lying where it came to rest, tipped over, on top of
+            // the ground rather than in it. That difference is the whole
+            // tell, and it is the same one you would read in a real yard.
+            w.position.set(tx, surfaceY(tx, tz) + h * 0.12, tz);
+            w.rotation.set(
+              hashRange(l.n, i, 46, -0.6, 0.6),
+              hashRange(l.n, i, 47, 0, Math.PI * 2),
+              hashRange(l.n, i, 48, -0.6, 0.6),
+            );
+            w.userData.nightOnly = true;
+            w.visible = nightNow;
+            scene.add(w);
+            characterRoots.add(w);
+            traces++;
+          }
+        }
+        console.info(`[chapter] ${traces} night traces in the corridor`);
       }
     }
 
