@@ -5594,6 +5594,20 @@ export function createKidsWorld(
           color: land.grass,
           roughness: 1,
           metalness: 0,
+          // IT PAINTS, BUT IT DOES NOT CLAIM THE DEPTH.
+          //
+          // The horizon stands 200 units out and takes the depth test, so
+          // anything nearer that writes depth hides it — and this skirt lies
+          // right across the bottom of the painted band, cutting the mist off
+          // at the ground line and leaving the hills floating on a hard edge.
+          //
+          // Leaving the depth alone lets the band show through the skirt
+          // while the terrain, the trees and the buildings all still occlude
+          // it normally: they write depth, this does not. It is safe because
+          // opaque geometry is drawn front to back, so the skirt — the
+          // furthest opaque thing in the world — is the last one drawn and
+          // there is nothing behind it to leak through.
+          depthWrite: false,
         }),
       );
       skirt.rotation.x = -Math.PI / 2;
@@ -12715,6 +12729,19 @@ export function createKidsWorld(
           mesh.frustumCulled = false;
           group.add(mesh);
         }
+        // THE TWO ROWS MUST LAND ON EXACTLY THE SAME SPOT.
+        //
+        // Day and night are the same painting under different light — the
+        // same ridge, the same palms, the same silhouette — so the crossing
+        // only reads as the hour changing if the two are registered to the
+        // pixel. A unit out and the hills would slide sideways as the sun
+        // went down.
+        //
+        // Nothing here is per-half: the same `baseY`, the same distance, the
+        // same strip width and count, the same alternation of A and B in the
+        // same order, and one formula in the tick moving both groups. The
+        // registration is a consequence of that rather than something
+        // maintained, which is the only way it stays true.
         group.position.set(0, baseY, -H.dist);
         group.renderOrder = -100;
         scene.add(group);
