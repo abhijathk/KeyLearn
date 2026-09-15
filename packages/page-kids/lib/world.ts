@@ -4697,13 +4697,21 @@ export function createKidsWorld(
         if (cloudLayer != null) {
           const cm = cloudLayer.material as THREE.MeshBasicMaterial;
           cm.color.copy(sun.color).lerp(WHITE, 0.45);
-          // Just short of full. The worry behind holding this down was that
-          // a solid sheet would read as paint on glass, but that was really
-          // the hard-edged version showing through; with the edges soft the
-          // clouds carry their own falloff and can be drawn at nearly full
-          // strength without flattening. 0.55 -> 0.78 -> 0.94.
+          // Just short of full by day. The worry behind holding this down was
+          // that a solid sheet would read as paint on glass, but that was
+          // really the hard-edged version showing through; with the edges
+          // soft the clouds carry their own falloff and can be drawn at
+          // nearly full strength without flattening. 0.55 -> 0.78 -> 0.94.
+          //
+          // AND ALMOST NOTHING BY NIGHT — 0.94 off, leaving six per cent.
+          // Nothing is lighting them: the sun is the only source that ever
+          // picks out a crown, and once it is down a cloud is not a white
+          // heap in a dark sky, it is an absence, slightly darker than the
+          // stars it covers. Drawing them anywhere near daytime strength
+          // after dark was the one thing that gave the sheet away as a
+          // texture.
           cm.opacity =
-            (1 - nightLook * 0.82) * (0.35 + cloudCover * 0.65) * 0.94;
+            (1 - nightLook * 0.94) * (0.35 + cloudCover * 0.65) * 0.94;
           cloudLayer.position.x =
             cloudCamX0 + (cam.position.x - cloudCamX0) * (1 - CLOUD_DRIFT);
         }
