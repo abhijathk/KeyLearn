@@ -2641,7 +2641,18 @@ export const VILLAGE_THEME: WorldTheme = {
       { model: "Temple", dx: 5, dz: -24, h: 9, turn: 0.08 },
     ],
     houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
-    // SIXTY PER CENT of the 14 they were measured to. 8.4 is about 2.4 m to
+    // ELEVEN, WITH THE DISTANCE DOING THE REST. 14 was the human-scale
+    // figure and too big in the frame; 8.4 was 60 per cent of it and right
+    // for the nearest house but wrong for the far ones, which were the same
+    // size again because an orthographic camera does not shrink anything.
+    //
+    // `perspective()` in the build now scales every building by its depth, so
+    // this is the size of a house STANDING ON THE ROAD and the ones set back
+    // come down from it on their own: 11 at the verge, about 8 at the nearest
+    // spot, a little over 7 at the furthest. The old note follows because it
+    // still governs the temple, the wall and the cart.
+    //
+    // (Was: SIXTY PER CENT of the 14 they were measured to. 8.4 is about 2.4 m to
     // the ridge, which is a metre under the human-scale figure above and is a
     // deliberate departure from it: at 14 the houses were right against a
     // ruler and too big against the FRAME, crowding the road they are meant
@@ -2649,8 +2660,8 @@ export const VILLAGE_THEME: WorldTheme = {
     // with Dave rather than over an adult's head — so the honest measurement
     // in `heart` above no longer describes these two numbers. Left in place
     // because it still describes the temple, the wall and the cart, and
-    // because the reasoning is worth keeping when the art is next revisited.
-    houseHeight: 8.4,
+    // because the reasoning is worth keeping when the art is next revisited.)
+    houseHeight: 11,
     wall: "Wall",
     wallHeight: 4.2,
     // Out on the empty stretches, very rarely: a house set back off the road,
@@ -5665,12 +5676,29 @@ export function createKidsWorld(
       // sky left. Fog is solid by 120 units from the camera, and the frame
       // top is 11.8 units of screen height, which at this 4-degree pitch is
       // 11.8 / sin(4) = 169 units out. So the edge belongs somewhere between
-      // 120 and the frame's own top, and it moves whenever the frame does.
+      // THE WEDGE OF SKY UNDER THE HORIZON WAS THIS NUMBER BEING TOO SMALL.
+      //
+      // The painted band is horizontal and the ground's far edge is not: it
+      // is a straight line in world space seen under a twelve-degree yaw, so
+      // it runs across the screen at an angle. Where the band's mist ended
+      // above that slanted edge, nothing painted at all and the background
+      // showed through — a wedge, wide on one side and closed on the other,
+      // which is exactly the shape a diagonal meeting a horizontal makes.
+      //
+      // The old note below reasoned about keeping this edge UNDER the top of
+      // the frame. That stopped being the constraint the moment the band
+      // moved in front of the ground: the band covers the top now, so the
+      // skirt is free to run out well past it and simply leave no gap to
+      // find. At 140 its own edge is fifty units past the fog's saturation
+      // and far above the frame, which is to say it does not exist on screen.
+      //
+      // (Historic: the window used to be between
+      // 120 and the frame's own top, and it moved whenever the frame did.
       // With the window down at 0.70 the top is 10.8 units of screen height,
       // so 125 is the number: far enough out that the edge is already solid
       // fog and cannot be found, near enough to leave two units of sky above
-      // it. At 200 the fog covered the entire picture.
-      const FAR = 88;
+      // it. At 200 the fog covered the entire picture.)
+      const FAR = 140;
       // TUCKED UNDER THE TERRAIN, NOT BUTTED AGAINST IT.
       //
       // This started at the terrain's own far edge (-60) and level with it,
@@ -5682,7 +5710,7 @@ export function createKidsWorld(
       // Twelve units of overlap and half a unit lower, so the terrain always
       // wins in front and the join cannot be found. Both numbers are larger
       // than the relief ever is.
-      const near = -28;
+      const near = -36;
       // The camera stands at z = 42, so a far edge FAR units away is at
       // z = 42 - FAR, and the skirt runs from the terrain's edge out to it.
       const farZ = V.camZ - FAR;
@@ -11563,6 +11591,34 @@ export function createKidsWorld(
         }
         return propCache.get(name) ?? null;
       };
+      /**
+       * HOW MUCH SMALLER A THING IS FOR BEING FURTHER BACK.
+       *
+       * This camera is ORTHOGRAPHIC, which means it has no perspective at
+       * all: a house forty units behind the road is drawn exactly the size of
+       * one standing on it. That is why setting the village back made it look
+       * wrong rather than distant — higher up the picture, same size, which
+       * the eye reads as "enormous and close" instead of "normal and far".
+       *
+       * A perspective camera would give this for nothing, and cost a great
+       * deal: the skyline solve, the lane alignment, the word row and the
+       * shadows are all written against an orthographic projection. So the
+       * cue is applied where it is missed instead — to the buildings, by
+       * size, which is the only channel an ortho camera leaves.
+       *
+       * Apparent size goes as 1/distance, and the road is the reference: a
+       * prop on it is its true size and everything behind shrinks from there.
+       * Softened to seven tenths of the true falloff, because the full curve
+       * over this depth range takes the far houses down to half and they stop
+       * reading as houses.
+       */
+      const perspective = (z: number) => {
+        // `cam.position.z`, not the view's `camZ`: inside this block `V` is
+        // the VILLAGE, not the view — the name is shadowed here.
+        const eye = cam.position.z;
+        const dist = Math.max(1, eye - z);
+        return 1 - 0.7 * (1 - eye / dist);
+      };
       const stand = async (
         name: string,
         x: number,
@@ -11574,7 +11630,7 @@ export function createKidsWorld(
         if (src == null) {
           return null;
         }
-        const wrap = fitToHeight(src.clone(true), h);
+        const wrap = fitToHeight(src.clone(true), h * perspective(z));
         wrap.position.set(x, surfaceY(x, z), z);
         wrap.rotation.y = turn;
         scene.add(wrap);
