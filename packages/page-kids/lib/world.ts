@@ -8792,6 +8792,20 @@ export function createKidsWorld(
    */
   let templeView: { x: number; z: number; halfW: number } | null = null;
 
+  /**
+   * HOW FAR ONE WALK CYCLE CARRIES A VILLAGER.
+   *
+   * The one number here that cannot be derived, because these are in-place
+   * cycles with no root motion to read it from — so it is stated once and
+   * every walker's speed is computed from it and their own clip's length,
+   * rather than each being given a speed and hoping the two agree.
+   *
+   * 6.4 units is a shade under six real feet at this world's scale, which is
+   * a full stride pair for an adult: left foot to left foot. Tune THIS if
+   * the feet still slip, never the speeds — they are consequences.
+   */
+  const STRIDE = 6.4;
+
   const MILESTONE_CLEAR = 3.2;
   const MILESTONE_CLEAR_DEPTH = -15;
 
@@ -9178,6 +9192,9 @@ export function createKidsWorld(
     }
   }
 
+  /** Walkers dealt with by walking, so the fade leaves them alone. */
+  const handledWalkers = new Set<THREE.Object3D>();
+
   /** Who is out on the trail right now. */
   function refreshPopulation(dramatic = false): void {
     const roots: {
@@ -9191,13 +9208,42 @@ export function createKidsWorld(
     // paid in the world whose night deserves it, and never for somebody who
     // asked for a calm scene.
     const fade = dramatic && trueNight && motionScale >= 0.15;
+
+    // ── THE ROAD'S TRAFFIC ARRIVES ON FOOT ──────────────────────────────
+    //
+    // Everybody else in this world is standing somewhere, so fading them in
+    // and out with the hour is right: a man in a field at dusk is simply not
+    // there at dawn, and the dissolve is how that reads without a cut.
+    //
+    // A walker is different. Somebody using the road has to COME from
+    // somewhere, and a person materialising in the middle of a carriageway
+    // is a ghost however smooth the fade is — the more so at the moment the
+    // light comes up, which is exactly when the eye is on the road.
+    //
+    // So they are pushed off the end of the visible road and walk back in
+    // under their own steam, from whichever side they were already heading.
+    // Thirty-eight units is a comfortable margin past a camera that sees
+    // about thirty, so nobody is ever seen to be placed.
+    for (const f of roadWalkers) {
+      const rw = f.wrap.userData.roadWalker as { dir: number } | undefined;
+      if (rw == null) {
+        continue;
+      }
+      const from = playerX - rw.dir * 38;
+      const z =
+        meander(from) + (f.wrap.position.z - meander(f.wrap.position.x));
+      f.wrap.position.set(from, surfaceY(from, z), z);
+      f.wrap.visible = true;
+      handledWalkers.add(f.wrap);
+    }
+
     let leaving = 0;
     let arriving = 0;
     let morphing = 0;
     const handled = new Set<THREE.Object3D>();
     for (const { root, character } of roots) {
-      if (handled.has(root)) {
-        continue;
+      if (handled.has(root) || handledWalkers.has(root)) {
+        continue; // walked in above, and never dissolved
       }
       const ud = root.userData as {
         nightOnly?: boolean;
@@ -13369,11 +13415,20 @@ export function createKidsWorld(
             const dir = hash3(i, 2, 92) < 0.5 ? 1 : -1;
             f.wrap.userData.roadWalker = {
               dir,
-              // An ordinary unhurried walk. 3.1-4.0 still read as a dawdle
-              // against a nine-year-old covering 0.9 units a keystroke — the
-              // villagers were being overtaken by children, which is its own
-              // kind of wrong.
-              speed: hashRange(i, 3, 93, 4.4, 5.4),
+              // MEASURED FROM THE CLIP, NOT CHOSEN.
+              //
+              // Guessing this number is how you get a treadmill: the feet
+              // and the ground have to agree, and they only agree at one
+              // speed per clip. These are in-place walk cycles with no root
+              // motion to read a stride from, so the stride is the one thing
+              // that must be stated — but once stated, the SPEED follows
+              // from the clip's own length and playback rate, and a
+              // character whose walk is 1.4 seconds long no longer skates
+              // beside one whose walk is 1.0.
+              //
+              // That is why 4.4-5.4 was still slightly off: it was one range
+              // applied to villagers whose cycles are different lengths.
+              speed: 0,
               side,
             };
             f.wrap.userData.fixedFace = true;
@@ -13408,11 +13463,18 @@ export function createKidsWorld(
               // variation between them, because five people walking in
               // identical time is a parade.
               f.walk.reset();
-              f.walk.timeScale = hashRange(i, 5, 95, 0.92, 1.05);
+              const rate = hashRange(i, 5, 95, 0.92, 1.05);
+              f.walk.timeScale = rate;
               // Started at a random point in the cycle, so they are never in
               // step with one another.
               f.walk.time = hashRange(i, 4, 94, 0, 1);
               f.walk.play();
+              // One cycle of this clip covers STRIDE units of ground, so at
+              // `rate` it covers them in duration/rate seconds. Anything
+              // else is a treadmill in one direction or a skate in the other.
+              const dur = f.walk.getClip().duration || 1;
+              (f.wrap.userData.roadWalker as { speed: number }).speed =
+                (STRIDE / dur) * rate;
             }
             roadWalkers.push(f);
           }
