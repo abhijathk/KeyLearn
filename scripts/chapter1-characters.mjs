@@ -146,22 +146,17 @@ const CAST = [
     ratio: 0.4,
     error: 0.06,
     src: "Village assets/Man5_Blacksmith/Blacksmith.glb",
-    // 2048 FOR THIS ONE, AND IT IS THE ATLAS THAT DECIDES IT.
+    // 1024 LIKE THE REST, and the 2048 I tried first was wasted bytes.
     //
-    // His bake is not like the others'. Where a Meshy villager gets a few
-    // large UV islands, this is a shattered atlas — hundreds of small
-    // islands, no padding between them, and big cream areas sitting directly
-    // against dark ones. Halve it to 1024 and build mips and the averaging
-    // pulls the cream straight into the hair: at trail distance the model
-    // samples a low mip and he goes grey-haired. It looked like a specular
-    // blowout and it is not lighting at all, it is neighbouring islands
-    // bleeding into each other.
-    //
-    // So this one keeps its resolution. Roughly 700 KB more than the rest of
-    // the cast pays for it, which is the trade the brief asks for: small,
-    // but not at the cost of the texture.
-    tex: 2048,
-    budget: 2_000_000,
+    // His bake IS unlike the others' — a shattered atlas, hundreds of small
+    // islands, cream directly against dark — and the white hair is real. But
+    // raising the base resolution cannot fix it: for a given size on screen
+    // the sampled mip has the same number of texels whatever the base was,
+    // so 2048 bought a deeper mip index and exactly the same pale average,
+    // for 700 KB. The fix is how the mips are FILTERED — see `-mip_linear`
+    // where basisu is called.
+    tex: 1024,
+    budget: 1_300_000,
     // THREE CLIPS OUT OF SIX, and the three that go are this character's
     // generic Mixamo set rather than his own: `Casual_Walk` is the walk with
     // his weight in it (4.3 seconds against the generic 1.1), `Run_02` is
@@ -605,7 +600,28 @@ for (const c of CAST) {
       writeFileSync(step("tex.png"), b2.subarray(v.byteOffset ?? 0, (v.byteOffset ?? 0) + v.byteLength));
       execFileSync("cwebp", ["-quiet", "-resize", String(c.tex), String(c.tex), "-lossless", step("tex.png"), "-o", step("tex.webp")]);
       execFileSync("dwebp", ["-quiet", step("tex.webp"), "-o", step("tex_small.png")]);
-      execFileSync("basisu", ["-ktx2", "-mipmap", "-q", "255", "-file", step("tex_small.png"), "-output_file", step("tex.ktx2")], { stdio: "ignore" });
+      // ── `-mip_linear`, AND IT IS THE WHOLE OF THE WHITE CAST ──────────
+      //
+      // basisu's default is to convert an SDR texture from sRGB to LINEAR
+      // LIGHT before filtering each mip, then back to sRGB. That is
+      // physically the right way to average light, and it is the wrong way
+      // to average a baked albedo: linear-light averaging is dominated by
+      // the bright values, so a texel of cream beside a texel of dark hair
+      // comes back pale rather than mid-brown. Cream 0.92 and dark 0.15 in
+      // sRGB average to 0.53; the same pair through linear light comes back
+      // at 0.68.
+      //
+      // On a normal character atlas that is a slight lift. On the
+      // blacksmith's — a shattered bake, cream against dark everywhere — it
+      // washed the whole man out by the fourth mip and turned his hair
+      // white at the distance he is actually drawn at. It read as a
+      // reflection and is nothing of the kind.
+      //
+      // So the mips are filtered in the space the texture is stored in. The
+      // near view is unchanged — mip 0 is untouched either way — and a
+      // distant villager now keeps the tone they have close up, which is
+      // all this was ever supposed to preserve.
+      execFileSync("basisu", ["-ktx2", "-mipmap", "-mip_linear", "-q", "255", "-file", step("tex_small.png"), "-output_file", step("tex.ktx2")], { stdio: "ignore" });
       console.log(`  basecolor -> ${c.tex}x${c.tex} ETC1S, ${kb(step("tex.ktx2"))} KB`);
       run("glb-swap-texture.mjs", [cur, step("c.glb"), String(bc), step("tex.ktx2")]);
       cur = step("c.glb");

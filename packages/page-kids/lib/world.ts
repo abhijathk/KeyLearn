@@ -17288,6 +17288,28 @@ export function createKidsWorld(
           ?.wait;
         if (w != null && w > 0) resting++;
       }
+      /**
+       * NOBODY WALKS THIS ROAD IN PAIRS.
+       *
+       * Five people sharing two overlapping rounds will sooner or later fall
+       * in beside one another, and two villagers pacing along together at
+       * the same speed is the most obvious copy-paste a scene can show —
+       * worse than either of them alone, because it turns two characters
+       * into one repeated object. It is the same fault the cast list solved
+       * at build time ("one of each, never two") arriving at run time by a
+       * different route.
+       *
+       * Fifteen units is a little over the width of the frame's near half,
+       * so a pair is broken up before the child can see them as a pair.
+       */
+      const MIN_GAP = 15;
+      const crowded = (self: DinoRig): boolean =>
+        roadWalkers.some(
+          (o) =>
+            o !== self &&
+            o.wrap.visible &&
+            Math.abs(o.wrap.position.x - self.wrap.position.x) < MIN_GAP,
+        );
       for (const f of roadWalkers) {
         // OUT, OR NOT, ACCORDING TO THE CLOCK — every frame, so the road
         // empties as the evening goes on and fills again at seven whether or
@@ -17331,7 +17353,10 @@ export function createKidsWorld(
           rw.wait -= dt;
           // Never resume in view: a man fading up on camera is the same bug
           // from the other side.
-          if (rw.wait <= 0 && !seen) {
+          // Not back into somebody's pocket, either: a man who steps out of
+          // a doorway alongside the one who has just walked past him is the
+          // same pair from the other end.
+          if (rw.wait <= 0 && !seen && !crowded(f)) {
             rw.wait = undefined;
             rw.dir *= -1;
             f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
@@ -17356,6 +17381,20 @@ export function createKidsWorld(
           rw.dir *= -1;
           f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
         };
+        // FALLEN IN BESIDE SOMEBODY: the one who notices goes off about his
+        // own business instead, but only out of sight and only if the road
+        // can spare him — the same two conditions the beat's own errand
+        // runs under, for the same reasons.
+        if (
+          !seen &&
+          crowded(f) &&
+          resting < Math.max(1, Math.floor(roadWalkers.length / 2))
+        ) {
+          rw.wait = 20 + Math.random() * 70;
+          resting++;
+          f.wrap.visible = false;
+          continue;
+        }
         const stride = rw.speed * dt * motionScale;
         let nx = f.wrap.position.x + rw.dir * stride;
         const beat = (f.wrap.userData.beat as [number, number]) ?? [
