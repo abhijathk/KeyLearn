@@ -5193,6 +5193,18 @@ export function createKidsWorld(
   // and a random walk reads as a fault.
   type Lamp = {
     readonly mat: THREE.SpriteMaterial;
+    /**
+     * The sprite itself, because A FLAME CHANGES SIZE AS WELL AS BRIGHTNESS.
+     *
+     * Dimming a fixed disc reads as a lamp somebody is turning down. What a
+     * wick actually does is grow and shrink — the bright part of the flame
+     * is a couple of millimetres of burning vapour and it is never the same
+     * shape twice — and the halo around it grows and shrinks with it. Once
+     * the scale moves with the brightness the same numbers stop reading as a
+     * fade and start reading as a flame.
+     */
+    readonly sprite: THREE.Sprite;
+    readonly baseScale: number;
     readonly peak: number;
     readonly phase: number;
     readonly rate: number;
@@ -5582,7 +5594,14 @@ export function createKidsWorld(
         : "rgba(255,116,24,0)";
     let tex = lampTex.get(kind);
     if (tex == null) {
-      tex = glowTexture(inner, outer);
+      // A FLAME, NOT A DOT. `glowTexture` is an even radial fade, which is
+      // the right shape for an eye, a firefly or the moon and the wrong one
+      // for fire: it has no core. What you actually see of a wick is a small
+      // fierce centre that is nearly white, a warm body around it, and a
+      // wide dim halo — three zones, with most of the brightness inside the
+      // first fifth of the radius. Faded evenly instead, thirty of them
+      // along a temple wall read as a string of fairy lights.
+      tex = petromax ? glowTexture(inner, outer) : flameTexture(inner, outer);
       lampTex.set(kind, tex);
     }
     const mat = new THREE.SpriteMaterial({
@@ -5594,7 +5613,9 @@ export function createKidsWorld(
     });
     const sprite = new THREE.Sprite(mat);
     const size = opts.size ?? (petromax ? 2.6 : 1.5);
-    sprite.scale.set(size, size * (opts.aspect ?? 1), 1);
+    // A wick flame is taller than it is wide. The petromax is a mantle in a
+    // glass and really is a ball, so it keeps 1.
+    sprite.scale.set(size, size * (opts.aspect ?? (petromax ? 1 : 1.28)), 1);
     sprite.position.set(x, y, z);
     nightLayer.add(sprite);
     let light: THREE.PointLight | null = null;
@@ -5612,10 +5633,23 @@ export function createKidsWorld(
         // nearest — which, because they are 26 units apart and the frustum
         // is 14, is exactly the ones in shot.
         const phase = Math.random() * Math.PI * 2;
-        const rate = 3.4 + Math.random() * 2.2;
+        // The same widened spread as the lamps above: close rates drift in
+        // and out of step, and a line of milestone lamps breathing together
+        // is the arrangement that reads as an effect rather than as fire.
+        const rate = 2.6 + Math.random() * 3.8;
         aimed.push({ x, y, z, aim: opts.aim.clone(), phase, rate });
+        // Built BEFORE the lamp is registered, because the flicker scales
+        // the sprite as well as fading it and cannot do that to something
+        // that does not exist yet.
+        const sprite2 = new THREE.Sprite(mat);
+        const sz2 = opts.size ?? 1.5;
+        sprite2.scale.set(sz2, sz2 * (opts.aspect ?? 1), 1);
+        sprite2.position.set(x, y, z);
+        nightLayer.add(sprite2);
         lamps.push({
           mat,
+          sprite: sprite2,
+          baseScale: sprite2.scale.y,
           peak: opts.peak ?? 0.82,
           phase,
           rate,
@@ -5623,11 +5657,6 @@ export function createKidsWorld(
           light: null,
           lightPeak: lit,
         });
-        const sprite2 = new THREE.Sprite(mat);
-        const sz2 = opts.size ?? 1.5;
-        sprite2.scale.set(sz2, sz2 * (opts.aspect ?? 1), 1);
-        sprite2.position.set(x, y, z);
-        nightLayer.add(sprite2);
         return;
       }
       if (lampLightBudget <= 0) {
@@ -5635,9 +5664,11 @@ export function createKidsWorld(
         // no lit ground under it. See LAMP_LIGHTS for why there is a limit.
         lamps.push({
           mat,
+          sprite,
+          baseScale: sprite.scale.y,
           peak: opts.peak ?? (petromax ? 0.95 : 0.82),
           phase: Math.random() * Math.PI * 2,
-          rate: petromax ? 1.1 : 3.4 + Math.random() * 2.2,
+          rate: petromax ? 1.1 : 2.6 + Math.random() * 3.8,
           wick: petromax ? 0.12 : kind === "mirror" ? 0.4 : 1,
           light: null,
           lightPeak: lit,
@@ -5661,14 +5692,68 @@ export function createKidsWorld(
     }
     lamps.push({
       mat,
+      sprite,
+      baseScale: sprite.scale.y,
       peak: opts.peak ?? (petromax ? 0.95 : 0.82),
       phase: Math.random() * Math.PI * 2,
       // A wick in still air moves a few times a second; a mantle hums.
-      rate: petromax ? 1.1 : 3.4 + Math.random() * 2.2,
+      //
+      // WIDER THAN IT WAS, 2.6 to 6.4 rather than 3.4 to 5.6. Rates that
+      // close together drift in and out of step with each other, and a row
+      // of lamps along a temple wall breathing almost-together is the one
+      // arrangement that reads as an effect rather than as fire. Nearly two
+      // and a half times between the slowest and fastest means no two of
+      // them ever settle into a beat.
+      rate: petromax ? 1.1 : 2.6 + Math.random() * 3.8,
       wick: petromax ? 0.12 : kind === "mirror" ? 0.4 : 1,
       light,
       lightPeak: lit,
     });
+  }
+
+  /**
+   * A WICK FLAME: a hard bright core inside a soft warm halo.
+   *
+   * The difference from `glowTexture` is entirely in where the brightness
+   * sits. An even fade spreads it across the whole radius and reads as a
+   * glowing ball; a flame keeps nearly all of it in the middle few per cent
+   * and lets the rest fall away fast, which is why you can see the shape of
+   * a flame at all across a dark yard.
+   *
+   * Drawn slightly taller than wide, because a flame in still air is a
+   * teardrop rather than a ball — and because the sprite is then scaled by
+   * the flicker, which makes that teardrop shiver.
+   */
+  function flameTexture(inner: string, outer: string): THREE.Texture {
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const g = c.getContext("2d")!;
+    const grad = g.createRadialGradient(32, 34, 0.5, 32, 32, 30);
+    // White-hot at the very centre: the hottest part of a wick flame is
+    // near enough colourless, and it is what stops the whole thing reading
+    // as orange paint.
+    grad.addColorStop(0, "rgba(255,252,238,1)");
+    grad.addColorStop(0.08, inner);
+    // The body of the flame, still bright.
+    grad.addColorStop(0.22, inner.replace(/,1\)$/, ",0.72)"));
+    // Then away quickly. Most of a lamp's halo is much dimmer than the
+    // flame; an even ramp here is what made these read as lit marbles.
+    grad.addColorStop(0.55, outer.replace(/,0\)$/, ",0.2)"));
+    grad.addColorStop(1, outer);
+    g.fillStyle = grad;
+    // A teardrop rather than a disc: taller than wide, and narrower at the
+    // bottom where the wick is.
+    g.save();
+    g.translate(32, 32);
+    g.scale(0.82, 1);
+    g.translate(-32, -32);
+    g.beginPath();
+    g.arc(32, 32, 30, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
   }
 
   /** A soft radial dot, for eyes, moon and fireflies alike. */
@@ -15866,13 +15951,30 @@ export function createKidsWorld(
           }
         }
         for (const L of lamps) {
+          // THREE WAVES, NOT TWO. Two at 1 : 2.37 still come back together
+          // every few seconds, and a lamp that repeats is a lamp you can
+          // predict. A third at 4.31 — none of the three a whole multiple of
+          // another — pushes the repeat out past anything anyone watches for.
           const n =
-            Math.sin(t * L.rate + L.phase) * 0.62 +
-            Math.sin(t * L.rate * 2.37 + L.phase * 1.7) * 0.38;
+            Math.sin(t * L.rate + L.phase) * 0.5 +
+            Math.sin(t * L.rate * 2.37 + L.phase * 1.7) * 0.32 +
+            Math.sin(t * L.rate * 4.31 + L.phase * 2.9) * 0.18;
           // Dips only, never brightens past its peak: a flame guttering is
-          // what you see, not a flame flaring.
-          const f = 1 - L.wick * 0.26 * (0.5 - 0.5 * n);
+          // what you see, not a flame flaring. DEEPER than it was — 0.42
+          // against 0.26 — because at a quarter the sprite barely moved and
+          // the row read as steady dots.
+          const f = 1 - L.wick * 0.42 * (0.5 - 0.5 * n);
           L.mat.opacity = L.peak * nightBlend * f;
+          // The halo grows and shrinks with the flame, and by MORE than the
+          // brightness does: a guttering wick loses its reach before it
+          // loses its colour. This is the half that makes it read as fire
+          // rather than as a dimmer.
+          const k = 1 - L.wick * 0.3 * (0.5 - 0.5 * n);
+          L.sprite.scale.set(
+            L.baseScale * k * (L.sprite.scale.x / L.sprite.scale.y || 1),
+            L.baseScale * k,
+            1,
+          );
           if (L.light != null) {
             L.light.intensity = L.lightPeak * nightBlend * f;
           }
