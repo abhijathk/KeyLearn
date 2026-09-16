@@ -5002,8 +5002,23 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           // Every third camp, the trail map opens and the herd crosses into
           // a brand-new land — but never mid-sitting, where it would cover the
           // words with the clock still running.
+          //
+          // AND NEVER ON THE VILLAGE ROAD. This is the last piece of the old
+          // procedural model still running: a chapter used to be however much
+          // road happened to be generated before the scenery changed, so
+          // every third round the map offered to cross into a new land and
+          // rebuilt the world underneath the child. Chapter 1 is authored —
+          // ten lessons, M0 to M10, the same paddy and the same market every
+          // time — so there is no next land to cross into, and the card was
+          // interrupting a child three rounds into a lesson to ask them to
+          // press Enter and throw the scene away. The chapter ends at the
+          // tenth stone and nowhere else.
           roundsRef.current += 1;
-          if (roundsRef.current % 3 === 0 && assessmentRef.current == null) {
+          if (
+            roundsRef.current % 3 === 0 &&
+            assessmentRef.current == null &&
+            !onVillageRef.current
+          ) {
             setTimeout(() => setMapOpen(true), 900);
           }
         }
