@@ -22,6 +22,7 @@ import {
   LESSONS,
   placements,
   SEGMENT_COUNT,
+  tiredWalkAt,
 } from "./chapter1.ts";
 import {
   attachTint,
@@ -9586,8 +9587,13 @@ export function createKidsWorld(
       const nightClip = f.wrap.userData.nightWalkClip as
         | THREE.AnimationClip
         | undefined;
+      // The tired gaits are on the CLOCK, not on `nightNow`: see
+      // `tiredWalkAt`. A limp at two in the afternoon does not read as "late
+      // in the day", it reads as a lame man.
       const gait =
-        nightNow && nightClip != null ? f.mixer.clipAction(nightClip) : f.walk;
+        nightClip != null && tiredWalkAt(new Date().getHours())
+          ? f.mixer.clipAction(nightClip)
+          : f.walk;
       if (gait != null && !gait.isRunning()) {
         f.mixer.stopAllAction();
         poseRest(f.wrap);
@@ -13907,7 +13913,7 @@ export function createKidsWorld(
                 | THREE.AnimationClip
                 | undefined;
               const gait =
-                activity !== "day" && nightClip != null
+                nightClip != null && tiredWalkAt(new Date().getHours())
                   ? f.mixer.clipAction(nightClip)
                   : f.walk;
               gait.reset();

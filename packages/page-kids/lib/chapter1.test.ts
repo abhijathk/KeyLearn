@@ -23,6 +23,7 @@ import {
   placements,
   SEGMENT_COUNT,
   segmentLen,
+  tiredWalkAt,
 } from "./chapter1.ts";
 import { RUN_LEN, runLengthFor } from "./run-length.ts";
 
@@ -632,6 +633,21 @@ test("the village children are home between six and seven", () => {
     isTrue(childrenOut(h), `${h}:00 should be out`);
   for (const h of [18, 19, 21, 23, 0, 3, 5, 6]) {
     isTrue(!childrenOut(h), `${h}:00 should be home`);
+  }
+});
+
+/**
+ * The limp and the unsteady walk are END-OF-DAY gaits — a man stiff walking
+ * home, another closing up after a long one. Played at two in the afternoon
+ * they stop meaning "late" and start meaning "lame" and "drunk", which is a
+ * different thing to say about somebody.
+ */
+test("nobody limps or staggers in the working day", () => {
+  for (let h = 4; h < 18; h++) {
+    isTrue(!tiredWalkAt(h), `${h}:00 is the working day`);
+  }
+  for (const h of [18, 20, 23, 0, 2, 3]) {
+    isTrue(tiredWalkAt(h), `${h}:00 is late enough`);
   }
 });
 

@@ -211,6 +211,25 @@ export function childrenOut(hour: number): boolean {
   return h >= 7 && h < 18;
 }
 
+/**
+ * IS IT LATE ENOUGH FOR THE TIRED WALKS?
+ *
+ * The headman's limp and the tea seller's unsteady walk are END-OF-DAY
+ * gaits: a man stiff on the way home from the temple, another closing up
+ * after a long one. They say something because of WHEN they happen. Played
+ * in the middle of the afternoon they stop meaning "late" and start meaning
+ * "this man is lame" and "this man is drunk at two o'clock", which is a
+ * different thing to say about somebody and not one this village is saying.
+ *
+ * Six in the evening until four in the morning. It is a clock rule and not a
+ * `nightNow` one on purpose: a child who toggles night at midday is asking
+ * to see the dark, not to be told the headman is injured.
+ */
+export function tiredWalkAt(hour: number): boolean {
+  const h = ((hour % 24) + 24) % 24;
+  return h >= 18 || h < 4;
+}
+
 /** Which of the cast are children, by model name. */
 export function isChild(model: string): boolean {
   return model === "VillageBoy";
