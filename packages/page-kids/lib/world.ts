@@ -1178,7 +1178,15 @@ function castHeadScale(name: string): number {
       // overhang the shoulders past about 1.34 on a child's body; these are
       // taller and wider and carry more. If a villager ever reads as a
       // bobblehead from the side, this is the number that did it.
-      return 2.1;
+      // 1.8. Two numbers were changing at once here and only one of them
+      // was the size: the scale was being applied at spawn and then thrown
+      // away again by `poseRest` for everybody who WALKS, so five raises in
+      // a row were judged on standing villagers alone while the ones going
+      // past kept their original heads. With the reset fixed, 2.1 turned out
+      // to be too much — it is the first figure that was ever actually seen
+      // on the road — and this comes back down to where it reads as
+      // stylised rather than as a bobblehead.
+      return 1.8;
     // The village child, who takes a child's share — and a child's share in
     // this cast is LARGE. 1.44 was set against an adult table that has been
     // raised three times since, so he quietly became the most realistically
@@ -3467,13 +3475,29 @@ const crossLimitX = (fromX: number, toX: number, z: number): number => {
   }
   const dir = Math.sign(toX - fromX);
   const edge = riverHalfAt(z) + 0.9;
-  const near = RIVER.x - dir * edge;
-  // Already inside the channel — do not reverse them out of it, just stop
-  // them going further in.
-  if ((near - fromX) * dir < 0) {
-    return fromX;
+  const lo = RIVER.x - edge;
+  const hi = RIVER.x + edge;
+  // ONLY A STEP THAT ENTERS THE WATER IS STOPPED, and it is stopped at the
+  // bank it is entering from.
+  //
+  // This first read "if the near bank is already behind you, do not move" —
+  // which is true of somebody standing IN the channel and also true of
+  // everything on the far side of it walking away. A buffalo at x=200 with
+  // the river at 100 is past the left bank, so it was pinned where it stood
+  // with its walk cycle still running: the whole herd downstream of the
+  // crossing froze, animating in place, and the cause was a rule about a
+  // river they were nowhere near. Being past a bank is the normal condition
+  // of almost everything on a road; it cannot be the test.
+  //
+  // Anything already in the water may move freely — it will walk out, which
+  // is what we want — and anything outside simply cannot step in.
+  if (dir > 0 && fromX <= lo && toX > lo) {
+    return lo;
   }
-  return (toX - near) * dir > 0 ? near : toX;
+  if (dir < 0 && fromX >= hi && toX < hi) {
+    return hi;
+  }
+  return toX;
 };
 
 /**
@@ -12918,7 +12942,16 @@ export function createKidsWorld(
       // A twin inherits its villager's duty, so a pacing guard morphs into a
       // pacing skeleton rather than a stander who forgot the job.
       const guard =
-        forceGuard ?? (!scary && Math.random() < (theme.guardRate ?? 0));
+        forceGuard ??
+        // NO GUARDS ON AN AUTHORED ROAD. A "guard" is given a WALKING loop
+        // so its legs move while it paces a patch, and on a chapter that
+        // means a farmer treading back and forth across her own field —
+        // which is the "walking but not moving" everyone keeps seeing,
+        // because a pace is a short beat and the turn at each end is what
+        // the eye reads. The chapter decides who moves: people on the road
+        // walk, people on their own land stand. A coin toss is the opposite
+        // of authored.
+        (CHAPTER == null && !scary && Math.random() < (theme.guardRate ?? 0));
       // Only some companions are "smilers" who give a happy bob; the rest just
       // stop and stare when the hero passes.
       wrap.userData = {
@@ -21159,7 +21192,12 @@ export function createKidsWorld(
             if (after === "wander") {
               wildEnter(w, "wander", "Walk", 9, WILD_TURN_FADE);
             } else if (after === "gohome") {
-              wildEnter(w, "gohome", "Run", 14, WILD_TURN_FADE);
+              // WALKS HOME. A buffalo that breaks into a run every time it
+              // has drifted too far reads as a spooked animal rather than a
+              // heavy one that has decided to go back — and this road only
+              // has one moment where it should look fast, which is the
+              // charge. The gallop is spent on that and nothing else.
+              wildEnter(w, "gohome", "Walk", 22, WILD_TURN_FADE);
             } else if (after === "windup") {
               wildEnter(w, "windup", "Charge_Start", undefined, WILD_TURN_FADE);
               opts.onEvent?.("buffaloWarn");
@@ -21200,6 +21238,12 @@ export function createKidsWorld(
           const tz = clampZ(tx, pos.z + dzh * k);
           // And the advance is clamped again on the measured gap, so a bad
           // target cannot be acted on even if one were somehow computed.
+          // 7.5, unchanged. The charge looked like a treadmill and it was
+          // tempting to blame this number — but the animal was not slow, it
+          // was PINNED by the river rule above, and the gallop was playing
+          // over a position that never changed. Tuning a speed to cover for
+          // a freeze would have hidden the bug and left a buffalo that
+          // overshoots the child on every road without a river in it.
           const left = gap > WILD_STOP_D ? advance(tx, tz, 7.5, clampZ) : 0;
           // PULL UP WHEN IT HAS ARRIVED, not when the gap hits the floor.
           //
@@ -21255,7 +21299,7 @@ export function createKidsWorld(
           pos.set(bx, wildGroundY(bx, bz), bz);
           face(facingHero, 0.8);
           if (w.t <= 0) {
-            wildEnter(w, "gohome", "Run", 14);
+            wildEnter(w, "gohome", "Walk", 22);
           }
           break;
         }
@@ -21289,7 +21333,7 @@ export function createKidsWorld(
             // Its own cooldown, so a child who runs the whole trail is
             // joined once in a while rather than escorted the entire way.
             w.cooldown = 14 + Math.random() * 26;
-            wildEnter(w, "gohome", "Run", 12);
+            wildEnter(w, "gohome", "Walk", 20);
           }
           break;
         }
@@ -21305,7 +21349,13 @@ export function createKidsWorld(
             wildTurn(w, needHome, "gohome");
             break;
           }
-          const left = advance(w.homeX, w.homeZ, 5.5, freeZ, 0.6);
+          // 2.1, NOT 5.5. The clip is a Walk now rather than a Run, and a
+          // walking animal driven across the ground at a run's speed is the
+          // skate this world keeps having to fix: the feet and the ground
+          // agree at exactly one speed per clip. The Walk is a 1.0-second
+          // cycle on a 6-unit animal, so a little over two units a second
+          // is what the hooves actually cover.
+          const left = advance(w.homeX, w.homeZ, 2.1, freeZ, 0.6);
           if (left <= 0 || w.t <= 0) {
             wildAmbient(w, nightNow);
           }
