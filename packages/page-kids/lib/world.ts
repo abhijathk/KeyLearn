@@ -13125,7 +13125,31 @@ export function createKidsWorld(
         if (src == null) {
           return null;
         }
-        const wrap = fitToHeight(src.clone(true), h * perspective(z));
+        // A SKINNED MODEL NEEDS SKELETONUTILS, NOT `clone`.
+        //
+        // `Object3D.clone(true)` copies the meshes and the bones as separate
+        // objects and does not rebuild the link between them: the cloned
+        // SkinnedMesh keeps pointing at the ORIGINAL skeleton, so its bind
+        // matrices no longer describe the bones it is drawn with and it
+        // collapses somewhere off-world. Nothing warns; the model loads, the
+        // prop is placed, and there is simply nothing where it should be.
+        //
+        // Everything `stand` placed until now was architecture, which has no
+        // skeleton, so this never came up. The cow resting outside the
+        // market is the first animal put down as a PROP rather than as
+        // livestock — deliberately, because the herd code would walk it away
+        // — and it went straight into this.
+        const isSkinned = (() => {
+          let found = false;
+          src.traverse((n) => {
+            if ((n as THREE.SkinnedMesh).isSkinnedMesh) found = true;
+          });
+          return found;
+        })();
+        const wrap = fitToHeight(
+          isSkinned ? skinnedClone(src) : src.clone(true),
+          h * perspective(z),
+        );
         // MEASURE THE BOUNDING SPHERE, NEVER INHERIT IT.
         //
         // three.js culls a mesh against `geometry.boundingSphere`, and
@@ -19008,6 +19032,10 @@ export function createKidsWorld(
         roams?: boolean;
         /** Placed facing wins over `companionsWatch`. */
         fixedFace?: boolean;
+        /** Which way along their beat a patrolling guard is walking. */
+        patrolDir?: number;
+        /** Seconds left of the pause at the end of a beat, while they turn. */
+        patrolWait?: number;
       };
       // Grazing sheep live their own little life: nibble a patch for a while,
       // then get up and amble several steps to fresh grass, and repeat.
@@ -19130,14 +19158,51 @@ export function createKidsWorld(
         } else {
           f.mixer.timeScale = 1;
           const gz = ud.homeZ ?? f.wrap.position.z;
-          const t = clock.elapsedTime * 0.5 + (ud.phase ?? 0);
-          const px = ud.homeX + Math.sin(t) * 3 * motionScale;
-          f.wrap.position.set(px, terrainY(px, gz), gz);
-          const faceTarget = Math.cos(t) >= 0 ? Math.PI / 2 : -Math.PI / 2;
+          // ── WALK, REACH THE END, TURN ──────────────────────────────────
+          //
+          // This was `homeX + sin(t) * 3`, and a sine is the wrong curve for
+          // a walk. The clip plays at a constant rate while the body moves
+          // fastest in the middle and slows to a stop at each extreme, so
+          // the feet keep striding as the man glides to a halt and slides
+          // back the way he came — which is what "walks a few steps, starts
+          // again from the same point" is. He never turned round; he was
+          // being played backwards.
+          //
+          // A patrol is a walk at ONE speed with a turn at each end. The
+          // speed is the one the stride gives, so the feet match the ground
+          // the same way the road walkers' do, and the turn is a pause and a
+          // swing rather than a reversal mid-stride: somebody reaching the
+          // end of their beat stops, looks, and goes back.
+          const beat = 9;
+          const pace =
+            f.walk != null
+              ? strideOf(1.6 * (f.wrap.scale.y || 1) * 3) /
+                (f.walk.getClip().duration || 1)
+              : 1.6;
+          ud.patrolDir ??= 1;
+          ud.patrolWait ??= 0;
+          if (ud.patrolWait > 0) {
+            // Standing at the end of the beat, turning round.
+            ud.patrolWait -= dt;
+            f.mixer.timeScale = 0.35;
+          } else {
+            const px =
+              f.wrap.position.x + ud.patrolDir * pace * dt * motionScale;
+            if (Math.abs(px - ud.homeX) > beat / 2) {
+              ud.patrolDir *= -1;
+              ud.patrolWait = 0.8 + Math.random() * 0.9;
+            } else {
+              f.wrap.position.set(px, terrainY(px, gz), gz);
+            }
+          }
+          const faceTarget = ud.patrolDir > 0 ? Math.PI / 2 : -Math.PI / 2;
           let d = faceTarget - f.wrap.rotation.y;
           while (d > Math.PI) d -= Math.PI * 2;
           while (d < -Math.PI) d += Math.PI * 2;
-          f.wrap.rotation.y += d * 0.1;
+          // Turned over about half a second, which is roughly how long it
+          // takes a person to come about — a snap looks like a sprite
+          // flipping.
+          f.wrap.rotation.y += d * Math.min(1, dt * 4);
         }
         continue;
       }
