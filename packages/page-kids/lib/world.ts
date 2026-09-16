@@ -8679,6 +8679,34 @@ export function createKidsWorld(
     Cow_Calf: 3.3,
   };
 
+  /**
+   * HOW TALL THE VILLAGERS ARE, IN FEET, CONVERTED BY DAVE.
+   *
+   * There is a real ruler in this world and it is the hero. Dave is 4.7 units
+   * and he is nine, which is about four foot six — so a foot is 4.7 / 4.5 =
+   * 1.044 units, and every other person can be written down at their actual
+   * height instead of being guessed at against the frame.
+   *
+   * They were all going in at 3.4, which is not merely short: it is A FOOT
+   * AND A HALF SHORTER THAN THE NINE-YEAR-OLD WALKING PAST THEM. Grown adults
+   * came up to the children's chins, and the village read as a model village
+   * rather than a place with people in it. The whole point of sizing the
+   * houses against an adult door was that adults are the tall ones here.
+   *
+   * The figures are the ones asked for: the farmer five foot, the tea seller
+   * five foot four, the headman five foot nine. Rural Kerala adults of that
+   * generation, and a span between them that reads at a glance — the headman
+   * being the tallest is doing some of the work of saying who he is.
+   */
+  const FOOT = castHeight("Explorer") / 4.5;
+  const FOLK_HEIGHT: Record<string, number> = {
+    FarmerWoman: 5.0 * FOOT,
+    TeaStall: 5.4 * FOOT,
+    Headman: 5.9 * FOOT,
+    // Eleven, so a little over Dave at nine and well under every adult.
+    VillageBoy: 4.75 * FOOT,
+  };
+
   const MILESTONE_CLEAR = 3.2;
   const MILESTONE_CLEAR_DEPTH = -15;
 
@@ -13046,7 +13074,14 @@ export function createKidsWorld(
             // Passed explicitly rather than by setting `guardRate` to zero,
             // because the village's guards on the ROAD are a different thing
             // and should keep pacing.
-            await spawnCompanion(who, spot.x, spot.z, 3.4, false, false);
+            await spawnCompanion(
+              who,
+              spot.x,
+              spot.z,
+              FOLK_HEIGHT[who] ?? 5.2 * FOOT,
+              false,
+              false,
+            );
             const villager = friends[friends.length - 1]?.wrap;
             if (villager != null) lessonGroup(spot.x).add(villager);
             blockers.push({ x: spot.x, z: spot.z, r: 2.2 });

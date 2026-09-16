@@ -75,8 +75,8 @@ const OUT = join(REPO, "root/public/kids-assets/models/village-folk");
 
 
 const CAST = [
-  { name: "Cow", ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert", "Turn_Left_90", "Turn_Right_90"] },
-  { name: "Cow_Calf", ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert", "Turn_Left_90", "Turn_Right_90"] },
+  { name: "Cow", ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert"] },
+  { name: "Cow_Calf", ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert"] },
   { name: "Headman", ratio: 0.4,     src: "Village assets/Man1_VillageHeadman/Village headman.glb", tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
   { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
   { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" } },
@@ -300,7 +300,17 @@ for (const c of CAST) {
     // gaits transfer directly, and the splice remaps by NAME and leaves the
     // two neck tracks behind.
     //
-    // Only the calm ones. Charge_Start, Aggressive_Threat and
+    // NOT THE TURNS. Turn_Left_90 and Turn_Right_90 were in this list and
+    // came out wrong on the cow, and there is no version of tuning them that
+    // is worth doing: they are authored around the buffalo's own turn
+    // hand-off — the tick fades the clip out while raising the heading by
+    // exactly what the clip gives up — and the cattle do not use that
+    // machinery at all. Their state machine eases its own yaw, so it never
+    // asks for a turn clip. A clip that can only look wrong and can never be
+    // played is weight in the file and a trap for whoever reads the list
+    // next.
+    //
+    // Only the calm ones otherwise. Charge_Start, Aggressive_Threat and
     // Supernatural_Rear_Stomp are the buffalo's temper — they are what makes
     // IT the dangerous animal on this road, and a cow that can rear at a
     // child is a different game. The kids app strips attack clips on load
@@ -314,6 +324,22 @@ for (const c of CAST) {
       ]);
       cur = step("s0.glb");
       console.log(`  took from the buffalo: ${c.splice.join(", ")}`);
+      // AND REBASED ONTO THIS ANIMAL'S OWN BODY.
+      //
+      // The splice remaps by bone name, which is right for rotation — a
+      // joint angle means the same thing on any skeleton that has that
+      // joint. Every one of these clips is rotation-only except ONE channel:
+      // a translation on the hips, carrying the body's height and its bob,
+      // written in ABSOLUTE units in the buffalo. Its hips rest at -0.1195,
+      // the cow's at -0.0912, the calf's at -0.083 — so the borrowed clips
+      // lifted each animal off its own rest, and the calf, having the
+      // shortest legs, was thrown furthest. That is why its animation looked
+      // fully off while the cow's was merely a little high.
+      run("glb-rebase-root.mjs", [
+        cur, step("s1.glb"), "--from", step("buffalo.glb"),
+        ...c.splice.flatMap((t) => ["--clip", t]),
+      ]);
+      cur = step("s1.glb");
     }
 
     // 2 ── the maps that say nothing, and the emissive that lies
