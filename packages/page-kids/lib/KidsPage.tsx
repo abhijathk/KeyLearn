@@ -3505,7 +3505,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * at Milestone n-1, so a child with four stones is on Lesson 5. Capped at
    * the last lesson: Chapter 1 ends at ten and there is no eleventh to name.
    */
-  const lessonNo = Math.min(SEGMENT_COUNT, (prefs.roadStones ?? 0) + 1);
+  // `?lesson=N` wins here too, so the chip names the lesson a tester is
+  // actually standing in rather than the one their save says they reached.
+  const lessonNo = Math.min(
+    SEGMENT_COUNT,
+    Number(
+      typeof window === "undefined"
+        ? Number.NaN
+        : new URLSearchParams(window.location.search).get("lesson"),
+    ) || (prefs.roadStones ?? 0) + 1,
+  );
   const lessonName = LESSONS[lessonNo - 1]?.name ?? "";
   const flashStage = useFlash(
     stageOf(prefs.world)(dinoAgeOf(included, lesson.letters.length)),
@@ -4227,6 +4236,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // while working on the layout put the counter back to zero and showed an
     // empty road.
     const villageForced = qs?.has("village") === true;
+    // `?lesson=7` opens the road at Lesson 7, for looking at one. Review
+    // only — see `startLesson` in world.ts for why it earns its keep.
+    const asked = Number(qs?.get("lesson"));
+    const startLesson =
+      Number.isInteger(asked) && asked >= 1 && asked <= SEGMENT_COUNT
+        ? asked
+        : undefined;
     const villageDue: boolean | "near" =
       prefsRef.current.world !== "village"
         ? false
@@ -4295,6 +4311,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // How long this child's chapter is. Ten lessons of a five-year-old's
       // passages is 270 units of road; of an eleven-year-old's, 640.
       ageBand: band,
+      startLesson,
       // Dev review aid: `?buffalo` / `?puppy` spawns that animal beside the
       // player and cycles every clip, naming each in the caption line.
       showcaseModel,

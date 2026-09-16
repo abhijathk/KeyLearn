@@ -3439,6 +3439,22 @@ export function createKidsWorld(
      */
     readonly ageBand?: string;
     /**
+     * REVIEW ONLY, for `?lesson=N`: open the road at Lesson N.
+     *
+     * Ten lessons of a chapter are ten different places, and nine of them
+     * are unreachable without typing a chapter's worth of passages to get
+     * there. Every fault found in this chapter so far — the buffalo standing
+     * in front of a milestone, the papaya hiding a number, the villagers
+     * sliding — was found by somebody standing in the lesson that had it,
+     * and the cost of standing there was most of a session.
+     *
+     * It moves the child to that lesson's opening stone and does nothing
+     * else: same world, same build, same save. It does NOT award the
+     * milestones along the way — a tester looking at Lesson 7 wants to see
+     * Lesson 7, not to have a child's progress rewritten underneath them.
+     */
+    readonly startLesson?: number;
+    /**
      * How many milestones this child has already passed, across every
      * session they have ever played.
      *
@@ -8041,7 +8057,14 @@ export function createKidsWorld(
       ? CHAPTER[
           Math.min(
             SEGMENT_COUNT - 1,
-            Math.max(0, Math.floor(opts.stonesPassed ?? 0)),
+            Math.max(
+              0,
+              Math.floor(
+                opts.startLesson != null
+                  ? opts.startLesson - 1
+                  : (opts.stonesPassed ?? 0),
+              ),
+            ),
           )
         ]!
       : -6;
@@ -8318,7 +8341,14 @@ export function createKidsWorld(
    *
    * Starts from what the child has already walked past, not from zero.
    */
-  let milestoneNo = Math.max(0, Math.floor(opts.stonesPassed ?? 0));
+  let milestoneNo = Math.max(
+    0,
+    Math.floor(
+      opts.startLesson != null
+        ? opts.startLesson - 1
+        : (opts.stonesPassed ?? 0),
+    ),
+  );
   // `MIN_STONE_GAP` and the lead cap live in stone-x.ts, with the arithmetic
   // they belong to — see `stoneXFor`, and the note there on why the gap is a
   // preference rather than a promise.
@@ -8747,6 +8777,21 @@ export function createKidsWorld(
     "village-plants/Kerala_Grass_Tuft": 2,
   };
 
+  /**
+   * THE LINE OF SIGHT TO THE SHRINE, kept empty.
+   *
+   * The temple is the thing this village is arranged around — the banyan
+   * stands beside it rather than in front of it for exactly this reason —
+   * and the planting pass, which knows nothing about any of that, was free
+   * to put a coconut palm on the road side of it and undo the lot. A
+   * building nobody can see is the same as no building.
+   *
+   * Set when the temple is placed, and read by the planting: nothing tall
+   * goes in the corridor between its front face and the road. Beside it and
+   * behind it are fine, and are where the flowers go.
+   */
+  let templeView: { x: number; z: number; halfW: number } | null = null;
+
   const MILESTONE_CLEAR = 3.2;
   const MILESTONE_CLEAR_DEPTH = -15;
 
@@ -8803,8 +8848,23 @@ export function createKidsWorld(
   /** Which lesson's scene is up. -1 until the first one is asked for. */
   let shownLesson = -1;
   /** Is lesson `n` inside the window around what is showing? */
+  /**
+   * TWO LESSONS BEHIND, ONE AHEAD — not one either side.
+   *
+   * A symmetric window drops the lesson before last the moment the child
+   * crosses a stone, and on the shorter bands a lesson is only 21.6 units:
+   * the camera sees about thirty units of road, so a house two segments back
+   * was still in shot when its group went dark. What that looks like is a
+   * house vanishing as the party walks past it, which is the one thing
+   * scenery must never do.
+   *
+   * Asymmetric because the road is walked in one direction. What is behind
+   * has been seen and has to stay seen until it is genuinely gone; what is
+   * ahead only has to exist before it is reached, and one lesson of warning
+   * is plenty for that.
+   */
   const inWindow = (n: number) =>
-    shownLesson < 0 || Math.abs(n - shownLesson) <= 1;
+    shownLesson < 0 || (n >= shownLesson - 2 && n <= shownLesson + 1);
   /**
    * The group a chapter object belongs in, by where it stands.
    *
@@ -12799,6 +12859,54 @@ export function createKidsWorld(
         // guessed radius, so it stays right if the tree is ever resized: a
         // little wider than the canopy, which is where its roots would be.
         if (w != null && /temple/i.test(h.model)) {
+          const tb = measureBox(w);
+          templeView = {
+            x: (tb.min.x + tb.max.x) / 2,
+            z: tb.max.z,
+            // A little wider than the building, because a tree just off its
+            // shoulder still crosses the face at this camera's yaw.
+            halfW: (tb.max.x - tb.min.x) / 2 + 3.5,
+          };
+          // ── FLOWERS AT THE SHRINE, AND NOT ACROSS IT ────────────────
+          //
+          // A Kerala temple yard is planted — chemparathi especially, which
+          // is what gets picked for the offerings — and this one stood on
+          // bare ground. They go at its SIDES and BEHIND it, never in the
+          // corridor: the whole point of clearing that ground is lost if it
+          // is cleared of trees and filled with shrubs instead.
+          //
+          // Thick, because "a few flowers" reads as a plant that seeded
+          // itself and a yard reads as somebody tending it.
+          for (let k = 0; k < 26; k++) {
+            const side = k % 2 === 0 ? -1 : 1;
+            const fx =
+              templeView.x +
+              side *
+                hashRange(
+                  k,
+                  0,
+                  100,
+                  templeView.halfW * 0.5,
+                  templeView.halfW * 1.5,
+                );
+            const fz =
+              tb.min.z +
+              hashRange(k, 1, 101, -4.5, (tb.max.z - tb.min.z) * 0.9);
+            const src = await prop("village-plants/Hibiscus_Chemparathi");
+            if (src == null) {
+              break;
+            }
+            const fw = fitToHeight(
+              src.clone(true),
+              hashRange(k, 2, 102, 2.2, 3.4) * perspective(fz),
+            );
+            fw.position.set(fx, surfaceY(fx, fz), fz);
+            fw.rotation.y = hashRange(k, 3, 103, 0, Math.PI * 2);
+            scene.add(fw);
+            characterRoots.add(fw);
+          }
+        }
+        if (w != null && /temple-unused/i.test(h.model)) {
           const box = measureBox(w);
           const cx = (box.min.x + box.max.x) / 2;
           const cz = (box.min.z + box.max.z) / 2;
@@ -13261,9 +13369,11 @@ export function createKidsWorld(
             const dir = hash3(i, 2, 92) < 0.5 ? 1 : -1;
             f.wrap.userData.roadWalker = {
               dir,
-              // What a walk cycle covers in this world's units at the rate
-              // the clip is played: an ordinary pace, not a dawdle.
-              speed: hashRange(i, 3, 93, 3.1, 4.0),
+              // An ordinary unhurried walk. 3.1-4.0 still read as a dawdle
+              // against a nine-year-old covering 0.9 units a keystroke — the
+              // villagers were being overtaken by children, which is its own
+              // kind of wrong.
+              speed: hashRange(i, 3, 93, 4.4, 5.4),
               side,
             };
             f.wrap.userData.fixedFace = true;
@@ -13422,6 +13532,19 @@ export function createKidsWorld(
             layer.key !== "ground" &&
             spot.z > MILESTONE_CLEAR_DEPTH &&
             atMilestone(spot.x, 0)
+          ) {
+            refused++;
+            continue;
+          }
+          // AND NOTHING TALL BETWEEN THE SHRINE AND THE ROAD. See
+          // `templeView`: the village is arranged so the temple is met
+          // through the banyan's branches rather than hidden by them, and
+          // one palm on the road side of it undoes that entirely.
+          if (
+            layer.key !== "ground" &&
+            templeView != null &&
+            spot.z > templeView.z &&
+            Math.abs(spot.x - templeView.x) < templeView.halfW
           ) {
             refused++;
             continue;
@@ -18560,6 +18683,31 @@ export function createKidsWorld(
         CHAPTER != null
           ? CHAPTER[Math.min(SEGMENT_COUNT - 1, Math.max(0, milestoneNo))]!
           : Math.min(targetX, TRAIL_END - runLen);
+      // AND IT CARRIES THEM ALL THE WAY TO THE STONE.
+      //
+      // `chapterBounds` PREDICTS where each lesson ends, from the band's
+      // measured passage curve; the lesson generator produces the real
+      // passage. Where the two disagree the child ran out of words before
+      // reaching the marker and stopped in the middle of a field — the
+      // milestone they were walking to sitting a few units further on,
+      // untouched. That is the break being seen.
+      //
+      // A lesson ends AT its milestone. That is the whole arrangement, so
+      // the distance is the segment's, not the passage's, and the pace
+      // adjusts to fit. Guarded, because the pace is what `MAX_UNITS_PER_KEY`
+      // exists to protect: if honouring the stone would push a character past
+      // 1.25 units a keystroke their feet start to slide, and a sliding
+      // character is worse than a short walk. Then, and only then, the
+      // passage wins and the stone is reached next run.
+      if (CHAPTER != null) {
+        const stone = CHAPTER[Math.min(SEGMENT_COUNT, milestoneNo + 1)]!;
+        const reach = stone - runStart;
+        const chars = passageChars ?? Number.NaN;
+        const perKey = Number.isFinite(chars) && chars > 0 ? reach / chars : 0;
+        if (reach > 0 && (perKey === 0 || perKey <= 1.25)) {
+          runLen = reach;
+        }
+      }
       if (CHAPTER != null && playerX < runStart - 0.5) {
         // Resuming, or a rebuild: stand them at the stone rather than making
         // them walk back up the road to it.
