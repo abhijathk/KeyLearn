@@ -117,9 +117,11 @@ export const LESSONS_2: readonly Lesson[] = [
     ],
     herd: ["Cow", "Buffalo"],
     // "A farmer, farm worker or one animal near a boundary opening can
-    // provide life without turning the scene into a settlement" — and the
-    // animal is doing it here. The people are on the road.
-    folk: [],
+    // provide life without turning the scene into a settlement." She stands
+    // at the boundary and works — which on this road means she IDLES, using
+    // the four loops she ships with. Nobody walks on their own land here;
+    // the road is where walking happens.
+    folk: ["FarmerWoman"],
     corridor: false,
   },
   {

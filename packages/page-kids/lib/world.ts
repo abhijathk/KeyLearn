@@ -15711,6 +15711,13 @@ export function createKidsWorld(
               continue;
             }
             v.wrap.userData.fixedFace = true;
+            // A POST NEVER PACES. `guardRate` is already refused under a
+            // chapter, and this says it again at the one place that knows
+            // this person is standing on their own land: a guard is handed a
+            // WALKING loop to pace a patch with, and a farmer treading back
+            // and forth across her own field is the "walking but not moving"
+            // that keeps being reported. She has four idles; she uses them.
+            v.wrap.userData.guard = false;
             v.wrap.userData.folkOf = l.n;
             v.wrap.userData.folkRank = i;
             v.wrap.userData.isChild = isChild(post.model);
@@ -15788,6 +15795,9 @@ export function createKidsWorld(
             // lesson's list they are, and whether they are a child.
             const v = friends[friends.length - 1];
             if (v != null) {
+              // Standing on her own land, so never a pacing guard — see the
+              // posts above.
+              v.wrap.userData.guard = false;
               v.wrap.userData.folkOf = l.n;
               v.wrap.userData.folkRank = i;
               v.wrap.userData.isChild = isChild(who);
@@ -16094,7 +16104,14 @@ export function createKidsWorld(
             childrenOut(worldHour())
           ) {
             const bx = CHAPTER[4]! + (CHAPTER[5]! - CHAPTER[4]!) * 0.55;
-            const bz = meander(bx) - roadClear - 4;
+            // ON THE ROAD, not behind it. He stood a full road-width plus
+            // four units back — out past the verge in somebody's plot — so
+            // the walk out to the party was a long trudge across a field
+            // before anything happened, and for most of it he read as one
+            // more villager standing in the scenery. On the far side of the
+            // carriageway he is a boy on the road who turns towards them,
+            // which is the whole of what this moment is.
+            const bz = meander(bx) - roadClear * 0.45;
             await spawnCompanion(
               "VillageBoy",
               bx,
@@ -18747,6 +18764,8 @@ export function createKidsWorld(
           state: string;
           t: number;
           homeZ: number;
+          /** Which way he bolts. Drawn once, when his nerve goes. */
+          away?: number;
         };
         const cw = curiousBoy.wrap;
         const dx = playerX - cw.position.x;
@@ -18781,7 +18800,16 @@ export function createKidsWorld(
         } else if (cu.state === "approach") {
           const want = Math.atan2(dx, dz);
           cw.rotation.y += angTo(cw.rotation.y, want) * Math.min(1, dt * 3);
-          const sp = 3.4 * dt * motionScale;
+          // The clip's own pace. `strideOf` is what every other walker in
+          // this world is driven by: one cycle covers a stride, so the
+          // ground speed is a stride per cycle and the feet cannot skate.
+          // 3.4 was a guess that happened to land near it; this is right by
+          // construction, and stays right if his walk is ever re-spliced.
+          const walkDur = curiousBoy.walk?.getClip().duration || 1.03;
+          const sp =
+            (strideOf(FOLK_HEIGHT.VillageBoy ?? 4.28 * FOOT) / walkDur) *
+            dt *
+            motionScale;
           cw.position.x = crossLimitX(
             cw.position.x,
             cw.position.x + (dx / (gap || 1)) * sp,
@@ -18805,11 +18833,22 @@ export function createKidsWorld(
             cu.t = 0;
           }
         } else if (cu.state === "flee") {
-          // Back to his own side of the road, and away up it.
-          const away = Math.atan2(-1, -0.35);
+          // EITHER WAY, AND DRAWN WHEN HIS NERVE GOES rather than fixed.
+          //
+          // He always bolted back up the road, which after two sightings is
+          // a scripted beat: a child who has seen it once knows where he
+          // will go. Half the time he now runs on past them instead, which
+          // is just as true of a boy who has lost his nerve and makes the
+          // moment worth looking at twice.
+          cu.away ??= Math.random() < 0.5 ? -1 : 1;
+          const away = Math.atan2(cu.away, -0.35);
           cw.rotation.y += angTo(cw.rotation.y, away) * Math.min(1, dt * 4);
-          const sp = 6.2 * dt * motionScale;
-          cw.position.x -= sp;
+          const runDur = curiousBoy.run?.getClip().duration || 0.63;
+          const sp =
+            (strideOf(FOLK_HEIGHT.VillageBoy ?? 4.28 * FOOT) / runDur) *
+            dt *
+            motionScale;
+          cw.position.x += cu.away * sp;
           cw.position.z = Math.max(cu.homeZ - 6, cw.position.z - sp * 0.35);
           cw.position.y =
             deckY(cw.position.x, cw.position.z) ??
