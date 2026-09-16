@@ -9226,6 +9226,109 @@ export function createKidsWorld(
     });
   };
 
+  /**
+   * PLANT A SPECIES ONCE, NOT ONCE PER PLANT.
+   *
+   * The chapter puts about 1,750 plants on a road — 900 in the field and 850
+   * along the verges — and every one of them was a cloned GLTF scene added to
+   * the scene graph on its own. That is 1,750 draw calls in a world measured
+   * at 155 before any of this existed, and 1,750 deep clones at build time,
+   * which is most of the ten seconds the chapter took to come up.
+   *
+   * They are all the same handful of models. That is exactly what instancing
+   * is for, and this world already draws its thickets and its loose stones
+   * this way — the comment on `groundClusters` makes the same argument.
+   *
+   * The whole transform goes in the matrix, so nothing is lost: position,
+   * heading, the few degrees of lean, and the separate height-and-girth
+   * scaling that keeps the silhouettes varied.
+   *
+   * ONE INSTANCED MESH PER PRIMITIVE, because half these models are two —
+   * trunk and foliage on separate materials — and they must share ONE
+   * normalisation or the leaves lift off the trunk. The whole scene's box is
+   * measured once and every primitive is shifted by the same amount.
+   *
+   * Kept per LESSON rather than per road, so the lesson window still hides
+   * what is not in play: a single instanced mesh spanning 640 units could
+   * never be culled, and would draw nine lessons of foliage to show one.
+   */
+  const plantInstanced = (
+    into: THREE.Group,
+    src: THREE.Object3D,
+    at: readonly {
+      pos: THREE.Vector3;
+      rot: THREE.Euler;
+      scale: THREE.Vector3;
+    }[],
+  ): void => {
+    if (at.length === 0) {
+      return;
+    }
+    src.updateMatrixWorld(true);
+    // `measureBox`, NOT `Box3.setFromObject`. setFromObject trusts each
+    // geometry's CACHED bounding box, and GLTFLoader builds that from the
+    // accessor's declared min/max — which under KHR_mesh_quantization are
+    // normalized shorts, so the box comes back tens of thousands of times
+    // too small and the node's own scale is what puts the mesh back at true
+    // size. This is the same trap that made every building in this village
+    // invisible; here it made the plants fly, because a wrong height is a
+    // wrong divisor and every instance was scaled by a nonsense factor.
+    const box = measureBox(src);
+    const size = box.getSize(new THREE.Vector3());
+    const tall = Math.max(1e-4, size.y);
+    // Sit it on the ground and centre it, the same normalisation
+    // `fitToHeight` does — but baked into the geometry once instead of
+    // applied to 1,750 clones.
+    const shift = new THREE.Matrix4().makeTranslation(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    const m4 = new THREE.Matrix4();
+    const pre = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    src.traverse((n) => {
+      const mesh = n as THREE.Mesh;
+      if (!mesh.isMesh) {
+        return;
+      }
+      // THE GEOMETRY IS NOT TOUCHED, and that is deliberate. Baking the
+      // node's transform in with `geometry.applyMatrix4` is the obvious way
+      // to do this and it destroys these models: POSITION here is a
+      // NORMALISED Uint16 under KHR_mesh_quantization, so applyMatrix4
+      // writes scaled floats back into an integer buffer that cannot hold
+      // them. The mesh's own matrix and the normalisation go into every
+      // instance's matrix instead, which costs one multiply per plant at
+      // build time and nothing at all afterwards.
+      pre.copy(shift).multiply(mesh.matrixWorld);
+      const inst = new THREE.InstancedMesh(
+        mesh.geometry,
+        mesh.material,
+        at.length,
+      );
+      inst.castShadow = mesh.castShadow;
+      inst.receiveShadow = true;
+      for (const [i, t] of at.entries()) {
+        // `scale` arrives as a HEIGHT in world units on y and multipliers on
+        // x and z, so the model's own size divides out here and a caller
+        // never has to know how big the file happens to be.
+        const k = t.scale.y / tall;
+        m4.compose(
+          t.pos,
+          q.setFromEuler(t.rot),
+          new THREE.Vector3(k * t.scale.x, k, k * t.scale.z),
+        ).multiply(pre);
+        inst.setMatrixAt(i, m4);
+      }
+      inst.instanceMatrix.needsUpdate = true;
+      // The combined bounds of a lesson's worth of planting are wider than
+      // three computes from one prototype, and a wrongly-culled thicket
+      // flickers out as the camera turns.
+      inst.frustumCulled = false;
+      into.add(inst);
+    });
+  };
+
   /** Walkers dealt with by walking, so the fade leaves them alone. */
   const handledWalkers = new Set<THREE.Object3D>();
 
@@ -13598,6 +13701,27 @@ export function createKidsWorld(
           { key: "mid" as const, lo: 2.8, hi: 4.6, clear: 0 },
           { key: "ground" as const, lo: 0.7, hi: 1.7, clear: 0 },
         ];
+        // COLLECTED FIRST, BUILT ONCE. Deciding where a plant goes is
+        // arithmetic and costs nothing; turning it into a scene object is
+        // what costs, so every decision is made before any model is touched
+        // and each species is then planted in a single pass. See
+        // `plantInstanced`.
+        type Spot = {
+          pos: THREE.Vector3;
+          rot: THREE.Euler;
+          scale: THREE.Vector3;
+        };
+        const wanted = new Map<number, Map<string, Spot[]>>();
+        const want = (lesson: number, model: string, spot: Spot) => {
+          let byModel = wanted.get(lesson);
+          if (byModel == null) {
+            byModel = new Map();
+            wanted.set(lesson, byModel);
+          }
+          const list = byModel.get(model);
+          if (list == null) byModel.set(model, [spot]);
+          else list.push(spot);
+        };
         let planted = 0;
         let refused = 0;
         for (let x = 0; x < TRAIL_END; ) {
@@ -13668,10 +13792,6 @@ export function createKidsWorld(
             refused++;
             continue;
           }
-          const src = await prop(pick);
-          if (src == null) {
-            continue;
-          }
           // THE SPECIES' OWN HEIGHT, not the layer's.
           //
           // Every canopy tree was drawn between 6.5 and 11 whatever it was,
@@ -13689,21 +13809,26 @@ export function createKidsWorld(
             FOOT *
             TREE_SCALE *
             hashRange(x, 5, 16, 0.82, 1.18);
-          const w = fitToHeight(src.clone(true), h * perspective(spot.z));
-          w.position.set(spot.x, surfaceY(spot.x, spot.z), spot.z);
-          w.rotation.y = hashRange(x, 6, 17, 0, Math.PI * 2);
-          // NOTHING GROWS PLUMB — the same few degrees of lean the scatter
-          // uses, for the same reason: yaw alone leaves a row standing to
-          // attention, and a little tilt is the cheapest tell that these
-          // grew rather than being placed.
-          w.rotation.x = hashRange(x, 7, 18, -0.085, 0.085);
-          w.rotation.z = hashRange(x, 8, 19, -0.085, 0.085);
-          // Height running separately from girth, so the outline changes and
-          // not merely the size: a uniform scale is the same plant further
-          // away, and the outline is what the eye picks up in a cluster.
-          w.scale.y *= hashRange(x, 9, 20, 0.85, 1.25);
-          lessonGroup(spot.x).add(w);
-          characterRoots.add(w);
+          want(lessonAt(spot.x, CHAPTER).n, pick, {
+            pos: new THREE.Vector3(spot.x, surfaceY(spot.x, spot.z), spot.z),
+            // NOTHING GROWS PLUMB. Yaw alone leaves a row standing to
+            // attention, and a few degrees of lean is the cheapest tell that
+            // these grew rather than being placed.
+            rot: new THREE.Euler(
+              hashRange(x, 7, 18, -0.085, 0.085),
+              hashRange(x, 6, 17, 0, Math.PI * 2),
+              hashRange(x, 8, 19, -0.085, 0.085),
+            ),
+            // Height in world units on y, girth as multipliers on x and z,
+            // so the OUTLINE changes and not merely the size: a uniform
+            // scale is the same plant seen from further away, and the
+            // outline is what the eye picks up in a cluster.
+            scale: new THREE.Vector3(
+              1,
+              h * perspective(spot.z) * hashRange(x, 9, 20, 0.85, 1.25),
+              1,
+            ),
+          });
           if (layer.clear > 0) {
             blockers.push({ x: spot.x, z: spot.z, r: layer.clear });
           }
@@ -13765,24 +13890,42 @@ export function createKidsWorld(
               if (pick == null || onRoad(px, pz, pick, 0.3)) {
                 continue;
               }
-              const src = await prop(pick);
-              if (src == null) {
-                continue;
-              }
+              // Collected like the field planting, and for the same reason:
+              // these are 850 of the same two models, which as separate
+              // objects is 850 draw calls for grass.
               const h = hashRange(px, i, 68, 0.45, 1.25);
-              const w = fitToHeight(src.clone(true), h * perspective(pz));
-              w.position.set(px, surfaceY(px, pz) - 0.04, pz);
-              w.rotation.y = hashRange(px, i, 69, 0, Math.PI * 2);
-              w.rotation.x = hashRange(px, i, 70, -0.12, 0.12);
-              w.rotation.z = hashRange(px, i, 71, -0.12, 0.12);
-              w.scale.y *= hashRange(px, i, 72, 0.8, 1.3);
-              lessonGroup(Math.max(0, px)).add(w);
-              characterRoots.add(w);
+              want(lessonAt(Math.max(0, px), CHAPTER).n, pick, {
+                pos: new THREE.Vector3(px, surfaceY(px, pz) - 0.04, pz),
+                rot: new THREE.Euler(
+                  hashRange(px, i, 70, -0.12, 0.12),
+                  hashRange(px, i, 69, 0, Math.PI * 2),
+                  hashRange(px, i, 71, -0.12, 0.12),
+                ),
+                scale: new THREE.Vector3(
+                  1,
+                  h * perspective(pz) * hashRange(px, i, 72, 0.8, 1.3),
+                  1,
+                ),
+              });
               verge++;
             }
           }
         }
-        console.info(`[chapter] ${verge} plants along the verges`);
+        // ── AND NOW BUILD THEM, ONE PASS PER SPECIES PER LESSON ────────
+        let batches = 0;
+        for (const [lesson, byModel] of wanted) {
+          for (const [model, spots] of byModel) {
+            const src = await prop(model);
+            if (src == null) {
+              continue;
+            }
+            plantInstanced(lessonGroup(CHAPTER[lesson - 1]! + 0.5), src, spots);
+            batches++;
+          }
+        }
+        console.info(
+          `[chapter] ${verge} along the verges, ${batches} batches in all`,
+        );
       }
 
       // ── WHAT WAS MOVED IN THE NIGHT ──────────────────────────────────
