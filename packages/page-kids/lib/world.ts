@@ -399,6 +399,7 @@ const OWN_MODELS: ReadonlyMap<string, string> = new Map([
   ["TeaStall", "village-folk"],
   ["FarmerWoman", "village-folk"],
   ["VillageBoy", "village-folk"],
+  ["Blacksmith", "village-folk"],
 ]);
 
 /** Where a character's model actually lives, pack members included. */
@@ -9286,6 +9287,10 @@ export function createKidsWorld(
     Headman: 6.1 * FOOT,
     // Eleven, so a little over Dave at nine and well under every adult.
     VillageBoy: 4.75 * FOOT,
+    // FIVE TEN, which puts him between the tea seller and the headman
+    // rather than at either end — a heavy man whose build is his job, and
+    // still not the tallest in the village, which is the elder's.
+    Blacksmith: 5.83 * FOOT,
   };
 
   /**
@@ -9402,6 +9407,8 @@ export function createKidsWorld(
   let villagersShown = "";
   /** The one villager who takes an interest. See the tick. */
   let curiousBoy: DinoRig | null = null;
+  /** The smith at his forge. Sits from eight in the morning until nine. */
+  let smith: DinoRig | null = null;
 
   const blockers: { x: number; z: number; r: number }[] = [];
 
@@ -13919,6 +13926,45 @@ export function createKidsWorld(
                 : { size: 1.9, peak: 0.9, lit: 4.6, closes: shop.closes },
             );
           }
+
+          // ── THE SMITH AT HIS FORGE ────────────────────────────────────
+          //
+          // On the shop's own foundation, not on a chair and not on the
+          // road: a market row is built up off the ground and its plinth is
+          // where everybody in it sits between customers. His only idle IS a
+          // sit — he has no standing loop at all, which is right for a man
+          // who is either at his work or walking somewhere — and a chair-sit
+          // puts the feet on the floor with the seat a foot or so above, so
+          // the plinth edge is exactly the height the clip was authored for.
+          //
+          // AT HIS OWN SHOP. 0.13 across the frontage is the blacksmith's,
+          // the same fraction his counter lamp hangs at — one number for
+          // where that business is, so the man and his lamp cannot drift on
+          // to different premises.
+          {
+            const seat = on(0.13 * wide, 0, 0.55);
+            await spawnCompanion(
+              "Blacksmith",
+              seat[0],
+              seat[2],
+              (FOLK_HEIGHT.Blacksmith ?? 5.8 * FOOT) * perspective(seat[2]),
+              false,
+              false,
+              // Square to the road, so a child walking past sees him
+              // working rather than the back of his shoulder.
+              0,
+            );
+            const sm = friends[friends.length - 1];
+            if (sm != null) {
+              sm.wrap.userData.fixedFace = true;
+              // Marked so the population count sees him — he is one of the
+              // people the road has on it, and the log that says how many
+              // villagers are out would be wrong without him.
+              sm.wrap.userData.villageBystander = true;
+              builtGroup.add(sm.wrap);
+              smith = sm;
+            }
+          }
           return;
         }
         if (/Althara/i.test(name)) {
@@ -14599,7 +14645,41 @@ export function createKidsWorld(
           // now, and the rule below decides it rather than this list: he is
           // here because he can walk, and would drop out again if he could
           // not.
-          const WHO = ["Headman", "TeaStall", "FarmerWoman", "VillageBoy"];
+          const WHO = [
+            "Headman",
+            "TeaStall",
+            "FarmerWoman",
+            "VillageBoy",
+            "Blacksmith",
+          ];
+          /**
+           * WHO KEEPS TO A PARTICULAR STRETCH, by milestone.
+           *
+           * Everybody else is given a round centred on the village or the
+           * market. The smith is not a traveller: his forge is in the market
+           * row and the errands a smith runs — a delivery, a collection, the
+           * tea stall — are all within a few lessons of it. A blacksmith met
+           * out on the pasture at the far end of the chapter is somebody
+           * else's blacksmith.
+           *
+           * AND HIS ROUND STOPS SHORT OF THE MARKET, at Milestone 6. He is
+           * SITTING at his forge in Lesson 7 from eight in the morning until
+           * nine at night — the same hours he would be walking — so a round
+           * that reached the market row would put the same man on the road
+           * and on his own plinth in one frame. There is no way through
+           * Lesson 7 to the far side that does not pass his shop, so the
+           * road he keeps is the near approach: Lessons 4, 5 and 6, walking
+           * up towards the market and turning back before it.
+           */
+          const SPAN: Record<string, readonly [number, number]> = {
+            Blacksmith: [3, 6],
+          };
+          /** And who keeps different hours from their neighbours. */
+          const HOURS: Record<string, readonly [number, number]> = {
+            // The same window he sits at the forge for. A man is either at
+            // his work or on the road to it, never neither.
+            Blacksmith: [8, 21],
+          };
           // ONE OF EACH, NEVER TWO. The list was cycled with `i % length`,
           // so a fifth walker was a second headman — and two identical men
           // walking the same road at the same pace, sometimes abreast, is
@@ -14676,15 +14756,19 @@ export function createKidsWorld(
             // It also buys back the time the waiting costs: a longer round is
             // more walking per stop, and a road where everybody is resting is
             // an empty road.
-            f.wrap.userData.beat = [
-              Math.max(8, hubX - 80),
-              Math.min(TRAIL_END - 8, hubX + 80),
-            ];
+            const span = SPAN[who];
+            f.wrap.userData.beat =
+              span != null && CHAPTER != null
+                ? [
+                    Math.max(8, CHAPTER[span[0]] ?? 8),
+                    Math.min(TRAIL_END - 8, CHAPTER[span[1]] ?? TRAIL_END - 8),
+                  ]
+                : [Math.max(8, hubX - 80), Math.min(TRAIL_END - 8, hubX + 80)];
             // NOBODY WALKS BEFORE SIX. The early pair used to start at
             // four, which put two people on a dark road an hour before
             // sunrise — inside the Kuttichathan window as far as anybody
             // watching is concerned. They start when the light does.
-            f.wrap.userData.shift = i < 2 ? [6, 22] : [7, 19];
+            f.wrap.userData.shift = HOURS[who] ?? (i < 2 ? [6, 22] : [7, 19]);
             f.wrap.userData.isChild = isChild(who);
             f.wrap.userData.roadWalker = {
               dir,
@@ -17134,6 +17218,16 @@ export function createKidsWorld(
             f.wrap.visible = out;
           }
           if (out) showing++;
+        }
+        // EIGHT IN THE MORNING UNTIL NINE AT NIGHT, and read every frame
+        // from the same clock as the shop lamps above him — so the forge
+        // empties as his own lamp goes out rather than at some hour settled
+        // when the world was built.
+        if (smith != null) {
+          const atWork = hourOfDay >= 8 && hourOfDay < 21;
+          if (smith.wrap.visible !== atWork) {
+            smith.wrap.visible = atWork;
+          }
         }
         for (const f of friends) {
           if (f.wrap.userData.villageBystander === true && f.wrap.visible) {

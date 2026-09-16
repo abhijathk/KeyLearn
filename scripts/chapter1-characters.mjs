@@ -142,6 +142,53 @@ const CAST = [
     splice: ["Idle_C", "Idle_D"],
   },
   {
+    name: "Blacksmith",
+    ratio: 0.4,
+    error: 0.06,
+    src: "Village assets/Man5_Blacksmith/Blacksmith.glb",
+    // 2048 FOR THIS ONE, AND IT IS THE ATLAS THAT DECIDES IT.
+    //
+    // His bake is not like the others'. Where a Meshy villager gets a few
+    // large UV islands, this is a shattered atlas — hundreds of small
+    // islands, no padding between them, and big cream areas sitting directly
+    // against dark ones. Halve it to 1024 and build mips and the averaging
+    // pulls the cream straight into the hair: at trail distance the model
+    // samples a low mip and he goes grey-haired. It looked like a specular
+    // blowout and it is not lighting at all, it is neighbouring islands
+    // bleeding into each other.
+    //
+    // So this one keeps its resolution. Roughly 700 KB more than the rest of
+    // the cast pays for it, which is the trade the brief asks for: small,
+    // but not at the cost of the texture.
+    tex: 2048,
+    budget: 2_000_000,
+    // THREE CLIPS OUT OF SIX, and the three that go are this character's
+    // generic Mixamo set rather than his own: `Casual_Walk` is the walk with
+    // his weight in it (4.3 seconds against the generic 1.1), `Run_02` is
+    // his run, and the plain `Walking` and `Running` are the stock pair
+    // every Mixamo export carries.
+    //
+    // DROPPING HAPPENS BEFORE RENAMING in this pipeline, so the generic
+    // `Walking` and `Running` are gone by the time his own claim their
+    // names. Listing a clip in both lists is the order this depends on, not
+    // a coincidence.
+    drop: ["restpose", "Walking", "Running"],
+    rename: {
+      Casual_Walk: "Walking",
+      // His sit becomes his idle, which is the whole of what he does at the
+      // forge. He has no standing idle at all — right for a man who is
+      // either sitting at his work or walking somewhere.
+      Chair_Sit_Idle_M: "Idle_A",
+      // Kept for the rare occasion. He does not run the road for a living
+      // and it should read as something happening, not as his gait.
+      Run_02: "Running",
+    },
+    // NO FLATTEN. Measured before building: every clip's hips travel less
+    // than 0.08 model units in x and z, so these are in-place cycles and
+    // there is no root motion to strip. The farmer's idles needed it because
+    // hers were locomotion wearing an idle's name; his are not.
+  },
+  {
     name: "VillageBoy", ratio: 0.36,
     // He has three idles and two transitions — IdleToWalk and WalkToIdle —
     // and NO cycle between them, so he could not cover ground without
@@ -480,6 +527,16 @@ for (const c of CAST) {
         pbr.roughnessFactor = 0.85;
         dropped++;
       }
+      // AND THE NORMAL MAP, for the same reason as the metallic-roughness.
+      //
+      // The blacksmith is the first of these to ship one. At the size these
+      // draw — a few hundred screen pixels on a trail — a tangent-space
+      // normal map is a second full-resolution texture spent on surface
+      // detail below the size of a pixel, on a model whose lighting is
+      // already baked into its basecolor. Dropped WITH its reference: a
+      // material still pointing at a deleted image is the dangling index
+      // that made this step fall over.
+      if (m.normalTexture != null) { delete m.normalTexture; dropped++; }
       // An emissive baseColor makes the animal its own light source and opts
       // it out of the world's 24-hour lighting entirely. See the header.
       if (m.emissiveTexture != null) { delete m.emissiveTexture; dropped++; }
@@ -498,11 +555,36 @@ for (const c of CAST) {
       }
     }
     const pruned = prune(json, bin);
-    for (const [i, im] of (json.images ?? []).entries()) {
-      if (!keep.has(i)) delete im.bufferView;
+    // ── RE-INDEXED, NOT JUST FILTERED ───────────────────────────────────
+    //
+    // Dropping images renumbers every image after them, and textures and
+    // materials address images and textures BY INDEX. Filtering without
+    // remapping happened to work for six characters because their basecolor
+    // was image 0 and only trailing maps were removed — the blacksmith ships
+    // a normal map FIRST, so his basecolor is image 1, and the old code read
+    // `images[1]` from an array that now had one entry in it and fell over
+    // with "cannot read properties of undefined".
+    //
+    // Which is the good failure. The same staleness in a material index
+    // would not have thrown: it would have pointed a character's skin at
+    // whatever texture happened to land on that number.
+    const imgKeep = [...(json.images ?? []).keys()].filter((i) => keep.has(i));
+    const imgMap = new Map(imgKeep.map((old, now) => [old, now]));
+    json.images = imgKeep.map((i) => json.images[i]);
+    const texKeep = [...(json.textures ?? []).keys()].filter((i) =>
+      imgMap.has(json.textures[i].source),
+    );
+    const texMap = new Map(texKeep.map((old, now) => [old, now]));
+    json.textures = texKeep.map((i) => ({
+      ...json.textures[i],
+      source: imgMap.get(json.textures[i].source),
+    }));
+    for (const m of json.materials ?? []) {
+      const bct = m.pbrMetallicRoughness?.baseColorTexture;
+      if (bct != null) {
+        bct.index = texMap.get(bct.index);
+      }
     }
-    json.images = (json.images ?? []).filter((im) => im.bufferView != null);
-    json.textures = (json.textures ?? []).filter((t) => t.source < json.images.length);
     cur = step("b.glb");
     writeGlb(cur, json, pruned, new Map());
     console.log(
@@ -512,7 +594,11 @@ for (const c of CAST) {
 
     // 3 ── basecolor -> 1024 ETC1S with mips. basisu has no resize of its
     //      own; cwebp does it losslessly on the way in.
-    const bc = [...keep][0];
+    // The basecolor's index AFTER the renumbering above — which is 0, because
+    // it is the only image left, but taken from the map rather than assumed
+    // so the next character with an unexpected texture set says so loudly
+    // instead of shipping somebody else's skin.
+    const bc = imgMap.get([...keep][0]);
     if (bc != null) {
       const { json: j2, bin: b2 } = readGlb(cur);
       const v = j2.bufferViews[j2.images[bc].bufferView];
