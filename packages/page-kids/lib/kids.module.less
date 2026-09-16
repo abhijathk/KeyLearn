@@ -815,6 +815,26 @@
   font-variant-numeric: tabular-nums;
 }
 
+/**
+ * The lesson row's value, which is a NAME where every other row's is a
+ * number — so it wraps, sits proportional rather than tabular, and is capped
+ * in width.
+ *
+ * Declared here beside `.noteVal` rather than with the chips, because the
+ * hover glow below styles the two together and a base rule that comes after
+ * the rule using it is a specificity trap: the hover would win on source
+ * order today and lose the moment either selector changed.
+ */
+.noteName {
+  max-inline-size: 10rem;
+  font-size: 0.8em;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: end;
+  transition: color 0.2s ease;
+  font-variant-numeric: normal;
+}
+
 .timerLowNote {
   color: #a8321a;
 }
@@ -890,7 +910,13 @@
     text-shadow: 0 0 5px rgb(255 246 220 / 95%);
   }
 
-  .noteVal {
+  // `.noteName` with `.noteVal`: the lesson row holds a NAME where every
+  // other row holds a number, so it has its own class — and the hover glow
+  // was written before it existed and only ever selected the numbers. One
+  // row in the panel stayed dark while the rest lit up, which reads as that
+  // row being disabled rather than as it being different.
+  .noteVal,
+  .noteName {
     color: #120f09;
     text-shadow:
       0 0 7px rgb(255 246 220 / 95%),
@@ -912,7 +938,8 @@
     text-shadow: 0 0 6px rgb(255 168 60 / 80%);
   }
 
-  .noteVal {
+  .noteVal,
+  .noteName {
     color: #ffe0ac;
     text-shadow:
       0 0 9px rgb(255 168 60 / 95%),
@@ -1494,16 +1521,6 @@
   font-weight: 700;
   line-height: 1.15;
   text-wrap: balance;
-  font-variant-numeric: normal;
-}
-
-.noteName {
-  max-inline-size: 10rem;
-  font-size: 0.8em;
-  font-weight: 800;
-  line-height: 1.15;
-  text-align: end;
-  transition: color 0.2s ease;
   font-variant-numeric: normal;
 }
 

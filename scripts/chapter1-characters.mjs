@@ -109,8 +109,8 @@ const CAST = [
       "Sit_Cross_Legged_on_Floor", "Stand_Up3", "Stand_to_Sit_Transition_M",
     ],
   },
-  { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A", Unsteady_Walk: "Walk_Night" } },
-  { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" } },
+  { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A", Unsteady_Walk: "Walk_Night" }, flatten: [["Idle_A","Hips","x"],["Idle_A","Hips","z"]] },
+  { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" }, flatten: [["Idle_A","Hips","x"],["Idle_A","Hips","z"],["Idle_B","Hips","x"],["Idle_B","Hips","z"]] },
   {
     name: "VillageBoy", ratio: 0.36,
     // He has three idles and two transitions — IdleToWalk and WalkToIdle —
@@ -327,6 +327,31 @@ for (const c of CAST) {
       run("glb-rename-clips.mjs", [cur, step("r.glb"), ...pairs]);
       cur = step("r.glb");
       console.log(`  named: ${Object.values(c.rename).join(", ")}`);
+    }
+
+    // 1b2 ── AN "IDLE" THAT WALKS ACROSS THE FIELD.
+    //
+    // Measured on the shipped files, and the numbers are not close: the
+    // headman's real idles move his hips 0.02 and 0.07 units over their
+    // cycle. The farmer's move hers 2.26 and 3.63, and the tea seller's
+    // 2.49. Those are not idles with a sway in them — they are locomotion
+    // clips with ROOT MOTION, and renaming a UUID to "Idle_A" did not change
+    // what was inside it.
+    //
+    // So a farmer told to stand in her plot and idle walked steadily out of
+    // it, and nothing about the code was wrong: it played the idle it was
+    // given. The body motion is worth keeping — arms, spine, a shift of
+    // weight, which is what somebody working in a field looks like — and
+    // only the TRAVEL has to go. Flattening the hips in x and z holds her
+    // where she was put and leaves everything above the waist alone; y is
+    // untouched, so she still rises and settles as she moves.
+    if (c.flatten != null) {
+      for (const [clip, bone, axis] of c.flatten) {
+        run("glb-flatten-track.mjs", [cur, step("f.glb"), clip, bone, axis]);
+        copyFileSync(step("f.glb"), step("flat.glb"));
+        cur = step("flat.glb");
+      }
+      console.log(`  flattened ${c.flatten.length} root track(s)`);
     }
 
     // 1c ── ONE CLIP IS NOT AN ANIMAL.
