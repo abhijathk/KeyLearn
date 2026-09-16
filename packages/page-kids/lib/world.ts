@@ -3314,8 +3314,60 @@ let RIVER_SURFACE = 0;
  * the crossing actually landed — with the water either standing above the
  * bank or sitting at the bottom of a dry gorge.
  */
+/**
+ * THE BRIDGE DECK: the first walkable surface in this world that is not
+ * the terrain.
+ *
+ * Every character's feet come from one height field — `terrainY`, or the
+ * mesh raycast that agrees with it — and over the channel that field is the
+ * river BED. The deck sits three units above it. So anything standing on
+ * the bridge has to be asked a different question, and `walkY` below is that
+ * question: the deck where there is one, the ground everywhere else.
+ *
+ * Kept as numbers rather than as a mesh lookup because it is asked every
+ * frame for every walker, and a raycast against the bridge would be the
+ * `surfaceY` cost all over again. The deck is flat; four numbers describe it.
+ */
+type BridgeDeck = {
+  readonly x: number;
+  /** Half the deck's length along the road. */
+  readonly halfLen: number;
+  /** Half its width across the road. */
+  readonly halfWid: number;
+  /** The deck's top, in world units. */
+  readonly y: number;
+};
+let BRIDGE: BridgeDeck | null = null;
+
+/** The deck's height at a point, or null if the point is not on it. */
+const deckY = (x: number, z: number): number | null => {
+  if (BRIDGE == null) {
+    return null;
+  }
+  const dx = Math.abs(x - BRIDGE.x);
+  if (dx > BRIDGE.halfLen || Math.abs(z - meander(x)) > BRIDGE.halfWid) {
+    return null;
+  }
+  // THE LAST TWO UNITS AT EACH END BLEND INTO THE BANK. The deck is set to
+  // the bank's height, but a bank is not perfectly flat, and a character who
+  // steps from a deck at 1.30 onto ground at 1.18 drops through a visible
+  // step. Ramped over the landing instead, so the join is a slope a foot
+  // never notices.
+  const ramp = 2;
+  const into = BRIDGE.halfLen - dx;
+  if (into < ramp) {
+    const t = into / ramp;
+    return terrainY(x, z) * (1 - t) + BRIDGE.y * t;
+  }
+  return BRIDGE.y;
+};
+
+/** Where a foot rests: the deck over the water, the ground everywhere else. */
+const walkY = (x: number, z: number): number => deckY(x, z) ?? terrainY(x, z);
+
 function setRiver(cut: RiverCut | null): void {
   RIVER = null;
+  BRIDGE = null;
   if (cut == null) {
     return;
   }
@@ -3370,8 +3422,13 @@ const terrainY = (x: number, z: number) => {
   if (RIVER != null) {
     const d = Math.abs(x - RIVER.x) / RIVER.half;
     if (d < 1) {
-      const t = 1 - d;
-      y -= RIVER.depth * t * t * (3 - 2 * t);
+      // A PARABOLA, NOT A SMOOTHSTEP. This was a smoothstep first, and a
+      // smoothstep is flat at the bank — so with the water 0.9 below the
+      // bank the surface only covered the inner 68 per cent of the channel
+      // and the rest was dry sloping mud. A parabola puts 86 per cent under
+      // water: a river filled bank to bank, with a bank that still leans
+      // rather than drops, which is where the taro grows.
+      y -= RIVER.depth * (1 - d * d);
     }
   }
   return y;
@@ -4327,6 +4384,26 @@ export function createKidsWorld(
   const CHAPTER = theme.village != null ? boundsForBand(opts.ageBand) : null;
   if (CHAPTER != null) {
     TRAIL_END = chapterEnd(CHAPTER);
+  }
+  // THE RIVER IS CUT HERE, before the ground is meshed, because the mesh
+  // samples `terrainY` and a channel cut after that is a channel the water
+  // sits in and nothing else noticed. And it is cut EVERY build, to null when
+  // the chapter has none: the river is module state, and a Chapter 1 road
+  // built after a Chapter 2 one would otherwise inherit a channel through
+  // its own Lesson 6.
+  {
+    const wet = CHAPTER == null ? null : LESSONS.find((l) => l.river != null);
+    if (wet?.river != null && CHAPTER != null) {
+      const from = CHAPTER[wet.n - 1]!;
+      const len = CHAPTER[wet.n]! - from;
+      setRiver({
+        x: from + wet.river.at * len,
+        half: wet.river.half,
+        depth: wet.river.depth,
+      });
+    } else {
+      setRiver(null);
+    }
   }
 
   const V = theme.view ?? DEFAULT_VIEW;
@@ -5407,6 +5484,8 @@ export function createKidsWorld(
     readonly phase: Float32Array;
   } | null = null;
   const mistMats: THREE.ShaderMaterial[] = [];
+  /** The river's ripple clock; advanced in the tick, read by the water. */
+  const waterTime = { value: 0 };
   const lanternMats: THREE.SpriteMaterial[] = [];
 
   /**
@@ -6948,6 +7027,88 @@ export function createKidsWorld(
     ground.updateMatrixWorld(true);
     groundMesh = ground;
     scene.add(ground);
+
+    // ── THE WATER ──────────────────────────────────────────────────────
+    //
+    // A flat plane at the surface height, exactly as wide as the water is
+    // where the bank crosses it, running the full depth of the ground so it
+    // comes toward the camera the way the reference frames show. Nothing
+    // here is simulated: the reference's river is a teal channel, darker in
+    // the middle, with sun sparkle by day and a moon track by night, and all
+    // three of those come from lighting a low-roughness surface with the
+    // world's own sun. MeshStandardMaterial is PATCHED rather than replaced
+    // for the same reason the ground's is — it keeps the 24-hour light, the
+    // fog and the tone mapping for free, and a hand-written shader would
+    // have had to rebuild all of it to gain nothing but ripples.
+    if (RIVER != null) {
+      // Where the surface meets the bank: under water wherever the drop is
+      // more than the freeboard, and the bank is a parabola, so the edge is
+      // at sqrt(1 - freeboard / depth) of the half-width.
+      const freeboard = 0.9;
+      const edge =
+        RIVER.half * Math.sqrt(Math.max(0, 1 - freeboard / RIVER.depth));
+      const wgeo = new THREE.PlaneGeometry(edge * 2, GROUND_DEPTH, 24, 2);
+      wgeo.rotateX(-Math.PI / 2);
+      wgeo.translate(RIVER.x, 0, 0);
+      // DEEPER IN THE MIDDLE, painted per vertex: the reference's channel is
+      // dark teal along its centre line and pales toward each bank, and
+      // that gradient is most of what makes it read as deep rather than as
+      // a puddle. Vertex colour multiplies the material colour, so the
+      // material holds the pale bank tone and the centre is pulled down.
+      const wpos = wgeo.attributes.position;
+      const shade = new Float32Array(wpos.count * 3);
+      for (let i = 0; i < wpos.count; i++) {
+        const d = Math.min(1, Math.abs(wpos.getX(i) - RIVER.x) / edge);
+        const k = 0.55 + 0.45 * d * d; // 0.55 at the centre, 1 at the edge
+        shade[i * 3] = k;
+        shade[i * 3 + 1] = k;
+        shade[i * 3 + 2] = k;
+      }
+      wgeo.setAttribute("color", new THREE.BufferAttribute(shade, 3));
+      const wmat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x3f8f92),
+        roughness: 0.14,
+        metalness: 0,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.92,
+      });
+      // Ripples: two crossing sine bands nudge the normal, so the sun's
+      // highlight breaks into moving sparkle rather than sitting as one
+      // still white bar. Small, because the surface is seen edge-on and a
+      // large wobble reads as boiling.
+      wmat.onBeforeCompile = (sh) => {
+        sh.uniforms.uWave = waterTime;
+        sh.vertexShader = sh.vertexShader
+          .replace(
+            "#include <common>",
+            "#include <common>\nvarying vec2 vWave;",
+          )
+          .replace(
+            "#include <worldpos_vertex>",
+            "#include <worldpos_vertex>\nvWave = (modelMatrix * vec4(transformed, 1.0)).xz;",
+          );
+        sh.fragmentShader = sh.fragmentShader
+          .replace(
+            "#include <common>",
+            "#include <common>\nvarying vec2 vWave;\nuniform float uWave;",
+          )
+          .replace(
+            "#include <normal_fragment_begin>",
+            `#include <normal_fragment_begin>
+             {
+               float a = sin(vWave.y * 0.9 + uWave * 1.1) * 0.05;
+               float b = sin(vWave.x * 1.7 - uWave * 0.8 + vWave.y * 0.4) * 0.035;
+               normal = normalize(normal + vec3(b, 0.0, a));
+             }`,
+          );
+      };
+      wmat.customProgramCacheKey = () => "village-water";
+      const water = new THREE.Mesh(wgeo, wmat);
+      water.position.y = RIVER_SURFACE;
+      water.receiveShadow = true;
+      scene.add(water);
+    }
 
     // THE FAR SKIRT IS GONE. It was a flat plane carrying on past the
     // terrain so the terrain's own edge could not be seen, and it did that —
@@ -8915,6 +9076,18 @@ export function createKidsWorld(
       return toX;
     }
     let limit = toX;
+    // AND THE RIVER BANK. An animal is stopped at the water's edge the same
+    // way it is stopped short of a stone: the bank is a line it walks up to
+    // and turns from, not one it wades through. Cattle in this world do not
+    // swim, and a buffalo that walked into the channel would stand on the
+    // bed with the water at its shoulders looking exactly like a bug.
+    if (RIVER != null) {
+      const edge = RIVER.half + 1.5;
+      const near = RIVER.x - dir * edge; // the bank on this animal's side
+      if ((near - fromX) * dir > 0 && (toX - near) * dir > 0) {
+        limit = near;
+      }
+    }
     const consider = (o: THREE.Object3D | null) => {
       if (o == null) {
         return;
@@ -9658,6 +9831,12 @@ export function createKidsWorld(
 
   /** Is this spot clear of everything built? */
   const isClear = (x: number, z: number, need = 1.5): boolean => {
+    // Nothing is planted in the river. The channel is a strip, not a disc,
+    // so it is tested here rather than pushed into `blockers` as a ring of
+    // circles pretending to be one.
+    if (RIVER != null && Math.abs(x - RIVER.x) < RIVER.half + need) {
+      return false;
+    }
     for (const b of blockers) {
       // Distance to the box's edge, which for a disc (no box) is the
       // distance to its centre — the same test it always was.
@@ -11805,7 +11984,7 @@ export function createKidsWorld(
       // as a group going somewhere together rather than as a stack.
       const gap = FOLLOW_GAP + i * FOLLOW_STAGGER;
       const z = LANE + SIDE + i * FOLLOW_SPREAD;
-      rig.wrap.position.set(playerX - gap, terrainY(playerX, z), z);
+      rig.wrap.position.set(playerX - gap, walkY(playerX, z), z);
       // Lit like the player, but with no pointer ring.
       //
       // The ring marks whose turn it is and that is never the companion's —
@@ -11888,7 +12067,7 @@ export function createKidsWorld(
     // Band 1 until told otherwise: three units up the road, leading.
     // His band's own distance, not band 1's -- see `guideBandGap`.
     const gap = guideBandGap();
-    rig.wrap.position.set(playerX - gap, terrainY(playerX, z), z);
+    rig.wrap.position.set(playerX - gap, walkY(playerX, z), z);
     rig.wrap.traverse((n) => {
       n.layers.enable(COMPANION_LIGHT_LAYER);
     });
@@ -11980,7 +12159,7 @@ export function createKidsWorld(
           err,
         );
       });
-    rig.wrap.position.set(playerX, terrainY(playerX, LANE), LANE);
+    rig.wrap.position.set(playerX, walkY(playerX, LANE), LANE);
     rig.wrap.rotation.y = Math.PI / 2;
     playerGrows = growsWithAge(name);
     playerSitsLate = sitPatience(name);
@@ -14379,276 +14558,291 @@ export function createKidsWorld(
         }
       };
 
-      // The heart: temple, market, banyan, and the cart parked at the market.
-      // Fixed offsets, because their arrangement relative to each other is the
-      // whole point - the market fronts the road and the temple stands behind
-      // it, which is how you actually meet a village from its road.
-      for (const h of V.heart) {
-        const w = await stand(
-          h.model,
-          vx + h.dx,
-          h.dz,
-          h.h,
-          h.turn ?? 0,
-          h.lift ?? 0,
-        );
-        // SOLID, so nothing grows through it.
-        //
-        // The chapter's own props have registered their clearance since they
-        // were written, and the village's did not — the temple, the banyan
-        // and the houses were placed by this older code, which predates
-        // `blockers` entirely. So the one part of the road with real
-        // buildings on it was the one part where a coconut palm could come up
-        // through a roof. Taken from the MEASURED box rather than a guessed
-        // radius, so it stays right if any of them is ever resized.
-        if (w != null) {
-          const b = measureBox(w);
-          blockers.push({
-            x: (b.min.x + b.max.x) / 2,
-            z: (b.min.z + b.max.z) / 2,
-            r: Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 0.45,
-          });
-        }
-        // ── AND NOTHING ELSE GROWING THROUGH THE BANYAN ──────────────────
-        //
-        // The scatter runs long before a village exists and spreads trees
-        // evenly down the whole trail, so the roadside the banyan is planted
-        // on already had three or four palms standing in it. A banyan with a
-        // coconut coming out of its crown is not a banyan, it is a thicket —
-        // and the banyan is the one tree here that is meant to be looked AT
-        // rather than walked past.
-        //
-        // Cleared from the tree's own measured footprint rather than from a
-        // guessed radius, so it stays right if the tree is ever resized: a
-        // little wider than the canopy, which is where its roots would be.
-        if (w != null && /temple/i.test(h.model)) {
-          const tb = measureBox(w);
-          templeView = {
-            x: (tb.min.x + tb.max.x) / 2,
-            z: tb.max.z,
-            // A little wider than the building, because a tree just off its
-            // shoulder still crosses the face at this camera's yaw.
-            halfW: (tb.max.x - tb.min.x) / 2 + 3.5,
-          };
-          // ── FLOWERS AT THE SHRINE, AND NOT ACROSS IT ────────────────
+      // THE HEART IS CHAPTER 1'S, AND ONLY CHAPTER 1'S.
+      //
+      // Everything from here to "THE REST OF THE CHAPTER" — the temple, the
+      // althara and its banyan, the three houses and their swept yards, the
+      // compound wall — is the village centre, and the village centre is
+      // Lesson 5 of Chapter 1. It was placed whenever `theme.village` was
+      // set, which is every Village Road build, so Chapter 2's road got a
+      // second temple and a second banyan dropped into its Farm Clearing:
+      // a child at Lesson 16 stood looking at the village they had left
+      // ten lessons ago. The reference for Chapter 2 is explicit that the
+      // large estate house is "used only as a distant or glimpsed element"
+      // and that nothing from the centre reappears. So the heart is built
+      // for the chapter it belongs to and no other.
+      if (CHAPTER == null || CHAPTER_N === 1) {
+        // The heart: temple, market, banyan, and the cart parked at the market.
+        // Fixed offsets, because their arrangement relative to each other is the
+        // whole point - the market fronts the road and the temple stands behind
+        // it, which is how you actually meet a village from its road.
+        for (const h of V.heart) {
+          const w = await stand(
+            h.model,
+            vx + h.dx,
+            h.dz,
+            h.h,
+            h.turn ?? 0,
+            h.lift ?? 0,
+          );
+          // SOLID, so nothing grows through it.
           //
-          // A Kerala temple yard is planted — chemparathi especially, which
-          // is what gets picked for the offerings — and this one stood on
-          // bare ground. They go at its SIDES and BEHIND it, never in the
-          // corridor: the whole point of clearing that ground is lost if it
-          // is cleared of trees and filled with shrubs instead.
-          //
-          // Thick, because "a few flowers" reads as a plant that seeded
-          // itself and a yard reads as somebody tending it.
-          for (let k = 0; k < 26; k++) {
-            const side = k % 2 === 0 ? -1 : 1;
-            const fx =
-              templeView.x +
-              side *
-                hashRange(
-                  k,
-                  0,
-                  100,
-                  templeView.halfW * 0.5,
-                  templeView.halfW * 1.5,
-                );
-            const fz =
-              tb.min.z +
-              hashRange(k, 1, 101, -4.5, (tb.max.z - tb.min.z) * 0.9);
-            const src = await prop("village-plants/Hibiscus_Chemparathi");
-            if (src == null) {
-              break;
-            }
-            const fw = fitToHeight(
-              src.clone(true),
-              hashRange(k, 2, 102, 2.2, 3.4) * perspective(fz),
-            );
-            fw.position.set(fx, surfaceY(fx, fz), fz);
-            fw.rotation.y = hashRange(k, 3, 103, 0, Math.PI * 2);
-            scene.add(fw);
-            characterRoots.add(fw);
+          // The chapter's own props have registered their clearance since they
+          // were written, and the village's did not — the temple, the banyan
+          // and the houses were placed by this older code, which predates
+          // `blockers` entirely. So the one part of the road with real
+          // buildings on it was the one part where a coconut palm could come up
+          // through a roof. Taken from the MEASURED box rather than a guessed
+          // radius, so it stays right if any of them is ever resized.
+          if (w != null) {
+            const b = measureBox(w);
+            blockers.push({
+              x: (b.min.x + b.max.x) / 2,
+              z: (b.min.z + b.max.z) / 2,
+              r: Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 0.45,
+            });
           }
-        }
-        if (w != null && /temple-unused/i.test(h.model)) {
-          const box = measureBox(w);
-          const cx = (box.min.x + box.max.x) / 2;
-          const cz = (box.min.z + box.max.z) / 2;
-          // Its own footprint plus a courtyard's worth. Measured, so it
-          // follows the building if the shrine is ever resized or moved
-          // again — which it has been twice this week.
-          const reach =
-            Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 0.5 + 9;
-          hushEyes(cx, cz, reach);
-        }
-        if (w != null && /banyan/i.test(h.model)) {
-          const box = measureBox(w);
-          const cx = (box.min.x + box.max.x) / 2;
-          const cz = (box.min.z + box.max.z) / 2;
-          const reach =
-            Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 0.62;
-          for (const t of scatterTrees) {
-            if (Math.hypot(t.position.x - cx, t.position.z - cz) < reach) {
-              t.visible = false;
-              t.parent?.remove(t);
+          // ── AND NOTHING ELSE GROWING THROUGH THE BANYAN ──────────────────
+          //
+          // The scatter runs long before a village exists and spreads trees
+          // evenly down the whole trail, so the roadside the banyan is planted
+          // on already had three or four palms standing in it. A banyan with a
+          // coconut coming out of its crown is not a banyan, it is a thicket —
+          // and the banyan is the one tree here that is meant to be looked AT
+          // rather than walked past.
+          //
+          // Cleared from the tree's own measured footprint rather than from a
+          // guessed radius, so it stays right if the tree is ever resized: a
+          // little wider than the canopy, which is where its roots would be.
+          if (w != null && /temple/i.test(h.model)) {
+            const tb = measureBox(w);
+            templeView = {
+              x: (tb.min.x + tb.max.x) / 2,
+              z: tb.max.z,
+              // A little wider than the building, because a tree just off its
+              // shoulder still crosses the face at this camera's yaw.
+              halfW: (tb.max.x - tb.min.x) / 2 + 3.5,
+            };
+            // ── FLOWERS AT THE SHRINE, AND NOT ACROSS IT ────────────────
+            //
+            // A Kerala temple yard is planted — chemparathi especially, which
+            // is what gets picked for the offerings — and this one stood on
+            // bare ground. They go at its SIDES and BEHIND it, never in the
+            // corridor: the whole point of clearing that ground is lost if it
+            // is cleared of trees and filled with shrubs instead.
+            //
+            // Thick, because "a few flowers" reads as a plant that seeded
+            // itself and a yard reads as somebody tending it.
+            for (let k = 0; k < 26; k++) {
+              const side = k % 2 === 0 ? -1 : 1;
+              const fx =
+                templeView.x +
+                side *
+                  hashRange(
+                    k,
+                    0,
+                    100,
+                    templeView.halfW * 0.5,
+                    templeView.halfW * 1.5,
+                  );
+              const fz =
+                tb.min.z +
+                hashRange(k, 1, 101, -4.5, (tb.max.z - tb.min.z) * 0.9);
+              const src = await prop("village-plants/Hibiscus_Chemparathi");
+              if (src == null) {
+                break;
+              }
+              const fw = fitToHeight(
+                src.clone(true),
+                hashRange(k, 2, 102, 2.2, 3.4) * perspective(fz),
+              );
+              fw.position.set(fx, surfaceY(fx, fz), fz);
+              fw.rotation.y = hashRange(k, 3, 103, 0, Math.PI * 2);
+              scene.add(fw);
+              characterRoots.add(fw);
             }
           }
-        }
-      }
-
-      // Dwellings around it, on both sides of the road but mostly the far
-      // side, drawn without repeating until the list runs out.
-      const pool = [...V.houses].sort(() => Math.random() - 0.5);
-      // Some right on the road, some set well back. A row of houses all at the
-      // same depth reads as a stage flat; what makes a village look lived-in
-      // is that somebody built close to the road and somebody else built
-      // behind them.
-      // SET BACK IN PROPORTION TO THEIR SIZE.
-      //
-      // These offsets were drawn around houses 4.6 units tall — about a
-      // nine-year-old — and a house is 14 now that the village is measured
-      // against the child (see `heart`). The models scale uniformly, so a
-      // house that is three times taller is also three times deeper: at the
-      // old setbacks the first one stood in the middle of the road with the
-      // children inside its porch. Everything is pushed out by the same
-      // factor the buildings grew by, which keeps the arrangement — somebody
-      // built close to the road, somebody else built behind them — and gives
-      // it the room it now needs.
-      // EVERY ONE OF THEM BEHIND THE ROAD, and none on the child's side.
-      //
-      // There used to be one across the road at +z, which is the verge the
-      // child walks and the side the camera is on — so the house stood
-      // between the viewer and the entire village, and at the honest size it
-      // filled the frame and hid the party walking past it. The far verge is
-      // where a village is met from a road anyway: you walk along it and it
-      // is over there.
-      // SET FURTHER BACK, but not past where they can be seen. The houses
-      // are 60 per cent of the size they were, so they can afford more ground
-      // between them and the road — and the ceiling on that is the fog, not
-      // the terrain: it goes solid 92 units from the camera, which stands at
-      // z = 42, so anything past about -44 is gone whatever is drawn there.
-      // AND NONE OF THEM PAST THE EDGE OF THE FLOOR.
-      //
-      // The ground is 76 deep centred on z = 0, so it stops at -38. These
-      // read -26, -40, -36 — and the loop below takes the first three, so
-      // the second house was standing four units beyond the last of the
-      // terrain with nothing under it, hanging in the painted horizon, and
-      // the third had its back wall through the edge. The ceiling that was
-      // written here was the fog's, at -44; the fog was never the binding
-      // one. The floor runs out first.
-      //
-      // Pulled in to -24/-31/-28. That keeps what the spread is for —
-      // somebody built close to the road, somebody else built behind them —
-      // and `perspective()` in `stand` still takes the far ones down to
-      // about seven units against eleven at the verge, so they read as
-      // further away rather than merely being further away.
-      // IN LESSON 5, on a chapter road — see `villageHouses` for what the
-      // fixed offsets did to the lessons either side. The trail without a
-      // chapter keeps its old spread round `vx`.
-      const homes =
-        CHAPTER != null
-          ? villageHouses(CHAPTER[4]!, CHAPTER[5]! - CHAPTER[4]!)
-          : VILLAGE_HOUSE_SPOTS.slice(0, 3).map(([ox, oz]) => ({
-              x: vx + ox + hashRange(ox, oz, 120, -2.5, 2.5),
-              z: oz + hashRange(ox, oz, 121, -1.5, 1.5),
-            }));
-      for (let i = 0; i < Math.min(homes.length, pool.length); i++) {
-        const home = homes[i]!;
-        const ox = home.x - vx;
-        const oz = home.z;
-        // HASHED, NOT ROLLED. The jitter was `Math.random`, which is fine
-        // for a house and fatal for the bare YARD that now has to go in
-        // front of one: the ground is painted before the village is built,
-        // so the yard can only find the house if the house's position can be
-        // worked out twice and come to the same answer. Same reasoning as
-        // the whole chapter — a thing has to stand still before anything
-        // else can be placed relative to it.
-        const hx = home.x;
-        const hz = home.z;
-        const w = await stand(
-          pool[i % pool.length],
-          hx,
-          hz,
-          V.houseHeight,
-          // No `oz > 0` half-turn any more: nothing stands on the near side,
-          // so every house already faces the road it fronts.
-          hashRange(ox, oz, 122, -0.35, 0.35),
-        );
-        // THEN CHECKED AGAINST THE FLOOR IT IS ACTUALLY STANDING ON.
-        //
-        // The table above places an ORIGIN; what has to stay on the ground
-        // is the whole footprint, and a house eleven units tall is about as
-        // many deep, so its back wall is metres behind the number written
-        // down. Jitter moves it again, and any future change to the height
-        // or to the models changes the depth without changing the table.
-        // Measuring the built object and pulling it forward by whatever
-        // overhangs is the only version of this that cannot drift: it costs
-        // one box per house, at build time, and it is right by construction
-        // rather than right until something is edited.
-        if (w != null) {
-          const over = GROUND_BACK + 1.5 - measureBox(w).min.z;
-          if (over > 0) {
-            w.position.z += over;
-            w.position.y = surfaceY(w.position.x, w.position.z);
+          if (w != null && /temple-unused/i.test(h.model)) {
+            const box = measureBox(w);
+            const cx = (box.min.x + box.max.x) / 2;
+            const cz = (box.min.z + box.max.z) / 2;
+            // Its own footprint plus a courtyard's worth. Measured, so it
+            // follows the building if the shrine is ever resized or moved
+            // again — which it has been twice this week.
+            const reach =
+              Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 0.5 + 9;
+            hushEyes(cx, cz, reach);
           }
-          // Measured AFTER the shove, or the clearance would describe where
-          // the house used to be.
-          const b = measureBox(w);
-          blockers.push({
-            x: (b.min.x + b.max.x) / 2,
-            z: (b.min.z + b.max.z) / 2,
-            r: Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 0.45,
-          });
-        }
-      }
-
-      // Wall segments along the road, enclosing the yards. Laid end to end
-      // with a gap where the market fronts the road, so the child can see in.
-      // The wall model is five and a half times wider than it is tall, so a
-      // segment grew from 8 units long to 23 when the wall itself went from
-      // knee-high to chest-high on an adult. Laid at the old 7.5 they now sit
-      // three deep inside each other.
-      const seg = 23;
-      if (CHAPTER != null) {
-        // ONE PANEL, WHERE THERE IS ROOM FOR IT, on a chapter road.
-        //
-        // Six panels at twenty-three units a side is a hundred and forty
-        // units of wall, and Lesson 5 is sixty-four at most: the panels
-        // stood in Lessons 3, 4, 6 and 7 — on top of the estate's own wall,
-        // which runs on the same line at z -10, and on the youngest band
-        // across the open village edge and the market's forecourt. The
-        // shrine's line of sight is kept clear (`templeView`), the cart
-        // parks past the shrine, and the milestone keeps its margin; what
-        // is left between the cart and the stone is where a compound wall
-        // can front the houses set back there. On the long bands that is
-        // one panel; on a five-year-old's lesson there is no such stretch,
-        // and a village with no wall is better than a village with a wall
-        // through its market.
-        //
-        // The panel is measured as it is DRAWN — the model is 5.53 times as
-        // wide as tall and stands at z -10 under the depth falloff — for
-        // the same reason the chapter's runs are: a nominal width leaves a
-        // panel straddling the stone it was meant to stop short of.
-        const panel = 5.53 * V.wallHeight * perspective(-10);
-        const x1 = CHAPTER[5]! - MILESTONE_CLEAR;
-        const x0 = Math.max(
-          templeView != null ? templeView.x + templeView.halfW : vx + 8,
-          vx + 12 + 4,
-        );
-        if (x1 - x0 >= panel) {
-          const wx = x1 - panel / 2;
-          await stand(V.wall, wx, -10, V.wallHeight, 0);
-          blockers.push({ x: wx, z: -10, r: 1.5, hw: panel / 2, hd: 1.2 });
-        }
-      } else {
-        for (let i = -4; i <= 4; i++) {
-          if (i >= -1 && i <= 1) {
-            continue; // the way in
+          if (w != null && /banyan/i.test(h.model)) {
+            const box = measureBox(w);
+            const cx = (box.min.x + box.max.x) / 2;
+            const cz = (box.min.z + box.max.z) / 2;
+            const reach =
+              Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 0.62;
+            for (const t of scatterTrees) {
+              if (Math.hypot(t.position.x - cx, t.position.z - cz) < reach) {
+                t.visible = false;
+                t.parent?.remove(t);
+              }
+            }
           }
-          const wx = vx + i * seg;
-          await stand(V.wall, wx, -10, V.wallHeight, 0);
-          blockers.push({ x: wx, z: -10, r: 8 });
         }
-      }
+
+        // Dwellings around it, on both sides of the road but mostly the far
+        // side, drawn without repeating until the list runs out.
+        const pool = [...V.houses].sort(() => Math.random() - 0.5);
+        // Some right on the road, some set well back. A row of houses all at the
+        // same depth reads as a stage flat; what makes a village look lived-in
+        // is that somebody built close to the road and somebody else built
+        // behind them.
+        // SET BACK IN PROPORTION TO THEIR SIZE.
+        //
+        // These offsets were drawn around houses 4.6 units tall — about a
+        // nine-year-old — and a house is 14 now that the village is measured
+        // against the child (see `heart`). The models scale uniformly, so a
+        // house that is three times taller is also three times deeper: at the
+        // old setbacks the first one stood in the middle of the road with the
+        // children inside its porch. Everything is pushed out by the same
+        // factor the buildings grew by, which keeps the arrangement — somebody
+        // built close to the road, somebody else built behind them — and gives
+        // it the room it now needs.
+        // EVERY ONE OF THEM BEHIND THE ROAD, and none on the child's side.
+        //
+        // There used to be one across the road at +z, which is the verge the
+        // child walks and the side the camera is on — so the house stood
+        // between the viewer and the entire village, and at the honest size it
+        // filled the frame and hid the party walking past it. The far verge is
+        // where a village is met from a road anyway: you walk along it and it
+        // is over there.
+        // SET FURTHER BACK, but not past where they can be seen. The houses
+        // are 60 per cent of the size they were, so they can afford more ground
+        // between them and the road — and the ceiling on that is the fog, not
+        // the terrain: it goes solid 92 units from the camera, which stands at
+        // z = 42, so anything past about -44 is gone whatever is drawn there.
+        // AND NONE OF THEM PAST THE EDGE OF THE FLOOR.
+        //
+        // The ground is 76 deep centred on z = 0, so it stops at -38. These
+        // read -26, -40, -36 — and the loop below takes the first three, so
+        // the second house was standing four units beyond the last of the
+        // terrain with nothing under it, hanging in the painted horizon, and
+        // the third had its back wall through the edge. The ceiling that was
+        // written here was the fog's, at -44; the fog was never the binding
+        // one. The floor runs out first.
+        //
+        // Pulled in to -24/-31/-28. That keeps what the spread is for —
+        // somebody built close to the road, somebody else built behind them —
+        // and `perspective()` in `stand` still takes the far ones down to
+        // about seven units against eleven at the verge, so they read as
+        // further away rather than merely being further away.
+        // IN LESSON 5, on a chapter road — see `villageHouses` for what the
+        // fixed offsets did to the lessons either side. The trail without a
+        // chapter keeps its old spread round `vx`.
+        const homes =
+          CHAPTER != null
+            ? villageHouses(CHAPTER[4]!, CHAPTER[5]! - CHAPTER[4]!)
+            : VILLAGE_HOUSE_SPOTS.slice(0, 3).map(([ox, oz]) => ({
+                x: vx + ox + hashRange(ox, oz, 120, -2.5, 2.5),
+                z: oz + hashRange(ox, oz, 121, -1.5, 1.5),
+              }));
+        for (let i = 0; i < Math.min(homes.length, pool.length); i++) {
+          const home = homes[i]!;
+          const ox = home.x - vx;
+          const oz = home.z;
+          // HASHED, NOT ROLLED. The jitter was `Math.random`, which is fine
+          // for a house and fatal for the bare YARD that now has to go in
+          // front of one: the ground is painted before the village is built,
+          // so the yard can only find the house if the house's position can be
+          // worked out twice and come to the same answer. Same reasoning as
+          // the whole chapter — a thing has to stand still before anything
+          // else can be placed relative to it.
+          const hx = home.x;
+          const hz = home.z;
+          const w = await stand(
+            pool[i % pool.length],
+            hx,
+            hz,
+            V.houseHeight,
+            // No `oz > 0` half-turn any more: nothing stands on the near side,
+            // so every house already faces the road it fronts.
+            hashRange(ox, oz, 122, -0.35, 0.35),
+          );
+          // THEN CHECKED AGAINST THE FLOOR IT IS ACTUALLY STANDING ON.
+          //
+          // The table above places an ORIGIN; what has to stay on the ground
+          // is the whole footprint, and a house eleven units tall is about as
+          // many deep, so its back wall is metres behind the number written
+          // down. Jitter moves it again, and any future change to the height
+          // or to the models changes the depth without changing the table.
+          // Measuring the built object and pulling it forward by whatever
+          // overhangs is the only version of this that cannot drift: it costs
+          // one box per house, at build time, and it is right by construction
+          // rather than right until something is edited.
+          if (w != null) {
+            const over = GROUND_BACK + 1.5 - measureBox(w).min.z;
+            if (over > 0) {
+              w.position.z += over;
+              w.position.y = surfaceY(w.position.x, w.position.z);
+            }
+            // Measured AFTER the shove, or the clearance would describe where
+            // the house used to be.
+            const b = measureBox(w);
+            blockers.push({
+              x: (b.min.x + b.max.x) / 2,
+              z: (b.min.z + b.max.z) / 2,
+              r: Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 0.45,
+            });
+          }
+        }
+
+        // Wall segments along the road, enclosing the yards. Laid end to end
+        // with a gap where the market fronts the road, so the child can see in.
+        // The wall model is five and a half times wider than it is tall, so a
+        // segment grew from 8 units long to 23 when the wall itself went from
+        // knee-high to chest-high on an adult. Laid at the old 7.5 they now sit
+        // three deep inside each other.
+        const seg = 23;
+        if (CHAPTER != null) {
+          // ONE PANEL, WHERE THERE IS ROOM FOR IT, on a chapter road.
+          //
+          // Six panels at twenty-three units a side is a hundred and forty
+          // units of wall, and Lesson 5 is sixty-four at most: the panels
+          // stood in Lessons 3, 4, 6 and 7 — on top of the estate's own wall,
+          // which runs on the same line at z -10, and on the youngest band
+          // across the open village edge and the market's forecourt. The
+          // shrine's line of sight is kept clear (`templeView`), the cart
+          // parks past the shrine, and the milestone keeps its margin; what
+          // is left between the cart and the stone is where a compound wall
+          // can front the houses set back there. On the long bands that is
+          // one panel; on a five-year-old's lesson there is no such stretch,
+          // and a village with no wall is better than a village with a wall
+          // through its market.
+          //
+          // The panel is measured as it is DRAWN — the model is 5.53 times as
+          // wide as tall and stands at z -10 under the depth falloff — for
+          // the same reason the chapter's runs are: a nominal width leaves a
+          // panel straddling the stone it was meant to stop short of.
+          const panel = 5.53 * V.wallHeight * perspective(-10);
+          const x1 = CHAPTER[5]! - MILESTONE_CLEAR;
+          const x0 = Math.max(
+            templeView != null ? templeView.x + templeView.halfW : vx + 8,
+            vx + 12 + 4,
+          );
+          if (x1 - x0 >= panel) {
+            const wx = x1 - panel / 2;
+            await stand(V.wall, wx, -10, V.wallHeight, 0);
+            blockers.push({ x: wx, z: -10, r: 1.5, hw: panel / 2, hd: 1.2 });
+          }
+        } else {
+          for (let i = -4; i <= 4; i++) {
+            if (i >= -1 && i <= 1) {
+              continue; // the way in
+            }
+            const wx = vx + i * seg;
+            await stand(V.wall, wx, -10, V.wallHeight, 0);
+            blockers.push({ x: wx, z: -10, r: 8 });
+          }
+        }
+      } // end of the heart — Chapter 1 only
 
       // ── THE REST OF THE CHAPTER ──────────────────────────────────────
       //
@@ -14788,6 +14982,59 @@ export function createKidsWorld(
               characterRoots.add(gw);
             }
           }
+        }
+      }
+
+      // ── THE BRIDGE ──────────────────────────────────────────────────
+      //
+      // Built from the river's own three numbers, so the two cannot drift:
+      // a bridge is exactly as long as the water it crosses plus a landing
+      // at each end. The model is 2.98 units long for every unit tall (its
+      // length runs along its z, hence the quarter turn), so the height is
+      // whatever makes it that long, and the deck lands at the BANK's
+      // height — sampled just outside the cut on the road's own line, the
+      // same way the water surface is — with the piers going down into the
+      // channel from there. `deckY` then reports that height to every foot
+      // that steps onto it; see `BRIDGE` at module scope for why a mesh
+      // lookup would be the wrong tool.
+      if (RIVER != null) {
+        const rx = RIVER.x;
+        const rz = meander(rx);
+        const landing = 2;
+        const span = 2 * (RIVER.half + landing);
+        const H = span / 2.98;
+        const w = await stand(
+          "village-util/Wooden_Bridge",
+          rx,
+          rz,
+          H,
+          Math.PI / 2,
+          0,
+        );
+        if (w != null) {
+          const bank =
+            (terrainY(rx - RIVER.half - 1.5, rz) +
+              terrainY(rx + RIVER.half + 1.5, rz)) /
+            2;
+          const Hd = H * perspective(rz);
+          // Where the deck's top sits in the model, as a fraction of its
+          // height: the planks are a little below the middle, with the
+          // posts standing above them. Set by looking at it on the road.
+          const DECK = 0.5;
+          w.position.y = bank - DECK * Hd;
+          builtGroup.add(w);
+          BRIDGE = {
+            x: rx,
+            halfLen: RIVER.half + landing,
+            // The deck is 1.36 units wide per unit tall, but the WALKABLE
+            // width is the road's lane, not the planks' edge — a child
+            // stepping off the side would find the water, not the ground.
+            halfWid: Math.min(4.6, (1.36 * Hd) / 2 - 0.4),
+            y: bank,
+          };
+          console.info(
+            `[chapter] bridge at x=${rx.toFixed(1)} span ${span.toFixed(1)} deck y=${bank.toFixed(2)}`,
+          );
         }
       }
 
@@ -15805,7 +16052,13 @@ export function createKidsWorld(
     // A lone house or a forgotten cart, out on the empty stretches. Rare on
     // purpose: the road between villages is meant to feel like open country,
     // and the point of a village is that you arrive somewhere.
-    if (theme.village != null) {
+    // NOT ON AN AUTHORED ROAD. A stray is a coin toss — `Math.random()`
+    // decides whether the lone house or the forgotten cart turns up — and a
+    // chapter is a scene somebody wrote down. Chapter 2 already places its
+    // own thatched roof at the back road and its own estate house behind the
+    // wall; a random hut landing beside either of them is a second building
+    // nobody asked for, in a different place every session.
+    if (theme.village != null && CHAPTER == null) {
       const V = theme.village;
       for (const stray of V.strays) {
         if (Math.random() > 0.34) {
@@ -16306,8 +16559,16 @@ export function createKidsWorld(
             // every time the world is built. A marker that changes its moss
             // on reload is a different marker, and the number on it is what
             // the child is meant to recognise.
-            weatherStone(wrap, n + 7);
-            const plate = carveFace(n);
+            // NUMBERED ALONG THE WHOLE ROAD. `n` is the stone's index in
+            // THIS chapter — 0 to 10, which is what `stoneAt` needs to find
+            // its x — but the digit carved into it is the child's number:
+            // Chapter 2's first stone is Milestone 10 and its last is 20,
+            // because the road did not start again at the chapter line and
+            // neither did the count. Carved with the chapter offset, and
+            // weathered on it too, so no two stones on the road age alike.
+            const carved = n + (CHAPTER_N - 1) * SEGMENT_COUNT;
+            weatherStone(wrap, carved + 7);
+            const plate = carveFace(carved);
             plate.scale.setScalar((w * 0.78) / 0.96);
             plate.position.set(
               (box.min.x + box.max.x) / 2 - wrap.position.x,
@@ -17487,6 +17748,7 @@ export function createKidsWorld(
       if (on) {
         const calm = 0.25 + 0.75 * motionScale;
         const t = clock.elapsedTime * calm;
+        waterTime.value = clock.elapsedTime;
         for (const m of mistMats) {
           m.uniforms.uTime.value = t;
           m.uniforms.uOpacity.value =
@@ -17978,7 +18240,7 @@ export function createKidsWorld(
         // walker holding a constant z drifts off the carriageway on a curve.
         const nz =
           meander(nx) + (f.wrap.position.z - meander(f.wrap.position.x));
-        f.wrap.position.set(nx, surfaceY(nx, nz), nz);
+        f.wrap.position.set(nx, deckY(nx, nz) ?? surfaceY(nx, nz), nz);
       }
 
       // ── THE BOY WHO COMES OVER TO LOOK ──────────────────────────────
@@ -18034,7 +18296,9 @@ export function createKidsWorld(
           const sp = 3.4 * dt * motionScale;
           cw.position.x += (dx / (gap || 1)) * sp;
           cw.position.z += (dz / (gap || 1)) * sp;
-          cw.position.y = surfaceY(cw.position.x, cw.position.z);
+          cw.position.y =
+            deckY(cw.position.x, cw.position.z) ??
+            surfaceY(cw.position.x, cw.position.z);
           play("walk", 1);
           // Stops a good six units off, and gives up if they walk away.
           if (gap < 6.5 || cu.t > 14) {
@@ -18055,7 +18319,9 @@ export function createKidsWorld(
           const sp = 6.2 * dt * motionScale;
           cw.position.x -= sp;
           cw.position.z = Math.max(cu.homeZ - 6, cw.position.z - sp * 0.35);
-          cw.position.y = surfaceY(cw.position.x, cw.position.z);
+          cw.position.y =
+            deckY(cw.position.x, cw.position.z) ??
+            surfaceY(cw.position.x, cw.position.z);
           play("run", 1);
           if (cu.t > 4) {
             cu.state = "done";
@@ -18096,7 +18362,9 @@ export function createKidsWorld(
       // `terrainY` is the same function the ground MESH is built from, so
       // this is the height of the ground actually under their feet, ruts and
       // all.
-      p.y = terrainY(p.x, p.z) + jumpY - restLift();
+      // `walkY`, not `terrainY`: over the river the ground is the bed, and
+      // the child is on the deck three units above it.
+      p.y = walkY(p.x, p.z) + jumpY - restLift();
       // Just above and in front of the runner — unless they are passing a
       // milestone, in which case the light is coming out of its niche and
       // the lamp slides over to it. See `lampFrom`.
@@ -18378,7 +18646,7 @@ export function createKidsWorld(
           // flat 0.06 is a smaller share of it than when that number was
           // chosen -- it was four per cent of the animal and is now three.
           const bed = companion.quadruped ? 0.13 : 0.06;
-          cw.position.y = terrainY(cw.position.x, cw.position.z) - lift - bed;
+          cw.position.y = walkY(cw.position.x, cw.position.z) - lift - bed;
         }
         // How far it travelled this frame, for next frame's gait. One frame
         // of lag, which at sixty a second is invisible, and it means the legs

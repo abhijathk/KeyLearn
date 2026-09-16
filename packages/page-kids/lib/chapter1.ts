@@ -596,6 +596,26 @@ export type Lesson = {
    * one post sits in the same relation to its lesson on a 270-unit chapter
    * and a 640-unit one.
    */
+  /**
+   * A RIVER CROSSING THE ROAD IN THIS LESSON.
+   *
+   * Not a prop. A river is a shape cut into the ground — see `setRiver` in
+   * world.ts — and everything that asks "how high is the ground here" has to
+   * get the channel's answer: the ground mesh, the plants, the herd, and the
+   * child's own feet. `at` is where the channel's centre line crosses the
+   * road, as a fraction of the segment like every other placement here;
+   * `half` is half the water's width bank to bank; `depth` is how far the
+   * bed drops below the bank.
+   *
+   * The bridge is placed by the world from these same three numbers, so the
+   * two cannot drift apart: a bridge is exactly as long as the water it
+   * crosses, plus a landing at each end.
+   */
+  readonly river?: {
+    readonly at: number;
+    readonly half: number;
+    readonly depth: number;
+  };
   readonly posts?: readonly {
     readonly model: string;
     readonly at: number;

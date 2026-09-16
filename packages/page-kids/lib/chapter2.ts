@@ -309,6 +309,16 @@ export const LESSONS_2: readonly Lesson[] = [
     herd: [],
     folk: [],
     corridor: false,
+    // HALFWAY ALONG, SIXTEEN UNITS WIDE, THREE AND A HALF DEEP. Halfway so
+    // the child walks up to it, crosses, and walks away again inside one
+    // lesson — the reference's "road, bridge deck, road" — rather than
+    // meeting it at a stone. Sixteen across is wide enough that the far bank
+    // is plainly a far bank from this camera and narrow enough that the
+    // bridge is a village footbridge rather than a span. 3.4 deep with the
+    // water 0.9 below the bank leaves two and a half units of water, which
+    // reads as deep from the side — the reference is explicit that this
+    // must not read as a shallow puddle.
+    river: { at: 0.5, half: 8, depth: 3.4 },
   },
   {
     n: 7,
