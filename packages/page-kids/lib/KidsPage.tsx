@@ -72,6 +72,7 @@ import {
   type Sticker,
 } from "./album.ts";
 import { kidsAudio } from "./audio.ts";
+import { LESSONS, SEGMENT_COUNT } from "./chapter1.ts";
 import {
   CLOTHING_REGIONS,
   type ClothingColours,
@@ -3496,6 +3497,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // Which line on the notice just moved. See `useFlash`.
   const flashScore = useFlash(score);
   const flashCombo = useFlash(combo);
+  /**
+   * WHICH LESSON THIS IS, AND WHAT IT IS CALLED.
+   *
+   * From the stones already passed, because that is what a completed lesson
+   * means and it is the same figure the world resumes from — lesson n starts
+   * at Milestone n-1, so a child with four stones is on Lesson 5. Capped at
+   * the last lesson: Chapter 1 ends at ten and there is no eleventh to name.
+   */
+  const lessonNo = Math.min(SEGMENT_COUNT, (prefs.roadStones ?? 0) + 1);
+  const lessonName = LESSONS[lessonNo - 1]?.name ?? "";
   const flashStage = useFlash(
     stageOf(prefs.world)(dinoAgeOf(included, lesson.letters.length)),
   );
@@ -5926,8 +5937,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                       flashCombo && styles.noteFlash,
                     )}
                   >
-                    <span className={styles.noteLab}>Combo</span>
-                    <span className={styles.noteVal}>×{combo}</span>
+                    <span className={styles.noteLab}>
+                      {onVillage ? `Lesson ${lessonNo}` : "Combo"}
+                    </span>
+                    {onVillage ? (
+                      <span className={styles.noteName}>{lessonName}</span>
+                    ) : (
+                      <span className={styles.noteVal}>×{combo}</span>
+                    )}
                   </div>
                   <div
                     className={clsx(
@@ -5998,8 +6015,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                     <FlameIcon />
                   </span>
                   <div>
-                    <div className={styles.chipLab}>Combo</div>
-                    <div className={styles.chipVal}>×{combo}</div>
+                    <div className={styles.chipLab}>
+                      {onVillage ? `Lesson ${lessonNo}` : "Combo"}
+                    </div>
+                    <div
+                      className={onVillage ? styles.chipName : styles.chipVal}
+                    >
+                      {onVillage ? lessonName : `×${combo}`}
+                    </div>
                   </div>
                 </div>
                 <div className={styles.chip}>

@@ -1473,6 +1473,40 @@
   font-variant-numeric: tabular-nums;
 }
 
+/**
+ * A chip holding a NAME rather than a number.
+ *
+ * The rest of the scoreboard is digits — score, streak, a stage count — and
+ * every rule up there is written for digits: tabular figures so they do not
+ * jitter as they tick, one line because a number never needs two. A lesson
+ * title is words, and "The Mixed Orchard Belt" in a slot cut for "x7" either
+ * clips or shoves the chips beside it off the row.
+ *
+ * So it gets its own treatment: smaller, allowed two lines, and capped in
+ * width so a long title wraps instead of stretching the chip. Not tabular —
+ * proportional figures are correct for text and tabular ones leave gaps
+ * around the spaces in a name.
+ */
+.chipName {
+  max-inline-size: 9.5rem;
+  color: var(--kink);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-wrap: balance;
+  font-variant-numeric: normal;
+}
+
+.noteName {
+  max-inline-size: 10rem;
+  font-size: 0.8em;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: end;
+  transition: color 0.2s ease;
+  font-variant-numeric: normal;
+}
+
 .ringT {
   position: relative;
   flex: none;
