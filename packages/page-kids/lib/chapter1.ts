@@ -763,7 +763,25 @@ export const LESSONS: readonly Lesson[] = [
       { model: "nature/KeralaBambooGroves", at: 0.1, z: -11, h: 7, clear: 5 },
       // PLACEHOLDER — see the note above. Swap the model here when the real
       // one is ready; nothing else in the lesson depends on it.
-      { model: "ak-3d-pack/Market", at: 0.4, z: -17, h: 6, clear: 13 },
+      //
+      // Rebuilt from the 18.6 MB master rather than taken from the pack:
+      //   node scripts/village-prop.mjs \
+      //     "3D ASSETS/../characters 3d/3d elements/Village_Market.glb" \
+      //     root/public/kids-assets/models/village-util/Village_Market.glb \
+      //     --tex 1536 --tris 7000 --sloppy
+      //
+      // The master carries a 2048 baseColor and a 4096 metallic-roughness;
+      // the MR is ten of its megabytes and says "not metal, fairly rough",
+      // so it goes. That buys a 1536 texture — half again the detail of the
+      // pack copy — for 553 KB total.
+      //
+      // `--sloppy` is what makes it affordable. The seam-aware simplifier
+      // stalls at 23,301 of 31,485 triangles on this mesh, because a baked
+      // prop is split at every UV seam and every seam is a border the
+      // collapser will not cross; the topology-blind one reaches 6,342 at
+      // under one per cent error. Wrong tool for a character, right tool for
+      // a building seen from across a field.
+      { model: `${UTIL}/Village_Market`, at: 0.4, z: -17, h: 6, clear: 13 },
       { model: `${UTIL}/Village_Well`, at: 0.46, z: -12, h: 2.2, clear: 4 },
       {
         model: `${UTIL}/Village_Cart`,

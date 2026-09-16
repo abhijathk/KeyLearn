@@ -99,13 +99,17 @@ const CAST = [
       // and listing that in `drop` did nothing at all — the drop had already
       // run, and the dead clip shipped.
       Casual_Walk: "Walking",
+      // KEPT FOR THE NIGHT. An old man walks home from the temple stiffer
+      // than he walked to it, and one gait that only comes out after dark
+      // says more about him than any amount of daytime idling.
+      Injured_Walk: "Walk_Night",
     },
     drop: [
-      "restpose", "Walking", "Injured_Walk", "run_fast_6_inplace",
+      "restpose", "Walking", "run_fast_6_inplace",
       "Sit_Cross_Legged_on_Floor", "Stand_Up3", "Stand_to_Sit_Transition_M",
     ],
   },
-  { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
+  { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A", Unsteady_Walk: "Walk_Night" } },
   { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" } },
   {
     name: "VillageBoy", ratio: 0.36,

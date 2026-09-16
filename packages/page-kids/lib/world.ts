@@ -11521,6 +11521,13 @@ export function createKidsWorld(
         // a clip are never bobbing in unison.
         a.time = Math.random() * (clip.duration || 1);
       }
+      // The gait that only comes out after dark, if this person has one.
+      // Carried on the wrap rather than added to the rig type: exactly two
+      // characters in the world have such a thing, and the rig is shared by
+      // every companion in three worlds.
+      wrap.userData.nightWalkClip = clips.find((c) =>
+        /^Walk_Night$/i.test(c.name),
+      );
       friends.push({
         wrap,
         mixer,
@@ -13382,14 +13389,13 @@ export function createKidsWorld(
         // walk between lessons by definition — grouping them would delete a
         // villager mid-stride the moment they crossed a stone.
         if (activity !== "deep") {
-          // NOT THE VILLAGE BOY. He has three idles and two transitions —
-          // ABEE_LOCO_IdleToWalk and WalkToIdle — and no walk CYCLE between
-          // them, so there is nothing to loop while he covers ground and he
-          // slid down the road in an idle. The transitions are for a
-          // character that starts and stops under something else's control,
-          // which is what Abee is and what a bystander is not. He stands in
-          // the village instead, where his idles are the whole point of him.
-          const WHO = ["Headman", "TeaStall", "FarmerWoman"];
+          // THE BOY IS BACK. He was left off this list because he had three
+          // idles and two transitions — IdleToWalk and WalkToIdle — with no
+          // walk CYCLE between them, so he slid. He has Abee's walk and run
+          // now, and the rule below decides it rather than this list: he is
+          // here because he can walk, and would drop out again if he could
+          // not.
+          const WHO = ["Headman", "TeaStall", "FarmerWoman", "VillageBoy"];
           const n = activity === "day" ? 5 : 2;
           for (let i = 0; i < n; i++) {
             const who = WHO[i % WHO.length]!;
@@ -13462,17 +13468,33 @@ export function createKidsWorld(
               // the walker is what one cycle actually covers. A little
               // variation between them, because five people walking in
               // identical time is a parade.
-              f.walk.reset();
+              // AFTER DARK THEY WALK DIFFERENTLY, and it is the same two
+              // people every night: the headman stiff on the way home from
+              // the temple, the tea seller unsteady after closing up. Both
+              // gaits came with their files and were being thrown away —
+              // Injured_Walk and Unsteady_Walk, kept now as `Walk_Night`.
+              //
+              // One clip that only comes out after dark says more about a
+              // man than any amount of daytime idling, and it costs nothing:
+              // it is animation that was already in the file.
+              const nightClip = f.wrap.userData.nightWalkClip as
+                | THREE.AnimationClip
+                | undefined;
+              const gait =
+                activity !== "day" && nightClip != null
+                  ? f.mixer.clipAction(nightClip)
+                  : f.walk;
+              gait.reset();
               const rate = hashRange(i, 5, 95, 0.92, 1.05);
-              f.walk.timeScale = rate;
+              gait.timeScale = rate;
               // Started at a random point in the cycle, so they are never in
               // step with one another.
-              f.walk.time = hashRange(i, 4, 94, 0, 1);
-              f.walk.play();
+              gait.time = hashRange(i, 4, 94, 0, 1);
+              gait.play();
               // One cycle of this clip covers STRIDE units of ground, so at
               // `rate` it covers them in duration/rate seconds. Anything
               // else is a treadmill in one direction or a skate in the other.
-              const dur = f.walk.getClip().duration || 1;
+              const dur = gait.getClip().duration || 1;
               (f.wrap.userData.roadWalker as { speed: number }).speed =
                 (STRIDE / dur) * rate;
             }
