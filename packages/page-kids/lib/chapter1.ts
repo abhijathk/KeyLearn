@@ -728,13 +728,29 @@ export const LESSONS: readonly Lesson[] = [
     to: 7,
     // The social peak, framed by bamboo before and after.
     //
-    // THE MARKET ITSELF IS A GAP. The shipped model is four and a third times
-    // wider than it is tall and will not carry an honest size, and nothing in
-    // any vault has the stalls, sacks, jars and baskets this lesson is built
-    // from. So the zone is authored — bamboo, well, the tea-stall worker, the
-    // clutter of a place people use — and the market goes in when there is
-    // one. What must NOT happen is a smeared market: a village with no market
-    // reads as a small village, a village with a broken one reads as broken.
+    // THE MARKET IS A PLACEHOLDER, AND IT IS IN.
+    //
+    // The shipped model is four and a third times wider than it is tall, and
+    // so is the only other one in any vault — measured, both of them, rather
+    // than assumed: 4.34 and 4.21. Sized honestly against the child it
+    // stretches across most of the road, which is why it was pulled in the
+    // first place.
+    //
+    // It goes back anyway, because an empty market road is a worse lie than
+    // a rough market. This lesson is the social peak of the chapter — the
+    // busiest thing a child meets on this road — and with nothing in it the
+    // segment reads as another orchard with a well. A stand-in says "a
+    // market belongs here" and is replaced by one asset swap; a hole says
+    // nothing and quietly re-authors the lesson.
+    //
+    // Kept SHORT rather than honest, at 6 against the houses' 11, because
+    // the distortion is in the ratio: the shorter it is drawn the less road
+    // it spans, and a low market frontage set back off the verge is a fair
+    // reading of the thing anyway. Set well back so its width is read as
+    // depth rather than as a wall along the carriageway.
+    //
+    // The shipped ak-3d-pack copy is used rather than the other, which is
+    // the same shape at 31,485 triangles against 5,638.
     canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Tamarind_Tree`],
     mid: [`${PLANTS}/Banana_Plant`, `${PLANTS}/Hibiscus_Chemparathi`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
@@ -745,6 +761,9 @@ export const LESSONS: readonly Lesson[] = [
     props: [
       { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.72, z: -16, h: 26 },
       { model: "nature/KeralaBambooGroves", at: 0.1, z: -11, h: 7, clear: 5 },
+      // PLACEHOLDER — see the note above. Swap the model here when the real
+      // one is ready; nothing else in the lesson depends on it.
+      { model: "ak-3d-pack/Market", at: 0.4, z: -17, h: 6, clear: 13 },
       { model: `${UTIL}/Village_Well`, at: 0.46, z: -12, h: 2.2, clear: 4 },
       {
         model: `${UTIL}/Village_Cart`,
