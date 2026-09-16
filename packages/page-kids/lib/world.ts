@@ -1138,12 +1138,16 @@ function castHeadScale(name: string): number {
       // head, and they still came out as realistic people standing among
       // stylised ones. The ratio that matters is HEADS TALL, not the number
       // in this table, and matching it takes more on a bigger body.
-      // 1.42. Raised twice now, from 1.22 then 1.34, and both times because
-      // the figure was reasoned about rather than looked at: these bodies
-      // are a head taller than the children's, so the SAME ratio always
-      // reads as a smaller head on them. The measure that matters is heads
-      // tall, not the number in this table.
-      return 1.42;
+      // 1.56. Raised three times now — 1.22, then 1.34, then 1.42 — and
+      // every time for the same reason: the figure was reasoned about rather
+      // than looked at, and these bodies are a head taller than the
+      // children's, so the SAME ratio always reads as a smaller head on
+      // them. The measure that matters is HEADS TALL, not the number in this
+      // table, and an adult drawn at seven heads beside a child drawn at
+      // three and a quarter is the thing that makes the villagers look
+      // imported. The boy below is deliberately left where he is: he is a
+      // child and already takes a child's share.
+      return 1.56;
     // The eleven-year-old, who is a child and takes a child's share.
     case "VillageBoy":
       return 1.44;
@@ -9762,6 +9766,7 @@ export function createKidsWorld(
   let villagersShown = "";
   /** The one villager who takes an interest. See the tick. */
   let curiousBoy: DinoRig | null = null;
+  let bridgeProbed = false;
   /** The smith at his forge. Sits from eight in the morning until nine. */
   let smith: DinoRig | null = null;
   /**
@@ -15098,7 +15103,7 @@ export function createKidsWorld(
           // model's x onto the world's z, so scaling x alone broadens the
           // deck without touching the span, which must stay exactly the
           // width of the water.
-          w.scale.x *= 1.75;
+          w.scale.x *= 2.1;
           const Hd = H * perspective(rz) * RAIL;
           // WHERE THE DECK'S TOP SITS IN THE MODEL — MEASURED, NOT GUESSED.
           //
@@ -15119,7 +15124,21 @@ export function createKidsWorld(
             // The deck is 1.36 units wide per unit tall, but the WALKABLE
             // width is the road's lane, not the planks' edge — a child
             // stepping off the side would find the water, not the ground.
-            halfWid: Math.min(4.6, (1.36 * Hd) / 2 - 0.4),
+            // AS WIDE AS THE ROAD, NOT AS WIDE AS THE PLANKS.
+            //
+            // This was the model's own width — about 2.5 units total, so
+            // ±1.23 from the centre line. Measured in the running game: the
+            // player walks the lane at z = 2.0 with the road's centre at
+            // -0.06, which is 2.06 out, so `deckY` returned null and the
+            // child — and every villager, and the guide — walked the river
+            // bed while the bridge stood over them. Anything wider than a
+            // plank's width missed it.
+            //
+            // The deck is a logical surface, not a collision mesh: anything
+            // using the road at the crossing is on the bridge, whatever the
+            // carpentry looks like from the side. On a fixed side-on camera
+            // the width of a footbridge is never visible anyway.
+            halfWid: Math.max(roadClear * 0.8, (1.36 * Hd) / 2),
             y: bank,
           };
           console.info(
@@ -18580,6 +18599,19 @@ export function createKidsWorld(
       // `walkY`, not `terrainY`: over the river the ground is the bed, and
       // the child is on the deck three units above it.
       p.y = walkY(p.x, p.z) + jumpY - restLift();
+      if (
+        BRIDGE != null &&
+        !bridgeProbed &&
+        Math.abs(p.x - BRIDGE.x) <= BRIDGE.halfLen
+      ) {
+        bridgeProbed = true;
+        console.info(
+          `[bridge] player x=${p.x.toFixed(1)} z=${p.z.toFixed(1)} ` +
+            `meander=${meander(p.x).toFixed(2)} halfWid=${BRIDGE.halfWid.toFixed(2)} ` +
+            `deck=${String(deckY(p.x, p.z))} terrain=${terrainY(p.x, p.z).toFixed(2)} ` +
+            `y=${p.y.toFixed(2)} bridgeY=${BRIDGE.y.toFixed(2)}`,
+        );
+      }
       // Just above and in front of the runner — unless they are passing a
       // milestone, in which case the light is coming out of its niche and
       // the lamp slides over to it. See `lampFrom`.
