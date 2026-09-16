@@ -3581,6 +3581,31 @@ export function createKidsWorld(
   RELIEF = theme.relief ?? 1;
   ROAD_SINK = land.path === "mud" ? 0.22 : 0;
   const trueNight = (theme.nightMode ?? "dusk") === "night";
+
+  /**
+   * WHAT HOUR IT IS IN THE WORLD — which is not what the wall clock says.
+   *
+   * This road is lit by `stagedHours`: the child's real time folded onto a
+   * twelve-hour face, with day mode taking the daylight candidate and night
+   * mode the dark one. At five in the afternoon the day is five in the
+   * afternoon and the NIGHT IS FIVE IN THE MORNING — that is the whole point
+   * of the fold, and it is why the sky is always one that could exist.
+   *
+   * Every rule about hours — which shops are lit, who is out on the road,
+   * whether the children are home, whether anybody is walking home stiff —
+   * was reading `new Date().getHours()` instead. So the village kept office
+   * hours by London time while the sky kept its own, and none of it lined
+   * up: a market lit at five in the morning, villagers on the road at two,
+   * lamps that ignored the toggle entirely because the toggle changes the
+   * staged hour and not the wall clock.
+   *
+   * One source of truth. If the world says it is five in the morning, it is
+   * five in the morning for everybody in it.
+   */
+  const worldHour = (): number => {
+    const staged = stagedHours();
+    return nightNow ? staged.night : staged.day;
+  };
   const nightStyle: NightStyle = opts.nightStyle ?? "full";
   const villageDue = opts.villageDue ?? false;
   /**
@@ -9706,7 +9731,7 @@ export function createKidsWorld(
       // `tiredWalkAt`. A limp at two in the afternoon does not read as "late
       // in the day", it reads as a lame man.
       const gait =
-        nightClip != null && tiredWalkAt(new Date().getHours())
+        nightClip != null && tiredWalkAt(worldHour())
           ? f.mixer.clipAction(nightClip)
           : f.walk;
       if (gait != null && !gait.isRunning()) {
@@ -13399,6 +13424,8 @@ export function createKidsWorld(
           // up and down across the frontage — so a single fraction hangs one
           // lantern into the rafters and leaves the next one floating below
           // the overhang. Raman Stores has the taller front of the two.
+          /** How tall a hung pressure lantern is, in world units. */
+          const LANTERN = 1.7;
           const SHOPS = [
             { at: -0.4, closes: 21, kind: "petromax" as const, up: 0.47 },
             { at: -0.24, closes: 20, kind: "oil" as const },
@@ -13484,22 +13511,48 @@ export function createKidsWorld(
                 // model's base where it is told, so the whole lamp drops by
                 // its own height and the eave line ends up at its handle —
                 // which is where a lamp on a hook actually meets the roof.
-                lamp.position.set(spot[0], spot[1] - 1.7, spot[2]);
+                lamp.position.set(spot[0], spot[1] - LANTERN, spot[2]);
                 lamp.rotation.y = Math.random() * Math.PI * 2;
                 builtGroup.add(lamp);
               }
             }
+            // THE FLAME GOES INSIDE THE GLASS, NOT ON TOP OF THE LANTERN.
+            //
+            // `spot` is the point the lamp hangs FROM — the eave — and the
+            // model drops its full height below it, so putting the glow at
+            // `spot` as well left a bright ball at the lantern's handle with
+            // a dark body hanging underneath. Which is what it looked like:
+            // a light next to a lamp.
+            //
+            // A petromax's mantle sits a little under half way up its body,
+            // so the glow drops by the rest. The oil lamps are unaffected —
+            // they stand on a counter and their flame IS where they are put.
+            const glow: readonly [number, number, number] =
+              shop.kind === "petromax"
+                ? [spot[0], spot[1] - LANTERN * 0.55, spot[2]]
+                : spot;
             makeLamp(
-              ...spot,
+              ...glow,
+              // BRIGHTER, AND THE PETROMAX MOST OF ALL — which is the
+              // honest ratio between them. A pressure lantern puts out
+              // something like ten times what a wick does; it is the reason
+              // anybody carried the weight of one to a market. At 4.2
+              // against the oil lamps' 3.4 it was barely a quarter brighter,
+              // so the two read as the same lamp in different housings and
+              // the row had no shape to its lighting.
+              //
+              // 7.5 against 4.6 now, and a bigger halo to carry it: the two
+              // hung lanterns are what light the frontage, and the wick
+              // lamps light their own counters.
               shop.kind === "petromax"
                 ? {
                     kind: "petromax",
-                    size: 2.4,
-                    peak: 0.92,
-                    lit: 4.2,
+                    size: 3.4,
+                    peak: 0.98,
+                    lit: 7.5,
                     closes: shop.closes,
                   }
-                : { size: 1.5, peak: 0.82, lit: 3.4, closes: shop.closes },
+                : { size: 1.9, peak: 0.9, lit: 4.6, closes: shop.closes },
             );
           }
           return;
@@ -14026,7 +14079,7 @@ export function createKidsWorld(
         // names; between seven and nine almost nobody, because a settlement
         // winding down has to differ from a settlement; after ten nobody at
         // all, which is the whole reason the corridor works.
-        const activity = activityAt(new Date().getHours());
+        const activity = activityAt(worldHour());
         let folk = 0;
         for (const l of LESSONS) {
           const from = CHAPTER[l.n - 1]!;
@@ -14039,7 +14092,7 @@ export function createKidsWorld(
             // NO CHILDREN AFTER SIX. See `childrenOut`: a child on a village
             // road at nine at night reads as wrong to anybody who has been
             // in one — and to the child playing at nine at night.
-            if (isChild(who) && !childrenOut(new Date().getHours())) {
+            if (isChild(who) && !childrenOut(worldHour())) {
               continue;
             }
             const x = from + (0.3 + i * 0.28) * len;
@@ -14133,7 +14186,7 @@ export function createKidsWorld(
           // from their shift, below. Deciding it here froze the road at
           // whatever hour the child arrived.
           const n = WHO.length;
-          const kidsAllowed = childrenOut(new Date().getHours());
+          const kidsAllowed = childrenOut(worldHour());
           for (let i = 0; i < n; i++) {
             const who = WHO[i % WHO.length]!;
             if (isChild(who) && !kidsAllowed) {
@@ -14229,7 +14282,7 @@ export function createKidsWorld(
                 | THREE.AnimationClip
                 | undefined;
               const gait =
-                nightClip != null && tiredWalkAt(new Date().getHours())
+                nightClip != null && tiredWalkAt(worldHour())
                   ? f.mixer.clipAction(nightClip)
                   : f.walk;
               gait.reset();
@@ -14264,7 +14317,7 @@ export function createKidsWorld(
           if (
             CHAPTER != null &&
             activity === "day" &&
-            childrenOut(new Date().getHours())
+            childrenOut(worldHour())
           ) {
             const bx = CHAPTER[4]! + (CHAPTER[5]! - CHAPTER[4]!) * 0.55;
             const bz = meander(bx) - roadClear - 4;
@@ -14607,11 +14660,7 @@ export function createKidsWorld(
       // ONLY BETWEEN TEN AND FOUR. The corridor has an active window and
       // this is it — a trace at eight in the evening is just a stone lying
       // about, because the village is still awake and can see it.
-      if (
-        CHAPTER != null &&
-        trueNight &&
-        activityAt(new Date().getHours()) === "deep"
-      ) {
+      if (CHAPTER != null && trueNight && activityAt(worldHour()) === "deep") {
         const LITTER = [
           "village-stone/River_Stone",
           "village-stone/Stepping_Stone",
@@ -16477,7 +16526,7 @@ export function createKidsWorld(
           }
         }
         // WHAT HOUR IT IS, once per frame rather than once per lamp.
-        const hourNow = new Date().getHours();
+        const hourNow = worldHour();
         for (const L of lamps) {
           // A SHUT SHOP HAS NO LIGHT IN IT, and it works this out every
           // frame. The alternative — deciding at build time which shops are
@@ -16580,7 +16629,7 @@ export function createKidsWorld(
       // until a child happens to be looking, and then it is the only thing
       // they saw; somebody reaching the edge of the village and walking back
       // is what a road between two places looks like anyway.
-      const hourOfDay = new Date().getHours();
+      const hourOfDay = worldHour();
       for (const f of roadWalkers) {
         // OUT, OR NOT, ACCORDING TO THE CLOCK — every frame, so the road
         // empties as the evening goes on and fills again at seven whether or
