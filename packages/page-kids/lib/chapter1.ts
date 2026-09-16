@@ -480,7 +480,35 @@ export type Placed = {
   readonly box?: {
     readonly w: number;
     readonly d: number;
+    /**
+     * The most of its lesson this building may cover. MAY EXCEED 1.
+     *
+     * It is a brake on the fit rather than the target — see `want`. A
+     * village does not get smaller because the child walking through it is
+     * five, so the size a building WANTS is a number of world units; this
+     * only stops a short lesson's building running the length of the
+     * chapter.
+     */
     readonly span?: number;
+    /**
+     * HOW BIG THIS BUILDING IS, IN WORLD UNITS, when the road has room.
+     *
+     * Without this the market was fitted to its lesson and nothing else,
+     * and a lesson is as long as the child's typing: 64 units for an
+     * eleven-year-old and 28.8 for a five-year-old. So the youngest child
+     * — the one least able to read a distant building — got a market with
+     * 24.8 units of frontage where the oldest got 55, and the village's
+     * centrepiece was drawn at under half size for the people who needed it
+     * biggest. It is the same market in the same village; only the road
+     * through it is shorter.
+     *
+     * A building this wide CANNOT fit a 28.8-unit lesson, so honouring it
+     * means letting the frontage cross a milestone. That is a real building
+     * standing on a real road: the stones are markers along the way, not
+     * property lines, and the reference frames show the market rising
+     * behind one rather than stopping at it.
+     */
+    readonly want?: number;
   };
 };
 
@@ -1055,7 +1083,19 @@ export const LESSONS: readonly Lesson[] = [
       // pass through something to arrive. 18 is forty feet at the chapter's
       // own scale, the same ruler the trees use, and taller than any of them
       // bar the palmyra.
-      { model: "nature/KeralaBambooGroves", at: 0.05, z: -11, h: 23, clear: 5 },
+      // THE TWO GROVES ARE NOT IN THIS TABLE ANY MORE — see the market
+      // block in world.ts, which stands them off the building's own
+      // measured edges.
+      //
+      // They were at 0.05 and 1.06 of the lesson, and that was a fact about
+      // the segment pretending to be a fact about the market. "The grove at
+      // the market gate" and "the closing grove past the stone" are both
+      // sentences about where the BUILDING ends, and the building is a
+      // different width on every band — so on the short road the gate grove
+      // stood a third of the way along the frontage and the closing one
+      // came up through the last stalls, while on the long road both sat
+      // where they were meant to. Measured off the market they frame it on
+      // every band, and the market is free to be the size a market is.
       // PLACEHOLDER — see the note above. Swap the model here when the real
       // one is ready; nothing else in the lesson depends on it.
       //
@@ -1236,7 +1276,19 @@ export const LESSONS: readonly Lesson[] = [
         // rises BEHIND the marker rather than across it, which is what the
         // reference frames show. The grove is the real limit and this is
         // most of what is left before the two touch.
-        box: { w: 4.27, d: 1.02, span: 0.86 },
+        // 55 UNITS OF FRONTAGE, BRAKED AT 1.6 LESSONS.
+        //
+        // 55 is what the longest road was already drawing it at, so nothing
+        // changes for a nine- or eleven-year-old. What changes is everyone
+        // younger: a 28.8-unit Lesson 7 was giving the five-year-old 24.8
+        // units of market, under half the building, and the brake now lets
+        // it reach 46 — most of the way back, and as much as a lesson that
+        // short can carry without the row becoming the whole chapter.
+        //
+        // 1.6 rather than something rounder because that is where the
+        // youngest band stops gaining: past it the frontage grows into
+        // Lesson 8's grazing land faster than it grows on screen.
+        box: { w: 4.27, d: 1.02, span: 1.6, want: 55 },
       },
       // A COW LYING IN FRONT OF THE MARKET, by the bamboo. Cattle settle
       // exactly here in a Kerala market town — in the shade, on the bare
@@ -1327,7 +1379,6 @@ export const LESSONS: readonly Lesson[] = [
       // what is wanted here, because the closing grove belongs on the far
       // side of Milestone 7 — it is the gate you walk OUT through, and the
       // stone should be met before it rather than through it.
-      { model: "nature/KeralaBambooGroves", at: 1.06, z: -13, h: 23, clear: 5 },
     ],
     herd: [],
     // AT THE STALLS. The forecourt runs from the milestone line at about
@@ -1381,7 +1432,7 @@ export const LESSONS: readonly Lesson[] = [
       // something that enclosed a field long ago.
       {
         model: `${UTIL}/Laterite_Wall`,
-        at: 0.2,
+        at: 0.45,
         z: -14,
         h: 2.0,
         clear: 5,
@@ -1397,8 +1448,8 @@ export const LESSONS: readonly Lesson[] = [
       // than the last, because the run is clamped to the lesson and its
       // last panel is in a different place on every band; its first is
       // where it is written.
-      { model: "village-stone/Laterite_Rock", at: 0.185, z: -13.1, h: 0.55 },
-      { model: "village-stone/Laterite_Rock", at: 0.21, z: -13.3, h: 0.4 },
+      { model: "village-stone/Laterite_Rock", at: 0.435, z: -13.1, h: 0.55 },
+      { model: "village-stone/Laterite_Rock", at: 0.46, z: -13.3, h: 0.4 },
       {
         model: "village-stone/Granite_Boulder",
         at: 0.6,
@@ -1645,7 +1696,14 @@ function fitted(
   const s = persp(p.z);
   const width = p.box.w * p.h * s;
   const depth = p.box.d * p.h * s;
-  const limit = p.box.span == null ? Infinity : p.box.span * len;
+  // THE SIZE IT WANTS, BRAKED BY THE LESSON — not the lesson alone. See
+  // `box.want`: a village is not smaller for a younger child, so the target
+  // is a number of world units and `span` only stops a short lesson's
+  // building from running away down the chapter.
+  const limit = Math.min(
+    p.box.want ?? Infinity,
+    p.box.span == null ? Infinity : p.box.span * len,
+  );
   if (width <= limit) {
     return { ...p, width, depth };
   }

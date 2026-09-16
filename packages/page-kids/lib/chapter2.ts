@@ -185,33 +185,43 @@ export const LESSONS_2: readonly Lesson[] = [
     mix: [0.14, 0.16, 0.7],
     depth: [10, 26],
     props: [
-      // THE PEEPAL IS THE LANDMARK and everything else defers to it. Larger
-      // than the banyan on the althara in Chapter 1, because that one is
-      // furniture in a village square and this one IS the place.
-      { model: `${PLANTS}/Peepal_Arayal`, at: 0.52, z: -14, h: 21, clear: 10 },
-      // The platform at its roots. `Stone_Althara` is a low round village
-      // plinth and is the right object for a shrine base as well as a tree
-      // seat — the same stone doing the same job in a quieter place.
+      // A BANYAN, AND THE SAME ONE THE VILLAGE IS ARRANGED AROUND — 24,
+      // which is the height it stands at on the althara in Chapter 1.
+      //
+      // Not a peepal. Both are sacred and both would be right in a grove,
+      // but the banyan is the tree this world has already taught the child
+      // to read: they have walked past the one in the village heart for ten
+      // lessons, and meeting the same species out in the fields says "this
+      // is a place like that one" without a word. A second, different
+      // sacred tree says only that there are two kinds of tree.
+      //
+      // NO ALTHARA. The village's banyan stands on a platform because that
+      // platform is furniture — the place a village sits all afternoon —
+      // and this one is not in a village. It is a roadside grove, and the
+      // reference is explicit that it should read as old and naturally
+      // integrated rather than built: the tree goes straight into the soil
+      // and its roots are the only masonry there is. `lift` goes with the
+      // platform, since the base is no longer riding on anything.
       {
-        model: `${STONE}/Stone_Althara`,
+        model: `${PLANTS}/Banyan_Almaram`,
         at: 0.52,
-        z: -12.5,
-        h: 1.5,
-        clear: 4,
-        lift: -0.1,
+        z: -14,
+        h: 24,
+        clear: 10,
       },
       // ── SPACE LEFT: THE IDOL AND ITS FLOWERS ──────────────────────────
       //
-      // The reference asks for a small weathered stone idol on this plinth,
-      // a garland, and fallen flower offerings. Neither exists in any folder
-      // — rejected ones included — and the nearest things that do are a
-      // washing stone and a milestone, which would put a laundry slab or a
-      // road marker where a god goes. That is worse than an empty plinth, so
-      // the plinth stands empty until the idol is made.
+      // The reference asks for a small weathered stone idol at the tree's
+      // foot, a garland, and fallen flower offerings. None exists in any
+      // folder — rejected ones included — and the nearest things that do are
+      // a washing stone and a milestone, which would put a laundry slab or a
+      // road marker where a god goes. That is worse than an empty root, so
+      // the roots stay empty until the idol is made.
       //
-      // The lamps are NOT left out with it. The temple's flame system is
-      // already built and hour-gated, and a lit lamp on a bare plinth reads
-      // as a shrine whose idol is in shadow rather than as a mistake.
+      // With the platform gone this is now a space among the roots rather
+      // than on a plinth, which is the harder of the two to fake and the
+      // easier of the two to leave: exposed banyan roots are a place, and a
+      // place can be visibly waiting for something.
       { model: `${STONE}/Mossy_Stone`, at: 0.58, z: -11.5, h: 0.8 },
       // "One simple resting stone, bench or low sitting edge nearby."
       { model: `${UTIL}/Washing_Stone`, at: 0.64, z: -11, h: 0.55, clear: 2 },

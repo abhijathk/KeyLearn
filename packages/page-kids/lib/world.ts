@@ -14167,6 +14167,36 @@ export function createKidsWorld(
             );
           }
 
+          // ── THE GROVES THAT FRAME THE ROW ─────────────────────────────
+          //
+          // Stood off the building's own measured edges rather than written
+          // as fractions of the lesson. "The grove at the market gate" and
+          // "the closing grove past the stone" are sentences about where the
+          // BUILDING ends, and the building is a different width on every
+          // band: as fractions they put the gate grove a third of the way
+          // along the frontage on a five-year-old's road and brought the
+          // closing one up through the last stalls, while landing correctly
+          // on an eleven-year-old's. Measured from the market they are right
+          // on every road, and the market is free to be the size a market
+          // is rather than the size its lesson can spare.
+          //
+          // Three units of gap: enough that the canopy clears the end wall
+          // and close enough that the two read as one place.
+          for (const side of [-1, 1] as const) {
+            const gx = cx + side * (wide / 2 + 3);
+            const g = await stand(
+              "nature/KeralaBambooGroves",
+              gx,
+              side < 0 ? -11 : -13,
+              23,
+              0,
+            );
+            if (g != null) {
+              builtGroup.add(g);
+              blockers.push({ x: gx, z: side < 0 ? -11 : -13, r: 5 });
+            }
+          }
+
           // ── THE TEA SELLER, INSIDE HIS OWN SHOP ───────────────────────
           //
           // Behind the front plane rather than in front of it, which is the
