@@ -583,6 +583,25 @@
 }
 
 /**
+ * THE LESSON, under the chapter.
+ *
+ * Deliberately quieter than the line above it: the chapter is the title and
+ * this is the chapter and verse, and giving them the same weight would make
+ * the child read two headings and decide which one mattered. Same nowrap
+ * rule for the same reason — see `.loadLabel`.
+ */
+.loadLesson {
+  margin-block-start: clamp(0.15rem, 0.5cqi, 0.45rem);
+  color: var(--kink3, var(--kink2));
+  opacity: 0.78;
+  font-size: clamp(0.7rem, 1.5cqi, 1.15rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/**
  * What the world is building, under the chapter name.
  *
  * Monospaced and letter-spaced on purpose: the text arrives as morse and

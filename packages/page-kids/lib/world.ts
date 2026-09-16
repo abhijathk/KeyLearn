@@ -3186,6 +3186,59 @@ const VILLAGE_HOUSE_SPOTS: readonly (readonly [number, number])[] = [
 const GROUND_DEPTH = 76;
 const GROUND_BACK = -GROUND_DEPTH / 2;
 
+/**
+ * THE RIVER, WHERE A ROAD HAS ONE.
+ *
+ * Module-level and mutable for the same reason `ROAD_SINK` is: `terrainY` is
+ * the one answer to "how high is the ground here", it is called from the
+ * ground mesh, from every prop, from the herd and from the child's own feet,
+ * and a channel that only some of those knew about would be a river the
+ * water sat in and nothing else noticed.
+ *
+ * Carved rather than modelled. A river bed is a shape in the ground, and
+ * putting a mesh of one on top of flat terrain gives you a trough with the
+ * old floor visible through its banks — and, worse, a `terrainY` that still
+ * reports the field height in the middle of the water, so everything that
+ * asks where to stand would stand on the surface of the river.
+ *
+ * NULL ON EVERY ROAD BUT THE ONE WITH A CROSSING, so the arithmetic below
+ * costs the other worlds a null check per sample and nothing else.
+ */
+type RiverCut = {
+  /** Where the channel runs, across the road. */
+  readonly x: number;
+  /** Half the water's width, bank to bank. */
+  readonly half: number;
+  /** How far the bed drops below the bank it is cut into. */
+  readonly depth: number;
+};
+let RIVER: RiverCut | null = null;
+
+/** The water's own surface height — flat, the way still water is. */
+let RIVER_SURFACE = 0;
+
+/**
+ * Cut a channel across the road, or fill it back in.
+ *
+ * The water's surface is taken from the BANK rather than chosen: sampled
+ * just outside the cut, on the road's own line, and dropped by a fixed
+ * freeboard. A hand-picked height would be right on one stretch of a road
+ * that rises and falls by several units along its length, and wrong wherever
+ * the crossing actually landed — with the water either standing above the
+ * bank or sitting at the bottom of a dry gorge.
+ */
+function setRiver(cut: RiverCut | null): void {
+  RIVER = null;
+  if (cut == null) {
+    return;
+  }
+  // Sampled BEFORE the cut is applied, so `terrainY` still reports the land
+  // the river is about to be carved out of.
+  const bank = terrainY(cut.x - cut.half * 1.35, meander(cut.x));
+  RIVER = cut;
+  RIVER_SURFACE = bank - 0.9;
+}
+
 const terrainY = (x: number, z: number) => {
   let y = groundY(x);
   if (ROAD_SINK > 0) {
@@ -3214,6 +3267,25 @@ const terrainY = (x: number, z: number) => {
     // slope on a flat world, so the land still lifts towards the horizon
     // rather than running to a hard edge - the mountains go on top of this.
     y += (-z - 10) * (0.3 + 0.1 * Math.sin(x * 0.05)) * (0.25 + 0.75 * RELIEF);
+  }
+  // ── THE CHANNEL, CUT LAST ────────────────────────────────────────────
+  //
+  // After the road's wear, after the field noise, after the far bank rises:
+  // a river is older than any of them and cuts through all of it. Applied
+  // earlier, the road sink would have gone on scooping a cart track across
+  // the middle of the water.
+  //
+  // SMOOTHSTEPPED FROM THE BANK, not a straight-sided trench. The profile is
+  // what tells a child the water is deep — a channel with vertical walls
+  // reads as a swimming pool, and one that eases down from the grass reads as
+  // a river that has been there a long time. The banks are also where the
+  // taro and the grass go, and they need ground that leans rather than a lip.
+  if (RIVER != null) {
+    const d = Math.abs(x - RIVER.x) / RIVER.half;
+    if (d < 1) {
+      const t = 1 - d;
+      y -= RIVER.depth * t * t * (3 - 2 * t);
+    }
   }
   return y;
 };
@@ -17155,7 +17227,23 @@ export function createKidsWorld(
             continue;
           }
         }
-        const nx = f.wrap.position.x + rw.dir * rw.speed * dt * motionScale;
+        // A TURN ALWAYS COMES WITH A STEP.
+        //
+        // Every reversal here used to `continue` without writing a position,
+        // which leaves the walker exactly where the condition that triggered
+        // the turn was measured — so the same test fires on the very next
+        // frame and flips the direction back. At the end of the road that is
+        // a man standing in the right-hand corner spinning sixty times a
+        // second, going nowhere, which is precisely what it looked like.
+        //
+        // So `turn` changes the heading and the step is recomputed from it in
+        // the same frame. Nothing below leaves without moving.
+        const turn = () => {
+          rw.dir *= -1;
+          f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+        };
+        const stride = rw.speed * dt * motionScale;
+        let nx = f.wrap.position.x + rw.dir * stride;
         const beat = (f.wrap.userData.beat as [number, number]) ?? [
           6,
           TRAIL_END - 6,
@@ -17177,17 +17265,24 @@ export function createKidsWorld(
             continue;
           }
           if (!seen) {
-            rw.dir *= -1;
-            f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-            continue;
+            turn();
+            nx = f.wrap.position.x + rw.dir * stride;
           }
-          // Still in frame. Walk on — unless the road itself has run out,
-          // which is the one place a turn on the spot beats walking into
-          // nothing.
-          if (nx < 6 || nx > TRAIL_END - 6) {
-            rw.dir *= -1;
-            f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-            continue;
+          // Still in frame: he walks on. The beat is where he MEANS to stop,
+          // not a wall, and stopping dead in view is the pendulum again.
+        }
+        // THE ROAD ITSELF IS THE WALL. Clamped rather than refused, and the
+        // heading only flips when he is walking INTO the end — turning a man
+        // who is already walking away from it is what made the spin.
+        if (nx < 6) {
+          nx = 6;
+          if (rw.dir < 0) {
+            turn();
+          }
+        } else if (nx > TRAIL_END - 6) {
+          nx = TRAIL_END - 6;
+          if (rw.dir > 0) {
+            turn();
           }
         }
         // The road bends, so the lane has to be re-read at every step — a

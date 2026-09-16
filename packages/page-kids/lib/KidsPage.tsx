@@ -5337,6 +5337,24 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             ).toUpperCase()}
           />
         </div>
+        {/*
+          AND WHICH LESSON, in the same braille.
+          
+          The chapter names the road; this names the stretch of it the child
+          is about to be standing on, which is the thing they actually left
+          off at. It resolves in the same cells as the line above rather than
+          simply appearing — two different treatments a line apart would read
+          as one of them being chrome.
+
+          Village only, and only once there is a name: the other two worlds
+          have no authored lessons to name, and an empty row that is sometimes
+          there is worse than no row.
+        */}
+        {onVillage && lessonName !== "" && (
+          <div className={styles.loadLesson}>
+            <Reveal text={`Lesson ${lessonNo} · ${lessonName}`.toUpperCase()} />
+          </div>
+        )}
         <LoadStep
           queueRef={loadSteps}
           active={!loaded}
@@ -5474,7 +5492,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       return;
     }
     setChapterCard(due);
-     
   }, [onVillage, loaded, prefs.roadStones, chapterCard]);
 
   /**
