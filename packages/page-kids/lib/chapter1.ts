@@ -622,7 +622,10 @@ export const LESSONS: readonly Lesson[] = [
     props: [
       // The banyan is the social focus and the temple is glimpsed past its
       // trunk, never behind it — the tree stands BESIDE the shrine.
-      { model: `${PLANTS}/Banyan_Almaram`, at: 0.3, z: -14, h: 18, clear: 10 },
+      // NOT THE BANYAN. It is placed by the village's own `heart` table with
+      // the althara under it, and the chapter skips lesson 5's props for
+      // exactly that reason — so an entry here was never built and only read
+      // as though the tree were configured in two places at once.
       {
         model: "ak-3d-pack/Temple",
         at: 0.44,

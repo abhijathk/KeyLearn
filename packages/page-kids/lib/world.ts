@@ -2094,6 +2094,13 @@ export type WorldTheme = {
       readonly dz: number;
       readonly h: number;
       readonly turn?: number;
+      /**
+       * Raised this far off the ground.
+       *
+       * For the one thing in this village that does not stand ON the earth:
+       * the banyan, which grows out of a built stone platform.
+       */
+      readonly lift?: number;
     }[];
     /** Dwellings placed around the heart, picked at random per village. */
     readonly houses: readonly string[];
@@ -2762,7 +2769,35 @@ export const VILLAGE_THEME: WorldTheme = {
       // quantisation flag says they are, rather than in the already
       // normalised units that made every building in this village invisible.
       // See `measureBox`.
-      { model: "village-plants/Banyan_Almaram", dx: -13, dz: -16, h: 18 },
+      // ── THE ALTHARA, AND THE TREE THAT STANDS ON IT ──────────────────
+      //
+      // It was held back with a note saying it would go in "on this exact
+      // line and before the tree so the tree stands ON it rather than in
+      // it, the moment the new banyan lands". The new banyan landed a while
+      // ago; this is that.
+      //
+      // A Kerala village banyan grows out of a built stone platform — the
+      // althara is where people sit in its shade, and it is the reason the
+      // tree is a place rather than a plant. Listed BEFORE the tree because
+      // `heart` is planted in order and the platform has to exist under it.
+      //
+      // 2.0 tall makes it 8.5 units across at this model's 4.23:1, which is
+      // a platform somebody could sit on all the way round a trunk. Sized
+      // from the ratio rather than guessed: at the 0.85 it was written for
+      // it would have been 3.6 across, narrower than the tree's own root
+      // flare, and the banyan would have stood on a doorstep.
+      { model: "village-stone/Stone_Althara", dx: -13, dz: -16, h: 2.0 },
+      // BIGGER, AND UP ON THE STONE. 24 against 18 — its canopy spreads 35
+      // units now against 26, which is what makes it the thing the village
+      // is arranged around rather than a large tree. `lift` puts its base on
+      // the platform's top instead of in the soil beside it.
+      {
+        model: "village-plants/Banyan_Almaram",
+        dx: -13,
+        dz: -16,
+        h: 24,
+        lift: 2.0,
+      },
       // The VAZHIVILAKKU are not here. They belong to the ROAD, not to the
       // village — and they are no longer even their own object: the lamp head
       // is welded onto the milestone, so one arrives with every marker the
@@ -12834,13 +12869,17 @@ export function createKidsWorld(
         z: number,
         h: number,
         turn: number,
+        lift = 0,
       ) => {
         const src = await prop(name);
         if (src == null) {
           return null;
         }
         const wrap = fitToHeight(src.clone(true), h * perspective(z));
-        wrap.position.set(x, surfaceY(x, z), z);
+        // `lift` is in the same units as `h` and takes the same depth
+        // falloff, so a tree standing on a platform stays standing on it
+        // however far back the pair are placed.
+        wrap.position.set(x, surfaceY(x, z) + lift * perspective(z), z);
         wrap.rotation.y = turn;
         scene.add(wrap);
         characterRoots.add(wrap);
@@ -13018,7 +13057,14 @@ export function createKidsWorld(
       // whole point - the market fronts the road and the temple stands behind
       // it, which is how you actually meet a village from its road.
       for (const h of V.heart) {
-        const w = await stand(h.model, vx + h.dx, h.dz, h.h, h.turn ?? 0);
+        const w = await stand(
+          h.model,
+          vx + h.dx,
+          h.dz,
+          h.h,
+          h.turn ?? 0,
+          h.lift ?? 0,
+        );
         // SOLID, so nothing grows through it.
         //
         // The chapter's own props have registered their clearance since they
