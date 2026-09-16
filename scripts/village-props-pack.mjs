@@ -28,23 +28,35 @@
  *     MEASURED on each of these (the tool's own header says to): 97 KB more
  *     off the market, and smaller on every file here.
  *
- * WHY ONLY THESE FIVE. The same pass was run over all 52 uncompressed village
- * files. The ak-3d-pack props, the stones and nearly all the plants were
- * already fully quantized by village-prop.mjs (u16 positions, i16 normals,
- * u16 UVs) and meshopt made them LARGER — Banyan 434 KB -> 457 KB, HouseHearth
- * 434 -> 448 — because the byte-level codec has nothing left to find in a
- * compact 6,000-triangle mesh and adds its framing. Three (Palmyra_Karimpana,
- * Mango_Tree, Jackfruit_Tree) failed glb-compress's own verify and were left
- * alone rather than shipped on a mismatch. MegaPine would take the same cut
- * (821 -> 407 KB) but is not on the village road; MegaBroadleaf is already
- * gltfpack output and these tools cannot read it. What is left is the five
- * files where the numbers were real:
+ * WHY ONLY THESE SIX. The same pass was run over every uncompressed file
+ * under models/. The ak-3d-pack props, the stones and nearly all the plants
+ * were already fully quantized by village-prop.mjs (u16 positions, i16
+ * normals, u16 UVs) and meshopt made them LARGER — Banyan 434 KB -> 457 KB,
+ * HouseHearth 434 -> 448 — because the byte-level codec has nothing left to
+ * find in a compact 6,000-triangle mesh and adds its framing. What is left is
+ * the six files where the numbers were real:
  *
  *   Village_Market      1,831,984 -> 1,254,112   lesson 7, the biggest thing on the road
  *   MegaDead            1,396,048 ->   665,552   the night forest
+ *   MegaPine              820,716 ->   407,332   Dino Run / Hero Trail scenery, not the village
  *   Banyan_Almaram        198,832 ->   123,824   the village heart
  *   KeralaBambooGroves    152,260 ->    75,592   the market's gate
  *   MegaPebbles            52,768 ->    32,292   the ground scatter
+ *
+ * A FILE THAT IS ALREADY MESHOPT IS SKIPPED, NOT PACKED, and the reason is a
+ * trap worth writing down. glb-quantize-attrs and glb-compress read a
+ * bufferView by its outer byteOffset/byteLength — which on an
+ * EXT_meshopt_compression file is a range in a data-less FALLBACK buffer, not
+ * the bytes on disk. Fed a gltfpack file they do not throw: quantize sees UVs
+ * of ±3e38 and "leaves them as float", and compress's --verify reports a
+ * MISMATCH on the strided views, which is the tool comparing garbage to
+ * garbage. Palmyra_Karimpana, Mango_Tree and Jackfruit_Tree "failed verify"
+ * for exactly this reason the first time this pass was run over the plants
+ * — every one of their views is already meshopt — and so would this script's
+ * own output on a second run. Hence the guard below, and hence MegaBroadleaf
+ * (gltfpack, 1.67 MB decoded against 1.16 shipped) is not in the list: it is
+ * already packed, and repacking it would mean the in-place technique from
+ * cast-characters.mjs extended to geometry, which is a new capability.
  *
  * Each build must decode byte-identical AND come out smaller than it went in,
  * or it is not installed. The previous files are in
@@ -63,6 +75,7 @@ const MODELS = join(REPO, "root/public/kids-assets/models");
 const PROPS = [
   "village-util/Village_Market",
   "nature/MegaDead",
+  "nature/MegaPine",
   "village-plants/Banyan_Almaram",
   "nature/KeralaBambooGroves",
   "nature/MegaPebbles",
@@ -84,7 +97,8 @@ function shape(path) {
       tris += pr.indices != null ? j.accessors[pr.indices].count / 3 : verts / 3;
     }
   }
-  return { tris, verts, images: (j.images ?? []).length, materials: (j.materials ?? []).length };
+  const packed = (j.bufferViews ?? []).some((v) => v.extensions?.EXT_meshopt_compression != null);
+  return { tris, verts, images: (j.images ?? []).length, materials: (j.materials ?? []).length, packed };
 }
 
 let failed = 0;
@@ -94,6 +108,12 @@ for (const name of PROPS) {
   const tmp = mkdtempSync(join(tmpdir(), "prop-pack-"));
   try {
     const before = shape(src);
+    if (before.packed) {
+      // Already meshopt — see the header: the tools downstream would read
+      // its fallback ranges as data and verify garbage against garbage.
+      console.log(`${name.padEnd(34)} already packed, skipped`);
+      continue;
+    }
     run("glb-quantize-attrs.mjs", [src, join(tmp, "q.glb"), "--normals"]);
     const log = run("glb-compress.mjs", [join(tmp, "q.glb"), join(tmp, "c.glb"), "--verify", "--indices"]);
     if (/MISMATCH|REFUS/i.test(log)) throw new Error("verify failed:\n" + log);
