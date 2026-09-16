@@ -1138,19 +1138,36 @@ function castHeadScale(name: string): number {
       // head, and they still came out as realistic people standing among
       // stylised ones. The ratio that matters is HEADS TALL, not the number
       // in this table, and matching it takes more on a bigger body.
-      // 1.56. Raised three times now — 1.22, then 1.34, then 1.42 — and
-      // every time for the same reason: the figure was reasoned about rather
-      // than looked at, and these bodies are a head taller than the
-      // children's, so the SAME ratio always reads as a smaller head on
-      // them. The measure that matters is HEADS TALL, not the number in this
-      // table, and an adult drawn at seven heads beside a child drawn at
-      // three and a quarter is the thing that makes the villagers look
-      // imported. The boy below is deliberately left where he is: he is a
-      // child and already takes a child's share.
-      return 1.56;
-    // The eleven-year-old, who is a child and takes a child's share.
+      // 1.74. Raised four times — 1.22, 1.34, 1.42, 1.56 — and each time by
+      // reasoning rather than by looking, which is why each raise was too
+      // small. The reasoning was always the same and always wrong in the
+      // same direction: "an adult should take less of this than a child".
+      // True of the RATIO in this table and false of the thing it controls.
+      // These bodies are a head taller than the children's, so the same
+      // number always yields a smaller-looking head on them, and the measure
+      // that matters is HEADS TALL.
+      //
+      // The correction is not anatomy, it is genre. This is a game for
+      // six-year-olds whose cast is deliberately top-heavy; a villager drawn
+      // at a real person's proportions does not read as an adult standing
+      // among stylised children, it reads as a character from a different
+      // game who has wandered in. 1.74 puts them at about four heads tall —
+      // still visibly taller and longer-limbed than the children, which is
+      // what says "grown-up", and unmistakably drawn by the same hand.
+      //
+      // The boy keeps his own number below. He is a child and already takes
+      // a child's share.
+      return 1.74;
+    // The village child, who takes a child's share — and a child's share in
+    // this cast is LARGE. 1.44 was set against an adult table that has been
+    // raised three times since, so he quietly became the most realistically
+    // proportioned child on the road: a boy drawn at a real boy's ratio
+    // standing beside Abee, who is the same rig at 1.26 on a shorter body.
+    // 1.62 puts the two of them at the same heads-tall, which is the measure
+    // that matters — see the adults above, where reasoning about this number
+    // rather than looking at its result went wrong three times running.
     case "VillageBoy":
-      return 1.44;
+      return 1.62;
     default:
       return 1;
   }
@@ -3386,6 +3403,49 @@ const deckY = (x: number, z: number): number | null => {
 
 /** Where a foot rests: the deck over the water, the ground everywhere else. */
 const walkY = (x: number, z: number): number => deckY(x, z) ?? terrainY(x, z);
+
+/**
+ * NOTHING CROSSES THE RIVER EXCEPT BY THE BRIDGE. A STRICT RULE.
+ *
+ * Given a step from `fromX` to `toX` at depth `z`, this returns the furthest
+ * x that step may reach. On the deck — inside the bridge's own corridor —
+ * it returns `toX` untouched, because that is what a bridge is for. Anywhere
+ * else, a step that would enter the channel is stopped at the near bank.
+ *
+ * ONE FUNCTION, EVERY MOVER. The herd was already turned at the bank by its
+ * own copy of this test inside `stoneLimitX`, and that is exactly the shape
+ * of bug worth removing: a rule enforced in the one place somebody
+ * remembered is a rule that holds until the next thing learns to walk. The
+ * buffalo, the cattle, the villagers on their rounds and the child's own
+ * companions all ask this now, so "never, unless by the bridge" is a
+ * property of the river rather than a habit of the herd.
+ *
+ * The bank is where the WATER is, not where the channel begins: the cut
+ * leans out well past the water line and an animal standing on the lean is
+ * standing on a bank, which is what banks are for.
+ */
+const crossLimitX = (fromX: number, toX: number, z: number): number => {
+  if (RIVER == null || toX === fromX) {
+    return toX;
+  }
+  // On the bridge, and in line with it: cross freely.
+  if (
+    BRIDGE != null &&
+    Math.abs(z - meander(fromX)) <= BRIDGE.halfWid &&
+    Math.abs(toX - BRIDGE.x) <= BRIDGE.halfLen
+  ) {
+    return toX;
+  }
+  const dir = Math.sign(toX - fromX);
+  const edge = riverHalfAt(z) + 0.9;
+  const near = RIVER.x - dir * edge;
+  // Already inside the channel — do not reverse them out of it, just stop
+  // them going further in.
+  if ((near - fromX) * dir < 0) {
+    return fromX;
+  }
+  return (toX - near) * dir > 0 ? near : toX;
+};
 
 /**
  * THE ROAD'S OWN HEIGHT AT AN X, WHATEVER THE Z.
@@ -9158,16 +9218,15 @@ export function createKidsWorld(
       return toX;
     }
     let limit = toX;
-    // AND THE RIVER BANK. An animal is stopped at the water's edge the same
-    // way it is stopped short of a stone: the bank is a line it walks up to
-    // and turns from, not one it wades through. Cattle in this world do not
-    // swim, and a buffalo that walked into the channel would stand on the
-    // bed with the water at its shoulders looking exactly like a bug.
-    if (RIVER != null) {
-      const edge = riverHalfAt(z) + 1.5;
-      const near = RIVER.x - dir * edge; // the bank on this animal's side
-      if ((near - fromX) * dir > 0 && (toX - near) * dir > 0) {
-        limit = near;
+    // AND THE RIVER BANK — see `crossLimitX`, which every mover in this
+    // world asks. An animal is stopped at the water's edge the same way it
+    // is stopped short of a stone: a line it walks up to and turns from,
+    // not one it wades through. Cattle here do not swim, and a buffalo
+    // standing on the bed with the water at its shoulders is a bug.
+    {
+      const wet = crossLimitX(fromX, toX, z);
+      if ((wet - fromX) * dir < (limit - fromX) * dir) {
+        limit = wet;
       }
     }
     const consider = (o: THREE.Object3D | null) => {
@@ -9652,8 +9711,14 @@ export function createKidsWorld(
     FarmerWoman: 5.2 * FOOT,
     TeaStall: 5.6 * FOOT,
     Headman: 6.1 * FOOT,
-    // Eleven, so a little over Dave at nine and well under every adult.
-    VillageBoy: 4.75 * FOOT,
+    // 4.28, WHICH IS ABEE'S. Not a coincidence and not a coincidence worth
+    // hiding: they are the same rig — the boy's walk and run are Abee's,
+    // spliced in because his own export had idles and transitions but no
+    // cycle between them — so drawing them at different heights makes one
+    // model look like two children of different ages wearing each other's
+    // gaits. At 4.75 he was the tallest child on the road and read as a
+    // young teenager among the villagers.
+    VillageBoy: 4.28 * FOOT,
     // FIVE TEN, which puts him between the tea seller and the headman
     // rather than at either end — a heavy man whose build is his job, and
     // still not the tallest in the village, which is the elder's.
@@ -15887,8 +15952,17 @@ export function createKidsWorld(
           // He can do it because his rig turned out to be Abee's, so he has
           // a real walk and a real run — and ABEE_IDLE_ListeningAlert_01 is
           // already exactly the pose for stopping to look at something.
+          // CHAPTER 1 ONLY, like everything else that belongs to the
+          // village. He is a child OF the village who notices the party
+          // going past and walks out of his own lesson to look — and the
+          // position below is Lesson 5's, the village centre. In Chapter 2
+          // that x is the Farm Clearing, so he was walking out of an empty
+          // field at a spot chosen for a village that is ten lessons
+          // behind him, which is also the second copy of a boy already
+          // walking that road. Out here he is simply one of the walkers.
           if (
             CHAPTER != null &&
+            CHAPTER_N === 1 &&
             activity === "day" &&
             childrenOut(worldHour())
           ) {
@@ -18450,7 +18524,11 @@ export function createKidsWorld(
           continue;
         }
         const stride = rw.speed * dt * motionScale;
-        let nx = f.wrap.position.x + rw.dir * stride;
+        let nx = crossLimitX(
+          f.wrap.position.x,
+          f.wrap.position.x + rw.dir * stride,
+          f.wrap.position.z,
+        );
         const beat = (f.wrap.userData.beat as [number, number]) ?? [
           6,
           TRAIL_END - 6,
@@ -18554,7 +18632,11 @@ export function createKidsWorld(
           const want = Math.atan2(dx, dz);
           cw.rotation.y += angTo(cw.rotation.y, want) * Math.min(1, dt * 3);
           const sp = 3.4 * dt * motionScale;
-          cw.position.x += (dx / (gap || 1)) * sp;
+          cw.position.x = crossLimitX(
+            cw.position.x,
+            cw.position.x + (dx / (gap || 1)) * sp,
+            cw.position.z,
+          );
           cw.position.z += (dz / (gap || 1)) * sp;
           cw.position.y =
             deckY(cw.position.x, cw.position.z) ??
@@ -18886,7 +18968,11 @@ export function createKidsWorld(
         // eases back to nothing when they move. Added here rather than
         // written into the replay so the replay stays the one truth about
         // where the pair are on the trail.
-        cw.position.x = seen.x - FOLLOW_GAP + dogOffX + dogAhead;
+        cw.position.x = crossLimitX(
+          cw.position.x,
+          seen.x - FOLLOW_GAP + dogOffX + dogAhead,
+          cw.position.z,
+        );
         // The guide keeps his own side -- see `setGuide`. Without this the
         // line below put every follower, him included, on the companions'
         // side at their FULL offset, quietly overriding the half-offset he
