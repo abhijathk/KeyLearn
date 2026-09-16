@@ -8710,6 +8710,36 @@ export function createKidsWorld(
   const MILESTONE_CLEAR = 3.2;
   const MILESTONE_CLEAR_DEPTH = -15;
 
+  /**
+   * Is this spot close enough to a stone to stand in front of it?
+   *
+   * One definition, because the rule now has three callers — the planting,
+   * the herds and the villagers — and three copies of a margin is three
+   * chances for one of them to drift. `margin` is how much room the thing
+   * itself needs: a fern needs none, a buffalo six units tall and three
+   * wide needs a good deal.
+   */
+  const atMilestone = (x: number, margin: number): boolean => {
+    if (CHAPTER == null) {
+      return false;
+    }
+    for (const m of CHAPTER) {
+      if (Math.abs(x - m) < MILESTONE_CLEAR + margin) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  /**
+   * Villagers using the road, as opposed to standing beside it.
+   *
+   * Kept apart from `friends` handling because they are the only people in
+   * this world who travel: everything else the chapter places is rooted to
+   * one stretch of ground and is hidden with it.
+   */
+  const roadWalkers: DinoRig[] = [];
+
   const blockers: { x: number; z: number; r: number }[] = [];
 
   /**
@@ -11347,7 +11377,17 @@ export function createKidsWorld(
         wrap,
         mixer,
         run: null,
-        walk: null,
+        // THE WALK, KEPT RATHER THAN THROWN AWAY. This was `null` for every
+        // companion, because until now none of them went anywhere — they
+        // stand by the road and idle. The road walkers do go somewhere, and
+        // with nothing here to play they slid along the carriageway in an
+        // IDLE pose, which is what "they are not really walking" looks like.
+        // Holding the action costs nothing: it is only ever played by code
+        // that asks for it, and nothing else asks.
+        walk:
+          clips.find((c) => /^walk(ing)?$/i.test(c.name)) != null
+            ? mixer.clipAction(clips.find((c) => /^walk(ing)?$/i.test(c.name))!)
+            : null,
         idle: null,
         idles: [],
         hair: null,
@@ -12962,6 +13002,16 @@ export function createKidsWorld(
             if (model == null || spot == null) {
               continue;
             }
+            // NOT IN FRONT OF THE STONE. A buffalo stands six units tall and
+            // three across, which is more than enough to cover a milestone
+            // completely — and unlike a tree it walks, so a marker that was
+            // readable when the world was built stops being readable the
+            // moment the animal drifts. Given its own body's width as the
+            // margin, and dropped rather than shuffled: every lesson has
+            // more field than it has animals.
+            if (atMilestone(spot.x, model === "Buffalo" ? 4 : 2.5)) {
+              continue;
+            }
             // A CALF IS A YOUNG COW, NOT A TOY ONE. 1.6 against the cow's
             // 2.5 made it a third smaller than its mother, which is roughly
             // a newborn — and next to children who are themselves drawn
@@ -13058,9 +13108,16 @@ export function createKidsWorld(
               break;
             }
             const x = from + (0.3 + i * 0.28) * len;
-            const z = -hashRange(x, i, 51, 9, 16);
+            // BACK FROM THE ROAD, behind the boundary rather than on the
+            // verge. These people are standing on their own land — that is
+            // the whole reason they are not moving — and a farmer idling a
+            // pace from the carriageway reads as somebody waiting to cross,
+            // which is a different story and a worse one. The fences and
+            // walls sit around z = -8 to -14, so this starts at the fence
+            // line and goes back from there into the plot.
+            const z = -hashRange(x, i, 51, 14, 24);
             const spot = clearSpot(x, z, 2.2);
-            if (spot == null) {
+            if (spot == null || atMilestone(spot.x, 2)) {
               continue;
             }
             // NEVER A GUARD. `spawnCompanion` decides that on a coin
@@ -13089,6 +13146,97 @@ export function createKidsWorld(
           }
         }
         console.info(`[chapter] ${folk} villagers out (${activity})`);
+
+        // ── AND THE ONES USING THE ROAD ──────────────────────────────────
+        //
+        // A road with nobody on it is a path through a museum. The people
+        // placed above are standing on their own land — a farmer in her
+        // plot, the headman by the temple — and none of them ever moves,
+        // which is right for them and wrong for the road itself.
+        //
+        // THEY KEEP LEFT, because the children keep right. The hero's lane
+        // is `LANE`, so the far half of the carriageway is the other side of
+        // the centre line — traffic passing rather than traffic shared, and
+        // nobody ever walking through the party.
+        //
+        // BOTH WAYS. Everyone travelling the same direction as the child
+        // reads as a procession; half of them coming the other way is what
+        // makes it a road between places rather than a queue.
+        //
+        // They are not in a lesson group. Everything else the chapter places
+        // belongs to one stretch of road and is hidden with it, but these
+        // walk between lessons by definition — grouping them would delete a
+        // villager mid-stride the moment they crossed a stone.
+        if (activity !== "deep") {
+          // NOT THE VILLAGE BOY. He has three idles and two transitions —
+          // ABEE_LOCO_IdleToWalk and WalkToIdle — and no walk CYCLE between
+          // them, so there is nothing to loop while he covers ground and he
+          // slid down the road in an idle. The transitions are for a
+          // character that starts and stops under something else's control,
+          // which is what Abee is and what a bystander is not. He stands in
+          // the village instead, where his idles are the whole point of him.
+          const WHO = ["Headman", "TeaStall", "FarmerWoman"];
+          const n = activity === "day" ? 5 : 2;
+          for (let i = 0; i < n; i++) {
+            const who = WHO[i % WHO.length]!;
+            const x = hashRange(i, 0, 90, 10, Math.max(40, TRAIL_END - 10));
+            // The far half of the road, on the opposite side of the centre
+            // from the hero's lane, and a little in from the edge.
+            const side = LANE >= 0 ? -1 : 1;
+            const z =
+              meander(x) + side * hashRange(i, 1, 91, 1.6, roadClear * 0.62);
+            await spawnCompanion(
+              who,
+              x,
+              z,
+              FOLK_HEIGHT[who] ?? 5.2 * FOOT,
+              false,
+              false,
+            );
+            const f = friends[friends.length - 1];
+            if (f == null) {
+              continue;
+            }
+            // Half of them are walking back the way the child came.
+            const dir = hash3(i, 2, 92) < 0.5 ? 1 : -1;
+            f.wrap.userData.roadWalker = {
+              dir,
+              speed: hashRange(i, 3, 93, 1.15, 1.6),
+              side,
+            };
+            f.wrap.userData.fixedFace = true;
+            f.wrap.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+            // Walking, not idling. `spawnCompanion` starts a non-guard on
+            // an idle and cycles it, which is right for the people standing
+            // in their fields and wrong for somebody going somewhere — so
+            // every action it started is stopped before the walk goes on,
+            // rather than crossfaded over the top of a running idle.
+            // AND ANYBODY WITHOUT A WALK STAYS PUT, as a rule rather than
+            // as a list. Sliding is what a missing walk cycle looks like,
+            // and the next model added here will not announce that it has no
+            // loop — it will just skate. Left standing where they are, which
+            // is a villager by the road and costs nothing.
+            if (f.walk == null) {
+              continue;
+            }
+            f.mixer.stopAllAction();
+            f.wrap.userData.idlePool = undefined;
+            {
+              // SLOWLY, and the clip slowed to match the ground it covers.
+              // A walk cycle played at full rate against this speed is a
+              // villager skating; the two have to agree or neither reads.
+              // Started at a random point in the cycle so five of them are
+              // never in step.
+              f.walk.timeScale = 0.62;
+              f.walk.time = hashRange(i, 4, 94, 0, 1);
+              f.walk.reset();
+              f.walk.timeScale = 0.62;
+              f.walk.play();
+            }
+            roadWalkers.push(f);
+          }
+          console.info(`[chapter] ${roadWalkers.length} on the road`);
+        }
       }
 
       // ── THE PLANTING, LESSON BY LESSON ───────────────────────────────
@@ -13116,9 +13264,9 @@ export function createKidsWorld(
           // ended up with three animals and no villagers at all. A cow beside
           // a banana plant is a cow beside a banana plant; a cow inside a
           // coconut palm is the bug this list exists to prevent.
-          { key: "canopy" as const, lo: 6.5, hi: 11, share: 0.3, clear: 1.6 },
-          { key: "mid" as const, lo: 2.8, hi: 4.6, share: 0.3, clear: 0 },
-          { key: "ground" as const, lo: 0.7, hi: 1.7, share: 0.4, clear: 0 },
+          { key: "canopy" as const, lo: 6.5, hi: 11, clear: 1.6 },
+          { key: "mid" as const, lo: 2.8, hi: 4.6, clear: 0 },
+          { key: "ground" as const, lo: 0.7, hi: 1.7, clear: 0 },
         ];
         let planted = 0;
         let refused = 0;
@@ -13129,10 +13277,15 @@ export function createKidsWorld(
           // cannot be half a mango; what fades across a milestone is the
           // proportion of each, and that is a coin weighted by `mix`.
           const from = hash3(x, 0, 11) < here.mix ? here.lesson : here.prev;
+          // WHICH LAYER, WEIGHTED BY THIS LESSON. An orchard and a fern
+          // meadow can hold the same plants per unit of road and be nothing
+          // alike, because one lesson's are overhead and the other's are
+          // underfoot. The share comes from the lesson the plant belongs to
+          // rather than from one fixed split for all ten.
           const roll = hash3(x, 1, 12);
           let acc = 0;
           const layer =
-            LAYERS.find((l) => (acc += l.share) > roll) ?? LAYERS[2]!;
+            LAYERS.find((l, li) => (acc += from.mix[li]!) > roll) ?? LAYERS[2]!;
           const species = from[layer.key];
           const pick = hashPick(species, x, 2, 13);
           const step = 1 / Math.max(0.2, densityAt(x, CHAPTER));
@@ -13164,18 +13317,13 @@ export function createKidsWorld(
           // The ground layer is welcome at a stone. Walking up to a bare
           // marker in mown grass would read as one installed this morning
           // rather than one that has stood there for years.
-          if (layer.key !== "ground" && spot.z > MILESTONE_CLEAR_DEPTH) {
-            let atStone = false;
-            for (const m of CHAPTER) {
-              if (Math.abs(spot.x - m) < MILESTONE_CLEAR) {
-                atStone = true;
-                break;
-              }
-            }
-            if (atStone) {
-              refused++;
-              continue;
-            }
+          if (
+            layer.key !== "ground" &&
+            spot.z > MILESTONE_CLEAR_DEPTH &&
+            atMilestone(spot.x, 0)
+          ) {
+            refused++;
+            continue;
           }
           const src = await prop(pick);
           if (src == null) {
@@ -15236,6 +15384,34 @@ export function createKidsWorld(
         }
         jumpFwdV = Math.max(0, jumpFwdV - 0.0016);
       }
+      // ── THE ROAD'S OWN TRAFFIC ──────────────────────────────────────
+      //
+      // Walked at a real pace along the far half of the carriageway, and
+      // TURNED ROUND at the ends rather than wrapped. A villager who
+      // vanishes at one end of the road and reappears at the other is fine
+      // until a child happens to be looking, and then it is the only thing
+      // they saw; somebody reaching the edge of the village and walking back
+      // is what a road between two places looks like anyway.
+      for (const f of roadWalkers) {
+        const rw = f.wrap.userData.roadWalker as
+          | { dir: number; speed: number; side: number }
+          | undefined;
+        if (rw == null) {
+          continue;
+        }
+        const nx = f.wrap.position.x + rw.dir * rw.speed * dt * motionScale;
+        if (nx < 6 || nx > TRAIL_END - 6) {
+          rw.dir *= -1;
+          f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+          continue;
+        }
+        // The road bends, so the lane has to be re-read at every step — a
+        // walker holding a constant z drifts off the carriageway on a curve.
+        const nz =
+          meander(nx) + (f.wrap.position.z - meander(f.wrap.position.x));
+        f.wrap.position.set(nx, surfaceY(nx, nz), nz);
+      }
+
       playerX = p.x;
       // WHICH LESSON'S SCENE IS UP, decided by where the child is standing
       // rather than by how many stones they have passed. The two agree

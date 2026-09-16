@@ -282,6 +282,23 @@ export type Lesson = {
   readonly ground: readonly string[];
   /** Plants per unit of road, across both verges. Lesson 3 is the densest. */
   readonly density: number;
+  /**
+   * HOW THAT DENSITY IS SPLIT BETWEEN THE THREE LAYERS: canopy, middle,
+   * ground.
+   *
+   * Density alone cannot say what a lesson looks like. An orchard and a fern
+   * meadow can hold the same number of plants per unit of road and be
+   * nothing alike, because the orchard's are overhead and the meadow's are
+   * underfoot — the document describes every lesson in exactly these terms
+   * ("upper layer... middle layer... lower layer" for the orchard; "grass
+   * and ferns dominate" for the meadow; "only a few scattered trees" for the
+   * open edge) and one fixed split across all ten threw all of it away.
+   *
+   * These weights are read straight off the brief's own sentences. Lesson 3
+   * is the only one with three full layers; Lesson 10 is almost entirely
+   * ground; the pasture has a handful of shade trees over open grass.
+   */
+  readonly mix: readonly [number, number, number];
   /** How far back the planting reaches. The near verge is left clear. */
   readonly depth: readonly [number, number];
   /** Fixed structures, in segment-relative coordinates. */
@@ -371,6 +388,8 @@ export const LESSONS: readonly Lesson[] = [
     mid: [`${PLANTS}/Hibiscus_Chemparathi`, `${PLANTS}/Drumstick_Muringa`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.1,
+    // "only a few scattered trees; keep tree density light" — open ground carries this lesson.
+    mix: [0.18, 0.17, 0.65],
     depth: [8, 24],
     props: [
       // A PALMYRA, AND ONE OF IT. It stands above everything else on a
@@ -409,6 +428,8 @@ export const LESSONS: readonly Lesson[] = [
     ],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Taro_Chembu`],
     density: 1.9,
+    // "gradually framed by useful trees and domestic vegetation" — the middle layer arrives.
+    mix: [0.28, 0.3, 0.42],
     depth: [7, 26],
     props: [
       // Broken and partial, never a run: the wall is a hint of enclosure
@@ -473,6 +494,8 @@ export const LESSONS: readonly Lesson[] = [
       `${PLANTS}/Kerala_Fern`,
     ],
     density: 3.4,
+    // the only lesson with three FULL layers, which is what the brief spells out for it.
+    mix: [0.34, 0.3, 0.36],
     depth: [6, 30],
     props: [
       // In stretches, not as an unbroken wall the whole way — the brief is
@@ -538,6 +561,8 @@ export const LESSONS: readonly Lesson[] = [
     ],
     ground: [`${PLANTS}/Taro_Chembu`, `${PLANTS}/Kerala_Fern`],
     density: 2.4,
+    // "fewer tightly packed palms and more large mature trees", undergrowth retained.
+    mix: [0.32, 0.2, 0.48],
     depth: [8, 28],
     props: [
       { model: "ak-3d-pack/HouseMoss", at: 0.55, z: -22, h: 11, clear: 12 },
@@ -589,6 +614,8 @@ export const LESSONS: readonly Lesson[] = [
     ],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Taro_Chembu`],
     density: 1.6,
+    // "leave room between buildings for plants, gardens and side paths".
+    mix: [0.22, 0.28, 0.5],
     depth: [9, 26],
     props: [
       // The banyan is the social focus and the temple is glimpsed past its
@@ -655,6 +682,8 @@ export const LESSONS: readonly Lesson[] = [
     ],
     ground: [`${PLANTS}/Tapioca_Cassava`, `${PLANTS}/Kerala_Fern`],
     density: 2.9,
+    // Lesson 3 again but prosperous — the same orchard shape.
+    mix: [0.32, 0.28, 0.4],
     depth: [7, 30],
     props: [
       // A real run this time. Six segments end to end is the longest
@@ -708,6 +737,8 @@ export const LESSONS: readonly Lesson[] = [
     mid: [`${PLANTS}/Banana_Plant`, `${PLANTS}/Hibiscus_Chemparathi`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.4,
+    // "orchard remnants": what is left of a canopy, not a canopy.
+    mix: [0.2, 0.22, 0.58],
     depth: [9, 24],
     props: [
       { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.72, z: -16, h: 16 },
@@ -749,6 +780,8 @@ export const LESSONS: readonly Lesson[] = [
     mid: [`${PLANTS}/Arecanut_Palm`, `${PLANTS}/Hibiscus_Chemparathi`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.5,
+    // "a mixture of mature trees, open grass, scattered shrubs" — grass wins.
+    mix: [0.22, 0.18, 0.6],
     depth: [10, 28],
     props: [
       // Fragments, not a boundary: the wall is a leftover out here.
@@ -799,6 +832,8 @@ export const LESSONS: readonly Lesson[] = [
     mid: [`${PLANTS}/Hibiscus_Chemparathi`, `${PLANTS}/Drumstick_Muringa`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.0,
+    // "large areas of grass... a few scattered small trees or shade trees".
+    mix: [0.12, 0.16, 0.72],
     depth: [11, 30],
     props: [
       { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.58, z: -19, h: 16.5 },
@@ -826,6 +861,8 @@ export const LESSONS: readonly Lesson[] = [
     mid: [],
     ground: [`${PLANTS}/Kerala_Fern`, `${PLANTS}/Kerala_Grass_Tuft`],
     density: 1.2,
+    // "grass and ferns dominate... only sparse distant trees" — and no middle layer at all, which is why `mid` is empty.
+    mix: [0.08, 0.0, 0.92],
     depth: [12, 32],
     props: [
       { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.34, z: -17, h: 16 },

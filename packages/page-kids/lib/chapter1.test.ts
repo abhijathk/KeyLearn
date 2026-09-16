@@ -399,6 +399,50 @@ test("a calf is never drawn on its own", () => {
   isTrue(withCows.length >= 3, "too few lessons keep cattle");
 });
 
+/**
+ * Density alone cannot say what a lesson looks like: an orchard and a fern
+ * meadow can hold the same plants per unit of road and be nothing alike,
+ * because one lesson's are overhead and the other's underfoot.
+ */
+test("each lesson splits its planting between the layers", () => {
+  for (const l of LESSONS) {
+    const sum = l.mix.reduce((a, b) => a + b, 0);
+    isTrue(
+      Math.abs(sum - 1) < 1e-9,
+      `lesson ${l.n}: the mix sums to ${sum}, not 1`,
+    );
+    for (const w of l.mix) isTrue(w >= 0, `lesson ${l.n} has a negative share`);
+    // A layer with weight must have something to plant, and a layer with
+    // plants must have weight — either way round is a silently empty slot.
+    const layers = [l.canopy, l.mid, l.ground];
+    for (const [i, list] of layers.entries()) {
+      if (l.mix[i]! > 0) {
+        isTrue(list.length > 0, `lesson ${l.n} weights an empty layer ${i}`);
+      } else {
+        isTrue(list.length === 0, `lesson ${l.n} has plants it never draws`);
+      }
+    }
+  }
+});
+
+test("the chapter's shape reads off the table", () => {
+  const by = (n: number) => LESSONS[n - 1]!;
+  // The orchard is the richest vegetation in the chapter, and the estate
+  // recalls it.
+  const densest = Math.max(...LESSONS.map((l) => l.density));
+  equal(by(3).density, densest);
+  isTrue(
+    by(6).density > by(5).density,
+    "the estate is not thicker than the village",
+  );
+  // The pasture is simpler and more open than the grazing land before it.
+  isTrue(by(9).density < by(8).density, "the pasture is not more open");
+  // The open edge keeps tree density light; the meadow is ground cover.
+  isTrue(by(1).mix[0]! < by(3).mix[0]!, "the open edge has orchard canopy");
+  isTrue(by(10).mix[2]! > 0.85, "the fern meadow is not ground-dominant");
+  equal(by(10).mix[1], 0);
+});
+
 test("no single plant dominates a layer", () => {
   for (const l of LESSONS) {
     for (const [key, list] of [

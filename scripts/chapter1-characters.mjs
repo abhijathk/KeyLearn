@@ -82,6 +82,14 @@ const CAST = [
   { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" } },
   {
     name: "VillageBoy", ratio: 0.36,
+    // He has three idles and two transitions — IdleToWalk and WalkToIdle —
+    // and NO cycle between them, so he could not cover ground without
+    // skating. Abee's rig is the same rig: 97 bones, every name shared, no
+    // difference at all, because they came from the same source. So his walk
+    // and run transfer exactly, and the root rebase is a no-op because the
+    // rests are identical.
+    spliceFrom: "abee/Abee.glb",
+    splice: ["walk", "run"],
     src: "Villagers/Modern_village_boy_11 years old.glb",
     tex: 1024,
     // Twelve fight clips the kids app strips on load anyway. See the header.
@@ -316,14 +324,18 @@ for (const c of CAST) {
     // child is a different game. The kids app strips attack clips on load
     // anyway, so they would be downloaded and thrown away.
     if (c.splice != null) {
-      const buf = join(REPO, "root/public/kids-assets/models/ak-3d-pack/Buffalo.glb");
-      run("glb-decompress.mjs", [buf, step("buffalo.glb")]);
+      const donor = join(
+        REPO,
+        "root/public/kids-assets/models",
+        c.spliceFrom ?? "ak-3d-pack/Buffalo.glb",
+      );
+      run("glb-decompress.mjs", [donor, step("buffalo.glb")]);
       run("glb-splice-animations.mjs", [
         cur, step("buffalo.glb"), step("s0.glb"),
         ...c.splice.flatMap((t) => ["--take", t]),
       ]);
       cur = step("s0.glb");
-      console.log(`  took from the buffalo: ${c.splice.join(", ")}`);
+      console.log(`  took from ${c.spliceFrom ?? "the buffalo"}: ${c.splice.join(", ")}`);
       // AND REBASED ONTO THIS ANIMAL'S OWN BODY.
       //
       // The splice remaps by bone name, which is right for rotation — a
