@@ -9482,7 +9482,9 @@ export function createKidsWorld(
     // Thirty-eight units is a comfortable margin past a camera that sees
     // about thirty, so nobody is ever seen to be placed.
     for (const f of roadWalkers) {
-      const rw = f.wrap.userData.roadWalker as { dir: number } | undefined;
+      const rw = f.wrap.userData.roadWalker as
+        | { dir: number; speed: number }
+        | undefined;
       if (rw == null) {
         continue;
       }
@@ -9492,6 +9494,30 @@ export function createKidsWorld(
       f.wrap.position.set(from, surfaceY(from, z), z);
       f.wrap.visible = true;
       handledWalkers.add(f.wrap);
+      // AND THEY WALK HOME DIFFERENTLY. The gait was chosen once, when the
+      // world was built, from the clock — so a child who turned night on in
+      // the afternoon watched the headman stride home as briskly as he set
+      // out. It is chosen here instead, every time the hour turns, which is
+      // the moment it should change.
+      //
+      // Speed follows it: the limp and the unsteady walk are longer clips
+      // than the stride they replace, and a gait swapped without its speed
+      // is the treadmill all over again.
+      const nightClip = f.wrap.userData.nightWalkClip as
+        | THREE.AnimationClip
+        | undefined;
+      const gait =
+        nightNow && nightClip != null ? f.mixer.clipAction(nightClip) : f.walk;
+      if (gait != null && !gait.isRunning()) {
+        f.mixer.stopAllAction();
+        poseRest(f.wrap);
+        gait.reset();
+        gait.timeScale = 1;
+        gait.play();
+        rw.speed =
+          strideOf((f.wrap.userData.walkHeight as number) ?? 5.2) /
+          (gait.getClip().duration || 1);
+      }
     }
 
     let leaving = 0;
@@ -13373,7 +13399,18 @@ export function createKidsWorld(
       // animal can only route around a thing that is in the same place every
       // time it looks.
       if (CHAPTER != null) {
-        for (const p of placements(CHAPTER, perspective)) {
+        // NEAREST LESSON FIRST. The props are the visible half of a lesson —
+        // the well, the walls, the houses — so the ones the child opens
+        // among are placed before the ones nine lessons away, and the world
+        // is ready to look at that much sooner. They still all get built;
+        // the ordering only decides what is finished first.
+        const opensAt = lessonAt(resumeX, CHAPTER).n;
+        const queue = [...placements(CHAPTER, perspective)].sort(
+          (a, b) =>
+            Math.abs(lessonAt(a.x, CHAPTER).n - opensAt) -
+            Math.abs(lessonAt(b.x, CHAPTER).n - opensAt),
+        );
+        for (const p of queue) {
           if (lessonAt(p.x, CHAPTER).n === 5) {
             continue; // the village centre, already built
           }
@@ -13764,6 +13801,7 @@ export function createKidsWorld(
               // `rate` it covers them in duration/rate seconds. Anything
               // else is a treadmill in one direction or a skate in the other.
               const dur = gait.getClip().duration || 1;
+              f.wrap.userData.walkHeight = FOLK_HEIGHT[who] ?? 5.2 * FOOT;
               (f.wrap.userData.roadWalker as { speed: number }).speed =
                 (strideOf(FOLK_HEIGHT[who] ?? 5.2 * FOOT) / dur) * rate;
             }
@@ -14042,20 +14080,62 @@ export function createKidsWorld(
             }
           }
         }
-        // ── AND NOW BUILD THEM, ONE PASS PER SPECIES PER LESSON ────────
+        // ── AND NOW BUILD THEM: THIS LESSON FIRST, THE REST BEHIND ─────
+        //
+        // The child stands in one lesson and the chapter has ten. Building
+        // all of them before the world appears means nine lessons' worth of
+        // waiting for scenery nobody can see yet — and the one they ARE
+        // standing in is ready almost immediately.
+        //
+        // Every model is fetched first, in parallel and once each: that is
+        // network time, it overlaps, and `prop` caches, so asking for the
+        // whole chapter's plants costs about what asking for one lesson's
+        // did. What is expensive afterwards is CPU — composing a matrix per
+        // plant and uploading the instance buffers — and that is now
+        // synchronous, which is what lets it be handed to `later` and spread
+        // across frames at SLICE_MS a time instead of blocking one.
+        const needed = new Set<string>();
+        for (const byModel of wanted.values()) {
+          for (const model of byModel.keys()) needed.add(model);
+        }
+        await Promise.all([...needed].map((m) => prop(m)));
+
+        // Nearest first, working outwards. The child opens at `resumeX`, so
+        // that lesson and the one they are walking towards are built before
+        // anything else — and the far end of the chapter, which they will
+        // not reach this session, is built last.
+        const openAt = lessonAt(resumeX, CHAPTER).n;
+        const order = [...wanted.keys()].sort(
+          (a, b) => Math.abs(a - openAt) - Math.abs(b - openAt),
+        );
         let batches = 0;
-        for (const [lesson, byModel] of wanted) {
-          for (const [model, spots] of byModel) {
-            const src = await prop(model);
-            if (src == null) {
-              continue;
+        for (const lesson of order) {
+          const byModel = wanted.get(lesson)!;
+          const build = () => {
+            const into = lessonGroup(CHAPTER[lesson - 1]! + 0.5);
+            for (const [model, spots] of byModel) {
+              // From the cache, not awaited: everything was fetched above,
+              // and a deferred slice cannot wait for anything.
+              const src = propCache.get(model);
+              if (src == null) {
+                continue;
+              }
+              plantInstanced(into, src, spots);
+              batches++;
             }
-            plantInstanced(lessonGroup(CHAPTER[lesson - 1]! + 0.5), src, spots);
-            batches++;
+          };
+          // The lesson in play and its neighbours are what the first frame
+          // shows, so they are built now; everything else goes in the queue
+          // the tick drains.
+          if (Math.abs(lesson - openAt) <= 1) {
+            build();
+          } else {
+            later(build);
           }
         }
         console.info(
-          `[chapter] ${verge} along the verges, ${batches} batches in all`,
+          `[chapter] ${verge} along the verges;` +
+            ` ${batches} batches up front, the rest queued`,
         );
       }
 
