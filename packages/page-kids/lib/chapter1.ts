@@ -774,23 +774,41 @@ export const LESSONS: readonly Lesson[] = [
       // PLACEHOLDER — see the note above. Swap the model here when the real
       // one is ready; nothing else in the lesson depends on it.
       //
-      // Rebuilt from the 18.6 MB master rather than taken from the pack:
-      //   node scripts/village-prop.mjs \
-      //     "3D ASSETS/../characters 3d/3d elements/Village_Market.glb" \
+      // Built from the 25 MB master in two steps — the back thrown away
+      // first, then the rest reduced:
+      //
+      //   node scripts/glb-cull-back.mjs \
+      //     "3D ASSETS/Village assets/Market/Village_Market_Row_master.glb" \
+      //     /tmp/culled.glb
+      //   node scripts/village-prop.mjs /tmp/culled.glb \
       //     root/public/kids-assets/models/village-util/Village_Market.glb \
-      //     --tex 1536 --tris 7000 --sloppy
+      //     --tex 2048 --tris 7000 --sloppy
       //
-      // The master carries a 2048 baseColor and a 4096 metallic-roughness;
-      // the MR is ten of its megabytes and says "not metal, fairly rough",
-      // so it goes. That buys a 1536 texture — half again the detail of the
-      // pack copy — for 553 KB total.
+      // THE BACK IS CUT BEFORE ANYTHING ELSE, and the bytes are the small
+      // reason. This building is seen from a fixed orthographic camera
+      // yawed twelve degrees: it shows one face and a little of one end, for
+      // the life of the chapter. 27 per cent of its triangles point away
+      // from the road — and meshopt has no idea which side is which, so at a
+      // 7,000-triangle target it was spending about 1,800 of them on a wall
+      // nobody will ever see. Cut first, the whole budget goes on the face
+      // you look at.
       //
-      // `--sloppy` is what makes it affordable. The seam-aware simplifier
-      // stalls at 23,301 of 31,485 triangles on this mesh, because a baked
-      // prop is split at every UV seam and every seam is a border the
-      // collapser will not cross; the topology-blind one reaches 6,342 at
-      // under one per cent error. Wrong tool for a character, right tool for
-      // a building seen from across a field.
+      // The master also carries a 4096 metallic-roughness worth nine of its
+      // megabytes, to say "not metal, fairly rough" — two numbers. Dropping
+      // it pays for a 2048 baseColor, so the side that faces the road gets
+      // twice the texel density of the copy this replaces.
+      //
+      // `--sloppy` is what makes the reduction possible at all: the
+      // seam-aware simplifier stalls on a baked prop, because it is split at
+      // every UV seam and every seam is a border the collapser will not
+      // cross. The topology-blind one reaches 6,755 from 69,809 at 1.1 per
+      // cent error. Wrong tool for a character, right tool for a building
+      // seen from across a field.
+      //
+      // What is NOT kept is the master's normal map. Nothing here is lit
+      // sharply enough for it to show — the texture is a baked one and the
+      // prop is thirty units away — and it would cost more than the
+      // resolution bump that does show.
       // AT THE ROADSIDE, AND BIG. Set back at -17 and drawn 6 tall it was a
       // shed in a field; a village market is the one building that is not
       // set back, because trading happens off the road itself and a stall
