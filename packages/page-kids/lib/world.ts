@@ -6253,6 +6253,36 @@ export function createKidsWorld(
     const groundMix = land.mix ?? theme.groundMix;
     if (groundMix != null) {
       const mix = new Float32Array(pos.count * 4);
+      /**
+       * GROUND THAT IS WALKED ON RATHER THAN GROWN ON.
+       *
+       * A market has no grass in front of it. Hundreds of feet a week is
+       * what stops anything growing, so the earth outside a row of shops is
+       * the same bare laterite as the road — and the road already knows how
+       * to paint itself, so this simply extends it over the trading ground.
+       *
+       * Green right up to the shop fronts was the single thing making the
+       * market look dropped onto a lawn rather than built where people go.
+       *
+       * Taken from the chapter's own placements, so the yard follows the
+       * building: move the market and its bare ground moves with it, which
+       * is one fewer coordinate to keep in step by hand.
+       */
+      const yards =
+        CHAPTER == null
+          ? []
+          : placements(CHAPTER)
+              .filter((p) => /Market/i.test(p.model))
+              .map((p) => ({
+                x: p.x,
+                // Between the stalls and the road, not centred on the
+                // building: what is trodden is the ground people stand on
+                // to buy things.
+                z: p.z + 7,
+                // A little wider than the frontage, and shallow.
+                rx: (p.clear ?? 24) * 1.1,
+                rz: 11,
+              }));
       // Smoothstep, not a linear ramp. A straight ramp reaches its ends with a
       // sudden change of slope, and across a ground mesh whose vertices are two
       // units apart that corner is visible as a crease running the length of
@@ -6282,10 +6312,20 @@ export function createKidsWorld(
         const dryN = (noise2(x * 0.031 - 6.2, z * 0.037) + 1) / 2;
         const litter = ss(0.52, 0.8, damp) * (1 - road);
         const dry = ss(0.55, 0.84, dryN) * (1 - road) * (1 - litter);
-        const field = Math.max(0, 1 - road - litter - dry);
-        const sum = road + litter + dry + field || 1;
+        // The trading ground, worn to bare earth. Blended with a smoothstep
+        // like everything else here: a hard-edged patch of laterite would
+        // read as a rug thrown on the grass, and what this is meant to be is
+        // ground that simply stopped growing.
+        let worn2 = 0;
+        for (const y of yards) {
+          const d = Math.hypot((x - y.x) / y.rx, (z - y.z) / y.rz);
+          worn2 = Math.max(worn2, 1 - ss(0.55, 1, d));
+        }
+        const roadOrYard = Math.max(road, worn2);
+        const field = Math.max(0, 1 - roadOrYard - litter - dry);
+        const sum = roadOrYard + litter + dry + field || 1;
         mix[i * 4] = field / sum;
-        mix[i * 4 + 1] = road / sum;
+        mix[i * 4 + 1] = roadOrYard / sum;
         mix[i * 4 + 2] = litter / sum;
         mix[i * 4 + 3] = dry / sum;
       }
@@ -8985,6 +9025,24 @@ export function createKidsWorld(
    * towards and has to be standing there before they arrive rather than
    * appearing around them.
    */
+  /**
+   * WHAT IS BUILT IS NEVER HIDDEN.
+   *
+   * The lesson window was switching whole lessons off, and a lesson contains
+   * its buildings — so a house or the market went out as the child walked on,
+   * leaving bare ground where a landmark had been. That is the one thing
+   * scenery must not do: a building is what you navigate by, it is how a
+   * child knows which lesson they are in, and the market is the thing Lesson
+   * 7 is named after. Foliage is texture and may come and go unnoticed; a
+   * market may not.
+   *
+   * So the two are split. Structures go here and stay put — there are only a
+   * few dozen on the whole road and they are the cheapest thing on it once
+   * the planting is instanced. The planting keeps its window, because that
+   * is where the thousands are and where the saving actually was.
+   */
+  const builtGroup = new THREE.Group();
+
   const lessonGroups: THREE.Group[] = [];
   /** Which lesson's scene is up. -1 until the first one is asked for. */
   let shownLesson = -1;
@@ -9018,6 +9076,7 @@ export function createKidsWorld(
    * lesson has not changed and the lesson does not change while a child
    * stands at the start of it. The whole road came up empty.
    */
+  scene.add(builtGroup);
   const lessonGroup = (x: number): THREE.Group => {
     const n = CHAPTER != null ? lessonAt(x, CHAPTER).n : 1;
     while (lessonGroups.length < n) {
@@ -13416,7 +13475,8 @@ export function createKidsWorld(
           }
           const w = await stand(p.model, p.x, p.z, p.h, p.turn ?? 0);
           if (w != null) {
-            lessonGroup(p.x).add(w);
+            // A structure, so it stays: see `builtGroup`.
+            builtGroup.add(w);
             if ((p.clear ?? 0) > 0) {
               blockers.push({ x: p.x, z: p.z, r: p.clear! });
             }
@@ -13450,7 +13510,7 @@ export function createKidsWorld(
               );
               gw.position.set(sx, surfaceY(sx, sz) - 0.05, sz);
               gw.rotation.y = hashRange(p.x, k, 84, 0, Math.PI * 2);
-              lessonGroup(p.x).add(gw);
+              builtGroup.add(gw);
               characterRoots.add(gw);
             }
           }
@@ -13548,7 +13608,7 @@ export function createKidsWorld(
             // block, which put the whole herd outside the groups and showed
             // every animal in every lesson at once.
             const beast = wilds[wilds.length - 1]?.wrap;
-            if (beast != null) lessonGroup(spot.x).add(beast);
+            if (beast != null) builtGroup.add(beast);
             blockers.push({
               x: spot.x,
               z: spot.z,
@@ -13579,7 +13639,7 @@ export function createKidsWorld(
                   WILD_HEIGHT.Cow_Calf!,
                 );
                 const c = wilds[wilds.length - 1]?.wrap;
-                if (c != null) lessonGroup(near.x).add(c);
+                if (c != null) builtGroup.add(c);
                 blockers.push({ x: near.x, z: near.z, r: 2 });
                 grazing++;
               }
@@ -13666,7 +13726,7 @@ export function createKidsWorld(
               false,
             );
             const villager = friends[friends.length - 1]?.wrap;
-            if (villager != null) lessonGroup(spot.x).add(villager);
+            if (villager != null) builtGroup.add(villager);
             blockers.push({ x: spot.x, z: spot.z, r: 2.2 });
             folk++;
           }
@@ -14219,7 +14279,7 @@ export function createKidsWorld(
             );
             w.userData.nightOnly = true;
             w.visible = nightNow;
-            lessonGroup(tx).add(w);
+            builtGroup.add(w);
             characterRoots.add(w);
             traces++;
           }

@@ -851,8 +851,21 @@ export const LESSONS: readonly Lesson[] = [
       // seeding inside the end stalls, because the blocker simply did not
       // reach them. 30 covers the frontage and a margin, which is also the
       // trading ground a market needs in front of it.
-      { model: `${UTIL}/Village_Market`, at: 0.46, z: -12, h: 13, clear: 30 },
-      { model: `${UTIL}/Village_Well`, at: 0.46, z: -12, h: 2.2, clear: 4 },
+      // 0.6, NOT 0.46. A 55-unit frontage centred at 0.46 has its left end
+      // back at about 0.1 of the segment — which is where the bamboo stands,
+      // so the market was growing out of the grove that is supposed to frame
+      // it. The centre has to clear the bamboo by HALF THE BUILDING, not by
+      // a comfortable-looking gap, and that is what the extra distance buys.
+      //
+      // 14 rather than 13: a 60-unit frontage. The market is the largest
+      // thing on this road by a good margin now, which is the point of it.
+      { model: `${UTIL}/Village_Market`, at: 0.6, z: -12, h: 14, clear: 32 },
+      // BETWEEN THE BAMBOO AND THE MARKET, which is where a village well
+      // belongs on a trade road: the traders draw from it and so does
+      // anyone walking in, so it sits on the way rather than behind the
+      // stalls. It also gives the stretch between the gate and the shops
+      // something to be, rather than being the gap before the market.
+      { model: `${UTIL}/Village_Well`, at: 0.3, z: -12, h: 2.2, clear: 4 },
       {
         model: `${UTIL}/Village_Cart`,
         at: 0.56,
