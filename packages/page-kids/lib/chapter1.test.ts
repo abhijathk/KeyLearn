@@ -24,6 +24,7 @@ import {
   SEGMENT_COUNT,
   segmentLen,
   tiredWalkAt,
+  villageDay,
 } from "./chapter1.ts";
 import { RUN_LEN, runLengthFor } from "./run-length.ts";
 
@@ -648,6 +649,63 @@ test("nobody limps or staggers in the working day", () => {
   }
   for (const h of [18, 20, 23, 0, 2, 3]) {
     isTrue(tiredWalkAt(h), `${h}:00 is late enough`);
+  }
+});
+
+/**
+ * THE SUN DECIDES WHAT IS LIT; THE BRIEF DECIDES WHO IS OUT.
+ *
+ * Two clocks, and having them as one is what put a lamp in a shop window at
+ * ten in the morning — ten is not past any closing hour, which is true and
+ * beside the point, because nobody lights a lamp in daylight.
+ */
+// Kerala, near enough: the sun is up from about ten past six to half six.
+const RISE = 6.2;
+const SET = 18.4;
+const at = (h: number) => villageDay(h, RISE, SET);
+
+test("no lamp burns in daylight, however open the shop", () => {
+  for (const h of [7, 9, 10, 12, 15, 17]) {
+    isTrue(at(h).trading(21), `${h}:00 the shop is open`);
+    isTrue(!at(h).lampLit(21), `${h}:00 a lamp is burning in daylight`);
+  }
+});
+
+test("a lamp needs the shop open AND the dark", () => {
+  // Dark and trading: lit.
+  isTrue(at(19).lampLit(21), "19:00 an open shop after sunset is unlit");
+  // Dark, but this one has shut: out.
+  isTrue(!at(19).lampLit(19), "19:00 a shut shop is still lit");
+  // Dark, but nothing trades before six.
+  isTrue(at(5).dark, "05:00 should be dark");
+  isTrue(!at(5).lampLit(21), "05:00 a shop is lit before it opens");
+  // And the small hours are dark and shut.
+  isTrue(!at(1).lampLit(21), "01:00 a shop is lit");
+});
+
+test("the row goes out shop by shop, not all at once", () => {
+  // The tailor at seven, the tea stall at eight, the rest at nine.
+  const lit = (h: number) =>
+    [21, 20, 21, 21, 19].filter((c) => at(h).lampLit(c)).length;
+  equal(lit(18.5), 5);
+  equal(lit(19.5), 4);
+  equal(lit(20.5), 3);
+  equal(lit(21.5), 0);
+});
+
+test("dark follows the sun, not a round number", () => {
+  isTrue(at(RISE - 1).dark, "before sunrise should be dark");
+  isTrue(!at(12).dark, "noon should not be dark");
+  isTrue(at(SET + 0.5).dark, "after sunset should be dark");
+  // A shade either side, so the row does not switch on in one frame.
+  isTrue(at(SET - 0.5).dark, "lamps come on a little before sunset");
+});
+
+test("the day's rules agree with the pieces they came from", () => {
+  for (let h = 0; h < 24; h++) {
+    equal(at(h).activity, activityAt(h));
+    equal(at(h).children, childrenOut(h));
+    equal(at(h).tired, tiredWalkAt(h));
   }
 });
 

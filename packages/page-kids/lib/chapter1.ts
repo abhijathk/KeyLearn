@@ -230,6 +230,74 @@ export function tiredWalkAt(hour: number): boolean {
   return h >= 18 || h < 4;
 }
 
+/**
+ * A DAY IN THE VILLAGE, ALL OF IT, IN ONE PLACE.
+ *
+ * This replaces a handful of separate rules that grew one at a time and
+ * disagreed with each other. Writing them out together makes the mistake
+ * behind most of them obvious:
+ *
+ *   THE SUN DECIDES WHAT IS LIT. THE BRIEF DECIDES WHO IS OUT.
+ *
+ * They are two different clocks and I had them as one. A lamp was burning at
+ * ten in the morning because ten is not past any shop's closing hour — which
+ * is true and irrelevant, since nobody lights a lamp in daylight. Opening
+ * hours say whether a shop is TRADING; the sun says whether it needs a lamp
+ * to trade by. A shop is lit only when both are true.
+ *
+ * `rise` and `set` come from the world's own solar model rather than from a
+ * hardcoded six and eighteen — over Kerala the sun is up from about ten past
+ * six to about half past six, and those few minutes are exactly the ones a
+ * guess gets wrong.
+ *
+ * The people keep the brief's windows, which are clock hours because that is
+ * how the document states them and because human habits follow the clock
+ * rather than the sun: a market closes at nine whatever the season.
+ */
+export type VillageDay = {
+  /** Is it dark enough that a lamp would be lit? */
+  readonly dark: boolean;
+  readonly activity: Activity;
+  /** Are the village children outside? */
+  readonly children: boolean;
+  /** Are the end-of-day gaits — the limp, the unsteady walk — in season? */
+  readonly tired: boolean;
+  /** Is a shop with this closing hour trading? */
+  readonly trading: (closes: number) => boolean;
+  /** Is its lamp burning? Trading AND dark, never one alone. */
+  readonly lampLit: (closes: number) => boolean;
+};
+
+/** When the shutters go up. Nothing in this village trades before six. */
+export const SHOPS_OPEN = 6;
+
+export function villageDay(
+  hour: number,
+  rise: number,
+  set: number,
+): VillageDay {
+  const h = ((hour % 24) + 24) % 24;
+  // A shade before sunset and a shade after sunrise: lamps are lit while
+  // there is still some light in the sky and put out once there is enough,
+  // which is what anybody does. Lighting them exactly at sunset makes the
+  // whole row come on in one frame.
+  // Half an hour before sunset and a shade after sunrise. Lamps go up while
+  // there is still light in the sky — anybody closing a shop lights one
+  // before they need it, not at the moment they do — and go out once there
+  // is enough to work by. Lighting them exactly at sunset brings the whole
+  // row on in a single frame, which is the one thing that reads as a switch.
+  const dark = h < rise + 0.2 || h >= set - 0.5;
+  const trading = (closes: number) => h >= SHOPS_OPEN && h < closes;
+  return {
+    dark,
+    activity: activityAt(h),
+    children: childrenOut(h),
+    tired: tiredWalkAt(h),
+    trading,
+    lampLit: (closes: number) => trading(closes) && dark,
+  };
+}
+
 /** Which of the cast are children, by model name. */
 export function isChild(model: string): boolean {
   return model === "VillageBoy";

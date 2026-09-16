@@ -23,6 +23,7 @@ import {
   placements,
   SEGMENT_COUNT,
   tiredWalkAt,
+  villageDay,
 } from "./chapter1.ts";
 import {
   attachTint,
@@ -3605,6 +3606,20 @@ export function createKidsWorld(
   const worldHour = (): number => {
     const staged = stagedHours();
     return nightNow ? staged.night : staged.day;
+  };
+
+  /**
+   * THE WHOLE VILLAGE DAY, at the hour the world is actually showing.
+   *
+   * One call rather than five separate questions about the time, and it
+   * carries the world's own sunrise and sunset into the answer — which is
+   * what tells a lamp whether it is needed at all. See `villageDay`: the sun
+   * decides what is LIT and the brief decides who is OUT, and those are not
+   * the same clock.
+   */
+  const village = () => {
+    const { rise, set } = daylightWindow();
+    return villageDay(worldHour(), rise, set);
   };
   const nightStyle: NightStyle = opts.nightStyle ?? "full";
   const villageDue = opts.villageDue ?? false;
@@ -14232,6 +14247,23 @@ export function createKidsWorld(
             // road at six in the morning or nine at night — and the rest
             // keep the day. The children's curfew is stricter still and is
             // applied on top.
+            // WHERE THIS ONE WALKS. Traffic is not spread evenly down a
+            // country road: it clusters where people are going — the village
+            // centre and the market — and out on the orchard and pasture
+            // stretches you meet somebody occasionally, not continually.
+            //
+            // Each walker gets a beat centred on one of the two busy
+            // lessons, and turns at its ends. Four people sharing two
+            // centres means the village and the market always have somebody
+            // about, and Lessons 1, 3, 9 and 10 get whoever has walked out
+            // that far — which is the right frequency for open country.
+            const hub = i % 2 === 0 ? 5 : 7;
+            const hubX =
+              CHAPTER[hub - 1]! + (CHAPTER[hub]! - CHAPTER[hub - 1]!) * 0.5;
+            f.wrap.userData.beat = [
+              Math.max(8, hubX - 52),
+              Math.min(TRAIL_END - 8, hubX + 52),
+            ];
             f.wrap.userData.shift = i < 2 ? [4, 22] : [7, 19];
             f.wrap.userData.isChild = isChild(who);
             f.wrap.userData.roadWalker = {
@@ -16541,14 +16573,18 @@ export function createKidsWorld(
           }
         }
         // WHAT HOUR IT IS, once per frame rather than once per lamp.
-        const hourNow = worldHour();
+        const today = village();
         for (const L of lamps) {
           // A SHUT SHOP HAS NO LIGHT IN IT, and it works this out every
           // frame. The alternative — deciding at build time which shops are
           // open — froze the row at whatever hour the child arrived: switch
           // to night at five in the afternoon and the whole market was lit,
           // because at five nothing was shut yet and nothing asked again.
-          if (L.closes != null && (hourNow >= L.closes || hourNow < 4)) {
+          // NOT TRADING, OR NOT DARK — either one puts a lamp out. This
+          // tested the closing hour alone, so a shop lamp burned at ten in
+          // the morning: ten is not past nine, which is true and beside the
+          // point, because nobody lights a lamp in daylight.
+          if (L.closes != null && !today.lampLit(L.closes)) {
             L.mat.opacity = 0;
             if (L.light != null) L.light.intensity = 0;
             continue;
@@ -16688,7 +16724,11 @@ export function createKidsWorld(
           continue;
         }
         const nx = f.wrap.position.x + rw.dir * rw.speed * dt * motionScale;
-        if (nx < 6 || nx > TRAIL_END - 6) {
+        const beat = (f.wrap.userData.beat as [number, number]) ?? [
+          6,
+          TRAIL_END - 6,
+        ];
+        if (nx < beat[0] || nx > beat[1]) {
           rw.dir *= -1;
           f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
           continue;
@@ -19388,6 +19428,8 @@ export function createKidsWorld(
         fixedFace?: boolean;
         /** The hours this road walker is out, [from, to). */
         shift?: [number, number];
+        /** The stretch of road this walker keeps to, [from, to]. */
+        beat?: [number, number];
         /** Which lesson's folk list this villager belongs to. */
         folkOf?: number;
         /** Their place in it: the lower the rank, the later they stay out. */
