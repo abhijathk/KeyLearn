@@ -2795,7 +2795,13 @@ export const VILLAGE_THEME: WorldTheme = {
       // from the ratio rather than guessed: at the 0.85 it was written for
       // it would have been 3.6 across, narrower than the tree's own root
       // flare, and the banyan would have stood on a doorstep.
-      { model: "village-stone/Stone_Althara", dx: -13, dz: -16, h: 2.0 },
+      // 2.6, which at this model's 4.23:1 is 11 units across. The banyan's
+      // canopy spreads 35 and its root flare is wide in proportion — at 8.5
+      // the platform was a step round the trunk rather than the place a
+      // village sits, which is what an althara IS. It is furniture as much
+      // as architecture: people sit on it all afternoon in the shade, and it
+      // has to be big enough that they plainly could.
+      { model: "village-stone/Stone_Althara", dx: -13, dz: -16, h: 2.6 },
       // BIGGER, AND UP ON THE STONE. 24 against 18 — its canopy spreads 35
       // units now against 26, which is what makes it the thing the village
       // is arranged around rather than a large tree. `lift` puts its base on
@@ -2805,7 +2811,9 @@ export const VILLAGE_THEME: WorldTheme = {
         dx: -13,
         dz: -16,
         h: 24,
-        lift: 2.0,
+        // Its base rides on the platform's top, so this follows the height
+        // above rather than being a number of its own.
+        lift: 2.6,
       },
       // The VAZHIVILAKKU are not here. They belong to the ROAD, not to the
       // village — and they are no longer even their own object: the lamp head
@@ -3159,6 +3167,22 @@ const groundNoise = (x: number, z: number) =>
  * written as a literal in the geometry because the village has to be able to
  * ask where the edge is before it puts a building down.
  */
+/**
+ * Where the village's own three houses stand, as offsets from its centre.
+ *
+ * At module level because TWO things need them and they are built at
+ * different times: the village places the houses, and the GROUND — painted
+ * long before the village exists — has to put a worn yard in front of each
+ * one. A house whose position only the village knows cannot have anything
+ * placed in front of it.
+ */
+const VILLAGE_HOUSE_SPOTS: readonly (readonly [number, number])[] = [
+  [-46, -24], // nearest the road
+  [50, -31], // well back behind the others
+  [-28, -28], // and one more set back, still behind
+  [72, -26],
+];
+
 const GROUND_DEPTH = 76;
 const GROUND_BACK = -GROUND_DEPTH / 2;
 
@@ -6292,6 +6316,29 @@ export function createKidsWorld(
               rx: 15,
               rz: 9,
             },
+            // EVERY HOUSE HAS A SWEPT YARD. A Kerala house is not set in
+            // grass — the ground in front of it is beaten earth, swept every
+            // morning, and worn bare by the traffic of people living there.
+            // It is smaller and softer than the market's: a household's worth
+            // of feet rather than a village's, so the grass holds on nearer
+            // the edges.
+            //
+            // The village's three are derived here from the same numbers the
+            // village places them with, which is why their jitter had to stop
+            // being random.
+            ...VILLAGE_HOUSE_SPOTS.map(([ox, oz]) => ({
+              x:
+                CHAPTER[4]! +
+                (CHAPTER[5]! - CHAPTER[4]!) * 0.33 +
+                ox +
+                hashRange(ox, oz, 120, -2.5, 2.5),
+              z: oz + hashRange(ox, oz, 121, -1.5, 1.5) + 9,
+              rx: 13,
+              rz: 7.5,
+            })),
+            ...placements(CHAPTER)
+              .filter((p) => /House/i.test(p.model))
+              .map((p) => ({ x: p.x, z: p.z + 9, rx: 13, rz: 7.5 })),
             ...placements(CHAPTER)
               .filter((p) => /Market/i.test(p.model))
               .map((p) => ({
@@ -13884,22 +13931,26 @@ export function createKidsWorld(
       // and `perspective()` in `stand` still takes the far ones down to
       // about seven units against eleven at the verge, so they read as
       // further away rather than merely being further away.
-      const spots: readonly (readonly [number, number])[] = [
-        [-46, -24], // nearest the road
-        [50, -31], // well back behind the others
-        [-28, -28], // and one more set back, still behind
-        [72, -26],
-      ];
+      const spots = VILLAGE_HOUSE_SPOTS;
       for (let i = 0; i < Math.min(3, pool.length); i++) {
         const [ox, oz] = spots[i];
+        // HASHED, NOT ROLLED. The jitter was `Math.random`, which is fine
+        // for a house and fatal for the bare YARD that now has to go in
+        // front of one: the ground is painted before the village is built,
+        // so the yard can only find the house if the house's position can be
+        // worked out twice and come to the same answer. Same reasoning as
+        // the whole chapter — a thing has to stand still before anything
+        // else can be placed relative to it.
+        const hx = vx + ox + hashRange(ox, oz, 120, -2.5, 2.5);
+        const hz = oz + hashRange(ox, oz, 121, -1.5, 1.5);
         const w = await stand(
           pool[i % pool.length],
-          vx + ox + (Math.random() - 0.5) * 5,
-          oz + (Math.random() - 0.5) * 3,
+          hx,
+          hz,
           V.houseHeight,
           // No `oz > 0` half-turn any more: nothing stands on the near side,
           // so every house already faces the road it fronts.
-          (Math.random() - 0.5) * 0.7,
+          hashRange(ox, oz, 122, -0.35, 0.35),
         );
         // THEN CHECKED AGAINST THE FLOOR IT IS ACTUALLY STANDING ON.
         //
@@ -16857,7 +16908,7 @@ export function createKidsWorld(
           continue;
         }
         const rw = f.wrap.userData.roadWalker as
-          | { dir: number; speed: number; side: number }
+          | { dir: number; speed: number; side: number; wait?: number }
           | undefined;
         if (rw == null) {
           continue;
