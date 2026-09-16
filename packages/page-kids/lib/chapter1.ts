@@ -1362,13 +1362,30 @@ export function placements(
       // than the oldest, which is correct: it is a shorter lesson, and a
       // wall that fits the field it encloses is the point of it.
       const end = from + len;
+      const panel = p.run.aspect * p.h * persp(p.z);
+      // AND THE LEADING EDGE STARTS INSIDE. Lesson 6's boundary is written
+      // at the very top of its segment, so its first panel reached back
+      // across the stone into Lesson 5 — the same half-panel error at the
+      // other end of the run. The run is nudged forward rather than having
+      // its first panel dropped: a boundary missing its first section is a
+      // second gateway, and the run already has the one it means to have.
+      const start = Math.max(x0, from + panel / 2);
       for (let i = 0; i < p.run.count; i++) {
+        const x = start + i * panel;
+        // THE TRAILING EDGE STOPS, NOT THE CENTRE.
+        //
+        // Tested on `x` alone, the last panel of a run straddled the stone:
+        // Lesson 2's wall ran to 46.7 with the lesson ending at 44.4, and
+        // Lesson 3's bamboo fence began at 46.1 — a laterite wall and a
+        // bamboo fence occupying the same few units of road, at two
+        // different depths, which reads as two boundaries round one field
+        // rather than as the edge of two. Half a panel is the whole error
+        // and the milestone is exactly where it is most visible.
+        if (x + panel / 2 > end) {
+          break;
+        }
         if (i === p.run.gapAt) {
           continue; // the way in
-        }
-        const x = x0 + i * (p.run.aspect * p.h * persp(p.z));
-        if (x >= end) {
-          break;
         }
         out.push({ ...p, run: undefined, x });
       }

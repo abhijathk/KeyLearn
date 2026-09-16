@@ -9318,6 +9318,25 @@ export function createKidsWorld(
   const blockers: { x: number; z: number; r: number }[] = [];
 
   /**
+   * THE BOUNDARIES, PANEL BY PANEL.
+   *
+   * A laterite wall and a bamboo fence are not obstacles to walk around —
+   * they are the edge of somebody's land, and an animal that strolls through
+   * one tells a child the wall is a painting. `blockers` cannot say this: it
+   * is a list of circles used at BUILD time to stop two things being placed
+   * in the same spot, and a wall is a line, not a circle.
+   *
+   * Each panel records its own measured footprint rather than a nominal
+   * width, so the barrier is exactly as long as the thing that was drawn.
+   * The panels come from `placements`, which expands a run and SKIPS
+   * `gapAt` — so the opening is simply a stretch of boundary with no panel
+   * in it, and needs no special case at all. The way in is the way in
+   * because nothing was built there.
+   */
+  const fences: { x0: number; x1: number; z: number }[] = [];
+  const BOUNDARY = /fence|wall|laterite/i;
+
+  /**
    * ONE GROUP PER LESSON, and only the lesson in play is in the scene.
    *
    * A chapter is up to 640 units of authored road and a child stands in 26
@@ -10440,6 +10459,52 @@ export function createKidsWorld(
    */
   const wildGroundY = (x: number, z: number) =>
     terrainY(x, z) - 0.06 + WILD_LIFT;
+
+  /**
+   * Keep an animal on its own side of a boundary.
+   *
+   * A wall is crossed the moment the step from `fromZ` to `toZ` passes the
+   * panel's line while the animal is within the panel's own x span. Both
+   * halves matter: without the span an animal would be stopped by a wall
+   * fifty units down the road, and without the crossing test one walking
+   * parallel to a fence would be shoved away from it.
+   *
+   * THE OPENING NEEDS NO CODE. `placements` leaves `gapAt` unbuilt, so the
+   * way in is a stretch with no panel in it and the loop below simply finds
+   * nothing to stop at — an animal can only come through where the fence
+   * itself is missing, which is what a gate is.
+   *
+   * It stops rather than slides along: a buffalo that noses into a wall and
+   * stands there is what actually happens, and the wander picks a fresh
+   * target within a few seconds anyway.
+   */
+  /** Said once, the first time a boundary actually turns an animal back. */
+  let fenceHeld = false;
+  const fenceLimit = (
+    fromZ: number,
+    toZ: number,
+    x: number,
+    r: number,
+  ): number => {
+    for (const f of fences) {
+      if (x < f.x0 - r || x > f.x1 + r) {
+        continue;
+      }
+      const near = f.z + (fromZ >= f.z ? r : -r);
+      // Already on one side; do not let this step put it on the other, and
+      // do not let it press into the panel's own thickness either.
+      if (fromZ >= f.z ? toZ < near : toZ > near) {
+        if (!fenceHeld) {
+          fenceHeld = true;
+          console.info(
+            `[chapter] boundaries are solid — ${fences.length} panel(s) held`,
+          );
+        }
+        return near;
+      }
+    }
+    return toZ;
+  };
 
   /** Shortest signed angle from a to b. */
   const angTo = (a: number, b: number) => {
@@ -12423,6 +12488,21 @@ export function createKidsWorld(
     let firstWild = true;
     for (const spot of theme.herd) {
       const model = spot.model === "$friend" ? land.friend : spot.model;
+      // THE CHAPTER OWNS THE ANIMALS WHEN THERE IS A CHAPTER.
+      //
+      // This list predates Chapter 1 and pins three buffalo at x=34, 118 and
+      // 206 whatever else is on the road — so a lesson that also asked for
+      // one got two, and the "one buffalo to a lesson" rule was being kept
+      // scrupulously by a piece of code that was not the only one placing
+      // buffalo. Two sources, one rule, and the rule only applied to one of
+      // them.
+      //
+      // Only the WILD entries drop out. Abee is in this same list without
+      // `wild`, standing where the opening frame needs him, and he has
+      // nothing to do with the herd.
+      if (spot.wild === true && CHAPTER != null) {
+        continue;
+      }
       if (spot.wild === true) {
         // `?wild` drags the first one into view of the start; see wildReview.
         const near = wildReview && firstWild;
@@ -14099,6 +14179,15 @@ export function createKidsWorld(
             builtGroup.add(w);
             if ((p.clear ?? 0) > 0) {
               blockers.push({ x: p.x, z: p.z, r: p.clear! });
+            }
+            // MEASURED, NOT ASSUMED. The run's nominal spacing is the number
+            // the panels were LAID OUT on; what they actually occupy depends
+            // on the model's own proportions and on the depth scaling, and a
+            // barrier half a unit short of the thing you can see is a gap an
+            // animal walks through in full view of the fence.
+            if (BOUNDARY.test(p.model)) {
+              const b = measureBox(w);
+              fences.push({ x0: b.min.x, x1: b.max.x, z: p.z });
             }
           }
           // AND WHAT GROWS AT ITS FOOT. Nothing is mown along the base of a
@@ -19249,7 +19338,12 @@ export function createKidsWorld(
         // makes it break off into its bluff there, on its feet, with the
         // turn-and-toss it would have played anyway.
         const nx = stoneLimitX(pos.x, pos.x + (dx / d) * move, pos.z);
-        const nz = limit(nx, pos.z + (dz / d) * move);
+        const nz = fenceLimit(
+          pos.z,
+          limit(nx, pos.z + (dz / d) * move),
+          nx,
+          w.halfWid,
+        );
         pos.set(nx, wildGroundY(nx, nz), nz);
         // NO STEERING WHILE WALKING. Every state that moves already checks
         // its heading and hands off to a turn clip before it takes a step —
