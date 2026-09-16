@@ -162,6 +162,43 @@ export function hashPick<T>(
   ]!;
 }
 
+/**
+ * WHAT HOUR IT IS, in the only three flavours this chapter has.
+ *
+ * "Do not create separate day/night geometry variants; instead, create
+ * activity-state variants." The scene is one scene — the same house, the
+ * same wall, the same well at noon, at eight, and at two in the morning —
+ * and what changes is who is out in it. A child standing at Milestone 5 at
+ * any hour has to be visibly in the same place.
+ *
+ * The windows are the brief's own: village life by day, a settlement winding
+ * down between seven and nine, and deep night from ten until four, which is
+ * also the only window the Kuttichathan corridor is awake in.
+ */
+export type Activity = "day" | "evening" | "deep";
+
+export function activityAt(hour: number): Activity {
+  const h = ((hour % 24) + 24) % 24;
+  if (h >= 22 || h < 4) return "deep";
+  if (h >= 19) return "evening";
+  return "day";
+}
+
+/**
+ * How many of a lesson's people are still outside at this hour.
+ *
+ * Day is everyone the lesson names. Evening is almost nobody: the brief
+ * leaves a few outside at the village centre and the closing market and
+ * sends everyone else indoors, which is what "winding down" has to mean if
+ * it is to differ from day at all. Deep night is nobody — an empty road at
+ * two in the morning is the whole reason the corridor is frightening.
+ */
+export function folkOut(l: Lesson, a: Activity): number {
+  if (a === "day") return l.folk.length;
+  if (a === "evening") return l.n === 5 || l.n === 7 ? 1 : 0;
+  return 0;
+}
+
 /** A prop standing in a fixed place, for the whole life of the chapter. */
 export type Placed = {
   /** Model path under `models/`, without the .glb. */
@@ -212,6 +249,21 @@ export type Lesson = {
    * is authored now so there is somewhere for it to arrive.
    */
   readonly corridor: boolean;
+  /**
+   * How much is left behind, and WHERE IN THE SEGMENT.
+   *
+   * The corridor does not switch on at Milestone 4 and off at Milestone 7 —
+   * the brief builds up to it and lets it fall away. Lesson 4 is a threshold
+   * and gets one faint thing near its END; 5, 6 and 7 are the corridor
+   * proper; Lesson 8 gets a single leftover near its START and then nothing
+   * for the rest of the chapter. That shape is the difference between a
+   * haunted stretch of road and a flag on three lessons.
+   */
+  readonly trace?: {
+    readonly count: number;
+    /** Where in the segment the traces may fall, as fractions. */
+    readonly span: readonly [number, number];
+  };
 };
 
 const PLANTS = "village-plants";
@@ -314,6 +366,18 @@ export const LESSONS: readonly Lesson[] = [
       { model: `${UTIL}/Bamboo_Fence`, at: 0.26, z: -8, h: 2.4, clear: 5 },
       { model: `${UTIL}/Bamboo_Fence`, at: 0.68, z: -8.5, h: 2.4, clear: 5 },
       { model: `${UTIL}/Washing_Stone`, at: 0.52, z: -12, h: 0.5, clear: 2 },
+      // A FOOTPATH INTO THE PROPERTY, in stepping stones. There is no path
+      // asset and painting one into the terrain would fight the road, but a
+      // line of stones going back off the verge is how a Kerala smallholding
+      // is actually entered — and it reads as somebody's way in rather than
+      // as scattered rock because it is straight.
+      { model: "village-stone/Stepping_Stone", at: 0.44, z: -8, h: 0.24 },
+      { model: "village-stone/Stepping_Stone", at: 0.45, z: -10.5, h: 0.24 },
+      { model: "village-stone/Stepping_Stone", at: 0.46, z: -13, h: 0.24 },
+      { model: "village-stone/Stepping_Stone", at: 0.47, z: -15.5, h: 0.24 },
+      // Leaf litter and fallen fronds, which is what an orchard floor IS.
+      { model: "village-stone/River_Stone", at: 0.62, z: -9.5, h: 0.2 },
+      { model: "village-stone/Mossy_Stone", at: 0.34, z: -11, h: 0.35 },
     ],
     herd: [],
     folk: ["village-folk/FarmerWoman"],
@@ -352,8 +416,10 @@ export const LESSONS: readonly Lesson[] = [
     ],
     herd: ["village-folk/Cow"],
     folk: ["village-folk/FarmerWoman"],
-    // The threshold. Foreshadowing only, near the far end.
+    // THE THRESHOLD. Not the corridor — but one faint thing near the far
+    // end, so Lesson 5 is arrived at rather than switched on.
     corridor: false,
+    trace: { count: 1, span: [0.82, 0.96] },
   },
   {
     n: 5,
@@ -396,6 +462,7 @@ export const LESSONS: readonly Lesson[] = [
     herd: [],
     folk: ["village-folk/Headman", "village-folk/VillageBoy"],
     corridor: true,
+    trace: { count: 3, span: [0.15, 0.9] },
   },
   {
     n: 6,
@@ -437,6 +504,7 @@ export const LESSONS: readonly Lesson[] = [
     herd: [],
     folk: ["village-folk/Headman"],
     corridor: true,
+    trace: { count: 3, span: [0.12, 0.92] },
   },
   {
     n: 7,
@@ -474,6 +542,8 @@ export const LESSONS: readonly Lesson[] = [
     herd: [],
     folk: ["village-folk/TeaStall", "village-folk/Headman"],
     corridor: true,
+    // The strongest in the chapter.
+    trace: { count: 4, span: [0.1, 0.94] },
   },
   {
     n: 8,
@@ -484,7 +554,10 @@ export const LESSONS: readonly Lesson[] = [
     // is still land that belongs to a village economy, but the sightlines
     // come back after the market.
     canopy: [`${PLANTS}/Palmyra_Karimpana`, `${PLANTS}/Mango_Tree`],
-    mid: [`${PLANTS}/Hibiscus_Chemparathi`],
+    // "Small palms", which the arecanut is — slender and short beside the
+    // palmyra, and the difference between the two reads as grazing land
+    // rather than plantation.
+    mid: [`${PLANTS}/Arecanut_Palm`, `${PLANTS}/Hibiscus_Chemparathi`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.5,
     depth: [10, 28],
@@ -502,6 +575,10 @@ export const LESSONS: readonly Lesson[] = [
     herd: ["ak-3d-pack/Buffalo", "village-folk/Cow", "village-folk/Cow_Calf"],
     folk: [],
     corridor: false,
+    // One leftover suggestion near the start, then nothing for the rest of
+    // the chapter. It is what makes the corridor read as something the road
+    // came OUT of rather than a zone that ended at a stone.
+    trace: { count: 1, span: [0.05, 0.18] },
   },
   {
     n: 9,

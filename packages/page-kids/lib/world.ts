@@ -7,10 +7,12 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
 import {
+  activityAt,
   blendAt,
   boundsForBand,
   chapterEnd,
   densityAt,
+  folkOut,
   hash3,
   hashPick,
   hashRange,
@@ -12808,11 +12810,25 @@ export function createKidsWorld(
         // Lessons 1, 8, 9 and 10 have nobody at all, which is what makes
         // them read as open land rather than as a village with the people
         // temporarily out.
+        // WHO IS STILL OUT, AT THIS HOUR.
+        //
+        // "Do not create separate day/night geometry variants; instead,
+        // create activity-state variants." The scene is one scene — same
+        // house, same wall, same well at noon and at two in the morning —
+        // and what changes is who is out in it. By day everybody the lesson
+        // names; between seven and nine almost nobody, because a settlement
+        // winding down has to differ from a settlement; after ten nobody at
+        // all, which is the whole reason the corridor works.
+        const activity = activityAt(new Date().getHours());
         let folk = 0;
         for (const l of LESSONS) {
           const from = CHAPTER[l.n - 1]!;
           const len = CHAPTER[l.n]! - from;
+          const out = folkOut(l, activity);
           for (const [i, who] of l.folk.entries()) {
+            if (i >= out) {
+              break;
+            }
             const x = from + (0.3 + i * 0.28) * len;
             const z = -hashRange(x, i, 51, 9, 16);
             const spot = clearSpot(x, z, 2.2);
@@ -12826,7 +12842,7 @@ export function createKidsWorld(
             folk++;
           }
         }
-        console.info(`[chapter] ${folk} villagers out`);
+        console.info(`[chapter] ${folk} villagers out (${activity})`);
       }
 
       // ── WHAT WAS MOVED IN THE NIGHT ──────────────────────────────────
@@ -12848,19 +12864,39 @@ export function createKidsWorld(
       // follow the same hour everything else does. The 10 PM to 4 AM window
       // is what the real clock produces on its own; a child toggling night
       // in the afternoon is asking to see the night, and gets it.
-      if (CHAPTER != null && trueNight) {
+      // ONLY BETWEEN TEN AND FOUR. The corridor has an active window and
+      // this is it — a trace at eight in the evening is just a stone lying
+      // about, because the village is still awake and can see it.
+      if (
+        CHAPTER != null &&
+        trueNight &&
+        activityAt(new Date().getHours()) === "deep"
+      ) {
         const LITTER = [
           "village-stone/River_Stone",
           "village-stone/Stepping_Stone",
           "village-stone/Laterite_Rock",
         ];
         let traces = 0;
-        for (const l of LESSONS.filter((x) => x.corridor)) {
+        // GRADED, NOT SWITCHED ON. Lesson 4 is a threshold and gets one
+        // faint thing near its far end; 5, 6 and 7 are the corridor proper;
+        // Lesson 8 gets a single leftover near its start and then the
+        // chapter has none. That shape is the difference between a haunted
+        // stretch of road and a flag on three lessons.
+        for (const l of LESSONS.filter((x) => x.trace != null)) {
+          const from = CHAPTER[l.n - 1]!;
+          const len = CHAPTER[l.n]! - from;
+          const [lo, hi] = l.trace!.span;
           const near = blockers.filter((b) => {
-            const ls = lessonAt(b.x, CHAPTER);
-            return ls.n === l.n && b.r >= 2;
+            const at = (b.x - from) / len;
+            return (
+              lessonAt(b.x, CHAPTER).n === l.n &&
+              b.r >= 2 &&
+              at >= lo &&
+              at <= hi
+            );
           });
-          for (let i = 0; i < 3 && near.length > 0; i++) {
+          for (let i = 0; i < l.trace!.count && near.length > 0; i++) {
             const host = near[Math.floor(hash3(l.n, i, 41) * near.length)]!;
             // Just outside whatever it was taken from — close enough to
             // belong to it, far enough to be plainly not where it sat.

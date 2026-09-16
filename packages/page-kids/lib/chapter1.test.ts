@@ -4,12 +4,14 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { equal, isTrue } from "rich-assert";
 import {
+  activityAt,
   BLEED,
   blendAt,
   chapterBounds,
   chapterEnd,
   DEFAULT_BOUNDS,
   densityAt,
+  folkOut,
   hash3,
   hashPick,
   hashRange,
@@ -342,4 +344,74 @@ test("the chapter opens and closes on the same open language", () => {
 test("the supernatural corridor is M4 to M7 and nowhere else", () => {
   const corridor = LESSONS.filter((l) => l.corridor).map((l) => l.n);
   equal(corridor.join(","), "5,6,7");
+});
+
+/**
+ * "Do not create separate day/night geometry variants; instead, create
+ * activity-state variants." The scene is one scene at every hour; what
+ * changes is who is out in it.
+ */
+test("the day has exactly the three states the brief names", () => {
+  // Village life.
+  for (const h of [4, 9, 12, 17, 18]) equal(activityAt(h), "day");
+  // Winding down, 7 PM to 9 PM.
+  for (const h of [19, 20, 21]) equal(activityAt(h), "evening");
+  // Deep night, 10 PM to 4 AM.
+  for (const h of [22, 23, 0, 2, 3]) equal(activityAt(h), "deep");
+});
+
+test("the window wraps midnight rather than breaking at it", () => {
+  equal(activityAt(23.9), "deep");
+  equal(activityAt(0), "deep");
+  equal(activityAt(-1), "deep");
+  equal(activityAt(27), "deep");
+});
+
+test("the road empties as the evening goes on", () => {
+  for (const l of LESSONS) {
+    equal(folkOut(l, "day"), l.folk.length);
+    // Deep night is nobody, everywhere. An empty road at two in the morning
+    // is the whole reason the corridor works.
+    equal(folkOut(l, "deep"), 0);
+  }
+  // Evening keeps a few out at the village centre and the closing market,
+  // and sends everyone else indoors.
+  equal(folkOut(LESSONS[4]!, "evening"), 1);
+  equal(folkOut(LESSONS[6]!, "evening"), 1);
+  for (const n of [1, 2, 3, 4, 6, 8, 9, 10]) {
+    equal(folkOut(LESSONS[n - 1]!, "evening"), 0);
+  }
+});
+
+/**
+ * The corridor is built up to and fallen away from, rather than switched on
+ * at one stone and off at another.
+ */
+test("the traces build to the corridor and fade after it", () => {
+  const traced = LESSONS.filter((l) => l.trace != null).map((l) => l.n);
+  equal(traced.join(","), "4,5,6,7,8");
+
+  // Lesson 4 is a threshold: one faint thing, near the far END.
+  const four = LESSONS[3]!.trace!;
+  equal(four.count, 1);
+  isTrue(four.span[0] >= 0.8, "lesson 4's foreshadowing is not near the end");
+
+  // Lesson 8 is a leftover: one, near the START, then nothing after it.
+  const eight = LESSONS[7]!.trace!;
+  equal(eight.count, 1);
+  isTrue(eight.span[1] <= 0.25, "lesson 8's leftover is not near the start");
+  for (const n of [9, 10]) equal(LESSONS[n - 1]!.trace, undefined);
+
+  // And the market road is the strongest in the chapter.
+  const most = Math.max(...LESSONS.map((l) => l.trace?.count ?? 0));
+  equal(LESSONS[6]!.trace!.count, most);
+});
+
+test("every trace span is a real slice of its segment", () => {
+  for (const l of LESSONS) {
+    if (l.trace == null) continue;
+    const [lo, hi] = l.trace.span;
+    isTrue(lo >= 0 && hi <= 1 && lo < hi, `lesson ${l.n} has a bad span`);
+    isTrue(l.trace.count > 0, `lesson ${l.n} traces nothing`);
+  }
 });
