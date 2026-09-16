@@ -957,9 +957,15 @@ export const LESSONS: readonly Lesson[] = [
       {
         model: `${UTIL}/Village_Market`,
         at: 0.56,
-        z: -16.5,
-        h: 15.5,
-        clear: 36,
+        // 17.5 tall, which at 4.27:1 is a 75-unit frontage. Its DEPTH grows
+        // with it — about eighteen units now — so the centre goes back to
+        // -18 to keep the front face where it belongs, just behind the
+        // milestone line. Deepening a building without moving its centre
+        // walks the shop fronts out onto the road, which is the mistake this
+        // placement already made once.
+        z: -18,
+        h: 17.5,
+        clear: 40,
       },
       // A COW LYING IN FRONT OF THE MARKET, by the bamboo. Cattle settle
       // exactly here in a Kerala market town — in the shade, on the bare
@@ -972,11 +978,16 @@ export const LESSONS: readonly Lesson[] = [
       // which is the opposite of lying down.
       {
         model: "village-folk/Cow",
-        at: 0.17,
-        z: -10.5,
+        // Between the gate grove and the well, and broadside to the road so
+        // its whole length reads rather than its nose.
+        at: 0.14,
+        z: -9.5,
         h: 4.5,
-        lift: -2.3,
-        turn: 1.15,
+        // 1.7, not 2.3. At 2.3 the body sat down in the grass with only its
+        // back showing, which is a boulder. A cow settled in the dust still
+        // stands a good half its shoulder height.
+        lift: -1.7,
+        turn: 1.45,
         clear: 3,
       },
       // BETWEEN THE BAMBOO AND THE MARKET, which is where a village well

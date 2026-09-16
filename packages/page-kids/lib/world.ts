@@ -1128,10 +1128,15 @@ function castHeadScale(name: string): number {
       // head, and they still came out as realistic people standing among
       // stylised ones. The ratio that matters is HEADS TALL, not the number
       // in this table, and matching it takes more on a bigger body.
-      return 1.34;
+      // 1.42. Raised twice now, from 1.22 then 1.34, and both times because
+      // the figure was reasoned about rather than looked at: these bodies
+      // are a head taller than the children's, so the SAME ratio always
+      // reads as a smaller head on them. The measure that matters is heads
+      // tall, not the number in this table.
+      return 1.42;
     // The eleven-year-old, who is a child and takes a child's share.
     case "VillageBoy":
-      return 1.38;
+      return 1.44;
     default:
       return 1;
   }
@@ -6136,6 +6141,67 @@ export function createKidsWorld(
     const cGrass = new THREE.Color(land.grass);
     const cVar = new THREE.Color(land.grassVar);
     const cDirt = new THREE.Color(land.dirt);
+    /**
+     * GROUND THAT IS WALKED ON RATHER THAN GROWN ON, 0 to 1.
+     *
+     * Defined once and asked twice, which is the whole point: the ground has
+     * TWO passes and painting only one of them does nothing. `aMix` chooses
+     * which texture a vertex samples; the vertex COLOUR is multiplied over
+     * the top of it. Setting the mix to laterite and leaving the colour as
+     * grass gives laterite times green, which is a slightly olive lawn — and
+     * that is exactly what the market's forecourt was.
+     *
+     * A market has no grass in front of it: hundreds of feet a week is what
+     * stops anything growing. And the wear is PATCHY, not a slab — it goes
+     * where people walk and where carts turn and holds on in the corners
+     * nobody crosses, so laterite comes through in patches with grass
+     * surviving between them. An even sheet of bare earth reads as a car
+     * park.
+     */
+    const yards =
+      CHAPTER == null
+        ? []
+        : placements(CHAPTER)
+            .filter((p) => /Market/i.test(p.model))
+            .map((p) => ({
+              x: p.x,
+              // Between the stalls and the road, not centred on the
+              // building: what is trodden is where people stand to buy.
+              z: p.z + 7,
+              rx: (p.clear ?? 24) * 1.1,
+              rz: 11,
+            }));
+    const yardAt = (x: number, z: number): number => {
+      let w = 0;
+      for (const y of yards) {
+        const d = Math.hypot((x - y.x) / y.rx, (z - y.z) / y.rz);
+        const t = Math.max(0, Math.min(1, (d - 0.55) / 0.45));
+        w = Math.max(w, 1 - t * t * (3 - 2 * t));
+      }
+      if (w <= 0) {
+        return 0;
+      }
+      // Two noise fields: a coarse one saying which parts of the yard are
+      // used at all, a finer one giving each patch a ragged edge rather than
+      // a drawn one. Never below 0.45 in the middle — the ground directly
+      // outside the stalls IS bare, whatever the noise says.
+      const coarse = (groundNoise(x * 0.055 + 31.4, z * 0.06 - 8.2) + 1) / 2;
+      const fine = (groundNoise(x * 0.19 - 4.7, z * 0.21 + 2.3) + 1) / 2;
+      // MOSTLY BARE, PATCHY AT THE EDGES. Measured at the market: the first
+      // window put this at 0.45 almost everywhere, because two averaged
+      // noise fields sit near the middle of their range and almost never
+      // cleared a 0.72 threshold. A 45 per cent blend is not bare ground, it
+      // is grass with a hint of dust — which is exactly what it looked like.
+      //
+      // The floor is 0.78 now: the forecourt of a market IS bare, and the
+      // noise decides where the last of the grass survives rather than
+      // whether there is any dust at all.
+      const m = Math.max(
+        0,
+        Math.min(1, (coarse * 0.6 + fine * 0.4 - 0.28) / 0.34),
+      );
+      return w * (0.78 + 0.22 * m * m * (3 - 2 * m));
+    };
     const tmp = new THREE.Color();
     const noise2 = groundNoise;
     // A blended ground is a textured ground for colouring purposes: the vertex
@@ -6179,8 +6245,21 @@ export function createKidsWorld(
         // corridor evenly gave a ten-metre brown stripe, which reads as a
         // runway rather than a road through a village.
         const worn = 2.9 + noise2(x * 0.13, 1.7) * 0.5;
-        const bare =
-          off <= worn ? 1 : Math.max(0, 1 - (off - worn) / (halfWidth - worn));
+        const yard = yardAt(x, z);
+        // THE YARD NEEDS THE COLOUR AS WELL AS THE TEXTURE. The road is
+        // tinted only 0.22 toward dirt on a textured world, because the
+        // laterite MAP carries its colour and doubling up stacked two reds.
+        // The forecourt is not the road: it samples the same map at a
+        // fraction of full strength, so without a real tint underneath it
+        // stays green whatever the mix says. This is the half that was
+        // missing — the mix was painting and nothing showed.
+        // The forecourt is as bare as the road, and the grass does not creep
+        // back across it — which is the second half of the same rule and the
+        // half that was missing.
+        const bare = Math.max(
+          yard,
+          off <= worn ? 1 : Math.max(0, 1 - (off - worn) / (halfWidth - worn)),
+        );
         // Much lighter when the road has a texture of its own: the laterite
         // map IS the road's colour, and tinting to full dirt underneath it
         // stacked two reds into a stripe you could see from orbit.
@@ -6188,7 +6267,10 @@ export function createKidsWorld(
           cDirt,
           Math.min(
             1,
-            bare * ((land.mix ?? theme.groundMix) != null ? 0.22 : 0.96),
+            Math.max(
+              bare * ((land.mix ?? theme.groundMix) != null ? 0.22 : 0.96),
+              yard * 0.72,
+            ),
           ),
         );
         if (off > worn) {
@@ -6256,36 +6338,6 @@ export function createKidsWorld(
     const groundMix = land.mix ?? theme.groundMix;
     if (groundMix != null) {
       const mix = new Float32Array(pos.count * 4);
-      /**
-       * GROUND THAT IS WALKED ON RATHER THAN GROWN ON.
-       *
-       * A market has no grass in front of it. Hundreds of feet a week is
-       * what stops anything growing, so the earth outside a row of shops is
-       * the same bare laterite as the road — and the road already knows how
-       * to paint itself, so this simply extends it over the trading ground.
-       *
-       * Green right up to the shop fronts was the single thing making the
-       * market look dropped onto a lawn rather than built where people go.
-       *
-       * Taken from the chapter's own placements, so the yard follows the
-       * building: move the market and its bare ground moves with it, which
-       * is one fewer coordinate to keep in step by hand.
-       */
-      const yards =
-        CHAPTER == null
-          ? []
-          : placements(CHAPTER)
-              .filter((p) => /Market/i.test(p.model))
-              .map((p) => ({
-                x: p.x,
-                // Between the stalls and the road, not centred on the
-                // building: what is trodden is the ground people stand on
-                // to buy things.
-                z: p.z + 7,
-                // A little wider than the frontage, and shallow.
-                rx: (p.clear ?? 24) * 1.1,
-                rz: 11,
-              }));
       // Smoothstep, not a linear ramp. A straight ramp reaches its ends with a
       // sudden change of slope, and across a ground mesh whose vertices are two
       // units apart that corner is visible as a crease running the length of
@@ -6319,30 +6371,7 @@ export function createKidsWorld(
         // like everything else here: a hard-edged patch of laterite would
         // read as a rug thrown on the grass, and what this is meant to be is
         // ground that simply stopped growing.
-        let worn2 = 0;
-        for (const y of yards) {
-          const d = Math.hypot((x - y.x) / y.rx, (z - y.z) / y.rz);
-          worn2 = Math.max(worn2, 1 - ss(0.55, 1, d));
-        }
-        if (worn2 > 0) {
-          // WEAR IS PATCHY, NOT A SLAB. Ground outside a row of shops is not
-          // uniformly bare: it wears where people walk and where carts turn,
-          // and holds on in the corners nobody crosses — so laterite comes
-          // through in patches with grass surviving between them, and the
-          // shape of those patches is the record of where the feet went.
-          //
-          // An even sheet of bare earth reads as a car park. Two noise
-          // fields at different frequencies break it up: a coarse one that
-          // says which parts of the yard are used at all, and a finer one
-          // that gives each patch a ragged edge rather than a drawn one.
-          const coarse = (noise2(x * 0.055 + 31.4, z * 0.06 - 8.2) + 1) / 2;
-          const fine = (noise2(x * 0.19 - 4.7, z * 0.21 + 2.3) + 1) / 2;
-          // Never below 0.45 at the centre of the yard: the ground directly
-          // outside the stalls IS bare, whatever the noise says, because
-          // that is where everybody stands.
-          const patch = 0.45 + 0.55 * ss(0.35, 0.72, coarse * 0.7 + fine * 0.3);
-          worn2 *= patch;
-        }
+        const worn2 = yardAt(x, z);
         const roadOrYard = Math.max(road, worn2);
         const field = Math.max(0, 1 - roadOrYard - litter - dry);
         const sum = roadOrYard + litter + dry + field || 1;
@@ -8912,9 +8941,17 @@ export function createKidsWorld(
    */
   const FOOT = castHeight("Explorer") / 4.5;
   const FOLK_HEIGHT: Record<string, number> = {
-    FarmerWoman: 5.0 * FOOT,
-    TeaStall: 5.4 * FOOT,
-    Headman: 5.9 * FOOT,
+    // A COUPLE OF INCHES ON EACH, KEEPING THE SPREAD. 5.2, 5.6 and 6.1 feet
+    // rather than 5.0, 5.4 and 5.9 — the gap between them is what says who
+    // is who at a glance, so they go up together rather than converging.
+    //
+    // Against Dave's four foot six the adults now stand a clear head and a
+    // half over the children, which is what an adult looks like to a
+    // nine-year-old and is the whole reason the houses were sized to an
+    // adult door in the first place.
+    FarmerWoman: 5.2 * FOOT,
+    TeaStall: 5.6 * FOOT,
+    Headman: 6.1 * FOOT,
     // Eleven, so a little over Dave at nine and well under every adult.
     VillageBoy: 4.75 * FOOT,
   };
