@@ -68,9 +68,12 @@ export const LESSONS_2: readonly Lesson[] = [
       { model: `${STONE}/Laterite_Rock`, at: 0.86, z: -9, h: 0.7 },
     ],
     herd: ["Cow"],
-    // "One villager returning from the village" — and only one. The segment
-    // should feel like departure rather than a settlement.
-    folk: ["FarmerWoman"],
+    // NOBODY STANDING IN THIS FIELD. The reference wants "one villager
+    // returning from the village" — a person on the ROAD, walking back the
+    // way the child came — and the road walkers already carry that. A
+    // figure posted in a plot beside it is a farmer at work, which is the
+    // opposite of the departure this segment is for.
+    folk: [],
     corridor: false,
   },
   {
@@ -113,7 +116,10 @@ export const LESSONS_2: readonly Lesson[] = [
       { model: `${UTIL}/Cattle_Tether_Post`, at: 0.72, z: -13, h: 1.4 },
     ],
     herd: ["Cow", "Buffalo"],
-    folk: ["FarmerWoman"],
+    // "A farmer, farm worker or one animal near a boundary opening can
+    // provide life without turning the scene into a settlement" — and the
+    // animal is doing it here. The people are on the road.
+    folk: [],
     corridor: false,
   },
   {
@@ -165,7 +171,9 @@ export const LESSONS_2: readonly Lesson[] = [
       { model: `${PLANTS}/Banyan_Almaram`, at: 0.9, z: -19, h: 17, clear: 9 },
     ],
     herd: [],
-    folk: ["FarmerWoman"],
+    // "The emphasis is on movement through the landscape" — so the life in
+    // this lane is somebody passing along it, not somebody planted in it.
+    folk: [],
     corridor: false,
   },
   {
@@ -228,8 +236,11 @@ export const LESSONS_2: readonly Lesson[] = [
       { model: `${STONE}/Laterite_Rock`, at: 0.3, z: -9, h: 0.7 },
     ],
     herd: [],
-    // "A single visitor may pause briefly." One, and only by day.
-    folk: ["Headman"],
+    // "A single visitor may pause briefly" — a traveller who stops at the
+    // grove, which is a person on the road doing something, not a resident
+    // standing in it. Left to the walkers until the shrine has an idol for
+    // somebody to be visiting.
+    folk: [],
     corridor: false,
   },
   {
@@ -269,7 +280,10 @@ export const LESSONS_2: readonly Lesson[] = [
     ],
     // "This is an active working space." The fullest herd in the chapter.
     herd: ["Buffalo", "Cow"],
-    folk: ["FarmerWoman", "TeaStall"],
+    // THE ONE PLACE PEOPLE STAND STILL IN THIS CHAPTER. "This is an active
+    // working space: one farmer can tend animals, move hay, or stand near
+    // the cart" — a work site, where standing IS the activity. Kept.
+    folk: ["FarmerWoman"],
     corridor: false,
   },
   {
@@ -297,10 +311,15 @@ export const LESSONS_2: readonly Lesson[] = [
     mix: [0.18, 0.14, 0.68],
     depth: [7, 24],
     props: [
-      { model: `${STONE}/River_Stone`, at: 0.33, z: -8, h: 1 },
-      { model: `${STONE}/River_Stone`, at: 0.66, z: -8.5, h: 1.2 },
-      { model: `${STONE}/River_Stone`, at: 0.71, z: -6.5, h: 0.8 },
-      { model: `${STONE}/Granite_Boulder`, at: 0.28, z: -6.5, h: 0.9 },
+      // THE STONES AT THE WATER LINE ARE NOT IN THIS TABLE — see the river
+      // block in world.ts, which stands them off the channel's own banks.
+      // As lesson fractions they landed on the bank of an eleven-year-old's
+      // road and in the middle of the water on a five-year-old's: on the
+      // shortest band the river is 16 units wide in a 27.6-unit lesson, so
+      // "a third of the way along" IS the river. A stone at the water line
+      // is a fact about the river, and the river is the thing that knows
+      // where its edge is.
+      //
       // Set well back: "keep large foliage away from the bridge deck so the
       // player, milestone and movement path remain readable".
       { model: `${PLANTS}/Tamarind_Tree`, at: 0.16, z: -20, h: 13, clear: 7 },
@@ -309,16 +328,23 @@ export const LESSONS_2: readonly Lesson[] = [
     herd: [],
     folk: [],
     corridor: false,
-    // HALFWAY ALONG, SIXTEEN UNITS WIDE, THREE AND A HALF DEEP. Halfway so
-    // the child walks up to it, crosses, and walks away again inside one
-    // lesson — the reference's "road, bridge deck, road" — rather than
-    // meeting it at a stone. Sixteen across is wide enough that the far bank
-    // is plainly a far bank from this camera and narrow enough that the
-    // bridge is a village footbridge rather than a span. 3.4 deep with the
-    // water 0.9 below the bank leaves two and a half units of water, which
-    // reads as deep from the side — the reference is explicit that this
-    // must not read as a shallow puddle.
-    river: { at: 0.5, half: 8, depth: 3.4 },
+    // HALFWAY ALONG, EIGHT UNITS WIDE, THREE DEEP. Halfway so the child
+    // walks up to it, crosses, and walks away again inside one lesson — the
+    // reference's "road, bridge deck, road" — rather than meeting it at a
+    // stone.
+    //
+    // Eight across, down from sixteen. At sixteen it was a river you ferry
+    // across, and on the shortest band it was most of the lesson: 16 units
+    // of water in a 27.6-unit segment left the crossing with no approach on
+    // either side. Eight gives a twelve-unit bridge — a village footbridge,
+    // which is the asset and the story — and keeps the banks the lesson is
+    // actually authored around.
+    //
+    // Three deep with the water 0.9 below the bank leaves two units of
+    // water: still plainly deep from this camera, which the reference is
+    // explicit about ("should visually read as deep rather than as a
+    // shallow puddle"), without becoming a gorge at the narrower width.
+    river: { at: 0.5, half: 4, depth: 3 },
   },
   {
     n: 7,
@@ -366,9 +392,10 @@ export const LESSONS_2: readonly Lesson[] = [
       { model: `${STONE}/Mossy_Stone`, at: 0.3, z: -8.5, h: 0.9 },
     ],
     herd: [],
-    // "A gatekeeper, worker or resident can appear near the gate, but keep
-    // activity restrained and private."
-    folk: ["Headman"],
+    // "Keep activity restrained and private" — and an estate's people are
+    // inside its wall, which the child never crosses. The road carries
+    // whoever is out.
+    folk: [],
     corridor: false,
   },
   {
@@ -407,8 +434,10 @@ export const LESSONS_2: readonly Lesson[] = [
       { model: `${STONE}/Laterite_Rock`, at: 0.86, z: -9, h: 0.7 },
     ],
     herd: [],
-    // "One of Chapter 2's busier working segments."
-    folk: ["FarmerWoman", "TeaStall", "VillageBoy"],
+    // "One of Chapter 2's busier working segments": one or two workers
+    // loading and preparing produce, with the cart beside them. A loading
+    // crew is stationary by definition, so these two stay.
+    folk: ["FarmerWoman", "TeaStall"],
     corridor: false,
   },
   {

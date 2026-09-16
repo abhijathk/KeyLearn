@@ -3303,6 +3303,24 @@ let RIVER: RiverCut | null = null;
 
 /** The water's own surface height — flat, the way still water is. */
 let RIVER_SURFACE = 0;
+/** The bed's height — ALSO flat, and that is the point. See `terrainY`. */
+let RIVER_BED = 0;
+
+/**
+ * HALF THE RIVER'S WIDTH AT A GIVEN DEPTH INTO THE SCENE.
+ *
+ * A river drawn at one width from the camera to the horizon reads as a
+ * canal. The reference frames show it wide in the foreground and closing
+ * toward the far bank, which is what distance does to a channel seen from
+ * its side — so the width is `half` on the road's line, 40 per cent more at
+ * the near edge of the ground, and 40 per cent less at the far one. Linear
+ * in z, because the ground is only 76 deep and anything curvier is invisible
+ * over that. Everything that asks about the channel — the cut, the water,
+ * the clearance test, the herd's bank, the stones — asks THIS, so the taper
+ * is one fact in one place.
+ */
+const riverHalfAt = (z: number): number =>
+  RIVER == null ? 0 : RIVER.half * (1 + (0.4 * z) / (GROUND_DEPTH / 2));
 
 /**
  * Cut a channel across the road, or fill it back in.
@@ -3365,6 +3383,26 @@ const deckY = (x: number, z: number): number | null => {
 /** Where a foot rests: the deck over the water, the ground everywhere else. */
 const walkY = (x: number, z: number): number => deckY(x, z) ?? terrainY(x, z);
 
+/**
+ * THE ROAD'S OWN HEIGHT AT AN X, WHATEVER THE Z.
+ *
+ * For things that ride the road without standing on it — the word row sits
+ * ten units in FRONT of the carriageway, out over the verge — the sideways
+ * test in `deckY` is the wrong question: at the crossing the tiles were
+ * landing just outside the deck's half-width and diving into the channel
+ * one letter at a time while the child walked over on the planks.
+ *
+ * The row belongs to the ROAD, and the road at the crossing is the bridge.
+ * So this asks only whether the x is on the span, and gives the ground at
+ * the road's own line otherwise.
+ */
+const roadTopY = (x: number): number => {
+  if (BRIDGE != null && Math.abs(x - BRIDGE.x) <= BRIDGE.halfLen) {
+    return deckY(x, meander(x)) ?? BRIDGE.y;
+  }
+  return terrainY(x, meander(x));
+};
+
 function setRiver(cut: RiverCut | null): void {
   RIVER = null;
   BRIDGE = null;
@@ -3376,6 +3414,7 @@ function setRiver(cut: RiverCut | null): void {
   const bank = terrainY(cut.x - cut.half * 1.35, meander(cut.x));
   RIVER = cut;
   RIVER_SURFACE = bank - 0.9;
+  RIVER_BED = bank - cut.depth;
 }
 
 const terrainY = (x: number, z: number) => {
@@ -3420,15 +3459,29 @@ const terrainY = (x: number, z: number) => {
   // a river that has been there a long time. The banks are also where the
   // taro and the grass go, and they need ground that leans rather than a lip.
   if (RIVER != null) {
-    const d = Math.abs(x - RIVER.x) / RIVER.half;
+    const d = Math.abs(x - RIVER.x) / riverHalfAt(z);
     if (d < 1) {
-      // A PARABOLA, NOT A SMOOTHSTEP. This was a smoothstep first, and a
-      // smoothstep is flat at the bank — so with the water 0.9 below the
-      // bank the surface only covered the inner 68 per cent of the channel
-      // and the rest was dry sloping mud. A parabola puts 86 per cent under
-      // water: a river filled bank to bank, with a bank that still leans
+      // BLENDED TOWARD AN ABSOLUTE BED, not dropped by a fixed depth.
+      //
+      // Subtracting a constant depth digs the channel into whatever the land
+      // is doing — and this land RISES away from the road, by design: past
+      // z = -10 the far bank climbs so the horizon has something to stand
+      // on. So the bed climbed with it, and by the back of the ground the
+      // bed had risen above the flat water surface and the river simply
+      // stopped: water in the foreground, dry channel behind it.
+      //
+      // A river is level. The bed is one height everywhere, the banks rise
+      // away from it, and the channel is therefore DEEPER where the land is
+      // higher — which is what a river valley is. Blending to an absolute
+      // bed says exactly that, and the water reaches the back of the scene.
+      //
+      // A PARABOLA, NOT A SMOOTHSTEP, for the profile: a smoothstep is flat
+      // at the bank, so the surface only covered the inner 68 per cent of
+      // the channel and the rest was dry sloping mud. A parabola puts 86 per
+      // cent under water — filled bank to bank, with a bank that still leans
       // rather than drops, which is where the taro grows.
-      y -= RIVER.depth * (1 - d * d);
+      const t = 1 - d * d;
+      y = y * (1 - t) + RIVER_BED * t;
     }
   }
   return y;
@@ -7045,11 +7098,22 @@ export function createKidsWorld(
       // more than the freeboard, and the bank is a parabola, so the edge is
       // at sqrt(1 - freeboard / depth) of the half-width.
       const freeboard = 0.9;
-      const edge =
-        RIVER.half * Math.sqrt(Math.max(0, 1 - freeboard / RIVER.depth));
-      const wgeo = new THREE.PlaneGeometry(edge * 2, GROUND_DEPTH, 24, 2);
+      // The water's edge is a fraction of the channel's half-width, and the
+      // half-width changes with depth into the scene — so the plane is built
+      // in a unit width and every vertex is pushed out to the edge at ITS z.
+      const wet = Math.sqrt(Math.max(0, 1 - freeboard / RIVER.depth));
+      const wgeo = new THREE.PlaneGeometry(2, GROUND_DEPTH, 8, 40);
       wgeo.rotateX(-Math.PI / 2);
-      wgeo.translate(RIVER.x, 0, 0);
+      {
+        const wp = wgeo.attributes.position;
+        for (let i = 0; i < wp.count; i++) {
+          const u = wp.getX(i); // -1 .. 1 across the channel
+          const z = wp.getZ(i);
+          wp.setX(i, RIVER.x + u * riverHalfAt(z) * wet);
+        }
+        wp.needsUpdate = true;
+      }
+      const edge = RIVER.half * wet; // the road-line width, for the shading
       // DEEPER IN THE MIDDLE, painted per vertex: the reference's channel is
       // dark teal along its centre line and pales toward each bank, and
       // that gradient is most of what makes it read as deep rather than as
@@ -7058,7 +7122,11 @@ export function createKidsWorld(
       const wpos = wgeo.attributes.position;
       const shade = new Float32Array(wpos.count * 3);
       for (let i = 0; i < wpos.count; i++) {
-        const d = Math.min(1, Math.abs(wpos.getX(i) - RIVER.x) / edge);
+        const d = Math.min(
+          1,
+          Math.abs(wpos.getX(i) - RIVER.x) /
+            Math.max(0.01, riverHalfAt(wpos.getZ(i)) * wet),
+        );
         const k = 0.55 + 0.45 * d * d; // 0.55 at the centre, 1 at the edge
         shade[i * 3] = k;
         shade[i * 3 + 1] = k;
@@ -9082,7 +9150,7 @@ export function createKidsWorld(
     // swim, and a buffalo that walked into the channel would stand on the
     // bed with the water at its shoulders looking exactly like a bug.
     if (RIVER != null) {
-      const edge = RIVER.half + 1.5;
+      const edge = riverHalfAt(z) + 1.5;
       const near = RIVER.x - dir * edge; // the bank on this animal's side
       if ((near - fromX) * dir > 0 && (toX - near) * dir > 0) {
         limit = near;
@@ -9834,7 +9902,7 @@ export function createKidsWorld(
     // Nothing is planted in the river. The channel is a strip, not a disc,
     // so it is tested here rather than pushed into `blockers` as a ring of
     // circles pretending to be one.
-    if (RIVER != null && Math.abs(x - RIVER.x) < RIVER.half + need) {
+    if (RIVER != null && Math.abs(x - RIVER.x) < riverHalfAt(z) + need) {
       return false;
     }
     for (const b of blockers) {
@@ -15016,11 +15084,33 @@ export function createKidsWorld(
             (terrainY(rx - RIVER.half - 1.5, rz) +
               terrainY(rx + RIVER.half + 1.5, rz)) /
             2;
-          const Hd = H * perspective(rz);
-          // Where the deck's top sits in the model, as a fraction of its
-          // height: the planks are a little below the middle, with the
-          // posts standing above them. Set by looking at it on the road.
-          const DECK = 0.5;
+          // A LOWER RAIL, WITHOUT A SHORTER BRIDGE. The model's rails stand
+          // from 0.80 to 1.0 of its height — a full-height balustrade, which
+          // on a village footbridge reads as a fence somebody put across the
+          // river. Squashing the wrap's Y alone drops the rail and the pier
+          // and leaves the SPAN untouched, which uniform scaling could not
+          // do: the bridge has to stay exactly as long as the water.
+          const RAIL = 0.62;
+          w.scale.y *= RAIL;
+          // WIDER ACROSS THE ROAD. The model is 1.36 units wide per unit
+          // tall against 2.98 long, which is a plank walk — right for a
+          // footpath and thin for a road a cart uses. The turn maps the
+          // model's x onto the world's z, so scaling x alone broadens the
+          // deck without touching the span, which must stay exactly the
+          // width of the water.
+          w.scale.x *= 1.75;
+          const Hd = H * perspective(rz) * RAIL;
+          // WHERE THE DECK'S TOP SITS IN THE MODEL — MEASURED, NOT GUESSED.
+          //
+          // A histogram of the model's 714 vertex heights: pier feet at 0,
+          // a dense band of planks and beams from 0.15 to 0.34, NOTHING
+          // from 0.35 to 0.80, and the rail tops from 0.80 to 1.0. The deck
+          // is the top of that band, a third of the way up. It was set to
+          // 0.5 first, by eye, and at 0.5 the planks landed 1.1 units below
+          // the bank — under a water surface that sits 0.9 below it — so
+          // the child walked on air between two handrails with no bridge
+          // visible between them.
+          const DECK = 0.33;
           w.position.y = bank - DECK * Hd;
           builtGroup.add(w);
           BRIDGE = {
@@ -15035,6 +15125,110 @@ export function createKidsWorld(
           console.info(
             `[chapter] bridge at x=${rx.toFixed(1)} span ${span.toFixed(1)} deck y=${bank.toFixed(2)}`,
           );
+        }
+        // ── STONES AT THE WATER LINE ─────────────────────────────────
+        //
+        // Stood off the channel's edges rather than written as fractions of
+        // the lesson, for the same reason the market's groves are stood off
+        // the market: on the shortest band the river is most of the lesson,
+        // and a stone "a third of the way along" was a stone in the water.
+        // Just outside the water's edge on the bank, where the reference
+        // shows them, and on both sides so the crossing reads the same
+        // approached from either direction. Deterministic per stone — an
+        // authored bank does not rearrange itself between sittings.
+        const bankStones: readonly [number, number, string, number][] = [
+          [-1, 0.6, "village-stone/River_Stone", 1.0],
+          [-1, 2.4, "village-stone/Granite_Boulder", 0.9],
+          [1, 0.8, "village-stone/River_Stone", 1.2],
+          [1, 2.6, "village-stone/River_Stone", 0.8],
+        ];
+        for (const [side, out, model, h] of bankStones) {
+          const sz = rz - 6.5 - hashRange(rx, side, 61, 0, 2.5);
+          const sx = rx + side * (riverHalfAt(sz) + out);
+          const st = await stand(
+            model,
+            sx,
+            sz,
+            h,
+            hashRange(sx, side, 62, 0, 6),
+          );
+          if (st != null) {
+            builtGroup.add(st);
+          }
+        }
+        // ── AND THE BANK ITSELF: STONES AND GRASS, BOTH SIDES ──────────
+        //
+        // The reference frames are specific about this — boulders sitting
+        // in and beside the water at both ends of the bridge, with dense
+        // grass and wet-edge planting running down to the line. The lesson's
+        // own scatter cannot do it: `isClear` refuses the channel, so the
+        // planting stops a clear margin short of the water and leaves a ring
+        // of bare mud exactly where a riverbank should be thickest.
+        //
+        // Placed against the water line at each z, so they follow the taper
+        // down the scene rather than sitting on a straight line the river no
+        // longer runs along. Deterministic, like every authored bank.
+        // 64, AND WEIGHTED TO THE FAR END. The channel runs from the road
+        // to the back of the ground, and at the far end it is both narrower
+        // and higher-banked — so the same scatter that dresses the near bank
+        // leaves the deep end reading as a bare trench, which is where the
+        // "too much depth" comes from. Squaring the draw pushes two thirds
+        // of it past halfway, so the planting thickens exactly where the
+        // channel is doing the most work.
+        for (let i = 0; i < 64; i++) {
+          const side = i % 2 === 0 ? -1 : 1;
+          // BEHIND THE ROAD, NOT ACROSS IT. This started at the road line,
+          // so the first few landed on the carriageway either side of the
+          // bridge — boulders and ferns in the middle of the way through.
+          // The bank a child can see is the slope BEHIND the road; the strip
+          // in front of it is the road's own verge and belongs to the
+          // lesson's scatter.
+          const far = hashRange(rx, i, 63, 0, 1);
+          const sz = rz - roadClear * 0.7 - far * far * 30;
+          const rock = i % 3 === 0;
+          const model = rock
+            ? hashPick(
+                [
+                  "village-stone/River_Stone",
+                  "village-stone/Granite_Boulder",
+                  "village-stone/Mossy_Stone",
+                ],
+                rx,
+                i,
+                64,
+              )
+            : hashPick(
+                [
+                  "village-plants/Taro_Chembu",
+                  "village-plants/Kerala_Grass_Tuft",
+                  "village-plants/Kerala_Fern",
+                ],
+                rx,
+                i,
+                65,
+              );
+          if (model == null) {
+            continue;
+          }
+          // Rocks sit AT the line and half in the water; planting stands
+          // back from it, the way a bank actually reads.
+          const out = rock
+            ? hashRange(rx, i, 66, -0.6, 0.9)
+            : hashRange(rx, i, 67, 1.1, 3.4);
+          const bx = rx + side * (riverHalfAt(sz) + out);
+          const b = await stand(
+            model,
+            bx,
+            sz,
+            rock
+              ? hashRange(rx, i, 68, 0.5, 1.2)
+              : hashRange(rx, i, 69, 0.7, 1.5),
+            hashRange(rx, i, 70, 0, 6.28),
+            rock ? -0.15 : 0,
+          );
+          if (b != null) {
+            builtGroup.add(b);
+          }
         }
       }
 
@@ -15411,7 +15605,16 @@ export function createKidsWorld(
           // the road at the same time. Leaving him on this list put a second
           // copy of him past his own shutters, which is exactly the fault
           // the blacksmith's round was shortened to avoid.
-          const WHO = ["Headman", "FarmerWoman", "VillageBoy", "Blacksmith"];
+          const stationed = CHAPTER_N === 1;
+          const WHO = stationed
+            ? ["Headman", "FarmerWoman", "VillageBoy", "Blacksmith"]
+            : [
+                "Headman",
+                "TeaStall",
+                "FarmerWoman",
+                "VillageBoy",
+                "Blacksmith",
+              ];
           /**
            * WHO KEEPS TO A PARTICULAR STRETCH, by milestone.
            *
@@ -15431,15 +15634,27 @@ export function createKidsWorld(
            * road he keeps is the near approach: Lessons 4, 5 and 6, walking
            * up towards the market and turning back before it.
            */
-          const SPAN: Record<string, readonly [number, number]> = {
-            Blacksmith: [3, 6],
-            // The headman has a POST in Lesson 7, between the bamboo and
-            // the well, so his walking self stops at Milestone 6 for the
-            // same reason the smith's does: one man, one place at a time.
-            // Lessons 2 to 6 is the village end of the road, which is where
-            // an elder's business is anyway.
-            Headman: [1, 6],
-          };
+          // STATIONED PEOPLE ARE CHAPTER 1'S PROBLEM, AND ONLY CHAPTER 1'S.
+          //
+          // The tea seller is behind his counter and the smith is on his
+          // plinth — in the MARKET, which is Lesson 7 of Chapter 1. Chapter
+          // 2 has no market, no tea shop and no forge, so nobody is
+          // stationed anywhere in it and every one of them should be walking
+          // the road like the rest. Keeping these rules on every chapter is
+          // why the smith never appeared on Chapter 2's road at all and the
+          // tea seller was missing from it entirely: they were being held
+          // back from a building that is ten lessons behind them.
+          const SPAN: Record<string, readonly [number, number]> = stationed
+            ? {
+                Blacksmith: [3, 6],
+                // The headman has a POST in Lesson 7, between the bamboo and
+                // the well, so his walking self stops at Milestone 6 for the
+                // same reason the smith's does: one man, one place at a time.
+                // Lessons 2 to 6 is the village end of the road, which is where
+                // an elder's business is anyway.
+                Headman: [1, 6],
+              }
+            : {};
           /** And who keeps different hours from their neighbours. */
           const HOURS: Record<string, readonly [number, number]> = {
             // The same window he sits at the forge for. A man is either at
@@ -20115,7 +20330,15 @@ export function createKidsWorld(
           // lift the letters off the road they were nearly touching without
           // moving them far enough to read as a separate band of interface.
           const tileX = wordGroup.position.x + g.position.x;
-          const groundH = terrainY(tileX, gz);
+          // `walkY`, not `terrainY`: the word row rides the road, and over
+          // the river the road is the bridge deck. On the terrain the tiles
+          // sank into the channel with the child walking above them.
+          // `roadTopY`, keyed on x alone — see why the z test is wrong for
+          // the word row, which rides the road from out over the verge.
+          const groundH =
+            BRIDGE != null && Math.abs(tileX - BRIDGE.x) <= BRIDGE.halfLen
+              ? roadTopY(tileX)
+              : terrainY(tileX, gz);
           g.position.y += (groundH + 1.55 + lift - g.position.y) * 0.25;
           // PIN THE PAINTED SHADOW TO THE GROUND, AND THROW IT FROM THE SUN.
           //
