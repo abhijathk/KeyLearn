@@ -1178,25 +1178,32 @@ function castHeadScale(name: string): number {
       // overhang the shoulders past about 1.34 on a child's body; these are
       // taller and wider and carry more. If a villager ever reads as a
       // bobblehead from the side, this is the number that did it.
-      // 1.8. Two numbers were changing at once here and only one of them
-      // was the size: the scale was being applied at spawn and then thrown
-      // away again by `poseRest` for everybody who WALKS, so five raises in
-      // a row were judged on standing villagers alone while the ones going
-      // past kept their original heads. With the reset fixed, 2.1 turned out
-      // to be too much — it is the first figure that was ever actually seen
-      // on the road — and this comes back down to where it reads as
-      // stylised rather than as a bobblehead.
-      return 1.8;
-    // The village child, who takes a child's share — and a child's share in
-    // this cast is LARGE. 1.44 was set against an adult table that has been
-    // raised three times since, so he quietly became the most realistically
-    // proportioned child on the road: a boy drawn at a real boy's ratio
-    // standing beside Abee, who is the same rig at 1.26 on a shorter body.
-    // 1.62 puts the two of them at the same heads-tall, which is the measure
-    // that matters — see the adults above, where reasoning about this number
-    // rather than looking at its result went wrong three times running.
+      // 1.7, AND THE VILLAGE SHARES IT.
+      //
+      // The long argument this number had with itself is worth keeping: it
+      // was raised five times — 1.22, 1.34, 1.42, 1.56, 1.74, 2.1 — and
+      // every raise looked like nothing, because TWO separate faults were
+      // hiding it. `poseRest` restored each bone's bind transform and threw
+      // the scale away again for everybody who WALKS, so the figure was only
+      // ever judged on the villagers standing still; and the blacksmith's
+      // bone never matched at all, because three deletes the colon out of
+      // `mixamorig:Head` rather than replacing it. With both fixed, the
+      // number could finally be seen, and it turned out to have been pushed
+      // well past where it needed to be.
+      //
+      // ONE FIGURE FOR THE WHOLE VILLAGE, adults and the boy alike. They
+      // stand in the same frames and are drawn by the same hand; two ratios
+      // a few hundredths apart bought nothing except a second number to keep
+      // in step. The children of the PARTY keep their own — Peeli and Abee
+      // are tuned against each other and against the player, which is a
+      // different conversation.
+      return 1.7;
+    // The village child takes the village's figure — see above for why
+    // there is only one of them now. He is shorter than the adults, so the
+    // same ratio still reads as a larger head on him, which is exactly the
+    // relationship a child should have to the grown-ups beside him.
     case "VillageBoy":
-      return 1.62;
+      return 1.7;
     default:
       return 1;
   }
