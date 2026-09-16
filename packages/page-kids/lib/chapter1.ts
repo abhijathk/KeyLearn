@@ -782,7 +782,7 @@ export const LESSONS: readonly Lesson[] = [
       //     /tmp/culled.glb
       //   node scripts/village-prop.mjs /tmp/culled.glb \
       //     root/public/kids-assets/models/village-util/Village_Market.glb \
-      //     --tex 2048 --tris 7000 --sloppy
+      //     --tex 2048 --tris 24000
       //
       // THE BACK IS CUT BEFORE ANYTHING ELSE, and the bytes are the small
       // reason. This building is seen from a fixed orthographic camera
@@ -798,12 +798,26 @@ export const LESSONS: readonly Lesson[] = [
       // it pays for a 2048 baseColor, so the side that faces the road gets
       // twice the texel density of the copy this replaces.
       //
-      // `--sloppy` is what makes the reduction possible at all: the
-      // seam-aware simplifier stalls on a baked prop, because it is split at
-      // every UV seam and every seam is a border the collapser will not
-      // cross. The topology-blind one reaches 6,755 from 69,809 at 1.1 per
-      // cent error. Wrong tool for a character, right tool for a building
-      // seen from across a field.
+      // NO `--sloppy`, AND THAT IS THE WHOLE DIFFERENCE. The topology-blind
+      // simplifier will hit any triangle target you name, which is why it
+      // was reached for — but it hits them by ignoring connectivity, and a
+      // baked prop's detail IS its connectivity: the shop fronts, the
+      // shutters and the signboards are shallow geometry carrying a
+      // photographic texture, and collapsing across their UV seams smears
+      // the texture over the shapes. It reported 1.1 per cent error and
+      // looked like a melted building, because the error metric measures
+      // distance from the original SURFACE and has nothing to say about
+      // what happened to the surface's texture.
+      //
+      // The seam-aware simplifier will not cross a seam, so it cannot smear.
+      // It plateaus at about 23,400 triangles on this mesh however low the
+      // target — that plateau IS the model's real detail, the point past
+      // which nothing can go without breaking something — and at 24,000 it
+      // keeps the signage legible. That costs 1.83 MB against 0.88, which is
+      // the right trade for the one building this lesson is named after.
+      //
+      // The lesson: `--sloppy` is for silhouettes seen at distance, and this
+      // is read at twenty units.
       //
       // What is NOT kept is the master's normal map. Nothing here is lit
       // sharply enough for it to show — the texture is a baked one and the
@@ -822,7 +836,22 @@ export const LESSONS: readonly Lesson[] = [
       //
       // The clearance grows with it, so the planting keeps out of the
       // trading ground instead of sprouting between the stalls.
-      { model: `${UTIL}/Village_Market`, at: 0.36, z: -12, h: 11, clear: 22 },
+      // AFTER THE BAMBOO, AND BIGGER. The bamboo at 0.1 is the gate of this
+      // lesson — you pass through it to arrive — so the market has to be on
+      // the far side of it rather than level with it, or there is nothing to
+      // arrive AT. 0.46 puts a clear stretch of road between the two.
+      //
+      // 13 rather than 11, which at this model's 4.27:1 is a 55-unit
+      // frontage: longer than the houses' compounds and the biggest thing a
+      // child meets on the whole road, which is what the social peak of the
+      // chapter should be.
+      //
+      // AND NOTHING GROWS THROUGH IT. `clear` is a radius and the building
+      // is 55 units wide, so 22 left its two ends unprotected — trees were
+      // seeding inside the end stalls, because the blocker simply did not
+      // reach them. 30 covers the frontage and a margin, which is also the
+      // trading ground a market needs in front of it.
+      { model: `${UTIL}/Village_Market`, at: 0.46, z: -12, h: 13, clear: 30 },
       { model: `${UTIL}/Village_Well`, at: 0.46, z: -12, h: 2.2, clear: 4 },
       {
         model: `${UTIL}/Village_Cart`,
