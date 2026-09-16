@@ -5233,9 +5233,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </div>
         <div className={styles.loadLabel}>
           <Reveal
-            text={(landName !== ""
-              ? `Chapter ${chapter} · ${landName}`
-              : "Running to the valley"
+            text={(onVillage
+              ? "Chapter 1 · The Village"
+              : landName !== ""
+                ? `Chapter ${chapter} · ${landName}`
+                : "Running to the valley"
             ).toUpperCase()}
           />
         </div>
@@ -5347,7 +5349,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     const land = peekNextLandName();
     speak("crossed", { chapter: String(chapter + 1), land });
     collect(`land:${land}`);
-    setChapter((c) => c + 1);
+    // THE VILLAGE ROAD HAS ONE CHAPTER, and it is Chapter 1.
+    //
+    // This counter came from the old model, where a chapter was however much
+    // road happened to be generated before the land changed — so crossing
+    // into new scenery called it a new chapter, and a child could be on
+    // "Chapter 4" of a world with no authored chapters in it at all. Chapter
+    // 1 is now The Village: ten lessons, M0 to M10, and it is over when the
+    // tenth stone is passed rather than when the trees change.
+    //
+    // The other two worlds keep the old behaviour; they are procedural by
+    // design and have no authored chapters to contradict.
+    if (!onVillage) {
+      setChapter((c) => c + 1);
+    }
     setLoaded(false);
     setWorldReady(false);
     setStepsDone(false);

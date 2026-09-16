@@ -8551,6 +8551,43 @@ export function createKidsWorld(
    */
   const blockers: { x: number; z: number; r: number }[] = [];
 
+  /**
+   * ONE GROUP PER LESSON, and only the lesson in play is in the scene.
+   *
+   * A chapter is up to 640 units of authored road and a child stands in 26
+   * of it. Building all ten lessons into one scene means drawing nine of
+   * them nobody can see — and, worse, it means the world a child is handed
+   * is every lesson at once rather than the one they are on.
+   *
+   * The window is the current lesson with its neighbours either side: the
+   * one behind, because the first fifth of a lesson still plants the
+   * previous one's species and the road behind must not empty out as they
+   * walk away from it; the one ahead, because it is what they are walking
+   * towards and has to be standing there before they arrive rather than
+   * appearing around them.
+   */
+  const lessonGroups: THREE.Group[] = [];
+  /** The group a chapter object belongs in, by where it stands. */
+  const lessonGroup = (x: number): THREE.Group => {
+    const n = CHAPTER != null ? lessonAt(x, CHAPTER).n : 1;
+    while (lessonGroups.length < n) {
+      const g = new THREE.Group();
+      g.visible = false;
+      scene.add(g);
+      lessonGroups.push(g);
+    }
+    return lessonGroups[n - 1]!;
+  };
+  /** Which lesson's scene is up. -1 until the first one is shown. */
+  let shownLesson = -1;
+  const showLesson = (n: number) => {
+    if (n === shownLesson) return;
+    shownLesson = n;
+    for (const [i, g] of lessonGroups.entries()) {
+      g.visible = Math.abs(i + 1 - n) <= 1;
+    }
+  };
+
   /** Is this spot clear of everything built? */
   const isClear = (x: number, z: number, need = 1.5): boolean => {
     for (const b of blockers) {
@@ -11703,17 +11740,23 @@ export function createKidsWorld(
     // theme's scenery folder. Village Road needs it: its scenery is the
     // nature set but its buildings live in the licensed pack folder, and a
     // theme has only one sceneryDir.
-    // COUNTS ARE FOR A 260-UNIT ROAD, and the road is no longer always 260.
-    // These were tuned as totals, so on a 640-unit chapter the same numbers
-    // would spread the same plants over two and a half times the ground and
-    // the whole world would thin out. Scaled by length, they keep the
-    // density they were tuned to.
+    // NO RANDOM SCATTER IN A CHAPTER. AT ALL.
     //
-    // AND HALVED WHERE THE CHAPTER PLANTS. On a chapter road this scatter is
-    // no longer the planting, it is the undergrowth between it — the species
-    // that say which lesson you are in come from the table, and running both
-    // at full strength buries them.
-    const spread = (TRAIL_END / 260) * (CHAPTER != null ? 0.5 : 1);
+    // This spreads a species evenly down the whole road from `Math.random`,
+    // which is the opposite of what an authored chapter is: it plants the
+    // same palm through the orchard, the market and the fern meadow, so
+    // every lesson ends up wearing a little of every other one and none of
+    // them reads as itself. Halving it, which is what this did first, only
+    // made the smear fainter.
+    //
+    // It is also unplaceable. A rolled position cannot be registered as an
+    // obstruction — there is nothing stable to register — so every one of
+    // these was a tree an animal could stand inside.
+    //
+    // The other two worlds keep it. Dino Run and Hero Trail are procedural
+    // by design and a scattered forest is the right answer there; the
+    // village is authored, and the table is the only thing that plants it.
+    const spread = CHAPTER != null ? 0 : 1;
     const groundSpecs = [
       [
         land.trees,
@@ -12014,8 +12057,32 @@ export function createKidsWorld(
       // Two ways to lay a clump down: at the milestones, or as a continuous
       // band along the whole road. `stride` picks the second.
       const step = spec.stride ?? MIN_STONE_GAP;
-      for (let stone = 1; stone * step < TRAIL_END + 26; stone++) {
-        const cx = stone * step;
+      // AT THE STONES THEMSELVES, once this is a chapter.
+      //
+      // The brief asks for the same vegetation at the base of every
+      // milestone the whole chapter long, which is what these are for — and
+      // stepping by `MIN_STONE_GAP` stopped landing on a milestone the
+      // moment the stones started following the typing. A band keeps its
+      // stride; a milestone clump goes where the milestone is.
+      const centres =
+        CHAPTER != null && spec.stride == null
+          ? CHAPTER.slice(1)
+          : Array.from(
+              { length: Math.ceil((TRAIL_END + 26) / step) - 1 },
+              (_, k) => (k + 1) * step,
+            );
+      for (const [stone, cx] of centres.entries()) {
+        // DETERMINISTIC PER CLUMP. Every wobble, gap and row offset below
+        // came from `Math.random`, so the same milestone grew a different
+        // thicket every time the world was built — and an authored scene
+        // that rearranges itself between sittings is not an authored scene.
+        // One stream per (plant, stone) pair: the jitter is as varied as it
+        // ever was, and it is the same variety twice.
+        let seed = (stone + 1) * 9301 + ci * 49297 + 233;
+        const rand = () => {
+          seed = (seed * 9301 + 49297) % 233280;
+          return seed / 233280;
+        };
         // Both verges, drawn separately: a thicket that matches across the
         // road is a hedge somebody planted.
         const verges =
@@ -12034,35 +12101,34 @@ export function createKidsWorld(
           // tenths, and each ROW starts at its own offset, because a plot dug
           // by hand does not line up end to end.
           if (spec.plot != null) {
-            if (Math.random() > spec.plot.chance) {
+            if (rand() > spec.plot.chance) {
               continue;
             }
-            const z0 = spec.near + Math.random() * (spec.far - spec.near);
+            const z0 = spec.near + rand() * (spec.far - spec.near);
             // `rowZ` below is a signed offset; the meander is added per plant
             // so a row follows the road's curve instead of cutting across it.
             const along = spec.spread / Math.max(1, spec.plot.perLine - 1);
             for (let row = 0; row < spec.plot.lines; row++) {
               const rowZ = sideSign * (z0 + row * spec.plot.rowGap);
-              const start = cx - spec.spread / 2 + (Math.random() - 0.5) * 1.2;
+              const start = cx - spec.spread / 2 + (rand() - 0.5) * 1.2;
               for (let c = 0; c < spec.plot.perLine; c++) {
                 const px =
-                  start + c * along + (Math.random() - 0.5) * spec.plot.wobble;
+                  start + c * along + (rand() - 0.5) * spec.plot.wobble;
                 const pz =
                   (spec.roadRelative ? meander(px) : 0) +
                   rowZ +
-                  (Math.random() - 0.5) * spec.plot.wobble;
+                  (rand() - 0.5) * spec.plot.wobble;
                 const plo = spec.lo ?? 0.8;
                 const phi = spec.hi ?? 1.25;
-                const scl =
-                  (plo + Math.random() * (phi - plo)) * theme.sceneryScale;
+                const scl = (plo + rand() * (phi - plo)) * theme.sceneryScale;
                 if (onRoad(px, pz, spec.file, half * scl * 0.66)) {
                   rejected += 1;
                   continue;
                 }
                 e.set(
-                  (Math.random() - 0.5) * 0.12,
-                  Math.random() * Math.PI * 2,
-                  (Math.random() - 0.5) * 0.12,
+                  (rand() - 0.5) * 0.12,
+                  rand() * Math.PI * 2,
+                  (rand() - 0.5) * 0.12,
                 );
                 q.setFromEuler(e);
                 // terrainY, NOT surfaceY.
@@ -12074,45 +12140,44 @@ export function createKidsWorld(
                 // arithmetic; a plant is not a character and does not need
                 // the mesh's exact answer.
                 pos.set(px, terrainY(px, pz) - 0.06, pz);
-                scl3.set(scl, scl * (0.88 + Math.random() * 0.3), scl);
+                scl3.set(scl, scl * (0.88 + rand() * 0.3), scl);
                 mats.push(m4.clone().compose(pos, q, scl3));
-                const tp = 0.94 + Math.random() * 0.12;
+                const tp = 0.94 + rand() * 0.12;
                 tints.push(new THREE.Color(tp, tp, tp));
               }
             }
             continue;
           }
-          if (spec.chance != null && Math.random() > spec.chance) {
+          if (spec.chance != null && rand() > spec.chance) {
             continue;
           }
-          const n =
-            spec.min + Math.floor(Math.random() * (spec.max - spec.min + 1));
+          const n = spec.min + Math.floor(rand() * (spec.max - spec.min + 1));
           for (let k = 0; k < n; k++) {
             // Tight, so they touch and overlap rather than dotting a line.
-            const x = cx + (Math.random() - 0.5) * spec.spread;
-            const depth = spec.near + Math.random() * (spec.far - spec.near);
+            const x = cx + (rand() - 0.5) * spec.spread;
+            const depth = spec.near + rand() * (spec.far - spec.near);
             const z = spec.roadRelative
               ? meander(x) + sideSign * depth
               : sideSign * depth;
             const lo = spec.lo ?? 0.7;
             const hi = spec.hi ?? 1.4;
-            const scl = (lo + Math.random() * (hi - lo)) * theme.sceneryScale;
+            const scl = (lo + rand() * (hi - lo)) * theme.sceneryScale;
             if (onRoad(x, z, spec.file, half * scl * 0.66)) {
               rejected += 1;
               continue;
             }
             e.set(
-              (Math.random() - 0.5) * 0.22, // lean: nothing grows plumb
-              Math.random() * Math.PI * 2,
-              (Math.random() - 0.5) * 0.22,
+              (rand() - 0.5) * 0.22, // lean: nothing grows plumb
+              rand() * Math.PI * 2,
+              (rand() - 0.5) * 0.22,
             );
             q.setFromEuler(e);
             pos.set(x, terrainY(x, z) - 0.06, z);
             // Height apart from girth, so the cluster has stocky ones and
             // leggy ones rather than one outline at several sizes.
-            scl3.set(scl, scl * (0.8 + Math.random() * 0.5), scl);
+            scl3.set(scl, scl * (0.8 + rand() * 0.5), scl);
             mats.push(m4.clone().compose(pos, q, scl3));
-            const t = 0.94 + Math.random() * 0.12;
+            const t = 0.94 + rand() * 0.12;
             tints.push(new THREE.Color(t, t, t));
           }
         }
@@ -12594,8 +12659,11 @@ export function createKidsWorld(
             continue; // the village centre, already built
           }
           const w = await stand(p.model, p.x, p.z, p.h, p.turn ?? 0);
-          if (w != null && (p.clear ?? 0) > 0) {
-            blockers.push({ x: p.x, z: p.z, r: p.clear! });
+          if (w != null) {
+            lessonGroup(p.x).add(w);
+            if ((p.clear ?? 0) > 0) {
+              blockers.push({ x: p.x, z: p.z, r: p.clear! });
+            }
           }
         }
       }
@@ -12669,7 +12737,7 @@ export function createKidsWorld(
           // not merely the size: a uniform scale is the same plant further
           // away, and the outline is what the eye picks up in a cluster.
           w.scale.y *= hashRange(x, 9, 20, 0.85, 1.25);
-          scene.add(w);
+          lessonGroup(spot.x).add(w);
           characterRoots.add(w);
           if (layer.clear > 0) {
             blockers.push({ x: spot.x, z: spot.z, r: layer.clear });
@@ -12752,6 +12820,8 @@ export function createKidsWorld(
               continue;
             }
             await spawnCompanion(who, spot.x, spot.z, 3.4, false);
+            const villager = friends[friends.length - 1]?.wrap;
+            if (villager != null) lessonGroup(spot.x).add(villager);
             blockers.push({ x: spot.x, z: spot.z, r: 2.2 });
             folk++;
           }
@@ -12819,7 +12889,7 @@ export function createKidsWorld(
             );
             w.userData.nightOnly = true;
             w.visible = nightNow;
-            scene.add(w);
+            lessonGroup(tx).add(w);
             characterRoots.add(w);
             traces++;
           }
@@ -14698,6 +14768,14 @@ export function createKidsWorld(
         jumpFwdV = Math.max(0, jumpFwdV - 0.0016);
       }
       playerX = p.x;
+      // WHICH LESSON'S SCENE IS UP, decided by where the child is standing
+      // rather than by how many stones they have passed. The two agree
+      // almost always, and where they do not it is because the child is
+      // walking through a bleed into the next lesson — which is exactly the
+      // moment the next lesson has to already be there.
+      if (CHAPTER != null) {
+        showLesson(lessonAt(playerX, CHAPTER).n);
+      }
       jumpY = Math.max(0, jumpY + jumpV);
       jumpV -= 0.03;
       // STAND ON THE ROAD, NOT ON THE FIELD BESIDE IT.
