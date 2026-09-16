@@ -392,14 +392,16 @@ export const LESSONS: readonly Lesson[] = [
     mix: [0.18, 0.17, 0.65],
     depth: [8, 24],
     props: [
-      // A PALMYRA, AND ONE OF IT. It stands above everything else on a
+      // A PALMYRA, AND ONE OF IT. Twenty-five to twenty-eight units, which
+      // is seventy real feet at the chapter's own scale — four adults on top
+      // of one another, and more than twice the ridge of a house. It stands above everything else on a
       // Kerala roadside and is the tree you navigate by — a job exactly one
       // tree can hold. Drawn from the canopy list it came up as often as the
       // coconuts did, and a landmark repeated thirty times is a plantation.
       // So it is PLACED, and at a height nothing else here reaches: 16
       // against the canopy's 6.5 to 11, because being the tallest thing in
       // the frame is the whole of what it does.
-      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.62, z: -15, h: 16 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.62, z: -15, h: 26 },
       { model: "village-stone/Mossy_Stone", at: 0.42, z: -7.5, h: 0.9 },
       { model: "village-stone/Laterite_Rock", at: 0.74, z: -9, h: 0.7 },
     ],
@@ -434,8 +436,8 @@ export const LESSONS: readonly Lesson[] = [
     props: [
       // Broken and partial, never a run: the wall is a hint of enclosure
       // here, and becomes a real boundary by Lesson 6.
-      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.2, z: -17, h: 15.5 },
-      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.9, z: -14, h: 16.5 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.2, z: -17, h: 25 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.9, z: -14, h: 27 },
       // Broken and partial here, which is the brief — but broken means a
       // short run with an end to it, not panels floating apart. Five
       // segments at 5.47, the wall's own width at this height, with the
@@ -741,7 +743,7 @@ export const LESSONS: readonly Lesson[] = [
     mix: [0.2, 0.22, 0.58],
     depth: [9, 24],
     props: [
-      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.72, z: -16, h: 16 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.72, z: -16, h: 26 },
       { model: "nature/KeralaBambooGroves", at: 0.1, z: -11, h: 7, clear: 5 },
       { model: `${UTIL}/Village_Well`, at: 0.46, z: -12, h: 2.2, clear: 4 },
       {
@@ -785,8 +787,8 @@ export const LESSONS: readonly Lesson[] = [
     depth: [10, 28],
     props: [
       // Fragments, not a boundary: the wall is a leftover out here.
-      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.46, z: -18, h: 17 },
-      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.8, z: -15, h: 15.5 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.46, z: -18, h: 28 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.8, z: -15, h: 25 },
       // Fragments, not a boundary: three panels and a hole, the remains of
       // something that enclosed a field long ago.
       {
@@ -836,7 +838,7 @@ export const LESSONS: readonly Lesson[] = [
     mix: [0.12, 0.16, 0.72],
     depth: [11, 30],
     props: [
-      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.58, z: -19, h: 16.5 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.58, z: -19, h: 27 },
       {
         model: `${UTIL}/Cattle_Tether_Post`,
         at: 0.36,
@@ -865,7 +867,7 @@ export const LESSONS: readonly Lesson[] = [
     mix: [0.08, 0.0, 0.92],
     depth: [12, 32],
     props: [
-      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.34, z: -17, h: 16 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.34, z: -17, h: 26 },
       { model: "village-stone/Mossy_Stone", at: 0.45, z: -8, h: 0.9 },
       { model: "village-stone/Laterite_Rock", at: 0.8, z: -9.5, h: 0.7 },
     ],

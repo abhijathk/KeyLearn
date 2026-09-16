@@ -77,7 +77,34 @@ const OUT = join(REPO, "root/public/kids-assets/models/village-folk");
 const CAST = [
   { name: "Cow", ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert"] },
   { name: "Cow_Calf", ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert"] },
-  { name: "Headman", ratio: 0.4,     src: "Village assets/Man1_VillageHeadman/Village headman.glb", tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
+  {
+    name: "Headman", ratio: 0.4, tex: 1024, budget: 1_500_000,
+    // THE SECOND HEADMAN FILE, which arrived with real animation on it. The
+    // first had one usable pose under a UUID; this one has two proper idles
+    // and a relaxed walk, which is the difference between a man standing in
+    // a field and a man who lives there.
+    src: "Villagers/Village headman.glb",
+    rename: {
+      // Named for what they are. `idlePool` finds anything matching /idle/i
+      // and CYCLES it when there is more than one, so two named idles is
+      // what stops him holding a single loop for four minutes.
+      Long_Breathe_and_Look_Around: "Idle_A",
+      Short_Breathe_and_Look_Around: "Idle_B",
+      // The stroll takes the name the walker code looks for. A headman
+      // walking his own village is not marching.
+      //
+      // The stiff "Walking" is DROPPED rather than renamed out of the way:
+      // dropping happens before renaming in this pipeline, so it is gone by
+      // the time Casual_Walk claims its name. Renaming it to a parking name
+      // and listing that in `drop` did nothing at all — the drop had already
+      // run, and the dead clip shipped.
+      Casual_Walk: "Walking",
+    },
+    drop: [
+      "restpose", "Walking", "Injured_Walk", "run_fast_6_inplace",
+      "Sit_Cross_Legged_on_Floor", "Stand_Up3", "Stand_to_Sit_Transition_M",
+    ],
+  },
   { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
   { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" } },
   {

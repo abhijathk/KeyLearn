@@ -8707,6 +8707,46 @@ export function createKidsWorld(
     VillageBoy: 4.75 * FOOT,
   };
 
+  /**
+   * HOW TALL EACH TREE IS, IN FEET, AND WHY THEY ARE NOT DRAWN AT IT.
+   *
+   * The figures are the real ones: a mature coconut palm is forty feet, a
+   * tamarind fifty, a papaya twenty, a banana twelve. Drawn literally, at
+   * 1.044 units to the foot, a coconut is 42 units — and the camera can see
+   * 29 units of height in total. Every open stretch of this chapter would be
+   * trunk, the painted horizon would be behind foliage all the way, and the
+   * sky that took a week to get right would be gone.
+   *
+   * So there is one compression, applied to every species equally, and the
+   * PROPORTIONS survive it — which is the part that was actually wrong.
+   * Before this, every canopy tree was drawn between 6.5 and 11 units
+   * whatever species it was, so a papaya and a tamarind were the same size
+   * and both stood barely a head over a villager. Now a tamarind is three
+   * times a papaya, as it should be, and a coconut palm stands about four
+   * adults tall instead of one.
+   *
+   * 0.42 is the largest factor that leaves the horizon band visible over the
+   * planting on the open lessons, which is the constraint that decides it.
+   */
+  const TREE_SCALE = 0.42;
+  const TREE_FEET: Record<string, number> = {
+    "village-plants/Palmyra_Karimpana": 70,
+    "village-plants/Tamarind_Tree": 50,
+    "village-plants/Coconut_Palm": 40,
+    "village-plants/Peepal_Arayal": 55,
+    "village-plants/Mango_Tree": 45,
+    "village-plants/Jackfruit_Tree": 38,
+    "village-plants/Arecanut_Palm": 35,
+    "village-plants/Papaya_Tree": 20,
+    "village-plants/Drumstick_Muringa": 26,
+    "village-plants/Banana_Plant": 12,
+    "village-plants/Hibiscus_Chemparathi": 7,
+    "village-plants/Tapioca_Cassava": 7,
+    "village-plants/Taro_Chembu": 3.5,
+    "village-plants/Kerala_Fern": 2.5,
+    "village-plants/Kerala_Grass_Tuft": 2,
+  };
+
   const MILESTONE_CLEAR = 3.2;
   const MILESTONE_CLEAR_DEPTH = -15;
 
@@ -8739,6 +8779,8 @@ export function createKidsWorld(
    * one stretch of ground and is hidden with it.
    */
   const roadWalkers: DinoRig[] = [];
+  /** The one villager who takes an interest. See the tick. */
+  let curiousBoy: DinoRig | null = null;
 
   const blockers: { x: number; z: number; r: number }[] = [];
 
@@ -11376,7 +11418,12 @@ export function createKidsWorld(
       friends.push({
         wrap,
         mixer,
-        run: null,
+        // Kept for the same reason as `walk` below: it was null because no
+        // companion ever ran, and now one does.
+        run:
+          clips.find((c) => /^run(ning)?$/i.test(c.name)) != null
+            ? mixer.clipAction(clips.find((c) => /^run(ning)?$/i.test(c.name))!)
+            : null,
         // THE WALK, KEPT RATHER THAN THROWN AWAY. This was `null` for every
         // companion, because until now none of them went anywhere — they
         // stand by the road and idle. The road walkers do go somewhere, and
@@ -13131,11 +13178,24 @@ export function createKidsWorld(
             // Passed explicitly rather than by setting `guardRate` to zero,
             // because the village's guards on the ROAD are a different thing
             // and should keep pacing.
+            // WITH THE DEPTH FALLOFF, like everything else standing in the
+            // field. An orthographic camera shrinks nothing, so a farmer
+            // twenty units back is drawn exactly as tall as one at the
+            // verge — and the trees, walls and animals around her have all
+            // been scaled by `perspective` since it was written, so she was
+            // the one thing in the field that did not recede. Standing in a
+            // plot of correctly-shrinking plants at full size, she read as a
+            // giant.
+            //
+            // The hero, the companions and the road walkers are exempt, and
+            // for the same reason in each case: they TRAVEL. A character
+            // whose size changed as they walked would be growing and
+            // shrinking down the road, which is far worse than not receding.
             await spawnCompanion(
               who,
               spot.x,
               spot.z,
-              FOLK_HEIGHT[who] ?? 5.2 * FOOT,
+              (FOLK_HEIGHT[who] ?? 5.2 * FOOT) * perspective(spot.z),
               false,
               false,
             );
@@ -13235,6 +13295,36 @@ export function createKidsWorld(
             }
             roadWalkers.push(f);
           }
+          // ── THE BOY WHO COMES OVER TO LOOK ─────────────────────────
+          //
+          // One child of the village, near the centre, who walks out to the
+          // party, stops a little way off and stares, and then runs. It is
+          // the one piece of behaviour here aimed at the child rather than
+          // at the scene: everybody else is busy with their own day and
+          // ignores them entirely, so somebody noticing them is worth more
+          // than any amount of ambient activity.
+          //
+          // He can do it because his rig turned out to be Abee's, so he has
+          // a real walk and a real run — and ABEE_IDLE_ListeningAlert_01 is
+          // already exactly the pose for stopping to look at something.
+          if (CHAPTER != null && activity === "day") {
+            const bx = CHAPTER[4]! + (CHAPTER[5]! - CHAPTER[4]!) * 0.55;
+            const bz = meander(bx) - roadClear - 4;
+            await spawnCompanion(
+              "VillageBoy",
+              bx,
+              bz,
+              FOLK_HEIGHT.VillageBoy!,
+              false,
+              false,
+            );
+            const b = friends[friends.length - 1];
+            if (b != null) {
+              b.wrap.userData.fixedFace = true;
+              b.wrap.userData.curious = { state: "wait", t: 0, homeZ: bz };
+              curiousBoy = b;
+            }
+          }
           console.info(`[chapter] ${roadWalkers.length} on the road`);
         }
       }
@@ -13329,7 +13419,23 @@ export function createKidsWorld(
           if (src == null) {
             continue;
           }
-          const h = hashRange(x, 5, 16, layer.lo, layer.hi);
+          // THE SPECIES' OWN HEIGHT, not the layer's.
+          //
+          // Every canopy tree was drawn between 6.5 and 11 whatever it was,
+          // so a coconut palm and a papaya came out the same size and both
+          // stood barely a head over a villager. Real trees are nothing like
+          // that: a tamarind is three times a papaya, and it is the
+          // DIFFERENCE between them that says this is a place where things
+          // grow rather than a set dressed with one prop at two scales.
+          //
+          // Written in feet, converted by the same ruler as the people (Dave
+          // is 4.7 units and nine years old, so a foot is 1.044), then taken
+          // down by TREE_SCALE — see there for why that number is not 1.
+          const h =
+            (TREE_FEET[pick] ?? 22) *
+            FOOT *
+            TREE_SCALE *
+            hashRange(x, 5, 16, 0.82, 1.18);
           const w = fitToHeight(src.clone(true), h * perspective(spot.z));
           w.position.set(spot.x, surfaceY(spot.x, spot.z), spot.z);
           w.rotation.y = hashRange(x, 6, 17, 0, Math.PI * 2);
@@ -15410,6 +15516,93 @@ export function createKidsWorld(
         const nz =
           meander(nx) + (f.wrap.position.z - meander(f.wrap.position.x));
         f.wrap.position.set(nx, surfaceY(nx, nz), nz);
+      }
+
+      // ── THE BOY WHO COMES OVER TO LOOK ──────────────────────────────
+      //
+      // Wait until the party is close, walk out to meet them, stop short and
+      // stare, then lose his nerve and run. Four states and no more: the
+      // whole thing has to read in the few seconds it is on screen, and
+      // anything subtler than "he noticed us" would not survive a child
+      // reading the word they are typing at the same time.
+      //
+      // He stops SHORT rather than reaching them. A stranger who walks all
+      // the way up to a child is a different feeling entirely, and the gap
+      // is what makes it shy curiosity instead.
+      if (curiousBoy != null) {
+        const cu = curiousBoy.wrap.userData.curious as {
+          state: string;
+          t: number;
+          homeZ: number;
+        };
+        const cw = curiousBoy.wrap;
+        const dx = playerX - cw.position.x;
+        const dz = LANE - cw.position.z;
+        const gap = Math.hypot(dx, dz);
+        const play = (name: string, scale = 1) => {
+          const a =
+            name === "walk"
+              ? curiousBoy!.walk
+              : name === "run"
+                ? curiousBoy!.run
+                : null;
+          if (a != null && !a.isRunning()) {
+            curiousBoy!.mixer.stopAllAction();
+            a.timeScale = scale;
+            a.reset().play();
+          }
+        };
+        cu.t += dt;
+        if (cu.state === "wait") {
+          // Only once the child is actually near, and only from in front —
+          // a boy who starts walking towards somebody still forty units away
+          // has seen them from impossibly far off.
+          if (gap < 22 && dx < 0) {
+            cu.state = "approach";
+            cu.t = 0;
+          }
+        } else if (cu.state === "approach") {
+          const want = Math.atan2(dx, dz);
+          cw.rotation.y += angTo(cw.rotation.y, want) * Math.min(1, dt * 3);
+          const sp = 1.7 * dt * motionScale;
+          cw.position.x += (dx / (gap || 1)) * sp;
+          cw.position.z += (dz / (gap || 1)) * sp;
+          cw.position.y = surfaceY(cw.position.x, cw.position.z);
+          play("walk", 0.9);
+          // Stops a good six units off, and gives up if they walk away.
+          if (gap < 6.5 || cu.t > 14) {
+            cu.state = "stare";
+            cu.t = 0;
+          }
+        } else if (cu.state === "stare") {
+          const want = Math.atan2(dx, dz);
+          cw.rotation.y += angTo(cw.rotation.y, want) * Math.min(1, dt * 4);
+          if (cu.t > 2.6) {
+            cu.state = "flee";
+            cu.t = 0;
+          }
+        } else if (cu.state === "flee") {
+          // Back to his own side of the road, and away up it.
+          const away = Math.atan2(-1, -0.35);
+          cw.rotation.y += angTo(cw.rotation.y, away) * Math.min(1, dt * 4);
+          const sp = 3.4 * dt * motionScale;
+          cw.position.x -= sp;
+          cw.position.z = Math.max(cu.homeZ - 6, cw.position.z - sp * 0.35);
+          cw.position.y = surfaceY(cw.position.x, cw.position.z);
+          play("run", 1);
+          if (cu.t > 4) {
+            cu.state = "done";
+          }
+        }
+        if (cu.state === "stare" && cu.t < 0.1) {
+          // The one pose in his set that IS this: he is listening and alert,
+          // which is what somebody stopping to look at you actually does.
+          curiousBoy.mixer.stopAllAction();
+          const alert = curiousBoy.idles.find((a) =>
+            /ListeningAlert/i.test(a.getClip().name),
+          );
+          (alert ?? curiousBoy.idle)?.reset().play();
+        }
       }
 
       playerX = p.x;
