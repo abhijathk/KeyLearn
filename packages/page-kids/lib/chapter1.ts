@@ -555,6 +555,27 @@ export type Lesson = {
    */
   readonly folkDepth?: readonly [number, number];
   /**
+   * VILLAGERS WHO STAND SOMEWHERE IN PARTICULAR, rather than anywhere in
+   * the plot.
+   *
+   * `folk` is a list of people and the placement finds them room; that is
+   * right for a farmer in her own field, where the exact spot carries no
+   * meaning. It is wrong wherever the POSITION is the story — the tea
+   * seller belongs in the tea shop and nowhere else, and "the headman
+   * between the bamboo and the well" is a sentence about a place.
+   *
+   * `at` is a fraction of the segment, like every other placement here, so
+   * one post sits in the same relation to its lesson on a 270-unit chapter
+   * and a 640-unit one.
+   */
+  readonly posts?: readonly {
+    readonly model: string;
+    readonly at: number;
+    readonly z: number;
+    /** Which way to face, in radians. Default is square to the road. */
+    readonly face?: number;
+  }[];
+  /**
    * Inside the Kuttichathan corridor, M4 to M7.
    *
    * Traces only, and no figure at all — a moved pot, a disturbed basket.
@@ -1156,15 +1177,28 @@ export const LESSONS: readonly Lesson[] = [
         // walks the shop fronts out onto the road, which is the mistake this
         // placement already made once.
         //
-        // -21.5, NOT -18: A FORECOURT A WELL CAN STAND IN. With the front
-        // face at -11 there were under four units between the milestone
-        // line and the shop fronts, and the well written for "between the
-        // bamboo and the market" was standing at -12 — inside the stalls,
-        // on every band, invisible. Seven units of trodden ground is a
-        // village street with a well and a cart on it, which is what the
-        // yard painter has been painting there all along. The back wall
-        // moves to about -28, well inside the ground's edge at -38.
-        z: -21.5,
+        // A FORECOURT A WELL CAN STAND IN, AND A ROAD CLOSE ENOUGH TO SEE
+        // THE SHOPS FROM. With the front face at -11 there were under four
+        // units between the milestone line and the shop fronts, and the
+        // well written for "between the bamboo and the market" stood at -12
+        // — inside the stalls, on every band, invisible. -21.5 bought seven
+        // units of trodden ground for the well and the cart; at -19 the
+        // forecourt is still four and a half units deep and the row itself
+        // comes two and a half units nearer the child, which is what a
+        // market a village actually walks to looks like from the road.
+        //
+        // EVERYTHING IN THE FORECOURT MOVES WITH IT, by exactly the same
+        // two and a half: the well, the cart, the lamp and the cow in front
+        // of the stalls. Move the building alone and the cart it is parked
+        // behind ends up inside it — the forecourt is a group, and its
+        // depths are all relative to this one number even though the file
+        // has to write them out separately.
+        //
+        // The back wall sits at about -28, well inside the ground's edge at
+        // -38. The smith on his plinth needs no change: he is placed off
+        // the building's own measured front face, so he comes forward with
+        // the shop he is sitting at.
+        z: -19,
         h: 17.5,
         // A FOOTPRINT, NOT A DISC — see `box`. `clear` is now the margin of
         // trading ground kept bare of planting round the building; the
@@ -1194,9 +1228,12 @@ export const LESSONS: readonly Lesson[] = [
       {
         model: "village-folk/Cow",
         // Between the gate grove and the well, and broadside to the road so
-        // its whole length reads rather than its nose.
+        // its whole length reads rather than its nose. Forward with the rest
+        // of the forecourt when the row came nearer the road — at -9.5 she
+        // was standing against the shop fronts rather than out in the open
+        // ground in front of them.
         at: 0.14,
-        z: -9.5,
+        z: -7,
         h: 5.2,
         // ON THE GROUND, NOT IN IT. The sinking trick is abandoned: it was
         // a way to fake a resting cow without a resting clip, and it does
@@ -1235,7 +1272,7 @@ export const LESSONS: readonly Lesson[] = [
       {
         model: `${UTIL}/Village_Well`,
         at: 0.3,
-        z: -11.6,
+        z: -9.1,
         h: 3.6,
         turn: -Math.PI / 2,
         clear: 6,
@@ -1243,14 +1280,14 @@ export const LESSONS: readonly Lesson[] = [
       {
         model: `${UTIL}/Village_Cart`,
         at: 0.56,
-        z: -10,
+        z: -7.5,
         h: 2.6,
         turn: 1.9,
         clear: 4,
       },
       // Out at nine with the last of the stalls — see the market's own
       // shop lamps, which close between seven and nine.
-      { model: `${UTIL}/Petromax_Lamp`, at: 0.5, z: -10.5, h: 1.2, lit: 21 },
+      { model: `${UTIL}/Petromax_Lamp`, at: 0.5, z: -8, h: 1.2, lit: 21 },
       // THE CLOSING GROVE, PAST THE STONE. At 0.88 it was inside the market:
       // a 66-unit frontage centred at 0.56 reaches from 0.23 to 0.89 of the
       // segment, so the bamboo was coming up through the last two stalls.
@@ -1271,12 +1308,23 @@ export const LESSONS: readonly Lesson[] = [
       { model: "nature/KeralaBambooGroves", at: 1.06, z: -13, h: 23, clear: 5 },
     ],
     herd: [],
-    folk: ["TeaStall", "Headman"],
     // AT THE STALLS. The forecourt runs from the milestone line at about
     // -7.5 to the shop fronts at about -14.6, and a person needs a couple
     // of units from either. Fourteen to twenty-four — the default, a farmer
     // in her plot — is the inside of the market.
-    folkDepth: [8.5, 11.2],
+    // BOTH OF THIS LESSON'S PEOPLE STAND SOMEWHERE IN PARTICULAR, so the
+    // hashed placement has nobody left to place. The tea seller is inside
+    // his own shop — see the market block in world.ts, which is the only
+    // place that knows where the shop fronts actually ended up after the
+    // building was fitted to the band — and the headman has a post below.
+    folk: [],
+    posts: [
+      // BETWEEN THE BAMBOO AND THE WELL. The grove is at 0.05 and the well
+      // at 0.3, so halfway is where a man stands when he is talking to
+      // whoever is drawing water and watching the road at the same time.
+      // A little in front of the well so he does not read as behind it.
+      { model: "Headman", at: 0.18, z: -8.6 },
+    ],
     corridor: true,
     // The strongest in the chapter.
     trace: { count: 4, span: [0.1, 0.94] },

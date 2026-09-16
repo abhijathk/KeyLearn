@@ -14158,6 +14158,39 @@ export function createKidsWorld(
             );
           }
 
+          // ── THE TEA SELLER, INSIDE HIS OWN SHOP ───────────────────────
+          //
+          // Behind the front plane rather than in front of it, which is the
+          // whole difference between a man serving tea and a man standing
+          // outside a tea shop. -0.24 across the frontage is the tea
+          // stall's own fraction — the same number its lamp hangs at — so
+          // he cannot end up behind somebody else's counter.
+          //
+          // Placed here rather than from the chapter table because this is
+          // the only place that knows where the shop fronts actually ended
+          // up: the building is fitted to the band, so the frontage is a
+          // different width on a five-year-old's road than on an
+          // eleven-year-old's, and a fraction of it is only meaningful once
+          // that is settled.
+          {
+            const counter = on(-0.24 * wide, 0, -1.6);
+            await spawnCompanion(
+              "TeaStall",
+              counter[0],
+              counter[2],
+              (FOLK_HEIGHT.TeaStall ?? 5.6 * FOOT) * perspective(counter[2]),
+              false,
+              false,
+              0,
+            );
+            const t = friends[friends.length - 1];
+            if (t != null) {
+              t.wrap.userData.fixedFace = true;
+              t.wrap.userData.villageBystander = true;
+              builtGroup.add(t.wrap);
+            }
+          }
+
           // ── THE SMITH AT HIS FORGE ────────────────────────────────────
           //
           // On the shop's own foundation, not on a chair and not on the
@@ -14923,6 +14956,37 @@ export function createKidsWorld(
           // The lamps and the road walkers were fixed this way already. This
           // is the last of the three, and the reason the same complaint kept
           // coming back.
+          // ── THE ONES WHO STAND SOMEWHERE IN PARTICULAR ──────────────
+          //
+          // Placed before the hashed folk below and NOT through `clearSpot`:
+          // a post is a stated position, and letting the clearance search
+          // move it would defeat the whole point of having written it down.
+          // If a post collides with something the fix is the number in the
+          // table, not a nudge at run time.
+          for (const [i, post] of (l.posts ?? []).entries()) {
+            const px = from + post.at * len;
+            await spawnCompanion(
+              post.model,
+              px,
+              post.z,
+              (FOLK_HEIGHT[post.model] ?? 5.2 * FOOT) * perspective(post.z),
+              false,
+              false,
+              post.face,
+            );
+            const v = friends[friends.length - 1];
+            if (v == null) {
+              continue;
+            }
+            v.wrap.userData.fixedFace = true;
+            v.wrap.userData.folkOf = l.n;
+            v.wrap.userData.folkRank = i;
+            v.wrap.userData.isChild = isChild(post.model);
+            standingFolk.push(v);
+            builtGroup.add(v.wrap);
+            blockers.push({ x: px, z: post.z, r: 2.2 });
+            folk++;
+          }
           for (const [i, who] of l.folk.entries()) {
             const x = from + (0.3 + i * 0.28) * len;
             // BACK FROM THE ROAD, behind the boundary rather than on the

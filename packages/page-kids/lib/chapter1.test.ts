@@ -907,8 +907,14 @@ test("the market is fitted to its lesson, and its front face stays put", () => {
   const long = placements(BANDS[2]!, persp).find((q) =>
     q.model.includes("Market"),
   )!;
+  // 0.90, not 0.93. The building was brought two and a half units nearer
+  // the road, so `persp` shrinks it less and it is DRAWN wider — and the
+  // span cap then trims the height to keep the frontage inside 82 per cent
+  // of the lesson. That is the fitting doing its job, not a refit: what
+  // matters is the drawn frontage, which is capped at the same limit either
+  // way, and the front face, which the spread check below still pins.
   isTrue(
-    long.h > market.h * 0.93,
+    long.h > market.h * 0.9,
     `the long road's market was refitted from ${market.h} to ${long.h}`,
   );
   // And the shop fronts are on the same line whatever the band.
@@ -939,15 +945,19 @@ test("nothing in the market lesson stands inside the market", () => {
         `${p.model} at (${p.x.toFixed(1)}, ${p.z}) is inside the market`,
       );
     }
-    // And the people stand in the forecourt: between the milestone line
-    // and the shop fronts, with room to spare from both.
-    const [near, far] = LESSONS[6]!.folkDepth!;
+    // And the people this lesson names stand in the forecourt rather than
+    // in the stalls. They are POSTS now — stated positions, because the tea
+    // seller belongs in the tea shop and the headman between the bamboo and
+    // the well, and a hashed spot cannot say either — so the check is on
+    // the post itself rather than on a depth band.
     const front = -(m.z + m.depth! / 2);
-    isTrue(near > 7.5, "the traders stand on the road");
-    isTrue(
-      far + 2 < front,
-      `the traders stand in the stalls (${far} vs ${front})`,
-    );
+    for (const post of LESSONS[6]!.posts ?? []) {
+      isTrue(-post.z > 6, `${post.model} stands on the road`);
+      isTrue(
+        -post.z + 1.5 < front,
+        `${post.model} stands in the stalls (${-post.z} vs ${front})`,
+      );
+    }
   }
 });
 
