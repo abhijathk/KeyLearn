@@ -13387,14 +13387,33 @@ export function createKidsWorld(
           // playing at half past seven sees a row with one gap in it, at
           // half past eight two, and after nine a closed market, which is
           // exactly what the brief means by "market closing state".
+          // The far end of the row is SHUT — not shut early, shut. Some
+          // premises in a market are not trading at all: a lock-up, a store,
+          // somebody who gave it up. It has no entry here rather than an
+          // entry that closes at four, because a shop that is never open
+          // does not keep hours.
+          //
+          // The tailor is the last one that does, and he goes at seven.
+          // `up` is per shop where it has to be. The row is not one roofline
+          // — the shops are built at different heights and their eaves step
+          // up and down across the frontage — so a single fraction hangs one
+          // lantern into the rafters and leaves the next one floating below
+          // the overhang. Raman Stores has the taller front of the two.
           const SHOPS = [
-            { at: -0.4, closes: 21, kind: "petromax" as const },
+            { at: -0.4, closes: 21, kind: "petromax" as const, up: 0.47 },
             { at: -0.24, closes: 20, kind: "oil" as const },
-            { at: -0.08, closes: 21, kind: "petromax" as const },
-            { at: 0.08, closes: 21, kind: "oil" as const },
-            { at: 0.24, closes: 21, kind: "oil" as const },
-            { at: 0.4, closes: 19, kind: "oil" as const },
-          ];
+            { at: -0.08, closes: 21, kind: "petromax" as const, up: 0.55 },
+            // The blacksmith's counter sits further along his front and a
+            // little higher than the others; the tailor works at a table
+            // rather than a counter, which stands taller.
+            { at: 0.13, closes: 21, kind: "oil" as const, up: 0.235 },
+            { at: 0.24, closes: 19, kind: "oil" as const, up: 0.225 },
+          ] as {
+            at: number;
+            closes: number;
+            kind: "petromax" | "oil";
+            up?: number;
+          }[];
           for (const shop of SHOPS) {
             // EVERY shop's lamp is built; whether it BURNS is decided in the
             // tick, every frame, from its own closing hour. Skipping the
@@ -13415,7 +13434,36 @@ export function createKidsWorld(
             // the only lamp anybody modelled. The oil lamps stay as flames —
             // which is nearly right anyway: a nilavilakku is a small brass
             // thing almost entirely hidden by what it is burning.
-            const spot = on(shop.at * wide, 0.46, -0.32);
+            // ── AT THE HEIGHT THE THING ACTUALLY SITS AT ──────────────
+            //
+            // `up` is a FRACTION of the building, and this building is 17.5
+            // units tall — so 0.46 put every lamp eight units off the
+            // ground, half way up the wall, hanging in the air behind the
+            // shutters. It read as a glow in a shop because that is all it
+            // could read as.
+            //
+            // An oil lamp stands on the counter: about a metre, which at
+            // this world's scale is a fifth of the way up this frontage. A
+            // petromax does not stand — it HANGS, over the counter and a
+            // little above head height, which is where you put a lamp you
+            // want to light a whole stall by and not have anybody knock
+            // over. That difference in height is most of what tells the two
+            // apart at a glance.
+            // A PETROMAX HANGS FROM THE EAVES; AN OIL LAMP SITS ON THE
+            // COUNTER. That is not decoration, it is what each lamp is for —
+            // a pressure lantern lights a whole stall and is hung out of
+            // reach where it cannot be knocked over, and a wick lamp lights
+            // the few feet in front of somebody working and belongs at
+            // elbow height.
+            //
+            // So the petromax goes up under the roof edge and OUT to the
+            // front plane, where an eave is; the oil lamp stays a fifth of
+            // the way up and set back behind the shutters, so what reaches
+            // the road from it is the doorway rather than the flame.
+            const spot =
+              shop.kind === "petromax"
+                ? on(shop.at * wide, shop.up ?? 0.5, -0.12)
+                : on(shop.at * wide, shop.up ?? 0.19, -0.32);
             if (shop.kind === "petromax") {
               const lampSrc = await prop("village-util/Petromax_Lamp");
               if (lampSrc != null) {
@@ -13426,7 +13474,17 @@ export function createKidsWorld(
                   const m = n as THREE.Mesh;
                   if (m.isMesh) m.geometry.computeBoundingSphere();
                 });
-                lamp.position.set(spot[0], spot[1] - 0.85, spot[2]);
+                // Hung so its MANTLE is where the light is. `fitToHeight`
+                // puts a model's base at the position it is given, and the
+                // glow belongs at the lamp's middle — so the body drops by
+                // half its height and the flame sits inside the glass rather
+                // than under the lantern.
+                // HUNG, so its body is BELOW the point it is fixed at and
+                // the glow sits inside the glass. `fitToHeight` puts a
+                // model's base where it is told, so the whole lamp drops by
+                // its own height and the eave line ends up at its handle —
+                // which is where a lamp on a hook actually meets the roof.
+                lamp.position.set(spot[0], spot[1] - 1.7, spot[2]);
                 lamp.rotation.y = Math.random() * Math.PI * 2;
                 builtGroup.add(lamp);
               }

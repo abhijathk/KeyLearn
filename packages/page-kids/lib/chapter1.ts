@@ -1011,7 +1011,18 @@ export const LESSONS: readonly Lesson[] = [
       // knee-high, which is a garden feature rather than the thing the whole
       // stretch of road exists around. Its clearance grows with it, so
       // nothing plants itself in the drawing space.
-      { model: `${UTIL}/Village_Well`, at: 0.3, z: -12, h: 3.6, clear: 6 },
+      // A QUARTER TURN, bringing its right-hand side round to face the
+      // road. A well is not symmetrical — the winch, the post and the rope
+      // are all on one side of it — and which side is showing is the
+      // difference between a well and a ring of stones.
+      {
+        model: `${UTIL}/Village_Well`,
+        at: 0.3,
+        z: -12,
+        h: 3.6,
+        turn: -Math.PI / 2,
+        clear: 6,
+      },
       {
         model: `${UTIL}/Village_Cart`,
         at: 0.56,
