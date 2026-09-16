@@ -3643,19 +3643,10 @@ export function createKidsWorld(
    * working" were all this one line: the lights and the people were the only
    * things in the scene not being told what time it was.
    */
-  const stagedNow = (): { readonly day: number; readonly night: number } => {
-    if (hourPref == null) {
-      return stagedHours();
-    }
-    // THE SETTING PINS A DAYLIGHT HOUR AND THE NIGHT BUTTON MIRRORS IT: the
-    // panel offers Early, Morning, Midday, Afternoon, Evening and nothing
-    // else, so "Midday, but at night" can only mean midnight. `?hour=` is the
-    // one place an hour is meant literally — a reviewer asking for 2am wants
-    // 2am in both modes, not 2pm in one of them.
-    return reviewHour != null
-      ? { day: hourPref, night: hourPref }
+  const stagedNow = (): { readonly day: number; readonly night: number } =>
+    hourPref == null
+      ? stagedHours()
       : { day: hourPref, night: (hourPref + 12) % 24 };
-  };
 
   const worldHour = (): number => {
     const staged = stagedNow();
@@ -7425,8 +7416,26 @@ export function createKidsWorld(
       mixer.update(0);
       lowest = lowestNow();
     }
+    // RELATIVE TO THE WRAP, NOT TO THE WORLD'S FLOOR.
+    //
+    // `lowestNow` measures in world space, and this subtracted that world
+    // height straight from a LOCAL offset inside the wrap — which is only the
+    // same number when the wrap is sitting at y=0. Companions are planted
+    // before they are placed, so they were; the herd is planted after, out in
+    // a field, so every animal was driven into the ground by exactly the
+    // height of the ground beneath it. It showed as buffalo standing in the
+    // paddy up to the knee, deeper the further back the field lay, which is
+    // precisely the shape of the terrain they were being buried by.
+    const parentY = (() => {
+      const p = root.parent;
+      if (p == null) {
+        return 0;
+      }
+      p.updateMatrixWorld(true);
+      return new THREE.Vector3().setFromMatrixPosition(p.matrixWorld).y;
+    })();
     if (Number.isFinite(lowest)) {
-      root.position.y -= lowest;
+      root.position.y -= lowest - parentY;
     }
     mixer.update(0);
 
@@ -7453,7 +7462,10 @@ export function createKidsWorld(
       }
       others.forEach((a, k) => (a.weight = saved[k]!));
       mixer.update(0);
-      return Number.isFinite(low) ? low : 0;
+      // Same frame of reference as the plant above: how far this pose's
+      // lowest point sits above the wrap's own origin, which is what every
+      // caller then subtracts from the ground height.
+      return Number.isFinite(low) ? low - parentY : 0;
     };
   }
 
@@ -9065,8 +9077,17 @@ export function createKidsWorld(
   /** Distance walked since the last puff of dust - see the tick. */
   let footDust = 0;
 
-  /** Does this land's surface raise dust underfoot? */
-  const dustyRoad = land.path === "mud";
+  /**
+   * Does this land's surface raise dust underfoot?
+   *
+   * NOT ON THE VILLAGE ROAD. A laterite road is cut into ironstone and packed
+   * hard by everything that has ever walked it — it is the reason the road
+   * reads as older than the houses beside it — and a child kicking up a puff
+   * at every stride turned that into loose sand. The dust was written for the
+   * dino run's dry riverbed, where it belongs, and followed the village here
+   * only because both surfaces are called "mud" in the land table.
+   */
+  const dustyRoad = land.path === "mud" && CHAPTER == null;
   let jumpV = 0;
   let jumpY = 0;
   let jumpCount = 0; // jumps used since last touchdown (max 2 = double jump)
@@ -9290,7 +9311,7 @@ export function createKidsWorld(
   /** Villagers standing on their own land. Shown or hidden by the hour. */
   const standingFolk: DinoRig[] = [];
   /** Last reported count, so the log speaks only when it changes. */
-  let villagersShown = -1;
+  let villagersShown = "";
   /** The one villager who takes an interest. See the tick. */
   let curiousBoy: DinoRig | null = null;
 
@@ -14148,7 +14169,17 @@ export function createKidsWorld(
           const len = CHAPTER[l.n]! - from;
           // Two or three head, spread through the middle of the segment so
           // they are met while walking it rather than at a milestone.
-          const n = 2 + Math.floor(hash3(l.n, 0, 31) * 2);
+          const n = 3 + Math.floor(hash3(l.n, 0, 31) * 3);
+          // ONE BUFFALO TO A LESSON, AND THE REST ARE COWS.
+          //
+          // The model was drawn from the lesson's list per animal, so a
+          // lesson that listed the buffalo could field two or three of them —
+          // and a water buffalo is not a herd animal here, it is THE animal
+          // on this road with a temper, the one the whole charge behaviour
+          // was written for. Three of them in one paddy is three of the
+          // village's most dangerous thing standing about in a field, which
+          // makes it ordinary. One, among cattle, is what makes it read.
+          let hadBuffalo = false;
           // BUFFALO FIRST, AND WITH ROOM ROUND THEM.
           //
           // Cattle keep their distance from a water buffalo — it is the one
@@ -14166,7 +14197,13 @@ export function createKidsWorld(
             const at = 0.2 + ((i + hash3(l.n, i, 32)) / n) * 0.6;
             const x = from + at * len;
             const z = -hashRange(x, i, 33, 13, 25);
-            const model = hashPick(l.herd, from + i, i, 34);
+            let model = hashPick(l.herd, from + i, i, 34);
+            // The second buffalo of a lesson becomes a cow. Not skipped: the
+            // field is meant to have an animal in it, and a lesson that lost
+            // two of its three head to this rule would read as empty land.
+            if (model === "Buffalo" && hadBuffalo) {
+              model = "Cow";
+            }
             // A buffalo needs a paddock's worth to itself; a cow only needs
             // not to be standing in a tree.
             const room = model === "Buffalo" ? 11 : 3.5;
@@ -14201,6 +14238,12 @@ export function createKidsWorld(
             // different species rather than as one animal at two sizes. The
             // calf is 55 per cent: old enough to be out in the field, plainly
             // not grown.
+            if (model === "Buffalo") {
+              // Claimed only once it is actually standing there: a buffalo
+              // refused for want of room, or dropped for sitting in front of
+              // a milestone, must not spend the lesson's one buffalo.
+              hadBuffalo = true;
+            }
             await spawnWild(model, spot.x, spot.z, WILD_HEIGHT[model] ?? 6.0);
             // Re-parented into its lesson, the same as everything else the
             // chapter places. Lost once already in a reshuffle of this
@@ -14392,7 +14435,17 @@ export function createKidsWorld(
             if (isChild(who) && !kidsAllowed) {
               continue; // home before dark, like everybody's children
             }
-            const x = hashRange(i, 0, 90, 10, Math.max(40, TRAIL_END - 10));
+            // INSIDE HIS OWN ROUND. Spread across the whole road, a walker
+            // could start outside the beat he is given below and spend his
+            // first two minutes waiting to come back from somewhere he had
+            // never been.
+            const hub0 = i % 2 === 0 ? 5 : 7;
+            const hubX0 =
+              CHAPTER[hub0 - 1]! + (CHAPTER[hub0]! - CHAPTER[hub0 - 1]!) * 0.5;
+            const x = Math.min(
+              Math.max(10, hubX0 + hashRange(i, 0, 90, -70, 70)),
+              Math.max(40, TRAIL_END - 10),
+            );
             // The far half of the road, on the opposite side of the centre
             // from the hero's lane, and a little in from the edge.
             const side = LANE >= 0 ? -1 : 1;
@@ -14430,9 +14483,21 @@ export function createKidsWorld(
             const hub = i % 2 === 0 ? 5 : 7;
             const hubX =
               CHAPTER[hub - 1]! + (CHAPTER[hub]! - CHAPTER[hub - 1]!) * 0.5;
+            // WIDE ENOUGH THAT THE TWO ROUNDS OVERLAP. At 52 each walker was
+            // sealed into one hub's half of the road: the headman and the
+            // farmer woman kept to the village, the tea seller and the boy to
+            // the market, and a child standing in the market never met the
+            // first two at all — four people on the road and only ever the
+            // same two of them in view. At 80 both rounds cover both hubs, so
+            // who you meet is who happens to be passing rather than a fixture
+            // of where you are standing.
+            //
+            // It also buys back the time the waiting costs: a longer round is
+            // more walking per stop, and a road where everybody is resting is
+            // an empty road.
             f.wrap.userData.beat = [
-              Math.max(8, hubX - 52),
-              Math.min(TRAIL_END - 8, hubX + 52),
+              Math.max(8, hubX - 80),
+              Math.min(TRAIL_END - 8, hubX + 80),
             ];
             // NOBODY WALKS BEFORE SIX. The early pair used to start at
             // four, which put two people on a dark road an hour before
@@ -16895,8 +16960,14 @@ export function createKidsWorld(
           }
         }
         for (const f of roadWalkers) if (f.wrap.visible) showing++;
-        if (showing !== villagersShown) {
-          villagersShown = showing;
+        // ON THE HOUR AS WELL AS ON THE COUNT. Watching this line was how
+        // the pinned-hour bug was meant to be caught, and it could not be:
+        // it spoke only when the number of people changed, so an hour that
+        // moved without moving the headcount — which is most of them — went
+        // by in silence and the old hour stayed on screen looking current.
+        const stamp = `${showing}@${hourOfDay.toFixed(1)}`;
+        if (stamp !== villagersShown) {
+          villagersShown = stamp;
           console.info(
             `[village] ${showing} villager(s) out at ${hourOfDay.toFixed(1)}` +
               ` (${act})`,
@@ -16931,6 +17002,17 @@ export function createKidsWorld(
       // they saw; somebody reaching the edge of the village and walking back
       // is what a road between two places looks like anyway.
       const hourOfDay = worldHour();
+      // HOW MANY ARE ALREADY AWAY. Four people who all walked off at once is
+      // an empty road, and they arrive at their turning points together on
+      // the first round because they all set out together — the randomness
+      // only pulls them apart after a few trips, which is several minutes
+      // the child spends alone on a village street.
+      let resting = 0;
+      for (const f of roadWalkers) {
+        const w = (f.wrap.userData.roadWalker as { wait?: number } | undefined)
+          ?.wait;
+        if (w != null && w > 0) resting++;
+      }
       for (const f of roadWalkers) {
         // OUT, OR NOT, ACCORDING TO THE CLOCK — every frame, so the road
         // empties as the evening goes on and fills again at seven whether or
@@ -16954,15 +17036,70 @@ export function createKidsWorld(
         if (rw == null) {
           continue;
         }
+        // OFF THE END OF THE ROUND, AND NOT STRAIGHT BACK.
+        //
+        // The turn used to happen on the spot the instant a walker reached
+        // the end of its beat, which is what made one read as a pendulum: a
+        // man who walks to the edge of the village and immediately comes back
+        // has not gone anywhere, and after two passes a child can predict
+        // him. So the end of a beat is a DESTINATION — he reaches it, goes on
+        // about his business out of sight, and comes back in his own time.
+        //
+        // OUT OF SIGHT IS THE CONDITION, not a nicety. Hiding a walker who is
+        // still on camera is the ghosting that was fixed once already, so a
+        // walker who runs out of beat in full view simply keeps walking until
+        // the frame no longer holds him — the beat is where he means to stop,
+        // not a wall. He reappears where he left, so he walks back IN rather
+        // than popping into the middle of the road.
+        const seen = Math.abs(f.wrap.position.x - playerX) < cam.right + 6;
+        if (rw.wait != null && rw.wait > 0) {
+          rw.wait -= dt;
+          // Never resume in view: a man fading up on camera is the same bug
+          // from the other side.
+          if (rw.wait <= 0 && !seen) {
+            rw.wait = undefined;
+            rw.dir *= -1;
+            f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+            f.wrap.visible = true;
+          } else {
+            f.wrap.visible = false;
+            continue;
+          }
+        }
         const nx = f.wrap.position.x + rw.dir * rw.speed * dt * motionScale;
         const beat = (f.wrap.userData.beat as [number, number]) ?? [
           6,
           TRAIL_END - 6,
         ];
         if (nx < beat[0] || nx > beat[1]) {
-          rw.dir *= -1;
-          f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-          continue;
+          // HALF THE ROAD MAY BE AWAY, never all of it. Beyond that the next
+          // one to reach a turning point simply turns — out of sight, so it
+          // costs nothing on screen — and waits its turn to have an errand.
+          const mayRest =
+            resting < Math.max(1, Math.floor(roadWalkers.length / 2));
+          if (!seen && mayRest) {
+            // Thirty seconds to two minutes, drawn fresh at every arrival
+            // rather than once per walker: a fixed interval per person is a
+            // timetable, and four of them would fall into step inside a
+            // minute.
+            rw.wait = 30 + Math.random() * 90;
+            resting++;
+            f.wrap.visible = false;
+            continue;
+          }
+          if (!seen) {
+            rw.dir *= -1;
+            f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+            continue;
+          }
+          // Still in frame. Walk on — unless the road itself has run out,
+          // which is the one place a turn on the spot beats walking into
+          // nothing.
+          if (nx < 6 || nx > TRAIL_END - 6) {
+            rw.dir *= -1;
+            f.wrap.rotation.y = rw.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+            continue;
+          }
         }
         // The road bends, so the lane has to be re-read at every step — a
         // walker holding a constant z drifts off the carriageway on a curve.
@@ -19135,6 +19272,37 @@ export function createKidsWorld(
         const want = w.lift.get(w.cur) ?? 0;
         w.liftNow += (want - w.liftNow) * Math.min(1, step * 4);
         pos.y = wildGroundY(pos.x, pos.z) - w.liftNow;
+        // DID IT ACTUALLY LAND ON THE GROUND?
+        //
+        // Everything above is a chain of measurements — the fit to height,
+        // the foot plant, the per-clip lift, the slope tilt — and a chain of
+        // measurements is exactly the kind of thing that can be individually
+        // correct and still leave an animal shin-deep in a field. Nothing
+        // checked the result, so the only detector was somebody looking at
+        // the screen and saying so.
+        //
+        // Once per animal, a second in, the lowest point of the posed body
+        // is compared with the ground under it. Silent when it is standing
+        // on the field, which is almost always; loud with the numbers when
+        // it is not.
+        if (w.wrap.userData.footChecked !== true && w.t > 1) {
+          w.wrap.userData.footChecked = true;
+          const gap = measureBox(w.wrap).min.y - wildGroundY(pos.x, pos.z);
+          // TOLERANCE IS WIDE BECAUSE THE MEASUREMENT IS COARSE: a skinned
+          // mesh's bounding box is its BIND pose, straight-legged, which sits
+          // lower than a grazing animal actually stands. Half a unit of
+          // apparent sink is that, not a bug. It catches what it is for —
+          // the metre-plus burial that scaled with the terrain height.
+          if (gap < -0.9 || gap > 0.9) {
+            console.warn(
+              `[wild] ${String(w.wrap.userData.wildModel)} ` +
+                `${gap < 0 ? "sunk" : "floating"} ${Math.abs(gap).toFixed(2)}` +
+                ` at x=${pos.x.toFixed(1)} z=${pos.z.toFixed(1)}` +
+                ` (clip ${w.cur}, lift ${w.liftNow.toFixed(2)},` +
+                ` pitch ${w.pitch.toFixed(2)})`,
+            );
+          }
+        }
       };
       /**
        * STAND ON THE GROUND THAT IS THERE.

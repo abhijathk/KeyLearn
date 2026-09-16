@@ -109,8 +109,38 @@ const CAST = [
       "Sit_Cross_Legged_on_Floor", "Stand_Up3", "Stand_to_Sit_Transition_M",
     ],
   },
-  { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A", Unsteady_Walk: "Walk_Night" }, flatten: [["Idle_A","Hips","x"],["Idle_A","Hips","z"]] },
-  { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" }, flatten: [["Idle_A","Hips","x"],["Idle_A","Hips","z"],["Idle_B","Hips","x"],["Idle_B","Hips","z"]] },
+  {
+    name: "TeaStall", ratio: 0.4, error: 0.06,
+    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb",
+    tex: 1024, drop: ["restpose"], budget: 1_450_000,
+    rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A", Unsteady_Walk: "Walk_Night" },
+    flatten: [["Idle_A","Hips","x"],["Idle_A","Hips","z"]],
+    // ONE IDLE IS A STATUE ON A TIMER.
+    //
+    // He arrived with a single 2.5-second idle, which is short enough that a
+    // child watching him stand in a field sees the same loop four times in
+    // ten seconds — the thing that makes a background figure read as a prop
+    // rather than as a person. The headman's two are 8 and 11 seconds of
+    // small weight shifts on the same 22-bone rig, bone for bone, so they
+    // transfer exactly and cost nothing but the keyframes.
+    spliceFrom: "village-folk/Headman.glb",
+    spliceRename: { Idle_A: "Idle_B", Idle_B: "Idle_C" },
+    splice: ["Idle_B", "Idle_C"],
+  },
+  {
+    name: "FarmerWoman", ratio: 0.4,
+    src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",
+    tex: 1024, drop: ["restpose"], budget: 1_300_000,
+    rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" },
+    flatten: [["Idle_A","Hips","x"],["Idle_A","Hips","z"],["Idle_B","Hips","x"],["Idle_B","Hips","z"]],
+    // Her own two are 3.5 and 3.0 seconds — a pair of short loops that read
+    // as one fidget. The headman's long ones give her something to do
+    // between them, and the pool is picked at random per villager, so four
+    // clips is what stops two women in neighbouring fields moving together.
+    spliceFrom: "village-folk/Headman.glb",
+    spliceRename: { Idle_A: "Idle_C", Idle_B: "Idle_D" },
+    splice: ["Idle_C", "Idle_D"],
+  },
   {
     name: "VillageBoy", ratio: 0.36,
     // He has three idles and two transitions — IdleToWalk and WalkToIdle —
@@ -386,6 +416,18 @@ for (const c of CAST) {
         c.spliceFrom ?? "ak-3d-pack/Buffalo.glb",
       );
       run("glb-decompress.mjs", [donor, step("buffalo.glb")]);
+      // THE DONOR IS RENAMED, NOT THE RESULT. Both villagers already own an
+      // `Idle_A`, and a splice appends rather than merges — take it under its
+      // own name and the file ships two clips called Idle_A, of which the
+      // matcher can only ever find the first. Renaming on the donor copy is
+      // also the only point where the two names are still telling apart.
+      if (c.spliceRename != null) {
+        run("glb-rename-clips.mjs", [
+          step("buffalo.glb"), step("donor.glb"),
+          ...Object.entries(c.spliceRename).map(([a, b]) => `${a}=${b}`),
+        ]);
+        copyFileSync(step("donor.glb"), step("buffalo.glb"));
+      }
       run("glb-splice-animations.mjs", [
         cur, step("buffalo.glb"), step("s0.glb"),
         ...c.splice.flatMap((t) => ["--take", t]),
@@ -409,6 +451,19 @@ for (const c of CAST) {
       ]);
       cur = step("s1.glb");
     }
+
+    // 1b ── the keys that say nothing
+    //
+    // These arrive with a key on every joint on every frame, because that is
+    // what a solver writes: it poses the whole skeleton each frame and saves
+    // the result. A man standing in a field is not moving most of his bones
+    // most of the time, and a joint turning steadily needs two keys rather
+    // than thirty. Thinned against the SAME linear interpolation the runtime
+    // performs, to a quarter of a degree — a hard bound on playback error,
+    // not an estimate — so this is size off the wire and nothing off the
+    // screen. It is what pays for the extra idles above several times over.
+    run("glb-reduce-keys.mjs", [cur, step("k0.glb")]);
+    cur = step("k0.glb");
 
     // 2 ── the maps that say nothing, and the emissive that lies
     const { json, bin } = readGlb(cur);

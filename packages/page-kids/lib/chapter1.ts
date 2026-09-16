@@ -621,7 +621,11 @@ export const LESSONS: readonly Lesson[] = [
       },
     ],
     herd: ["Cow", "Buffalo"],
-    folk: ["FarmerWoman"],
+    // TWO IN THE FIELD, NOT ONE. A paddy field is not worked alone, and the
+    // tea seller's model is the village's second man — he is back here now
+    // that he has idles worth standing still in rather than the one short
+    // loop that made him read as a prop.
+    folk: ["FarmerWoman", "TeaStall"],
     corridor: false,
   },
   {
