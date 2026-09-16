@@ -255,6 +255,8 @@ export function tiredWalkAt(hour: number): boolean {
  * rather than the sun: a market closes at nine whatever the season.
  */
 export type VillageDay = {
+  /** The hour this answer is for, normalised to 0..24. */
+  readonly hour: number;
   /** Is it dark enough that a lamp would be lit? */
   readonly dark: boolean;
   readonly activity: Activity;
@@ -289,6 +291,7 @@ export function villageDay(
   const dark = h < rise + 0.2 || h >= set - 0.5;
   const trading = (closes: number) => h >= SHOPS_OPEN && h < closes;
   return {
+    hour: h,
     dark,
     activity: activityAt(h),
     children: childrenOut(h),

@@ -5269,6 +5269,8 @@ export function createKidsWorld(
      * to keep closing.
      */
     readonly closes?: number;
+    /** Lit only between these hours — see `makeLamp`. */
+    readonly hours?: readonly [number, number];
     /** A point light, or a cone where the lamp only throws one way. */
     readonly light: THREE.PointLight | THREE.SpotLight | null;
     readonly lightPeak: number;
@@ -5623,6 +5625,15 @@ export function createKidsWorld(
       size?: number;
       /** Goes dark at this hour, and stays dark until four. */
       closes?: number;
+      /**
+       * Burns only between these hours, whatever the sun is doing.
+       *
+       * For light that is lit for an OCCASION rather than for seeing by. A
+       * temple's lamps go up for the evening puja and are put out after it,
+       * and the first of them is lit while the sun is still up — which is
+       * why this ignores `dark`, where a shop's lamp cannot.
+       */
+      hours?: readonly [number, number];
       /** Taller than it is wide, for the mirror's smear of caught light. */
       aspect?: number;
       peak?: number;
@@ -5715,6 +5726,7 @@ export function createKidsWorld(
           phase,
           rate,
           closes: opts.closes,
+          hours: opts.hours,
           wick: 1,
           light: null,
           lightPeak: lit,
@@ -5732,6 +5744,7 @@ export function createKidsWorld(
           phase: Math.random() * Math.PI * 2,
           rate: petromax ? 1.1 : 2.6 + Math.random() * 3.8,
           closes: opts.closes,
+          hours: opts.hours,
           wick: petromax ? 0.12 : kind === "mirror" ? 0.4 : 1,
           light: null,
           lightPeak: lit,
@@ -5769,6 +5782,7 @@ export function createKidsWorld(
       // them ever settle into a beat.
       rate: petromax ? 1.1 : 2.6 + Math.random() * 3.8,
       closes: opts.closes,
+      hours: opts.hours,
       wick: petromax ? 0.12 : kind === "mirror" ? 0.4 : 1,
       light,
       lightPeak: lit,
@@ -6260,16 +6274,35 @@ export function createKidsWorld(
     const yards =
       CHAPTER == null
         ? []
-        : placements(CHAPTER)
-            .filter((p) => /Market/i.test(p.model))
-            .map((p) => ({
-              x: p.x,
-              // Between the stalls and the road, not centred on the
-              // building: what is trodden is where people stand to buy.
-              z: p.z + 7,
-              rx: (p.clear ?? 24) * 1.1,
-              rz: 11,
-            }));
+        : [
+            // THE TEMPLE'S FORECOURT, which is the most walked ground in the
+            // village. People come to a shrine barefoot, in numbers, every
+            // day for years — nothing grows there, and the bare patch in
+            // front of a temple is as much a part of it as the building is.
+            //
+            // Its position is worked out the way the village works it out,
+            // because the temple is placed by `heart` rather than by the
+            // chapter table and its x never appears in `placements`. That
+            // duplication is worth a note: if the village ever moves off
+            // Lesson 5's third, this moves with it or the bare ground stays
+            // behind.
+            {
+              x: CHAPTER[4]! + (CHAPTER[5]! - CHAPTER[4]!) * 0.33 - 1,
+              z: -12,
+              rx: 15,
+              rz: 9,
+            },
+            ...placements(CHAPTER)
+              .filter((p) => /Market/i.test(p.model))
+              .map((p) => ({
+                x: p.x,
+                // Between the stalls and the road, not centred on the
+                // building: what is trodden is where people stand to buy.
+                z: p.z + 7,
+                rx: (p.clear ?? 24) * 1.1,
+                rz: 11,
+              })),
+          ];
     const yardAt = (x: number, z: number): number => {
       let w = 0;
       for (const y of yards) {
@@ -13382,30 +13415,40 @@ export function createKidsWorld(
           [cx + across, foot + tall * up, front + faces * out] as const;
 
         if (/^Temple$/i.test(name)) {
-          // "Lots of oil lamps inside and outside." A temple at dusk is the
-          // brightest thing for a mile, and it is lit in ROWS — a line of
-          // small flames along a step reads as a temple in a way that one
-          // big glow never does, however bright.
-          const n = 7;
-          for (let i = 0; i < n; i++) {
-            const t = (i + 0.5) / n;
-            makeLamp(...on((t - 0.5) * wide * 0.86, 0.09, 0.35), {
-              size: 1.15,
-              peak: 0.8,
-            });
-          }
-          // A second, shorter row up on the plinth, so the front has depth
-          // rather than a single lit line across it.
+          // ── THE PUJA, AND THE LAMP THAT NEVER GOES OUT ─────────────────
+          //
+          // A temple is not lit all night. It is lit for the evening puja —
+          // roughly half past five to half past eight — and afterwards the
+          // lamps on the plinth are put out and one is left burning in the
+          // sanctum, which is the point of that one: it is not lighting
+          // anything, it is being kept.
+          //
+          // So the front row is on a WINDOW rather than on darkness. The
+          // first of them is lit while the sun is still up, which is what
+          // actually happens and is why these ignore `dark` where a shop's
+          // lamp cannot.
+          //
+          // THE ROW OF SEVEN ALONG THE STEP IS GONE. Seven evenly spaced
+          // flames across a frontage read as a string of festival lights
+          // rather than as lamps somebody set down, and at this distance
+          // they merged into one bright bar and flattened the building they
+          // were supposed to describe.
+          const PUJA = [17.5, 20.5] as const;
+          // A short row up on the plinth, so the front has depth rather than
+          // a single lit line across it.
           for (let i = 0; i < 4; i++) {
             makeLamp(...on((i / 3 - 0.5) * wide * 0.52, 0.34, -0.2), {
               size: 0.95,
               peak: 0.7,
+              hours: PUJA,
             });
           }
-          // INSIDE. Set back behind the front face and low, so what escapes
-          // is a doorway full of light rather than a lamp you can see. This
-          // is the one that carries a real light: the inside of a temple
-          // spilling onto its own steps is the whole picture.
+          // INSIDE, AND ALWAYS. Set back behind the front face and low, so
+          // what escapes is a doorway full of light rather than a lamp you
+          // can see. This is the one that carries a real light and the one
+          // that stays: the inside of a temple spilling onto its own steps
+          // is the whole picture, and at two in the morning it is the only
+          // thing still burning in the village.
           makeLamp(...on(0, 0.3, -2.6), { size: 3.4, peak: 0.92, lit: 5.5 });
           // THE MIRROR. Kerala temples keep a polished metal mirror by the
           // sanctum, and what you actually see from outside is the lamps
@@ -13413,11 +13456,14 @@ export function createKidsWorld(
           // a light of its own. Hence the stretched sprite, and a wick value
           // between the flame and the mantle: a reflection inherits some of
           // the flicker and averages away the rest.
+          //
+          // It keeps the puja's hours, because what it reflects does.
           makeLamp(...on(wide * 0.16, 0.42, -1.1), {
             kind: "mirror",
             size: 0.8,
             aspect: 2.6,
             peak: 0.75,
+            hours: PUJA,
           });
           return;
         }
@@ -13607,13 +13653,27 @@ export function createKidsWorld(
           if (Math.random() < 0.26) {
             return;
           }
+          // AND EVERY HOUSE IS DARK BY NINE. A village goes to bed: the
+          // lamps come on as the light fails and are out well before the
+          // small hours, so a road that still has lit windows at two in the
+          // morning is a road nobody lives on. From six to nine, which is
+          // the evening a household is actually awake for.
+          const AWAKE = [18, 21] as const;
           // One at the door: "oil lamps in every home" — every home that is
           // still awake.
-          makeLamp(...on(wide * 0.2, 0.36, 0.3), { size: 1.4, peak: 0.78 });
+          makeLamp(...on(wide * 0.2, 0.36, 0.3), {
+            size: 1.4,
+            peak: 0.78,
+            hours: AWAKE,
+          });
           // And a second one in a window, in about half of them, so the row
           // of houses is not a row of identical dots.
           if (Math.random() < 0.5) {
-            makeLamp(...on(-wide * 0.24, 0.55, 0.15), { size: 1.0, peak: 0.6 });
+            makeLamp(...on(-wide * 0.24, 0.55, 0.15), {
+              size: 1.0,
+              peak: 0.6,
+              hours: AWAKE,
+            });
           }
           // Very rarely a petromax on the porch — somebody in this village
           // is doing well, and one house in ten saying so is worth more
@@ -13623,6 +13683,7 @@ export function createKidsWorld(
               kind: "petromax",
               size: 2.2,
               peak: 0.9,
+              hours: AWAKE,
             });
           }
           return;
@@ -16599,7 +16660,10 @@ export function createKidsWorld(
           // tested the closing hour alone, so a shop lamp burned at ten in
           // the morning: ten is not past nine, which is true and beside the
           // point, because nobody lights a lamp in daylight.
-          if (L.closes != null && !today.lampLit(L.closes)) {
+          const outOfHours =
+            L.hours != null &&
+            (today.hour < L.hours[0] || today.hour >= L.hours[1]);
+          if (outOfHours || (L.closes != null && !today.lampLit(L.closes))) {
             // TAKEN OUT OF THE DRAW, not merely faded to nothing.
             //
             // Zero opacity leaves the sprite in the scene, and the sprite's
@@ -16683,31 +16747,12 @@ export function createKidsWorld(
       }
     }
 
-    if (player) {
-      const p = player.wrap.position;
-      framesSinceJump += 1;
-      const dx = targetX - p.x;
-      p.x += dx * 0.06;
-      if (jumpFwdV > 0) {
-        // Only while there is trail to cover. A jump on the spot must stay on
-        // the spot: nudging x would make the next frame see a gap between the
-        // character and its target, which is the same signal running uses, so
-        // a plain space press at a standstill played a stride and a half of
-        // walking under the hop. Standing still, space is a jump and nothing
-        // else.
-        if (Math.abs(dx) > 0.08) {
-          p.x += jumpFwdV;
-        }
-        jumpFwdV = Math.max(0, jumpFwdV - 0.0016);
-      }
-      // ── THE ROAD'S OWN TRAFFIC ──────────────────────────────────────
-      //
-      // Walked at a real pace along the far half of the carriageway, and
-      // TURNED ROUND at the ends rather than wrapped. A villager who
-      // vanishes at one end of the road and reappears at the other is fine
-      // until a child happens to be looking, and then it is the only thing
-      // they saw; somebody reaching the edge of the village and walking back
-      // is what a road between two places looks like anyway.
+    // WHO IS OUT, and it does not depend on the hero existing. This sat
+    // inside `if (player)`, which is true while somebody is playing and not
+    // while the world is being built or handed over — so the village could
+    // be left showing whatever it was built with at exactly the moment the
+    // child first sees it.
+    {
       const hourOfDay = worldHour();
       // THE PEOPLE ON THEIR OWN LAND, by the hour. Everybody the table names
       // is built; how many of them are outside follows `folkOut`, which is
@@ -16743,6 +16788,34 @@ export function createKidsWorld(
           }
         }
       }
+    }
+
+    if (player) {
+      const p = player.wrap.position;
+      framesSinceJump += 1;
+      const dx = targetX - p.x;
+      p.x += dx * 0.06;
+      if (jumpFwdV > 0) {
+        // Only while there is trail to cover. A jump on the spot must stay on
+        // the spot: nudging x would make the next frame see a gap between the
+        // character and its target, which is the same signal running uses, so
+        // a plain space press at a standstill played a stride and a half of
+        // walking under the hop. Standing still, space is a jump and nothing
+        // else.
+        if (Math.abs(dx) > 0.08) {
+          p.x += jumpFwdV;
+        }
+        jumpFwdV = Math.max(0, jumpFwdV - 0.0016);
+      }
+      // ── THE ROAD'S OWN TRAFFIC ──────────────────────────────────────
+      //
+      // Walked at a real pace along the far half of the carriageway, and
+      // TURNED ROUND at the ends rather than wrapped. A villager who
+      // vanishes at one end of the road and reappears at the other is fine
+      // until a child happens to be looking, and then it is the only thing
+      // they saw; somebody reaching the edge of the village and walking back
+      // is what a road between two places looks like anyway.
+      const hourOfDay = worldHour();
       for (const f of roadWalkers) {
         // OUT, OR NOT, ACCORDING TO THE CLOCK — every frame, so the road
         // empties as the evening goes on and fills again at seven whether or
