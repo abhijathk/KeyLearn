@@ -75,8 +75,8 @@ const OUT = join(REPO, "root/public/kids-assets/models/village-folk");
 
 
 const CAST = [
-  { name: "Cow", ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" } },
-  { name: "Cow_Calf", ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" } },
+  { name: "Cow", ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert", "Turn_Left_90", "Turn_Right_90"] },
+  { name: "Cow_Calf", ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert", "Turn_Left_90", "Turn_Right_90"] },
   { name: "Headman", ratio: 0.4,     src: "Village assets/Man1_VillageHeadman/Village headman.glb", tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
   { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
   { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" } },
@@ -288,6 +288,32 @@ for (const c of CAST) {
       run("glb-rename-clips.mjs", [cur, step("r.glb"), ...pairs]);
       cur = step("r.glb");
       console.log(`  named: ${Object.values(c.rename).join(", ")}`);
+    }
+
+    // 1c ── ONE CLIP IS NOT AN ANIMAL.
+    //
+    // The cattle arrived with a single pose apiece, so a cow could stand and
+    // do nothing else — it could not graze, could not walk, and could not
+    // move out of a buffalo's way. The buffalo already has thirteen clips
+    // and its skeleton is a SUPERSET of the cow's: 29 bones against 27, the
+    // same names throughout, the extra two being neck0 and neck1. So its
+    // gaits transfer directly, and the splice remaps by NAME and leaves the
+    // two neck tracks behind.
+    //
+    // Only the calm ones. Charge_Start, Aggressive_Threat and
+    // Supernatural_Rear_Stomp are the buffalo's temper — they are what makes
+    // IT the dangerous animal on this road, and a cow that can rear at a
+    // child is a different game. The kids app strips attack clips on load
+    // anyway, so they would be downloaded and thrown away.
+    if (c.splice != null) {
+      const buf = join(REPO, "root/public/kids-assets/models/ak-3d-pack/Buffalo.glb");
+      run("glb-decompress.mjs", [buf, step("buffalo.glb")]);
+      run("glb-splice-animations.mjs", [
+        cur, step("buffalo.glb"), step("s0.glb"),
+        ...c.splice.flatMap((t) => ["--take", t]),
+      ]);
+      cur = step("s0.glb");
+      console.log(`  took from the buffalo: ${c.splice.join(", ")}`);
     }
 
     // 2 ── the maps that say nothing, and the emissive that lies

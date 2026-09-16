@@ -226,19 +226,36 @@ export type Placed = {
    * it walls the child out of a place they are supposed to be able to see
    * into, so every run leaves one segment out: the gate.
    *
-   * `step` is in WORLD UNITS, not fractions, and it has to be the model's
-   * own width at the height it is drawn — 4.20 for a bamboo fence at 2.4,
-   * 6.25 for a laterite wall at the same. Fractions cannot do this job: a
-   * segment of road is 21.6 units for a five-year-old and 64 for an
-   * eleven-year-old, so the same fraction would overlap the panels for one
-   * child and leave gaps between them for another.
+   * `aspect` IS THE MODEL'S OWN WIDTH-TO-HEIGHT RATIO, and the spacing is
+   * worked out from it rather than written down. Measured: 1.75 for the
+   * bamboo fence, 2.61 for the laterite wall.
+   *
+   * It has to be derived, because a panel is not drawn at the height the
+   * table asks for. `stand` scales every prop by `perspective(z)` to fake
+   * depth under an orthographic camera, so a fence written as 2.4 tall at
+   * z = -8 is drawn at 2.13 and is therefore 3.73 wide, not 4.20. Spacing
+   * them by the nominal width left half a unit of daylight between every
+   * pair — a fence you can see through, which is not a fence.
+   *
+   * A fraction of the segment cannot do this job either: a lesson is 21.6
+   * units for a five-year-old and 64 for an eleven-year-old, so one fraction
+   * would overlap the panels for one child and part them for another.
    */
   readonly run?: {
     readonly count: number;
-    readonly step: number;
+    readonly aspect: number;
     /** Which panel is missing. The way in. */
     readonly gapAt: number;
   };
+  /**
+   * Grass and ferns at its foot.
+   *
+   * Nothing is mown at the base of a fence and nothing walks there, so it is
+   * where the ground cover gets away — and a post meeting bare earth along a
+   * dead straight line is the clearest sign in any scene that an object was
+   * placed rather than built. The skirt settles a boundary INTO its ground.
+   */
+  readonly skirt?: boolean;
 };
 
 export type Lesson = {
@@ -408,7 +425,8 @@ export const LESSONS: readonly Lesson[] = [
         z: -11,
         h: 2.1,
         clear: 5,
-        run: { count: 5, step: 5.47, gapAt: 2 },
+        run: { count: 5, aspect: 2.61, gapAt: 2 },
+        skirt: true,
       },
       // GRASS GROWS AT A GATEWAY. Nothing is built there and nothing walks
       // there often enough to wear it away, so it is the one part of a
@@ -460,27 +478,28 @@ export const LESSONS: readonly Lesson[] = [
       // In stretches, not as an unbroken wall the whole way — the brief is
       // explicit, and a continuous fence would also hide the orchard it is
       // supposed to enclose.
-      // Two runs rather than one unbroken line the whole way, which is the
-      // brief's "selected stretches" — and each run has its own gate.
+      // ONE FENCE, PANEL TO PANEL, WITH ONE WAY IN.
+      //
+      // This was two runs with a gate each and a stretch of nothing between
+      // them, on the reading that the brief's "selected stretches" meant
+      // several short fences. It does not: a smallholding is enclosed, and a
+      // boundary that stops and starts again is not enclosing anything. What
+      // "in stretches" rules out is fencing the WHOLE lesson — so it is one
+      // continuous run along the orchard's frontage, and open ground either
+      // side of it.
+      //
+      // Sixteen panels and a single gap, which is the entrance.
       {
         model: `${UTIL}/Bamboo_Fence`,
-        at: 0.12,
+        at: 0.16,
         z: -8,
         h: 2.4,
         clear: 4,
-        run: { count: 7, step: 4.2, gapAt: 4 },
+        run: { count: 16, aspect: 1.75, gapAt: 6 },
+        skirt: true,
       },
-      {
-        model: `${UTIL}/Bamboo_Fence`,
-        at: 0.64,
-        z: -8.5,
-        h: 2.4,
-        clear: 4,
-        run: { count: 6, step: 4.2, gapAt: 2 },
-      },
-      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.19, z: -7.2, h: 0.85 },
-      { model: `${PLANTS}/Kerala_Fern`, at: 0.2, z: -9.4, h: 0.75 },
-      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.68, z: -7.6, h: 0.9 },
+      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.42, z: -7.1, h: 0.85 },
+      { model: `${PLANTS}/Kerala_Fern`, at: 0.44, z: -9.4, h: 0.75 },
       { model: `${UTIL}/Washing_Stone`, at: 0.52, z: -12, h: 0.5, clear: 2 },
       // A FOOTPATH INTO THE PROPERTY, in stepping stones. There is no path
       // asset and painting one into the terrain would fight the road, but a
@@ -530,7 +549,8 @@ export const LESSONS: readonly Lesson[] = [
         z: -12,
         h: 2.1,
         clear: 5,
-        run: { count: 6, step: 5.47, gapAt: 3 },
+        run: { count: 6, aspect: 2.61, gapAt: 3 },
+        skirt: true,
       },
       { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.72, z: -11, h: 0.95 },
       { model: `${PLANTS}/Kerala_Fern`, at: 0.73, z: -13.2, h: 0.8 },
@@ -595,7 +615,8 @@ export const LESSONS: readonly Lesson[] = [
         z: -13,
         h: 2.1,
         clear: 5,
-        run: { count: 4, step: 5.47, gapAt: 1 },
+        run: { count: 4, aspect: 2.61, gapAt: 1 },
+        skirt: true,
       },
       { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.73, z: -12, h: 0.95 },
       {
@@ -648,7 +669,8 @@ export const LESSONS: readonly Lesson[] = [
         z: -10,
         h: 2.4,
         clear: 5,
-        run: { count: 12, step: 6.25, gapAt: 5 },
+        run: { count: 12, aspect: 2.61, gapAt: 5 },
+        skirt: true,
       },
       { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.33, z: -9, h: 1 },
       { model: `${PLANTS}/Kerala_Fern`, at: 0.34, z: -11.3, h: 0.85 },
@@ -740,7 +762,8 @@ export const LESSONS: readonly Lesson[] = [
         z: -14,
         h: 2.0,
         clear: 5,
-        run: { count: 4, step: 5.21, gapAt: 1 },
+        run: { count: 4, aspect: 2.61, gapAt: 1 },
+        skirt: true,
       },
       {
         model: "village-stone/Granite_Boulder",
@@ -890,6 +913,12 @@ export function densityAt(
  */
 export function placements(
   bounds: readonly number[] = DEFAULT_BOUNDS,
+  /**
+   * The world's own depth falloff, so a run's spacing matches the width its
+   * panels are actually DRAWN at. Defaults to no falloff, which is what a
+   * test wants and what a caller with no camera has.
+   */
+  persp: (z: number) => number = () => 1,
 ): readonly (Placed & { readonly x: number })[] {
   const out: (Placed & { x: number })[] = [];
   for (const l of LESSONS) {
@@ -917,7 +946,7 @@ export function placements(
         if (i === p.run.gapAt) {
           continue; // the way in
         }
-        const x = x0 + i * p.run.step;
+        const x = x0 + i * (p.run.aspect * p.h * persp(p.z));
         if (x >= end) {
           break;
         }

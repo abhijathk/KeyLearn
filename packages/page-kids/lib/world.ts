@@ -1118,10 +1118,17 @@ function castHeadScale(name: string): number {
     case "Headman":
     case "TeaStall":
     case "FarmerWoman":
-      return 1.22;
+      // 1.34, not 1.22. The first figure was set by reasoning about the
+      // cast — "adults should take less of this than the children" — and on
+      // the road it was not enough: these bodies are a head taller than the
+      // children's to begin with, so the same ratio reads as a much smaller
+      // head, and they still came out as realistic people standing among
+      // stylised ones. The ratio that matters is HEADS TALL, not the number
+      // in this table, and matching it takes more on a bigger body.
+      return 1.34;
     // The eleven-year-old, who is a child and takes a child's share.
     case "VillageBoy":
-      return 1.3;
+      return 1.38;
     default:
       return 1;
   }
@@ -8656,6 +8663,22 @@ export function createKidsWorld(
    * country and not a problem at all. So the far treeline runs straight
    * through the milestone and only its immediate shoulder is kept clear.
    */
+  /**
+   * How tall the grazing animals stand, against the buffalo's 6.0.
+   *
+   * The buffalo is the animal this world was built around and the one the
+   * child already knows, so it is the ruler. A cow is about three quarters
+   * of a water buffalo — that ratio is roughly true of the animals and is
+   * what makes the two read as different species rather than as one animal
+   * drawn at two sizes. A calf takes 55 per cent: out in the field with the
+   * herd, plainly not grown.
+   */
+  const WILD_HEIGHT: Record<string, number> = {
+    Buffalo: 6.0,
+    Cow: 4.5,
+    Cow_Calf: 3.3,
+  };
+
   const MILESTONE_CLEAR = 3.2;
   const MILESTONE_CLEAR_DEPTH = -15;
 
@@ -11462,6 +11485,9 @@ export function createKidsWorld(
         after: null,
       };
       wrap.userData.wildBaseY = y0;
+      // What it is, so the tick can tell a cow from a buffalo. The rig knows
+      // its clips and its box but never knew its species.
+      wrap.userData.wildModel = model;
       wilds.push(w);
       wildAmbient(w, nightNow);
       // Wild: no catchlight in daylight — see applyEyeGlow.
@@ -12628,6 +12654,23 @@ export function createKidsWorld(
       // it, which is how you actually meet a village from its road.
       for (const h of V.heart) {
         const w = await stand(h.model, vx + h.dx, h.dz, h.h, h.turn ?? 0);
+        // SOLID, so nothing grows through it.
+        //
+        // The chapter's own props have registered their clearance since they
+        // were written, and the village's did not — the temple, the banyan
+        // and the houses were placed by this older code, which predates
+        // `blockers` entirely. So the one part of the road with real
+        // buildings on it was the one part where a coconut palm could come up
+        // through a roof. Taken from the MEASURED box rather than a guessed
+        // radius, so it stays right if any of them is ever resized.
+        if (w != null) {
+          const b = measureBox(w);
+          blockers.push({
+            x: (b.min.x + b.max.x) / 2,
+            z: (b.min.z + b.max.z) / 2,
+            r: Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 0.45,
+          });
+        }
         // ── AND NOTHING ELSE GROWING THROUGH THE BANYAN ──────────────────
         //
         // The scatter runs long before a village exists and spreads trees
@@ -12746,6 +12789,14 @@ export function createKidsWorld(
             w.position.z += over;
             w.position.y = surfaceY(w.position.x, w.position.z);
           }
+          // Measured AFTER the shove, or the clearance would describe where
+          // the house used to be.
+          const b = measureBox(w);
+          blockers.push({
+            x: (b.min.x + b.max.x) / 2,
+            z: (b.min.z + b.max.z) / 2,
+            r: Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 0.45,
+          });
         }
       }
 
@@ -12778,7 +12829,7 @@ export function createKidsWorld(
       // animal can only route around a thing that is in the same place every
       // time it looks.
       if (CHAPTER != null) {
-        for (const p of placements(CHAPTER)) {
+        for (const p of placements(CHAPTER, perspective)) {
           if (lessonAt(p.x, CHAPTER).n === 5) {
             continue; // the village centre, already built
           }
@@ -12787,6 +12838,39 @@ export function createKidsWorld(
             lessonGroup(p.x).add(w);
             if ((p.clear ?? 0) > 0) {
               blockers.push({ x: p.x, z: p.z, r: p.clear! });
+            }
+          }
+          // AND WHAT GROWS AT ITS FOOT. Nothing is mown along the base of a
+          // fence and nothing walks there, so it is where the ground cover
+          // gets away — and a post meeting bare earth in a dead straight
+          // line is the clearest sign in any scene that a thing was placed
+          // rather than built. Planted before the blockers matter, and with
+          // no clearance of its own, because it is grass.
+          if (w != null && p.skirt === true) {
+            for (let k = 0; k < 3; k++) {
+              const sx = p.x + hashRange(p.x, k, 80, -1.6, 1.6);
+              const sz = p.z + hashRange(p.x, k, 81, 0.35, 1.5);
+              const kind = hashPick(
+                [
+                  "village-plants/Kerala_Grass_Tuft",
+                  "village-plants/Kerala_Fern",
+                ],
+                p.x,
+                k,
+                82,
+              );
+              const g = kind == null ? null : await prop(kind);
+              if (g == null) {
+                continue;
+              }
+              const gw = fitToHeight(
+                g.clone(true),
+                hashRange(p.x, k, 83, 0.5, 1.0) * perspective(sz),
+              );
+              gw.position.set(sx, surfaceY(sx, sz) - 0.05, sz);
+              gw.rotation.y = hashRange(p.x, k, 84, 0, Math.PI * 2);
+              lessonGroup(p.x).add(gw);
+              characterRoots.add(gw);
             }
           }
         }
@@ -12825,12 +12909,28 @@ export function createKidsWorld(
           // Two or three head, spread through the middle of the segment so
           // they are met while walking it rather than at a milestone.
           const n = 2 + Math.floor(hash3(l.n, 0, 31) * 2);
-          for (let i = 0; i < n; i++) {
+          // BUFFALO FIRST, AND WITH ROOM ROUND THEM.
+          //
+          // Cattle keep their distance from a water buffalo — it is the one
+          // animal on this road with a temper, and the reason the buffalo is
+          // worth being wary of is undone if a cow is grazing against its
+          // shoulder. Whoever is placed first claims their ground, so the
+          // buffalo go down first and carry a wide clearance; the cows then
+          // find somewhere that is not next to one.
+          const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => {
+            const ma = hashPick(l.herd, from + a, a, 34);
+            const mb = hashPick(l.herd, from + b, b, 34);
+            return (mb === "Buffalo" ? 1 : 0) - (ma === "Buffalo" ? 1 : 0);
+          });
+          for (const i of order) {
             const at = 0.2 + ((i + hash3(l.n, i, 32)) / n) * 0.6;
             const x = from + at * len;
             const z = -hashRange(x, i, 33, 13, 25);
-            const model = hashPick(l.herd, x, i, 34);
-            const spot = clearSpot(x, z, 3.5);
+            const model = hashPick(l.herd, from + i, i, 34);
+            // A buffalo needs a paddock's worth to itself; a cow only needs
+            // not to be standing in a tree.
+            const room = model === "Buffalo" ? 11 : 3.5;
+            const spot = clearSpot(x, z, room);
             if (model == null || spot == null) {
               continue;
             }
@@ -12841,14 +12941,28 @@ export function createKidsWorld(
             // than an animal. 2.0 is the right fraction of a grown one for a
             // calf old enough to be out in the field with the herd, which is
             // what it is doing here.
-            await spawnWild(model, spot.x, spot.z, 2.5);
+            // SIZED AGAINST THE BUFFALO, which is the animal this world was
+            // built around and stands 6.0. Everything here was going in at
+            // 2.5 — under half of it — so the cattle read as models of cows
+            // rather than as cows, and beside a buffalo they were absurd.
+            //
+            // A cow is about three quarters of a water buffalo, which is
+            // roughly true of the animals and is what makes the two read as
+            // different species rather than as one animal at two sizes. The
+            // calf is 55 per cent: old enough to be out in the field, plainly
+            // not grown.
+            await spawnWild(model, spot.x, spot.z, WILD_HEIGHT[model] ?? 6.0);
             // Re-parented into its lesson, the same as everything else the
             // chapter places. Lost once already in a reshuffle of this
             // block, which put the whole herd outside the groups and showed
             // every animal in every lesson at once.
             const beast = wilds[wilds.length - 1]?.wrap;
             if (beast != null) lessonGroup(spot.x).add(beast);
-            blockers.push({ x: spot.x, z: spot.z, r: 3.5 });
+            blockers.push({
+              x: spot.x,
+              z: spot.z,
+              r: model === "Buffalo" ? 11 : 3.5,
+            });
             grazing++;
             // A CALF COMES WITH A COW, AND ONLY WITH A COW.
             //
@@ -12860,10 +12974,6 @@ export function createKidsWorld(
             // About half the cows have one. A field where every cow has a
             // calf is a farm that had one remarkable year.
             //
-            // AND IT IS 2.0, NOT 1.6. A calf is a young cow, not a toy one —
-            // at a third smaller than its mother it was roughly a newborn,
-            // and beside children who are themselves drawn large-headed and
-            // stocky it read as a model of a cow rather than an animal.
             if (model === "Cow" && hash3(l.n, i, 35) < 0.5) {
               const near = clearSpot(
                 spot.x + hashRange(l.n, i, 36, 2.4, 4),
@@ -12871,7 +12981,12 @@ export function createKidsWorld(
                 2,
               );
               if (near != null) {
-                await spawnWild("Cow_Calf", near.x, near.z, 2.0);
+                await spawnWild(
+                  "Cow_Calf",
+                  near.x,
+                  near.z,
+                  WILD_HEIGHT.Cow_Calf!,
+                );
                 const c = wilds[wilds.length - 1]?.wrap;
                 if (c != null) lessonGroup(near.x).add(c);
                 blockers.push({ x: near.x, z: near.z, r: 2 });
@@ -16954,6 +17069,84 @@ export function createKidsWorld(
     for (const w of wilds) {
       w.mixer.update(dt * motionScale);
       const step = dt * motionScale;
+
+      // ── CATTLE KEEP OUT OF THE BUFFALO'S WAY ────────────────────────
+      //
+      // Everything below this is the buffalo's: noticing the child, losing
+      // patience, charging, pulling up at the road. A cow does none of it —
+      // she grazes, and the only thing that moves her is a buffalo coming
+      // over. Running her through that state machine would make her a small
+      // buffalo, and the buffalo is supposed to be the one animal on this
+      // road worth being wary of.
+      //
+      // It is also what the wariness is FOR. A herd that stands its ground
+      // while a buffalo walks into it says the buffalo is harmless; cattle
+      // drifting away from one, without ever panicking, says more about the
+      // animal than any amount of snorting.
+      const ud = w.wrap.userData as {
+        wildModel?: string;
+        moving?: number;
+        playing?: string;
+      };
+      if (ud.wildModel === "Cow" || ud.wildModel === "Cow_Calf") {
+        const pos = w.wrap.position;
+        let near = Infinity;
+        let awayX = 0;
+        let awayZ = 0;
+        for (const other of wilds) {
+          if (
+            (other.wrap.userData as { wildModel?: string }).wildModel !==
+            "Buffalo"
+          ) {
+            continue;
+          }
+          const dx = pos.x - other.wrap.position.x;
+          const dz = pos.z - other.wrap.position.z;
+          const d = Math.hypot(dx, dz);
+          if (d < near) {
+            near = d;
+            awayX = dx / (d || 1);
+            awayZ = dz / (d || 1);
+          }
+        }
+        // Hysteresis, or she would stutter on the threshold: she starts
+        // moving at 13 and does not settle again until 18.
+        if (near < 13) {
+          ud.moving = 1;
+        } else if (near > 18) {
+          ud.moving = 0;
+        }
+        const walking = ud.moving === 1;
+        if (walking) {
+          // AMBLING, NOT FLEEING. A cow that bolts is a cow in danger, and
+          // nothing here is in danger — she is giving way, which is a walk.
+          const speed = 1.15 * step;
+          const nx = pos.x + awayX * speed;
+          const nz = Math.max(
+            -30,
+            Math.min(meander(nx) - roadClear - 2, pos.z + awayZ * speed),
+          );
+          pos.x = nx;
+          pos.z = nz;
+          pos.y = surfaceY(nx, nz) + WILD_LIFT;
+          // Facing the way she is going, eased rather than snapped.
+          const want = Math.atan2(awayX, awayZ);
+          w.wrap.rotation.y +=
+            angTo(w.wrap.rotation.y, want) * Math.min(1, step * 2.5);
+        }
+        const wants = walking ? "Walk" : "Graze";
+        if (ud.playing !== wants) {
+          const next = w.act.get(wants) ?? w.act.get("Idle");
+          if (next != null) {
+            for (const [name, a] of w.act) {
+              if (name !== wants) a.fadeOut(0.35);
+            }
+            next.reset().fadeIn(0.35).play();
+            ud.playing = wants;
+          }
+        }
+        continue;
+      }
       // The turn hand-off, if one is running: the heading climbs by the same
       // amount the outgoing clip is giving up, so the animal appears to hold
       // still while the two swap over.

@@ -291,15 +291,14 @@ test("every fence and wall runs end to end and has a way in", () => {
         p.run.gapAt > 0 && p.run.gapAt < p.run.count - 1,
         `lesson ${l.n}: the gate is at an end, which is just a shorter run`,
       );
-      // The step has to be the model's own width at the height it is drawn,
-      // or the panels overlap or leave daylight between them. Measured:
-      // bamboo is 1.75 times as wide as tall, laterite 2.61.
-      const aspect = p.model.includes("Bamboo") ? 1.75 : 2.61;
-      const want = aspect * p.h;
-      isTrue(
-        Math.abs(p.run.step - want) < 0.35,
-        `lesson ${l.n}: ${p.model} steps ${p.run.step} but is ${want.toFixed(2)} wide at h=${p.h}`,
-      );
+      // The aspect has to be the model's OWN width-to-height ratio, or the
+      // panels overlap or leave daylight between them. Measured off the
+      // files: bamboo is 1.75 times as wide as tall, laterite 2.61.
+      const want = p.model.includes("Bamboo") ? 1.75 : 2.61;
+      equal(p.run.aspect, want);
+      // And a boundary has to be skirted, or it meets bare earth along a
+      // dead straight line.
+      isTrue(p.skirt === true, `lesson ${l.n}: ${p.model} has no skirt`);
     }
   }
 });
