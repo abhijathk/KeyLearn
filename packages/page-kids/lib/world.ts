@@ -9199,6 +9199,33 @@ export function createKidsWorld(
     }
   }
 
+  /**
+   * PUT EVERY BONE BACK TO ITS BIND POSE.
+   *
+   * An AnimationAction only writes the bones its clip has tracks for; every
+   * other bone keeps whatever the LAST clip left it at. That is invisible as
+   * long as a character's clips all drive the same skeleton — and it is not
+   * invisible at all the moment they do not.
+   *
+   * The village boy is the case. His own idles animate all 97 bones in both
+   * rotation and translation; the walk and run borrowed from Abee drive 22
+   * rotations and one translation, because that is all a walk needs. Starting
+   * the walk therefore left seventy-five bones frozen in the middle of an
+   * idle — arms, spine and head held in one pose while the legs walked out
+   * from under them. Not a bad-looking walk: a broken body.
+   *
+   * `Skeleton.pose()` is the neutral the clip was authored against, so what
+   * the walk does not touch reads as "not moving" rather than as "stuck".
+   */
+  const poseRest = (root: THREE.Object3D): void => {
+    root.traverse((o) => {
+      const m = o as THREE.SkinnedMesh;
+      if (m.isSkinnedMesh && m.skeleton != null) {
+        m.skeleton.pose();
+      }
+    });
+  };
+
   /** Walkers dealt with by walking, so the fade leaves them alone. */
   const handledWalkers = new Set<THREE.Object3D>();
 
@@ -13460,6 +13487,7 @@ export function createKidsWorld(
               continue;
             }
             f.mixer.stopAllAction();
+            poseRest(f.wrap);
             f.wrap.userData.idlePool = undefined;
             {
               // THE CLIP PLAYS AT ITS OWN RATE; THE GROUND SPEED MATCHES IT.
@@ -15773,6 +15801,10 @@ export function createKidsWorld(
                 : null;
           if (a != null && !a.isRunning()) {
             curiousBoy!.mixer.stopAllAction();
+            // See `poseRest`: his walk and run drive 22 bones and his idles
+            // drive 97, so going from one to the other without this leaves
+            // three quarters of him stuck mid-idle.
+            poseRest(curiousBoy!.wrap);
             a.timeScale = scale;
             a.reset().play();
           }
@@ -15823,6 +15855,7 @@ export function createKidsWorld(
           // The one pose in his set that IS this: he is listening and alert,
           // which is what somebody stopping to look at you actually does.
           curiousBoy.mixer.stopAllAction();
+          poseRest(curiousBoy.wrap);
           const alert = curiousBoy.idles.find((a) =>
             /ListeningAlert/i.test(a.getClip().name),
           );
