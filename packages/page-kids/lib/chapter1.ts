@@ -1258,15 +1258,41 @@ export const LESSONS: readonly Lesson[] = [
   },
 ];
 
+/**
+ * WHICH CHAPTER'S LESSONS THE ROAD IS CURRENTLY MADE OF.
+ *
+ * `lessonAt`, `blendAt` and `placements` all have to answer for whichever
+ * chapter is being built, and threading a table through every one of their
+ * call sites — thirty-odd, across the world build and its tick — would be a
+ * parameter that is the same value every time it is passed. So the module
+ * holds it, exactly as it holds `ROAD_SINK` and the river: there is one road
+ * at a time, and everything that asks about it must get the same answer.
+ *
+ * DEFAULTS TO CHAPTER 1 AND FALLS BACK TO IT. A table of the wrong length is
+ * a chapter that is half-written, and building a road from it would place
+ * some lessons and silently drop others; Chapter 1 is a road that works.
+ */
+let ACTIVE: readonly Lesson[] = LESSONS;
+
+/** Build the road from this chapter's lessons until told otherwise. */
+export function setChapterLessons(lessons: readonly Lesson[]): void {
+  ACTIVE = lessons.length === SEGMENT_COUNT ? lessons : LESSONS;
+}
+
+/** Which lessons the road is made of right now. */
+export function activeLessons(): readonly Lesson[] {
+  return ACTIVE;
+}
+
 /** Which lesson owns this point on the road. Clamped at both ends. */
 export function lessonAt(
   x: number,
   bounds: readonly number[] = DEFAULT_BOUNDS,
 ): Lesson {
   for (let i = SEGMENT_COUNT - 1; i > 0; i--) {
-    if (x >= bounds[i]!) return LESSONS[i]!;
+    if (x >= bounds[i]!) return ACTIVE[i]!;
   }
-  return LESSONS[0]!;
+  return ACTIVE[0]!;
 }
 
 /** Where a milestone stands. Stone n closes lesson n. */
@@ -1307,7 +1333,7 @@ export function blendAt(
   const t = into / BLEED;
   return {
     lesson,
-    prev: LESSONS[lesson.n - 2]!,
+    prev: ACTIVE[lesson.n - 2]!,
     // Smoothstep rather than a straight ramp: a linear blend changes fastest
     // at the stone itself, which is exactly where the seam would show.
     mix: Math.max(0, t * t * (3 - 2 * t)),
@@ -1341,7 +1367,7 @@ export function placements(
   persp: (z: number) => number = () => 1,
 ): readonly (Placed & { readonly x: number })[] {
   const out: (Placed & { x: number })[] = [];
-  for (const l of LESSONS) {
+  for (const l of ACTIVE) {
     const from = bounds[l.n - 1]!;
     const len = segmentLen(l.n, bounds);
     for (const p of l.props) {

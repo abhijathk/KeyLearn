@@ -18,7 +18,8 @@
  * thing, and only ever needed dividing.
  */
 
-import { type Lesson,LESSONS, SEGMENT_COUNT } from "./chapter1.ts";
+import { type Lesson, LESSONS, SEGMENT_COUNT } from "./chapter1.ts";
+import { LESSONS_2 } from "./chapter2.ts";
 
 export type Chapter = {
   /** 1-based, and the same number the card shows. */
@@ -72,7 +73,7 @@ export const CHAPTERS: readonly Chapter[] = [
       "Past the last house lies the land that feeds the village — orchards" +
       " and field walls, a little shrine under a great tree, a river to" +
       " cross, and open grazing beyond it.",
-    lessons: [],
+    lessons: LESSONS_2,
   },
 ];
 
@@ -119,18 +120,35 @@ export function chapterDueAt(stones: number): Chapter | null {
 }
 
 /**
- * Which lesson WITHIN that chapter, 1-based.
+ * WHICH LESSON, COUNTED ALONG THE WHOLE ROAD.
  *
  * Lesson n starts at Milestone n-1, so a child with four stones is on Lesson
- * 5 — of their own chapter. Chapter 2's first lesson is Lesson 1 of Chapter 2
- * and never "Lesson 11": a child counts from the start of the thing they are
- * in, and a scoreboard that climbs to twenty is a number about the software
- * rather than about the road.
+ * 5 — and one with fourteen is on Lesson 15. The numbering is CONTINUOUS
+ * across chapters: Chapter 1 is Lessons 1 to 10 and Chapter 2 is Lessons 11
+ * to 20, which is how the reference documents are written, how the
+ * milestones are carved, and how it is talked about.
+ *
+ * I had this counting within the chapter, on the reasoning that a child
+ * counts from the start of the thing they are in. That was wrong about this
+ * road: the milestones do not reset at the chapter line — Milestone 14 is
+ * Milestone 14 — so a chip reading "Lesson 4" beside a stone reading 14
+ * disagrees with the thing the child is standing next to.
  */
 export function lessonAtStones(stones: number): number {
+  const total = CHAPTERS.reduce((n, c) => n + c.lessons.length, 0);
+  return Math.min(Math.max(1, total), Math.max(0, stones) + 1);
+}
+
+/**
+ * Where that lesson sits in its own chapter's table, 0-based.
+ *
+ * The number a child reads runs 1..20; the table it is looked up in runs
+ * 0..9 twice. This is the one place that conversion happens.
+ */
+export function lessonIndexAt(stones: number): number {
   const c = chapterAt(stones);
   const within = Math.max(0, stones) - (c.n - 1) * CHAPTER_STONES;
-  return Math.min(c.lessons.length || CHAPTER_STONES, within + 1);
+  return Math.max(0, Math.min(c.lessons.length - 1, within));
 }
 
 /**
@@ -143,6 +161,30 @@ export function lessonAtStones(stones: number): number {
  */
 export function chapterOpensAt(c: Chapter): number {
   return (c.n - 1) * CHAPTER_STONES;
+}
+
+/**
+ * `?lesson=14` → Chapter 2, Lesson 4.
+ *
+ * THE FLAG COUNTS ALONG THE WHOLE ROAD, because that is how the reference
+ * documents talk: Chapter 2 is "Lesson 11 through Lesson 20", and a reviewer
+ * reading the brief and wanting to look at the river types the number in
+ * front of them. The scoreboard still counts within the chapter — those are
+ * different audiences and it is worth them disagreeing.
+ *
+ * Null for anything that is not a real lesson of a real chapter.
+ */
+export function addressLesson(
+  n: number,
+): { readonly chapter: Chapter; readonly lesson: number } | null {
+  if (!Number.isInteger(n) || n < 1 || n > CHAPTER_STONES * CHAPTERS.length) {
+    return null;
+  }
+  const chapter = CHAPTERS[Math.floor((n - 1) / CHAPTER_STONES)];
+  if (chapter == null || !isWalkable(chapter)) {
+    return null;
+  }
+  return { chapter, lesson: ((n - 1) % CHAPTER_STONES) + 1 };
 }
 
 /** The key under which "this child has been shown that card" is remembered. */

@@ -74,12 +74,14 @@ import {
 import { kidsAudio } from "./audio.ts";
 import { SEGMENT_COUNT } from "./chapter1.ts";
 import {
+  addressLesson,
   type Chapter,
   chapterAt,
   chapterDueAt,
   chapterSeenKey,
   isWalkable,
   lessonAtStones,
+  lessonIndexAt,
 } from "./chapters.ts";
 import {
   CLOTHING_REGIONS,
@@ -3542,26 +3544,34 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * means and it is the same figure the world resumes from — lesson n starts
    * at Milestone n-1, so a child with four stones is on Lesson 5.
    *
-   * COUNTED WITHIN THE CHAPTER, not along the whole road. `roadStones` runs
-   * on past ten, and a chip reading "Lesson 14" would be a number about the
-   * software: a child counts from the start of the thing they are in, and
-   * Chapter 2's first lesson is its first lesson. `chapters.ts` owns that
-   * arithmetic so the card and the chip can never disagree about which
-   * chapter is under way.
+   * COUNTED ALONG THE WHOLE ROAD: Chapter 1 is Lessons 1 to 10 and Chapter 2
+   * is Lessons 11 to 20. The milestones do not reset at the chapter line —
+   * Milestone 14 is Milestone 14 — so a chip counting within the chapter
+   * would disagree with the stone the child is standing next to.
+   * `chapters.ts` owns the arithmetic and the conversion into each chapter's
+   * own table, so the card, the chip and the stone cannot drift apart.
    */
   // `?lesson=N` wins here too, so the chip names the lesson a tester is
   // actually standing in rather than the one their save says they reached.
-  const forcedLesson = Number(
-    typeof window === "undefined"
-      ? Number.NaN
-      : new URLSearchParams(window.location.search).get("lesson"),
+  // It counts the same way: `?lesson=14` is the river.
+  const forced = addressLesson(
+    Number(
+      typeof window === "undefined"
+        ? Number.NaN
+        : new URLSearchParams(window.location.search).get("lesson"),
+    ),
   );
-  const chapterNow = chapterAt(prefs.roadStones ?? 0);
+  const stonesNow = prefs.roadStones ?? 0;
+  const chapterNow = forced?.chapter ?? chapterAt(stonesNow);
   const lessonNo =
-    forcedLesson > 0
-      ? Math.min(SEGMENT_COUNT, forcedLesson)
-      : lessonAtStones(prefs.roadStones ?? 0);
-  const lessonName = chapterNow.lessons[lessonNo - 1]?.name ?? "";
+    forced != null
+      ? (forced.chapter.n - 1) * SEGMENT_COUNT + forced.lesson
+      : lessonAtStones(stonesNow);
+  const lessonName =
+    (forced != null
+      ? chapterNow.lessons[forced.lesson - 1]
+      : chapterNow.lessons[lessonIndexAt(stonesNow)]
+    )?.name ?? "";
   const flashStage = useFlash(
     stageOf(prefs.world)(dinoAgeOf(included, lesson.letters.length)),
   );
@@ -4284,11 +4294,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     const villageForced = qs?.has("village") === true;
     // `?lesson=7` opens the road at Lesson 7, for looking at one. Review
     // only — see `startLesson` in world.ts for why it earns its keep.
-    const asked = Number(qs?.get("lesson"));
-    const startLesson =
-      Number.isInteger(asked) && asked >= 1 && asked <= SEGMENT_COUNT
-        ? asked
-        : undefined;
+    // COUNTED ALONG THE WHOLE ROAD, the way the reference documents are
+    // written and the milestones are carved: `?lesson=14` is the river, in
+    // Chapter 2. The world is handed the chapter and the lesson WITHIN it,
+    // because that is what it builds from.
+    const at = addressLesson(Number(qs?.get("lesson")));
+    const startLesson = at?.lesson;
+    const onVillageNow = prefsRef.current.world === "village";
+    // Which chapter's ten lessons this road is made of. `?lesson=` wins, so
+    // a reviewer lands in the chapter they named; otherwise it is whichever
+    // one the child's own milestones put them in.
+    const villageChapter = onVillageNow
+      ? (at?.chapter.n ?? chapterAt(prefsRef.current.roadStones ?? 0).n)
+      : chapter;
     const villageDue: boolean | "near" =
       prefsRef.current.world !== "village"
         ? false
@@ -4353,7 +4371,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // Carry on from the last stone this child walked past, and stand the
       // most recent few behind them so the road reads as already travelled.
       stonesPassed: prefsRef.current.roadStones ?? 0,
-      chapter,
+      chapter: villageChapter,
       // How long this child's chapter is. Ten lessons of a five-year-old's
       // passages is 270 units of road; of an eleven-year-old's, 640.
       ageBand: band,

@@ -7,6 +7,7 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
 import {
+  activeLessons,
   activityAt,
   blendAt,
   boundsForBand,
@@ -19,12 +20,13 @@ import {
   hashRange,
   isChild,
   lessonAt,
-  LESSONS,
   placements,
   SEGMENT_COUNT,
+  setChapterLessons,
   tiredWalkAt,
   villageDay,
 } from "./chapter1.ts";
+import { CHAPTERS } from "./chapters.ts";
 import {
   attachTint,
   type CharacterTint,
@@ -4203,6 +4205,13 @@ export function createKidsWorld(
    * they were built to, so `chapterBounds` is asked for nothing unless a
    * village is what is being built.
    */
+  // WHICH CHAPTER'S LESSONS THIS ROAD IS MADE OF, decided once and before
+  // anything asks. `lessonAt`, `blendAt` and `placements` all answer from the
+  // table this sets — see `setChapterLessons` — so it has to be set before the first
+  // of them is called, which is the ground pass, thousands of lines below.
+  const CHAPTER_N = Math.max(1, opts.chapter ?? 1);
+  setChapterLessons(CHAPTERS[CHAPTER_N - 1]?.lessons ?? []);
+  const LESSONS = activeLessons();
   const CHAPTER = theme.village != null ? boundsForBand(opts.ageBand) : null;
   if (CHAPTER != null) {
     TRAIL_END = chapterEnd(CHAPTER);
@@ -7255,12 +7264,19 @@ export function createKidsWorld(
    * this depth range takes the far houses down to half and they stop reading
    * as houses.
    *
-   * Applied at PLACEMENT, not per frame. Every mover here already writes its
-   * own `scale` for its own reasons — the scare loom, the celebration hop,
-   * the girth override — and a second writer every frame would fight all of
-   * them. A companion holds its lane, so its factor is a constant anyway; an
-   * animal that wanders a few units in z changes size by less than a per
-   * cent, which is well under noticing and far cheaper than the alternative.
+   * Applied at PLACEMENT for everything that stays put, and PER FRAME for
+   * the herd, which does not. Every mover here writes its own `scale` for
+   * its own reasons — the scare loom, the celebration hop, the girth
+   * override — and a second writer would fight them, so the per-frame case
+   * is confined to the one group that has no other writer and genuinely
+   * changes depth: see the rescale in the wild tick.
+   *
+   * A companion holds its lane, so its factor is a constant. This comment
+   * used to say the same of an animal — "changes size by less than a per
+   * cent" — and that was measured on a wander of a unit or two. The herd is
+   * placed between z -11 and -24 and wanders nine units on top of that,
+   * which at this camera is eleven per cent: plainly visible, and the one
+   * thing in the frame that looked like it was ignoring depth.
    */
   function perspective(z: number): number {
     const eye = V.camZ;
@@ -12520,6 +12536,10 @@ export function createKidsWorld(
         after: null,
       };
       wrap.userData.wildBaseY = y0;
+      // The depth factor this animal was FITTED at. Its size already has this
+      // baked into the inner scale, so the tick divides by it to find how
+      // much the animal has changed depth since — see the rescale below.
+      wrap.userData.persp0 = perspective(z);
       // What it is, so the tick can tell a cow from a buffalo. The rig knows
       // its clips and its box but never knew its species.
       wrap.userData.wildModel = model;
@@ -19255,6 +19275,28 @@ export function createKidsWorld(
     for (const w of wilds) {
       w.mixer.update(dt * motionScale);
       const step = dt * motionScale;
+
+      // ── DEPTH IS A SIZE, AND THESE ONES MOVE IN IT ───────────────────
+      //
+      // `perspective()` is applied at placement everywhere else in this
+      // world, and the reasoning it gives for not doing it per frame is that
+      // "an animal that wanders a few units in z changes size by less than a
+      // per cent". That is true of a few units and wrong about these: the
+      // herd is put down between z -11 and -24 and wanders nine units on top
+      // of it, and at the village camera's distance of 33 that span is a
+      // ELEVEN per cent change in apparent size. A buffalo that walks twenty
+      // units back into a field and stays exactly as big as it was is the
+      // one thing on this road that does not obey the depth cue — which is
+      // precisely how it reads.
+      //
+      // Written on the WRAP, dividing out the factor already baked into the
+      // inner fit. Nothing else writes a wild's wrap scale — the girth
+      // override and the celebration hop belong to companions and props — so
+      // this fights nobody, which was the objection to doing it per frame.
+      {
+        const p0 = (w.wrap.userData.persp0 as number) ?? 1;
+        w.wrap.scale.setScalar(perspective(w.wrap.position.z) / (p0 || 1));
+      }
 
       // ── CATTLE KEEP OUT OF THE BUFFALO'S WAY ────────────────────────
       //
