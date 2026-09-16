@@ -6321,6 +6321,25 @@ export function createKidsWorld(
           const d = Math.hypot((x - y.x) / y.rx, (z - y.z) / y.rz);
           worn2 = Math.max(worn2, 1 - ss(0.55, 1, d));
         }
+        if (worn2 > 0) {
+          // WEAR IS PATCHY, NOT A SLAB. Ground outside a row of shops is not
+          // uniformly bare: it wears where people walk and where carts turn,
+          // and holds on in the corners nobody crosses — so laterite comes
+          // through in patches with grass surviving between them, and the
+          // shape of those patches is the record of where the feet went.
+          //
+          // An even sheet of bare earth reads as a car park. Two noise
+          // fields at different frequencies break it up: a coarse one that
+          // says which parts of the yard are used at all, and a finer one
+          // that gives each patch a ragged edge rather than a drawn one.
+          const coarse = (noise2(x * 0.055 + 31.4, z * 0.06 - 8.2) + 1) / 2;
+          const fine = (noise2(x * 0.19 - 4.7, z * 0.21 + 2.3) + 1) / 2;
+          // Never below 0.45 at the centre of the yard: the ground directly
+          // outside the stalls IS bare, whatever the noise says, because
+          // that is where everybody stands.
+          const patch = 0.45 + 0.55 * ss(0.35, 0.72, coarse * 0.7 + fine * 0.3);
+          worn2 *= patch;
+        }
         const roadOrYard = Math.max(road, worn2);
         const field = Math.max(0, 1 - roadOrYard - litter - dry);
         const sum = roadOrYard + litter + dry + field || 1;

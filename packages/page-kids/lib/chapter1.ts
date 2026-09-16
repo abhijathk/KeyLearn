@@ -770,7 +770,7 @@ export const LESSONS: readonly Lesson[] = [
       // pass through something to arrive. 18 is forty feet at the chapter's
       // own scale, the same ruler the trees use, and taller than any of them
       // bar the palmyra.
-      { model: "nature/KeralaBambooGroves", at: 0.1, z: -11, h: 18, clear: 5 },
+      { model: "nature/KeralaBambooGroves", at: 0.05, z: -11, h: 18, clear: 5 },
       // PLACEHOLDER — see the note above. Swap the model here when the real
       // one is ready; nothing else in the lesson depends on it.
       //
@@ -865,7 +865,30 @@ export const LESSONS: readonly Lesson[] = [
       //
       // Nudged to 0.62 with the extra length, for the same reason as before:
       // the centre must clear the bamboo by HALF the building.
-      { model: `${UTIL}/Village_Market`, at: 0.62, z: -12, h: 15.5, clear: 36 },
+      // BEHIND THE MILESTONE LINE, not across it. `stand` centres a prop on
+      // the z it is given, and this building is about sixteen units deep at
+      // this height — so a centre of -12 put its FRONT FACE at roughly -4,
+      // which is nearly on the carriageway and a good way in front of the
+      // milestones, which stand around -7.5. The market was standing forward
+      // of the line every other thing on this road respects.
+      //
+      // -16.5 puts the frontage just behind the stones: the milestone is met
+      // first, the shops open behind it, and the trodden ground between them
+      // is the width of a village street.
+      // 0.56, with the gate bamboo pulled back to 0.05 to make room for it.
+      // There was a stretch of empty road between the two that read as a gap
+      // in the lesson rather than as an approach — the market is what this
+      // segment is for, and the walk to it should be short. Moving BOTH is
+      // what keeps the half-a-building of clearance the bamboo needs: the
+      // market could not come left on its own without growing out of the
+      // grove again.
+      {
+        model: `${UTIL}/Village_Market`,
+        at: 0.56,
+        z: -16.5,
+        h: 15.5,
+        clear: 36,
+      },
       // BETWEEN THE BAMBOO AND THE MARKET, which is where a village well
       // belongs on a trade road: the traders draw from it and so does
       // anyone walking in, so it sits on the way rather than behind the
