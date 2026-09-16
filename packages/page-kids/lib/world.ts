@@ -9907,6 +9907,29 @@ export function createKidsWorld(
    */
   const strideOf = (height: number) => height * 0.86;
 
+  /**
+   * HOW MANY STRIDES A WALK CLIP ACTUALLY CONTAINS.
+   *
+   * `strideOf(h) / duration` assumes one stride per cycle, which is true of
+   * a loop authored as a loop and false of these two: the blacksmith and the
+   * headman both walk on `Casual_Walk`, a 4.3-second take with THREE full
+   * strides in it. Divided as one, they were driven at a third of their own
+   * pace — about 1.3 units a second against the farmer's 4.5 — and what that
+   * looks like is a big man wading.
+   *
+   * Counted rather than guessed: the left foot's height was sampled 240
+   * times across each clip through the real loader and its rises counted.
+   * Blacksmith 3, Headman 3, FarmerWoman 1, TeaStall 1.
+   *
+   * A table because there is no cheap way to ask a clip this at run time,
+   * and it is a property of the take rather than of the rig — re-splice
+   * either of them from a one-stride loop and the entry comes out again.
+   */
+  const WALK_STRIDES: Record<string, number> = {
+    Blacksmith: 3,
+    Headman: 3,
+  };
+
   // `MILESTONE_CLEAR` comes from the chapter, because the runs are laid out
   // there and keep the same distance from a stone that everything rolled
   // here does.
@@ -15726,6 +15749,11 @@ export function createKidsWorld(
             if (v == null) {
               continue;
             }
+            // And a stander rests on its IDLE — same measurement, same
+            // reason as the walkers below: the pose on screen is the one
+            // that has to touch the ground, not whichever of the rig's
+            // poses happens to reach lowest.
+            v.wrap.position.y -= v.lifts?.idle ?? 0;
             v.wrap.userData.fixedFace = true;
             // A POST NEVER PACES. `guardRate` is already refused under a
             // chapter, and this says it again at the one place that knows
@@ -15811,6 +15839,7 @@ export function createKidsWorld(
             // lesson's list they are, and whether they are a child.
             const v = friends[friends.length - 1];
             if (v != null) {
+              v.wrap.position.y -= v.lifts?.idle ?? 0;
               // Standing on her own land, so never a pacing guard — see the
               // posts above.
               v.wrap.userData.guard = false;
@@ -16089,7 +16118,10 @@ export function createKidsWorld(
               const dur = gait.getClip().duration || 1;
               f.wrap.userData.walkHeight = FOLK_HEIGHT[who] ?? 5.2 * FOOT;
               (f.wrap.userData.roadWalker as { speed: number }).speed =
-                (strideOf(FOLK_HEIGHT[who] ?? 5.2 * FOOT) / dur) * rate;
+                ((strideOf(FOLK_HEIGHT[who] ?? 5.2 * FOOT) *
+                  (WALK_STRIDES[who] ?? 1)) /
+                  dur) *
+                rate;
             }
             roadWalkers.push(f);
           }
@@ -18757,9 +18789,21 @@ export function createKidsWorld(
         // walker holding a constant z drifts off the carriageway on a curve.
         const nz =
           meander(nx) + (f.wrap.position.z - meander(f.wrap.position.x));
+        // MINUS THE GAP THIS CHARACTER'S WALK LEAVES.
+        //
+        // `plantFeet` puts the LOWEST of a rig's poses on the ground, and
+        // measures how far each of the others floats above it — but only the
+        // player ever spent those measurements. For most of the cast the
+        // difference is nothing, because their lowest pose IS the walk. The
+        // blacksmith's is his RUN: measured through the loader, his run
+        // reaches 0.004, his walk 0.053 and his seated idle 0.113, so
+        // planting on the run left him walking a twentieth of his height
+        // above the road. Taller than everyone else, so more visible on him.
         f.wrap.position.set(
           nx,
-          (deckY(nx, nz) ?? surfaceY(nx, nz)) - FOLK_SINK,
+          (deckY(nx, nz) ?? surfaceY(nx, nz)) -
+            FOLK_SINK -
+            (f.lifts?.walk ?? 0),
           nz,
         );
       }
