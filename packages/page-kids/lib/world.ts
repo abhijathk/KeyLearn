@@ -9569,10 +9569,26 @@ export function createKidsWorld(
       if (rw == null) {
         continue;
       }
-      const from = playerX - rw.dir * 38;
-      const z =
-        meander(from) + (f.wrap.position.z - meander(f.wrap.position.x));
-      f.wrap.position.set(from, surfaceY(from, z), z);
+      // ANYBODY ALREADY IN SHOT KEEPS WALKING.
+      //
+      // The move below exists so a walker is never seen to APPEAR — they
+      // come in from off the end of the road under their own steam rather
+      // than fading up in the middle of a carriageway. Applied to everybody
+      // at once it does the opposite at the same moment: the villager the
+      // child is watching is snatched away and re-placed thirty-eight units
+      // back, which is a person vanishing mid-stride and is worse than the
+      // fade it replaced.
+      //
+      // So it only moves the ones already out of sight. Whoever is in shot
+      // carries on, reaches the end of the road and walks off it, which is
+      // what a person does. The camera sees about thirty units, so anything
+      // past twenty-two either side is genuinely gone.
+      if (Math.abs(f.wrap.position.x - playerX) >= 22) {
+        const from = playerX - rw.dir * 38;
+        const z =
+          meander(from) + (f.wrap.position.z - meander(f.wrap.position.x));
+        f.wrap.position.set(from, surfaceY(from, z), z);
+      }
       f.wrap.visible = true;
       handledWalkers.add(f.wrap);
       // AND THEY WALK HOME DIFFERENTLY. The gait was chosen once, when the
