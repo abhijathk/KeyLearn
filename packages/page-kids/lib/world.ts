@@ -12303,6 +12303,21 @@ export function createKidsWorld(
         spot.headScale,
       );
       const day = friends[friends.length - 1];
+      // ── THE VILLAGE'S OWN BYSTANDERS KEEP VILLAGE HOURS TOO ───────────
+      //
+      // These predate the chapter: they are the per-world population, placed
+      // from the night plan's own spots, and they were the people still
+      // standing in the fields at two in the morning after the chapter's
+      // villagers had all gone in. Three systems were taught the clock and
+      // this was a fourth nobody had noticed.
+      //
+      // Marked rather than gated here, because whether somebody is out is a
+      // question for the tick — and marked ONLY on the village road, where
+      // there is a schedule to keep. Dino Run and Hero Trail have no village
+      // day and their crowds stay as they are.
+      if (day != null && CHAPTER != null) {
+        day.wrap.userData.villageBystander = true;
+      }
       // ONLY A CAST THAT HAS AN UNDEAD COUNTERPART TRANSFORMS.
       //
       // This used to fall back to `Skeleton_Minion` for anybody not in the
@@ -16585,10 +16600,23 @@ export function createKidsWorld(
           // the morning: ten is not past nine, which is true and beside the
           // point, because nobody lights a lamp in daylight.
           if (L.closes != null && !today.lampLit(L.closes)) {
+            // TAKEN OUT OF THE DRAW, not merely faded to nothing.
+            //
+            // Zero opacity leaves the sprite in the scene, and the sprite's
+            // opacity is written by more than one thing — the nightfall
+            // cross-fade walks every lamp's alpha up from the old sky to the
+            // new one over a second and a half. So a shut shop could be lit
+            // for a frame at the moment the light changed, which is exactly
+            // when somebody is looking at it: press Day and the whole row
+            // flashes on before going out.
+            //
+            // `visible` cannot be overwritten by a fade. Off is off.
+            L.sprite.visible = false;
             L.mat.opacity = 0;
             if (L.light != null) L.light.intensity = 0;
             continue;
           }
+          L.sprite.visible = true;
           // THREE WAVES, NOT TWO. Two at 1 : 2.37 still come back together
           // every few seconds, and a lamp that repeats is a lamp you can
           // predict. A third at 4.31 — none of the three a whole multiple of
@@ -16688,6 +16716,21 @@ export function createKidsWorld(
       {
         const act = activityAt(hourOfDay);
         const kidsOut = childrenOut(hourOfDay);
+        // The village's own bystanders, on the same schedule. They are not
+        // the chapter's people and have no place in its table, but they are
+        // standing in the same fields and a road cannot half empty.
+        for (const f of friends) {
+          if (f.wrap.userData.villageBystander !== true) {
+            continue;
+          }
+          // One rank for all of them: they are out by day, and in when the
+          // village is. Finer than that would be inventing a hierarchy the
+          // old population never had.
+          const out = act === "day" || act === "evening";
+          if (f.wrap.visible !== out) {
+            f.wrap.visible = out;
+          }
+        }
         for (const f of standingFolk) {
           const rank = (f.wrap.userData.folkRank as number) ?? 0;
           const lesson = LESSONS[((f.wrap.userData.folkOf as number) ?? 1) - 1];
@@ -19428,6 +19471,8 @@ export function createKidsWorld(
         fixedFace?: boolean;
         /** The hours this road walker is out, [from, to). */
         shift?: [number, number];
+        /** One of the per-world population, on the village road. */
+        villageBystander?: boolean;
         /** The stretch of road this walker keeps to, [from, to]. */
         beat?: [number, number];
         /** Which lesson's folk list this villager belongs to. */
