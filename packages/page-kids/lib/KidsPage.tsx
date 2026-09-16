@@ -3479,11 +3479,25 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   }, [prefs.guide, prefs.world, prefs.classic, loaded, regenNonce]);
   const roadClock = useMemo(() => {
     void clockTick;
+    // REVIEW ONLY: `?hour=` pins the world's clock outright, and the board
+    // has to be told as well. It printed the real staged hour while the
+    // village ran on the flag — two clocks disagreeing on screen is the exact
+    // thing the flag exists to rule out.
+    const review =
+      typeof window === "undefined"
+        ? null
+        : (() => {
+            const q = new URLSearchParams(window.location.search).get("hour");
+            const n = q == null ? Number.NaN : Number(q);
+            return Number.isFinite(n) && n >= 0 && n < 24 ? n : null;
+          })();
     const pinned = prefs.dayHour === "auto" ? null : prefs.dayHour;
     const at =
-      typeof pinned === "number"
-        ? { day: pinned, night: (pinned + 12) % 24 }
-        : stagedHours();
+      review != null
+        ? { day: review, night: review }
+        : typeof pinned === "number"
+          ? { day: pinned, night: (pinned + 12) % 24 }
+          : stagedHours();
     const h24 = prefs.night ? at.night : at.day;
     const hour = Math.floor(h24);
     const mins = Math.round((h24 - hour) * 60);

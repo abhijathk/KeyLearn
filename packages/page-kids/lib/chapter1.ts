@@ -925,7 +925,7 @@ export const LESSONS: readonly Lesson[] = [
       // pass through something to arrive. 18 is forty feet at the chapter's
       // own scale, the same ruler the trees use, and taller than any of them
       // bar the palmyra.
-      { model: "nature/KeralaBambooGroves", at: 0.05, z: -11, h: 18, clear: 5 },
+      { model: "nature/KeralaBambooGroves", at: 0.05, z: -11, h: 23, clear: 5 },
       // PLACEHOLDER — see the note above. Swap the model here when the real
       // one is ready; nothing else in the lesson depends on it.
       //
@@ -1132,7 +1132,7 @@ export const LESSONS: readonly Lesson[] = [
       // what is wanted here, because the closing grove belongs on the far
       // side of Milestone 7 — it is the gate you walk OUT through, and the
       // stone should be met before it rather than through it.
-      { model: "nature/KeralaBambooGroves", at: 1.06, z: -13, h: 18, clear: 5 },
+      { model: "nature/KeralaBambooGroves", at: 1.06, z: -13, h: 23, clear: 5 },
     ],
     herd: [],
     folk: ["TeaStall", "Headman"],

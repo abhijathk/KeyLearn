@@ -3627,8 +3627,38 @@ export function createKidsWorld(
    * One source of truth. If the world says it is five in the morning, it is
    * five in the morning for everybody in it.
    */
+  /**
+   * THE HOUR THIS VILLAGE RUNS ON.
+   *
+   * Two clocks used to disagree here and this is where they are married.
+   * `stagedHours` folds the child's real time onto a twelve-hour face and day
+   * mode takes the light candidate, night mode the dark one; `hourPref` pins
+   * that outright when a grown-up has set an hour in the settings.
+   *
+   * The pin is the part that was missing. `restageSun` honoured it and the
+   * scoreboard printed it, but the schedule below read `stagedHours()` raw —
+   * so pinning midnight moved the sun, wrote "12:00 am" on the board, and
+   * left the shops lit and the villagers walking at whatever hour it happened
+   * to be in the real world. Three rounds of "the timing is still not
+   * working" were all this one line: the lights and the people were the only
+   * things in the scene not being told what time it was.
+   */
+  const stagedNow = (): { readonly day: number; readonly night: number } => {
+    if (hourPref == null) {
+      return stagedHours();
+    }
+    // THE SETTING PINS A DAYLIGHT HOUR AND THE NIGHT BUTTON MIRRORS IT: the
+    // panel offers Early, Morning, Midday, Afternoon, Evening and nothing
+    // else, so "Midday, but at night" can only mean midnight. `?hour=` is the
+    // one place an hour is meant literally — a reviewer asking for 2am wants
+    // 2am in both modes, not 2pm in one of them.
+    return reviewHour != null
+      ? { day: hourPref, night: hourPref }
+      : { day: hourPref, night: (hourPref + 12) % 24 };
+  };
+
   const worldHour = (): number => {
-    const staged = stagedHours();
+    const staged = stagedNow();
     return nightNow ? staged.night : staged.day;
   };
 
@@ -3728,7 +3758,21 @@ export function createKidsWorld(
    * chosen time pins it. Held here rather than baked in at build so changing
    * it does not cost a world rebuild: `setHour` restages the light in place.
    */
-  let hourPref: number | null = null;
+  /**
+   * The pinned hour, or null to follow the child's own clock.
+   *
+   * Seeded from `?hour=` so a reviewer can put the village at any hour of the
+   * day without touching the settings panel — and, more to the point, so that
+   * what a reviewer exercises is the SAME path the setting drives rather than
+   * a parallel one that can quietly agree while the real one is broken.
+   */
+  const reviewHour = (() => {
+    if (typeof window === "undefined") return null;
+    const q = new URLSearchParams(window.location.search).get("hour");
+    const n = q == null ? Number.NaN : Number(q);
+    return Number.isFinite(n) && n >= 0 && n < 24 ? n : null;
+  })();
+  let hourPref: number | null = reviewHour;
   const SUN_DAY = new THREE.Vector3(...(theme.sunAt ?? [-8, 30, 7]));
   /**
    * AND WHERE THE MOON STANDS, which is not where the sun stood.
@@ -3761,10 +3805,7 @@ export function createKidsWorld(
     if (theme.clockLit !== true) {
       return;
     }
-    stagedAt =
-      hourPref == null
-        ? stagedHours()
-        : { day: hourPref, night: (hourPref + 12) % 24 };
+    stagedAt = stagedNow();
     SUN_DAY.copy(sunAtHour(stagedAt.day, false));
     SUN_NIGHT.copy(sunAtHour(stagedAt.night, true));
     // And the live vector with it. `SUN_AT` is cloned from `SUN_DAY` before
@@ -20192,11 +20233,16 @@ export function createKidsWorld(
       ];
     },
     setHour(hour) {
-      if (hourPref === hour) {
+      // `?hour=` outranks the setting, which otherwise pushes its own value
+      // in as the page settles and quietly takes the review flag back off.
+      if (reviewHour != null || hourPref === hour) {
         return;
       }
       hourPref = hour;
       restageSun();
+      // The village keeps the same clock as the sky. Moving the hour without
+      // this leaves the shops lit at noon and the road empty at nine.
+      refreshPopulation(true);
       // The palette goes with the angle — a low sun is a gold one — so the
       // sky has to be rebuilt, not just the vector moved.
       applySky(nightNow ? "night" : land.mood).catch(() => {});
