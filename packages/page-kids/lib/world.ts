@@ -371,7 +371,29 @@ const AK_3D_PACK: ReadonlySet<string> = new Set([
  * folder. Abee is ours -- keeping him out of `ak-3d-pack/` keeps that folder
  * exactly what its COMMERCIAL-LICENSE.md says it is.
  */
-const OWN_MODELS: ReadonlyMap<string, string> = new Map([["Abee", "abee"]]);
+/**
+ * Models that live in their own folder rather than in a theme's.
+ *
+ * `spawnWild` and `spawnCompanion` both resolve through `modelUrl`, which
+ * joins the THEME's model directory onto a bare name — so the village's cows
+ * and villagers, which live in `village-folk/`, were being asked for at
+ * `ak-3d-pack/village-folk/Cow.glb` and answered with a 404. Neither spawner
+ * throws on a missing model (a missing animal must never break the world),
+ * so the build reported fifteen animals and eight villagers and put none of
+ * them on the road.
+ *
+ * Registering them here is the mechanism that already existed for exactly
+ * this, and it keeps ONE place that knows where a character's file is.
+ */
+const OWN_MODELS: ReadonlyMap<string, string> = new Map([
+  ["Abee", "abee"],
+  ["Cow", "village-folk"],
+  ["Cow_Calf", "village-folk"],
+  ["Headman", "village-folk"],
+  ["TeaStall", "village-folk"],
+  ["FarmerWoman", "village-folk"],
+  ["VillageBoy", "village-folk"],
+]);
 
 /** Where a character's model actually lives, pack members included. */
 /**
@@ -8569,24 +8591,38 @@ export function createKidsWorld(
    * appearing around them.
    */
   const lessonGroups: THREE.Group[] = [];
-  /** The group a chapter object belongs in, by where it stands. */
+  /** Which lesson's scene is up. -1 until the first one is asked for. */
+  let shownLesson = -1;
+  /** Is lesson `n` inside the window around what is showing? */
+  const inWindow = (n: number) =>
+    shownLesson < 0 || Math.abs(n - shownLesson) <= 1;
+  /**
+   * The group a chapter object belongs in, by where it stands.
+   *
+   * A NEW GROUP IS BORN WITH THE RIGHT VISIBILITY, which is the whole
+   * subtlety here. These are created lazily as the build reaches each
+   * lesson, and the build is asynchronous — so the tick starts running, and
+   * calls `showLesson`, long before the last group exists. Created hidden
+   * and left for `showLesson` to correct, every group made after that first
+   * call stayed hidden for good, because `showLesson` returns early when the
+   * lesson has not changed and the lesson does not change while a child
+   * stands at the start of it. The whole road came up empty.
+   */
   const lessonGroup = (x: number): THREE.Group => {
     const n = CHAPTER != null ? lessonAt(x, CHAPTER).n : 1;
     while (lessonGroups.length < n) {
       const g = new THREE.Group();
-      g.visible = false;
+      g.visible = inWindow(lessonGroups.length + 1);
       scene.add(g);
       lessonGroups.push(g);
     }
     return lessonGroups[n - 1]!;
   };
-  /** Which lesson's scene is up. -1 until the first one is shown. */
-  let shownLesson = -1;
   const showLesson = (n: number) => {
     if (n === shownLesson) return;
     shownLesson = n;
     for (const [i, g] of lessonGroups.entries()) {
-      g.visible = Math.abs(i + 1 - n) <= 1;
+      g.visible = inWindow(i + 1);
     }
   };
 
@@ -12670,89 +12706,16 @@ export function createKidsWorld(
         }
       }
 
-      // ── THE PLANTING, LESSON BY LESSON ───────────────────────────────
-      //
-      // What actually makes Lesson 3 an orchard and Lesson 10 a fern meadow.
-      // The road is walked end to end at whatever spacing the table's density
-      // asks for at that point, and each plant is drawn from the lesson it
-      // stands in — three layers, because a Kerala orchard is layered and a
-      // meadow is not, and the difference between them is which layers are
-      // populated rather than how many plants there are.
-      //
-      // EVERY DECISION COMES FROM THE PLACE, not from a sequence. Species,
-      // depth, size, lean and heading are each a hash of the coordinates
-      // with their own salt, so the same tree stands in the same spot with
-      // the same lean on every visit — and an animal placed later can be
-      // told to keep out of it.
-      if (CHAPTER != null) {
-        // Layer heights, and what each layer is for. A canopy tree stands
-        // over the road, the middle layer meets it at head height, and the
-        // ground layer is what the child walks past.
-        const LAYERS = [
-          { key: "canopy" as const, lo: 6.5, hi: 11, share: 0.3, clear: 2.2 },
-          { key: "mid" as const, lo: 2.8, hi: 4.6, share: 0.3, clear: 1.2 },
-          { key: "ground" as const, lo: 0.7, hi: 1.7, share: 0.4, clear: 0 },
-        ];
-        let planted = 0;
-        let refused = 0;
-        for (let x = 0; x < TRAIL_END; ) {
-          const here = blendAt(x, CHAPTER);
-          // The bleed picks WHICH lesson this plant belongs to, rather than
-          // averaging the two into something neither of them has. A species
-          // cannot be half a mango; what fades across a milestone is the
-          // proportion of each, and that is a coin weighted by `mix`.
-          const from = hash3(x, 0, 11) < here.mix ? here.lesson : here.prev;
-          const roll = hash3(x, 1, 12);
-          let acc = 0;
-          const layer =
-            LAYERS.find((l) => (acc += l.share) > roll) ?? LAYERS[2]!;
-          const species = from[layer.key];
-          const pick = hashPick(species, x, 2, 13);
-          const step = 1 / Math.max(0.2, densityAt(x, CHAPTER));
-          x += step * hashRange(x, 3, 14, 0.6, 1.5);
-          if (pick == null) {
-            continue; // this lesson has no such layer — a meadow has no canopy
-          }
-          // Behind the road only. The near verge is the child's side and
-          // stays clear, which is the rule the village already follows.
-          const z = -hashRange(x, 4, 15, from.depth[0], from.depth[1]);
-          const spot = clearSpot(x, z, layer.clear);
-          if (spot == null) {
-            refused++;
-            continue;
-          }
-          const src = await prop(pick);
-          if (src == null) {
-            continue;
-          }
-          const h = hashRange(x, 5, 16, layer.lo, layer.hi);
-          const w = fitToHeight(src.clone(true), h * perspective(spot.z));
-          w.position.set(spot.x, surfaceY(spot.x, spot.z), spot.z);
-          w.rotation.y = hashRange(x, 6, 17, 0, Math.PI * 2);
-          // NOTHING GROWS PLUMB — the same few degrees of lean the scatter
-          // uses, for the same reason: yaw alone leaves a row standing to
-          // attention, and a little tilt is the cheapest tell that these
-          // grew rather than being placed.
-          w.rotation.x = hashRange(x, 7, 18, -0.085, 0.085);
-          w.rotation.z = hashRange(x, 8, 19, -0.085, 0.085);
-          // Height running separately from girth, so the outline changes and
-          // not merely the size: a uniform scale is the same plant further
-          // away, and the outline is what the eye picks up in a cluster.
-          w.scale.y *= hashRange(x, 9, 20, 0.85, 1.25);
-          lessonGroup(spot.x).add(w);
-          characterRoots.add(w);
-          if (layer.clear > 0) {
-            blockers.push({ x: spot.x, z: spot.z, r: layer.clear });
-          }
-          planted++;
-        }
-        console.info(
-          `[chapter] ${planted} plants over ${Math.round(TRAIL_END)} units` +
-            `, ${refused} refused for want of room, ${blockers.length} blockers`,
-        );
-      }
-
       // ── THE ANIMALS, WHERE THE LESSON KEEPS THEM ─────────────────────
+      //
+      // BEFORE THE PLANTING, AND THAT ORDER IS THE POINT. Placed after it,
+      // they were competing for ground against nine hundred plants that had
+      // already claimed it: the build reported three animals and NO
+      // villagers on a road that asks for fifteen and six, because
+      // `clearSpot` could not find a gap. There are a handful of animals and
+      // hundreds of plants, so the handful chooses first and the plants fill
+      // in around them. A refused plant is invisible; a refused cow is a
+      // lesson missing the animal it was written around.
       //
       // Buffalo open and close the chapter, cows arrive with cultivation in
       // Lesson 2, and the grazing land and pasture are theirs. The table
@@ -12843,6 +12806,164 @@ export function createKidsWorld(
           }
         }
         console.info(`[chapter] ${folk} villagers out (${activity})`);
+      }
+
+      // ── THE PLANTING, LESSON BY LESSON ───────────────────────────────
+      //
+      // What actually makes Lesson 3 an orchard and Lesson 10 a fern meadow.
+      // The road is walked end to end at whatever spacing the table's density
+      // asks for at that point, and each plant is drawn from the lesson it
+      // stands in — three layers, because a Kerala orchard is layered and a
+      // meadow is not, and the difference between them is which layers are
+      // populated rather than how many plants there are.
+      //
+      // EVERY DECISION COMES FROM THE PLACE, not from a sequence. Species,
+      // depth, size, lean and heading are each a hash of the coordinates
+      // with their own salt, so the same tree stands in the same spot with
+      // the same lean on every visit — and an animal placed later can be
+      // told to keep out of it.
+      if (CHAPTER != null) {
+        // Layer heights, and what each layer is for. A canopy tree stands
+        // over the road, the middle layer meets it at head height, and the
+        // ground layer is what the child walks past.
+        const LAYERS = [
+          // `clear` is what an animal must keep OUT of, and only a trunk
+          // qualifies. Registering the middle layer too put 508 circles on a
+          // road with room for a fraction of that, which is how the build
+          // ended up with three animals and no villagers at all. A cow beside
+          // a banana plant is a cow beside a banana plant; a cow inside a
+          // coconut palm is the bug this list exists to prevent.
+          { key: "canopy" as const, lo: 6.5, hi: 11, share: 0.3, clear: 1.6 },
+          { key: "mid" as const, lo: 2.8, hi: 4.6, share: 0.3, clear: 0 },
+          { key: "ground" as const, lo: 0.7, hi: 1.7, share: 0.4, clear: 0 },
+        ];
+        let planted = 0;
+        let refused = 0;
+        for (let x = 0; x < TRAIL_END; ) {
+          const here = blendAt(x, CHAPTER);
+          // The bleed picks WHICH lesson this plant belongs to, rather than
+          // averaging the two into something neither of them has. A species
+          // cannot be half a mango; what fades across a milestone is the
+          // proportion of each, and that is a coin weighted by `mix`.
+          const from = hash3(x, 0, 11) < here.mix ? here.lesson : here.prev;
+          const roll = hash3(x, 1, 12);
+          let acc = 0;
+          const layer =
+            LAYERS.find((l) => (acc += l.share) > roll) ?? LAYERS[2]!;
+          const species = from[layer.key];
+          const pick = hashPick(species, x, 2, 13);
+          const step = 1 / Math.max(0.2, densityAt(x, CHAPTER));
+          x += step * hashRange(x, 3, 14, 0.6, 1.5);
+          if (pick == null) {
+            continue; // this lesson has no such layer — a meadow has no canopy
+          }
+          // Behind the road only. The near verge is the child's side and
+          // stays clear, which is the rule the village already follows.
+          const z = -hashRange(x, 4, 15, from.depth[0], from.depth[1]);
+          const spot = clearSpot(x, z, Math.max(0.8, layer.clear));
+          if (spot == null) {
+            refused++;
+            continue;
+          }
+          const src = await prop(pick);
+          if (src == null) {
+            continue;
+          }
+          const h = hashRange(x, 5, 16, layer.lo, layer.hi);
+          const w = fitToHeight(src.clone(true), h * perspective(spot.z));
+          w.position.set(spot.x, surfaceY(spot.x, spot.z), spot.z);
+          w.rotation.y = hashRange(x, 6, 17, 0, Math.PI * 2);
+          // NOTHING GROWS PLUMB — the same few degrees of lean the scatter
+          // uses, for the same reason: yaw alone leaves a row standing to
+          // attention, and a little tilt is the cheapest tell that these
+          // grew rather than being placed.
+          w.rotation.x = hashRange(x, 7, 18, -0.085, 0.085);
+          w.rotation.z = hashRange(x, 8, 19, -0.085, 0.085);
+          // Height running separately from girth, so the outline changes and
+          // not merely the size: a uniform scale is the same plant further
+          // away, and the outline is what the eye picks up in a cluster.
+          w.scale.y *= hashRange(x, 9, 20, 0.85, 1.25);
+          lessonGroup(spot.x).add(w);
+          characterRoots.add(w);
+          if (layer.clear > 0) {
+            blockers.push({ x: spot.x, z: spot.z, r: layer.clear });
+          }
+          planted++;
+        }
+        console.info(
+          `[chapter] ${planted} plants over ${Math.round(TRAIL_END)} units` +
+            `, ${refused} refused for want of room, ${blockers.length} blockers`,
+        );
+
+        // ── THE VERGES ───────────────────────────────────────────────────
+        //
+        // "Road edges lined with grass, ferns, tiny weeds, a few low shrubs
+        // and exposed soil" — the one line in the brief that appears in
+        // every single lesson, and the one thing the planting above cannot
+        // do, because it works the FAR side only. That rule exists to keep
+        // buildings off the child's shoulder; it was never meant to keep the
+        // grass off it, and with the old scatter gone the road came out with
+        // bare edges on both banks.
+        //
+        // BOTH SIDES, AND IN CLUMPS. Ground cover does not arrive evenly
+        // spaced — it seeds where it can, so it comes in patches with worn
+        // ground between them, and an even sprinkle down a verge reads as a
+        // mown lawn. So: cluster centres down the road, each with a handful
+        // of plants scattered round it at its own spread, and gaps between
+        // where nothing grows at all. The gaps are as much of the effect as
+        // the clumps.
+        //
+        // Nothing here is an obstruction and nothing checks for room. You
+        // walk through grass.
+        let verge = 0;
+        for (
+          let x = -12;
+          x < TRAIL_END + 12;
+          x += hashRange(x, 0, 60, 2.2, 6.5)
+        ) {
+          const here = lessonAt(Math.max(0, x), CHAPTER);
+          // A clump every other centre or so, which is what leaves bare
+          // stretches between them.
+          if (hash3(x, 1, 61) > 0.62) {
+            continue;
+          }
+          for (const side of [-1, 1] as const) {
+            // Each bank decides for itself. Matching clumps across a road is
+            // a hedge somebody planted.
+            if (hash3(x, side, 62) > 0.78) {
+              continue;
+            }
+            const n = 3 + Math.floor(hash3(x, side, 63) * 6);
+            const spread = hashRange(x, side, 64, 1.4, 3.6);
+            for (let i = 0; i < n; i++) {
+              const px = x + hashRange(x, i * 7 + side, 65, -spread, spread);
+              // Off the carriageway and no further back than the first of
+              // the planting, so the verge meets the field rather than
+              // overlapping it.
+              const pz =
+                side * hashRange(px, i, 66, roadClear + 0.6, roadClear + 5.5);
+              const pick = hashPick(here.ground, px, i, 67);
+              if (pick == null || onRoad(px, pz, pick, 0.3)) {
+                continue;
+              }
+              const src = await prop(pick);
+              if (src == null) {
+                continue;
+              }
+              const h = hashRange(px, i, 68, 0.45, 1.25);
+              const w = fitToHeight(src.clone(true), h * perspective(pz));
+              w.position.set(px, surfaceY(px, pz) - 0.04, pz);
+              w.rotation.y = hashRange(px, i, 69, 0, Math.PI * 2);
+              w.rotation.x = hashRange(px, i, 70, -0.12, 0.12);
+              w.rotation.z = hashRange(px, i, 71, -0.12, 0.12);
+              w.scale.y *= hashRange(px, i, 72, 0.8, 1.3);
+              lessonGroup(Math.max(0, px)).add(w);
+              characterRoots.add(w);
+              verge++;
+            }
+          }
+        }
+        console.info(`[chapter] ${verge} plants along the verges`);
       }
 
       // ── WHAT WAS MOVED IN THE NIGHT ──────────────────────────────────

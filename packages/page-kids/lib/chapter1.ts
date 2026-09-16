@@ -288,7 +288,12 @@ export const LESSONS: readonly Lesson[] = [
     // Light tree density and wide sightlines: this is the chapter's opening
     // and the child is learning to read the road itself. Nothing here is
     // allowed to compete with the milestone or the buffalo.
-    canopy: [`${PLANTS}/Coconut_Palm`],
+    // A KARIMPANA OR TWO. The palmyra stands above everything else on a
+    // Kerala roadside and is the tree you navigate by, so it belongs on the
+    // open stretches where there is sky for it to stand against rather than
+    // in the orchard where it would be lost. One in the opening frame is a
+    // landmark; a row of them would be a plantation.
+    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Palmyra_Karimpana`],
     mid: [`${PLANTS}/Hibiscus_Chemparathi`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.1,
@@ -298,7 +303,7 @@ export const LESSONS: readonly Lesson[] = [
       { model: "village-stone/Laterite_Rock", at: 0.74, z: -9, h: 0.7 },
     ],
     // The first recognisable living landmark in the chapter.
-    herd: ["ak-3d-pack/Buffalo"],
+    herd: ["Buffalo"],
     folk: [],
     corridor: false,
   },
@@ -309,7 +314,11 @@ export const LESSONS: readonly Lesson[] = [
     to: 2,
     // The edge turning into productive family land: useful trees rather than
     // scenery, and the first laterite showing through.
-    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Papaya_Tree`],
+    canopy: [
+      `${PLANTS}/Coconut_Palm`,
+      `${PLANTS}/Papaya_Tree`,
+      `${PLANTS}/Palmyra_Karimpana`,
+    ],
     mid: [`${PLANTS}/Banana_Plant`, `${PLANTS}/Drumstick_Muringa`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Taro_Chembu`],
     density: 1.9,
@@ -327,8 +336,8 @@ export const LESSONS: readonly Lesson[] = [
         clear: 2,
       },
     ],
-    herd: ["village-folk/Cow", "village-folk/Cow_Calf", "ak-3d-pack/Buffalo"],
-    folk: ["village-folk/FarmerWoman"],
+    herd: ["Cow", "Cow_Calf", "Buffalo"],
+    folk: ["FarmerWoman"],
     corridor: false,
   },
   {
@@ -380,7 +389,7 @@ export const LESSONS: readonly Lesson[] = [
       { model: "village-stone/Mossy_Stone", at: 0.34, z: -11, h: 0.35 },
     ],
     herd: [],
-    folk: ["village-folk/FarmerWoman"],
+    folk: ["FarmerWoman"],
     corridor: false,
   },
   {
@@ -414,8 +423,8 @@ export const LESSONS: readonly Lesson[] = [
         clear: 2,
       },
     ],
-    herd: ["village-folk/Cow"],
-    folk: ["village-folk/FarmerWoman"],
+    herd: ["Cow"],
+    folk: ["FarmerWoman"],
     // THE THRESHOLD. Not the corridor — but one faint thing near the far
     // end, so Lesson 5 is arrived at rather than switched on.
     corridor: false,
@@ -460,7 +469,7 @@ export const LESSONS: readonly Lesson[] = [
       },
     ],
     herd: [],
-    folk: ["village-folk/Headman", "village-folk/VillageBoy"],
+    folk: ["Headman", "VillageBoy"],
     corridor: true,
     trace: { count: 3, span: [0.15, 0.9] },
   },
@@ -502,7 +511,7 @@ export const LESSONS: readonly Lesson[] = [
       { model: `${UTIL}/Petromax_Lamp`, at: 0.62, z: -13, h: 1.1 },
     ],
     herd: [],
-    folk: ["village-folk/Headman"],
+    folk: ["Headman"],
     corridor: true,
     trace: { count: 3, span: [0.12, 0.92] },
   },
@@ -520,7 +529,11 @@ export const LESSONS: readonly Lesson[] = [
     // clutter of a place people use — and the market goes in when there is
     // one. What must NOT happen is a smeared market: a village with no market
     // reads as a small village, a village with a broken one reads as broken.
-    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Tamarind_Tree`],
+    canopy: [
+      `${PLANTS}/Coconut_Palm`,
+      `${PLANTS}/Tamarind_Tree`,
+      `${PLANTS}/Palmyra_Karimpana`,
+    ],
     mid: [`${PLANTS}/Banana_Plant`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`],
     density: 1.4,
@@ -540,7 +553,7 @@ export const LESSONS: readonly Lesson[] = [
       { model: "nature/KeralaBambooGroves", at: 0.88, z: -12, h: 7, clear: 5 },
     ],
     herd: [],
-    folk: ["village-folk/TeaStall", "village-folk/Headman"],
+    folk: ["TeaStall", "Headman"],
     corridor: true,
     // The strongest in the chapter.
     trace: { count: 4, span: [0.1, 0.94] },
@@ -572,7 +585,7 @@ export const LESSONS: readonly Lesson[] = [
         clear: 2,
       },
     ],
-    herd: ["ak-3d-pack/Buffalo", "village-folk/Cow", "village-folk/Cow_Calf"],
+    herd: ["Buffalo", "Cow", "Cow_Calf"],
     folk: [],
     corridor: false,
     // One leftover suggestion near the start, then nothing for the rest of
@@ -591,7 +604,7 @@ export const LESSONS: readonly Lesson[] = [
     // THE HAYSTACK IS A GAP. It is named as the key landmark prop and there
     // is no haystack in any folder, so the space it wants is left clear at
     // 0.5 rather than filled with something that is not one.
-    canopy: [`${PLANTS}/Mango_Tree`],
+    canopy: [`${PLANTS}/Mango_Tree`, `${PLANTS}/Palmyra_Karimpana`],
     mid: [`${PLANTS}/Hibiscus_Chemparathi`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`],
     density: 1.0,
@@ -605,7 +618,7 @@ export const LESSONS: readonly Lesson[] = [
         clear: 2,
       },
     ],
-    herd: ["village-folk/Cow", "village-folk/Cow_Calf", "ak-3d-pack/Buffalo"],
+    herd: ["Cow", "Cow_Calf", "Buffalo"],
     folk: [],
     corridor: false,
   },
@@ -617,7 +630,7 @@ export const LESSONS: readonly Lesson[] = [
     // Closure, and a deliberate echo of Lesson 1: the same open language at a
     // calmer end-state, with the buffalo back as a bookend. Trees only at the
     // far edge so the space stays open.
-    canopy: [`${PLANTS}/Coconut_Palm`],
+    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Palmyra_Karimpana`],
     mid: [],
     ground: [`${PLANTS}/Kerala_Fern`, `${PLANTS}/Kerala_Grass_Tuft`],
     density: 1.2,
@@ -626,7 +639,7 @@ export const LESSONS: readonly Lesson[] = [
       { model: "village-stone/Mossy_Stone", at: 0.45, z: -8, h: 0.9 },
       { model: "village-stone/Laterite_Rock", at: 0.8, z: -9.5, h: 0.7 },
     ],
-    herd: ["ak-3d-pack/Buffalo"],
+    herd: ["Buffalo"],
     folk: [],
     corridor: false,
   },

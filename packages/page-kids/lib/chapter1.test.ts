@@ -309,21 +309,46 @@ test("every model named by the chapter is on disk", () => {
     dirname(fileURLToPath(import.meta.url)),
     "../../../root/public/kids-assets/models",
   );
+  // RESOLVED THE WAY THE WORLD RESOLVES IT, which is the only version worth
+  // testing. `herd` and `folk` go through `modelUrl`, which takes a BARE
+  // name and finds the folder itself; `props`, `canopy`, `mid` and `ground`
+  // go through `prop()`, which takes a path. Checking both as plain paths
+  // passed happily while the cows were 404ing in the game, because
+  // "village-folk/Cow.glb" is a real file and "ak-3d-pack/village-folk/
+  // Cow.glb" is what was actually requested.
+  const FOLDER_OF: Record<string, string> = {
+    Buffalo: "ak-3d-pack",
+    Cow: "village-folk",
+    Cow_Calf: "village-folk",
+    Headman: "village-folk",
+    TeaStall: "village-folk",
+    FarmerWoman: "village-folk",
+    VillageBoy: "village-folk",
+  };
   const missing: string[] = [];
   const seen = new Set<string>();
-  for (const l of LESSONS) {
-    for (const m of [
-      ...l.canopy,
-      ...l.mid,
-      ...l.ground,
-      ...l.herd,
-      ...l.folk,
-      ...l.props.map((p) => p.model),
-    ]) {
-      if (seen.has(m)) continue;
-      seen.add(m);
-      if (!existsSync(join(root, `${m}.glb`))) missing.push(m);
+  const check = (m: string, bare: boolean) => {
+    if (seen.has(m)) return;
+    seen.add(m);
+    if (bare) {
+      const dir = FOLDER_OF[m];
+      if (dir == null) {
+        missing.push(`${m} (no folder registered — modelUrl cannot find it)`);
+        return;
+      }
+      if (!existsSync(join(root, dir, `${m}.glb`))) missing.push(`${dir}/${m}`);
+      return;
     }
+    if (m.includes("/")) {
+      if (!existsSync(join(root, `${m}.glb`))) missing.push(m);
+      return;
+    }
+    missing.push(`${m} (a prop path must name its folder)`);
+  };
+  for (const l of LESSONS) {
+    for (const m of [...l.canopy, ...l.mid, ...l.ground]) check(m, false);
+    for (const m of l.props.map((p) => p.model)) check(m, false);
+    for (const m of [...l.herd, ...l.folk]) check(m, true);
   }
   equal(missing.join(", "), "");
 });
@@ -333,8 +358,8 @@ test("the chapter opens and closes on the same open language", () => {
   const last = LESSONS[9]!;
   // Milestone 10's roadside is meant to look like Milestone 0's, and the
   // buffalo is the bookend.
-  isTrue(last.herd.includes("ak-3d-pack/Buffalo"), "no buffalo at the end");
-  isTrue(first.herd.includes("ak-3d-pack/Buffalo"), "no buffalo at the start");
+  isTrue(last.herd.includes("Buffalo"), "no buffalo at the end");
+  isTrue(first.herd.includes("Buffalo"), "no buffalo at the start");
   isTrue(
     Math.abs(first.density - last.density) < 0.5,
     "the end is not as open as the start",
