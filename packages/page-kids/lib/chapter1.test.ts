@@ -618,9 +618,29 @@ test("the day has the brief's states, and a dawn of its own", () => {
   for (const h of [4, 5, 6]) equal(activityAt(h), "dawn");
 });
 
-test("dawn is as quiet as the evening", () => {
+/**
+ * The evening is a village that has not gone in yet; dawn is one that has not
+ * come out. Before sunrise the road is nobody — and it is nobody for a reason
+ * this chapter cares about: the small hours belong to the corridor, and
+ * people who believe that do not step outside to test it.
+ */
+test("dawn is empty, and the evening is not", () => {
   for (const l of LESSONS) {
-    equal(folkOut(l, "dawn"), folkOut(l, "evening"));
+    equal(folkOut(l, "dawn"), 0);
+    equal(folkOut(l, "deep"), 0);
+  }
+  // The village centre and the closing market keep somebody out in the
+  // evening; everywhere else has gone in.
+  equal(folkOut(LESSONS[4]!, "evening"), 1);
+  equal(folkOut(LESSONS[6]!, "evening"), 1);
+  equal(folkOut(LESSONS[0]!, "evening"), 0);
+});
+
+test("nobody is out in the dark, whichever side of it", () => {
+  for (const l of LESSONS) {
+    for (const a of ["dawn", "deep"] as const) {
+      equal(folkOut(l, a), 0);
+    }
   }
 });
 

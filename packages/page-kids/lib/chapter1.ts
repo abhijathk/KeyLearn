@@ -317,12 +317,24 @@ export function isChild(model: string): boolean {
  */
 export function folkOut(l: Lesson, a: Activity): number {
   if (a === "day") return l.folk.length;
-  // Evening and dawn are the same shape from the road's point of view — a
-  // few people with somewhere to be — and the brief treats the winding-down
-  // and the waking-up as the same reduced state.
-  if (a === "evening" || a === "dawn") {
+  // The evening keeps a few out: the brief leaves people at the village
+  // centre and the closing market, and a road at eight has somebody on it.
+  if (a === "evening") {
     return l.n === 5 || l.n === 7 ? 1 : 0;
   }
+  // DAWN IS EMPTY, and this is a correction. It was treated as the evening's
+  // mirror — a few people with somewhere to be — and it is not: the evening
+  // is a village that has not gone in yet, dawn is one that has not come out.
+  // Before sunrise a Kerala village road is nobody, and it is nobody for a
+  // reason this chapter cares about: the small hours belong to the
+  // Kuttichathan corridor, and people who believe that do not step outside
+  // to test it. They wait for light.
+  //
+  // It is also what the child sees. Night mode at six in the evening stages
+  // six in the morning — the fold picks the dark candidate nearest the clock
+  // — so "a few villagers about at dawn" arrives as "villagers wandering
+  // around in the dark", which is precisely the thing the corridor is
+  // supposed to make impossible.
   return 0;
 }
 

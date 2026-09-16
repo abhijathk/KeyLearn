@@ -9201,6 +9201,8 @@ export function createKidsWorld(
   const roadWalkers: DinoRig[] = [];
   /** Villagers standing on their own land. Shown or hidden by the hour. */
   const standingFolk: DinoRig[] = [];
+  /** Last reported count, so the log speaks only when it changes. */
+  let villagersShown = -1;
   /** The one villager who takes an interest. See the tick. */
   let curiousBoy: DinoRig | null = null;
 
@@ -14340,7 +14342,11 @@ export function createKidsWorld(
               Math.max(8, hubX - 52),
               Math.min(TRAIL_END - 8, hubX + 52),
             ];
-            f.wrap.userData.shift = i < 2 ? [4, 22] : [7, 19];
+            // NOBODY WALKS BEFORE SIX. The early pair used to start at
+            // four, which put two people on a dark road an hour before
+            // sunrise — inside the Kuttichathan window as far as anybody
+            // watching is concerned. They start when the light does.
+            f.wrap.userData.shift = i < 2 ? [6, 22] : [7, 19];
             f.wrap.userData.isChild = isChild(who);
             f.wrap.userData.roadWalker = {
               dir,
@@ -16771,11 +16777,14 @@ export function createKidsWorld(
           // One rank for all of them: they are out by day, and in when the
           // village is. Finer than that would be inventing a hierarchy the
           // old population never had.
+          // Day and evening only — not dawn, which is dark and belongs to
+          // the corridor as far as anybody living here is concerned.
           const out = act === "day" || act === "evening";
           if (f.wrap.visible !== out) {
             f.wrap.visible = out;
           }
         }
+        let showing = 0;
         for (const f of standingFolk) {
           const rank = (f.wrap.userData.folkRank as number) ?? 0;
           const lesson = LESSONS[((f.wrap.userData.folkOf as number) ?? 1) - 1];
@@ -16786,6 +16795,20 @@ export function createKidsWorld(
           if (f.wrap.visible !== out) {
             f.wrap.visible = out;
           }
+          if (out) showing++;
+        }
+        for (const f of friends) {
+          if (f.wrap.userData.villageBystander === true && f.wrap.visible) {
+            showing++;
+          }
+        }
+        for (const f of roadWalkers) if (f.wrap.visible) showing++;
+        if (showing !== villagersShown) {
+          villagersShown = showing;
+          console.info(
+            `[village] ${showing} villager(s) out at ${hourOfDay.toFixed(1)}` +
+              ` (${act})`,
+          );
         }
       }
     }
