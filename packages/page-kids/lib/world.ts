@@ -15974,7 +15974,10 @@ export function createKidsWorld(
                     Math.max(8, CHAPTER[span[0]] ?? 8),
                     Math.min(TRAIL_END - 8, CHAPTER[span[1]] ?? TRAIL_END - 8),
                   ]
-                : [Math.max(8, hubX - 80), Math.min(TRAIL_END - 8, hubX + 80)];
+                : [
+                    Math.max(8, hubX - 150),
+                    Math.min(TRAIL_END - 8, hubX + 150),
+                  ];
             // NOBODY WALKS BEFORE SIX. The early pair used to start at
             // four, which put two people on a dark road an hour before
             // sunrise — inside the Kuttichathan window as far as anybody
@@ -18600,7 +18603,19 @@ export function createKidsWorld(
         // the frame no longer holds him — the beat is where he means to stop,
         // not a wall. He reappears where he left, so he walks back IN rather
         // than popping into the middle of the road.
-        const seen = Math.abs(f.wrap.position.x - playerX) < cam.right + 6;
+        // OFF SCREEN BY A WIDE MARGIN, not by a hair.
+        //
+        // Six units past the frustum edge is about a second and a half of
+        // walking, and the camera eases rather than snapping — so a walker
+        // who stepped just outside and went invisible could still be in
+        // frame, or come back into it a moment later with nobody there. It
+        // is worst when the child STOPS TYPING: the camera holds still, so
+        // the edge of the picture holds still too, and a man winking out
+        // just beyond it is the whole event with nothing else moving.
+        //
+        // Twenty-four units is roughly a frame's width of slack. Nothing is
+        // allowed to appear or disappear inside it.
+        const seen = Math.abs(f.wrap.position.x - playerX) < cam.right + 24;
         if (rw.wait != null && rw.wait > 0) {
           rw.wait -= dt;
           // Never resume in view: a man fading up on camera is the same bug
@@ -18642,7 +18657,7 @@ export function createKidsWorld(
           crowded(f) &&
           resting < Math.max(1, Math.floor(roadWalkers.length / 2))
         ) {
-          rw.wait = 20 + Math.random() * 70;
+          rw.wait = 8 + Math.random() * 14;
           resting++;
           f.wrap.visible = false;
           continue;
@@ -18661,14 +18676,25 @@ export function createKidsWorld(
           // HALF THE ROAD MAY BE AWAY, never all of it. Beyond that the next
           // one to reach a turning point simply turns — out of sight, so it
           // costs nothing on screen — and waits its turn to have an errand.
+          // With the errands now measured in seconds rather than minutes
+          // this rarely binds, but it is what guarantees the road is never
+          // empty however the random draws fall.
           const mayRest =
             resting < Math.max(1, Math.floor(roadWalkers.length / 2));
           if (!seen && mayRest) {
-            // Thirty seconds to two minutes, drawn fresh at every arrival
-            // rather than once per walker: a fixed interval per person is a
-            // timetable, and four of them would fall into step inside a
-            // minute.
-            rw.wait = 30 + Math.random() * 90;
+            // TEN TO THIRTY SECONDS, drawn fresh at every arrival rather
+            // than once per walker — a fixed interval per person is a
+            // timetable, and four of them fall into step inside a minute.
+            //
+            // It was thirty to a hundred and twenty, and that was far too
+            // long. The point of the errand was to stop a man turning on the
+            // spot like a pendulum, and half a minute does that; two minutes
+            // empties the road. It shows most when the child STOPS TYPING,
+            // because then nothing else on screen is moving either, and the
+            // road they are looking at has nobody on it for minutes at a
+            // time. A round is 300 units now against 160, so most of a
+            // walker's life is walking rather than waiting.
+            rw.wait = 10 + Math.random() * 20;
             resting++;
             f.wrap.visible = false;
             continue;
