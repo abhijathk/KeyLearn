@@ -269,7 +269,16 @@ export type Lesson = {
   readonly depth: readonly [number, number];
   /** Fixed structures, in segment-relative coordinates. */
   readonly props: readonly Placed[];
-  /** Grazing animals, by model. Placed on the open ground, away from props. */
+  /**
+   * Grazing animals, by model. Placed on the open ground, away from props.
+   *
+   * NO CALVES HERE. A calf is not an animal that turns up on its own — it is
+   * a cow's calf, and one grazing by itself in an empty field reads as a lost
+   * animal rather than as a herd. So the list names cows, and the placement
+   * puts a calf beside one: it is a consequence of a cow, not a draw of its
+   * own, which is also the only way to guarantee there is a mother in the
+   * frame with it.
+   */
   readonly herd: readonly string[];
   /** Who is out here by day. Empty means an unpeopled stretch. */
   readonly folk: readonly string[];
@@ -415,7 +424,7 @@ export const LESSONS: readonly Lesson[] = [
         clear: 2,
       },
     ],
-    herd: ["Cow", "Cow_Calf", "Buffalo"],
+    herd: ["Cow", "Buffalo"],
     folk: ["FarmerWoman"],
     corridor: false,
   },
@@ -741,7 +750,7 @@ export const LESSONS: readonly Lesson[] = [
         clear: 2,
       },
     ],
-    herd: ["Buffalo", "Cow", "Cow_Calf"],
+    herd: ["Buffalo", "Cow"],
     folk: [],
     corridor: false,
     // One leftover suggestion near the start, then nothing for the rest of
@@ -778,7 +787,7 @@ export const LESSONS: readonly Lesson[] = [
         clear: 2,
       },
     ],
-    herd: ["Cow", "Cow_Calf", "Buffalo"],
+    herd: ["Cow", "Buffalo"],
     folk: [],
     corridor: false,
   },

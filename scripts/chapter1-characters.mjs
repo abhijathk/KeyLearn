@@ -75,8 +75,8 @@ const OUT = join(REPO, "root/public/kids-assets/models/village-folk");
 
 
 const CAST = [
-  { name: "Cow", ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000 },
-  { name: "Cow_Calf", ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000 },
+  { name: "Cow", ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" } },
+  { name: "Cow_Calf", ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" } },
   { name: "Headman", ratio: 0.4,     src: "Village assets/Man1_VillageHeadman/Village headman.glb", tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
   { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
   { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" } },
@@ -274,6 +274,15 @@ for (const c of CAST) {
     // villager's only standing loop was invisible and the spawner fell
     // through to whatever `calm()` could find — which is a WALK. That is why
     // the farmers were striding on the spot in the middle of a field.
+    //
+    // THE CATTLE NEEDED IT FOR A DIFFERENT REASON AGAIN. `spawnWild` plants
+    // an animal on its feet by measuring the poses it spends its time in —
+    // `plantFeet` is handed the GAITS list, ["Graze", "Idle", "Walk",
+    // "Charge_Loop"] — and a cow whose only clip is called
+    // "Armature|Unreal Take|baselayer" matches none of them. With nothing to
+    // measure, the probe had nothing to say and the animal was never planted:
+    // the calf stood half in the floor. Named "Idle", which is both a gait
+    // and an idle, so it is grounded AND it stands still.
     if (c.rename != null) {
       const pairs = Object.entries(c.rename).map(([k, v]) => `${k}=${v}`);
       run("glb-rename-clips.mjs", [cur, step("r.glb"), ...pairs]);

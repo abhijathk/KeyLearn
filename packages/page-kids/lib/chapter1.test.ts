@@ -383,6 +383,23 @@ test("every lesson is named, and named differently", () => {
   for (const l of LESSONS) isTrue(l.name.trim().length > 0, `lesson ${l.n}`);
 });
 
+/**
+ * A calf is not an animal that turns up on its own — it is a cow's calf, and
+ * one grazing by itself in an empty field reads as a lost animal rather than
+ * as a herd.
+ */
+test("a calf is never drawn on its own", () => {
+  for (const l of LESSONS) {
+    isTrue(
+      !l.herd.some((m) => m.includes("Calf")),
+      `lesson ${l.n} draws calves from the herd list, so one can appear alone`,
+    );
+  }
+  // And wherever calves can appear, there are cows for them to belong to.
+  const withCows = LESSONS.filter((l) => l.herd.includes("Cow"));
+  isTrue(withCows.length >= 3, "too few lessons keep cattle");
+});
+
 test("no single plant dominates a layer", () => {
   for (const l of LESSONS) {
     for (const [key, list] of [

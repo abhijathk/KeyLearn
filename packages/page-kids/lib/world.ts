@@ -8638,14 +8638,26 @@ export function createKidsWorld(
    * and this list is what the determinism buys.
    */
   /**
-   * How much road either side of a milestone stays free of anything tall.
+   * How much road either side of a milestone stays free of anything tall,
+   * and HOW DEEP that rule reaches.
    *
-   * Seven units, which is a little over a quarter of the shortest lesson and
-   * a tenth of the longest — enough that the stone is met in the open from
-   * both directions, and not so much that a lesson turns into a lawn with a
-   * hedge in the middle of it.
+   * 3.2 units, not 7. Seven cleared a fourteen-unit band across the whole
+   * depth of the field, and what that produced was a bald strip at every
+   * stone — the treeline stopping dead, a gap, and then starting again. It
+   * read as a SEAM BETWEEN LESSONS, which is the one thing the chapter is
+   * built to avoid: a milestone is a marker, not a border, and the change
+   * from one lesson to the next is the bleed's job, done gradually over the
+   * first fifth of a segment. A hard edge at the stone undoes all of it.
+   *
+   * And it only reaches back as far as the planting that can actually cover
+   * the stone. The marker stands at the roadside, so a tree a few units
+   * behind it hides the number; one twenty units back stands ABOVE it
+   * against the sky, which is what a roadside marker looks like in a wooded
+   * country and not a problem at all. So the far treeline runs straight
+   * through the milestone and only its immediate shoulder is kept clear.
    */
-  const MILESTONE_CLEAR = 7;
+  const MILESTONE_CLEAR = 3.2;
+  const MILESTONE_CLEAR_DEPTH = -15;
 
   const blockers: { x: number; z: number; r: number }[] = [];
 
@@ -12822,14 +12834,50 @@ export function createKidsWorld(
             if (model == null || spot == null) {
               continue;
             }
-            await spawnWild(
-              model,
-              spot.x,
-              spot.z,
-              model.includes("Calf") ? 1.6 : 2.5,
-            );
+            // A CALF IS A YOUNG COW, NOT A TOY ONE. 1.6 against the cow's
+            // 2.5 made it a third smaller than its mother, which is roughly
+            // a newborn — and next to children who are themselves drawn
+            // large-headed and stocky it read as a model of a cow rather
+            // than an animal. 2.0 is the right fraction of a grown one for a
+            // calf old enough to be out in the field with the herd, which is
+            // what it is doing here.
+            await spawnWild(model, spot.x, spot.z, 2.5);
+            // Re-parented into its lesson, the same as everything else the
+            // chapter places. Lost once already in a reshuffle of this
+            // block, which put the whole herd outside the groups and showed
+            // every animal in every lesson at once.
+            const beast = wilds[wilds.length - 1]?.wrap;
+            if (beast != null) lessonGroup(spot.x).add(beast);
             blockers.push({ x: spot.x, z: spot.z, r: 3.5 });
             grazing++;
+            // A CALF COMES WITH A COW, AND ONLY WITH A COW.
+            //
+            // Drawn from the herd list like everything else it could turn up
+            // alone in an empty field, which reads as a lost animal rather
+            // than as a herd. It is placed here instead, beside its mother
+            // and close enough to be plainly hers.
+            //
+            // About half the cows have one. A field where every cow has a
+            // calf is a farm that had one remarkable year.
+            //
+            // AND IT IS 2.0, NOT 1.6. A calf is a young cow, not a toy one —
+            // at a third smaller than its mother it was roughly a newborn,
+            // and beside children who are themselves drawn large-headed and
+            // stocky it read as a model of a cow rather than an animal.
+            if (model === "Cow" && hash3(l.n, i, 35) < 0.5) {
+              const near = clearSpot(
+                spot.x + hashRange(l.n, i, 36, 2.4, 4),
+                spot.z + hashRange(l.n, i, 37, -1.8, 1.8),
+                2,
+              );
+              if (near != null) {
+                await spawnWild("Cow_Calf", near.x, near.z, 2.0);
+                const c = wilds[wilds.length - 1]?.wrap;
+                if (c != null) lessonGroup(near.x).add(c);
+                blockers.push({ x: near.x, z: near.z, r: 2 });
+                grazing++;
+              }
+            }
           }
         }
         console.info(`[chapter] ${grazing} animals grazing`);
@@ -12966,7 +13014,7 @@ export function createKidsWorld(
           // The ground layer is welcome at a stone. Walking up to a bare
           // marker in mown grass would read as one installed this morning
           // rather than one that has stood there for years.
-          if (layer.key !== "ground") {
+          if (layer.key !== "ground" && spot.z > MILESTONE_CLEAR_DEPTH) {
             let atStone = false;
             for (const m of CHAPTER) {
               if (Math.abs(spot.x - m) < MILESTONE_CLEAR) {
