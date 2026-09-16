@@ -273,6 +273,105 @@ test("nothing stands on the child's side of the road", () => {
   }
 });
 
+/**
+ * A boundary is continuous or it is not a boundary — scattered panels read
+ * as a fence somebody is halfway through building. But an unbroken run walls
+ * the child out of a place they are meant to see into, so every run leaves
+ * one panel out for the gate.
+ */
+test("every fence and wall runs end to end and has a way in", () => {
+  for (const l of LESSONS) {
+    for (const p of l.props) {
+      if (p.run == null) continue;
+      isTrue(
+        p.run.count >= 3,
+        `lesson ${l.n}: a run of ${p.run.count} is not a boundary`,
+      );
+      isTrue(
+        p.run.gapAt > 0 && p.run.gapAt < p.run.count - 1,
+        `lesson ${l.n}: the gate is at an end, which is just a shorter run`,
+      );
+      // The step has to be the model's own width at the height it is drawn,
+      // or the panels overlap or leave daylight between them. Measured:
+      // bamboo is 1.75 times as wide as tall, laterite 2.61.
+      const aspect = p.model.includes("Bamboo") ? 1.75 : 2.61;
+      const want = aspect * p.h;
+      isTrue(
+        Math.abs(p.run.step - want) < 0.35,
+        `lesson ${l.n}: ${p.model} steps ${p.run.step} but is ${want.toFixed(2)} wide at h=${p.h}`,
+      );
+    }
+  }
+});
+
+/**
+ * A run is written in world units and a lesson is not the same length for
+ * every child. Lesson 6's boundary is 69 units of wall; a five-year-old's
+ * whole lesson is 21.6. Unclamped it ran through the market and into the
+ * grazing land.
+ */
+test("a run stays inside the lesson it belongs to", () => {
+  for (const [start, full] of [
+    [24, 36],
+    [102, 153],
+  ] as const) {
+    const b = chapterBounds(start, full);
+    for (const p of placements(b)) {
+      const l = lessonAt(p.x, b);
+      isTrue(
+        p.x >= b[l.n - 1]! && p.x < b[l.n]!,
+        `${p.model} at ${p.x} is outside lesson ${l.n}`,
+      );
+    }
+    // And the panels of one run are laid end to end, never stacked.
+    for (const n of [2, 4, 5, 6, 8]) {
+      const xs = placements(b)
+        .filter(
+          (p) => lessonAt(p.x, b).n === n && p.model.includes("Laterite_Wall"),
+        )
+        .map((p) => p.x)
+        .sort((x, y) => x - y);
+      for (let i = 1; i < xs.length; i++) {
+        const gap = xs[i]! - xs[i - 1]!;
+        isTrue(
+          gap > 4,
+          `lesson ${n}: panels ${gap.toFixed(2)} apart — stacked`,
+        );
+      }
+    }
+  }
+});
+
+test("the shortest chapter still gets a boundary worth the name", () => {
+  // The youngest band's lessons are 21.6 units, so Lesson 6's twelve-panel
+  // run is cut short — but it must not be cut to nothing.
+  const b = chapterBounds(24, 36);
+  const six = placements(b).filter(
+    (p) => lessonAt(p.x, b).n === 6 && p.model.includes("Laterite_Wall"),
+  );
+  isTrue(six.length >= 3, `only ${six.length} panels survive the clamp`);
+});
+
+/**
+ * The palmyra is the tree you navigate by, which is a job exactly one tree
+ * can hold. Drawn from the canopy list it came up as often as the coconuts.
+ */
+test("the palmyra is a landmark, not a species", () => {
+  for (const l of LESSONS) {
+    isTrue(
+      ![...l.canopy, ...l.mid, ...l.ground].some((m) => m.includes("Palmyra")),
+      `lesson ${l.n} still draws palmyras at random`,
+    );
+    const placed = l.props.filter((p) => p.model.includes("Palmyra"));
+    isTrue(placed.length <= 2, `lesson ${l.n} has ${placed.length} palmyras`);
+    for (const p of placed) {
+      // Taller than anything the canopy draw can produce, which tops out at
+      // 11. Being the tallest thing in the frame is the whole of what it does.
+      isTrue(p.h >= 15, `a palmyra at ${p.h} is not standing over anything`);
+    }
+  }
+});
+
 test("every placement is inside the chapter", () => {
   for (const p of placements()) {
     isTrue(

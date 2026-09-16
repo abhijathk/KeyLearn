@@ -217,6 +217,28 @@ export type Placed = {
    * anything you would walk straight through.
    */
   readonly clear?: number;
+  /**
+   * A LINE OF THIS THING, laid end to end, with a way in.
+   *
+   * A boundary is continuous or it is not a boundary — scattered posts read
+   * as litter, and three fence panels with daylight between them read as a
+   * fence somebody is halfway through building. But a run with no break in
+   * it walls the child out of a place they are supposed to be able to see
+   * into, so every run leaves one segment out: the gate.
+   *
+   * `step` is in WORLD UNITS, not fractions, and it has to be the model's
+   * own width at the height it is drawn — 4.20 for a bamboo fence at 2.4,
+   * 6.25 for a laterite wall at the same. Fractions cannot do this job: a
+   * segment of road is 21.6 units for a five-year-old and 64 for an
+   * eleven-year-old, so the same fraction would overlap the panels for one
+   * child and leave gaps between them for another.
+   */
+  readonly run?: {
+    readonly count: number;
+    readonly step: number;
+    /** Which panel is missing. The way in. */
+    readonly gapAt: number;
+  };
 };
 
 export type Lesson = {
@@ -293,12 +315,20 @@ export const LESSONS: readonly Lesson[] = [
     // open stretches where there is sky for it to stand against rather than
     // in the orchard where it would be lost. One in the opening frame is a
     // landmark; a row of them would be a plantation.
-    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Palmyra_Karimpana`],
+    canopy: [`${PLANTS}/Coconut_Palm`],
     mid: [`${PLANTS}/Hibiscus_Chemparathi`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.1,
     depth: [8, 24],
     props: [
+      // A PALMYRA, AND ONE OF IT. It stands above everything else on a
+      // Kerala roadside and is the tree you navigate by — a job exactly one
+      // tree can hold. Drawn from the canopy list it came up as often as the
+      // coconuts did, and a landmark repeated thirty times is a plantation.
+      // So it is PLACED, and at a height nothing else here reaches: 16
+      // against the canopy's 6.5 to 11, because being the tallest thing in
+      // the frame is the whole of what it does.
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.62, z: -15, h: 16 },
       { model: "village-stone/Mossy_Stone", at: 0.42, z: -7.5, h: 0.9 },
       { model: "village-stone/Laterite_Rock", at: 0.74, z: -9, h: 0.7 },
     ],
@@ -314,11 +344,7 @@ export const LESSONS: readonly Lesson[] = [
     to: 2,
     // The edge turning into productive family land: useful trees rather than
     // scenery, and the first laterite showing through.
-    canopy: [
-      `${PLANTS}/Coconut_Palm`,
-      `${PLANTS}/Papaya_Tree`,
-      `${PLANTS}/Palmyra_Karimpana`,
-    ],
+    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Papaya_Tree`],
     mid: [`${PLANTS}/Banana_Plant`, `${PLANTS}/Drumstick_Muringa`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Taro_Chembu`],
     density: 1.9,
@@ -326,8 +352,26 @@ export const LESSONS: readonly Lesson[] = [
     props: [
       // Broken and partial, never a run: the wall is a hint of enclosure
       // here, and becomes a real boundary by Lesson 6.
-      { model: `${UTIL}/Laterite_Wall`, at: 0.3, z: -11, h: 2.1, clear: 6 },
-      { model: `${UTIL}/Laterite_Wall`, at: 0.38, z: -11.4, h: 2.1, clear: 6 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.2, z: -17, h: 15.5 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.9, z: -14, h: 16.5 },
+      // Broken and partial here, which is the brief — but broken means a
+      // short run with an end to it, not panels floating apart. Five
+      // segments at 5.47, the wall's own width at this height, with the
+      // third left out for the way in.
+      {
+        model: `${UTIL}/Laterite_Wall`,
+        at: 0.26,
+        z: -11,
+        h: 2.1,
+        clear: 5,
+        run: { count: 5, step: 5.47, gapAt: 2 },
+      },
+      // GRASS GROWS AT A GATEWAY. Nothing is built there and nothing walks
+      // there often enough to wear it away, so it is the one part of a
+      // boundary that greens over — which is also what tells you it IS a
+      // gateway rather than a panel that fell down.
+      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.29, z: -10, h: 0.9 },
+      { model: `${PLANTS}/Kerala_Fern`, at: 0.3, z: -12.2, h: 0.8 },
       {
         model: `${UTIL}/Cattle_Tether_Post`,
         at: 0.62,
@@ -371,9 +415,27 @@ export const LESSONS: readonly Lesson[] = [
       // In stretches, not as an unbroken wall the whole way — the brief is
       // explicit, and a continuous fence would also hide the orchard it is
       // supposed to enclose.
-      { model: `${UTIL}/Bamboo_Fence`, at: 0.18, z: -8, h: 2.4, clear: 5 },
-      { model: `${UTIL}/Bamboo_Fence`, at: 0.26, z: -8, h: 2.4, clear: 5 },
-      { model: `${UTIL}/Bamboo_Fence`, at: 0.68, z: -8.5, h: 2.4, clear: 5 },
+      // Two runs rather than one unbroken line the whole way, which is the
+      // brief's "selected stretches" — and each run has its own gate.
+      {
+        model: `${UTIL}/Bamboo_Fence`,
+        at: 0.12,
+        z: -8,
+        h: 2.4,
+        clear: 4,
+        run: { count: 7, step: 4.2, gapAt: 4 },
+      },
+      {
+        model: `${UTIL}/Bamboo_Fence`,
+        at: 0.64,
+        z: -8.5,
+        h: 2.4,
+        clear: 4,
+        run: { count: 6, step: 4.2, gapAt: 2 },
+      },
+      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.19, z: -7.2, h: 0.85 },
+      { model: `${PLANTS}/Kerala_Fern`, at: 0.2, z: -9.4, h: 0.75 },
+      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.68, z: -7.6, h: 0.9 },
       { model: `${UTIL}/Washing_Stone`, at: 0.52, z: -12, h: 0.5, clear: 2 },
       // A FOOTPATH INTO THE PROPERTY, in stepping stones. There is no path
       // asset and painting one into the terrain would fight the road, but a
@@ -413,8 +475,16 @@ export const LESSONS: readonly Lesson[] = [
       { model: "ak-3d-pack/HouseMoss", at: 0.55, z: -22, h: 11, clear: 12 },
       { model: `${UTIL}/Village_Well`, at: 0.44, z: -13, h: 2.2, clear: 4 },
       { model: `${UTIL}/Washing_Stone`, at: 0.4, z: -11, h: 0.5, clear: 2 },
-      { model: `${UTIL}/Laterite_Wall`, at: 0.68, z: -12, h: 2.1, clear: 6 },
-      { model: `${UTIL}/Laterite_Wall`, at: 0.76, z: -12, h: 2.1, clear: 6 },
+      {
+        model: `${UTIL}/Laterite_Wall`,
+        at: 0.62,
+        z: -12,
+        h: 2.1,
+        clear: 5,
+        run: { count: 6, step: 5.47, gapAt: 3 },
+      },
+      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.72, z: -11, h: 0.95 },
+      { model: `${PLANTS}/Kerala_Fern`, at: 0.73, z: -13.2, h: 0.8 },
       {
         model: `${UTIL}/Cattle_Tether_Post`,
         at: 0.3,
@@ -458,7 +528,19 @@ export const LESSONS: readonly Lesson[] = [
       { model: "ak-3d-pack/HouseThatch", at: 0.66, z: -21, h: 11, clear: 12 },
       { model: "ak-3d-pack/HouseHearth", at: 0.84, z: -24, h: 11, clear: 12 },
       { model: `${UTIL}/Village_Well`, at: 0.56, z: -12, h: 2.2, clear: 4 },
-      { model: `${UTIL}/Laterite_Wall`, at: 0.72, z: -13, h: 2.1, clear: 6 },
+      // The garden walls between the houses — short, because the village
+      // centre has to stay breathable and a long wall here would turn a row
+      // of homes into a street frontage. Still a run with a gate, because
+      // the rule is the rule: a boundary is continuous or it is litter.
+      {
+        model: `${UTIL}/Laterite_Wall`,
+        at: 0.7,
+        z: -13,
+        h: 2.1,
+        clear: 5,
+        run: { count: 4, step: 5.47, gapAt: 1 },
+      },
+      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.73, z: -12, h: 0.95 },
       {
         model: `${UTIL}/Village_Cart`,
         at: 0.2,
@@ -494,11 +576,20 @@ export const LESSONS: readonly Lesson[] = [
     props: [
       // A real run this time. Six segments end to end is the longest
       // continuous boundary in the chapter, which is the whole point.
-      { model: `${UTIL}/Laterite_Wall`, at: 0.14, z: -10, h: 2.4, clear: 6 },
-      { model: `${UTIL}/Laterite_Wall`, at: 0.22, z: -10, h: 2.4, clear: 6 },
-      { model: `${UTIL}/Laterite_Wall`, at: 0.3, z: -10, h: 2.4, clear: 6 },
-      { model: `${UTIL}/Laterite_Wall`, at: 0.38, z: -10, h: 2.4, clear: 6 },
-      { model: `${UTIL}/Laterite_Wall`, at: 0.46, z: -10, h: 2.4, clear: 6 },
+      // THE LONGEST BOUNDARY IN THE CHAPTER, which is what says "wealthier
+      // family" more than the size of the house does. Twelve panels, and one
+      // gate — a prosperous compound has a proper way in rather than a
+      // stretch that simply stops.
+      {
+        model: `${UTIL}/Laterite_Wall`,
+        at: 0.1,
+        z: -10,
+        h: 2.4,
+        clear: 5,
+        run: { count: 12, step: 6.25, gapAt: 5 },
+      },
+      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.33, z: -9, h: 1 },
+      { model: `${PLANTS}/Kerala_Fern`, at: 0.34, z: -11.3, h: 0.85 },
       { model: "ak-3d-pack/HouseHearth", at: 0.6, z: -23, h: 13, clear: 13 },
       {
         model: `${UTIL}/Village_Cart`,
@@ -529,16 +620,13 @@ export const LESSONS: readonly Lesson[] = [
     // clutter of a place people use — and the market goes in when there is
     // one. What must NOT happen is a smeared market: a village with no market
     // reads as a small village, a village with a broken one reads as broken.
-    canopy: [
-      `${PLANTS}/Coconut_Palm`,
-      `${PLANTS}/Tamarind_Tree`,
-      `${PLANTS}/Palmyra_Karimpana`,
-    ],
+    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Tamarind_Tree`],
     mid: [`${PLANTS}/Banana_Plant`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`],
     density: 1.4,
     depth: [9, 24],
     props: [
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.72, z: -16, h: 16 },
       { model: "nature/KeralaBambooGroves", at: 0.1, z: -11, h: 7, clear: 5 },
       { model: `${UTIL}/Village_Well`, at: 0.46, z: -12, h: 2.2, clear: 4 },
       {
@@ -566,7 +654,7 @@ export const LESSONS: readonly Lesson[] = [
     // Decompression. Mature trees over open grass — not empty, because this
     // is still land that belongs to a village economy, but the sightlines
     // come back after the market.
-    canopy: [`${PLANTS}/Palmyra_Karimpana`, `${PLANTS}/Mango_Tree`],
+    canopy: [`${PLANTS}/Mango_Tree`],
     // "Small palms", which the arecanut is — slender and short beside the
     // palmyra, and the difference between the two reads as grazing land
     // rather than plantation.
@@ -576,7 +664,18 @@ export const LESSONS: readonly Lesson[] = [
     depth: [10, 28],
     props: [
       // Fragments, not a boundary: the wall is a leftover out here.
-      { model: `${UTIL}/Laterite_Wall`, at: 0.24, z: -14, h: 2.0, clear: 6 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.46, z: -18, h: 17 },
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.8, z: -15, h: 15.5 },
+      // Fragments, not a boundary: three panels and a hole, the remains of
+      // something that enclosed a field long ago.
+      {
+        model: `${UTIL}/Laterite_Wall`,
+        at: 0.2,
+        z: -14,
+        h: 2.0,
+        clear: 5,
+        run: { count: 4, step: 5.21, gapAt: 1 },
+      },
       {
         model: "village-stone/Granite_Boulder",
         at: 0.6,
@@ -604,12 +703,13 @@ export const LESSONS: readonly Lesson[] = [
     // THE HAYSTACK IS A GAP. It is named as the key landmark prop and there
     // is no haystack in any folder, so the space it wants is left clear at
     // 0.5 rather than filled with something that is not one.
-    canopy: [`${PLANTS}/Mango_Tree`, `${PLANTS}/Palmyra_Karimpana`],
+    canopy: [`${PLANTS}/Mango_Tree`],
     mid: [`${PLANTS}/Hibiscus_Chemparathi`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`],
     density: 1.0,
     depth: [11, 30],
     props: [
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.58, z: -19, h: 16.5 },
       {
         model: `${UTIL}/Cattle_Tether_Post`,
         at: 0.36,
@@ -630,12 +730,13 @@ export const LESSONS: readonly Lesson[] = [
     // Closure, and a deliberate echo of Lesson 1: the same open language at a
     // calmer end-state, with the buffalo back as a bookend. Trees only at the
     // far edge so the space stays open.
-    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Palmyra_Karimpana`],
+    canopy: [`${PLANTS}/Coconut_Palm`],
     mid: [],
     ground: [`${PLANTS}/Kerala_Fern`, `${PLANTS}/Kerala_Grass_Tuft`],
     density: 1.2,
     depth: [12, 32],
     props: [
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.34, z: -17, h: 16 },
       { model: "village-stone/Mossy_Stone", at: 0.45, z: -8, h: 0.9 },
       { model: "village-stone/Laterite_Rock", at: 0.8, z: -9.5, h: 0.7 },
     ],
@@ -726,7 +827,33 @@ export function placements(
     const from = bounds[l.n - 1]!;
     const len = segmentLen(l.n, bounds);
     for (const p of l.props) {
-      out.push({ ...p, x: from + p.at * len });
+      const x0 = from + p.at * len;
+      if (p.run == null) {
+        out.push({ ...p, x: x0 });
+        continue;
+      }
+      // CLAMPED TO ITS OWN LESSON, and this is not a detail.
+      //
+      // A run is written in world units and a lesson is not the same length
+      // for every child: Lesson 6's estate boundary is twelve panels at 6.25,
+      // which is 69 units of wall, and a five-year-old's whole lesson is
+      // 21.6. Unclamped it ran straight through the market and out into the
+      // grazing land — one lesson's wall arriving in three others.
+      //
+      // So the run stops at the stone. The youngest get a shorter boundary
+      // than the oldest, which is correct: it is a shorter lesson, and a
+      // wall that fits the field it encloses is the point of it.
+      const end = from + len;
+      for (let i = 0; i < p.run.count; i++) {
+        if (i === p.run.gapAt) {
+          continue; // the way in
+        }
+        const x = x0 + i * p.run.step;
+        if (x >= end) {
+          break;
+        }
+        out.push({ ...p, run: undefined, x });
+      }
     }
   }
   return out;

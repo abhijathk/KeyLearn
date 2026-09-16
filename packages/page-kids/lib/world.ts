@@ -420,7 +420,7 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Cart", "a cart"],
   ["Banyan", "the banyan tree"],
   ["Banyan_Almaram", "the banyan tree"],
-  ["Stone_Althara", "the althara"],
+  ["Stone_Althara", "the stone platform"],
   ["Wall", "garden walls"],
   ["HouseThatch", "a thatched house"],
   ["HouseMoss", "an old house"],
@@ -442,6 +442,49 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Mossy_Stone", "mossy stones"],
   ["River_Stone", "river stones"],
   ["Stepping_Stone", "stepping stones"],
+  // ── THE VILLAGE PLANTING, IN PLAIN ENGLISH ───────────────────────────
+  //
+  // The files carry both names — Banyan_Almaram, Taro_Chembu,
+  // Palmyra_Karimpana — which is right for a folder, because it says exactly
+  // which plant was modelled and a folder is read by whoever is looking for
+  // it. A loading screen is read by a six-year-old learning to type, and
+  // "Hibiscus Chemparathi" is two words they cannot read where one would
+  // have done. The fallback strips underscores and would have shown every
+  // one of these as its double-barrelled filename.
+  ["Coconut_Palm", "coconut palms"],
+  ["Arecanut_Palm", "areca palms"],
+  ["Palmyra_Karimpana", "a palmyra palm"],
+  ["Mango_Tree", "mango trees"],
+  ["Jackfruit_Tree", "jackfruit trees"],
+  ["Tamarind_Tree", "tamarind trees"],
+  ["Peepal_Arayal", "a peepal tree"],
+  ["Papaya_Tree", "papaya trees"],
+  ["Banana_Plant", "banana plants"],
+  ["Drumstick_Muringa", "drumstick trees"],
+  ["Hibiscus_Chemparathi", "hibiscus"],
+  ["Tapioca_Cassava", "tapioca"],
+  ["Taro_Chembu", "taro"],
+  ["Kerala_Fern", "ferns"],
+  ["Kerala_Grass_Tuft", "grass"],
+  ["KeralaGrassTufts", "grass"],
+  ["KeralaLeafShrubs", "leafy shrubs"],
+  ["KeralaGroundCover", "ground cover"],
+  // ── WHAT THE VILLAGE IS BUILT AND WORKED WITH ────────────────────────
+  ["Village_Well", "the well"],
+  ["Laterite_Wall", "laterite walls"],
+  ["Bamboo_Fence", "bamboo fencing"],
+  ["Cattle_Tether_Post", "a tether post"],
+  ["Washing_Stone", "a washing stone"],
+  ["Petromax_Lamp", "a lamp"],
+  ["Wooden_Bridge", "a wooden bridge"],
+  ["Village_Cart", "a cart"],
+  // ── AND WHO LIVES THERE ──────────────────────────────────────────────
+  ["Cow", "a cow"],
+  ["Cow_Calf", "a calf"],
+  ["Headman", "the village headman"],
+  ["TeaStall", "the tea seller"],
+  ["FarmerWoman", "a farmer"],
+  ["VillageBoy", "a village boy"],
 ]);
 
 /** The name for whatever is at this URL — see SCENE_NAMES. */
