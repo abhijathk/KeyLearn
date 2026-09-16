@@ -12872,7 +12872,18 @@ export function createKidsWorld(
             if (spot == null) {
               continue;
             }
-            await spawnCompanion(who, spot.x, spot.z, 3.4, false);
+            // NEVER A GUARD. `spawnCompanion` decides that on a coin
+            // weighted by `theme.guardRate` when nobody says otherwise, and
+            // a guard is deliberately given a WALKING loop so its legs move
+            // while it paces. That is right for somebody patrolling a road
+            // and wrong for a farmer standing in her own field, which is why
+            // renaming the idle clips fixed only some of them: the rest were
+            // not failing to find an idle, they were being told to walk.
+            //
+            // Passed explicitly rather than by setting `guardRate` to zero,
+            // because the village's guards on the ROAD are a different thing
+            // and should keep pacing.
+            await spawnCompanion(who, spot.x, spot.z, 3.4, false, false);
             const villager = friends[friends.length - 1]?.wrap;
             if (villager != null) lessonGroup(spot.x).add(villager);
             blockers.push({ x: spot.x, z: spot.z, r: 2.2 });
@@ -12927,35 +12938,9 @@ export function createKidsWorld(
           const species = from[layer.key];
           const pick = hashPick(species, x, 2, 13);
           const step = 1 / Math.max(0.2, densityAt(x, CHAPTER));
-          const at = x;
           x += step * hashRange(x, 3, 14, 0.6, 1.5);
           if (pick == null) {
             continue; // this lesson has no such layer — a meadow has no canopy
-          }
-          // NOTHING TALL AT A MILESTONE.
-          //
-          // The stone is the one thing on this road the child has to be able
-          // to find — it carries the lesson number and it is how they know
-          // they have got somewhere — and a coconut palm planted in front of
-          // it hides it completely. The milestone's own planting is grass,
-          // ferns and taro by design; this keeps the chapter's canopy and
-          // middle layers out of the same ground, so what stands at a stone
-          // is only ever ankle-high.
-          //
-          // The ground layer is welcome there. Walking up to a bare stone in
-          // mown grass would read as a marker somebody installed rather than
-          // one that has stood there for years.
-          if (layer.clear > 0 || layer.key !== "ground") {
-            let tooNear = false;
-            for (const m of CHAPTER) {
-              if (Math.abs(at - m) < MILESTONE_CLEAR) {
-                tooNear = true;
-                break;
-              }
-            }
-            if (tooNear) {
-              continue;
-            }
           }
           // Behind the road only. The near verge is the child's side and
           // stays clear, which is the rule the village already follows.
@@ -12964,6 +12949,35 @@ export function createKidsWorld(
           if (spot == null) {
             refused++;
             continue;
+          }
+          // NOTHING TALL AT A MILESTONE — TESTED WHERE IT ENDS UP.
+          //
+          // The stone carries the lesson number and is how a child knows
+          // they have got somewhere; a papaya planted in front of it hides
+          // the number completely.
+          //
+          // Checked against `spot.x` and not against the candidate, which is
+          // the whole of why the first attempt at this leaked. `clearSpot`
+          // pushes a refused plant ALONG the road to find it room — up to
+          // thirty units — so a tree turned away from a crowded verge was
+          // being shunted into exactly the ground this rule exists to keep
+          // empty, having already passed the test on the way in.
+          //
+          // The ground layer is welcome at a stone. Walking up to a bare
+          // marker in mown grass would read as one installed this morning
+          // rather than one that has stood there for years.
+          if (layer.key !== "ground") {
+            let atStone = false;
+            for (const m of CHAPTER) {
+              if (Math.abs(spot.x - m) < MILESTONE_CLEAR) {
+                atStone = true;
+                break;
+              }
+            }
+            if (atStone) {
+              refused++;
+              continue;
+            }
           }
           const src = await prop(pick);
           if (src == null) {
