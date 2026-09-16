@@ -430,6 +430,19 @@ export type Placed = {
    */
   readonly lift?: number;
   /**
+   * A LAMP THAT IS LIT AFTER DARK, until this hour.
+   *
+   * The two pressure lanterns the table places — one on the estate's wall,
+   * one in the market's forecourt — were models and nothing more: the
+   * market's shop-front lamps glow after sunset and go out one by one at
+   * their shops' closing hours, and the two standing a few units from
+   * them stayed dark all night. A lamp that never lights is a prop; a
+   * lamp that lights is somebody's. The hour is when its owner puts it
+   * out — the same clock the shop lamps keep, so a child who has watched
+   * the market shut sees the forecourt lamp go with it.
+   */
+  readonly lit?: number;
+  /**
    * A BUILDING: something wide enough that a circle is the wrong shape for
    * it, and big enough that it may not fit the lesson it is written in.
    *
@@ -958,7 +971,8 @@ export const LESSONS: readonly Lesson[] = [
       // its height and nobody ever saw it, lit or unlit — a lamp that is
       // hung where the road can see it is the whole of what a lamp on a
       // compound wall is for.
-      { model: `${UTIL}/Petromax_Lamp`, at: 0.62, z: -9, h: 1.1 },
+      // Lit until ten: a household's lamp, out when the house goes to bed.
+      { model: `${UTIL}/Petromax_Lamp`, at: 0.62, z: -9, h: 1.1, lit: 22 },
     ],
     herd: [],
     folk: ["Headman"],
@@ -1234,7 +1248,9 @@ export const LESSONS: readonly Lesson[] = [
         turn: 1.9,
         clear: 4,
       },
-      { model: `${UTIL}/Petromax_Lamp`, at: 0.5, z: -10.5, h: 1.2 },
+      // Out at nine with the last of the stalls — see the market's own
+      // shop lamps, which close between seven and nine.
+      { model: `${UTIL}/Petromax_Lamp`, at: 0.5, z: -10.5, h: 1.2, lit: 21 },
       // THE CLOSING GROVE, PAST THE STONE. At 0.88 it was inside the market:
       // a 66-unit frontage centred at 0.56 reaches from 0.23 to 0.89 of the
       // segment, so the bamboo was coming up through the last two stalls.

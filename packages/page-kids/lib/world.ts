@@ -3205,6 +3205,11 @@ const groundNoise = (x: number, z: number) =>
  * long before the village exists — has to put a worn yard in front of each
  * one. A house whose position only the village knows cannot have anything
  * placed in front of it.
+ *
+ * THESE ARE THE ROAD WITHOUT A CHAPTER — the village that lands every four
+ * to seven flags on a trail with no lessons. On a chapter road the houses
+ * are placed by `villageHouses` below, in fractions of Lesson 5, and these
+ * offsets are not read at all.
  */
 const VILLAGE_HOUSE_SPOTS: readonly (readonly [number, number])[] = [
   [-46, -24], // nearest the road
@@ -3212,6 +3217,58 @@ const VILLAGE_HOUSE_SPOTS: readonly (readonly [number, number])[] = [
   [-28, -28], // and one more set back, still behind
   [72, -26],
 ];
+
+/**
+ * THE VILLAGE'S HOUSES ON A CHAPTER ROAD, in fractions of Lesson 5.
+ *
+ * The offsets above were tuned for a village that stood on its own, in
+ * units: a house forty-six units before the shrine and one fifty after it,
+ * with compound walls every twenty-three units out to ninety-two on either
+ * side. The chapter then put the village a third of the way into Lesson 5
+ * and left the offsets alone — and Lesson 5 is 64 units long for an
+ * eleven-year-old and 26 for a five-year-old. So on EVERY band the
+ * village's houses stood in other lessons: the "nearest the road" house
+ * in the homestead, four units from the homestead's own house and through
+ * its corner; the far one in the estate, behind the estate's wall; and on
+ * the youngest band the wall panels ran through Lesson 1 (the open village
+ * edge, which is meant to have nothing on it), Lesson 2, and the market's
+ * forecourt, where they refused the traders room. Measured with the boxes,
+ * then seen in the build.
+ *
+ * So the houses are placed the way everything else in the chapter is:
+ * as fractions of the lesson they belong to, with the depth in units
+ * because the ground is the same depth for everybody. A five-year-old's
+ * 26-unit lesson has room for the banyan, the shrine and two houses; the
+ * longer bands get the third. The jitter is hashed from the slot, as it
+ * always was, so the yard painter — which runs before any of this — can
+ * find the same house twice.
+ *
+ * The shrine stands at a third of the lesson and the banyan thirteen
+ * units before it, so the first house goes behind the banyan at the very
+ * start, well back; the others sit past the cart, set back in the
+ * author's original ordering — somebody built close to the road and
+ * somebody else built behind them.
+ */
+function villageHouses(
+  from: number,
+  len: number,
+): readonly { readonly x: number; readonly z: number }[] {
+  const slots: readonly (readonly [number, number])[] =
+    len / RUN_LEN < 0.6
+      ? [
+          [0.06, -30],
+          [0.8, -28],
+        ]
+      : [
+          [0.06, -30],
+          [0.6, -31],
+          [0.84, -27],
+        ];
+  return slots.map(([at, oz]) => ({
+    x: from + at * len + hashRange(at, oz, 120, -1.5, 1.5),
+    z: oz + hashRange(at, oz, 121, -1.5, 1.5),
+  }));
+}
 
 const GROUND_DEPTH = 76;
 const GROUND_BACK = -GROUND_DEPTH / 2;
@@ -3794,7 +3851,34 @@ export function createKidsWorld(
     powerPreference: "high-performance",
   });
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // THE LOW TIER GETS THE SAME PICTURE WITH LESS WORK BEHIND IT.
+  //
+  // `deviceTier` is deliberately conservative — two gigabytes or two cores
+  // is "low", and unknown counts against the machine — because this runs
+  // on school Chromebooks and hand-me-down tablets. Until now the only
+  // thing the tier changed was the night's headcount and its mist; the
+  // renderer drew the same 3072-square soft shadow map at up to twice the
+  // device's pixels on every machine. Three knobs, none of which changes
+  // what is in the scene:
+  //
+  //   - the pixel ratio is capped at 1.25 rather than 2: a 1.25 cap on a
+  //     2x tablet is 2.5 times fewer pixels to shade every frame, and at
+  //     this camera's distance the difference is only visible in the
+  //     carved digits on the milestones;
+  //   - the shadow map is 2048 rather than 3072 — 17.8 texels per unit of
+  //     ground against 26.7, which is softer edges under the trees and a
+  //     shadow pass under half the size;
+  //   - plain PCF rather than the soft variant, which samples the map
+  //     several more times per pixel for a gentler penumbra nobody is
+  //     looking at from a keyboard.
+  //
+  // Mid and high are left exactly as they were: this page has been tuned
+  // by eye on those, and "the story reads the same at every tier" cuts
+  // both ways.
+  const lowTier = (opts.tier ?? "mid") === "low";
+  renderer.shadowMap.type = lowTier
+    ? THREE.PCFShadowMap
+    : THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   const bright = theme.sky === "flat";
   // Hero Trail is punchy and kids-bright; the dino world is graded subtler so
@@ -3805,7 +3889,7 @@ export function createKidsWorld(
       ? { exposure: 1.5, sat: 1.5, bright: 1.12, sun: 3.0, hemi: 1.0 }
       : { exposure: 1.16, sat: 1.07, bright: 1.0, sun: 2.4, hemi: 0.5 });
   renderer.toneMappingExposure = grade.exposure;
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, lowTier ? 1.25 : 2));
   // The child's brightness/paleness slider scales the base grade live:
   // brightness multiplies CSS brightness(); paleness (0..1) desaturates.
   let userBright = 1;
@@ -4029,7 +4113,7 @@ export function createKidsWorld(
   // The map grows with the box so the shadows do not get coarser as the box
   // gets bigger. 3072 over 115 units is 26.7 texels per unit, which is what
   // 2048 over 80 was — same sharpness, more ground.
-  sun.shadow.mapSize.set(3072, 3072);
+  sun.shadow.mapSize.set(lowTier ? 2048 : 3072, lowTier ? 2048 : 3072);
   sun.shadow.camera.left = -45;
   sun.shadow.camera.right = 70;
   sun.shadow.camera.top = 52;
@@ -6467,16 +6551,9 @@ export function createKidsWorld(
             // The village's three are derived here from the same numbers the
             // village places them with, which is why their jitter had to stop
             // being random.
-            ...VILLAGE_HOUSE_SPOTS.map(([ox, oz]) => ({
-              x:
-                CHAPTER[4]! +
-                (CHAPTER[5]! - CHAPTER[4]!) * 0.33 +
-                ox +
-                hashRange(ox, oz, 120, -2.5, 2.5),
-              z: oz + hashRange(ox, oz, 121, -1.5, 1.5) + 9,
-              rx: 13,
-              rz: 7.5,
-            })),
+            ...villageHouses(CHAPTER[4]!, CHAPTER[5]! - CHAPTER[4]!).map(
+              (h) => ({ x: h.x, z: h.z + 9, rx: 13, rz: 7.5 }),
+            ),
             // WITH THE DEPTH FALLOFF, the same one the build stands them
             // with: a building fitted to its lesson (see `Placed.box`)
             // is fitted from its drawn width, and asked without the
@@ -12095,6 +12172,55 @@ export function createKidsWorld(
     ]) {
       want.push(`${ASSETS}/models/village-stone/${n}.glb`);
     }
+    // ── AND THE WHOLE CHAPTER ────────────────────────────────────────────
+    //
+    // Everything the chapter table names was left out of the warm-up, and
+    // it is most of the road: the market, the wells, the walls and fences,
+    // the bamboo, the fifteen plant species, the cattle and every villager.
+    // Each of those was fetched the first time the build reached it — and
+    // the build reaches them one at a time, because it stands each prop
+    // and awaits it before standing the next. Measured on the village
+    // build: the warm burst finishes at 2.9 s and the chapter's models then
+    // arrive in single file from 3.6 s to 6.2 s, sixteen files each waiting
+    // for the one before, with the villagers — a megabyte apiece — at the
+    // end of the line. On a school network with a real round trip that
+    // line is the load time.
+    //
+    // Asked for here, they all go out in the first burst instead. Nothing
+    // else changes: `loadModel` finds the bytes in three's cache and the
+    // build is the same build, it just stops waiting on the network.
+    if (v != null) {
+      const chapterUrl = (name: string) =>
+        name.includes("/")
+          ? `${ASSETS}/models/${name}.glb`
+          : `${ASSETS}/models/${v.dir}/${name}.glb`;
+      for (const l of activeLessons()) {
+        for (const p of l.props) want.push(chapterUrl(p.model));
+        for (const m of [...l.canopy, ...l.mid, ...l.ground]) {
+          want.push(chapterUrl(m));
+        }
+        // The herds and the villagers go through `modelUrl`, which takes
+        // a bare name and knows the folder — the same resolution the
+        // spawns use, so the warmed URL is the fetched URL.
+        for (const m of [...l.herd, ...l.folk]) {
+          want.push(modelUrl(theme.modelDir, m));
+        }
+      }
+      // What the build adds of its own: the calf beside a cow, the skirt
+      // at a wall's foot, the lamps in the shop fronts, the night's
+      // litter, and the people on the road.
+      for (const m of ["Cow_Calf", "Blacksmith"]) {
+        want.push(modelUrl(theme.modelDir, m));
+      }
+      for (const n of [
+        "village-plants/Kerala_Grass_Tuft",
+        "village-plants/Kerala_Fern",
+        "village-util/Petromax_Lamp",
+        "village-stone/Stepping_Stone",
+      ]) {
+        want.push(chapterUrl(n));
+      }
+    }
     warmModels(want);
   }
 
@@ -12526,10 +12652,44 @@ export function createKidsWorld(
       // The showcase buffalo already had this, with a comment about towering
       // on the rear-stomp. The herd one never did, and it is the herd one
       // that rears at a child on a dark road.
+      //
+      // A BIGGER SPHERE, NOT NO SPHERE. Switching culling off was the fix,
+      // and it cost every animal on the road: twenty-odd skinned meshes of
+      // twelve thousand triangles each, drawn every frame in the colour
+      // pass and again in the shadow pass whether the camera could see
+      // them or not — a child at Milestone 0 was paying for the buffalo at
+      // Milestone 9. Measured headlessly on the youngest band's Lesson 1:
+      // 1.1 million triangles a frame, of which the herd was about half.
+      //
+      // The sphere is only wrong by the amount the clips exceed the bind
+      // pose, and that amount is known: 173 per cent of standing height on
+      // the rear, less on everything else. Two and a half times the bind
+      // sphere covers the rear with room to spare, and an animal whose
+      // sphere is two and a half body-heights across is still culled the
+      // moment it is a lesson away. `computeBoundingSphere` first, because
+      // the sphere GLTFLoader supplies is built from quantised accessor
+      // bounds and can be tens of thousands of times too small — see
+      // `stand`, where the same trap made the market blink out.
+      //
+      // ON THE MESH, NOT ONLY THE GEOMETRY. A SkinnedMesh carries its own
+      // `boundingSphere`, and that is the one the frustum test reads; three
+      // fills it lazily on first draw from the skinned vertices, which is
+      // the bind-pose sphere the flashes came from. Set here from the
+      // geometry's own bounds — the geometry IS the bind pose — and never
+      // recomputed, so the enlarged sphere is the one that stays.
       gltf.scene.traverse((o) => {
         const m = o as THREE.Mesh;
         if (m.isMesh) {
-          m.frustumCulled = false;
+          m.geometry.computeBoundingSphere();
+          const sphere = m.geometry.boundingSphere?.clone();
+          if (sphere != null) {
+            sphere.radius *= 2.5;
+            if ((m as THREE.SkinnedMesh).isSkinnedMesh) {
+              (m as THREE.SkinnedMesh).boundingSphere = sphere;
+            } else {
+              m.geometry.boundingSphere = sphere;
+            }
+          }
         }
       });
       const wrap = fitToHeight(gltf.scene, h * perspective(z));
@@ -14287,9 +14447,20 @@ export function createKidsWorld(
       // and `perspective()` in `stand` still takes the far ones down to
       // about seven units against eleven at the verge, so they read as
       // further away rather than merely being further away.
-      const spots = VILLAGE_HOUSE_SPOTS;
-      for (let i = 0; i < Math.min(3, pool.length); i++) {
-        const [ox, oz] = spots[i];
+      // IN LESSON 5, on a chapter road — see `villageHouses` for what the
+      // fixed offsets did to the lessons either side. The trail without a
+      // chapter keeps its old spread round `vx`.
+      const homes =
+        CHAPTER != null
+          ? villageHouses(CHAPTER[4]!, CHAPTER[5]! - CHAPTER[4]!)
+          : VILLAGE_HOUSE_SPOTS.slice(0, 3).map(([ox, oz]) => ({
+              x: vx + ox + hashRange(ox, oz, 120, -2.5, 2.5),
+              z: oz + hashRange(ox, oz, 121, -1.5, 1.5),
+            }));
+      for (let i = 0; i < Math.min(homes.length, pool.length); i++) {
+        const home = homes[i]!;
+        const ox = home.x - vx;
+        const oz = home.z;
         // HASHED, NOT ROLLED. The jitter was `Math.random`, which is fine
         // for a house and fatal for the bare YARD that now has to go in
         // front of one: the ground is painted before the village is built,
@@ -14297,8 +14468,8 @@ export function createKidsWorld(
         // worked out twice and come to the same answer. Same reasoning as
         // the whole chapter — a thing has to stand still before anything
         // else can be placed relative to it.
-        const hx = vx + ox + hashRange(ox, oz, 120, -2.5, 2.5);
-        const hz = oz + hashRange(ox, oz, 121, -1.5, 1.5);
+        const hx = home.x;
+        const hz = home.z;
         const w = await stand(
           pool[i % pool.length],
           hx,
@@ -14343,13 +14514,46 @@ export function createKidsWorld(
       // knee-high to chest-high on an adult. Laid at the old 7.5 they now sit
       // three deep inside each other.
       const seg = 23;
-      for (let i = -4; i <= 4; i++) {
-        if (i >= -1 && i <= 1) {
-          continue; // the way in
+      if (CHAPTER != null) {
+        // ONE PANEL, WHERE THERE IS ROOM FOR IT, on a chapter road.
+        //
+        // Six panels at twenty-three units a side is a hundred and forty
+        // units of wall, and Lesson 5 is sixty-four at most: the panels
+        // stood in Lessons 3, 4, 6 and 7 — on top of the estate's own wall,
+        // which runs on the same line at z -10, and on the youngest band
+        // across the open village edge and the market's forecourt. The
+        // shrine's line of sight is kept clear (`templeView`), the cart
+        // parks past the shrine, and the milestone keeps its margin; what
+        // is left between the cart and the stone is where a compound wall
+        // can front the houses set back there. On the long bands that is
+        // one panel; on a five-year-old's lesson there is no such stretch,
+        // and a village with no wall is better than a village with a wall
+        // through its market.
+        //
+        // The panel is measured as it is DRAWN — the model is 5.53 times as
+        // wide as tall and stands at z -10 under the depth falloff — for
+        // the same reason the chapter's runs are: a nominal width leaves a
+        // panel straddling the stone it was meant to stop short of.
+        const panel = 5.53 * V.wallHeight * perspective(-10);
+        const x1 = CHAPTER[5]! - MILESTONE_CLEAR;
+        const x0 = Math.max(
+          templeView != null ? templeView.x + templeView.halfW : vx + 8,
+          vx + 12 + 4,
+        );
+        if (x1 - x0 >= panel) {
+          const wx = x1 - panel / 2;
+          await stand(V.wall, wx, -10, V.wallHeight, 0);
+          blockers.push({ x: wx, z: -10, r: 1.5, hw: panel / 2, hd: 1.2 });
         }
-        const wx = vx + i * seg;
-        await stand(V.wall, wx, -10, V.wallHeight, 0);
-        blockers.push({ x: wx, z: -10, r: 8 });
+      } else {
+        for (let i = -4; i <= 4; i++) {
+          if (i >= -1 && i <= 1) {
+            continue; // the way in
+          }
+          const wx = vx + i * seg;
+          await stand(V.wall, wx, -10, V.wallHeight, 0);
+          blockers.push({ x: wx, z: -10, r: 8 });
+        }
       }
 
       // ── THE REST OF THE CHAPTER ──────────────────────────────────────
@@ -14441,6 +14645,28 @@ export function createKidsWorld(
           // line is the clearest sign in any scene that a thing was placed
           // rather than built. Planted before the blockers matter, and with
           // no clearance of its own, because it is grass.
+          // A LAMP THE TABLE SAYS IS LIT gets the same glow the shop
+          // lamps get, hung at the same point on the lantern — the mantle
+          // sits a little under half way up a pressure lamp — and sized to
+          // the lantern as it is drawn, so a lamp on a wall eight units
+          // back glows in proportion to the lamp and not to the shop
+          // front's. `makeLamp` keeps its own hours from `lit`.
+          if (w != null && p.lit != null && trueNight) {
+            const b = measureBox(w);
+            const tall = b.max.y - b.min.y;
+            makeLamp(
+              (b.min.x + b.max.x) / 2,
+              b.min.y + tall * 0.45,
+              (b.min.z + b.max.z) / 2,
+              {
+                kind: "petromax",
+                size: tall * 2,
+                peak: 0.98,
+                lit: tall * 4.4,
+                closes: p.lit,
+              },
+            );
+          }
           if (w != null && p.skirt === true) {
             for (let k = 0; k < 3; k++) {
               const sx = p.x + hashRange(p.x, k, 80, -1.6, 1.6);
