@@ -1157,7 +1157,28 @@ function castHeadScale(name: string): number {
       //
       // The boy keeps his own number below. He is a child and already takes
       // a child's share.
-      return 1.74;
+      // 2.1, AND THIS ONE IS A JUMP RATHER THAN A STEP.
+      //
+      // Raised four times before it — 1.22, 1.34, 1.42, 1.56, 1.74 — and
+      // every one of those read as "no change" on the road. The increments
+      // lie, for two compounding reasons. A villager is drawn sixty to a
+      // hundred pixels tall, so a ten per cent head is three or four pixels.
+      // And the thing being judged is HEADS TALL, which moves far less than
+      // the multiplier: 1.56 to 1.74 is twelve per cent on the number and
+      // about a third of one head on the figure.
+      //
+      // It is also a genre decision rather than an anatomical one. The game
+      // is for six-year-olds and its cast is deliberately top-heavy; an
+      // adult at true proportions does not read as a grown-up standing among
+      // stylised children, it reads as somebody from another game who has
+      // wandered in. Near three heads tall now — still clearly taller and
+      // longer-limbed than the children, which is what says "adult".
+      //
+      // The ceiling is the PROFILE. Abee's note warns a skull starts to
+      // overhang the shoulders past about 1.34 on a child's body; these are
+      // taller and wider and carry more. If a villager ever reads as a
+      // bobblehead from the side, this is the number that did it.
+      return 2.1;
     // The village child, who takes a child's share — and a child's share in
     // this cast is LARGE. 1.44 was set against an adult table that has been
     // raised three times since, so he quietly became the most realistically
@@ -3428,12 +3449,20 @@ const crossLimitX = (fromX: number, toX: number, z: number): number => {
   if (RIVER == null || toX === fromX) {
     return toX;
   }
-  // On the bridge, and in line with it: cross freely.
-  if (
-    BRIDGE != null &&
-    Math.abs(z - meander(fromX)) <= BRIDGE.halfWid &&
-    Math.abs(toX - BRIDGE.x) <= BRIDGE.halfLen
-  ) {
+  // ON THE ROAD IS ON THE BRIDGE — an open gate, tested on z alone.
+  //
+  // This also asked whether the DESTINATION was within the span, and that
+  // second test is what made villagers march on the spot at the bank: a
+  // walker approaching the crossing is not yet over the span, so the gate
+  // was shut in their face, and the clamp below then pinned them to the
+  // bank while their walk cycle kept playing. A gate you have to already be
+  // through in order to enter is not a gate.
+  //
+  // The bridge carries the ROAD across. So anything using the road crosses
+  // freely, wherever along it they happen to be, and only things out in the
+  // fields are stopped at the water — which is the rule as stated: the
+  // bridge is the one open point, and everywhere else is closed.
+  if (BRIDGE != null && Math.abs(z - meander(fromX)) <= BRIDGE.halfWid) {
     return toX;
   }
   const dir = Math.sign(toX - fromX);
@@ -6726,8 +6755,19 @@ export function createKidsWorld(
     // standing on any of them. Swept earth in an empty field is exactly the
     // fault the hashed house positions were introduced to prevent, arriving
     // from the other side — the houses moved chapters and the yards stayed.
-    const yards =
-      CHAPTER == null || CHAPTER_N !== 1
+    // EVERY BUILDING'S OWN GROUND, wherever it stands.
+    //
+    // Split in two, because the yards have two kinds of owner. The village
+    // centre's — the temple's forecourt and its three houses — are worked
+    // out from Lesson 5's third, which only exists in Chapter 1, and
+    // painting those on Chapter 2 put four rectangles of bare laterite in an
+    // empty Farm Clearing. But the houses the TABLE places are a different
+    // matter: Chapter 2 has a thatched roof at the back road and an estate
+    // house behind its wall, and a house standing on lawn is exactly what
+    // this pass exists to prevent. The first list is Chapter 1's; the second
+    // follows the buildings.
+    const yards = [
+      ...(CHAPTER == null || CHAPTER_N !== 1
         ? []
         : [
             // THE TEMPLE'S FORECOURT, which is the most walked ground in the
@@ -6760,13 +6800,6 @@ export function createKidsWorld(
             ...villageHouses(CHAPTER[4]!, CHAPTER[5]! - CHAPTER[4]!).map(
               (h) => ({ x: h.x, z: h.z + 9, rx: 13, rz: 7.5 }),
             ),
-            // WITH THE DEPTH FALLOFF, the same one the build stands them
-            // with: a building fitted to its lesson (see `Placed.box`)
-            // is fitted from its drawn width, and asked without the
-            // camera the table answers for the nominal one.
-            ...placements(CHAPTER, perspective)
-              .filter((p) => /House/i.test(p.model))
-              .map((p) => ({ x: p.x, z: p.z + 9, rx: 13, rz: 7.5 })),
             ...placements(CHAPTER, perspective)
               .filter((p) => /Market/i.test(p.model))
               .map((p) => ({
@@ -6781,7 +6814,25 @@ export function createKidsWorld(
                 rx: (p.width ?? 48) / 2 + (p.clear ?? 6),
                 rz: 6,
               })),
-          ];
+          ]),
+      // ── AND EVERY HOUSE THE TABLE PLACES, IN ANY CHAPTER ──────────────
+      //
+      // A Kerala house is not set in grass: the ground in front of it is
+      // beaten earth, swept every morning and worn bare by the traffic of
+      // the people living there. Smaller and softer than the market's — a
+      // household's worth of feet rather than a village's — so the grass
+      // holds on nearer the edges.
+      //
+      // Derived from `placements` WITH the camera's depth falloff, the same
+      // one the build stands them with: a building fitted to its lesson is
+      // fitted from its DRAWN width, and asked without the camera the table
+      // answers for the nominal one.
+      ...(CHAPTER == null
+        ? []
+        : placements(CHAPTER, perspective)
+            .filter((p) => /House/i.test(p.model))
+            .map((p) => ({ x: p.x, z: p.z + 9, rx: 13, rz: 7.5 }))),
+    ];
     const yardAt = (x: number, z: number): number => {
       let w = 0;
       for (const y of yards) {
@@ -10305,7 +10356,32 @@ export function createKidsWorld(
     root.traverse((o) => {
       const m = o as THREE.SkinnedMesh;
       if (m.isSkinnedMesh && m.skeleton != null) {
+        // KEEP THE BONE SCALES A CLIP CANNOT SET.
+        //
+        // `Skeleton.pose()` puts every bone back to its BIND transform —
+        // position, rotation AND SCALE — which is the whole point of it, and
+        // it silently threw away the enlarged head. `scaleHead` writes a
+        // scale onto the Head bone at spawn; the standing villagers keep it
+        // because nothing resets them, and the road walkers lose it because
+        // `spawnCompanion` starts them on an idle and the walker code poses
+        // them flat before putting them on their gait. Same spawn, same
+        // table, same call — one of them stood in a field with a big head
+        // and the other walked past with a small one.
+        //
+        // Worse, this also fires on every clip SWITCH (see the curious boy),
+        // so a character who kept the scale at spawn would still lose it the
+        // first time they changed what they were doing.
+        //
+        // No animation channel in this world scales a bone — the clips are
+        // rotation and translation — so any scale that is not 1 was put
+        // there deliberately and is carried across the reset.
+        const kept = m.skeleton.bones
+          .filter((b) => b.scale.x !== 1 || b.scale.y !== 1 || b.scale.z !== 1)
+          .map((b) => [b, b.scale.clone()] as const);
         m.skeleton.pose();
+        for (const [b, sc] of kept) {
+          b.scale.copy(sc);
+        }
       }
     });
   };
