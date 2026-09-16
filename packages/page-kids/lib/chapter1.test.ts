@@ -71,6 +71,57 @@ test("each band gets the road it needs", () => {
 });
 
 /**
+ * THE CHAPTER MUST NOT END BEFORE LESSON 10.
+ *
+ * `startRun` used to clamp the start of a run to `TRAIL_END - RUN_LEN`, and
+ * RUN_LEN is the 64-unit MAXIMUM rather than the run this child actually
+ * walks. For the youngest band that is thirty units behind their own ninth
+ * stone, so the last lesson began well short of the marker that opens it and
+ * the closing stretch of road was never walked at all.
+ */
+test("the last lesson starts at its own stone and reaches the end", () => {
+  for (const [start, full] of [
+    [24, 36],
+    [50, 72],
+    [77, 112],
+    [102, 153],
+  ] as const) {
+    const b = chapterBounds(start, full);
+    const end = chapterEnd(b);
+    // Lesson 10 runs from the ninth stone to the tenth, in full.
+    equal(
+      Math.round((b[9]! + runLengthFor(full)) * 10) / 10,
+      Math.round(end * 10) / 10,
+    );
+    // And the old clamp would have started it behind that stone. Kept as an
+    // assertion rather than a comment, because it is the whole reason the
+    // clamp is against `runLen` now.
+    if (start === 24) {
+      isTrue(
+        end - RUN_LEN < b[9]!,
+        "the youngest band's last lesson no longer needs the fix",
+      );
+    }
+  }
+});
+
+/**
+ * A chapter is walked across many sittings. `roadStones` counts them, and
+ * lesson n starts at Milestone n-1 — so a child who has passed four stones
+ * opens their fifth lesson at the fourth stone.
+ */
+test("a saved stone count names where the next lesson starts", () => {
+  const b = DEFAULT_BOUNDS;
+  for (let passed = 0; passed < SEGMENT_COUNT; passed++) {
+    const resume = b[Math.min(SEGMENT_COUNT - 1, passed)]!;
+    equal(resume, b[passed]);
+    equal(lessonAt(resume, b).n, passed + 1);
+  }
+  // Past the end there is no eleventh lesson to open; they stay on the last.
+  equal(b[Math.min(SEGMENT_COUNT - 1, 14)], b[9]);
+});
+
+/**
  * The world is built to the SHORTEST chapter when nobody says otherwise.
  * Guessing high builds ground nobody reaches; guessing low runs a child off
  * the end of the terrain, which is the failure that shows.

@@ -7927,9 +7927,32 @@ export function createKidsWorld(
    * replacing it.
    */
   const dogWait = (secs: number) => secs * (playerIsLittle() ? 0.38 : 1);
-  let playerX = -6;
-  let targetX = -6;
-  let runStart = -6;
+  /**
+   * WHERE THIS CHILD LEFT OFF.
+   *
+   * A chapter is walked across many sittings, and `roadStones` has been
+   * counting them all along — it was only ever used to stand a few markers
+   * behind the child, never to decide where they were standing. So every
+   * session opened at -6 whatever they had already walked: the save existed
+   * and nothing read it.
+   *
+   * Lesson n starts at Milestone n-1, so a child who has passed four stones
+   * begins their fifth lesson at the fourth stone, with the four they earned
+   * behind them and the village ahead. Clamped one short of the end because
+   * the last stone closes the chapter rather than opening an eleventh lesson.
+   */
+  const resumeX =
+    CHAPTER != null
+      ? CHAPTER[
+          Math.min(
+            SEGMENT_COUNT - 1,
+            Math.max(0, Math.floor(opts.stonesPassed ?? 0)),
+          )
+        ]!
+      : -6;
+  let playerX = resumeX;
+  let targetX = resumeX;
+  let runStart = resumeX;
   /** This run's length — see runLengthFor. Full until a passage says otherwise. */
   let runLen = RUN_LEN;
   let runEnd = runStart + runLen;
@@ -13382,10 +13405,20 @@ export function createKidsWorld(
         // the carved model changed the road ahead and left the first one
         // behind you as it was.
         const behind: THREE.Object3D[] = [];
+        //
+        // IN A CHAPTER THEY STAND WHERE THEY WERE EARNED. Stepping back from
+        // the child by a fixed gap was right when a stone could be planted
+        // anywhere; now Milestone n has an address, and a marker that is not
+        // at it is a marker in the wrong place — the child would walk back
+        // past a stone that had moved since they passed it.
+        const stoneAt = (n: number, fallback: number) =>
+          CHAPTER != null && n >= 0 && n <= SEGMENT_COUNT
+            ? CHAPTER[n]!
+            : fallback;
         const spots: { n: number; sx: number; spin: number }[] = [
           {
             n: milestoneNo,
-            sx: runStart - 2.5,
+            sx: stoneAt(milestoneNo, runStart - 2.5),
             spin: 0.08 + Math.random() * 0.16,
           },
         ];
@@ -13395,7 +13428,7 @@ export function createKidsWorld(
         for (let i = 1; i <= Math.min(2, milestoneNo); i++) {
           spots.push({
             n: milestoneNo - i,
-            sx: runStart - 2.5 - i * MIN_STONE_GAP,
+            sx: stoneAt(milestoneNo - i, runStart - 2.5 - i * MIN_STONE_GAP),
             // Turned a little off square, and each one differently, so a row
             // does not look machined. Kept, not redrawn, so a rebuild stands
             // them exactly where they were.
@@ -17505,10 +17538,29 @@ export function createKidsWorld(
     startRun(passageChars) {
       scaredThisRun = false;
       runLen = runLengthFor(passageChars ?? Number.NaN);
-      // Clamped against the full length, not this run's: the window slides
-      // along a 260-unit trail, and a short run must not be allowed to
-      // start further along than a full one could have.
-      runStart = Math.min(targetX, TRAIL_END - RUN_LEN);
+      // IN A CHAPTER THE RUN STARTS AT A STONE. Lesson n runs from Milestone
+      // n-1 to Milestone n, which is the whole arrangement — the child walks
+      // to the marker rather than the marker being planted where they
+      // stopped.
+      //
+      // AND THE CHAPTER MUST NOT END BEFORE LESSON 10. The clamp below was
+      // against RUN_LEN, which is the 64-unit MAXIMUM rather than this
+      // child's actual run, and for a five-year-old that ended the chapter
+      // early every time: their road is 270 units, Milestone 9 stands at
+      // 237.6, and `TRAIL_END - RUN_LEN` pinned the last lesson's start at
+      // 206 — thirty units behind its own stone, with the last stretch of
+      // road never walked. Clamping against `runLen` is the honest version:
+      // a run may start as far along as it can still finish.
+      runStart =
+        CHAPTER != null
+          ? CHAPTER[Math.min(SEGMENT_COUNT - 1, Math.max(0, milestoneNo))]!
+          : Math.min(targetX, TRAIL_END - runLen);
+      if (CHAPTER != null && playerX < runStart - 0.5) {
+        // Resuming, or a rebuild: stand them at the stone rather than making
+        // them walk back up the road to it.
+        playerX = runStart;
+        targetX = runStart;
+      }
       runEnd = runStart + runLen;
       placeFlag();
     },
