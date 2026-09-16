@@ -72,7 +72,15 @@ import {
   type Sticker,
 } from "./album.ts";
 import { kidsAudio } from "./audio.ts";
-import { LESSONS, SEGMENT_COUNT } from "./chapter1.ts";
+import { SEGMENT_COUNT } from "./chapter1.ts";
+import {
+  type Chapter,
+  chapterAt,
+  chapterDueAt,
+  chapterSeenKey,
+  isWalkable,
+  lessonAtStones,
+} from "./chapters.ts";
 import {
   CLOTHING_REGIONS,
   type ClothingColours,
@@ -3376,7 +3384,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * Nothing about the individual cards changes; each still owns its own flag
    * and its own dismissal. They simply queue.
    */
-  type CardKind = "rest" | "graduated" | "key" | "chapter" | "finished";
+  /**
+   * THE CHAPTER A CHILD IS ABOUT TO WALK INTO, or null once they have been
+   * told. See the effect below for when it opens and `chapters.ts` for what
+   * each one says.
+   */
+  const [chapterCard, setChapterCard] = useState<Chapter | null>(null);
+  type CardKind =
+    | "rest"
+    | "graduated"
+    | "key"
+    | "chapterIntro"
+    | "chapter"
+    | "finished";
   // NOTE there is no "session over" card, and there never was one — the
   // window inventory lists it as its own entry, but running the timer out
   // opens the FINISHED card with an end-of-session message in it. Giving
@@ -3389,11 +3409,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       ? "graduated"
       : ceremony != null
         ? "key"
-        : mapOpen
-          ? "chapter"
-          : finishOpen
-            ? "finished"
-            : null;
+        : chapterCard != null
+          ? "chapterIntro"
+          : mapOpen
+            ? "chapter"
+            : finishOpen
+              ? "finished"
+              : null;
 
   /**
    * THE CARDS LEAVE BY KEY, NOT BY MOUSE.
@@ -3518,20 +3540,28 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    *
    * From the stones already passed, because that is what a completed lesson
    * means and it is the same figure the world resumes from — lesson n starts
-   * at Milestone n-1, so a child with four stones is on Lesson 5. Capped at
-   * the last lesson: Chapter 1 ends at ten and there is no eleventh to name.
+   * at Milestone n-1, so a child with four stones is on Lesson 5.
+   *
+   * COUNTED WITHIN THE CHAPTER, not along the whole road. `roadStones` runs
+   * on past ten, and a chip reading "Lesson 14" would be a number about the
+   * software: a child counts from the start of the thing they are in, and
+   * Chapter 2's first lesson is its first lesson. `chapters.ts` owns that
+   * arithmetic so the card and the chip can never disagree about which
+   * chapter is under way.
    */
   // `?lesson=N` wins here too, so the chip names the lesson a tester is
   // actually standing in rather than the one their save says they reached.
-  const lessonNo = Math.min(
-    SEGMENT_COUNT,
-    Number(
-      typeof window === "undefined"
-        ? Number.NaN
-        : new URLSearchParams(window.location.search).get("lesson"),
-    ) || (prefs.roadStones ?? 0) + 1,
+  const forcedLesson = Number(
+    typeof window === "undefined"
+      ? Number.NaN
+      : new URLSearchParams(window.location.search).get("lesson"),
   );
-  const lessonName = LESSONS[lessonNo - 1]?.name ?? "";
+  const chapterNow = chapterAt(prefs.roadStones ?? 0);
+  const lessonNo =
+    forcedLesson > 0
+      ? Math.min(SEGMENT_COUNT, forcedLesson)
+      : lessonAtStones(prefs.roadStones ?? 0);
+  const lessonName = chapterNow.lessons[lessonNo - 1]?.name ?? "";
   const flashStage = useFlash(
     stageOf(prefs.world)(dinoAgeOf(included, lesson.letters.length)),
   );
@@ -4626,6 +4656,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     sessionOver ||
     nameOpen ||
     mapOpen ||
+    // A key pressed at the chapter card is a key aimed at a card, not at the
+    // passage behind it.
+    chapterCard != null ||
     albumOpen ||
     // The story panel covers the road. A key pressed while it is open is a
     // key aimed at nothing the child can see.
@@ -5293,7 +5326,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         <div className={styles.loadLabel}>
           <Reveal
             text={(onVillage
-              ? "Chapter 1 · The Village"
+              ? // From the registry, not spelled out here: the loading screen
+                // and the chapter card name the same chapter, and a hardcoded
+                // "Chapter 1 · The Village" is a second answer waiting to
+                // disagree with the first the day Chapter 2 opens.
+                `Chapter ${chapterNow.n} · ${chapterNow.name}`
               : landName !== ""
                 ? `Chapter ${chapter} · ${landName}`
                 : "Running to the valley"
@@ -5403,6 +5440,73 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [say, loaded]);
 
+  /**
+   * OPEN THE CHAPTER CARD WHEN A CHILD ARRIVES AT ONE.
+   *
+   * Twice on the whole road, not on a timer: once before the first step of
+   * Chapter 1, and once at the tenth stone when the village is behind them.
+   * What it replaces is the trail map, which fired every third round and
+   * offered to rebuild the world whether or not anything had been reached —
+   * a card about the software's bookkeeping rather than about the journey.
+   *
+   * NOT WHILE THE LOADING SCREEN IS UP. A card naming the road has to arrive
+   * when there is a road behind it; over the loading screen it is a dialogue
+   * box about nothing, and the child dismisses it before they have seen the
+   * place it is describing.
+   *
+   * ONCE EVER, REMEMBERED. `seen` is the same list every other once-in-a-
+   * lifetime moment is spent from, so a child who stops halfway through a
+   * chapter comes back to the road rather than to the card — and one who
+   * finishes Chapter 1 today meets Chapter 2's card tomorrow, on the stone
+   * where it belongs.
+   */
+  useEffect(() => {
+    if (!onVillage || !loaded || chapterCard != null) {
+      return;
+    }
+    // ONLY ON THE STONE THAT OPENS ONE. Between stones a chapter is already
+    // under way and the card would be an interruption rather than an opening.
+    // `chapterDueAt` answers "is one starting HERE", which is a different
+    // question from "which one am I in" — and the announcement is allowed to
+    // name a chapter that is not built yet, which is the whole point of it.
+    const due = chapterDueAt(prefs.roadStones ?? 0);
+    if (due == null || seenRef.current.includes(chapterSeenKey(due))) {
+      return;
+    }
+    setChapterCard(due);
+     
+  }, [onVillage, loaded, prefs.roadStones, chapterCard]);
+
+  /**
+   * Enter, on a chapter card.
+   *
+   * Spends the once-ever, then walks on. THE REBUILD IS GATED ON THE CHAPTER
+   * ACTUALLY EXISTING: this is the one remaining path allowed to tear the
+   * world down and put another one up — it is where a child is reading and a
+   * rebuild costs nothing — but a chapter with no authored lessons has no
+   * bounds to build to, so pressing Enter on its card returns them to the
+   * road they are on rather than to an empty one.
+   */
+  const enterChapter = () => {
+    const c = chapterCard;
+    setChapterCard(null);
+    if (c == null) {
+      return;
+    }
+    const key = chapterSeenKey(c);
+    if (!seenRef.current.includes(key)) {
+      seenRef.current = [...seenRef.current, key];
+      savePrefs({ seen: seenRef.current });
+    }
+    if (isWalkable(c) && c.n > 1) {
+      setLoaded(false);
+      setWorldReady(false);
+      setStepsDone(false);
+      loadSteps.current = [];
+      setLandNonce((n) => n + 1);
+    }
+  };
+
   const crossIntoNextLand = () => {
     setMapOpen(false);
     const land = peekNextLandName();
@@ -5475,15 +5579,17 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // What each card answers to. Rebuilt per render so the closures are never
   // stale; the ref is only so the key handler can read it without re-binding.
   cardActionRef.current =
-    cardShown === "rest"
-      ? { space: null, enter: () => setRestOpen(false) }
-      : cardShown === "finished"
-        ? { space: playAgain, enter: stopHere }
-        : cardShown === "chapter"
-          ? { space: crossIntoNextLand, enter: crossIntoNextLand }
-          : cardShown === "graduated"
-            ? { space: null, enter: () => setGraduated(false) }
-            : { space: null, enter: null };
+    cardShown === "chapterIntro"
+      ? { space: enterChapter, enter: enterChapter }
+      : cardShown === "rest"
+        ? { space: null, enter: () => setRestOpen(false) }
+        : cardShown === "finished"
+          ? { space: playAgain, enter: stopHere }
+          : cardShown === "chapter"
+            ? { space: crossIntoNextLand, enter: crossIntoNextLand }
+            : cardShown === "graduated"
+              ? { space: null, enter: () => setGraduated(false) }
+              : { space: null, enter: null };
 
   useEffect(() => {
     if (cardShown == null) {
@@ -6804,6 +6910,28 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             </button>
           </div>
         </div>
+      )}
+
+      {/*
+        THE CHAPTER CARD. Twice on the whole road — before the first step, and
+        at the stone where the village ends — naming what is ahead in one
+        sentence a child can be read aloud. See `chapters.ts` for the words
+        and the effect above for when it opens.
+
+        SPACE ANSWERS IT AS WELL AS ENTER, unlike the rest card. That one is a
+        nudge to stop for the day and should cost a deliberate key; this one
+        is a door held open, and a child with their thumb already on the bar
+        should be able to walk through it.
+      */}
+      {cardShown === "chapterIntro" && chapterCard != null && (
+        <RoadCard
+          kind="chapter"
+          eyebrow={`Chapter ${chapterCard.n}`}
+          title={chapterCard.name}
+          keys={[{ cap: "enter", what: "to set off", zone: "rose" }]}
+        >
+          <p>{chapterCard.blurb}</p>
+        </RoadCard>
       )}
 
       {/*
