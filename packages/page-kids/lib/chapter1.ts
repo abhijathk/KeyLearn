@@ -1183,9 +1183,16 @@ export const LESSONS: readonly Lesson[] = [
         // well written for "between the bamboo and the market" stood at -12
         // — inside the stalls, on every band, invisible. -21.5 bought seven
         // units of trodden ground for the well and the cart; at -19 the
-        // forecourt is still four and a half units deep and the row itself
-        // comes two and a half units nearer the child, which is what a
-        // market a village actually walks to looks like from the road.
+        // forecourt is still deep enough for the well and the cart, and the
+        // row itself comes nearer the child, which is what a market a
+        // village actually walks to looks like from the road.
+        //
+        // -17.5 on the second pass. The forecourt does NOT move again with
+        // it: at -19 the well stood three and a half units clear of the
+        // shop fronts, and taking the building forward another unit and a
+        // half closes that to two — which is a village street rather than a
+        // yard, and is the point. Moving the forecourt again would have put
+        // the cow and the cart on the carriageway.
         //
         // EVERYTHING IN THE FORECOURT MOVES WITH IT, by exactly the same
         // two and a half: the well, the cart, the lamp and the cow in front
@@ -1198,7 +1205,7 @@ export const LESSONS: readonly Lesson[] = [
         // -38. The smith on his plinth needs no change: he is placed off
         // the building's own measured front face, so he comes forward with
         // the shop he is sitting at.
-        z: -19,
+        z: -17.5,
         h: 17.5,
         // A FOOTPRINT, NOT A DISC — see `box`. `clear` is now the margin of
         // trading ground kept bare of planting round the building; the

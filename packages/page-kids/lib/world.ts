@@ -9523,6 +9523,15 @@ export function createKidsWorld(
   let curiousBoy: DinoRig | null = null;
   /** The smith at his forge. Sits from eight in the morning until nine. */
   let smith: DinoRig | null = null;
+  /**
+   * The tea seller behind his counter, and the hours he keeps.
+   *
+   * His stall's lamp goes out at eight — see the market's `SHOPS` table —
+   * and a shopkeeper standing in an unlit shop after closing is a man who
+   * has forgotten to go home. The market opens at six, which is when a tea
+   * stall opens anywhere.
+   */
+  let teaMan: DinoRig | null = null;
 
   /**
    * A DISC, OR A BOX WITH A MARGIN.
@@ -14173,7 +14182,28 @@ export function createKidsWorld(
           // eleven-year-old's, and a fraction of it is only meaningful once
           // that is settled.
           {
-            const counter = on(-0.24 * wide, 0, -1.6);
+            // BEHIND THE COUNTER, BUT STILL VISIBLE THROUGH THE OPENING.
+            //
+            // 1.6 inside the front plane left him level with the shutters,
+            // reading as a man leaning out of a doorway rather than one
+            // working in a shop. 2.8 put him properly inside and the
+            // shopfront then hid him completely — which is worse than
+            // either, because a shopkeeper nobody can see is the same as no
+            // shopkeeper. 2.1 is the depth at which the stall's own frame
+            // still frames him.
+            //
+            // The market has real interiors — it is why its lamps could be
+            // stood on counters rather than hung in front of the building —
+            // so this is a position in a room, not an offset from a wall.
+            // -0.19 ACROSS, NOT -0.24. The shop fractions in `SHOPS` mark
+            // where each LAMP hangs, and a lamp hangs over a counter rather
+            // than in the middle of an opening — so borrowing the tea
+            // stall's lamp fraction for the man stood him in the partition
+            // between his shop and the one beside it. Half a shop's width
+            // to the right puts him in the gap his customers see him
+            // through. The lamp keeps its own number; they are two
+            // different things that happen to belong to one business.
+            const counter = on(-0.19 * wide, 0, -2.1);
             await spawnCompanion(
               "TeaStall",
               counter[0],
@@ -14188,6 +14218,7 @@ export function createKidsWorld(
               t.wrap.userData.fixedFace = true;
               t.wrap.userData.villageBystander = true;
               builtGroup.add(t.wrap);
+              teaMan = t;
             }
           }
 
@@ -15097,13 +15128,13 @@ export function createKidsWorld(
           // now, and the rule below decides it rather than this list: he is
           // here because he can walk, and would drop out again if he could
           // not.
-          const WHO = [
-            "Headman",
-            "TeaStall",
-            "FarmerWoman",
-            "VillageBoy",
-            "Blacksmith",
-          ];
+          // NO TEA SELLER. He is behind his own counter from one end of the
+          // day to the other — see the market block, where he is placed
+          // inside his shop — and a man cannot be serving tea and walking
+          // the road at the same time. Leaving him on this list put a second
+          // copy of him past his own shutters, which is exactly the fault
+          // the blacksmith's round was shortened to avoid.
+          const WHO = ["Headman", "FarmerWoman", "VillageBoy", "Blacksmith"];
           /**
            * WHO KEEPS TO A PARTICULAR STRETCH, by milestone.
            *
@@ -15125,6 +15156,12 @@ export function createKidsWorld(
            */
           const SPAN: Record<string, readonly [number, number]> = {
             Blacksmith: [3, 6],
+            // The headman has a POST in Lesson 7, between the bamboo and
+            // the well, so his walking self stops at Milestone 6 for the
+            // same reason the smith's does: one man, one place at a time.
+            // Lessons 2 to 6 is the village end of the road, which is where
+            // an elder's business is anyway.
+            Headman: [1, 6],
           };
           /** And who keeps different hours from their neighbours. */
           const HOURS: Record<string, readonly [number, number]> = {
@@ -17688,6 +17725,14 @@ export function createKidsWorld(
           const atWork = hourOfDay >= 8 && hourOfDay < 21;
           if (smith.wrap.visible !== atWork) {
             smith.wrap.visible = atWork;
+          }
+        }
+        // Six until eight, which is his stall's own lamp hour. A shopkeeper
+        // standing in an unlit shop after closing has forgotten to go home.
+        if (teaMan != null) {
+          const open = hourOfDay >= 6 && hourOfDay < 20;
+          if (teaMan.wrap.visible !== open) {
+            teaMan.wrap.visible = open;
           }
         }
         for (const f of friends) {
