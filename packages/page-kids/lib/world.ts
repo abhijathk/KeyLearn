@@ -1214,21 +1214,29 @@ function scaleHead(root: THREE.Object3D, scale: number): void {
   if (scale === 1) {
     return;
   }
-  // MATCHED PAST THE RIG'S NAMESPACE.
+  // MATCHED ON THE NAME THREE ACTUALLY LOADS, NOT THE ONE IN THE FILE.
   //
-  // This tested `name === "Head"`, which is what the village rigs call it —
-  // and the blacksmith's is a Mixamo export, where every bone is prefixed:
-  // his is `mixamorig:Head`. So he was asked for the same head the other
-  // villagers get and silently kept a realistically proportioned one, which
-  // is the single thing that makes a character look imported from another
-  // game rather than drawn for this one.
+  // This tested `name === "Head"`, which is what the village rigs call it.
+  // The blacksmith is a Mixamo export where every bone is namespaced, so the
+  // FILE calls his `mixamorig:Head` — and the obvious repair, `(^|:)Head$`,
+  // was checked against the file and still did not work. GLTFLoader runs
+  // every node name through `PropertyBinding.sanitizeNodeName`, which does
+  // not replace the colon, it DELETES it: by the time the bone exists it is
+  // called `mixamorigHead`, and a pattern expecting a separator cannot see
+  // it.
   //
-  // `(^|:)Head$` takes the bone whatever namespace it is under and still
-  // passes over `HeadTop_End` and `headfront`, which are a Mixamo tip bone
-  // and a face locator and are not the skull.
+  // So the anchor is the suffix alone. `Head$` catches `Head` and
+  // `mixamorigHead`, and still passes over `mixamorigHeadTop_End` (a tip
+  // bone), `headfront` (a face locator) and `head_end` — none of which end
+  // in the word.
+  //
+  // THE LESSON IS THE VERIFICATION, not the regex: the first fix was
+  // confirmed by reading bone names out of the .glb with a script, which is
+  // a different string from the one the runtime holds. Anything that matches
+  // a name has to be checked against a LOADED scene.
   let found = false;
   root.traverse((o) => {
-    if ((o as THREE.Bone).isBone && /(^|:)Head$/.test(o.name)) {
+    if ((o as THREE.Bone).isBone && /Head$/.test(o.name)) {
       o.scale.setScalar(scale);
       found = true;
     }
