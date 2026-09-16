@@ -4300,6 +4300,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // because that is what it builds from.
     const at = addressLesson(Number(qs?.get("lesson")));
     const startLesson = at?.lesson;
+    // `?band=5-6` builds the road to that band's chapter. Review only, and
+    // only the ROAD: the band comes from the active profile's birth year,
+    // so looking at the youngest band's 270-unit chapter — the one the
+    // world defaults to, and the one every prop was checked against least —
+    // meant making a profile with a six-year-old's birthday first. A lesson
+    // is 21.6 units for that child and 64 for an eleven-year-old, and a
+    // market authored on the long road is a different thing on the short
+    // one; this is how that gets looked at without a second profile.
+    const reviewBand = (() => {
+      const b = qs?.get("band");
+      return b === "5-6" || b === "7-8" || b === "9-10" || b === "11+"
+        ? b
+        : null;
+    })();
     const onVillageNow = prefsRef.current.world === "village";
     // Which chapter's ten lessons this road is made of. `?lesson=` wins, so
     // a reviewer lands in the chapter they named; otherwise it is whichever
@@ -4374,7 +4388,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       chapter: villageChapter,
       // How long this child's chapter is. Ten lessons of a five-year-old's
       // passages is 270 units of road; of an eleven-year-old's, 640.
-      ageBand: band,
+      ageBand: reviewBand ?? band,
       startLesson,
       // Dev review aid: `?buffalo` / `?puppy` spawns that animal beside the
       // player and cycles every clip, naming each in the caption line.

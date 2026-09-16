@@ -110,6 +110,24 @@ export function chapterEnd(bounds: readonly number[] = DEFAULT_BOUNDS): number {
 export const BLEED = 0.22;
 
 /**
+ * HOW CLOSE TO A STONE A TALL THING MAY STAND. In world units either side.
+ *
+ * The milestone carries the lesson number and is how a child knows they
+ * have got somewhere, so nothing at head height goes in front of it. The
+ * world applies this to everything it rolls — the planting, the herds, the
+ * villagers — and `placements` applies it to the runs, which are the one
+ * authored thing whose panels land wherever the arithmetic puts them: a
+ * fence written to start at 0.16 of a lesson starts two units past the
+ * stone on the shortest band and eight on the longest, and a panel two
+ * units behind a slab of the same height is a slab you cannot read.
+ *
+ * Held here rather than in the world because the world imports this file
+ * and not the other way round, and one number kept in two places is the
+ * number that drifts.
+ */
+export const MILESTONE_CLEAR = 3.2;
+
+/**
  * A DETERMINISTIC VALUE FOR A PLACE.
  *
  * Every placement in this chapter is drawn from here rather than from
@@ -411,6 +429,46 @@ export type Placed = {
    * has to change.
    */
   readonly lift?: number;
+  /**
+   * A BUILDING: something wide enough that a circle is the wrong shape for
+   * it, and big enough that it may not fit the lesson it is written in.
+   *
+   * `w` and `d` are the model's own width-to-height and depth-to-height
+   * ratios, measured off the file the way `run.aspect` is. With them the
+   * table knows how much road a thing will actually take up before a
+   * single byte of it has loaded, and three things follow:
+   *
+   *   1. IT IS BLOCKED AS ITS FOOTPRINT, not as a disc. The market is
+   *      fifty-seven units wide and fourteen deep; a circle round it is
+   *      forty units in radius and reaches across the road, so for the
+   *      whole length of the market nothing could be placed on the verge,
+   *      in the forecourt, or in the two lessons either side of it — the
+   *      social peak of the chapter had no people in it, on any band,
+   *      because they were being refused room by a building sixteen units
+   *      behind them. `clear` becomes the MARGIN round the footprint.
+   *
+   *   2. `span` CAPS ITS FRONTAGE to a fraction of the lesson. A lesson is
+   *      21.6 units for a five-year-old and 64 for an eleven-year-old and
+   *      the building is the same size for both, so a market authored on
+   *      the long road straddled two milestones and both neighbouring
+   *      lessons on the short one, with the estate's house standing inside
+   *      its left end. The height comes down until the frontage fits, and
+   *      everything derived from it — the depth, the clearance — comes
+   *      down with it. On the long bands nothing changes, because the
+   *      building already fits.
+   *
+   *   3. THE FRONT FACE STAYS PUT when the height comes down. `stand`
+   *      centres a model on the z it is given, so a shallower building
+   *      with the same centre has its front face further from the road;
+   *      the fitted placement moves the centre forward to keep the face
+   *      where the authored numbers put it, which is the line every other
+   *      thing on the road is arranged against.
+   */
+  readonly box?: {
+    readonly w: number;
+    readonly d: number;
+    readonly span?: number;
+  };
 };
 
 export type Lesson = {
@@ -471,6 +529,18 @@ export type Lesson = {
   readonly herd: readonly string[];
   /** Who is out here by day. Empty means an unpeopled stretch. */
   readonly folk: readonly string[];
+  /**
+   * HOW FAR BACK FROM THE ROAD THEY STAND, in units behind the carriageway.
+   *
+   * The rule for a farmer is "behind the boundary, in her own plot" — the
+   * fences and walls sit around 8 to 14 units back, so people stand from
+   * 14 to 24. That is right for every lesson but one: a market's people are
+   * AT the stalls, on the trodden ground between the road and the shop
+   * fronts, and put fourteen units back they were being asked to stand
+   * inside the building. The default is the plot; the market names its
+   * forecourt.
+   */
+  readonly folkDepth?: readonly [number, number];
   /**
    * Inside the Kuttichathan corridor, M4 to M7.
    *
@@ -727,7 +797,18 @@ export const LESSONS: readonly Lesson[] = [
     depth: [8, 28],
     props: [
       { model: "ak-3d-pack/HouseMoss", at: 0.55, z: -22, h: 11, clear: 12 },
-      { model: `${UTIL}/Village_Well`, at: 0.44, z: -13, h: 2.2, clear: 4 },
+      // 3.2, NOT 2.2, for the reason the market's well was raised: a well
+      // is a waist-high parapet a grown woman draws from, and at 2.2
+      // against a farmer standing 5.4 it was a garden feature. A little
+      // under the market's 3.6 — a household well, not a village one.
+      //
+      // AND AT -14, NOT -13. On the youngest band the compound wall slides
+      // back towards the house to keep three panels (see `placements`),
+      // and at -13 the well stood across its line. Between the wall at -12
+      // and the house front at about -15.5 there are three and a half
+      // units; the well is three deep, and -14 is the one place it clears
+      // both.
+      { model: `${UTIL}/Village_Well`, at: 0.44, z: -14, h: 3.2, clear: 5 },
       { model: `${UTIL}/Washing_Stone`, at: 0.4, z: -11, h: 0.5, clear: 2 },
       {
         model: `${UTIL}/Laterite_Wall`,
@@ -778,47 +859,31 @@ export const LESSONS: readonly Lesson[] = [
     // "leave room between buildings for plants, gardens and side paths".
     mix: [0.22, 0.28, 0.5],
     depth: [9, 26],
-    props: [
-      // The banyan is the social focus and the temple is glimpsed past its
-      // trunk, never behind it — the tree stands BESIDE the shrine.
-      // NOT THE BANYAN. It is placed by the village's own `heart` table with
-      // the althara under it, and the chapter skips lesson 5's props for
-      // exactly that reason — so an entry here was never built and only read
-      // as though the tree were configured in two places at once.
-      {
-        model: "ak-3d-pack/Temple",
-        at: 0.44,
-        z: -17,
-        h: 9,
-        turn: 0.08,
-        clear: 9,
-      },
-      { model: "ak-3d-pack/HouseThatch", at: 0.66, z: -21, h: 11, clear: 12 },
-      { model: "ak-3d-pack/HouseHearth", at: 0.84, z: -24, h: 11, clear: 12 },
-      { model: `${UTIL}/Village_Well`, at: 0.56, z: -12, h: 2.2, clear: 4 },
-      // The garden walls between the houses — short, because the village
-      // centre has to stay breathable and a long wall here would turn a row
-      // of homes into a street frontage. Still a run with a gate, because
-      // the rule is the rule: a boundary is continuous or it is litter.
-      {
-        model: `${UTIL}/Laterite_Wall`,
-        at: 0.7,
-        z: -13,
-        h: 2.1,
-        clear: 5,
-        run: { count: 4, aspect: 2.61, gapAt: 1 },
-        skirt: true,
-      },
-      { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.73, z: -12, h: 0.95 },
-      {
-        model: `${UTIL}/Village_Cart`,
-        at: 0.2,
-        z: -9,
-        h: 2.6,
-        turn: 0.9,
-        clear: 4,
-      },
-    ],
+    // NOTHING IS PLACED FROM HERE, AND THAT IS NOT AN OVERSIGHT.
+    //
+    // The village centre is the one lesson the world builds from its own
+    // table rather than from this one: the temple, the banyan on its
+    // althara, the three houses, the compound walls and the cart parked
+    // past the shrine all come from `theme.village.heart`,
+    // `VILLAGE_HOUSE_SPOTS` and the wall loop in the world, which were
+    // tuned in place long before the chapter existed and are placed by the
+    // chapter telling them WHERE — a third of the way into this segment —
+    // rather than WHAT. The build skips Lesson 5's props for that reason.
+    //
+    // This table used to list a temple, two houses, a well, a wall and a
+    // cart anyway, and none of them was ever built. It was worse than dead
+    // data: the ground is painted before anything stands on it, and the
+    // painter read the houses out of this table and wore a swept yard into
+    // the grass in front of each — two bare patches in the village with
+    // nothing standing behind them, one of them where the banyan's shade
+    // falls. And the temple listed here was a second temple, at a
+    // different spot from the one the heart places, so that anybody who
+    // ever "fixed" the skip would have got two shrines twelve units apart.
+    //
+    // A well is the one thing the village centre genuinely lacks. If it
+    // gets one it goes in `heart` with the rest, where it can be arranged
+    // against the banyan and the shrine rather than against nothing.
+    props: [],
     herd: [],
     folk: ["Headman", "VillageBoy"],
     corridor: true,
@@ -868,15 +933,32 @@ export const LESSONS: readonly Lesson[] = [
       { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.33, z: -9, h: 1 },
       { model: `${PLANTS}/Kerala_Fern`, at: 0.34, z: -11.3, h: 0.85 },
       { model: "ak-3d-pack/HouseHearth", at: 0.6, z: -23, h: 13, clear: 13 },
+      // INSIDE THE COMPOUND, NOT THROUGH ITS WALL. At 0.72 and z -11 the
+      // cart stood across the boundary: the wall runs at z -10 and is
+      // seven tenths of a unit thick, and a cart nearly six units long
+      // parked end-on at -11 had the wall passing through its middle, on
+      // every band. Measured rather than eyeballed — the two boxes
+      // overlapped by the wall's whole depth.
+      //
+      // So it is parked in the yard behind the wall, where a prosperous
+      // house keeps its cart, and seen over the top of it: the wall is two
+      // units tall as drawn and the cart a shade more. At the near end of
+      // the lesson rather than by the house, because on the shortest band
+      // the house's sixteen-unit frontage fills most of a 27-unit lesson and
+      // there is no ground beside it that is not also inside it.
       {
         model: `${UTIL}/Village_Cart`,
-        at: 0.72,
-        z: -11,
+        at: 0.22,
+        z: -13.5,
         h: 2.6,
         turn: 0.4,
         clear: 4,
       },
-      { model: `${UTIL}/Petromax_Lamp`, at: 0.62, z: -13, h: 1.1 },
+      // ON THE ROAD SIDE OF THE WALL. At z -13 it was behind a wall twice
+      // its height and nobody ever saw it, lit or unlit — a lamp that is
+      // hung where the road can see it is the whole of what a lamp on a
+      // compound wall is for.
+      { model: `${UTIL}/Petromax_Lamp`, at: 0.62, z: -9, h: 1.1 },
     ],
     herd: [],
     folk: ["Headman"],
@@ -921,7 +1003,16 @@ export const LESSONS: readonly Lesson[] = [
     mix: [0.2, 0.22, 0.58],
     depth: [9, 24],
     props: [
-      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.72, z: -16, h: 26 },
+      // BEHIND THE MARKET, RISING OVER ITS ROOF. At z -16 the trunk stood
+      // inside the building: the market's centre is at -21.5 and it is
+      // fourteen units deep as drawn, so everything from -28 to -15 along
+      // its frontage is under its roof, and 0.72 of the lesson is well
+      // inside the frontage on every band. The palmyra was coming up
+      // through the stalls. At -31 it stands behind the back wall with its
+      // crown over the tiles, which is where the tallest tree in a market
+      // town is seen from the road anyway — and it is still on the ground,
+      // which stops at -38.
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.72, z: -31, h: 26 },
       // BAMBOO GROWS. At 7 it was a shrub — waist-high on the headman, which
       // is a hedge, not a grove. A clump of Kerala bamboo runs forty feet and
       // arches over whatever is beneath it, and the reason the brief frames
@@ -1050,9 +1141,32 @@ export const LESSONS: readonly Lesson[] = [
         // milestone line. Deepening a building without moving its centre
         // walks the shop fronts out onto the road, which is the mistake this
         // placement already made once.
-        z: -18,
+        //
+        // -21.5, NOT -18: A FORECOURT A WELL CAN STAND IN. With the front
+        // face at -11 there were under four units between the milestone
+        // line and the shop fronts, and the well written for "between the
+        // bamboo and the market" was standing at -12 — inside the stalls,
+        // on every band, invisible. Seven units of trodden ground is a
+        // village street with a well and a cart on it, which is what the
+        // yard painter has been painting there all along. The back wall
+        // moves to about -28, well inside the ground's edge at -38.
+        z: -21.5,
         h: 17.5,
-        clear: 40,
+        // A FOOTPRINT, NOT A DISC — see `box`. `clear` is now the margin of
+        // trading ground kept bare of planting round the building; the
+        // building's own extent comes from its measured proportions. Forty
+        // as a radius reached across the road and through both neighbouring
+        // lessons, and refused every villager the lesson names.
+        clear: 6,
+        // Measured off the file, like `run.aspect`: 4.27 wide and 1.02 deep
+        // to every unit of height. `span` at 0.82 trims the long road's row
+        // by five per cent — 52 units of frontage rather than 55, which is
+        // what ends it a hair short of the closing grove instead of two
+        // units inside it — and on the youngest band's 28-unit lesson it
+        // brings the row down to a line of low stalls rather than a
+        // building that runs from the middle of the estate to the middle
+        // of the grazing land.
+        box: { w: 4.27, d: 1.02, span: 0.82 },
       },
       // A COW LYING IN FRONT OF THE MARKET, by the bamboo. Cattle settle
       // exactly here in a Kerala market town — in the shade, on the bare
@@ -1102,10 +1216,12 @@ export const LESSONS: readonly Lesson[] = [
       // road. A well is not symmetrical — the winch, the post and the rope
       // are all on one side of it — and which side is showing is the
       // difference between a well and a ring of stones.
+      // IN THE FORECOURT, where it can be seen. See the market's z: at -12
+      // this was inside the building.
       {
         model: `${UTIL}/Village_Well`,
         at: 0.3,
-        z: -12,
+        z: -11.6,
         h: 3.6,
         turn: -Math.PI / 2,
         clear: 6,
@@ -1140,6 +1256,11 @@ export const LESSONS: readonly Lesson[] = [
     ],
     herd: [],
     folk: ["TeaStall", "Headman"],
+    // AT THE STALLS. The forecourt runs from the milestone line at about
+    // -7.5 to the shop fronts at about -14.6, and a person needs a couple
+    // of units from either. Fourteen to twenty-four — the default, a farmer
+    // in her plot — is the inside of the market.
+    folkDepth: [8.5, 11.2],
     corridor: true,
     // The strongest in the chapter.
     trace: { count: 4, span: [0.1, 0.94] },
@@ -1181,6 +1302,17 @@ export const LESSONS: readonly Lesson[] = [
         run: { count: 4, aspect: 2.61, gapAt: 1 },
         skirt: true,
       },
+      // WHAT FELL OFF IT. A wall that is "the remains of something" has
+      // to have remains: two laterite blocks lying at the foot of the
+      // first panel, on the road side, where a course that came down would
+      // land. It is the one detail that says the gaps in this wall are
+      // age rather than a builder who stopped — the same panels stand
+      // whole round the estate two lessons back. At the first panel rather
+      // than the last, because the run is clamped to the lesson and its
+      // last panel is in a different place on every band; its first is
+      // where it is written.
+      { model: "village-stone/Laterite_Rock", at: 0.185, z: -13.1, h: 0.55 },
+      { model: "village-stone/Laterite_Rock", at: 0.21, z: -13.3, h: 0.4 },
       {
         model: "village-stone/Granite_Boulder",
         at: 0.6,
@@ -1227,6 +1359,33 @@ export const LESSONS: readonly Lesson[] = [
         h: 1.5,
         clear: 2,
       },
+      // AND SOMETHING TIED TO IT. A tether post with nothing at it is a
+      // stick in a field; the reason the post is out here is that a cow
+      // is walked to it in the morning and left on a rope's length of
+      // grass all day, which is how cattle are actually kept on a Kerala
+      // pasture — the loose herd is the exception, this is the rule. So
+      // one stands at the post, broadside to the road so its whole length
+      // reads, a rope's length along from it.
+      //
+      // A prop, not livestock, for the same reason as the cow outside the
+      // market: the herd code would give it a grazing loop and walk it
+      // off, and a tethered animal is one that stays. At the herd's own
+      // 4.5 rather than the market cow's 5.2, because it is met beside the
+      // herd and has to be the same animal.
+      //
+      // `at` is a fraction, so the rope is a unit and a quarter long on
+      // the youngest band and two and a half on the oldest. Both read as
+      // tethered; what would not is the cow standing ON the post, and its
+      // own clearance keeps the herd off it.
+      {
+        model: "village-folk/Cow",
+        at: 0.4,
+        z: -13.2,
+        h: 4.5,
+        turn: 1.45,
+        lift: 0,
+        clear: 3,
+      },
     ],
     herd: ["Cow", "Buffalo"],
     folk: [],
@@ -1251,6 +1410,18 @@ export const LESSONS: readonly Lesson[] = [
       { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.34, z: -17, h: 26 },
       { model: "village-stone/Mossy_Stone", at: 0.45, z: -8, h: 0.9 },
       { model: "village-stone/Laterite_Rock", at: 0.8, z: -9.5, h: 0.7 },
+      // A PATH OFF THE ROAD, GOING SOMEWHERE. The chapter ends "out the
+      // other side", and a stretch of open meadow with nothing leading
+      // anywhere ends nowhere. Stepping stones going back off the verge —
+      // the same line the orchard was entered by in Lesson 3, laid in the
+      // same direction — say there is more land past this and somebody
+      // walks to it. It is the smallest possible promise of Chapter 2,
+      // made of stones the scatter has already loaded.
+      { model: "village-stone/Stepping_Stone", at: 0.62, z: -8.2, h: 0.24 },
+      { model: "village-stone/Stepping_Stone", at: 0.63, z: -10.7, h: 0.24 },
+      { model: "village-stone/Stepping_Stone", at: 0.64, z: -13.2, h: 0.24 },
+      { model: "village-stone/Stepping_Stone", at: 0.65, z: -15.7, h: 0.24 },
+      { model: "village-stone/Stepping_Stone", at: 0.66, z: -18.2, h: 0.24 },
     ],
     herd: ["Buffalo"],
     folk: [],
@@ -1349,6 +1520,62 @@ export function densityAt(
   return prev.density + (lesson.density - prev.density) * mix;
 }
 
+/** What `placements` hands out: the table entry, resolved to the road. */
+export type Placement = Placed & {
+  readonly x: number;
+  /**
+   * For a `box` prop, how wide and how deep it is DRAWN — after the depth
+   * falloff and after any `span` fit. The world uses these where it has to
+   * know a building's extent before the model has loaded: the bare ground
+   * in front of it is painted before it stands.
+   */
+  readonly width?: number;
+  readonly depth?: number;
+};
+
+/**
+ * A BUILDING FITTED TO ITS LESSON. See `Placed.box`.
+ *
+ * Returns the entry as written when it already fits, so on the long bands
+ * this is the identity and the numbers in the table are the numbers on the
+ * road. When the drawn frontage is more than `span` of the segment, the
+ * height is scaled down until it is exactly that, the clearance scales with
+ * it (it is a margin round a smaller thing), and the centre comes forward
+ * by half the depth it lost so the front face does not move.
+ *
+ * The falloff is evaluated at the AUTHORED z and not re-derived for the
+ * moved centre. It changes by under two per cent over the few units the
+ * centre moves, and chasing it would make the fitted height depend on
+ * itself.
+ */
+function fitted(
+  p: Placed,
+  len: number,
+  persp: (z: number) => number,
+): Placed & { readonly width?: number; readonly depth?: number } {
+  if (p.box == null) {
+    return p;
+  }
+  const s = persp(p.z);
+  const width = p.box.w * p.h * s;
+  const depth = p.box.d * p.h * s;
+  const limit = p.box.span == null ? Infinity : p.box.span * len;
+  if (width <= limit) {
+    return { ...p, width, depth };
+  }
+  const k = limit / width;
+  const h = p.h * k;
+  return {
+    ...p,
+    h,
+    clear: p.clear == null ? undefined : p.clear * k,
+    // The front face is at z + depth / 2; keep it there.
+    z: p.z + (depth - depth * k) / 2,
+    width: limit,
+    depth: depth * k,
+  };
+}
+
 /**
  * Everything that stands in a fixed place, in world coordinates.
  *
@@ -1365,12 +1592,13 @@ export function placements(
    * test wants and what a caller with no camera has.
    */
   persp: (z: number) => number = () => 1,
-): readonly (Placed & { readonly x: number })[] {
-  const out: (Placed & { x: number })[] = [];
+): readonly Placement[] {
+  const out: Placement[] = [];
   for (const l of ACTIVE) {
     const from = bounds[l.n - 1]!;
     const len = segmentLen(l.n, bounds);
-    for (const p of l.props) {
+    for (const raw of l.props) {
+      const p = fitted(raw, len, persp);
       const x0 = from + p.at * len;
       if (p.run == null) {
         out.push({ ...p, x: x0 });
@@ -1387,33 +1615,79 @@ export function placements(
       // So the run stops at the stone. The youngest get a shorter boundary
       // than the oldest, which is correct: it is a shorter lesson, and a
       // wall that fits the field it encloses is the point of it.
-      const end = from + len;
+      //
+      // AND SHORT OF THE STONE BY `MILESTONE_CLEAR`, at both ends. The
+      // clamp used to stop a panel's trailing edge exactly at the stone,
+      // which on the shortest band put the orchard fence's last panel a
+      // third of a unit behind Milestone 3 and its first two units past
+      // Milestone 2 — a slab read against a panel of the same height half a
+      // unit behind it. The rule the world applies to every tree applies
+      // to every panel.
       const panel = p.run.aspect * p.h * persp(p.z);
+      const first = from + MILESTONE_CLEAR + panel / 2;
+      const last = from + len - MILESTONE_CLEAR - panel / 2;
       // AND THE LEADING EDGE STARTS INSIDE. Lesson 6's boundary is written
       // at the very top of its segment, so its first panel reached back
       // across the stone into Lesson 5 — the same half-panel error at the
       // other end of the run. The run is nudged forward rather than having
       // its first panel dropped: a boundary missing its first section is a
       // second gateway, and the run already has the one it means to have.
-      const start = Math.max(x0, from + panel / 2);
-      for (let i = 0; i < p.run.count; i++) {
-        const x = start + i * panel;
-        // THE TRAILING EDGE STOPS, NOT THE CENTRE.
-        //
-        // Tested on `x` alone, the last panel of a run straddled the stone:
-        // Lesson 2's wall ran to 46.7 with the lesson ending at 44.4, and
-        // Lesson 3's bamboo fence began at 46.1 — a laterite wall and a
-        // bamboo fence occupying the same few units of road, at two
-        // different depths, which reads as two boundaries round one field
-        // rather than as the edge of two. Half a panel is the whole error
-        // and the milestone is exactly where it is most visible.
-        if (x + panel / 2 > end) {
-          break;
-        }
-        if (i === p.run.gapAt) {
+      let start = Math.max(x0, first);
+      // How many panels the lesson has room for from here.
+      let fits = Math.min(
+        p.run.count,
+        Math.floor((last - start) / panel + 1e-9) + 1,
+      );
+      // THREE PANELS OR NOTHING, AND SOONER THAN NOTHING, EARLIER.
+      //
+      // The file's own rule: scattered posts are litter and a boundary is
+      // continuous or it is not one. The homestead's wall is written at
+      // 0.62 of its lesson, which on the youngest band leaves room for two
+      // panels before the stone — a wall that is two panels long is a wall
+      // somebody is halfway through building. Rather than drop it, the run
+      // slides back towards the start of the lesson until four slots fit —
+      // three panels and the gate — or three if the lesson has no room for
+      // four; the wall ends up in front of the house instead of beside it,
+      // which is where a compound wall goes anyway.
+      if (fits < 4) {
+        start = Math.max(first, last - 3 * panel);
+        fits = Math.min(
+          p.run.count,
+          Math.floor((last - start) / panel + 1e-9) + 1,
+        );
+      }
+      if (fits < 3) {
+        continue; // a lesson shorter than three panels: no such lesson
+      }
+      // THE GATE STAYS INSIDE THE RUN. `gapAt` is written for the full
+      // count, and on the short bands the clamp cut the run off before it
+      // got there: the orchard's fence had its gate at panel 6 of 16 and
+      // room for six panels, so the youngest band's orchard was fenced with
+      // no way in, and the estate's the same. The gap moves to the same
+      // PROPORTION of whatever survives, and never to an end — a gap at the
+      // end is just a shorter run.
+      //
+      // AND A RUN OF THREE HAS NO GATE AT ALL. Three slots with the middle
+      // one missing is two panels with daylight between them, which is
+      // precisely the half-built look the run exists to avoid; three
+      // panels end to end are a short stretch of wall with open ground
+      // past both ends, which is a boundary a child can see round. The
+      // gate only earns its place once there are three panels to be a
+      // gate in.
+      const gap =
+        fits === p.run.count
+          ? p.run.gapAt
+          : fits < 4
+            ? -1
+            : Math.min(
+                fits - 2,
+                Math.max(1, Math.round((p.run.gapAt / p.run.count) * fits)),
+              );
+      for (let i = 0; i < fits; i++) {
+        if (i === gap) {
           continue; // the way in
         }
-        out.push({ ...p, run: undefined, x });
+        out.push({ ...p, run: undefined, x: start + i * panel });
       }
     }
   }

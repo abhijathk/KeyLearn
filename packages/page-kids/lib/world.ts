@@ -20,6 +20,7 @@ import {
   hashRange,
   isChild,
   lessonAt,
+  MILESTONE_CLEAR,
   placements,
   SEGMENT_COUNT,
   setChapterLessons,
@@ -6476,18 +6477,26 @@ export function createKidsWorld(
               rx: 13,
               rz: 7.5,
             })),
-            ...placements(CHAPTER)
+            // WITH THE DEPTH FALLOFF, the same one the build stands them
+            // with: a building fitted to its lesson (see `Placed.box`)
+            // is fitted from its drawn width, and asked without the
+            // camera the table answers for the nominal one.
+            ...placements(CHAPTER, perspective)
               .filter((p) => /House/i.test(p.model))
               .map((p) => ({ x: p.x, z: p.z + 9, rx: 13, rz: 7.5 })),
-            ...placements(CHAPTER)
+            ...placements(CHAPTER, perspective)
               .filter((p) => /Market/i.test(p.model))
               .map((p) => ({
                 x: p.x,
                 // Between the stalls and the road, not centred on the
                 // building: what is trodden is where people stand to buy.
-                z: p.z + 7,
-                rx: (p.clear ?? 24) * 1.1,
-                rz: 11,
+                // From the front face forward, and as wide as the row plus
+                // the margin it keeps — both derived from the fitted
+                // placement, so the bare ground is the size of the
+                // building that actually stands on it.
+                z: p.z + (p.depth ?? 14) / 2 + 2,
+                rx: (p.width ?? 48) / 2 + (p.clear ?? 6),
+                rz: 6,
               })),
           ];
     const yardAt = (x: number, z: number): number => {
@@ -9395,7 +9404,9 @@ export function createKidsWorld(
    */
   const strideOf = (height: number) => height * 0.86;
 
-  const MILESTONE_CLEAR = 3.2;
+  // `MILESTONE_CLEAR` comes from the chapter, because the runs are laid out
+  // there and keep the same distance from a stone that everything rolled
+  // here does.
   const MILESTONE_CLEAR_DEPTH = -15;
 
   /**
@@ -9436,7 +9447,24 @@ export function createKidsWorld(
   /** The smith at his forge. Sits from eight in the morning until nine. */
   let smith: DinoRig | null = null;
 
-  const blockers: { x: number; z: number; r: number }[] = [];
+  /**
+   * A DISC, OR A BOX WITH A MARGIN.
+   *
+   * `r` alone is a disc — right for a tree, a well, a cow. A building is
+   * not a disc: the market is fifty units wide and twelve deep, and the
+   * circle that covers it is forty units in radius and reaches across the
+   * road, so for the whole length of the market nothing could stand on
+   * the verge, in the forecourt, or in the two lessons either side. Given
+   * `hw` and `hd` — half the measured width and depth — a blocker is that
+   * box, and `r` is the margin kept clear round it.
+   */
+  const blockers: {
+    x: number;
+    z: number;
+    r: number;
+    hw?: number;
+    hd?: number;
+  }[] = [];
 
   /**
    * THE BOUNDARIES, PANEL BY PANEL.
@@ -9545,7 +9573,11 @@ export function createKidsWorld(
   /** Is this spot clear of everything built? */
   const isClear = (x: number, z: number, need = 1.5): boolean => {
     for (const b of blockers) {
-      if (Math.hypot(x - b.x, z - b.z) < b.r + need) return false;
+      // Distance to the box's edge, which for a disc (no box) is the
+      // distance to its centre — the same test it always was.
+      const dx = Math.max(0, Math.abs(x - b.x) - (b.hw ?? 0));
+      const dz = Math.max(0, Math.abs(z - b.z) - (b.hd ?? 0));
+      if (Math.hypot(dx, dz) < b.r + need) return false;
     }
     return true;
   };
@@ -9563,12 +9595,25 @@ export function createKidsWorld(
     x: number,
     z: number,
     need = 1.5,
+    /**
+     * A further test each candidate has to pass — "not in front of a
+     * stone", for the herds and the villagers. It is part of the SEARCH
+     * rather than a check on the answer, and that is the whole fix: the
+     * search shunts a refused spot along the road in steps of two and a
+     * half, and on the youngest band's 22-unit lessons the nearest clear
+     * ground was, more often than not, the ground in front of a milestone.
+     * Checked afterwards, that answer was thrown away and the villager with
+     * it — eight of the nine people this chapter names were being refused
+     * "for a milestone" on the shortest band, when a spot two steps further
+     * on was free.
+     */
+    ok: (tx: number) => boolean = () => true,
   ): { x: number; z: number } | null => {
-    if (isClear(x, z, need)) return { x, z };
+    if (isClear(x, z, need) && ok(x)) return { x, z };
     for (let step = 1; step <= 12; step++) {
       for (const dir of [1, -1]) {
         const tx = x + dir * step * 2.5;
-        if (isClear(tx, z, need)) return { x: tx, z };
+        if (isClear(tx, z, need) && ok(tx)) return { x: tx, z };
       }
     }
     return null;
@@ -14319,6 +14364,8 @@ export function createKidsWorld(
       // the whole reason the positions are authored rather than rolled: an
       // animal can only route around a thing that is in the same place every
       // time it looks.
+      /** Ground round a building claimed only once its people stand on it. */
+      const forecourts: (typeof blockers)[number][] = [];
       if (CHAPTER != null) {
         // NEAREST LESSON FIRST. The props are the visible half of a lesson —
         // the well, the walls, the houses — so the ones the child opens
@@ -14333,7 +14380,12 @@ export function createKidsWorld(
         );
         for (const p of queue) {
           if (lessonAt(p.x, CHAPTER).n === 5) {
-            continue; // the village centre, already built
+            // The village centre is built above from `heart`; the table
+            // places nothing here and says why. Kept as a guard rather
+            // than removed, because a prop authored into Lesson 5 by
+            // mistake would otherwise stand in the middle of a village
+            // arranged without it.
+            continue;
           }
           const w = await stand(
             p.model,
@@ -14346,7 +14398,31 @@ export function createKidsWorld(
           if (w != null) {
             // A structure, so it stays: see `builtGroup`.
             builtGroup.add(w);
-            if ((p.clear ?? 0) > 0) {
+            if (p.box != null) {
+              // A BUILDING IS BLOCKED AS ITS FOOTPRINT — see `Placed.box`
+              // and the blocker type. Measured off the standing model
+              // rather than taken from the table, so it is right whatever
+              // the fit did to the height.
+              //
+              // IN TWO PARTS, AT TWO TIMES. The footprint itself, plus a
+              // unit so nothing grows against the wall, is claimed now:
+              // nobody stands inside a building. The MARGIN round it —
+              // the trading ground the table asks to keep bare — is
+              // claimed after the villagers have been placed, because
+              // that ground is exactly where a market's people stand.
+              // Claimed first, it refused the very people it was cleared
+              // for; the planting comes later still and is refused by it
+              // as intended.
+              const b = measureBox(w);
+              const hw = (b.max.x - b.min.x) / 2;
+              const hd = (b.max.z - b.min.z) / 2;
+              const cx = (b.min.x + b.max.x) / 2;
+              const cz = (b.min.z + b.max.z) / 2;
+              blockers.push({ x: cx, z: cz, r: 1, hw, hd });
+              if ((p.clear ?? 0) > 0) {
+                forecourts.push({ x: cx, z: cz, r: p.clear!, hw, hd });
+              }
+            } else if ((p.clear ?? 0) > 0) {
               blockers.push({ x: p.x, z: p.z, r: p.clear! });
             }
             // MEASURED, NOT ASSUMED. The run's nominal spacing is the number
@@ -14464,19 +14540,58 @@ export function createKidsWorld(
             }
             // A buffalo needs a paddock's worth to itself; a cow only needs
             // not to be standing in a tree.
-            const room = model === "Buffalo" ? 11 : 3.5;
-            const spot = clearSpot(x, z, room);
-            if (model == null || spot == null) {
-              continue;
-            }
+            //
+            // A PADDOCK IS A SHARE OF THE FIELD, and the field is the
+            // lesson. Eleven units is a paddock on a 64-unit lesson; on the
+            // youngest band's 21.6-unit one it is half the field, and with
+            // the cows needing to stand clear of it the buffalo was the
+            // only animal a lesson could hold — six head on a road that
+            // asks for twenty-odd, and every "herd" a single beast. A third
+            // of the lesson, capped at the paddock, is still two and a half
+            // body lengths of clear ground round the one animal here with
+            // a temper.
+            const paddock = Math.min(11, len / 3);
+            let room = model === "Buffalo" ? paddock : 3.5;
             // NOT IN FRONT OF THE STONE. A buffalo stands six units tall and
             // three across, which is more than enough to cover a milestone
             // completely — and unlike a tree it walks, so a marker that was
             // readable when the world was built stops being readable the
             // moment the animal drifts. Given its own body's width as the
-            // margin, and dropped rather than shuffled: every lesson has
-            // more field than it has animals.
-            if (atMilestone(spot.x, model === "Buffalo" ? 4 : 2.5)) {
+            // margin, and searched for rather than checked afterwards: see
+            // `clearSpot`.
+            //
+            // AND ONLY IN FRONT OF IT. The planting has always exempted
+            // anything behind `MILESTONE_CLEAR_DEPTH`: the camera looks
+            // down at eleven degrees, so a thing fifteen units behind the
+            // stone is drawn three units up the screen — above the top of
+            // a slab two and a bit tall — and cannot cover it however big
+            // it is. The herds and the villagers were not given that
+            // exemption, and they stand between thirteen and twenty-five
+            // units back: on the youngest band a stone's margin on both
+            // sides took half of every 22-unit lesson out of play for
+            // animals standing too far back to matter.
+            const offStone = (m: string) => (tx: number) =>
+              z <= MILESTONE_CLEAR_DEPTH ||
+              !atMilestone(tx, m === "Buffalo" ? 4 : 2.5);
+            let spot =
+              model == null ? null : clearSpot(x, z, room, offStone(model));
+            // A BUFFALO WITH NO PADDOCK IS A COW, NOT A GAP. The second
+            // buffalo of a lesson already becomes a cow; the first one
+            // could be refused for want of a paddock and take the field's
+            // whole draw with it — four of five head in the grazing land
+            // refused, because each draw was a buffalo and none of them
+            // could find a paddock's worth among the wall fragments. The
+            // field is meant to have animals in it.
+            if (spot == null && model === "Buffalo") {
+              model = "Cow";
+              room = 3.5;
+              spot = clearSpot(x, z, room, offStone(model));
+            }
+            if (model == null || spot == null) {
+              // SAID OUT LOUD. A refused animal is a lesson missing the
+              // animal it was written around, and until this line the only
+              // way to know was to count the herd by eye.
+              console.info(`[chapter] no room for a ${model} in lesson ${l.n}`);
               continue;
             }
             // A CALF IS A YOUNG COW, NOT A TOY ONE. 1.6 against the cow's
@@ -14509,11 +14624,7 @@ export function createKidsWorld(
             // every animal in every lesson at once.
             const beast = wilds[wilds.length - 1]?.wrap;
             if (beast != null) builtGroup.add(beast);
-            blockers.push({
-              x: spot.x,
-              z: spot.z,
-              r: model === "Buffalo" ? 11 : 3.5,
-            });
+            blockers.push({ x: spot.x, z: spot.z, r: room });
             grazing++;
             // A CALF COMES WITH A COW, AND ONLY WITH A COW.
             //
@@ -14595,9 +14706,25 @@ export function createKidsWorld(
             // which is a different story and a worse one. The fences and
             // walls sit around z = -8 to -14, so this starts at the fence
             // line and goes back from there into the plot.
-            const z = -hashRange(x, i, 51, 14, 24);
-            const spot = clearSpot(x, z, 2.2);
-            if (spot == null || atMilestone(spot.x, 2)) {
+            // ...unless the lesson says where its people stand — the
+            // market's are at the stalls, not in a plot behind them. See
+            // `Lesson.folkDepth`.
+            const [near, far] = l.folkDepth ?? [14, 24];
+            const z = -hashRange(x, i, 51, near, far);
+            // Off the stones as part of the search — see `clearSpot` for
+            // what checking it afterwards did to the shortest band — and
+            // only when near enough to the road to stand in front of one;
+            // see the herd for the depth rule.
+            const spot = clearSpot(
+              x,
+              z,
+              2.2,
+              (tx) => z <= MILESTONE_CLEAR_DEPTH || !atMilestone(tx, 2),
+            );
+            if (spot == null) {
+              // See the herd: a villager the lesson names and the road
+              // does not show is worth a line in the log.
+              console.info(`[chapter] no room for ${who} in lesson ${l.n}`);
               continue;
             }
             // NEVER A GUARD. `spawnCompanion` decides that on a coin
@@ -14648,6 +14775,10 @@ export function createKidsWorld(
           }
         }
         console.info(`[chapter] ${folk} villagers out (${activity})`);
+        // The trading ground, claimed now that the traders are on it. From
+        // here on it is bare: the planting and the night's traces both
+        // read `blockers` after this line.
+        blockers.push(...forecourts);
 
         // ── AND THE ONES USING THE ROAD ──────────────────────────────────
         //
@@ -15262,7 +15393,11 @@ export function createKidsWorld(
             const at = (b.x - from) / len;
             return (
               lessonAt(b.x, CHAPTER).n === l.n &&
-              b.r >= 2 &&
+              // A thing of some size — or a building, whose footprint
+              // blocker carries a margin of one but is the biggest thing
+              // on the road. Its forecourt margin is skipped: a trace
+              // should lie against the wall, not eight units out from it.
+              (b.hw != null ? b.r <= 1 : b.r >= 2) &&
               at >= lo &&
               at <= hi
             );
@@ -15273,8 +15408,13 @@ export function createKidsWorld(
             // belong to it, far enough to be plainly not where it sat.
             const a = hashRange(l.n, i, 42, 0, Math.PI * 2);
             const d = host.r + hashRange(l.n, i, 43, 0.6, 2.2);
-            const tx = host.x + Math.cos(a) * d;
-            const tz = Math.min(-6, host.z + Math.sin(a) * d);
+            // From the EDGE of a box, not its centre: measured from the
+            // centre of the market a trace was lying under its roof.
+            const tx = host.x + Math.cos(a) * ((host.hw ?? 0) + d);
+            const tz = Math.min(
+              -6,
+              host.z + Math.sin(a) * ((host.hd ?? 0) + d),
+            );
             const model = hashPick(LITTER, l.n, i, 44);
             const src = model == null ? null : await prop(model);
             if (src == null) {

@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { equal, isTrue } from "rich-assert";
 import {
   activityAt,
+  BAND_CHARS,
   BLEED,
   blendAt,
   chapterBounds,
@@ -19,6 +20,7 @@ import {
   isChild,
   lessonAt,
   LESSONS,
+  MILESTONE_CLEAR,
   milestoneX,
   placements,
   SEGMENT_COUNT,
@@ -327,7 +329,8 @@ test("a run stays inside the lesson it belongs to", () => {
       );
     }
     // And the panels of one run are laid end to end, never stacked.
-    for (const n of [2, 4, 5, 6, 8]) {
+    // Not 5: the village centre places nothing through the table.
+    for (const n of [2, 4, 6, 8]) {
       const xs = placements(b)
         .filter(
           (p) => lessonAt(p.x, b).n === n && p.model.includes("Laterite_Wall"),
@@ -790,4 +793,173 @@ test("every trace span is a real slice of its segment", () => {
     isTrue(lo >= 0 && hi <= 1 && lo < hi, `lesson ${l.n} has a bad span`);
     isTrue(l.trace.count > 0, `lesson ${l.n} traces nothing`);
   }
+});
+
+/**
+ * THE WORLD'S OWN DEPTH FALLOFF, for the tests that have to know how wide a
+ * thing is DRAWN. The village camera stands at z = 42 and the lane at 2;
+ * `perspective` in the world is this function with those numbers in it.
+ */
+const persp = (z: number) => 1 - 0.7 * (1 - 40 / Math.max(1, 42 - z));
+const BANDS = Object.values(BAND_CHARS).map((c) =>
+  chapterBounds(c.start, c.full),
+);
+
+/**
+ * The village centre is built from the world's own `heart` table, and the
+ * build skips Lesson 5's props for that reason. A table entry here is never
+ * built — but the ground painter used to read houses out of it and wear
+ * yards into the grass in front of buildings that did not exist.
+ */
+test("the village centre places nothing through the table", () => {
+  equal(LESSONS[4]!.props.length, 0);
+  equal(placements().filter((p) => lessonAt(p.x).n === 5).length, 0);
+});
+
+/**
+ * A run is written for the long road and clamped to the short one, and the
+ * clamp used to cut runs off before their gate: the youngest band's orchard
+ * was fenced with no way in. Now the gate moves with the run — and a run of
+ * three has none, because two panels with daylight between them is the
+ * half-built look the run exists to avoid.
+ */
+test("every boundary that survives the clamp keeps a gate, or is three panels end to end", () => {
+  for (const b of BANDS) {
+    for (const l of LESSONS) {
+      for (const p of l.props) {
+        if (p.run == null) continue;
+        const xs = placements(b, persp)
+          .filter((q) => q.model === p.model && lessonAt(q.x, b).n === l.n)
+          .map((q) => q.x)
+          .sort((x, y) => x - y);
+        isTrue(xs.length >= 3, `lesson ${l.n}: only ${xs.length} panels`);
+        const panel = p.run.aspect * p.h * persp(p.z);
+        const gaps = [];
+        for (let i = 1; i < xs.length; i++) {
+          const g = xs[i]! - xs[i - 1]!;
+          if (g > panel * 1.5) gaps.push(g);
+          else isTrue(Math.abs(g - panel) < 0.01, `lesson ${l.n}: ${g}`);
+        }
+        if (xs.length >= 3 && xs.length + gaps.length >= 4) {
+          equal(gaps.length, 1, `lesson ${l.n}: ${gaps.length} gates`);
+          isTrue(Math.abs(gaps[0]! - 2 * panel) < 0.01, "a gate is one panel");
+        } else {
+          equal(gaps.length, 0, `lesson ${l.n}: a gate in a run of three`);
+        }
+      }
+    }
+  }
+});
+
+/**
+ * The milestone carries the lesson number. A fence panel of the same height
+ * half a unit behind the slab is a slab nobody can read, and on the shortest
+ * band the clamp used to stop the orchard's last panel a third of a unit
+ * short of Milestone 3.
+ */
+test("no panel stands against a milestone", () => {
+  for (const b of BANDS) {
+    for (const p of placements(b, persp)) {
+      if (!/Wall|Fence/.test(p.model)) continue;
+      const l = lessonAt(p.x, b);
+      const half =
+        (2.61 *
+          p.h *
+          persp(p.z) *
+          (p.model.includes("Bamboo") ? 1.75 / 2.61 : 1)) /
+        2;
+      for (const m of [b[l.n - 1]!, b[l.n]!]) {
+        isTrue(
+          Math.abs(p.x - m) - half >= MILESTONE_CLEAR - 0.01,
+          `lesson ${l.n}: a panel ${(Math.abs(p.x - m) - half).toFixed(2)} from stone`,
+        );
+      }
+    }
+  }
+});
+
+/**
+ * A building is the same size on every band and a lesson is not, so the
+ * market authored on the 64-unit road straddled two milestones on the
+ * 28-unit one, with the estate's house inside its left end. `box.span`
+ * caps the frontage to a fraction of the lesson; on the long road it is
+ * the author's own frontage and nothing moves.
+ */
+test("the market is fitted to its lesson, and its front face stays put", () => {
+  const market = LESSONS[6]!.props.find((p) => p.model.includes("Market"))!;
+  isTrue(market.box != null, "the market has no box");
+  const fronts: number[] = [];
+  for (const b of BANDS) {
+    const p = placements(b, persp).find((q) => q.model.includes("Market"))!;
+    const len = segmentLen(7, b);
+    isTrue(p.width != null && p.depth != null, "no drawn size");
+    isTrue(
+      p.width! <= market.box!.span! * len + 1e-6,
+      `${p.width} wide in a ${len} lesson`,
+    );
+    isTrue(p.h <= market.h, "fitting never enlarges");
+    // The clearance is a margin round a smaller thing, so it shrinks too.
+    isTrue((p.clear ?? 0) <= market.clear!, "clearance grew");
+    fronts.push(p.z + p.depth! / 2);
+  }
+  // On the long road the cap is a trim of a few per cent, not a refit: the
+  // author's frontage, ending a hair short of the closing grove.
+  const long = placements(BANDS[2]!, persp).find((q) =>
+    q.model.includes("Market"),
+  )!;
+  isTrue(
+    long.h > market.h * 0.93,
+    `the long road's market was refitted from ${market.h} to ${long.h}`,
+  );
+  // And the shop fronts are on the same line whatever the band.
+  const spread = Math.max(...fronts) - Math.min(...fronts);
+  isTrue(
+    spread < 0.5,
+    `the front face moved ${spread.toFixed(2)} between bands`,
+  );
+});
+
+/**
+ * The market's own well was standing inside the market, on every band, and
+ * so was the palmyra: `stand` centres a model on its z and the building is
+ * fourteen units deep. Everything else in the lesson has to be clear of the
+ * footprint — in front of it, beside it, or behind it.
+ */
+test("nothing in the market lesson stands inside the market", () => {
+  for (const b of BANDS) {
+    const ps = placements(b, persp).filter((p) => lessonAt(p.x, b).n === 7);
+    const m = ps.find((p) => p.model.includes("Market"))!;
+    for (const p of ps) {
+      if (p === m || p.model.includes("Bamboo")) continue;
+      const inside =
+        Math.abs(p.x - m.x) < m.width! / 2 &&
+        Math.abs(p.z - m.z) < m.depth! / 2;
+      isTrue(
+        !inside,
+        `${p.model} at (${p.x.toFixed(1)}, ${p.z}) is inside the market`,
+      );
+    }
+    // And the people stand in the forecourt: between the milestone line
+    // and the shop fronts, with room to spare from both.
+    const [near, far] = LESSONS[6]!.folkDepth!;
+    const front = -(m.z + m.depth! / 2);
+    isTrue(near > 7.5, "the traders stand on the road");
+    isTrue(
+      far + 2 < front,
+      `the traders stand in the stalls (${far} vs ${front})`,
+    );
+  }
+});
+
+/** The estate's cart used to be parked across its own wall. */
+test("the estate's cart is inside the compound, not through the wall", () => {
+  const six = LESSONS[5]!;
+  const wall = six.props.find((p) => p.run != null)!;
+  const cart = six.props.find((p) => p.model.includes("Cart"))!;
+  const depth = 2.69 * cart.h * persp(cart.z);
+  isTrue(
+    Math.abs(cart.z - wall.z) > depth / 2 + 0.35,
+    "the cart straddles the wall line",
+  );
+  isTrue(cart.z < wall.z, "the cart is on the road side of the wall");
 });
