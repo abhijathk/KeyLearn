@@ -1122,9 +1122,14 @@ function castHeadScale(name: string): number {
     // language, he is a large child — the proportion is how the cast says
     // who is grown up, so the villagers take enough of it to belong and stop
     // well short of the children.
+    // The smith is in this list for the same reason as the rest of them: he
+    // arrived as a realistically proportioned adult, and stood on the same
+    // road as the children he was the one man still drawn at seven heads
+    // tall.
     case "Headman":
     case "TeaStall":
     case "FarmerWoman":
+    case "Blacksmith":
       // 1.34, not 1.22. The first figure was set by reasoning about the
       // cast — "adults should take less of this than the children" — and on
       // the road it was not enough: these bodies are a head taller than the
@@ -1158,11 +1163,32 @@ function scaleHead(root: THREE.Object3D, scale: number): void {
   if (scale === 1) {
     return;
   }
+  // MATCHED PAST THE RIG'S NAMESPACE.
+  //
+  // This tested `name === "Head"`, which is what the village rigs call it —
+  // and the blacksmith's is a Mixamo export, where every bone is prefixed:
+  // his is `mixamorig:Head`. So he was asked for the same head the other
+  // villagers get and silently kept a realistically proportioned one, which
+  // is the single thing that makes a character look imported from another
+  // game rather than drawn for this one.
+  //
+  // `(^|:)Head$` takes the bone whatever namespace it is under and still
+  // passes over `HeadTop_End` and `headfront`, which are a Mixamo tip bone
+  // and a face locator and are not the skull.
+  let found = false;
   root.traverse((o) => {
-    if ((o as THREE.Bone).isBone && o.name === "Head") {
+    if ((o as THREE.Bone).isBone && /(^|:)Head$/.test(o.name)) {
       o.scale.setScalar(scale);
+      found = true;
     }
   });
+  // A HEAD SCALE THAT MATCHES NOTHING SAYS SO. Asking for one and getting
+  // silence is how the smith shipped with the wrong proportions: the table
+  // said 1.42, the model came back untouched, and nothing anywhere
+  // disagreed. The next rig with its own naming will not be so quiet.
+  if (!found) {
+    console.warn("[cast] head scale asked for, no Head bone found");
+  }
 }
 
 /**
@@ -13942,7 +13968,12 @@ export function createKidsWorld(
           // where that business is, so the man and his lamp cannot drift on
           // to different premises.
           {
-            const seat = on(0.13 * wide, 0, 0.55);
+            // BACK AGAINST HIS OWN SHOPFRONT. 0.55 out from the front
+            // plane put him on the edge of the plinth with the road behind
+            // his heels, which reads as a man waiting for a bus rather than
+            // one sitting at his work. A quarter of a unit tucks him under
+            // his own eave, where the light from his lamp falls.
+            const seat = on(0.13 * wide, 0, 0.25);
             await spawnCompanion(
               "Blacksmith",
               seat[0],
