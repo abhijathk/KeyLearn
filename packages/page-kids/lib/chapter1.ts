@@ -857,9 +857,15 @@ export const LESSONS: readonly Lesson[] = [
       // it. The centre has to clear the bamboo by HALF THE BUILDING, not by
       // a comfortable-looking gap, and that is what the extra distance buys.
       //
-      // 14 rather than 13: a 60-unit frontage. The market is the largest
-      // thing on this road by a good margin now, which is the point of it.
-      { model: `${UTIL}/Village_Market`, at: 0.6, z: -12, h: 14, clear: 32 },
+      // 15.5, which at 4.27:1 is a 66-unit frontage. The largest thing on
+      // this road by a wide margin, and by now deliberately so: it is the
+      // social peak of the chapter and the only building a child meets that
+      // is bigger than a house. Its clearance and its bare yard are both
+      // derived from it, so they grew with it and nothing had to be chased.
+      //
+      // Nudged to 0.62 with the extra length, for the same reason as before:
+      // the centre must clear the bamboo by HALF the building.
+      { model: `${UTIL}/Village_Market`, at: 0.62, z: -12, h: 15.5, clear: 36 },
       // BETWEEN THE BAMBOO AND THE MARKET, which is where a village well
       // belongs on a trade road: the traders draw from it and so does
       // anyone walking in, so it sits on the way rather than behind the
