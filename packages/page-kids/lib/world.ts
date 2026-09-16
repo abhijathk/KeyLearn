@@ -13261,7 +13261,9 @@ export function createKidsWorld(
             const dir = hash3(i, 2, 92) < 0.5 ? 1 : -1;
             f.wrap.userData.roadWalker = {
               dir,
-              speed: hashRange(i, 3, 93, 1.15, 1.6),
+              // What a walk cycle covers in this world's units at the rate
+              // the clip is played: an ordinary pace, not a dawdle.
+              speed: hashRange(i, 3, 93, 3.1, 4.0),
               side,
             };
             f.wrap.userData.fixedFace = true;
@@ -13282,15 +13284,24 @@ export function createKidsWorld(
             f.mixer.stopAllAction();
             f.wrap.userData.idlePool = undefined;
             {
-              // SLOWLY, and the clip slowed to match the ground it covers.
-              // A walk cycle played at full rate against this speed is a
-              // villager skating; the two have to agree or neither reads.
-              // Started at a random point in the cycle so five of them are
-              // never in step.
-              f.walk.timeScale = 0.62;
-              f.walk.time = hashRange(i, 4, 94, 0, 1);
+              // THE CLIP PLAYS AT ITS OWN RATE; THE GROUND SPEED MATCHES IT.
+              //
+              // I had this backwards. Wanting a slow walk, I slowed the clip
+              // to 0.62 and got slow motion — a man wading. A walk cycle is
+              // authored at the speed a person walks, and the only honest
+              // way to make somebody move slowly is to give them a slower
+              // GAIT, not a slower film; playing it under rate makes every
+              // limb late, which reads as underwater rather than as unhurried.
+              //
+              // So it runs at its own rate, near enough, and the speed on
+              // the walker is what one cycle actually covers. A little
+              // variation between them, because five people walking in
+              // identical time is a parade.
               f.walk.reset();
-              f.walk.timeScale = 0.62;
+              f.walk.timeScale = hashRange(i, 5, 95, 0.92, 1.05);
+              // Started at a random point in the cycle, so they are never in
+              // step with one another.
+              f.walk.time = hashRange(i, 4, 94, 0, 1);
               f.walk.play();
             }
             roadWalkers.push(f);
@@ -15564,11 +15575,11 @@ export function createKidsWorld(
         } else if (cu.state === "approach") {
           const want = Math.atan2(dx, dz);
           cw.rotation.y += angTo(cw.rotation.y, want) * Math.min(1, dt * 3);
-          const sp = 1.7 * dt * motionScale;
+          const sp = 3.4 * dt * motionScale;
           cw.position.x += (dx / (gap || 1)) * sp;
           cw.position.z += (dz / (gap || 1)) * sp;
           cw.position.y = surfaceY(cw.position.x, cw.position.z);
-          play("walk", 0.9);
+          play("walk", 1);
           // Stops a good six units off, and gives up if they walk away.
           if (gap < 6.5 || cu.t > 14) {
             cu.state = "stare";
@@ -15585,7 +15596,7 @@ export function createKidsWorld(
           // Back to his own side of the road, and away up it.
           const away = Math.atan2(-1, -0.35);
           cw.rotation.y += angTo(cw.rotation.y, away) * Math.min(1, dt * 4);
-          const sp = 3.4 * dt * motionScale;
+          const sp = 6.2 * dt * motionScale;
           cw.position.x -= sp;
           cw.position.z = Math.max(cu.homeZ - 6, cw.position.z - sp * 0.35);
           cw.position.y = surfaceY(cw.position.x, cw.position.z);
