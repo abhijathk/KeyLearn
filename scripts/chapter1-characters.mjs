@@ -77,9 +77,9 @@ const OUT = join(REPO, "root/public/kids-assets/models/village-folk");
 const CAST = [
   { name: "Cow", ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000 },
   { name: "Cow_Calf", ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000 },
-  { name: "Headman", ratio: 0.4,     src: "Village assets/Man1_VillageHeadman/Village headman.glb", tex: 1024, drop: ["restpose"], budget: 1_200_000 },
-  { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000 },
-  { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000 },
+  { name: "Headman", ratio: 0.4,     src: "Village assets/Man1_VillageHeadman/Village headman.glb", tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
+  { name: "TeaStall", ratio: 0.4, error: 0.06,    src: "Village assets/Man2_TeaStallWorker/Teastall Worker.glb", tex: 1024, drop: ["restpose"], budget: 1_400_000, rename: { "01a0a1cb-7f7c-76e9-ae94-b34a0dac3262": "Idle_A" } },
+  { name: "FarmerWoman", ratio: 0.4, src: "Village assets/Woman3_FarmerWoman/Farmer womon.glb",     tex: 1024, drop: ["restpose"], budget: 1_200_000, rename: { "01a0a210-1735-7771-beef-0f70b0b68827": "Idle_A", "01a0a213-0991-749b-9ddb-7ba0e26ea0ee": "Idle_B" } },
   {
     name: "VillageBoy", ratio: 0.36,
     src: "Villagers/Modern_village_boy_11 years old.glb",
@@ -264,6 +264,21 @@ for (const c of CAST) {
       console.log(`  dropped ${c.drop.length} clip(s) -> ${kb(cur)} KB`);
     } else {
       copyFileSync(from, cur);
+    }
+
+    // 1b ── THE CLIPS THE GAME CANNOT SEE.
+    //
+    // Clip names are the only handle this world has on an animation: every
+    // gait and pose is found by matching the name, and `idlePool` looks for
+    // /idle/i. These arrive from Meshy with UUIDs for names, so each
+    // villager's only standing loop was invisible and the spawner fell
+    // through to whatever `calm()` could find — which is a WALK. That is why
+    // the farmers were striding on the spot in the middle of a field.
+    if (c.rename != null) {
+      const pairs = Object.entries(c.rename).map(([k, v]) => `${k}=${v}`);
+      run("glb-rename-clips.mjs", [cur, step("r.glb"), ...pairs]);
+      cur = step("r.glb");
+      console.log(`  named: ${Object.values(c.rename).join(", ")}`);
     }
 
     // 2 ── the maps that say nothing, and the emissive that lies

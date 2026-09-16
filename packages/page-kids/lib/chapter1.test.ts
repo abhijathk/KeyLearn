@@ -356,6 +356,71 @@ test("the shortest chapter still gets a boundary worth the name", () => {
  * The palmyra is the tree you navigate by, which is a job exactly one tree
  * can hold. Drawn from the canopy list it came up as often as the coconuts.
  */
+/**
+ * Every list is a flat draw, so its length IS the rarity of each plant in
+ * it. A layer with two species gives each of them half the trees in the
+ * lesson, which is how a papaya — a plant you see one or two of in a yard —
+ * became every second tree on the road.
+ */
+/**
+ * The name is read off a scoreboard chip beside the score and the streak, at
+ * the size those are. A long one wraps to three lines and pushes the chips
+ * beside it out of the row.
+ */
+test("a lesson name fits on a chip", () => {
+  for (const l of LESSONS) {
+    const words = l.name.trim().split(/\s+/);
+    isTrue(
+      words.length <= 2,
+      `lesson ${l.n}: "${l.name}" is ${words.length} words`,
+    );
+    isTrue(l.name.length <= 16, `lesson ${l.n}: "${l.name}" is long`);
+  }
+});
+
+test("every lesson is named, and named differently", () => {
+  equal(new Set(LESSONS.map((l) => l.name)).size, LESSONS.length);
+  for (const l of LESSONS) isTrue(l.name.trim().length > 0, `lesson ${l.n}`);
+});
+
+test("no single plant dominates a layer", () => {
+  for (const l of LESSONS) {
+    for (const [key, list] of [
+      ["canopy", l.canopy],
+      ["mid", l.mid],
+    ] as const) {
+      if (list.length === 0) continue;
+      const share = 1 / list.length;
+      isTrue(
+        share <= 0.5,
+        `lesson ${l.n} ${key}: ${list.length} species means ${(share * 100).toFixed(0)}% each`,
+      );
+    }
+  }
+});
+
+test("the papaya is an occasional tree, never a common one", () => {
+  for (const l of LESSONS) {
+    for (const list of [l.canopy, l.mid]) {
+      if (!list.some((m) => m.includes("Papaya"))) continue;
+      isTrue(
+        list.length >= 4,
+        `lesson ${l.n}: papaya in a list of ${list.length} is one tree in ${list.length}`,
+      );
+    }
+  }
+});
+
+test("no lesson is planted from a single species", () => {
+  for (const l of LESSONS) {
+    const all = [...l.canopy, ...l.mid, ...l.ground];
+    isTrue(
+      new Set(all).size >= 3,
+      `lesson ${l.n} draws from only ${new Set(all).size} plants`,
+    );
+  }
+});
+
 test("the palmyra is a landmark, not a species", () => {
   for (const l of LESSONS) {
     isTrue(

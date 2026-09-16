@@ -243,6 +243,16 @@ export type Placed = {
 
 export type Lesson = {
   readonly n: number;
+  /**
+   * TWO WORDS AT MOST.
+   *
+   * This is read off a scoreboard chip beside the score and the streak, at
+   * the size those are — not off a contents page. "The Mixed Orchard Belt"
+   * wraps to three lines there and pushes the chips beside it out of the
+   * row, and a six-year-old halfway through a word is not reading a subtitle
+   * anyway. The description of a lesson belongs in this file; what the child
+   * needs is the name of the place they are in.
+   */
   readonly name: string;
   /** Milestone numbers: lesson n runs from stone n-1 to stone n. */
   readonly from: number;
@@ -288,6 +298,17 @@ export type Lesson = {
   };
 };
 
+/**
+ * EVERY LIST IS A FLAT DRAW, so its length IS the rarity of each plant in it.
+ *
+ * A layer with two species gives each of them half the trees in the lesson,
+ * which is how a papaya — a plant you see one or two of in a yard — ended up
+ * as every second tree on the road. There is no weighting here on purpose: a
+ * weight table is a second thing to keep in step with the list, and the same
+ * effect comes free from writing down everything that actually grows in that
+ * layer. So the lists are long where the planting is mixed and short where a
+ * lesson is meant to be dominated by one thing.
+ */
 const PLANTS = "village-plants";
 const UTIL = "village-util";
 
@@ -304,7 +325,7 @@ const UTIL = "village-util";
 export const LESSONS: readonly Lesson[] = [
   {
     n: 1,
-    name: "The Open Village Edge",
+    name: "Village Edge",
     from: 0,
     to: 1,
     // Light tree density and wide sightlines: this is the chapter's opening
@@ -315,8 +336,13 @@ export const LESSONS: readonly Lesson[] = [
     // open stretches where there is sky for it to stand against rather than
     // in the orchard where it would be lost. One in the opening frame is a
     // landmark; a row of them would be a plantation.
-    canopy: [`${PLANTS}/Coconut_Palm`],
-    mid: [`${PLANTS}/Hibiscus_Chemparathi`],
+    // FEW TREES, BUT NOT ALL THE SAME TREE. "Keep tree density light" is
+    // about how many stand here, not about how alike they are — and a
+    // handful of identical palms reads as a copied object far more loudly
+    // than a crowd of them would.
+    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Tamarind_Tree`],
+    // "A few low shrubs" — two kinds of them, for the same reason.
+    mid: [`${PLANTS}/Hibiscus_Chemparathi`, `${PLANTS}/Drumstick_Muringa`],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.1,
     depth: [8, 24],
@@ -339,13 +365,22 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     n: 2,
-    name: "Entering Cultivated Land",
+    name: "Farmland",
     from: 1,
     to: 2,
     // The edge turning into productive family land: useful trees rather than
     // scenery, and the first laterite showing through.
-    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Papaya_Tree`],
-    mid: [`${PLANTS}/Banana_Plant`, `${PLANTS}/Drumstick_Muringa`],
+    canopy: [
+      `${PLANTS}/Coconut_Palm`,
+      `${PLANTS}/Mango_Tree`,
+      `${PLANTS}/Tamarind_Tree`,
+      `${PLANTS}/Papaya_Tree`,
+    ],
+    mid: [
+      `${PLANTS}/Banana_Plant`,
+      `${PLANTS}/Drumstick_Muringa`,
+      `${PLANTS}/Hibiscus_Chemparathi`,
+    ],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Taro_Chembu`],
     density: 1.9,
     depth: [7, 26],
@@ -386,7 +421,7 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     n: 3,
-    name: "The Mixed Orchard Belt",
+    name: "The Orchard",
     from: 2,
     to: 3,
     // The richest vegetation in the chapter, and the only segment where all
@@ -402,6 +437,7 @@ export const LESSONS: readonly Lesson[] = [
     mid: [
       `${PLANTS}/Banana_Plant`,
       `${PLANTS}/Drumstick_Muringa`,
+      `${PLANTS}/Hibiscus_Chemparathi`,
       `${PLANTS}/Papaya_Tree`,
     ],
     ground: [
@@ -456,7 +492,7 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     n: 4,
-    name: "The Old Homestead",
+    name: "The Homestead",
     from: 3,
     to: 4,
     // Fewer packed palms, more mature trees: the house has to emerge THROUGH
@@ -467,7 +503,11 @@ export const LESSONS: readonly Lesson[] = [
       `${PLANTS}/Jackfruit_Tree`,
       `${PLANTS}/Peepal_Arayal`,
     ],
-    mid: [`${PLANTS}/Hibiscus_Chemparathi`, `${PLANTS}/Banana_Plant`],
+    mid: [
+      `${PLANTS}/Hibiscus_Chemparathi`,
+      `${PLANTS}/Banana_Plant`,
+      `${PLANTS}/Drumstick_Muringa`,
+    ],
     ground: [`${PLANTS}/Taro_Chembu`, `${PLANTS}/Kerala_Fern`],
     density: 2.4,
     depth: [8, 28],
@@ -502,14 +542,22 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     n: 5,
-    name: "The Village Centre",
+    name: "Village Centre",
     from: 4,
     to: 5,
     // Rural and breathable, not a town: the planting stays heavy between the
     // buildings on purpose, because what stops a cluster of houses reading as
     // a street is the garden between them.
-    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Mango_Tree`],
-    mid: [`${PLANTS}/Banana_Plant`, `${PLANTS}/Hibiscus_Chemparathi`],
+    canopy: [
+      `${PLANTS}/Coconut_Palm`,
+      `${PLANTS}/Mango_Tree`,
+      `${PLANTS}/Jackfruit_Tree`,
+    ],
+    mid: [
+      `${PLANTS}/Banana_Plant`,
+      `${PLANTS}/Hibiscus_Chemparathi`,
+      `${PLANTS}/Drumstick_Muringa`,
+    ],
     ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Taro_Chembu`],
     density: 1.6,
     depth: [9, 26],
@@ -557,7 +605,7 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     n: 6,
-    name: "The Large Orchard Estate",
+    name: "The Estate",
     from: 5,
     to: 6,
     // Lesson 3 again, but prosperous. Same species; what says "wealthier
@@ -569,7 +617,12 @@ export const LESSONS: readonly Lesson[] = [
       `${PLANTS}/Jackfruit_Tree`,
       `${PLANTS}/Tamarind_Tree`,
     ],
-    mid: [`${PLANTS}/Banana_Plant`, `${PLANTS}/Papaya_Tree`],
+    mid: [
+      `${PLANTS}/Banana_Plant`,
+      `${PLANTS}/Drumstick_Muringa`,
+      `${PLANTS}/Hibiscus_Chemparathi`,
+      `${PLANTS}/Papaya_Tree`,
+    ],
     ground: [`${PLANTS}/Tapioca_Cassava`, `${PLANTS}/Kerala_Fern`],
     density: 2.9,
     depth: [7, 30],
@@ -608,7 +661,7 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     n: 7,
-    name: "The Market Road",
+    name: "The Market",
     from: 6,
     to: 7,
     // The social peak, framed by bamboo before and after.
@@ -621,8 +674,8 @@ export const LESSONS: readonly Lesson[] = [
     // one. What must NOT happen is a smeared market: a village with no market
     // reads as a small village, a village with a broken one reads as broken.
     canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Tamarind_Tree`],
-    mid: [`${PLANTS}/Banana_Plant`],
-    ground: [`${PLANTS}/Kerala_Grass_Tuft`],
+    mid: [`${PLANTS}/Banana_Plant`, `${PLANTS}/Hibiscus_Chemparathi`],
+    ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.4,
     depth: [9, 24],
     props: [
@@ -648,13 +701,17 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     n: 8,
-    name: "Into Grazing Land",
+    name: "Grazing Land",
     from: 7,
     to: 8,
     // Decompression. Mature trees over open grass — not empty, because this
     // is still land that belongs to a village economy, but the sightlines
     // come back after the market.
-    canopy: [`${PLANTS}/Mango_Tree`],
+    canopy: [
+      `${PLANTS}/Mango_Tree`,
+      `${PLANTS}/Tamarind_Tree`,
+      `${PLANTS}/Jackfruit_Tree`,
+    ],
     // "Small palms", which the arecanut is — slender and short beside the
     // palmyra, and the difference between the two reads as grazing land
     // rather than plantation.
@@ -703,9 +760,12 @@ export const LESSONS: readonly Lesson[] = [
     // THE HAYSTACK IS A GAP. It is named as the key landmark prop and there
     // is no haystack in any folder, so the space it wants is left clear at
     // 0.5 rather than filled with something that is not one.
-    canopy: [`${PLANTS}/Mango_Tree`],
-    mid: [`${PLANTS}/Hibiscus_Chemparathi`],
-    ground: [`${PLANTS}/Kerala_Grass_Tuft`],
+    canopy: [`${PLANTS}/Mango_Tree`, `${PLANTS}/Tamarind_Tree`],
+    // Grazing land is grass and scrub, but "a small number of strong
+    // elements" is about how MUCH grows here, not about it all being the
+    // same plant. Trampled pasture is patchy by nature.
+    mid: [`${PLANTS}/Hibiscus_Chemparathi`, `${PLANTS}/Drumstick_Muringa`],
+    ground: [`${PLANTS}/Kerala_Grass_Tuft`, `${PLANTS}/Kerala_Fern`],
     density: 1.0,
     depth: [11, 30],
     props: [
@@ -724,13 +784,13 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     n: 10,
-    name: "The Fern Meadow",
+    name: "Fern Meadow",
     from: 9,
     to: 10,
     // Closure, and a deliberate echo of Lesson 1: the same open language at a
     // calmer end-state, with the buffalo back as a bookend. Trees only at the
     // far edge so the space stays open.
-    canopy: [`${PLANTS}/Coconut_Palm`],
+    canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Mango_Tree`],
     mid: [],
     ground: [`${PLANTS}/Kerala_Fern`, `${PLANTS}/Kerala_Grass_Tuft`],
     density: 1.2,

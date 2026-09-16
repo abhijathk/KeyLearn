@@ -1101,6 +1101,27 @@ function castHeadScale(name: string): number {
     // small man.)
     case "Abee":
       return 1.26;
+    // ── THE VILLAGE, SO IT BELONGS TO THE SAME WORLD ──────────────────
+    //
+    // These are realistically proportioned adults — roughly seven heads
+    // tall, which is what a person actually is — and every character the
+    // child already knows is drawn top-heavy on purpose. Stood side by side
+    // on the same road the villagers did not read as stylised adults, they
+    // read as a DIFFERENT GAME's adults: correct anatomy is exactly what
+    // makes them look imported.
+    //
+    // Less than the children get, though, and that gap is the point. A grown
+    // man with a nine-year-old's head ratio is not an adult in this world's
+    // language, he is a large child — the proportion is how the cast says
+    // who is grown up, so the villagers take enough of it to belong and stop
+    // well short of the children.
+    case "Headman":
+    case "TeaStall":
+    case "FarmerWoman":
+      return 1.22;
+    // The eleven-year-old, who is a child and takes a child's share.
+    case "VillageBoy":
+      return 1.3;
     default:
       return 1;
   }
@@ -8616,6 +8637,16 @@ export function createKidsWorld(
    * placed from a hash of its own coordinates rather than from Math.random,
    * and this list is what the determinism buys.
    */
+  /**
+   * How much road either side of a milestone stays free of anything tall.
+   *
+   * Seven units, which is a little over a quarter of the shortest lesson and
+   * a tenth of the longest — enough that the stone is met in the open from
+   * both directions, and not so much that a lesson turns into a lawn with a
+   * hedge in the middle of it.
+   */
+  const MILESTONE_CLEAR = 7;
+
   const blockers: { x: number; z: number; r: number }[] = [];
 
   /**
@@ -12896,9 +12927,35 @@ export function createKidsWorld(
           const species = from[layer.key];
           const pick = hashPick(species, x, 2, 13);
           const step = 1 / Math.max(0.2, densityAt(x, CHAPTER));
+          const at = x;
           x += step * hashRange(x, 3, 14, 0.6, 1.5);
           if (pick == null) {
             continue; // this lesson has no such layer — a meadow has no canopy
+          }
+          // NOTHING TALL AT A MILESTONE.
+          //
+          // The stone is the one thing on this road the child has to be able
+          // to find — it carries the lesson number and it is how they know
+          // they have got somewhere — and a coconut palm planted in front of
+          // it hides it completely. The milestone's own planting is grass,
+          // ferns and taro by design; this keeps the chapter's canopy and
+          // middle layers out of the same ground, so what stands at a stone
+          // is only ever ankle-high.
+          //
+          // The ground layer is welcome there. Walking up to a bare stone in
+          // mown grass would read as a marker somebody installed rather than
+          // one that has stood there for years.
+          if (layer.clear > 0 || layer.key !== "ground") {
+            let tooNear = false;
+            for (const m of CHAPTER) {
+              if (Math.abs(at - m) < MILESTONE_CLEAR) {
+                tooNear = true;
+                break;
+              }
+            }
+            if (tooNear) {
+              continue;
+            }
           }
           // Behind the road only. The near verge is the child's side and
           // stays clear, which is the rule the village already follows.
