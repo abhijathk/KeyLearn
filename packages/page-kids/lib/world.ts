@@ -5609,7 +5609,7 @@ export function createKidsWorld(
       // wide dim halo — three zones, with most of the brightness inside the
       // first fifth of the radius. Faded evenly instead, thirty of them
       // along a temple wall read as a string of fairy lights.
-      tex = petromax ? glowTexture(inner, outer) : flameTexture(inner, outer);
+      tex = petromax ? mantleTexture() : flameTexture(inner, outer);
       lampTex.set(kind, tex);
     }
     const mat = new THREE.SpriteMaterial({
@@ -5717,6 +5717,49 @@ export function createKidsWorld(
       light,
       lightPeak: lit,
     });
+  }
+
+  /**
+   * A PETROMAX: a pressure lantern, which is a different thing from a flame.
+   *
+   * It was borrowing `glowTexture`, the same even fade the moon and the
+   * fireflies use, and reading as a warm ball. A petromax is not warm and is
+   * not a ball. It is a silk MANTLE glowing white-hot inside a glass globe —
+   * far brighter than any wick, near enough colourless at the centre, and
+   * with a hard edge where the glass ends rather than a fade into the dark.
+   * That hard edge is most of what identifies it across a field: an oil lamp
+   * dissolves at its rim and a pressure lantern does not.
+   *
+   * Three things, then, none of which the old texture had: a white core
+   * rather than an amber one, a visible GLOBE — a brighter ring at the glass
+   * with a step at its edge — and a short cool halo outside it, because a
+   * mantle throws a slightly blue light and the warm glow around an oil lamp
+   * would make this one look like a bigger candle.
+   */
+  function mantleTexture(): THREE.Texture {
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const g = c.getContext("2d")!;
+    const grad = g.createRadialGradient(32, 32, 0.5, 32, 32, 30);
+    // The mantle: white-hot, and small.
+    grad.addColorStop(0, "rgba(255,255,252,1)");
+    grad.addColorStop(0.12, "rgba(255,250,232,0.98)");
+    // The globe it sits in, still bright, then the glass edge — a step, not
+    // a fade. This is the one feature that says "lantern" and not "flame".
+    grad.addColorStop(0.3, "rgba(246,240,214,0.72)");
+    grad.addColorStop(0.34, "rgba(228,228,214,0.3)");
+    // And a short, faintly cool spill. A mantle's light is bluer than a
+    // wick's, which is what makes the two read as different lamps when they
+    // are side by side on the same road.
+    grad.addColorStop(0.6, "rgba(206,218,238,0.12)");
+    grad.addColorStop(1, "rgba(196,214,255,0)");
+    g.fillStyle = grad;
+    g.beginPath();
+    g.arc(32, 32, 30, 0, Math.PI * 2);
+    g.fill();
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
   }
 
   /**
@@ -8874,6 +8917,9 @@ export function createKidsWorld(
   let playerGhostly = false; // skeleton hero: floats and glides like a ghost
   // Every character root in the scene, so the dark can reach all of their eyes.
   const characterRoots = new Set<THREE.Object3D>();
+
+  /** Mixers for props that are alive — see `stand`. Driven by the tick. */
+  const propMixers: THREE.AnimationMixer[] = [];
 
   /**
    * WHAT STANDS IN THE WAY, so that what moves can go round it.
@@ -13095,6 +13141,15 @@ export function createKidsWorld(
                 ? `${ASSETS}/models/${name}.glb`
                 : `${ASSETS}/models/${V.dir}/${name}.glb`,
             );
+            // THE CLIPS ARE KEPT WITH THE SCENE. `prop` cached only the
+            // scene, and a glTF carries its animations on the FILE rather
+            // than on the scene graph — so every clip a prop had was thrown
+            // away at load. That was fine while props were architecture; the
+            // resting cow is an animal, and an animal that does not breathe
+            // is a statue of one.
+            if (g?.scene != null) {
+              g.scene.userData.clips = clipsFor(g);
+            }
             propCache.set(name, g?.scene ?? null);
           } catch {
             propCache.set(name, null);
@@ -13177,6 +13232,32 @@ export function createKidsWorld(
         // however far back the pair are placed.
         wrap.position.set(x, surfaceY(x, z) + lift * perspective(z), z);
         wrap.rotation.y = turn;
+        // ── A PROP THAT BREATHES ────────────────────────────────────────
+        //
+        // Architecture does not move and neither did anything `stand`
+        // placed. An animal is different: a cow lying outside a market with
+        // no motion at all is a model of a cow, and the eye finds a
+        // perfectly still thing among moving ones immediately.
+        //
+        // Its own Idle rather than Graze or Walk — those move the legs, and
+        // this one's legs are folded under it. Idle is the breathing, the
+        // ear and the tail, which is exactly what an animal at rest does and
+        // all that is wanted here. Slowed a little, because a resting
+        // animal's breathing is slower than a standing one's.
+        const clips = (src.userData.clips ?? []) as THREE.AnimationClip[];
+        const rest =
+          clips.find((c) => /^idle$/i.test(c.name)) ??
+          clips.find((c) => /idle/i.test(c.name));
+        if (isSkinned && rest != null) {
+          const mixer = new THREE.AnimationMixer(wrap);
+          const a = mixer.clipAction(rest);
+          a.timeScale = 0.62 + Math.random() * 0.18;
+          // Started anywhere in the loop, so two animals placed the same way
+          // are never breathing in time with each other.
+          a.time = Math.random() * (rest.duration || 1);
+          a.play();
+          propMixers.push(mixer);
+        }
         scene.add(wrap);
         characterRoots.add(wrap);
         applyEyeGlow(wrap, nightNow);
@@ -13258,29 +13339,52 @@ export function createKidsWorld(
           return;
         }
 
-        if (/^Market$/i.test(name)) {
-          // SOME STALLS HAVE SHUT, and a shut stall has no light in it.
+        if (/Market/i.test(name)) {
+          // ── A LAMP IN EVERY SHOP, AND EACH SHUTS AT ITS OWN HOUR ───────
           //
-          // At eight the market is winding down rather than closed: the
-          // petromax is still up over whoever is still trading, and the oil
-          // lamps at the ends of the counter go out one at a time as their
-          // stalls pack away. A market where every lamp burns until the
-          // village sleeps is a market nobody actually works in.
-          makeLamp(...on(0, 0.82, -0.4), {
-            kind: "petromax",
-            size: 3.2,
-            peak: 0.95,
-            lit: 6,
-          });
-          for (const sgn of [-1, 1]) {
-            if (Math.random() < 0.4) {
-              continue; // that end has packed up for the night
+          // A market row after dark is not one lit building. It is six
+          // separate businesses, each with its own lamp on its own counter,
+          // and they go out one at a time as their owners pack up — which is
+          // the whole reason an evening market is worth looking at. Lit
+          // evenly from outside it is a lit shed; lit from within, shop by
+          // shop, it is a row of people working.
+          //
+          // INSIDE, not on the front. The lamp sits on the counter a little
+          // way back from the shutters, so what reaches the road is the
+          // doorway full of light rather than the lamp itself — the same
+          // thing the temple does with its sanctum, and for the same reason:
+          // a visible light source reads as a lamp, spilled light reads as
+          // somewhere occupied.
+          //
+          // THE HOURS ARE THE ONES ASKED FOR. The tailor shuts at seven, the
+          // tea stall at eight, and everything is dark by nine — so a child
+          // playing at half past seven sees a row with one gap in it, at
+          // half past eight two, and after nine a closed market, which is
+          // exactly what the brief means by "market closing state".
+          const SHOPS = [
+            { at: -0.4, closes: 21, kind: "petromax" as const },
+            { at: -0.24, closes: 20, kind: "oil" as const },
+            { at: -0.08, closes: 21, kind: "petromax" as const },
+            { at: 0.08, closes: 21, kind: "oil" as const },
+            { at: 0.24, closes: 21, kind: "oil" as const },
+            { at: 0.4, closes: 19, kind: "oil" as const },
+          ];
+          const hourNow = new Date().getHours();
+          for (const shop of SHOPS) {
+            // Open between four in the morning and its own closing hour.
+            // Before four, the whole row is shut with the village.
+            if (hourNow >= shop.closes || hourNow < 4) {
+              continue;
             }
-            makeLamp(...on(sgn * wide * 0.36, 0.42, 0.25), { size: 1.3 });
+            makeLamp(
+              ...on(shop.at * wide, 0.46, -0.32),
+              shop.kind === "petromax"
+                ? { kind: "petromax", size: 2.4, peak: 0.92, lit: 4.2 }
+                : { size: 1.5, peak: 0.82, lit: 3.4 },
+            );
           }
           return;
         }
-
         if (/Althara/i.test(name)) {
           return; // a platform, not a dwelling: nothing to light
         }
@@ -18305,6 +18409,9 @@ export function createKidsWorld(
               .join(" "),
         );
       }
+    }
+    for (const m of propMixers) {
+      m.update(dt * motionScale);
     }
     for (const w of wilds) {
       w.mixer.update(dt * motionScale);

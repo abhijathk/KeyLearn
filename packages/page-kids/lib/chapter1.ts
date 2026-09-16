@@ -982,11 +982,14 @@ export const LESSONS: readonly Lesson[] = [
         // its whole length reads rather than its nose.
         at: 0.14,
         z: -9.5,
-        h: 4.5,
-        // 1.7, not 2.3. At 2.3 the body sat down in the grass with only its
-        // back showing, which is a boulder. A cow settled in the dust still
-        // stands a good half its shoulder height.
-        lift: -1.7,
+        h: 5.2,
+        // 1.1, not 1.7, and not the 2.3 before that. Each time it went down
+        // it read less as a resting animal and more as a buried one — a cow
+        // lying in the dust still carries its chest and its head a good way
+        // off the ground, and it is the HEAD clear of the grass that makes
+        // the difference between an animal at rest and a shape in the
+        // ground. Only the folded legs belong under the earth here.
+        lift: -1.1,
         turn: 1.45,
         clear: 3,
       },
@@ -995,7 +998,12 @@ export const LESSONS: readonly Lesson[] = [
       // anyone walking in, so it sits on the way rather than behind the
       // stalls. It also gives the stretch between the gate and the shops
       // something to be, rather than being the gap before the market.
-      { model: `${UTIL}/Village_Well`, at: 0.3, z: -12, h: 2.2, clear: 4 },
+      // 3.6, NOT 2.2. A village well is a waist-high parapet a grown woman
+      // draws from with a rope — against a headman standing 6.37 it was
+      // knee-high, which is a garden feature rather than the thing the whole
+      // stretch of road exists around. Its clearance grows with it, so
+      // nothing plants itself in the drawing space.
+      { model: `${UTIL}/Village_Well`, at: 0.3, z: -12, h: 3.6, clear: 6 },
       {
         model: `${UTIL}/Village_Cart`,
         at: 0.56,
