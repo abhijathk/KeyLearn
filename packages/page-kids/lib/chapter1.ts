@@ -760,7 +760,14 @@ export const LESSONS: readonly Lesson[] = [
     depth: [9, 24],
     props: [
       { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.72, z: -16, h: 26 },
-      { model: "nature/KeralaBambooGroves", at: 0.1, z: -11, h: 7, clear: 5 },
+      // BAMBOO GROWS. At 7 it was a shrub — waist-high on the headman, which
+      // is a hedge, not a grove. A clump of Kerala bamboo runs forty feet and
+      // arches over whatever is beneath it, and the reason the brief frames
+      // this lesson with it is that it makes a GATE of the market road: you
+      // pass through something to arrive. 18 is forty feet at the chapter's
+      // own scale, the same ruler the trees use, and taller than any of them
+      // bar the palmyra.
+      { model: "nature/KeralaBambooGroves", at: 0.1, z: -11, h: 18, clear: 5 },
       // PLACEHOLDER — see the note above. Swap the model here when the real
       // one is ready; nothing else in the lesson depends on it.
       //
@@ -781,7 +788,20 @@ export const LESSONS: readonly Lesson[] = [
       // collapser will not cross; the topology-blind one reaches 6,342 at
       // under one per cent error. Wrong tool for a character, right tool for
       // a building seen from across a field.
-      { model: `${UTIL}/Village_Market`, at: 0.4, z: -17, h: 6, clear: 13 },
+      // AT THE ROADSIDE, AND BIG. Set back at -17 and drawn 6 tall it was a
+      // shed in a field; a village market is the one building that is not
+      // set back, because trading happens off the road itself and a stall
+      // nobody can reach from it is not a stall.
+      //
+      // 11 matches the houses' ridge, which makes it a proper building
+      // rather than an outhouse, and at this model's 4.2:1 that is a
+      // forty-six unit frontage — a market ROW, which is what the file is
+      // called and what a Kerala market actually is: a line of stalls along
+      // the road, not a hall. Its width finally works FOR it.
+      //
+      // The clearance grows with it, so the planting keeps out of the
+      // trading ground instead of sprouting between the stalls.
+      { model: `${UTIL}/Village_Market`, at: 0.36, z: -12, h: 11, clear: 22 },
       { model: `${UTIL}/Village_Well`, at: 0.46, z: -12, h: 2.2, clear: 4 },
       {
         model: `${UTIL}/Village_Cart`,
@@ -792,7 +812,7 @@ export const LESSONS: readonly Lesson[] = [
         clear: 4,
       },
       { model: `${UTIL}/Petromax_Lamp`, at: 0.5, z: -10.5, h: 1.2 },
-      { model: "nature/KeralaBambooGroves", at: 0.88, z: -12, h: 7, clear: 5 },
+      { model: "nature/KeralaBambooGroves", at: 0.88, z: -12, h: 18, clear: 5 },
     ],
     herd: [],
     folk: ["TeaStall", "Headman"],
