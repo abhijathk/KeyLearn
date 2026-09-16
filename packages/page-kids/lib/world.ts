@@ -13046,6 +13046,28 @@ export function createKidsWorld(
           return null;
         }
         const wrap = fitToHeight(src.clone(true), h * perspective(z));
+        // MEASURE THE BOUNDING SPHERE, NEVER INHERIT IT.
+        //
+        // three.js culls a mesh against `geometry.boundingSphere`, and
+        // GLTFLoader supplies one built from the accessor's declared
+        // min/max — which on these models are NORMALISED shorts under
+        // KHR_mesh_quantization, so the sphere comes back tens of thousands
+        // of times too small. The renderer then decides a sixty-six unit
+        // market is off screen the moment the camera moves, and the building
+        // blinks out halfway through a lesson with the ground still there.
+        //
+        // This is the same trap that made the whole village invisible
+        // (`measureBox`) and the instanced plants fly (`plantInstanced`), in
+        // its third disguise: the cached BOX, the cached SPHERE and
+        // `applyMatrix4` all trust the same bad numbers. `computeBoundingSphere`
+        // reads the attribute through `getX/getY/getZ`, which apply the
+        // normalisation exactly once.
+        wrap.traverse((n) => {
+          const m = n as THREE.Mesh;
+          if (m.isMesh) {
+            m.geometry.computeBoundingSphere();
+          }
+        });
         // `lift` is in the same units as `h` and takes the same depth
         // falloff, so a tree standing on a platform stays standing on it
         // however far back the pair are placed.
