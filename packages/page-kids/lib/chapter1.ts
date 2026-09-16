@@ -1221,7 +1221,22 @@ export const LESSONS: readonly Lesson[] = [
         // brings the row down to a line of low stalls rather than a
         // building that runs from the middle of the estate to the middle
         // of the grazing land.
-        box: { w: 4.27, d: 1.02, span: 0.82 },
+        // 0.86 OF THE LESSON, UP FROM 0.82 — and `span` is the only lever
+        // that does anything here. The cap binds on EVERY band, the longest
+        // included: the drawn frontage is always `span * len`, so `h` above
+        // is a ceiling that is never reached and raising it would be
+        // trimmed straight back to the same number of units. A building
+        // asked to be bigger has to be allowed more of its lesson.
+        //
+        // Four per cent, and it is bounded at both ends rather than chosen
+        // for feel: the grove at 0.05 is on one side and Milestone 7 on the
+        // other, so at 0.56 the frontage now reaches 0.13 to 0.99 of the
+        // segment. The stone is the tighter of the two and it is not
+        // actually at risk — the row stands seventeen units back, so it
+        // rises BEHIND the marker rather than across it, which is what the
+        // reference frames show. The grove is the real limit and this is
+        // most of what is left before the two touch.
+        box: { w: 4.27, d: 1.02, span: 0.86 },
       },
       // A COW LYING IN FRONT OF THE MARKET, by the bamboo. Cattle settle
       // exactly here in a Kerala market town — in the shade, on the bare
