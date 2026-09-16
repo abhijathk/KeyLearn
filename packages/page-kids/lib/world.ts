@@ -16275,11 +16275,21 @@ export function createKidsWorld(
           // being shunted into exactly the ground this rule exists to keep
           // empty, having already passed the test on the way in.
           //
-          // The ground layer is welcome at a stone. Walking up to a bare
+          // SMALL ground cover is welcome at a stone. Walking up to a bare
           // marker in mown grass would read as one installed this morning
           // rather than one that has stood there for years.
+          //
+          // BY SPECIES, NOT BY LAYER. This tested the layer alone, and the
+          // ground layer is not all small: taro is an elephant-ear, a single
+          // leaf of which is a hand's breadth across at this scale, and
+          // tapioca stands waist high. One taro landed square in front of
+          // Milestone 13 and covered the number — which is the one thing on
+          // the roadside that has to stay readable, and the same fault a
+          // papaya caused at another stone once already. Grass and ferns
+          // soften a marker's foot; a broad leaf hides it.
+          const smallAtStone = /Grass_Tuft|Fern/i.test(pick);
           if (
-            layer.key !== "ground" &&
+            !smallAtStone &&
             spot.z > MILESTONE_CLEAR_DEPTH &&
             atMilestone(spot.x, 0)
           ) {
@@ -18524,7 +18534,7 @@ export function createKidsWorld(
           const lesson = LESSONS[((f.wrap.userData.folkOf as number) ?? 1) - 1];
           const out =
             lesson != null &&
-            rank < folkOut(lesson, act) &&
+            rank < folkOut(lesson, act, hourOfDay) &&
             (f.wrap.userData.isChild !== true || kidsOut);
           if (f.wrap.visible !== out) {
             f.wrap.visible = out;

@@ -973,3 +973,28 @@ test("the estate's cart is inside the compound, not through the wall", () => {
   );
   isTrue(cart.z < wall.z, "the cart is on the road side of the wall");
 });
+
+test("nobody is in a field outside a working day", () => {
+  // Eight to six. `activity` is "day" from seven to seven, which is when the
+  // LIGHT is up rather than when anybody is working, and it used to decide
+  // this — so a farmer stood at her boundary for twelve hours without a
+  // break. The hours are the ones asked for and the ones a field keeps.
+  for (const l of LESSONS) {
+    if (l.folk.length === 0) continue;
+    for (const h of [0, 4, 6, 7, 7.9]) {
+      equal(folkOut(l, activityAt(h), h), 0, `lesson ${l.n} at ${h}`);
+    }
+    for (const h of [8, 12, 17.9]) {
+      equal(
+        folkOut(l, activityAt(h), h),
+        l.folk.length,
+        `lesson ${l.n} at ${h}`,
+      );
+    }
+    // After six, only the village centre and the market keep anybody, and
+    // only one of them each.
+    const late = folkOut(l, activityAt(19), 19);
+    equal(late, l.n === 5 || l.n === 7 ? 1 : 0, `lesson ${l.n} at 19`);
+    equal(folkOut(l, activityAt(23), 23), 0, `lesson ${l.n} at 23`);
+  }
+});

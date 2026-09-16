@@ -333,7 +333,26 @@ export function isChild(model: string): boolean {
  * it is to differ from day at all. Deep night is nobody — an empty road at
  * two in the morning is the whole reason the corridor is frightening.
  */
-export function folkOut(l: Lesson, a: Activity): number {
+export function folkOut(l: Lesson, a: Activity, hour?: number): number {
+  // EIGHT TO SIX, AND THAT IS A WORKING DAY RATHER THAN DAYLIGHT.
+  //
+  // `activity` is "day" from seven in the morning until seven at night,
+  // which is when the LIGHT is up — and it was being used to decide when
+  // people are in their fields, so a farmer stood at her boundary from seven
+  // to seven every day without a break. Nobody works dawn to dusk in the
+  // field beside the road; they are out after the morning is under way and
+  // in before the light goes.
+  //
+  // The hour is optional so the older two-argument call still answers about
+  // an activity in the abstract, which is what the tests ask it.
+  if (hour != null) {
+    if (hour >= 8 && hour < 18) {
+      return l.folk.length;
+    }
+    // Outside those hours only the two places the brief keeps occupied into
+    // the evening have anybody, and only one of them each.
+    return a === "evening" && (l.n === 5 || l.n === 7) ? 1 : 0;
+  }
   if (a === "day") return l.folk.length;
   // The evening keeps a few out: the brief leaves people at the village
   // centre and the closing market, and a road at eight has somebody on it.
