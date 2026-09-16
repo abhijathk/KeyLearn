@@ -6656,8 +6656,18 @@ export function createKidsWorld(
      * surviving between them. An even sheet of bare earth reads as a car
      * park.
      */
+    // THE VILLAGE'S OWN YARDS BELONG TO THE VILLAGE'S OWN CHAPTER.
+    //
+    // The temple's forecourt and the three houses' swept earth are worked
+    // out from Lesson 5's third — the village centre, which is Chapter 1's.
+    // The centre is only BUILT for Chapter 1 now, but this pass still
+    // painted its yards on every chapter's ground: Chapter 2's road carried
+    // four rectangles of bare laterite out in the Farm Clearing with nothing
+    // standing on any of them. Swept earth in an empty field is exactly the
+    // fault the hashed house positions were introduced to prevent, arriving
+    // from the other side — the houses moved chapters and the yards stayed.
     const yards =
-      CHAPTER == null
+      CHAPTER == null || CHAPTER_N !== 1
         ? []
         : [
             // THE TEMPLE'S FORECOURT, which is the most walked ground in the
@@ -10686,6 +10696,8 @@ export function createKidsWorld(
    * hoof to clear and lets the grass overlap the very bottom of it.
    */
   const WILD_LIFT = 0.86;
+  /** How far a person is pressed into the ground. See `spawnCompanion`. */
+  const FOLK_SINK = 0.11;
   /**
    * The smallest turn worth using the whole body for.
    *
@@ -12746,7 +12758,17 @@ export function createKidsWorld(
       // the shared table, so a companion and a player of the same character
       // are the same person.
       scaleHead(gltf.scene, headScale ?? castHeadScale(model));
-      wrap.position.set(x, surfaceY(x, z), z);
+      // FOLK_SINK: the last tenth of a unit between a shoe and the road.
+      //
+      // `plantFeet` puts the lowest point of a character's own gait exactly
+      // on the wrap's origin, which is correct and still leaves a visible
+      // gap: the lowest point of a WALK is the sole of the forward foot at
+      // its lowest frame, and for most of the cycle every foot is above
+      // that. Planted flush, a villager reads as hovering a centimetre over
+      // the road for most of their stride. Pressing them a little into it
+      // costs nothing — nobody can see a sole from this camera — and the
+      // contact reads immediately.
+      wrap.position.set(x, surfaceY(x, z) - FOLK_SINK, z);
       // A random home facing — the crowd looks every which way, not all one
       // way — unless the placement asked for a particular one.
       const homeY = faceY ?? Math.random() * Math.PI * 2;
@@ -18474,7 +18496,11 @@ export function createKidsWorld(
         // walker holding a constant z drifts off the carriageway on a curve.
         const nz =
           meander(nx) + (f.wrap.position.z - meander(f.wrap.position.x));
-        f.wrap.position.set(nx, deckY(nx, nz) ?? surfaceY(nx, nz), nz);
+        f.wrap.position.set(
+          nx,
+          (deckY(nx, nz) ?? surfaceY(nx, nz)) - FOLK_SINK,
+          nz,
+        );
       }
 
       // ── THE BOY WHO COMES OVER TO LOOK ──────────────────────────────
