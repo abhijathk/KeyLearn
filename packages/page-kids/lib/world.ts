@@ -9151,6 +9151,8 @@ export function createKidsWorld(
    * one stretch of ground and is hidden with it.
    */
   const roadWalkers: DinoRig[] = [];
+  /** Villagers standing on their own land. Shown or hidden by the hour. */
+  const standingFolk: DinoRig[] = [];
   /** The one villager who takes an interest. See the tick. */
   let curiousBoy: DinoRig | null = null;
 
@@ -13427,9 +13429,12 @@ export function createKidsWorld(
           /** How tall a hung pressure lantern is, in world units. */
           const LANTERN = 1.7;
           const SHOPS = [
-            { at: -0.4, closes: 21, kind: "petromax" as const, up: 0.47 },
+            // C.K. Nair's hangs from the shop's own wall rather than out
+            // over the middle of his frontage, and his eave is the lower of
+            // the two.
+            { at: -0.34, closes: 21, kind: "petromax" as const, up: 0.43 },
             { at: -0.24, closes: 20, kind: "oil" as const },
-            { at: -0.08, closes: 21, kind: "petromax" as const, up: 0.55 },
+            { at: -0.08, closes: 21, kind: "petromax" as const, up: 0.515 },
             // The blacksmith's counter sits further along his front and a
             // little higher than the others; the tailor works at a table
             // rather than a counter, which stands taller.
@@ -14084,17 +14089,18 @@ export function createKidsWorld(
         for (const l of LESSONS) {
           const from = CHAPTER[l.n - 1]!;
           const len = CHAPTER[l.n]! - from;
-          const out = folkOut(l, activity);
+          // EVERYBODY IS BUILT; WHO IS OUT IS DECIDED EVERY FRAME.
+          //
+          // This used to spawn only the people the hour called for, which
+          // froze the village at whatever hour the world was built: a child
+          // who loaded at noon still had every farmer standing in their plot
+          // at midnight, and the night toggle could not put them indoors
+          // because they were the only ones that existed.
+          //
+          // The lamps and the road walkers were fixed this way already. This
+          // is the last of the three, and the reason the same complaint kept
+          // coming back.
           for (const [i, who] of l.folk.entries()) {
-            if (i >= out) {
-              break;
-            }
-            // NO CHILDREN AFTER SIX. See `childrenOut`: a child on a village
-            // road at nine at night reads as wrong to anybody who has been
-            // in one — and to the child playing at nine at night.
-            if (isChild(who) && !childrenOut(worldHour())) {
-              continue;
-            }
             const x = from + (0.3 + i * 0.28) * len;
             // BACK FROM THE ROAD, behind the boundary rather than on the
             // verge. These people are standing on their own land — that is
@@ -14143,6 +14149,15 @@ export function createKidsWorld(
             const villager = friends[friends.length - 1]?.wrap;
             if (villager != null) builtGroup.add(villager);
             blockers.push({ x: spot.x, z: spot.z, r: 2.2 });
+            // What it takes for this one to be outside: how far down their
+            // lesson's list they are, and whether they are a child.
+            const v = friends[friends.length - 1];
+            if (v != null) {
+              v.wrap.userData.folkOf = l.n;
+              v.wrap.userData.folkRank = i;
+              v.wrap.userData.isChild = isChild(who);
+              standingFolk.push(v);
+            }
             folk++;
           }
         }
@@ -16630,6 +16645,25 @@ export function createKidsWorld(
       // they saw; somebody reaching the edge of the village and walking back
       // is what a road between two places looks like anyway.
       const hourOfDay = worldHour();
+      // THE PEOPLE ON THEIR OWN LAND, by the hour. Everybody the table names
+      // is built; how many of them are outside follows `folkOut`, which is
+      // the brief's own rule — everyone by day, one or two at the village
+      // centre and the closing market in the evening, nobody after ten.
+      {
+        const act = activityAt(hourOfDay);
+        const kidsOut = childrenOut(hourOfDay);
+        for (const f of standingFolk) {
+          const rank = (f.wrap.userData.folkRank as number) ?? 0;
+          const lesson = LESSONS[((f.wrap.userData.folkOf as number) ?? 1) - 1];
+          const out =
+            lesson != null &&
+            rank < folkOut(lesson, act) &&
+            (f.wrap.userData.isChild !== true || kidsOut);
+          if (f.wrap.visible !== out) {
+            f.wrap.visible = out;
+          }
+        }
+      }
       for (const f of roadWalkers) {
         // OUT, OR NOT, ACCORDING TO THE CLOCK — every frame, so the road
         // empties as the evening goes on and fills again at seven whether or
@@ -19354,6 +19388,10 @@ export function createKidsWorld(
         fixedFace?: boolean;
         /** The hours this road walker is out, [from, to). */
         shift?: [number, number];
+        /** Which lesson's folk list this villager belongs to. */
+        folkOf?: number;
+        /** Their place in it: the lower the rank, the later they stay out. */
+        folkRank?: number;
         /** Subject to the children's curfew. */
         isChild?: boolean;
         /** Which way along their beat a patrolling guard is walking. */
