@@ -9022,7 +9022,12 @@ export function createKidsWorld(
   // down, and the puppy's Sit sprang back up mid-sit.
   const SHOWCASE_LOOPS =
     /^(Walk|Walk_Backward|Idle|Idle_Alert|Run|Trot|Charge_Loop|Sleep|Beg|Sniff_Ground|Tail_Wag)$/;
-  const SHOWCASE_H: Record<string, number> = { Buffalo: 5.9, Puppy: 2.1 };
+  // The showcase draws each animal at the size the ROAD draws it, so a
+  // reviewer checking gaits is looking at the animal the child meets rather
+  // than a scale model of it. Kept in step with `WILD_HEIGHT` by hand, which
+  // is a duplication worth a note: raise one and the other has to follow or
+  // `?buffalo` quietly starts lying about proportions.
+  const SHOWCASE_H: Record<string, number> = { Buffalo: 6.8, Puppy: 2.1 };
   function advanceBuffalo(i: number) {
     if (!buffaloMixer || buffaloActions.length === 0) return;
     const next = buffaloActions[i];
@@ -9764,7 +9769,13 @@ export function createKidsWorld(
    * herd, plainly not grown.
    */
   const WILD_HEIGHT: Record<string, number> = {
-    Buffalo: 6.0,
+    // 6.8, up from 6.0. The buffalo is the animal this whole road was
+    // built around — it is the one thing on it worth being wary of, and the
+    // charge only lands if what arrives is plainly heavier than the child.
+    // At 6.0 it stood about a head over the villagers, which reads as a
+    // large cow; at 6.8 it is half again the height of a grown man, which
+    // is what a water buffalo actually is beside one.
+    Buffalo: 6.8,
     Cow: 4.5,
     Cow_Calf: 3.3,
   };
@@ -9809,10 +9820,15 @@ export function createKidsWorld(
     // gaits. At 4.75 he was the tallest child on the road and read as a
     // young teenager among the villagers.
     VillageBoy: 4.28 * FOOT,
-    // FIVE TEN, which puts him between the tea seller and the headman
-    // rather than at either end — a heavy man whose build is his job, and
-    // still not the tallest in the village, which is the elder's.
-    Blacksmith: 5.83 * FOOT,
+    // SIX THREE, AND THE TALLEST MAN ON THE ROAD. He was five ten, chosen
+    // to sit between the tea seller and the headman so the elder kept the
+    // top of the range — but height on this road is read as BUILD rather
+    // than as rank, and the smith is the one villager whose body is his
+    // trade. An elder is distinguished by his walk, his stick and the fact
+    // that everyone else defers to him; he does not need to be the biggest
+    // person in the frame, and a blacksmith who is not is a blacksmith
+    // nobody would ask to shoe a bullock.
+    Blacksmith: 6.3 * FOOT,
   };
 
   /**
