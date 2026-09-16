@@ -8793,18 +8793,25 @@ export function createKidsWorld(
   let templeView: { x: number; z: number; halfW: number } | null = null;
 
   /**
-   * HOW FAR ONE WALK CYCLE CARRIES A VILLAGER.
+   * HOW FAR ONE WALK CYCLE CARRIES A VILLAGER — FROM THEIR OWN HEIGHT.
    *
-   * The one number here that cannot be derived, because these are in-place
-   * cycles with no root motion to read it from — so it is stated once and
-   * every walker's speed is computed from it and their own clip's length,
-   * rather than each being given a speed and hoping the two agree.
+   * A stride pair, left foot to left foot, is close to 0.86 of a person's
+   * height; it is one of the steadier ratios in human gait and it is why
+   * tall people walk faster than short ones without hurrying. So this is not
+   * a constant at all, and 6.4 was wrong twice over: too long outright — a
+   * shade under six feet, when even the headman's stride is five and a
+   * quarter — and the same for everybody, so a five-foot farmer was made to
+   * cover the same ground per step as a five-nine headman.
    *
-   * 6.4 units is a shade under six real feet at this world's scale, which is
-   * a full stride pair for an adult: left foot to left foot. Tune THIS if
-   * the feet still slip, never the speeds — they are consequences.
+   * That is the slide. The feet plant at the rate the clip plants them and
+   * the ground goes by faster, so each step reaches too far and the contact
+   * drags. Nothing about the animation was wrong; it was being asked to
+   * cover a distance nobody of that size would.
+   *
+   * Every walker's speed now falls out of two measured things — their height
+   * and their clip's length — with nothing left to tune.
    */
-  const STRIDE = 6.4;
+  const strideOf = (height: number) => height * 0.86;
 
   const MILESTONE_CLEAR = 3.2;
   const MILESTONE_CLEAR_DEPTH = -15;
@@ -13496,7 +13503,7 @@ export function createKidsWorld(
               // else is a treadmill in one direction or a skate in the other.
               const dur = gait.getClip().duration || 1;
               (f.wrap.userData.roadWalker as { speed: number }).speed =
-                (STRIDE / dur) * rate;
+                (strideOf(FOLK_HEIGHT[who] ?? 5.2 * FOOT) / dur) * rate;
             }
             roadWalkers.push(f);
           }
