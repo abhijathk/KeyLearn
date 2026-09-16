@@ -5218,6 +5218,17 @@ export function createKidsWorld(
     readonly rate: number;
     /** 0 = a mantle that does not move, 1 = a wick in the open air. */
     readonly wick: number;
+    /**
+     * The hour this lamp goes out, if it keeps shop hours.
+     *
+     * Read EVERY FRAME rather than once when the world is built. The shops
+     * were decided at build time from the clock, which meant the row was
+     * frozen at whatever hour the child happened to arrive: switch to night
+     * at five in the afternoon and every shop was lit, because at five they
+     * were all open and nothing ever asked again. A market that closes has
+     * to keep closing.
+     */
+    readonly closes?: number;
     /** A point light, or a cone where the lamp only throws one way. */
     readonly light: THREE.PointLight | THREE.SpotLight | null;
     readonly lightPeak: number;
@@ -5570,6 +5581,8 @@ export function createKidsWorld(
     opts: {
       kind?: "oil" | "petromax" | "mirror";
       size?: number;
+      /** Goes dark at this hour, and stays dark until four. */
+      closes?: number;
       /** Taller than it is wide, for the mirror's smear of caught light. */
       aspect?: number;
       peak?: number;
@@ -5661,6 +5674,7 @@ export function createKidsWorld(
           peak: opts.peak ?? 0.82,
           phase,
           rate,
+          closes: opts.closes,
           wick: 1,
           light: null,
           lightPeak: lit,
@@ -5677,6 +5691,7 @@ export function createKidsWorld(
           peak: opts.peak ?? (petromax ? 0.95 : 0.82),
           phase: Math.random() * Math.PI * 2,
           rate: petromax ? 1.1 : 2.6 + Math.random() * 3.8,
+          closes: opts.closes,
           wick: petromax ? 0.12 : kind === "mirror" ? 0.4 : 1,
           light: null,
           lightPeak: lit,
@@ -5713,6 +5728,7 @@ export function createKidsWorld(
       // and a half times between the slowest and fastest means no two of
       // them ever settle into a beat.
       rate: petromax ? 1.1 : 2.6 + Math.random() * 3.8,
+      closes: opts.closes,
       wick: petromax ? 0.12 : kind === "mirror" ? 0.4 : 1,
       light,
       lightPeak: lit,
@@ -13245,7 +13261,14 @@ export function createKidsWorld(
         // all that is wanted here. Slowed a little, because a resting
         // animal's breathing is slower than a standing one's.
         const clips = (src.userData.clips ?? []) as THREE.AnimationClip[];
+        // `Idle_Alert` FIRST. The cow's own clip is a Meshy "baselayer"
+        // take renamed to Idle, and what it actually contains is closer to
+        // an amble than a stand — which is why a cow parked outside a market
+        // looked like it was setting off. Idle_Alert came from the buffalo
+        // and is unambiguously a standing animal looking about, which is
+        // what a cow does in a market all afternoon.
         const rest =
+          clips.find((c) => /idle_alert/i.test(c.name)) ??
           clips.find((c) => /^idle$/i.test(c.name)) ??
           clips.find((c) => /idle/i.test(c.name));
         if (isSkinned && rest != null) {
@@ -13262,7 +13285,7 @@ export function createKidsWorld(
         characterRoots.add(wrap);
         applyEyeGlow(wrap, nightNow);
         if (trueNight) {
-          lightBuilding(name, wrap);
+          await lightBuilding(name, wrap);
         }
         return wrap;
       };
@@ -13284,7 +13307,10 @@ export function createKidsWorld(
        * every case would have hung a lamp on the back wall of every house
        * across the road, lighting nothing and visible to nobody.
        */
-      function lightBuilding(name: string, wrap: THREE.Object3D): void {
+      async function lightBuilding(
+        name: string,
+        wrap: THREE.Object3D,
+      ): Promise<void> {
         const box = measureBox(wrap);
         const cx = (box.min.x + box.max.x) / 2;
         const cz = (box.min.z + box.max.z) / 2;
@@ -13369,18 +13395,53 @@ export function createKidsWorld(
             { at: 0.24, closes: 21, kind: "oil" as const },
             { at: 0.4, closes: 19, kind: "oil" as const },
           ];
-          const hourNow = new Date().getHours();
           for (const shop of SHOPS) {
-            // Open between four in the morning and its own closing hour.
-            // Before four, the whole row is shut with the village.
-            if (hourNow >= shop.closes || hourNow < 4) {
-              continue;
+            // EVERY shop's lamp is built; whether it BURNS is decided in the
+            // tick, every frame, from its own closing hour. Skipping the
+            // build for a shut shop was what froze the row: a child who
+            // loaded at five in the afternoon got six lamps that stayed lit
+            // however late it got, and one who loaded at ten got a market
+            // that could never light up again.
+            // THE LAMP ITSELF, not only its light. This market is a real
+            // structure with real shop interiors — counters, shutters, a
+            // space behind each front — so there is somewhere to PUT a lamp,
+            // and a glow with no object behind it reads as a light source
+            // floating in a shop rather than as a lamp standing on a
+            // counter. The model does the work the sprite cannot: it catches
+            // the scene's own light, it casts, and it is still there by day
+            // when nothing is lit at all.
+            //
+            // Only the petromax shops get a body, because the petromax is
+            // the only lamp anybody modelled. The oil lamps stay as flames —
+            // which is nearly right anyway: a nilavilakku is a small brass
+            // thing almost entirely hidden by what it is burning.
+            const spot = on(shop.at * wide, 0.46, -0.32);
+            if (shop.kind === "petromax") {
+              const lampSrc = await prop("village-util/Petromax_Lamp");
+              if (lampSrc != null) {
+                // About half a metre at this world's scale, which is what a
+                // pressure lantern is.
+                const lamp = fitToHeight(lampSrc.clone(true), 1.7);
+                lamp.traverse((n) => {
+                  const m = n as THREE.Mesh;
+                  if (m.isMesh) m.geometry.computeBoundingSphere();
+                });
+                lamp.position.set(spot[0], spot[1] - 0.85, spot[2]);
+                lamp.rotation.y = Math.random() * Math.PI * 2;
+                builtGroup.add(lamp);
+              }
             }
             makeLamp(
-              ...on(shop.at * wide, 0.46, -0.32),
+              ...spot,
               shop.kind === "petromax"
-                ? { kind: "petromax", size: 2.4, peak: 0.92, lit: 4.2 }
-                : { size: 1.5, peak: 0.82, lit: 3.4 },
+                ? {
+                    kind: "petromax",
+                    size: 2.4,
+                    peak: 0.92,
+                    lit: 4.2,
+                    closes: shop.closes,
+                  }
+                : { size: 1.5, peak: 0.82, lit: 3.4, closes: shop.closes },
             );
           }
           return;
@@ -14004,7 +14065,16 @@ export function createKidsWorld(
           // here because he can walk, and would drop out again if he could
           // not.
           const WHO = ["Headman", "TeaStall", "FarmerWoman", "VillageBoy"];
-          const n = activity === "day" ? 5 : 2;
+          // ONE OF EACH, NEVER TWO. The list was cycled with `i % length`,
+          // so a fifth walker was a second headman — and two identical men
+          // walking the same road at the same pace, sometimes abreast, is
+          // the most obvious copy-paste a scene can show. Four people, four
+          // models: the road is busy enough and nobody has a twin.
+          //
+          // Everybody is BUILT; who is actually out is decided every frame
+          // from their shift, below. Deciding it here froze the road at
+          // whatever hour the child arrived.
+          const n = WHO.length;
           const kidsAllowed = childrenOut(new Date().getHours());
           for (let i = 0; i < n; i++) {
             const who = WHO[i % WHO.length]!;
@@ -14031,6 +14101,13 @@ export function createKidsWorld(
             }
             // Half of them are walking back the way the child came.
             const dir = hash3(i, 2, 92) < 0.5 ? 1 : -1;
+            // WHEN THIS ONE IS OUT. The first two keep long hours — an
+            // early start and a late finish, which is who is on a village
+            // road at six in the morning or nine at night — and the rest
+            // keep the day. The children's curfew is stricter still and is
+            // applied on top.
+            f.wrap.userData.shift = i < 2 ? [4, 22] : [7, 19];
+            f.wrap.userData.isChild = isChild(who);
             f.wrap.userData.roadWalker = {
               dir,
               // MEASURED FROM THE CLIP, NOT CHOSEN.
@@ -16341,7 +16418,19 @@ export function createKidsWorld(
             spot.intensity = 5.1 * nightBlend * fade * gutter;
           }
         }
+        // WHAT HOUR IT IS, once per frame rather than once per lamp.
+        const hourNow = new Date().getHours();
         for (const L of lamps) {
+          // A SHUT SHOP HAS NO LIGHT IN IT, and it works this out every
+          // frame. The alternative — deciding at build time which shops are
+          // open — froze the row at whatever hour the child arrived: switch
+          // to night at five in the afternoon and the whole market was lit,
+          // because at five nothing was shut yet and nothing asked again.
+          if (L.closes != null && (hourNow >= L.closes || hourNow < 4)) {
+            L.mat.opacity = 0;
+            if (L.light != null) L.light.intensity = 0;
+            continue;
+          }
           // THREE WAVES, NOT TWO. Two at 1 : 2.37 still come back together
           // every few seconds, and a lamp that repeats is a lamp you can
           // predict. A third at 4.31 — none of the three a whole multiple of
@@ -16433,7 +16522,24 @@ export function createKidsWorld(
       // until a child happens to be looking, and then it is the only thing
       // they saw; somebody reaching the edge of the village and walking back
       // is what a road between two places looks like anyway.
+      const hourOfDay = new Date().getHours();
       for (const f of roadWalkers) {
+        // OUT, OR NOT, ACCORDING TO THE CLOCK — every frame, so the road
+        // empties as the evening goes on and fills again at seven whether or
+        // not anybody reloads. This was settled once at build, which meant a
+        // child who started at noon had five people on the road at midnight.
+        const shift = (f.wrap.userData.shift as [number, number]) ?? [0, 24];
+        const kid = f.wrap.userData.isChild === true;
+        const out =
+          hourOfDay >= shift[0] &&
+          hourOfDay < shift[1] &&
+          (!kid || childrenOut(hourOfDay));
+        if (f.wrap.visible !== out) {
+          f.wrap.visible = out;
+        }
+        if (!out) {
+          continue;
+        }
         const rw = f.wrap.userData.roadWalker as
           | { dir: number; speed: number; side: number }
           | undefined;
@@ -19139,6 +19245,10 @@ export function createKidsWorld(
         roams?: boolean;
         /** Placed facing wins over `companionsWatch`. */
         fixedFace?: boolean;
+        /** The hours this road walker is out, [from, to). */
+        shift?: [number, number];
+        /** Subject to the children's curfew. */
+        isChild?: boolean;
         /** Which way along their beat a patrolling guard is walking. */
         patrolDir?: number;
         /** Seconds left of the pause at the end of a beat, while they turn. */

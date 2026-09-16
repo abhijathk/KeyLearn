@@ -983,13 +983,21 @@ export const LESSONS: readonly Lesson[] = [
         at: 0.14,
         z: -9.5,
         h: 5.2,
-        // 1.1, not 1.7, and not the 2.3 before that. Each time it went down
-        // it read less as a resting animal and more as a buried one — a cow
-        // lying in the dust still carries its chest and its head a good way
-        // off the ground, and it is the HEAD clear of the grass that makes
-        // the difference between an animal at rest and a shape in the
-        // ground. Only the folded legs belong under the earth here.
-        lift: -1.1,
+        // ON THE GROUND, NOT IN IT. The sinking trick is abandoned: it was
+        // a way to fake a resting cow without a resting clip, and it does
+        // not work. At 2.3 only the back showed, at 1.7 it was a shape in
+        // the earth, at 1.1 the legs were still half buried — because the
+        // thing that says "lying down" is the FOLD of the legs, and no
+        // amount of hiding them supplies it. Hiding a leg reads as a hole,
+        // not as a knee.
+        //
+        // So it stands, which is at least true, and it stands where a cow
+        // stands in a market town: on the bare ground outside the stalls, in
+        // everybody's way and nobody's. A resting animal here needs a
+        // resting clip, and that is an animation job rather than a placement
+        // one — the buffalo has thirteen clips and not one of them is lying
+        // down either.
+        lift: 0,
         turn: 1.45,
         clear: 3,
       },
