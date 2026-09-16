@@ -175,13 +175,45 @@ export function hashPick<T>(
  * down between seven and nine, and deep night from ten until four, which is
  * also the only window the Kuttichathan corridor is awake in.
  */
-export type Activity = "day" | "evening" | "deep";
+export type Activity = "day" | "evening" | "dawn" | "deep";
 
 export function activityAt(hour: number): Activity {
   const h = ((hour % 24) + 24) % 24;
   if (h >= 22 || h < 4) return "deep";
+  // DAWN IS ITS OWN STATE, and leaving it out was a real hole: the brief
+  // ends deep night at four, and everything after four was therefore "normal
+  // village life" — so a child playing at half past four in the morning met
+  // a road as busy as noon. A village at that hour is not asleep, but it is
+  // not up either: it is one or two people with somewhere to be.
+  if (h < 7) return "dawn";
   if (h >= 19) return "evening";
   return "day";
+}
+
+/**
+ * ARE THE VILLAGE CHILDREN OUT?
+ *
+ * Between six in the evening and seven in the morning they are not. Adults
+ * keep their own hours — a tea seller closes late, a headman walks home in
+ * the dark, somebody is always about — but a child on a village road at
+ * nine at night is the one thing that would read as wrong to anybody who has
+ * been in one, and it reads as wrong to a child playing at nine at night
+ * too.
+ *
+ * Kept separate from `Activity` on purpose. The hours do not line up with
+ * the brief's three windows — six in the evening is still "day" by those,
+ * and seven in the morning is "dawn" — because this is a different rule
+ * about a different thing: not how busy the road is, but who is allowed to
+ * be on it.
+ */
+export function childrenOut(hour: number): boolean {
+  const h = ((hour % 24) + 24) % 24;
+  return h >= 7 && h < 18;
+}
+
+/** Which of the cast are children, by model name. */
+export function isChild(model: string): boolean {
+  return model === "VillageBoy";
 }
 
 /**
@@ -195,7 +227,12 @@ export function activityAt(hour: number): Activity {
  */
 export function folkOut(l: Lesson, a: Activity): number {
   if (a === "day") return l.folk.length;
-  if (a === "evening") return l.n === 5 || l.n === 7 ? 1 : 0;
+  // Evening and dawn are the same shape from the road's point of view — a
+  // few people with somewhere to be — and the brief treats the winding-down
+  // and the waking-up as the same reduced state.
+  if (a === "evening" || a === "dawn") {
+    return l.n === 5 || l.n === 7 ? 1 : 0;
+  }
   return 0;
 }
 
@@ -256,6 +293,22 @@ export type Placed = {
    * placed rather than built. The skirt settles a boundary INTO its ground.
    */
   readonly skirt?: boolean;
+  /**
+   * Raised, or — negative — SUNK into the ground.
+   *
+   * For the banyan, which grows out of a stone platform, and for the one
+   * animal on this road that is lying down. There is no lying-down clip in
+   * any file we have, and a cow settled in the dust is mostly body: the legs
+   * are folded under it and invisible. Sinking a standing cow until its legs
+   * are in the earth leaves exactly that silhouette, and this camera never
+   * sees beneath anything.
+   *
+   * It is a trick, and it is the same one the loose stones already use —
+   * they are part-buried so the soil reads as having come up around them.
+   * If a real resting clip ever arrives, this entry is the only thing that
+   * has to change.
+   */
+  readonly lift?: number;
 };
 
 export type Lesson = {
@@ -889,6 +942,24 @@ export const LESSONS: readonly Lesson[] = [
         h: 15.5,
         clear: 36,
       },
+      // A COW LYING IN FRONT OF THE MARKET, by the bamboo. Cattle settle
+      // exactly here in a Kerala market town — in the shade, on the bare
+      // ground, out of the way of the stalls but not out of the way of
+      // anybody — and an animal at REST is the clearest thing you can put in
+      // a busy place to say it is an ordinary afternoon rather than a set.
+      //
+      // Placed as a prop rather than as livestock on purpose: the herd code
+      // would give it a grazing loop and walk it away from the buffalo,
+      // which is the opposite of lying down.
+      {
+        model: "village-folk/Cow",
+        at: 0.17,
+        z: -10.5,
+        h: 4.5,
+        lift: -2.3,
+        turn: 1.15,
+        clear: 3,
+      },
       // BETWEEN THE BAMBOO AND THE MARKET, which is where a village well
       // belongs on a trade road: the traders draw from it and so does
       // anyone walking in, so it sits on the way rather than behind the
@@ -904,7 +975,24 @@ export const LESSONS: readonly Lesson[] = [
         clear: 4,
       },
       { model: `${UTIL}/Petromax_Lamp`, at: 0.5, z: -10.5, h: 1.2 },
-      { model: "nature/KeralaBambooGroves", at: 0.88, z: -12, h: 18, clear: 5 },
+      // THE CLOSING GROVE, PAST THE STONE. At 0.88 it was inside the market:
+      // a 66-unit frontage centred at 0.56 reaches from 0.23 to 0.89 of the
+      // segment, so the bamboo was coming up through the last two stalls.
+      //
+      // The arithmetic is worth keeping in mind for anything else placed in
+      // this lesson — the market is two thirds of it, and there are only two
+      // clear stretches left, before 0.23 and after 0.89.
+      //
+      // 0.97 puts it past Milestone 7, which is where a closing grove
+      // belongs anyway: the pair of them are the gate at each end, and the
+      // far one should be the thing you walk out through.
+      // 1.06 — PAST THE STONE, not merely near it. The market reaches 0.89
+      // of the segment and a bamboo clump is wide: at 0.97 its near edge was
+      // still inside the last stall. A fraction over 1.0 is allowed and is
+      // what is wanted here, because the closing grove belongs on the far
+      // side of Milestone 7 — it is the gate you walk OUT through, and the
+      // stone should be met before it rather than through it.
+      { model: "nature/KeralaBambooGroves", at: 1.06, z: -13, h: 18, clear: 5 },
     ],
     herd: [],
     folk: ["TeaStall", "Headman"],

@@ -9,12 +9,14 @@ import {
   blendAt,
   chapterBounds,
   chapterEnd,
+  childrenOut,
   DEFAULT_BOUNDS,
   densityAt,
   folkOut,
   hash3,
   hashPick,
   hashRange,
+  isChild,
   lessonAt,
   LESSONS,
   milestoneX,
@@ -600,13 +602,44 @@ test("the supernatural corridor is M4 to M7 and nowhere else", () => {
  * activity-state variants." The scene is one scene at every hour; what
  * changes is who is out in it.
  */
-test("the day has exactly the three states the brief names", () => {
+test("the day has the brief's states, and a dawn of its own", () => {
   // Village life.
-  for (const h of [4, 9, 12, 17, 18]) equal(activityAt(h), "day");
+  for (const h of [7, 9, 12, 17, 18]) equal(activityAt(h), "day");
   // Winding down, 7 PM to 9 PM.
   for (const h of [19, 20, 21]) equal(activityAt(h), "evening");
   // Deep night, 10 PM to 4 AM.
   for (const h of [22, 23, 0, 2, 3]) equal(activityAt(h), "deep");
+  // AND FOUR TO SEVEN IS NOT NOON. The brief ends deep night at four and
+  // says nothing about what follows, so everything after it was reading as
+  // full village life — a road as busy at half past four in the morning as
+  // at midday.
+  for (const h of [4, 5, 6]) equal(activityAt(h), "dawn");
+});
+
+test("dawn is as quiet as the evening", () => {
+  for (const l of LESSONS) {
+    equal(folkOut(l, "dawn"), folkOut(l, "evening"));
+  }
+});
+
+/**
+ * Adults keep their own hours — a tea seller closes late, a headman walks
+ * home in the dark — but a child on a village road at nine at night reads as
+ * wrong to anybody who has been in one.
+ */
+test("the village children are home between six and seven", () => {
+  for (const h of [7, 9, 12, 17])
+    isTrue(childrenOut(h), `${h}:00 should be out`);
+  for (const h of [18, 19, 21, 23, 0, 3, 5, 6]) {
+    isTrue(!childrenOut(h), `${h}:00 should be home`);
+  }
+});
+
+test("only the children are governed by that", () => {
+  isTrue(isChild("VillageBoy"), "the village boy is a child");
+  for (const who of ["Headman", "TeaStall", "FarmerWoman"]) {
+    isTrue(!isChild(who), `${who} keeps their own hours`);
+  }
 });
 
 test("the window wraps midnight rather than breaking at it", () => {

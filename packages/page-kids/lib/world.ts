@@ -11,11 +11,13 @@ import {
   blendAt,
   boundsForBand,
   chapterEnd,
+  childrenOut,
   densityAt,
   folkOut,
   hash3,
   hashPick,
   hashRange,
+  isChild,
   lessonAt,
   LESSONS,
   placements,
@@ -13514,7 +13516,14 @@ export function createKidsWorld(
           if (lessonAt(p.x, CHAPTER).n === 5) {
             continue; // the village centre, already built
           }
-          const w = await stand(p.model, p.x, p.z, p.h, p.turn ?? 0);
+          const w = await stand(
+            p.model,
+            p.x,
+            p.z,
+            p.h,
+            p.turn ?? 0,
+            p.lift ?? 0,
+          );
           if (w != null) {
             // A structure, so it stays: see `builtGroup`.
             builtGroup.add(w);
@@ -13721,6 +13730,12 @@ export function createKidsWorld(
             if (i >= out) {
               break;
             }
+            // NO CHILDREN AFTER SIX. See `childrenOut`: a child on a village
+            // road at nine at night reads as wrong to anybody who has been
+            // in one — and to the child playing at nine at night.
+            if (isChild(who) && !childrenOut(new Date().getHours())) {
+              continue;
+            }
             const x = from + (0.3 + i * 0.28) * len;
             // BACK FROM THE ROAD, behind the boundary rather than on the
             // verge. These people are standing on their own land — that is
@@ -13803,8 +13818,12 @@ export function createKidsWorld(
           // not.
           const WHO = ["Headman", "TeaStall", "FarmerWoman", "VillageBoy"];
           const n = activity === "day" ? 5 : 2;
+          const kidsAllowed = childrenOut(new Date().getHours());
           for (let i = 0; i < n; i++) {
             const who = WHO[i % WHO.length]!;
+            if (isChild(who) && !kidsAllowed) {
+              continue; // home before dark, like everybody's children
+            }
             const x = hashRange(i, 0, 90, 10, Math.max(40, TRAIL_END - 10));
             // The far half of the road, on the opposite side of the centre
             // from the hero's lane, and a little in from the edge.
@@ -13920,7 +13939,11 @@ export function createKidsWorld(
           // He can do it because his rig turned out to be Abee's, so he has
           // a real walk and a real run — and ABEE_IDLE_ListeningAlert_01 is
           // already exactly the pose for stopping to look at something.
-          if (CHAPTER != null && activity === "day") {
+          if (
+            CHAPTER != null &&
+            activity === "day" &&
+            childrenOut(new Date().getHours())
+          ) {
             const bx = CHAPTER[4]! + (CHAPTER[5]! - CHAPTER[4]!) * 0.55;
             const bz = meander(bx) - roadClear - 4;
             await spawnCompanion(
