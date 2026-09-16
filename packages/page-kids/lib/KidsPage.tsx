@@ -4321,10 +4321,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     const villageChapter = onVillageNow
       ? (at?.chapter.n ?? chapterAt(prefsRef.current.roadStones ?? 0).n)
       : chapter;
+    // `?lesson=` IMPLIES THE VILLAGE IS DUE, and leaving that out made the
+    // flag look broken in the worst way: the whole chapter — its props, its
+    // planting, its herd, its people AND its milestones — is built inside
+    // `if (theme.village != null && villageDue)` in world.ts. So
+    // `?lesson=16` on its own opened a correctly-named Lesson 16 with
+    // nothing in it: bare ground, a road, and milestones numbered by the
+    // old generic trail because the chapter's own were never placed. It
+    // read as "Chapter 2 does not exist" when every part of it did.
+    //
+    // A reviewer naming a lesson is asking for that lesson's scenery. There
+    // is no reading of `?lesson=16` under which they wanted an empty road.
     const villageDue: boolean | "near" =
       prefsRef.current.world !== "village"
         ? false
-        : villageForced
+        : villageForced || at != null
           ? "near"
           : (prefsRef.current.villageFlags ?? 0) >=
             (prefsRef.current.villageGap ?? 4);
