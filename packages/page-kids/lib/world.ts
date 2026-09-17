@@ -15777,7 +15777,7 @@ export function createKidsWorld(
               // Both are fractions of the house's own measurements, so they
               // hold if it is resized.
               const lampZ = porch - hd * 0.3;
-              const lampLift = (b.max.y - b.min.y) * 0.1;
+              const lampLift = (b.max.y - b.min.y) * 0.135;
               // AND IT IS AN OIL LAMP, WHICH LIGHTS THE ROOM IT IS IN.
               //
               // A wick in a brass bowl throws enough to cross a veranda and
@@ -15807,18 +15807,43 @@ export function createKidsWorld(
               // objects at depth. The middle one stays the biggest — that is
               // the arrangement — but the gap between them is what carries
               // it now rather than the size of any of them.
-              for (const [lx, lh, peak, reach] of [
-                [cx, tall * 0.13, 0.94, 0.8],
-                [cx - hw * 0.82, tall * 0.1, 0.82, 0],
-                [cx + hw * 0.82, tall * 0.1, 0.82, 0],
+              // THE VERANDA PAIR SIT DEEPER AND HIGHER THAN THE PORTICO'S.
+              //
+              // They are in a different place, not the same place twice. The
+              // portico is a porch — its lamp stands near the front of it,
+              // where somebody arriving sees it. The colonnade behind is a
+              // walkway along the house, so its lamps belong further in
+              // against the wall, and that wall's floor is a step up from
+              // the porch it opens onto.
+              //
+              // Each lamp carries its own depth and lift now rather than
+              // three sharing one of each.
+              for (const [lx, lz, llift, lh, peak, reach] of [
+                [cx, lampZ, lampLift, tall * 0.13, 0.94, 0.8],
+                [
+                  cx - hw * 0.82,
+                  lampZ - hd * 0.1,
+                  lampLift + tall * 0.045,
+                  tall * 0.1,
+                  0.82,
+                  0,
+                ],
+                [
+                  cx + hw * 0.82,
+                  lampZ - hd * 0.1,
+                  lampLift + tall * 0.045,
+                  tall * 0.1,
+                  0.82,
+                  0,
+                ],
               ] as const) {
                 const v = await stand(
                   "village-util/Nilavilakku",
                   lx,
-                  lampZ,
+                  lz,
                   lh,
                   0,
-                  lampLift,
+                  llift,
                 );
                 if (v == null) {
                   continue;
