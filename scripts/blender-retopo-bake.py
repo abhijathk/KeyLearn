@@ -82,10 +82,61 @@ print(f"[retopo] welded to {len(lo.data.vertices)} vertices")
 # merged, and without this a building's corners come back rounded.
 bpy.ops.object.shade_auto_smooth(angle=0.663)
 
-mod = lo.modifiers.new("dec", "DECIMATE")
-mod.decimate_type = "COLLAPSE"
-mod.ratio = min(1.0, want_tris / max(1, src_tris))
-bpy.ops.object.modifier_apply(modifier="dec")
+# ── DECIMATE IN PASSES, BECAUSE ONE IS NOT ALWAYS ENOUGH ───────────────
+#
+# Blender's collapse decimate stalls on very dense, very non-manifold input
+# the same way meshopt does. MEASURED on the thatch house: 1,975,220 faces
+# asked down to 9,000 in a single pass stopped at 33,140 and would not move
+# — a ratio of 0.0046 applied once, and the collapser ran out of legal edges
+# long before it ran out of budget.
+#
+# Asking again, with the ratio recomputed against what actually survived,
+# gets it the rest of the way: each pass has a far gentler ratio to achieve
+# and a cleaner mesh to do it on. It gives up when a pass stops making
+# progress, so an impossible target fails loudly at the floor rather than
+# looping.
+for attempt in range(6):
+    have = len(lo.data.polygons)
+    if have <= want_tris * 1.08:
+        break
+    mod = lo.modifiers.new("dec", "DECIMATE")
+    mod.decimate_type = "COLLAPSE"
+    mod.ratio = min(1.0, want_tris / max(1, have))
+    bpy.ops.object.modifier_apply(modifier="dec")
+    now = len(lo.data.polygons)
+    print(f"[retopo] pass {attempt + 1}: {have} -> {now} faces")
+    if now >= have * 0.98:
+        # ── FLOORED: REBUILD THE TOPOLOGY INSTEAD OF EDITING IT ────────
+        #
+        # Some bakes cannot be collapsed at all. The thatch house is one:
+        # its roof is hundreds of thousands of individual straws, each its
+        # own shell, and a collapser will not destroy a component to meet a
+        # budget. It stalled at 32,498 of 1,975,220 and a gentler second
+        # pass moved it by two per cent.
+        #
+        # A voxel remesh does not edit that topology, it REPLACES it — one
+        # watertight surface at a chosen resolution, components and all. It
+        # throws away every bit of fine geometry in the process, which
+        # anywhere else would be the objection and here is free: the detail
+        # is about to be re-baked into the texture from the original mesh,
+        # which is still sitting right there. The straws come back as
+        # pixels.
+        #
+        # Voxel size is a fraction of the model, so it is the same decision
+        # at any scale. 1/140th was NOT fine enough and the failure was
+        # instructive: it swallowed the thatch house's veranda posts into the
+        # wall behind them and left the bake painting torn white gashes
+        # across surfaces that no longer matched the original. A remesh has
+        # to resolve the THINNEST thing worth keeping, and on a building that
+        # is a post, not a wall.
+        print(f"[retopo] collapse floored at {now}; remeshing instead")
+        dim = max(hi.dimensions)
+        rm = lo.modifiers.new("vox", "REMESH")
+        rm.mode = "VOXEL"
+        rm.voxel_size = dim / 260.0
+        bpy.ops.object.modifier_apply(modifier="vox")
+        print(f"[retopo] remeshed to {len(lo.data.polygons)} faces")
+        continue
 print(f"[retopo] decimated to {len(lo.data.polygons)} faces")
 
 # ── fresh UVs, the point of the exercise ───────────────────────────────
@@ -148,8 +199,17 @@ scene.render.bake.use_selected_to_active = True
 # through it into the far side of a thin wall. A fiftieth of the model is
 # comfortably both on props at this scale.
 dim = max(hi.dimensions)
-scene.render.bake.cage_extrusion = dim * 0.02
-scene.render.bake.max_ray_distance = dim * 0.05
+# HOW FAR THE RAYS REACH, and it has to cover how far the low-poly has
+# MOVED from the original. A collapse keeps the new surface close to the old
+# one, so a fiftieth of the model was enough. A voxel remesh does not: it
+# rebuilds the surface on a grid and can sit a whole voxel off, and worst in
+# the concave places — under a veranda, inside an eave — which is exactly
+# where the misses showed as raw white gashes across the walls.
+#
+# A miss is silent. The bake simply leaves those texels as it found them, so
+# the failure arrives as a finished-looking file with holes in its paint.
+scene.render.bake.cage_extrusion = dim * 0.05
+scene.render.bake.max_ray_distance = dim * 0.14
 scene.render.bake.margin = max(4, texpx // 128)
 
 bpy.ops.object.select_all(action="DESELECT")

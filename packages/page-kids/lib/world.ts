@@ -2221,6 +2221,12 @@ export type WorldTheme = {
     }[];
     /** Dwellings placed around the heart, picked at random per village. */
     readonly houses: readonly string[];
+    /**
+     * The SMALL houses — one-room cottages rather than family compounds.
+     * They go on the shallow slots close to the road, where there is no
+     * room for anything bigger. See `villageHouses`.
+     */
+    readonly cottages?: readonly string[];
     readonly houseHeight: number;
     /** Wall segments enclosing the yards. */
     readonly wall: string;
@@ -2961,6 +2967,7 @@ export const VILLAGE_THEME: WorldTheme = {
       { model: "village-util/Nilavilakku", dx: -1, dz: -13.5, h: 2.6 },
     ],
     houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
+    cottages: ["CottageTiled", "CottageBell", "CottageVeranda"],
     // ELEVEN, WITH THE DISTANCE DOING THE REST. 14 was the human-scale
     // figure and too big in the frame; 8.4 was 60 per cent of it and right
     // for the nearest house but wrong for the far ones, which were the same
@@ -3341,21 +3348,44 @@ const VILLAGE_HOUSE_SPOTS: readonly (readonly [number, number])[] = [
 function villageHouses(
   from: number,
   len: number,
-): readonly { readonly x: number; readonly z: number }[] {
-  const slots: readonly (readonly [number, number])[] =
+): readonly {
+  readonly x: number;
+  readonly z: number;
+  /** Fraction of the village's house height. Under 0.7 means a cottage. */
+  readonly scale: number;
+}[] {
+  // A SETTLEMENT, NOT A ROW. Three houses at one depth and one size read as
+  // a terrace. What makes a village look like a village is that the houses
+  // are different sizes at different distances — and that the SMALL ones are
+  // nearest, because a family compound needs room and a one-room cottage
+  // does not, so the cottages end up on the scraps of ground by the road.
+  //
+  // The third number scales the village's house height, and it also decides
+  // WHAT gets built: under 0.7 is a cottage, above it a compound. The slot
+  // chooses the house rather than the other way round, which is how a plot
+  // works.
+  //
+  // Depths stay inside the floor, which stops at -38. The deepest here is
+  // -33, leaving its back wall on solid ground.
+  const slots: readonly (readonly [number, number, number])[] =
     len / RUN_LEN < 0.6
       ? [
-          [0.06, -30],
-          [0.8, -28],
+          [0.06, -30, 1],
+          [0.42, -20, 0.6],
+          [0.8, -28, 0.85],
         ]
       : [
-          [0.06, -30],
-          [0.6, -31],
-          [0.84, -27],
+          [0.06, -30, 1],
+          [0.26, -21, 0.58],
+          [0.45, -33, 0.92],
+          [0.6, -31, 1],
+          [0.72, -19, 0.55],
+          [0.84, -27, 0.86],
         ];
-  return slots.map(([at, oz]) => ({
+  return slots.map(([at, oz, scale]) => ({
     x: from + at * len + hashRange(at, oz, 120, -1.5, 1.5),
     z: oz + hashRange(at, oz, 121, -1.5, 1.5),
+    scale,
   }));
 }
 
@@ -15163,8 +15193,14 @@ export function createKidsWorld(
             : VILLAGE_HOUSE_SPOTS.slice(0, 3).map(([ox, oz]) => ({
                 x: vx + ox + hashRange(ox, oz, 120, -2.5, 2.5),
                 z: oz + hashRange(ox, oz, 121, -1.5, 1.5),
+                scale: 1,
               }));
-        for (let i = 0; i < Math.min(homes.length, pool.length); i++) {
+        // Shuffled separately so neither pool runs out while the other
+        // repeats itself down the road.
+        const cots = [...(V.cottages ?? V.houses)].sort(
+          () => Math.random() - 0.5,
+        );
+        for (let i = 0; i < homes.length; i++) {
           const home = homes[i]!;
           const ox = home.x - vx;
           const oz = home.z;
@@ -15177,11 +15213,14 @@ export function createKidsWorld(
           // else can be placed relative to it.
           const hx = home.x;
           const hz = home.z;
+          // THE SLOT PICKS THE HOUSE: a shallow plot gets a cottage, a deep
+          // one has room for a compound.
+          const from2 = home.scale < 0.7 ? cots : pool;
           const w = await stand(
-            pool[i % pool.length],
+            from2[i % from2.length]!,
             hx,
             hz,
-            V.houseHeight,
+            V.houseHeight * home.scale,
             // No `oz > 0` half-turn any more: nothing stands on the near side,
             // so every house already faces the road it fronts.
             hashRange(ox, oz, 122, -0.35, 0.35),
