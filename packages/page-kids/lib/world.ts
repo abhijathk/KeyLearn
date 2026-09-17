@@ -5901,7 +5901,14 @@ export function createKidsWorld(
    */
   const AIMED_LIGHTS = 2;
   /** What is left for the plain point lamps: houses, market, temple. */
-  let lampLightBudget = LAMP_LIGHTS - AIMED_LIGHTS;
+  /**
+   * The two shadow casters, and they come OUT of the budget like the aimed
+   * cones do — not on top of it. Added on top, the fragment shader looped
+   * over ten lights instead of eight on every lit surface in the world,
+   * which is a cost paid by every pixel whether a lamp is in shot or not.
+   */
+  const SHADOW_LIGHTS = 2;
+  let lampLightBudget = LAMP_LIGHTS - AIMED_LIGHTS - SHADOW_LIGHTS;
   /**
    * EVERY ROADSIDE LIGHT, BUILT BEFORE THE FIRST FRAME.
    *
@@ -6154,17 +6161,9 @@ export function createKidsWorld(
     // and it has to actually do that to be worth standing there.
     const spot = new THREE.SpotLight(0xffb867, 0, 46, 1.22, 0.85, 1.0);
     // Parked below the ground, aimed at nothing, until claimed.
-    // THE CONES CAST NOW. A spot's shadow is a single map, which is what
-    // makes it affordable at all — and these are the roadside lamps the
-    // child walks straight past, so their shadows are the ones anybody is
-    // close enough to read. Small map: these throw a milestone's shadow onto
-    // bare earth, not foliage detail.
-    spot.castShadow = true;
-    spot.shadow.mapSize.set(lowTier ? 512 : 1024, lowTier ? 512 : 1024);
-    spot.shadow.camera.near = 0.5;
-    spot.shadow.camera.far = 46;
-    spot.shadow.bias = -0.0015;
-    spot.shadow.normalBias = 0.05;
+    // THE CONES DO NOT CAST. They light the same roadside lamps the two
+    // LENT casters already serve, so switching them on bought a duplicate
+    // shadow for every milestone and two more depth passes a frame.
     spot.position.set(0, -500, 0);
     spot.target.position.set(0, -501, 0);
     nightLayer.add(spot);
@@ -6191,7 +6190,12 @@ export function createKidsWorld(
     petromax: new THREE.SpotLight(0xfff4e0, 0, 34, 1.0, 0.6, 1.3),
   };
   for (const sl of Object.values(shadowLights)) {
-    sl.castShadow = true;
+    // NOT ON THE LOW TIER AT ALL. Two extra depth passes is the cheapest
+    // shadow this world can offer and it is still two, on a machine chosen
+    // because a school could afford it. A pillar without its shadow is a
+    // pillar; a pillar at eleven frames a second is not. They still light —
+    // only the casting goes.
+    sl.castShadow = !lowTier;
     sl.shadow.mapSize.set(lowTier ? 512 : 1024, lowTier ? 512 : 1024);
     sl.shadow.camera.near = 0.4;
     sl.shadow.camera.far = 34;
@@ -6451,23 +6455,16 @@ export function createKidsWorld(
         kind === "oil" ? 1.15 : 1.6,
       );
       light.position.set(x, y, z);
-      // AND THE FEW POINT LAMPS THE BUDGET GRANTS. A point light's shadow is
-      // a CUBE — six depth passes where a spot needs one — so the map is
-      // kept small and the casting is SWITCHED rather than faded: a caster
-      // at zero intensity still pays for all six. See the tick, where it
-      // goes off in daylight and out of range.
+      // A POINT LAMP NEVER CASTS. Its shadow would be a CUBE — six depth
+      // passes for one lamp — and the budget grants six lamps, so switching
+      // this on cost thirty-six shadow renders a frame against the sun's
+      // one. Measured after the fact, which is the wrong time: the scene
+      // went from one caster to forty-one and the frame rate with it.
       //
-      // The low tier does not do this at all. Six passes per lamp is exactly
-      // the cost that machine cannot absorb, and a flame with no shadow
-      // there is a flame; a flame at eleven frames a second is not.
-      if (!lowTier) {
-        light.castShadow = true;
-        light.shadow.mapSize.set(512, 512);
-        light.shadow.camera.near = 0.35;
-        light.shadow.camera.far = kind === "oil" ? 34 : 26;
-        light.shadow.bias = -0.002;
-        light.shadow.normalBias = 0.06;
-      }
+      // Nothing is lost. Every lamp registers as a candidate for the two
+      // LENT casters below, so the nearest wick and the nearest mantle throw
+      // real shadows at two passes total — and those are the only two any
+      // child is close enough to read.
       nightLayer.add(light);
     }
     lamps.push({
@@ -19127,7 +19124,7 @@ export function createKidsWorld(
           // caster with no intensity still costs its depth pass, so the
           // light is what gets faded and the CASTING is what gets switched.
           const show = best != null && bestD < 26 && nightBlend > 0.02;
-          sl.castShadow = show;
+          sl.castShadow = show && !lowTier;
           if (best == null || !show) {
             sl.intensity = 0;
             continue;
@@ -19214,11 +19211,7 @@ export function createKidsWorld(
             // `visible` cannot be overwritten by a fade. Off is off.
             L.sprite.visible = false;
             L.mat.opacity = 0;
-            if (L.light != null) {
-              L.light.intensity = 0;
-              // Off, not dimmed: an unlit caster still renders its six faces.
-              L.light.castShadow = false;
-            }
+            if (L.light != null) L.light.intensity = 0;
             continue;
           }
           L.sprite.visible = true;
@@ -19248,12 +19241,6 @@ export function createKidsWorld(
           );
           if (L.light != null) {
             L.light.intensity = L.lightPeak * nightBlend * f;
-            // Only the ones in shot carry their shadow. Past the frustum the
-            // six faces buy nothing anybody can see.
-            L.light.castShadow =
-              !lowTier &&
-              nightBlend > 0.02 &&
-              Math.abs(L.sprite.position.x - playerX) < 22;
           }
         }
         if (fireflies != null) {
