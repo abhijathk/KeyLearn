@@ -282,11 +282,42 @@ export const LESSONS_2: readonly Lesson[] = [
       // overhead: which is what "under the banyan" looks like from a road,
       // and the only arrangement in which a child sees either.
       //
-      // 2.4 rather than 1.5. The first was a third of a metre and read as a
-      // kerbstone; this is about 70 cm, which is a god-stone somebody kneels
-      // to — and at this depth it is drawn at two units against a frame
-      // twenty-four tall, so it is actually in the picture.
-      { model: `${STONE}/Shrine_Idol`, at: 0.52, z: -8.8, h: 2.4, clear: 2 },
+      // 3.1 on a half-unit slab, so the whole thing stands 3.6 units — a
+      // metre. It has climbed twice: 1.5 was a third of a metre and read as
+      // a kerbstone, 2.4 was better and still small for the thing a lesson
+      // is named after. At this depth it draws at about three units against
+      // a frame twenty-four tall, which is a shrine a child notices rather
+      // than one they have to be told about.
+      // ON A SLAB, which is how one of these is actually set up. A god-stone
+      // is not pushed into the soil — it stands on a flat cut stone so it
+      // sits clear of the mud and there is somewhere to put the lamp and the
+      // flowers. The washing stone's model is that slab already: measured,
+      // 1.22 wide by 0.30 tall by 0.77 deep, which at h 0.5 gives a
+      // platform two units across and half a unit up.
+      //
+      // `lift` is in the same units as `h` and takes the same depth
+      // falloff, so the idol stays standing ON the slab however far back
+      // the pair are drawn — the two do not drift apart with distance.
+      { model: `${UTIL}/Washing_Stone`, at: 0.52, z: -8.8, h: 0.5, clear: 3 },
+      {
+        model: `${STONE}/Shrine_Idol`,
+        at: 0.52,
+        z: -8.8,
+        h: 3.1,
+        lift: 0.5,
+        clear: 2,
+      },
+      // AND THE LAMP IN FRONT OF IT, which is what says somebody was here
+      // this evening rather than that somebody was here once. A nilavilakku
+      // — bell foot, knopped stem, five-spouted bowl — set on the ground
+      // just off the slab, where one is actually put: in front of the god
+      // and to the side, so it is not between the deity and whoever is
+      // standing there.
+      //
+      // `lit` gives it the shrine's own hours. It goes on when the light
+      // goes, the same rule the temple lamps follow — not a lamp burning at
+      // noon, which is the bug the whole lamp gate exists to prevent.
+      { model: `${UTIL}/Nilavilakku`, at: 0.56, z: -8.4, h: 1.5, lit: 21 },
       { model: `${STONE}/Mossy_Stone`, at: 0.58, z: -11.5, h: 0.8 },
       // "One simple resting stone, bench or low sitting edge nearby."
       { model: `${UTIL}/Washing_Stone`, at: 0.64, z: -11, h: 0.55, clear: 2 },

@@ -318,13 +318,18 @@ test("the idol stands in front of the banyan, not behind its roots", () => {
   // measured, this banyan spans 18.4 units from its axis at h 24, so its
   // crown reaches out over the road and everything here is under it.
   ok(idol.z >= -10, `idol at z ${idol.z} is too far back to be read`);
-  const nearer = l.props.filter(
-    (p) => !/Banyan|Shrine_Idol/.test(p.model) && p.z > idol.z,
+  // Things MAY stand in front of it — the lamp is supposed to, that is
+  // where a lamp goes. What may not happen is one of them hiding it, so the
+  // rule is about HEIGHT rather than order: anything nearer the road has to
+  // be short enough to sit below the god-stone rather than across it.
+  const hiding = l.props.filter(
+    (p) =>
+      !/Banyan|Shrine_Idol/.test(p.model) && p.z > idol.z && p.h > idol.h * 0.6,
   );
   equal(
-    nearer.length,
+    hiding.length,
     0,
-    `${nearer.map((p) => p.model).join(", ")} stand nearer the road than the idol`,
+    `${hiding.map((p) => p.model).join(", ")} stand in front of the idol and hide it`,
   );
   // And square on to the road: no turn means model +Z, which is its face.
   equal(idol.turn ?? 0, 0, "the idol has been turned away from the road");

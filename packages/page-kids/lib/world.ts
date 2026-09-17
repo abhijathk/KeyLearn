@@ -498,6 +498,7 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Estate_Gate", "an estate gate"],
   ["Produce_Pile", "baskets and sacks"],
   ["Shrine_Idol", "a stone idol"],
+  ["Nilavilakku", "an oil lamp"],
   // ── AND WHO LIVES THERE ──────────────────────────────────────────────
   ["Cow", "a cow"],
   ["Cow_Calf", "a calf"],
