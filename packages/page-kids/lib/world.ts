@@ -15066,7 +15066,13 @@ export function createKidsWorld(
         // THE STANDING LAMP IN FRONT OF THE TEMPLE. Its flame is in the oil
         // bowl at the top of the stem — 0.88 of the way up — and it keeps
         // the puja's hours, because it is lit by whoever lights the rest.
-        if (/^Nilavilakku$/i.test(name)) {
+        // MATCHED ON THE LAST PATH SEGMENT, not on the whole string. The
+        // heart names most of its props bare — "Temple", "Cart" — and this
+        // one by folder, "village-util/Nilavilakku", because that is where
+        // it lives. Anchored at the start the test never fired once, and the
+        // failure is silent in the worst way: the lamp is THERE, correctly
+        // placed and correctly sized, and simply never lights.
+        if (/(?:^|\/)Nilavilakku$/i.test(name)) {
           makeLamp(...on(0, 0.88, 0), {
             kind: "oil",
             size: tall * 0.34,
