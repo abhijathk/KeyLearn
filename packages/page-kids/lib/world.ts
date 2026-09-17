@@ -15518,41 +15518,98 @@ export function createKidsWorld(
           }
           // ── THE MANA: HALF GEOMETRY, HALF PICTURE ────────────────────
           //
-          // The big house of the game, and it is one prop in the table and
-          // two things on the road. A two-storey mansion seen from a fixed
-          // camera thirty units away has almost no depth anybody can
-          // perceive — so its body is a CARD, and only the projecting
-          // portico is real: the columns, the balcony that shades what is
-          // behind it, the steps. That is the part with overlap, and overlap
-          // is what tells an eye it is looking at a building rather than at
-          // a picture of one. 194,000 triangles of the source against
-          // 1,374,000: an eighth of the geometry carries all of the depth.
+          // One name in the table, two things on the road. A two-storey
+          // mansion seen from a fixed camera thirty units away has almost no
+          // depth anybody can perceive, so its body is a CARD and only the
+          // projecting portico is real: columns, the balcony that shades what
+          // is behind it, the steps. That is the part with OVERLAP, and
+          // overlap is what tells an eye it is looking at a building rather
+          // than a picture of one. 194,394 triangles against 1,374,387.
           //
-          // THE NUMBERS ARE MEASURED, NOT TUNED. Both halves were cut from
-          // one model, so their offsets are facts about that cut: as
-          // fractions of the whole building's height, the portico's centre
-          // sits 0.1147 to the left and 0.6110 forward of the body's, it
-          // stands 0.7951 as tall, and both have their feet at the same
-          // level. `fitToHeight` re-centres each prop on its own box, which
-          // is exactly why these have to be put back by hand.
+          // `p.z` IS THE FAÇADE, not the model's origin. The first version
+          // put the card at the body's volumetric CENTRE — where it sits in
+          // a solid building and nowhere near where a PLANE belongs. At h 26
+          // the model is forty-four units deep and the floor is thirty-eight,
+          // so the card landed two units past the edge of the world, hanging
+          // in the painted horizon. A card has no depth: it goes at the face,
+          // and the portico stands in front by the gap measured between them.
           //
-          // `p.h` is the height of the WHOLE house, so the table asks for a
-          // building rather than for either half of one.
+          // AND BOTH TAKE ONE PERSPECTIVE. This is what would have shown as a
+          // seam. `perspective()` shrinks a prop by its own z, which is right
+          // for two props and wrong for two halves of one building: twenty-
+          // two units apart, the card came out EIGHTEEN PER CENT smaller than
+          // the portico in front of it. They are one object and are scaled as
+          // one — the portico's height is corrected by the ratio of the two
+          // factors, so whatever `stand` does with its own depth it lands at
+          // the façade's scale.
           if (/(?:^|\/)Mana$/i.test(p.model)) {
             const H = p.h;
+            // STRAIGHT TO THE GATE. The estate wall leaves one opening and
+            // the house is what the opening is FOR — a glimpse through a gate
+            // that shows a hedge is a wasted gate. The gap is FOUND, not
+            // written down: `placements` expands a run into panels and omits
+            // the missing one, so the way through is the widest step between
+            // consecutive panels. That survives the clamp walking the gap
+            // inward on a short lesson, which a written fraction would not.
+            const mine = lessonAt(p.x, CHAPTER).n;
+            const panels = queue
+              .filter(
+                (q) =>
+                  /Laterite_Wall/i.test(q.model) &&
+                  lessonAt(q.x, CHAPTER).n === mine,
+              )
+              .map((q) => q.x)
+              .sort((a, b) => a - b);
+            let gateX = p.x;
+            let widest = 0;
+            for (let k = 1; k < panels.length; k++) {
+              const step = panels[k]! - panels[k - 1]!;
+              if (step > widest) {
+                widest = step;
+                gateX = (panels[k]! + panels[k - 1]!) / 2;
+              }
+            }
+            const faceZ = p.z;
+            const scale = perspective(faceZ);
+            const porticoZ = faceZ + 0.238 * H;
             const [w2] = await Promise.all([
               stand(
                 "ak-3d-pack/ManaPortico",
-                p.x - 0.1147 * H,
-                p.z + 0.611 * H,
-                0.7951 * H,
+                gateX - 0.1147 * H,
+                porticoZ,
+                (0.7951 * H * scale) / perspective(porticoZ),
                 p.turn ?? 0,
                 p.lift ?? 0,
               ),
-              standCard("ManaBody", p.x, p.z - 0.2393 * H, 0.9991 * H, 1.6801),
+              standCard("ManaBody", gateX, faceZ, 0.9991 * H, 1.6801),
             ]);
             if (w2 != null) {
               builtGroup.add(w2);
+            }
+            // ── AND ITS GROUND, WHICH NOTHING ELSE GETS TO PLANT IN ──────
+            //
+            // The branch above returns early, so this prop never reached the
+            // code that records a footprint — and a building with no
+            // footprint is one the scatter has never heard of. Trees grew
+            // through the mansion because as far as the planting was
+            // concerned there was no mansion.
+            //
+            // Measured off what was actually drawn rather than off `p`: the
+            // card's width is its drawn height times its aspect, and the
+            // depth runs from the façade to the front of the portico.
+            const halfW = (0.9991 * H * scale * 1.6801) / 2;
+            const frontZ = faceZ + 0.476 * H * scale;
+            const mid = (faceZ + frontZ) / 2;
+            const halfD = Math.max(1, (frontZ - faceZ) / 2);
+            blockers.push({ x: gateX, z: mid, r: 1, hw: halfW, hd: halfD });
+            if ((p.clear ?? 0) > 0) {
+              forecourts.push({
+                x: gateX,
+                z: mid,
+                r: p.clear!,
+                hw: halfW,
+                hd: halfD,
+              });
             }
             continue;
           }

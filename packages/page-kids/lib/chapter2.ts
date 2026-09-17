@@ -537,7 +537,21 @@ export const LESSONS_2: readonly Lesson[] = [
       // the depth falloff draws it at about sixteen units against a frame
       // twenty-four tall: it fills the gap in the trees rather than peeping
       // through it.
-      { model: "ak-3d-pack/Mana", at: 0.48, z: -34, h: 26, clear: 16 },
+      //
+      // FAR BACK: `z` is the FAÇADE now, not the model's middle, so -36 puts
+      // the wall of the house two units inside the edge of the world and the
+      // front of its portico at -28. Nothing of it hangs off the floor, and
+      // there are eighteen units of field between it and the road — which is
+      // what "glimpsed" needs: distance, not a smaller building.
+      //
+      // Its x is ignored. The build snaps it to the gate in the wall in
+      // front of it, wherever the clamp put that gap.
+      //
+      // `clear` 22, and it earns it: the house is twenty-seven units wide as
+      // drawn and the planting has to stop short of all of it. This prop
+      // recorded no footprint at all until now, which is why trees were
+      // growing through the mansion.
+      { model: "ak-3d-pack/Mana", at: 0.48, z: -36, h: 26, clear: 22 },
       { model: `${STONE}/Mossy_Stone`, at: 0.3, z: -8.5, h: 0.9 },
     ],
     herd: [],
