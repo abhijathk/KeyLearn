@@ -521,7 +521,23 @@ export const LESSONS_2: readonly Lesson[] = [
       //
       // The house is the glimpse through it: far back, large, and never on
       // the road.
-      { model: "ak-3d-pack/HouseMoss", at: 0.48, z: -34, h: 16, clear: 14 },
+      // THE GREAT HOUSE, and the thing this lesson has always been about:
+      // "a long laterite wall, a formal gate, tall trees, and only a
+      // partial or distant glimpse of the large house beyond". A moss house
+      // stood in for it because there was no mansion; there is one now.
+      //
+      // ONE PROP, TWO THINGS. Its body is a card and only its portico is
+      // geometry — see the Mana branch where props are built. `h` is the
+      // height of the whole building; the halves are put back from measured
+      // offsets.
+      //
+      // 26 rather than the moss house's 16. It is the biggest thing in the
+      // game and has to out-scale the temple, which stands 9 — a villager
+      // is 5.9, so this is four and a half of them to the ridge. At z -34
+      // the depth falloff draws it at about sixteen units against a frame
+      // twenty-four tall: it fills the gap in the trees rather than peeping
+      // through it.
+      { model: "ak-3d-pack/Mana", at: 0.48, z: -34, h: 26, clear: 16 },
       { model: `${STONE}/Mossy_Stone`, at: 0.3, z: -8.5, h: 0.9 },
     ],
     herd: [],

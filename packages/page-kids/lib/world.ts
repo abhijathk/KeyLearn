@@ -499,6 +499,8 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Produce_Pile", "baskets and sacks"],
   ["Shrine_Idol", "a stone idol"],
   ["Nilavilakku", "an oil lamp"],
+  ["Mana", "the great house"],
+  ["ManaPortico", "the great house"],
   // ── AND WHO LIVES THERE ──────────────────────────────────────────────
   ["Cow", "a cow"],
   ["Cow_Calf", "a calf"],
@@ -15512,6 +15514,46 @@ export function createKidsWorld(
             // than removed, because a prop authored into Lesson 5 by
             // mistake would otherwise stand in the middle of a village
             // arranged without it.
+            continue;
+          }
+          // ── THE MANA: HALF GEOMETRY, HALF PICTURE ────────────────────
+          //
+          // The big house of the game, and it is one prop in the table and
+          // two things on the road. A two-storey mansion seen from a fixed
+          // camera thirty units away has almost no depth anybody can
+          // perceive — so its body is a CARD, and only the projecting
+          // portico is real: the columns, the balcony that shades what is
+          // behind it, the steps. That is the part with overlap, and overlap
+          // is what tells an eye it is looking at a building rather than at
+          // a picture of one. 194,000 triangles of the source against
+          // 1,374,000: an eighth of the geometry carries all of the depth.
+          //
+          // THE NUMBERS ARE MEASURED, NOT TUNED. Both halves were cut from
+          // one model, so their offsets are facts about that cut: as
+          // fractions of the whole building's height, the portico's centre
+          // sits 0.1147 to the left and 0.6110 forward of the body's, it
+          // stands 0.7951 as tall, and both have their feet at the same
+          // level. `fitToHeight` re-centres each prop on its own box, which
+          // is exactly why these have to be put back by hand.
+          //
+          // `p.h` is the height of the WHOLE house, so the table asks for a
+          // building rather than for either half of one.
+          if (/(?:^|\/)Mana$/i.test(p.model)) {
+            const H = p.h;
+            const [w2] = await Promise.all([
+              stand(
+                "ak-3d-pack/ManaPortico",
+                p.x - 0.1147 * H,
+                p.z + 0.611 * H,
+                0.7951 * H,
+                p.turn ?? 0,
+                p.lift ?? 0,
+              ),
+              standCard("ManaBody", p.x, p.z - 0.2393 * H, 0.9991 * H, 1.6801),
+            ]);
+            if (w2 != null) {
+              builtGroup.add(w2);
+            }
             continue;
           }
           const w = await stand(
