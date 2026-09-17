@@ -79,6 +79,27 @@ let TEX = null;
     const bv = tj.bufferViews[im.bufferView];
     const raw = tb.subarray(bv.byteOffset ?? 0, (bv.byteOffset ?? 0) + bv.byteLength);
     TEX = decodePNG(raw);
+    // `--tex-size N` box-filters the atlas down before sampling, which is how
+    // a resolution is DECIDED rather than argued about: the question "is 768
+    // enough" has a picture as its answer and nothing else.
+    const szArg = process.argv.indexOf("--tex-size");
+    if (szArg > 0) {
+      const n = Number(process.argv[szArg + 1]);
+      const k = Math.max(1, Math.round(TEX.w / n));
+      if (k > 1) {
+        const w2 = Math.floor(TEX.w / k), h2 = Math.floor(TEX.h / k);
+        const d2 = Buffer.alloc(w2 * h2 * TEX.ch);
+        for (let y = 0; y < h2; y++) for (let x = 0; x < w2; x++) {
+          for (let c = 0; c < TEX.ch; c++) {
+            let sum = 0;
+            for (let j = 0; j < k; j++) for (let i = 0; i < k; i++)
+              sum += TEX.data[(((y * k + j) * TEX.w) + (x * k + i)) * TEX.ch + c];
+            d2[(y * w2 + x) * TEX.ch + c] = Math.round(sum / (k * k));
+          }
+        }
+        TEX = { w: w2, h: h2, ch: TEX.ch, data: d2 };
+      }
+    }
     console.log(`  baseColor ${TEX.w}x${TEX.h} ch${TEX.ch}`);
   }
 }
