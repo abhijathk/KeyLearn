@@ -6618,6 +6618,87 @@ export function createKidsWorld(
 
   // ── terrain, worn trail, stepping stones ───────────────────────────────
   const tl = new THREE.TextureLoader();
+
+  /**
+   * A HOUSE ON THE FAR BAND, DRAWN ON A CARD.
+   *
+   * Out past the last row of real buildings there is nothing to walk round,
+   * nothing to occlude and nothing to see from a second angle: the ground
+   * stops at -38 and the painted horizon takes over. A roof out there is a
+   * silhouette with a roof's colours on it, and paying for that in geometry
+   * buys nothing — the cards are a fifth the size of the models they came
+   * from and carry MORE detail, because they are rendered from the raw
+   * million-triangle bake rather than from what survived decimation.
+   *
+   * THIS IS A MESH, NOT A SPRITE, and that is the whole of why it works.
+   * A sprite is unlit — it would sit at noon brightness through the night
+   * while the village behind it went dark, which is the one thing the brief
+   * forbids. A lambert-shaded plane takes the world's light like everything
+   * else, so the card dims at dusk and warms at sunrise with the houses
+   * beside it.
+   *
+   * IT DOES NOT TURN TO FACE THE CAMERA EITHER. It is built facing the
+   * camera once, because this camera never moves — `cam.lookAt` is called a
+   * single time — and the card was RENDERED from that exact viewpoint, yaw
+   * and pitch and all. Turning it per frame would be a way of arriving at
+   * the same fixed answer more expensively. Tilting it back by the camera's
+   * pitch is what keeps it from reading as a flat standee: the painted
+   * perspective and the world's now agree.
+   */
+  const cardDir = new THREE.Vector3(
+    -(V.camX ?? 10),
+    V.camY - V.lookY,
+    V.camZ,
+  ).normalize();
+  async function standCard(
+    name: string,
+    x: number,
+    z: number,
+    height: number,
+    aspect: number,
+  ): Promise<THREE.Mesh | null> {
+    const tex = await new Promise<THREE.Texture | null>((resolve) => {
+      tl.load(
+        `${ASSETS}/cards/${name}.webp`,
+        (t) => resolve(t),
+        undefined,
+        () => resolve(null),
+      );
+    });
+    if (tex == null) {
+      return null;
+    }
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    // The card shrinks with depth like everything else does — it is standing
+    // in the same faked perspective as the buildings it sits behind.
+    const h = height * perspective(z);
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(h * aspect, h),
+      new THREE.MeshLambertMaterial({
+        map: tex,
+        transparent: true,
+        // ALPHA TEST RATHER THAN BLEND ALONE. A blended card has to be
+        // sorted against the trees and the fog every frame and gets it
+        // wrong at the edges; a cut-out writes depth like solid geometry
+        // and cannot be drawn in the wrong order. The threshold is low
+        // because the renderer bled colour under the transparent edge for
+        // exactly this — see `glb-billboard.mjs`.
+        alphaTest: 0.35,
+        side: THREE.DoubleSide,
+      }),
+    );
+    // Half its height up, along the card's own up — which is tilted back by
+    // the camera's pitch — so the bottom edge meets the ground rather than
+    // sinking into it.
+    mesh.position.set(x, surfaceY(x, z), z);
+    mesh.lookAt(mesh.position.clone().add(cardDir));
+    mesh.translateY(h / 2);
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+    scene.add(mesh);
+    return mesh;
+  }
   function jitterGeo(geo: THREE.BufferGeometry, amt: number) {
     const pos = geo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
@@ -15251,6 +15332,60 @@ export function createKidsWorld(
               r: Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 0.45,
             });
           }
+        }
+
+        // ── AND A ROW BEHIND THEM, ON CARDS ────────────────────────────
+        //
+        // The village used to end at its back row. A settlement does not —
+        // it thins out, and the roofs you can just make out past the last
+        // real house are most of what makes it read as a place people live
+        // rather than a set of six buildings.
+        //
+        // Out here nothing can be walked round, occluded or seen from a
+        // second angle: the floor stops at -38 and the painted horizon takes
+        // over. So these are cards — a fifth the bytes of the models they
+        // were rendered from, and carrying MORE detail than those models do,
+        // because they come off the raw million-triangle bake rather than
+        // off what survived decimation.
+        //
+        // No blockers pushed for them. Nothing walks that far back, and a
+        // card is not a thing to bump into.
+        const CARDS = [
+          ["CottageThatch", 1.666],
+          ["CottageTiled", 1.826],
+          ["CottageBell", 1.51],
+          ["CottageVeranda", 1.66],
+        ] as const;
+        if (CHAPTER != null) {
+          const cFrom = CHAPTER[4]!;
+          const cLen = CHAPTER[5]! - cFrom;
+          // Offset from the houses' own fractions so a card never lines up
+          // directly behind a roof, which is the arrangement that makes two
+          // buildings read as one.
+          const far: readonly (readonly [number, number, number])[] = [
+            [0.16, -35.5, 0.62],
+            [0.35, -36.8, 0.5],
+            [0.54, -35.2, 0.58],
+            [0.68, -37, 0.46],
+            [0.9, -35.8, 0.54],
+          ];
+          // ALL FIVE AT ONCE. Awaited one at a time these are five network
+          // round trips in single file at the very end of the build — the
+          // same mistake the chapter's models made before they were pulled
+          // into the warm burst, on a smaller scale. They do not depend on
+          // each other and nothing after them depends on any of them.
+          await Promise.all(
+            far.map(([at, cz, scale], i) => {
+              const [nm, aspect] = CARDS[i % CARDS.length]!;
+              return standCard(
+                nm,
+                cFrom + at * cLen + hashRange(at, cz, 124, -2.2, 2.2),
+                cz + hashRange(at, cz, 125, -0.8, 0.8),
+                V.houseHeight * scale,
+                aspect,
+              );
+            }),
+          );
         }
 
         // Wall segments along the road, enclosing the yards. Laid end to end
