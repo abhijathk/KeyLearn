@@ -6192,10 +6192,21 @@ export function createKidsWorld(
   for (const sl of Object.values(shadowLights)) {
     // NOT ON THE LOW TIER AT ALL. Two extra depth passes is the cheapest
     // shadow this world can offer and it is still two, on a machine chosen
-    // because a school could afford it. A pillar without its shadow is a
-    // pillar; a pillar at eleven frames a second is not. They still light —
-    // only the casting goes.
+    // because a school could afford it. They still light — only the casting
+    // goes.
+    //
+    // AND IT IS SET ONCE, HERE, AND NEVER TOUCHED AGAIN. Flipping
+    // `castShadow` on a light invalidates every shader program that light
+    // affects, and three.js recompiles them on the next frame — which is a
+    // stall you SEE: the loader stops, then carries on. I had this toggling
+    // per frame on proximity, so the scene recompiled its materials every
+    // time the child walked into or out of range of a lamp.
     sl.castShadow = !lowTier;
+    // The map is rendered ON DEMAND instead. A shadow only changes when the
+    // thing casting it moves, and these lamps are nailed to buildings — so
+    // the map is re-rendered when the caster is LENT to a different lamp and
+    // at no other time. Per frame it costs nothing.
+    sl.shadow.autoUpdate = false;
     sl.shadow.mapSize.set(lowTier ? 512 : 1024, lowTier ? 512 : 1024);
     sl.shadow.camera.near = 0.4;
     sl.shadow.camera.far = 34;
@@ -19124,16 +19135,28 @@ export function createKidsWorld(
           // caster with no intensity still costs its depth pass, so the
           // light is what gets faded and the CASTING is what gets switched.
           const show = best != null && bestD < 26 && nightBlend > 0.02;
-          sl.castShadow = show && !lowTier;
           if (best == null || !show) {
+            // Faded, not switched. `castShadow` stays exactly as it was set
+            // at build time — see above for what touching it costs — and a
+            // caster with no intensity and a map it is not refreshing is
+            // very nearly free.
             sl.intensity = 0;
             continue;
           }
-          sl.position.set(best.x, best.y, best.z);
-          sl.target.position.set(best.x, 0, best.z + best.reach * 0.9);
-          sl.target.updateMatrixWorld();
-          sl.distance = Math.max(6, best.reach * 2.4);
-          sl.shadow.camera.far = sl.distance;
+          // ONLY WHEN IT MOVES. The lamps are fixed to buildings, so a map
+          // rendered once where the caster now stands stays correct until
+          // the caster is lent somewhere else.
+          const movedTo = `${best.x.toFixed(2)},${best.z.toFixed(2)}`;
+          if (sl.userData.at !== movedTo) {
+            sl.userData.at = movedTo;
+            sl.position.set(best.x, best.y, best.z);
+            sl.target.position.set(best.x, 0, best.z + best.reach * 0.9);
+            sl.target.updateMatrixWorld();
+            sl.distance = Math.max(6, best.reach * 2.4);
+            sl.shadow.camera.far = sl.distance;
+            sl.shadow.camera.updateProjectionMatrix();
+            sl.shadow.needsUpdate = true;
+          }
           const fade = Math.max(0, 1 - Math.max(0, bestD - 14) / 12);
           sl.intensity = 2.1 * fade * nightBlend;
         }
