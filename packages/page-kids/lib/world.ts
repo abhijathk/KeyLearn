@@ -15680,10 +15680,17 @@ export function createKidsWorld(
               // inset from the corners, because a lamp hung exactly on the
               // corner of a building looks like it is falling off it.
               //
-              // Hours, not `closes`: 6 PM to 11 PM. Later than a shop and
-              // earlier than all night, which is a household rather than a
-              // street lamp.
-              const HOUSE_LAMP = [18, 23] as const;
+              // SIX IN THE EVENING TO NINE, and not a minute of the deep
+              // night. The same window the village houses keep — see `AWAKE`
+              // where their windows are lit — because this is a household
+              // and not a street lamp: the lamps go on when the light goes
+              // and out when the house goes to bed.
+              //
+              // It is also the brief's own shape for these hours. Seven to
+              // nine is "work stops, people return"; ten to four is "minimal
+              // human presence". A lit veranda at two in the morning would
+              // be the one thing on this road still awake.
+              const HOUSE_LAMP = [18, 21] as const;
               const foot = b.min.y;
               const tall = b.max.y - b.min.y;
               makeLamp(cx, foot + tall * 0.34, porch - hd * 0.12, {
