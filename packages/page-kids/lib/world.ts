@@ -6154,6 +6154,17 @@ export function createKidsWorld(
     // and it has to actually do that to be worth standing there.
     const spot = new THREE.SpotLight(0xffb867, 0, 46, 1.22, 0.85, 1.0);
     // Parked below the ground, aimed at nothing, until claimed.
+    // THE CONES CAST NOW. A spot's shadow is a single map, which is what
+    // makes it affordable at all — and these are the roadside lamps the
+    // child walks straight past, so their shadows are the ones anybody is
+    // close enough to read. Small map: these throw a milestone's shadow onto
+    // bare earth, not foliage detail.
+    spot.castShadow = true;
+    spot.shadow.mapSize.set(lowTier ? 512 : 1024, lowTier ? 512 : 1024);
+    spot.shadow.camera.near = 0.5;
+    spot.shadow.camera.far = 46;
+    spot.shadow.bias = -0.0015;
+    spot.shadow.normalBias = 0.05;
     spot.position.set(0, -500, 0);
     spot.target.position.set(0, -501, 0);
     nightLayer.add(spot);
@@ -6440,6 +6451,23 @@ export function createKidsWorld(
         kind === "oil" ? 1.15 : 1.6,
       );
       light.position.set(x, y, z);
+      // AND THE FEW POINT LAMPS THE BUDGET GRANTS. A point light's shadow is
+      // a CUBE — six depth passes where a spot needs one — so the map is
+      // kept small and the casting is SWITCHED rather than faded: a caster
+      // at zero intensity still pays for all six. See the tick, where it
+      // goes off in daylight and out of range.
+      //
+      // The low tier does not do this at all. Six passes per lamp is exactly
+      // the cost that machine cannot absorb, and a flame with no shadow
+      // there is a flame; a flame at eleven frames a second is not.
+      if (!lowTier) {
+        light.castShadow = true;
+        light.shadow.mapSize.set(512, 512);
+        light.shadow.camera.near = 0.35;
+        light.shadow.camera.far = kind === "oil" ? 34 : 26;
+        light.shadow.bias = -0.002;
+        light.shadow.normalBias = 0.06;
+      }
       nightLayer.add(light);
     }
     lamps.push({
@@ -19186,7 +19214,11 @@ export function createKidsWorld(
             // `visible` cannot be overwritten by a fade. Off is off.
             L.sprite.visible = false;
             L.mat.opacity = 0;
-            if (L.light != null) L.light.intensity = 0;
+            if (L.light != null) {
+              L.light.intensity = 0;
+              // Off, not dimmed: an unlit caster still renders its six faces.
+              L.light.castShadow = false;
+            }
             continue;
           }
           L.sprite.visible = true;
@@ -19216,6 +19248,12 @@ export function createKidsWorld(
           );
           if (L.light != null) {
             L.light.intensity = L.lightPeak * nightBlend * f;
+            // Only the ones in shot carry their shadow. Past the frustum the
+            // six faces buy nothing anybody can see.
+            L.light.castShadow =
+              !lowTier &&
+              nightBlend > 0.02 &&
+              Math.abs(L.sprite.position.x - playerX) < 22;
           }
         }
         if (fireflies != null) {

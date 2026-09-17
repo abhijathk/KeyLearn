@@ -483,11 +483,32 @@ export const LESSONS_2: readonly Lesson[] = [
       `${PLANTS}/Jackfruit_Tree`,
       `${PLANTS}/Tamarind_Tree`,
     ],
-    mid: [`${PLANTS}/Hibiscus_Chemparathi`],
-    ground: [`${PLANTS}/Kerala_Fern`, `${PLANTS}/Kerala_Grass_Tuft`],
-    density: 1.8,
-    mix: [0.34, 0.12, 0.54],
-    depth: [12, 30],
+    mid: [
+      `${PLANTS}/Hibiscus_Chemparathi`,
+      // "Allow moss, vines and ROADSIDE PLANTS to soften the wall so it
+      // still belongs to the rural Kerala environment." A laterite run with
+      // nothing growing at its foot reads as new masonry; this is a boundary
+      // that has stood a long time.
+      `${PLANTS}/Drumstick_Muringa`,
+    ],
+    ground: [
+      `${PLANTS}/Kerala_Fern`,
+      `${PLANTS}/Kerala_Grass_Tuft`,
+      `${PLANTS}/Taro_Chembu`,
+    ],
+    // "TALL MATURE TREES BEHIND THE WALL so their canopies rise above it and
+    // imply a large property" — and that is what the canopy share is for
+    // here rather than the density. 0.44 of the planting is mango, jackfruit
+    // and tamarind, which is the highest canopy share in the chapter: an
+    // estate is a place where nobody has cut anything down for fifty years.
+    density: 2.6,
+    mix: [0.44, 0.14, 0.42],
+    // ALL THE WAY BACK, PAST THE HOUSE. The old 30 stopped nine units short
+    // of the mansion's back wall, so the great house stood against bare
+    // ground with a stand of trees in front of it and nothing behind — which
+    // reads as a model on a table rather than a property. The brief wants it
+    // "glimpsed BETWEEN trees", and that needs trees on both sides of it.
+    depth: [10, 38],
     props: [
       // THE LONGEST WALL IN EITHER CHAPTER, and one way in. Here the single
       // opening is right: an estate has A gate, and the gap in the run is
@@ -546,9 +567,17 @@ export const LESSONS_2: readonly Lesson[] = [
       // game and it is also a field away, and the second has to read or the
       // first is a lie.
       //
-      // `clear` 16 against a drawn width of twenty-one, so the planting
-      // stops short of all of it and closes around rather than through.
-      { model: "ak-3d-pack/Mana", at: 0.48, z: -31, h: 16, clear: 15 },
+      // `clear` IS SMALL ON PURPOSE. It was 16, which held a bare ring
+      // twenty-one units across around the house — and the brief asks for
+      // the opposite: "only a partial or distant glimpse of the large house
+      // through a gate opening or BETWEEN TREES". A clearing is the one
+      // arrangement in which nothing is between anything.
+      //
+      // Nothing is needed for the building itself: the build already records
+      // its measured footprint as a blocker, and the drive from the gate to
+      // the porch is held clear separately. 4 is a skirt of open ground at
+      // the walls, which is what a swept house has — not a field.
+      { model: "ak-3d-pack/Mana", at: 0.48, z: -31, h: 16, clear: 4 },
       { model: `${STONE}/Mossy_Stone`, at: 0.3, z: -8.5, h: 0.9 },
     ],
     herd: [],
