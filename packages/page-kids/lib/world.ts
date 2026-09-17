@@ -3347,6 +3347,29 @@ const VILLAGE_HOUSE_SPOTS: readonly (readonly [number, number])[] = [
  * author's original ordering — somebody built close to the road and
  * somebody else built behind them.
  */
+/**
+ * WHERE THE ESTATE'S GATE IS, found rather than written down.
+ *
+ * A boundary run is expanded into panels with its gap simply OMITTED, so the
+ * way through is the widest step between consecutive panels. Finding it this
+ * way survives the clamp walking the gap inward on a short lesson, which any
+ * hand-written fraction would not — and two things need it: the house, which
+ * stands square in the opening, and the path, which starts at it.
+ */
+function estateGate(panels: readonly number[]): number | null {
+  const xs = [...panels].sort((a, b) => a - b);
+  let x = 0;
+  let gap = 0;
+  for (let k = 1; k < xs.length; k++) {
+    const step = xs[k]! - xs[k - 1]!;
+    if (step > gap) {
+      gap = step;
+      x = (xs[k]! + xs[k - 1]!) / 2;
+    }
+  }
+  return gap > 0 ? x : null;
+}
+
 function villageHouses(
   from: number,
   len: number,
@@ -7045,11 +7068,44 @@ export function createKidsWorld(
     // be left behind if the shrine moves, which is the mistake the temple's
     // forecourt is still one hand-kept number away from.
     if (CHAPTER != null) {
+      const placed = placements(CHAPTER, perspective);
       yards.push(
-        ...placements(CHAPTER, perspective)
+        ...placed
           .filter((p) => /Shrine_Idol/i.test(p.model))
           .map((p) => ({ x: p.x, z: p.z + 2.6, rx: 5.2, rz: 3.2 })),
       );
+      // ── AND THE DRIVE UP TO THE GREAT HOUSE ─────────────────────────
+      //
+      // Bare laterite, because that is what a track between a gate and a
+      // door becomes after decades of feet and cartwheels: the grass gives
+      // up and the red earth comes through. Same mechanism as the temple's
+      // forecourt and the shrine's worn patch — and because the ground is
+      // painted BEFORE anything is built on it, this has to find the gate
+      // the same way the house does rather than be told where it is.
+      //
+      // Long and narrow, which is what makes it a path. The noise that
+      // roughens every yard gives it a ragged edge on its own, so the grass
+      // and ferns closing in either side meet worn dirt and not a drawn
+      // line.
+      for (const m of placed.filter((q) => /(?:^|\/)Mana$/i.test(q.model))) {
+        const gx =
+          estateGate(
+            placed
+              .filter(
+                (q) =>
+                  /Laterite_Wall/i.test(q.model) &&
+                  lessonAt(q.x, CHAPTER).n === lessonAt(m.x, CHAPTER).n,
+              )
+              .map((q) => q.x),
+          ) ?? m.x;
+        const front = m.z + 0.476 * m.h * perspective(m.z);
+        yards.push({
+          x: gx,
+          z: (-12 + front) / 2,
+          rx: 3.9,
+          rz: Math.abs(front + 12) / 2 + 1.5,
+        });
+      }
     }
     const yardAt = (x: number, z: number): number => {
       let w = 0;
@@ -15560,44 +15616,60 @@ export function createKidsWorld(
           // the façade's scale.
           if (/(?:^|\/)Mana$/i.test(p.model)) {
             const H = p.h;
-            // STRAIGHT TO THE GATE. The estate wall leaves one opening and
-            // the house is what the opening is FOR — a glimpse through a gate
-            // that shows a hedge is a wasted gate. The gap is FOUND, not
-            // written down: `placements` expands a run into panels and omits
+            // ── ONE BUILDING, TURNED TO MATCH ITS OWN PICTURE ──────────
+            //
+            // The card was drawn from an azimuth of +16.86 degrees and the
+            // camera stands at -16.86 — `theme.view.camX` holds a distance
+            // that is negated where the camera is placed, and the renderer
+            // took the field at face value. So the picture shows the house
+            // from one side and the geometry beside it stood on the other:
+            // thirty-four degrees apart, which is a portico that does not
+            // belong to the wall behind it.
+            //
+            // The picture is the one that was liked, so the GEOMETRY moves.
+            // Turning the model -33.72 degrees at the true camera reproduces
+            // the card exactly — rendered both ways and compared, not
+            // reasoned about — so that is the turn, and the portico's offset
+            // is the same rotation applied to where it sits on the building.
+            //
+            // BOTH ARE FRAMED ON THE WHOLE MODEL, which is what makes this
+            // arithmetic rather than fitting: the card's centre IS the
+            // building's centre, so the portico is placed from the building's
+            // centre and the two cannot drift.
+            // STRAIGHT TO THE GATE. The estate wall leaves exactly one
+            // opening and the house is what it is FOR. The gap is FOUND, not
+            // written down — `placements` expands a run into panels and omits
             // the missing one, so the way through is the widest step between
-            // consecutive panels. That survives the clamp walking the gap
-            // inward on a short lesson, which a written fraction would not.
+            // consecutive panels, which survives the clamp walking that gap
+            // inward on a short lesson.
             const mine = lessonAt(p.x, CHAPTER).n;
-            const panels = queue
-              .filter(
-                (q) =>
-                  /Laterite_Wall/i.test(q.model) &&
-                  lessonAt(q.x, CHAPTER).n === mine,
-              )
-              .map((q) => q.x)
-              .sort((a, b) => a - b);
-            let gateX = p.x;
-            let widest = 0;
-            for (let k = 1; k < panels.length; k++) {
-              const step = panels[k]! - panels[k - 1]!;
-              if (step > widest) {
-                widest = step;
-                gateX = (panels[k]! + panels[k - 1]!) / 2;
-              }
-            }
+            const gateX =
+              estateGate(
+                queue
+                  .filter(
+                    (q) =>
+                      /Laterite_Wall/i.test(q.model) &&
+                      lessonAt(q.x, CHAPTER).n === mine,
+                  )
+                  .map((q) => q.x),
+              ) ?? p.x;
+            const TURN = -0.5885; // -33.72 degrees
             const faceZ = p.z;
             const scale = perspective(faceZ);
-            const porticoZ = faceZ + 0.238 * H;
+            const porticoZ = faceZ + 0.4445 * H;
             const [w2] = await Promise.all([
               stand(
                 "ak-3d-pack/ManaPortico",
-                gateX - 0.1147 * H,
+                gateX - 0.4345 * H,
                 porticoZ,
                 (0.7951 * H * scale) / perspective(porticoZ),
-                p.turn ?? 0,
+                TURN,
                 p.lift ?? 0,
               ),
-              standCard("ManaBody", gateX, faceZ, 1.014 * H, 1.7049, 0.036),
+              // 0.0339 is measured: how far the base line sits above the
+              // silhouette's lowest corner, which is the plinth's near edge
+              // seen from above. Without it the house hovers by that much.
+              standCard("ManaBody", gateX, faceZ, 1.015 * H, 1.607, 0.0339),
             ]);
             if (w2 != null) {
               builtGroup.add(w2);
@@ -15613,11 +15685,31 @@ export function createKidsWorld(
             // Measured off what was actually drawn rather than off `p`: the
             // card's width is its drawn height times its aspect, and the
             // depth runs from the façade to the front of the portico.
-            const halfW = (1.014 * H * scale * 1.7049) / 2;
+            const halfW = (1.015 * H * scale * 1.607) / 2;
             const frontZ = faceZ + 0.476 * H * scale;
             const mid = (faceZ + frontZ) / 2;
             const halfD = Math.max(1, (frontZ - faceZ) / 2);
             blockers.push({ x: gateX, z: mid, r: 1, hw: halfW, hd: halfD });
+            // ── THE WAY UP TO THE DOOR ──────────────────────────────────
+            //
+            // An estate gate opens onto something. A gate with mature trees
+            // growing across the line between it and the house is a gate
+            // into a thicket — and the whole reason the house stands square
+            // in the opening is so a child sees it THROUGH the gate.
+            //
+            // A narrow corridor from gate to portico is held clear of
+            // everything the scatter puts down, and nothing else about the
+            // estate is. The planting closes back in on both sides, which is
+            // what makes it read as a path rather than as a gap.
+            const PATH_HALF = 3.4;
+            const GATE_Z = -12;
+            blockers.push({
+              x: gateX,
+              z: (GATE_Z + frontZ) / 2,
+              r: 1,
+              hw: PATH_HALF,
+              hd: Math.abs(frontZ - GATE_Z) / 2,
+            });
             if ((p.clear ?? 0) > 0) {
               forecourts.push({
                 x: gateX,

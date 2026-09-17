@@ -36,7 +36,33 @@ const [inPath, outPath] = args.filter((a, i) => !a.startsWith("--") && !(i > 0 &
 if (!inPath || !outPath) { console.error("usage: glb-billboard.mjs in.glb out.png [--px N] [--tex-png f]"); process.exit(2); }
 const PX = num("--px", 512);
 const CAMX = num("--camx", 10), CAMY = num("--camy", 11), CAMZ = num("--camz", 33), LOOKY = num("--looky", 3.6);
-const YAW = Math.atan2(CAMX, CAMZ);
+// THE CAMERA STANDS AT MINUS camX, AND THAT SIGN IS THE WHOLE OF IT.
+//
+// `theme.view.camX` is 10 and the camera is placed at `-(camX)` — a field
+// holding a distance, negated at the point of use. Taking the field at face
+// value put the yaw at +16.86 degrees when the camera sees the building from
+// -16.86, so every card was rendered FROM THE WRONG SIDE: mirrored, and 33.7
+// degrees out from the geometry standing next to it.
+//
+// Derived rather than guessed, since guessing is what produced the bug. The
+// camera's screen-x axis is normalize(cross(forward, up)), which for this
+// view is (0.9570, 0, 0.2900); a rotation by YAW projects onto
+// (cos YAW, 0, -sin YAW), and only YAW = -16.86 gives that vector.
+//
+// AND NO RENDER OF MINE COULD HAVE CAUGHT IT. The seam check composites two
+// halves rendered by THIS tool, so both carried the same wrong sign and
+// agreed with each other perfectly. Only the real camera disagrees, and only
+// on screen.
+// `--yaw` overrides the camera azimuth and `--turn` spins the MODEL before
+// viewing. Both exist for one job: a card already drawn at one azimuth is
+// being kept, so the geometry standing beside it has to be turned to match
+// the PICTURE rather than the other way round — and that turn is found by
+// rendering the real camera's view against the card until they agree,
+// instead of nudging a number in the world and reloading.
+const YAW = Number.isNaN(num("--yaw", Number.NaN))
+  ? Math.atan2(-CAMX, CAMZ)
+  : (num("--yaw", 0) * Math.PI) / 180;
+const TURN = (num("--turn", 0) * Math.PI) / 180;
 const PITCH = Math.atan2(CAMY - LOOKY, Math.hypot(CAMX, CAMZ));
 
 const src = readFileSync(inPath);
@@ -128,8 +154,11 @@ for (let i = 0; i < measure.count; i++) for (let c = 0; c < 3; c++) {
 // Origin at the FOOT, so placing the card is "stand the bottom on the ground".
 const ctr = [(mn[0] + mx[0]) / 2, mn[1], (mn[2] + mx[2]) / 2];
 const cy = Math.cos(YAW), sy = Math.sin(YAW), cp = Math.cos(PITCH), sp = Math.sin(PITCH);
+const ct = Math.cos(TURN), st = Math.sin(TURN);
 const view = (x, y, z) => {
-  const rx = x * cy - z * sy, rz = x * sy + z * cy;
+  // The model's own turn first, then the camera's.
+  const tx = x * ct + z * st, tz = -x * st + z * ct;
+  const rx = tx * cy - tz * sy, rz = tx * sy + tz * cy;
   return [rx, y * cp - rz * sp, y * sp + rz * cp];
 };
 let ax = 1e9, bx = -1e9, ay = 1e9, by = -1e9;
