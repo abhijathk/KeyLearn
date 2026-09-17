@@ -256,7 +256,19 @@ execFileSync("dwebp", ["-quiet", `${tmpScaled}.webp`, "-o", tmpScaled]);
 // KHR_texture_basisu nor EXT_meshopt_compression, so the shipping file cannot
 // be inspected there at all.
 const QA = args.includes("--qa-webp");
-if (!QA) execFileSync("basisu", ["-ktx2", "-mipmap", "-q", String(QUALITY), "-file", tmpScaled, "-output_file", tmpOut], { stdio: "ignore" });
+// `-mip_linear` — the same flag, and the same reason, as the cast.
+//
+// basisu's default converts an SDR texture from sRGB to LINEAR LIGHT before
+// filtering each mip and back again. That is the right way to average LIGHT
+// and the wrong way to average a baked ALBEDO: linear-light averaging is
+// dominated by the bright end, so cream plaster beside a dark doorway comes
+// back pale rather than mid-brown. It turned the blacksmith's hair white at
+// the distance he is drawn at, and these buildings are the same bake in the
+// large — cream walls against dark thatch, dark shutters, dark timber — and
+// they are drawn at distance nearly always. Mip 0 is untouched either way,
+// so the near view does not change; what changes is that a house half way
+// down the road keeps the tone it has up close.
+if (!QA) execFileSync("basisu", ["-ktx2", "-mipmap", "-mip_linear", "-q", String(QUALITY), "-file", tmpScaled, "-output_file", tmpOut], { stdio: "ignore" });
 const tex = QA ? readFileSync(`${tmpScaled}.webp`) : readFileSync(tmpOut);
 for (const f of [tmpIn, tmpScaled, `${tmpScaled}.webp`, tmpOut]) { try { unlinkSync(f); } catch { /* already gone */ } }
 
