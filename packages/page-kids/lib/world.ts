@@ -6670,6 +6670,17 @@ export function createKidsWorld(
     z: number,
     height: number,
     aspect: number,
+    /**
+     * HOW FAR TO DROP IT, as a fraction of its own height.
+     *
+     * The bottom of a card is its silhouette's lowest PIXEL, and on a
+     * building that is one corner of the plinth: the camera looks down, so
+     * the nearest corner projects below the rest of the base. Stand that
+     * pixel on the ground and the base line across the building's width
+     * floats above it — which reads as a house hovering, and is exactly what
+     * it is. `glb-billboard.mjs` measures the difference and prints it.
+     */
+    sink = 0,
   ): Promise<THREE.Mesh | null> {
     const tex = await new Promise<THREE.Texture | null>((resolve) => {
       tl.load(
@@ -6705,7 +6716,7 @@ export function createKidsWorld(
     // Half its height up, along the card's own up — which is tilted back by
     // the camera's pitch — so the bottom edge meets the ground rather than
     // sinking into it.
-    mesh.position.set(x, surfaceY(x, z), z);
+    mesh.position.set(x, surfaceY(x, z) - h * sink, z);
     mesh.lookAt(mesh.position.clone().add(cardDir));
     mesh.translateY(h / 2);
     mesh.castShadow = false;
@@ -15393,11 +15404,15 @@ export function createKidsWorld(
         //
         // No blockers pushed for them. Nothing walks that far back, and a
         // card is not a thing to bump into.
+        // Name, aspect, and SINK — all three measured off the render rather
+        // than typed in. The sink is how far the base line sits above the
+        // silhouette's lowest corner, and without it every card in this row
+        // hovered by two or three per cent of its own height.
         const CARDS = [
-          ["CottageThatch", 1.666],
-          ["CottageTiled", 1.826],
-          ["CottageBell", 1.51],
-          ["CottageVeranda", 1.66],
+          ["CottageThatch", 1.6901, 0.0271],
+          ["CottageTiled", 1.8541, 0.0344],
+          ["CottageBell", 1.5316, 0.0219],
+          ["CottageVeranda", 1.6845, 0.0262],
         ] as const;
         if (CHAPTER != null) {
           const cFrom = CHAPTER[4]!;
@@ -15419,13 +15434,14 @@ export function createKidsWorld(
           // each other and nothing after them depends on any of them.
           await Promise.all(
             far.map(([at, cz, scale], i) => {
-              const [nm, aspect] = CARDS[i % CARDS.length]!;
+              const [nm, aspect, sink] = CARDS[i % CARDS.length]!;
               return standCard(
                 nm,
                 cFrom + at * cLen + hashRange(at, cz, 124, -2.2, 2.2),
                 cz + hashRange(at, cz, 125, -0.8, 0.8),
                 V.houseHeight * scale,
                 aspect,
+                sink,
               );
             }),
           );
@@ -15581,7 +15597,7 @@ export function createKidsWorld(
                 p.turn ?? 0,
                 p.lift ?? 0,
               ),
-              standCard("ManaBody", gateX, faceZ, 1.014 * H, 1.7049),
+              standCard("ManaBody", gateX, faceZ, 1.014 * H, 1.7049, 0.036),
             ]);
             if (w2 != null) {
               builtGroup.add(w2);

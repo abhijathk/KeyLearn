@@ -209,6 +209,32 @@ for (let pass = 0; pass < 3; pass++) {
   }
 }
 writeFileSync(outPath, encodePNG(W, H, 4, px));
+// ── HOW FAR THE CARD HAS TO SINK ───────────────────────────────────────
+//
+// The bottom of this image is the silhouette's lowest PIXEL, and on a
+// building that is one corner of the plinth — the camera looks down, so the
+// nearest corner projects lower than the rest of the base. Stand that pixel
+// on the ground and the base line across the width of the building floats
+// above it by the difference, which reads as a house hovering.
+//
+// So it is measured: the mean base row across the middle of the silhouette,
+// against the lowest row, as a fraction of the card's height. The placer
+// sinks the card by that much and the base line lands on the ground.
+{
+  const bottomOf = (x) => {
+    for (let y = H - 1; y >= 0; y--) if (px[(y * W + x) * 4 + 3] > 127) return y;
+    return -1;
+  };
+  let sum = 0, n = 0, lowest = 0;
+  for (let x = Math.floor(W * 0.2); x < W * 0.8; x++) {
+    const b = bottomOf(x);
+    if (b < 0) continue;
+    sum += b; n++;
+    if (b > lowest) lowest = b;
+  }
+  const sink = n > 0 ? (lowest - sum / n) / H : 0;
+  console.log(`  sink ${sink.toFixed(4)} — the base line is that far above the lowest corner`);
+}
 let opaque = 0;
 for (let i = 0; i < W * H; i++) if (px[i * 4 + 3]) opaque++;
 console.log(`  ${W}x${H}, ${((opaque / (W * H)) * 100).toFixed(0)}% opaque`);
