@@ -2931,6 +2931,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [worldReady, setWorldReady] = useState(false);
   const [stepsDone, setStepsDone] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  /** The world is ready and the recap may be walked away from. */
+  const [walkArmed, setWalkArmed] = useState(false);
   /**
    * The pieces of the world, in the order they should be READ OUT.
    *
@@ -3567,6 +3569,39 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     forced != null
       ? (forced.chapter.n - 1) * SEGMENT_COUNT + forced.lesson
       : lessonAtStones(stonesNow);
+  /**
+   * WHAT THE LOADING SCREEN SAYS WHILE IT LOADS.
+   *
+   * The loader used to say where the child was going and nothing about where
+   * they had BEEN — which is the half a child actually cares about, and the
+   * half that gives them a reason to read rather than wait.
+   *
+   * It is also the cover the streaming build needs. Only the lesson the
+   * child resumes on and the one after it are waited for now; the rest of
+   * the road arrives behind this panel. A recap somebody wants to read buys
+   * those seconds honestly, where a spinner only spends them.
+   *
+   * Computed here rather than in the panel because it needs `results`, which
+   * lives well above it, and because a `useMemo` keeps it off the render
+   * path of every keystroke.
+   */
+  const recap = useMemo(() => {
+    const speeds = results
+      .slice(-40)
+      .map((r) => Math.round(r.speed / 5))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    const best = speeds.length > 0 ? Math.max(...speeds) : 0;
+    const chap = forced?.chapter ?? chapterAt(prefs.roadStones ?? 0);
+    const idx =
+      forced != null ? forced.lesson - 1 : lessonIndexAt(prefs.roadStones ?? 0);
+    // The next two stretches by name — enough to be a promise, few enough to
+    // read in the second and a half this is on screen.
+    const ahead = chap.lessons
+      .slice(idx + 1, idx + 3)
+      .map((l) => l.name.toLowerCase());
+    return { stones: prefs.roadStones ?? 0, best, ahead };
+  }, [results, forced, prefs.roadStones]);
+
   const lessonName =
     (forced != null
       ? chapterNow.lessons[forced.lesson - 1]
@@ -4365,6 +4400,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // one of those rebuilds is the same wait the opening one is, and it is
     // shown the same way.
     setLoaded(false);
+    setWalkArmed(false);
     setWorldReady(false);
     setStepsDone(false);
     loadSteps.current = [];
@@ -4809,7 +4845,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       if (classicRef.current && !armedRef.current) {
         if (ev.key === "Enter") {
           ev.preventDefault();
-          setArmed(true);
+          setWalkArmed(true);
         }
         return;
       }
@@ -5299,7 +5335,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     const done = () => {
       if (!fired) {
         fired = true;
-        setLoaded(true);
+        // ARMED, NOT DISMISSED. This used to tear the loader away the moment
+        // the world was ready, which is right when there is nothing to read
+        // and wrong now that there is: the child decides when to walk on.
+        // The screen they land on is finished either way — only the road
+        // beyond it is still arriving — so pressing this the instant it
+        // lights costs them nothing.
+        setArmed(true);
       }
     };
     raf = requestAnimationFrame(() => {
@@ -5344,6 +5386,29 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * spanning them would have nothing to span, so there it stays inside the
    * scene card exactly as before.
    */
+  /**
+   * ENTER OR SPACE WALKS ON. This is a typing game — the child's hands are
+   * on the keys, not the mouse — and a loading screen that can only be left
+   * by clicking is a loading screen that asks them to move their hands twice
+   * for nothing.
+   *
+   * Only while the loader is up and only once armed, so it cannot swallow
+   * the first keystroke of the passage.
+   */
+  useEffect(() => {
+    if (loaded || !walkArmed) {
+      return;
+    }
+    const go = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        setLoaded(true);
+      }
+    };
+    window.addEventListener("keydown", go);
+    return () => window.removeEventListener("keydown", go);
+  }, [loaded, walkArmed]);
+
   const loaderPane = loaded ? null : (
     <div className={styles.loading}>
       <div className={styles.loadStack}>
@@ -5398,12 +5463,66 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             <Reveal text={`Lesson ${lessonNo} · ${lessonName}`.toUpperCase()} />
           </div>
         )}
+        {/*
+          ── THE RECAP, AND IT IS ON SCREEN FROM THE FIRST FRAME ──────────
+
+          Not a card shown after the loader: the loader IS this. A recap that
+          appears once loading finishes buys its seconds AFTER the wait it
+          was meant to cover, which is no use to anybody. Shown from t=0, the
+          child reads while the road is still arriving.
+
+          Only the stretch they are standing on and the next one are waited
+          for. Everything beyond streams in behind this panel, which is why
+          the panel has to be worth looking at.
+        */}
+        <div className={styles.loadRecap}>
+          {recap.stones > 0 ? (
+            <p>
+              <span>Last time you reached</span>
+              <b>Milestone {recap.stones}</b>
+            </p>
+          ) : (
+            <p>
+              <span>Your first walk down</span>
+              <b>the village road</b>
+            </p>
+          )}
+          {recap.ahead.length > 0 && (
+            <p>
+              <span>Ahead</span>
+              <b>{recap.ahead.join(", then ")}</b>
+            </p>
+          )}
+          {recap.best > 0 && (
+            <p>
+              <span>Your best so far</span>
+              <b>{recap.best} words a minute</b>
+            </p>
+          )}
+        </div>
         <LoadStep
           queueRef={loadSteps}
           active={!loaded}
           settling={worldReady}
           onDone={onStepsDone}
         />
+        {/*
+          THE BUTTON ARMS, IT DOES NOT APPEAR. A control that pops into
+          existence under a thumb gets pressed by accident; one that is there
+          from the start and becomes pressable is a control somebody waits
+          for. Until then it says what it is waiting for.
+
+          Enter and space work too, because this is a typing game and the
+          child's hands are already on the keys.
+        */}
+        <button
+          type="button"
+          className={styles.loadGo}
+          disabled={!walkArmed}
+          onClick={() => setLoaded(true)}
+        >
+          {walkArmed ? "Walk on" : "Walking out…"}
+        </button>
       </div>
     </div>
   );
@@ -5560,6 +5679,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     }
     if (isWalkable(c) && c.n > 1) {
       setLoaded(false);
+      setWalkArmed(false);
       setWorldReady(false);
       setStepsDone(false);
       loadSteps.current = [];
@@ -5587,6 +5707,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       setChapter((c) => c + 1);
     }
     setLoaded(false);
+    setWalkArmed(false);
     setWorldReady(false);
     setStepsDone(false);
     loadSteps.current = [];

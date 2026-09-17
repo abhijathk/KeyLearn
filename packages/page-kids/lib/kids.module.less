@@ -602,6 +602,91 @@
 }
 
 /**
+ * THE RECAP, which is what this screen is for now.
+ *
+ * The chapter and lesson above say where the child is GOING. This says where
+ * they got to, what is coming, and how fast they have ever typed — the half
+ * they actually care about, and the half that makes reading it worth the
+ * seconds it buys while the rest of the road streams in behind the panel.
+ *
+ * Label quiet and value loud, one pair per line, so it is taken in at a
+ * glance rather than read. `min-height` holds the card still: the lines
+ * appear as the numbers resolve, and a card that grows under a waiting thumb
+ * moves the button out from under it.
+ */
+.loadRecap {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.15rem, 0.6cqi, 0.4rem);
+  align-items: center;
+  min-block-size: clamp(3.2rem, 9cqi, 5.4rem);
+  margin-block-start: clamp(0.5rem, 1.6cqi, 1.1rem);
+  text-align: center;
+
+  p {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    line-height: 1.15;
+  }
+
+  span {
+    color: var(--kink3, var(--kink2));
+    opacity: 0.62;
+    font-size: clamp(0.56rem, 1.15cqi, 0.82rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  b {
+    color: var(--kink2);
+    font-size: clamp(0.78rem, 1.7cqi, 1.25rem);
+    font-weight: 800;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
+  }
+}
+
+/**
+ * WALK ON, present from the start rather than appearing.
+ *
+ * A control that pops into existence under a waiting thumb gets pressed by
+ * accident and shifts everything below it. This one is there the whole time
+ * and simply becomes pressable — and until it does, its own label is the
+ * only honest progress indicator on the card.
+ */
+.loadGo {
+  margin-block-start: clamp(0.5rem, 1.5cqi, 1rem);
+  padding: clamp(0.3rem, 0.9cqi, 0.6rem) clamp(1rem, 3cqi, 2rem);
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  color: var(--kink2);
+  background: transparent;
+  font: inherit;
+  font-size: clamp(0.7rem, 1.5cqi, 1.05rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    opacity 220ms ease,
+    background-color 220ms ease;
+
+  &:disabled {
+    opacity: 0.34;
+    cursor: default;
+  }
+
+  &:not(:disabled):hover,
+  &:not(:disabled):focus-visible {
+    background: color-mix(in oklab, currentcolor 14%, transparent);
+  }
+}
+
+/**
  * What the world is building, under the chapter name.
  *
  * Monospaced and letter-spaced on purpose: the text arrives as morse and
