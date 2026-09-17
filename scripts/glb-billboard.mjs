@@ -88,9 +88,42 @@ else {
   }
 }
 
+// `--frame-from` measures the framing off a DIFFERENT file. Without it each
+// render is fitted to its own silhouette, which is right for one prop and
+// useless for two halves of one building: each would be blown up to fill the
+// frame and neither could be laid over the other. Given the whole model to
+// measure against, both halves land in one coordinate system and compositing
+// them reconstructs the original — which is the only way to see a seam
+// without opening a browser.
+const frameSrc = str("--frame-from");
+const framePts = frameSrc == null ? null : (() => {
+  const fsrc = readFileSync(frameSrc);
+  let o = 12, fj = null, fb = null;
+  while (o + 8 <= fsrc.length) {
+    const l = fsrc.readUInt32LE(o), t = fsrc.readUInt32LE(o + 4);
+    const bb = fsrc.subarray(o + 8, o + 8 + l);
+    if (t === 0x4e4f534a) fj = JSON.parse(bb.toString("utf8"));
+    if (t === 0x004e4942) fb = bb;
+    o += 8 + l;
+  }
+  const fp = fj.meshes[0].primitives[0];
+  const a = fj.accessors[fp.attributes.POSITION], v = fj.bufferViews[a.bufferView];
+  const [sz, kind] = CT[a.componentType];
+  const stride = v.byteStride || sz * 3;
+  const base = (v.byteOffset ?? 0) + (a.byteOffset ?? 0);
+  const out = new Float64Array(a.count * 3);
+  for (let k = 0; k < a.count; k++) for (let c = 0; c < 3; c++)
+    out[k * 3 + c] = fb[`read${kind}${sz === 1 ? "" : "LE"}`](base + k * stride + c * sz);
+  const nd = fj.nodes.find((n) => n.mesh === 0) ?? fj.nodes[0];
+  const s2 = nd?.scale ?? [1, 1, 1], t2 = nd?.translation ?? [0, 0, 0];
+  for (let i = 0; i < a.count; i++) for (let c = 0; c < 3; c++)
+    out[i * 3 + c] = out[i * 3 + c] * s2[c] + t2[c];
+  return { data: out, count: a.count };
+})();
+const measure = framePts ?? P;
 const mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
-for (let i = 0; i < P.count; i++) for (let c = 0; c < 3; c++) {
-  const v = P.data[i * 3 + c]; if (v < mn[c]) mn[c] = v; if (v > mx[c]) mx[c] = v;
+for (let i = 0; i < measure.count; i++) for (let c = 0; c < 3; c++) {
+  const v = measure.data[i * 3 + c]; if (v < mn[c]) mn[c] = v; if (v > mx[c]) mx[c] = v;
 }
 // Origin at the FOOT, so placing the card is "stand the bottom on the ground".
 const ctr = [(mn[0] + mx[0]) / 2, mn[1], (mn[2] + mx[2]) / 2];
@@ -100,18 +133,25 @@ const view = (x, y, z) => {
   return [rx, y * cp - rz * sp, y * sp + rz * cp];
 };
 let ax = 1e9, bx = -1e9, ay = 1e9, by = -1e9;
-for (let i = 0; i < P.count; i++) {
-  const v = view(P.data[i * 3] - ctr[0], P.data[i * 3 + 1] - ctr[1], P.data[i * 3 + 2] - ctr[2]);
+for (let i = 0; i < measure.count; i++) {
+  const v = view(measure.data[i * 3] - ctr[0], measure.data[i * 3 + 1] - ctr[1], measure.data[i * 3 + 2] - ctr[2]);
   if (v[0] < ax) ax = v[0]; if (v[0] > bx) bx = v[0];
   if (v[1] < ay) ay = v[1]; if (v[1] > by) by = v[1];
 }
+// PADDING EVERYWHERE EXCEPT UNDER THE FEET.
+//
+// A margin round a sprite keeps its edges from clipping, and putting one
+// under the bottom lifts the building off the card's lower edge — which the
+// world then stands on the ground, so the house floats by however much the
+// margin was. Small, and exactly the kind of small that reads as a building
+// hovering. The foot goes on the edge; everything else gets its margin.
 const PAD = 0.015;
-const spanX = (bx - ax) * (1 + PAD * 2), spanY = (by - ay) * (1 + PAD * 2);
+const spanX = (bx - ax) * (1 + PAD * 2), spanY = (by - ay) * (1 + PAD);
 const H = PX, W = Math.max(8, Math.round(PX * (spanX / spanY)));
 const px = Buffer.alloc(W * H * 4, 0);
 const zb = new Float64Array(W * H).fill(-1e9);
 const sX = (v) => ((v - ax) / spanX + PAD) * W;
-const sY = (v) => H - ((v - ay) / spanY + PAD) * H;
+const sY = (v) => H - ((v - ay) / spanY) * H;
 
 for (let t = 0; t < I.count; t += 3) {
   const p = [], uv = [];

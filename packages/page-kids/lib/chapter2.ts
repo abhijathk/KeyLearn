@@ -547,11 +547,19 @@ export const LESSONS_2: readonly Lesson[] = [
       // Its x is ignored. The build snaps it to the gate in the wall in
       // front of it, wherever the clamp put that gap.
       //
-      // `clear` 22, and it earns it: the house is twenty-seven units wide as
-      // drawn and the planting has to stop short of all of it. This prop
-      // recorded no footprint at all until now, which is why trees were
+      // AND 18, NOT 26. It is the biggest building in the game and it is
+      // also eighteen units of field away, and the second of those has to
+      // read or the first one is a lie — a house that fills two thirds of
+      // the frame is a house you are standing in front of. At 18 it draws
+      // eleven units tall against a frame of twenty-four, which is under
+      // half of it and still nearly twice the temple. Distance does the
+      // rest: it is glimpsed, and the glimpse is of something large.
+      //
+      // `clear` 15 against a drawn width of nineteen. This prop recorded no
+      // footprint AT ALL until now — the Mana branch returns early and never
+      // reached the code that keeps a footprint — which is why trees were
       // growing through the mansion.
-      { model: "ak-3d-pack/Mana", at: 0.48, z: -36, h: 26, clear: 22 },
+      { model: "ak-3d-pack/Mana", at: 0.48, z: -36, h: 18, clear: 15 },
       { model: `${STONE}/Mossy_Stone`, at: 0.3, z: -8.5, h: 0.9 },
     ],
     herd: [],

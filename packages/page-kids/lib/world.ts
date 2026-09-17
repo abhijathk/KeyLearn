@@ -15581,7 +15581,7 @@ export function createKidsWorld(
                 p.turn ?? 0,
                 p.lift ?? 0,
               ),
-              standCard("ManaBody", gateX, faceZ, 0.9991 * H, 1.6801),
+              standCard("ManaBody", gateX, faceZ, 1.014 * H, 1.7049),
             ]);
             if (w2 != null) {
               builtGroup.add(w2);
@@ -15597,7 +15597,7 @@ export function createKidsWorld(
             // Measured off what was actually drawn rather than off `p`: the
             // card's width is its drawn height times its aspect, and the
             // depth runs from the façade to the front of the portico.
-            const halfW = (0.9991 * H * scale * 1.6801) / 2;
+            const halfW = (1.014 * H * scale * 1.7049) / 2;
             const frontZ = faceZ + 0.476 * H * scale;
             const mid = (faceZ + frontZ) / 2;
             const halfD = Math.max(1, (frontZ - faceZ) / 2);
