@@ -219,6 +219,25 @@ export const LESSONS_2: readonly Lesson[] = [
         h: 24,
         clear: 10,
       },
+      // AND A SECOND ONE, FAR BACK. A grove is not one tree with a clear
+      // sky behind it — the great banyan reads as the oldest thing here
+      // only if something of its own kind stands further off for the eye to
+      // measure it against, and a lone canopy against the horizon reads as
+      // planted rather than grown.
+      //
+      // At -29 it is behind the whole planting band (which stops at 26) and
+      // well short of where the ground ends at -38, so it stands on soil
+      // with open field in front of it. Height stays near the near tree's:
+      // distance is what makes it small, not a smaller tree, which is the
+      // whole point of the depth scaling — shrink it here as well and it
+      // reads as a sapling standing much closer.
+      {
+        model: `${PLANTS}/Banyan_Almaram`,
+        at: 0.78,
+        z: -29,
+        h: 22,
+        clear: 8,
+      },
       // ── SPACE LEFT: THE IDOL AND ITS FLOWERS ──────────────────────────
       //
       // The reference asks for a small weathered stone idol at the tree's

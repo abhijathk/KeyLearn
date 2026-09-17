@@ -14145,7 +14145,23 @@ export function createKidsWorld(
               : sideSign * depth;
             const lo = spec.lo ?? 0.7;
             const hi = spec.hi ?? 1.4;
-            const scl = (lo + rand() * (hi - lo)) * theme.sceneryScale;
+            // AND THE DEPTH CUE, which this path did not have.
+            //
+            // The scattered heroes above have carried `perspective(z)` since
+            // it was written; the thickets never did, and the thickets are
+            // most of the greenery there IS by count. So the road had a
+            // handful of trees obeying distance standing in a mass of
+            // undergrowth that did not, which reads worse than no depth cue
+            // at all — the eye takes the majority as the truth and concludes
+            // the world is flat, and the few honest trees just look
+            // undersized.
+            //
+            // It multiplies the girth as well as the height, because this is
+            // distance rather than a stunted plant, and it goes through
+            // `onRoad` below with the same factor: a clump that is drawn
+            // two thirds the size takes up two thirds the room.
+            const scl =
+              (lo + rand() * (hi - lo)) * theme.sceneryScale * perspective(z);
             if (onRoad(x, z, spec.file, half * scl * 0.66)) {
               rejected += 1;
               continue;
@@ -20911,7 +20927,31 @@ export function createKidsWorld(
         if (walking) {
           // AMBLING, NOT FLEEING. A cow that bolts is a cow in danger, and
           // nothing here is in danger — she is giving way, which is a walk.
-          const speed = 1.15 * step;
+          //
+          // ONE CYCLE OF THE CLIP CARRIES HER ONE STRIDE, and that is the
+          // whole rule this used to break. `Walk` is exactly one second
+          // long, so a stride per second is the pace the animation is drawn
+          // at; move her at any other rate and the hooves skate, because
+          // nothing ties the legs to the ground but this number.
+          //
+          // The stride is a quarter of the animal's height, which is the
+          // buffalo's figure — 1.7 units a second on a 6.8-unit body, on the
+          // same one-second cycle — rather than a second guess. It lands at
+          // 1.125 for a cow, which is where the old hand-set 1.15 was, so
+          // this is not a change of pace. What it changes is everything
+          // below.
+          //
+          // AND IT FOLLOWS HER DEPTH. She is DRAWN smaller the further back
+          // she stands — that is the depth cue — and a body drawn at two
+          // thirds with a stride still measured at full size slides by a
+          // third, which is worse the further she goes. Real distance slows
+          // a walk across the frame; so does this one.
+          const persp = perspective(pos.z);
+          const stride =
+            0.25 * (WILD_HEIGHT[ud.wildModel ?? ""] ?? 4.5) * persp;
+          const speed = stride * step;
+          const fromX = pos.x;
+          const fromZ = pos.z;
           const nx = pos.x + awayX * speed;
           const nz = Math.max(
             -30,
@@ -20920,10 +20960,38 @@ export function createKidsWorld(
           pos.x = nx;
           pos.z = nz;
           pos.y = surfaceY(nx, nz) + WILD_LIFT;
-          // Facing the way she is going, eased rather than snapped.
-          const want = Math.atan2(awayX, awayZ);
-          w.wrap.rotation.y +=
-            angTo(w.wrap.rotation.y, want) * Math.min(1, step * 2.5);
+          // WHAT SHE ACTUALLY DID, not what she was asked to do.
+          //
+          // The z above is CLAMPED — she will not walk into the road, and
+          // she stops at -30 — so a cow giving way beside the verge is told
+          // to go diagonally and in fact travels straight along it. Facing
+          // the instruction rather than the result pointed her off at an
+          // angle to her own path, which is a cow crabbing sideways: the
+          // single most slide-like thing a four-legged walk can do.
+          const dx = pos.x - fromX;
+          const dz = pos.z - fromZ;
+          const went = Math.hypot(dx, dz);
+          if (went > 1e-5) {
+            const want = Math.atan2(dx, dz);
+            w.wrap.rotation.y +=
+              angTo(w.wrap.rotation.y, want) * Math.min(1, step * 2.5);
+          }
+          // AND THE LEGS KEEP TIME WITH THE GROUND SHE COVERED.
+          //
+          // Same reason. When the clamp holds her back she covers less than
+          // a stride, and a walk cycle running at full rate over a short
+          // distance is a treadmill. Scaling the clip by the ratio ties the
+          // hooves to the ground whatever gets in her way — floored so a
+          // cow pressed against the verge slows to a shuffle rather than
+          // freezing mid-step with one leg in the air.
+          const walk = w.act.get("Walk");
+          if (walk != null) {
+            const wanted = speed > 1e-6 ? went / speed : 1;
+            walk.timeScale = Math.max(0.2, Math.min(1.4, wanted));
+          }
+        } else {
+          const walk = w.act.get("Walk");
+          if (walk != null) walk.timeScale = 1;
         }
         const wants = walking ? "Walk" : "Graze";
         if (ud.playing !== wants) {
