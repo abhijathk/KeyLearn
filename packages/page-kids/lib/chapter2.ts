@@ -267,16 +267,26 @@ export const LESSONS_2: readonly Lesson[] = [
       // five units behind the near root wall, correctly facing a road that
       // could not see it.
       //
-      // -11.4 is just inside the near face of that ring. The canopy is still
-      // overhead — it spreads far wider than the roots — and the roots are
-      // now BEHIND the idol, framing it, which is what "under the tree"
-      // looks like from a road. It shares the readable band with the
-      // resting stone and the mossy stone rather than sitting apart from
-      // them.
+      // SO IT COMES RIGHT FORWARD, to the front prop band with the laterite
+      // rock, nearer the road than anything else in the grove. Moving it
+      // just clear of the roots was not enough: at -11.4 it was still
+      // behind the mossy stone and the resting stone, a knee-high object
+      // three quarters of the way back in a lesson whose planting runs to
+      // -26.
       //
-      // 1.9 rather than 1.5, which was a third of a metre and read as a
-      // kerbstone. This is 55 cm: a god-stone a child could put a flower on.
-      { model: `${STONE}/Shrine_Idol`, at: 0.52, z: -11.4, h: 1.9, clear: 2 },
+      // AND IT IS STILL UNDER THE TREE, which is the part that looked like
+      // a trade and is not. MEASURED: at this height the banyan spans 18.4
+      // units from its axis, so its canopy reaches to z 4.4 — out over the
+      // road itself. Everything in this grove is under it. The roots stay
+      // behind the idol at 2 to 6 units, framing it, and the crown is
+      // overhead: which is what "under the banyan" looks like from a road,
+      // and the only arrangement in which a child sees either.
+      //
+      // 2.4 rather than 1.5. The first was a third of a metre and read as a
+      // kerbstone; this is about 70 cm, which is a god-stone somebody kneels
+      // to — and at this depth it is drawn at two units against a frame
+      // twenty-four tall, so it is actually in the picture.
+      { model: `${STONE}/Shrine_Idol`, at: 0.52, z: -8.8, h: 2.4, clear: 2 },
       { model: `${STONE}/Mossy_Stone`, at: 0.58, z: -11.5, h: 0.8 },
       // "One simple resting stone, bench or low sitting edge nearby."
       { model: `${UTIL}/Washing_Stone`, at: 0.64, z: -11, h: 0.55, clear: 2 },

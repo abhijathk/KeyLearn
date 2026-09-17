@@ -311,10 +311,20 @@ test("the idol stands in front of the banyan, not behind its roots", () => {
     idol.z - tree.z >= 2,
     `idol at z ${idol.z} is only ${(idol.z - tree.z).toFixed(1)} in front of the trunk at ${tree.z}`,
   );
-  // But still under the canopy rather than out in the open ground.
-  ok(
-    idol.z - tree.z <= 6,
-    `idol at z ${idol.z} has walked out from under the tree`,
+  // AND IT IS THE NEAREST THING IN THE GROVE. Clearing the roots was not
+  // enough on its own: at -11.4 it still stood behind the mossy stone and
+  // the resting stone, a knee-high object three quarters of the way back in
+  // a lesson whose planting runs to -26. The canopy is not the constraint —
+  // measured, this banyan spans 18.4 units from its axis at h 24, so its
+  // crown reaches out over the road and everything here is under it.
+  ok(idol.z >= -10, `idol at z ${idol.z} is too far back to be read`);
+  const nearer = l.props.filter(
+    (p) => !/Banyan|Shrine_Idol/.test(p.model) && p.z > idol.z,
+  );
+  equal(
+    nearer.length,
+    0,
+    `${nearer.map((p) => p.model).join(", ")} stand nearer the road than the idol`,
   );
   // And square on to the road: no turn means model +Z, which is its face.
   equal(idol.turn ?? 0, 0, "the idol has been turned away from the road");
