@@ -15654,13 +15654,59 @@ export function createKidsWorld(
               // everything the scatter puts down, and nothing else about the
               // estate is — so the planting closes back in on both sides,
               // which is what makes it read as a path rather than a gap.
+              const porch = cz + hd;
               blockers.push({
                 x: gateX,
-                z: (-12 + (cz + hd)) / 2,
+                z: (-12 + porch) / 2,
                 r: 1,
-                hw: 3.4,
-                hd: Math.abs(cz + hd + 12) / 2,
+                hw: 3.6,
+                hd: Math.abs(porch + 12) / 2,
               });
+              // ── AND THREE LAMPS ON ITS FRONT ─────────────────────────
+              //
+              // A great house that goes completely dark at dusk reads as
+              // derelict, and this one is lived in — a family big enough to
+              // need a gate keeps its veranda lit. Three lamps, and the
+              // arrangement is the point: one under the portico where the
+              // door is, and one at each end of the colonnade.
+              //
+              // THE MIDDLE ONE IS BRIGHTER, which is what makes it read as
+              // the WAY IN rather than as three lamps in a row. A porch lamp
+              // is lit for people arriving; the corner lamps are only there
+              // so the veranda is not a black band under a lit roof.
+              //
+              // Placed off the measured box rather than written down, so
+              // they follow the house if it is ever moved or resized — and
+              // inset from the corners, because a lamp hung exactly on the
+              // corner of a building looks like it is falling off it.
+              //
+              // Hours, not `closes`: 6 PM to 11 PM. Later than a shop and
+              // earlier than all night, which is a household rather than a
+              // street lamp.
+              const HOUSE_LAMP = [18, 23] as const;
+              const foot = b.min.y;
+              const tall = b.max.y - b.min.y;
+              makeLamp(cx, foot + tall * 0.34, porch - hd * 0.12, {
+                kind: "oil",
+                size: tall * 0.16,
+                peak: 0.97,
+                lit: tall * 2.6,
+                hours: HOUSE_LAMP,
+              });
+              for (const side of [-1, 1]) {
+                makeLamp(
+                  cx + side * hw * 0.82,
+                  foot + tall * 0.3,
+                  porch - hd * 0.1,
+                  {
+                    kind: "oil",
+                    size: tall * 0.1,
+                    peak: 0.88,
+                    lit: tall * 1.5,
+                    hours: HOUSE_LAMP,
+                  },
+                );
+              }
             }
             continue;
           }

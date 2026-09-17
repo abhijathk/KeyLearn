@@ -529,13 +529,17 @@ export const LESSONS_2: readonly Lesson[] = [
       // Its `at` is IGNORED — the build snaps it to the gate in the wall in
       // front of it, wherever the clamp put that opening.
       //
-      // 18 AND -28, AND BOTH ARE SET BY THE FLOOR. This model is solid, so
-      // unlike the card it has a back to put somewhere: measured 1.74 deep
-      // for 1.08 tall, which at h 18 and this depth is nineteen units of
-      // building. The ground stops at -38 and the estate wall stands at -12,
-      // so there are twenty-six units to fit it in. At -28 its back wall
-      // lands at -37.5, just inside the world, and its porch at -18.5, six
-      // clear of the wall.
+      // 16 AT -31, AND THE DEPTH IS WHAT SETS BOTH. A solid model has a
+      // back to put somewhere, which the card never did: measured 1.74 deep
+      // for 1.08 tall, so at this size it is seventeen units of building.
+      // The estate wall stands at -12 and the ground runs out at -38.
+      //
+      // Pulled back three units from -28, which puts its porch at -21.5 and
+      // gives the drive ten clear units from the gate instead of six — the
+      // house is glimpsed ACROSS ground now rather than looming just behind
+      // the wall. Its back wall goes a unit and a half past the floor's
+      // edge, which the card could never have done and a solid can: the
+      // building's own mass is between that edge and the road.
       //
       // It draws about twelve units against a frame of twenty-four — half of
       // it, and near twice the temple. It is the biggest building in the
@@ -544,7 +548,7 @@ export const LESSONS_2: readonly Lesson[] = [
       //
       // `clear` 16 against a drawn width of twenty-one, so the planting
       // stops short of all of it and closes around rather than through.
-      { model: "ak-3d-pack/Mana", at: 0.48, z: -28, h: 18, clear: 16 },
+      { model: "ak-3d-pack/Mana", at: 0.48, z: -31, h: 16, clear: 15 },
       { model: `${STONE}/Mossy_Stone`, at: 0.3, z: -8.5, h: 0.9 },
     ],
     herd: [],
