@@ -302,20 +302,110 @@ const addAcc = (buf, componentType, count, type, minmax, target) => {
 // model's own bounding box, which on a two-metre house is three hundredths of a
 // millimetre.
 const span = [0, 1, 2].map((c) => Math.max(1e-9, hi[c] - lo[c]));
-const qpos = new Uint16Array(newVerts * 3);
+const u16 = (arr) => { const b = Buffer.alloc(arr.length * 2); arr.forEach((v, i) => b.writeUInt16LE(v, i * 2)); return b; };
+
+// ── QUANTIZE FIRST, THEN MERGE WHAT QUANTIZING MADE IDENTICAL ───────────
+//
+// The order matters and it is the whole of this saving. Simplification
+// leaves a vertex wherever the source had one, and a baked prop is split at
+// every UV seam and every hard edge -- on the temple, 35,557 vertices for
+// 10,288 distinct POSITIONS. Most of those splits are real and have to
+// stay: a seam vertex genuinely carries two texture coordinates.
+//
+// But quantizing collapses more of them than the source had. Positions go
+// to one part in 65,535 of the box, normals to a signed byte, texture
+// coordinates to one part in 65,535 of the atlas -- and pairs that differed
+// in the seventh decimal place of a float land on the same integers.
+// MEASURED on the temple: 10,437 of 35,557 vertices, twenty-nine per cent,
+// become byte-for-byte duplicates of another vertex. Deduplicating before
+// quantizing would find almost none of them.
+//
+// Nothing is lost. A duplicate is merged only when its position, normal AND
+// texture coordinate are all identical after quantization, so every corner
+// still reads the texel and takes the light it did before; the index buffer
+// simply points several triangles at one copy instead of several copies.
+const q = { pos: new Uint16Array(newVerts * 3) };
 for (let i = 0; i < newVerts; i++)
   for (let c = 0; c < 3; c++)
-    qpos[i * 3 + c] = Math.max(0, Math.min(65535,
+    q.pos[i * 3 + c] = Math.max(0, Math.min(65535,
       Math.round(((pos2[i * 3 + c] - lo[c]) / span[c]) * 65535)));
-const u16 = (arr) => { const b = Buffer.alloc(arr.length * 2); arr.forEach((v, i) => b.writeUInt16LE(v, i * 2)); return b; };
-views.push(push(u16(qpos), { target: 34962 }));
+if (nrm2) {
+  // A signed byte is under two degrees of error at worst, on baked
+  // architecture lit by one soft key -- and it is what gltfpack quantizes
+  // normals to by default, for the same reason. Float normals were the
+  // largest thing left in these files after the texture: twelve bytes a
+  // vertex, 417 KB raw on the temple against a 162 KB atlas.
+  q.nrm = new Int8Array(newVerts * 3);
+  for (let i = 0; i < newVerts; i++) {
+    let x = nrm2[i * 3], y = nrm2[i * 3 + 1], z = nrm2[i * 3 + 2];
+    const len = Math.hypot(x, y, z) || 1;
+    q.nrm[i * 3] = Math.max(-127, Math.min(127, Math.round((x / len) * 127)));
+    q.nrm[i * 3 + 1] = Math.max(-127, Math.min(127, Math.round((y / len) * 127)));
+    q.nrm[i * 3 + 2] = Math.max(-127, Math.min(127, Math.round((z / len) * 127)));
+  }
+}
+// ONLY WHILE THE UVs STAY INSIDE THE UNIT SQUARE. A normalized short cannot
+// express a number outside it, so a bake that tiles or overruns keeps its
+// floats rather than wrapping its texture inside out -- the kind of thing
+// that would otherwise be discovered on screen. One part in 65,535 across a
+// 1024-texel atlas is a sixty-fourth of a texel, so where it does apply it
+// is exact as far as anything can see.
+const uvInUnit = uv2 != null && uv2.every((v) => v >= 0 && v <= 1);
+if (uv2 && uvInUnit) {
+  q.uv = new Uint16Array(newVerts * 2);
+  for (let i = 0; i < newVerts * 2; i++) q.uv[i] = Math.round(uv2[i] * 65535);
+}
+
+const canon = new Map();
+const dedup = new Uint32Array(newVerts);
+let uniq = 0;
+for (let i = 0; i < newVerts; i++) {
+  let key = `${q.pos[i * 3]},${q.pos[i * 3 + 1]},${q.pos[i * 3 + 2]}`;
+  if (q.nrm) key += `|${q.nrm[i * 3]},${q.nrm[i * 3 + 1]},${q.nrm[i * 3 + 2]}`;
+  if (q.uv) key += `|${q.uv[i * 2]},${q.uv[i * 2 + 1]}`;
+  else if (uv2) key += `|${uv2[i * 2]},${uv2[i * 2 + 1]}`;
+  const seen = canon.get(key);
+  if (seen != null) { dedup[i] = seen; continue; }
+  canon.set(key, uniq);
+  dedup[i] = uniq;
+  q.pos.copyWithin(uniq * 3, i * 3, i * 3 + 3);
+  if (q.nrm) q.nrm.copyWithin(uniq * 3, i * 3, i * 3 + 3);
+  if (q.uv) q.uv.copyWithin(uniq * 2, i * 2, i * 2 + 2);
+  if (uv2 && !q.uv) { uv2[uniq * 2] = uv2[i * 2]; uv2[uniq * 2 + 1] = uv2[i * 2 + 1]; }
+  uniq++;
+}
+for (let i = 0; i < idx.length; i++) idx[i] = dedup[idx[i]];
+const merged = newVerts - uniq;
+newVerts = uniq;
+
+views.push(push(u16(q.pos.subarray(0, newVerts * 3)), { target: 34962 }));
 accessors.push({
   bufferView: views.length - 1, componentType: 5123, normalized: true,
   count: newVerts, type: "VEC3", min: [0, 0, 0], max: [1, 1, 1],
 });
 const aPos = accessors.length - 1;
-const aNrm = nrm2 ? addAcc(f32(nrm2), 5126, newVerts, "VEC3", null, 34962) : null;
-const aUv  = uv2  ? addAcc(f32(uv2),  5126, newVerts, "VEC2", null, 34962) : null;
+// Three bytes padded to four: glTF wants a vertex attribute's stride on a
+// four-byte boundary.
+const aNrm = q.nrm
+  ? (() => {
+      const b = Buffer.alloc(newVerts * 4);
+      for (let i = 0; i < newVerts; i++) {
+        b.writeInt8(q.nrm[i * 3], i * 4);
+        b.writeInt8(q.nrm[i * 3 + 1], i * 4 + 1);
+        b.writeInt8(q.nrm[i * 3 + 2], i * 4 + 2);
+      }
+      views.push(push(b, { target: 34962, byteStride: 4 }));
+      accessors.push({ bufferView: views.length - 1, componentType: 5120, normalized: true, count: newVerts, type: "VEC3" });
+      return accessors.length - 1;
+    })()
+  : nrm2 ? addAcc(f32(nrm2.subarray(0, newVerts * 3)), 5126, newVerts, "VEC3", null, 34962) : null;
+const aUv = q.uv
+  ? (() => {
+      views.push(push(u16(q.uv.subarray(0, newVerts * 2)), { target: 34962, byteStride: 4 }));
+      accessors.push({ bufferView: views.length - 1, componentType: 5123, normalized: true, count: newVerts, type: "VEC2" });
+      return accessors.length - 1;
+    })()
+  : uv2 ? addAcc(f32(uv2.subarray(0, newVerts * 2)), 5126, newVerts, "VEC2", null, 34962) : null;
 // 16-bit indices whenever the mesh fits, which every one of these props does.
 // 32-bit was costing 2 bytes a corner for a range none of them use.
 const aIdx = newVerts <= 65536
@@ -383,6 +473,7 @@ writeFileSync(outPath, Buffer.concat([
 const dim = [0, 1, 2].map((c) => hi[c] - lo[c]);
 console.log(`  ${inPath.split("/").pop()}`);
 console.log(`    tris    ${triCount} -> ${idx.length / 3}   verts ${vertCount} -> ${newVerts}   simplify error ${(error * 100).toFixed(2)}%`);
+console.log(`    merged  ${merged} vertices identical after quantizing (${((merged / (newVerts + merged)) * 100).toFixed(0)}% of them), losslessly`);
 console.log(`    texture ${TEX}px mipped ktx2 q${QUALITY} ${(tex.length / 1024).toFixed(0)}KB   (metallicRoughness dropped: metallic 0, roughness ${ROUGH})`);
 console.log(`    size    ${(src.length / 1048576).toFixed(1)}MB -> ${(total / 1024).toFixed(0)}KB`);
 console.log(`    bounds  X ${dim[0].toFixed(2)}  Y ${dim[1].toFixed(2)}  Z ${dim[2].toFixed(2)}   (floor at y=${lo[1].toFixed(2)})`);
