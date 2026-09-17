@@ -578,6 +578,41 @@ export const LESSONS_2: readonly Lesson[] = [
       // the porch is held clear separately. 4 is a skirt of open ground at
       // the walls, which is what a swept house has — not a field.
       { model: "ak-3d-pack/Mana", at: 0.48, z: -31, h: 16, clear: 4 },
+      // ── MATURE TREES ALONG THE WALL, IN FRONT OF THE HOUSE ──────────
+      //
+      // "Place tall mature trees BEHIND THE WALL so their canopies rise
+      // above it and imply a large property", and "only a partial or distant
+      // glimpse of the large house ... BETWEEN TREES".
+      //
+      // The scatter plants this lesson heavily and at random, which gives a
+      // wood. What it cannot give is the one thing the brief is describing:
+      // named trees standing at known places relative to the gate, so the
+      // house is seen between THEM. These four are placed, not scattered.
+      //
+      // Just inside the wall at z -16, which puts their trunks behind the
+      // masonry and their crowns well above it — a mango is 15 units here
+      // against a wall of 2.4. Two flank the gate at 0.34 and 0.62 without
+      // standing in it; the jackfruits at 0.2 and 0.78 carry the line on
+      // down the boundary so it does not stop where the gate does.
+      //
+      // `clear` is small: these are meant to have undergrowth up to their
+      // trunks, which is what makes a boundary look old.
+      { model: `${PLANTS}/Mango_Tree`, at: 0.34, z: -16, h: 15, clear: 4 },
+      { model: `${PLANTS}/Mango_Tree`, at: 0.62, z: -16.5, h: 14, clear: 4 },
+      {
+        model: `${PLANTS}/Jackfruit_Tree`,
+        at: 0.2,
+        z: -15.5,
+        h: 13,
+        clear: 4,
+      },
+      {
+        model: `${PLANTS}/Jackfruit_Tree`,
+        at: 0.78,
+        z: -17,
+        h: 13.5,
+        clear: 4,
+      },
       { model: `${STONE}/Mossy_Stone`, at: 0.3, z: -8.5, h: 0.9 },
     ],
     herd: [],
