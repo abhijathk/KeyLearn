@@ -6114,6 +6114,33 @@ export function createKidsWorld(
    */
   const TMP_AT = new THREE.Vector3();
 
+  /**
+   * EVERY LAMP THAT WANTS A SHADOW, and only two ever get one.
+   *
+   * Shadow casting is the most expensive thing a light can do and this world
+   * runs exactly one caster: the sun. Thirty lamps each throwing their own
+   * would be thirty more depth passes a frame, on a machine chosen because
+   * a school could afford it.
+   *
+   * So it is the same bargain the aimed cones already strike, one level up.
+   * There are TWO shadow-casting lights for the whole road — one warm for a
+   * wick, one cold for a mantle — and every lamp registers where it stands
+   * and how far it throws. The tick lends each light to the nearest lamp of
+   * its own kind, which is the one in shot. A lamp the child is standing at
+   * casts pillar shadows across the ground; a lamp four lessons away does
+   * not, and nobody can tell, because nobody is looking at it.
+   *
+   * `reach` carries the lamp's own size, so the same two lights serve a
+   * milestone's little flame and a mansion's veranda lamp at the scale each
+   * actually is.
+   */
+  const casters: {
+    x: number;
+    y: number;
+    z: number;
+    kind: "oil" | "petromax";
+    reach: number;
+  }[] = [];
   const spotPool: THREE.SpotLight[] = [];
   for (let i = 0; i < AIMED_LIGHTS; i++) {
     // Wide and very soft: this is a flame in an opening, not a torch. The
@@ -6132,6 +6159,39 @@ export function createKidsWorld(
     nightLayer.add(spot);
     nightLayer.add(spot.target);
     spotPool.push(spot);
+  }
+  /**
+   * THE TWO SHADOW CASTERS, made now for the reason the cones are: creating
+   * a shadow-mapped light on the frame a child walks up to it compiles a
+   * shader and stalls. These sit at zero intensity until a lamp claims one.
+   *
+   * SPOT, NOT POINT. A point light's shadow is a cube — six depth passes for
+   * one lamp — and a spot's is a single map. A lamp under a veranda only
+   * needs to throw one way in any case: outward, past the pillars, onto the
+   * ground where the shadows go.
+   *
+   * The map is small on purpose. These shadows are pillars on bare earth
+   * twenty units away, not foliage detail; 1024 is already generous and the
+   * low tier gets half, where this is most likely to be the thing that costs
+   * a frame.
+   */
+  const shadowLights: Record<"oil" | "petromax", THREE.SpotLight> = {
+    oil: new THREE.SpotLight(0xffb066, 0, 30, 1.05, 0.7, 1.4),
+    petromax: new THREE.SpotLight(0xfff4e0, 0, 34, 1.0, 0.6, 1.3),
+  };
+  for (const sl of Object.values(shadowLights)) {
+    sl.castShadow = true;
+    sl.shadow.mapSize.set(lowTier ? 512 : 1024, lowTier ? 512 : 1024);
+    sl.shadow.camera.near = 0.4;
+    sl.shadow.camera.far = 34;
+    // A wick is not a point source and a hard shadow edge from one looks
+    // like a torch. The bias keeps the columns off their own shadows.
+    sl.shadow.bias = -0.0014;
+    sl.shadow.normalBias = 0.05;
+    sl.position.set(0, -500, 0);
+    sl.target.position.set(0, -501, 0);
+    nightLayer.add(sl);
+    nightLayer.add(sl.target);
   }
   /**
    * One texture per kind of flame, shared by every lamp of that kind.
@@ -6296,6 +6356,18 @@ export function createKidsWorld(
     nightLayer.add(sprite);
     let light: THREE.PointLight | null = null;
     const lit = opts.lit ?? 0;
+    // EVERY LAMP THAT THROWS LIGHT REGISTERS FOR A SHADOW, and only the two
+    // nearest of each kind will ever be lent one. Registering is a push onto
+    // an array; it costs nothing to be a candidate.
+    if (lit > 0 && opts.kind !== "mirror") {
+      casters.push({
+        x,
+        y,
+        z,
+        kind: opts.kind === "petromax" ? "petromax" : "oil",
+        reach: lit,
+      });
+    }
     if (lit > 0) {
       if (opts.aim != null) {
         // AIMED LAMPS DO NOT OWN A LIGHT, THEY BORROW ONE.
@@ -15692,11 +15764,20 @@ export function createKidsWorld(
               // veranda then would be the one thing on the road still awake.
               const HOUSE_LAMP = [18, 21] as const;
               const tall = b.max.y - b.min.y;
-              // UNDER THE ROOF, NOT AT THE EDGE OF IT. These stand INSIDE
-              // the portico and inside the veranda, back from the drip line,
-              // which is where a house lamp goes — out of the rain and out
-              // of the wind.
-              const lampZ = porch - hd * 0.16;
+              // INSIDE THE PORTICO AND INSIDE THE VERANDA, which takes two
+              // things and I only did one of them.
+              //
+              // BACK from the drip line, deep enough to be under the roof
+              // rather than at its edge — that part was right, and not far
+              // enough. And UP ONTO THE FLOOR: a mana's veranda stands on a
+              // plinth, so a lamp set on the terrain is a lamp on the ground
+              // BELOW the veranda, outside the building looking in. `lift`
+              // puts it on the boards where it belongs.
+              //
+              // Both are fractions of the house's own measurements, so they
+              // hold if it is resized.
+              const lampZ = porch - hd * 0.3;
+              const lampLift = (b.max.y - b.min.y) * 0.1;
               // AND IT IS AN OIL LAMP, WHICH LIGHTS THE ROOM IT IS IN.
               //
               // A wick in a brass bowl throws enough to cross a veranda and
@@ -15715,10 +15796,21 @@ export function createKidsWorld(
               // The flames stay bright to LOOK at — they are the brightest
               // things in that frame after dark — while lighting almost
               // nothing. That is the difference between a lamp and a lantern.
+              // AND THEY ARE LAMP-SIZED, WHICH IS SMALL. A nilavilakku is a
+              // brass lamp somebody carries out and sets down — knee high,
+              // call it seventy centimetres. Against a house that stands
+              // five metres to its ridge that is a seventh of it, and the
+              // first pass had the portico's at a fifth: a metre of lamp,
+              // which is a floor-standing temple lamp, not a house one.
+              //
+              // The house is also a field away, so all three are small
+              // objects at depth. The middle one stays the biggest — that is
+              // the arrangement — but the gap between them is what carries
+              // it now rather than the size of any of them.
               for (const [lx, lh, peak, reach] of [
-                [cx, tall * 0.2, 0.94, 0.8],
-                [cx - hw * 0.82, tall * 0.13, 0.82, 0],
-                [cx + hw * 0.82, tall * 0.13, 0.82, 0],
+                [cx, tall * 0.13, 0.94, 0.8],
+                [cx - hw * 0.82, tall * 0.1, 0.82, 0],
+                [cx + hw * 0.82, tall * 0.1, 0.82, 0],
               ] as const) {
                 const v = await stand(
                   "village-util/Nilavilakku",
@@ -15726,7 +15818,7 @@ export function createKidsWorld(
                   lampZ,
                   lh,
                   0,
-                  0,
+                  lampLift,
                 );
                 if (v == null) {
                   continue;
@@ -18951,6 +19043,50 @@ export function createKidsWorld(
         // Lend the cones to the nearest lamps — see `aimed`. Cheap: a few
         // dozen absolute differences and two matrix writes, against a road
         // that would otherwise be lit only at its very beginning.
+        // ── THE TWO SHADOW CASTERS GO TO WHOEVER IS NEAREST ────────────
+        //
+        // One warm light for wicks and one cold for mantles, lent to the
+        // closest lamp of each kind. A lamp the child is standing at throws
+        // pillar shadows across the ground; one four lessons away does not,
+        // and nobody can tell, because nobody is looking at it.
+        //
+        // AIMED DOWN AND OUT, toward the road. A lamp under a veranda only
+        // throws one way that matters, and it is past the columns onto the
+        // ground in front — which is the shadow this is all for. Aiming it
+        // straight down would put the columns' shadows under the columns.
+        //
+        // The cone and its throw scale with the lamp's own reach, so the
+        // same two lights serve a milestone's flame and a mansion's veranda
+        // lamp at the size each actually is.
+        for (const kind of ["oil", "petromax"] as const) {
+          const sl = shadowLights[kind];
+          let best: (typeof casters)[number] | null = null;
+          let bestD = Infinity;
+          for (const c of casters) {
+            if (c.kind !== kind) continue;
+            const d = Math.abs(c.x - playerX);
+            if (d < bestD) {
+              bestD = d;
+              best = c;
+            }
+          }
+          // Off entirely past the frustum, and off in daylight: a shadow
+          // caster with no intensity still costs its depth pass, so the
+          // light is what gets faded and the CASTING is what gets switched.
+          const show = best != null && bestD < 26 && nightBlend > 0.02;
+          sl.castShadow = show;
+          if (best == null || !show) {
+            sl.intensity = 0;
+            continue;
+          }
+          sl.position.set(best.x, best.y, best.z);
+          sl.target.position.set(best.x, 0, best.z + best.reach * 0.9);
+          sl.target.updateMatrixWorld();
+          sl.distance = Math.max(6, best.reach * 2.4);
+          sl.shadow.camera.far = sl.distance;
+          const fade = Math.max(0, 1 - Math.max(0, bestD - 14) / 12);
+          sl.intensity = 2.1 * fade * nightBlend;
+        }
         if (spotPool.length > 0 && aimed.length > 0) {
           const near = [...aimed].sort(
             (a, b) => Math.abs(a.x - playerX) - Math.abs(b.x - playerX),
