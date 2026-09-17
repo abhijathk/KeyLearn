@@ -42,5 +42,17 @@ root/public/cursor-mock/
 __pycache__/
 *.pyc
 
-# Asset masters — 1.9 GB of bakes behind 36 MB of game. See AK-3D-PACK.md.
+# ── ASSET MASTERS NEVER GO UP ──────────────────────────────────────────
+#
+# Two gigabytes of bakes behind thirty-one megabytes of game. A master is a
+# 20-70 MB file that gets retopologised, re-baked, blanked, quantised and
+# meshopt-compressed down to a few hundred kilobytes, and only the last of
+# those belongs in a repo.
+#
+# `3D ASSETS` and `meshy_output` live one level ABOVE this repository and
+# git cannot reach them from here — these two lines are insurance for the
+# day somebody moves them in, which costs nothing and would otherwise be
+# found out by a push. See AK-3D-PACK.md for what came from where.
 AK 3D Pack/
+3D ASSETS/
+meshy_output/
