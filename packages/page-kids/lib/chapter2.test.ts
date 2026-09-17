@@ -295,3 +295,27 @@ test("a gate is only ever hung in a run that has an opening", () => {
     }
   }
 });
+
+test("the idol stands in front of the banyan, not behind its roots", () => {
+  // A banyan's base is a RING. Measured on the model: dense prop roots from
+  // 2 to 6 units out at this height, running to 10, and almost nothing
+  // within a unit of the axis — so the axis is the one place at the foot of
+  // this tree that the road cannot see. The idol was put there first.
+  const l = LESSONS_2[3]!;
+  const idol = l.props.find((p) => /Shrine_Idol/.test(p.model))!;
+  const tree = l.props
+    .filter((p) => /Banyan/.test(p.model))
+    .sort((a, b) => b.h - a.h)[0]!;
+  // Nearer the road than the trunk axis by enough to clear the near roots.
+  ok(
+    idol.z - tree.z >= 2,
+    `idol at z ${idol.z} is only ${(idol.z - tree.z).toFixed(1)} in front of the trunk at ${tree.z}`,
+  );
+  // But still under the canopy rather than out in the open ground.
+  ok(
+    idol.z - tree.z <= 6,
+    `idol at z ${idol.z} has walked out from under the tree`,
+  );
+  // And square on to the road: no turn means model +Z, which is its face.
+  equal(idol.turn ?? 0, 0, "the idol has been turned away from the road");
+});

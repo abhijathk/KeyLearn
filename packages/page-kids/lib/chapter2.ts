@@ -256,7 +256,27 @@ export const LESSONS_2: readonly Lesson[] = [
       // NO PLATFORM, for the same reason the banyan lost its althara: this
       // grove is not a built place. The idol goes into the soil among the
       // roots and its own plinth is the only masonry here.
-      { model: `${STONE}/Shrine_Idol`, at: 0.5, z: -13.4, h: 1.5, clear: 2 },
+      // AND IT HAS TO BE IN FRONT OF THE ROOTS, not among them.
+      //
+      // "Among the exposed roots" is the reference's phrase and it reads
+      // beautifully — and a banyan's base is not a trunk. MEASURED on the
+      // model: at this height the lowest sixth of the tree is a RING of prop
+      // roots, dense from 2 to 6 units out and running to 10, with almost
+      // nothing within a unit of the axis. So the axis is the one place at
+      // the foot of this tree that is hidden: at z -13.4 the idol stood
+      // five units behind the near root wall, correctly facing a road that
+      // could not see it.
+      //
+      // -11.4 is just inside the near face of that ring. The canopy is still
+      // overhead — it spreads far wider than the roots — and the roots are
+      // now BEHIND the idol, framing it, which is what "under the tree"
+      // looks like from a road. It shares the readable band with the
+      // resting stone and the mossy stone rather than sitting apart from
+      // them.
+      //
+      // 1.9 rather than 1.5, which was a third of a metre and read as a
+      // kerbstone. This is 55 cm: a god-stone a child could put a flower on.
+      { model: `${STONE}/Shrine_Idol`, at: 0.52, z: -11.4, h: 1.9, clear: 2 },
       { model: `${STONE}/Mossy_Stone`, at: 0.58, z: -11.5, h: 0.8 },
       // "One simple resting stone, bench or low sitting edge nearby."
       { model: `${UTIL}/Washing_Stone`, at: 0.64, z: -11, h: 0.55, clear: 2 },
