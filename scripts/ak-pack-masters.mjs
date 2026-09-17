@@ -80,7 +80,22 @@ function walk(dir, out = []) {
 }
 
 const shipped = walk(SHIPPED).filter((f) => /\.(glb|webp|ktx2)$/i.test(f));
-const pool = HUNTS.flatMap((h) => walk(h)).filter((f) => /\.(glb|fbx|blend|png)$/i.test(f));
+// ── WHAT COUNTS AS A MASTER ────────────────────────────────────────────
+//
+// A .glb or .fbx, and nothing else. The first pass accepted .png and .blend
+// too, on the reasoning that a source is a source — and it matched 57 of 100
+// shipped models to QA RENDER IMAGES and unrelated Blender files, because a
+// loose substring will always find something in two gigabytes. `Banyan.glb`
+// was paired with a render called `Banyan_Almaram_common_scale.png`, and
+// `Triceratops.glb` with a Blender file called `Ice.blend`.
+//
+// A WRONG MASTER IS WORSE THAN NO MASTER. No master says "this cannot be
+// re-processed"; a wrong one says "it can" and wastes somebody's afternoon
+// proving otherwise. Render folders are excluded outright for the same
+// reason — everything in them is a picture OF an asset, never the asset.
+const pool = HUNTS.flatMap((h) => walk(h))
+  .filter((f) => /\.(glb|fbx)$/i.test(f))
+  .filter((f) => !/qa-renders|\/samples?\//i.test(f));
 
 /** Loose match: the shipped stem, ignoring case, separators and _raw/_m6 tails. */
 const norm = (s) => basename(s, extname(s)).toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -96,9 +111,15 @@ const rows = [];
 for (const s of shipped) {
   const rel = relative(SHIPPED, s).replace(/^models\//, "").replace(/\.[^.]+$/, "");
   const stem = ALIASES[rel] != null ? norm(ALIASES[rel]) : norm(s);
+  // Exact first. The fallback needs a real overlap — eight characters, not
+  // "cover" inside "groundcover" — or it invents relationships.
   let master =
     byNorm.get(stem) ??
-    [...byNorm.entries()].find(([k]) => k.includes(stem) || stem.includes(k))?.[1] ??
+    [...byNorm.entries()].find(
+      ([k]) =>
+        Math.min(k.length, stem.length) >= 8 &&
+        (k.includes(stem) || stem.includes(k)),
+    )?.[1] ??
     null;
   rows.push({
     shipped: relative(SHIPPED, s),
