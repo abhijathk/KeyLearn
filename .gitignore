@@ -41,3 +41,6 @@ root/public/cursor-mock/
 # Python bytecode from the asset scripts.
 __pycache__/
 *.pyc
+
+# Asset masters — 1.9 GB of bakes behind 36 MB of game. See AK-3D-PACK.md.
+AK 3D Pack/
