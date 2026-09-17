@@ -12636,20 +12636,41 @@ export function createKidsWorld(
     for (const g of theme.ground) {
       want.push(sceneryUrl(String(g[0])));
     }
+    // ── WARM WHAT WILL ACTUALLY BE BUILT, AND NOTHING ELSE ──────────────
+    //
+    // The heart — temple, althara, banyan, cart — and the village yards
+    // behind them are CHAPTER 1'S, gated on `CHAPTER_N === 1` where they
+    // are placed. The strays are narrower still: they only appear on the
+    // endless trail, where there is no chapter at all. None of that was
+    // gated HERE, so a child walking Chapter 2 downloaded the temple, the
+    // hearth house, the cart and the althara — 1.17 MB measured — and the
+    // build never placed one of them.
+    //
+    // It is worse than dead weight. These go out in the same first burst as
+    // the things the road does need, so they are not idling at the back of
+    // the queue; they are taking bandwidth from the villagers and the
+    // planting while the child waits on a blank screen.
+    //
+    // The conditions are written to match the build sites exactly. If one
+    // moves, this has to move with it — which is why each says which site
+    // it mirrors.
     const v = theme.village;
+    const heartBuilt = CHAPTER == null || CHAPTER_N === 1; // see `heart`
+    const straysBuilt = CHAPTER == null; // see `V.strays`
     if (v != null) {
       const villageUrl = (name: string) =>
         name.includes("/")
           ? `${ASSETS}/models/${name}.glb`
           : `${ASSETS}/models/${v.dir}/${name}.glb`;
-      for (const h of v.heart) {
+      for (const h of heartBuilt ? v.heart : []) {
         want.push(villageUrl(h.model));
       }
-      for (const h of v.houses) {
+      // The yards are inside the same Chapter 1 gate as the heart.
+      for (const h of heartBuilt ? v.houses : []) {
         want.push(villageUrl(h));
       }
       want.push(villageUrl(v.wall));
-      for (const st of v.strays ?? []) {
+      for (const st of straysBuilt ? (v.strays ?? []) : []) {
         want.push(villageUrl(st.model));
       }
     }

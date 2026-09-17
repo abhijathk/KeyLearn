@@ -1,0 +1,233 @@
+import { equal, ok } from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { test } from "node:test";
+import {
+  BLEED,
+  MILESTONE_CLEAR,
+  type Placed,
+  SEGMENT_COUNT,
+} from "./chapter1.ts";
+import { LESSONS_2 } from "./chapter2.ts";
+
+/**
+ * CHAPTER 2, HELD TO CHAPTER 1'S RULES.
+ *
+ * Chapter 1 has fifty-eight of these and Chapter 2 had none — it was
+ * authored after them, against a reference document, and nothing checked it
+ * against the invariants the first chapter had to learn one bug at a time.
+ * Every rule below is one Chapter 1 already pays for.
+ */
+
+const ROOT = new URL(
+  "../../../root/public/kids-assets/models/",
+  import.meta.url,
+);
+
+test("there are ten lessons, numbered 1..10, spanning M10 to M20", () => {
+  equal(LESSONS_2.length, SEGMENT_COUNT);
+  LESSONS_2.forEach((l, i) => {
+    equal(l.n, i + 1, l.name);
+    // The brief numbers these 11..20 and the table numbers them 1..10; the
+    // milestones are what has to be continuous, and they are `from`/`to`.
+    equal(l.from, i, `${l.name} starts at the stone before it`);
+    equal(l.to, i + 1, `${l.name} ends at its own stone`);
+  });
+});
+
+test("nothing stands on the child's side of the road", () => {
+  // The single rule that ruins a scene outright: the typing lane is the one
+  // place a prop may never be, and the brief says so for every lesson.
+  for (const l of LESSONS_2) {
+    for (const p of l.props) {
+      ok(p.z < 0, `${l.name}: ${p.model} at z ${p.z} is on the road side`);
+    }
+  }
+});
+
+test("every placement sits inside the lesson it belongs to", () => {
+  for (const l of LESSONS_2) {
+    for (const p of l.props) {
+      ok(p.at >= 0 && p.at <= 1, `${l.name}: ${p.model} at ${p.at}`);
+    }
+  }
+});
+
+test("a run of fencing stays inside its own lesson", () => {
+  for (const l of LESSONS_2) {
+    for (const p of l.props) {
+      if (p.run == null) continue;
+      const span = (p.h * p.run.aspect * p.run.count) / 100;
+      ok(p.at + span <= 1 + BLEED, `${l.name}: ${p.model} run overruns`);
+    }
+  }
+});
+
+test("every boundary run has a way through it", () => {
+  // A wall a child cannot see past, with no gate, is a corridor — and the
+  // brief asks for openings in every one of them: "break them occasionally
+  // with gates, openings, vegetation or eroded sections".
+  for (const l of LESSONS_2) {
+    for (const p of l.props) {
+      if (p.run == null) continue;
+      ok(
+        p.run.gapAt >= 0 && p.run.gapAt < p.run.count,
+        `${l.name}: ${p.model} gap at ${p.run.gapAt} of ${p.run.count}`,
+      );
+    }
+  }
+});
+
+test("nothing tall stands where a milestone has to be read", () => {
+  // Milestone 13's number was covered by a taro once already. A stone sits
+  // at each end of a lesson, so a tall prop at either end needs clearance.
+  for (const l of LESSONS_2) {
+    for (const p of l.props) {
+      if (p.h < 2) continue;
+      const nearStone = p.at < 0.04 || p.at > 0.96;
+      if (!nearStone) continue;
+      ok(
+        Math.abs(p.z) > MILESTONE_CLEAR,
+        `${l.name}: ${p.model} (h ${p.h}) stands on a milestone at at=${p.at}`,
+      );
+    }
+  }
+});
+
+test("anything with a footprint declares how much room it needs", () => {
+  // `clear` is what keeps a villager from walking through a wall, and it is
+  // about FOOTPRINT rather than height: the palmyra is twenty-five units
+  // tall and a hand's breadth through, and Chapter 1 gives it no clearance
+  // for exactly that reason. Structures are the things somebody can walk
+  // into.
+  const STRUCTURE = /House|Hut|Temple|Market|Wall|Fence|Bridge|Cart|Shed|Gate/i;
+  for (const l of LESSONS_2) {
+    for (const p of l.props) {
+      if (!STRUCTURE.test(p.model)) continue;
+      ok(
+        p.clear != null,
+        `${l.name}: ${p.model} (h ${p.h}) declares no clearance`,
+      );
+    }
+  }
+});
+
+test("every model the chapter names is on disk", () => {
+  for (const l of LESSONS_2) {
+    const named = [
+      ...l.canopy,
+      ...l.mid,
+      ...l.ground,
+      ...l.props.map((p: Placed) => p.model),
+      ...l.herd,
+      ...l.folk,
+    ];
+    for (const m of named) {
+      if (!m.includes("/")) continue; // folk and herd are resolved elsewhere
+      ok(
+        existsSync(new URL(`${m}.glb`, ROOT)),
+        `${l.name}: ${m}.glb is missing`,
+      );
+    }
+  }
+});
+
+test("each lesson splits its planting across the three layers", () => {
+  for (const l of LESSONS_2) {
+    const sum = l.mix[0] + l.mix[1] + l.mix[2];
+    ok(Math.abs(sum - 1) < 1e-6, `${l.name}: mix sums to ${sum}`);
+    l.mix.forEach((m, i) => ok(m >= 0, `${l.name}: mix[${i}] is ${m}`));
+    // A layer given weight must have something to plant in it.
+    const layers = [l.canopy, l.mid, l.ground];
+    l.mix.forEach((m, i) => {
+      if (m > 0.01)
+        ok(layers[i]!.length > 0, `${l.name}: layer ${i} weighted but empty`);
+    });
+  }
+});
+
+test("no lesson is planted from a single species", () => {
+  // The brief's whole instruction on reuse: "rotate, scale modestly and vary
+  // spacing rather than duplicating large clusters identically".
+  for (const l of LESSONS_2) {
+    const all = new Set([...l.canopy, ...l.mid, ...l.ground]);
+    ok(all.size >= 2, `${l.name} is planted from ${all.size} species`);
+  }
+});
+
+test("depth runs outward and never reaches the road", () => {
+  for (const l of LESSONS_2) {
+    const [near, far] = l.depth;
+    ok(near > 0, `${l.name}: near depth ${near}`);
+    ok(far > near, `${l.name}: depth ${near}..${far} does not run outward`);
+  }
+});
+
+test("a calf is never drawn without a cow", () => {
+  for (const l of LESSONS_2) {
+    if (l.herd.some((h) => /Calf/i.test(h))) {
+      ok(
+        l.herd.some((h) => /^Cow$/i.test(h)),
+        `${l.name}: calf with no cow`,
+      );
+    }
+  }
+});
+
+test("the river is declared once, in the crossing lesson, and fits the road", () => {
+  const withRiver = LESSONS_2.filter((l) => l.river != null);
+  equal(withRiver.length, 1, "exactly one lesson carries the river");
+  const l = withRiver[0]!;
+  equal(l.n, 6, "the river is Lesson 16, which is Chapter 2's sixth");
+  const r = l.river!;
+  ok(r.at > 0.2 && r.at < 0.8, `river at ${r.at} is too close to a milestone`);
+  ok(r.half > 0 && r.half < 8, `river half-width ${r.half}`);
+  ok(r.depth > 0, `river depth ${r.depth}`);
+});
+
+test("nothing is planted in the river", () => {
+  // "Keep taro, grass and bank trees outside the playable bridge deck and
+  // collision lane" — and out of the water, which is the same rule.
+  const l = LESSONS_2.find((x) => x.river != null)!;
+  const r = l.river!;
+  for (const p of l.props) {
+    const dist = Math.abs(p.at - r.at);
+    // Anything standing within the channel would be in the water. Bank
+    // dressing belongs beyond it.
+    ok(dist > 0.04 || p.h < 1.2, `${l.name}: ${p.model} stands in the channel`);
+  }
+});
+
+test("the chapter opens where Chapter 1 left off and ends open", () => {
+  // "Lesson 11 begins exactly where Chapter 1 ends" — so the first lesson
+  // still carries village traces, and the last is the emptiest of the ten.
+  const first = LESSONS_2[0]!;
+  const last = LESSONS_2[SEGMENT_COUNT - 1]!;
+  ok(
+    first.props.some((p) => /House|Wall|Hut/i.test(p.model)),
+    "Lesson 11 keeps no village trace",
+  );
+  const densities = LESSONS_2.map((l) => l.density);
+  ok(
+    last.density <= Math.min(...densities) + 0.15,
+    `Lesson 20 (${last.density}) is not among the most open`,
+  );
+  equal(last.herd.length <= 1, true, "Lesson 20 should be near-empty of stock");
+});
+
+test("every lesson is named, differently, and fits the chip", () => {
+  const seen = new Set<string>();
+  for (const l of LESSONS_2) {
+    ok(l.name.length > 0 && l.name.length <= 16, l.name);
+    ok(l.name.split(/\s+/).length <= 2, l.name);
+    ok(!seen.has(l.name), `${l.name} is used twice`);
+    seen.add(l.name);
+  }
+});
+
+test("no lesson is a corridor — that belongs to Chapter 1", () => {
+  // The supernatural corridor is M4..M7 of Chapter 1 and nowhere else; the
+  // brief is explicit that Chapter 2 introduces no such character.
+  for (const l of LESSONS_2) {
+    equal(l.corridor, false, `${l.name} declares a corridor`);
+  }
+});
