@@ -15654,9 +15654,27 @@ export function createKidsWorld(
                   .map((q) => q.x),
               ) ?? p.x;
             const TURN = -0.5885; // -33.72 degrees
+            // ── AND TWO NUDGES THAT ARE NOT DERIVED ─────────────────────
+            //
+            // Everything above this came out of the geometry. These two came
+            // off the screen, and they are kept separate and named so that
+            // is obvious — a hand-set number buried in a derived expression
+            // is the thing nobody can check later.
+            //
+            // BACK: the portico's place is 0.4445 of the height forward of
+            // the building's centre, measured off the cut. It sits a little
+            // proud of the card at that, so it is pulled back by six
+            // hundredths.
+            //
+            // DOWN: the renderer measures the card's base line at 0.0339
+            // above its lowest corner, and on screen that still left the
+            // house standing high. The measurement is of the PICTURE; what
+            // has to meet the ground is the building in it.
+            const PORTICO_BACK = 0.06;
+            const CARD_SINK = 0.1;
             const faceZ = p.z;
             const scale = perspective(faceZ);
-            const porticoZ = faceZ + 0.4445 * H;
+            const porticoZ = faceZ + (0.4445 - PORTICO_BACK) * H;
             const [w2] = await Promise.all([
               stand(
                 "ak-3d-pack/ManaPortico",
@@ -15669,7 +15687,7 @@ export function createKidsWorld(
               // 0.0339 is measured: how far the base line sits above the
               // silhouette's lowest corner, which is the plinth's near edge
               // seen from above. Without it the house hovers by that much.
-              standCard("ManaBody", gateX, faceZ, 1.015 * H, 1.607, 0.0339),
+              standCard("ManaBody", gateX, faceZ, 1.015 * H, 1.607, CARD_SINK),
             ]);
             if (w2 != null) {
               builtGroup.add(w2);
