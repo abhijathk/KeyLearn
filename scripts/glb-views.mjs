@@ -71,41 +71,51 @@ const texArg = process.argv.indexOf("--tex-from");
 const texSrc = texArg > 0 ? readGLB(process.argv[texArg + 1]) : { json, bin };
 let TEX = null;
 {
-  const tj = texSrc.json, tb = texSrc.bin;
+  // WHERE THE ATLAS COMES FROM, in order of preference.
+  //
+  // `--tex-png` reads it from a loose file, which is the one that makes a
+  // freshly generated asset checkable AT ALL: a generator embeds its texture
+  // as a JPEG and writes a PNG beside it, and only one of those two can be
+  // decoded here. Otherwise it comes from `--tex-from`'s GLB, or this one's.
+  //
   // An untextured PREVIEW carries no material at all, and a preview is
-  // exactly when you want to look — before paying to texture it. Shaded
-  // silhouettes are the answer to "is the shape right", so this renders
+  // exactly when you want to look — before paying to texture it. A shaded
+  // silhouette answers "is the shape right", so a missing atlas renders
   // rather than throwing.
-  const mat = tj.materials?.[0];
-  const ti = mat?.pbrMetallicRoughness?.baseColorTexture?.index;
-  if (ti != null && tj.images?.[0]?.mimeType === "image/png") {
-    const im = tj.images[tj.textures[ti].source ?? 0];
-    const bv = tj.bufferViews[im.bufferView];
-    const raw = tb.subarray(bv.byteOffset ?? 0, (bv.byteOffset ?? 0) + bv.byteLength);
-    TEX = decodePNG(raw);
-    // `--tex-size N` box-filters the atlas down before sampling, which is how
-    // a resolution is DECIDED rather than argued about: the question "is 768
-    // enough" has a picture as its answer and nothing else.
-    const szArg = process.argv.indexOf("--tex-size");
-    if (szArg > 0) {
-      const n = Number(process.argv[szArg + 1]);
-      const k = Math.max(1, Math.round(TEX.w / n));
-      if (k > 1) {
-        const w2 = Math.floor(TEX.w / k), h2 = Math.floor(TEX.h / k);
-        const d2 = Buffer.alloc(w2 * h2 * TEX.ch);
-        for (let y = 0; y < h2; y++) for (let x = 0; x < w2; x++) {
-          for (let c = 0; c < TEX.ch; c++) {
-            let sum = 0;
-            for (let j = 0; j < k; j++) for (let i = 0; i < k; i++)
-              sum += TEX.data[(((y * k + j) * TEX.w) + (x * k + i)) * TEX.ch + c];
-            d2[(y * w2 + x) * TEX.ch + c] = Math.round(sum / (k * k));
-          }
-        }
-        TEX = { w: w2, h: h2, ch: TEX.ch, data: d2 };
-      }
+  const pngArg = process.argv.indexOf("--tex-png");
+  if (pngArg > 0) {
+    TEX = decodePNG(readFileSync(process.argv[pngArg + 1]));
+  } else {
+    const tj = texSrc.json, tb = texSrc.bin;
+    const ti = tj.materials?.[0]?.pbrMetallicRoughness?.baseColorTexture?.index;
+    if (ti != null && tj.images?.[0]?.mimeType === "image/png") {
+      const im = tj.images[tj.textures[ti].source ?? 0];
+      const bv = tj.bufferViews[im.bufferView];
+      TEX = decodePNG(tb.subarray(bv.byteOffset ?? 0, (bv.byteOffset ?? 0) + bv.byteLength));
     }
-    console.log(`  baseColor ${TEX.w}x${TEX.h} ch${TEX.ch}`);
   }
+  // `--tex-size N` box-filters the atlas down before sampling, which is how
+  // a resolution is DECIDED rather than argued about: the question "is 768
+  // enough" has a picture as its answer and nothing else.
+  const szArg = process.argv.indexOf("--tex-size");
+  if (TEX != null && szArg > 0) {
+    const n = Number(process.argv[szArg + 1]);
+    const k = Math.max(1, Math.round(TEX.w / n));
+    if (k > 1) {
+      const w2 = Math.floor(TEX.w / k), h2 = Math.floor(TEX.h / k);
+      const d2 = Buffer.alloc(w2 * h2 * TEX.ch);
+      for (let y = 0; y < h2; y++) for (let x = 0; x < w2; x++) {
+        for (let c = 0; c < TEX.ch; c++) {
+          let sum = 0;
+          for (let j = 0; j < k; j++) for (let i = 0; i < k; i++)
+            sum += TEX.data[(((y * k + j) * TEX.w) + (x * k + i)) * TEX.ch + c];
+          d2[(y * w2 + x) * TEX.ch + c] = Math.round(sum / (k * k));
+        }
+      }
+      TEX = { w: w2, h: h2, ch: TEX.ch, data: d2 };
+    }
+  }
+  if (TEX != null) console.log(`  baseColor ${TEX.w}x${TEX.h} ch${TEX.ch}`);
 }
 
 let mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
