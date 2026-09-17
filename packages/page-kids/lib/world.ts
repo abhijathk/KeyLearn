@@ -3351,8 +3351,10 @@ function villageHouses(
 ): readonly {
   readonly x: number;
   readonly z: number;
-  /** Fraction of the village's house height. Under 0.7 means a cottage. */
+  /** Fraction of the village's house height. */
   readonly scale: number;
+  /** Whether this plot takes a one-room cottage or a family compound. */
+  readonly cottage: boolean;
 }[] {
   // A SETTLEMENT, NOT A ROW. Three houses at one depth and one size read as
   // a terrace. What makes a village look like a village is that the houses
@@ -3367,25 +3369,35 @@ function villageHouses(
   //
   // Depths stay inside the floor, which stops at -38. The deepest here is
   // -33, leaving its back wall on solid ground.
-  const slots: readonly (readonly [number, number, number])[] =
+  // A COTTAGE IS STILL A HOUSE. The scale said 0.55, which on an eleven-unit
+  // house is six units — and a grown villager is 5.9. They were dollhouses
+  // with their ridges level with a man's head, which is not a small building,
+  // it is a toy. 0.78 and 0.82 read as one-room houses beside a family
+  // compound: plainly smaller, still somewhere a person lives.
+  //
+  // The FOURTH number says which pool to draw from, instead of inferring it
+  // from the scale. Those were two different questions sharing one number,
+  // and the moment a cottage had to grow it started answering the wrong one.
+  const slots: readonly (readonly [number, number, number, 0 | 1])[] =
     len / RUN_LEN < 0.6
       ? [
-          [0.06, -30, 1],
-          [0.42, -20, 0.6],
-          [0.8, -28, 0.85],
+          [0.06, -30, 1, 0],
+          [0.42, -20, 0.8, 1],
+          [0.8, -28, 0.85, 0],
         ]
       : [
-          [0.06, -30, 1],
-          [0.26, -21, 0.58],
-          [0.45, -33, 0.92],
-          [0.6, -31, 1],
-          [0.72, -19, 0.55],
-          [0.84, -27, 0.86],
+          [0.06, -30, 1, 0],
+          [0.26, -21, 0.82, 1],
+          [0.45, -33, 0.92, 0],
+          [0.6, -31, 1, 0],
+          [0.72, -19, 0.78, 1],
+          [0.84, -27, 0.86, 0],
         ];
-  return slots.map(([at, oz, scale]) => ({
+  return slots.map(([at, oz, scale, cottage]) => ({
     x: from + at * len + hashRange(at, oz, 120, -1.5, 1.5),
     z: oz + hashRange(at, oz, 121, -1.5, 1.5),
     scale,
+    cottage: cottage === 1,
   }));
 }
 
@@ -10038,7 +10050,12 @@ export function createKidsWorld(
    * goes in the corridor between its front face and the road. Beside it and
    * behind it are fine, and are where the flowers go.
    */
-  let templeView: { x: number; z: number; halfW: number } | null = null;
+  let templeView: {
+    x: number;
+    z: number;
+    back: number;
+    halfW: number;
+  } | null = null;
 
   /**
    * HOW FAR ONE WALK CYCLE CARRIES A VILLAGER — FROM THEIR OWN HEIGHT.
@@ -15150,6 +15167,9 @@ export function createKidsWorld(
             templeView = {
               x: (tb.min.x + tb.max.x) / 2,
               z: tb.max.z,
+              // Its FAR edge as well, so anything placed later can be put
+              // behind the building rather than inside it. See the houses.
+              back: tb.min.z,
               // A little wider than the building, because a tree just off its
               // shoulder still crosses the face at this camera's yaw.
               halfW: (tb.max.x - tb.min.x) / 2 + 3.5,
@@ -15275,6 +15295,7 @@ export function createKidsWorld(
                 x: vx + ox + hashRange(ox, oz, 120, -2.5, 2.5),
                 z: oz + hashRange(ox, oz, 121, -1.5, 1.5),
                 scale: 1,
+                cottage: false,
               }));
         // Shuffled separately so neither pool runs out while the other
         // repeats itself down the road.
@@ -15293,10 +15314,24 @@ export function createKidsWorld(
           // the whole chapter — a thing has to stand still before anything
           // else can be placed relative to it.
           const hx = home.x;
-          const hz = home.z;
+          // NOT INSIDE THE TEMPLE. The shallow plots were added at z -19,
+          // which is exactly the depth the temple stands at, and one of them
+          // landed on it — a house through a shrine, which is the sort of
+          // thing that only shows up on screen.
+          //
+          // Pushed behind the building rather than nudged: the temple's own
+          // measured far edge, plus room, so it stays right if the temple is
+          // ever moved or resized. Only when it actually overlaps in x —
+          // a plot to one side keeps the depth it was given.
+          const inTemple =
+            templeView != null &&
+            Math.abs(home.x - templeView.x) < templeView.halfW &&
+            home.z > templeView.back - 2;
+          const hz =
+            inTemple && templeView != null ? templeView.back - 6 : home.z;
           // THE SLOT PICKS THE HOUSE: a shallow plot gets a cottage, a deep
           // one has room for a compound.
-          const from2 = home.scale < 0.7 ? cots : pool;
+          const from2 = home.cottage ? cots : pool;
           const w = await stand(
             from2[i % from2.length]!,
             hx,
