@@ -15661,20 +15661,23 @@ export function createKidsWorld(
             // is obvious — a hand-set number buried in a derived expression
             // is the thing nobody can check later.
             //
-            // BACK: the portico's place is 0.4445 of the height forward of
-            // the building's centre, measured off the cut. It sits a little
-            // proud of the card at that, so it is pulled back by six
-            // hundredths.
+            // The gap between the two halves is 0.4445 of the height by
+            // measurement — that is where the portico sits on the building —
+            // and on screen it stands too far proud of the card. BACK pulls
+            // the portico in and FORWARD brings the card out to meet it,
+            // which closes the gap from seven units to under five while
+            // keeping the house itself roughly where the table put it.
             //
             // DOWN: the renderer measures the card's base line at 0.0339
             // above its lowest corner, and on screen that still left the
             // house standing high. The measurement is of the PICTURE; what
             // has to meet the ground is the building in it.
-            const PORTICO_BACK = 0.06;
+            const PORTICO_BACK = 0.13;
+            const CARD_FORWARD = 0.05;
             const CARD_SINK = 0.1;
-            const faceZ = p.z;
+            const faceZ = p.z + CARD_FORWARD * H;
             const scale = perspective(faceZ);
-            const porticoZ = faceZ + (0.4445 - PORTICO_BACK) * H;
+            const porticoZ = faceZ + (0.4445 - PORTICO_BACK - CARD_FORWARD) * H;
             const [w2] = await Promise.all([
               stand(
                 "ak-3d-pack/ManaPortico",
