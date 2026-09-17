@@ -15662,54 +15662,93 @@ export function createKidsWorld(
                 hw: 3.6,
                 hd: Math.abs(porch + 12) / 2,
               });
-              // ── AND THREE LAMPS ON ITS FRONT ─────────────────────────
+              // ── AND THREE STANDING LAMPS ALONG ITS FRONT ─────────────
               //
-              // A great house that goes completely dark at dusk reads as
-              // derelict, and this one is lived in — a family big enough to
-              // need a gate keeps its veranda lit. Three lamps, and the
-              // arrangement is the point: one under the portico where the
-              // door is, and one at each end of the colonnade.
+              // A glow in mid-air is a light; a nilavilakku with a glow in
+              // its bowl is a lamp somebody lit. These are the same brass
+              // lamp that stands at the shrine in Lesson 14 and in front of
+              // the temple in Chapter 1 — a great house, a village temple
+              // and a roadside god-stone lighting the identical object is
+              // most of what makes them feel like one place.
               //
-              // THE MIDDLE ONE IS BRIGHTER, which is what makes it read as
-              // the WAY IN rather than as three lamps in a row. A porch lamp
-              // is lit for people arriving; the corner lamps are only there
-              // so the veranda is not a black band under a lit roof.
+              // One at the portico where the door is, one at each end of the
+              // colonnade, all three standing ON THE GROUND at the foot of
+              // the veranda, which is where one actually goes.
               //
-              // Placed off the measured box rather than written down, so
-              // they follow the house if it is ever moved or resized — and
-              // inset from the corners, because a lamp hung exactly on the
-              // corner of a building looks like it is falling off it.
+              // THE MIDDLE ONE IS BIGGER AND BRIGHTER, and that is the whole
+              // arrangement. A porch lamp is lit for people ARRIVING; the
+              // corner pair exist so the veranda is not a black band under a
+              // lit roof. Three identical lamps in a row would say nothing.
               //
-              // SIX IN THE EVENING TO NINE, and not a minute of the deep
-              // night. The same window the village houses keep — see `AWAKE`
-              // where their windows are lit — because this is a household
-              // and not a street lamp: the lamps go on when the light goes
-              // and out when the house goes to bed.
+              // Positions come off the measured box, so they follow the
+              // house if it is ever moved or resized, and they are inset
+              // from the corners because a lamp on the very corner of a
+              // building looks like it is falling off it.
               //
-              // It is also the brief's own shape for these hours. Seven to
-              // nine is "work stops, people return"; ten to four is "minimal
-              // human presence". A lit veranda at two in the morning would
-              // be the one thing on this road still awake.
+              // SIX IN THE EVENING TO NINE. The same window the village
+              // houses keep — see `AWAKE` — because this is a household and
+              // not a street lamp, and it is the brief's own shape for these
+              // hours: ten to four is "minimal human presence", and a lit
+              // veranda then would be the one thing on the road still awake.
               const HOUSE_LAMP = [18, 21] as const;
-              const foot = b.min.y;
               const tall = b.max.y - b.min.y;
-              makeLamp(cx, foot + tall * 0.34, porch - hd * 0.12, {
-                kind: "oil",
-                size: tall * 0.16,
-                peak: 0.97,
-                lit: tall * 2.6,
-                hours: HOUSE_LAMP,
-              });
-              for (const side of [-1, 1]) {
+              // UNDER THE ROOF, NOT AT THE EDGE OF IT. These stand INSIDE
+              // the portico and inside the veranda, back from the drip line,
+              // which is where a house lamp goes — out of the rain and out
+              // of the wind.
+              const lampZ = porch - hd * 0.16;
+              // AND IT IS AN OIL LAMP, WHICH LIGHTS THE ROOM IT IS IN.
+              //
+              // A wick in a brass bowl throws enough to cross a veranda and
+              // no further. `reach` started at 2.9 times the lamp's own
+              // height — more than half the height of the whole building —
+              // so the glow climbed the façade and lit two storeys that have
+              // a veranda roof between them and the flame.
+              //
+              // The portico's keeps a short one, a pool at its own foot. THE
+              // TWO CORNER LAMPS CAST NOTHING AT ALL: they are the flame and
+              // its own glow, which is honestly what an oil lamp does to a
+              // dark colonnade twenty units from the road. It also spends
+              // nothing from the light budget, which is finite and better
+              // spent where somebody arrives.
+              //
+              // The flames stay bright to LOOK at — they are the brightest
+              // things in that frame after dark — while lighting almost
+              // nothing. That is the difference between a lamp and a lantern.
+              for (const [lx, lh, peak, reach] of [
+                [cx, tall * 0.2, 0.94, 0.8],
+                [cx - hw * 0.82, tall * 0.13, 0.82, 0],
+                [cx + hw * 0.82, tall * 0.13, 0.82, 0],
+              ] as const) {
+                const v = await stand(
+                  "village-util/Nilavilakku",
+                  lx,
+                  lampZ,
+                  lh,
+                  0,
+                  0,
+                );
+                if (v == null) {
+                  continue;
+                }
+                builtGroup.add(v);
+                // The flame goes in the BOWL, at the top of the stem —
+                // measured off the lamp that was actually stood rather than
+                // assumed from the height asked for.
+                const vb = measureBox(v);
                 makeLamp(
-                  cx + side * hw * 0.82,
-                  foot + tall * 0.3,
-                  porch - hd * 0.1,
+                  (vb.min.x + vb.max.x) / 2,
+                  vb.min.y + (vb.max.y - vb.min.y) * 0.88,
+                  (vb.min.z + vb.max.z) / 2,
                   {
                     kind: "oil",
-                    size: tall * 0.1,
-                    peak: 0.88,
-                    lit: tall * 1.5,
+                    size: (vb.max.y - vb.min.y) * 0.34,
+                    peak,
+                    // Nothing asked for is nothing granted: a reach of zero
+                    // leaves the flame as a flame and lights no geometry.
+                    ...(reach > 0
+                      ? { lit: (vb.max.y - vb.min.y) * reach }
+                      : {}),
                     hours: HOUSE_LAMP,
                   },
                 );
