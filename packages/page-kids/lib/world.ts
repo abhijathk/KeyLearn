@@ -5901,14 +5901,7 @@ export function createKidsWorld(
    */
   const AIMED_LIGHTS = 2;
   /** What is left for the plain point lamps: houses, market, temple. */
-  /**
-   * The two shadow casters, and they come OUT of the budget like the aimed
-   * cones do — not on top of it. Added on top, the fragment shader looped
-   * over ten lights instead of eight on every lit surface in the world,
-   * which is a cost paid by every pixel whether a lamp is in shot or not.
-   */
-  const SHADOW_LIGHTS = 2;
-  let lampLightBudget = LAMP_LIGHTS - AIMED_LIGHTS - SHADOW_LIGHTS;
+  let lampLightBudget = LAMP_LIGHTS - AIMED_LIGHTS;
   /**
    * EVERY ROADSIDE LIGHT, BUILT BEFORE THE FIRST FRAME.
    *
@@ -6121,33 +6114,6 @@ export function createKidsWorld(
    */
   const TMP_AT = new THREE.Vector3();
 
-  /**
-   * EVERY LAMP THAT WANTS A SHADOW, and only two ever get one.
-   *
-   * Shadow casting is the most expensive thing a light can do and this world
-   * runs exactly one caster: the sun. Thirty lamps each throwing their own
-   * would be thirty more depth passes a frame, on a machine chosen because
-   * a school could afford it.
-   *
-   * So it is the same bargain the aimed cones already strike, one level up.
-   * There are TWO shadow-casting lights for the whole road — one warm for a
-   * wick, one cold for a mantle — and every lamp registers where it stands
-   * and how far it throws. The tick lends each light to the nearest lamp of
-   * its own kind, which is the one in shot. A lamp the child is standing at
-   * casts pillar shadows across the ground; a lamp four lessons away does
-   * not, and nobody can tell, because nobody is looking at it.
-   *
-   * `reach` carries the lamp's own size, so the same two lights serve a
-   * milestone's little flame and a mansion's veranda lamp at the scale each
-   * actually is.
-   */
-  const casters: {
-    x: number;
-    y: number;
-    z: number;
-    kind: "oil" | "petromax";
-    reach: number;
-  }[] = [];
   const spotPool: THREE.SpotLight[] = [];
   for (let i = 0; i < AIMED_LIGHTS; i++) {
     // Wide and very soft: this is a flame in an opening, not a torch. The
@@ -6161,63 +6127,34 @@ export function createKidsWorld(
     // and it has to actually do that to be worth standing there.
     const spot = new THREE.SpotLight(0xffb867, 0, 46, 1.22, 0.85, 1.0);
     // Parked below the ground, aimed at nothing, until claimed.
-    // THE CONES DO NOT CAST. They light the same roadside lamps the two
-    // LENT casters already serve, so switching them on bought a duplicate
-    // shadow for every milestone and two more depth passes a frame.
+    // ── THESE ARE THE SHADOW CASTERS, AND THE ONLY ONES ────────────────
+    //
+    // A separate pair existed for a few hours and was a mistake twice over.
+    // It duplicated these — both systems lend a light to the nearest lamp,
+    // so every milestone got two — and, worse, it came OUT OF THE LAMP
+    // BUDGET, dropping the point lights from six to four. Two shops went
+    // dark inside. The cones were always the right place for this: they
+    // already go to whatever the child is standing next to.
+    //
+    // castShadow is set ONCE here and never touched. Flipping it on a light
+    // invalidates every shader program that light affects and three.js
+    // rebuilds them on the next frame — a stall you can watch happen.
+    //
+    // The map is rendered ON DEMAND. A shadow changes when its caster moves,
+    // and these are lent to fixed lamps, so the map refreshes when a cone
+    // changes lamp and at no other time. Between moves it is free.
+    spot.castShadow = !lowTier;
+    spot.shadow.autoUpdate = false;
+    spot.shadow.mapSize.set(lowTier ? 512 : 1024, lowTier ? 512 : 1024);
+    spot.shadow.camera.near = 0.5;
+    spot.shadow.camera.far = 46;
+    spot.shadow.bias = -0.0015;
+    spot.shadow.normalBias = 0.05;
     spot.position.set(0, -500, 0);
     spot.target.position.set(0, -501, 0);
     nightLayer.add(spot);
     nightLayer.add(spot.target);
     spotPool.push(spot);
-  }
-  /**
-   * THE TWO SHADOW CASTERS, made now for the reason the cones are: creating
-   * a shadow-mapped light on the frame a child walks up to it compiles a
-   * shader and stalls. These sit at zero intensity until a lamp claims one.
-   *
-   * SPOT, NOT POINT. A point light's shadow is a cube — six depth passes for
-   * one lamp — and a spot's is a single map. A lamp under a veranda only
-   * needs to throw one way in any case: outward, past the pillars, onto the
-   * ground where the shadows go.
-   *
-   * The map is small on purpose. These shadows are pillars on bare earth
-   * twenty units away, not foliage detail; 1024 is already generous and the
-   * low tier gets half, where this is most likely to be the thing that costs
-   * a frame.
-   */
-  const shadowLights: Record<"oil" | "petromax", THREE.SpotLight> = {
-    oil: new THREE.SpotLight(0xffb066, 0, 30, 1.05, 0.7, 1.4),
-    petromax: new THREE.SpotLight(0xfff4e0, 0, 34, 1.0, 0.6, 1.3),
-  };
-  for (const sl of Object.values(shadowLights)) {
-    // NOT ON THE LOW TIER AT ALL. Two extra depth passes is the cheapest
-    // shadow this world can offer and it is still two, on a machine chosen
-    // because a school could afford it. They still light — only the casting
-    // goes.
-    //
-    // AND IT IS SET ONCE, HERE, AND NEVER TOUCHED AGAIN. Flipping
-    // `castShadow` on a light invalidates every shader program that light
-    // affects, and three.js recompiles them on the next frame — which is a
-    // stall you SEE: the loader stops, then carries on. I had this toggling
-    // per frame on proximity, so the scene recompiled its materials every
-    // time the child walked into or out of range of a lamp.
-    sl.castShadow = !lowTier;
-    // The map is rendered ON DEMAND instead. A shadow only changes when the
-    // thing casting it moves, and these lamps are nailed to buildings — so
-    // the map is re-rendered when the caster is LENT to a different lamp and
-    // at no other time. Per frame it costs nothing.
-    sl.shadow.autoUpdate = false;
-    sl.shadow.mapSize.set(lowTier ? 512 : 1024, lowTier ? 512 : 1024);
-    sl.shadow.camera.near = 0.4;
-    sl.shadow.camera.far = 34;
-    // A wick is not a point source and a hard shadow edge from one looks
-    // like a torch. The bias keeps the columns off their own shadows.
-    sl.shadow.bias = -0.0014;
-    sl.shadow.normalBias = 0.05;
-    sl.position.set(0, -500, 0);
-    sl.target.position.set(0, -501, 0);
-    nightLayer.add(sl);
-    nightLayer.add(sl.target);
   }
   /**
    * One texture per kind of flame, shared by every lamp of that kind.
@@ -6382,18 +6319,6 @@ export function createKidsWorld(
     nightLayer.add(sprite);
     let light: THREE.PointLight | null = null;
     const lit = opts.lit ?? 0;
-    // EVERY LAMP THAT THROWS LIGHT REGISTERS FOR A SHADOW, and only the two
-    // nearest of each kind will ever be lent one. Registering is a push onto
-    // an array; it costs nothing to be a candidate.
-    if (lit > 0 && opts.kind !== "mirror") {
-      casters.push({
-        x,
-        y,
-        z,
-        kind: opts.kind === "petromax" ? "petromax" : "oil",
-        reach: lit,
-      });
-    }
     if (lit > 0) {
       if (opts.aim != null) {
         // AIMED LAMPS DO NOT OWN A LIGHT, THEY BORROW ONE.
@@ -19104,62 +19029,6 @@ export function createKidsWorld(
         // Lend the cones to the nearest lamps — see `aimed`. Cheap: a few
         // dozen absolute differences and two matrix writes, against a road
         // that would otherwise be lit only at its very beginning.
-        // ── THE TWO SHADOW CASTERS GO TO WHOEVER IS NEAREST ────────────
-        //
-        // One warm light for wicks and one cold for mantles, lent to the
-        // closest lamp of each kind. A lamp the child is standing at throws
-        // pillar shadows across the ground; one four lessons away does not,
-        // and nobody can tell, because nobody is looking at it.
-        //
-        // AIMED DOWN AND OUT, toward the road. A lamp under a veranda only
-        // throws one way that matters, and it is past the columns onto the
-        // ground in front — which is the shadow this is all for. Aiming it
-        // straight down would put the columns' shadows under the columns.
-        //
-        // The cone and its throw scale with the lamp's own reach, so the
-        // same two lights serve a milestone's flame and a mansion's veranda
-        // lamp at the size each actually is.
-        for (const kind of ["oil", "petromax"] as const) {
-          const sl = shadowLights[kind];
-          let best: (typeof casters)[number] | null = null;
-          let bestD = Infinity;
-          for (const c of casters) {
-            if (c.kind !== kind) continue;
-            const d = Math.abs(c.x - playerX);
-            if (d < bestD) {
-              bestD = d;
-              best = c;
-            }
-          }
-          // Off entirely past the frustum, and off in daylight: a shadow
-          // caster with no intensity still costs its depth pass, so the
-          // light is what gets faded and the CASTING is what gets switched.
-          const show = best != null && bestD < 26 && nightBlend > 0.02;
-          if (best == null || !show) {
-            // Faded, not switched. `castShadow` stays exactly as it was set
-            // at build time — see above for what touching it costs — and a
-            // caster with no intensity and a map it is not refreshing is
-            // very nearly free.
-            sl.intensity = 0;
-            continue;
-          }
-          // ONLY WHEN IT MOVES. The lamps are fixed to buildings, so a map
-          // rendered once where the caster now stands stays correct until
-          // the caster is lent somewhere else.
-          const movedTo = `${best.x.toFixed(2)},${best.z.toFixed(2)}`;
-          if (sl.userData.at !== movedTo) {
-            sl.userData.at = movedTo;
-            sl.position.set(best.x, best.y, best.z);
-            sl.target.position.set(best.x, 0, best.z + best.reach * 0.9);
-            sl.target.updateMatrixWorld();
-            sl.distance = Math.max(6, best.reach * 2.4);
-            sl.shadow.camera.far = sl.distance;
-            sl.shadow.camera.updateProjectionMatrix();
-            sl.shadow.needsUpdate = true;
-          }
-          const fade = Math.max(0, 1 - Math.max(0, bestD - 14) / 12);
-          sl.intensity = 2.1 * fade * nightBlend;
-        }
         if (spotPool.length > 0 && aimed.length > 0) {
           const near = [...aimed].sort(
             (a, b) => Math.abs(a.x - playerX) - Math.abs(b.x - playerX),
@@ -19171,9 +19040,17 @@ export function createKidsWorld(
               spot.intensity = 0;
               continue;
             }
-            spot.position.set(at.x, at.y, at.z);
-            spot.target.position.copy(at.aim);
-            spot.target.updateMatrixWorld();
+            // Only refresh the shadow map when this cone actually changes
+            // lamp. The lamps do not move, so between changes the map it
+            // already rendered is still correct.
+            const now = `${at.x.toFixed(2)},${at.z.toFixed(2)}`;
+            if (spot.userData.at !== now) {
+              spot.userData.at = now;
+              spot.position.set(at.x, at.y, at.z);
+              spot.target.position.copy(at.aim);
+              spot.target.updateMatrixWorld();
+              spot.shadow.needsUpdate = true;
+            }
             // Fades out as the lamp it is standing in leaves the frame, so a
             // cone moving from one lamp to the next is never seen to jump.
             const d = Math.abs(at.x - playerX);
