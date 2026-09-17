@@ -2948,6 +2948,17 @@ export const VILLAGE_THEME: WorldTheme = {
       // and not in front of it. Five units nearer the road on top of that,
       // so it is met rather than glimpsed.
       { model: "Temple", dx: -1, dz: -19, h: 9, turn: 0.08 },
+      // AND A NILAVILAKKU IN FRONT OF IT, the same lamp that stands at the
+      // shrine in Lesson 14 — which is the point. A village temple and a
+      // roadside god-stone are the same practice at two sizes, and using one
+      // lamp for both says so without a word.
+      //
+      // Bigger here: 2.6 against the shrine's 1.5. A temple's lamp is one
+      // somebody has to bend to light rather than crouch to.
+      //
+      // Five units in front of the building, clear of the steps, on the
+      // temple's own centre line.
+      { model: "village-util/Nilavilakku", dx: -1, dz: -13.5, h: 2.6 },
     ],
     houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
     // ELEVEN, WITH THE DISTANCE DOING THE REST. 14 was the human-scale
@@ -6885,6 +6896,25 @@ export function createKidsWorld(
             .filter((p) => /House/i.test(p.model))
             .map((p) => ({ x: p.x, z: p.z + 9, rx: 13, rz: 7.5 }))),
     ];
+    // ── AND THE GROUND IN FRONT OF A SHRINE ──────────────────────────
+    //
+    // The same fact as the temple's forecourt, one size down: people come to
+    // a god-stone barefoot, stand in one spot, and have done for years.
+    // Nothing grows where they stand. The patch is small and it sits in
+    // FRONT of the idol rather than around it — the worn ground is where the
+    // feet go, not where the stone is.
+    //
+    // Chapter-agnostic on purpose, unlike the village yards above: it is
+    // derived from wherever a Shrine_Idol was actually placed, so it cannot
+    // be left behind if the shrine moves, which is the mistake the temple's
+    // forecourt is still one hand-kept number away from.
+    if (CHAPTER != null) {
+      yards.push(
+        ...placements(CHAPTER, perspective)
+          .filter((p) => /Shrine_Idol/i.test(p.model))
+          .map((p) => ({ x: p.x, z: p.z + 2.6, rx: 5.2, rz: 3.2 })),
+      );
+    }
     const yardAt = (x: number, z: number): number => {
       let w = 0;
       for (const y of yards) {
@@ -14496,6 +14526,12 @@ export function createKidsWorld(
         const on = (across: number, up: number, out: number) =>
           [cx + across, foot + tall * up, front + faces * out] as const;
 
+        // THE EVENING PUJA, hoisted out of the temple's own block. The lamps
+        // ON the temple and the standing lamp IN FRONT of it are lit by the
+        // same people at the same hour, and two copies of that window are
+        // two things to keep in step by hand.
+        const PUJA = [17.5, 20.5] as const;
+
         if (/^Temple$/i.test(name)) {
           // ── THE PUJA, AND THE LAMP THAT NEVER GOES OUT ─────────────────
           //
@@ -14515,7 +14551,6 @@ export function createKidsWorld(
           // rather than as lamps somebody set down, and at this distance
           // they merged into one bright bar and flattened the building they
           // were supposed to describe.
-          const PUJA = [17.5, 20.5] as const;
           // A short row up on the plinth, so the front has depth rather than
           // a single lit line across it.
           for (let i = 0; i < 4; i++) {
@@ -14900,6 +14935,18 @@ export function createKidsWorld(
           return;
         }
 
+        // THE STANDING LAMP IN FRONT OF THE TEMPLE. Its flame is in the oil
+        // bowl at the top of the stem — 0.88 of the way up — and it keeps
+        // the puja's hours, because it is lit by whoever lights the rest.
+        if (/^Nilavilakku$/i.test(name)) {
+          makeLamp(...on(0, 0.88, 0), {
+            kind: "oil",
+            size: tall * 0.34,
+            peak: 0.95,
+            lit: tall * 3.4,
+            hours: PUJA,
+          });
+        }
         if (/^Cart$/i.test(name)) {
           // A lamp hung off the cart while it is being unloaded.
           makeLamp(...on(0, 0.9, 0.1), { size: 1.0, peak: 0.7 });
@@ -15315,15 +15362,29 @@ export function createKidsWorld(
           if (w != null && p.lit != null && trueNight) {
             const b = measureBox(w);
             const tall = b.max.y - b.min.y;
+            // A WICK IS NOT A MANTLE, and it is not halfway up the lamp.
+            //
+            // This lit every prop as a petromax at 45% of its height, which
+            // is right for the two hurricane lamps that were the only props
+            // using it and wrong for anything else. A nilavilakku is a stem
+            // with an oil bowl on top: its flame belongs at 0.88, and a
+            // petromax's steady white mantle is the opposite of what it
+            // does — an oil flame moves constantly, and that difference is
+            // what tells you which is which across a dark field before you
+            // can see either lamp.
+            const oil = p.litKind === "oil";
             makeLamp(
               (b.min.x + b.max.x) / 2,
-              b.min.y + tall * 0.45,
+              b.min.y + tall * (p.litUp ?? 0.45),
               (b.min.z + b.max.z) / 2,
               {
-                kind: "petromax",
-                size: tall * 2,
-                peak: 0.98,
-                lit: tall * 4.4,
+                kind: oil ? "oil" : "petromax",
+                // A wick flame is a few millimetres of burning vapour on a
+                // lamp you could pick up. At `tall * 2` it was a fireball
+                // wider than the lamp holding it.
+                size: tall * (oil ? 0.34 : 2),
+                peak: oil ? 0.95 : 0.98,
+                lit: tall * (oil ? 3.2 : 4.4),
                 closes: p.lit,
               },
             );
@@ -16005,7 +16066,13 @@ export function createKidsWorld(
           // Everybody is BUILT; who is actually out is decided every frame
           // from their shift, below. Deciding it here froze the road at
           // whatever hour the child arrived.
-          const n = WHO.length;
+          // AND FEWER OF THEM WHERE THERE IS NOTHING TO BE BUSY AT. The
+          // hubs are Chapter 1's — its village centre and its market — and
+          // a chapter without either has no reason to carry five people on
+          // the road. Chapter 2 is field boundaries, an orchard lane, a
+          // grove and grazing land: two is a road that has somebody on it,
+          // five is a procession.
+          const n = stationed ? WHO.length : 2;
           const kidsAllowed = childrenOut(worldHour());
           for (let i = 0; i < n; i++) {
             const who = WHO[i % WHO.length]!;
@@ -16079,10 +16146,34 @@ export function createKidsWorld(
                     Math.max(8, CHAPTER[span[0]] ?? 8),
                     Math.min(TRAIL_END - 8, CHAPTER[span[1]] ?? TRAIL_END - 8),
                   ]
-                : [
-                    Math.max(8, hubX - 150),
-                    Math.min(TRAIL_END - 8, hubX + 150),
-                  ];
+                : (() => {
+                    // HOW FAR THIS ONE RANGES, and it used to be 150 each
+                    // way — the whole road. Four people each covering
+                    // everything means four people are always everywhere,
+                    // and a child on an empty orchard stretch met the same
+                    // continuous traffic as a child at the market. That is
+                    // not what a country road is: the traffic is wherever
+                    // people are GOING, and out on the field boundaries you
+                    // meet somebody occasionally, not constantly.
+                    //
+                    // So a beat is now about one lesson either side of its
+                    // hub — the village centre or the market — which keeps
+                    // those two as busy as they were and empties the rest.
+                    //
+                    // EXCEPT ONE. The last walker keeps the old range,
+                    // because a road where nobody is ever going anywhere is
+                    // its own kind of wrong: somebody has to be passing
+                    // through. One person crossing the whole chapter is a
+                    // traveller; four is a crowd.
+                    const lessonLen =
+                      (CHAPTER[hub] ?? 0) - (CHAPTER[hub - 1] ?? 0);
+                    const reach =
+                      i === n - 1 ? 150 : Math.max(18, lessonLen * 1.25);
+                    return [
+                      Math.max(8, hubX - reach),
+                      Math.min(TRAIL_END - 8, hubX + reach),
+                    ];
+                  })();
             // NOBODY WALKS BEFORE SIX. The early pair used to start at
             // four, which put two people on a dark road an hour before
             // sunrise — inside the Kuttichathan window as far as anybody

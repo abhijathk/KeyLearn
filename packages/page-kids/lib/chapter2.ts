@@ -191,9 +191,21 @@ export const LESSONS_2: readonly Lesson[] = [
     canopy: [`${PLANTS}/Coconut_Palm`, `${PLANTS}/Tamarind_Tree`],
     mid: [`${PLANTS}/Hibiscus_Chemparathi`],
     ground: [`${PLANTS}/Kerala_Fern`, `${PLANTS}/Kerala_Grass_Tuft`],
-    density: 1.4,
-    mix: [0.14, 0.16, 0.7],
-    depth: [10, 26],
+    // DEEP FERN AND GRASS UNDER THE TREE, which is what the floor of a grove
+    // actually is. The density was 1.4 to give the banyan air to stand in,
+    // and that was the right instinct applied to the wrong layer: it thinned
+    // the GROUND cover as well as the canopy, and left the one tree standing
+    // on mown lawn.
+    //
+    // Air comes from the canopy and mid shares being almost nothing — 0.09
+    // and 0.09 — so nothing grows up to compete with the banyan. The 0.82
+    // goes to fern and grass, and the density can be the chapter's highest
+    // because none of it is taller than a knee. Depth runs to 30 so it
+    // carries right to the back of the grove rather than stopping short of
+    // the tree.
+    density: 3.4,
+    mix: [0.09, 0.09, 0.82],
+    depth: [8, 30],
     props: [
       // A BANYAN, AND THE SAME ONE THE VILLAGE IS ARRANGED AROUND — 24,
       // which is the height it stands at on the althara in Chapter 1.
@@ -317,7 +329,18 @@ export const LESSONS_2: readonly Lesson[] = [
       // `lit` gives it the shrine's own hours. It goes on when the light
       // goes, the same rule the temple lamps follow — not a lamp burning at
       // noon, which is the bug the whole lamp gate exists to prevent.
-      { model: `${UTIL}/Nilavilakku`, at: 0.56, z: -8.4, h: 1.5, lit: 21 },
+      {
+        model: `${UTIL}/Nilavilakku`,
+        at: 0.535,
+        z: -8.55,
+        h: 1.5,
+        lit: 21,
+        // The flame is in the bowl at the top of the stem, not halfway up
+        // the leg — and it is a wick, which moves, rather than a pressure
+        // mantle, which does not. See `litUp` and `litKind`.
+        litUp: 0.88,
+        litKind: "oil",
+      },
       { model: `${STONE}/Mossy_Stone`, at: 0.58, z: -11.5, h: 0.8 },
       // "One simple resting stone, bench or low sitting edge nearby."
       { model: `${UTIL}/Washing_Stone`, at: 0.64, z: -11, h: 0.55, clear: 2 },

@@ -480,6 +480,24 @@ export type Placed = {
    */
   readonly lit?: number;
   /**
+   * WHERE THE FLAME SITS, as a fraction of the prop's own height.
+   *
+   * Defaults to 0.45, which is right for a hurricane lamp hung on a post and
+   * wrong for anything whose light is at the top. A nilavilakku is a stem
+   * with an oil bowl on it: its flame is at 0.88 and putting it at 0.45 lit
+   * the middle of the stem, which is a lamp glowing out of its own leg.
+   */
+  readonly litUp?: number;
+  /**
+   * WHAT KIND OF LIGHT. "petromax" is a pressure mantle — near-white, and
+   * STEADY, which is the tell that separates it from fire across a dark
+   * field. "oil" is a wick: warmer, smaller, and never still.
+   *
+   * Defaults to petromax because the two props that had `lit` before this
+   * existed are both petromax lamps and should not change.
+   */
+  readonly litKind?: "oil" | "petromax";
+  /**
    * A BUILDING: something wide enough that a circle is the wrong shape for
    * it, and big enough that it may not fit the lesson it is written in.
    *
