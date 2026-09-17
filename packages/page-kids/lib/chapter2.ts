@@ -521,45 +521,30 @@ export const LESSONS_2: readonly Lesson[] = [
       //
       // The house is the glimpse through it: far back, large, and never on
       // the road.
-      // THE GREAT HOUSE, and the thing this lesson has always been about:
-      // "a long laterite wall, a formal gate, tall trees, and only a
-      // partial or distant glimpse of the large house beyond". A moss house
-      // stood in for it because there was no mansion; there is one now.
+      // THE GREAT HOUSE, and what this lesson has always been about: "a
+      // long laterite wall, a formal gate, tall trees, and only a partial or
+      // distant glimpse of the large house beyond". A moss house stood in
+      // for it because there was no mansion; there is one now.
       //
-      // ONE PROP, TWO THINGS. Its body is a card and only its portico is
-      // geometry — see the Mana branch where props are built. `h` is the
-      // height of the whole building; the halves are put back from measured
-      // offsets.
+      // Its `at` is IGNORED — the build snaps it to the gate in the wall in
+      // front of it, wherever the clamp put that opening.
       //
-      // 26 rather than the moss house's 16. It is the biggest thing in the
-      // game and has to out-scale the temple, which stands 9 — a villager
-      // is 5.9, so this is four and a half of them to the ridge. At z -34
-      // the depth falloff draws it at about sixteen units against a frame
-      // twenty-four tall: it fills the gap in the trees rather than peeping
-      // through it.
+      // 18 AND -28, AND BOTH ARE SET BY THE FLOOR. This model is solid, so
+      // unlike the card it has a back to put somewhere: measured 1.74 deep
+      // for 1.08 tall, which at h 18 and this depth is nineteen units of
+      // building. The ground stops at -38 and the estate wall stands at -12,
+      // so there are twenty-six units to fit it in. At -28 its back wall
+      // lands at -37.5, just inside the world, and its porch at -18.5, six
+      // clear of the wall.
       //
-      // FAR BACK: `z` is the FAÇADE now, not the model's middle, so -36 puts
-      // the wall of the house two units inside the edge of the world and the
-      // front of its portico at -28. Nothing of it hangs off the floor, and
-      // there are eighteen units of field between it and the road — which is
-      // what "glimpsed" needs: distance, not a smaller building.
+      // It draws about twelve units against a frame of twenty-four — half of
+      // it, and near twice the temple. It is the biggest building in the
+      // game and it is also a field away, and the second has to read or the
+      // first is a lie.
       //
-      // Its x is ignored. The build snaps it to the gate in the wall in
-      // front of it, wherever the clamp put that gap.
-      //
-      // AND 18, NOT 26. It is the biggest building in the game and it is
-      // also eighteen units of field away, and the second of those has to
-      // read or the first one is a lie — a house that fills two thirds of
-      // the frame is a house you are standing in front of. At 18 it draws
-      // eleven units tall against a frame of twenty-four, which is under
-      // half of it and still nearly twice the temple. Distance does the
-      // rest: it is glimpsed, and the glimpse is of something large.
-      //
-      // `clear` 15 against a drawn width of nineteen. This prop recorded no
-      // footprint AT ALL until now — the Mana branch returns early and never
-      // reached the code that keeps a footprint — which is why trees were
-      // growing through the mansion.
-      { model: "ak-3d-pack/Mana", at: 0.48, z: -36, h: 18, clear: 15 },
+      // `clear` 16 against a drawn width of twenty-one, so the planting
+      // stops short of all of it and closes around rather than through.
+      { model: "ak-3d-pack/Mana", at: 0.48, z: -28, h: 18, clear: 16 },
       { model: `${STONE}/Mossy_Stone`, at: 0.3, z: -8.5, h: 0.9 },
     ],
     herd: [],

@@ -7098,7 +7098,10 @@ export function createKidsWorld(
               )
               .map((q) => q.x),
           ) ?? m.x;
-        const front = m.z + 0.476 * m.h * perspective(m.z);
+        // Half the model's depth forward of its centre. Measured off the
+        // file: 1.74 deep for 1.08 tall, so half-depth is 0.806 of the
+        // height, and the depth falloff scales it like everything else.
+        const front = m.z + 0.806 * m.h * perspective(m.z);
         yards.push({
           x: gx,
           z: (-12 + front) / 2,
@@ -15588,60 +15591,28 @@ export function createKidsWorld(
             // arranged without it.
             continue;
           }
-          // ── THE MANA: HALF GEOMETRY, HALF PICTURE ────────────────────
+          // ── THE GREAT HOUSE ─────────────────────────────────────────
           //
-          // One name in the table, two things on the road. A two-storey
-          // mansion seen from a fixed camera thirty units away has almost no
-          // depth anybody can perceive, so its body is a CARD and only the
-          // projecting portico is real: columns, the balcony that shades what
-          // is behind it, the steps. That is the part with OVERLAP, and
-          // overlap is what tells an eye it is looking at a building rather
-          // than a picture of one. 194,394 triangles against 1,374,387.
+          // One model now, not two. It was a card for the body and geometry
+          // for the portico, which saved a great deal and cost more: the
+          // card was rendered from the wrong azimuth, and a picture and a
+          // solid that disagree by thirty-four degrees cannot be reconciled
+          // by any amount of nudging. A real mansion arrived at 82,632
+          // triangles — small enough to simply BE a building — and the whole
+          // problem went with it.
           //
-          // `p.z` IS THE FAÇADE, not the model's origin. The first version
-          // put the card at the body's volumetric CENTRE — where it sits in
-          // a solid building and nowhere near where a PLANE belongs. At h 26
-          // the model is forty-four units deep and the floor is thirty-eight,
-          // so the card landed two units past the edge of the world, hanging
-          // in the painted horizon. A card has no depth: it goes at the face,
-          // and the portico stands in front by the gap measured between them.
+          // What is kept from that work is the back-blanking: the -Z wall of
+          // this house is flooded flat, which is 43.5% of its atlas spent on
+          // a face nobody standing on the road will ever see.
           //
-          // AND BOTH TAKE ONE PERSPECTIVE. This is what would have shown as a
-          // seam. `perspective()` shrinks a prop by its own z, which is right
-          // for two props and wrong for two halves of one building: twenty-
-          // two units apart, the card came out EIGHTEEN PER CENT smaller than
-          // the portico in front of it. They are one object and are scaled as
-          // one — the portico's height is corrected by the ratio of the two
-          // factors, so whatever `stand` does with its own depth it lands at
-          // the façade's scale.
+          // STRAIGHT TO THE GATE, still. The estate wall leaves exactly one
+          // opening and the house is what it is FOR. The gap is FOUND rather
+          // than written down — `placements` expands a run into panels and
+          // omits the missing one, so the way through is the widest step
+          // between consecutive panels, which survives the clamp walking
+          // that gap inward on a short lesson. Its `at` in the table is
+          // therefore ignored.
           if (/(?:^|\/)Mana$/i.test(p.model)) {
-            const H = p.h;
-            // ── ONE BUILDING, TURNED TO MATCH ITS OWN PICTURE ──────────
-            //
-            // The card was drawn from an azimuth of +16.86 degrees and the
-            // camera stands at -16.86 — `theme.view.camX` holds a distance
-            // that is negated where the camera is placed, and the renderer
-            // took the field at face value. So the picture shows the house
-            // from one side and the geometry beside it stood on the other:
-            // thirty-four degrees apart, which is a portico that does not
-            // belong to the wall behind it.
-            //
-            // The picture is the one that was liked, so the GEOMETRY moves.
-            // Turning the model -33.72 degrees at the true camera reproduces
-            // the card exactly — rendered both ways and compared, not
-            // reasoned about — so that is the turn, and the portico's offset
-            // is the same rotation applied to where it sits on the building.
-            //
-            // BOTH ARE FRAMED ON THE WHOLE MODEL, which is what makes this
-            // arithmetic rather than fitting: the card's centre IS the
-            // building's centre, so the portico is placed from the building's
-            // centre and the two cannot drift.
-            // STRAIGHT TO THE GATE. The estate wall leaves exactly one
-            // opening and the house is what it is FOR. The gap is FOUND, not
-            // written down — `placements` expands a run into panels and omits
-            // the missing one, so the way through is the widest step between
-            // consecutive panels, which survives the clamp walking that gap
-            // inward on a short lesson.
             const mine = lessonAt(p.x, CHAPTER).n;
             const gateX =
               estateGate(
@@ -15653,91 +15624,42 @@ export function createKidsWorld(
                   )
                   .map((q) => q.x),
               ) ?? p.x;
-            const TURN = -0.5885; // -33.72 degrees
-            // ── AND TWO NUDGES THAT ARE NOT DERIVED ─────────────────────
-            //
-            // Everything above this came out of the geometry. These two came
-            // off the screen, and they are kept separate and named so that
-            // is obvious — a hand-set number buried in a derived expression
-            // is the thing nobody can check later.
-            //
-            // The gap between the two halves is 0.4445 of the height by
-            // measurement — that is where the portico sits on the building —
-            // and on screen it stands too far proud of the card. BACK pulls
-            // the portico in and FORWARD brings the card out to meet it,
-            // which closes the gap from seven units to under five while
-            // keeping the house itself roughly where the table put it.
-            //
-            // DOWN: the renderer measures the card's base line at 0.0339
-            // above its lowest corner, and on screen that still left the
-            // house standing high. The measurement is of the PICTURE; what
-            // has to meet the ground is the building in it.
-            const PORTICO_BACK = 0.13;
-            const CARD_FORWARD = 0.05;
-            const CARD_SINK = 0.1;
-            const faceZ = p.z + CARD_FORWARD * H;
-            const scale = perspective(faceZ);
-            const porticoZ = faceZ + (0.4445 - PORTICO_BACK - CARD_FORWARD) * H;
-            const [w2] = await Promise.all([
-              stand(
-                "ak-3d-pack/ManaPortico",
-                gateX - 0.4345 * H,
-                porticoZ,
-                (0.7951 * H * scale) / perspective(porticoZ),
-                TURN,
-                p.lift ?? 0,
-              ),
-              // 0.0339 is measured: how far the base line sits above the
-              // silhouette's lowest corner, which is the plinth's near edge
-              // seen from above. Without it the house hovers by that much.
-              standCard("ManaBody", gateX, faceZ, 1.015 * H, 1.607, CARD_SINK),
-            ]);
+            const w2 = await stand(
+              p.model,
+              gateX,
+              p.z,
+              p.h,
+              p.turn ?? 0,
+              p.lift ?? 0,
+            );
             if (w2 != null) {
               builtGroup.add(w2);
-            }
-            // ── AND ITS GROUND, WHICH NOTHING ELSE GETS TO PLANT IN ──────
-            //
-            // The branch above returns early, so this prop never reached the
-            // code that records a footprint — and a building with no
-            // footprint is one the scatter has never heard of. Trees grew
-            // through the mansion because as far as the planting was
-            // concerned there was no mansion.
-            //
-            // Measured off what was actually drawn rather than off `p`: the
-            // card's width is its drawn height times its aspect, and the
-            // depth runs from the façade to the front of the portico.
-            const halfW = (1.015 * H * scale * 1.607) / 2;
-            const frontZ = faceZ + 0.476 * H * scale;
-            const mid = (faceZ + frontZ) / 2;
-            const halfD = Math.max(1, (frontZ - faceZ) / 2);
-            blockers.push({ x: gateX, z: mid, r: 1, hw: halfW, hd: halfD });
-            // ── THE WAY UP TO THE DOOR ──────────────────────────────────
-            //
-            // An estate gate opens onto something. A gate with mature trees
-            // growing across the line between it and the house is a gate
-            // into a thicket — and the whole reason the house stands square
-            // in the opening is so a child sees it THROUGH the gate.
-            //
-            // A narrow corridor from gate to portico is held clear of
-            // everything the scatter puts down, and nothing else about the
-            // estate is. The planting closes back in on both sides, which is
-            // what makes it read as a path rather than as a gap.
-            const PATH_HALF = 3.4;
-            const GATE_Z = -12;
-            blockers.push({
-              x: gateX,
-              z: (GATE_Z + frontZ) / 2,
-              r: 1,
-              hw: PATH_HALF,
-              hd: Math.abs(frontZ - GATE_Z) / 2,
-            });
-            if ((p.clear ?? 0) > 0) {
-              forecourts.push({
+              const b = measureBox(w2);
+              const hw = (b.max.x - b.min.x) / 2;
+              const hd = (b.max.z - b.min.z) / 2;
+              const cx = (b.min.x + b.max.x) / 2;
+              const cz = (b.min.z + b.max.z) / 2;
+              blockers.push({ x: cx, z: cz, r: 1, hw, hd });
+              if ((p.clear ?? 0) > 0) {
+                forecourts.push({ x: cx, z: cz, r: p.clear!, hw, hd });
+              }
+              // ── THE WAY UP TO THE DOOR ────────────────────────────────
+              //
+              // An estate gate opens onto something. A gate with mature
+              // trees growing across the line between it and the house is a
+              // gate into a thicket, and the reason the house stands square
+              // in the opening is so a child sees it THROUGH the gate.
+              //
+              // A narrow corridor from gate to porch is held clear of
+              // everything the scatter puts down, and nothing else about the
+              // estate is — so the planting closes back in on both sides,
+              // which is what makes it read as a path rather than a gap.
+              blockers.push({
                 x: gateX,
-                z: mid,
-                r: p.clear!,
-                hw: halfW,
-                hd: halfD,
+                z: (-12 + (cz + hd)) / 2,
+                r: 1,
+                hw: 3.4,
+                hd: Math.abs(cz + hd + 12) / 2,
               });
             }
             continue;

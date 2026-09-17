@@ -123,22 +123,6 @@ test("every model the chapter names is on disk", () => {
     ];
     for (const m of named) {
       if (!m.includes("/")) continue; // folk and herd are resolved elsewhere
-      // THE GREAT HOUSE IS NOT A FILE. It is one name in the table and two
-      // things on disk: a portico that is real geometry and a card carrying
-      // the body. BOTH have to be there — half a hybrid is either a mansion
-      // with no front or a portico standing alone in a field — so this
-      // checks the pair rather than letting a virtual name off.
-      if (/(?:^|\/)Mana$/i.test(m)) {
-        ok(
-          existsSync(new URL("ak-3d-pack/ManaPortico.glb", ROOT)),
-          `${l.name}: the great house has no portico`,
-        );
-        ok(
-          existsSync(new URL("../cards/ManaBody.webp", ROOT)),
-          `${l.name}: the great house has no body card`,
-        );
-        continue;
-      }
       ok(
         existsSync(new URL(`${m}.glb`, ROOT)),
         `${l.name}: ${m}.glb is missing`,
