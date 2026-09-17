@@ -231,3 +231,67 @@ test("no lesson is a corridor — that belongs to Chapter 1", () => {
     equal(l.corridor, false, `${l.name} declares a corridor`);
   }
 });
+
+test("the four props the brief names by role are actually there", () => {
+  // Each of these was missing for a long time because no asset existed, and
+  // each is named in the reference as the thing its lesson is FOR. They are
+  // pinned by lesson so that losing one is a failing test rather than a
+  // scene that quietly goes back to being a road with a cart on it.
+  const has = (n: number, re: RegExp) =>
+    LESSONS_2[n - 1]!.props.some((p) => re.test(p.model));
+  // "Nestle a small weathered stone idol at the base of the tree."
+  ok(has(4, /Shrine_Idol/), "Lesson 14 has no idol at the banyan's roots");
+  // "Place a haystack off the road as the main landmark."
+  ok(has(5, /Haystack/), "Lesson 15 has no haystack");
+  // "Stronger gate pillars or a more formal gate." Hung inside the wall's
+  // run rather than placed beside it — see the test below for why.
+  ok(
+    LESSONS_2[6]!.props.some((p) =>
+      /Estate_Gate/.test(p.run?.gate?.model ?? ""),
+    ),
+    "Lesson 17 has no gate in its wall",
+  );
+  // "Stacked coconuts, baskets, sacks or produce bundles in small clusters."
+  ok(has(8, /Produce_Pile/), "Lesson 18 carries no produce");
+});
+
+test("the haystack and the cart leave Milestone 15 readable", () => {
+  // The brief asks for this by name, because these are the two biggest
+  // things in the lesson and the stone is what the child is counting.
+  const l = LESSONS_2[4]!;
+  for (const p of l.props) {
+    if (!/Haystack|Cart/.test(p.model)) continue;
+    ok(p.at < 0.85, `${p.model} at ${p.at} crowds the stone at the far end`);
+  }
+});
+
+test("the estate gate is hung in the wall's own opening", () => {
+  // Not placed beside it. `at` is a fraction of the lesson and a panel is a
+  // number of world units, and a lesson runs from 21.6 units to 64 across
+  // the age bands — so no fixed fraction lands on the gap for every child.
+  // Declaring it inside the run is what makes the question unaskable.
+  const l = LESSONS_2[6]!;
+  const wall = l.props.find((p) => p.run != null)!;
+  ok(wall.run!.gate != null, "the estate wall's opening has no gate");
+  ok(/Estate_Gate/.test(wall.run!.gate!.model), wall.run!.gate!.model);
+  ok(
+    wall.run!.gate!.h > wall.h,
+    "gateposts should stand taller than the wall they end",
+  );
+  ok(
+    !l.props.some((p) => p.run == null && /Estate_Gate/.test(p.model)),
+    "a second gate is placed loose in the lesson",
+  );
+});
+
+test("a gate is only ever hung in a run that has an opening", () => {
+  for (const l of LESSONS_2) {
+    for (const p of l.props) {
+      if (p.run?.gate == null) continue;
+      ok(
+        p.run.gapAt >= 0 && p.run.gapAt < p.run.count,
+        `${l.name}: ${p.model} hangs a gate in no opening`,
+      );
+    }
+  }
+});

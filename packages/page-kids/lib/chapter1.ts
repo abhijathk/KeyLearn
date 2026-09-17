@@ -422,6 +422,24 @@ export type Placed = {
     readonly aspect: number;
     /** Which panel is missing. The way in. */
     readonly gapAt: number;
+    /**
+     * WHAT STANDS IN THE GAP, if anything. A farm boundary's way in is a
+     * hole; an estate's is a gate, and that difference is most of what
+     * tells a child whose land this is.
+     *
+     * It has to be declared HERE rather than placed as its own prop,
+     * because `at` is a fraction of the lesson and a panel is a number of
+     * world units — and a lesson is 21.6 units for a five-year-old and 64
+     * for an eleven-year-old. There is no single fraction that lands on
+     * the gap for every band. Inside the run it needs no fraction at all:
+     * it is put at the slot the gap left, in whatever band, and the clamp
+     * that moves the gap on a short lesson moves the gate with it.
+     */
+    readonly gate?: {
+      readonly model: string;
+      /** Its own height — gateposts stand taller than the wall they end. */
+      readonly h: number;
+    };
   };
   /**
    * Grass and ferns at its foot.
@@ -1868,7 +1886,17 @@ export function placements(
               );
       for (let i = 0; i < fits; i++) {
         if (i === gap) {
-          continue; // the way in
+          // THE WAY IN — which may have a gate hung in it.
+          if (p.run.gate != null) {
+            out.push({
+              ...p,
+              model: p.run.gate.model,
+              h: p.run.gate.h,
+              run: undefined,
+              x: start + i * panel,
+            });
+          }
+          continue;
         }
         out.push({ ...p, run: undefined, x: start + i * panel });
       }

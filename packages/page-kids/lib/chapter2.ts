@@ -238,19 +238,25 @@ export const LESSONS_2: readonly Lesson[] = [
         h: 22,
         clear: 8,
       },
-      // ── SPACE LEFT: THE IDOL AND ITS FLOWERS ──────────────────────────
+      // ── THE IDOL, AMONG THE ROOTS ─────────────────────────────────────
       //
-      // The reference asks for a small weathered stone idol at the tree's
-      // foot, a garland, and fallen flower offerings. None exists in any
-      // folder — rejected ones included — and the nearest things that do are
-      // a washing stone and a milestone, which would put a laundry slab or a
-      // road marker where a god goes. That is worse than an empty root, so
-      // the roots stay empty until the idol is made.
+      // This space was held empty for a long time. The reference asks for "a
+      // small weathered stone idol at the base of the tree ... among the
+      // exposed roots", and nothing in any folder was one — the nearest
+      // things that existed were a washing stone and a milestone, which
+      // would have put a laundry slab or a road marker where a god goes.
+      // That is worse than an empty root, so the root stayed empty until
+      // there was an idol to put in it.
       //
-      // With the platform gone this is now a space among the roots rather
-      // than on a plinth, which is the harder of the two to fake and the
-      // easier of the two to leave: exposed banyan roots are a place, and a
-      // place can be visibly waiting for something.
+      // 1.5 units is about knee height on a grown villager, which is the
+      // size the brief asks for: "intimate, old and naturally integrated",
+      // not an architectural destination. It sits just off the trunk at
+      // -13.4 rather than against it, because a shrine is approached.
+      //
+      // NO PLATFORM, for the same reason the banyan lost its althara: this
+      // grove is not a built place. The idol goes into the soil among the
+      // roots and its own plinth is the only masonry here.
+      { model: `${STONE}/Shrine_Idol`, at: 0.5, z: -13.4, h: 1.5, clear: 2 },
       { model: `${STONE}/Mossy_Stone`, at: 0.58, z: -11.5, h: 0.8 },
       // "One simple resting stone, bench or low sitting edge nearby."
       { model: `${UTIL}/Washing_Stone`, at: 0.64, z: -11, h: 0.55, clear: 2 },
@@ -286,6 +292,18 @@ export const LESSONS_2: readonly Lesson[] = [
       // and there is no honest stand-in: a haystack is a specific silhouette
       // and anything else in the folder would just be a lump. The cart and
       // the tether post carry the working read until it is made.
+      // THE LANDMARK OF THE LESSON, and it was missing. "Place a haystack
+      // off the road as the main landmark, with the wooden cart nearby but
+      // not blocking player movement" — the cart has been here on its own,
+      // carrying a clearing that is supposed to be built around something
+      // else. At 4.6 units it stands about a third again the height of the
+      // farmer working beside it, which is what a season's straw looks like.
+      //
+      // AND CLEAR OF MILESTONE 15. The brief asks for that by name — "keep
+      // Milestone 15 visually separate from the haystack and cart so the
+      // progress marker remains readable" — so it sits at 0.22, well short
+      // of the stone at the far end, with the cart beyond it.
+      { model: `${UTIL}/Haystack`, at: 0.22, z: -15, h: 4.6, clear: 6 },
       { model: `${UTIL}/Village_Cart`, at: 0.36, z: -13, h: 2.2, clear: 5 },
       { model: `${UTIL}/Cattle_Tether_Post`, at: 0.46, z: -15, h: 1.4 },
       {
@@ -396,7 +414,17 @@ export const LESSONS_2: readonly Lesson[] = [
         z: -12,
         h: 2.4,
         clear: 5,
-        run: { count: 14, aspect: 2.61, gapAt: 7 },
+        // THE OPENING HAS A GATE IN IT, which is the one thing that says
+        // this boundary belongs to somebody bigger than a farm — the
+        // reference asks for "stronger gate pillars or a more formal gate
+        // than earlier farm boundaries". Declared inside the run so it
+        // lands on the gap in every age band; see `run.gate`.
+        run: {
+          count: 14,
+          aspect: 2.61,
+          gapAt: 7,
+          gate: { model: `${UTIL}/Estate_Gate`, h: 3.4 },
+        },
         skirt: true,
       },
       // ── SPACE LEFT: THE GATE ──────────────────────────────────────────
@@ -437,6 +465,18 @@ export const LESSONS_2: readonly Lesson[] = [
       { model: "nature/KeralaBambooGroves", at: 0.22, z: -14, h: 21, clear: 5 },
       // The cart is the major working prop, parked beside the road.
       { model: `${UTIL}/Village_Cart`, at: 0.55, z: -11, h: 2.3, clear: 5 },
+      // WHAT MAKES THIS A PRODUCE ROUTE RATHER THAN A ROAD WITH A CART ON
+      // IT. "Stacked coconuts, baskets, sacks or produce bundles in small
+      // clusters rather than covering the full scene" — two clusters, one
+      // at the cart as though being loaded onto it and one further along
+      // waiting its turn, which is the "temporary loading" the brief asks
+      // for rather than a shopfront.
+      //
+      // Small: 1.3 units is about waist height, which is what a basket a
+      // woman carries on her head comes up to when it is standing on the
+      // ground.
+      { model: `${UTIL}/Produce_Pile`, at: 0.5, z: -10, h: 1.3, clear: 2 },
+      { model: `${UTIL}/Produce_Pile`, at: 0.78, z: -12.5, h: 1.15, clear: 2 },
       {
         model: `${UTIL}/Bamboo_Fence`,
         at: 0.68,

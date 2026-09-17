@@ -486,6 +486,18 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Petromax_Lamp", "a lamp"],
   ["Wooden_Bridge", "a wooden bridge"],
   ["Village_Cart", "a cart"],
+  // ── THE OUTER FIELDS ─────────────────────────────────────────────────
+  //
+  // Chapter 2 asked for four things the asset library did not have, and the
+  // lessons stood without them rather than borrowing something that meant
+  // something else — a washing stone is not a god and a milestone is not a
+  // gatepost. Two of these carry a whole lesson: the haystack IS Lesson
+  // 15's landmark and the produce pile is what makes Lesson 18 a route that
+  // feeds a market rather than a road with a cart on it.
+  ["Haystack", "a haystack"],
+  ["Estate_Gate", "an estate gate"],
+  ["Produce_Pile", "baskets and sacks"],
+  ["Shrine_Idol", "a stone idol"],
   // ── AND WHO LIVES THERE ──────────────────────────────────────────────
   ["Cow", "a cow"],
   ["Cow_Calf", "a calf"],
