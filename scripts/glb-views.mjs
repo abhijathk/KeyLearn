@@ -72,7 +72,11 @@ const texSrc = texArg > 0 ? readGLB(process.argv[texArg + 1]) : { json, bin };
 let TEX = null;
 {
   const tj = texSrc.json, tb = texSrc.bin;
-  const mat = tj.materials[0];
+  // An untextured PREVIEW carries no material at all, and a preview is
+  // exactly when you want to look — before paying to texture it. Shaded
+  // silhouettes are the answer to "is the shape right", so this renders
+  // rather than throwing.
+  const mat = tj.materials?.[0];
   const ti = mat?.pbrMetallicRoughness?.baseColorTexture?.index;
   if (ti != null && tj.images?.[0]?.mimeType === "image/png") {
     const im = tj.images[tj.textures[ti].source ?? 0];
