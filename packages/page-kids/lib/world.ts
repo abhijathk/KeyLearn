@@ -903,6 +903,155 @@ function stripScaleTracks(clip: THREE.AnimationClip): THREE.AnimationClip {
   return clip;
 }
 
+/** How much further the knees fold at the top of a jump. 0 leaves it alone. */
+const JUMP_TUCK = 0.3;
+
+/**
+ * Clips already tucked, so a second pass cannot compound it.
+ *
+ * `foldLegsInAir` rewrites the track in place, and the clip it rewrites is
+ * the one the parsed model holds — the same object every time that character
+ * is shown again, because the parse is cached. Without this, picking Drew
+ * three times would fold his knees by thirty per cent three times over: a
+ * hundred and twelve degrees, then a hundred and forty, then his heels
+ * through his back. `trimStillEnds` needs no such guard; a clip with its
+ * padding already gone has none left to find.
+ */
+const tuckedClips = new WeakSet<THREE.AnimationClip>();
+
+/**
+ * Fold the knees further AT THE TOP OF A JUMP, and only there.
+ *
+ * `Jump_Happy` leaves the knees at about 86 degrees at the apex, which is a
+ * hop rather than a tuck. Scaling the whole clip is not the answer: the same
+ * tracks carry the crouch he takes off from and the crouch he lands in, both
+ * around 50 degrees, and deepening those drives his feet through the floor
+ * and makes the landing read as a collapse.
+ *
+ * So the amount is weighted by how far off the ground he is, taken from the
+ * root's own height — nothing at all on the ground, full at the apex. The
+ * take-off and the landing come out untouched by construction, and there is
+ * no seam anywhere, because the weight goes to zero exactly where the feet
+ * come back down.
+ *
+ * Only the knees. The thighs are barely twenty degrees up there and which
+ * way they would need to go to read as "more" is a judgement; the knee is
+ * unambiguous — it is the joint that folds the shin back.
+ *
+ * In place and idempotent-ish in the sense that matters: it runs once per
+ * parsed clip, on the same object `clipAction` is keyed by.
+ */
+function foldLegsInAir(
+  clip: THREE.AnimationClip,
+  extra = JUMP_TUCK,
+): THREE.AnimationClip {
+  if (extra <= 0 || tuckedClips.has(clip)) {
+    return clip;
+  }
+  tuckedClips.add(clip);
+  // The root, by the same "moves most vertically" rule the trim uses.
+  let root: THREE.KeyframeTrack | null = null;
+  let rise = 0;
+  for (const track of clip.tracks) {
+    if (!track.name.endsWith(".position") || track.times.length < 2) {
+      continue;
+    }
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let i = 1; i < track.values.length; i += 3) {
+      lo = Math.min(lo, track.values[i]!);
+      hi = Math.max(hi, track.values[i]!);
+    }
+    if (hi - lo > rise) {
+      rise = hi - lo;
+      root = track;
+    }
+  }
+  if (root == null || rise < 1e-4) {
+    return clip;
+  }
+  const rest = root.values[1]!;
+  let peak = rest;
+  for (let i = 1; i < root.values.length; i += 3) {
+    peak = Math.max(peak, root.values[i]!);
+  }
+  if (peak - rest < 1e-4) {
+    return clip;
+  }
+  /** How far off the ground the root is at time `t`, 0 to 1. */
+  const air = (t: number) => {
+    const times = root.times;
+    let i = 0;
+    while (i < times.length - 2 && times[i + 1]! < t) i++;
+    const span = times[i + 1]! - times[i]!;
+    const k = span > 0 ? (t - times[i]!) / span : 0;
+    const y =
+      root.values[i * 3 + 1]! +
+      (root.values[(i + 1) * 3 + 1]! - root.values[i * 3 + 1]!) * k;
+    return Math.min(1, Math.max(0, (y - rest) / (peak - rest)));
+  };
+  const from = new THREE.Quaternion();
+  const now = new THREE.Quaternion();
+  const axis = new THREE.Vector3();
+  for (const track of clip.tracks) {
+    // The knees: `LeftLeg` and `RightLeg`, not `LeftUpLeg` — the shin, not
+    // the thigh, and the name of one is a suffix of the other.
+    // `/` as well as `.`: a track is `LeftLeg.quaternion` on a flat rig and
+    // `Armature/LeftLeg.quaternion` on a nested one, and matching only the
+    // first would have quietly tucked nothing on half the exports. The
+    // thigh is excluded by construction — `LeftUpLeg` does not end in
+    // `Leg.quaternion` preceded by a boundary.
+    if (!/(?:^|[./])(?:Left|Right)Leg\.quaternion$/.test(track.name)) {
+      continue;
+    }
+    const n = 4;
+    if (track.values.length !== track.times.length * n) {
+      continue;
+    }
+    from.set(
+      track.values[0]!,
+      track.values[1]!,
+      track.values[2]!,
+      track.values[3]!,
+    );
+    const inverse = from.clone().invert();
+    for (let i = 1; i < track.times.length; i++) {
+      const w = air(track.times[i]!);
+      if (w <= 0) {
+        continue;
+      }
+      now.set(
+        track.values[i * n]!,
+        track.values[i * n + 1]!,
+        track.values[i * n + 2]!,
+        track.values[i * n + 3]!,
+      );
+      // The bend this key adds to the clip's own first pose, its angle
+      // scaled up, then put back where it came from.
+      const delta = now.clone().multiply(inverse);
+      let angle = 2 * Math.acos(Math.min(1, Math.abs(delta.w)));
+      const sin = Math.sqrt(Math.max(0, 1 - delta.w * delta.w));
+      if (sin < 1e-6 || angle < 1e-6) {
+        continue;
+      }
+      const flip = delta.w < 0 ? -1 : 1;
+      axis.set(
+        (delta.x / sin) * flip,
+        (delta.y / sin) * flip,
+        (delta.z / sin) * flip,
+      );
+      angle *= 1 + extra * w;
+      const scaled = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+      scaled.multiply(from);
+      track.values[i * n] = scaled.x;
+      track.values[i * n + 1] = scaled.y;
+      track.values[i * n + 2] = scaled.z;
+      track.values[i * n + 3] = scaled.w;
+    }
+  }
+  return clip;
+}
+
 /**
  * A clip cut down to the part where something actually happens.
  *
@@ -8640,7 +8789,14 @@ export function createKidsWorld(
     // one — it is the gesture a six-year-old actually makes when something goes
     // right. `celebrate` below repeats it a few times rather than playing one
     // long performance, which is also why it is allowed to loop.
-    const joyClip = pick(/^jump_happy/) ?? pick(/joy|celebrat|victory|cheer/);
+    const jumpClip = pick(/^jump_happy/);
+    // The same tuck the picker gives it, so a child who is shown the jump
+    // when they are chosen sees that jump again when they finish a lesson,
+    // and not a shallower one.
+    const joyClip =
+      jumpClip != null
+        ? foldLegsInAir(jumpClip)
+        : pick(/joy|celebrat|victory|cheer/);
     let run: THREE.AnimationAction | null = null;
     let walk: THREE.AnimationAction | null = null;
     let idle: THREE.AnimationAction | null = null;
@@ -24320,6 +24476,21 @@ export function createPickerScene(
   let moodAction: THREE.AnimationAction | null = null;
 
   /**
+   * Is the turntable bringing them round to face the child?
+   *
+   * `spin` is zero square-on — the running pose sets a quarter turn to put
+   * them side-on to the road, which is the other way round. Measured as a
+   * signed angle from front so "coming up to front" and "just past front"
+   * are simply negative and positive.
+   */
+  const facingFront = () => {
+    let a = spin % (Math.PI * 2);
+    if (a > Math.PI) a -= Math.PI * 2;
+    if (a < -Math.PI) a += Math.PI * 2;
+    return a >= -WAVE_LEAD && a <= WAVE_PAST;
+  };
+
+  /**
    * Cross-faded rather than cut: a gesture that snaps in from a breathing
    * idle reads as a glitch, and it is the same body in both.
    */
@@ -24359,8 +24530,12 @@ export function createPickerScene(
     // one-shot is part of how it lands, and only becomes a gap between two
     // of them. See `trimStillEnds`.
     const action = mixer.clipAction(
-      beats > 1
-        ? trimStillEnds(stripScaleTracks(clip))
+      set.bounce && next === "cheer"
+        ? // A jump is trimmed so it can repeat without a gap and tucked so
+          // it reads as a jump rather than a hop — see both helpers. Only
+          // ever a jump: the trim's padding and the tuck's knees both mean
+          // something different in a celebration routine.
+          foldLegsInAir(trimStillEnds(stripScaleTracks(clip)))
         : stripScaleTracks(clip),
     );
     action.reset();
@@ -24641,6 +24816,22 @@ export function createPickerScene(
    * asked for less movement, which leaves a portrait rather than nothing.
    */
   const RATE = Math.PI / 6;
+
+  /**
+   * HOW FAR BEFORE FRONT A WAVE MAY START, and how far past it.
+   *
+   * A wave is addressed to the child, and one delivered to the back of a
+   * head is not a wave. The turntable makes a full turn every twelve
+   * seconds and a wave runs about three, so it covers most of a quarter
+   * turn: started as the character comes round — a little before square-on
+   * — it plays out across the front and finishes as they turn away, which
+   * is what somebody waving and then getting on with it looks like.
+   *
+   * The small allowance PAST front is so a wave that becomes due a moment
+   * late is not made to wait another twelve seconds for the next pass.
+   */
+  const WAVE_LEAD = Math.PI / 4;
+  const WAVE_PAST = Math.PI / 18;
   const clock = new THREE.Clock();
   function tick() {
     if (disposed) {
@@ -24684,10 +24875,20 @@ export function createPickerScene(
     if (current != null && !running && clipsNow.length > 0) {
       moodLeft -= dt;
       if (moodLeft <= 0) {
-        // A cheer is over when it is over, and what follows it is the
-        // standing routine from its start — not the next gesture in the
-        // rotation, which would read as the character celebrating twice.
-        playMood(mood === "idle" ? "flourish" : "idle");
+        if (mood !== "idle") {
+          // A cheer or a wave is over when it is over, and what follows it
+          // is the standing routine from its start — not the next gesture
+          // in the rotation, which would read as celebrating twice.
+          playMood("idle");
+        } else if (facingFront()) {
+          playMood("flourish");
+        } else {
+          // DUE, BUT FACING THE WRONG WAY. Held back rather than played to
+          // the side or the back of the head, and asked again shortly —
+          // NOT by restarting the idle, which would book another five to
+          // ten seconds and miss the front altogether.
+          moodLeft = 0.2;
+        }
       }
     }
     // Held square once he is running: he is going somewhere now, not being
