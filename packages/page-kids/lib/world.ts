@@ -11600,6 +11600,14 @@ export function createKidsWorld(
    */
   const WILD_CHARGE_STALL = 0.25;
   /**
+   * HOW HARD A CHARGE MAY CORRECT ITS LINE, per second.
+   *
+   * Low enough to read as an animal leaning into its run rather than a
+   * turret tracking a target — it should still be possible to step out of
+   * the way of one.
+   */
+  const WILD_CHARGE_AIM = 2.2;
+  /**
    * How far a wild animal rides ABOVE the planted ground.
    *
    * `surfaceY` sinks everything it places by 6cm, which is right for a child
@@ -22831,7 +22839,14 @@ export function createKidsWorld(
         // this one go rather than re-rolling sixty times a second until it
         // succeeds, which would have made the odds meaningless.
         if (playerIsLittle() && Math.random() > LITTLE_CHARGE_ODDS) {
-          w.cooldown = WILD_COOLDOWN_S * 0.5;
+          // A FULL COOLDOWN, not half of one. Halving it handed the window
+          // back twice as fast, so five sixths of the rolls were re-rolled
+          // at double the rate and the odds above came out at about one
+          // charge in two and a half rather than the one in six they say.
+          // The whole point of deciding once per opportunity is that the
+          // cooldown is what closes the window; shortening it on a refusal
+          // reopens the same opportunity under another name.
+          w.cooldown = WILD_COOLDOWN_S;
         } else {
           wildEnter(w, "notice", "Idle_Alert", 1.3);
           opts.onEvent?.("buffaloNotice");
@@ -23064,6 +23079,27 @@ export function createKidsWorld(
           // and near enough IS arrival.
           const went = Math.hypot(pos.x - wasX, pos.z - wasZ);
           w.stall = went < 7.5 * step * 0.25 ? w.stall + step : 0;
+          // AND IT KEEPS ITS EYE ON THEM WHILE IT COMES.
+          //
+          // `advance` never steers, and everywhere else that is right: every
+          // state that moves settles its heading with a turn clip before it
+          // takes a step, and trimming the line mid-walk is the slide this
+          // file keeps having to take back out. The charge is the one
+          // exception, and the reason is in the legs — they are already
+          // galloping. An animal at a dead run leans into its line, and the
+          // child it is running at does not hold still while it comes: the
+          // road carries them on. Locked to the heading the windup gave it,
+          // it arrived a body's width to one side of them every time, which
+          // is what being off target looks like.
+          //
+          // Not while a hand-off ramp is still landing — that owns the
+          // heading until it finishes — and slow enough that a child can
+          // still step out of the way.
+          if (w.yawT <= 0 && went > 1e-5) {
+            w.yaw +=
+              angTo(w.yaw, facingHero) * Math.min(1, step * WILD_CHARGE_AIM);
+            w.wrap.rotation.y = w.yaw;
+          }
           // PULL UP WHEN IT HAS ARRIVED, not when the gap hits the floor.
           //
           // Those are not the same thing, and assuming they were broke the
