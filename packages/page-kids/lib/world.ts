@@ -24148,14 +24148,25 @@ export function createPickerScene(
    * WHAT BEING CHOSEN LOOKS LIKE — played once, and only when the choice is
    * a CHANGE.
    *
-   * Every one of the three ships a celebration: Dave and Little Drew a
-   * `Joy_LevelComplete`, Peeli a `Joy_Victory`. Matched by pattern for the
-   * same reason the wave is — the rigs agree on almost no names — and
-   * deliberately separate from `PICKER_GESTURE`, because this is not part of
-   * the standing routine. Dave has no entry there and still celebrates here:
-   * he stands about doing nothing until he is picked, which is the point.
+   * THE SAME RULE THE WORLD USES for finishing a level, and deliberately the
+   * same: a happy jump where the rig has one, a generic celebration where it
+   * does not. A character who bounces when picked and performs a routine
+   * when they finish a lesson reads as two different children.
+   *
+   * Little Drew has `Jump_Happy`; Dave a `Joy_LevelComplete`; Peeli a
+   * `Joy_Victory` and an `Excited`. Matched by pattern rather than listed
+   * per character for the reason the wave is — and the reason is not
+   * theoretical. Drew's file was re-exported mid-session and came back with
+   * `Jump_Happy` in place of the `Joy_LevelComplete` a name-by-name table
+   * would still have been asking for; he simply stopped celebrating, and
+   * nothing said so.
+   *
+   * Kept separate from `PICKER_GESTURE` because this is not part of the
+   * standing routine. Dave has no entry there and still celebrates here: he
+   * stands about doing nothing until he is picked, which is the point.
    */
-  const PICKER_CHEER = /^(joy|excited)/i;
+  const CHEER_JUMP = /^jump_happy/;
+  const CHEER_ANY = /joy|celebrat|victory|cheer|excited/;
 
   const moodClips = () => {
     // Not the crouch and not any sitting loop: `Idle`, or `Idle_Calm`.
@@ -24175,7 +24186,13 @@ export function createPickerScene(
     const want = PICKER_GESTURE[whoNow];
     const flourish =
       want == null ? [] : clipsNow.filter((c) => want.test(c.name));
-    const cheer = clipsNow.filter((c) => PICKER_CHEER.test(c.name));
+    // Lower-cased before matching, exactly as `loadModel` does it, so a
+    // pattern written in the lower case these names are discussed in cannot
+    // quietly miss a clip that ships capitalised.
+    const named = (re: RegExp) =>
+      clipsNow.filter((c) => re.test(c.name.toLowerCase()));
+    const jump = named(CHEER_JUMP);
+    const cheer = jump.length > 0 ? jump : named(CHEER_ANY);
     return { idle, flourish, cheer };
   };
 
