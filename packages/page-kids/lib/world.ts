@@ -11931,7 +11931,33 @@ export function createKidsWorld(
    * leg, so the animal finishes facing where it meant to and then does what
    * it turned round to do.
    */
-  function wildTurn(w: WildRig, need: number, after: WildState | null) {
+  function wildTurn(
+    w: WildRig,
+    need: number,
+    after: WildState | null,
+  ): boolean {
+    // NOT WHILE THE LAST TURN IS STILL LANDING.
+    //
+    // A turn's rotation lives in the CLIP until it ends, and then ramps onto
+    // the wrap across WILD_TURN_FADE. For those few frames `wrap.rotation.y`
+    // is still the heading the animal had BEFORE the turn, while the animal
+    // on screen is already facing the new one. Every caller here takes its
+    // bearing from that field.
+    //
+    // Deciding from it mid-ramp is what sent the buffalo pacing left and
+    // right forever: it turned sixty degrees, read its own heading as still
+    // sixty degrees off because the wrap had not caught up, turned sixty
+    // again — then both ramps landed, it found itself well past its target,
+    // and turned back. A quarter of a second of stale heading, and it never
+    // converged because each correction was measured from the same lie.
+    //
+    // `face` has always refused on this, and the chained legs below cancel
+    // the ramp before they re-base. Refusing HERE puts the rule in the one
+    // place every turn passes through: the caller simply gets a no and asks
+    // again next frame, by which time its heading is its own again.
+    if (w.yawT > 0) {
+      return false;
+    }
     const sign = need >= 0 ? 1 : -1;
     const clip = sign > 0 ? "Turn_Left_90" : "Turn_Right_90";
     // WHAT THIS CLIP IS ACTUALLY WORTH, not what its name claims — see
@@ -11942,7 +11968,6 @@ export function createKidsWorld(
     // The body is turned by exactly what the legs delivered, so there is
     // nothing left over to snap at the hand-off.
     w.yaw = w.wrap.rotation.y + sign * leg;
-    w.after = after;
     // STOP WHERE THE CLIP HAS TURNED THIS FAR, not at the fraction of the
     // timeline the angle resembles. The clip is eased, so those are not the
     // same instant and treating them as one left every turn short of its
@@ -11950,13 +11975,37 @@ export function createKidsWorld(
     // leg, which is what lets the animal decide its heading once and then
     // go, rather than re-deciding it in pieces on the way.
     const act = w.act.get(clip);
+    if (act == null) {
+      // THIS ANIMAL HAS NO TURN CLIP, and only the buffalo does — the cow
+      // and the calf ship Idle, Graze, Walk and Idle_Alert, and nothing
+      // else. They were being sent into the turn state regardless, which
+      // the world was already complaining about in as many words: "no clip
+      // — state will run with no pose". Two seconds holding whichever frame
+      // they happened to be on while their heading swung round underneath,
+      // over and over, which is an animal with no idea where it is going.
+      //
+      // They come round where they stand instead, on the same ramp the
+      // buffalo's hand-off uses, and stay in the state they were already
+      // in — a cow that turns its shoulders mid-graze rather than one that
+      // freezes to do it. No state change, so nothing is waiting on a clip
+      // that will never play, and `after` is not taken: there is no turn to
+      // finish and hand an errand on from.
+      w.yawFrom = w.wrap.rotation.y;
+      w.yawTo = w.yaw;
+      w.yawT = WILD_TURN_FADE;
+      w.aimed = true;
+      return true;
+    }
+    // Taken only here, on the path that actually ends in a turn to hand it
+    // on from. The branch above never enters the turn state, so an errand
+    // left in `after` there would sit waiting on a completion that has
+    // nothing to complete it.
+    w.after = after;
     const dur = wildDur(w, clip, 1.4);
     const stop =
-      act == null
-        ? (leg / arc) * dur
-        : (clipTimeForYaw(act.getClip(), "Hips", leg, w.toRig) ??
-          (leg / arc) * dur);
+      clipTimeForYaw(act.getClip(), "Hips", leg, w.toRig) ?? (leg / arc) * dur;
     wildEnter(w, "turn", clip, undefined, undefined, stop / dur);
+    return true;
   }
 
   /**
@@ -12164,9 +12213,9 @@ export function createKidsWorld(
         w.wrap.rotation.y,
         Math.atan2(w.tx - w.wrap.position.x, w.tz - w.wrap.position.z),
       );
-      if (Math.abs(need) > WILD_TURN_MIN) {
-        wildTurn(w, need, "wander");
-      } else {
+      // Sets off walking if the turn is refused — the wander re-takes its
+      // bearing on its first un-ramped frame, so the heading is not lost.
+      if (!(Math.abs(need) > WILD_TURN_MIN) || !wildTurn(w, need, "wander")) {
         wildEnter(w, "wander", clip, 9, fade); // 9s cap: never walks forever
       }
     } else {
