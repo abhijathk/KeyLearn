@@ -585,7 +585,13 @@ function modelUrl(modelDir: string, name: string): string {
 
 const WEARS_EXPLORER_CLIPS: ReadonlySet<string> = new Set([
   "Explorer",
-  "Explorer6",
+  // Explorer6 (Little Drew) is NOT here any more. His sit and crouch now carry
+  // the pose in the asset: the hands are solved onto the knees with IK, per
+  // frame, against his own arm lengths, and the feet are levelled. Applying
+  // SIT_ARM_CORRECTION on top of that is a second correction for a fault that
+  // is no longer there — it would rotate his arms a further 15–20 degrees and
+  // lift the hands back off his knees, which is the very thing the comment
+  // below reports it doing to him.
 ]);
 
 /**
@@ -10138,6 +10144,32 @@ export function createKidsWorld(
    * drawn at two sizes. A calf takes 55 per cent: out in the field with the
    * herd, plainly not grown.
    */
+  /**
+   * HOW FAR TO SINK AN ANIMAL BELOW ITS OWN FOOT PLANT, as a fraction of its
+   * height.
+   *
+   * `plantFeet` puts the lowest posed vertex on the ground, which is right
+   * for the children and wrong for these two. Neither rig has a bone matching
+   * toe, foot, ankle, paw or hoof — they are `frontleg0..2` and `backleg0..2`
+   * — so the plant falls to the leg pass, narrows to the chain tips and
+   * measures the lowest vertex weighted to those. On a hoofed animal that
+   * vertex sits up the fetlock rather than under the hoof, and the whole
+   * animal stands that far above the field.
+   *
+   * Measured by eye against the shadow rather than derived: the rigs record
+   * no hoof, so there is no number to derive it from, and the alternative is
+   * re-authoring two files. 0.07 was a first guess and plainly short — the
+   * leg tip the plant lands on is most of a fetlock above the ground, not a
+   * sliver. A fraction rather than world units, because the
+   * animal is scaled by its depth — a fixed sink would be right at one
+   * distance and wrong at every other.
+   */
+  const WILD_SINK: Record<string, number> = {
+    Buffalo: 0.16,
+    Cow: 0.16,
+    Cow_Calf: 0.16,
+  };
+
   const WILD_HEIGHT: Record<string, number> = {
     // 6.8, up from 6.0. The buffalo is the animal this whole road was
     // built around — it is the one thing on it worth being wary of, and the
@@ -16967,9 +16999,24 @@ export function createKidsWorld(
             const hub0 = i % 2 === 0 ? 5 : 7;
             const hubX0 =
               CHAPTER[hub0 - 1]! + (CHAPTER[hub0]! - CHAPTER[hub0 - 1]!) * 0.5;
+            /*
+             * NOT IN THE FIRST TWO LESSONS.
+             *
+             * A walker's round is scattered up to seventy units either side
+             * of a hub, and the floor of 10 let one of them start on the
+             * opening stretch. That stretch is where a child meets the game:
+             * eight letters, a coach line every few seconds, and the one
+             * moment the road should be quiet enough to read. Somebody
+             * strolling through it is the first thing the eye follows.
+             *
+             * `CHAPTER[2]` is where the third lesson begins, so this is the
+             * first two of whichever chapter is being built — the same
+             * argument holds for anybody arriving in Chapter 2.
+             */
+            const quietUntil = CHAPTER?.[2] ?? 10;
             const x = Math.min(
-              Math.max(10, hubX0 + hashRange(i, 0, 90, -70, 70)),
-              Math.max(40, TRAIL_END - 10),
+              Math.max(quietUntil, hubX0 + hashRange(i, 0, 90, -70, 70)),
+              Math.max(quietUntil + 30, TRAIL_END - 10),
             );
             // The far half of the road, on the opposite side of the centre
             // from the hero's lane, and a little in from the edge.
@@ -22194,7 +22241,15 @@ export function createKidsWorld(
       const settle = () => {
         const want = w.lift.get(w.cur) ?? 0;
         w.liftNow += (want - w.liftNow) * Math.min(1, step * 4);
-        pos.y = wildGroundY(pos.x, pos.z) - w.liftNow;
+        // And the standing correction these rigs need — see `WILD_SINK`.
+        // Scaled by the animal's own height and depth, so it holds wherever
+        // it wanders to.
+        const model = String(w.wrap.userData.wildModel ?? "");
+        const sink =
+          (WILD_SINK[model] ?? 0) *
+          (WILD_HEIGHT[model] ?? 6.0) *
+          perspective(pos.z);
+        pos.y = wildGroundY(pos.x, pos.z) - w.liftNow - sink;
         // DID IT ACTUALLY LAND ON THE GROUND?
         //
         // Everything above is a chain of measurements — the fit to height,
@@ -23812,6 +23867,21 @@ export function createPickerScene(
   const RUN_TALL = 2.47;
 
   /**
+   * THE SIZE HE IS AT RIGHT NOW, WHICH IS ON ITS WAY SOMEWHERE.
+   *
+   * It is the same child on both screens — running small across the loading
+   * card, then standing large on the turntable — and cutting between the two
+   * sizes threw that away: two pictures of a boy rather than one boy walking
+   * up to you.
+   *
+   * So he arrives at the size the card drew him and GROWS into the portrait,
+   * and when Walk on is pressed he shrinks back to it and runs off. Started
+   * at `RUN_TALL` for exactly that reason: the first frame of this screen
+   * matches the last frame of the one before it.
+   */
+  let tallNow = RUN_TALL;
+
+  /**
    * ── SOMEBODY WAITING TO BE CHOSEN DOES NOT STAND TO ATTENTION ────────
    *
    * The turntable's idle is a breathing loop, and eight seconds of it is
@@ -23923,9 +23993,10 @@ export function createPickerScene(
     if (current == null || fit == null) {
       return;
     }
-    const k = (running ? RUN_TALL : STAND_TALL) / (fit.tall || 1);
+    const k = tallNow / (fit.tall || 1);
     // The seat is measured in world units, so it is only valid for one
-    // scale — refitting between standing and running invalidates it.
+    // scale — every step of the grow invalidates it, and it recalibrates on
+    // the frame after the last one.
     soleY = null;
     current.scale.setScalar(k);
     // In the HOLDER's units, so the lift is scaled along with the character
@@ -24190,6 +24261,22 @@ export function createPickerScene(
       const lo = lowestBone();
       soleY ??= lo;
       current.position.y += (soleY - lo) * Math.min(1, dt * 12);
+    }
+    // GROWING OR SHRINKING, toward whichever size this screen means now.
+    //
+    // Eased rather than timed, so it is quick where the distance is large
+    // and settles instead of stopping. About a third of a second end to end,
+    // which is long enough to read as one movement and short enough that
+    // nobody pressing Walk on is kept waiting to watch it.
+    {
+      const target = running ? RUN_TALL : STAND_TALL;
+      if (Math.abs(tallNow - target) > 0.004) {
+        tallNow += (target - tallNow) * Math.min(1, dt * 9);
+        place();
+      } else if (tallNow !== target) {
+        tallNow = target;
+        place();
+      }
     }
     // The sitting routine, and only while standing: somebody on their way
     // does not stop to sit down.
