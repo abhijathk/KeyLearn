@@ -11592,6 +11592,14 @@ export function createKidsWorld(
   /** How long the hand-off out of a turn takes. See the turn case. */
   const WILD_TURN_FADE = 0.22;
   /**
+   * HOW LONG A CHARGE MAY GET NOWHERE BEFORE IT COUNTS AS ARRIVED.
+   *
+   * Long enough not to trip on a single frame clipped by a stone, short
+   * enough that nobody watches a buffalo run on the spot. A quarter of a
+   * second is about two strides of the gallop.
+   */
+  const WILD_CHARGE_STALL = 0.25;
+  /**
    * How far a wild animal rides ABOVE the planted ground.
    *
    * `surfaceY` sinks everything it places by 6cm, which is right for a child
@@ -11794,6 +11802,15 @@ export function createKidsWorld(
      * half-finished ramp is how a two-leg turn lost its place.
      */
     turnBase: number;
+    /**
+     * How long it has been charging without actually getting anywhere.
+     *
+     * A charge ends on ARRIVAL, and arrival was read off what the animal was
+     * asked to do rather than what it managed — see the charge. Pinned
+     * against a fence it kept asking, kept being refused, and galloped on
+     * the spot.
+     */
+    stall: number;
     /**
      * Second actions, made lazily, for clips that have to follow themselves.
      *
@@ -14250,6 +14267,7 @@ export function createKidsWorld(
         aimed: false,
         curAct: null,
         turnBase: wrap.rotation.y,
+        stall: 0,
         twin: new Map(),
         scareCool: Math.random() * 20,
         liftNow: 0,
@@ -23005,6 +23023,7 @@ export function createKidsWorld(
         case "windup": {
           face(facingHero, 2.6);
           if (w.t <= 0) {
+            w.stall = 0;
             wildEnter(w, "charge", "Charge_Loop", 6);
             opts.onEvent?.("buffaloCharge");
           }
@@ -23025,7 +23044,26 @@ export function createKidsWorld(
           // over a position that never changed. Tuning a speed to cover for
           // a freeze would have hidden the bug and left a buffalo that
           // overshoots the child on every road without a river in it.
+          const wasX = pos.x;
+          const wasZ = pos.z;
           const left = gap > WILD_STOP_D ? advance(tx, tz, 7.5, clampZ) : 0;
+          // DID IT ACTUALLY GET ANYWHERE?
+          //
+          // `advance` reports what it was ASKED to cover, not what it
+          // managed: it computes the step, then lets the stones and the
+          // fences clamp the result, and returns the difference either way.
+          // So an animal pinned at the verge is told it is making progress
+          // every frame, while `left` is recomputed from a position that
+          // never changes and so never falls. The gap cannot close either,
+          // for the same reason the fence is there. Neither pull-up could
+          // fire, and the gallop ran on the spot until the six-second timer
+          // let go of it — which is the charge that does not stop.
+          //
+          // Measured off the ground it covered instead. A quarter second of
+          // covering none of it is as near as this animal is going to get,
+          // and near enough IS arrival.
+          const went = Math.hypot(pos.x - wasX, pos.z - wasZ);
+          w.stall = went < 7.5 * step * 0.25 ? w.stall + step : 0;
           // PULL UP WHEN IT HAS ARRIVED, not when the gap hits the floor.
           //
           // Those are not the same thing, and assuming they were broke the
@@ -23035,7 +23073,20 @@ export function createKidsWorld(
           // it runs — it reached the fence, kept "charging", and slid along
           // it past the child until the timer ran out. Arrival is what ends
           // a charge; the gap is only the floor underneath it.
-          if (left <= 0.3 || gap <= WILD_STOP_D + 0.4 || w.t <= 0) {
+          // Pinned, but not cut off mid-stride: it finishes the gallop
+          // cycle it is in and pulls up on the beat, unless the cycle is
+          // somehow not ending, in which case it pulls up regardless.
+          let pinned = false;
+          if (w.stall >= WILD_CHARGE_STALL) {
+            const loop = w.curAct;
+            const cycle = loop?.getClip().duration ?? 0;
+            pinned =
+              loop == null ||
+              cycle <= 0 ||
+              loop.time >= cycle - Math.max(step, 0.02) ||
+              w.stall >= WILD_CHARGE_STALL + cycle;
+          }
+          if (left <= 0.3 || gap <= WILD_STOP_D + 0.4 || pinned || w.t <= 0) {
             // A THREAT, not a strike. Attack_Horn and Attack_Stomp would
             // have been the obvious clips and neither one exists in this
             // app — see the header — so the pull-up is a display: it hauls
