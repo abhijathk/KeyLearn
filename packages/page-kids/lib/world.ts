@@ -11506,6 +11506,29 @@ export function createKidsWorld(
      * crossing it. It decides where it is going, turns once, and goes.
      */
     aimed: boolean;
+    /**
+     * THE ACTION ACTUALLY PLAYING, which is not always `act.get(cur)`.
+     *
+     * A clip cannot crossfade from itself, so restarting one that is already
+     * running hands over to a twin built on a copy of it — see `twin`. From
+     * then on the name alone no longer says which of the two is on screen,
+     * and anything that wants to pause, sample or fade the current pose has
+     * to ask for the object rather than look it up by name.
+     */
+    curAct: THREE.AnimationAction | null;
+    /**
+     * Second actions, made lazily, for clips that have to follow themselves.
+     *
+     * Only the turn clips ever need one: a turn of more than ninety degrees
+     * is taken ninety at a time and both legs are the same clip. `reset()`
+     * on the action already holding the end of the first leg threw the pose
+     * back to the clip's first frame in a single frame at full weight, with
+     * no fade, because `crossFadeFrom` is skipped when the outgoing and the
+     * incoming are one object. That is the flash that outlived every other
+     * fix, and it only ever fired on turns past ninety, which is why it came
+     * and went.
+     */
+    readonly twin: Map<string, THREE.AnimationAction>;
 
     /**
      * HOW FAR EACH TURN CLIP ACTUALLY TURNS THIS ANIMAL, in radians, signed.
@@ -11849,7 +11872,7 @@ export function createKidsWorld(
     if (name === w.cur && WILD_LOOPS.test(name)) {
       return true; // already looping this; restarting it would stutter
     }
-    const next = w.act.get(name);
+    let next = w.act.get(name);
     if (next == null) {
       // A clip this code asks for and does not get is a silent hole: the
       // state advances, the timer runs on a guessed duration, and the animal
@@ -11860,7 +11883,24 @@ export function createKidsWorld(
       }
       return false;
     }
-    const prev = w.act.get(w.cur);
+    // THE ONE ACTUALLY ON SCREEN, not the one this name usually means — a
+    // twin may be holding the pose. See WildRig.curAct.
+    const prev = w.curAct;
+    if (prev === next) {
+      // A CLIP FOLLOWING ITSELF CANNOT FADE FROM ITSELF, and the `reset()`
+      // below is about to throw this action back to its first frame. Without
+      // a second object to fade out of, that is a hard pose cut: the turn's
+      // last frame to the turn's first, no blend, at full weight. Hand over
+      // to a twin on a copy of the clip so the ordinary crossfade applies —
+      // the copy is the same animation, so every lift, arc and sample taken
+      // off it reads the same.
+      let alt = w.twin.get(name);
+      if (alt == null) {
+        alt = w.mixer.clipAction(next.getClip().clone());
+        w.twin.set(name, alt);
+      }
+      next = alt;
+    }
     next.reset();
     const loops = WILD_LOOPS.test(name);
     next.setLoop(
@@ -11906,13 +11946,19 @@ export function createKidsWorld(
     // So the weight goes to zero explicitly. An action that is not the
     // incoming or outgoing pose now contributes nothing whatever the mixer
     // does with it.
-    for (const a of w.act.values()) {
-      if (a !== next && a !== prev) {
-        a.stop();
-        a.setEffectiveWeight(0);
+    // The twins are swept with the rest. They are not in `act`, so leaving
+    // them out would park a second turn pose at full weight for the life of
+    // the animal — the very thing this loop exists to prevent.
+    for (const pool of [w.act.values(), w.twin.values()]) {
+      for (const a of pool) {
+        if (a !== next && a !== prev) {
+          a.stop();
+          a.setEffectiveWeight(0);
+        }
       }
     }
     w.cur = name;
+    w.curAct = next;
     return true;
   }
 
@@ -13942,6 +13988,8 @@ export function createKidsWorld(
             ]),
         ),
         aimed: false,
+        curAct: null,
+        twin: new Map(),
         scareCool: Math.random() * 20,
         liftNow: 0,
         after: null,
@@ -22468,7 +22516,7 @@ export function createKidsWorld(
           //
           // Same rule as the ordinary hand-off below: the wrap takes over
           // exactly what the hips are showing, no more.
-          const cut = w.act.get(w.cur);
+          const cut = w.curAct;
           const shown =
             cut == null
               ? null
@@ -22587,7 +22635,7 @@ export function createKidsWorld(
             // Paused, not stopped: the pose has to stay on screen to be faded
             // out of. `reset()` in wildPlay clears this when the clip is next
             // played.
-            const turning = w.act.get(w.cur);
+            const turning = w.curAct;
             if (turning != null) {
               turning.paused = true;
             }
@@ -23878,7 +23926,8 @@ export function createPickerScene(
   rest: readonly string[] = [],
   onWarm?: (name: string) => void,
 ): {
-  setPlayer(name: string): void;
+  /** `cheer` marks a fresh choice, which is celebrated once — see `show`. */
+  setPlayer(name: string, cheer?: boolean): void;
   setRunning(on: boolean): void;
   dispose(): void;
 } {
@@ -24036,7 +24085,7 @@ export function createPickerScene(
    * Everything here plays from a standing pose to a standing pose, so the
    * seat below never has to argue with a clip.
    */
-  type Mood = "idle" | "flourish";
+  type Mood = "idle" | "flourish" | "cheer";
 
   /**
    * WHO DOES ANYTHING BESIDES BREATHE, AND WHAT.
@@ -24059,6 +24108,19 @@ export function createPickerScene(
     Explorer6: /^wave$/i,
   };
 
+  /**
+   * WHAT BEING CHOSEN LOOKS LIKE — played once, and only when the choice is
+   * a CHANGE.
+   *
+   * Every one of the three ships a celebration: Dave and Little Drew a
+   * `Joy_LevelComplete`, Peeli a `Joy_Victory`. Matched by pattern for the
+   * same reason the wave is — the rigs agree on almost no names — and
+   * deliberately separate from `PICKER_GESTURE`, because this is not part of
+   * the standing routine. Dave has no entry there and still celebrates here:
+   * he stands about doing nothing until he is picked, which is the point.
+   */
+  const PICKER_CHEER = /^(joy|excited)/i;
+
   const moodClips = () => {
     // Not the crouch and not any sitting loop: `Idle`, or `Idle_Calm`.
     const idle =
@@ -24077,11 +24139,14 @@ export function createPickerScene(
     const want = PICKER_GESTURE[whoNow];
     const flourish =
       want == null ? [] : clipsNow.filter((c) => want.test(c.name));
-    return { idle, flourish };
+    const cheer = clipsNow.filter((c) => PICKER_CHEER.test(c.name));
+    return { idle, flourish, cheer };
   };
 
   /** Who is on the turntable, for `PICKER_GESTURE`. */
   let whoNow = "";
+  /** Whether the model now loading was a fresh choice — see `show`. */
+  let cheerNext = false;
   let mood: Mood = "idle";
   /** Seconds left before the next mood. Counted down in the tick. */
   let moodLeft = 0;
@@ -24096,11 +24161,17 @@ export function createPickerScene(
       return;
     }
     const set = moodClips();
+    const pool =
+      next === "flourish" ? set.flourish : next === "cheer" ? set.cheer : null;
     const clip =
-      next === "flourish"
-        ? set.flourish[Math.floor(Math.random() * set.flourish.length)]
-        : set.idle;
+      pool == null ? set.idle : pool[Math.floor(Math.random() * pool.length)];
     if (clip == null) {
+      if (next === "cheer") {
+        // No celebration in this file. Nothing is owed to the child here, so
+        // it just carries on standing rather than holding still forever.
+        playMood("idle");
+        return;
+      }
       // Cast to stand, and that is the whole of it — Dave, or anybody this
       // table does not name. Stay on the idle and stop asking: a character
       // who is meant to stand should not be re-deciding that every few
@@ -24110,7 +24181,7 @@ export function createPickerScene(
       return;
     }
     mood = next;
-    const once = next === "flourish";
+    const once = next !== "idle";
     mixer ??= new THREE.AnimationMixer(rig ?? current);
     const action = mixer.clipAction(stripScaleTracks(clip));
     action.reset();
@@ -24186,9 +24257,14 @@ export function createPickerScene(
       return loader.loadAsync(modelUrl(theme.modelDir, name));
     });
 
-  const show = (name: string) => {
+  const show = (name: string, cheer = false) => {
     const mine = ++token;
     whoNow = name;
+    // Only a CHANGE of character celebrates. The one already standing there
+    // when the screen opens has not just been chosen — it is where the
+    // child left off last time — and a character who cheers at being looked
+    // at is a character who cheers constantly.
+    cheerNext = cheer;
     /*
      * NOTHING WAITS ON THE MANIFEST. NOT EVEN THIS.
      *
@@ -24352,8 +24428,12 @@ export function createPickerScene(
     moodAction = null;
     hair = makeHairSim(rig ?? current);
     if (!running) {
-      // Standing still is a whole little routine — see `playMood`.
-      playMood("idle");
+      // Standing still is a whole little routine — see `playMood`. A model
+      // that arrived because the child just picked it opens on the cheer
+      // and falls into that routine after; one that was already the choice
+      // starts where it always did.
+      playMood(cheerNext ? "cheer" : "idle");
+      cheerNext = false;
       return;
     }
     mixer.clipAction(stripScaleTracks(clip)).play();
@@ -24419,6 +24499,9 @@ export function createPickerScene(
     if (current != null && !running && clipsNow.length > 0) {
       moodLeft -= dt;
       if (moodLeft <= 0) {
+        // A cheer is over when it is over, and what follows it is the
+        // standing routine from its start — not the next gesture in the
+        // rotation, which would read as the character celebrating twice.
         playMood(mood === "idle" ? "flourish" : "idle");
       }
     }
@@ -24434,9 +24517,9 @@ export function createPickerScene(
   tick();
 
   return {
-    setPlayer(name: string) {
+    setPlayer(name: string, cheer = false) {
       if (!disposed) {
-        show(name);
+        show(name, cheer);
       }
     },
     setRunning(on: boolean) {

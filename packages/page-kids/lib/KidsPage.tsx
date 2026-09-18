@@ -4503,7 +4503,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // Rebuilt when the WORLD is, not when a pref changes: swapping who is
     // standing on the turntable is `setPlayer`, not a new scene and a new
     // WebGL context.
-     
   }, [loaded, onVillage, regenNonce, onCastReady, onCastWarm]);
 
   // ── the 3D world (rebuilt with a fresh land every three rounds) ────────
@@ -5939,7 +5938,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         onPickCharacter={(id) => {
           // The turntable swaps at once — that model is already in hand. The
           // WORLD is told nothing until Walk on; see `pickCharacter`.
-          pickerSceneRef.current?.setPlayer(id);
+          //
+          // A CHANGE of character celebrates; tapping the one already chosen
+          // does not. The row does not disable the current face — a child
+          // pressing it to make sure is a real thing — so the comparison is
+          // made here rather than assumed from the tap.
+          pickerSceneRef.current?.setPlayer(id, id !== charOf(prefs));
           pickCharacter(id, prefs.world, false);
         }}
         onToggleCompanion={(id) => pickCompanion(id, prefs.world, false)}
