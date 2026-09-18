@@ -585,14 +585,24 @@ function modelUrl(modelDir: string, name: string): string {
 }
 
 const WEARS_EXPLORER_CLIPS: ReadonlySet<string> = new Set([
-  "Explorer",
-  // Explorer6 (Little Drew) is NOT here any more. His sit and crouch now carry
-  // the pose in the asset: the hands are solved onto the knees with IK, per
-  // frame, against his own arm lengths, and the feet are levelled. Applying
-  // SIT_ARM_CORRECTION on top of that is a second correction for a fault that
-  // is no longer there — it would rotate his arms a further 15–20 degrees and
-  // lift the hands back off his knees, which is the very thing the comment
-  // below reports it doing to him.
+  // Empty, and deliberately kept rather than deleted.
+  //
+  // Neither boy is here any more. Both now carry the seated pose in the asset
+  // itself: the hands are solved onto the knees with IK, per frame, against
+  // that character's own arm lengths. Applying SIT_ARM_CORRECTION on top is a
+  // second correction for a fault that is no longer there — it rotates the
+  // arms a further 15–20 degrees and lifts the hands back OFF the knees, which
+  // is exactly what the comment below reports it doing to the six-year-old.
+  //
+  // Explorer (Dave) left when his own asset gained the pose. His two sit
+  // TRANSITIONS had to be solved at the same time, not just the idle: the
+  // runtime correction ramped across all three clips, so baking only the idle
+  // left his hands 94mm off the knees at the handover and the idle snapped
+  // them on. Solved across all three, the seam is 5–11mm.
+  //
+  // The machinery stays because the gate is on where the CLIP came from, not
+  // on who wears it: a future character baked with `kids-bake-clips.mjs` would
+  // borrow the Explorer's sit, and would need the correction that sit expects.
 ]);
 
 /**
@@ -21401,13 +21411,24 @@ export function createKidsWorld(
         let turn = lookTarget - cw.rotation.y;
         while (turn > Math.PI) turn -= Math.PI * 2;
         while (turn < -Math.PI) turn += Math.PI * 2;
-        if (follower.guide && companion.settle.turnLeft != null) {
-          // A GUIDE TURNS ON HIS FEET.
+        if (companion.settle.turnLeft != null) {
+          // ANYBODY WHO CAN, TURNS ON THEIR FEET.
           //
           // The lerp below spins the wrap with no stepping underneath it,
-          // which is a glide — and it is the most visible thing he does,
-          // because he is the one character who is regularly facing back down
-          // the road at the child.
+          // which is a glide. This was reserved for the guide, on the
+          // reasoning that he is the one character regularly facing back
+          // down the road at the child and so the one whose glide shows —
+          // but the reason it was ONLY him is that he was the only one whose
+          // file carried the clips. That is no longer true: Little Drew's
+          // rig was re-exported with `Turn_Left_90` and `Turn_Right_90`, and
+          // walking beside the child is exactly where a companion stands
+          // about and turns to watch.
+          //
+          // Nothing is needed to keep the other two out of it. Neither
+          // Dave's file nor Peeli's has a turn clip in it, so the null check
+          // this always had decides it — and the day one of them is
+          // re-exported with a pair, they step round too without anybody
+          // coming back here.
           //
           // His turn clips bake the rotation into the HIPS, so the two must
           // never run at once: while a clip plays the wrap holds absolutely
