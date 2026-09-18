@@ -25013,7 +25013,21 @@ export function createPickerScene(
     // rather than snapped: the transitions move the hips quickly and a seat
     // that corrects instantly turns the last few frames of sitting down into
     // a hop.
-    if (current != null && rig != null && !running) {
+    // NOT WHILE HIS FEET ARE OFF THE GROUND.
+    //
+    // This holds the lowest bone at `soleY`, and `soleY` is whatever that
+    // bone was on the first frame after a reseat. `place` reseats on every
+    // frame of the grow into the portrait, and the celebration starts on the
+    // same frame the grow does — so the seat was being taken over and over
+    // while he was in the air, and whichever frame the grow happened to
+    // finish on became the floor. Mid-bounce, that floor is the top of a
+    // jump: he lands on it, stands on it, and the next celebration takes its
+    // seat from higher still. That is the boy who goes up and up.
+    //
+    // A jump is the one thing on this screen that is SUPPOSED to leave the
+    // ground, and it carries its own root motion, so the seat has nothing to
+    // do during one. It stops asking, and resumes from a standing pose.
+    if (current != null && rig != null && !running && mood !== "cheer") {
       current.updateMatrixWorld(true);
       const lo = lowestBone();
       soleY ??= lo;
