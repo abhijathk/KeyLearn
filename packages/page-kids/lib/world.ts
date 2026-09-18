@@ -904,6 +904,104 @@ function stripScaleTracks(clip: THREE.AnimationClip): THREE.AnimationClip {
 }
 
 /**
+ * A clip cut down to the part where something actually happens.
+ *
+ * FOR A BEAT THAT IS PLAYED MORE THAN ONCE. `Jump_Happy` is a second long
+ * and only five sixths of that is a jump: it opens standing still and closes
+ * standing still, which is fine once and is a stutter when it repeats. Back
+ * to back the child watches the jump, then the boy standing there, then the
+ * jump again — and the sixth of a second of nothing reads as the second
+ * bounce being slow to arrive rather than as padding on the first.
+ *
+ * MEASURED ON THE ROOT ALONE, and that is the whole of why this works. The
+ * obvious rule — trim where EVERY track is still — takes almost nothing off
+ * this clip: the head goes on drifting to the last frame, so the span every
+ * track needs is the span the clip already has. What a bounce actually is,
+ * though, is the body leaving the ground and coming back, and the root says
+ * when that starts and stops. Cutting there costs a seam of six degrees on
+ * the head's tip bone, mid-bounce, against a sixth of a second of dead air
+ * that was plainly visible.
+ *
+ * The root is found by looking rather than by name: of the position tracks,
+ * the one that moves the most vertically. Idempotent, and in place, because
+ * `clipAction` caches by clip and a copy would mint a new action per play.
+ */
+function trimStillEnds(clip: THREE.AnimationClip): THREE.AnimationClip {
+  let root: THREE.KeyframeTrack | null = null;
+  let rise = 0;
+  for (const track of clip.tracks) {
+    if (!track.name.endsWith(".position") || track.times.length < 2) {
+      continue;
+    }
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let i = 1; i < track.values.length; i += 3) {
+      lo = Math.min(lo, track.values[i]!);
+      hi = Math.max(hi, track.values[i]!);
+    }
+    if (hi - lo > rise) {
+      rise = hi - lo;
+      root = track;
+    }
+  }
+  if (root == null || rise < 1e-4) {
+    return clip; // nothing that reads as a root; leave it alone
+  }
+  const times = root.times;
+  const at = (i: number) => [
+    root.values[i * 3]!,
+    root.values[i * 3 + 1]!,
+    root.values[i * 3 + 2]!,
+  ];
+  const still = (a: number, b: number) => {
+    const p = at(a);
+    const q = at(b);
+    return (
+      Math.abs(p[0]! - q[0]!) < 1e-3 &&
+      Math.abs(p[1]! - q[1]!) < 1e-3 &&
+      Math.abs(p[2]! - q[2]!) < 1e-3
+    );
+  };
+  let first = 0;
+  while (first < times.length - 1 && still(first + 1, 0)) first++;
+  let last = times.length - 1;
+  while (last > 0 && still(last - 1, times.length - 1)) last--;
+  const from = times[first]!;
+  const to = times[last]!;
+  if (!(to > from) || (from <= 1e-6 && to >= clip.duration - 1e-6)) {
+    return clip; // already tight at both ends
+  }
+  for (const track of clip.tracks) {
+    const n = track.values.length / track.times.length;
+    if (!Number.isInteger(n)) {
+      continue;
+    }
+    const keep: number[] = [];
+    for (let i = 0; i < track.times.length; i++) {
+      const t = track.times[i]!;
+      if (t >= from - 1e-6 && t <= to + 1e-6) {
+        keep.push(i);
+      }
+    }
+    if (keep.length < 2) {
+      continue; // too few to be worth cutting; it holds its pose anyway
+    }
+    const kept = new Float32Array(keep.length);
+    const values = new Float32Array(keep.length * n);
+    keep.forEach((src, k) => {
+      kept[k] = track.times[src]! - from;
+      for (let c = 0; c < n; c++) {
+        values[k * n + c] = track.values[src * n + c]!;
+      }
+    });
+    track.times = kept;
+    track.values = values;
+  }
+  clip.duration = to - from;
+  return clip;
+}
+
+/**
  * MESHOPT DECODING, OFF THE MAIN THREAD.
  *
  * Every model on this road ships `EXT_meshopt_compression`, and the decoder
@@ -24168,6 +24266,20 @@ export function createPickerScene(
   const CHEER_JUMP = /^jump_happy/;
   const CHEER_ANY = /joy|celebrat|victory|cheer|excited/;
 
+  /**
+   * HOW MANY TIMES A HAPPY JUMP GOES — two to four, chosen fresh each time.
+   *
+   * Only the jump. It is one second long and reads as a beat rather than a
+   * performance, so one of them barely registers as being pleased; the same
+   * reason the world repeats it when a lesson is finished. The routines are
+   * not repeated and must not be: Peeli's `Joy_Victory` runs 3.53 seconds,
+   * and four of those is fourteen seconds of a child waiting to start.
+   *
+   * Varied rather than fixed so that picking the same character twice is not
+   * the same two seconds twice.
+   */
+  const CHEER_BEATS = { least: 2, most: 4 } as const;
+
   const moodClips = () => {
     // Not the crouch and not any sitting loop: `Idle`, or `Idle_Calm`.
     const idle =
@@ -24193,7 +24305,9 @@ export function createPickerScene(
       clipsNow.filter((c) => re.test(c.name.toLowerCase()));
     const jump = named(CHEER_JUMP);
     const cheer = jump.length > 0 ? jump : named(CHEER_ANY);
-    return { idle, flourish, cheer };
+    // A jump is a BEAT and gets repeated; a celebration routine is a
+    // PERFORMANCE and does not. See `playMood`.
+    return { idle, flourish, cheer, bounce: jump.length > 0 };
   };
 
   /** Who is on the turntable, for `PICKER_GESTURE`. */
@@ -24235,17 +24349,35 @@ export function createPickerScene(
     }
     mood = next;
     const once = next !== "idle";
+    const beats =
+      next === "cheer" && set.bounce
+        ? CHEER_BEATS.least +
+          Math.floor(Math.random() * (CHEER_BEATS.most - CHEER_BEATS.least + 1))
+        : 1;
     mixer ??= new THREE.AnimationMixer(rig ?? current);
-    const action = mixer.clipAction(stripScaleTracks(clip));
+    // Trimmed only when it is going to repeat: the padding at the ends of a
+    // one-shot is part of how it lands, and only becomes a gap between two
+    // of them. See `trimStillEnds`.
+    const action = mixer.clipAction(
+      beats > 1
+        ? trimStillEnds(stripScaleTracks(clip))
+        : stripScaleTracks(clip),
+    );
     action.reset();
-    action.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
+    action.setLoop(
+      // A repeat still ENDS — it is a one-shot played `beats` times, not a
+      // loop — so it still clamps on its last frame and still hands back to
+      // the standing routine when its clock runs out.
+      !once || beats > 1 ? THREE.LoopRepeat : THREE.LoopOnce,
+      once ? beats : Infinity,
+    );
     action.clampWhenFinished = once;
     action.fadeIn(0.3).play();
     moodAction?.crossFadeTo(action, 0.3, false);
     moodAction = action;
     // A gesture runs for as long as it runs; the idle between them is
     // randomised so the two who wave do not do it in lockstep.
-    moodLeft = once ? clip.duration : 5 + Math.random() * 5;
+    moodLeft = once ? clip.duration * beats : 5 + Math.random() * 5;
   };
 
   /** Size and seat the showing model for whichever of the two it is doing. */
