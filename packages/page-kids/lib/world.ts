@@ -1,4 +1,4 @@
-import { profileStorageKey } from "@keylearn/pages-shared";
+import { motionStilled, profileStorageKey } from "@keylearn/pages-shared";
 import * as THREE from "three";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -6,6 +6,7 @@ import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
+import { ASSET_MAP } from "./asset-manifest.ts";
 import {
   activeLessons,
   activityAt,
@@ -33,12 +34,62 @@ import {
   type CharacterTint,
   type ClothingColours,
 } from "./character-tint.ts";
+import {
+  anchorsFrom,
+  beatAt,
+  chooseRoutine,
+  CLIPS as KUTTI_CLIPS,
+  isGone as kuttiIsGone,
+  type Routine as KuttiRoutine,
+  routineSeconds,
+  thinAnchors,
+} from "./kuttichathan.ts";
 import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
 import { MAX_UNITS_PER_KEY, RUN_LEN, runLengthFor } from "./run-length.ts";
 import { MIN_STONE_GAP, stoneXFor } from "./stone-x.ts";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
-const ASSETS = "/kids-assets";
+export const ASSETS = "/kids-assets";
+
+/**
+ * ── CONTENT-ADDRESSED ASSET URLS ─────────────────────────────────────────
+ *
+ * Every file under `/kids-assets/` is also reachable at a URL carrying a hash
+ * of its bytes — `/kids-assets/v1a2b3c4d/models/…` — and only that form may
+ * be cached for a year. See `scripts/kids-manifest.mjs` for why, and
+ * `static-cache.ts` for the server side.
+ *
+ * ONE HOOK, NOT EIGHTEEN CALL SITES. `THREE.DefaultLoadingManager` sees every
+ * URL every loader in this file asks for, because none of them is built with
+ * a manager of its own — so `setURLModifier` rewrites the lot, including the
+ * KTX2 transcoder and the textures a GLB pulls in by relative path. Rewriting
+ * the string at each `${ASSETS}/...` template instead would be eighteen
+ * places to keep in step and one of them forgotten.
+ *
+ * BUNDLED, NOT FETCHED. This began as a `fetch` of `manifest.json` at module
+ * init, which is tidier and cost fourteen seconds on a cold load: three
+ * kilobytes queued behind the browser's six connections to this host, every
+ * one of them busy with a model, and landed long after the URLs it was meant
+ * to rewrite had gone out the old way. Imported, it is there before the first
+ * request and there is no race to lose.
+ *
+ * FALLING BACK IS NOT A FAILURE MODE, IT IS THE DEFAULT. An asset the
+ * manifest has never heard of keeps its plain URL and a day's caching, which
+ * is what every asset had before this existed. Nothing here is allowed to be
+ * a way for the game not to start.
+ */
+/** `/kids-assets/models/x.glb` → `/kids-assets/v1a2b3c4d/models/x.glb`. */
+function versioned(url: string): string {
+  if (!url.startsWith(`${ASSETS}/`)) {
+    return url;
+  }
+  const entry = ASSET_MAP[url.slice(ASSETS.length + 1)];
+  // An asset added since the last manifest run keeps its plain URL and a
+  // day's caching, which is exactly what it had before any of this existed.
+  return entry == null ? url : `${ASSETS}/${entry.u}`;
+}
+
+THREE.DefaultLoadingManager.setURLModifier(versioned);
 
 /**
  * Runs the Basis transcoder from a served file instead of a blob.
@@ -394,6 +445,7 @@ const AK_3D_PACK: ReadonlySet<string> = new Set([
  */
 const OWN_MODELS: ReadonlyMap<string, string> = new Map([
   ["Abee", "abee"],
+  ["Kuttichathan", "kuttichathan"],
   ["Cow", "village-folk"],
   ["Cow_Calf", "village-folk"],
   ["Headman", "village-folk"],
@@ -421,6 +473,9 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Robot", "the robot"],
   ["Puppy", "the puppy"],
   ["Abee", "Abee"],
+  // Not "Kuttichathan". The loading screen is read by a six-year-old, and the
+  // whole point of him is that nobody gets a good enough look to name him.
+  ["Kuttichathan", "something in the trees"],
   ["Buffalo", "a buffalo"],
   // The village.
   ["Temple", "the temple"],
@@ -886,7 +941,11 @@ function serveTranscoderFromUrl(ktx2: KTX2Loader): void {
     workerConfig: unknown;
     workerPool: { setWorkerCreator: (fn: () => Worker) => void };
   };
-  self.transcoderPending = fetch(`${ASSETS}/basis/basis_transcoder.wasm`)
+  // `fetch` and `new Worker` never touch three's loading manager, so these
+  // two are the only URLs in the file that have to be rewritten by hand.
+  self.transcoderPending = fetch(
+    versioned(`${ASSETS}/basis/basis_transcoder.wasm`),
+  )
     .then((r) => {
       if (!r.ok) throw new Error(`basis_transcoder.wasm: ${r.status}`);
       return r.arrayBuffer();
@@ -894,7 +953,7 @@ function serveTranscoderFromUrl(ktx2: KTX2Loader): void {
     .then((binary) => {
       self.transcoderBinary = binary;
       self.workerPool.setWorkerCreator(() => {
-        const worker = new Worker(`${ASSETS}/basis/ktx2-worker.js`);
+        const worker = new Worker(versioned(`${ASSETS}/basis/ktx2-worker.js`));
         const transcoderBinary = (self.transcoderBinary as ArrayBuffer).slice(
           0,
         );
@@ -1275,7 +1334,7 @@ function scaleHead(root: THREE.Object3D, scale: number): void {
 /**
  * THE TWO HOURS A CLOCK TIME STAGES AS.
  *
- * Village Road is lit by the hour the child is actually playing at, folded
+ * Time Keepers is lit by the hour the child is actually playing at, folded
  * onto a twelve-hour face: at ten in the morning the day is a ten o'clock
  * morning and the night is ten at night; at eight in the evening the day is
  * eight in the morning and the night is eight at night.
@@ -1585,7 +1644,7 @@ function castHeight(name: string): number {
     // him look like a small child beside her.
     case "Abee":
       return 4.28;
-    // Village Road only. A water buffalo stands taller than the children
+    // Time Keepers only. A water buffalo stands taller than the children
     // walking past it — that is the whole point of the charge.
     case "Buffalo":
       return 6.0;
@@ -1595,7 +1654,7 @@ function castHeight(name: string): number {
   }
 }
 
-// Village Road — a Kerala village, and a road that runs past it.
+// Time Keepers — a Kerala village, and a road that runs past it.
 //
 // The third world is the same engine again, but its scenery is a different
 // class of asset from the other two: photoreal bakes rather than stylised
@@ -1739,7 +1798,7 @@ export type WorldTheme = {
    * Which side of the road the hero and companion walk on.
    *
    * 0 is the middle, which is where the other two worlds put them because
-   * their trails carry nobody else. Village Road is a road: it has traffic,
+   * their trails carry nobody else. Time Keepers is set on a road: it has traffic,
    * and traffic keeps to one side. Positive is the near side — towards the
    * camera — so the pair walk the near verge and the whole far half is left
    * clear for villagers coming the other way.
@@ -1749,7 +1808,7 @@ export type WorldTheme = {
    * How far towards the camera the letter ribbon sits, in world units.
    *
    * Larger is nearer the camera, which on screen is LOWER. 10 is where the
-   * other two worlds put it; Village Road pushes it much further forward so
+   * other two worlds put it; Time Keepers pushes it much further forward so
    * the letters clear the road rather than lying across it — this one has a
    * village, carts and a buffalo to read past.
    *
@@ -2045,7 +2104,7 @@ export type WorldTheme = {
    * Per world, because the hour of the day is part of what a world IS and the
    * three do not share one. Dino Run and the Hero Trail are staged at midday:
    * the sun nearly overhead, shadows tucked under what casts them, everything
-   * plainly lit. Village Road is eight in the morning.
+   * plainly lit. Time Keepers is eight in the morning.
    *
    * Only the RATIO matters — the sun rides with the camera and its target is
    * the camera, so its world position is meaningless and this vector alone
@@ -2059,7 +2118,7 @@ export type WorldTheme = {
   /**
    * Light this world by the CLOCK rather than by a fixed staging.
    *
-   * Village Road only. The other two are deliberately staged at midday and
+   * Time Keepers only. The other two are deliberately staged at midday and
    * are meant to look the same whenever a child opens them; this one is built
    * around a real place at a real hour, and the hour it shows is the hour
    * they are playing at. See `stagedHours`.
@@ -2069,7 +2128,7 @@ export type WorldTheme = {
    * How far this world's night is lifted towards its dusk, 0..1.
    *
    * Hero Trail wants a real night: you are out after dark with a lantern and
-   * the dark is the point. Village Road does not — it is an evening in a
+   * the dark is the point. Time Keepers does not — it is an evening in a
    * place where people live, the lamps are lit, and a child has to be able
    * to SEE the village they have walked to. 0 is the full night, 1 is the
    * dusk, and the same expressions produce both, so a twilight is a real
@@ -2131,7 +2190,7 @@ export type WorldTheme = {
    * How much of the night's ground mist this world gets, 0..1.
    *
    * The mist belongs to Hero Trail, where a fog bank between the trees is
-   * most of what makes the dark feel occupied. Village Road is a warm
+   * most of what makes the dark feel occupied. Time Keepers is a warm
    * evening in a place where people live and its light comes from oil lamps
    * — haze does two unhelpful things to that: it greys the lamplight it
    * drifts through, and it flattens the fields the low camera was lowered to
@@ -2144,7 +2203,7 @@ export type WorldTheme = {
    *
    * Hero Trail's night is a different place: a share of the leafy trees go
    * home and bare skeleton trunks stand where they were, which is most of
-   * what makes that dark feel haunted. Village Road's night is an evening in
+   * what makes that dark feel haunted. Time Keepers' night is an evening in
    * a working village — the same palms, the same banyan, lit by oil lamps
    * instead of the sun. Trees that strip themselves at dusk and grow their
    * leaves back at dawn belong to the other world entirely.
@@ -2188,7 +2247,7 @@ export type WorldTheme = {
     readonly hemi: number;
   };
   /**
-   * The village that recurs along Village Road.
+   * The village that recurs along Time Keepers.
    *
    * Named props rather than a scatter collection, because these are landmarks:
    * a temple, a market, a banyan and the cart parked at it are the same few
@@ -2375,7 +2434,7 @@ export const HERO_THEME: WorldTheme = {
   playerVivid: 1.12,
 };
 
-// Village Road — the third world. Same engine, Kerala village.
+// Time Keepers — the third world. Same engine, Kerala village.
 //
 // The cast is the AK pack only: no knights or mages, because a paddy field is
 // not a quest. Dave, Little Drew and Peeli lead; Robot and Puppy walk with
@@ -3260,7 +3319,7 @@ let TRAIL_END = 260;
  * them to say one number per world would be a much larger change for no more
  * correctness, and two worlds are never built at once.
  *
- * Village Road sets it near zero: Kerala's paddy country is table-flat, and
+ * Time Keepers sets it near zero: Kerala's paddy country is table-flat, and
  * rolling hills under a rice field is the one thing that would say "this is
  * not really that place" before a child had read a single word.
  */
@@ -3897,6 +3956,12 @@ export type KidsWorld = {
    * re-authored keeps this honest with no second place to update.
    */
   celebrate(): number;
+  /**
+   * Cut a celebration short. The child typing again is the clearest possible
+   * signal that they are done being congratulated, and a character still
+   * jumping about behind the next word is in the way of it.
+   */
+  endCelebration(): void;
   /** A celebratory size-pop when a new key unlocks. */
   grow(): void;
   /** Baby (0) → adult (1): reshapes the dino's body, size, colour and gait. */
@@ -3967,7 +4032,7 @@ export function createKidsWorld(
     /** Which night this learner gets; see night.ts. Hero world only. */
     readonly nightStyle?: NightStyle;
     /**
-     * Whether this trail contains a village (Village Road only).
+     * Whether this trail contains a village (Time Keepers only).
      *
      * The page decides, not the world. Villages fall every four to seven
      * FLAGS, and a flag is a round - but the world is rebuilt once per
@@ -6809,7 +6874,7 @@ export function createKidsWorld(
    *
    * Zero on the other two worlds: their paths are narrow and their scatter was
    * tuned around them years ago, and widening the exclusion would thin out
-   * trails that read correctly today. Village Road's road is thirteen units
+   * trails that read correctly today. Time Keepers' road is thirteen units
    * across, and the scatter's own minimum distances - two for the flowers, six
    * for the trees - put bushes and whole trees in the middle of it.
    *
@@ -7140,6 +7205,34 @@ export function createKidsWorld(
           z: (-12 + front) / 2,
           rx: 3.9,
           rz: Math.abs(front + 12) / 2 + 1.5,
+        });
+        // ── AND THE COURTYARD THE DRIVE ARRIVES AT ────────────────────
+        //
+        // A drive alone left the great house standing on lawn, with one
+        // narrow brown ribbon touching its door — which is the one thing the
+        // front of a Kerala mana never is. The ground people cross to reach
+        // it goes the same way the drive does and for longer: swept, walked,
+        // parked on, rained on, and bare red laterite by the time anybody
+        // alive remembers it otherwise.
+        //
+        // Off the model rather than by eye, the same as `front` above: the
+        // file is 1.897 wide for 1.076 tall, so half its width is 0.881 of
+        // its height, and the depth falloff scales that like everything else.
+        // `gx`, not `m.x` — the house is snapped to its gate when it is
+        // built, and a courtyard centred on the authored position would sit
+        // beside the building rather than under it.
+        //
+        // As wide as the façade and no wider. `yardAt` holds its full
+        // strength out to 55 per cent of these radii and fades to nothing at
+        // 100, so this is bare earth across the frontage that thins into
+        // grass at the corners — the wear coming from the noise underneath
+        // rather than from an edge drawn anywhere.
+        const hw = 0.881 * m.h * perspective(m.z);
+        yards.push({
+          x: gx,
+          z: front + hw * 0.34,
+          rx: hw,
+          rz: hw * 0.5,
         });
       }
     }
@@ -7763,7 +7856,7 @@ export function createKidsWorld(
         // BEDDED INTO THE ROAD, NOT RESTING ON IT.
         //
         // Two things were wrong and they compounded. `groundY` is the height
-        // of the FIELD and takes no z at all, while Village Road sinks its
+        // of the FIELD and takes no z at all, while Time Keepers sinks its
         // own surface up to 0.22 below that — so on this road every pebble
         // was already floating a fifth of a unit clear of the ground it was
         // meant to be lying on. The `+ 0.05` then lifted the whole stone
@@ -8438,7 +8531,11 @@ export function createKidsWorld(
     // never reached. This also keeps Peeli's `Idle_Calm` ahead of her
     // `Standing` gesture without relying on clip order.
     const idleClip = pick(/^idle/) ?? pick(/idle|stand/);
-    const joyClip = pick(/joy|celebrat|victory|cheer/);
+    // A happy jump beats a generic celebration routine where the character has
+    // one — it is the gesture a six-year-old actually makes when something goes
+    // right. `celebrate` below repeats it a few times rather than playing one
+    // long performance, which is also why it is allowed to loop.
+    const joyClip = pick(/^jump_happy/) ?? pick(/joy|celebrat|victory|cheer/);
     let run: THREE.AnimationAction | null = null;
     let walk: THREE.AnimationAction | null = null;
     let idle: THREE.AnimationAction | null = null;
@@ -8506,6 +8603,8 @@ export function createKidsWorld(
     if (joyClip) {
       // Played on demand and held on its last frame rather than looping: a
       // celebration that restarts behind the finish banner reads as a stutter.
+      // A happy jump is the exception — it is one jump, and a child who has
+      // just won does it a few times. `celebrate` sets the count.
       joy = mixer.clipAction(joyClip);
       joy.setLoop(THREE.LoopOnce, 1);
       joy.clampWhenFinished = true;
@@ -10071,6 +10170,16 @@ export function createKidsWorld(
    * being the tallest is doing some of the work of saying who he is.
    */
   const FOOT = castHeight("Explorer") / 4.5;
+  /**
+   * WHO WALKS DIFFERENTLY AFTER DARK — see `nightWalkClip`.
+   *
+   * Two files ship a second walk and both were being used, on the reasoning
+   * that a gait which only comes out at night says more about somebody than
+   * any amount of daytime idling. That still holds for the headman. It did
+   * not hold for the tea seller, whose night clip is an unsteady walk.
+   */
+  const NIGHT_WALKERS: ReadonlySet<string> = new Set(["Headman"]);
+
   const FOLK_HEIGHT: Record<string, number> = {
     // A COUPLE OF INCHES ON EACH, KEEPING THE SPREAD. 5.2, 5.6 and 6.1 feet
     // rather than 5.0, 5.4 and 5.9 — the gap between them is what says who
@@ -11359,6 +11468,148 @@ export function createKidsWorld(
     readonly arc: Map<string, number>;
   };
   const wilds: WildRig[] = [];
+
+  /**
+   * THE ONE WHO MOVED THE STONES.
+   *
+   * The corridor below authored its traces with the figure deliberately
+   * left out — "TRACES ONLY — no figure. The character is held back until
+   * its animation is ready." It is ready now, so this is the figure, and
+   * it runs under exactly the rules the traces already set: the same
+   * lessons, the same ten-to-four window, the same restraint.
+   *
+   * ONE OF HIM, kept in a single slot rather than an array. He is a
+   * spirit, and four of him standing at four trees is a crowd of goblins.
+   * He works one haunt at a time and moves between them the only way he
+   * has, which is by not being there any more.
+   *
+   * NOT A `friend` AND NOT A `wild`. The villager loop decides facing and
+   * reaction to the child, and the animal loop decides grazing and charge
+   * — both would be applied on top of a routine that already knows what it
+   * is doing. Same reasoning that keeps a buffalo out of the friends
+   * array: one owner for a body's pose.
+   */
+  type KuttiRig = {
+    readonly wrap: THREE.Group;
+    readonly mixer: THREE.AnimationMixer;
+    readonly act: ReadonlyMap<string, THREE.AnimationAction>;
+    /** How far each pose floats above planted ground — see plantFeet. */
+    readonly lift: ReadonlyMap<string, number>;
+    /** Where he may be. Corridor haunts only, already thinned. */
+    readonly spots: readonly { x: number; z: number; haunt: string }[];
+    routine: KuttiRoutine | null;
+    /** Seconds into the routine. A clock, never a clip-ended event. */
+    t: number;
+    /** Which beat is playing, so a change of beat is a crossfade not a cut. */
+    beat: number;
+    /** Seconds until he starts something, when he is between routines. */
+    wait: number;
+    /** Which spot he is standing at. */
+    spot: number;
+    hidden: boolean;
+  };
+  let kutti: KuttiRig | null = null;
+
+  /**
+   * Drive whatever he is in the middle of.
+   *
+   * ON A CLOCK, NOT ON CLIP-ENDED EVENTS. An action whose `finished` never
+   * fires — because the tab was hidden, or the mixer was paused mid-fade —
+   * would strand him mid-routine for the rest of the session. This page has
+   * already paid for that mistake once; see the queue the hidden tab drained.
+   */
+  const tickKutti = (dt: number) => {
+    const k = kutti;
+    if (k == null || k.spots.length === 0) {
+      return;
+    }
+    k.mixer.update(dt);
+    // ── BETWEEN ROUTINES ────────────────────────────────────────────
+    if (k.routine == null) {
+      k.wait -= dt;
+      if (k.wait > 0) {
+        return;
+      }
+      // Where, then what. The haunt decides the routine — that is the
+      // whole design — and the roll is taken from the spot's own position
+      // so the same tree does not do something different on every reload.
+      k.spot = Math.floor(Math.random() * k.spots.length);
+      const at = k.spots[k.spot]!;
+      const roll =
+        (((Math.sin(at.x * 12.9898 + at.z * 78.233) * 43758.5453) % 1) + 1) % 1;
+      const r = chooseRoutine(at.haunt as never, nightNow, roll);
+      if (r == null) {
+        k.wait = 20;
+        return;
+      }
+      k.routine = r;
+      k.t = 0;
+      k.beat = -1;
+      // Stood where the haunt is, turned to face the road he is beside.
+      k.wrap.position.set(at.x, terrainY(at.x, at.z), at.z);
+      k.wrap.rotation.y = at.z < -8 ? 0 : Math.PI;
+      k.wrap.visible = true;
+      k.hidden = false;
+      // Same reporting as the rest of the chapter build. A corridor that
+      // produced nothing for a whole lesson used to be indistinguishable
+      // from one whose figure never loaded.
+      console.info(
+        `[kuttichathan] at the ${at.haunt} by milestone` +
+          ` ${CHAPTER != null ? lessonAt(at.x, CHAPTER).n : "?"}: ${r.says}`,
+      );
+      return;
+    }
+    // ── MID-ROUTINE ─────────────────────────────────────────────────
+    k.t += dt;
+    const at = beatAt(k.routine, k.t);
+    if (at.index !== k.beat) {
+      const next = k.act.get(at.clip);
+      const prev = k.beat >= 0 ? k.act.get(k.routine.beats[k.beat]!) : null;
+      if (next != null) {
+        next.reset();
+        next.time = 0;
+        next.enabled = true;
+        next.setEffectiveWeight(1);
+        next.play();
+        // Crossfaded rather than cut. The poses join up by construction —
+        // `routineIsSound` is what guarantees that — so the fade only has
+        // to hide the seam between two clips of the same pose, which is
+        // what a short one is for.
+        if (prev != null && prev !== next) {
+          prev.crossFadeTo(next, 0.22, false);
+        }
+        k.wrap.position.y =
+          terrainY(k.wrap.position.x, k.wrap.position.z) -
+          (k.lift.get(at.clip) ?? 0);
+      }
+      k.beat = at.index;
+    }
+    // ── WHILE THE DUST IS ON HIM ────────────────────────────────────
+    //
+    // `gone` is a held pose with the VFX over it, and the model is hidden
+    // rather than left lying in the lane. It is also the one moment he can
+    // be MOVED: he goes into the ground at one haunt and comes out of it
+    // at another, which is the only travel he does that a child sees the
+    // ends of and not the middle.
+    const gone = kuttiIsGone(k.routine, k.t);
+    if (gone && !k.hidden) {
+      k.hidden = true;
+      k.wrap.visible = false;
+    } else if (!gone && k.hidden) {
+      k.hidden = false;
+      k.wrap.visible = true;
+    }
+    if (at.done && k.t >= routineSeconds(k.routine)) {
+      k.routine = null;
+      k.beat = -1;
+      k.wrap.visible = false;
+      k.hidden = true;
+      // Long gaps. A corridor that produces a figure every twenty seconds
+      // is a spawner; one that produces him twice in a lesson is a place
+      // where something happens.
+      k.wait = 45 + Math.random() * 75;
+    }
+  };
   /**
    * Pose lifts, worked out ONCE PER MODEL rather than once per animal.
    *
@@ -13356,13 +13607,22 @@ export function createKidsWorld(
         // a clip are never bobbing in unison.
         a.time = Math.random() * (clip.duration || 1);
       }
-      // The gait that only comes out after dark, if this person has one.
-      // Carried on the wrap rather than added to the rig type: exactly two
-      // characters in the world have such a thing, and the rig is shared by
-      // every companion in three worlds.
-      wrap.userData.nightWalkClip = clips.find((c) =>
-        /^Walk_Night$/i.test(c.name),
-      );
+      // The gait that only comes out after dark, if this person is owed one.
+      //
+      // Carried on the wrap rather than added to the rig type: the rig is
+      // shared by every companion in three worlds and this belongs to one
+      // person in one of them.
+      //
+      // NAMED, NOT MATCHED. This took the clip from anybody whose file had a
+      // `Walk_Night` in it, which is how the tea seller came to stagger
+      // home: his is an `Unsteady_Walk`, and a man weaving down the road
+      // after shutting his stall reads one way to an adult and has no
+      // business on a screen built for six-year-olds. The clip stays in his
+      // file and is simply never asked for. The headman keeps his, because a
+      // stiff walk back from the temple is just an old man's evening.
+      wrap.userData.nightWalkClip = NIGHT_WALKERS.has(model)
+        ? clips.find((c) => /^Walk_Night$/i.test(c.name))
+        : undefined;
       friends.push({
         wrap,
         mixer,
@@ -13594,6 +13854,92 @@ export function createKidsWorld(
       // Wild: no catchlight in daylight — see applyEyeGlow.
       applyEyeGlow(wrap, nightNow, true);
     };
+
+    const spawnKutti = async (
+      spots: readonly { x: number; z: number; haunt: string }[],
+    ) => {
+      let gltf;
+      try {
+        gltf = await loadModel(modelUrl(theme.modelDir, "Kuttichathan"));
+      } catch {
+        return; // he is the one thing on this road that may simply not turn up
+      }
+      if (gltf == null) {
+        return;
+      }
+      // Same enlarged sphere as the animals, and for the same reason: his
+      // clips leave the bind pose a long way behind. The jump-down starts
+      // him 0.62 above his own feet and the collapse folds him to a third of
+      // his height — a sphere computed from a standing figure culls both.
+      gltf.scene.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) {
+          m.geometry.computeBoundingSphere();
+          const sphere = m.geometry.boundingSphere?.clone();
+          if (sphere != null) {
+            sphere.radius *= 2.2;
+            if ((m as THREE.SkinnedMesh).isSkinnedMesh) {
+              (m as THREE.SkinnedMesh).boundingSphere = sphere;
+            } else {
+              m.geometry.boundingSphere = sphere;
+            }
+          }
+        }
+      });
+      // A CHILD'S HEIGHT, AND SMALLER THAN THE ONE PLAYING. He is a child
+      // spirit and the model is authored at 0.883 of its own units; fitted
+      // here against the village folk so he stands a head under a farmer.
+      const wrap = fitToHeight(
+        gltf.scene,
+        3.4 * FOOT * perspective(spots[0]!.z),
+      );
+      wrap.rotation.order = "YXZ";
+      scene.add(wrap);
+      characterRoots.add(wrap);
+      const mixer = new THREE.AnimationMixer(gltf.scene);
+      const act = new Map<string, THREE.AnimationAction>();
+      for (const clip of clipsFor(gltf)) {
+        const a = mixer.clipAction(clip);
+        const fact = KUTTI_CLIPS.get(clip.name);
+        a.clampWhenFinished = true;
+        a.loop = fact?.loop === false ? THREE.LoopOnce : THREE.LoopRepeat;
+        act.set(clip.name, a);
+      }
+      // Planted on the poses he actually rests in. A root offset taken from
+      // the jump-down — which begins in the air by design — would bury him
+      // for the whole of every other clip.
+      const rest = [
+        "kutti_01_mischievous_idle",
+        "kutti_07_squat_idle",
+        "kutti_22_perched_crouch",
+      ]
+        .map((n) => act.get(n) ?? null)
+        .filter((a) => a != null);
+      const probe = plantFeet(gltf.scene, mixer, rest);
+      const lift = new Map<string, number>();
+      for (const [name, a] of act) {
+        lift.set(name, probe(a));
+      }
+      kutti = {
+        wrap,
+        mixer,
+        act,
+        lift,
+        spots,
+        routine: null,
+        t: 0,
+        beat: -1,
+        // He is not there the moment the corridor is. A first sighting that
+        // happens as the lesson loads is a scheduled event; one that happens
+        // most of a minute in is a thing that happened.
+        wait: 18 + Math.random() * 40,
+        spot: 0,
+        hidden: true,
+      };
+      wrap.visible = false;
+      applyEyeGlow(wrap, nightNow, true);
+    };
+
     /**
      * FETCH THE WHOLE WORLD AT ONCE, INSTEAD OF ONE FILE AT A TIME.
      *
@@ -14018,7 +14364,7 @@ export function createKidsWorld(
     // limiting it to one.
     //
     // A name containing "/" is a full path under models/, not a file in this
-    // theme's scenery folder. Village Road needs it: its scenery is the
+    // theme's scenery folder. Time Keepers needs it: its scenery is the
     // nature set but its buildings live in the licensed pack folder, and a
     // theme has only one sceneryDir.
     // NO RANDOM SCATTER IN A CHAPTER. AT ALL.
@@ -15223,7 +15569,7 @@ export function createKidsWorld(
       // althara and its banyan, the three houses and their swept yards, the
       // compound wall — is the village centre, and the village centre is
       // Lesson 5 of Chapter 1. It was placed whenever `theme.village` was
-      // set, which is every Village Road build, so Chapter 2's road got a
+      // set, which is every Time Keepers build, so Chapter 2's road got a
       // second temple and a second banyan dropped into its Farm Clearing:
       // a child at Lesson 16 stood looking at the village they had left
       // ten lessons ago. The reference for Chapter 2 is explicit that the
@@ -17185,6 +17531,50 @@ export function createKidsWorld(
       // ONLY BETWEEN TEN AND FOUR. The corridor has an active window and
       // this is it — a trace at eight in the evening is just a stone lying
       // about, because the village is still awake and can see it.
+      // ── AND THE ONE WHO MOVED THEM ───────────────────────────────────
+      //
+      // The note above says the figure is held back until its animation is
+      // ready. It is: twenty-six clips, and the two that matter most here —
+      // he goes INTO the ground and comes back OUT of it, which is why the
+      // vanish was authored as a collapse into the earth and not a fade.
+      //
+      // Gated on the IDENTICAL condition as the traces, deliberately. A
+      // child who finds a stone out of its line and a child who catches a
+      // glimpse of him are then in the same stretch of road at the same
+      // hour, and the traces read as his rather than as weather.
+      //
+      // He is told where he may stand, and it is the same list the traces
+      // were placed against: the wall, the well, the tree, the lamp and the
+      // great house, filtered to the corridor's own lessons. `thinAnchors`
+      // is what stops the estate boundary — twelve separate wall panels —
+      // from becoming twelve places to climb.
+      if (CHAPTER != null && trueNight && activityAt(worldHour()) === "deep") {
+        // THE CORRIDOR IS WHICHEVER LESSONS WROTE A TRACE, and `LESSONS` is
+        // already the active chapter's table — so a chapter that writes none
+        // has no corridor and gets no figure. That is not a special case: it
+        // is the same rule the traces themselves follow, and it is why he is
+        // a Chapter 1 story rather than something that turns up on every road.
+        const corridorLessons = new Set(
+          LESSONS.filter((x) => x.trace != null).map((x) => x.n),
+        );
+        const spots = thinAnchors(
+          anchorsFrom(placements(CHAPTER, perspective)).filter((a) =>
+            corridorLessons.has(lessonAt(a.x, CHAPTER).n),
+          ),
+        ).map((a) => ({ x: a.x, z: a.z, haunt: a.haunt as string }));
+        if (spots.length > 0) {
+          // Queued, not awaited. He is the last thing that should hold up a
+          // first frame, and a child who never reaches Lesson 4 never needs
+          // the file at all.
+          later(() => {
+            void spawnKutti(spots);
+          });
+        }
+        console.info(
+          `[kuttichathan] ${spots.length} haunt${spots.length === 1 ? "" : "s"} in the corridor`,
+        );
+      }
+
       if (CHAPTER != null && trueNight && activityAt(worldHour()) === "deep") {
         const LITTER = [
           "village-stone/River_Stone",
@@ -19638,7 +20028,7 @@ export function createKidsWorld(
       // STAND ON THE ROAD, NOT ON THE FIELD BESIDE IT.
       //
       // `groundY` is the trail's height and takes no z at all — it is the
-      // height of the FIELD. Village Road then sinks its road up to 0.22
+      // height of the FIELD. Time Keepers then sinks its road up to 0.22
       // below that (ROAD_SINK; a cart road worn down by use, which is a thing
       // this world deliberately has), so a character placed at groundY stands
       // that far above the surface they are walking on. On the puppy, all of
@@ -21500,6 +21890,9 @@ export function createKidsWorld(
     }
     const heroRunning = heroSpeed > 1.4;
 
+    // ── and whatever is in the trees ─────────────────────────────────────
+    tickKutti(dt);
+
     // ── the wild ones ────────────────────────────────────────────────────
     if (wildReview) {
       wildBeat += dt;
@@ -22868,11 +23261,21 @@ export function createKidsWorld(
         // last frame, and without a reset the second celebration would play
         // nothing at all.
         player.joy.reset();
+        // A single happy jump is too small a thing to mean "you won", and the
+        // same number every time reads as a canned response. Two to five, drawn
+        // fresh, and the clip starts and ends on the same standing pose so the
+        // repeats join without a seam.
+        // Asked of the clip that was actually bound, because the choice above
+        // happens where the model is built and this runs on the world.
+        const reps = /^jump_happy/i.test(player.joy.getClip().name)
+          ? 2 + Math.floor(Math.random() * 4)
+          : 1;
+        player.joy.setLoop(reps > 1 ? THREE.LoopRepeat : THREE.LoopOnce, reps);
         player.joy.play();
         // Run the countdown at the clip's own length (assuming 60fps, which is
         // what the rest of these hand-tuned rates assume) so it neither cuts
         // the animation off nor holds a finished pose.
-        const frames = player.joy.getClip().duration * 60;
+        const frames = player.joy.getClip().duration * 60 * reps;
         if (frames > 1) celebRate = 1 / frames;
       }
       if (player) {
@@ -22897,6 +23300,16 @@ export function createKidsWorld(
       // celebration lasts `1 / celebRate` frames — expressed here at the
       // same 60fps the rest of these hand-tuned rates assume.
       return (1 / celebRate / 60) * 1000;
+    },
+    endCelebration() {
+      if (celebT <= 0) return;
+      celebT = 0;
+      celebHops = 0;
+      // Let the clip finish the jump it is in the air for rather than dropping
+      // it on the frame the key landed — the weight is faded out by the tick
+      // above, and stopping a LoopRepeat at its loop point is what stops the
+      // NEXT repeat from starting.
+      if (player?.joy) player.joy.setLoop(THREE.LoopOnce, 1);
     },
     roar() {
       roarT = 1;
@@ -23156,12 +23569,17 @@ export function createLoaderScene(
       gltf.scene.rotation.y = facing;
       scene.add(gltf.scene);
       const playRun = (clips: readonly THREE.AnimationClip[]) => {
-        // A walk, where the character has one. Nobody is racing on a loading
-        // screen, and a sprint cycle under a progress bar reads as urgency
-        // the screen does not mean.
+        // A RUN, with the walk as the fallback for anybody who has no run.
+        //
+        // This was the other way round, on the argument that nobody is
+        // racing on a loading screen and a sprint under a progress bar reads
+        // as urgency the screen does not mean. Wrong about the screen: it is
+        // the one place in the game where somebody IS covering ground to get
+        // somewhere, the light under his feet is travelling, and a walk
+        // beside it reads as dawdling rather than as calm.
         const clip =
-          clips.find((c) => /\bwalk\b/i.test(c.name)) ??
-          clips.find((c) => /run/i.test(c.name));
+          clips.find((c) => /run/i.test(c.name)) ??
+          clips.find((c) => /\bwalk\b/i.test(c.name));
         if (clip != null) {
           mixer = new THREE.AnimationMixer(gltf.scene);
           // Same export noise the world strips: without this the character
@@ -23227,6 +23645,594 @@ export function createLoaderScene(
       // Measured with WeakRefs across an unmount: the scene and every model
       // collected, the renderer and canvas never did, ~6 MB per visit.
       // Losing the context is what lets the browser release the pair.
+      renderer.forceContextLoss();
+    },
+  };
+}
+
+/**
+ * THE TURNTABLE ON THE PICKER, which is the loader's scene asked a different
+ * question.
+ *
+ * The loading screen shows somebody covering ground; this shows somebody
+ * standing still to be looked at. So: an idle clip rather than a run, the
+ * character turning on its own rather than pinned side-on, and a `setPlayer`
+ * that swaps who is standing there without tearing the scene down.
+ *
+ * ONE MODEL IS LIVE AT A TIME, ON PURPOSE. The cast is 4.8 MB of skinned,
+ * animated GLB between them; everybody who is not being looked at is a 6 KB
+ * face rendered offline (see `scripts/glb-face.mjs`). That is the whole
+ * reason this screen can appear while the road behind it is still arriving
+ * rather than after it.
+ *
+ * `onReady` fires the first time somebody is actually standing on the
+ * turntable — which is what the page waits for before it shows this at all.
+ * A picker that opens onto an empty plinth is a second loading screen.
+ */
+export function createPickerScene(
+  canvas: HTMLCanvasElement,
+  theme: WorldTheme,
+  first: string,
+  onReady?: () => void,
+  /**
+   * The rest of the cast, warmed behind the first one.
+   *
+   * Each name is reported as it lands, so the loading card can show the
+   * three of them filling in rather than a bar — and because the card waits
+   * for all three, the road behind it gets those seconds to stream.
+   *
+   * Warmed, not just fetched: the parsed result is kept, so tapping a face
+   * on the picker swaps instantly instead of paying a megabyte per tap.
+   */
+  rest: readonly string[] = [],
+  onWarm?: (name: string) => void,
+): {
+  setPlayer(name: string): void;
+  setRunning(on: boolean): void;
+  dispose(): void;
+} {
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: true,
+  });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(canvas.width, canvas.height, false);
+  const scene = new THREE.Scene();
+  // Brighter and flatter than the world's light. This is a portrait: the
+  // point is that every side of somebody is legible as they come round, and
+  // a key light strong enough to model them leaves half the turn in shadow.
+  scene.add(
+    new THREE.HemisphereLight(0xffffff, 0xc9c4b4, 2.1),
+    new THREE.DirectionalLight(0xffffff, 1.5),
+  );
+  const cam = new THREE.PerspectiveCamera(
+    30,
+    canvas.width / canvas.height,
+    0.1,
+    100,
+  );
+  // AIMED ABOVE THE MIDDLE OF HIM, which is what puts him low in the frame.
+  // The loader's camera is level with its character's waist because he is a
+  // figure in a landscape there; here he is a portrait standing on a plinth,
+  // and a subject centred in its own box floats in it.
+  cam.position.set(0, 2.35, 10);
+  cam.lookAt(0, 2.35, 0);
+
+  const loader = new GLTFLoader();
+  meshoptOffMainThread();
+  loader.setMeshoptDecoder(MeshoptDecoder);
+  const ktx2 = new KTX2Loader()
+    .setTranscoderPath(`${ASSETS}/basis/`)
+    .detectSupport(renderer);
+  serveTranscoderFromUrl(ktx2);
+  loader.setKTX2Loader(ktx2);
+  let disposed = false;
+  let mixer: THREE.AnimationMixer | null = null;
+  let hair: HairSim | null = null;
+  let current: THREE.Object3D | null = null;
+  let spin = 0;
+  /**
+   * STANDING TO BE LOOKED AT, OR RUNNING TO GET SOMEWHERE.
+   *
+   * The picker turns somebody slowly on the spot while a child decides. The
+   * moment they press Walk on, the road behind is still arriving — and the
+   * screen that covers that wait should say the same thing the loading card
+   * said, because it is the same wait: he is on his way. So he stops turning,
+   * squares up side-on the way the card draws him, and runs.
+   */
+  let running = false;
+  let clipsNow: readonly THREE.AnimationClip[] = [];
+  /** The showing model's own height and floor, so it can be refitted. */
+  let fit: { readonly tall: number; readonly floor: number } | null = null;
+  /**
+   * THE RIG INSIDE THE HOLDER, which is what the mixer drives.
+   *
+   * `current` is a bare group that carries the fit — the scale that makes
+   * somebody 4 units tall and the lift that puts their feet on the floor —
+   * and the character hangs inside it at its authored size.
+   *
+   * That split is not tidiness. The sitting clips animate the ROOT's
+   * position, and an object's position is expressed in its PARENT's space,
+   * so it is not touched by that object's own scale. Scaling the character
+   * directly meant a clip that drops the hips by half a unit dropped them
+   * half a WORLD unit — at the size she is drawn, a stride's worth — and
+   * Peeli sat down a foot above her own shadow. Inside a scaled holder the
+   * same track is scaled with everything else.
+   */
+  let rig: THREE.Object3D | null = null;
+  /**
+   * WHERE THE LOWEST BONE SITS WHEN THE FEET ARE ON THE FLOOR.
+   *
+   * Measured once, standing, and then held to every frame after — because
+   * the sitting clips animate the HIPS, which is anatomically right and
+   * ruins a fixed seat. `place` puts the holder where the BIND POSE's feet
+   * belong; the moment a clip folds the legs and drops the hips, the lowest
+   * part of her is somewhere else entirely and she hangs above her own
+   * shadow.
+   *
+   * A skinned mesh's bounding box is the one thing that cannot answer this —
+   * it is the geometry's, computed once, and does not follow the skeleton.
+   * The bones do. A few dozen world positions a frame, for one character on
+   * a screen that is otherwise still, is nothing.
+   */
+  let soleY: number | null = null;
+  const bonePos = new THREE.Vector3();
+  const lowestBone = (): number => {
+    if (rig == null) {
+      return 0;
+    }
+    let lo = Infinity;
+    rig.traverse((o) => {
+      if ((o as THREE.Bone).isBone) {
+        lo = Math.min(lo, o.getWorldPosition(bonePos).y);
+      }
+    });
+    return Number.isFinite(lo) ? lo : 0;
+  };
+
+  /**
+   * HOW TALL HE STANDS, AND HOW TALL HE RUNS.
+   *
+   * Two numbers because the running one has to match the loading card, and
+   * the two canvases are not the same shape: the card is 3:2 and this is
+   * 6:7. Same lens on both — 30° at ten units, so each sees 5.36 units of
+   * height — so matching on screen is arithmetic rather than taste.
+   *
+   * The card draws a 4.2-unit character on a canvas 19cqi wide and therefore
+   * 12.67cqi tall, which puts him at 4.2/5.36 = 78% of it, or 9.93cqi of the
+   * screen. This canvas is 18.5cqi wide and so 21.58cqi tall; to occupy that
+   * same 9.93cqi he has to be 9.93/21.58 = 46% of it, which is 2.47 units.
+   *
+   * Change either canvas and these have to be redone — which is the cost of
+   * "the same size as the other one" and is worth paying once here rather
+   * than looking wrong on every screen.
+   */
+  const STAND_TALL = 4.05;
+  const RUN_TALL = 2.47;
+
+  /**
+   * ── SOMEBODY WAITING TO BE CHOSEN DOES NOT STAND TO ATTENTION ────────
+   *
+   * The turntable's idle is a breathing loop, and eight seconds of it is
+   * eight seconds of a shop dummy. So every so often they do something — a
+   * wave, a bounce of excitement — and go back to waiting.
+   *
+   * ON THEIR FEET, ALWAYS. This first used the cross-legged sitting set,
+   * which all three rigs have and which is the most childlike thing any of
+   * them do. It also animates the HIPS, because that is what sitting is —
+   * and a rig whose hips are driven by the clip cannot be seated from its
+   * bind pose, so whoever sat down hung above their own shadow. It was
+   * fixable and it was not worth fixing: somebody who sits down while a
+   * child is choosing between three of them looks uninterested in being
+   * chosen.
+   *
+   * Everything here plays from a standing pose to a standing pose, so the
+   * seat below never has to argue with a clip.
+   */
+  type Mood = "idle" | "flourish";
+
+  /**
+   * WHO DOES ANYTHING BESIDES BREATHE, AND WHAT.
+   *
+   * A table rather than a pattern, because this is a casting decision and
+   * not a property of the files. All three rigs ship a wave and a cheer, and
+   * Peeli a bounce of excitement besides; matching those by name handed
+   * Peeli four gestures and the boys two, which is an inventory deciding
+   * rather than anybody choosing.
+   *
+   * So: the two younger ones wave, and Dave stands. He is the oldest of the
+   * three, and a child scanning the row gets one still face among two that
+   * catch the eye — a difference between them rather than a gap in his file.
+   *
+   * Anybody absent from this table stands, which is also what a cast whose
+   * clips are named differently gets.
+   */
+  const PICKER_GESTURE: Readonly<Record<string, RegExp>> = {
+    Peeli: /^wave$/i,
+    Explorer6: /^wave$/i,
+  };
+
+  const moodClips = () => {
+    // Not the crouch and not any sitting loop: `Idle`, or `Idle_Calm`.
+    const idle =
+      clipsNow.find(
+        (c) => /idle/i.test(c.name) && !/cross|crouch/i.test(c.name),
+      ) ?? clipsNow.find((c) => /\bwalk\b/i.test(c.name));
+    /*
+     * A WAVE, A CHEER, A BOUNCE — and nothing else in the file.
+     *
+     * These rigs ship with kicks, punches and a martial-arts stance, which
+     * is what comes with a game-ready character and is not what somebody
+     * waiting to be picked for a walk should be doing. Matched by pattern
+     * rather than listed per character because the two rigs agree on very
+     * little, but they do both call a wave a wave.
+     */
+    const want = PICKER_GESTURE[whoNow];
+    const flourish =
+      want == null ? [] : clipsNow.filter((c) => want.test(c.name));
+    return { idle, flourish };
+  };
+
+  /** Who is on the turntable, for `PICKER_GESTURE`. */
+  let whoNow = "";
+  let mood: Mood = "idle";
+  /** Seconds left before the next mood. Counted down in the tick. */
+  let moodLeft = 0;
+  let moodAction: THREE.AnimationAction | null = null;
+
+  /**
+   * Cross-faded rather than cut: a gesture that snaps in from a breathing
+   * idle reads as a glitch, and it is the same body in both.
+   */
+  const playMood = (next: Mood) => {
+    if (current == null) {
+      return;
+    }
+    const set = moodClips();
+    const clip =
+      next === "flourish"
+        ? set.flourish[Math.floor(Math.random() * set.flourish.length)]
+        : set.idle;
+    if (clip == null) {
+      // Cast to stand, and that is the whole of it — Dave, or anybody this
+      // table does not name. Stay on the idle and stop asking: a character
+      // who is meant to stand should not be re-deciding that every few
+      // seconds for the life of the screen.
+      mood = "idle";
+      moodLeft = Number.POSITIVE_INFINITY;
+      return;
+    }
+    mood = next;
+    const once = next === "flourish";
+    mixer ??= new THREE.AnimationMixer(rig ?? current);
+    const action = mixer.clipAction(stripScaleTracks(clip));
+    action.reset();
+    action.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
+    action.clampWhenFinished = once;
+    action.fadeIn(0.3).play();
+    moodAction?.crossFadeTo(action, 0.3, false);
+    moodAction = action;
+    // A gesture runs for as long as it runs; the idle between them is
+    // randomised so the two who wave do not do it in lockstep.
+    moodLeft = once ? clip.duration : 5 + Math.random() * 5;
+  };
+
+  /** Size and seat the showing model for whichever of the two it is doing. */
+  const place = () => {
+    if (current == null || fit == null) {
+      return;
+    }
+    const k = (running ? RUN_TALL : STAND_TALL) / (fit.tall || 1);
+    // The seat is measured in world units, so it is only valid for one
+    // scale — refitting between standing and running invalidates it.
+    soleY = null;
+    current.scale.setScalar(k);
+    // In the HOLDER's units, so the lift is scaled along with the character
+    // and with any root track the clip happens to carry.
+    current.position.y = -fit.floor * k;
+  };
+  /**
+   * WHICH LOAD IS STILL WANTED.
+   *
+   * A child tapping along the row starts a load per face, and they land in
+   * whatever order the network gives them — so without this the last model to
+   * ARRIVE wins rather than the last one asked for, and the turntable settles
+   * on somebody nobody chose. Bumped on every request; a load whose token is
+   * stale is dropped on arrival.
+   */
+  let token = 0;
+  let announced = false;
+
+  /**
+   * The cast, parsed and held.
+   *
+   * `SkeletonUtils.clone` is what makes one parse serve many showings — a
+   * skinned mesh cannot simply be re-added to a scene, because its skeleton
+   * and its bones are shared state and the mixer would drive two copies of
+   * one rig. Cloning per showing is how the world does it too.
+   */
+  // Typed off the loader rather than by importing GLTFLoader's own type: it
+  // is the same shape and it cannot drift from what this actually holds.
+  const warm = new Map<string, Awaited<ReturnType<GLTFLoader["loadAsync"]>>>();
+
+  /**
+   * ONE RETRY, BECAUSE A STALLED REQUEST HERE HAS NO WAY OUT.
+   *
+   * The loading card waits for this model — it is the one thing the picker
+   * cannot open without — and that card no longer has a key to press. So a
+   * request that fails on a flaky connection leaves a child looking at a
+   * screen that will never change, which is the worst thing this page can
+   * do and which it has already done twice today for other reasons.
+   *
+   * A retry rather than a timeout: aborting a slow-but-working download and
+   * starting again is exactly the wrong move on the connection that most
+   * needs the first attempt to finish. This only catches the request that
+   * actually failed.
+   */
+  const fetchModel = (name: string) =>
+    loader.loadAsync(modelUrl(theme.modelDir, name)).catch(async (e) => {
+      await new Promise((go) => setTimeout(go, 1200));
+      if (disposed) {
+        throw e;
+      }
+      return loader.loadAsync(modelUrl(theme.modelDir, name));
+    });
+
+  const show = (name: string) => {
+    const mine = ++token;
+    whoNow = name;
+    /*
+     * NOTHING WAITS ON THE MANIFEST. NOT EVEN THIS.
+     *
+     * This did, on the reasoning that the session's first request is the one
+     * that decides how long the loading card stays up, so it above all ought
+     * to go out on a URL that can be cached for a year. Measured: fourteen
+     * seconds between asking for the character and the manifest arriving to
+     * say where it lives — fourteen seconds of a child watching a card, to
+     * save a download on a visit that may never happen.
+     *
+     * A plain URL is not a failure. It is the behaviour this game had last
+     * week: correct, and cached for a day instead of a year. The manifest is
+     * an optimisation, and an optimisation that can delay the first frame is
+     * not one.
+     */
+    const held = warm.get(name);
+    const arriving = held != null ? Promise.resolve(held) : fetchModel(name);
+    arriving
+      .then((gltf) => {
+        if (disposed || mine !== token) {
+          return;
+        }
+        if (current != null) {
+          scene.remove(current);
+          disposeScene(current);
+        }
+        rig = null;
+        soleY = null;
+        mixer = null;
+        hair = null;
+        warm.set(name, gltf);
+        // A CLONE EVERY TIME, even the first. The held gltf is shown again
+        // whenever a child taps back to a face they have already looked at,
+        // and re-adding the same skinned mesh would hand two mixers one
+        // skeleton.
+        const shown = skinnedClone(gltf.scene) as THREE.Object3D;
+        shown.animations = gltf.animations;
+        shown.updateMatrixWorld(true);
+        const box = new THREE.Box3();
+        const tmp = new THREE.Box3();
+        shown.traverse((o) => {
+          const m = o as THREE.SkinnedMesh;
+          if (m.isSkinnedMesh) {
+            m.computeBoundingBox();
+            tmp.copy(m.boundingBox!).applyMatrix4(m.matrixWorld);
+            box.union(tmp);
+          }
+        });
+        const size = box.getSize(new THREE.Vector3());
+        fit = { tall: size.y, floor: box.min.y };
+        // Facing the camera when they arrive, wherever the turn had got to.
+        // Somebody appearing mid-spin with their back turned reads as the
+        // wrong model having loaded.
+        spin = 0;
+        shown.rotation.y = 0;
+        const holder = new THREE.Group();
+        holder.add(shown);
+        scene.add(holder);
+        current = holder;
+        rig = shown;
+        place();
+        const idle = (clips: readonly THREE.AnimationClip[]) => {
+          clipsNow = clips;
+          apply();
+        };
+        const own: readonly THREE.AnimationClip[] = gltf.animations ?? [];
+        if (own.some((c) => /idle/i.test(c.name)) || !theme.animationUrls) {
+          idle(own);
+        } else {
+          loader
+            .loadAsync(
+              `${ASSETS}/models/${theme.modelDir}/${theme.animationUrls[0]}`,
+            )
+            .then((g) => {
+              if (!disposed && mine === token) {
+                idle(g.animations ?? []);
+              }
+            })
+            .catch(() => {});
+        }
+        if (!announced) {
+          announced = true;
+          onReady?.();
+          // THE FIRST ONE IS REPORTED THE SAME WAY AS THE OTHER TWO.
+          //
+          // It is the one a child chose last time — or the default on a
+          // first run — and it is deliberately fetched before them, so it
+          // must be the first thing named on the loading card as well. It
+          // was not: `onReady` went to the page and the warm loop only ever
+          // covered `rest`, so the row announced the two nobody had picked
+          // and silently skipped the one standing on the turntable.
+          //
+          // Inside this branch rather than beside it, so a later tap along
+          // the row — which comes back through here — does not re-announce
+          // anybody to a card that has long since gone.
+          onWarm?.(name);
+        }
+      })
+      .catch(() => {
+        // A face that will not load must not hold the screen shut. The page
+        // waits on `onReady` to open the picker at all, so a failed FIRST
+        // load has to report ready anyway and show an empty plinth — which
+        // is recoverable, where a loading screen with no exit is not.
+        if (!disposed && mine === token && !announced) {
+          announced = true;
+          onReady?.();
+        }
+      });
+  };
+  show(first);
+
+  /**
+   * AND THE REST OF THE CAST, ONE AT A TIME, BEHIND THE FIRST.
+   *
+   * Sequential on purpose. Three characters at once is three megabytes of
+   * parsing racing the world's own build on the machines this page is for,
+   * and the point of warming them is to make the picker feel instant — not
+   * to win a stopwatch. One after another also means the loading card's row
+   * fills in left to right, which is the thing a child can actually watch.
+   */
+  void (async () => {
+    for (const name of rest) {
+      if (disposed) {
+        return;
+      }
+      try {
+        if (!warm.has(name)) {
+          warm.set(name, await fetchModel(name));
+        }
+      } catch {
+        // A face that will not warm is still a face you can tap — `show`
+        // will try it again then. Reported either way, because the card is
+        // waiting on this count and a silent failure would hold it forever.
+      }
+      if (!disposed) {
+        onWarm?.(name);
+      }
+    }
+  })();
+
+  /**
+   * Put the right clip on whoever is standing there, for whichever of the two
+   * things this screen is currently doing. Called when a model lands and
+   * again whenever `setRunning` changes its mind, so the two cannot disagree.
+   */
+  const apply = () => {
+    if (current == null || clipsNow.length === 0) {
+      return;
+    }
+    const clip = running
+      ? (clipsNow.find((c) => /run/i.test(c.name)) ??
+        clipsNow.find((c) => /\bwalk\b/i.test(c.name)))
+      : (clipsNow.find((c) => /idle/i.test(c.name)) ??
+        clipsNow.find((c) => /\bwalk\b/i.test(c.name)));
+    if (clip == null) {
+      return;
+    }
+    place();
+    mixer?.stopAllAction();
+    mixer = new THREE.AnimationMixer(rig ?? current);
+    moodAction = null;
+    hair = makeHairSim(rig ?? current);
+    if (!running) {
+      // Standing still is a whole little routine — see `playMood`.
+      playMood("idle");
+      return;
+    }
+    mixer.clipAction(stripScaleTracks(clip)).play();
+    if (running) {
+      // A quarter turn to +X, which is the way the road runs and the way the
+      // loading card has always drawn him. Snapped rather than eased: he has
+      // set off, and a character pirouetting into a run reads as a mistake.
+      spin = Math.PI / 2;
+      current.rotation.y = spin;
+    }
+  };
+
+  /**
+   * A QUARTER TURN EVERY THREE SECONDS, which is slower than it sounds.
+   *
+   * Fast enough that a child watching sees the back of somebody's head
+   * without waiting for it, slow enough that it is never the thing moving on
+   * the screen — the faces below are what is being chosen, and a character
+   * whipping round pulls the eye off them. Held still for anybody who has
+   * asked for less movement, which leaves a portrait rather than nothing.
+   */
+  const RATE = Math.PI / 6;
+  const clock = new THREE.Clock();
+  function tick() {
+    if (disposed) {
+      return;
+    }
+    const dt = Math.min(0.1, clock.getDelta());
+    mixer?.update(dt);
+    // A running gait moves hair the way the loading card's does; standing
+    // still barely moves it at all.
+    stepHair(hair, dt, running ? 2.1 : 0.5);
+    // KEEP HER ON THE FLOOR, whatever the clip is doing to her hips.
+    //
+    // Calibrated on the first standing frame and held to from then on. Eased
+    // rather than snapped: the transitions move the hips quickly and a seat
+    // that corrects instantly turns the last few frames of sitting down into
+    // a hop.
+    if (current != null && rig != null && !running) {
+      current.updateMatrixWorld(true);
+      const lo = lowestBone();
+      soleY ??= lo;
+      current.position.y += (soleY - lo) * Math.min(1, dt * 12);
+    }
+    // The sitting routine, and only while standing: somebody on their way
+    // does not stop to sit down.
+    if (current != null && !running && clipsNow.length > 0) {
+      moodLeft -= dt;
+      if (moodLeft <= 0) {
+        playMood(mood === "idle" ? "flourish" : "idle");
+      }
+    }
+    // Held square once he is running: he is going somewhere now, not being
+    // inspected.
+    if (current != null && !running && !motionStilled()) {
+      spin += dt * RATE;
+      current.rotation.y = spin;
+    }
+    renderer.render(scene, cam);
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  return {
+    setPlayer(name: string) {
+      if (!disposed) {
+        show(name);
+      }
+    },
+    setRunning(on: boolean) {
+      if (disposed || running === on) {
+        return;
+      }
+      running = on;
+      apply();
+    },
+    dispose() {
+      disposed = true;
+      // NOT `THREE.Cache.clear()`, unlike the loader's scene. This one is
+      // torn down at the moment the world starts streaming the rest of its
+      // road, and every character file this held is one the world is about
+      // to want. The loader clears it because it is the last thing standing
+      // when a world is abandoned; this is not.
+      disposeScene(scene);
+      ktx2.dispose();
+      renderer.dispose();
       renderer.forceContextLoss();
     },
   };

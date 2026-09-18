@@ -263,7 +263,7 @@ export function clearAllProfileStorage(): void {
  * survive, because none of them is a record of what they did.
  *
  * EXCEPT THAT A FEW COUNTERS LIVE IN THE PREFERENCES BLOB, and they are
- * progress however they are stored. The milestones passed on Village Road is
+ * progress however they are stored. The milestones passed on Time Keepers is
  * the plainest case: the number is carved into a stone standing at the
  * child's shoulder, and a reset that leaves it reading 47 has not reset
  * anything the child can see. Same for the count towards the next village.
@@ -317,7 +317,7 @@ export function clearProfileProgress(profileId: string | null): void {
         }
       }
       // Rewritten only if something was actually there, so a reset on a
-      // profile that never played Village Road leaves the file untouched.
+      // profile that never played Time Keepers leaves the file untouched.
       if (touched) {
         localStorage.setItem(key, JSON.stringify(prefs));
       }

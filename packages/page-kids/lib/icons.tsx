@@ -76,7 +76,7 @@ export function PawIcon({ size = 34, color = "#fff" }: IconProps) {
 export function LeafBookIcon({ size = 22, color }: IconProps) {
   return (
     // `currentColor` when no colour is named, so a caller can dim the icon
-    // from CSS along with whatever it is printed on — see the Village Road
+    // from CSS along with whatever it is printed on — see the Time Keepers
     // story scrap, which has to go dark with the notice at night.
     <svg
       viewBox="0 0 24 24"

@@ -64,7 +64,7 @@ export const HATCHLINGS: Record<WorldId, readonly Hatchling[]> = {
     { id: "Barbarian", label: "Bear", at: 16 },
     { id: "Rogue_Hooded", label: "Shadow", at: 20 },
   ],
-  // Village Road earns its companions out of the same small cast it is played
+  // Time Keepers earns its companions out of the same small cast it is played
   // with, because it has no villagers yet. Peeli is the world's default and so
   // is never locked; the rest arrive in the order a child would most like to
   // meet them, with the buffalo last - it is the only wild thing on the road,

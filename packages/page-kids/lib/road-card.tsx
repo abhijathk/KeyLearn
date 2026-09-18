@@ -5,13 +5,13 @@ import * as styles from "./kids.module.less";
 /**
  * ONE CARD, USED BY ALL OF THEM.
  *
- * Village Road's overlays were six unrelated objects — a rounded white panel
+ * Time Keepers' overlays were six unrelated objects — a rounded white panel
  * here, a badge and a ribbon there — none of which belonged to a road in 1930s
  * Kerala, and all of which a child had to read differently. This is the one
  * object they now share: the scoreboard's torn paper, an eyebrow saying which
  * kind of card it is, and the keys that dismiss it drawn as the keys they are.
  *
- * It is deliberately Village Road only. Dino Run and the Hero Trail keep their
+ * It is deliberately Time Keepers only. Dino Run and the Hero Trail keep their
  * own cards, because the three worlds are meant to share nothing but the
  * learner.
  */

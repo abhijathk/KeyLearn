@@ -1,5 +1,5 @@
 /**
- * The Village Road story, in the order it is told.
+ * The Time Keepers story, in the order it is told.
  *
  * Its own module because it is CONTENT: three hundred lines of prose has no
  * business sitting in the middle of a component, and keeping it apart means it

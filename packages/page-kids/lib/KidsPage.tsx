@@ -71,6 +71,7 @@ import {
   practiceDays,
   type Sticker,
 } from "./album.ts";
+import { startAssetStore, warmWorld } from "./asset-store.ts";
 import { kidsAudio } from "./audio.ts";
 import { SEGMENT_COUNT } from "./chapter1.ts";
 import {
@@ -128,12 +129,14 @@ import * as styles from "./kids.module.less";
 import { KidsLessonLoader } from "./kids-lesson-loader.tsx";
 import { deviceTier, type NightOverride, resolveNightStyle } from "./night.ts";
 import { paceTarget } from "./pace.ts";
+import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
 import { STORY, type StoryPart } from "./story.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
 import {
   createKidsWorld,
   createLoaderScene,
+  createPickerScene,
   DINO_THEME,
   HERO_THEME,
   type KidsWorld,
@@ -195,13 +198,13 @@ type KbMode = "off" | "simple" | "full";
 /**
  * Worlds whose cast is the children rather than creatures.
  *
- * Hero Trail and Village Road are both played as Dave, Little Drew or Peeli,
+ * Hero Trail and Time Keepers are both played as Dave, Little Drew or Peeli,
  * both offer a walking companion, both carry the pointer ring and both have a
  * real nightfall. Dino Run does none of that - you ARE the dinosaur there.
  *
  * Written as a predicate because the alternative is thirty-odd
  * `world === "hero"` tests that a third world silently falls out of: every one
- * of them would have sent Village Road down the dino branch, and every one of
+ * of them would have sent Time Keepers down the dino branch, and every one of
  * them would still have compiled.
  */
 const childCast = (w: WorldId) => w !== "dino";
@@ -210,7 +213,7 @@ type Prefs = {
   world: WorldId;
   dino: string;
   hero: string;
-  /** Who the child plays as on Village Road. */
+  /** Who the child plays as on Time Keepers. */
   village: string;
   /**
    * Flags reached since the last village, and the gap this run is waiting for.
@@ -257,7 +260,7 @@ type Prefs = {
    */
   storyRead?: number;
   /**
-   * Milestones passed on Village Road, across every session ever played.
+   * Milestones passed on Time Keepers, across every session ever played.
    *
    * A stone in the ground does not reset because the page reloaded. The
    * number cut into it is the whole reward, so it counts up forever and the
@@ -288,7 +291,7 @@ type Prefs = {
   /**
    * WHO WALKS WITH THE CHILD, KEPT SEPARATELY FOR EACH WORLD.
    *
-   * The three worlds are three games. Village Road is a place people live and
+   * The three worlds are three games. Time Keepers is a place people live and
    * offers everybody in it; Hero Trail is one hero and a dog; Dino Run has
    * nobody. One shared list could not mean the right thing in all three — a
    * child who walked the village road with Peeli and the robot arrived on the
@@ -385,7 +388,7 @@ type Prefs = {
   /**
    * WHAT THE DARK MEANS, PER WORLD.
    *
-   * Village Road's night is oil lamps and a lit temple; the Hero Trail's is
+   * Time Keepers' night is oil lamps and a lit temple; the Hero Trail's is
    * Lost Travellers and skeletons. They are not the same question, and one of
    * them does not even offer the spooky answers — so a parent who set "Extra
    * spooky" for the hero world was silently setting it for the village road
@@ -1231,7 +1234,7 @@ const CLASSIC_SAYS = {
   ],
 } as const;
 
-// Village Road's voice. Warmer and slower than the hero world's, and about
+// Time Keepers' voice. Warmer and slower than the hero world's, and about
 // walking and arriving rather than questing and winning - the road is not a
 // challenge to beat, it is a place to go through.
 /**
@@ -1355,7 +1358,7 @@ export function villagePool(
 }
 
 /**
- * Village Road's own voice.
+ * Time Keepers' own voice.
  *
  * Generated from the script document rather than typed out, so what ships is
  * exactly what was reviewed. Suffixes: `First` is said once ever, `B1`/`B2`/`B3`
@@ -1708,7 +1711,7 @@ export const VILLAGE_SAYS = {
 /**
  * WHAT A KERALA ROAD SAYS AFTER DARK.
  *
- * Village Road used to borrow the Hero Trail's night lines, because the test
+ * Time Keepers used to borrow the Hero Trail's night lines, because the test
  * that adds them is `world !== "dino"` — so half of what a child heard after
  * dark on this road was about lanterns, a party and mist, and if the night
  * style was not quiet it also pulled in the Lost Travellers, who do not exist
@@ -1752,7 +1755,7 @@ const VILLAGE_NIGHT_SAYS: Partial<Record<string, readonly string[]>> = {
  * The dry version, for the Cheeky coach setting — this world's own.
  *
  * `PLAYFUL_SAYS` is one table for all three worlds, so a child who turned this
- * on for Village Road got the dry version of somebody else's jokes. These sit
+ * on for Time Keepers got the dry version of somebody else's jokes. These sit
  * alongside the plain lines rather than replacing them, exactly as the shared
  * ones do, so anything a learner actually needs is still said straight by
  * whichever line comes up next.
@@ -1826,7 +1829,7 @@ function heroStage(age: number): string {
   return "Champion";
 }
 
-// Village Road grows as how far along the road you have walked, and how well
+// Time Keepers grows as how far along the road you have walked, and how well
 // the village knows you. Not ranks earned and not ages reached: this world has
 // no quest to rise through and the child is not a creature growing up, they
 // are somebody walking a road that people live along.
@@ -1938,7 +1941,7 @@ const HERO_CHARACTERS = [
   // KNIGHT AND SKELETON FIRST. This is the world where you are a hero out of
   // a story, and those two are what it is FOR — the two children are here
   // because a child who does not want to be either of them should not be
-  // shut out, not because they are what this trail is about. Village Road is
+  // shut out, not because they are what this trail is about. Time Keepers is
   // where they lead.
   { id: "Knight", label: "Knight" },
   { id: "Skeleton_Warrior", label: "Skeleton" },
@@ -1950,7 +1953,7 @@ const HERO_CHARACTERS = [
 ] as const;
 
 /**
- * Village Road's cast: the three children, and nobody else.
+ * Time Keepers' cast: the three children, and nobody else.
  *
  * No Knight, no Skeleton. A paddy field is not a quest, and the whole reason
  * this world exists as a third rather than a re-skin of Hero Trail is that
@@ -1982,19 +1985,63 @@ const VILLAGE_CHARACTERS = [
 /**
  * The longest name a character may be given.
  *
- * Ten. The name is printed on the loading card, in the settings pills and in
- * the coach's lines, and those are laid out for a word rather than a
+ * Twelve. The name is printed on the loading card, in the settings pills and
+ * in the coach's lines, and those are laid out for a word rather than a
  * sentence — the pills wrap and the loading row, which never wraps, simply
  * runs out of room. Enforced in the code as well as on the input, because
  * `maxLength` stops typing and does not stop a paste.
  *
- * THE SHIPPED NAMES ARE EXEMPT, and deliberately so: "Little Drew" is eleven
- * characters and has been fitting on that row since the day he was drawn.
- * The limit is on what a child may ADD, which is the thing that has no
- * bound; it is not a rule about how long a name may be, so it is applied
- * where a name is typed rather than where one is read.
+ * It was ten, which was one short of the longest name the game itself ships:
+ * "Little Drew" is eleven, so a child could be given a name they were not
+ * allowed to type. Twelve clears that with a character to spare, and the row
+ * it has to fit was measured at the same time — the braille line sets in
+ * fixed-width slots, and twelve of them still sit inside the card at every
+ * width this screen is drawn at.
+ *
+ * THE SHIPPED NAMES REMAIN EXEMPT. The limit is on what a child may ADD,
+ * which is the thing that has no bound; it is not a rule about how long a
+ * name may be, so it is applied where a name is typed rather than where one
+ * is read.
  */
-const NAME_MAX = 10;
+const NAME_MAX = 12;
+
+/**
+ * How long the loading card is held while it lifts away from the picker.
+ *
+ * Shared with the stylesheet, where the same number is the animation's own
+ * duration — see `.loadingOut`. Long enough to read as a movement rather than
+ * a flicker, short enough that a child who has already decided is not being
+ * made to watch it: measured at 400ms it still cut, and past about 700ms it
+ * starts to feel like another wait.
+ */
+const HANDOVER_MS = 560;
+
+/**
+ * HOW LONG THE CARD WILL WAIT FOR THE OTHER TWO.
+ *
+ * It waits for the one standing on the turntable, because that screen needs
+ * somebody on it. It does NOT need the other two: tapping a face that has
+ * not warmed yet loads it then and there, which `show` already handles.
+ *
+ * Waiting for all three was right on a desk and wrong on a phone. The cast
+ * is 2,815 KB — about three seconds on wifi, fifteen on slow 4G, and the
+ * best part of a minute on poor 3G. That is a minute of a child watching a
+ * card that has nothing left to tell them, spent on a download that may
+ * never be wanted.
+ *
+ * So the other two get this long and no longer, and go on arriving behind
+ * the picker either way.
+ */
+const CAST_PATIENCE_MS = 4000;
+
+/**
+ * The picker lives in its own file and needs both of these — the shipped name
+ * for its "put it back", and the limit for its counter. Handed over once
+ * rather than threaded through props, because they are constants of the build
+ * that happen to live here, and a picker handed the whole cast twice is a
+ * picker two callers can disagree about.
+ */
+configurePicker((id) => shippedLabel(id), NAME_MAX);
 
 const shippedLabel = (id: string): string =>
   [
@@ -2056,7 +2103,11 @@ const nightStyleOf = (
 const DEFAULT_CHAR: Readonly<Record<WorldId, string>> = {
   dino: "TRex",
   hero: "Knight",
-  village: "Peeli",
+  // DAVE, NOT PEELI. He is the oldest of the three and the one the cast row
+  // opens with, so the picker's first frame and the row under it agree about
+  // who is lit. Only ever seen by a profile that has never chosen — the
+  // moment anybody picks, their own choice is what loads.
+  village: "Explorer",
 };
 
 /**
@@ -2293,7 +2344,20 @@ function LoadStep({
   /** The world itself has finished; the only thing left is this ticker. */
   settling: boolean;
   /** Called once, when the last name has been shown and read. */
-  onDone: () => void;
+  /**
+   * Told once, when the queue has drained and the world has settled.
+   *
+   * Optional, and currently nobody listens. It reported "the row has said
+   * everything it has to say", which gated the handover to the road back
+   * when this row and that handover lived on the same screen. The loading
+   * card now leaves as soon as the picker has somebody to stand on its
+   * turntable and takes this row with it, so the report cannot arrive at
+   * all — see the note on `worldReady` at the gate. Kept because it is the
+   * honest shape of the component and costs nothing; wired to nothing
+   * because wiring it to something that can never hear it is how the
+   * picker ended up with no way out.
+   */
+  onDone?: () => void;
 }): ReactElement {
   // Everything the ticker owns lives in refs and it asks for one render when
   // something actually changed. Driving it through `useState` meant writing
@@ -2332,7 +2396,7 @@ function LoadStep({
       if (settling) {
         queueRef.current.length = 0;
         if (wordRef.current === "") {
-          onDone();
+          onDone?.();
           return;
         }
         if (cutRef.current < wordRef.current.length) {
@@ -2342,7 +2406,7 @@ function LoadStep({
         }
         heldRef.current += STEP_MS;
         if (heldRef.current >= 200) {
-          onDone();
+          onDone?.();
         }
         return;
       }
@@ -2468,7 +2532,19 @@ const CAST_ORDER: readonly string[] = COMPANIONS.map(({ id }) => id);
  * hidden while standing somewhere they do not belong.
  */
 const walksIn = (world: WorldId, id: string): boolean =>
-  world === "village" ? true : world === "hero" ? id === "Puppy" : false;
+  // THE BUFFALO WALKS WITH NOBODY, IN ANY WORLD — see `companionChoices` for
+  // why. Said here rather than only in the picker because a child who chose
+  // it while it was on offer has it saved, and a picker that stops offering
+  // something does not take it off the road: they would have arrived with a
+  // buffalo at heel and no row left that could unpick it. Both the saved
+  // value and the offered list read this one answer.
+  id === "Buffalo"
+    ? false
+    : world === "village"
+      ? true
+      : world === "hero"
+        ? id === "Puppy"
+        : false;
 
 const companionsOf = (
   p: Pick<Prefs, "companions" | "companion" | "companionsByWorld" | "world">,
@@ -2627,7 +2703,7 @@ const HERO_FINISH = [
   "The lanterns are warm and the village is closer. Wonderful typing!",
   "Steady steps the whole way — heroes rest well tonight.",
 ];
-// Village Road ends the day arriving somewhere, rather than migrating to a
+// Time Keepers ends the day arriving somewhere, rather than migrating to a
 // valley or marching home from a quest. The road goes on; the village is where
 // you stop for the night.
 const VILLAGE_FINISH = [
@@ -2929,10 +3005,40 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * a frame of characters standing in their bind pose.
    */
   const [worldReady, setWorldReady] = useState(false);
-  const [stepsDone, setStepsDone] = useState(false);
   const [loaded, setLoaded] = useState(false);
   /** The world is ready and the recap may be walked away from. */
   const [walkArmed, setWalkArmed] = useState(false);
+  /**
+   * ── THE THREE-STEP WAY IN ────────────────────────────────────────────
+   *
+   * Loading card → who walks today → the road. Which is two gates, and they
+   * wait on deliberately different things.
+   *
+   * `castReady` is the picker's turntable having somebody standing on it —
+   * about a megabyte, and the ONLY thing the loading card now waits for.
+   * That is the whole of the streaming idea: the road behind these two
+   * screens goes on building while a child reads a recap and chooses a
+   * character, so the seconds are spent on something rather than covered up.
+   *
+   * `worldArmed` is what the loading card used to wait for — the world
+   * built, the name ticker drained and the hour staged. It now gates only
+   * the last step, because that is the first moment there is actually a road
+   * to stand on.
+   */
+  const [pickOpen, setPickOpen] = useState(false);
+  const [castReady, setCastReady] = useState(false);
+  /**
+   * Which of the three the turntable has actually got, in the order they
+   * arrive. Shown on the loading card as a row of faces filling in — see
+   * `.loadCast` — and the card waits for all three.
+   *
+   * That wait is the point rather than a cost: the road behind these two
+   * screens is still streaming, and three characters' worth of download is
+   * the most honest thing there is to spend it on. A child watching faces
+   * turn up is not watching a bar.
+   */
+  const [castIn, setCastIn] = useState<readonly string[]>([]);
+  const [worldArmed, setWorldArmed] = useState(false);
   /**
    * The pieces of the world, in the order they should be READ OUT.
    *
@@ -3075,7 +3181,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    *
    * It used to be computed right here, in the initialiser, by reaching into
    * the say-table directly. That was the one line in the game that never went
-   * through the resolver, so on Village Road it skipped the familiarity band
+   * through the resolver, so on Time Keepers it skipped the familiarity band
    * and the once-ever opening entirely and read out whatever the plain key
    * happened to hold. A child's very first sentence in the game was the one
    * sentence the script did not choose.
@@ -3448,7 +3554,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     enter: (() => void) | null;
   }>({ space: null, enter: null });
 
-  /** Village Road parts company with the other two worlds all over. */
+  /** Time Keepers parts company with the other two worlds all over. */
   const onVillage = prefs.world === "village";
   /**
    * THE HOUR THE ROAD IS AT, for the corner of the notice board.
@@ -3620,7 +3726,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // Each world has its own voice: the dino arcade blips, the hero storybook
   // chimes (and its bored idle babble).
   useEffect(() => {
-    // Village Road borrows Hero Trail's softer chimes rather than Dino Run's
+    // Time Keepers borrows Hero Trail's softer chimes rather than Dino Run's
     // 8-bit blips: it is the gentler of the two moods, and a village road is
     // not an arcade. A voice of its own can come later - the palette is the
     // one thing here that is genuinely shared rather than merely defaulted.
@@ -3780,7 +3886,23 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             1,
           );
           collect(id);
-          setHatched(hatchling);
+          // THE CARD IS DINO AND HERO ONLY — see its render, which is gated
+          // on `!onVillage`. Time Keepers announces the companion through the
+          // coach line and hands it over in the settings sheet instead, out
+          // of `companionChoices`, because it is a place people live rather
+          // than an egg that hatched.
+          //
+          // Setting this on the village anyway was a keyboard that died. The
+          // flag blocks input (see `blockedRef`), the card that lowers it is
+          // the only thing that ever calls `setHatched(null)`, and on the
+          // village that card does not exist — so from the fourth key on, a
+          // child got the new-letter ceremony, pressed it through, and then
+          // found every key dead with nothing on screen to explain it and no
+          // way out but reloading. It fires at four, eight, twelve, sixteen
+          // and twenty keys, which is why it read as intermittent.
+          if (world !== "village") {
+            setHatched(hatchling);
+          }
         }
       }
       // Letter-count milestones, kept for good.
@@ -3981,7 +4103,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     const village = world === "village" && !p.classic;
     // ── WHICH VARIANT OF THIS CONTEXT ────────────────────────────────────
     //
-    // Village Road resolves in its own order: a once-ever line if this child
+    // Time Keepers resolves in its own order: a once-ever line if this child
     // has never seen the thing, then the familiarity band, then the existing
     // age variants, then the plain key. Everywhere else is untouched.
     const stones = p.roadStones ?? 0;
@@ -4019,7 +4141,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         pool = without;
       }
     }
-    // The after-dark lines. Village Road has its own; the Hero Trail's are
+    // The after-dark lines. Time Keepers has its own; the Hero Trail's are
     // about lanterns, a party and mist, and were being handed to a Kerala
     // cart road because the test for them is only "not the dino world".
     if (!p.classic && childCast(world) && p.night) {
@@ -4257,6 +4379,133 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return s;
   };
 
+  /**
+   * ── WHO WALKS TODAY ──────────────────────────────────────────────────
+   *
+   * Built while the loading card is still up, and declared HERE — above the
+   * world build — for a reason that is entirely about load order.
+   *
+   * Effects run in the order they are declared. Left below the build effect,
+   * this asked for its character after the world had already queued thirty
+   * files, so the one model standing between a child and the selection
+   * screen came back last and the card sat there long after it had anything
+   * to say. The loading card's own character has always been fetched from
+   * inside the build effect, before the world starts, which is exactly why
+   * that one appears promptly — this now shares the lane.
+   *
+   * An earlier attempt warmed `THREE.Cache` instead. That was worse than
+   * useless: the server sends `no-store`, so nothing was reusable, and a
+   * cached ArrayBuffer shared between two GLTF parses is a buffer the first
+   * meshopt worker detaches out from under the second.
+   *
+   * Its canvas has to exist before a model can be loaded into it, so the
+   * picker mounts from the first frame and sits under the card, which covers
+   * it — and the frame the child is handed when the card lifts already has
+   * somebody standing on it rather than an empty plinth.
+   */
+  /** Cancels the background world sweep — see `warmWorld`. */
+  const stopWarmRef = useRef<(() => void) | null>(null);
+  const pickerRef = useRef<HTMLCanvasElement>(null);
+  // Typed off the factory rather than restated: this listed the scene's
+  // methods by hand and promptly went out of date the first time one was
+  // added, which typechecks as "no such property" at the call site rather
+  // than anywhere near the mistake.
+  const pickerSceneRef = useRef<ReturnType<typeof createPickerScene> | null>(
+    null,
+  );
+  /** When the first of the cast was announced — see `CAST_PATIENCE_MS`. */
+  const castFirstAt = useRef<number | null>(null);
+  /** How many cast names are already at the head of the ticker's queue. */
+  const castQueued = useRef(0);
+  const onCastReady = useCallback(() => setCastReady(true), []);
+  const onCastWarm = useCallback((name: string) => {
+    castFirstAt.current ??= performance.now();
+    setCastIn((was) => (was.includes(name) ? was : [...was, name]));
+    // NAMED IN THE BRAILLE ROW, not drawn as a face.
+    //
+    // This was a row of three portraits filling in, which said the same
+    // thing twice: the row underneath was already spelling out everything
+    // the world puts down, one item at a time, and a second indicator beside
+    // it just split the attention of a child watching either.
+    //
+    // Pushed into the same queue the world's own pieces go into, so the
+    // three of them are announced exactly like everything else — and the
+    // card still waits for all three, which is what buys the road its time.
+    const label = castLabel(name, prefsRef.current.names);
+    if (!loadSeen.current.has(label)) {
+      loadSeen.current.add(label);
+      // AHEAD OF THE SCENERY, NOT BEHIND IT.
+      //
+      // One queue feeds this row and the world starts filling it the moment
+      // it begins building, so a cast name pushed to the back came out
+      // between a buffalo and a fern. Measured: of the three, two were
+      // announced and the third was still waiting when the card left — on a
+      // card whose entire remaining job was to announce those three.
+      //
+      // Spliced in after the cast names already queued rather than
+      // unshifted, which would have reversed them and put the child's own
+      // character last.
+      loadSteps.current.splice(castQueued.current, 0, label);
+      castQueued.current += 1;
+    }
+  }, []);
+  useEffect(() => {
+    /*
+     * `castReady` IS OWNED HERE AND NOWHERE ELSE.
+     *
+     * It was also cleared by the three places that tear a world down, which
+     * looked tidy and was a hang: two of those bump `landNonce`, this effect
+     * watches `regenNonce`, so crossing a chapter cleared the flag without
+     * rebuilding the scene that sets it — and that scene had already
+     * announced itself once and would never do so again. The loading card
+     * then waited on a report nobody was left to make.
+     *
+     * Third time this exact shape has bitten in a day. The rule it leaves
+     * behind: a flag may only be cleared by the thing that can set it again.
+     * Both branches below clear it on their way out; nothing else touches
+     * it.
+     */
+    if (!onVillage) {
+      // VILLAGE ROAD ONLY, FOR NOW. The other two worlds draw the loader
+      // inside a scene card with two more cards beneath it, where a
+      // full-window screen has nothing to be full-window in — and Dino Run's
+      // cast is one animal, so the question would have a single answer.
+      // Reported ready so their loading card is not left waiting on a screen
+      // that is never going to be built.
+      setCastReady(true);
+      return () => setCastReady(false);
+    }
+    if (loaded || pickerRef.current == null) {
+      return;
+    }
+    // `VILLAGE_THEME` by name rather than the world's own `theme`, which is
+    // a local of the build effect and not in scope here — and this branch is
+    // already fenced to the village two lines up, so naming the theme it
+    // must be is the honest way to say it.
+    const chosenNow = charOf(prefsRef.current);
+    const scene = createPickerScene(
+      pickerRef.current,
+      VILLAGE_THEME,
+      chosenNow,
+      onCastReady,
+      VILLAGE_CHARACTERS.map(({ id }) => id).filter((id) => id !== chosenNow),
+      onCastWarm,
+    );
+    pickerSceneRef.current = scene;
+    return () => {
+      scene.dispose();
+      pickerSceneRef.current = null;
+      setCastReady(false);
+      setCastIn([]);
+      castFirstAt.current = null;
+      castQueued.current = 0;
+    };
+    // Rebuilt when the WORLD is, not when a pref changes: swapping who is
+    // standing on the turntable is `setPlayer`, not a new scene and a new
+    // WebGL context.
+     
+  }, [loaded, onVillage, regenNonce, onCastReady, onCastWarm]);
+
   // ── the 3D world (rebuilt with a fresh land every three rounds) ────────
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -4321,7 +4570,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // keeps the whole rhythm in one place: the count lives with the saved
     // preferences, the gap is redrawn whenever a village is spent so the
     // spacing never settles into something a child could predict, and a world
-    // that is not Village Road never touches either.
+    // that is not Time Keepers never touches either.
     // `?village` forces one, the way `?buffalo` forces the showcase. Without
     // it a village is unreviewable: looking at one SPENDS it, so every reload
     // while working on the layout put the counter back to zero and showed an
@@ -4394,15 +4643,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     //
     // This effect runs again whenever the world, the night style, the band or
     // the land changes — and `loaded` was left true through all of it, so
-    // switching from Village Road to Hero Trail tore the old scene down and
+    // switching from Time Keepers to Hero Trail tore the old scene down and
     // built the new one in full view: an empty green plane, then a road, then
     // trees and people arriving one at a time over several seconds. Every
     // one of those rebuilds is the same wait the opening one is, and it is
     // shown the same way.
     setLoaded(false);
+    // The whole way in, not just the card: a rebuilt world has a new cast to
+    // stand on the turntable and a new road to wait for, and a picker
+    // left open across it would be offering yesterday's choice over
+    // tomorrow's world.
     setWalkArmed(false);
+    setPickOpen(false);
+    setWorldArmed(false);
     setWorldReady(false);
-    setStepsDone(false);
     loadSteps.current = [];
     loadSeen.current = new Set();
     {
@@ -4745,7 +4999,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     graduated ||
     restOpen ||
     tourOpen ||
-    hatched != null ||
+    // MIRRORS THE CARD'S OWN RENDER CONDITION, deliberately, rather than
+    // asking the shorter question. A blocked state whose only exit is a card
+    // must be blocked on exactly the terms that card appears on; the two
+    // being allowed to disagree is what killed the keyboard on Time Keepers.
+    (!onVillage && hatched != null) ||
     ceremony != null ||
     ceremonyPending ||
     // Keys pressed at the loading screen are not practice. They used to land
@@ -4834,6 +5092,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       if (blockedRef.current) {
         return;
       }
+      // Back to work: end the celebration rather than letting it play out over
+      // the next word. Cheap and idempotent when nothing is celebrating.
+      if (celebrateUntilRef.current > performance.now()) {
+        worldRef.current?.endCelebration();
+        celebrateUntilRef.current = 0;
+      }
       beckonedRef.current = false;
       const textInput = textInputRef.current;
       if (textInput == null || textInput.completed) {
@@ -4845,7 +5109,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       if (classicRef.current && !armedRef.current) {
         if (ev.key === "Enter") {
           ev.preventDefault();
-          setWalkArmed(true);
+          // `setArmed`, to match the `armedRef` two lines up. This is
+          // Classic's own gate; the loader's Walk on button is `walkArmed`,
+          // and the two were crossed — this handler opened the loader and
+          // the loader opened this handler, so Classic's Enter did nothing
+          // and the loading screen could not be left at all.
+          setArmed(true);
         }
         return;
       }
@@ -5057,13 +5326,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           // gets there, and none of them should lose the day for it.
           collect("first-run");
           // And it is what a village is measured in. Counted on every world,
-          // not just Village Road: a child who spends a week on Hero Trail and
+          // not just Time Keepers: a child who spends a week on Hero Trail and
           // comes back should find a village waiting rather than have to earn
           // four more flags for one.
           savePrefs({
             villageFlags: (prefsRef.current.villageFlags ?? 0) + 1,
-            // The milestone just reached. Only Village Road plants stones, so
-            // only Village Road counts them — unlike the village itself,
+            // The milestone just reached. Only Time Keepers plants stones, so
+            // only Time Keepers counts them — unlike the village itself,
             // which accrues on every world because a village rewards
             // practising rather than walking this particular road.
             ...(prefsRef.current.world === "village"
@@ -5309,7 +5578,28 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    */
   const [hourStaged, setHourStaged] = useState(false);
   useEffect(() => {
-    if (!worldReady || !stepsDone || loaded) {
+    /*
+     * `worldReady` ALONE, AND NO LONGER `stepsDone`.
+     *
+     * The second half of that condition was the name ticker having shown the
+     * last thing it had to say, which was the right question to ask while
+     * this gate belonged to the loading card: the card was not finished
+     * until its own row was.
+     *
+     * The card now leaves as soon as the picker has somebody to stand on its
+     * turntable, and it takes the ticker with it — so from that moment on
+     * `stepsDone` can never become true, because the only thing that sets it
+     * has been unmounted. Waiting on it left the picker with no way out at
+     * all: a screen whose Walk on button was pressed and which then simply
+     * sat there. Exactly the shape of the loading-card freeze earlier today,
+     * and worth writing down twice: a gate is only safe to wait on while the
+     * thing that opens it is still alive.
+     *
+     * Nothing is lost by dropping it. `LoadStep` only reports done once its
+     * queue has drained AND `settling` — which is `worldReady` — so it never
+     * said anything this does not already know.
+     */
+    if (!worldReady || loaded) {
       return;
     }
     if (!hourStaged) {
@@ -5341,7 +5631,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         // The screen they land on is finished either way — only the road
         // beyond it is still arriving — so pressing this the instant it
         // lights costs them nothing.
-        setArmed(true);
+        //
+        // `setWorldArmed`, NOT `setArmed`. There are three things in this
+        // file called armed and they are nothing to do with each other:
+        // this one says the road is ready to be stood on, `walkArmed` is
+        // the loading card's own cue, and `armed` is Classic mode's "press
+        // Enter to begin" gate. Writing to the wrong one typechecks
+        // perfectly and fails silently — which has happened here once
+        // already, and cost the loading screen its only way out.
+        setWorldArmed(true);
       }
     };
     raf = requestAnimationFrame(() => {
@@ -5352,7 +5650,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       cancelAnimationFrame(raf);
       clearTimeout(fallback);
     };
-  }, [worldReady, stepsDone, loaded, hourStaged, prefs.dayHour]);
+  }, [worldReady, loaded, hourStaged, prefs.dayHour]);
 
   /**
    * The loading screen's own little scene, released when it is no longer
@@ -5373,46 +5671,313 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     [],
   );
 
-  /** Told once, by the name ticker, when it has shown the last name. */
-  const onStepsDone = useCallback(() => setStepsDone(true), []);
+  /**
+   * THE LOADING CARD LETS GO AS SOON AS SOMEBODY IS STANDING ON THE
+   * TURNTABLE, which is a megabyte rather than a chapter.
+   *
+   * The recap is on screen from the first frame either way, so nothing is
+   * cut short by this — what it removes is the stretch where the card had
+   * nothing left to say and was simply holding the child there.
+   */
+  useEffect(() => {
+    // THE ONE ON THE TURNTABLE IS REQUIRED. THE OTHER TWO ARE NOT.
+    if (!castReady) {
+      return;
+    }
+    // THE MOMENT THE THIRD ONE LANDS, AND NOT A BEAT AFTER.
+    //
+    // This used to hold the card for a second a head once they were all in,
+    // so the braille row had time to say each name. The row still says them —
+    // they are announced as they arrive — but saying them is not worth making
+    // a child wait for: three seconds of a finished card is three seconds of
+    // a screen with nothing left to do.
+    if (castIn.length >= VILLAGE_CHARACTERS.length) {
+      setWalkArmed(true);
+      return;
+    }
+    // Not all three, so they are slow — see `CAST_PATIENCE_MS`. Go without
+    // them rather than let a bad connection hold the screen shut.
+    const since = performance.now() - (castFirstAt.current ?? 0);
+    const owed = Math.max(0, CAST_PATIENCE_MS - since);
+    if (owed === 0) {
+      setWalkArmed(true);
+      return;
+    }
+    const t = setTimeout(() => setWalkArmed(true), owed);
+    return () => clearTimeout(t);
+  }, [castReady, castIn]);
+
+  /**
+   * AND THEN IT GOES, WITHOUT BEING ASKED.
+   *
+   * This waited on a key press, which was the wrong shape twice over. The
+   * card has nothing left to do once the cast has landed — the recap has
+   * been readable since its first frame, and the picker is a screen somebody
+   * lingers on anyway, so the seconds it was holding bought nothing. And a
+   * child cannot be expected to know that a screen they have never seen is
+   * behind a space bar: from the outside, a loading card that has finished
+   * loading and stays put is a loading card that is stuck.
+   *
+   * There is still exactly one gate before the road, and it is Walk on —
+   * a button, on a screen that is plainly a question.
+   */
+  useEffect(() => {
+    if (walkArmed && !loaded) {
+      setPickOpen(true);
+    }
+  }, [walkArmed, loaded]);
+
+  /**
+   * THE HANDOVER, AND WHY THE CARD DOES NOT SIMPLY VANISH.
+   *
+   * Both screens are about the same child in the same place: he is running
+   * down a road on one and standing still on the other. Cutting between them
+   * on a single frame throws that away — it reads as two unrelated screens,
+   * one of which replaced the other.
+   *
+   * So the card is held for one beat after the picker opens and lifts away
+   * over it, which is the nearest a pair of separate canvases gets to him
+   * running up and stopping. `handing` is that beat. The picker underneath
+   * is already live, so nothing is waiting on this.
+   */
+  const [handing, setHanding] = useState(false);
+  useEffect(() => {
+    if (!pickOpen) {
+      return;
+    }
+    setHanding(true);
+    const t = setTimeout(() => setHanding(false), HANDOVER_MS);
+    return () => clearTimeout(t);
+  }, [pickOpen]);
 
   /**
    * The loading screen, built once and placed in one of two spots.
    *
-   * On Village Road it is a child of the window and covers all of it — the
+   * On Time Keepers it is a child of the window and covers all of it — the
    * road, the coach's line and the keyboard together — so the load is one
    * surface rather than a panel in the top third with an empty card beneath
    * it. The other two worlds are still three separate cards, where an overlay
    * spanning them would have nothing to span, so there it stays inside the
    * scene card exactly as before.
    */
+  // NOTHING TO PRESS ON THIS CARD ANY MORE. It hands over to the picker by
+  // itself the moment the cast has landed — see the effect above — so a key
+  // handler here could only ever fire in the frame between the two, and an
+  // instruction nobody has time to read is worse than no instruction.
+
   /**
-   * ENTER OR SPACE WALKS ON. This is a typing game — the child's hands are
-   * on the keys, not the mouse — and a loading screen that can only be left
-   * by clicking is a loading screen that asks them to move their hands twice
-   * for nothing.
+   * ── THE POSTCARD ────────────────────────────────────────────────────────
    *
-   * Only while the loader is up and only once armed, so it cannot swallow
-   * the first keystroke of the passage.
+   * What this screen says, in the order a postcard says it: a picture, then
+   * a few lines under it in somebody's handwriting, then the stamp.
+   *
+   * The old card was nine things down the centre line — chapter, lesson,
+   * three recap pairs, a ticker, a button — all the same width, all the same
+   * axis, none of them louder than the next. Centring everything is what
+   * makes a screen read as unfinished: with no left edge to run down, the
+   * eye has to re-find the start of every line, and with no size difference
+   * it has no reason to read one before another.
+   *
+   * So: the picture keeps the middle, and the words move to a band across
+   * the foot with a real left edge and a real hierarchy — a quiet line of
+   * credentials, the name of the place in display size, the chapter under
+   * it, and what is coming after. The button goes to the far end of the same
+   * band, which is where a thumb already is.
+   *
+   * WHAT IS UNDER HIS FEET IS STILL THE PROGRESS BAR. That is the one part
+   * of the old screen worth keeping, and a postcard that moved the bar down
+   * to the bottom edge would have thrown it away to gain a straight line.
    */
-  useEffect(() => {
-    if (loaded || !walkArmed) {
+  const loadHead =
+    onVillage && lessonName !== ""
+      ? lessonName
+      : landName !== ""
+        ? landName
+        : "The valley";
+  const loadSub = onVillage
+    ? // From the registry, not spelled out here: the loading screen and the
+      // chapter card name the same chapter, and a hardcoded "Chapter 1 ·
+      // The Village" is a second answer waiting to disagree with the first
+      // the day Chapter 2 opens.
+      `Chapter ${chapterNow.n} · ${chapterNow.name} · Lesson ${lessonNo}`
+    : landName !== ""
+      ? `Chapter ${chapter}`
+      : "Running on";
+  /*
+   * NO CREDENTIALS LINE, AND NOTHING ABOUT WHAT IS AHEAD.
+   *
+   * This card used to carry a recap — the milestone reached, the best speed,
+   * the next two stretches by name — because it was the screen a child sat
+   * in front of for several seconds and it was worth giving them something
+   * to read.
+   *
+   * It is not that screen any more. It leaves as soon as the cast has landed
+   * and hands over to the picker, which is where the seconds are now spent;
+   * what is left here is a few hundred milliseconds of somebody running.
+   * Four lines of statistics that cannot be finished are worse than none —
+   * they are a thing a child notices themselves failing to read.
+   *
+   * `recap` still feeds nothing else, and is left computing because the next
+   * screen that wants it will want exactly this.
+   */
+  /**
+   * ── PICKING SOMEBODY, ONCE, FOR BOTH PLACES THAT ASK ─────────────────
+   *
+   * These were written inline in the settings sheet's props. The picker asks
+   * exactly the same two questions, and a second copy of "playing as
+   * somebody sends them home as your friend" or of "a third tap drops the
+   * one who has been in the line longest" is a copy that will answer
+   * differently the first time one of them is edited.
+   *
+   * `forWorld` is the world being written FOR, which is not always the one
+   * running — the settings sheet can be showing another world's rows. The
+   * picker only ever passes the running world.
+   *
+   * `toWorld: false` SAVES THE CHOICE AND TELLS THE RUNNING WORLD NOTHING,
+   * which is what the picker wants. Pushing a change into the world from
+   * there means a model download on every tap along the row, while the world
+   * behind is still building — a child trying the three faces would queue
+   * three characters and two companions, all but one of which they are about
+   * to discard. Nothing is lost by waiting: the picker already has a moment
+   * at the end for exactly this, the one where the road is still arriving.
+   */
+  const pickCharacter = (who: string, forWorld: WorldId, toWorld = true) => {
+    // One handler for all three worlds, writing to whichever pref
+    // that world keeps its choice in. `forWorld` is the world the
+    // PANEL is showing, which is not always the one running: the
+    // change waits for the way out, so a choice made while browsing
+    // Hero Trail has to land in the Hero Trail's slot.
+    const key =
+      forWorld === "village"
+        ? "village"
+        : forWorld === "hero"
+          ? "hero"
+          : "dino";
+    // Playing as somebody sends them home as your friend — you
+    // cannot walk beside yourself. Dino Run has no companions, so
+    // this only ever bites in the two worlds that do.
+    const was = companionsOf({ ...prefs, world: forWorld });
+    const now = childCast(forWorld) ? was.filter((id) => id !== who) : was;
+    savePrefs({
+      [key]: who,
+      companionsByWorld: {
+        ...prefs.companionsByWorld,
+        [forWorld]: now,
+      },
+      companions: now,
+      companion: now[0] ?? null,
+    } as Partial<Prefs>);
+    // The running world is only told when the choice is ITS choice.
+    if (forWorld !== prefs.world) {
       return;
     }
-    const go = (e: KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        setLoaded(true);
-      }
-    };
-    window.addEventListener("keydown", go);
-    return () => window.removeEventListener("keydown", go);
-  }, [loaded, walkArmed]);
+    if (!toWorld) {
+      return;
+    }
+    worldRef.current?.setPlayer(who).catch(() => {});
+    if (now.length !== was.length) {
+      worldRef.current?.setCompanions(now).catch(() => {});
+    }
+  };
 
-  const loaderPane = loaded ? null : (
-    <div className={styles.loading}>
-      <div className={styles.loadStack}>
-        {/*
+  const pickCompanion = (
+    who: string | null,
+    forWorld: WorldId,
+    toWorld = true,
+  ) => {
+    // TAPPING SOMEBODY TOGGLES THEM, and `null` is "nobody at all".
+    //
+    // Two is the ceiling, and a third tap takes the one who has been
+    // in the line longest rather than refusing: a pill that does
+    // nothing when pressed is a pill a child presses again harder.
+    const now = companionsOf({ ...prefsRef.current, world: forWorld });
+    const next =
+      who == null
+        ? []
+        : now.includes(who)
+          ? now.filter((id) => id !== who)
+          : [...now, who].slice(-2);
+    const ordered = companionsOf({
+      companions: next,
+      companion: null,
+      world: forWorld,
+    });
+    savePrefs({
+      companionsByWorld: {
+        ...prefsRef.current.companionsByWorld,
+        [forWorld]: ordered,
+      },
+      // The pre-split fields are kept in step so a profile written
+      // here still reads correctly anywhere not yet moved over.
+      companions: ordered,
+      companion: ordered[0] ?? null,
+    });
+    // Only if this is the running world's own party — see above.
+    // Only when the caller wants it spent now — see `pickCharacter`.
+    if (toWorld && forWorld === prefsRef.current.world) {
+      worldRef.current?.setCompanions(ordered).catch(() => {});
+    }
+  };
+
+  const pickerPane =
+    loaded || !onVillage ? null : (
+      <Picker
+        open={pickOpen}
+        chapter={`Chapter ${chapterNow.n} · ${chapterNow.name}`}
+        lesson={lessonName}
+        characters={VILLAGE_CHARACTERS.map(({ id }) => ({
+          id,
+          label: castLabel(id, prefs.names),
+        }))}
+        companions={COMPANIONS.filter(
+          ({ id }) => id !== charOf(prefs) && walksIn(prefs.world, id),
+        ).map(({ id }) => ({ id, label: castLabel(id, prefs.names) }))}
+        playingAs={charOf(prefs)}
+        walkingWith={companionsOf(prefs)}
+        ready={worldArmed}
+        canvasRef={pickerRef}
+        onPickCharacter={(id) => {
+          // The turntable swaps at once — that model is already in hand. The
+          // WORLD is told nothing until Walk on; see `pickCharacter`.
+          pickerSceneRef.current?.setPlayer(id);
+          pickCharacter(id, prefs.world, false);
+        }}
+        onToggleCompanion={(id) => pickCompanion(id, prefs.world, false)}
+        onRename={(id, name) => {
+          // `null` means "put the shipped name back", which is a DELETE and
+          // not an empty string: `castLabel` falls back only when the id is
+          // absent from the map, so storing "" would rename somebody to
+          // nothing and there would be no way left to ask for their name.
+          const names = { ...(prefsRef.current.names ?? {}) };
+          if (name == null || name.trim() === "") {
+            delete names[id];
+          } else {
+            names[id] = name.trim().slice(0, NAME_MAX);
+          }
+          savePrefs({ names });
+        }}
+        onRunning={(on) => pickerSceneRef.current?.setRunning(on)}
+        onConfirm={() => {
+          // SPENT ONCE, HERE. Everything the child chose is pushed into the
+          // world in one go, at the only moment it is certain — and the
+          // picker is still on screen behind its veil while the models land,
+          // which is the wait this screen already had.
+          const p = prefsRef.current;
+          worldRef.current?.setPlayer(charOf(p)).catch(() => {});
+          worldRef.current?.setCompanions(companionsOf(p)).catch(() => {});
+          setLoaded(true);
+        }}
+      />
+    );
+
+  const loaderPane =
+    loaded || (pickOpen && !handing) ? null : (
+      <div
+        className={clsx(styles.loading, handing && styles.loadingOut)}
+        aria-hidden={handing}
+      >
+        <div className={styles.loadScene}>
+          {/*
           `setSize(canvas.width, canvas.height, false)` treats these numbers
           as the render size in CSS pixels and multiplies by the device
           ratio, so 360 across is 720 device pixels at 2x — comfortably more
@@ -5421,111 +5986,75 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           this, because the extra was GPU work paid during the load for
           resolution nothing could see.
         */}
-        <canvas
-          ref={loaderRef}
-          className={styles.loadArt}
-          width={360}
-          height={240}
-        />
-        {/* The ground he walks on IS the progress bar — see `.loadGround`. */}
-        <div className={styles.loadGround}>
-          <i />
+          <canvas
+            ref={loaderRef}
+            className={styles.loadArt}
+            width={360}
+            height={240}
+          />
+          {/* The ground he walks on IS the progress bar — see `.loadGround`. */}
+          <div className={styles.loadGround}>
+            <i />
+          </div>
         </div>
-        <div className={styles.loadLabel}>
-          <Reveal
-            text={(onVillage
-              ? // From the registry, not spelled out here: the loading screen
-                // and the chapter card name the same chapter, and a hardcoded
-                // "Chapter 1 · The Village" is a second answer waiting to
-                // disagree with the first the day Chapter 2 opens.
-                `Chapter ${chapterNow.n} · ${chapterNow.name}`
-              : landName !== ""
-                ? `Chapter ${chapter} · ${landName}`
-                : "Running to the valley"
-            ).toUpperCase()}
+        <div className={styles.loadBand}>
+          <div className={styles.loadWords}>
+            {/*
+            THE PLACE, in display size and in braille first.
+
+            One name, not a sentence: the chapter and the lesson number are
+            the line below, and a heading that carries its own coordinates is
+            a heading nobody reads twice. Mixed case rather than the
+            uppercase this line used to be set in — at this size uppercase
+            stops being a title and starts being a sign.
+          */}
+            <div className={styles.loadLabel}>
+              <Reveal text={loadHead} />
+            </div>
+            {/*
+            CHAPTER AND VERSE, quieter on purpose. Same braille, so the two
+            lines resolve as one gesture — two different treatments a line
+            apart would read as one of them being chrome.
+          */}
+            <div className={styles.loadLesson}>
+              <Reveal text={loadSub} />
+            </div>
+          </div>
+          {/*
+            A STATUS, NOT A CONTROL — and it never gets to say anything else.
+
+            This was "Press space to walk on", which was the right answer to
+            the wrong question. It existed because the card needed an exit
+            and a typing game's exit belongs on the keyboard — but the card
+            now hands over to the picker by itself the moment the cast has
+            landed, so there is nothing left to press and no moment in which
+            to read an instruction about pressing it.
+
+            A loading card that has finished loading and stays put reads as
+            stuck, whatever it says. The one gate before the road is Walk on,
+            which is a button on a screen that is plainly a question.
+          */}
+          <div className={styles.loadGo}>Walking out…</div>
+        </div>
+        {/*
+        THE STRIP ALONG THE BOTTOM, where the machine gets to talk.
+
+        Everything above is addressed to the child; this is the world saying
+        which piece of itself it is putting down. It sits below the band's
+        rule in its own tint for exactly that reason — it is the only line on
+        the screen that changes by itself, and a line that changes by itself
+        sitting inside the message would pull the eye off the message every
+        second and a half.
+      */}
+        <div className={styles.loadFoot}>
+          <LoadStep
+            queueRef={loadSteps}
+            active={!loaded}
+            settling={worldReady}
           />
         </div>
-        {/*
-          AND WHICH LESSON, in the same braille.
-          
-          The chapter names the road; this names the stretch of it the child
-          is about to be standing on, which is the thing they actually left
-          off at. It resolves in the same cells as the line above rather than
-          simply appearing — two different treatments a line apart would read
-          as one of them being chrome.
-
-          Village only, and only once there is a name: the other two worlds
-          have no authored lessons to name, and an empty row that is sometimes
-          there is worse than no row.
-        */}
-        {onVillage && lessonName !== "" && (
-          <div className={styles.loadLesson}>
-            <Reveal text={`Lesson ${lessonNo} · ${lessonName}`.toUpperCase()} />
-          </div>
-        )}
-        {/*
-          ── THE RECAP, AND IT IS ON SCREEN FROM THE FIRST FRAME ──────────
-
-          Not a card shown after the loader: the loader IS this. A recap that
-          appears once loading finishes buys its seconds AFTER the wait it
-          was meant to cover, which is no use to anybody. Shown from t=0, the
-          child reads while the road is still arriving.
-
-          Only the stretch they are standing on and the next one are waited
-          for. Everything beyond streams in behind this panel, which is why
-          the panel has to be worth looking at.
-        */}
-        <div className={styles.loadRecap}>
-          {recap.stones > 0 ? (
-            <p>
-              <span>Last time you reached</span>
-              <b>Milestone {recap.stones}</b>
-            </p>
-          ) : (
-            <p>
-              <span>Your first walk down</span>
-              <b>the village road</b>
-            </p>
-          )}
-          {recap.ahead.length > 0 && (
-            <p>
-              <span>Ahead</span>
-              <b>{recap.ahead.join(", then ")}</b>
-            </p>
-          )}
-          {recap.best > 0 && (
-            <p>
-              <span>Your best so far</span>
-              <b>{recap.best} words a minute</b>
-            </p>
-          )}
-        </div>
-        <LoadStep
-          queueRef={loadSteps}
-          active={!loaded}
-          settling={worldReady}
-          onDone={onStepsDone}
-        />
-        {/*
-          THE BUTTON ARMS, IT DOES NOT APPEAR. A control that pops into
-          existence under a thumb gets pressed by accident; one that is there
-          from the start and becomes pressable is a control somebody waits
-          for. Until then it says what it is waiting for.
-
-          Enter and space work too, because this is a typing game and the
-          child's hands are already on the keys.
-        */}
-        <button
-          type="button"
-          className={styles.loadGo}
-          disabled={!walkArmed}
-          onClick={() => setLoaded(true)}
-        >
-          {walkArmed ? "Walk on" : "Walking out…"}
-        </button>
       </div>
-    </div>
-  );
+    );
 
   /**
    * The world is frozen from the moment it is built and released here.
@@ -5538,8 +6067,46 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   useEffect(() => {
     if (loaded) {
       worldRef.current?.setHeld(false);
+      /*
+       * AND ONLY NOW, THE ASSET STORE.
+       *
+       * The child is on the road and the assets they needed are already
+       * here; a service worker installing at this moment competes with
+       * nothing. Registering it at page load would have put its script
+       * fetch and install in front of the very models it exists to make
+       * fast — worst on the slow connections that are the entire point.
+       */
+      startAssetStore();
     }
   }, [loaded]);
+
+  /**
+   * AND THEN THE REST OF THIS WORLD, QUIETLY, WHILE THEY TYPE.
+   *
+   * Only this world — Time Keepers owns 27 MB of the 42 and Dino Run 0.7, so
+   * the group is the whole point. Started a few seconds after the road
+   * appears, because the first thing a child does is look at it, and paused
+   * for every word they type.
+   *
+   * `typingRef` rather than `typing`: a predicate read inside the sweep, so
+   * the sweep does not restart every time a key goes down.
+   */
+  const typingRef = useRef(typing);
+  typingRef.current = typing;
+  useEffect(() => {
+    if (!loaded) {
+      return;
+    }
+    const world = prefs.world;
+    const t = setTimeout(() => {
+      stopWarmRef.current = warmWorld(world, () => typingRef.current);
+    }, 6000);
+    return () => {
+      clearTimeout(t);
+      stopWarmRef.current?.();
+      stopWarmRef.current = null;
+    };
+  }, [loaded, prefs.world]);
 
   /**
    * THE BUFFALO LINES, ONE AFTER ANOTHER, EACH LONG ENOUGH TO READ.
@@ -5679,9 +6246,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     }
     if (isWalkable(c) && c.n > 1) {
       setLoaded(false);
+      // The whole way in, not just the card: a rebuilt world has a new cast to
+      // stand on the turntable and a new road to wait for, and a picker
+      // left open across it would be offering yesterday's choice over
+      // tomorrow's world.
       setWalkArmed(false);
+      setPickOpen(false);
+      setWorldArmed(false);
       setWorldReady(false);
-      setStepsDone(false);
       loadSteps.current = [];
       setLandNonce((n) => n + 1);
     }
@@ -5707,9 +6279,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       setChapter((c) => c + 1);
     }
     setLoaded(false);
+    // The whole way in, not just the card: a rebuilt world has a new cast to
+    // stand on the turntable and a new road to wait for, and a picker
+    // left open across it would be offering yesterday's choice over
+    // tomorrow's world.
     setWalkArmed(false);
+    setPickOpen(false);
+    setWorldArmed(false);
     setWorldReady(false);
-    setStepsDone(false);
     loadSteps.current = [];
     setLandNonce((n) => n + 1);
   };
@@ -6157,6 +6734,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       )}
       {!classic && (
         <div className={clsx(styles.oneWindow, onVillage && styles.joined)}>
+          {/*
+            BOTH, AND IN THIS ORDER. The picker is mounted from the first
+            frame so its canvas exists and its model can start downloading;
+            the loading card is drawn over it until that model lands. They
+            are never both visible — `loaderPane` is null once the picker
+            opens, and `pickerPane` is null once the road is stood on.
+          */}
+          {onVillage && pickerPane}
           {onVillage && loaderPane}
           <div className={styles.sceneCard} ref={sceneCardRef}>
             {/* Described, not narrated.
@@ -6181,7 +6766,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               aria-label={sceneDescription}
             />
             {/*
-              THE STORY BUTTON. Village Road only, and only while nothing is
+              THE STORY BUTTON. Time Keepers only, and only while nothing is
               being typed — see `restful`. Absent rather than dimmed: a story
               invitation in the corner of a typing exercise is a thing to look
               at instead of the keyboard.
@@ -6419,7 +7004,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               key={growNonce}
               className={clsx(
                 styles.growBanner,
-                // Village Road prints it on paper — see `.growBannerRoad`.
+                // Time Keepers prints it on paper — see `.growBannerRoad`.
                 prefs.world === "village" && styles.growBannerRoad,
                 growNonce > 0 && styles.growBannerShow,
               )}
@@ -6934,7 +7519,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         five-year-old to go and find a gear icon, which is not a reward.
       */}
       {/*
-        THE CHARACTER REVEAL, and not on Village Road.
+        THE CHARACTER REVEAL, and not on Time Keepers.
         It is a hatching-egg idea from Dino Run — a badge announcing that
         somebody has joined. On this road the cast are time-travellers who
         catch you up, and the story panel is where that is told. A card
@@ -7291,79 +7876,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             setNameOpen(true);
           }}
           totalLetters={lesson.letters.length}
-          onPickCharacter={(who, forWorld) => {
-            // One handler for all three worlds, writing to whichever pref
-            // that world keeps its choice in. `forWorld` is the world the
-            // PANEL is showing, which is not always the one running: the
-            // change waits for the way out, so a choice made while browsing
-            // Hero Trail has to land in the Hero Trail's slot.
-            const key =
-              forWorld === "village"
-                ? "village"
-                : forWorld === "hero"
-                  ? "hero"
-                  : "dino";
-            // Playing as somebody sends them home as your friend — you
-            // cannot walk beside yourself. Dino Run has no companions, so
-            // this only ever bites in the two worlds that do.
-            const was = companionsOf({ ...prefs, world: forWorld });
-            const now = childCast(forWorld)
-              ? was.filter((id) => id !== who)
-              : was;
-            savePrefs({
-              [key]: who,
-              companionsByWorld: {
-                ...prefs.companionsByWorld,
-                [forWorld]: now,
-              },
-              companions: now,
-              companion: now[0] ?? null,
-            } as Partial<Prefs>);
-            // The running world is only told when the choice is ITS choice.
-            if (forWorld !== prefs.world) {
-              return;
-            }
-            worldRef.current?.setPlayer(who).catch(() => {});
-            if (now.length !== was.length) {
-              worldRef.current?.setCompanions(now).catch(() => {});
-            }
-          }}
+          onPickCharacter={pickCharacter}
           onPickWorld={(world) => {
             savePrefs({ world });
           }}
-          onPickCompanion={(who, forWorld) => {
-            // TAPPING SOMEBODY TOGGLES THEM, and `null` is "nobody at all".
-            //
-            // Two is the ceiling, and a third tap takes the one who has been
-            // in the line longest rather than refusing: a pill that does
-            // nothing when pressed is a pill a child presses again harder.
-            const now = companionsOf({ ...prefsRef.current, world: forWorld });
-            const next =
-              who == null
-                ? []
-                : now.includes(who)
-                  ? now.filter((id) => id !== who)
-                  : [...now, who].slice(-2);
-            const ordered = companionsOf({
-              companions: next,
-              companion: null,
-              world: forWorld,
-            });
-            savePrefs({
-              companionsByWorld: {
-                ...prefsRef.current.companionsByWorld,
-                [forWorld]: ordered,
-              },
-              // The pre-split fields are kept in step so a profile written
-              // here still reads correctly anywhere not yet moved over.
-              companions: ordered,
-              companion: ordered[0] ?? null,
-            });
-            // Only if this is the running world's own party — see above.
-            if (forWorld === prefsRef.current.world) {
-              worldRef.current?.setCompanions(ordered).catch(() => {});
-            }
-          }}
+          onPickCompanion={pickCompanion}
           onPickTimer={(timerMin) => {
             savePrefs({ timerMin });
             setSessionSecs(timerMin * 60);
@@ -7693,14 +8210,14 @@ function SettingsCard({
    *
    * Filtered against whoever the child is actually playing AS, which is not
    * the same thing as `prefs.hero`: that is the Hero Trail's pick and it
-   * holds a value in every world. Village Road stores its choice in
+   * holds a value in every world. Time Keepers stores its choice in
    * `prefs.village`, so filtering on `prefs.hero` struck Dave off the
    * companion list on the village road whenever he happened to be somebody's
    * hero-world character — which, since he is that world's default, was
    * almost everybody — while cheerfully offering to bring you along with
    * yourself the moment you played as him here.
    *
-   * Village Road's earned hatchlings join this list rather than the character
+   * Time Keepers' earned hatchlings join this list rather than the character
    * one. They are companions by design — see HATCHLINGS in album.ts, which
    * says so — and the buffalo at twenty keys is the clearest case: it is a
    * wild animal a child is finally allowed to WALK WITH, not one they are
@@ -7749,16 +8266,28 @@ function SettingsCard({
    * them walking the same trail turns a hero's road into a school outing —
    * the one companion that belongs beside a lone hero is a dog.
    *
-   * Village Road is the opposite case and offers everybody, because it is a
-   * place people live: the three children, the robot, the puppy, and whatever
-   * has been earned along the road — the buffalo at twenty keys included.
+   * Time Keepers is the opposite case and offers everybody, because it is a
+   * place people live: the three children, the robot and the puppy.
+   *
+   * THE BUFFALO IS NOT ON THIS LIST, AND IS THE ONLY THING THAT WAS TAKEN
+   * OFF IT. It is the one wild animal on the road — it is standing in the
+   * fields from the first day, it charges, and the whole of its presence is
+   * that it is not anybody's. A buffalo walking to heel is a different
+   * animal from the one the world already has.
+   *
+   * It stays in `HATCHLINGS.village`, so twenty letters still earns its
+   * sticker and the coach still says so; it simply is not somebody you can
+   * take with you.
+   *
+   * With it gone the hatchling term went too, because every other name in
+   * that table is already in `COMPANIONS` — which is also what makes the
+   * list unlocked: `COMPANIONS` carries no `at`, so all five are there from
+   * the first day rather than arriving at four, eight, twelve and sixteen
+   * letters.
    */
-  const companionChoices = [
-    ...COMPANIONS,
-    ...HATCHLINGS.village.filter(
-      ({ id, at }) => included >= at && !COMPANIONS.some((c) => c.id === id),
-    ),
-  ].filter(({ id }) => id !== playingAs && walksIn(worldDraft, id));
+  const companionChoices = COMPANIONS.filter(
+    ({ id }) => id !== playingAs && walksIn(worldDraft, id),
+  );
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [tab, setTab] = useState<SetTab>("practise");
   // Classic has no world to dress, no buddy to pick and no hands to show, so
@@ -7772,7 +8301,7 @@ function SettingsCard({
   const canToggleWords = band === "7-8" || band === "9-10";
   const canClassic = classicOffered(band);
   const trail = !(prefs.classic && canClassic);
-  /** The hour setting is Village Road's alone — see the row below. */
+  /** The hour setting is Time Keepers' alone — see the row below. */
   const onRoad = trail && prefs.world === "village";
   // Which sections this learner actually has. A child with no Classic offer
   // would otherwise open the panel on a heading with nothing under it.
@@ -7896,7 +8425,7 @@ function SettingsCard({
                         className={pill(worldDraft === "village")}
                         onClick={() => setWorldDraft("village")}
                       >
-                        Village Road
+                        Time Keepers
                       </button>
                       <button
                         type="button"
@@ -8024,7 +8553,7 @@ function SettingsCard({
                 {trail && (
                   <>
                     {/*
-                      The local boy. Village Road only — the other two worlds
+                      The local boy. Time Keepers only — the other two worlds
                       have nobody to guide anybody.
                     */}
                     {worldDraft === "village" && (
@@ -8163,7 +8692,7 @@ function SettingsCard({
               
               Dino is the one world whose hatchlings are characters a child
               PLAYS AS — Vela, Steggy, Tops are its whole cast past the first
-              one. Village Road's are companions, which is what album.ts says
+              one. Time Keepers' are companions, which is what album.ts says
               they are, so Puppy and Robot were being offered here as people
               to be rather than to walk with; they have moved to the friend
               row below, the buffalo with them. Hero's were already gone.
