@@ -24353,8 +24353,44 @@ export function createPickerScene(
    * "the same size as the other one" and is worth paying once here rather
    * than looking wrong on every screen.
    */
-  const STAND_TALL = 4.05;
-  const RUN_TALL = 2.47;
+  const STAND_TALL = 3.855;
+  const RUN_TALL = 2.35;
+
+  /**
+   * HOW OLD EACH OF THEM IS, which is what decides how tall they stand.
+   *
+   * They were all being fitted to one height, and that was wrong twice over.
+   * Wrong in principle, because a six-year-old and a ten-year-old are not
+   * the same size and a child can see that at a glance. And wrong in
+   * practice, because the height being fitted was the MESH's bounding box —
+   * which measures a different thing on each of these rigs. Dave's mesh is
+   * authored centred on the origin and Peeli's and Drew's stand on it, so
+   * his box came out 1.902 against their 1.69, and the scale that followed
+   * had nothing to do with how tall anybody was.
+   *
+   * Measured properly — feet to the top of the head, off the skeleton — the
+   * three came out at 3.86, 3.72 and 3.64 on screen. The ORDER was right by
+   * luck; the spread was five per cent where four years of growing should be
+   * nearer eighteen, and a six-year-old standing almost as tall as a
+   * ten-year-old, with a six-year-old's head and hat on him, reads as the
+   * biggest of the three.
+   */
+  const CAST_AGE: Readonly<Record<string, number>> = {
+    Explorer: 10, // Dave
+    Peeli: 9,
+    Explorer6: 6, // Little Drew
+  };
+  /** The age the two heights above are quoted for. */
+  const CAST_OLDEST = 10;
+  /**
+   * Median child stature, near enough: a bit under six centimetres a year
+   * through this age range. A curve rather than a table so a fourth child
+   * with a fourth age needs nothing added here.
+   */
+  const heightForAge = (age: number) => 77 + 6 * age;
+  /** How tall this one stands next to the oldest of them. */
+  const ageScale = (who: string) =>
+    heightForAge(CAST_AGE[who] ?? CAST_OLDEST) / heightForAge(CAST_OLDEST);
 
   /**
    * THE SIZE HE IS AT RIGHT NOW, WHICH IS ON ITS WAY SOMEWHERE.
@@ -24689,7 +24725,34 @@ export function createPickerScene(
           }
         });
         const size = box.getSize(new THREE.Vector3());
-        fit = { tall: size.y, floor: box.min.y };
+        // FEET TO THE TOP OF THE HEAD, off the bones, because the mesh box
+        // is not a height. It includes the hat and the hair, it includes
+        // whatever a rig keeps below its feet, and on this cast it is not
+        // even measured from the same place twice — see `CAST_AGE`. The
+        // skeleton is the one thing all three agree on.
+        //
+        // Hair and hats therefore sit ABOVE the fitted height rather than
+        // inside it, which is also how a person's height works.
+        const lowest = ["LeftFoot", "RightFoot", "LeftToeBase", "RightToeBase"]
+          .map((bone) => shown.getObjectByName(bone))
+          .reduce((low, bone) => {
+            if (bone == null) {
+              return low;
+            }
+            return Math.min(low, bone.getWorldPosition(new THREE.Vector3()).y);
+          }, Infinity);
+        const crown =
+          shown.getObjectByName("head_end") ?? shown.getObjectByName("Head");
+        const stature =
+          crown == null || lowest === Infinity
+            ? null
+            : crown.getWorldPosition(new THREE.Vector3()).y - lowest;
+        fit = {
+          // The fallback keeps an unnamed rig in the same units as the rest:
+          // across this cast the skeleton runs about 92% of the box.
+          tall: stature != null && stature > 1e-3 ? stature : size.y * 0.92,
+          floor: box.min.y,
+        };
         // Facing the camera when they arrive, wherever the turn had got to.
         // Somebody appearing mid-spin with their back turned reads as the
         // wrong model having loaded.
@@ -24876,7 +24939,7 @@ export function createPickerScene(
     // which is long enough to read as one movement and short enough that
     // nobody pressing Walk on is kept waiting to watch it.
     {
-      const target = running ? RUN_TALL : STAND_TALL;
+      const target = (running ? RUN_TALL : STAND_TALL) * ageScale(whoNow);
       if (Math.abs(tallNow - target) > 0.004) {
         tallNow += (target - tallNow) * Math.min(1, dt * 9);
         place();
