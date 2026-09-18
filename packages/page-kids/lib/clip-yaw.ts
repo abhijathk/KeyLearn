@@ -111,3 +111,52 @@ export const clipYaw = (
   bone: string,
   toRig: THREE.Quaternion,
 ) => clipYawAt(clip, bone, Infinity, toRig);
+
+/**
+ * WHEN THIS CLIP HAS TURNED THE ANIMAL `want` RADIANS — the clip time to
+ * stop at, not the fraction of the timeline the angle looks like.
+ *
+ * The difference is the whole reason this exists. A turn clip is eased: it
+ * starts slow, peaks near the middle and settles. Playing `want / total` of
+ * the TIMELINE therefore delivers well under `want` of ANGLE — about a
+ * third of it, a quarter of the way in. The animal then finished its turn
+ * still short of where it meant to be, asked for the rest, got a third of
+ * that, and asked again: a stutter of clips a few frames long, each one
+ * crossfading over longer than it played. That is the shiver, and the
+ * winding is the same thing seen from further away.
+ *
+ * Bisection rather than a table, because the answer is wanted once per turn
+ * and the curve is monotone — every sample between the ends is bracketed by
+ * the ones either side of it.
+ *
+ * Returns null when the clip does not drive the bone, and the clip's own
+ * duration when it never reaches `want`, which is the honest cap: it cannot
+ * turn further than it turns.
+ */
+export function clipTimeForYaw(
+  clip: THREE.AnimationClip,
+  bone: string,
+  want: number,
+  toRig: THREE.Quaternion,
+): number | null {
+  const total = clipYaw(clip, bone, toRig);
+  if (total == null) {
+    return null;
+  }
+  const goal = Math.min(Math.abs(want), Math.abs(total));
+  if (!(goal > 0)) {
+    return 0;
+  }
+  let lo = 0;
+  let hi = clip.duration;
+  for (let i = 0; i < 24; i++) {
+    const mid = (lo + hi) / 2;
+    const at = Math.abs(clipYawAt(clip, bone, mid, toRig) ?? 0);
+    if (at < goal) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return hi;
+}

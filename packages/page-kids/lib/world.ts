@@ -34,7 +34,7 @@ import {
   type CharacterTint,
   type ClothingColours,
 } from "./character-tint.ts";
-import { boneToRig, clipYaw, clipYawAt } from "./clip-yaw.ts";
+import { boneToRig, clipTimeForYaw, clipYaw, clipYawAt } from "./clip-yaw.ts";
 import {
   anchorsFrom,
   beatAt,
@@ -11358,12 +11358,18 @@ export function createKidsWorld(
    * Lowered from 0.2 rad. At eleven degrees, everything under that was
    * handed to the yaw slew instead, which is precisely the slide: a body
    * rotating with no step under it. Now that nothing slews, the threshold is
-   * only asking "is this worth getting up for", and three degrees is about
-   * where a herd animal stops caring. `wildTurn` plays the fraction of the
-   * ninety-degree clip the angle is worth, so a small correction is a short
-   * clip rather than a full pivot.
+   * only asking "is this worth getting up for".
+   *
+   * THEN RAISED AGAIN, to seven degrees, and the number is not taste. A turn
+   * is crossfaded in over WILD_TURN_FADE, and seven degrees is about what
+   * this clip has delivered by the time that fade is done. Anything smaller
+   * is a state that ends before it has finished arriving — the animal is
+   * still blending INTO a clip that is already being blended out of, which
+   * on a herd of them reads as legs shivering. Below this it does not turn
+   * at all, and it does not need to: a herd animal is not a turret, and
+   * seven degrees off is a buffalo, not an error.
    */
-  const WILD_TURN_MIN = 0.055;
+  const WILD_TURN_MIN = 0.12;
   /**
    * How much room a milestone and its lamp are given.
    *
@@ -11488,6 +11494,19 @@ export function createKidsWorld(
     liftNow: number;
     /** What this turn is FOR. A turn is never its own reason. */
     after: WildState | null;
+    /**
+     * IS ITS MIND MADE UP? Set once an errand's heading has been turned to,
+     * cleared when a new errand picks a new target.
+     *
+     * A walking animal used to re-take the bearing to its target on EVERY
+     * frame and turn again the moment it drifted past the dead band. It
+     * always drifts: the path is clamped by fences and stones, and the
+     * bearing to a point swings hard as you get near it. So it turned,
+     * walked a step, turned back — winding down the field instead of
+     * crossing it. It decides where it is going, turns once, and goes.
+     */
+    aimed: boolean;
+
     /**
      * HOW FAR EACH TURN CLIP ACTUALLY TURNS THIS ANIMAL, in radians, signed.
      *
@@ -11924,10 +11943,20 @@ export function createKidsWorld(
     // nothing left over to snap at the hand-off.
     w.yaw = w.wrap.rotation.y + sign * leg;
     w.after = after;
-    // A smaller turn plays the matching FRACTION of the clip. Playing the
-    // whole thing for a 15-degree correction swung the animal a full quarter
-    // turn and then unwound it across the hand-off.
-    wildEnter(w, "turn", clip, undefined, undefined, leg / arc);
+    // STOP WHERE THE CLIP HAS TURNED THIS FAR, not at the fraction of the
+    // timeline the angle resembles. The clip is eased, so those are not the
+    // same instant and treating them as one left every turn short of its
+    // own target — see `clipTimeForYaw`. One turn now delivers the whole
+    // leg, which is what lets the animal decide its heading once and then
+    // go, rather than re-deciding it in pieces on the way.
+    const act = w.act.get(clip);
+    const dur = wildDur(w, clip, 1.4);
+    const stop =
+      act == null
+        ? (leg / arc) * dur
+        : (clipTimeForYaw(act.getClip(), "Hips", leg, w.toRig) ??
+          (leg / arc) * dur);
+    wildEnter(w, "turn", clip, undefined, undefined, stop / dur);
   }
 
   /**
@@ -11981,6 +12010,13 @@ export function createKidsWorld(
     frac = 1,
   ) {
     wildPlay(w, clip, fade);
+    // A NEW ERRAND MAKES UP ITS MIND AGAIN. Anything that walks takes its
+    // bearing on the first frame of the state and then commits to it — see
+    // WildRig.aimed — so the flag has to fall here, at the one place a state
+    // ever changes, rather than at each of the places that start a walk.
+    if (state !== w.state) {
+      w.aimed = false;
+    }
     w.state = state;
     const dur = wildDur(w, clip);
     // A ONE-SHOT IS NEVER CUT SHORT.
@@ -13856,6 +13892,7 @@ export function createKidsWorld(
               clipYaw(act.get(n)!.getClip(), "Hips", hipsToRig) ?? Math.PI / 2,
             ]),
         ),
+        aimed: false,
         scareCool: Math.random() * 20,
         liftNow: 0,
         after: null,
@@ -22433,13 +22470,18 @@ export function createKidsWorld(
           // step of an errand. Anything past the dead-band now stops the walk
           // and plays the turn, then resumes the same errand — `w.tx`/`w.tz`
           // are untouched, so it picks up exactly where it left off.
-          const need = angTo(
-            w.wrap.rotation.y,
-            Math.atan2(w.tx - pos.x, w.tz - pos.z),
-          );
-          if (Math.abs(need) > WILD_TURN_MIN) {
-            wildTurn(w, need, "wander");
-            break;
+          // ONCE, AT THE START. See WildRig.aimed — re-taking the bearing
+          // every frame is what wound it down the field.
+          if (!w.aimed) {
+            const need = angTo(
+              w.wrap.rotation.y,
+              Math.atan2(w.tx - pos.x, w.tz - pos.z),
+            );
+            if (Math.abs(need) > WILD_TURN_MIN) {
+              wildTurn(w, need, "wander");
+              break;
+            }
+            w.aimed = true;
           }
           // Unfenced — a wander may cross the road, because its target is
           // never on one. The crossing is only ever a crossing. The turn rate
@@ -22717,13 +22759,16 @@ export function createKidsWorld(
           // Same rule as the wander: a real turn gets the clip. Going home
           // is the longest walk it ever takes and the one most likely to
           // need a correction halfway.
-          const needHome = angTo(
-            w.wrap.rotation.y,
-            Math.atan2(w.homeX - pos.x, w.homeZ - pos.z),
-          );
-          if (Math.abs(needHome) > WILD_TURN_MIN) {
-            wildTurn(w, needHome, "gohome");
-            break;
+          if (!w.aimed) {
+            const needHome = angTo(
+              w.wrap.rotation.y,
+              Math.atan2(w.homeX - pos.x, w.homeZ - pos.z),
+            );
+            if (Math.abs(needHome) > WILD_TURN_MIN) {
+              wildTurn(w, needHome, "gohome");
+              break;
+            }
+            w.aimed = true;
           }
           // 2.1, NOT 5.5. The clip is a Walk now rather than a Run, and a
           // walking animal driven across the ground at a run's speed is the
