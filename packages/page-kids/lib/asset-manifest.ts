@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "fb260808907c";
+export const ASSET_VERSION = "4e341dc8db77";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -73,8 +73,8 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "faces/Explorer.webp": {
-    "u": "vf03406f6/faces/Explorer.webp",
-    "b": 7574,
+    "u": "v9bb8f361/faces/Explorer.webp",
+    "b": 10152,
     "g": "village"
   },
   "faces/Explorer6.webp": {
@@ -178,13 +178,13 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "models/ak-3d-pack/Explorer.glb": {
-    "u": "vd2c79216/models/ak-3d-pack/Explorer.glb",
-    "b": 946728,
+    "u": "v43bb5afc/models/ak-3d-pack/Explorer.glb",
+    "b": 1044424,
     "g": "village"
   },
   "models/ak-3d-pack/Explorer6.glb": {
-    "u": "v11b90b2e/models/ak-3d-pack/Explorer6.glb",
-    "b": 803976,
+    "u": "v9f67543b/models/ak-3d-pack/Explorer6.glb",
+    "b": 1251632,
     "g": "village"
   },
   "models/ak-3d-pack/HouseHearth.glb": {

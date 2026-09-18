@@ -169,6 +169,49 @@ const UV = prim.attributes.TEXCOORD_0 != null
       P.data[i * 3 + c] = P.data[i * 3 + c] * sc[c] + tr[c];
 }
 const TEX = atlas(json, bufs);
+/**
+ * KHR_texture_transform, applied to the UVs before they are sampled.
+ *
+ * A re-export of Dave arrived carrying `scale: [16.0034, 16.0030]` on its
+ * base colour texture — every UV in the file is a sixteenth of where it
+ * actually reads. Sampled raw, the whole character is coloured from one
+ * corner tile of its own atlas, which came out as the hoodie's blue running
+ * through his hair and no face at all. It looked like a broken export and
+ * was a perfectly good one this script could not read.
+ *
+ * Wrapped rather than clamped, because that is what a scale above one is
+ * FOR: the tile repeats, and clamping it would pin every UV past the first
+ * tile to the atlas edge.
+ */
+const XF = (() => {
+  const t =
+    json.materials?.[0]?.pbrMetallicRoughness?.baseColorTexture?.extensions
+      ?.KHR_texture_transform;
+  if (t == null) return null;
+  const [sx, sy] = t.scale ?? [1, 1];
+  const [ox, oy] = t.offset ?? [0, 0];
+  return { sx, sy, ox, oy, rot: t.rotation ?? 0 };
+})();
+if (XF) {
+  console.log(
+    `  KHR_texture_transform: scale ${XF.sx.toFixed(4)},${XF.sy.toFixed(4)} ` +
+      `offset ${XF.ox},${XF.oy}${XF.rot ? ` rotation ${XF.rot}` : ""}`,
+  );
+}
+/** One UV through the transform, wrapped into the unit square. */
+const uvAt = (u, v) => {
+  if (XF == null) return [u, v];
+  let a = u;
+  let b = v;
+  if (XF.rot) {
+    const c = Math.cos(XF.rot);
+    const s2 = Math.sin(XF.rot);
+    [a, b] = [c * a + s2 * b, -s2 * a + c * b];
+  }
+  a = a * XF.sx + XF.ox;
+  b = b * XF.sy + XF.oy;
+  return [a - Math.floor(a), b - Math.floor(b)];
+};
 
 let mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
 for (let i = 0; i < P.count; i++) for (let c = 0; c < 3; c++) {
@@ -221,8 +264,9 @@ for (let t = 0; t < I.count; t += 3) {
     if (uvs.length === 3 && TEX) {
       const u = w0 * uvs[0][0] + w1 * uvs[1][0] + w2 * uvs[2][0];
       const vv = w0 * uvs[0][1] + w1 * uvs[1][1] + w2 * uvs[2][1];
-      const tx = Math.max(0, Math.min(TEX.w - 1, Math.floor(u * TEX.w)));
-      const ty = Math.max(0, Math.min(TEX.h - 1, Math.floor(vv * TEX.h)));
+      const [uu, uvv] = uvAt(u, vv);
+      const tx = Math.max(0, Math.min(TEX.w - 1, Math.floor(uu * TEX.w)));
+      const ty = Math.max(0, Math.min(TEX.h - 1, Math.floor(uvv * TEX.h)));
       const to = (ty * TEX.w + tx) * TEX.ch;
       r = TEX.data[to]; g = TEX.data[to + 1]; b = TEX.data[to + 2];
     }
