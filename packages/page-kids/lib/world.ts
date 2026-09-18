@@ -34,6 +34,7 @@ import {
   type CharacterTint,
   type ClothingColours,
 } from "./character-tint.ts";
+import { boneToRig, clipYaw, clipYawAt } from "./clip-yaw.ts";
 import {
   anchorsFrom,
   beatAt,
@@ -11490,18 +11491,22 @@ export function createKidsWorld(
     /**
      * HOW FAR EACH TURN CLIP ACTUALLY TURNS THIS ANIMAL, in radians, signed.
      *
-     * Measured off the clip rather than assumed from its name, and that is
-     * the whole point: `Turn_Left_90` and `Turn_Right_90` are not ninety
-     * degrees and are not even mirror images of each other. Measured on the
-     * shipped file, the left clip carries the hips +78.6° and the right one
-     * −101.4°.
+     * Measured off the clip rather than assumed from its name. On the
+     * buffalo the two clips come out at an exact +90.00° and −90.00°, which
+     * is what their names claim — but that is a measurement, not an
+     * assumption, and a re-export that changed it would be followed.
      *
-     * The code used to add exactly ninety degrees to the body at the
-     * hand-off. So a left turn left the animal standing at 78.6° and then
-     * snapped it to 90 — eleven degrees, in one frame, at the end of every
-     * single left turn. That is the flicker, and it is why it had a side.
+     * An earlier reading of these same clips returned +78.6° and −101.4°
+     * and concluded the export was crooked. It was not; the reading was —
+     * see `clipYawAt`. Everything downstream then inherited an eleven-degree
+     * error with a SIGN, which is why the flicker was worse turning right.
      */
     readonly arc: Map<string, number>;
+    /**
+     * The rotation taking this rig's hips into the wrap's frame, so a yaw
+     * can be read off them at all. See `boneToRig`.
+     */
+    readonly toRig: THREE.Quaternion;
   };
   const wilds: WildRig[] = [];
 
@@ -11923,36 +11928,6 @@ export function createKidsWorld(
     // whole thing for a 15-degree correction swung the animal a full quarter
     // turn and then unwound it across the hand-off.
     wildEnter(w, "turn", clip, undefined, undefined, leg / arc);
-  }
-
-  /**
-   * The net yaw a clip puts on a bone, first keyframe to last, in radians.
-   *
-   * Read straight off the quaternion track. Returns null when the clip does
-   * not drive that bone at all, which is the honest answer and lets the
-   * caller keep its old assumption rather than inventing a number.
-   */
-  function clipYaw(clip: THREE.AnimationClip, bone: string): number | null {
-    const track = clip.tracks.find(
-      (t) =>
-        t.name === `${bone}.quaternion` ||
-        t.name.endsWith(`/${bone}.quaternion`),
-    );
-    const v = track?.values;
-    if (v == null || v.length < 8) {
-      return null;
-    }
-    const yawOf = (i: number) => {
-      const x = v[i]!,
-        y = v[i + 1]!,
-        z = v[i + 2]!,
-        w = v[i + 3]!;
-      return Math.atan2(2 * (w * y + x * z), 1 - 2 * (y * y + z * z));
-    };
-    let d = yawOf(v.length - 4) - yawOf(0);
-    while (d > Math.PI) d -= Math.PI * 2;
-    while (d < -Math.PI) d += Math.PI * 2;
-    return d;
   }
 
   /**
@@ -13841,6 +13816,13 @@ export function createKidsWorld(
       if (wildReview) {
         console.log(`[wildclips] ${model}: ${[...act.keys()].join(", ")}`);
       }
+      // Captured before anything plays, while the bones still hold the pose
+      // the file was authored in — see `boneToRig`. Identity when the rig
+      // has no hips, which only happens if the export changed name, and then
+      // the turn clips would not bind either.
+      const hips = wrap.getObjectByName("Hips");
+      const hipsToRig =
+        hips == null ? new THREE.Quaternion() : boneToRig(hips, wrap);
       const w: WildRig = {
         wrap,
         mixer,
@@ -13864,13 +13846,14 @@ export function createKidsWorld(
         yawT: 0,
         // Staggered, so three buffalo on one road never all start at once.
         cooldown: Math.random() * 12,
+        toRig: hipsToRig,
         // Measured off this animal's own clips — see WildRig.arc.
         arc: new Map(
           [...act.keys()]
             .filter((n) => /^Turn_/.test(n))
             .map((n) => [
               n,
-              clipYaw(act.get(n)!.getClip(), "Hips") ?? Math.PI / 2,
+              clipYaw(act.get(n)!.getClip(), "Hips", hipsToRig) ?? Math.PI / 2,
             ]),
         ),
         scareCool: Math.random() * 20,
@@ -22307,12 +22290,21 @@ export function createKidsWorld(
         const back = at(-sy * L, -cy * L);
         const right = at(cy * W, -sy * W);
         const left = at(-cy * W, sy * W);
+        // Both measured as THE GROUND RISES: pitch positive when the ground
+        // ahead is higher, roll positive when the ground on its right is.
         const wantPitch = Math.atan2(front - back, 2 * L);
         const wantRoll = Math.atan2(right - left, 2 * W);
         const k = Math.min(1, step * 3);
         w.pitch += (wantPitch - w.pitch) * k;
         w.roll += (wantRoll - w.roll) * k;
-        w.wrap.rotation.x = w.pitch;
+        // NEGATED, AND THAT IS NOT A FUDGE. Under this rig's YXZ order a
+        // positive rotation.x drops the nose — +Z swings toward −Y — so
+        // feeding an uphill straight in pitched the animal face-first INTO
+        // the hill and tipped it back on the way down, which is the exact
+        // opposite of standing on the slope. Roll needs no flip: a positive
+        // rotation.z already lifts its right side, which is what a rise on
+        // the right should do.
+        w.wrap.rotation.x = -w.pitch;
         w.wrap.rotation.z = w.roll;
       };
       // ── the charge, and the one thing that calls it off ────────────────
@@ -22381,7 +22373,25 @@ export function createKidsWorld(
         // ends, so abandoning one mid-way snaps the animal back to where it
         // started facing.
         if (turning) {
-          w.wrap.rotation.y = w.yaw;
+          // ONLY AS FAR AS IT ACTUALLY GOT.
+          //
+          // `w.yaw` is where the turn was HEADING — the whole leg — and this
+          // turn is being abandoned part-way through it. Committing the full
+          // leg spun the animal through rotation the clip never played, on
+          // the one frame a child had just typed and was looking at it.
+          //
+          // Same rule as the ordinary hand-off below: the wrap takes over
+          // exactly what the hips are showing, no more.
+          const cut = w.act.get(w.cur);
+          const shown =
+            cut == null
+              ? null
+              : clipYawAt(cut.getClip(), "Hips", cut.time, w.toRig);
+          // Based on the wrap's CURRENT heading, which is still the one the
+          // turn started from: a turn in progress has not moved the wrap at
+          // all, that being the whole arrangement. `yawFrom` belongs to the
+          // last hand-off and would be a heading two turns old.
+          w.wrap.rotation.y = shown == null ? w.yaw : w.wrap.rotation.y + shown;
           w.after = null;
         }
         wildEnter(w, "flinch", "Hit_Reaction");
@@ -22461,12 +22471,16 @@ export function createKidsWorld(
           if (w.t <= 0) {
             // FREEZE THE TURN WHERE IT STOPPED, before anything fades it out.
             //
-            // This is the flicker that survived every other fix, and it is
-            // not a bad frame in the clip: measured at 60Hz with the real
-            // linear/slerp interpolation, all thirteen of this animal's clips
-            // are smooth, Turn_Left_90 and Turn_Right_90 included — their
-            // worst single step is about three times their own median, where
-            // a flicker needs twenty or more.
+            // Necessary, but on its own it was not enough — the snap it left
+            // behind is dealt with just below. Worth keeping the measurement
+            // that rules the clips themselves out, because they are the
+            // first thing anyone suspects: nothing in them is discontinuous.
+            // Both turn clips run a clean bell of 13 → 94 → 18 deg/s across
+            // their 1.40s, and their one large keyframe step — 34.5° against
+            // a 5.7° median — is a WIDE GAP, not a jump: gltfpack drops any
+            // key that linear interpolation can reproduce, so that step
+            // spans 0.367s where the others span 0.1s, and the rate through
+            // it is the same as the rate either side.
             //
             // It is the hand-off. A turn shorter than ninety degrees plays a
             // FRACTION of the clip: the state clock is set to `dur * frac`
@@ -22487,6 +22501,33 @@ export function createKidsWorld(
               turning.paused = true;
             }
             w.yawFrom = w.wrap.rotation.y;
+            // WHAT THE CLIP IS HOLDING, NOT WHAT IT WAS ASKED FOR.
+            //
+            // The wrap ramps up by the same amount the clip unwinds, so the
+            // two cancel and the heading never moves. That only works if the
+            // amount is the one actually on screen. Asking for ninety
+            // degrees and handing back whatever ninety degrees of clip came
+            // to is not the same number, and every place the two could
+            // differ ended up in the animal's neck:
+            //
+            //   - the arc was mis-measured by eleven degrees, with a sign
+            //     (see `clipYawAt`), so a full turn was eleven degrees out
+            //     and a turn taken in two legs was twenty-two;
+            //   - a part turn plays a FRACTION of the clip and the clip is
+            //     eased, so half the timeline is not half the rotation. At a
+            //     quarter it is out by eight degrees on its own.
+            //
+            // Sampling the clip at the exact time it stopped costs one slerp
+            // per turn and makes the cancellation exact by construction, so
+            // neither of those can come back — including from a re-export
+            // that eases differently or turns some other amount.
+            const shown =
+              turning == null
+                ? null
+                : clipYawAt(turning.getClip(), "Hips", turning.time, w.toRig);
+            if (shown != null) {
+              w.yaw = w.yawFrom + shown;
+            }
             w.yawTo = w.yaw;
             w.yawT = WILD_TURN_FADE;
             const after = w.after;
