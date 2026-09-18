@@ -11517,6 +11517,15 @@ export function createKidsWorld(
      */
     curAct: THREE.AnimationAction | null;
     /**
+     * The committed heading the turn in progress began at.
+     *
+     * A turn measures what its clip delivered and adds it to THIS, not to
+     * `wrap.rotation.y`. The wrap may still be ramping in the previous
+     * leg's rotation when the next one starts, and basing a leg on a
+     * half-finished ramp is how a two-leg turn lost its place.
+     */
+    turnBase: number;
+    /**
      * Second actions, made lazily, for clips that have to follow themselves.
      *
      * Only the turn clips ever need one: a turn of more than ninety degrees
@@ -11982,28 +11991,9 @@ export function createKidsWorld(
     need: number,
     after: WildState | null,
   ): boolean {
-    // NOT WHILE THE LAST TURN IS STILL LANDING.
-    //
-    // A turn's rotation lives in the CLIP until it ends, and then ramps onto
-    // the wrap across WILD_TURN_FADE. For those few frames `wrap.rotation.y`
-    // is still the heading the animal had BEFORE the turn, while the animal
-    // on screen is already facing the new one. Every caller here takes its
-    // bearing from that field.
-    //
-    // Deciding from it mid-ramp is what sent the buffalo pacing left and
-    // right forever: it turned sixty degrees, read its own heading as still
-    // sixty degrees off because the wrap had not caught up, turned sixty
-    // again — then both ramps landed, it found itself well past its target,
-    // and turned back. A quarter of a second of stale heading, and it never
-    // converged because each correction was measured from the same lie.
-    //
-    // `face` has always refused on this, and the chained legs below cancel
-    // the ramp before they re-base. Refusing HERE puts the rule in the one
-    // place every turn passes through: the caller simply gets a no and asks
-    // again next frame, by which time its heading is its own again.
-    if (w.yawT > 0) {
-      return false;
-    }
+    // No refusal for a ramp in flight any more, and none is needed: every
+    // bearing here is taken from `yaw`, the committed heading, so a wrap
+    // that has not finished catching up cannot mislead it.
     const sign = need >= 0 ? 1 : -1;
     const clip = sign > 0 ? "Turn_Left_90" : "Turn_Right_90";
     // WHAT THIS CLIP IS ACTUALLY WORTH, not what its name claims — see
@@ -12013,7 +12003,8 @@ export function createKidsWorld(
     const leg = Math.min(Math.abs(need), arc);
     // The body is turned by exactly what the legs delivered, so there is
     // nothing left over to snap at the hand-off.
-    w.yaw = w.wrap.rotation.y + sign * leg;
+    w.turnBase = w.yaw;
+    w.yaw = w.yaw + sign * leg;
     // STOP WHERE THE CLIP HAS TURNED THIS FAR, not at the fraction of the
     // timeline the angle resembles. The clip is eased, so those are not the
     // same instant and treating them as one left every turn short of its
@@ -12050,7 +12041,7 @@ export function createKidsWorld(
     const dur = wildDur(w, clip, 1.4);
     const stop =
       clipTimeForYaw(act.getClip(), "Hips", leg, w.toRig) ?? (leg / arc) * dur;
-    wildEnter(w, "turn", clip, undefined, undefined, stop / dur);
+    wildEnter(w, "turn", clip, undefined, WILD_TURN_FADE, stop / dur);
     return true;
   }
 
@@ -12256,7 +12247,7 @@ export function createKidsWorld(
       // Come round to face it first if it is properly behind — an animal
       // does not set off sideways. A small correction it just walks into.
       const need = angTo(
-        w.wrap.rotation.y,
+        w.yaw,
         Math.atan2(w.tx - w.wrap.position.x, w.tz - w.wrap.position.z),
       );
       // Sets off walking if the turn is refused — the wander re-takes its
@@ -13989,6 +13980,7 @@ export function createKidsWorld(
         ),
         aimed: false,
         curAct: null,
+        turnBase: wrap.rotation.y,
         twin: new Map(),
         scareCool: Math.random() * 20,
         liftNow: 0,
@@ -22308,7 +22300,7 @@ export function createKidsWorld(
         if (w.yawT > 0 || w.state === "turn" || midOneShot) {
           return;
         }
-        const need = angTo(w.wrap.rotation.y, target);
+        const need = angTo(w.yaw, target);
         if (Math.abs(need) > WILD_TURN_MIN) {
           wildTurn(w, need, w.state === "escort" ? "escort" : null);
         }
@@ -22521,11 +22513,14 @@ export function createKidsWorld(
             cut == null
               ? null
               : clipYawAt(cut.getClip(), "Hips", cut.time, w.toRig);
-          // Based on the wrap's CURRENT heading, which is still the one the
-          // turn started from: a turn in progress has not moved the wrap at
-          // all, that being the whole arrangement. `yawFrom` belongs to the
-          // last hand-off and would be a heading two turns old.
-          w.wrap.rotation.y = shown == null ? w.yaw : w.wrap.rotation.y + shown;
+          // Onto the heading this leg began at, and handed over on the
+          // ramp rather than written straight onto the wrap: the abandoned
+          // clip is about to be crossfaded out, so its rotation leaves over
+          // the fade and the wrap has to arrive across the same fade.
+          w.yaw = shown == null ? w.yaw : w.turnBase + shown;
+          w.yawFrom = w.wrap.rotation.y;
+          w.yawTo = w.yaw;
+          w.yawT = WILD_TURN_FADE;
           w.after = null;
         }
         wildEnter(w, "flinch", "Hit_Reaction");
@@ -22570,10 +22565,7 @@ export function createKidsWorld(
           // ONCE, AT THE START. See WildRig.aimed — re-taking the bearing
           // every frame is what wound it down the field.
           if (!w.aimed) {
-            const need = angTo(
-              w.wrap.rotation.y,
-              Math.atan2(w.tx - pos.x, w.tz - pos.z),
-            );
+            const need = angTo(w.yaw, Math.atan2(w.tx - pos.x, w.tz - pos.z));
             if (Math.abs(need) > WILD_TURN_MIN) {
               wildTurn(w, need, "wander");
               break;
@@ -22665,7 +22657,11 @@ export function createKidsWorld(
                 ? null
                 : clipYawAt(turning.getClip(), "Hips", turning.time, w.toRig);
             if (shown != null) {
-              w.yaw = w.yawFrom + shown;
+              // ONTO THE HEADING THIS LEG STARTED FROM. `yawFrom` is where
+              // the WRAP happens to be, which on the second leg of a long
+              // turn is part-way through taking up the first leg's rotation.
+              // Adding this leg to that counted the unfinished part twice.
+              w.yaw = w.turnBase + shown;
             }
             w.yawTo = w.yaw;
             w.yawT = WILD_TURN_FADE;
@@ -22684,22 +22680,23 @@ export function createKidsWorld(
             if (goal != null) {
               const left = angTo(w.yaw, goal);
               if (Math.abs(left) > WILD_TURN_MIN) {
-                // COMMIT THE HEADING BEFORE TAKING ANOTHER LEG.
+                // THE RAMP IS LEFT RUNNING, and that is the whole point.
                 //
-                // `wildTurn` bases the next turn on `w.wrap.rotation.y`, and
-                // at this instant that is still the heading from BEFORE this
-                // turn — the hand-off ramp has not run yet. Chaining without
-                // committing meant every extra leg re-based from the same
-                // stale heading, so the legs never accumulated and the animal
-                // rocked back and forth about one spot indefinitely. That is
-                // the spin, and it only appears on turns of more than ninety
-                // degrees, which is why it looked intermittent.
+                // This used to snap the wrap to the finished heading and
+                // cancel the ramp, on the reasoning that the next clip is
+                // about to play from there anyway. It was true only while
+                // restarting a turn clip cut its own pose dead on the same
+                // frame. It no longer does: a clip that follows itself hands
+                // over to a twin and crossfades, so the outgoing ninety
+                // degrees is still on screen for a quarter of a second after
+                // the wrap has already taken it up. The two added, and the
+                // animal swung a further ninety and came back — a turn right
+                // followed by a slide right and a return.
                 //
-                // The ramp is cancelled with it: there is nothing to blend
-                // into, because another turn clip is about to play from this
-                // exact heading.
-                w.wrap.rotation.y = w.yaw;
-                w.yawT = 0;
+                // So the second leg takes over exactly like any other
+                // hand-off: the wrap ramps in over the same fade the clip
+                // fades out across, and `wildTurn` measures from `yaw`
+                // rather than from a wrap that is still catching up.
                 wildTurn(w, left, after);
                 break;
               }
@@ -22724,7 +22721,7 @@ export function createKidsWorld(
         }
         case "notice": {
           if (w.t <= 0) {
-            const need = angTo(w.wrap.rotation.y, facingHero);
+            const need = angTo(w.yaw, facingHero);
             if (Math.abs(need) > WILD_TURN_MIN) {
               // Properly behind it: turn round on its feet before charging,
               // rather than sliding round on the spot mid-charge.
@@ -22833,7 +22830,7 @@ export function createKidsWorld(
           const wantX = heroX + WILD_ESCORT_LEAD;
           const wantZ = fenceZ(wantX) + w.side * 2.2;
           const needRun = angTo(
-            w.wrap.rotation.y,
+            w.yaw,
             Math.atan2(wantX - pos.x, wantZ - pos.z),
           );
           if (Math.abs(needRun) > WILD_TURN_MIN) {
@@ -22858,7 +22855,7 @@ export function createKidsWorld(
           // need a correction halfway.
           if (!w.aimed) {
             const needHome = angTo(
-              w.wrap.rotation.y,
+              w.yaw,
               Math.atan2(w.homeX - pos.x, w.homeZ - pos.z),
             );
             if (Math.abs(needHome) > WILD_TURN_MIN) {
@@ -22965,6 +22962,45 @@ export function createKidsWorld(
       // settled here, once, for all of them.
       settle();
       stand();
+      // `?wild` only: WHICH WAY IS THE ANIMAL ACTUALLY POINTING?
+      //
+      // Not off the hips. That bone sits under the armature's quarter turn
+      // about X, so a yaw read from it is not the animal's facing — the same
+      // trap that produced the eleven-degree arc error. Taken from the two
+      // front legs instead: the line between them is the body's lateral
+      // axis whatever the rig does with its bind frame, and the facing is
+      // that line turned a quarter about world up. Printed every frame of a
+      // hand-off, because the claim under test is that the wrap's ramp and
+      // the clip's unwind cancel and the body does not move.
+      if (wildReview && w.yawT > 0) {
+        const l = w.wrap.getObjectByName("frontleg");
+        const r = w.wrap.getObjectByName("R_frontleg");
+        if (l != null && r != null) {
+          const a = l.getWorldPosition(new THREE.Vector3());
+          const b = r.getWorldPosition(new THREE.Vector3());
+          // Lateral left->right, then a quarter turn about up gives forward.
+          const face = (Math.atan2(-(b.z - a.z), b.x - a.x) * 180) / Math.PI;
+          const ud = w.wrap.userData as { lastFace?: number; faceAt?: number };
+          const at = clock.elapsedTime;
+          const fresh = at - (ud.faceAt ?? -1) > 0.5;
+          const moved =
+            ud.lastFace == null || fresh
+              ? 0
+              : (angTo((ud.lastFace * Math.PI) / 180, (face * Math.PI) / 180) *
+                  180) /
+                Math.PI;
+          ud.lastFace = face;
+          ud.faceAt = at;
+          console.log(
+            `[face] ${fresh ? "START " : "      "}` +
+              `yawT=${w.yawT.toFixed(3)}` +
+              ` wrap=${((w.wrap.rotation.y * 180) / Math.PI).toFixed(1)}` +
+              ` facing=${face.toFixed(1)}` +
+              ` moved=${moved.toFixed(2)}` +
+              ` clip=${w.cur}`,
+          );
+        }
+      }
     }
 
     for (const f of friends) {
