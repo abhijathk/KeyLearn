@@ -10158,16 +10158,20 @@ export function createKidsWorld(
    *
    * Measured by eye against the shadow rather than derived: the rigs record
    * no hoof, so there is no number to derive it from, and the alternative is
-   * re-authoring two files. 0.07 was a first guess and plainly short — the
-   * leg tip the plant lands on is most of a fetlock above the ground, not a
-   * sliver. A fraction rather than world units, because the
-   * animal is scaled by its depth — a fixed sink would be right at one
-   * distance and wrong at every other.
+   * re-authoring two files.
+   *
+   * WORLD UNITS, NOT A FRACTION OF HEIGHT. It was a fraction, which sounds
+   * like the more principled choice and was wrong: the buffalo is 6.8 units
+   * and the cow 4.5, so one number sank the cow a third less than the
+   * buffalo and left it hanging while the buffalo stood. The error is in the
+   * rig — the height of a leg tip above a hoof — and these are the same rig
+   * at different sizes, so the number that matters is the same for all of
+   * them. Still multiplied by depth, because the animal itself is.
    */
   const WILD_SINK: Record<string, number> = {
-    Buffalo: 0.16,
-    Cow: 0.16,
-    Cow_Calf: 0.16,
+    Buffalo: 1.09,
+    Cow: 1.09,
+    Cow_Calf: 1.09,
   };
 
   const WILD_HEIGHT: Record<string, number> = {
@@ -22245,10 +22249,7 @@ export function createKidsWorld(
         // Scaled by the animal's own height and depth, so it holds wherever
         // it wanders to.
         const model = String(w.wrap.userData.wildModel ?? "");
-        const sink =
-          (WILD_SINK[model] ?? 0) *
-          (WILD_HEIGHT[model] ?? 6.0) *
-          perspective(pos.z);
+        const sink = (WILD_SINK[model] ?? 0) * perspective(pos.z);
         pos.y = wildGroundY(pos.x, pos.z) - w.liftNow - sink;
         // DID IT ACTUALLY LAND ON THE GROUND?
         //
