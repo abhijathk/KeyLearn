@@ -69,6 +69,39 @@ const KTX2_WORKER_CSP: Record<string, string> = {
   ].join("; "),
 };
 
+/**
+ * The same file, asked for by its content-addressed URL.
+ *
+ * Assets under `/kids-assets/` are also served from `/kids-assets/v1a2b3c4d/…`
+ * so they can be cached for a year — see `scripts/kids-manifest.mjs`. The
+ * segment is invisible to the file system, because `static-cache.ts` strips
+ * it, and it was invisible here too: the table above is an exact-path lookup,
+ * so the versioned worker quietly got the DOCUMENT policy instead of its own.
+ *
+ * It fails in the worst possible way. The document policy grants
+ * `wasm-unsafe-eval` but deliberately not `unsafe-eval`, so the transcoder's
+ * embind layer cannot build its call wrappers — and a worker that cannot
+ * start does not throw, it simply never answers the init message. Every
+ * character in the game hangs mid-load with nothing in the console.
+ *
+ * THIS IS THE THIRD PLACE THE VERSION SEGMENT BROKE SOMETHING THAT MATCHES ON
+ * URL SHAPE — after the encoding negotiation and the content-type table in
+ * `static-cache.ts`. Anything that decides by looking at an asset path has to
+ * normalise first.
+ */
+const VERSIONED = /^(\/kids-assets\/)v[0-9a-f]{8}\//;
+
+/**
+ * The policy a same-origin worker script gets, or `null` for everything else.
+ *
+ * Exported so it can be tested without standing up an application: the bug
+ * this guards against is a silent hang, and a test that needs a database to
+ * run is a test that does not run.
+ */
+export function workerCsp(path: string): string | null {
+  return KTX2_WORKER_CSP[path.replace(VERSIONED, "$1")] ?? null;
+}
+
 export const CSP_NONCE = "cspNonce";
 
 /** The nonce for this request, or "" outside a request that has one. */
@@ -129,7 +162,7 @@ export function securityHeaders(): Middleware {
     if (!headers.has("Content-Security-Policy")) {
       headers.set(
         "Content-Security-Policy",
-        KTX2_WORKER_CSP[ctx.request.path] ?? csp,
+        workerCsp(ctx.request.path) ?? csp,
       );
     }
     // Superseded by frame-ancestors, kept for older browsers.

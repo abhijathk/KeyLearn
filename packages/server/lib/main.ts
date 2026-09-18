@@ -13,6 +13,7 @@ import { ApplicationModule, kGame, kMain } from "./app/index.ts";
 import { ReminderSweep } from "./app/mail/index.ts";
 import { startSiteConfigCache } from "./app/site-config/cache.ts";
 import { SiteConfigSweep } from "./app/site-config/sweep.ts";
+import { StaticCache } from "./app/static-cache.ts";
 import {
   AccountDeletionSweep,
   CloseConfirmSweep,
@@ -90,6 +91,14 @@ if (cluster.isPrimary) {
   // Learner data lives in files on this machine's disk; the database is what
   // gets backed up. Copy one into the other at intervals.
   container.get(DataSnapshot).start();
+  // Brotli the kids world's models once, here, while the workers already
+  // serve — so no learner's request waits on the slow encoder and no two
+  // workers spend the same minutes on the same file. See static-cache.ts.
+  container
+    .get(StaticCache)
+    .warm()
+    .then((summary) => Logger.info("Static cache warm", summary))
+    .catch((err) => Logger.warn(err, "Static cache warm failed"));
   // The primary owns the rate-limit counters, which is what makes a limit a
   // cluster-wide number instead of one each worker enforces alone.
   serveRateLimits();

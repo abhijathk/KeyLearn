@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { Application } from "@fastr/core";
 import {
   type Binder,
@@ -23,6 +24,7 @@ import { MailModule } from "./mail/index.ts";
 import { MaintenanceGate } from "./maintenance.tsx";
 import { gameRoutes, mainRoutes } from "./routes.ts";
 import { SessionModule } from "./session.ts";
+import { StaticCache } from "./static-cache.ts";
 import { noStoreSupport } from "./support/no-store.ts";
 import { trailingSlashRedirect } from "./trailing-slash.ts";
 
@@ -49,12 +51,28 @@ export class ApplicationModule implements Module {
     load(new SessionModule());
   }
 
+  /**
+   * Under the data directory because that is the one place every deployment
+   * already has writable and persistent — a cache that vanished on restart
+   * would put the slow encoder back on the critical path after each deploy.
+   * The snapshot sweep never looks here: it reads learner files by name,
+   * not by walking the directory.
+   */
+  @provides({ singleton: true })
+  provideStaticCache(
+    @inject("publicDir") publicDir: string,
+    @inject("dataDir") dataDir: string,
+  ): StaticCache {
+    return new StaticCache(publicDir, join(dataDir, "static-cache"));
+  }
+
   @provides({ id: Application, name: kMain, singleton: true })
   provideMain(
     container: Container,
     @inject("publicDir") publicDir: string,
     @inject("sessionOptions") sessionOptions: SessionOptions,
     @inject("deskSessionOptions") deskSessionOptions: SessionOptions,
+    staticCache: StaticCache,
   ): Application {
     return (
       new Application(container, { behindProxy: behindProxy() })
@@ -67,6 +85,9 @@ export class ApplicationModule implements Module {
         .use(trailingSlashRedirect())
         .use(conditional())
         .use(compress())
+        // Ahead of staticFiles(), which is its fallback — and which is why
+        // compress() above never touched a static file: see static-cache.ts.
+        .use(staticCache.middleware({ cacheControl }))
         .use(staticFiles(publicDir, { cacheControl }))
         .use(deskAwareSession(sessionOptions, deskSessionOptions))
         // Before the routes, so the header is on the response whichever
