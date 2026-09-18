@@ -905,51 +905,54 @@ function stripScaleTracks(clip: THREE.AnimationClip): THREE.AnimationClip {
 
 /** How much further the knees fold at the top of a jump. 0 leaves it alone. */
 const JUMP_TUCK = 0.3;
+/** How much higher the jump carries him. 0 leaves the arc as authored. */
+const JUMP_LIFT = 0.3;
 
 /**
- * Clips already tucked, so a second pass cannot compound it.
+ * Clips already exaggerated, so a second pass cannot compound it.
  *
- * `foldLegsInAir` rewrites the track in place, and the clip it rewrites is
- * the one the parsed model holds — the same object every time that character
- * is shown again, because the parse is cached. Without this, picking Drew
- * three times would fold his knees by thirty per cent three times over: a
- * hundred and twelve degrees, then a hundred and forty, then his heels
- * through his back. `trimStillEnds` needs no such guard; a clip with its
- * padding already gone has none left to find.
+ * `exaggerateJump` rewrites tracks in place, and the clip it rewrites is the
+ * one the parsed model holds — the same object every time that character is
+ * shown again, because the parse is cached. Without this, picking Drew three
+ * times would fold his knees by thirty per cent three times over and raise
+ * him three times over with it: a hundred and twelve degrees, then a hundred
+ * and forty, then his heels through his back. `trimStillEnds` needs no such
+ * guard; a clip with its padding already gone has none left to find.
  */
-const tuckedClips = new WeakSet<THREE.AnimationClip>();
+const boostedClips = new WeakSet<THREE.AnimationClip>();
 
 /**
- * Fold the knees further AT THE TOP OF A JUMP, and only there.
+ * Make a jump read as a jump: higher off the ground, knees further folded.
  *
- * `Jump_Happy` leaves the knees at about 86 degrees at the apex, which is a
- * hop rather than a tuck. Scaling the whole clip is not the answer: the same
- * tracks carry the crouch he takes off from and the crouch he lands in, both
- * around 50 degrees, and deepening those drives his feet through the floor
- * and makes the landing read as a collapse.
+ * BOTH WEIGHTED BY HOW FAR OFF THE GROUND HE IS, and that is the whole
+ * design. `Jump_Happy` carries the hips 0.136 up from a standing 0.708 and
+ * leaves the knees at about 86 degrees at the apex — a hop. Scaling the
+ * tracks outright is not the answer, because the same tracks carry the
+ * crouch he takes off from and the one he lands in, both around 50 degrees
+ * and both BELOW standing height. Deepening those drives his feet through
+ * the floor and turns the landing into a collapse.
  *
- * So the amount is weighted by how far off the ground he is, taken from the
- * root's own height — nothing at all on the ground, full at the apex. The
- * take-off and the landing come out untouched by construction, and there is
- * no seam anywhere, because the weight goes to zero exactly where the feet
- * come back down.
+ * So the height is stretched only where it is already above standing, and
+ * the knees only in proportion to that height. On the ground, nothing
+ * changes at all — which matters beyond the look, because the clip is
+ * repeated and the seam it repeats across is exactly where the weight is
+ * zero. Neither of these can put back the gap the trim took out.
  *
- * Only the knees. The thighs are barely twenty degrees up there and which
- * way they would need to go to read as "more" is a judgement; the knee is
- * unambiguous — it is the joint that folds the shin back.
+ * Knees only, not thighs. The thighs are barely twenty degrees up there and
+ * which way they would have to go to read as "more" is a judgement; the knee
+ * is the joint that folds the shin back, and it is unambiguous.
  *
- * In place and idempotent-ish in the sense that matters: it runs once per
- * parsed clip, on the same object `clipAction` is keyed by.
+ * The root is found by looking rather than by name: of the position tracks,
+ * the one that moves the most vertically.
  */
-function foldLegsInAir(
+function exaggerateJump(
   clip: THREE.AnimationClip,
-  extra = JUMP_TUCK,
+  tuck = JUMP_TUCK,
+  lift = JUMP_LIFT,
 ): THREE.AnimationClip {
-  if (extra <= 0 || tuckedClips.has(clip)) {
+  if ((tuck <= 0 && lift <= 0) || boostedClips.has(clip)) {
     return clip;
   }
-  tuckedClips.add(clip);
-  // The root, by the same "moves most vertically" rule the trim uses.
   let root: THREE.KeyframeTrack | null = null;
   let rise = 0;
   for (const track of clip.tracks) {
@@ -968,14 +971,28 @@ function foldLegsInAir(
     }
   }
   if (root == null || rise < 1e-4) {
-    return clip;
+    return clip; // nothing that reads as a root; leave it alone
   }
+  boostedClips.add(clip);
   const rest = root.values[1]!;
+
+  // HIGHER — but only the part of the arc that is already above standing.
+  // The two crouches sit below it and are left exactly as authored, as are
+  // the first and last keys, which is what keeps the repeat seam clean.
+  if (lift > 0) {
+    for (let i = 1; i < root.values.length; i += 3) {
+      const y = root.values[i]!;
+      if (y > rest) {
+        root.values[i] = rest + (y - rest) * (1 + lift);
+      }
+    }
+  }
+
   let peak = rest;
   for (let i = 1; i < root.values.length; i += 3) {
     peak = Math.max(peak, root.values[i]!);
   }
-  if (peak - rest < 1e-4) {
+  if (tuck <= 0 || peak - rest < 1e-4) {
     return clip;
   }
   /** How far off the ground the root is at time `t`, 0 to 1. */
@@ -994,8 +1011,6 @@ function foldLegsInAir(
   const now = new THREE.Quaternion();
   const axis = new THREE.Vector3();
   for (const track of clip.tracks) {
-    // The knees: `LeftLeg` and `RightLeg`, not `LeftUpLeg` — the shin, not
-    // the thigh, and the name of one is a suffix of the other.
     // `/` as well as `.`: a track is `LeftLeg.quaternion` on a flat rig and
     // `Armature/LeftLeg.quaternion` on a nested one, and matching only the
     // first would have quietly tucked nothing on half the exports. The
@@ -1040,7 +1055,7 @@ function foldLegsInAir(
         (delta.y / sin) * flip,
         (delta.z / sin) * flip,
       );
-      angle *= 1 + extra * w;
+      angle *= 1 + tuck * w;
       const scaled = new THREE.Quaternion().setFromAxisAngle(axis, angle);
       scaled.multiply(from);
       track.values[i * n] = scaled.x;
@@ -8795,7 +8810,7 @@ export function createKidsWorld(
     // and not a shallower one.
     const joyClip =
       jumpClip != null
-        ? foldLegsInAir(jumpClip)
+        ? exaggerateJump(jumpClip)
         : pick(/joy|celebrat|victory|cheer/);
     let run: THREE.AnimationAction | null = null;
     let walk: THREE.AnimationAction | null = null;
@@ -24535,7 +24550,7 @@ export function createPickerScene(
           // it reads as a jump rather than a hop — see both helpers. Only
           // ever a jump: the trim's padding and the tuck's knees both mean
           // something different in a celebration routine.
-          foldLegsInAir(trimStillEnds(stripScaleTracks(clip)))
+          exaggerateJump(trimStillEnds(stripScaleTracks(clip)))
         : stripScaleTracks(clip),
     );
     action.reset();
