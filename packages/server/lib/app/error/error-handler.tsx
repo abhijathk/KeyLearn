@@ -23,6 +23,20 @@ const REDACTED_HEADERS = new Set([
   "authorization",
   "proxy-authorization",
   "paddle-signature",
+  // The machine keys. `authorization` above covers the standard header
+  // and nothing else, and every service-to-service credential this app
+  // accepts travels in a header of its own — so each was written to the
+  // log in full on any 5xx. `x-ops-api-key` is the widest of them: it
+  // opens every `/_/internal/*` route, which is to say every account on
+  // the system, and a single stack trace put it in a log file in
+  // plaintext beside the URL it had just been used on.
+  //
+  // Found 19 Sep 2026 while reading a 500 from the account-export route.
+  // Anything added to `requireOpsApi`-style gates belongs here the same
+  // day it is added.
+  "x-ops-api-key",
+  "x-qdesk-agent-key",
+  "x-qdesk-app-key",
 ]);
 
 // URL path segments that ARE credentials: magic-login and password-reset links

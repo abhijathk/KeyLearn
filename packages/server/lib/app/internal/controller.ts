@@ -2085,7 +2085,21 @@ export class Controller {
     @queryParam("reason", pQuery) reason: string | undefined,
   ) {
     ctx.state.requireOpsApi();
-    const user = await User.query().findById(id);
+    // `User.findById`, NOT `User.query().findById`.
+    //
+    // They read the same and are not: the model's own loader fetches the
+    // `externalIds` and `order` relations; the query builder's does not.
+    // `User.toDetails()` asserts the first is there (`this.externalIds!
+    // .map(...)`), so a user loaded the bare way threw "Cannot read
+    // properties of undefined (reading 'map')" the moment this route
+    // serialised it — a 500 on EVERY export, for every account.
+    //
+    // It surfaced at the desk as "Couldn't reach KeyLearn", because 500
+    // is the one status QDesk's `fromKeylearn` will not quote, so a staff
+    // member answering a data request was told to try again in a moment,
+    // forever. The other two routes above load the same bare way and are
+    // fine — neither calls `toDetails()`.
+    const user = await User.findById(id);
     if (user == null) {
       ctx.response.status = 404;
       return;
