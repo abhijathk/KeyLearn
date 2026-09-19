@@ -27,9 +27,26 @@
  * whatever happens to be in the folder is how a shrine ends up with a washing
  * stone for a god.
  *
- * NO KUTTICHATHAN CORRIDOR. It belongs to Chapter 1's M4–M7 and the
- * reference says plainly that this chapter does not require him. Every lesson
- * here has `corridor: false` and no traces.
+ * A SECOND KUTTICHATHAN CORRIDOR, L5–L8, PEAKING AT L7.
+ *
+ * The reference says plainly that this chapter does not require him, and this
+ * is a deliberate departure from it on the owner's instruction — worth knowing
+ * before anybody "corrects" it back.
+ *
+ * L7 is the peak and it is not an arbitrary choice: Estate Wall is the only
+ * lesson in the chapter holding BOTH a laterite wall, which is the one thing
+ * in this village he can climb and the place he throws from, and the Mana —
+ * the great house whose roof the stones land on out of an empty evening,
+ * which is the story everyone who knows his name knows. L5 and L6 build to
+ * it and L8 lets it fall away, which is Chapter 1's shape and the difference
+ * between a haunted stretch of road and a flag on four lessons.
+ *
+ * NO TRACES HERE. Chapter 1 opens with things moved in the night because the
+ * child has not met him; by this chapter they have, so this corridor starts
+ * at SIGHTINGS and the traces phase is skipped.
+ *
+ * L4 is Shrine Grove and is deliberately NOT in the corridor: nothing of his
+ * happens at or near a temple, a shrine or an idol.
  */
 
 import type { Lesson } from "./chapter1.ts";
@@ -407,7 +424,7 @@ export const LESSONS_2: readonly Lesson[] = [
     // working space: one farmer can tend animals, move hay, or stand near
     // the cart" — a work site, where standing IS the activity. Kept.
     folk: ["FarmerWoman"],
-    corridor: false,
+    corridor: true,
   },
   {
     n: 6,
@@ -450,7 +467,7 @@ export const LESSONS_2: readonly Lesson[] = [
     ],
     herd: [],
     folk: [],
-    corridor: false,
+    corridor: true,
     // HALFWAY ALONG, EIGHT UNITS WIDE, THREE DEEP. Halfway so the child
     // walks up to it, crosses, and walks away again inside one lesson — the
     // reference's "road, bridge deck, road" — rather than meeting it at a
@@ -620,7 +637,7 @@ export const LESSONS_2: readonly Lesson[] = [
     // inside its wall, which the child never crosses. The road carries
     // whoever is out.
     folk: [],
-    corridor: false,
+    corridor: true,
   },
   {
     n: 8,
@@ -674,7 +691,7 @@ export const LESSONS_2: readonly Lesson[] = [
     // loading and preparing produce, with the cart beside them. A loading
     // crew is stationary by definition, so these two stay.
     folk: ["FarmerWoman", "TeaStall"],
-    corridor: false,
+    corridor: true,
   },
   {
     n: 9,

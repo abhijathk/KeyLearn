@@ -1949,6 +1949,22 @@
   font-weight: 700;
 }
 
+// AT NIGHT IT NEEDS THE OTHER INK.
+//
+// The softening above is right on paper, where `--kink2` is a mid grey on
+// near-white and the line still reads plainly. At night `--kink2` is a mid
+// lavender on a near-black ground, so the same mix that reads as "somebody
+// talking" by day reads as "not quite legible" by dark — and the moments it
+// is most needed are the quiet ones, where it is the only thing on the page
+// saying anything at all.
+//
+// So the dark palette mixes toward `--kink`, the full ink, and takes the
+// lighter accent with it. Still short of the glowing key it must not compete
+// with, and no longer something a child has to lean in for.
+.rootDark .say {
+  color: color-mix(in srgb, var(--leaf) 42%, var(--kink));
+}
+
 /*
  * What the coach says is SPOKEN, so it is set as speech: italic, in
  * inverted commas. The quotes are pseudo-elements on the text itself
@@ -2062,7 +2078,14 @@
  * against its neighbours, because every one of them moved by the same amount.
  */
 .rootDark .kbWrap {
-  filter: brightness(0.92);
+  // 0.92 was not enough to do the job it was written for. The scene above is
+  // a night road and this card is the brightest surface on the page, so at
+  // eight per cent off it still pulled the eye down away from the road — and
+  // a child is meant to be watching where they are going. 0.84 with a little
+  // saturation off settles it behind the scene; both are small enough that
+  // nothing about it is legible as an effect, which is the point of doing it
+  // here on the wrapper rather than restyling the keys.
+  filter: brightness(0.84) saturate(0.94);
 }
 
 /* Holds its box while the world loads, so the scene above keeps the height it

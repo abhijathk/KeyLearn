@@ -22,6 +22,7 @@ import {
   isChild,
   lessonAt,
   MILESTONE_CLEAR,
+  milestoneX,
   placements,
   SEGMENT_COUNT,
   setChapterLessons,
@@ -42,6 +43,7 @@ import {
   CLIPS as KUTTI_CLIPS,
   isGone as kuttiIsGone,
   type Routine as KuttiRoutine,
+  ROUTINES as KUTTI_ROUTINES,
   routineSeconds,
   thinAnchors,
 } from "./kuttichathan.ts";
@@ -1462,6 +1464,24 @@ function castHeadScale(name: string): number {
     // small man.)
     case "Abee":
       return 1.26;
+    // A CHILD SPIRIT, so he is built like the children and not like a small
+    // adult. Measured the same way as the rest: the raw model is 3.45 heads
+    // tall against Little Drew's 3.26 and Abee's 3.24 — so he was the least
+    // top-heavy child on the road, which is exactly the proportion that reads
+    // as a miniature grown-up rather than as a boy.
+    //
+    // 1.07 landed him at 3.22, level with the biggest heads in the cast, and
+    // beside a child in the same frame it still read as an adult's proportion —
+    // he is a metre and a bit tall, so the skull has less to work with than the
+    // ratio suggests. 1.16 takes him to about 3.02, which is a head clear of
+    // Abee's 3.24 and firmly in kid territory.
+    //
+    // Do not push much past this. The unease in the folklore comes from
+    // something that might be a child until you look twice, and a bobblehead is
+    // never mistaken for anything; Abee's note puts the overhang at 1.34 on a
+    // taller body, so there is not a great deal of room left above this.
+    case "Kuttichathan":
+      return 1.16;
     // ── THE VILLAGE, SO IT BELONGS TO THE SAME WORLD ──────────────────
     //
     // These are realistically proportioned adults — roughly seven heads
@@ -4479,14 +4499,53 @@ export function createKidsWorld(
    * working" were all this one line: the lights and the people were the only
    * things in the scene not being told what time it was.
    */
-  const stagedNow = (): { readonly day: number; readonly night: number } =>
-    hourPref == null
-      ? stagedHours()
-      : { day: hourPref, night: (hourPref + 12) % 24 };
+  const stagedNow = (): { readonly day: number; readonly night: number } => {
+    if (hourPref == null) return stagedHours();
+    // THE HOUR YOU ASK FOR IS THE HOUR YOU GET, on whichever side it belongs.
+    //
+    // This used to hand the requested hour straight to `day` and put
+    // `hour + 12` on the night — so `?hour=2` meant "the DAY is two in the
+    // morning", and night mode then staged two in the AFTERNOON. Day and
+    // night came out swapped: a dark sky at 14:00 with the whole village at
+    // work in it, and a bright one at 02:00.
+    //
+    // `stagedHours` has always done this correctly for the real clock; the
+    // review override simply skipped the test. An hour between six and six is
+    // the day candidate and anything else is the night one, so `?hour=2`
+    // stages two in the morning as the NIGHT and leaves the day at 14:00.
+    const h = hourPref;
+    const light = h >= 6 && h < 18;
+    return light
+      ? { day: h, night: (h + 12) % 24 }
+      : { day: (h + 12) % 24, night: h };
+  };
 
   const worldHour = (): number => {
     const staged = stagedNow();
     return nightNow ? staged.night : staged.day;
+  };
+
+  /**
+   * THE HOUR THE VILLAGE ANSWERS TO, which is not always the one the sky does.
+   *
+   * `stagedHours` folds the real clock into a day candidate and a night one,
+   * and the night candidate lands anywhere in 18:12-06:12. `activityAt` does
+   * not call anything before 19:00 dark — so a night staged at half past six
+   * in the evening is "day" to every population rule there is, and the whole
+   * village stands about in the fields and at the market under a night sky.
+   * The window is small in clock terms and total in effect: it is hit whenever
+   * the real time is between about ten past six and seven, morning or evening.
+   *
+   * Corrected here and NOT in the fold, because the fold also aims the sun and
+   * the moon and rebuilds the sky; moving it to fix who is standing in a field
+   * would change what the entire road looks like. The population asks a
+   * different question of the clock than the lighting does, and this is that
+   * question — it is dark, so how late is it really? Late enough that people
+   * have gone in.
+   */
+  const populationHour = (): number => {
+    const h = worldHour();
+    return nightNow && h >= 4 && h < 19 ? 22 : h;
   };
 
   /**
@@ -4930,7 +4989,17 @@ export function createKidsWorld(
   // 5.2, not 3.4. She stands 4.7 units tall and the lamp rides just above
   // and in front of her, so at 3.4 with quadratic decay there was almost
   // nothing left by the time it reached her face.
-  const heroLamp = new THREE.PointLight(0xfff0d0, 0, 5.2, 2);
+  // SOFT, NOT SMALL. Three things made this read as a hard ring rather than
+  // lantern light: quadratic decay, which puts a hot core right at the child;
+  // a 5.2 range, which ends the pool abruptly enough to show an edge; and an
+  // intensity tuned to punch through both.
+  //
+  // Decay 1.4 instead of 2 spreads the falloff so there is no bright core, and
+  // a longer range moves the outer edge past where the eye looks for it. The
+  // two together would make it brighter as well as wider, so the intensity
+  // comes down to match - see `heroLampBase`. The pool is the same size to
+  // look at; what changed is that it now has no rim.
+  const heroLamp = new THREE.PointLight(0xfff0d0, 0, 8.0, 1.4);
   heroLamp.layers.set(HERO_LIGHT_LAYER);
   heroLamp.position.set(-6, 4, 3);
   /**
@@ -4951,7 +5020,8 @@ export function createKidsWorld(
   // apart, 3.4 left the one at the back on the edge of the pool.
   // Raised with the hero's, and by the same reasoning -- see above.
   // Raised with the hero's, by the same reasoning.
-  const companionLamp = new THREE.PointLight(0xfff0d0, 0, 6.2, 2);
+  // Softened with the hero's, and by the same reasoning.
+  const companionLamp = new THREE.PointLight(0xfff0d0, 0, 9.0, 1.4);
   companionLamp.layers.set(COMPANION_LIGHT_LAYER);
   companionLamp.position.set(-6, 4, 3);
   scene.add(sun, hemi, heroLamp, companionLamp);
@@ -5677,7 +5747,11 @@ export function createKidsWorld(
     // of the night and goes down with it at dawn. Reading back what the tick
     // wrote would compound it a frame at a time, so the un-blended value is
     // kept here.
-    heroLampBase = 3.2 * (1 - tw * 0.45);
+    // 2.3, not 3.2. The softer falloff above reaches the child with roughly a
+    // third more light at the same number, so holding 3.2 would have traded a
+    // hard ring for a bright one. This lands the face at about the brightness
+    // it had and lets the surroundings come up instead.
+    heroLampBase = 2.3 * (1 - tw * 0.45);
     heroLamp.intensity = heroLampBase * nightBlend;
     // The companion's lamp is driven in the tick (see companionLamp.position
     // there) — it has to be, because this function runs before a companion
@@ -6469,7 +6543,11 @@ export function createKidsWorld(
     // cone is opened up and the decay eased so it lays a stretch of the road
     // out in front of the child — the lamp is there so the road can be read,
     // and it has to actually do that to be worth standing there.
-    const spot = new THREE.SpotLight(0xffb867, 0, 46, 1.22, 0.85, 1.0);
+    // Penumbra 0.95, not 0.85. At 0.85 there is still a discernible edge to
+    // the cone where it crosses the road, and an edge is the thing that reads
+    // as a lamp being SHONE rather than a flame sitting in a niche. At 0.95
+    // the pool has essentially no rim left and only a centre.
+    const spot = new THREE.SpotLight(0xffb867, 0, 46, 1.22, 0.95, 1.0);
     // Parked below the ground, aimed at nothing, until claimed.
     // ── THESE ARE THE SHADOW CASTERS, AND THE ONLY ONES ────────────────
     //
@@ -6868,6 +6946,49 @@ export function createKidsWorld(
     grad.addColorStop(1, outer);
     g.fillStyle = grad;
     g.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  /**
+   * A PUFF THAT IS NOT A CIRCLE.
+   *
+   * `glowTexture` draws one radial gradient, which is exactly right for a
+   * halo and exactly wrong for smoke: a cloud of soft discs reads as a cloud
+   * of soft discs however many of them there are, because every one of them
+   * has the same perfectly round edge and the eye finds it immediately.
+   *
+   * So each puff gets a lumpy silhouette instead — half a dozen overlapping
+   * lobes of different sizes around the middle, the same way the clouds
+   * overhead are built and for the same reason. Drawn once and shared by
+   * every sprite; the variety between them comes from each one being rotated
+   * to its own angle and spun at its own rate, which costs nothing and is
+   * what stops sixteen copies of one bitmap looking like sixteen copies of
+   * one bitmap.
+   */
+  function smokeTexture(inner: string, outer: string): THREE.Texture {
+    const c = document.createElement("canvas");
+    c.width = c.height = 128;
+    const g = c.getContext("2d")!;
+    g.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 7; i++) {
+      // Lobes crowd the middle and thin toward the rim, so the puff has a
+      // dense core and a ragged edge rather than a uniform fog.
+      const a = (i / 7) * Math.PI * 2 + Math.random() * 0.9;
+      const d = i === 0 ? 0 : 12 + Math.random() * 20;
+      const px = 64 + Math.cos(a) * d;
+      const py = 64 + Math.sin(a) * d;
+      const pr = i === 0 ? 34 : 18 + Math.random() * 16;
+      const grad = g.createRadialGradient(px, py, pr * 0.08, px, py, pr);
+      grad.addColorStop(0, inner);
+      grad.addColorStop(0.55, outer.replace(/[\d.]+\)$/, "0.10)"));
+      grad.addColorStop(1, outer);
+      g.fillStyle = grad;
+      g.beginPath();
+      g.arc(px, py, pr, 0, Math.PI * 2);
+      g.fill();
+    }
     const tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
     return tex;
@@ -11885,6 +12006,40 @@ export function createKidsWorld(
    * is doing. Same reasoning that keeps a buffalo out of the friends
    * array: one owner for a body's pose.
    */
+  /**
+   * One place he can be. The scenery haunts come from the chapter's own
+   * placements; a `road` one is invented where it is needed.
+   */
+  type KuttiSpot = {
+    x: number;
+    z: number;
+    haunt: string;
+    /** The front of the roof, and how high it is. Houses only. */
+    roofZ?: number;
+    roofY?: number;
+  };
+
+  /**
+   * ONE OF HIM THAT IS NOT THE REAL ONE.
+   *
+   * A second and a third body, cloned off the same scene AFTER it has been
+   * fitted and its head enlarged, so a copy is the same figure and not a
+   * differently-proportioned one. Each carries its own mixer — they have to,
+   * an action belongs to the mixer that made it — and its own halo sprite,
+   * which shares the ORIGINAL'S MATERIAL so that one opacity assignment
+   * still drives every copy on screen.
+   *
+   * No spot light of its own. Lights are the budget this world actually runs
+   * out of, and three spots for one gag is not a trade worth making — so an
+   * appearance with copies in it is always a `glow` appearance, which costs
+   * nothing per body and is the reason that mode exists.
+   */
+  type KuttiEcho = {
+    readonly wrap: THREE.Group;
+    readonly mixer: THREE.AnimationMixer;
+    readonly act: ReadonlyMap<string, THREE.AnimationAction>;
+  };
+
   type KuttiRig = {
     readonly wrap: THREE.Group;
     readonly mixer: THREE.AnimationMixer;
@@ -11892,7 +12047,80 @@ export function createKidsWorld(
     /** How far each pose floats above planted ground — see plantFeet. */
     readonly lift: ReadonlyMap<string, number>;
     /** Where he may be. Corridor haunts only, already thinned. */
-    readonly spots: readonly { x: number; z: number; haunt: string }[];
+    readonly spots: readonly KuttiSpot[];
+    /** Roof height while he is up on one, 0 when he is not. */
+    roofY: number;
+    /**
+     * WHICH WAY HE HAS CHOSEN TO BE SEEN THIS TIME, never both at once.
+     *
+     * A lamp on him and a halo around him are two answers to the same
+     * question, and running them together is what made him look overlit no
+     * matter how far either one came down: the spot models a face and the
+     * halo paints flat orange over the face the spot just modelled, so each
+     * was spending its budget undoing the other. Picked once per appearance
+     * and kept for it, so an appearance has one look rather than an average
+     * of two — and he still has the third option of neither, which is most
+     * appearances and is the point of him.
+     *
+     * And "dark", which is the third answer and the most interesting one: he
+     * lights himself not at all and simply stands there in the night, read by
+     * whatever the moon is giving. Unlit he can afford to STAY — a lamp on a
+     * figure is a statement and wears out in seconds, while something merely
+     * present at the edge of the road can be present for a long time. So a
+     * dark appearance runs at better than twice the length of a lit one, and
+     * it is the commonest of the three.
+     */
+    lit: "spot" | "glow" | "dark";
+    /**
+     * WORLD UNITS PER MODEL UNIT.
+     *
+     * `fitToHeight` scales the imported scene to the height this world wants
+     * him at, so every figure the clips were authored in — and the travel
+     * speeds below are authored figures — is in the raw model's units and has
+     * to come through here. Read off the scene rather than written down,
+     * because the fit depends on his measured height and on the perspective
+     * of the lane he stands in, and a constant would be wrong the first time
+     * either changed.
+     */
+    readonly unit: number;
+    /** What this burst of stones is aimed at. Where the next one lands is
+     * drawn per stone, and the two aims scatter quite differently. */
+    stoneAim: "roof" | "short";
+    /** Whether the nothing-in-shot note has already been made this spell. */
+    saidDry: boolean;
+    /** The spare bodies, always built, mostly not shown. */
+    readonly echoes: readonly KuttiEcho[];
+    /** How many of him there are this time, the real one included. */
+    copies: number;
+    /**
+     * HIS OWN MATERIALS, so the glow can actually light his face.
+     *
+     * The sprite is a halo AROUND him and cannot illuminate anything — it is
+     * drawn over the scene, not into the lighting — so at night he glowed and
+     * his face stayed a silhouette inside it, which is the opposite of the
+     * point. A real light would cost a slot out of a budget that already has
+     * shops going dark in it. Raising his own emissive costs nothing, lights
+     * exactly him and nothing around him, and is the only thing here that
+     * makes the FACE readable rather than the outline.
+     */
+    readonly mats: readonly THREE.MeshStandardMaterial[];
+    /**
+     * A LAMP ON HIM, because emissive alone was not enough.
+     *
+     * Raising his own emissive makes the skin brighter but FLATTER — it adds
+     * light everywhere at once, so the face lifts out of the dark with no
+     * shadow left in it to read as a face. A spot from above and in front
+     * gives it a direction, which is what a brow and a nose need to be
+     * anything at all.
+     *
+     * Zero intensity whenever he is not lit, so it costs nothing on the
+     * frames he is sneaking about. `castShadow` is never touched: flipping it
+     * rebuilds every shader the light reaches and this one goes on and off
+     * constantly.
+     */
+    readonly faceSpot: THREE.SpotLight;
+    /** The stone burns while it flies, and goes out where it lands. */
+    readonly stoneLight: THREE.PointLight;
     routine: KuttiRoutine | null;
     /** Seconds into the routine. A clock, never a clip-ended event. */
     t: number;
@@ -11900,9 +12128,59 @@ export function createKidsWorld(
     beat: number;
     /** Seconds until he starts something, when he is between routines. */
     wait: number;
-    /** Which spot he is standing at. */
-    spot: number;
+    /** Where he is standing. Not an index: a road spot is made up on the
+     * spot and belongs to no list. */
+    here: KuttiSpot | null;
     hidden: boolean;
+    /**
+     * HIS OWN LIGHT, and it is not always on.
+     *
+     * A trickster who glows all the time cannot lurk, and half his clip set —
+     * `sneaky_walk`, `peek_left`, `peek_right`, `hear_something` — only pays
+     * off if he is sometimes hard to see. So the glow rises when he WANTS to
+     * be seen (laughing, taunting, throwing) and sits low the rest of the
+     * time. It is a sprite rather than a light: a real one would cost a slot
+     * out of a budget that already has shops going dark in it.
+     */
+    readonly glow: THREE.Sprite;
+    /** Where the glow is heading, 0..1. Eased, never snapped. */
+    glowWant: number;
+    glowNow: number;
+    /** The dust he goes into and comes out of. Pooled; never allocated in a tick. */
+    readonly puffs: readonly {
+      wait: number;
+      spin: number;
+      twist: number;
+      curl: number;
+      spec: number;
+      readonly s: THREE.Sprite;
+      v: THREE.Vector3;
+      life: number;
+      max: number;
+      size: number;
+    }[];
+    /** One stone, because he never has two in the air. */
+    readonly stone: THREE.Mesh;
+    stoneT: number;
+    /** Stones still to throw in this burst, and the wait until the next. */
+    stoneLeft: number;
+    stoneGap: number;
+    readonly stoneFrom: THREE.Vector3;
+    readonly stoneTo: THREE.Vector3;
+    stoneArc: number;
+    /**
+     * Seconds left of being CAUGHT, and the cooldown after.
+     *
+     * `kutti_25_light_hit` was authored and then deliberately left out of
+     * every routine, because nothing on an empty road hits him and inventing
+     * an attacker to justify a clip is backwards. This is what it was being
+     * held for: the child stops, and he is still there, and being SEEN is the
+     * thing that startles him.
+     */
+    caught: number;
+    seenCool: number;
+    /** Cooldown on the come-and-sit-with-you beat. */
+    roadCool: number;
   };
   let kutti: KuttiRig | null = null;
 
@@ -11914,44 +12192,905 @@ export function createKidsWorld(
    * would strand him mid-routine for the rest of the session. This page has
    * already paid for that mistake once; see the queue the hidden tab drained.
    */
+  /**
+   * WHEN HE WANTS TO BE SEEN, by clip.
+   *
+   * The glow is not a state he is in, it is something he does. Laughing,
+   * taunting and throwing are all aimed at somebody, so he lights up for
+   * them; creeping and peering are the opposite and he goes dim. Anything
+   * unlisted sits in between, which is most of his idling.
+   */
+  const KUTTI_BOLD = new Set([
+    "kutti_13_trickster_laugh",
+    "kutti_14_taunt",
+    "kutti_17_pick_up_and_throw_stone",
+    "kutti_10_reappear_standing",
+    "kutti_12_reappear_into_squat",
+    "kutti_21_mischief_hop",
+  ]);
+  const KUTTI_SHY = new Set([
+    "kutti_04_sneaky_walk",
+    "kutti_15_peek_left",
+    "kutti_16_peek_right",
+    "kutti_24_hear_something",
+    "kutti_22_perched_crouch",
+  ]);
+  const KUTTI_VANISH = new Set([
+    "kutti_09_vanish_standing",
+    "kutti_11_vanish_from_squat",
+  ]);
+  const KUTTI_REAPPEAR = new Set([
+    "kutti_10_reappear_standing",
+    "kutti_12_reappear_into_squat",
+  ]);
+
+  /** A handful of dust off the road, thrown up and settling back. */
+  const kuttiBurst = (k: KuttiRig, x: number, y: number, z: number) => {
+    let n = 0;
+    for (const p of k.puffs) {
+      if (p.life > 0 || p.wait > 0) continue;
+      // Outward and UP, then gravity takes it: dust thrown up by something
+      // arriving settles, it does not drift away like smoke.
+      //
+      // BUT IT DOES NOT ALL LEAVE AT ONCE. Eleven sprites released on a
+      // single frame is a starburst — one ring, expanding, gone — and the
+      // reason it read as a special effect rather than as smoke. Real smoke
+      // keeps arriving for a moment after the thing that made it: the first
+      // puffs are already spreading and going soft while the next are still
+      // coming out of the ground behind them, and that overlap is most of
+      // what makes a cloud look like it has depth.
+      const a = Math.random() * Math.PI * 2;
+      const r = 0.3 + Math.random() * 1.2;
+      // Later puffs come out slower and lower — the burst is spending itself.
+      const late = n / 17;
+      p.wait = late * 0.32 * (0.6 + Math.random() * 0.8);
+      p.v.set(
+        Math.cos(a) * r * (1 - late * 0.45),
+        0.85 + Math.random() * 1.25 - late * 0.3,
+        Math.sin(a) * r * (1 - late * 0.45),
+      );
+      // Longer-lived than before. Dust that is gone in half a second never
+      // gets to billow, and billowing is the whole of what smoke does.
+      p.max = 0.9 + Math.random() * 0.75;
+      p.life = p.max;
+      p.size = 0.55 + Math.random() * 0.8;
+      p.spin = Math.random() * Math.PI * 2;
+      // Slow. Fast-spinning sprites read as pinwheels; this is just enough
+      // to stop the same bitmap being recognisable twice in one cloud.
+      p.twist = (Math.random() - 0.5) * 1.1;
+      p.curl = Math.random() * Math.PI * 2;
+      p.spec = 0.6 + Math.random() * 0.8;
+      p.s.position.set(
+        x + Math.cos(a) * 0.25,
+        y + 0.1 + Math.random() * 0.3,
+        z + Math.sin(a) * 0.25,
+      );
+      p.s.material.rotation = p.spin;
+      p.s.material.opacity = 0;
+      // The ones with no delay start visible; the rest are switched on by the
+      // wait branch in the tick as their moment comes.
+      p.s.visible = p.wait <= 0;
+      if (++n >= 18) break;
+    }
+  };
+
+  /** Dust, glow and stone, every frame, whether or not he is doing anything. */
+  const tickKuttiVfx = (k: KuttiRig, dt: number) => {
+    for (const p of k.puffs) {
+      if (p.wait > 0) {
+        p.wait -= dt;
+        if (p.wait <= 0 && p.life > 0) {
+          p.s.visible = true;
+        }
+        continue;
+      }
+      if (p.life <= 0) continue;
+      p.life -= dt;
+      if (p.life <= 0) {
+        p.s.visible = false;
+        p.s.material.opacity = 0;
+        continue;
+      }
+      // LIGHTER THAN IT WAS. At 3.4 the gravity pulled every puff back down
+      // inside its own lifetime, so the cloud fell as one piece — which is
+      // what sand does and not what smoke does. Cut to a third, so it rises,
+      // slows, and is still hanging when it fades out.
+      p.v.y -= 1.15 * dt;
+      p.v.multiplyScalar(1 - Math.min(1, dt * 1.5));
+      const u = p.life / p.max;
+      const age = 1 - u;
+      // A SLOW WANDER. Smoke does not travel in straight lines: the air it is
+      // in is moving, so it drifts sideways and the drift changes as it goes.
+      // Two turns of a sine over its life, each puff on its own phase, which
+      // is enough to break up the radial spray without looking like wind.
+      const curl = p.curl + age * 4.2;
+      p.s.position.x += Math.cos(curl) * 0.34 * dt;
+      p.s.position.z += Math.sin(curl * 0.8) * 0.3 * dt;
+      p.s.position.addScaledVector(p.v, dt);
+      p.s.material.rotation = p.spin + p.twist * age;
+      // Spreads as it fades, which is what makes it dust and not a flash —
+      // and spreads FURTHER now, to two and a half times its birth size: a
+      // cloud that holds its width while it dims is a light going out, not
+      // smoke thinning.
+      p.s.scale.setScalar(p.size * (1 + age * 1.5));
+      // A TENTH, AND THE STACK DOES THE REST.
+      //
+      // Each puff is barely there now. 0.72 was a solid body of smoke, and
+      // what a thing stepping out of the ground leaves behind should be
+      // something you can see the road through — but eighteen of them
+      // overlapping still build a cloud with weight where they pile up and
+      // almost nothing at its edges, which is the shape smoke actually has.
+      // One dense sprite has the same silhouette everywhere, which is what
+      // made it read as a decal.
+      //
+      // `spec` is each puff's own share of that, drawn at birth: a cloud in
+      // which every particle is equally faint is a gradient, not smoke.
+      //
+      // The curve is unchanged and still matters: a puff fading on `u * u`
+      // spends most of its life nearly invisible, so the cloud looks thin at
+      // exactly the moment it should be thickest — the beat right after he
+      // goes. Full within a fifth of its life, then a long smooth decay.
+      p.s.material.opacity =
+        0.1 * p.spec * Math.min(1, age / 0.18) * (u * u * (3 - 2 * u));
+    }
+    // Every copy shows exactly when he does and goes when he goes — he is
+    // one thing seen several times, so they cannot outlast him. Done here,
+    // in the one function every path through the tick runs before any of its
+    // returns, rather than at each of the four places he is hidden.
+    for (let i = 0; i < k.echoes.length; i++) {
+      const e = k.echoes[i]!;
+      e.wrap.visible = i < k.copies - 1 && k.wrap.visible;
+    }
+    // The glow follows its target rather than jumping to it: a light that
+    // snaps on is a switch, and he is not wired to anything.
+    k.glowNow += (k.glowWant - k.glowNow) * Math.min(1, dt * 3.2);
+    // A RIM, NOT A BONFIRE.
+    //
+    // This sprite was 4.0 to 6.6 units across on a figure 3.75 tall — nearly
+    // twice his own height, centred on his chest, and painted over him. That
+    // is what "the glow is too much and the face is not visible" was: not the
+    // light on him, the sheet of orange in front of him.
+    //
+    // Now about half his height and half as strong, sitting behind his
+    // shoulders where it separates him from the dark without touching his
+    // face. The light that makes the face is the spot below, not this.
+    //
+    // DOWN AGAIN, to a little over half of that. The halo is the part that
+    // reads as "too much glow" every time, because a sprite is painted OVER
+    // the scene rather than into the lighting — it cannot model anything, it
+    // can only add flat orange, and flat orange over a face is the one thing
+    // that makes a face harder to see rather than easier. So it keeps
+    // shrinking and the spot keeps taking over its job: this is now a faint
+    // separation behind the shoulders and nothing else.
+    // Back up from the 0.09 it was cut to, because it is no longer sharing
+    // the job with a spotlight: on the appearances that go this way it is the
+    // only thing separating him from the road, and it is off entirely on the
+    // ones that do not.
+    // SUBTLE — enough to find him by and no more. 0.2 was a lamp, 0.13 was
+    // still a light source; this is the amount that says something is
+    // standing there without saying what, which is the whole of him. Down
+    // again to 0.075: the halo's job is to separate him from the dark, not
+    // to be the brightest thing on the road.
+    k.glow.material.opacity =
+      k.lit === "glow" ? k.glowNow * 0.075 * nightBlend : 0;
+    k.glow.scale.setScalar(1.45 + k.glowNow * 0.5);
+    // And he lights himself. 0.85 is enough to read a face by at night and
+    // short of the point where the skin stops having shape in it.
+    // Emissive is the FILL now and the spot is the key. Down from 0.85: with
+    // a real light on him too, the old figure washed the face out entirely.
+    // It exists to stop the shadowed side going to pure black, nothing more.
+    // Barely there. Emissive cannot make a face — it lights every facet by
+    // the same amount, so the more of it there is the flatter he gets, and at
+    // 0.3 it was still cancelling out the modelling the spot was putting in.
+    // The self-emissive belongs to the halo look — it is him giving off light
+    // — so it goes with it, and under the lamp he is lit from outside like
+    // anything else is.
+    // The self-emissive comes down with it, and by more. Emissive lights
+    // every facet by the same amount, so it FLATTENS him as it brightens —
+    // past a point it is not making him more visible, it is making him more
+    // like a cut-out. 0.06 keeps the shadowed side off pure black and does
+    // nothing else.
+    const emissive = k.lit === "glow" ? k.glowNow * 0.06 * nightBlend : 0;
+    for (const m of k.mats) {
+      m.emissiveIntensity = emissive;
+    }
+    // The spot does the work, and carries more of it now that nothing is
+    // washing it out — and more again now the halo has been taken down twice.
+    //
+    // The figure goes UP as the cone widens, which looks backwards and is not:
+    // intensity here is power at the source, and spreading the same power over
+    // a cone half again as wide, from half again as far away, with a gentler
+    // decay, arrives dimmer at the face. 15 against the old 11 is roughly the
+    // same brightness ON HIM, delivered as a wash rather than as a spot.
+    k.faceSpot.intensity = k.lit === "spot" ? k.glowNow * 16 * nightBlend : 0;
+    if (k.stoneLeft > 0 && k.stoneT <= 0) {
+      k.stoneGap -= dt;
+      if (k.stoneGap <= 0) {
+        if (k.stoneAim === "short") {
+          // WHERE THIS ONE LANDS, drawn fresh. Scattered around the child by a
+          // few units in both directions — short of them more often than past
+          // them, because a stone that overshoots has gone over their heads and
+          // the whole point is that it falls at their feet.
+          const tz = k.stoneTo.z + (Math.random() * 5 - 2.6);
+          const tx = playerX - 3.4 + Math.random() * 5.2;
+          k.stoneTo.set(tx, terrainY(tx, tz) + 0.1, tz);
+        } else {
+          // A ROOF is a target, not an area: re-aimed at the child it would
+          // stop being a stone landing on somebody's tiles, which is the whole
+          // story. Nudged across the slope instead, so two stones do not hit
+          // the same tile.
+          k.stoneTo.x += (Math.random() - 0.5) * 1.6;
+          k.stoneTo.z += (Math.random() - 0.5) * 1.2;
+        }
+        k.stone.position.copy(k.stoneFrom);
+        k.stone.visible = true;
+        k.stoneT = k.stoneArc;
+        k.stoneLeft -= 1;
+        k.stoneGap = 0.45;
+      }
+    }
+    if (k.stoneT > 0) {
+      k.stoneT -= dt;
+      if (k.stoneT <= 0) {
+        k.stone.visible = false;
+        // Out, the instant it lands.
+        k.stoneLight.intensity = 0;
+        // A puff where it lands, so the stone is seen to ARRIVE. Without it
+        // a thrown stone simply stops existing somewhere.
+        kuttiBurst(k, k.stoneTo.x, k.stoneTo.y, k.stoneTo.z);
+      } else {
+        const u = 1 - k.stoneT / k.stoneArc;
+        k.stone.position.lerpVectors(k.stoneFrom, k.stoneTo, u);
+        // One parabola, peaking halfway. Height scales with the throw so a
+        // short toss does not loop like a mortar.
+        k.stone.position.y += 4 * u * (1 - u) * k.stoneArc * 1.5;
+        k.stone.rotation.x += dt * 7;
+        k.stone.rotation.z += dt * 5;
+        // Brightest across the middle of the arc, where it is highest and
+        // furthest from anything — a flame guttering down as it drops.
+        // Halved and reddened with the rest of it. An ember lights the ground
+        // it passes over faintly; it does not floodlight the road.
+        k.stoneLight.intensity = (0.4 + u * (1 - u) * 3) * 1.5 * nightBlend;
+      }
+    }
+  };
+
+  // ── WHERE THE PICTURE ACTUALLY IS ────────────────────────────────────
+  //
+  // "Near the child" and "on screen" are not the same thing, and the gap
+  // between them is why measuring against `playerX` was never going to be
+  // enough on its own.
+  //
+  // This camera is ORTHOGRAPHIC and aimed diagonally: it sits back and to the
+  // left, at (-camX, camY, camZ), looking at the origin, so in world terms
+  // its right vector is about (0.91, 0, 0.41). A haunt's DEPTH slides it
+  // across the frame nearly half as much as its distance down the road does,
+  // which a window measured in x alone cannot see at all — the well set back
+  // off the verge and the tree on the near side of it are a long way apart on
+  // screen while being the same `playerX` distance away. On top of that the
+  // camera trails the child by two units and lerps in at 0.06, so after a
+  // walk the frame sits further behind them than any symmetric window
+  // believes, and every theme overrides camY/camZ/frustum anyway.
+  //
+  // So ask the camera rather than model it. `project` returns normalised
+  // device coordinates, where 0 is the middle of the picture and ±1 its
+  // edges; that answer survives the camera overrides, the aspect ratio, a
+  // resize and the follow's lag, none of which a tuned distance can track.
+  const _shot = new THREE.Vector3();
+  /** How far across the frame a world point falls: 0 centre, ±1 the edges. */
+  const shotX = (x: number, z: number): number => {
+    // Chest height. It makes no difference to the ACROSS answer — this
+    // camera's right vector has no y in it at all, so height cannot move a
+    // point sideways — but it keeps the sample on the figure rather than
+    // under his feet for the day a theme tilts the camera and height starts
+    // to count.
+    _shot.set(x, terrainY(x, z) + 1.2, z).project(cam);
+    return _shot.x;
+  };
+
+  /**
+   * HOW FAST THE FRAME IS SLIDING UP THE ROAD, in units per second, smoothed.
+   *
+   * This is the whole reason the sightings need two tests rather than one. The
+   * frame only drifts while the child WALKS; when they stop — which is most of
+   * the time, and is exactly the case the corridor is for — it does not drift
+   * at all, and reserving the right-hand side of the picture for a drift that
+   * is not happening just throws away most of the eligible road for nothing.
+   * Measured off the camera rather than the child, because the camera is the
+   * thing whose movement actually carries him out of shot, and it lags.
+   */
+  let camWasX: number | null = null;
+  let camDrift = 0;
+
+  /**
+   * EVERYWHERE HE COULD BE RIGHT NOW, which is not only the scenery.
+   *
+   * Two kinds of place go in. The chapter's own haunts — the banyan, the
+   * laterite wall, the well, the lamp, a house and its roof — are fixed, and
+   * the routines that use them are about the thing they stand at, so they can
+   * only happen where that thing is. And then the ROAD, which is a haunt in
+   * the routine table with four routines hanging off it and which, until now,
+   * DID NOT EXIST: `HAUNT_MODELS` maps a haunt to the models that anchor it,
+   * and nothing anchors a road, so `anchorsFrom` never produced one. Every
+   * road routine in the table was unreachable — including the one that steps
+   * out of the ground behind the party, which is the one most asked for.
+   *
+   * A road needs no model to stand for it, so road spots are simply invented
+   * wherever he is wanted: a handful of random places inside the frame, on or
+   * beside the road, which is what "anywhere near the child" means. They are
+   * kept inside the corridor's own x range so he still only haunts the
+   * lessons that wrote a trace — the area is the chapter's, the position
+   * within it is free. It also means there is now always somewhere in shot,
+   * which is what killed the long empty stretches between fixed haunts.
+   */
+  /**
+   * TURN HIM TO LOOK AT SOMETHING.
+   *
+   * Every rig in this world is modelled facing +Z, which is why the player and
+   * the followers are all set to `Math.PI / 2` to walk up the road in +x. So a
+   * yaw of θ points along (sin θ, cos θ), and looking at a point is one atan2.
+   *
+   * It replaces `at.z < -8 ? 0 : Math.PI`, which was a guess at "face the road"
+   * and got it backwards for everything standing NEAR the road rather than set
+   * well back off it: at z = -1, `Math.PI` is -Z, which is away from the child
+   * and into the verge. Most haunts are near the road and all the invented road
+   * spots are, so most of the time he was facing the wrong way — and a figure
+   * throwing stones over its own shoulder is not throwing them at anybody.
+   */
+  const yawToward = (x: number, z: number, tx: number, tz: number): number =>
+    Math.atan2(tx - x, tz - z);
+  const faceKutti = (k: KuttiRig, tx: number, tz: number): void => {
+    k.wrap.rotation.y = yawToward(k.wrap.position.x, k.wrap.position.z, tx, tz);
+  };
+  /** Turn him to look at the child, wherever the child has got to. */
+  const faceChild = (k: KuttiRig): void => {
+    faceKutti(k, playerX, player?.wrap.position.z ?? LANE);
+  };
+
+  /**
+   * HOW FAR INTO THE THROW CLIP THE STONE ACTUALLY LEAVES HIS HAND.
+   *
+   * `kutti_17_pick_up_and_throw_stone` runs 4.25 seconds and spends the first
+   * half of it bending down and closing a fist on something. 2.6s is the wind
+   * and release — about five eighths through, which is where a throw releases
+   * once the arm has come over. Held any less and the stone is in the air
+   * before he has picked it up; held longer and it leaves after his arm has
+   * already dropped.
+   */
+  const THROW_RELEASE = 2.6;
+
+  // More than the five it was: a third or so of the draws are now thrown
+  // away for standing inside something, and the pool must not thin out.
+  /**
+   * A WELL'S PARAPET RADIUS, as a fraction of the model's own height.
+   *
+   * Measured from `Village_Well.glb`: the drum's widest ring is 17,770 of the
+   * 26,233 quantised units the model is tall, which is 0.677. Kept as a ratio
+   * rather than as a distance because the chapter sizes the well by height.
+   */
+  const WELL_RIM_R = 0.677;
+
+  const ROAD_TRIES = 9;
+  const inShot = (
+    k: KuttiRig,
+    edge: number,
+    slide: number,
+    not: KuttiSpot | null,
+  ): KuttiSpot[] => {
+    // NOT IN AMONG THEM.
+    //
+    // Nothing had ever said how CLOSE was too close. The scenery haunts were
+    // wherever the chapter put them and the road spots are invented inside
+    // the frame — and the frame contains the children, so a draw could and
+    // did land in the middle of the party, which is where he was standing to
+    // throw stones at them from a couple of metres. That is not a trickster
+    // in the dark, it is a boy in the group.
+    //
+    // Eight units is about three of him. Far enough that a thrown stone has
+    // an arc to it and that he is plainly a separate thing out on the road,
+    // close enough to still be the same picture. The one placement allowed
+    // inside it is `behind-child`, which is measured from the party on
+    // purpose and does not come through here.
+    const KEEP_OFF = 8;
+    const fits = (sp: KuttiSpot) =>
+      Math.abs(sp.x - playerX) > KEEP_OFF &&
+      shotX(sp.x, sp.z) < edge &&
+      shotX(sp.x - slide, sp.z) > -edge;
+    const out: KuttiSpot[] = [];
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const sp of k.spots) {
+      lo = Math.min(lo, sp.x);
+      hi = Math.max(hi, sp.x);
+      if (sp !== not && fits(sp)) out.push(sp);
+    }
+    if (!Number.isFinite(lo)) {
+      return out;
+    }
+    // The frame's own left and right edges at road depth, solved rather than
+    // searched: for an orthographic camera the across-answer is linear in x.
+    const a = shotX(0, 0);
+    const grad = (shotX(100, 0) - a) / 100;
+    if (grad > 1e-6) {
+      const xOf = (nx: number) => (nx - a) / grad;
+      // Biased right by the slide, exactly as the fixed haunts are: a road
+      // spot at the left edge walks out of shot just as fast as a tree there.
+      const x0 = Math.max(lo, xOf(-edge) + slide);
+      const x1 = Math.min(hi, xOf(edge));
+      for (let i = 0; i < ROAD_TRIES && x1 > x0; i++) {
+        // ── AND ACROSS THE ROAD, NOT JUST ALONG IT ──────────────────
+        //
+        // He was pinned to a two-metre strip beside the lane the children
+        // walk in, which is the one place a thing hiding from them would not
+        // stand. He can have the whole width: out in the middle of the road,
+        // over on the verge in the weeds, or back in the first of the trees.
+        //
+        // Measured from the road's OWN CENTRE rather than from the lane,
+        // because the road wanders — `meander` swings it about a unit either
+        // way — and an offset taken from a fixed lane drifts off the metalling
+        // wherever the road has gone the other way.
+        //
+        // WEIGHTED, because the tiers are not equally interesting: half the
+        // time on the road itself where he is unmissable, a third on the verge
+        // where he is half in the grass, and the rest back in the trees where
+        // he is a shape that might not be anything. The cap is the point of
+        // the whole thing — the treeline tier stops at about thirteen units
+        // out, which is the near edge of the planting, so "into the woods"
+        // means the first few trunks and never the field behind them. He is a
+        // spirit of the ROAD; a figure standing forty units back is not
+        // spooky, he is scenery.
+        const half = Math.max(3, roadClear);
+        const roll = Math.random();
+        const off =
+          roll < 0.5
+            ? Math.random() * half
+            : roll < 0.83
+              ? half + Math.random() * 3.2
+              : half + 3.2 + Math.random() * 1.8;
+        const px = x0 + Math.random() * (x1 - x0);
+        // Mostly the far side, which is the side with something to come out
+        // of — the near verge backs onto nothing but the camera.
+        const pz = meander(px) + (Math.random() < 0.7 ? -off : off);
+        // AND NOT INSIDE ANYTHING. These positions are invented rather than
+        // taken from a placement, so nothing had checked whether the ground
+        // at one was occupied — which is how he ended up standing half inside
+        // the market's foundation. `isClear` is the same test the build uses
+        // to stop two things being put in the same place, so a spot that
+        // would have failed at build time fails here too.
+        //
+        // 1.2 is his own width and a little air. A spot that is not clear is
+        // simply dropped: there are several tries and a whole frame of road
+        // to find one in, and one candidate fewer costs nothing.
+        // `fits` is not consulted for these — they are built to be in frame
+        // — so the stand-off has to be applied here as well, or the one kind
+        // of spot that CAN land on top of the children is the one kind that
+        // is invented near them.
+        if (Math.abs(px - playerX) > KEEP_OFF && isClear(px, pz, 1.2)) {
+          out.push({ x: px, z: pz, haunt: "road" });
+        }
+      }
+    }
+    return out;
+  };
+
   const tickKutti = (dt: number) => {
     const k = kutti;
     if (k == null || k.spots.length === 0) {
       return;
     }
+    // ── HE IS A NIGHT THING, AND ONLY THAT ──────────────────────────
+    //
+    // The corridor is BUILT behind this window — see the chapter build — but
+    // nothing enforced it afterwards, and the routine table is what let him
+    // through: `routinesFor` only withholds the ones marked `night`, so every
+    // "any" and "prefers-night" routine was perfectly happy to run at noon.
+    // A child who pressed the moon button back to day, or who played on
+    // through until the staged hour rolled out of the small hours, got a
+    // forest spirit strolling about in daylight.
+    //
+    // Asked with `activityAt` against the staged night hour, which is the
+    // same test the corridor build uses and the same one that defines "deep"
+    // as ten at night through four in the morning. Build and tick therefore
+    // agree by construction rather than by two copies of a number.
+    if (!nightNow || activityAt(stagedNow().night) !== "deep") {
+      if (!k.hidden) {
+        k.hidden = true;
+        k.wrap.visible = false;
+        k.routine = null;
+        k.beat = -1;
+        k.glowWant = 0;
+        k.glowNow = 0;
+        k.copies = 1;
+        for (const e of k.echoes) e.wrap.visible = false;
+        // Not a burst: dawn is not something he does, it is something that
+        // happens to him, and a puff of dust says he chose to go.
+      }
+      return;
+    }
+    if (dt > 0) {
+      const v = camWasX == null ? 0 : (cam.position.x - camWasX) / dt;
+      camWasX = cam.position.x;
+      // Only ever forward. A stumble backward does not buy him time on the
+      // right of the frame, and the lerp overshoots a little on stopping.
+      camDrift += (Math.max(0, v) - camDrift) * Math.min(1, dt * 2);
+    }
     k.mixer.update(dt);
+    for (let i = 0; i < k.copies - 1; i++) {
+      k.echoes[i]?.mixer.update(dt);
+    }
+    tickKuttiVfx(k, dt);
+    if (k.seenCool > 0) k.seenCool -= dt;
+    if (k.roadCool > 0) k.roadCool -= dt;
+    // ── CAUGHT LOOKING ──────────────────────────────────────────────
+    //
+    // What `kutti_25_light_hit` was held back for. He is not hit by anything
+    // on this road; what startles him is being SEEN. So: he is visible, the
+    // child has stopped, and they are close enough that looking at him is
+    // unavoidable — he flinches and goes into the ground, mid-routine,
+    // whatever he was doing.
+    //
+    // The cooldown is long. A spirit that flinches every time you stop
+    // walking is a jack-in-the-box.
+    if (k.caught > 0) {
+      k.caught -= dt;
+      if (k.caught <= 0) {
+        kuttiBurst(k, k.wrap.position.x, k.wrap.position.y, k.wrap.position.z);
+        k.wrap.visible = false;
+        k.hidden = true;
+        k.routine = null;
+        k.beat = -1;
+        k.glowWant = 0;
+        k.wait = 60 + Math.random() * 60;
+      }
+      return;
+    }
+    //
+    // THREE THINGS TIGHTENED once the road became a haunt he can be invented
+    // at. A road spot is generated near the child by design, so the old test —
+    // standing still, and within thirteen units — was met on the first frame
+    // of the very first routine, every time: he appeared, flinched, and was
+    // gone for three minutes before doing anything. That is not the rare
+    // accident it was written to be, it is his whole behaviour.
+    //
+    // So he has to be EIGHT SECONDS into something before it can happen (he
+    // gets to do the thing he came to do), they have to be properly close at
+    // NINE units rather than thirteen, and even then it is one chance in four
+    // — with a short `seenCool` on the miss so the roll is not retaken sixty
+    // times a second. Being caught is an accident, and an accident that
+    // happens whenever the conditions allow it is a rule.
+    if (
+      k.routine != null &&
+      !k.hidden &&
+      k.t > 8 &&
+      k.seenCool <= 0 &&
+      moveW < 0.12 &&
+      Math.abs(k.wrap.position.x - playerX) < 9
+    ) {
+      const hit = Math.random() < 0.25 ? k.act.get("kutti_25_light_hit") : null;
+      if (hit == null) {
+        // The roll missed, or the clip is absent. Either way, do not ask again
+        // for a few seconds — at sixty frames a second a one-in-four chance
+        // re-rolled every frame is a certainty within a twentieth of one.
+        k.seenCool = 12;
+      } else {
+        for (const [, a2] of k.act) a2.stop();
+        hit.reset();
+        hit.setEffectiveWeight(1);
+        hit.play();
+        k.caught = KUTTI_CLIPS.get("kutti_25_light_hit")?.seconds ?? 2;
+        k.seenCool = 150 + Math.random() * 120;
+        // Lit, because being caught is the one moment he is not hiding.
+        k.glowWant = 1;
+        console.info("[kuttichathan] caught looking, and gone");
+        return;
+      }
+    }
     // ── BETWEEN ROUTINES ────────────────────────────────────────────
     if (k.routine == null) {
+      // ── IF THEY SIT DOWN ON HIS ROAD, AT NIGHT ────────────────────
+      //
+      // CHECKED BEFORE `k.wait`, and that is the whole point of it being
+      // here. Behind the wait this could only fire once the 45-120s ambient
+      // timer had run out, so a child who sat down and looked around got
+      // nothing most of the time — the trigger was real and almost
+      // unreachable. Sitting jumps the queue; `roadCool` is what stops it
+      // becoming constant, and it ticks every frame now rather than only in
+      // the branch this used to be buried in.
+      //
+      // The one time he comes to THEM. Everywhere else he is a creature of
+      // places and the child happens to walk past; a child who stops in the
+      // dark and sits down in the middle of his stretch of road has, as far
+      // as this story is concerned, asked for it.
+      //
+      // He still arrives out of the ground rather than walking up, and
+      // `road-behind` puts him at their backs — so they sit, and the thing
+      // they cannot see stands up behind them and laughs.
+      const sitting =
+        restStage === "sitIdle" ||
+        restStage === "sitDown" ||
+        restStage === "crouchIdle";
+      // AND IN THE MIDDLE OF ONE OF HIS LESSONS.
+      //
+      // Not at a milestone. A milestone is a lit stone with a lamp on it and
+      // the obvious place to stop, and something stepping out of the ground
+      // there is a thing that happens AT the marker — which makes it part of
+      // the furniture. Out in the middle of a lesson there is nothing but
+      // road, which is where a child sitting down in the dark is properly on
+      // their own.
+      //
+      // The corridor test is the same one the traces use, so he can only do
+      // this on a stretch the chapter already says is his.
+      const here = CHAPTER != null ? lessonAt(playerX, CHAPTER) : null;
+      const from =
+        here != null && CHAPTER != null ? milestoneX(here.n - 1, CHAPTER) : 0;
+      const to =
+        here != null && CHAPTER != null ? milestoneX(here.n, CHAPTER) : 1;
+      const frac = to > from ? (playerX - from) / (to - from) : 0.5;
+      // A slightly wider band than the strict middle: sitting is something a
+      // child does where they happen to stop, and 22-78 refused a lot of road
+      // that is nowhere near a milestone.
+      const midLesson = here?.trace != null && frac > 0.15 && frac < 0.85;
+      if (nightNow && sitting && midLesson && k.roadCool <= 0) {
+        const r2 = KUTTI_ROUTINES.find((x) => x.id === "road-behind");
+        if (r2 != null) {
+          k.routine = r2;
+          k.t = 0;
+          k.beat = -1;
+          // Placed on the road beside them to begin with; the vanish in the
+          // routine then moves him behind them, which is the whole point.
+          // HE IS SEEN FIRST, AND ON THE RIGHT.
+          //
+          // Ahead of them up the road, which is the right of frame, and out
+          // on the road rather than back in the verge. He stands there, throws
+          // his stones and laughs where they can see him — and only then goes
+          // into the ground and comes up behind them on the left. Starting him
+          // already behind them made the whole beat a figure appearing out of
+          // nothing, with no crossing to notice.
+          const rx = playerX + 6.5;
+          const rz = (player?.wrap.position.z ?? 0) + 0.2;
+          k.wrap.position.set(rx, terrainY(rx, rz), rz);
+          k.wrap.rotation.y = Math.PI / 2;
+          k.wrap.visible = true;
+          k.hidden = false;
+          // VERY short. The routine itself runs about half a minute, so this
+          // is the pause BETWEEN visits — a child who stays sitting gets him
+          // back within ten or fifteen seconds of him strolling off, which is
+          // what "he keeps coming back" has to mean to be worth sitting for.
+          k.roadCool = 8 + Math.random() * 9;
+          console.info(
+            `[kuttichathan] they sat down in the middle of lesson ${here?.n}`,
+          );
+          return;
+        }
+      }
+      // The ordinary ambient routine, once his own timer is up.
       k.wait -= dt;
       if (k.wait > 0) {
         return;
       }
+      // ── AND IT HAS TO BE A HAUNT THEY CAN SEE ────────────────────
+      //
+      // THIS is why he never seemed to turn up. The spot was drawn uniformly
+      // from every haunt in the corridor — and the corridor is five lessons
+      // of road, hundreds of units of it, while the camera sees a few dozen.
+      // So he was picking a tree four lessons away and performing the whole
+      // routine perfectly, to nobody, out of shot. Everything worked except
+      // the one thing that matters, which is being in the picture.
+      //
+      // Only haunts within sight are eligible now. If none is, he waits a few
+      // seconds and asks again rather than spending the routine somewhere the
+      // child will never look — the corridor scrolls past as they walk, so a
+      // haunt is usually along in a moment.
+      // IN THE FRAME NOW, AND STILL IN IT WHEN HE HAS FINISHED.
+      //
+      // Two tests, because a haunt is a fixed place and the frame moves. The
+      // children walk up the road in +x and the camera goes with them, so over
+      // the twenty-odd seconds of a routine a haunt slides LEFTWARD across the
+      // picture: one that starts near the left edge is gone before he has
+      // finished squatting down. So he also has to be inside the frame at the
+      // far end of the routine, which is the same question asked of a haunt
+      // shifted back down the road by however far the frame will have travelled.
+      //
+      // The pair of them do the right thing at both speeds without a special
+      // case. Walking, the second test pushes the whole eligible band to the
+      // right — he shows up on the right of the live scene and drifts out to
+      // the left, which is the shape that was asked for. Sitting, the frame is
+      // not moving, the second test is the same as the first, and the entire
+      // visible sixty units of road are fair game, which is what the sitting
+      // case needs: nothing drifts, so nothing has to be reserved.
+      //
+      // The edges are 0.85 and not 1.0 so he is wholly inside the picture
+      // rather than half off the side of it — he is a metre across, and his
+      // stones fly further than he stands.
+      const EDGE = 0.85;
+      const slide = camDrift * 12;
+      const near = inShot(k, EDGE, slide, null);
+      if (near.length === 0) {
+        k.wait = 6;
+        // Said ONCE per dry spell, not every six seconds. This should now be
+        // close to impossible — the road candidates are generated inside the
+        // frame — so if it ever prints, the corridor's own x range is the
+        // thing that has gone wrong, and the percentages say so.
+        if (!k.saidDry) {
+          k.saidDry = true;
+          console.info(
+            `[kuttichathan] nothing in shot: ` +
+              k.spots
+                .map(
+                  (sp) =>
+                    `${sp.haunt} ${(shotX(sp.x, sp.z) * 50 + 50).toFixed(0)}%`,
+                )
+                .join(", "),
+          );
+        }
+        return;
+      }
+      k.saidDry = false;
       // Where, then what. The haunt decides the routine — that is the
       // whole design — and the roll is taken from the spot's own position
       // so the same tree does not do something different on every reload.
-      k.spot = Math.floor(Math.random() * k.spots.length);
-      const at = k.spots[k.spot]!;
-      const roll =
+      //
+      // Weighted toward the right of what is eligible rather than picked flat
+      // out of it, for the drift above: the further right he starts the more
+      // of him gets seen. Weighted and not simply the rightmost, or the same
+      // haunt in a lesson would be the only one that ever ran.
+      // AND THE BIAS IS ONLY RIGHT WHILE THE FRAME IS MOVING.
+      //
+      // Preferring the right of the picture buys him time when it is sliding
+      // left past him. Standing still it buys nothing and costs a lot: with
+      // the child sat down and the camera parked, this put him at 92% across
+      // — hard against the right edge, half of him out of shot — for a
+      // benefit that does not exist at zero drift. So the two preferences are
+      // blended by how fast the frame is actually going: parked, he is drawn
+      // toward the MIDDLE, where a figure is unambiguously in the scene;
+      // walking, toward the right, where he has the whole routine to drift
+      // across. `1.5` is a brisk walk, so a stroll gets most of the way to
+      // the right-hand bias and a dead stop gets none of it.
+      const bias = Math.min(1, camDrift / 1.5);
+      const wOf = (sp: KuttiSpot) => {
+        const nx = shotX(sp.x, sp.z);
+        const middling = 1.15 - Math.abs(nx);
+        const rightward = nx + EDGE + 0.15;
+        return middling * (1 - bias) + rightward * bias;
+      };
+      let wsum = 0;
+      for (const sp of near) wsum += wOf(sp);
+      let pick = Math.random() * wsum;
+      k.here = near[near.length - 1]!;
+      for (const sp of near) {
+        pick -= wOf(sp);
+        if (pick <= 0) {
+          k.here = sp;
+          break;
+        }
+      }
+      const at = k.here;
+      // THE PLACE LEANS THE CHOICE; IT DOES NOT DECIDE IT.
+      //
+      // This roll used to be the spot's hash alone, deliberately — so that a
+      // given tree always did the same thing and the corridor felt like a set
+      // of places rather than a spawner. The cost of that was not obvious
+      // until the stones went missing: a hash is CONSTANT, so every haunt was
+      // welded to exactly one of its routines for the life of the world. A
+      // house whose hash landed on the taunt would never once throw a stone,
+      // however long anybody played, and with thirteen haunts the whole
+      // repertoire a session could ever show was thirteen fixed behaviours.
+      //
+      // Mixed with a fresh draw instead. The place still leans — its own
+      // routine comes up most often, so a tree keeps a character — but every
+      // routine it has can eventually happen there.
+      const placed =
         (((Math.sin(at.x * 12.9898 + at.z * 78.233) * 43758.5453) % 1) + 1) % 1;
+      const roll = (placed * 0.4 + Math.random() * 0.6) % 1;
       const r = chooseRoutine(at.haunt as never, nightNow, roll);
       if (r == null) {
         k.wait = 20;
+        // A haunt with nothing it is allowed to do at this hour is a real
+        // state — the lamp and the house are night-only — but it used to be a
+        // silent one, and a silent twenty-second retry looks exactly like a
+        // figure that never loaded.
+        console.info(
+          `[kuttichathan] nothing for a ${at.haunt} at this hour, waiting`,
+        );
         return;
       }
-      k.routine = r;
+      // ── HOW MANY OF HIM THERE ARE THIS TIME ────────────────────
+      //
+      // Mostly one. The trick only works because it is not what usually
+      // happens — three Kuttichathans every time is a crowd of goblins, and a
+      // crowd is not uncanny. So: seven times in ten there is one of him, and
+      // the rest of the time the child looks up and there is another one
+      // further down the road doing exactly the same thing.
+      //
+      // Copies force the `glow` look, because they have no spot of their own
+      // — see `KuttiEcho`. That is a cost, but it is the right way round: the
+      // one lit body and two dark ones would read as a bug, and all three
+      // faintly glowing in the dark is the picture this is for.
+      const roll2 = Math.random();
+      k.copies = roll2 < 0.7 ? 1 : roll2 < 0.92 ? 2 : 3;
+      // ── LIT, HALOED, OR NOT AT ALL ─────────────────────────────
+      //
+      // Copies still force the halo — they have no lamp of their own, and one
+      // lit body beside two dark ones reads as a fault rather than a trick.
+      // Otherwise the commonest answer is neither: he stands in the dark and
+      // is simply there.
+      const roll3 = Math.random();
+      k.lit =
+        k.copies > 1
+          ? "glow"
+          : roll3 < 0.46
+            ? "dark"
+            : roll3 < 0.76
+              ? "spot"
+              : "glow";
+      // ── AND AN UNLIT ONE STAYS ─────────────────────────────────
+      //
+      // Only the HOLDS are stretched, which is why this is a copy of the
+      // routine and not a slower clock: holds govern the looping beats — the
+      // standing, the squatting, the crouch on the wall — and the one-shots
+      // around them keep their own timing. Slowing `k.t` instead would play
+      // the laugh and the throw in slow motion, which is a different
+      // character entirely.
+      k.routine =
+        k.lit === "dark" ? { ...r, holds: r.holds.map((h) => h * 2.4) } : r;
       k.t = 0;
       k.beat = -1;
-      // Stood where the haunt is, turned to face the road he is beside.
-      k.wrap.position.set(at.x, terrainY(at.x, at.z), at.z);
-      k.wrap.rotation.y = at.z < -8 ? 0 : Math.PI;
+      // Stood where the haunt is, looking at the child — which is also
+      // looking at the road, since that is where they are.
+      // ── UP ON IT, IF THE ROUTINE SAYS SO ───────────────────────
+      //
+      // `onRoof` has been on the routine table since the corridor was written
+      // and was never read anywhere in this file — so `house-roof`, the whole
+      // point of which is that he is sitting on a roof, put him on the ground
+      // in front of the house. That is the "he is inside the house, not on
+      // it" report, and the well's rim needs exactly the same mechanism.
+      //
+      // `roofZ` moves him onto the near edge of the thing and `roofY` lifts
+      // him onto its top; a spot that carries neither simply keeps him on the
+      // ground, so a routine may ask for a perch at a haunt that has none
+      // without anything having to check.
+      k.roofY = r.onRoof ? (at.roofY ?? 0) : 0;
+      const az = r.onRoof && at.roofZ != null ? at.roofZ : at.z;
+      k.wrap.position.set(at.x, terrainY(at.x, az) + k.roofY, az);
+      faceChild(k);
       k.wrap.visible = true;
       k.hidden = false;
+      // The copies go to other places in the same shot, never on top of each
+      // other: a fresh draw from the same candidate list, minus the one he
+      // took. If the frame has not got the room, there are simply fewer of
+      // him — better one Kuttichathan than two standing in the same square.
+      const spare = inShot(k, EDGE, slide, at).filter(
+        (sp) => Math.abs(sp.x - at.x) > 4,
+      );
+      k.copies = Math.min(k.copies, spare.length + 1);
+      for (let i = 0; i < k.echoes.length; i++) {
+        const e = k.echoes[i]!;
+        if (i >= k.copies - 1) {
+          e.wrap.visible = false;
+          continue;
+        }
+        const to = spare.splice(
+          Math.floor(Math.random() * spare.length),
+          1,
+        )[0]!;
+        e.wrap.position.set(to.x, terrainY(to.x, to.z), to.z);
+        e.wrap.rotation.y = yawToward(
+          to.x,
+          to.z,
+          playerX,
+          player?.wrap.position.z ?? LANE,
+        );
+        e.wrap.visible = true;
+      }
       // Same reporting as the rest of the chapter build. A corridor that
       // produced nothing for a whole lesson used to be indistinguishable
       // from one whose figure never loaded.
       console.info(
         `[kuttichathan] at the ${at.haunt} by milestone` +
-          ` ${CHAPTER != null ? lessonAt(at.x, CHAPTER).n : "?"}: ${r.says}`,
+          ` ${CHAPTER != null ? lessonAt(at.x, CHAPTER).n : "?"}` +
+          `, ${(at.x - playerX).toFixed(0)}u from the child and` +
+          ` ${(shotX(at.x, at.z) * 50 + 50).toFixed(0)}% across frame:` +
+          ` ${r.says}`,
       );
       return;
     }
@@ -11960,13 +13099,48 @@ export function createKidsWorld(
     const at = beatAt(k.routine, k.t);
     if (at.index !== k.beat) {
       const next = k.act.get(at.clip);
-      const prev = k.beat >= 0 ? k.act.get(k.routine.beats[k.beat]!) : null;
+      const prevName = k.beat >= 0 ? k.routine.beats[k.beat]! : null;
+      const prev = prevName != null ? k.act.get(prevName) : null;
+      // A TURN THAT SURVIVES THE CLIP THAT MADE IT.
+      //
+      // Both turns carry the whole ninety degrees on the Hips — measured at
+      // 89.9° end to end — so the figure really does turn while they play.
+      // But the Hips is inside the wrap, and the next clip's first frame puts
+      // it back wherever that clip starts: he turned, and then the turn was
+      // thrown away, every time. Which is most of what "facing the wrong
+      // direction" was.
+      //
+      // Handed to the wrap as the beat ends, so the rotation the clip drew is
+      // still there on the frame after it. Added, not assigned — he may have
+      // been turned to face the children first, and the turn is relative to
+      // wherever he was looking.
+      if (prevName === "kutti_26_turn_left_90") {
+        k.wrap.rotation.y += Math.PI / 2;
+      } else if (prevName === "kutti_27_turn_right_90") {
+        k.wrap.rotation.y -= Math.PI / 2;
+      }
       if (next != null) {
         next.reset();
         next.time = 0;
         next.enabled = true;
         next.setEffectiveWeight(1);
         next.play();
+        // AND SO DOES EVERY COPY OF HIM. Same clip, same moment — they are
+        // him, not a troupe — but each is nudged a fraction out of step,
+        // because three bodies frame-locked to the same pose read as one
+        // model drawn three times, which is what they are and the one thing
+        // they must not look like.
+        for (let i = 0; i < k.copies - 1; i++) {
+          const e = k.echoes[i];
+          const ea = e?.act.get(at.clip);
+          if (e == null || ea == null) continue;
+          for (const [, other] of e.act) other.stop();
+          ea.reset();
+          ea.time = 0.12 + i * 0.17;
+          ea.enabled = true;
+          ea.setEffectiveWeight(1);
+          ea.play();
+        }
         // Crossfaded rather than cut. The poses join up by construction —
         // `routineIsSound` is what guarantees that — so the fade only has
         // to hide the seam between two clips of the same pose, which is
@@ -11978,7 +13152,151 @@ export function createKidsWorld(
           terrainY(k.wrap.position.x, k.wrap.position.z) -
           (k.lift.get(at.clip) ?? 0);
       }
+      // ── WHAT THE BEAT DOES BESIDES ANIMATE ──────────────────────
+      const wasLit = k.glowWant;
+      k.glowWant = KUTTI_BOLD.has(at.clip)
+        ? 1
+        : KUTTI_SHY.has(at.clip)
+          ? 0.05
+          : 0.3;
+      // Chosen on the way UP, at the moment he decides to be seen rather than
+      // every beat: switching between a lamp and a halo partway through an
+      // appearance is a visible change of lighting on a character who has not
+      // moved, and reads as a bug even when it is not.
+      if (k.glowWant > 0.5 && wasLit <= 0.5) {
+        k.lit = Math.random() < 0.5 ? "spot" : "glow";
+      }
+      if (KUTTI_VANISH.has(at.clip) || KUTTI_REAPPEAR.has(at.clip)) {
+        kuttiBurst(k, k.wrap.position.x, k.wrap.position.y, k.wrap.position.z);
+      }
+      // A STONE THAT ACTUALLY LEAVES HIS HAND.
+      //
+      // Held until partway through the throw rather than released on the
+      // first frame of it: the clip picks the stone up first, and a stone
+      // that flies while he is still bending down is a stone he did not
+      // throw.
+      const th = k.routine.throws;
+      if (th != null && th.beats.includes(at.index)) {
+        k.stoneAim = th.at;
+        // SQUARE ON TO WHAT HE IS THROWING AT, on the beat he throws it.
+        //
+        // The beat before a throw is a walk or a look-round, and either can
+        // have left him side-on or turned away — so the throw played out of a
+        // body pointing somewhere else, which reads as a stone going anywhere
+        // but where it goes. Re-aimed here, at the last possible moment, so it
+        // is right however he arrived.
+        if (th.at === "roof") {
+          faceKutti(k, k.wrap.position.x + 3.4, k.wrap.position.z - 5.5);
+        } else {
+          faceChild(k);
+        }
+        const y0 = k.wrap.position.y + 1.3;
+        k.stoneFrom.set(k.wrap.position.x, y0, k.wrap.position.z);
+        if (th.at === "roof") {
+          // Onto the great house. Up and over — the whole point of the story
+          // is that it lands on a roof out of an empty evening.
+          k.stoneTo.set(
+            k.wrap.position.x + 3.4,
+            y0 + 3.2,
+            k.wrap.position.z - 5.5,
+          );
+          k.stoneArc = 1.5;
+        } else {
+          // AIMED AT THEM AND DELIBERATELY SHORT. It arcs toward the group
+          // and skitters across the road at their feet. Never a hit: no kid
+          // ships with a reaction clip, and this world does not show a child
+          // being struck.
+          // AIMED AT THEM AND DELIBERATELY SHORT, and never twice in the
+          // same place. A fixed target plus a few centimetres of jitter is one
+          // stone thrown three times; somebody actually pelting you scatters
+          // them about your feet — one short, one past a shoulder, one off to
+          // the side. So the aim point is redrawn per stone, a few units
+          // around where they are standing, still always landing on the road
+          // near them rather than on them.
+          k.stoneTo.set(0, 0, player?.wrap.position.z ?? k.wrap.position.z);
+          k.stoneArc = 1.25;
+        }
+        // ONE STONE PER THROW, AND IT LEAVES WHEN THE CLIP THROWS IT.
+        //
+        // Both halves of that were wrong. The comment above this block has
+        // always said the stone is "held until partway through the throw
+        // rather than released on the first frame of it" — and the code set
+        // the delay to ZERO, so it left his hand on frame one of a
+        // four-and-a-quarter second clip whose first half is him bending down
+        // to pick the thing up. The stone was in the air before he had hold
+        // of it.
+        //
+        // And a burst of up to three, 0.45s apart, out of a single play of
+        // that clip is three stones from one arm motion — a machine gun, not
+        // a boy throwing. The animation IS the throw, so one play throws one
+        // stone, and a routine that wants two stones has two throw beats in
+        // it. `house-stones` and `road-stones` do.
+        k.stoneLeft = 1;
+        k.stoneGap = THROW_RELEASE;
+      }
       k.beat = at.index;
+    }
+    // ── A WALK THAT ACTUALLY GOES SOMEWHERE ─────────────────────────
+    //
+    // The walk and run clips are authored in place, and nothing moved the
+    // wrap — so "walks away" was him treading the same square of road until
+    // the routine ran out and he was switched off. He now travels while they
+    // play, away from the children, across the frame and out of it.
+    //
+    // AND HE NEVER WALKS PAST THEM. The direction used to be a constant LEFT,
+    // which is away only while he is already on their left; stood on their
+    // right, the same constant marched him straight down the road and through
+    // the middle of the group. That is the one piece of travel this character
+    // must not do on foot. He is a thing that is somewhere, and then is not,
+    // and then is somewhere else — a small boy jogging past you at walking
+    // pace is an NPC, and it hands the children a good look at him besides.
+    //
+    // So the direction is taken from where they actually are, and a stand-off
+    // stops him closing the last couple of units even when a routine begins
+    // almost on top of them. Crossing still happens constantly; it happens the
+    // way it is supposed to, through the dust — he goes into the ground on one
+    // side and comes out of it on the other, which is what the vanish and
+    // reappear beats are for and what the relocation already does.
+    if (!k.hidden) {
+      // THE SPEEDS THE CLIPS WERE AUTHORED AT, not invented ones.
+      //
+      // These three carry no root motion at all — measured, not assumed: the
+      // hips travel about a millimetre across five seconds, so the clip is
+      // a cycle on the spot and the wrap has to do every bit of the travel.
+      // That much the old code had right. What it had wrong was the figure —
+      // though by less than the raw numbers suggest, and the difference is
+      // `unit`. The authored speeds are in MODEL units and one of those is
+      // 3.32 world units on this road, so 1.15 / 0.42 / 0.33 arrive as
+      // 3.82 / 1.39 / 1.10 against the 4.6 / 1.7 / 1.1 that were guessed:
+      // the run and the walk were about a fifth too fast and the sneak was
+      // already right. A fifth is not nothing — it is the difference between
+      // a foot that stays where it is put and one that creeps — but it is a
+      // correction, not the rescue an unscaled comparison would claim.
+      const speed =
+        (at.clip === "kutti_05_scampering_run"
+          ? 1.15
+          : at.clip === "kutti_03_natural_walk"
+            ? 0.42
+            : at.clip === "kutti_04_sneaky_walk"
+              ? 0.33
+              : 0) * k.unit;
+      if (speed > 0) {
+        // Recomputed every frame, so the gap between them can only ever grow
+        // and crossing is impossible by construction rather than by a clamp.
+        // A clamp was written here first and thrown away: catching him on the
+        // wrong side after the fact means putting him back, and putting him
+        // back is a teleport of up to a metre in a single frame — which is a
+        // worse artefact than the one it prevents, and in the one character
+        // whose whole business is appearing where he was not.
+        const away = k.wrap.position.x >= playerX ? 1 : -1;
+        k.wrap.position.x += away * speed * dt;
+        k.wrap.position.y =
+          terrainY(k.wrap.position.x, k.wrap.position.z) -
+          (k.lift.get(at.clip) ?? 0);
+        // Facing the way he is going, or he moonwalks off. Every rig here is
+        // modelled facing +Z, so +PI/2 is up the road and -PI/2 is back down it.
+        k.wrap.rotation.y = (away * Math.PI) / 2;
+      }
     }
     // ── WHILE THE DUST IS ON HIM ────────────────────────────────────
     //
@@ -11991,9 +13309,93 @@ export function createKidsWorld(
     if (gone && !k.hidden) {
       k.hidden = true;
       k.wrap.visible = false;
+      k.glowWant = 0;
+      // ── AND THIS IS WHERE HE ACTUALLY MOVES ──────────────────────
+      //
+      // The comment above has said for a long time that the dust is the one
+      // moment he can be moved. It was a description of an opportunity and
+      // not of anything that happened: his position was set once when a
+      // routine started and never again, so every vanish put him back
+      // exactly where he went. He now goes somewhere.
+      const mv = k.routine.moves;
+      if (mv === "haunt") {
+        // Somewhere else he can be seen, never where he just went in. Same
+        // reason as the pick above: coming out of the ground at a well the
+        // child cannot see is indistinguishable from not coming back at all.
+        // No slide allowance — the routine is nearly over and he only needs
+        // to be seen arriving — and the left edge is wider for the same
+        // reason.
+        const opts = inShot(k, 0.85, 0, k.here);
+        if (opts.length > 0) {
+          k.here = opts[Math.floor(Math.random() * opts.length)]!;
+          const to = k.here;
+          // Back on the floor. He went into the ground off a rim or a roof;
+          // wherever he comes out of it is a patch of road, and carrying the
+          // old lift across would stand him in mid-air above the new one.
+          k.roofY = 0;
+          k.wrap.position.set(to.x, terrainY(to.x, to.z), to.z);
+          faceChild(k);
+        }
+      } else if (mv === "behind-child") {
+        // OUT OF THE GROUND BEHIND THEM.
+        //
+        // The one time he is placed by a relation rather than by a place.
+        // The camera sits behind the children, so "behind them" is between
+        // the camera and their backs: he comes up large in the foreground,
+        // facing a group who are walking away and cannot see him. The player
+        // gets the whole joke and the children get none of it, which is why
+        // this needs no reaction clip from them.
+        // BEHIND THEM IS THE LEFT OF THE SCREEN.
+        //
+        // The children walk up the road in +x with the camera looking along
+        // it, so the ground they have already covered runs off to the LEFT of
+        // frame. "Behind" therefore means a shorter x, and it wants to be
+        // close: at 4.2 he arrived near the edge of shot and read as somebody
+        // in the distance. 3.0 puts him plainly in the left of the picture,
+        // large, with their backs to him.
+        //
+        // Kept ON the road rather than set back off it, so he is standing
+        // where they are standing and not in the verge behind a bush.
+        // A BIT LEFT OF THE COMPANION, not of the player.
+        //
+        // The companion walks behind and to one side, so measuring from the
+        // player put him level with it or in front of it — which is not
+        // behind the GROUP, it is in the middle of them. Taken from whoever
+        // is actually at the back, he comes up clear of both, and the whole
+        // party has its back to him.
+        // A follower carries its distance BEHIND the player rather than a
+        // position, so the back of the party is the largest gap of the lot.
+        const backGap = followers.reduce(
+          (m, f) => (f.guide ? m : Math.max(m, f.gap)),
+          0,
+        );
+        let bx = playerX - backGap - 2.2;
+        const bz = (player?.wrap.position.z ?? 0) + 0.2;
+        // AND THEN CHECK THE PICTURE, because this is the one placement made
+        // by a relation rather than by a place — and a relation cannot know
+        // where the frame is. The camera trails the party and lags behind a
+        // walk, so "a bit left of the companion" can already be past the left
+        // edge; that is the reappearing-on-the-left that was not working. He
+        // is nudged back up the road until he is inside the left half of the
+        // frame. NDC x is linear in world x for an orthographic camera, so
+        // one gradient sample solves the nudge outright — no search.
+        const n0 = shotX(bx, bz);
+        if (n0 < -0.62) {
+          const grad = (shotX(bx + 4, bz) - n0) / 4;
+          if (grad > 1e-4) {
+            bx += (-0.62 - n0) / grad;
+          }
+        }
+        k.wrap.position.set(bx, terrainY(bx, bz), bz);
+        // At their backs, and taken from where they actually are rather than
+        // from a constant: he comes up a little off their shoulder in z as well
+        // as behind them in x, so a fixed quarter turn looked past them.
+        faceChild(k);
+      }
     } else if (!gone && k.hidden) {
       k.hidden = false;
       k.wrap.visible = true;
+      kuttiBurst(k, k.wrap.position.x, k.wrap.position.y, k.wrap.position.z);
     }
     if (at.done && k.t >= routineSeconds(k.routine)) {
       k.routine = null;
@@ -12003,7 +13405,12 @@ export function createKidsWorld(
       // Long gaps. A corridor that produces a figure every twenty seconds
       // is a spawner; one that produces him twice in a lesson is a place
       // where something happens.
-      k.wait = 45 + Math.random() * 75;
+      k.glowWant = 0;
+      // WALKING OR NOT. Sitting down still brings him far faster — that is
+      // `roadCool`, and it is eight to seventeen seconds — but the ordinary
+      // corridor is his too, and at 45 to 120 seconds a child could walk a
+      // whole lesson through his own stretch of road and meet nothing.
+      k.wait = 28 + Math.random() * 45;
     }
   };
   /**
@@ -14339,11 +15746,33 @@ export function createKidsWorld(
       // A CHILD'S HEIGHT, AND SMALLER THAN THE ONE PLAYING. He is a child
       // spirit and the model is authored at 0.883 of its own units; fitted
       // here against the village folk so he stands a head under a farmer.
+      // ALMOST LITTLE DREW, AND A SHADE UNDER.
+      //
+      // Given as a fraction of Drew's own height rather than in `FOOT` units,
+      // because that is the comparison that matters and the one that will be
+      // checked: he is a child spirit, and the child he stands nearest is the
+      // six-year-old. At 3.4 FOOT he came out around 3.55 against Drew's 3.95
+      // and read as a much smaller creature — something that scurries rather
+      // than somebody who might be a boy until you look twice, which is the
+      // whole unease of the folklore.
+      //
+      // 0.95 is deliberately close. Level with Drew he would just be another
+      // child; a shade under is the difference you notice without being able
+      // to say why.
       const wrap = fitToHeight(
         gltf.scene,
-        3.4 * FOOT * perspective(spots[0]!.z),
+        castHeight("Explorer6") * 0.95 * perspective(spots[0]!.z),
       );
       wrap.rotation.order = "YXZ";
+      // AFTER `fitToHeight`, which is the order `rigOf` uses. Before it the
+      // enlarged skull is part of what gets measured, so the fit scales the
+      // whole figure down to hold the total height and he comes out shorter
+      // than he was asked to be.
+      // The same top-heavy build the children have. He was the one character
+      // on this road that never got it — `rigOf` applies it to the cast and
+      // the villagers get it where they are made, but he is built here by
+      // hand and the call was simply missing.
+      scaleHead(gltf.scene, castHeadScale("Kuttichathan"));
       scene.add(wrap);
       characterRoots.add(wrap);
       const mixer = new THREE.AnimationMixer(gltf.scene);
@@ -14370,12 +15799,229 @@ export function createKidsWorld(
       for (const [name, a] of act) {
         lift.set(name, probe(a));
       }
-      kutti = {
+      // ── THE DUST, AND THE LIGHT IN IT ──────────────────────────────
+      //
+      // WARM ROAD DUST, lit by his own glow rather than by the moon. He goes
+      // into the ground and comes out of it, so what rises is what was under
+      // his feet: the same colour as the road, picking up the light he
+      // carries. A cold smoke would read as a ghost, and he is not one — he
+      // is a thing that lives in a tree and throws stones at roofs.
+      const dustTex = smokeTexture(
+        "rgba(216,192,154,0.62)",
+        "rgba(190,166,128,0)",
+      );
+      const puffs = Array.from({ length: 30 }, () => {
+        const sp = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: dustTex,
+            transparent: true,
+            depthWrite: false,
+            opacity: 0,
+            fog: true,
+          }),
+        );
+        sp.visible = false;
+        scene.add(sp);
+        return {
+          s: sp,
+          v: new THREE.Vector3(),
+          life: 0,
+          max: 1,
+          size: 1,
+          /** Seconds before this one appears — see the burst. */
+          wait: 0,
+          spin: 0,
+          /** Radians per second, either way. */
+          twist: 0,
+          /** Its own phase in the curl, so no two wander alike. */
+          curl: 0,
+          /** Its own share of the cloud's thickness. */
+          spec: 1,
+        };
+      });
+      // His own glow: a sprite riding at chest height inside the wrap, so it
+      // goes wherever he goes and needs nothing driving its position.
+      const glow = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: glowTexture("rgba(255,228,158,0.5)", "rgba(255,168,66,0)"),
+          transparent: true,
+          depthWrite: false,
+          opacity: 0,
+          fog: true,
+        }),
+      );
+      // Behind him and a little low, so the halo reads as light coming off
+      // him rather than as a lamp held in front of his chest. At 1.5 and dead
+      // centre the sprite sat exactly where his face is.
+      glow.position.set(0, 1.3, -0.55);
+      glow.scale.setScalar(4.2);
+      wrap.add(glow);
+
+      // ── AND TWO MORE OF HIM ─────────────────────────────────────────
+      //
+      // Cloned HERE, after `fitToHeight` and after the head was enlarged, so
+      // a copy is the same boy and not a differently-shaped one. Built once
+      // at spawn rather than made on demand: skinned cloning walks the whole
+      // skeleton and is not a thing to do in a tick, and two spare bodies of
+      // a model this size are cheaper than the stone he throws is to light.
+      //
+      // `skinnedClone` shares materials, which is exactly what is wanted —
+      // the emissive that makes him glow is set on the originals, so it
+      // reaches every copy without being tracked per body.
+      const echoes: KuttiEcho[] = [];
+      for (let i = 0; i < 2; i++) {
+        const body = skinnedClone(gltf.scene);
+        const w2 = new THREE.Group();
+        w2.rotation.order = "YXZ";
+        w2.add(body);
+        w2.visible = false;
+        scene.add(w2);
+        characterRoots.add(w2);
+        const m2 = new THREE.AnimationMixer(body);
+        const a2 = new Map<string, THREE.AnimationAction>();
+        for (const clip of clipsFor(gltf)) {
+          const a = m2.clipAction(clip);
+          const fact = KUTTI_CLIPS.get(clip.name);
+          a.clampWhenFinished = true;
+          a.loop = fact?.loop === false ? THREE.LoopOnce : THREE.LoopRepeat;
+          a2.set(clip.name, a);
+        }
+        const halo = new THREE.Sprite(glow.material);
+        halo.position.copy(glow.position);
+        w2.add(halo);
+        applyEyeGlow(w2, nightNow, true);
+        echoes.push({ wrap: w2, mixer: m2, act: a2 });
+      }
+
+      // Cloned, not shared. `loadModel` may hand the same material out again
+      // for another copy of this file, and tinting it here would light every
+      // one of them.
+      const mats: THREE.MeshStandardMaterial[] = [];
+      gltf.scene.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh) return;
+        const list = Array.isArray(m.material) ? m.material : [m.material];
+        const cloned = list.map((src) => {
+          const c = (src as THREE.MeshStandardMaterial).clone();
+          if (c.emissive != null) {
+            mats.push(c);
+            c.emissive.setHex(0xffb457);
+            c.emissiveIntensity = 0;
+          }
+          return c;
+        });
+        m.material = Array.isArray(m.material) ? cloned : cloned[0]!;
+      });
+
+      // His own spot, aimed at his head from above and a little in front —
+      // the side the road is on, so the face that turns toward the children is
+      // the lit one.
+      // Tighter and closer than a room light: a narrow cone from just above
+      // head height, so it falls on him and not on the road around him. A wide
+      // one lit the whole verge and made him the dimmest thing in his own pool.
+      // SOFT, which is a shape and not a brightness.
+      //
+      // Three things make a light soft, and the old cone had none of them: a
+      // WIDE angle so the pool is bigger than the thing in it and there is no
+      // visible edge on the ground, a high PENUMBRA so what edge there is
+      // falls off across most of the cone's width instead of in the last
+      // fifth of it, and a low DECAY so the far side of him is lit nearly as
+      // much as the near side. At 0.55 / 0.55 / 1.1 this was a stage
+      // instrument: a hard-edged disc with a hotspot in it.
+      //
+      // SOFT IS THE EDGE, NOT THE WIDTH — and widening it was the mistake.
+      //
+      // A wide cone from far back does make a gentle light, and it also lights
+      // everything he is standing on: at 0.85 radians from four units away the
+      // pool was some nine units across, so what the night actually showed was
+      // a lit patch of road with him in the middle of it. The road is not the
+      // thing being lit. He is.
+      //
+      // Narrowed to 0.40, which is about a metre across at his chest — his own
+      // width and a little air — and brought in close. The softness is kept
+      // entirely in the PENUMBRA, which costs no width at all: 0.9 fades the
+      // last tenth of the cone out so there is no disc edge anywhere.
+      //
+      // The range does the rest. At 6.0 the falloff has him at about nine
+      // tenths and the ground where the cone would land at about one tenth, so
+      // it dies between his feet and the road rather than spilling across it.
+      // That figure is the whole trick — a light that stops before it arrives
+      // anywhere is the only kind that shows one thing and nothing else.
+      // DEAD IN FRONT, NOT OFF TO ONE SIDE. The 0.45 of lateral offset was
+      // there to model a lamp standing somewhere else, and with the cone now
+      // barely a metre across it stopped being character and started being a
+      // miss: a metre-wide pool shifted half a metre sideways leaves a third
+      // of him outside it. Straight in front and above, so the cone is
+      // centred on the body it is there to show.
+      const kSpot = new THREE.SpotLight(0xffd9a0, 0, 6.0, 0.4, 0.9, 0.75);
+      kSpot.position.set(0, 3.2, 2.2);
+      kSpot.target.position.set(0, 1.5, 0);
+      wrap.add(kSpot);
+      wrap.add(kSpot.target);
+
+      // The stone. One, reused: he never has two in the air, and a stone
+      // allocated per throw is a stone allocated in a tick.
+      // NOT A PEBBLE — A THING THAT BURNS ON THE WAY OVER.
+      //
+      // Unlit, a fist-sized stone is invisible at night against a mud road,
+      // and a throw whose stone nobody sees is a mime. Lit, the arc is the
+      // readable part of the whole trick. It carries its own light so the
+      // ground comes up as it passes, and both go out the moment it lands: a
+      // fire that keeps burning where it fell is a campfire, not a stone
+      // thrown by something in the dark.
+      // A LUMP OF BURNING CHARCOAL, which is a different thing from a
+      // fireball. Charcoal is dark rock with fire INSIDE it: the body stays
+      // nearly black and only the heat glows, deep orange going to red, and it
+      // does not throw much light because there is no flame on it. So the
+      // stone's own colour comes down from a bright yellow-white to a dull
+      // ember, the halo shrinks to something barely wider than the stone, and
+      // the light it carries is halved and reddened. Read at the size it
+      // actually flies past at, the old one was a flare.
+      const stone = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.13, 0),
+        new THREE.MeshBasicMaterial({ color: 0xc4491a }),
+      );
+      stone.castShadow = false;
+      stone.visible = false;
+      scene.add(stone);
+      const stoneHalo = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: glowTexture("rgba(255,122,34,0.8)", "rgba(190,40,0,0)"),
+          transparent: true,
+          depthWrite: false,
+          fog: true,
+        }),
+      );
+      stoneHalo.scale.setScalar(0.62);
+      stone.add(stoneHalo);
+      const stoneLight = new THREE.PointLight(0xff6a22, 0, 5.5, 2.0);
+      stone.add(stoneLight);
+
+      const k1 = (kutti = {
         wrap,
         mixer,
         act,
         lift,
         spots,
+        glow,
+        glowWant: 0,
+        glowNow: 0,
+        puffs,
+        stone,
+        stoneT: 0,
+        stoneLeft: 0,
+        stoneGap: 0,
+        stoneFrom: new THREE.Vector3(),
+        stoneTo: new THREE.Vector3(),
+        stoneArc: 1.6,
+        mats,
+        faceSpot: kSpot,
+        stoneLight,
+        caught: 0,
+        seenCool: 0,
+        roadCool: 25,
+        roofY: 0,
+        saidDry: false,
         routine: null,
         t: 0,
         beat: -1,
@@ -14383,11 +16029,26 @@ export function createKidsWorld(
         // happens as the lesson loads is a scheduled event; one that happens
         // most of a minute in is a thing that happened.
         wait: 18 + Math.random() * 40,
-        spot: 0,
+        here: null,
+        stoneAim: "short",
+        lit: "spot",
+        unit: gltf.scene.scale.x || 1,
+        echoes,
+        copies: 1,
         hidden: true,
-      };
+      });
       wrap.visible = false;
       applyEyeGlow(wrap, nightNow, true);
+      // HE EXISTS. The corridor already reports how many haunts it found, but
+      // that line is printed by the chapter build and says nothing about
+      // whether the figure itself ever arrived — so a model that failed after
+      // loading looked identical to a quiet night. `unit` is here because
+      // every authored travel speed is multiplied by it, and a wrong one is
+      // the difference between a walk and a skate.
+      console.info(
+        `[kuttichathan] he is in the world:` +
+          ` ${k1.act.size} clips, 1 model unit = ${(gltf.scene.scale.x || 1).toFixed(2)}u`,
+      );
     };
 
     /**
@@ -18013,7 +19674,19 @@ export function createKidsWorld(
       // great house, filtered to the corridor's own lessons. `thinAnchors`
       // is what stops the estate boundary — twelve separate wall panels —
       // from becoming twelve places to climb.
-      if (CHAPTER != null && trueNight && activityAt(worldHour()) === "deep") {
+      // ASKED OF THE NIGHT THIS WORLD STAGES, not of the hour showing now.
+      //
+      // The corridor is built once, during the chapter build, and that build
+      // can perfectly well run while the world is still showing day — it then
+      // asked `worldHour()`, got the DAY candidate, decided it was not deep,
+      // and built no corridor at all. Nothing was visible at night because
+      // nothing had been made. What matters is whether the night this world
+      // folds to is a deep one; `nightNow` already decides when he is awake.
+      if (
+        CHAPTER != null &&
+        trueNight &&
+        activityAt(stagedNow().night) === "deep"
+      ) {
         // THE CORRIDOR IS WHICHEVER LESSONS WROTE A TRACE, and `LESSONS` is
         // already the active chapter's table — so a chapter that writes none
         // has no corridor and gets no figure. That is not a special case: it
@@ -18026,7 +19699,67 @@ export function createKidsWorld(
           anchorsFrom(placements(CHAPTER, perspective)).filter((a) =>
             corridorLessons.has(lessonAt(a.x, CHAPTER).n),
           ),
-        ).map((a) => ({ x: a.x, z: a.z, haunt: a.haunt as string }));
+        ).map((a) => {
+          // OUT OF THE BUILDING, NOT IN THE MIDDLE OF IT.
+          //
+          // An anchor is the model's own position, which for a well or a lamp
+          // is the thing itself and for a HOUSE is the middle of the floor.
+          // Stood there he is inside the walls, which is where he was turning
+          // up: a spirit standing in somebody's front room rather than in the
+          // yard throwing stones at their roof.
+          //
+          // Pushed toward the road, by an amount that matches how big the
+          // thing is. The road runs at z ~ 0 and the buildings sit back from
+          // it on the far side, so "toward the road" is toward zero.
+          const toward = a.z < 0 ? 1 : -1;
+          // THE WELL IS A DRUM, AND 1.5 IS INSIDE IT.
+          //
+          // Measured off the model rather than guessed: `Village_Well.glb`
+          // carries 88% of its vertices below half its own height — that is
+          // the parapet — with a canopy above 70% and nothing in between, and
+          // the drum's radius is 0.677 of the total height. Fitted to the
+          // chapter's h of 3.2 that is a ring 2.17 units across the middle,
+          // so a haunt pushed 1.5 out of the centre sits INSIDE the masonry.
+          // He was standing in the well.
+          const rimR = a.h != null ? a.h * WELL_RIM_R : 2.2;
+          const step =
+            a.haunt === "house"
+              ? 5.4
+              : a.haunt === "tree"
+                ? 2.2
+                : a.haunt === "well"
+                  ? rimR + 0.6
+                  : 1.5;
+          // AND, FOR A HOUSE, WHERE THE FRONT OF ITS ROOF IS.
+          //
+          // The chapter writes every building's height and drawn depth, so
+          // the roof needs no measuring: the front slope is a little under
+          // half the depth toward the road, and two thirds of the way up.
+          // Sat there he faces the road, which is the only side of a roof
+          // worth sitting on — a figure on the back slope is a figure nobody
+          // walking past ever sees.
+          const front =
+            a.depth != null ? a.z + toward * a.depth * 0.42 : undefined;
+          // AND FOR A WELL, ITS RIM — which is a perch in exactly the way a
+          // roof is, so it uses the same two fields. Half the model's height
+          // is the top of the parapet (see above), and a shade inboard of the
+          // rim's own radius is sat ON the wall rather than balanced on its
+          // outer lip.
+          const well = a.haunt === "well";
+          return {
+            x: a.x,
+            z: a.z + toward * step,
+            haunt: a.haunt as string,
+            roofZ: well ? a.z + toward * rimR * 0.78 : front,
+            roofY: well
+              ? a.h != null
+                ? a.h * 0.5
+                : undefined
+              : a.h != null
+                ? a.h * 0.66
+                : undefined,
+          };
+        });
         if (spots.length > 0) {
           // Queued, not awaited. He is the last thing that should hold up a
           // first frame, and a child who never reaches Lesson 4 never needs
@@ -18040,7 +19773,19 @@ export function createKidsWorld(
         );
       }
 
-      if (CHAPTER != null && trueNight && activityAt(worldHour()) === "deep") {
+      // ASKED OF THE NIGHT THIS WORLD STAGES, not of the hour showing now.
+      //
+      // The corridor is built once, during the chapter build, and that build
+      // can perfectly well run while the world is still showing day — it then
+      // asked `worldHour()`, got the DAY candidate, decided it was not deep,
+      // and built no corridor at all. Nothing was visible at night because
+      // nothing had been made. What matters is whether the night this world
+      // folds to is a deep one; `nightNow` already decides when he is awake.
+      if (
+        CHAPTER != null &&
+        trueNight &&
+        activityAt(stagedNow().night) === "deep"
+      ) {
         const LITTER = [
           "village-stone/River_Stone",
           "village-stone/Stepping_Stone",
@@ -19932,9 +21677,19 @@ export function createKidsWorld(
             // became the only light in the frame, flattening everybody who
             // walked into it. Down a fifth: still reads the road, no longer
             // overrules the lamp in her hand.
-            // 5.1, not 6.4: a wick in a stone niche lighting a stretch of
-            // road, not the only light in the frame.
-            spot.intensity = 5.1 * nightBlend * fade * gutter;
+            // 3.6, not 5.1, and 5.1 was already down from 6.4.
+            //
+            // Both earlier cuts were made against the same complaint and both
+            // stopped short: walking up to a milestone still washed the
+            // children out, which is the one place in the night where that
+            // must not happen, because a milestone is where a child STOPS.
+            // Everywhere else on the road was already right, so this is the
+            // lamp to move and not the one in her hand.
+            //
+            // A third down again puts the flame under the child's own lantern
+            // rather than over it: the stretch of road is still readable, and
+            // arriving somewhere lit no longer flattens the face that arrives.
+            spot.intensity = 3.6 * nightBlend * fade * gutter;
           }
         }
         // WHAT HOUR IT IS, once per frame rather than once per lamp.
@@ -20042,7 +21797,7 @@ export function createKidsWorld(
     // be left showing whatever it was built with at exactly the moment the
     // child first sees it.
     {
-      const hourOfDay = worldHour();
+      const hourOfDay = populationHour();
       // THE PEOPLE ON THEIR OWN LAND, by the hour. Everybody the table names
       // is built; how many of them are outside follows `folkOut`, which is
       // the brief's own rule — everyone by day, one or two at the village
@@ -20071,9 +21826,28 @@ export function createKidsWorld(
         for (const f of standingFolk) {
           const rank = (f.wrap.userData.folkRank as number) ?? 0;
           const lesson = LESSONS[((f.wrap.userData.folkOf as number) ?? 1) - 1];
+          // NOBODY IS STANDING IN A FIELD IN THE DARK.
+          //
+          // `folkOut` already empties the road at deep night, and that was
+          // believed to be enough. It is not, because of how the clock folds:
+          // `stagedHours` puts the NIGHT hour somewhere in 18:00-06:00, and
+          // `activityAt` only calls 22:00 onward "deep" — so a night staged
+          // at, say, half past six in the evening is "day" to the villager
+          // logic and the whole farm comes out under a dark sky.
+          //
+          // Fixing the fold would move every villager in the village and the
+          // shop lamps with them. This is the rule as stated instead: whatever
+          // hour the sky was folded to, if it is NIGHT then the fields are
+          // empty. The village centre and the market keep their evening
+          // person, because somebody closing a shop at eight is not the same
+          // claim as somebody weeding a field at midnight.
+          const inTheFields =
+            lesson != null &&
+            /farm|field|pastur|graz|orchard|meadow|clearing/i.test(lesson.name);
           const out =
             lesson != null &&
             rank < folkOut(lesson, act, hourOfDay) &&
+            !(nightNow && inTheFields) &&
             (f.wrap.userData.isChild !== true || kidsOut);
           if (f.wrap.visible !== out) {
             f.wrap.visible = out;
@@ -20145,7 +21919,7 @@ export function createKidsWorld(
       // until a child happens to be looking, and then it is the only thing
       // they saw; somebody reaching the edge of the village and walking back
       // is what a road between two places looks like anyway.
-      const hourOfDay = worldHour();
+      const hourOfDay = populationHour();
       // HOW MANY ARE ALREADY AWAY. Four people who all walked off at once is
       // an empty road, and they arrive at their turning points together on
       // the first round because they all set out together — the randomness
@@ -21364,7 +23138,18 @@ export function createKidsWorld(
           // down the trail, i.e. back to the camera. That is why the robot
           // stood showing its back: not a broken look-around, an unreachable
           // one.
-          (seen.resting || seen.moveW < 0.15) &&
+          // 0.30, not 0.15. At the tighter number the only heading change a
+          // companion ever made was when the child SAT DOWN: typing keeps
+          // `moveW` near one, and it has to fall below the threshold and stay
+          // there before a look is even considered, so every ordinary pause in
+          // typing was too brief to qualify. The turns were built and then
+          // almost never seen.
+          //
+          // 0.30 is the same number this file already calls `onTheMove`, so
+          // "not walking" now means one thing in both places. A companion
+          // standing beside a child who has stopped to think is exactly when
+          // turning to look at them reads as company.
+          (seen.resting || seen.moveW < 0.3) &&
           !companion.quadruped &&
           !follower.guide
         ) {
@@ -21424,13 +23209,16 @@ export function createKidsWorld(
           // walking beside the child is exactly where a companion stands
           // about and turns to watch.
           //
-          // Nothing is needed to keep the other two out of it. Neither
-          // Dave's file nor Peeli's has a turn clip in it, so the null check
-          // this always had decides it — and the day one of them is
-          // re-exported with a pair, they step round too without anybody
-          // coming back here.
+          // That day has come, and nothing here needed changing for it.
+          // Dave and Peeli were both re-exported with `Turn_Left_90` and
+          // `Turn_Right_90` of their own, authored at their own proportions —
+          // Dave's quicker and flatter than the six-year-old's, Peeli's the
+          // most decisive of the three, with her ponytail swinging wide and
+          // arriving late. The null check above simply stopped being false for
+          // them, so all three now step round instead of gliding. Whoever is
+          // walking beside the child turns on their feet.
           //
-          // His turn clips bake the rotation into the HIPS, so the two must
+          // The turn clips bake the rotation into the HIPS, so the two must
           // never run at once: while a clip plays the wrap holds absolutely
           // still, and when it finishes the wrap takes over the quarter-turn
           // the clip was holding. Rotating both would turn him twice.

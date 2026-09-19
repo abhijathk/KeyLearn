@@ -3628,9 +3628,31 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           })();
     const pinned =
       review != null ? review : prefs.dayHour === "auto" ? null : prefs.dayHour;
+    // A PINNED HOUR FOLDS THE SAME WAY A REAL ONE DOES.
+    //
+    // This used to read `{ day: pinned, night: (pinned + 12) % 24 }`, which
+    // assumes the pinned figure is the daylight one — and for anything from
+    // one to five it is not. Pin two and the board wrote "2:00 pm" over a
+    // world staged at two in the MORNING: the sky was right and the clock
+    // beside it said the opposite, which is the day and night reading as
+    // flipped. `stagedHours` already answers this correctly for the wall
+    // clock, by asking which of the two candidates the sun is actually up
+    // for, so a pinned hour is handed to the same function rather than folded
+    // by hand next to it.
     const at =
       typeof pinned === "number"
-        ? { day: pinned, night: (pinned + 12) % 24 }
+        ? stagedHours(
+            (() => {
+              const d = new Date();
+              d.setHours(
+                Math.floor(pinned),
+                Math.round((pinned % 1) * 60),
+                0,
+                0,
+              );
+              return d;
+            })(),
+          )
         : stagedHours();
     const h24 = prefs.night ? at.night : at.day;
     const hour = Math.floor(h24);

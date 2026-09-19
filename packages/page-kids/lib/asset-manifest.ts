@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "4e341dc8db77";
+export const ASSET_VERSION = "f1a838bf7f4e";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -213,8 +213,8 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "models/ak-3d-pack/Peeli.glb": {
-    "u": "ve63fdba1/models/ak-3d-pack/Peeli.glb",
-    "b": 1131496,
+    "u": "vfafe6477/models/ak-3d-pack/Peeli.glb",
+    "b": 899044,
     "g": "village"
   },
   "models/ak-3d-pack/Puppy.glb": {

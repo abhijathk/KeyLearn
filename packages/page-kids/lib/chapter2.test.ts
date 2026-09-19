@@ -224,12 +224,30 @@ test("every lesson is named, differently, and fits the chip", () => {
   }
 });
 
-test("no lesson is a corridor — that belongs to Chapter 1", () => {
-  // The supernatural corridor is M4..M7 of Chapter 1 and nowhere else; the
-  // brief is explicit that Chapter 2 introduces no such character.
+test("the corridor is L5..L8, peaking at the Estate Wall", () => {
+  // This test used to assert that Chapter 2 had NO corridor, because the
+  // brief says it introduces no such character. That was overridden on the
+  // owner's instruction, so the guard is kept and pointed at the new rule
+  // rather than removed — a corridor that quietly spreads across the chapter
+  // is exactly what this was here to catch.
+  //
+  // L7 is the peak because it is the only lesson holding both a laterite
+  // wall, which is the one thing he can climb, and the Mana, whose roof the
+  // stones land on.
   for (const l of LESSONS_2) {
-    equal(l.corridor, false, `${l.name} declares a corridor`);
+    const want = l.n >= 5 && l.n <= 8;
+    equal(l.corridor, want, `${l.name} (L${l.n}) corridor`);
   }
+});
+
+test("nothing of his happens at the shrine", () => {
+  // The rule is absolute and is the reason L4 is outside the corridor
+  // despite sitting right beside it: no mischief at or near a temple, a
+  // shrine or an idol. Pinned as a test because it is a judgement about what
+  // belongs in a children's game and not a tuning number.
+  const shrine = LESSONS_2.find((l) => /shrine/i.test(l.name));
+  ok(shrine != null, "Chapter 2 has a Shrine Grove");
+  equal(shrine.corridor, false, "Shrine Grove must never be a corridor");
 });
 
 test("the four props the brief names by role are actually there", () => {
