@@ -392,6 +392,18 @@
  * ran it again. It froze the renderer. Viewport units cannot feed back.
  */
 .joined {
+  /*
+   * THE WINDOW'S OWN COLOUR, NAMED.
+   *
+   * `--card` is not it. After dark the window is deliberately darker than the
+   * shared card navy (see `.rootDark .joined`), and anything fading into the
+   * window has to fade into THAT — the coach's strip faded to `--card`
+   * instead and landed two shades light, which at night was a pale band
+   * across the join with a hard line under it. Exactly the seam the fade
+   * exists to remove, in the one theme nobody was looking at.
+   */
+  --joinbg: var(--card);
+
   display: flex;
   position: relative;
   flex: 0 0 auto;
@@ -399,7 +411,7 @@
   inline-size: min(76rem, 96vi, max(34rem, calc((100vb - 8rem) * 1.885)));
   border-radius: var(--kr);
   overflow: hidden;
-  background: var(--card);
+  background: var(--joinbg);
   box-shadow: var(--kshadow);
   container-type: inline-size;
 }
@@ -416,10 +428,93 @@
  */
 .joined .say {
   display: grid;
+  position: relative;
+  z-index: 6;
   flex: none;
   place-items: center;
+  /*
+   * THE LINE SITS ON THE JOIN, NOT BELOW IT.
+   *
+   * The strip climbs onto the last of the road and brings the transition with
+   * it: transparent where it meets the scene, the window's own colour by the
+   * time it reaches the keyboard. So the road is not cut off at an edge and
+   * it is not washed pale either — it passes UNDER something, which is what
+   * the eye already expects a caption to do.
+   *
+   * The coach's line rides in the lower half of that gradient, where there is
+   * enough of `--card` behind it to stay legible, and the top half is left
+   * almost clear so the ground still shows through.
+   *
+   * The negative margin is why this works and also why it is bounded: it eats
+   * into the SCENE's box, which is measured for the camera. Two and a half
+   * ems is about a tenth of that pane at any size this window takes, well
+   * inside the slack the framing already has.
+   */
+  /*
+   * THE TRANSITION LIVES IN THIS PANE, AND NEVER OVER THE GAME.
+   *
+   * Earlier versions pulled this strip up onto the road so the fade had a
+   * picture to dissolve. It did remove the seam, and it cost the bottom of
+   * the scene: the letters being typed sit on that very line, and a veil over
+   * them is worse than any edge. The scene is not touched now — nothing
+   * overlaps it, nothing fades it, and it ends exactly where its box ends.
+   *
+   * What removes the hard edge is on THIS side of it: the pane opens with the
+   * shade the scene above casts into it, strongest where they meet and gone
+   * within three ems. The join reads as one surface lit from above rather
+   * than two panels butted together, and every pixel of the game is still
+   * the game.
+   *
+   * Black rather than a colour, so it works in both themes — it darkens
+   * whatever the window happens to be, which at night is already near-black
+   * and by day is white.
+   */
+  /*
+   * THE JOIN HAPPENS ON ROAD GROWN FOR IT.
+   *
+   * `--scene-bleed` is published by the page: the pane is made that much
+   * taller than it needs to be, and because the world keeps world-units-per-
+   * pixel constant when it resizes, those pixels are MORE ROAD rather than
+   * the same road stretched. See `SCENE_BLEED_PX` in KidsPage.
+   *
+   * This strip then climbs back up by exactly that amount and dissolves
+   * across it. The two numbers being the same is the whole point: the game a
+   * child could see before is still all there, at the same size and
+   * untouched, and the fade runs only over ground that was not on screen
+   * until the pane grew. Nothing is covered and nothing is washed out.
+   *
+   * Earlier attempts failed at both ends — fading the picture's own bottom
+   * spoiled the road, and sliding this strip up without growing the pane hid
+   * the letters being typed.
+   *
+   * Lengths, not percentages: as percentages the stops were measured against
+   * this strip's full height, so the fade was only about seven tenths opaque
+   * where the scene actually ends, which is a cut with a blur on it.
+   */
+  margin-block-start: calc(-1 * var(--scene-bleed, 2.5rem));
   padding-inline: 1.3rem;
-  padding-block: 0.75rem;
+  /*
+   * THE LINE IS CENTRED IN WHAT IS ACTUALLY VISIBLE, not in the box.
+   *
+   * The box starts `--scene-bleed` above the scene's bottom edge, and that
+   * part of it is over the road. Only what comes after is the panel a child
+   * sees, so the air above the line has to be the bleed PLUS the same amount
+   * that sits below it — matching numbers either side, which is what makes it
+   * look centred rather than pushed down. Written as one value used twice so
+   * the two cannot drift apart.
+   */
+  padding-block: calc(var(--scene-bleed, 2.5rem) + 0.6rem) 0.6rem;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--joinbg) 0%, transparent) 0,
+    color-mix(in srgb, var(--joinbg) 30%, transparent)
+      calc(var(--scene-bleed, 2.5rem) * 0.3),
+    color-mix(in srgb, var(--joinbg) 72%, transparent)
+      calc(var(--scene-bleed, 2.5rem) * 0.62),
+    color-mix(in srgb, var(--joinbg) 93%, transparent)
+      calc(var(--scene-bleed, 2.5rem) * 0.85),
+    var(--joinbg) var(--scene-bleed, 2.5rem)
+  );
   text-align: center;
 }
 
@@ -446,7 +541,9 @@
  * a road whose only lighting is an oil lamp.
  */
 .rootDark .joined {
-  background: #0e1120;
+  --joinbg: #0e1120;
+
+  background: var(--joinbg);
 }
 
 .sceneCard {
@@ -792,14 +889,41 @@
   display: grid;
   position: absolute;
   inset-inline-start: 0.7rem;
-  inset-block-end: 0.7rem;
+  /*
+   * CLEAR OF THE DISSOLVE.
+   *
+   * The pane is grown by `--scene-bleed` so the panel below can fade across
+   * the bottom of it (see `.joined .say`), and anything pinned to the
+   * scene's bottom edge now sits inside that fade — this button was sinking
+   * into it. Lifted by the same variable, so it keeps the gap it always had
+   * from what a child can actually see, and follows automatically if the
+   * bleed is ever retuned.
+   *
+   * Falls back to the plain offset where there is no bleed: the scene is a
+   * card of its own then, with nothing fading over it.
+   */
+  inset-block-end: calc(var(--scene-bleed, 0px) + 0.7rem);
   z-index: 5;
   place-items: center;
   inline-size: 2.5rem;
   block-size: 2.5rem;
   padding: 0;
   border: 0;
-  border-radius: 999px;
+  /*
+   * CUT AND LIT LIKE A LETTER TILE.
+   *
+   * It was a circle. The tiles a child reads on this road are square slabs
+   * with a lightly rounded edge, and this button sits among them in the same
+   * scene — so it takes their outline, and their shadow.
+   *
+   * THEIR shadow, specifically: the tiles drop a soft disc onto the ground a
+   * few inches beneath them, close and still defined. The score card above
+   * hangs much higher and gets a wide faint one instead. Same world, two
+   * distances, two shadows.
+   *
+   * Colour, texture and the unread dot are exactly as they were.
+   */
+  border-radius: 0.55rem;
   background: rgb(38 26 16 / 55%);
   cursor: pointer;
   animation: storyIn 0.25s ease-out both;
@@ -884,26 +1008,85 @@
 .sheet {
   position: absolute;
   inset: 0;
+  /*
+   * DUSK TAKES AS LONG HERE AS IT DOES OUT THERE.
+   *
+   * The world does not cut from day to night: `SUN_AT` is eased between the
+   * sun's rig and the moon's over about a second and a half, and the sky,
+   * the shadows and the lamps all cross in that time. This paper flipped
+   * instantly, because its night state is a class on an ancestor — so the
+   * one thing nearest the child's eye was the one thing that jumped.
+   *
+   * Matched to that blend, and on the properties that actually differ after
+   * dark: what the paper is lit by, and the ink on it.
+   */
+  transition: filter 1.5s ease;
 }
 
+/*
+ * THE SCORE SHEET IS CUT LIKE A LETTER TILE.
+ *
+ * The tiles a child reads on the road are square slabs with a raised edge
+ * and the glyph on a panel set into it — `BoxGeometry(1.67, 1.67, 0.49)`
+ * with a 1.42 face, so the face is inset a fifteenth on every side — and
+ * each one drops a soft shadow onto the ground beneath it.
+ *
+ * This card was a torn sheet of newsprint: a ragged silhouette cut by an SVG
+ * turbulence filter, which belonged to a different idea of what the HUD was.
+ * It now takes the tile's SHAPE — slab, raised edge, inset panel, shadow —
+ * and keeps everything else it had. The paper colours and the fibre and
+ * grain textures are untouched, and so is every animation on the figures
+ * printed on it; only the outline and the edge have changed.
+ *
+ * The tear filters go with the tear. Left on, they chewed the corners off a
+ * shape that is now meant to be cut square.
+ */
 .rim {
   position: absolute;
   inset: -3px;
+  border-radius: 0.62em;
   background: #8c866c;
-  filter: url(#klvTearRim) blur(0.4px)
-    drop-shadow(0 2px 3px rgb(30 26 12 / 38%));
+  /*
+   * A SHADOW FROM SOMETHING HELD HIGH.
+   *
+   * This card hangs well above the road, and a shadow's edge softens and its
+   * darkness falls with distance from what it lands on. So it is wide, faint
+   * and diffuse — the opposite of the tiles', which rest on the ground a few
+   * inches below the letters and keep a defined edge. Matching the two would
+   * have flattened the card into the picture.
+   */
+  /*
+   * THROWN FROM THE SAME LIGHT AS EVERYTHING ELSE, AND FROM THIS HEIGHT.
+   *
+   * `--sun-dx` / `--sun-dy` are published by the world every twenty frames:
+   * the light's horizontal run over its vertical rise, projected through the
+   * camera into screen directions and normalised. They swing round at dusk
+   * because the same vector eases into the moon's rig.
+   *
+   * The DISTANCE is this card's own: it hangs high above the road, and a
+   * shadow lengthens and softens the further its caster is from what it
+   * lands on. The story scrap below sits down among the letter cards and
+   * uses a third of this. The fallback is straight down, which is what
+   * these were before there was a sun to ask.
+   */
 }
 
+/* The lighter edge between the slab's rim and its face — the bevel the tile
+   catches the light on. Same colour it always was. */
 .fibre {
   position: absolute;
   inset: -1.5px;
+  border-radius: 0.55em;
   background: #cdc7b2;
-  filter: url(#klvTearFibre) blur(0.35px);
 }
 
 .face {
   position: absolute;
   inset: 0;
+  /* Set INTO the slab, the way a tile's glyph panel is: the rim and the
+     fibre above show as its edge. The tear filter has gone with the torn
+     silhouette; the paper's own grain and mottle are untouched. */
+  border-radius: 0.44em;
   background-color: #ddd7c4;
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.30 0 0 0 0 0.27 0 0 0 0 0.20 0.22 0.22 0.22 0 -0.10'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url%28%23g%29'/%3E%3C/svg%3E"),
@@ -917,8 +1100,80 @@
     auto,
     100% 100%,
     auto;
-  filter: url(#klvTear);
   background-blend-mode: multiply, multiply, normal;
+}
+
+/*
+ * THE SAME SHADOW THE LETTER CARDS CAST, for the two things held over this
+ * road that are not part of the render.
+ *
+ * Theirs is not a drop-shadow, and that is why the borrowed ones never
+ * looked right. Each card lays a flat square PATCH on the ground —
+ * `PlaneGeometry(1.6, 1.6)` in `rgb(31 42 19)` at 0.46, rotated flat and
+ * pushed out from under the card by the light's horizontal run times its
+ * height. A drop-shadow is a copy of the thing hanging behind it in the air;
+ * this is a mark lying on the floor, and the difference reads instantly.
+ *
+ * So both of these get a patch too: same colour, laid flat by squashing it
+ * against a ground plane that recedes, thrown the same way as everything
+ * else by `--sun-dx`/`--sun-dy`.
+ *
+ * WHAT DIFFERS IS HEIGHT, and only height.
+ *   · the story scrap sits down among the cards: their own opacity, their
+ *     own throw, barely softened.
+ *   · the score sheet is large and held high above the road, so its patch
+ *     lands far out — over the other side of the track, where the villagers
+ *     walk — and by then it has gone faint and diffuse, the way a shadow
+ *     does when its caster is a long way off what it falls on.
+ */
+.notice::after,
+.storyBtn::after {
+  content: "";
+  /*
+   * The pseudo-element itself. `content` lives HERE and nowhere else — an
+   * edit that lost it once left both of these with every other property set
+   * correctly and no element to apply them to, which looks exactly like a
+   * shadow that was never written.
+   */
+  position: absolute;
+  z-index: -1;
+  border-radius: 0.6em;
+  pointer-events: none;
+}
+
+/*
+ * THE LETTER CARDS' SHADOW, MATCHED FIGURE FOR FIGURE — this button stands
+ * at their height, so it gets their mark rather than a version of it.
+ *
+ *   colour   `rgb(31 42 19)`, the cards' own `0x1f2a13`
+ *   opacity  0.46, theirs exactly
+ *   size     1.6 against a 1.67 card, so 96% of what casts it
+ *   edge     none. Theirs is a plane with a hard edge, and a blur here left
+ *            a soft blob sitting under a crisp one.
+ *   throw    their whole height above the road — 1.55 against a 1.67 card,
+ *            so a shade under one width of whatever casts it, which for
+ *            this 2.5rem button is 2.3rem.
+ *
+ * Drawn out along the road by `--sun-run`, the light's horizontal travel per
+ * unit of height: tucked under the button at midday, long by evening. No
+ * in-plane rotation — turning the cards' own planes to face the light tilted
+ * them out of the ground, and the same would happen here.
+ */
+.storyBtn::after {
+  inset: 0;
+  background: rgb(31 42 19 / 46%);
+  scale: calc(0.96 + var(--sun-run, 0) * 0.7) 0.44;
+  translate: calc(var(--sun-dx, 0) * 2.3rem) calc(var(--sun-dy, 1) * 2.3rem);
+}
+
+/* Held high: thrown clear across the road, faint and soft by the time it
+   lands. A shade wider than the sheet, as a shadow at distance is. */
+.notice::after {
+  inset: 16% -4%;
+  background: rgb(31 42 19 / 30%);
+  filter: blur(7px);
+  scale: calc(1.04 + var(--sun-run, 0) * 0.55) 0.4;
+  translate: calc(var(--sun-dx, 0) * 74px) calc(var(--sun-dy, 1) * 74px);
 }
 
 .notePrint {
@@ -926,6 +1181,8 @@
   z-index: 1;
   padding: 0.55rem 0.75rem 0.6rem;
   color: #23201a;
+  /* With the paper — see `.sheet`. */
+  transition: color 1.5s ease;
 }
 
 /* The masthead: the one line that is a sentence rather than a figure. */
@@ -1131,9 +1388,18 @@
  * other two worlds keep the plain dark disc.
  */
 .storyScrap {
-  border-radius: 0;
+  /*
+   * CUT LIKE A LETTER TILE — and this is the class that decides it.
+   *
+   * The button carries `.storyBtn` AND `.storyScrap`; this one is written
+   * second and was setting the radius back to zero, so shaping the other did
+   * nothing at all. The tiles are square slabs with a lightly rounded edge,
+   * so that is what this is.
+   */
+  border-radius: 0.5rem;
   color: #23201a;
   background: none;
+  transition: color 1.5s ease;
 
   // The disc the other two worlds use has no place here, and the ink lifts
   // instead — the icon draws in `currentColor`.
@@ -1152,26 +1418,39 @@
 .scrapPaper {
   position: absolute;
   inset: 0;
+  /* The scrap crosses with the sheet and the sky — see `.sheet`. */
+  transition: filter 1.5s ease;
 }
 
 .scrapRim {
   position: absolute;
   inset: -3px;
+  border-radius: 0.58rem;
   background: #8c866c;
-  filter: url(#klvScrapRim) blur(0.4px)
-    drop-shadow(0 2px 3px rgb(30 26 12 / 38%));
+  /*
+   * THE TILES' OWN SHADOW, because this sits at the tiles' own height.
+   *
+   * They drop a soft disc onto the ground a few inches under them — close,
+   * and still defined. The score card hangs much higher up the picture and
+   * gets a wide faint one instead; same world, two distances, two shadows.
+   *
+   * The tear filter has gone with the torn outline: left on, it chewed the
+   * corners off a shape that is now meant to be cut square.
+   */
 }
 
 .scrapFibre {
   position: absolute;
   inset: -1.5px;
+  border-radius: 0.52rem;
   background: #cdc7b2;
-  filter: url(#klvScrapFibre) blur(0.35px);
 }
 
 .scrapFace {
   position: absolute;
   inset: 0;
+  /* Set into the slab, the way a tile's glyph panel is. Textures kept. */
+  border-radius: 0.42rem;
   background-color: #ddd7c4;
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.30 0 0 0 0 0.27 0 0 0 0 0.20 0.22 0.22 0.22 0 -0.10'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url%28%23g%29'/%3E%3C/svg%3E"),
@@ -1179,9 +1458,48 @@
   background-size:
     auto,
     100% 100%;
-  filter: url(#klvScrap);
   transition: filter 0.2s ease;
   background-blend-mode: multiply, multiply;
+}
+
+/*
+ * THE SUN AND THE MOON FALL ON THESE TOO.
+ *
+ * Both of these are paper held up in a lit scene, and they were painted at
+ * one fixed brightness whatever the sky was doing — flat at noon, and still
+ * flat under a moon. This is the light landing on them: a soft highlight on
+ * the side the light comes from, fading across the sheet.
+ *
+ * Every part of it is the scene's own. `--sun-tint` is the light's colour,
+ * warm at midday and blue after dark; `--sun-lit` is how much daylight is
+ * left, so the sheen fades out as the sun goes down rather than sitting
+ * there at full strength on a night road; and the highlight is placed by
+ * `--sun-dx`/`--sun-dy`, the same direction the shadows are thrown from,
+ * negated because the lit face is on the opposite side to the shadow.
+ *
+ * Laid over the paper rather than replacing it: the grain and mottle
+ * underneath are untouched, and with no variables published this adds
+ * nothing at all.
+ */
+.face::after,
+.scrapFace::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: radial-gradient(
+    116% 116% at calc(50% - var(--sun-dx, 0) * 42%)
+      calc(50% - var(--sun-dy, 1) * 42%),
+    color-mix(
+        in srgb,
+        var(--sun-tint, #fff) calc(var(--sun-lit, 0) * 34%),
+        transparent
+      )
+      0%,
+    transparent 64%
+  );
+  pointer-events: none;
 }
 
 .rootDark .scrapPaper {
@@ -1200,7 +1518,7 @@
 }
 
 .storyScrap:hover .scrapFace {
-  filter: url(#klvScrap) brightness(1.2) saturate(1.08);
+  filter: brightness(1.2) saturate(1.08);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2030,8 +2348,6 @@
   padding: 0.95em 1.3em;
   border-radius: var(--kr);
   background: var(--card);
-  box-shadow: var(--kshadow);
-  font-size: clamp(0.6rem, 1.12vi, 1rem);
 }
 
 /*

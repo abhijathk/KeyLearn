@@ -32,12 +32,6 @@ import {
   TextInput,
   toTextInputSettings,
 } from "@keylearn/textinput";
-import {
-  makeSoundPlayer,
-  PlaySounds,
-  soundProps,
-  SoundTheme,
-} from "@keylearn/textinput-sounds";
 import { useTheme } from "@keylearn/themes";
 import { clsx } from "clsx";
 import {
@@ -352,6 +346,23 @@ type Prefs = {
    */
   soundAsked: boolean;
   /**
+   * The keyboard and the buttons: the click a key makes, the tap a button
+   * makes. Feedback for something the child just did.
+   *
+   * Separate from {@link worldSounds} because they fail in opposite
+   * directions. A classroom of eight wants the world quiet and the key click
+   * kept — the click is what tells a child their press landed. A child alone
+   * with headphones wants the world. One switch for both means whoever needs
+   * half of it turns all of it off.
+   *
+   * `sounds` above is still the master, and it is what the speaker button in
+   * the header turns on and off: these two say WHAT is on when it is on.
+   */
+  clickSounds: boolean;
+  /** Everything the game itself makes: the background air, the night, jumps,
+   * chimes, level-ups, the roar. */
+  worldSounds: boolean;
+  /**
    * Whether the coach reads its lines aloud. Defaults from the age band —
    * on for the bands who cannot yet read them — and stays a knob because a
    * classroom of eight children is a different room from a bedroom.
@@ -521,6 +532,10 @@ function defaultPrefs(): Prefs {
     cheers: true,
     night: false,
     soundAsked: false,
+    // Both on, so that saying yes to sound gives a child the whole thing;
+    // whoever wants half of it goes and takes half away.
+    clickSounds: true,
+    worldSounds: true,
     readAloud: cfg.readAloud,
     readAloudChosen: false,
     grownupKeys: "off",
@@ -2801,6 +2816,26 @@ const SCENE_CAP_FALLBACK = 405;
  * `min-block-size: 10rem`. Below this the road is a letterbox and there is no
  * point taking more.
  */
+/**
+ * EXTRA ROAD, GROWN BELOW THE GAME FOR THE JOIN TO HAPPEN ON.
+ *
+ * The scene and the panel under it met on a crease, and every way of hiding
+ * it took something from the child: fading the bottom of the picture washed
+ * the road out, and sliding the panel up over the picture covered the letters
+ * being typed.
+ *
+ * So the pane is grown by this much instead, and the panel's dissolve is
+ * exactly this tall. The world's own `resize` keeps world-units-per-pixel
+ * constant (see the note in `resize`), so a taller pane does not stretch the
+ * view — it SHOWS MORE ROAD, and all of the extra arrives below, where the
+ * frustum already reaches further under the look-at than over it.
+ *
+ * The arithmetic that matters: the game a child could see before is still
+ * all there, at the same size, un-faded. The fade happens entirely on ground
+ * that did not exist on screen until now.
+ */
+const SCENE_BLEED_PX = 40;
+
 const SCENE_MIN_PX = 160;
 /**
  * The pane the overlays were drawn against, in CSS pixels. `--kscale` is the
@@ -3754,9 +3789,41 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // one thing here that is genuinely shared rather than merely defaulted.
     kidsAudio.setTheme(childCast(prefs.world) ? "hero" : "dino");
   }, [prefs.world]);
-  // The night, heard: a far-off cricket now and then, only on the hero
-  // world's real night and only with sound on. Quiet enough to be the night
-  // being there rather than a soundtrack.
+  /**
+   * WHAT IS AUDIBLE, in one place.
+   *
+   * `sounds` is the master — it is what the speaker button in the header
+   * turns on and off — and the two below say what is on when it is on. Folded
+   * together here rather than checked at each of the twenty-odd call sites,
+   * because a running loop cannot be un-started by a check that only happens
+   * when something is played: the background bed has to fall silent the
+   * moment the header button is pressed, and a gain is the only thing that
+   * does that.
+   */
+  useEffect(() => {
+    kidsAudio.setEnabled({
+      clicks: prefs.sounds && prefs.clickSounds,
+      world: prefs.sounds && prefs.worldSounds,
+    });
+  }, [prefs.sounds, prefs.clickSounds, prefs.worldSounds]);
+  /**
+   * The background of the village: moving air, and insects after dark.
+   *
+   * Started only once the child is actually in the world — not over the
+   * loading card — and only on the world that has a village in it. Everything
+   * about how quiet it is lives in `audio.ts`; what it is doing here is
+   * deciding WHEN there is a village to be the background of.
+   */
+  useEffect(() => {
+    if (!worldArmed || !prefs.sounds || !prefs.worldSounds) {
+      kidsAudio.stopAmbience();
+      return undefined;
+    }
+    kidsAudio.startAmbience(prefs.night);
+    return () => kidsAudio.stopAmbience();
+  }, [worldArmed, prefs.sounds, prefs.worldSounds, prefs.night]);
+  // The hero world's own synthesised crickets, which predate the recorded
+  // bed above and stay its voice: that world is a storybook, not a village.
   useEffect(() => {
     if (childCast(prefs.world) && prefs.night && prefs.sounds) {
       kidsAudio.startCrickets();
@@ -3829,13 +3896,42 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   useEffect(() => {
     const onToggle = (ev: Event) => {
       const what = (ev as CustomEvent<string>).detail;
+      kidsAudio.init();
       if (what === "sound") {
-        savePrefs({ sounds: !prefsRef.current.sounds });
+        const on = !prefsRef.current.sounds;
+        // The speaker button is the MASTER and nothing else: it does not
+        // change which halves are chosen in the settings, it only decides
+        // whether what is chosen can be heard.
+        //
+        // Opened here rather than left to the effect below, because the
+        // button's own click has to be audible in BOTH directions and the
+        // effect has not run yet: switching sound ON played into a bus that
+        // was still muted, so the one press a child makes to start the sound
+        // was the one press that answered with silence.
+        if (on) {
+          // Open the buses first, then speak: the effect below has not run
+          // yet, so without this the press that starts the sound is the one
+          // press that answers with silence.
+          kidsAudio.setEnabled({
+            clicks: prefsRef.current.clickSounds,
+            world: prefsRef.current.worldSounds,
+          });
+          kidsAudio.playToggle(true);
+        } else {
+          // And the other way round on the way out — said while the bus is
+          // still open, and the fade in `setEnabled` is slow enough to let it
+          // finish. See the comment there.
+          kidsAudio.playToggle(false);
+          kidsAudio.setEnabled({ clicks: false, world: false });
+        }
+        savePrefs({ sounds: on });
       } else if (what === "night") {
         const night = !prefsRef.current.night;
+        kidsAudio.playButton();
         savePrefs({ night });
         worldRef.current?.setNight(night);
       } else if (what === "settings") {
+        kidsAudio.playPanel(true);
         setSettingsOpen(true);
       }
     };
@@ -4706,6 +4802,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       wildReview: qs?.has("wild") === true,
       // Carry on from the last stone this child walked past, and stand the
       // most recent few behind them so the road reads as already travelled.
+      // The pinned hour, at construction. Handing it over afterwards with
+      // `setHour` was too late for everything the build decides from it —
+      // see `hour` in the world's own options.
+      hour:
+        prefsRef.current.dayHour === "auto" ? null : prefsRef.current.dayHour,
       stonesPassed: prefsRef.current.roadStones ?? 0,
       chapter: villageChapter,
       // How long this child's chapter is. Ten lessons of a five-year-old's
@@ -4907,7 +5008,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       const kbOn = kb != null && prefsRef.current.kbMode !== "off";
       let want: number;
       if (kbOn && kb != null) {
-        want = Math.round(kb.offsetHeight * 1.5);
+        want = Math.round(kb.offsetHeight * 1.5) + SCENE_BLEED_PX;
         sceneCapRef.current = want;
       } else {
         // THE HELPER GOING AWAY MUST NOT RESIZE THE WORLD.
@@ -4937,6 +5038,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // allows for, it scrolls a little. That is a far better failure than
       // silently squeezing the one part the child is looking at.
       scene.style.maxHeight = `${Math.max(SCENE_MIN_PX, want)}px`;
+      // Handed to the stylesheet so the panel's dissolve is exactly as tall
+      // as the road grown for it — one number, so the two cannot drift.
+      scene.parentElement?.style.setProperty(
+        "--scene-bleed",
+        `${SCENE_BLEED_PX}px`,
+      );
       // WHAT SITS OVER THE ROAD SCALES WITH THE ROAD.
       //
       // The notice board and the story page were fixed in `rem`, so on a
@@ -5183,11 +5290,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         } else {
           textInput.clearChar();
         }
+        // Backspace never reaches the engine, so it never reaches the sound
+        // above; it is still a key, and a key a child presses a lot.
+        if (prefsRef.current.sounds && prefsRef.current.clickSounds) {
+          kidsAudio.playBackspace();
+        }
         forceTick();
         return;
       }
       if (ev.key === "Tab") {
         textInput.appendIndent(ev.timeStamp, 0);
+        if (prefsRef.current.sounds && prefsRef.current.clickSounds) {
+          kidsAudio.playKey();
+        }
         forceTick();
         return;
       }
@@ -5264,11 +5379,22 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         key.codePointAt(0)!,
         timeToType,
       );
-      // One real key sound per press on Classic, right where the engine
-      // decides whether the press landed — the trail's own blips below are
-      // skipped so the two never double up.
-      if (prefsRef.current.classic && sounds) {
-        classicKeySoundRef.current(feedback);
+      // ONE KEY SOUND PER PRESS, for every mode and every key.
+      //
+      // Classic used to play the grown-up page's synthesised click and the
+      // trail its own 8-bit blip, each skipping the other so they never
+      // doubled up. Both are the recorded keyboard now — so a child gets the
+      // same board whichever way they are practising, and the space bar,
+      // Enter and a wrong letter each sound like themselves.
+      if (sounds && prefsRef.current.clickSounds) {
+        if (
+          feedback === Feedback.Succeeded ||
+          feedback === Feedback.Recovered
+        ) {
+          kidsAudio.playKey(key);
+        } else {
+          kidsAudio.playWrong();
+        }
       }
       const passage = passageRef.current;
       const pos = textInput.pos;
@@ -5306,9 +5432,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         // leap on every gap and learn that the gaps are where the points are.
         // Finishing a word still counts and still chimes; it just is not paid.
         setScore((s) => saveBest(s + 1));
-        if (sounds && key !== " " && !prefsRef.current.classic) {
-          kidsAudio.playMove();
-        }
+        // The key itself already sounded, above — every mode, every key.
         if (pos > 0 && passage[pos - 1] === " ") {
           setWords((w) => w + 1);
           // Another of the trail's game chimes: Classic keeps to the sound a
@@ -6483,24 +6607,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // — but like the boards these learners have actually used. The mechanical
   // samples are a nostalgia most eleven-year-olds do not share; the soft
   // modern click of a laptop is the sound they know a key to make.
-  const classicKeySound = useMemo(
-    () =>
-      makeSoundPlayer(
-        settings
-          .set(soundProps.playSounds, PlaySounds.All)
-          .set(soundProps.soundTheme, SoundTheme.DEFAULT)
-          .set(soundProps.soundVolume, 0.5),
-      ),
-    [settings],
-  );
   const classicRef = useRef(classic);
   classicRef.current = classic;
   const armedRef = useRef(armed);
   armedRef.current = armed;
   // Set by the keydown effect, which owns the lesson's TextInput.
   const restartLineRef = useRef<((announce: boolean) => void) | null>(null);
-  const classicKeySoundRef = useRef(classicKeySound);
-  classicKeySoundRef.current = classicKeySound;
   // Leaving the window or the tab puts the line back, the way the grown-up
   // page does. A clock that kept running while somebody watched a video would
   // otherwise record a speed they never typed at — and the average they are
@@ -7912,7 +8024,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             setSessionSecs(timerMin * 60);
             setSessionOver(false);
           }}
-          onClose={() => setSettingsOpen(false)}
+          onClose={() => {
+            kidsAudio.playPanel(false);
+            setSettingsOpen(false);
+          }}
         />
       )}
     </div>
@@ -8898,16 +9013,96 @@ function SettingsCard({
                   <div>
                     <div className={styles.sl}>Sounds</div>
                     <div className={styles.sd}>
-                      beeps, jumps and level-up tunes
+                      the speaker button at the top turns these two on and off
                     </div>
                   </div>
                   <div className={styles.ctl}>
                     <button
                       type="button"
                       className={pill(prefs.sounds)}
-                      onClick={() => savePrefs({ sounds: !prefs.sounds })}
+                      onClick={() => {
+                        const on = !prefs.sounds;
+                        // Played BEFORE the save when switching off, so the
+                        // child hears the switch they just pressed rather than
+                        // pressing a button that answers with silence.
+                        kidsAudio.init();
+                        kidsAudio.playToggle(on);
+                        savePrefs({ sounds: on });
+                      }}
                     >
                       {prefs.sounds ? "On" : "Off"}
+                    </button>
+                  </div>
+                </div>
+                {/*
+          THE TWO HALVES. One is feedback for what the child did, the other is
+          the game making noise, and they are wanted in different rooms — see
+          `clickSounds` on Prefs. Both sit under the master above and go grey
+          with it, the same way "Read it out loud" does.
+        */}
+                <div className={styles.srow}>
+                  <span
+                    className={styles.ri}
+                    style={{ background: "var(--sand)" }}
+                  >
+                    <SoundIcon color="#7a5c00" size={20} />
+                  </span>
+                  <div>
+                    <div className={styles.sl}>Keyboard and buttons</div>
+                    <div className={styles.sd}>
+                      {prefs.sounds
+                        ? "a small click for every key you press, and every button you tap"
+                        : "needs sounds switched on"}
+                    </div>
+                  </div>
+                  <div className={styles.ctl}>
+                    <button
+                      type="button"
+                      className={pill(prefs.clickSounds && prefs.sounds)}
+                      disabled={!prefs.sounds}
+                      onClick={() => {
+                        const on = !prefs.clickSounds;
+                        kidsAudio.init();
+                        savePrefs({ clickSounds: on });
+                        if (on) {
+                          kidsAudio.playToggle(true);
+                        }
+                      }}
+                    >
+                      {prefs.clickSounds && prefs.sounds ? "On" : "Off"}
+                    </button>
+                  </div>
+                </div>
+                <div className={styles.srow}>
+                  <span
+                    className={styles.ri}
+                    style={{ background: "var(--sand)" }}
+                  >
+                    <SoundIcon color="#7a5c00" size={20} />
+                  </span>
+                  <div>
+                    <div className={styles.sl}>Game and background</div>
+                    <div className={styles.sd}>
+                      {prefs.sounds
+                        ? "jumps, chimes, level-up tunes, and the quiet sound of the road"
+                        : "needs sounds switched on"}
+                    </div>
+                  </div>
+                  <div className={styles.ctl}>
+                    <button
+                      type="button"
+                      className={pill(prefs.worldSounds && prefs.sounds)}
+                      disabled={!prefs.sounds}
+                      onClick={() => {
+                        const on = !prefs.worldSounds;
+                        kidsAudio.init();
+                        savePrefs({ worldSounds: on });
+                        if (on) {
+                          kidsAudio.playPoint();
+                        }
+                      }}
+                    >
+                      {prefs.worldSounds && prefs.sounds ? "On" : "Off"}
                     </button>
                   </div>
                 </div>

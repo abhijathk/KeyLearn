@@ -328,6 +328,15 @@
   display: flex;
   justify-content: center;
   min-block-size: 65px;
+
+  // Paired with `size: "flexible"` on the widget: it takes the width given
+  // here, so the challenge shares its edges with the email field and the
+  // button instead of floating narrower than both. Turnstile will not go
+  // below 300px — if the form is ever narrower, `justify-content` keeps the
+  // overhang even on both sides rather than all of it on one.
+  > div {
+    inline-size: 100%;
+  }
 }
 
 .spamHint {

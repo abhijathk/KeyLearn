@@ -3,10 +3,300 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "f1a838bf7f4e";
+export const ASSET_VERSION = "e3ad342871ea";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
+  "audio/ambient/cricket_night_01.mp3": {
+    "u": "vaf8441f7/audio/ambient/cricket_night_01.mp3",
+    "b": 10074,
+    "g": "shared"
+  },
+  "audio/ambient/cricket_night_02.mp3": {
+    "u": "vb187d000/audio/ambient/cricket_night_02.mp3",
+    "b": 10074,
+    "g": "shared"
+  },
+  "audio/ambient/wind_open_air_01.mp3": {
+    "u": "ve9e202da/audio/ambient/wind_open_air_01.mp3",
+    "b": 120730,
+    "g": "shared"
+  },
+  "audio/ambient/wind_open_air_02.mp3": {
+    "u": "v4a5877b7/audio/ambient/wind_open_air_02.mp3",
+    "b": 120730,
+    "g": "shared"
+  },
+  "audio/creatures/buffalo_vocal_01.mp3": {
+    "u": "vbd036630/audio/creatures/buffalo_vocal_01.mp3",
+    "b": 10074,
+    "g": "shared"
+  },
+  "audio/creatures/buffalo_vocal_02.mp3": {
+    "u": "v0dca58af/audio/creatures/buffalo_vocal_02.mp3",
+    "b": 10074,
+    "g": "shared"
+  },
+  "audio/creatures/buffalo_vocal_03.mp3": {
+    "u": "v3e3c9d71/audio/creatures/buffalo_vocal_03.mp3",
+    "b": 10074,
+    "g": "shared"
+  },
+  "audio/movement/body_shift_01.mp3": {
+    "u": "vf8ee70a8/audio/movement/body_shift_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/movement/body_shift_02.mp3": {
+    "u": "vbcb713c7/audio/movement/body_shift_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/movement/body_shift_03.mp3": {
+    "u": "vc5e9cdb9/audio/movement/body_shift_03.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/movement/child_land_01.mp3": {
+    "u": "v0a4eeecb/audio/movement/child_land_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/movement/child_land_02.mp3": {
+    "u": "v73a82994/audio/movement/child_land_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/movement/child_land_03.mp3": {
+    "u": "vbe839ac8/audio/movement/child_land_03.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/movement/child_push_01.mp3": {
+    "u": "v6691e748/audio/movement/child_push_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/movement/child_push_02.mp3": {
+    "u": "v05e1325b/audio/movement/child_push_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/movement/child_push_03.mp3": {
+    "u": "vcba47250/audio/movement/child_push_03.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/rewards/achievement_01.mp3": {
+    "u": "v860ffd76/audio/rewards/achievement_01.mp3",
+    "b": 7984,
+    "g": "shared"
+  },
+  "audio/rewards/achievement_02.mp3": {
+    "u": "v7e4013f7/audio/rewards/achievement_02.mp3",
+    "b": 7984,
+    "g": "shared"
+  },
+  "audio/rewards/lesson_complete_01.mp3": {
+    "u": "v50e99677/audio/rewards/lesson_complete_01.mp3",
+    "b": 6939,
+    "g": "shared"
+  },
+  "audio/rewards/lesson_complete_02.mp3": {
+    "u": "vd09363a9/audio/rewards/lesson_complete_02.mp3",
+    "b": 6939,
+    "g": "shared"
+  },
+  "audio/rewards/sentence_complete_01.mp3": {
+    "u": "v53c445f7/audio/rewards/sentence_complete_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/rewards/sentence_complete_02.mp3": {
+    "u": "v304a13ed/audio/rewards/sentence_complete_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/rewards/word_complete_01.mp3": {
+    "u": "v9a2e64f3/audio/rewards/word_complete_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/rewards/word_complete_02.mp3": {
+    "u": "vd03163cb/audio/rewards/word_complete_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/rewards/word_complete_03.mp3": {
+    "u": "vff4ed2e4/audio/rewards/word_complete_03.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/backspace_01.mp3": {
+    "u": "v8f1bab5e/audio/typing/backspace_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/backspace_02.mp3": {
+    "u": "v99c107f2/audio/typing/backspace_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/backspace_03.mp3": {
+    "u": "v8e03d555/audio/typing/backspace_03.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/enter_01.mp3": {
+    "u": "vf69f1692/audio/typing/enter_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/enter_02.mp3": {
+    "u": "vbe731cac/audio/typing/enter_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/enter_03.mp3": {
+    "u": "v9cba54b3/audio/typing/enter_03.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_01.mp3": {
+    "u": "v13af2d46/audio/typing/key_soft_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_02.mp3": {
+    "u": "v741a7484/audio/typing/key_soft_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_03.mp3": {
+    "u": "vfeb0251d/audio/typing/key_soft_03.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_04.mp3": {
+    "u": "v819780f3/audio/typing/key_soft_04.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_05.mp3": {
+    "u": "v24b4d77a/audio/typing/key_soft_05.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_06.mp3": {
+    "u": "vf82198fb/audio/typing/key_soft_06.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_07.mp3": {
+    "u": "v73df6aad/audio/typing/key_soft_07.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_08.mp3": {
+    "u": "v09ae4a42/audio/typing/key_soft_08.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_09.mp3": {
+    "u": "v77baf1df/audio/typing/key_soft_09.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_10.mp3": {
+    "u": "v451f1a07/audio/typing/key_soft_10.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_11.mp3": {
+    "u": "v73b51392/audio/typing/key_soft_11.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/key_soft_12.mp3": {
+    "u": "vcb8119bf/audio/typing/key_soft_12.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/space_01.mp3": {
+    "u": "vc1254508/audio/typing/space_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/space_02.mp3": {
+    "u": "v6992bb70/audio/typing/space_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/space_03.mp3": {
+    "u": "vfbadb596/audio/typing/space_03.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/space_04.mp3": {
+    "u": "v28e67f5c/audio/typing/space_04.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/wrong_01.mp3": {
+    "u": "v17c379d2/audio/typing/wrong_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/wrong_02.mp3": {
+    "u": "ve0941747/audio/typing/wrong_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/wrong_03.mp3": {
+    "u": "vc545d86e/audio/typing/wrong_03.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/typing/wrong_04.mp3": {
+    "u": "vf3a14caf/audio/typing/wrong_04.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/ui/ui_back_01.mp3": {
+    "u": "v57428a87/audio/ui/ui_back_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/ui/ui_button_01.mp3": {
+    "u": "v9d821c34/audio/ui/ui_button_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/ui/ui_button_02.mp3": {
+    "u": "v1877819f/audio/ui/ui_button_02.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/ui/ui_toggle_off_01.mp3": {
+    "u": "v7020bc81/audio/ui/ui_toggle_off_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/ui/ui_toggle_on_01.mp3": {
+    "u": "ve2e4d861/audio/ui/ui_toggle_on_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/ui/ui_window_close_01.mp3": {
+    "u": "vf07f31bc/audio/ui/ui_window_close_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
+  "audio/ui/ui_window_open_01.mp3": {
+    "u": "vc79d33fa/audio/ui/ui_window_open_01.mp3",
+    "b": 4431,
+    "g": "shared"
+  },
   "basis/basis_transcoder.js": {
     "u": "v8478b5b6/basis/basis_transcoder.js",
     "b": 57529,

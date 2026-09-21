@@ -194,7 +194,20 @@
 .turnstile {
   display: flex;
   justify-content: center;
-  min-block-size: 65px;
+
+  // No reserved height, deliberately — unlike the auth form's copy of this
+  // rule. This widget is mounted eagerly with `appearance: "interaction-only"`,
+  // so for almost every visitor it clears in the background and draws
+  // nothing at all. A 65px floor turned that into a permanent empty box
+  // above Send on both public forms: no control, no label, no explanation,
+  // just a gap that looks like something failed to load.
+  //
+  // The cost is that the form shifts on the rare visit where a checkbox
+  // does appear. That is a new control arriving, which is a fair thing for
+  // a form to make room for; an empty hole for everybody else is not.
+  > div {
+    inline-size: 100%;
+  }
 }
 
 .primary {

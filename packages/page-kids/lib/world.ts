@@ -6,7 +6,7 @@ import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
-import { ASSET_MAP } from "./asset-manifest.ts";
+import { ASSETS, versioned } from "./asset-url.ts";
 import {
   activeLessons,
   activityAt,
@@ -52,7 +52,7 @@ import { MAX_UNITS_PER_KEY, RUN_LEN, runLengthFor } from "./run-length.ts";
 import { MIN_STONE_GAP, stoneXFor } from "./stone-x.ts";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
-export const ASSETS = "/kids-assets";
+export { ASSETS, versioned };
 
 /**
  * ── CONTENT-ADDRESSED ASSET URLS ─────────────────────────────────────────
@@ -81,16 +81,7 @@ export const ASSETS = "/kids-assets";
  * is what every asset had before this existed. Nothing here is allowed to be
  * a way for the game not to start.
  */
-/** `/kids-assets/models/x.glb` → `/kids-assets/v1a2b3c4d/models/x.glb`. */
-function versioned(url: string): string {
-  if (!url.startsWith(`${ASSETS}/`)) {
-    return url;
-  }
-  const entry = ASSET_MAP[url.slice(ASSETS.length + 1)];
-  // An asset added since the last manifest run keeps its plain URL and a
-  // day's caching, which is exactly what it had before any of this existed.
-  return entry == null ? url : `${ASSETS}/${entry.u}`;
-}
+/** Both now live in `asset-url.ts`; see the note there for why. */
 
 THREE.DefaultLoadingManager.setURLModifier(versioned);
 
@@ -1735,6 +1726,30 @@ export function daylightWindow(now: Date = new Date()): {
   // polar cases cannot happen — clamped anyway rather than returning NaN.
   const H = Math.acos(Math.min(1, Math.max(-1, cosH))) / D2R / 15;
   return { rise: 12 - H, set: 12 + H };
+}
+
+/**
+ * The day and night an explicitly PINNED hour stages.
+ *
+ * The same rule `stagedHours` applies to the real clock: an hour between six
+ * and six is the day candidate and anything else is the night one. So `12`
+ * stages midday as the day and midnight as the night — which is why a child
+ * who pins midday and turns the night on gets a scoreboard reading 12:00 am,
+ * and why the Kuttichathan corridor is due at that setting.
+ *
+ * Pulled out of the world's own closure so it can be tested: the corridor is
+ * staged once during the build from exactly this answer, and when the build
+ * was getting the real clock instead of this, nothing was built at all and no
+ * test could see it.
+ */
+export function pinnedHours(h: number): {
+  readonly day: number;
+  readonly night: number;
+} {
+  const light = h >= 6 && h < 18;
+  return light
+    ? { day: h, night: (h + 12) % 24 }
+    : { day: (h + 12) % 24, night: h };
 }
 
 export function stagedHours(now: Date = new Date()): {
@@ -4388,6 +4403,21 @@ export function createKidsWorld(
      * count lives with the saved preferences because the world is rebuilt
      * from nothing every session and cannot remember anything itself.
      */
+    /**
+     * The hour this world opens at, or null to follow the child's clock.
+     *
+     * THE PIN HAS TO ARRIVE BEFORE THE BUILD, not after it. `setHour` exists
+     * and works, but the page could only call it once the world was already
+     * made — and by then the chapter had been built against whatever the real
+     * clock said. Everything the build decides from the hour was therefore
+     * decided on the wrong one, and the most visible of those is the
+     * Kuttichathan corridor: it is staged once, only when the night this
+     * world folds to is a deep one, so a child who had pinned midday and
+     * switched the night on saw a midnight sky, a scoreboard reading 12:00 am
+     * — and no corridor anywhere on the road, because at the real hour it was
+     * built at, he was not due.
+     */
+    readonly hour?: number | null;
     readonly stonesPassed?: number;
     readonly tier?: DeviceTier;
     /**
@@ -4513,11 +4543,7 @@ export function createKidsWorld(
     // review override simply skipped the test. An hour between six and six is
     // the day candidate and anything else is the night one, so `?hour=2`
     // stages two in the morning as the NIGHT and leaves the day at 14:00.
-    const h = hourPref;
-    const light = h >= 6 && h < 18;
-    return light
-      ? { day: h, night: (h + 12) % 24 }
-      : { day: (h + 12) % 24, night: h };
+    return pinnedHours(hourPref);
   };
 
   const worldHour = (): number => {
@@ -4685,7 +4711,12 @@ export function createKidsWorld(
     const n = q == null ? Number.NaN : Number(q);
     return Number.isFinite(n) && n >= 0 && n < 24 ? n : null;
   })();
-  let hourPref: number | null = reviewHour;
+  // `?hour=` first, then the setting the page was opened with; null means the
+  // child's own clock. Set HERE rather than through `setHour` so that
+  // everything below — the sun at 4768, the population, the sky, and the
+  // chapter's own once-only staging — is built against the hour that was
+  // actually asked for.
+  let hourPref: number | null = reviewHour ?? opts.hour ?? null;
   const SUN_DAY = new THREE.Vector3(...(theme.sunAt ?? [-8, 30, 7]));
   /**
    * AND WHERE THE MOON STANDS, which is not where the sun stood.
@@ -5125,6 +5156,88 @@ export function createKidsWorld(
    * only a RESIZE is compensated for.
    */
   let refH = 0;
+  /**
+   * WHICH WAY EVERY SHADOW FALLS, published to CSS.
+   *
+   * The scoreboard and the story scrap are HTML drawn over this scene, and
+   * their shadows were pointing straight down while every shadow inside the
+   * picture — the child's, the trees', the letter cards' — fell wherever the
+   * sun happened to be. Two lights in one frame, and the flat one was on the
+   * things nearest the eye.
+   *
+   * The direction is the same one the cards use: the light's horizontal run
+   * over its vertical rise. It is projected through the camera rather than
+   * assumed, because the road is watched from one side and a world offset is
+   * not a screen offset — then normalised, so the page can decide how far a
+   * given thing throws by its own height. `SUN_AT` is the live light and it
+   * is eased into the moon's rig after dark, so this swings round at dusk
+   * with everything else and needs no night case of its own.
+   */
+  const lightP0 = new THREE.Vector3();
+  const lightP1 = new THREE.Vector3();
+  let lightTick = 0;
+  let lightLast = "";
+  function publishLightDirection(lit: number): void {
+    // The sun moves by the hour, not by the frame.
+    if (++lightTick % 20 !== 0) {
+      return;
+    }
+    const fall = -SUN_AT.y === 0 ? 1 : -SUN_AT.y;
+    const run = Math.min(6, Math.hypot(SUN_AT.x / fall, SUN_AT.z / fall));
+    // The vector from a thing to its own shadow, per unit of height: the
+    // light's horizontal run sideways, and one unit DOWN to the ground.
+    // Leaving the drop out was the first attempt and it pointed the card's
+    // shadow up the screen — the run alone says which way along the ground
+    // the shadow lies, not that it lies on the ground at all.
+    lightP0.set(0, 0, 0).project(cam);
+    lightP1.set(SUN_AT.x / fall, -1, SUN_AT.z / fall).project(cam);
+    // Screen y grows downward where clip space grows up.
+    let dx = lightP1.x - lightP0.x;
+    let dy = -(lightP1.y - lightP0.y);
+    const len = Math.hypot(dx, dy);
+    if (!Number.isFinite(len) || len < 1e-6) {
+      return;
+    }
+    dx /= len;
+    dy /= len;
+    const css = `${dx.toFixed(3)}|${dy.toFixed(3)}|${lit.toFixed(2)}|${run.toFixed(2)}`;
+    if (css === lightLast) {
+      return;
+    }
+    lightLast = css;
+    const host = canvas.parentElement?.parentElement ?? canvas.parentElement;
+    host?.style.setProperty("--sun-dx", dx.toFixed(3));
+    host?.style.setProperty("--sun-dy", dy.toFixed(3));
+    // HOW LONG THE SHADOW IS, which is a different question from where it
+    // points. The run is the light's horizontal travel per unit of height —
+    // tan of its angle from straight up — so it is near nothing at midday
+    // and grows without limit as the sun goes down. Every shadow in the
+    // render already lengthens with it; these did not, because a direction
+    // on its own only ever told them which way to sit.
+    //
+    // The angle goes with it so a flat patch can be stretched ALONG the
+    // light rather than merely pushed: CSS has no `atan2`, so it is worked
+    // out here where the vector is.
+    host?.style.setProperty("--sun-run", run.toFixed(3));
+    host?.style.setProperty(
+      "--sun-angle",
+      `${((Math.atan2(dy, dx) * 180) / Math.PI).toFixed(1)}deg`,
+    );
+    // AND WHAT THE LIGHT IS MADE OF, so the HTML over this scene can be lit
+    // by it rather than painted at one fixed brightness. The colour is the
+    // light's own — warm at midday, blue after dark — and `--sun-lit` is how
+    // much daylight is left, which is what decides how strong a sheen a
+    // surface catches and how far it falls off at night.
+    host?.style.setProperty(
+      "--sun-tint",
+      `rgb(${Math.round(sun.color.r * 255)} ${Math.round(sun.color.g * 255)} ${Math.round(sun.color.b * 255)})`,
+    );
+    host?.style.setProperty(
+      "--sun-lit",
+      Math.max(0, Math.min(1, lit)).toFixed(3),
+    );
+  }
+
   function resize() {
     const w = canvas.clientWidth || 800;
     const h = canvas.clientHeight || 300;
@@ -14237,6 +14350,8 @@ export function createKidsWorld(
     face: THREE.Mesh;
     shadow: THREE.Mesh;
   };
+  /** How high the word ribbon rides above the road when nothing is lifting. */
+  const WORD_REST_Y = 1.55;
   let wordTiles: WordTile[] = [];
   /**
    * How hard a letter card sits on the road, before cloud is taken off it.
@@ -24031,6 +24146,7 @@ export function createKidsWorld(
       // was only ever one place for the light to be.
       SUN_AT.lerpVectors(SUN_DAY, SUN_NIGHT, nightBlend);
       sun.position.set(cam.position.x + SUN_AT.x, SUN_AT.y, SUN_AT.z);
+      publishLightDirection(1 - nightBlend);
       sun.target.position.x = cam.position.x;
       sun.target.updateMatrixWorld();
       player.mixer.update(dt);
@@ -24080,7 +24196,7 @@ export function createKidsWorld(
             BRIDGE != null && Math.abs(tileX - BRIDGE.x) <= BRIDGE.halfLen
               ? roadTopY(tileX)
               : terrainY(tileX, gz);
-          g.position.y += (groundH + 1.55 + lift - g.position.y) * 0.25;
+          g.position.y += (groundH + WORD_REST_Y + lift - g.position.y) * 0.25;
           // PIN THE PAINTED SHADOW TO THE GROUND, AND THROW IT FROM THE SUN.
           //
           // Not directly under the card: that is the shadow of a light hung
@@ -24102,6 +24218,45 @@ export function createKidsWorld(
           tile.shadow.position.y = -drop / (g.scale.y || 1);
           tile.shadow.position.x = ((SUN_AT.x / -SUN_AT.y) * drop) / sx;
           tile.shadow.position.z = ((SUN_AT.z / -SUN_AT.y) * drop) / sz;
+          // AND IT SHRINKS AS THE CARD RISES.
+          //
+          // The tile a child is typing lifts and bobs (`lift`, above), and
+          // its shadow used to follow it across the ground at exactly the
+          // size it had while resting — which reads as the card sliding
+          // rather than lifting, because size is most of how height is
+          // judged from a shadow.
+          //
+          // Smaller and fainter with height, not larger: the light here is
+          // the sky as much as the sun, so a rising object loses its umbra
+          // to the penumbra and the mark on the ground weakens and draws in.
+          // A hard point light would do the opposite, and the scene has no
+          // such thing in it.
+          //
+          // Measured from the resting height so a tile at rest is untouched:
+          // only the one being typed moves at all.
+          const rise = Math.max(0, drop - WORD_REST_Y);
+          const shrink = 1 / (1 + rise * 0.55);
+          // AND IT LENGTHENS AS THE SUN DROPS.
+          //
+          // Stretched along the road, which is the axis the light's run is
+          // almost entirely on in this view — the road runs in x and the
+          // camera watches it from the side. A shadow is the caster seen
+          // from the light: as the light falls, that view flattens and the
+          // mark on the ground draws out along it.
+          //
+          // STRETCH ONLY, NO IN-PLANE TURN. Spinning the plane to face the
+          // light exactly was tried and it broke them: the mesh is already
+          // rotated flat, and a second rotation on top tilted the cards'
+          // shadows out of the ground they are supposed to be lying on.
+          const runXZ = Math.hypot(SUN_AT.x / -SUN_AT.y, SUN_AT.z / -SUN_AT.y);
+          tile.shadow.scale.set(
+            shrink * (1 + Math.min(4, runXZ) * 0.7),
+            shrink,
+            1,
+          );
+          (tile.shadow.material as THREE.MeshBasicMaterial).opacity =
+            ((tile.shadow.userData.shadowBase as number) ?? tileShadowBase) *
+            (0.45 + shrink * 0.55);
         }
       }
     }
