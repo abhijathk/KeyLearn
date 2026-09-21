@@ -1169,24 +1169,30 @@
 /* Held high: thrown clear across the road, faint and soft by the time it
    lands. A shade wider than the sheet, as a shadow at distance is. */
 .notice::after {
-  inset: 16% -4%;
-  background: rgb(31 42 19 / 46%);
+  inset-inline: -4%;
   /*
-   * ALL THE WAY DOWN TO THE ROAD.
+   * ON THE ROAD, BECAUSE THE ROAD SAYS WHERE IT IS.
    *
-   * This sheet hangs high and well back, and its mark belongs where the
-   * ground actually is — out on the track the villagers walk, not on the
-   * wall a few inches under the card. At seventy-odd pixels it was landing
-   * in mid-air; the throw is the height of the thing casting it, and this
-   * one is held a long way up.
+   * `--road-y` is published by the world every twenty frames: the ground
+   * beside the child, projected through the scene's own camera, in pixels
+   * down from the top of the canvas. Guessing a throw distance put this
+   * patch out in the paddy — the sheet hangs near the top of the frame, the
+   * track is most of the way down it, and the gap between them changes with
+   * the pane's height.
    *
-   * Fainter and softer than the story scrap's for the same reason: by the
-   * time a shadow has travelled that far from its caster, the sky has filled
-   * most of it in.
+   * The sheet is the containing block, and it sits `0.7rem` (scaled) below
+   * the top of the scene, so that offset comes back off. Sideways it still
+   * follows the light like everything else.
    */
-  filter: blur(6px);
-  scale: calc(1.08 + var(--sun-run, 0) * 0.6) 0.36;
-  translate: calc(var(--sun-dx, 0) * 168px) calc(var(--sun-dy, 1) * 168px);
+  inset-block: calc(var(--road-y, 320px) - 0.7rem * var(--kscale, 1)) auto;
+  block-size: 2.1rem;
+  /* Faint and diffuse: this one has travelled the whole height of the frame
+     to get here, and by then the sky has filled most of it in. The scrap's
+     stays crisp because it falls a few inches. */
+  background: rgb(31 42 19 / 24%);
+  filter: blur(12px);
+  scale: calc(1.08 + var(--sun-run, 0) * 0.6) 1;
+  translate: calc(var(--sun-dx, 0) * 30px) 0;
 }
 
 .notePrint {

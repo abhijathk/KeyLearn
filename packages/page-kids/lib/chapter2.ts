@@ -464,6 +464,23 @@ export const LESSONS_2: readonly Lesson[] = [
       // player, milestone and movement path remain readable".
       { model: `${PLANTS}/Tamarind_Tree`, at: 0.16, z: -20, h: 13, clear: 7 },
       { model: `${PLANTS}/Tamarind_Tree`, at: 0.86, z: -21, h: 12, clear: 7 },
+      // BAMBOO ON THE FAR BANK, downstream of the crossing.
+      //
+      // Bamboo is what actually grows where a Kerala river meets its bank —
+      // it likes wet feet and it holds the soil, which is why it is planted
+      // on cut banks in the first place. The crossing had taro at the water
+      // line and tamarind set back on the road side, and nothing at all on
+      // the far side of the channel: the eye went over the bridge and off
+      // the edge of the world.
+      //
+      // ONE STAND, and one is the right number: the model is already a
+      // clump of many culms, which is how bamboo grows — several groves in a
+      // row turned the far bank into a wall of it and took the crossing's
+      // own silhouette away. Just past the halfway mark, which is where the
+      // river is, so it stands on the bank the child walks onto; and 24
+      // units back, further than anything else in the lesson, so it reads
+      // behind the water rather than beside the deck.
+      { model: "nature/KeralaBambooGroves", at: 0.6, z: -24, h: 19, clear: 6 },
     ],
     herd: [],
     folk: [],

@@ -5219,6 +5219,27 @@ export function createKidsWorld(
     // light rather than merely pushed: CSS has no `atan2`, so it is worked
     // out here where the vector is.
     host?.style.setProperty("--sun-run", run.toFixed(3));
+    // WHERE THE ROAD IS, in the window's own pixels.
+    //
+    // The score sheet's shadow belongs on the track the villagers walk, and
+    // guessing a distance put it out in the paddy instead — the card hangs
+    // near the top of the frame and the road is most of the way down it, and
+    // how far apart those two are changes with the pane's height.
+    //
+    // So it is asked rather than assumed: the point on the ground beside the
+    // child, projected through the same camera that draws the scene, in CSS
+    // pixels down from the top of the canvas.
+    lightP1
+      .set(
+        player ? player.wrap.position.x : cam.position.x,
+        terrainY(player ? player.wrap.position.x : cam.position.x, 0),
+        0,
+      )
+      .project(cam);
+    const roadY = ((1 - lightP1.y) / 2) * renderer.domElement.clientHeight;
+    if (Number.isFinite(roadY)) {
+      host?.style.setProperty("--road-y", `${roadY.toFixed(1)}px`);
+    }
     host?.style.setProperty(
       "--sun-angle",
       `${((Math.atan2(dy, dx) * 180) / Math.PI).toFixed(1)}deg`,
