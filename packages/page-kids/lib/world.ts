@@ -12670,7 +12670,29 @@ export function createKidsWorld(
    * before he has picked it up; held longer and it leaves after his arm has
    * already dropped.
    */
-  const THROW_RELEASE = 2.6;
+  /**
+   * WHEN THE STONE LEAVES HIS HAND, in seconds into the throw clip.
+   *
+   * MEASURED OFF THE ANIMATION, not judged by eye. `kutti_17_pick_up_and_
+   * throw_stone` is one 4.25s clip: the pick-up and the throw meet on a
+   * shared junction pose at 1.94s, and the throw half whips through as a
+   * kinetic chain — hips first, chest 42ms later, arm 85ms after the hips.
+   * Reading the rotation tracks out of `Kuttichathan_animations.glb` and
+   * taking each bone's peak angular step puts that whip at:
+   *
+   *     RightArm       27.6 deg/frame at 3.083s
+   *     RightHand      15.4 deg/frame at 3.125s
+   *     RightForeArm   18.4 deg/frame at 3.167s
+   *
+   * The hand is fastest at 3.125, which is where a thrown thing leaves it —
+   * after that the arm is decelerating into the follow-through.
+   *
+   * It was 2.6, half a second early: the stone was in the air while he was
+   * still cocked behind his head, so it looked thrown by nothing. The
+   * comment above the beat has always claimed the stone is "held until
+   * partway through the throw"; this is the figure that makes it true.
+   */
+  const THROW_RELEASE = 3.125;
 
   // More than the five it was: a third or so of the draws are now thrown
   // away for standing inside something, and the pool must not thin out.

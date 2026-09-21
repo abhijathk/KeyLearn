@@ -1170,7 +1170,7 @@
    lands. A shade wider than the sheet, as a shadow at distance is. */
 .notice::after {
   inset: 16% -4%;
-  background: rgb(31 42 19 / 26%);
+  background: rgb(31 42 19 / 46%);
   /*
    * ALL THE WAY DOWN TO THE ROAD.
    *
@@ -1184,7 +1184,7 @@
    * time a shadow has travelled that far from its caster, the sky has filled
    * most of it in.
    */
-  filter: blur(9px);
+  filter: blur(6px);
   scale: calc(1.08 + var(--sun-run, 0) * 0.6) 0.36;
   translate: calc(var(--sun-dx, 0) * 168px) calc(var(--sun-dy, 1) * 168px);
 }
