@@ -24249,8 +24249,17 @@ export function createKidsWorld(
           // rotated flat, and a second rotation on top tilted the cards'
           // shadows out of the ground they are supposed to be lying on.
           const runXZ = Math.hypot(SUN_AT.x / -SUN_AT.y, SUN_AT.z / -SUN_AT.y);
+          // A SPACE IS A SMALLER CARD, so it casts a smaller shadow.
+          //
+          // The gap between words is drawn as a low bar — `base.scale` puts
+          // it at half width and under a third of the height — but every
+          // shadow in the row was the same full-size square, so each space
+          // sat on a patch twice the width of the thing making it. Only the
+          // width carries over: the card's DEPTH is unchanged, and depth is
+          // the ground plane's other axis.
+          const wide = (wordText[i] ?? " ") === " " ? 0.5 : 1;
           tile.shadow.scale.set(
-            shrink * (1 + Math.min(4, runXZ) * 0.7),
+            shrink * (1 + Math.min(4, runXZ) * 0.7) * wide,
             shrink,
             1,
           );

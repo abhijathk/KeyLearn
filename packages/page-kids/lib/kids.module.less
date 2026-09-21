@@ -1170,10 +1170,23 @@
    lands. A shade wider than the sheet, as a shadow at distance is. */
 .notice::after {
   inset: 16% -4%;
-  background: rgb(31 42 19 / 30%);
-  filter: blur(7px);
-  scale: calc(1.04 + var(--sun-run, 0) * 0.55) 0.4;
-  translate: calc(var(--sun-dx, 0) * 74px) calc(var(--sun-dy, 1) * 74px);
+  background: rgb(31 42 19 / 26%);
+  /*
+   * ALL THE WAY DOWN TO THE ROAD.
+   *
+   * This sheet hangs high and well back, and its mark belongs where the
+   * ground actually is — out on the track the villagers walk, not on the
+   * wall a few inches under the card. At seventy-odd pixels it was landing
+   * in mid-air; the throw is the height of the thing casting it, and this
+   * one is held a long way up.
+   *
+   * Fainter and softer than the story scrap's for the same reason: by the
+   * time a shadow has travelled that far from its caster, the sky has filled
+   * most of it in.
+   */
+  filter: blur(9px);
+  scale: calc(1.08 + var(--sun-run, 0) * 0.6) 0.36;
+  translate: calc(var(--sun-dx, 0) * 168px) calc(var(--sun-dy, 1) * 168px);
 }
 
 .notePrint {
