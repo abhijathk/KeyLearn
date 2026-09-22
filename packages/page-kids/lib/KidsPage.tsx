@@ -4676,9 +4676,31 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       typeof window === "undefined"
         ? null
         : new URLSearchParams(window.location.search);
-    const showcaseModel =
-      qs?.has("puppy") || qs?.has("buffalo") ? "Puppy" : undefined;
-    const showcaseIdleModel = qs?.has("buffalo") ? "Buffalo" : undefined;
+    // REVIEW AIDS. Each spawns an animal beside the player and steps through
+    // every clip it ships, naming them in the coach line as they play.
+    //
+    //   ?puppy    the puppy's own gaits
+    //   ?buffalo  the buffalo cycling, with a puppy beside it for scale
+    //   ?cow      the cow cycling, with her calf beside her
+    //   ?calf     the calf cycling, with the cow beside him
+    //
+    // The pair matters for cattle: the two share a rig and a clip list, and
+    // the only way to judge whether the calf reads as a calf rather than as
+    // a small cow is to watch the same clip on both at once.
+    const showcaseModel = qs?.has("cow")
+      ? "Cow"
+      : qs?.has("calf")
+        ? "Cow_Calf"
+        : qs?.has("puppy") || qs?.has("buffalo")
+          ? "Puppy"
+          : undefined;
+    const showcaseIdleModel = qs?.has("buffalo")
+      ? "Buffalo"
+      : qs?.has("cow")
+        ? "Cow_Calf"
+        : qs?.has("calf")
+          ? "Cow"
+          : undefined;
     // Is a village due on this trail?
     //
     // Decided here rather than in the world, because it depends on how many
@@ -4817,7 +4839,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // player and cycles every clip, naming each in the caption line.
       showcaseModel,
       showcaseIdleModel,
-      onShowcaseClip: (name) => setSay(`🐶 ${name.replace(/_/g, " ")}`),
+      // WHICH ANIMAL, AND WHICH CLIP, AND HOW FAR THROUGH THE LIST.
+      //
+      // It said "🐶" whatever was on screen, which was fine while the puppy
+      // was the only thing reviewed here and is useless now that a cow and a
+      // calf share a clip list: the whole question being asked is whether
+      // THIS clip on THIS animal reads right, and the caption was answering
+      // neither. The count is there so a reviewer knows whether they have
+      // seen everything or are still waiting for the one they came for.
+      onShowcaseClip: (name, i, total) =>
+        setSay(
+          `${(showcaseModel ?? "").replace(/_/g, " ") || "Showcase"} · ` +
+            `${name.replace(/_/g, " ")} (${i + 1}/${total})`,
+        ),
       // What the world is building, named — see LoadStep. Only while the
       // card is up: once the road is open these keep arriving for the props
       // planted along it, and nobody wants a ticker over their game.

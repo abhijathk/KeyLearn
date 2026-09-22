@@ -5266,6 +5266,39 @@ export function createKidsWorld(
     );
   }
 
+  /** Reusable scratch, so a per-frame helper allocates nothing. */
+  const AX_UP = new THREE.Vector3(0, 1, 0);
+  const AX_R = new THREE.Vector3(1, 0, 0);
+  const spinQ = new THREE.Quaternion();
+  const spinAxis = new THREE.Vector3();
+  const spinWorld = new THREE.Quaternion();
+
+  /** The animal's own right-hand axis, in world space. */
+  function wrapRight(o: THREE.Object3D, into: THREE.Vector3): THREE.Vector3 {
+    return into.set(1, 0, 0).applyQuaternion(o.getWorldQuaternion(spinWorld));
+  }
+
+  /**
+   * Turn a bone about a WORLD axis, on top of whatever is already posed.
+   *
+   * The axis is carried into the bone's own space first, so this says "swing
+   * sideways" regardless of which way the rig happens to have built that
+   * bone — and it multiplies rather than assigns, so the clip the mixer just
+   * wrote is still underneath and nothing accumulates between frames.
+   */
+  function addWorldSpin(
+    bone: THREE.Object3D,
+    worldAxis: THREE.Vector3,
+    angle: number,
+  ): void {
+    if (angle === 0) {
+      return;
+    }
+    bone.getWorldQuaternion(spinWorld).invert();
+    spinAxis.copy(worldAxis).applyQuaternion(spinWorld).normalize();
+    bone.quaternion.multiply(spinQ.setFromAxisAngle(spinAxis, angle));
+  }
+
   function resize() {
     const w = canvas.clientWidth || 800;
     const h = canvas.clientHeight || 300;
@@ -9963,7 +9996,15 @@ export function createKidsWorld(
   // than a scale model of it. Kept in step with `WILD_HEIGHT` by hand, which
   // is a duplication worth a note: raise one and the other has to follow or
   // `?buffalo` quietly starts lying about proportions.
-  const SHOWCASE_H: Record<string, number> = { Buffalo: 6.8, Puppy: 2.1 };
+  // Sized against Dave's 4.8 so the review shows them at the scale they are
+  // actually drawn on the road: a cow is a shade below him, a calf is knee
+  // height beside her. These are the same figures the herd spawner uses.
+  const SHOWCASE_H: Record<string, number> = {
+    Buffalo: 6.8,
+    Puppy: 2.1,
+    Cow: 4.5,
+    Cow_Calf: 3.3,
+  };
   function advanceBuffalo(i: number) {
     if (!buffaloMixer || buffaloActions.length === 0) return;
     const next = buffaloActions[i];
@@ -15611,7 +15652,27 @@ export function createKidsWorld(
      * of them. Combat clips are not idles and are still excluded — a
      * roundhouse kick is not a thing to do while waiting by a road.
      */
-    const idlePool = (clips: THREE.AnimationClip[], scary: boolean) => {
+    const idlePool = (
+      clips: THREE.AnimationClip[],
+      scary: boolean,
+      grazes = false,
+    ) => {
+      // A GRAZING ANIMAL SPENDS MOST OF ITS DAY WITH ITS HEAD DOWN, so
+      // `Graze` is in the rotation and it is in there twice: a cow that
+      // alternates evenly between standing and eating looks like it is
+      // deciding, and cattle do not deliberate. `Idle_Alert` stays a rare
+      // single entry — a head coming up at a noise is worth seeing, and
+      // worth not seeing often.
+      if (grazes) {
+        const named = (n: string) => clips.find((c) => c.name === n);
+        const graze = named("Graze");
+        const pool = [graze, graze, named("Idle"), named("Idle_Alert")].filter(
+          (c): c is THREE.AnimationClip => c != null,
+        );
+        if (pool.length > 1) {
+          return pool;
+        }
+      }
       const names = scary
         ? ["Idle_B", "Idle_A"]
         : ["Idle_A", "Idle_B", "Interact"];
@@ -15722,7 +15783,7 @@ export function createKidsWorld(
       const clips = clipsFor(gltf);
       // Guards get a walking loop so their legs move while patrolling; everyone
       // else gets a calm, friendly idle.
-      const pool = guard ? [] : idlePool(clips, scary);
+      const pool = guard ? [] : idlePool(clips, scary, /^Cow/.test(model));
       const clip = guard
         ? (clips.find((c) => /walk|run|gallop|march/i.test(c.name)) ??
           pickIdle(clips, scary))
@@ -15734,6 +15795,52 @@ export function createKidsWorld(
       if (!guard && pool.length > 1) {
         wrap.userData.idlePool = pool.map((c) => mixer.clipAction(c));
         wrap.userData.idleNext = 12 + Math.random() * 14;
+      }
+      // ── CATTLE ARE SCENERY THAT HAS TO LOOK ALIVE ──────────────────
+      //
+      // The cow and the calf ship `Idle`, `Graze`, `Walk` and `Idle_Alert`,
+      // and a bystander plays ONE of them forever — so a cow by the road was
+      // a statue with a one-second loop. Nobody looks at a cow for long, but
+      // everybody notices one that never moves.
+      //
+      // Two things fix it. The pool below takes `Graze` as well as the
+      // idles, so they put their heads down and lift them again; and the
+      // small motions a cow actually makes — chewing, a slow nod, the tail
+      // going at flies, an ear flicking — are added per frame on top of
+      // whichever clip is running, because those are the details that read
+      // as alive and no clip here has them.
+      //
+      // Layered rather than replacing: the deltas are applied after the
+      // mixer has written the clip each frame, so nothing accumulates and
+      // the authored motion still comes through underneath.
+      if (/^Cow/.test(model)) {
+        const bone = (n: string) => wrap.getObjectByName(n) ?? null;
+        const calf = /Calf/i.test(model);
+        wrap.userData.cattle = {
+          calf,
+          head: bone("head"),
+          // Base to tip. Each segment swings a little more than the one
+          // before it, which is what makes a tail read as a tail rather
+          // than as a stick on a hinge.
+          tail: ["tailstart", "tail1", "tail2", "tail3"]
+            .map(bone)
+            .filter((b): b is THREE.Object3D => b != null),
+          ears: ["earend", "R_earend"]
+            .map(bone)
+            .filter((b): b is THREE.Object3D => b != null),
+          phase: Math.random() * Math.PI * 2,
+          // When the next fly lands. A calf is pestered more and minds it
+          // more; a grown cow swats and goes back to eating.
+          flickIn: 2 + Math.random() * (calf ? 4 : 7),
+          flickT: 0,
+          earIn: 1.5 + Math.random() * (calf ? 3 : 6),
+          earT: 0,
+          earWhich: 0,
+        };
+        // A calf does not stand still for as long as its mother does.
+        wrap.userData.idleNext = calf
+          ? 6 + Math.random() * 8
+          : 14 + Math.random() * 16;
       }
       if (clip) {
         const a = mixer.clipAction(clip);
@@ -25640,6 +25747,19 @@ export function createKidsWorld(
         idlePool?: THREE.AnimationAction[];
         idleNext?: number;
         headBaseX?: number;
+        /** Cattle only: the bones and timers behind the small motions. */
+        cattle?: {
+          calf: boolean;
+          head: THREE.Object3D | null;
+          tail: THREE.Object3D[];
+          ears: THREE.Object3D[];
+          phase: number;
+          flickIn: number;
+          flickT: number;
+          earIn: number;
+          earT: number;
+          earWhich: number;
+        };
         baseX?: number;
         baseZ?: number;
         state?: "graze" | "walk";
@@ -25743,6 +25863,74 @@ export function createKidsWorld(
           }
         }
         continue;
+      }
+      // ── THE SMALL MOTIONS THAT MAKE A COW A COW ────────────────────
+      //
+      // Applied AFTER the mixer has written this frame's clip, and as a
+      // rotation multiplied onto what is already there rather than a value
+      // assigned over it — so the authored `Graze` still swings the head and
+      // these ride on top, and nothing drifts over time.
+      //
+      // Turned about WORLD axes, not the bone's own. A tail hangs, so its
+      // swish is a swing about vertical whatever the rig's local convention
+      // is; a nod is about the animal's own right-hand axis, taken from the
+      // wrap. Guessing local axes on a rig this small is how you get a tail
+      // that rotates on its long axis and reads as a drill bit.
+      {
+        const cow = ud.cattle;
+        if (cow != null) {
+          const t = clock.elapsedTime;
+          const quick = cow.calf ? 1.7 : 1;
+          const ph = cow.phase;
+          // CHEWING. Cattle chew the cud at roughly one jaw cycle a second,
+          // and they do it whether their head is up or down — it is the
+          // single most recognisable thing a cow does standing still.
+          const chew = Math.sin(t * 5.2 + ph) * 0.012;
+          // And a slow nod under it, the weight of the head settling.
+          const nod = Math.sin(t * 0.45 + ph) * 0.03;
+          if (cow.head != null) {
+            addWorldSpin(cow.head, wrapRight(f.wrap, AX_R), chew + nod);
+          }
+          // THE TAIL, always going. A cow's tail is never still in a Kerala
+          // afternoon; it swings gently and then cracks across the flank
+          // when something actually lands.
+          cow.flickIn -= dt;
+          if (cow.flickIn <= 0) {
+            cow.flickIn =
+              (cow.calf ? 2.5 : 5) + Math.random() * (cow.calf ? 4 : 9);
+            cow.flickT = 0.42;
+          }
+          if (cow.flickT > 0) cow.flickT = Math.max(0, cow.flickT - dt);
+          // The flick decays over its half second and is several times the
+          // size of the idle swing, which is what makes it read as a swat
+          // rather than as more swinging.
+          const swat =
+            cow.flickT > 0 ? Math.sin((cow.flickT / 0.42) * Math.PI) : 0;
+          for (let i = 0; i < cow.tail.length; i++) {
+            // Further down the tail moves more and lags behind what is above
+            // it — the lag is the whole difference between a chain and a rod.
+            const reach = 0.05 + i * 0.055;
+            const lag = i * 0.38;
+            const swing = Math.sin(t * 1.25 * quick + ph - lag) * reach;
+            addWorldSpin(cow.tail[i]!, AX_UP, swing + swat * reach * 3.4);
+          }
+          // AN EAR, ONE AT A TIME. Both at once is a rabbit.
+          cow.earIn -= dt;
+          if (cow.earIn <= 0) {
+            cow.earIn =
+              (cow.calf ? 1.6 : 3) + Math.random() * (cow.calf ? 3.5 : 7);
+            cow.earT = 0.26;
+            cow.earWhich = Math.random() < 0.5 ? 0 : 1;
+          }
+          if (cow.earT > 0) {
+            cow.earT = Math.max(0, cow.earT - dt);
+            const ear = cow.ears[cow.earWhich];
+            if (ear != null) {
+              const k = Math.sin((cow.earT / 0.26) * Math.PI);
+              addWorldSpin(ear, wrapRight(f.wrap, AX_R), k * 0.5 * quick);
+            }
+          }
+        }
       }
       // A bystander with several idles moves between them, so a character
       // stood by the road for four minutes is not in one three-second loop
