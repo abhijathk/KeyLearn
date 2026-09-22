@@ -20,6 +20,7 @@
 
 import { type Lesson, LESSONS, SEGMENT_COUNT } from "./chapter1.ts";
 import { LESSONS_2 } from "./chapter2.ts";
+import { LESSONS_3 } from "./chapter3.ts";
 
 export type Chapter = {
   /** 1-based, and the same number the card shows. */
@@ -74,6 +75,15 @@ export const CHAPTERS: readonly Chapter[] = [
       " and field walls, a little shrine under a great tree, a river to" +
       " cross, and open grazing beyond it.",
     lessons: LESSONS_2,
+  },
+  {
+    n: 3,
+    name: "Village of Whispers",
+    blurb:
+      "Beyond the fields, a bigger village waits — houses, a great market" +
+      " and a temple street, where somebody plays among the trees before" +
+      " the road grows quiet again.",
+    lessons: LESSONS_3,
   },
 ];
 

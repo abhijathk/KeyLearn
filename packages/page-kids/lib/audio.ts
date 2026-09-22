@@ -80,6 +80,7 @@ const CLIPS = {
   panelClose: ["ui/ui_window_close_01"],
   wind: ["ambient/wind_open_air_01", "ambient/wind_open_air_02"],
   cricket: ["ambient/cricket_night_01", "ambient/cricket_night_02"],
+  whisperPot: ["environment/pot_set_01"],
   // The game's own moments. Each is the library's event for that exact
   // moment rather than something borrowed and re-pitched.
   word: [
@@ -331,6 +332,11 @@ class KidsAudio {
   /** Waiting: a small shift of weight, not a tune. */
   playIdle() {
     this.#fire("shift", "world", MOVE_PEAK);
+  }
+
+  /** A quiet physical object cue; respects the existing world-sound switch. */
+  playWhisperPot() {
+    this.#fire("whisperPot", "world", 0.035);
   }
 
   // ── Recorded sounds ──────────────────────────────────────────────────

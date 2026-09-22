@@ -4848,6 +4848,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         }
         speak(what as SayKey);
       },
+      onWhisper: () => kidsAudio.playWhisperPot(),
       onLoadStep: (label: string) => {
         // Dropped in a box for the loader to read at its own pace. No state,
         // so the page does not re-render once per model loaded. Skipped if

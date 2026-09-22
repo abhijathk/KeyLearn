@@ -118,14 +118,15 @@ test("a negative or missing count is the start of the road", () => {
   equal(lessonAtStones(-3), 1);
 });
 
-test("lesson numbers run 1..20 along the whole road", () => {
+test("lesson numbers run 1..30 along the whole road", () => {
   equal(lessonAtStones(0), 1);
   equal(lessonAtStones(4), 5);
   equal(lessonAtStones(9), 10);
   equal(lessonAtStones(10), 11);
   equal(lessonAtStones(19), 20);
-  // And stop there: there is no Lesson 21 to name.
-  equal(lessonAtStones(40), 20);
+  equal(lessonAtStones(20), 21);
+  equal(lessonAtStones(29), 30);
+  equal(lessonAtStones(40), 30);
   // Once Chapter 2 has lessons, its first stone is its Lesson 1 and never
   // "Lesson 11" — a chip that climbs to twenty is a number about the
   // software rather than about the road.
@@ -175,7 +176,18 @@ test("`?lesson=N` addresses a lesson the way the brief numbers it", () => {
 });
 
 test("nothing outside the authored road addresses anything", () => {
-  for (const n of [0, -1, 21, 99, 1.5, Number.NaN]) {
+  for (const n of [0, -1, 31, 99, 1.5, Number.NaN]) {
     equal(addressLesson(n), null, String(n));
   }
+});
+
+test("Chapter 3 continues directly from global lesson 20 at milestone 20", () => {
+  equal(chapterAt(19).n, 2);
+  equal(chapterAt(20).n, 3);
+  equal(chapterDueAt(20)?.n, 3);
+  equal(lessonIndexAt(20), 0);
+  equal(addressLesson(21)?.chapter.n, 3);
+  equal(addressLesson(21)?.lesson, 1);
+  equal(addressLesson(30)?.lesson, 10);
+  equal(chapterDueAt(30), null);
 });

@@ -29,6 +29,7 @@ import {
   tiredWalkAt,
   villageDay,
 } from "./chapter1.ts";
+import { WHISPER_NODES, whisperFolkOut, whisperState } from "./chapter3.ts";
 import { CHAPTERS } from "./chapters.ts";
 import {
   attachTint,
@@ -4484,6 +4485,7 @@ export function createKidsWorld(
         | "nightfall"
         | "village",
     ) => void;
+    readonly onWhisper?: () => void;
   } = {},
 ): KidsWorld {
   // Whether dark here means night, and what tonight holds if it does.
@@ -5229,14 +5231,19 @@ export function createKidsWorld(
     // So it is asked rather than assumed: the point on the ground beside the
     // child, projected through the same camera that draws the scene, in CSS
     // pixels down from the top of the canvas.
-    lightP1
-      .set(
-        player ? player.wrap.position.x : cam.position.x,
-        terrainY(player ? player.wrap.position.x : cam.position.x, 0),
-        0,
-      )
-      .project(cam);
-    const roadY = ((1 - lightP1.y) / 2) * renderer.domElement.clientHeight;
+    // THE CHILD'S OWN FEET, which is the road by definition — they walk on
+    // it. Taking `z = 0` and the terrain height there was a guess about
+    // where the track runs, and it projected a third of the way up the
+    // frame; the runner's wrap sits on the ground it is standing on, so ask
+    // that instead and there is nothing left to get wrong.
+    if (player != null) {
+      lightP1.copy(player.wrap.position);
+    } else {
+      lightP1.set(cam.position.x, terrainY(cam.position.x, 0), 0);
+    }
+    lightP1.project(cam);
+    const view = renderer.domElement.getBoundingClientRect();
+    const roadY = ((1 - lightP1.y) / 2) * view.height;
     if (Number.isFinite(roadY)) {
       host?.style.setProperty("--road-y", `${roadY.toFixed(1)}px`);
     }
@@ -7684,7 +7691,7 @@ export function createKidsWorld(
       ...(CHAPTER == null
         ? []
         : placements(CHAPTER, perspective)
-            .filter((p) => /House/i.test(p.model))
+            .filter((p) => /House|Cottage/i.test(p.model))
             .map((p) => ({ x: p.x, z: p.z + 9, rx: 13, rz: 7.5 }))),
     ];
     // ── AND THE GROUND IN FRONT OF A SHRINE ──────────────────────────
@@ -7701,6 +7708,24 @@ export function createKidsWorld(
     // forecourt is still one hand-kept number away from.
     if (CHAPTER != null) {
       const placed = placements(CHAPTER, perspective);
+      if (CHAPTER_N === 3) {
+        for (const p of placed.filter((p) => /Market|Temple/i.test(p.model))) {
+          yards.push({
+            x: p.x,
+            z: p.z + (p.depth ?? 8) / 2 + 2,
+            rx: (p.width ?? 12) / 2,
+            rz: 5,
+          });
+        }
+        for (let n = 2; n <= 9; n++) {
+          const from = CHAPTER[n - 1]!;
+          const len = CHAPTER[n]! - from;
+          yards.push({ x: from + len * 0.65, z: -17, rx: 1.6, rz: 10 });
+          if (n === 4 || n === 7) {
+            yards.push({ x: from + len * 0.25, z: -20, rx: 1.5, rz: 12 });
+          }
+        }
+      }
       yards.push(
         ...placed
           .filter((p) => /Shrine_Idol/i.test(p.model))
@@ -12317,6 +12342,118 @@ export function createKidsWorld(
     roadCool: number;
   };
   let kutti: KuttiRig | null = null;
+  // Chapter 3 uses short, off-road glimpses instead of the older road routines.
+  const whisperProps: {
+    mesh: THREE.Object3D;
+    base: THREE.Vector3;
+    lesson: number;
+    roll: boolean;
+  }[] = [];
+  let whisperTime = 0;
+  let whisperNext = 18;
+  let whisperUntil = 0;
+  let whisperLesson = 0;
+  let whisperSequence = 0;
+  let whisperMoving: (typeof whisperProps)[number] | null = null;
+  let whisperStarted = 0;
+  const whisperFarewells = new Set<number>();
+  const whisperStructures: {
+    lesson: number;
+    model: string;
+    box: THREE.Box3;
+  }[] = [];
+
+  const tickWhispers = (dt: number) => {
+    if (CHAPTER_N !== 3 || CHAPTER == null) return;
+    whisperTime += Math.min(dt, 0.1);
+    const lesson = lessonAt(playerX, CHAPTER).n;
+    const begin = CHAPTER[lesson - 1]!;
+    const fraction = (playerX - begin) / (CHAPTER[lesson]! - begin);
+    const state = whisperState(lesson, fraction, worldHour());
+    const k = kutti;
+    if (lesson !== whisperLesson) {
+      whisperLesson = lesson;
+      whisperNext = whisperTime + 12;
+      whisperUntil = 0;
+    }
+    if (k != null) {
+      k.wrap.visible =
+        state.figure && whisperTime < whisperUntil && !motionStilled();
+      k.hidden = !k.wrap.visible;
+      if (k.wrap.visible) k.mixer.update(dt);
+    }
+    if (whisperMoving != null) {
+      const p = whisperMoving;
+      const t = Math.min(1, (whisperTime - whisperStarted) / 2);
+      if (!state.props || motionStilled() || p.lesson !== lesson || t >= 1) {
+        p.mesh.position.copy(p.base);
+        p.mesh.rotation.z = 0;
+        whisperMoving = null;
+      } else {
+        const wave = Math.sin(t * Math.PI);
+        p.mesh.position.x = p.base.x + (p.roll ? wave * 0.9 : wave * 0.12);
+        p.mesh.rotation.z = p.roll
+          ? -wave * 2
+          : Math.sin(t * Math.PI * 4) * 0.13;
+      }
+    }
+    if (
+      motionStilled() ||
+      whisperTime < whisperNext ||
+      !state.props ||
+      whisperFarewells.has(lesson)
+    )
+      return;
+    whisperNext = whisperTime + state.gap;
+    const candidates = whisperProps.filter(
+      (p) => p.lesson === lesson && Math.abs(shotX(p.base.x, p.base.z)) < 0.8,
+    );
+    const p = candidates[whisperSequence % Math.max(1, candidates.length)];
+    if (p != null) {
+      whisperMoving = p;
+      whisperStarted = whisperTime;
+      if (!p.roll) opts.onWhisper?.();
+      if (lesson >= 8) whisperFarewells.add(lesson);
+    }
+    const nodes = WHISPER_NODES.filter((n) => n.lesson === lesson);
+    const node = nodes[whisperSequence++ % Math.max(1, nodes.length)];
+    if (!state.figure || k == null || node == null) return;
+    let x = begin + node.at * (CHAPTER[lesson]! - begin);
+    let z: number = node.z;
+    let y = terrainY(x, z);
+    const pattern =
+      node.kind === "wall"
+        ? /Laterite_Wall/
+        : node.kind === "well"
+          ? /Village_Well/
+          : node.kind === "root"
+            ? /Banyan/
+            : null;
+    if (pattern != null) {
+      const candidates = whisperStructures
+        .filter((s) => s.lesson === lesson && pattern.test(s.model))
+        .sort(
+          (a, b) =>
+            Math.abs((a.box.min.x + a.box.max.x) / 2 - x) -
+            Math.abs((b.box.min.x + b.box.max.x) / 2 - x),
+        );
+      const box = candidates[0]?.box;
+      if (box == null) return;
+      x = (box.min.x + box.max.x) / 2;
+      z = node.kind === "wall" ? (box.min.z + box.max.z) / 2 : box.max.z + 0.8;
+      y = node.kind === "wall" ? box.max.y : terrainY(x, z);
+    }
+    if (z > -8 || Math.abs(shotX(x, z)) >= 0.8) return;
+    k.wrap.position.set(x, y, z);
+    k.wrap.rotation.y = Math.PI * 0.2;
+    k.mixer.stopAllAction();
+    const clip =
+      node.kind === "wall" ? "kutti_22_perched_crouch" : "kutti_15_peek_left";
+    k.act.get(clip)?.reset().play();
+    whisperUntil = whisperTime + state.seconds;
+    k.wrap.visible = true;
+    k.hidden = false;
+  };
 
   /**
    * Drive whatever he is in the middle of.
@@ -12830,6 +12967,10 @@ export function createKidsWorld(
   };
 
   const tickKutti = (dt: number) => {
+    if (CHAPTER_N === 3) {
+      tickWhispers(dt);
+      return;
+    }
     const k = kutti;
     if (k == null || k.spots.length === 0) {
       return;
@@ -15879,7 +16020,7 @@ export function createKidsWorld(
       } catch {
         return; // he is the one thing on this road that may simply not turn up
       }
-      if (gltf == null) {
+      if (gltf == null || disposed) {
         return;
       }
       // Same enlarged sphere as the animals, and for the same reason: his
@@ -17617,7 +17758,7 @@ export function createKidsWorld(
           //
           // Three units of gap: enough that the canopy clears the end wall
           // and close enough that the two read as one place.
-          for (const side of [-1, 1] as const) {
+          for (const side of CHAPTER_N === 3 ? [] : ([-1, 1] as const)) {
             const gx = cx + side * (wide / 2 + 3);
             const g = await stand(
               "nature/KeralaBambooGroves",
@@ -18231,7 +18372,7 @@ export function createKidsWorld(
             Math.abs(lessonAt(b.x, CHAPTER).n - opensAt),
         );
         for (const p of queue) {
-          if (lessonAt(p.x, CHAPTER).n === 5) {
+          if (CHAPTER_N === 1 && lessonAt(p.x, CHAPTER).n === 5) {
             // The village centre is built above from `heart`; the table
             // places nothing here and says why. Kept as a guard rather
             // than removed, because a prop authored into Lesson 5 by
@@ -18460,6 +18601,16 @@ export function createKidsWorld(
           if (w != null) {
             // A structure, so it stays: see `builtGroup`.
             builtGroup.add(w);
+            if (
+              CHAPTER_N === 3 &&
+              /Laterite_Wall|Village_Well|Banyan|Temple|Market/.test(p.model)
+            ) {
+              whisperStructures.push({
+                lesson: lessonAt(p.x, CHAPTER).n,
+                model: p.model,
+                box: measureBox(w),
+              });
+            }
             if (p.box != null) {
               // A BUILDING IS BLOCKED AS ITS FOOTPRINT — see `Placed.box`
               // and the blocker type. Measured off the standing model
@@ -19032,7 +19183,12 @@ export function createKidsWorld(
             folk++;
           }
           for (const [i, who] of l.folk.entries()) {
-            const x = from + (0.3 + i * 0.28) * len;
+            const x =
+              from +
+              (CHAPTER_N === 3
+                ? 0.18 + (0.64 * i) / Math.max(1, l.folk.length - 1)
+                : 0.3 + i * 0.28) *
+                len;
             // BACK FROM THE ROAD, behind the boundary rather than on the
             // verge. These people are standing on their own land — that is
             // the whole reason they are not moving — and a farmer idling a
@@ -19616,6 +19772,20 @@ export function createKidsWorld(
             continue;
           }
           // THE SPECIES' OWN HEIGHT, not the layer's.
+          if (
+            CHAPTER_N === 3 &&
+            layer.key !== "ground" &&
+            whisperStructures.some(
+              (s) =>
+                /Temple|Market/.test(s.model) &&
+                spot.z > s.box.max.z &&
+                spot.x > s.box.min.x - 1 &&
+                spot.x < s.box.max.x + 1,
+            )
+          ) {
+            refused++;
+            continue;
+          }
           //
           // Every canopy tree was drawn between 6.5 and 11 whatever it was,
           // so a coconut palm and a papaya came out the same size and both
@@ -19795,6 +19965,70 @@ export function createKidsWorld(
 
       // ── WHAT WAS MOVED IN THE NIGHT ──────────────────────────────────
       //
+      if (CHAPTER_N === 3 && CHAPTER != null) {
+        // Build the same props at noon and midnight. Only their transforms
+        // change, briefly, in tickWhispers; no night-only architecture.
+        const clay = new THREE.MeshStandardMaterial({
+          color: 0x785038,
+          roughness: 0.98,
+        });
+        const husk = new THREE.MeshStandardMaterial({
+          color: 0x574130,
+          roughness: 1,
+        });
+        const potShape = new THREE.LatheGeometry(
+          [
+            new THREE.Vector2(0.21, 0),
+            new THREE.Vector2(0.4, 0.13),
+            new THREE.Vector2(0.47, 0.4),
+            new THREE.Vector2(0.31, 0.66),
+            new THREE.Vector2(0.23, 0.72),
+            new THREE.Vector2(0.25, 0.78),
+            new THREE.Vector2(0.19, 0.78),
+            new THREE.Vector2(0.18, 0.7),
+          ],
+          16,
+        );
+        const coconut = new THREE.SphereGeometry(0.28, 12, 8);
+        for (let n = 1; n <= 9; n++) {
+          const count = n === 7 ? 4 : n === 5 || n === 6 ? 3 : 1;
+          for (let i = 0; i < count; i++) {
+            const roll = i % 2 === 1;
+            const x =
+              CHAPTER[n - 1]! +
+              (CHAPTER[n]! - CHAPTER[n - 1]!) * (0.28 + i * 0.15);
+            const z = -9.5 - (i % 2) * 1.1;
+            const mesh = new THREE.Mesh(
+              roll ? coconut : potShape,
+              roll ? husk : clay,
+            );
+            mesh.position.set(x, terrainY(x, z) + (roll ? 0.28 : 0), z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            builtGroup.add(mesh);
+            whisperProps.push({
+              mesh,
+              base: mesh.position.clone(),
+              lesson: n,
+              roll,
+            });
+          }
+        }
+        // Load regardless of the opening hour: a daytime visit may reach
+        // 22:00 without a scene rebuild. The tick alone owns visibility.
+        later(() => {
+          void spawnKutti(
+            WHISPER_NODES.map((n) => ({
+              x:
+                CHAPTER[n.lesson - 1]! +
+                n.at * (CHAPTER[n.lesson]! - CHAPTER[n.lesson - 1]!),
+              z: n.z,
+              haunt: n.kind,
+            })),
+          );
+        });
+      }
+
       // The Kuttichathan corridor, M4 to M7, and TRACES ONLY — no figure.
       // The character is held back until its animation is ready, so what is
       // authored now is the evidence it leaves: a stone out of its line at
@@ -19842,6 +20076,7 @@ export function createKidsWorld(
       // folds to is a deep one; `nightNow` already decides when he is awake.
       if (
         CHAPTER != null &&
+        CHAPTER_N !== 3 &&
         trueNight &&
         activityAt(stagedNow().night) === "deep"
       ) {
@@ -22004,7 +22239,10 @@ export function createKidsWorld(
             /farm|field|pastur|graz|orchard|meadow|clearing/i.test(lesson.name);
           const out =
             lesson != null &&
-            rank < folkOut(lesson, act, hourOfDay) &&
+            rank <
+              (CHAPTER_N === 3
+                ? whisperFolkOut(lesson, worldHour())
+                : folkOut(lesson, act, hourOfDay)) &&
             !(nightNow && inTheFields) &&
             (f.wrap.userData.isChild !== true || kidsOut);
           if (f.wrap.visible !== out) {
@@ -24189,7 +24427,6 @@ export function createKidsWorld(
       // was only ever one place for the light to be.
       SUN_AT.lerpVectors(SUN_DAY, SUN_NIGHT, nightBlend);
       sun.position.set(cam.position.x + SUN_AT.x, SUN_AT.y, SUN_AT.z);
-      publishLightDirection(1 - nightBlend);
       sun.target.position.x = cam.position.x;
       sun.target.updateMatrixWorld();
       player.mixer.update(dt);
@@ -25685,6 +25922,12 @@ export function createKidsWorld(
         sparks.splice(i, 1);
       }
     }
+    // UNCONDITIONALLY, once per frame. This used to sit beside the sun's
+    // own lerp, which turns out to be inside a branch the village road does
+    // not always take — so the page got no light direction at all and the
+    // HTML shadows fell back to pointing straight down. Beside the render is
+    // the one place that is reached whenever there is a frame to describe.
+    publishLightDirection(1 - nightBlend);
     renderer.render(scene, cam);
     requestAnimationFrame(tick);
   }

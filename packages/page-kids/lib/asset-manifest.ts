@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "e3ad342871ea";
+export const ASSET_VERSION = "481b82a5d7b8";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -40,6 +40,11 @@ export const ASSET_MAP: Readonly<
   "audio/creatures/buffalo_vocal_03.mp3": {
     "u": "v3e3c9d71/audio/creatures/buffalo_vocal_03.mp3",
     "b": 10074,
+    "g": "shared"
+  },
+  "audio/environment/pot_set_01.mp3": {
+    "u": "v213098f7/audio/environment/pot_set_01.mp3",
+    "b": 8821,
     "g": "shared"
   },
   "audio/movement/body_shift_01.mp3": {
