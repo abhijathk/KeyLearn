@@ -5266,6 +5266,154 @@ export function createKidsWorld(
     );
   }
 
+  /** What the small motions need to know, per animal. */
+  type CattleLife = {
+    calf: boolean;
+    head: THREE.Object3D | null;
+    tail: THREE.Object3D[];
+    ears: THREE.Object3D[];
+    phase: number;
+    flickIn: number;
+    flickT: number;
+    earIn: number;
+    earT: number;
+    earWhich: number;
+    /** 0 standing, 1 folded down for the night; eased between. */
+    rest: number;
+    /** How far the body drops when it lies down, in world units. */
+    drop: number;
+    /** The four legs, top bone first, for folding. */
+    legs: THREE.Object3D[];
+    baseY: number;
+  };
+
+  /** Collect the bones the motions drive, by the names this rig uses. */
+  function cattleLife(
+    wrap: THREE.Object3D,
+    calf: boolean,
+    height: number,
+  ): CattleLife {
+    const bone = (n: string) => wrap.getObjectByName(n) ?? null;
+    return {
+      calf,
+      head: bone("head"),
+      tail: ["tailstart", "tail1", "tail2", "tail3"]
+        .map(bone)
+        .filter((b): b is THREE.Object3D => b != null),
+      ears: ["earend", "R_earend"]
+        .map(bone)
+        .filter((b): b is THREE.Object3D => b != null),
+      phase: Math.random() * Math.PI * 2,
+      flickIn: 2 + Math.random() * (calf ? 4 : 7),
+      flickT: 0,
+      earIn: 1.5 + Math.random() * (calf ? 3 : 6),
+      earT: 0,
+      earWhich: 0,
+      rest: 0,
+      // A lying cow's back is a bit over half its standing height, and what
+      // comes off is leg. Measured against the fitted height rather than a
+      // constant so the calf folds to its own size.
+      drop: height * 0.3,
+      legs: ["frontleg", "R_frontleg", "backleg", "R_backleg"]
+        .map(bone)
+        .filter((b): b is THREE.Object3D => b != null),
+      baseY: wrap.position.y,
+    };
+  }
+
+  /**
+   * THE SMALL MOTIONS THAT MAKE A COW A COW.
+   *
+   * The shipped clips carry the big movements and almost none of the small
+   * ones: `Idle` and `Graze` do move — measured, 25 and 7 bones — but subtly
+   * enough that from across a road only `Walk` reads as alive at all. These
+   * are the details that fix that, and they run wherever cattle are drawn:
+   * on the road, and on the review page, so the two show the same animal.
+   *
+   * Called AFTER the mixer has written this frame, and multiplied onto the
+   * pose rather than assigned over it — so the authored clip still comes
+   * through underneath and nothing accumulates between frames.
+   */
+  function cattleMotion(
+    cow: CattleLife,
+    wrap: THREE.Object3D,
+    dt: number,
+    t: number,
+  ): void {
+    // ── LYING DOWN FOR THE NIGHT ────────────────────────────────────
+    //
+    // Cattle spend the night down, and they chew while they are down — a
+    // field of animals still standing at two in the morning is one of those
+    // things nobody can name but everybody feels. Neither model ships a
+    // lie-down clip, so the pose is made here: the body settles by about a
+    // third of its height, which is roughly the leg it is folding away, and
+    // the legs tuck under it.
+    //
+    // Eased over several seconds rather than switched, so they go down as
+    // the light does instead of dropping on the frame the sky changes.
+    const wantRest = nightBlend > 0.55 ? 1 : 0;
+    cow.rest += (wantRest - cow.rest) * Math.min(1, dt * 0.55);
+    if (cow.rest > 0.002) {
+      wrap.position.y = cow.baseY - cow.drop * cow.rest;
+      for (let i = 0; i < cow.legs.length; i++) {
+        // Fronts fold forward under the chest, backs tuck the other way —
+        // which is how a cow actually gets down, and why she looks lopsided
+        // doing it.
+        const front = i < 2;
+        addWorldSpin(
+          cow.legs[i]!,
+          wrapRight(wrap, AX_R),
+          (front ? 1.15 : -1.0) * cow.rest,
+        );
+      }
+    }
+    // Resting animals chew slower and swish less; they do not stop.
+    const calm = 1 - cow.rest * 0.55;
+    const quick = (cow.calf ? 1.7 : 1) * calm;
+    const ph = cow.phase;
+    // Chewing the cud, about a jaw cycle a second, head up or down — the
+    // single most recognisable thing a cow does standing still. The slow
+    // wave under it is the weight of the head settling.
+    const chew = Math.sin(t * 5.2 * calm + ph) * 0.012;
+    const nod = Math.sin(t * 0.45 + ph) * 0.03 * (1 - cow.rest * 0.6);
+    if (cow.head != null) {
+      addWorldSpin(cow.head, wrapRight(wrap, AX_R), chew + nod);
+    }
+    // The tail is never still, and it cracks across the flank when something
+    // actually lands.
+    cow.flickIn -= dt;
+    if (cow.flickIn <= 0) {
+      cow.flickIn = (cow.calf ? 2.5 : 5) + Math.random() * (cow.calf ? 4 : 9);
+      cow.flickT = 0.42;
+    }
+    if (cow.flickT > 0) {
+      cow.flickT = Math.max(0, cow.flickT - dt);
+    }
+    const swat = cow.flickT > 0 ? Math.sin((cow.flickT / 0.42) * Math.PI) : 0;
+    for (let i = 0; i < cow.tail.length; i++) {
+      // Further down the tail moves more and lags behind what is above it —
+      // the lag is the whole difference between a chain and a rod.
+      const reach = 0.05 + i * 0.055;
+      const swing = Math.sin(t * 1.25 * quick + ph - i * 0.38) * reach;
+      addWorldSpin(cow.tail[i]!, AX_UP, swing + swat * reach * 3.4);
+    }
+    // One ear at a time. Both at once is a rabbit.
+    cow.earIn -= dt;
+    if (cow.earIn <= 0) {
+      cow.earIn = (cow.calf ? 1.6 : 3) + Math.random() * (cow.calf ? 3.5 : 7);
+      cow.earT = 0.26;
+      cow.earWhich = Math.random() < 0.5 ? 0 : 1;
+    }
+    if (cow.earT > 0) {
+      cow.earT = Math.max(0, cow.earT - dt);
+      const ear = cow.ears[cow.earWhich];
+      if (ear != null) {
+        const k = Math.sin((cow.earT / 0.26) * Math.PI);
+        addWorldSpin(ear, wrapRight(wrap, AX_R), k * 0.5 * quick);
+      }
+    }
+  }
+
   /** Reusable scratch, so a per-frame helper allocates nothing. */
   const AX_UP = new THREE.Vector3(0, 1, 0);
   const AX_R = new THREE.Vector3(1, 0, 0);
@@ -9986,6 +10134,8 @@ export function createKidsWorld(
   let idleShowFootLift = 0;
   let buffaloIdx = -1;
   let buffaloHold = 0;
+  let buffaloLife: CattleLife | null = null;
+  let idleShowLife: CattleLife | null = null;
   // Which clips REPEAT. Everything else plays once and holds its last frame -
   // looping them meant Death restarted from standing before you ever saw it lie
   // down, and the puppy's Sit sprang back up mid-sit.
@@ -10002,7 +10152,12 @@ export function createKidsWorld(
   const SHOWCASE_H: Record<string, number> = {
     Buffalo: 6.8,
     Puppy: 2.1,
-    Cow: 4.5,
+    // 5.9, not 4.5. At 4.5 she stood shorter than Dave's 4.8 and read as a
+    // calf herself — which is exactly what came back from review. A cow is
+    // taller than a nine-year-old and only a head below the buffalo's 6.8,
+    // and the calf at 3.3 has to be obviously HER calf rather than simply a
+    // smaller animal standing nearby.
+    Cow: 5.9,
     Cow_Calf: 3.3,
   };
   function advanceBuffalo(i: number) {
@@ -10783,7 +10938,8 @@ export function createKidsWorld(
     // large cow; at 6.8 it is half again the height of a grown man, which
     // is what a water buffalo actually is beside one.
     Buffalo: 6.8,
-    Cow: 4.5,
+    // See SHOWCASE_H: she was shorter than the child at 4.5.
+    Cow: 5.9,
     Cow_Calf: 3.3,
   };
 
@@ -15506,6 +15662,15 @@ export function createKidsWorld(
             SHOWCASE_H[opts.showcaseModel] ?? 5.9,
           );
           buffaloWrap.rotation.y = Math.PI / 2; // broadside to the camera, as the player is
+          // Cattle on the review page get exactly what cattle on the road
+          // get, or the page is reviewing something nobody will ever see.
+          if (/^Cow/.test(opts.showcaseModel)) {
+            buffaloLife = cattleLife(
+              buffaloWrap,
+              /Calf/i.test(opts.showcaseModel),
+              SHOWCASE_H[opts.showcaseModel] ?? 5.9,
+            );
+          }
           scene.add(buffaloWrap);
           characterRoots.add(buffaloWrap);
           buffaloMixer = new THREE.AnimationMixer(bg.scene);
@@ -15583,6 +15748,13 @@ export function createKidsWorld(
             SHOWCASE_H[opts.showcaseIdleModel] ?? 5.9,
           );
           idleShowWrap.rotation.y = Math.PI / 2;
+          if (/^Cow/.test(opts.showcaseIdleModel)) {
+            idleShowLife = cattleLife(
+              idleShowWrap,
+              /Calf/i.test(opts.showcaseIdleModel),
+              SHOWCASE_H[opts.showcaseIdleModel] ?? 5.9,
+            );
+          }
           scene.add(idleShowWrap);
           characterRoots.add(idleShowWrap);
           idleShowMixer = new THREE.AnimationMixer(ig.scene);
@@ -15814,29 +15986,8 @@ export function createKidsWorld(
       // mixer has written the clip each frame, so nothing accumulates and
       // the authored motion still comes through underneath.
       if (/^Cow/.test(model)) {
-        const bone = (n: string) => wrap.getObjectByName(n) ?? null;
         const calf = /Calf/i.test(model);
-        wrap.userData.cattle = {
-          calf,
-          head: bone("head"),
-          // Base to tip. Each segment swings a little more than the one
-          // before it, which is what makes a tail read as a tail rather
-          // than as a stick on a hinge.
-          tail: ["tailstart", "tail1", "tail2", "tail3"]
-            .map(bone)
-            .filter((b): b is THREE.Object3D => b != null),
-          ears: ["earend", "R_earend"]
-            .map(bone)
-            .filter((b): b is THREE.Object3D => b != null),
-          phase: Math.random() * Math.PI * 2,
-          // When the next fly lands. A calf is pestered more and minds it
-          // more; a grown cow swats and goes back to eating.
-          flickIn: 2 + Math.random() * (calf ? 4 : 7),
-          flickT: 0,
-          earIn: 1.5 + Math.random() * (calf ? 3 : 6),
-          earT: 0,
-          earWhich: 0,
-        };
+        wrap.userData.cattle = cattleLife(wrap, calf, h);
         // A calf does not stand still for as long as its mother does.
         wrap.userData.idleNext = calf
           ? 6 + Math.random() * 8
@@ -24041,6 +24192,13 @@ export function createKidsWorld(
           // stand in, and the animal would bob through it.
           const bz = isPup ? 1.3 : 2.4;
           buffaloWrap.position.set(bx, groundY(bx) + buffaloFootLift, bz);
+          if (buffaloLife != null) {
+            // `baseY` is rewritten every frame here because this one is
+            // re-placed beside the player each frame; the road's cattle are
+            // put down once and keep the height they were spawned at.
+            buffaloLife.baseY = buffaloWrap.position.y;
+            cattleMotion(buffaloLife, buffaloWrap, dt, clock.elapsedTime);
+          }
         }
         if (idleShowMixer && idleShowWrap && player) {
           idleShowMixer.update(dt);
@@ -24052,6 +24210,10 @@ export function createKidsWorld(
           // both invisible and bobbing.
           const ix = player.wrap.position.x - 8.6;
           idleShowWrap.position.set(ix, groundY(ix) + idleShowFootLift, 2.5);
+          if (idleShowLife != null) {
+            idleShowLife.baseY = idleShowWrap.position.y;
+            cattleMotion(idleShowLife, idleShowWrap, dt, clock.elapsedTime);
+          }
         }
         const cur = buffaloActions[buffaloIdx];
         const dur = cur ? cur.getClip().duration : 2;
@@ -25748,18 +25910,7 @@ export function createKidsWorld(
         idleNext?: number;
         headBaseX?: number;
         /** Cattle only: the bones and timers behind the small motions. */
-        cattle?: {
-          calf: boolean;
-          head: THREE.Object3D | null;
-          tail: THREE.Object3D[];
-          ears: THREE.Object3D[];
-          phase: number;
-          flickIn: number;
-          flickT: number;
-          earIn: number;
-          earT: number;
-          earWhich: number;
-        };
+        cattle?: CattleLife;
         baseX?: number;
         baseZ?: number;
         state?: "graze" | "walk";
@@ -25879,57 +26030,7 @@ export function createKidsWorld(
       {
         const cow = ud.cattle;
         if (cow != null) {
-          const t = clock.elapsedTime;
-          const quick = cow.calf ? 1.7 : 1;
-          const ph = cow.phase;
-          // CHEWING. Cattle chew the cud at roughly one jaw cycle a second,
-          // and they do it whether their head is up or down — it is the
-          // single most recognisable thing a cow does standing still.
-          const chew = Math.sin(t * 5.2 + ph) * 0.012;
-          // And a slow nod under it, the weight of the head settling.
-          const nod = Math.sin(t * 0.45 + ph) * 0.03;
-          if (cow.head != null) {
-            addWorldSpin(cow.head, wrapRight(f.wrap, AX_R), chew + nod);
-          }
-          // THE TAIL, always going. A cow's tail is never still in a Kerala
-          // afternoon; it swings gently and then cracks across the flank
-          // when something actually lands.
-          cow.flickIn -= dt;
-          if (cow.flickIn <= 0) {
-            cow.flickIn =
-              (cow.calf ? 2.5 : 5) + Math.random() * (cow.calf ? 4 : 9);
-            cow.flickT = 0.42;
-          }
-          if (cow.flickT > 0) cow.flickT = Math.max(0, cow.flickT - dt);
-          // The flick decays over its half second and is several times the
-          // size of the idle swing, which is what makes it read as a swat
-          // rather than as more swinging.
-          const swat =
-            cow.flickT > 0 ? Math.sin((cow.flickT / 0.42) * Math.PI) : 0;
-          for (let i = 0; i < cow.tail.length; i++) {
-            // Further down the tail moves more and lags behind what is above
-            // it — the lag is the whole difference between a chain and a rod.
-            const reach = 0.05 + i * 0.055;
-            const lag = i * 0.38;
-            const swing = Math.sin(t * 1.25 * quick + ph - lag) * reach;
-            addWorldSpin(cow.tail[i]!, AX_UP, swing + swat * reach * 3.4);
-          }
-          // AN EAR, ONE AT A TIME. Both at once is a rabbit.
-          cow.earIn -= dt;
-          if (cow.earIn <= 0) {
-            cow.earIn =
-              (cow.calf ? 1.6 : 3) + Math.random() * (cow.calf ? 3.5 : 7);
-            cow.earT = 0.26;
-            cow.earWhich = Math.random() < 0.5 ? 0 : 1;
-          }
-          if (cow.earT > 0) {
-            cow.earT = Math.max(0, cow.earT - dt);
-            const ear = cow.ears[cow.earWhich];
-            if (ear != null) {
-              const k = Math.sin((cow.earT / 0.26) * Math.PI);
-              addWorldSpin(ear, wrapRight(f.wrap, AX_R), k * 0.5 * quick);
-            }
-          }
+          cattleMotion(cow, f.wrap, dt, clock.elapsedTime);
         }
       }
       // A bystander with several idles moves between them, so a character
