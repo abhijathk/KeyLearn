@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cow and calf — animation review</title>
+    <link rel="stylesheet" href="./review.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Cow and calf</h1>
+      <p class="sub">
+        Every clip both models ship, side by side, with the same small motions
+        the road adds on top. The cow is drawn at 5.9 and the calf at 3.3 —
+        the heights the village actually spawns them at.
+      </p>
+    </header>
+
+    <div class="stage">
+      <canvas id="view"></canvas>
+      <p id="status" class="status">Loading…</p>
+    </div>
+
+    <section class="controls">
+      <div class="group">
+        <h2>Clip</h2>
+        <div id="clips" class="row"></div>
+      </div>
+      <div class="group">
+        <h2>Layered motion</h2>
+        <div class="row">
+          <label><input type="checkbox" id="live" checked /> chew, nod, tail, ears</label>
+          <label><input type="checkbox" id="night" /> night — lie down</label>
+        </div>
+        <p class="note">
+          These are added per frame on top of whichever clip is playing, the
+          same way the game does it. Neither model ships a lie-down clip: that
+          pose is made from the legs and the body height.
+        </p>
+      </div>
+      <div class="group">
+        <h2>View</h2>
+        <div class="row">
+          <label><input type="checkbox" id="spin" /> turn slowly</label>
+          <button type="button" id="front">Front</button>
+          <button type="button" id="side">Side</button>
+          <button type="button" id="back">Back</button>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="./review.js"></script>
+  </body>
+</html>

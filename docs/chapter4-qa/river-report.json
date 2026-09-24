@@ -1,0 +1,140 @@
+[
+  {
+    "lesson": 35,
+    "band": "9-10",
+    "errors": [],
+    "missing": [],
+    "dayClock": "11:00 AM",
+    "nightClock": "11:00 PM",
+    "geometry": {
+      "crossing": {
+        "island": {
+          "hills": [
+            {
+              "x": 224,
+              "width": 192,
+              "height": 3.5
+            },
+            {
+              "x": 576,
+              "width": 128,
+              "height": 1.8
+            }
+          ],
+          "approach": 393,
+          "exit": 503,
+          "revealStart": 304,
+          "islandX": 448,
+          "islandRX": 10,
+          "islandZ": -4,
+          "islandRZ": 19,
+          "milestone": 448,
+          "spans": [
+            {
+              "from": 391,
+              "to": 442.3
+            },
+            {
+              "from": 453.7,
+              "to": 505
+            }
+          ]
+        },
+        "decks": [
+          {
+            "x": 416.65,
+            "halfLen": 25.650000000000006,
+            "halfWid": 6.8,
+            "y": -0.5200301645440651
+          },
+          {
+            "x": 479.35,
+            "halfLen": 25.650000000000006,
+            "halfWid": 6.8,
+            "y": -0.5200301645440651
+          }
+        ],
+        "waterY": -1.4200301645440652
+      },
+      "background": {
+        "terrain": 4.899964165643381,
+        "deck": null,
+        "walk": 4.899964165643381
+      },
+      "road": {
+        "terrain": -0.5694934034463566,
+        "deck": null,
+        "walk": -0.5694934034463566
+      }
+    }
+  },
+  {
+    "lesson": 36,
+    "band": "9-10",
+    "errors": [],
+    "missing": [],
+    "dayClock": "11:00 AM",
+    "nightClock": "11:00 PM",
+    "geometry": {
+      "crossing": {
+        "island": {
+          "hills": [
+            {
+              "x": 224,
+              "width": 192,
+              "height": 3.5
+            },
+            {
+              "x": 576,
+              "width": 128,
+              "height": 1.8
+            }
+          ],
+          "approach": 393,
+          "exit": 503,
+          "revealStart": 304,
+          "islandX": 448,
+          "islandRX": 10,
+          "islandZ": -4,
+          "islandRZ": 19,
+          "milestone": 448,
+          "spans": [
+            {
+              "from": 391,
+              "to": 442.3
+            },
+            {
+              "from": 453.7,
+              "to": 505
+            }
+          ]
+        },
+        "decks": [
+          {
+            "x": 416.65,
+            "halfLen": 25.650000000000006,
+            "halfWid": 6.8,
+            "y": -0.5200301645440651
+          },
+          {
+            "x": 479.35,
+            "halfLen": 25.650000000000006,
+            "halfWid": 6.8,
+            "y": -0.5200301645440651
+          }
+        ],
+        "waterY": -1.4200301645440652
+      },
+      "background": {
+        "terrain": -4.120030164544065,
+        "deck": null,
+        "walk": -4.120030164544065
+      },
+      "road": {
+        "terrain": -0.18632671441982623,
+        "deck": null,
+        "walk": -0.18632671441982623
+      }
+    }
+  }
+]

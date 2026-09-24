@@ -56,3 +56,9 @@ __pycache__/
 AK 3D Pack/
 3D ASSETS/
 meshy_output/
+
+# Kids chapter QA screenshots: large, reproducible from the QA scripts; the
+# reports and notes beside them are tracked. The cattle review page keeps its
+# own vendored three.js out of the repo too.
+docs/chapter*-qa/*.png
+docs/cattle-review/vendor/
