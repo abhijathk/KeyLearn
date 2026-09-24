@@ -1486,13 +1486,6 @@ export function AccessibilityPage() {
         </li>
         <li>
           <FormattedMessage
-            id="accessibility.short.4"
-            defaultMessage="<em>The settings are per learner, and per device.</em> They are kept with the learner’s profile on the device you set them on. Sign in on a new machine and you will need to set them again — which is exactly the wrong way round, because the person most inconvenienced by re-doing them is the person who needs them."
-            values={{ em }}
-          />
-        </li>
-        <li>
-          <FormattedMessage
             id="accessibility.short.5"
             defaultMessage="<em>Nothing here has been tested with real assistive technology by the people who use it.</em> The braille mode was built with the standard in front of us, not a braille reader beside us. If you use one, we would rather hear that we got it wrong than not hear at all."
             values={{ em }}

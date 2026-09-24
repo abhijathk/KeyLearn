@@ -600,6 +600,42 @@ function sceneName(url: string): string {
   return SCENE_NAMES.get(file) ?? file.replace(/[_-]+/g, " ").toLowerCase();
 }
 
+/**
+ * THE LOADING CARD'S RUNNER COMES FIRST.
+ *
+ * The runner is one model (and, for the heroes, one shared run clip) drawn on
+ * the card while the world downloads. The T-Rex is 128 KB and was always
+ * there; the children are 0.9–1.25 MB, and queued behind the dozens of
+ * models the world asks for in the same moment, a child's runner arrived
+ * ten or more seconds into the load on a slow line — measured, throttled to
+ * 600 KB/s: Hero Trials showed an empty shadow for 8 s, Time Keepers for
+ * the whole load. The card is the one screen a child waits on; the
+ * character on it is the point of it.
+ *
+ * So the world's model fetches (and the picker's warm-up of the rest of the
+ * cast) wait here until the runner is running, or for LOADER_FIRST_MS,
+ * whichever is sooner — a runner that never arrives must not hold the game.
+ * Nothing is lost by the wait: they were sharing the same line anyway.
+ */
+// Ten seconds, not four: at 600 KB/s the runner's file lands at about four
+// seconds and its textures still have to be transcoded, and a four-second
+// cap let the cast and the buffalo in exactly as the transcoder started —
+// the runner then showed at fourteen seconds. The world is released the
+// moment the runner is running, so this is only ever reached on a line that
+// slow, where it is the right trade.
+const LOADER_FIRST_MS = 10000;
+let loaderFirst: { who: string | null; hold: Promise<void> } = {
+  who: null,
+  hold: Promise.resolve(),
+};
+/** Resolves when a model fetch may start. Read after a tick, so a loader
+ * created later in the same React commit is still waited for. */
+async function afterLoaderRunner(name?: string): Promise<void> {
+  await Promise.resolve();
+  if (name != null && name === loaderFirst.who) return;
+  await loaderFirst.hold;
+}
+
 function modelUrl(modelDir: string, name: string): string {
   const own = OWN_MODELS.get(name);
   if (own != null) return `${ASSETS}/models/${own}/${name}.glb`;
@@ -9135,6 +9171,7 @@ export function createKidsWorld(
   // The title sign in the top-right corner — see `world-logo.ts`. Drawn by
   // this renderer as a second pass, so it costs no context of its own.
   const logo = createWorldLogo();
+  const logoLightDir = new THREE.Vector3();
   logo.setStill(motionStilled());
   if (theme.sign != null) {
     void logo.load(loader, `${ASSETS}/models/${theme.sign}.glb`);
@@ -9185,6 +9222,8 @@ export function createKidsWorld(
   }
 
   async function loadModel(url: string) {
+    // Behind the loading card's runner — see `afterLoaderRunner`.
+    await afterLoaderRunner();
     // EVERY MODEL IS FETCHED ONCE, NOT ONCE PER USE.
     //
     // Without this the loader re-downloads a file for every spawn: the
@@ -16422,7 +16461,14 @@ export function createKidsWorld(
   }
 
   const ready = (async () => {
-    // Before anything is awaited — see `warmEverything`.
+    // BEHIND THE LOADING CARD'S RUNNER, THE WHOLE BUILD — see
+    // `afterLoaderRunner`. Gating `loadModel` alone was measured and was not
+    // enough: the player, the herd and the planting fetch by other paths, and
+    // half a second into the load Peeli, the buffalo and the plants were
+    // pulling 1.5 MB against the runner's one. Held here, before the first
+    // prefetch, every one of those paths waits.
+    await afterLoaderRunner();
+    // Before anything else is awaited — see `warmEverything`.
     warmEverything();
     // Load the shared movement/idle clips first so every hero can play them.
     if (theme.animationUrls) {
@@ -20334,11 +20380,17 @@ export function createKidsWorld(
       if (CHAPTER != null) {
         let grazing = 0;
         for (const l of LESSONS) {
-          if (l.herd.length === 0) {
+          if (l.herd.length === 0 && l.buffalo !== true) {
             continue;
           }
           const from = CHAPTER[l.n - 1]!;
           const len = CHAPTER[l.n]! - from;
+          // Who animal i is: a lesson that asks for its buffalo gets it as
+          // animal 0, and a lesson with no herd of its own gets only that.
+          const modelOf = (i: number) =>
+            l.buffalo === true && i === 0
+              ? "Buffalo"
+              : hashPick(l.herd, from + i, i, 34);
           // Two or three head, spread through the middle of the segment so
           // they are met while walking it rather than at a milestone.
           //
@@ -20347,7 +20399,8 @@ export function createKidsWorld(
           // of a lesson becomes a cow, even a buffalo lesson filled up with
           // cattle. The owner found the road over-stocked (23 Sep 2026);
           // this is what the comment always said.
-          const n = 2 + Math.floor(hash3(l.n, 0, 31) * 2);
+          const n =
+            l.herd.length === 0 ? 1 : 2 + Math.floor(hash3(l.n, 0, 31) * 2);
           // ONE BUFFALO TO A LESSON, AND THE REST ARE COWS.
           //
           // The model was drawn from the lesson's list per animal, so a
@@ -20367,15 +20420,15 @@ export function createKidsWorld(
           // buffalo go down first and carry a wide clearance; the cows then
           // find somewhere that is not next to one.
           const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => {
-            const ma = hashPick(l.herd, from + a, a, 34);
-            const mb = hashPick(l.herd, from + b, b, 34);
+            const ma = modelOf(a);
+            const mb = modelOf(b);
             return (mb === "Buffalo" ? 1 : 0) - (ma === "Buffalo" ? 1 : 0);
           });
           for (const i of order) {
             const at = 0.2 + ((i + hash3(l.n, i, 32)) / n) * 0.6;
             const x = from + at * len;
             const z = -hashRange(x, i, 33, 13, 25);
-            let model = hashPick(l.herd, from + i, i, 34);
+            let model = modelOf(i);
             // The second buffalo of a lesson becomes a cow. Not skipped: the
             // field is meant to have an animal in it, and a lesson that lost
             // two of its three head to this rule would read as empty land.
@@ -20414,9 +20467,13 @@ export function createKidsWorld(
             // units back: on the youngest band a stone's margin on both
             // sides took half of every 22-unit lesson out of play for
             // animals standing too far back to matter.
+            // AND ON DRY GROUND. Chapter 4's river opens behind the road
+            // (`wildBanks`), and the open ground a herd is sent to is, there,
+            // open water: the animal would stand on the river bed.
             const offStone = (m: string) => (tx: number) =>
-              z <= MILESTONE_CLEAR_DEPTH ||
-              !atMilestone(tx, m === "Buffalo" ? 4 : 2.5);
+              (WILD == null || wildDry(WILD, tx, z, 2)) &&
+              (z <= MILESTONE_CLEAR_DEPTH ||
+                !atMilestone(tx, m === "Buffalo" ? 4 : 2.5));
             let spot =
               model == null ? null : clearSpot(x, z, room, offStone(model));
             // A BUFFALO WITH NO PADDOCK IS A COW, NOT A GAP. The second
@@ -23123,6 +23180,82 @@ export function createKidsWorld(
   /** Smoothstep: no corner where the shadow's edge arrives or leaves. */
   const ease = (t: number) => t * t * (3 - 2 * t);
 
+  // ── A MACHINE THAT CANNOT KEEP UP GETS FEWER PIXELS, NOT A SLOWER GAME ──
+  //
+  // The tier is guessed once, from memory and cores, and a "mid" machine
+  // with a weak GPU never hears about it: measured on an Iris Plus laptop,
+  // the riverbank drew 786k triangles in 26ms a frame — thirty frames a
+  // second at idle, and every keystroke's own work then pushed a frame past
+  // 50ms, which is the hitch under the child's fingers. A Retina screen at
+  // ratio 2 is four times those pixels to shade.
+  //
+  // So the frame time is watched and, when it stays over ~24ms, the cheapest
+  // things that do not change the picture's CONTENT are given up in order:
+  // the pixel ratio a quarter at a time down to 1, then the sun's shadow map
+  // down to 2048 (the low tier's). Neither recompiles a shader — the shadow
+  // TYPE is left alone for exactly that reason, see `castShadow` above — so
+  // a step costs one reallocation, not a stall. With lasting headroom the
+  // steps are undone in reverse, and never within 20s of a step down, so a
+  // machine on the line does not flicker between the two.
+  //
+  // Frames longer than a fifth of a second are a hidden tab or a one-off
+  // upload, not a verdict on the machine, and are left out.
+  const RATIO_CAP = Math.min(devicePixelRatio, lowTier ? 1.25 : 2);
+  const SUN_MAP = lowTier ? 2048 : 3072;
+  const guard = {
+    last: 0,
+    frames: [] as number[],
+    ratio: RATIO_CAP,
+    sunMap: SUN_MAP,
+    easyWindows: 0,
+    quietUntil: 0,
+  };
+  const setSunMap = (size: number) => {
+    guard.sunMap = size;
+    sun.shadow.mapSize.set(size, size);
+    sun.shadow.map?.dispose();
+    (sun.shadow as { map: THREE.WebGLRenderTarget | null }).map = null;
+  };
+  function frameGuard(now: number) {
+    const gap = now - guard.last;
+    guard.last = now;
+    if (held || document.hidden || gap <= 0 || gap > 200) {
+      return;
+    }
+    guard.frames.push(gap);
+    if (guard.frames.length < 90) {
+      return;
+    }
+    const sorted = guard.frames.sort((x, y) => x - y);
+    const median = sorted[45]!;
+    guard.frames = [];
+    if (median > 24) {
+      guard.easyWindows = 0;
+      guard.quietUntil = now + 20_000;
+      if (guard.ratio > 1) {
+        guard.ratio = Math.max(1, guard.ratio - 0.25);
+        renderer.setPixelRatio(guard.ratio);
+      } else if (guard.sunMap > 2048) {
+        setSunMap(2048);
+      }
+      return;
+    }
+    if (median < 15 && now > guard.quietUntil) {
+      guard.easyWindows += 1;
+      if (guard.easyWindows < 3) {
+        return;
+      }
+      guard.easyWindows = 0;
+      if (guard.sunMap < SUN_MAP) {
+        setSunMap(SUN_MAP);
+      } else if (guard.ratio < RATIO_CAP) {
+        guard.ratio = Math.min(RATIO_CAP, guard.ratio + 0.25);
+        renderer.setPixelRatio(guard.ratio);
+      }
+    } else {
+      guard.easyWindows = 0;
+    }
+  }
   function tick() {
     runSlices();
     if (disposed) {
@@ -27593,7 +27726,19 @@ export function createKidsWorld(
     // the one place that is reached whenever there is a frame to describe.
     publishLightDirection(1 - nightBlend);
     renderer.render(scene, cam);
+    // Time Keepers' title takes the same sun and moon as the road beneath it.
+    if (theme.village != null) {
+      logo.setLight({
+        dir: logoLightDir.copy(SUN_AT).normalize(),
+        color: sun.color,
+        key: sun.intensity / grade.sun,
+        sky: hemi.color,
+        ground: hemi.groundColor,
+        fill: hemi.intensity / grade.hemi,
+      });
+    }
     logo.render(renderer, elapsed);
+    frameGuard(performance.now());
     requestAnimationFrame(tick);
   }
   /**
@@ -28100,6 +28245,19 @@ export function createLoaderScene(
   let mixer: THREE.AnimationMixer | null = null;
   let hair: HairSim | null = null;
   let disposed = false;
+  // Hold the world's fetches until this runner is running — see
+  // `afterLoaderRunner`.
+  let running!: () => void;
+  const ran = new Promise<void>((go) => {
+    running = go;
+  });
+  loaderFirst = {
+    who: playerName,
+    hold: Promise.race([
+      ran,
+      new Promise<void>((go) => setTimeout(go, LOADER_FIRST_MS)),
+    ]),
+  };
   const loader = new GLTFLoader();
   meshoptOffMainThread();
   loader.setMeshoptDecoder(MeshoptDecoder);
@@ -28170,6 +28328,7 @@ export function createLoaderScene(
         const clip =
           clips.find((c) => /run/i.test(c.name)) ??
           clips.find((c) => /\bwalk\b/i.test(c.name));
+        running();
         if (clip != null) {
           mixer = new THREE.AnimationMixer(gltf.scene);
           // Same export noise the world strips: without this the character
@@ -28199,10 +28358,10 @@ export function createLoaderScene(
               playRun(g.animations ?? []);
             }
           })
-          .catch(() => {});
+          .catch(() => running());
       }
     })
-    .catch(() => {});
+    .catch(() => running());
   const clock = new THREE.Clock();
   function tick() {
     if (disposed) {
@@ -28221,6 +28380,7 @@ export function createLoaderScene(
   return {
     dispose() {
       disposed = true;
+      running();
       // The file cache holds a copy of every GLB this world loaded — tens of
       // megabytes of ArrayBuffer that nothing will ask for again once the
       // world is gone. It is global to three, so it outlives the world
@@ -28718,13 +28878,15 @@ export function createPickerScene(
    * actually failed.
    */
   const fetchModel = (name: string) =>
-    loader.loadAsync(modelUrl(theme.modelDir, name)).catch(async (e) => {
-      await new Promise((go) => setTimeout(go, 1200));
-      if (disposed) {
-        throw e;
-      }
-      return loader.loadAsync(modelUrl(theme.modelDir, name));
-    });
+    afterLoaderRunner(name)
+      .then(() => loader.loadAsync(modelUrl(theme.modelDir, name)))
+      .catch(async (e) => {
+        await new Promise((go) => setTimeout(go, 1200));
+        if (disposed) {
+          throw e;
+        }
+        return loader.loadAsync(modelUrl(theme.modelDir, name));
+      });
 
   const show = (name: string, cheer = false) => {
     const mine = ++token;

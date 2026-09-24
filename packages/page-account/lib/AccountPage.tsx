@@ -596,7 +596,7 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
                 <p className={styles.cardNote}>
                   <FormattedMessage
                     id="account.profiles.note"
-                    defaultMessage="Add a profile for each person in your household. Kids get the dino game; each profile keeps its own progress on this device."
+                    defaultMessage="Add a profile for each person in your household. Kids get a playful trail world; each profile keeps its own progress on this device."
                   />
                 </p>
                 <ProfilesManager />

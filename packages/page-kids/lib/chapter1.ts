@@ -647,6 +647,13 @@ export type Lesson = {
    * frame with it.
    */
   readonly herd: readonly string[];
+  /**
+   * One water buffalo in this lesson's open ground, whatever the herd list
+   * draws. The herd draws each animal from its list, so listing "Buffalo"
+   * only makes one likely; this makes it certain, and adds no cattle to a
+   * lesson that has none.
+   */
+  readonly buffalo?: boolean;
   /** Who is out here by day. Empty means an unpeopled stretch. */
   readonly folk: readonly string[];
   /**

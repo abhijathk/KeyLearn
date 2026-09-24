@@ -38,6 +38,9 @@ const lesson = (
   depth: [11, 30],
   props,
   herd: [],
+  // One buffalo to each lesson's open ground (owner, 25 Sep 2026) — the
+  // island's lesson opts out; it has no open ground, only the crossing.
+  buffalo: true,
   folk: [],
   corridor: false,
   ...options,
@@ -141,7 +144,12 @@ export const LESSONS_4: readonly Lesson[] = [
   // The island's banyan, boulders and edge plants are placed from crossing
   // geometry (see "ONE WIDE BANYAN" in world.ts),
   // not lesson fractions: Milestone 37 must stay on land at every age band.
-  lesson(7, "Island Milestone", [], { density: 0, mix: [0, 0, 1], mid: wet }),
+  lesson(7, "Mangrove Island", [], {
+    density: 0,
+    mix: [0, 0, 1],
+    mid: wet,
+    buffalo: false,
+  }),
   lesson(
     8,
     "River Woods",

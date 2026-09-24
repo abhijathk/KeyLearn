@@ -59,7 +59,7 @@ const FAQ: {
     a: (
       <FormattedMessage
         id="support.faq.data.a"
-        defaultMessage="Yes, any time — from Account → Security you can export everything or erase a single learner’s progress without affecting the rest of the household."
+        defaultMessage="Yes, any time. Account → Security exports everything; to reset one learner without touching the rest, open their Profile and choose Clear statistics — and to remove a learner altogether, use Account → Learners."
       />
     ),
   },
@@ -326,6 +326,10 @@ export function SupportPage({
 } = {}): ReactNode {
   const { formatMessage } = useIntl();
   const { publicUser } = usePageData();
+  // Whether a reply can land in the app (Account → Support, with a bell
+  // notification) or has to go by email — the only address a guest has
+  // given us. See support.intro and support.form.sent below.
+  const signedIn = publicUser.id != null;
   // Eager: the guest form is the one door into the desk that needs no
   // account, so the server requires a token on every submission. Mounting
   // the widget here means it is solved in the background while somebody
@@ -420,10 +424,17 @@ export function SupportPage({
       .then(() => {
         setSent(true);
         toast(
-          <FormattedMessage
-            id="support.form.sentToast"
-            defaultMessage="Sent — thanks, we’ll reply by email."
-          />,
+          signedIn ? (
+            <FormattedMessage
+              id="support.form.sentToast.app"
+              defaultMessage="Sent — thanks, we’ll reply here and the bell will light up."
+            />
+          ) : (
+            <FormattedMessage
+              id="support.form.sentToast.email"
+              defaultMessage="Sent — thanks, we’ll reply by email."
+            />
+          ),
         );
       })
       .catch((err: any) => {
@@ -489,10 +500,17 @@ export function SupportPage({
         <FormattedMessage id="support.headline" defaultMessage="Support" />
       </h1>
       <p className={styles.intro}>
-        <FormattedMessage
-          id="support.intro"
-          defaultMessage="Most answers are below. Can’t find yours? Send a message and we’ll reply by email."
-        />
+        {signedIn ? (
+          <FormattedMessage
+            id="support.intro.app"
+            defaultMessage="Most answers are below. Can’t find yours? Send a message and we’ll reply here, with a notification when it lands."
+          />
+        ) : (
+          <FormattedMessage
+            id="support.intro.email"
+            defaultMessage="Most answers are below. Can’t find yours? Send a message and we’ll reply by email."
+          />
+        )}
       </p>
 
       <div className={styles.columns}>
@@ -538,10 +556,17 @@ export function SupportPage({
 
           {sent ? (
             <p className={styles.notice}>
-              <FormattedMessage
-                id="support.form.sent"
-                defaultMessage="Thanks — your message is in. We reply by email, usually within a couple of days."
-              />
+              {signedIn ? (
+                <FormattedMessage
+                  id="support.form.sent.app"
+                  defaultMessage="Thanks — your message is in. We reply here, usually within a couple of days, and the bell in the header lights up when it lands."
+                />
+              ) : (
+                <FormattedMessage
+                  id="support.form.sent.email"
+                  defaultMessage="Thanks — your message is in. We reply by email, usually within a couple of days."
+                />
+              )}
             </p>
           ) : (
             <form

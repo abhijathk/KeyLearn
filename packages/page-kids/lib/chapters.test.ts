@@ -229,7 +229,7 @@ test("`?lesson=` runs on past forty into the repeats", () => {
   equal(addressLesson(47)?.lesson, 7);
   equal(addressLesson(77)?.chapter.n, 8);
   equal(addressLesson(77)?.chapter.scenery, 4);
-  equal(addressLesson(77)?.chapter.lessons[6]?.name, "Island Milestone");
+  equal(addressLesson(77)?.chapter.lessons[6]?.name, "Mangrove Island");
 });
 
 test("Chapter 3 continues directly from global lesson 20 at milestone 20", () => {

@@ -225,7 +225,7 @@ export namespace Pages {
       title: defineMessage({
         id: "page.kids.description",
         defaultMessage:
-          "A dino typing adventure for kids — same smart lessons, playful world.",
+          "Time Keepers, Dino Run and Hero Trail — same smart lessons, playful world.",
       }),
       icon: mdiTeddyBear,
     },
@@ -236,7 +236,7 @@ export namespace Pages {
         content: defineMessage({
           id: "page.kids.description",
           defaultMessage:
-            "A dino typing adventure for kids — same smart lessons, playful world.",
+            "Time Keepers, Dino Run and Hero Trail — same smart lessons, playful world.",
         }),
       },
     ],

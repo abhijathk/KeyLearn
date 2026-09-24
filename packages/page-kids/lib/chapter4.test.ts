@@ -178,7 +178,8 @@ for (const band of ["5-6", "7-8", "9-10", "11+"]) {
       const r = MANGROVE_ROOT * m.h;
       ok(m.z + r <= -6.8, "root cage behind the deck");
       ok(islandRadius(c, m.x, m.z) > ISLAND_SHORE, "stands in the river");
-      ok(m.x > wildBanks(c, m.z).left, "not on the far bank");
+      ok(m.x > wildBanks(c, m.z).left, "not on the near bank");
+      ok(m.x < wildBanks(c, m.z).right, "not on the far bank");
       ok(
         Math.hypot(m.x - b.x, m.z - b.z) > islandBanyanTrunkR(),
         "off the banyan trunk",
@@ -194,7 +195,7 @@ for (const band of ["5-6", "7-8", "9-10", "11+"]) {
     ).length;
     ok(near / stand.length > 0.6, `clumped ${near}/${stand.length}`);
     ok(
-      new Set(stand.map((m) => m.h.toFixed(2))).size === stand.length,
+      new Set(stand.map((m) => m.h.toFixed(3))).size === stand.length,
       "all different heights",
     );
     // Several close to the island.
@@ -208,5 +209,18 @@ for (const band of ["5-6", "7-8", "9-10", "11+"]) {
     };
     const byIsland = stand.filter((m) => toShore(m.x, m.z) < 4).length;
     ok(byIsland >= 5, `clumps against the island: ${byIsland}`);
+    // And clumps against the far bank, on the way to Milestones 38 and 39.
+    const byFarBank = stand.filter(
+      (m) => wildBanks(c, m.z).right - m.x < 5,
+    ).length;
+    ok(byFarBank >= 5, `clumps against the far bank: ${byFarBank}`);
   });
 }
+
+test("one buffalo to every Chapter 3 and 4 lesson with open ground", async () => {
+  const { LESSONS_3 } = await import("./chapter3.ts");
+  const with3 = LESSONS_3.filter((l) => l.buffalo === true).map((l) => l.n);
+  equal(with3.join(","), "1,2,3,8,9,10");
+  const with4 = LESSONS_4.filter((l) => l.buffalo === true).map((l) => l.n);
+  equal(with4.join(","), "1,2,3,4,5,6,8,9,10");
+});

@@ -81,6 +81,10 @@ const lesson = (
   depth: [10, 28],
   props,
   herd: [],
+  // One buffalo to each lesson's open ground (owner, 25 Sep 2026), except
+  // where a water buffalo does not graze: the junction round the sacred
+  // banyan, the market, the temple street and the children's playground.
+  buffalo: ![4, 5, 6, 7].includes(n),
   folk: [],
   corridor: false,
   ...options,

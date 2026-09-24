@@ -46,6 +46,7 @@ import {
   useReducer,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   type AgeBand,
@@ -3205,7 +3206,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const ceremonyPending = ceremonyWaiting != null;
   const ceremonyRef = useRef(ceremony);
   ceremonyRef.current = ceremony;
-  const [pressed, setPressed] = useState<string | null>(null);
   const pressedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   /**
@@ -5105,9 +5105,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           : prefsRef.current.grownupKeys === "off"
             ? ev.key.toLowerCase()
             : ev.key;
-      setPressed(key.toLowerCase());
+      pressedKey.set(key.toLowerCase());
       clearTimeout(pressedTimer.current);
-      pressedTimer.current = setTimeout(() => setPressed(null), 110);
+      pressedTimer.current = setTimeout(() => pressedKey.set(null), 110);
 
       const { sounds, cheers } = prefsRef.current;
       if (key === " ") {
@@ -5388,6 +5388,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       clearTimeout(pressedTimer.current);
+      pressedKey.set(null);
     };
   }, [settings, appendResults]);
 
@@ -6436,7 +6437,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               key={i}
               def={def}
               next={def.char != null && def.char === nextChar}
-              pressed={def.char != null && def.char === pressed}
+              press={def.char}
               stuck={stuckHelp || helpLevel >= 1}
               urgent={helpLevel >= 2}
               wrong={def.char != null && def.char === wrongKey}
@@ -6463,7 +6464,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           colours={prefs.fingerColours}
           rainbow={rainbow}
           next={nextChar === " "}
-          pressed={pressed === " "}
+          press=" "
           stuck={stuckHelp}
         />
       </div>
@@ -7664,10 +7665,37 @@ const RAINBOW_SIGN: Readonly<Record<string, string>> = {
 // A pure, prop-only tile — memoized so a keystroke that changes one or two
 // keys' state (old "next" key, new "next" key, pressed key) doesn't force
 // React to diff every tile on the board (up to 47 in full-keyboard mode).
+/**
+ * THE KEY BEING PRESSED, KEPT OUT OF THE GAME'S STATE.
+ *
+ * It lights a cap for 110ms after every keystroke. As game state, the
+ * light going OUT was a second render of the whole game per keystroke —
+ * every overlay, the passage, the board — to change one class on one key.
+ * Here only the two keys whose answer changed re-render.
+ */
+const pressedKey = (() => {
+  let now: string | null = null;
+  const subs = new Set<() => void>();
+  return {
+    get: () => now,
+    set(next: string | null) {
+      if (next === now) return;
+      now = next;
+      for (const f of subs) f();
+    },
+    subscribe(f: () => void) {
+      subs.add(f);
+      return () => {
+        subs.delete(f);
+      };
+    },
+  };
+})();
+
 const Key = memo(function Key({
   def,
   next,
-  pressed,
+  press,
   space = false,
   stuck = false,
   urgent = false,
@@ -7679,7 +7707,8 @@ const Key = memo(function Key({
 }: {
   readonly def: KeyDef;
   readonly next: boolean;
-  readonly pressed: boolean;
+  /** The character that lights this cap when typed; none for modifiers. */
+  readonly press?: string | null;
   readonly space?: boolean;
   readonly stuck?: boolean;
   /** Help level 2: the next key insists rather than suggests. */
@@ -7695,6 +7724,11 @@ const Key = memo(function Key({
   /** The primary-colour board: the cap carries the key's kind as its fill. */
   readonly rainbow?: boolean;
 }) {
+  const pressed = useSyncExternalStore(
+    pressedKey.subscribe,
+    () => press != null && pressedKey.get() === press,
+    () => false,
+  );
   // Only the character keys carry a finger colour. Tab, Caps, Shift, Enter,
   // Backspace and the space bar keep the neutral cap: they are the frame the
   // letters sit in, and colouring them competes with the keys a learner is

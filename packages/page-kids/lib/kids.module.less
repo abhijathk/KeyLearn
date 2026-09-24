@@ -4631,6 +4631,10 @@
   display: flex;
   flex-direction: column;
   gap: min(0.9cqi, 1.6cqb);
+  /* Centred in its panel, both ways (owner, 25 Sep 2026): left-set, the
+     three faces sat in the left third of a half-width panel. */
+  align-items: center;
+  justify-content: center;
   min-inline-size: 0;
   padding: min(1.3cqi, 2cqb) 1.5cqi;
   border-radius: clamp(0.9rem, 1.85cqi, 1.25rem);
@@ -4641,7 +4645,9 @@
   display: flex;
   gap: 0.45em;
   align-items: baseline;
+  justify-content: center;
   min-inline-size: 0;
+  max-inline-size: 100%;
   overflow: hidden;
   color: var(--pickMute);
   font-size: clamp(0.55rem, min(1.1cqi, 2cqb), 0.78rem);
@@ -4665,6 +4671,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: min(1.3cqi, 2cqb) min(1.6cqi, 2.4cqb);
+  justify-content: center;
 }
 
 .pickOne {

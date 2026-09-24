@@ -28,6 +28,21 @@ export type WorldLogo = {
   render(renderer: THREE.WebGLRenderer, dt: number): void;
   /** Stillness: calm mode, motion off, or the OS asking for less motion. */
   setStill(still: boolean): void;
+  /**
+   * Light the sign with the world's own sun or moon (Time Keepers — the
+   * owner wants the day passing to show on the title as well). `dir` is the
+   * world's light vector (toward the light), `key`/`fill` its intensity as a
+   * share of the world's full-day value, the colours the world's own.
+   * Never called by a world that keeps the neutral title light.
+   */
+  setLight(light: {
+    dir: THREE.Vector3;
+    color: THREE.Color;
+    key: number;
+    sky: THREE.Color;
+    ground: THREE.Color;
+    fill: number;
+  }): void;
   dispose(): void;
 };
 
@@ -66,10 +81,12 @@ const BOB_PX = 1.5;
 
 export function createWorldLogo(): WorldLogo {
   const scene = new THREE.Scene();
-  // Its own light, neutral, and none of the world's: the sign is a title,
-  // not a prop, so it does not go orange at sunset or blue after dark.
+  // Its own light, neutral by default: the sign is a title, not a prop, so
+  // in Dino Run and Hero Trail it does not go orange at sunset or blue after
+  // dark. Time Keepers hands it the world's sun and moon — see `setLight`.
   const hemi = new THREE.HemisphereLight(0xffffff, 0x8a8278, 1.55);
   const key = new THREE.DirectionalLight(0xffffff, 1.35);
+  const WHITE = new THREE.Color(0xffffff);
   key.position.set(1.2, 1.6, 3);
   scene.add(hemi, key);
   // Depth first, colour second. Faded by plain transparency, the sign's own
@@ -192,6 +209,27 @@ export function createWorldLogo(): WorldLogo {
 
     setStill(value) {
       still = value;
+    },
+
+    setLight(l) {
+      // The world's light, turned into the sign's frame. Both cameras face
+      // down -z with +y up, so the vector carries over as it is — except that
+      // a light from behind would leave the face the child reads in its own
+      // shadow; it is always kept a little in front.
+      key.position
+        .set(l.dir.x, l.dir.y, Math.max(l.dir.z, 0.35))
+        .normalize()
+        .multiplyScalar(3);
+      // The colour is the world's, a quarter of the way back to white: fully
+      // tinted, the painted letters took the moon's blue as their own colour
+      // and stopped reading as the sign.
+      key.color.copy(l.color).lerp(WHITE, 0.25);
+      hemi.color.copy(l.sky).lerp(WHITE, 0.25);
+      hemi.groundColor.copy(l.ground).lerp(WHITE, 0.2);
+      // Full day is the neutral light it always had; night and dusk take it
+      // down with the world, but never below what still reads as a title.
+      key.intensity = THREE.MathUtils.clamp(1.35 * l.key, 0.3, 1.6);
+      hemi.intensity = THREE.MathUtils.clamp(1.55 * l.fill, 0.55, 1.8);
     },
 
     dispose() {

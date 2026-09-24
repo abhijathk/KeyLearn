@@ -229,7 +229,8 @@ export function mangroveStand(c: WildCrossing) {
     const r = MANGROVE_ROOT * h;
     if (z + r > -DECK_BACK) return false;
     if (islandRadius(c, x, z) < ISLAND_SHORE + 0.02) return false;
-    if (x - r * 0.5 < wildBanks(c, z).left) return false;
+    const bank = wildBanks(c, z);
+    if (x - r * 0.5 < bank.left || x + r * 0.5 > bank.right) return false;
     if (Math.hypot(x - banyan.x, z - banyan.z) < islandBanyanTrunkR() + r * 0.7)
       return false;
     return trees.every(
@@ -279,6 +280,32 @@ export function mangroveStand(c: WildCrossing) {
   // And a few loners in the gaps.
   for (let k = 0, placed = 0; k < 60 && placed < 3; k++) {
     if (plant(range(from + 2, to), -range(9.5, 18), range(3.2, 5.2))) placed++;
+  }
+  // THE FAR BANK, on the way to Milestone 38 and 39: clumps hugging the
+  // right bank, where the child steps off the second bridge, and a few
+  // out along that bridge. Measured from the bank itself, which opens
+  // wider the further back it runs (`wildBanks`).
+  const exitSpan = c.spans[1];
+  for (const [back, n, tall] of [
+    [10.5, 3, 7.0],
+    [14.0, 3, 5.8],
+    [17.5, 2, 6.6],
+    [21.0, 2, 5.0],
+  ] as const) {
+    const z = -back + range(-1, 1);
+    clump(wildBanks(c, z).right - range(1.8, 2.6), z, n, tall);
+  }
+  for (const [along, n, tall, back] of [
+    [0.3, 2, 5.6, 12],
+    [0.6, 2, 6.8, 15],
+  ] as const) {
+    clump(
+      exitSpan.to -
+        (exitSpan.to - exitSpan.from) * (along + range(-0.06, 0.06)),
+      -back + range(-1, 1),
+      n,
+      tall,
+    );
   }
   return trees.slice(1);
 }

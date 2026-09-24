@@ -65,28 +65,22 @@ export const GUIDE_EN: GuideDoc = {
       nav: "Sign in and passwords",
       heading: "Signing up, logging in, and passwords",
       blocks: [
-        { p: "Everything lives in the menu at the top-right." },
-        { lab: "Create an account" },
         {
-          steps: [
-            "Open the menu (top-right).",
-            "Choose Register.",
-            "Enter an email and a password.",
-            "Confirm — you are in.",
-          ],
+          p: "Everything lives in the menu at the top-right, under Log in or sign up — the same door whether you already have an account or not.",
         },
-        { lab: "Log in" },
+        { lab: "Create an account or log in" },
         {
           steps: [
-            "Open the menu and choose Log In.",
-            "Enter your email and password.",
+            "Open the menu and choose Log in or sign up.",
+            "Continue with Google, Facebook or a passkey — or type your email and press Continue.",
+            "A new email sets you up with a password; an existing one asks for it.",
           ],
         },
         { lab: "Reset a forgotten password" },
         {
           steps: [
-            "On the Log In screen, choose Forgot Password.",
-            "Enter your email address.",
+            "On the log-in screen, enter your email and press Continue.",
+            "Choose Forgot your password?",
             "Open the reset link we send you.",
             "Choose a new password and log in.",
           ],
@@ -99,18 +93,18 @@ export const GUIDE_EN: GuideDoc = {
       heading: "Profiles for the whole household",
       blocks: [
         {
-          p: "KeyLearn is built like a household: one account holds up to four profiles (eight with premium), grown-ups and children in any mix. Each profile keeps its *own* separate progress on this device — nothing is ever mixed together.",
+          p: "KeyLearn is built like a household: an account holds up to four learners, grown-ups and children in any mix, plus four extra places for learners on braille and audio — they never use up one of the four. Each profile keeps its *own* separate progress on this device — nothing is ever mixed together.",
         },
         { lab: "Add a profile" },
         {
           steps: [
             "Open the menu and choose Account (or “Set up profiles”).",
             "Select Add a profile.",
-            "Type a first name.",
             "Mark it as a Grown-up or a Kid.",
-            "Pick an avatar — a friendly icon, or a Photo from your device.",
-            "For a child, add a birth year (it only tunes the words and pacing to their age).",
-            "Save.",
+            "Type a first name and year born (it only tunes the words and pacing to their age). A grown-up also needs a last name.",
+            "Pick an avatar — a friendly icon, or a Photo from your device — and a reading voice.",
+            "For a child, tick the parent or guardian consent box.",
+            "Add learner.",
           ],
         },
         { lab: "Switch to another learner" },
@@ -128,7 +122,7 @@ export const GUIDE_EN: GuideDoc = {
           ],
         },
         {
-          p: "Kid profiles get a simplified, locked-down menu, and grown-up actions sit behind a quick “what is A times B?” maths gate, so little ones cannot wander into the settings.",
+          p: "Kid profiles get a simplified, locked-down menu — the grown-up links switch off while a kid profile is active. If you set a grown-up PIN (Account → Security), Account, Security and Support ask for it too, so a child on the family device cannot wander into your settings.",
         },
       ],
     },
@@ -190,10 +184,11 @@ export const GUIDE_EN: GuideDoc = {
           tips: [
             "*Guided practice* — the adaptive default that grows your alphabet key by key.",
             "*Classic course* — a fixed, ordered march through the keys.",
+            "*Code craft* — real code from real frameworks.",
             "*Frequent words* — the most common words in your language.",
             "*Book Text* — type your way through real books built into the app.",
+            "*Quotes* — short, complete thoughts with their real capitals and punctuation.",
             "*Your Own Text* — paste anything you like and practise on it.",
-            "*Code Snippets* — brackets, symbols and the rhythm of code.",
             "*Number Drills* — the number row and the keypad.",
           ],
         },
@@ -278,11 +273,7 @@ export const GUIDE_EN: GuideDoc = {
         },
         { lab: "Open your progress" },
         {
-          steps: [
-            "Open the menu.",
-            "Choose Profile.",
-            "Use the filter row to focus on Letters, Digits, Punctuation or Symbols.",
-          ],
+          steps: ["Open the menu.", "Choose Profile."],
         },
       ],
     },
@@ -330,7 +321,7 @@ export const GUIDE_EN: GuideDoc = {
           ],
         },
         {
-          p: "There are two worlds to choose from — Dino Run, with a friendly dinosaur, and Hero Trail, where a knight quests through a forest — each with a character to pick.",
+          p: "There are three worlds to choose from — Time Keepers, a village road that most learners start on; Dino Run, with a friendly dinosaur; and Hero Trail, where a knight quests through a forest — each with a character to pick.",
         },
       ],
     },
@@ -369,14 +360,11 @@ export const GUIDE_EN: GuideDoc = {
       heading: "Other ways to practise",
       blocks: [
         {
-          p: "Beyond your daily practice there is a *Speed Test* — a quick one-off passage that reports your words-per-minute and accuracy with no lesson attached; a *Layouts* explorer for comparing keyboard layouts and their finger maps; *High Scores* to see how you stack up; and *Multiplayer* races to push your speed against others in real time.",
+          p: "Beyond your daily practice there is a *Speed Test* — a quick one-off passage that reports your words-per-minute and accuracy with no lesson attached — and a *Layouts* explorer for comparing keyboard layouts and their finger maps.",
         },
         { lab: "Find them" },
         {
-          steps: [
-            "Open the menu.",
-            "Choose Speed Test, Layouts, High Scores or Multiplayer.",
-          ],
+          steps: ["Open the menu.", "Choose Speed Test or Layouts."],
         },
       ],
     },
@@ -506,7 +494,7 @@ export const GUIDE_EN: GuideDoc = {
           p: "The same page lists recent activity — sign-ins, failed sign-ins, a passkey added, a password changed — each with the rough location it came from, so something you did not do is easy to spot. If it looks wrong, *sign out everywhere* ends every session but the one you are using.",
         },
         {
-          p: "There is also a *parent PIN*, which locks the account settings so a child on the family device cannot change them or delete a profile.",
+          p: "There is also a *grown-up PIN* (Account → Security → Grown-up PIN), which locks the account settings so a child on the family device cannot change them or delete a profile.",
         },
       ],
     },
@@ -567,7 +555,7 @@ export const GUIDE_EN: GuideDoc = {
           ],
         },
         {
-          p: "Replies appear in that conversation *and* arrive by email, so you do not have to sit and watch the page. Anything already sorted folds away under Resolved, which starts closed — the thing you are still waiting on is the thing you see.",
+          p: "Replies appear in that conversation, and the bell in the header lights up when one arrives, so you do not have to sit and watch the page. Anything already sorted folds away under Resolved, which starts closed — the thing you are still waiting on is the thing you see.",
         },
         { lab: "Who answers" },
         {
