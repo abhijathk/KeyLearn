@@ -42,8 +42,8 @@ function estimate(n: number): number {
 }
 
 /**
- * The KeyLearn loading state: three keycaps typing "K E Y", coloured from the
- * keyboard's finger-zone palette, plus a slim progress track.
+ * The KeyLearn loading state: the K·E·Y mark drawing itself, plus a slim
+ * progress track.
  *
  * **Why this knows about the loader before it.** Reaching the practice page
  * crosses four loading gates in sequence — the route's own Suspense while the
@@ -65,10 +65,19 @@ function estimate(n: number): number {
 export function LoadingProgress({
   total = 0,
   current = 0,
+  kids,
 }: {
   readonly total?: number;
   readonly current?: number;
+  /**
+   * The kids look. Left unset, it follows the address — every gate on the
+   * way into the kids pages (the route chunk, Classic's lesson, the games)
+   * renders this without knowing where it is. The server shell passes it
+   * explicitly, having no address bar to read.
+   */
+  readonly kids?: boolean;
 }): ReactNode {
+  const [isKids] = useState(() => kids ?? onKidsPage());
   // Both decided once, at mount, and held in state so a re-render cannot
   // restart the animation or make the bar jump backwards mid-wait.
   const [{ continuing, step }] = useState(() => {
@@ -105,13 +114,62 @@ export function LoadingProgress({
   const pct = measured ?? estimate(step);
 
   return (
-    <div className={`${styles.root} ${continuing ? styles.continuing : ""}`}>
+    <div
+      className={`${styles.root} ${continuing ? styles.continuing : ""} ${isKids ? styles.kids : ""}`}
+    >
       <div className={styles.loader}>
-        <div className={styles.keys}>
-          <span className={`${styles.key} ${styles.k1}`}>K</span>
-          <span className={`${styles.key} ${styles.k2}`}>E</span>
-          <span className={`${styles.key} ${styles.k3}`}>Y</span>
-        </div>
+        {isKids ? (
+          // The kids look (owner's pick, 25 Sep 2026): three chunky toy
+          // blocks spelling KEY that hop and squish in turn, and a round
+          // bar with a moving shine. Yellow, blue and green — no pink.
+          <div className={styles.blocks} aria-hidden="true">
+            <span>K</span>
+            <span>E</span>
+            <span>Y</span>
+          </div>
+        ) : (
+          <>
+            {/* The KEY mark drawing itself: each keycap traces its outline in one
+            stroke, fills softly, then fades and draws again (owner's pick,
+            design 04, 25 Sep 2026). No word beside it — this loader shows
+            while the translations themselves are still loading. */}
+            <svg className={styles.mark} viewBox="0 0 92 40" aria-hidden="true">
+              <rect
+                x="2"
+                y="6"
+                width="26"
+                height="26"
+                rx="6"
+                pathLength={100}
+              />
+              <rect
+                x="33"
+                y="6"
+                width="26"
+                height="26"
+                rx="6"
+                pathLength={100}
+              />
+              <rect
+                x="64"
+                y="6"
+                width="26"
+                height="26"
+                rx="6"
+                pathLength={100}
+              />
+              <text x="15" y="23.5" textAnchor="middle">
+                K
+              </text>
+              <text x="46" y="23.5" textAnchor="middle">
+                E
+              </text>
+              <text x="77" y="23.5" textAnchor="middle">
+                Y
+              </text>
+            </svg>
+          </>
+        )}
         <div
           className={styles.track}
           role="progressbar"
@@ -126,5 +184,15 @@ export function LoadingProgress({
         </div>
       </div>
     </div>
+  );
+}
+
+/** Is this the kids part of the app — /kids, or /<locale>/kids? */
+export function onKidsPage(): boolean {
+  if (typeof window === "undefined" || window.location == null) {
+    return false;
+  }
+  return /^\/(?:[a-z]{2,3}(?:-[a-z0-9]{2,8})?\/)?kids(?:\/|$)/i.test(
+    window.location.pathname,
   );
 }

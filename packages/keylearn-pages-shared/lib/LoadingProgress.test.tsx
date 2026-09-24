@@ -1,7 +1,7 @@
 import { deepEqual } from "node:assert/strict";
 import { test } from "node:test";
 import { render } from "@testing-library/react";
-import { LoadingProgress } from "./LoadingProgress.tsx";
+import { LoadingProgress, onKidsPage } from "./LoadingProgress.tsx";
 
 /**
  * Reaching the practice page crosses four loading gates in sequence — the
@@ -155,4 +155,50 @@ test("an inferred bar is not announced as a value", async () => {
     false,
   );
   r.unmount();
+});
+
+test("the kids look spells KEY in blocks and keeps the progress bar", () => {
+  const { container, unmount } = render(<LoadingProgress kids={true} />);
+  const root = container.firstElementChild as HTMLElement;
+  deepEqual(root.className.includes("kids"), true);
+  deepEqual(
+    [...container.querySelectorAll("[aria-hidden=true] span")].map(
+      (s) => s.textContent,
+    ),
+    ["K", "E", "Y"],
+  );
+  deepEqual(container.querySelector("svg") == null, true);
+  deepEqual(container.querySelector("[role=progressbar] i") != null, true);
+  unmount();
+});
+
+test("the grown-up look is the drawn mark", () => {
+  const { container, unmount } = render(<LoadingProgress kids={false} />);
+  deepEqual(container.querySelectorAll("svg rect").length, 3);
+  deepEqual(
+    (container.firstElementChild as HTMLElement).className.includes("kids"),
+    false,
+  );
+  unmount();
+});
+
+test("kids pages are recognised, with or without a locale", () => {
+  const at = (path: string) => {
+    window.history.replaceState(null, "", path);
+    return onKidsPage();
+  };
+  deepEqual(
+    [
+      "/kids",
+      "/kids/",
+      "/ar/kids",
+      "/pt-br/kids",
+      "/",
+      "/practice",
+      "/help/kids-safety",
+      "/kidsroom",
+    ].map(at),
+    [true, true, true, true, false, false, false, false],
+  );
+  window.history.replaceState(null, "", "/");
 });

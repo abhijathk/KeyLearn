@@ -30,7 +30,13 @@ export function Shell({
     <Html>
       <Head page={page} />
       <Body>
-        {isBot(headers) ? <Content page={page} /> : <LoadingProgress />}
+        {isBot(headers) ? (
+          <Content page={page} />
+        ) : (
+          <LoadingProgress
+            kids={page.path === "/kids" || page.path.startsWith("/kids/")}
+          />
+        )}
       </Body>
     </Html>
   );
