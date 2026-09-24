@@ -45,6 +45,7 @@ import {
   premiumSell,
   profileCaps,
   registrationMode,
+  replyAccent,
   siteLocalesAllowed,
   smartPractice,
   typingLanguagesAllowed,
@@ -553,6 +554,9 @@ export class Controller {
       premiumSell: premiumSell(),
       // Whether KeyLearn's adaptive helpers run at all (control centre).
       smartPractice: smartPractice(),
+      // The control centre's reply accent (Replies): which of the ten fixed
+      // colours page-support's ReplyBody draws its chrome in.
+      replyAccent: replyAccent(),
       locale,
       // What the network says about where this request came from —
       // Cloudflare's edge, so it is absent in development and on any

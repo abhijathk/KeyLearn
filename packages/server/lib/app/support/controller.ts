@@ -37,6 +37,10 @@ import {
   User,
 } from "@keylearn/database";
 import { hasContactDetails } from "@keylearn/moderation";
+import {
+  parseReply,
+  plainText,
+} from "@keylearn/page-support/lib/reply-format.ts";
 import { type NoticeKind, resolveDateMarks } from "@keylearn/pages-shared";
 import { type Knex } from "knex";
 import { z } from "zod";
@@ -1707,7 +1711,18 @@ export class Controller {
           // UTC, because a guest has no account and therefore no zone we
           // could honour — and a time with a named zone is at least true
           // for everyone, which "10:39" is not.
-          body: resolveDateMarks(body, { timeZone: "UTC" }),
+          //
+          // Then through the shared parser's own plain-text reading
+          // (`plainText`/`parseReply`, ReplyBody's twin on the email side):
+          // a guest has no ReplyBody to draw the route rail or the toggle
+          // switch, so without this an [ask] or a [status N] directive —
+          // or even plain **bold** — reached their inbox as raw brackets
+          // and asterisks. `plainText` is the same reading a screen reader
+          // or the handoff packet gets; an email is one more thing that
+          // must never render.
+          body: plainText(
+            parseReply(resolveDateMarks(body, { timeZone: "UTC" })),
+          ),
           threadLink: this.#link(`/support/t/${threadToken}`),
           authorName,
         }),

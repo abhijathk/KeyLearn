@@ -124,6 +124,9 @@ export const WIRED_KEYS: ReadonlySet<string> = new Set([
   "ads.dwellSeconds",
   "ads.maxRotation",
   "ads.showToGuests",
+  // The reply accent (24 Sep 2026) — read by readers.ts and sent to every
+  // page through PageData.replyAccent, for page-support's ReplyBody.
+  "support.replyAccent",
 ]);
 
 export function isWired(key: string): boolean {

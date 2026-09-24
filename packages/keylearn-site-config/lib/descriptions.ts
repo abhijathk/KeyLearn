@@ -158,6 +158,10 @@ export const DESCRIPTIONS: Readonly<Record<string, string>> = {
   "retention.staffAuditDays":
     "How long staff audit rows are kept. Zero keeps them for good.",
 
+  // ── Support ──
+  "support.replyAccent":
+    "The colour of route chips, keycaps and other reply chrome a customer reads on a support message.",
+
   // ── Practice and lessons ──
   "practice.defaultLessonType":
     "Which course a learner starts on before they choose for themselves.",

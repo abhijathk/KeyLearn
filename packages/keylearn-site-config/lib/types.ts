@@ -33,6 +33,7 @@ export type SectionId =
   | "premium"
   | "ads"
   | "a11y"
+  | "support"
   | "ops"
   | "email"
   | "admin";

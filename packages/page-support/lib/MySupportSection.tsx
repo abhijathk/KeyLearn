@@ -1360,6 +1360,52 @@ function Thread({
     last.sender !== "them" &&
     last.kind == null;
 
+  /**
+   * An [ask] block's buttons only ever go live on the thread's newest desk
+   * reply, and only until the customer has sent anything after it — a
+   * pending outbox entry counts as "sent", so the buttons freeze the
+   * instant they act rather than waiting on the round trip to confirm it.
+   * Scanning from the end: a "them" message before any desk reply means
+   * the customer already answered, however that reply is dressed
+   * (`"agent"` is Tab, `"us"` a person, `"auto"` a matched Answer); a
+   * `"system"` note in between (a handover line, say) doesn't count as
+   * either and is skipped over.
+   */
+  const askLiveIndex = (() => {
+    if (outbox.length > 0) {
+      return -1;
+    }
+    for (let idx = thread.messages.length - 1; idx >= 0; idx--) {
+      const sender = thread.messages[idx]!.sender;
+      if (sender === "them") {
+        return -1;
+      }
+      if (sender === "agent" || sender === "us" || sender === "auto") {
+        return idx;
+      }
+    }
+    return -1;
+  })();
+
+  /** The customer's own next message after `i`, if any — an unsynced
+   *  outbox entry is also already their answer. */
+  const nextCustomerReply = (i: number): string | null => {
+    for (let j = i + 1; j < thread.messages.length; j++) {
+      if (thread.messages[j]!.sender === "them") {
+        return thread.messages[j]!.body;
+      }
+    }
+    return outbox.length > 0 ? outbox[0]!.body : null;
+  };
+
+  /** Tapping a live [ask] option sends it exactly like a typed reply —
+   *  same outbox, same retry, no new endpoint. */
+  const sendAsk = (option: string) => {
+    const clientId = newClientId();
+    setOutbox((o) => [...o, { clientId, body: option, failed: false }]);
+    void send(option, clientId);
+  };
+
   let dayShown: string | null = null;
 
   return (
@@ -1455,20 +1501,32 @@ function Thread({
                 {m.kind === "crisis" ? (
                   /* Never a bubble. Nothing about the emergency redirect
                      should read as the assistant chatting. The redirect
-                     arrives as a few paced chunks; the alert header opens
-                     the run once rather than repeating on every chunk. */
-                  <div className={styles.crisis} role="alert">
-                    {thread.messages[i - 1]?.kind !== "crisis" && (
-                      <span className={styles.crisisHead}>
-                        <Icon name="alert" size={16} />
-                        <FormattedMessage
-                          id="support.my.crisisHead"
-                          defaultMessage="This sounds like an emergency"
-                        />
-                      </span>
-                    )}
-                    <CrisisBody text={m.body} />
-                  </div>
+                     arrives as a few paced chunks; only the FIRST one gets
+                     the loud red card and the alert header — later chunks
+                     in the same run are calm cards, the way the mock draws
+                     the follow-up beats under the initial alarm. */
+                  (() => {
+                    const first = thread.messages[i - 1]?.kind !== "crisis";
+                    return (
+                      <div
+                        className={first ? styles.crisis : styles.crisisCalm}
+                        role={first ? "alert" : undefined}
+                      >
+                        {first && (
+                          <span className={styles.crisisHead}>
+                            <Icon name="alert" size={16} />
+                            <FormattedMessage
+                              id="support.my.crisisHead"
+                              defaultMessage="This sounds like an emergency"
+                            />
+                          </span>
+                        )}
+                        <div className={styles.crisisBody}>
+                          <CrisisBody text={m.body} loud={first} />
+                        </div>
+                      </div>
+                    );
+                  })()
                 ) : m.sender === "system" || m.kind === "handover" ? (
                   <p className={styles.systemMsg}>
                     {renderMessageText(m.body, undefined, locale)}
@@ -1523,7 +1581,13 @@ function Thread({
                           promoting their own words into product chrome
                           would put KeyLearn's voice in their mouth. Their
                           bubble below stays plain. */}
-                      <ReplyBody text={m.body} locale={locale} />
+                      <ReplyBody
+                        text={m.body}
+                        locale={locale}
+                        onAsk={sendAsk}
+                        askLive={!mine && i === askLiveIndex}
+                        askAnswer={mine ? null : nextCustomerReply(i)}
+                      />
                     </div>
                     <span className={styles.stamp}>
                       {new Date(m.createdAt).toLocaleTimeString(locale, {
@@ -2118,7 +2182,24 @@ function ReplyFeedback({
   );
 }
 
-function CrisisBody({ text }: { readonly text: string }): ReactNode {
+function CrisisBody({
+  text,
+  loud,
+}: {
+  readonly text: string;
+  /**
+   * The first chunk in a crisis run carries the loud red card and the
+   * alert header; later chunks in the same run render as calm neutral
+   * cards instead of repeating the alarm (see the loop above, which
+   * already suppresses the repeated header the same way). Passed straight
+   * through rather than re-derived, so this component never has to know
+   * about its neighbours' kinds — only whether IT is the loud one. The
+   * marked numbers are tel: links either way; only the surrounding card
+   * changes. The script's own wording never changes with it.
+   */
+  readonly loud: boolean;
+}): ReactNode {
+  const { formatMessage } = useIntl();
   const lines = text.split("\n");
   const body = (
     lines[0]?.startsWith("This sounds like an emergency")
@@ -2130,38 +2211,60 @@ function CrisisBody({ text }: { readonly text: string }): ReactNode {
 
   return (
     <>
-      {body.split(/\n{2,}/).map((para, i) => (
-        <p key={i}>
-          {para.split("**").map((part, j) =>
-            // Odd indices are what the script marked: the number to dial.
-            // Rendered digit-by-digit in individual boxes (owner
-            // directive) — aria carries the whole number so assistive
-            // tech reads "000", not "zero. zero. zero." as three items.
-            j % 2 === 1 ? (
-              <span
-                key={j}
-                className={styles.dialNumber}
-                aria-label={part.trim()}
-              >
+      {body.split(/\n{2,}/).map((para, i) => {
+        // The AI disclaimer reads as small print under a divider rather
+        // than as another beat of the script — a heuristic match, the
+        // same way the header line above is detected by its own opening
+        // words rather than a dedicated marker.
+        const fine = /\bAI assistant\b/i.test(para);
+        const content = para.split("**").map((part, j) =>
+          // Odd indices are what the script marked: the number to dial.
+          // A tel: link, its digits in their own white tiles inside a red
+          // button (owner directive) — aria carries the whole number so
+          // assistive tech reads "000", not "zero. zero. zero." as three
+          // items. Always left-to-right, even inside an RTL page: 112
+          // must never read back as 211.
+          j % 2 === 1 ? (
+            <a
+              key={j}
+              // Full size on the loud, first chunk; a quieter size on the
+              // calm cards that can follow it — same button, same link,
+              // never a smaller target than 44px either way.
+              className={
+                loud
+                  ? styles.dialButton
+                  : `${styles.dialButton} ${styles.dialButtonSm}`
+              }
+              href={`tel:${part.replace(/\D/g, "")}`}
+              aria-label={formatMessage(
+                {
+                  id: "support.my.crisisCallNumber",
+                  defaultMessage: "Call {number}",
+                },
+                { number: part.trim() },
+              )}
+            >
+              <span className={styles.dialDigits} aria-hidden={true}>
                 {part
                   .trim()
                   .split("")
                   .map((ch, k) => (
-                    <span
-                      key={k}
-                      className={styles.dialDigit}
-                      aria-hidden={true}
-                    >
+                    <span key={k} className={styles.dialDigit}>
                       {ch}
                     </span>
                   ))}
               </span>
-            ) : (
-              part
-            ),
-          )}
-        </p>
-      ))}
+            </a>
+          ) : (
+            part
+          ),
+        );
+        return (
+          <p key={i} className={fine ? styles.crisisFine : undefined}>
+            {content}
+          </p>
+        );
+      })}
     </>
   );
 }

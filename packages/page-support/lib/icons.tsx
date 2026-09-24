@@ -43,6 +43,10 @@ const PATHS = {
     "M2.2 7.8h2.3v5.9H2.2Z M4.5 8.2l3-4.9a1.3 1.3 0 012.4.7V7h2.6a1.4 1.4 0 011.4 1.6l-.8 3.9a1.7 1.7 0 01-1.7 1.4H4.5",
   thumbDown:
     "M2.2 8.2h2.3V2.3H2.2Z M4.5 7.8l3 4.9a1.3 1.3 0 002.4-.7V9h2.6a1.4 1.4 0 001.4-1.6l-.8-3.9a1.7 1.7 0 00-1.7-1.4H4.5",
+  // The crisis card's call button. A classic handset rather than a modern
+  // "phone" glyph — reads unambiguously at the small sizes this sits at.
+  phone:
+    "M4.2 2.4h1.7l1 2.8-1.3 1a6.8 6.8 0 003.4 3.4l1-1.3 2.8 1v1.7a1.4 1.4 0 01-1.5 1.4A11 11 0 012.8 3.9a1.4 1.4 0 011.4-1.5z",
 } as const;
 
 export type IconName = keyof typeof PATHS;

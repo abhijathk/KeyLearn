@@ -78,6 +78,17 @@ function paragraph(text: string): string {
   return `<p style="margin:0 0 18px;font-family:${FONT};font-size:15px;line-height:1.6;color:#374151">${esc(text)}</p>`;
 }
 
+/**
+ * Like {@link paragraph}, but keeps the line breaks in `text` — for a
+ * reply's plain-text reading, where a numbered step list or a run of
+ * causes is several real lines rather than one long sentence. The ordinary
+ * `paragraph` collapses those onto one line, which was fine for the single
+ * unbroken sentences it was written for and is not fine for a step list.
+ */
+function paragraphPre(text: string): string {
+  return `<p style="margin:0 0 18px;font-family:${FONT};font-size:15px;line-height:1.6;color:#374151;white-space:pre-wrap">${esc(text)}</p>`;
+}
+
 // A small muted "or paste this link" fallback under a CTA button.
 function fallbackLink(link: string): string {
   return (
@@ -747,6 +758,14 @@ Happy typing!`;
  * reused — the plaintext token from the ticket's original creation was only
  * ever available once, so the most recent reply email is the sender's
  * working way back into the conversation.
+ *
+ * `body` arrives already through the reply format's own `plainText`
+ * reading (support/controller.ts's `#notifyReply`) — this function has no
+ * opinion about `**bold**`, `→` routes or `[ask]`/`[status N]` directives,
+ * and must not try to interpret any of it: the guest reading this email
+ * has no ReplyBody to draw a rail or a switch, so what reaches them is
+ * exactly the readable fallback the shared parser produced, never the raw
+ * markup Tab wrote.
  */
 export function messageThreadReply({
   to,
@@ -773,7 +792,7 @@ Happy typing!`;
   const html = shell(
     mailSubject,
     heading(from != null ? `New reply from ${from}` : "New reply") +
-      paragraph(body) +
+      paragraphPre(body) +
       `<div style="margin:4px 0 4px">${button(threadLink, "View conversation")}</div>` +
       fallbackLink(threadLink),
   );

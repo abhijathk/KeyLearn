@@ -18,6 +18,7 @@
     "@keylearn/multiplayer-shared": "*",
     "@keylearn/oauth": "*",
     "@keylearn/page-account": "*",
+    "@keylearn/page-support": "*",
     "@keylearn/page-typing-test": "*",
     "@keylearn/pages-server": "*",
     "@keylearn/pages-shared": "*",

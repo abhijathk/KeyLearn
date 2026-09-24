@@ -120,13 +120,15 @@ export function SupportThreadPage(): ReactNode {
   const { thread } = state;
   const closed = thread.status === "closed";
 
-  const send = () => {
-    const message = reply.trim();
-    if (message === "" || busy) {
+  /** Shared by the composer and a tapped [ask] option — both are the
+   *  customer's own reply, sent through the one path this page has. */
+  const sendMessage = (message: string) => {
+    const trimmed = message.trim();
+    if (trimmed === "" || busy) {
       return;
     }
     setBusy(true);
-    SupportService.replyToThread(token, message)
+    SupportService.replyToThread(token, trimmed)
       .then((r) => {
         if (r.ticket != null) {
           setState({ kind: "ready", thread: r.ticket });
@@ -135,6 +137,37 @@ export function SupportThreadPage(): ReactNode {
       })
       .finally(() => setBusy(false));
   };
+  const send = () => sendMessage(reply);
+
+  /**
+   * An [ask] block's buttons are live only on the newest desk reply, and
+   * only until the customer has sent anything after it — see the twin of
+   * this in MySupportSection.tsx, which also has an outbox to account for;
+   * this page re-fetches the whole thread on every send, so `busy` alone
+   * already keeps a second tap from racing the first.
+   */
+  const askLiveIndex = (() => {
+    for (let idx = thread.messages.length - 1; idx >= 0; idx--) {
+      const sender = thread.messages[idx]!.sender;
+      if (sender === "them") {
+        return -1;
+      }
+      if (sender === "us" || sender === "auto" || sender === "agent") {
+        return idx;
+      }
+    }
+    return -1;
+  })();
+
+  /** The customer's own next message after `i`, if any. */
+  const nextCustomerReply = (i: number): string | null => {
+    for (let j = i + 1; j < thread.messages.length; j++) {
+      if (thread.messages[j]!.sender === "them") {
+        return thread.messages[j]!.body;
+      }
+    }
+    return null;
+  };
 
   return (
     <Shell subject={thread.subject}>
@@ -142,7 +175,7 @@ export function SupportThreadPage(): ReactNode {
         {/* No separate bubble for `thread.message`: unlike QDesk, this
             side also stores the opening message as a `them` row, so the
             list below already contains it. */}
-        {thread.messages.map((m) => (
+        {thread.messages.map((m, i) => (
           <Bubble
             key={m.id}
             mine={m.sender === "them"}
@@ -150,6 +183,9 @@ export function SupportThreadPage(): ReactNode {
             at={m.createdAt}
             from={m.sender === "them" ? null : (m.authorName ?? null)}
             system={m.sender === "system"}
+            onAsk={sendMessage}
+            live={m.sender !== "them" && i === askLiveIndex}
+            answer={m.sender === "them" ? null : nextCustomerReply(i)}
           />
         ))}
         <div ref={endRef} />
@@ -222,12 +258,21 @@ function Bubble({
   at,
   from = null,
   system = false,
+  onAsk,
+  live = false,
+  answer = null,
 }: {
   readonly mine: boolean;
   readonly body: string;
   readonly at: string;
   readonly from?: string | null;
   readonly system?: boolean;
+  /** Called with the option's text when a live [ask] button is tapped. */
+  readonly onAsk?: (option: string) => void;
+  /** Whether an [ask] block in this bubble may still be answered. */
+  readonly live?: boolean;
+  /** The customer's next message after this one, if any. */
+  readonly answer?: string | null;
 }): ReactNode {
   if (system) {
     return <p className={styles.system}>{body}</p>;
@@ -243,7 +288,12 @@ function Bubble({
         <p className={styles.body}>{body}</p>
       ) : (
         <div className={styles.body}>
-          <ReplyBody text={body} />
+          <ReplyBody
+            text={body}
+            onAsk={onAsk}
+            askLive={live}
+            askAnswer={answer}
+          />
         </div>
       )}
       <span className={styles.at}>

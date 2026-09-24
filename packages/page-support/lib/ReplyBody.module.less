@@ -1,15 +1,63 @@
 /**
- * Rich reply chrome — the keycaps, the rail, the steps.
+ * Rich reply chrome — the keycaps, the rail, the steps, and the wider set
+ * of flat modules from the 24 Sep 2026 redesign (causes, nope, status, ask,
+ * timeline, contacts).
  *
- * Drawn entirely from the theme's own tokens, so the accent follows
- * whatever the learner has chosen and both light and dark themes are
- * covered without a second set of rules. Nothing here hard-codes a colour.
+ * Surfaces and text are drawn entirely from the theme's own tokens
+ * (`--primary*`, `--secondary*`, `--separator-color`), so every module sits
+ * correctly in whichever of KeyLearn's themes and light/dark faces the
+ * reader has chosen. Only the ACCENT is different: `--reply-accent` /
+ * `--reply-accent-ink`, below — an admin picks one colour for every
+ * customer reply (control centre, Settings → Replies), and it must not
+ * fight whatever a learner has chosen for their own keyboard accent
+ * (`--accent`, untouched by anything in this file).
+ *
+ * Flat throughout: no gradients, no glows, no drop shadows, and never a
+ * coloured left-edge stripe (rejected by the owner while reviewing the
+ * mock). A tinted surface and a solid round icon carry the weight instead.
  *
  * The keycap is the one deliberate piece of skeuomorphism in the app, and
  * it earns it: this is a typing tutor, the on-screen keyboard already
  * draws keys exactly this way, and a customer hunting for a screen
  * recognises the shape before they read the word.
  */
+
+/* ── The reply accent (control centre, Settings → Replies) ───────────── */
+/*
+   `--reply-accent-dark`/`--reply-accent-light` arrive as inline styles from
+   ReplyBody.tsx (ten fixed colours, each already checked for contrast in
+   both of the app's own themes). This picks the one for the theme actually
+   in play and its matching ink, using the same `html[data-color]` selector
+   set the learner's own keyboard accent is painted with (accents.less,
+   ThemeProvider.tsx) — `data-color="keylearn"` is night, `"keylearn-day"`
+   is day, and `"auto"` follows the device. `:global(.dark)` was tried here
+   first and does nothing: no class named `.dark` is ever applied anywhere
+   in this app, so that selector silently never matched and the accent was
+   always the light value regardless of theme.
+
+   The ink is a fixed pair per theme rather than computed per accent: every
+   one of the ten reply accents was hand-picked (reply-accent.ts) so the
+   night value is pale enough for dark ink and the day value dark enough
+   for white ink, the same two constants `ink()` in ThemeProvider.tsx
+   resolves to for a custom keyboard accent.
+*/
+
+.root {
+  --reply-accent: var(--reply-accent-dark);
+  --reply-accent-ink: #241a12;
+}
+
+:global(html[data-color="keylearn-day"]) .root {
+  --reply-accent: var(--reply-accent-light);
+  --reply-accent-ink: #ffffff;
+}
+
+@media (prefers-color-scheme: light) {
+  :global(html[data-color="auto"]) .root {
+    --reply-accent: var(--reply-accent-light);
+    --reply-accent-ink: #ffffff;
+  }
+}
 
 .para {
   margin: 0;
@@ -28,13 +76,22 @@
   border: 1px solid var(--separator-color, rgb(0 0 0 / 12%));
   /* The seated bottom edge — what makes it read as pressable rather than
      as a tinted rectangle. */
-  border-block-end-width: 2px;
+  border-block-end-width: 0.16rem;
   border-radius: 0.45rem;
   color: var(--secondary);
   background-color: var(--primary-l2);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
   font-size: 0.9em;
   font-weight: 500;
+  white-space: nowrap;
+}
+
+/* A control named inside a sentence: flat, tinted, no border. */
+.control {
+  display: inline;
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.4rem;
+  background-color: color-mix(in oklab, var(--reply-accent) 16%, transparent);
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -42,8 +99,8 @@
    findable and the rail is just texture. */
 .capDest {
   border-color: transparent;
-  color: var(--accent-ink);
-  background-color: var(--accent);
+  color: var(--reply-accent-ink);
+  background-color: var(--reply-accent);
   font-weight: 600;
 }
 
@@ -71,15 +128,24 @@
   inline-size: 0.55rem;
   block-size: 0.55rem;
   margin-inline: 0.2rem;
-  color: var(--accent);
+  color: var(--reply-accent);
   opacity: 0.85;
+}
+
+/* A drawn glyph does not mirror on its own the way a CSS border-chevron
+   would — the page's `dir` only flips box-model geometry, not the
+   coordinates inside an SVG `path`. */
+:global([dir="rtl"]) .arrow {
+  transform: scaleX(-1);
 }
 
 /* ── The step rail ────────────────────────────────────────────────── */
 /*
    Numbered because these ARE ordered actions — losing your place between
    two of them is the failure the numbering prevents. Never used for a
-   list that merely has several items.
+   list that merely has several items. Only the LAST step is filled: that
+   is where the reader ends up, and filling every marker would leave the
+   eye nowhere to land.
 */
 
 .steps {
@@ -108,11 +174,16 @@
     inline-size: 1.25rem;
     block-size: 1.25rem;
     border-radius: 50%;
-    color: var(--accent-ink);
-    background-color: var(--accent);
+    color: var(--secondary);
+    background-color: var(--primary-l2);
     font-size: 0.7rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+  }
+
+  &:last-child::before {
+    color: var(--reply-accent-ink);
+    background-color: var(--reply-accent);
   }
 
   /* The connector, drawn between one marker and the next. */
@@ -123,7 +194,7 @@
     inset-block-start: 1.4rem;
     inline-size: 1px;
     block-size: calc(100% - 1.15rem);
-    background-color: color-mix(in oklab, var(--accent) 35%, transparent);
+    background-color: var(--separator-color, rgb(0 0 0 / 12%));
   }
 }
 
@@ -131,9 +202,20 @@
   font-weight: 600;
 }
 
+/* The trailing aside, with a small pin so it reads as "and this is where"
+   rather than a second, competing instruction. */
 .stepHint {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
   color: color-mix(in oklab, var(--secondary) 65%, transparent);
   font-size: 0.9em;
+
+  svg {
+    flex: none;
+    inline-size: 0.7rem;
+    block-size: 0.7rem;
+  }
 }
 
 /* ── The inline crumb ─────────────────────────────────────────────── */
@@ -146,14 +228,14 @@
   display: inline;
   padding: 0.05rem 0.3rem;
   border-radius: 0.35rem;
-  background-color: color-mix(in oklab, var(--accent) 14%, transparent);
+  background-color: color-mix(in oklab, var(--reply-accent) 14%, transparent);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .crumbSep {
   margin-inline: 0.25rem;
-  color: var(--accent);
+  color: var(--reply-accent);
   opacity: 0.7;
 }
 
@@ -164,14 +246,14 @@
   gap: 0.3rem;
   align-items: baseline;
   padding: 0.1rem 0.4rem;
-  border: 1px solid color-mix(in oklab, var(--accent) 34%, transparent);
+  border: 1px solid color-mix(in oklab, var(--reply-accent) 34%, transparent);
   border-radius: 0.4rem;
-  background-color: color-mix(in oklab, var(--accent) 14%, transparent);
+  background-color: color-mix(in oklab, var(--reply-accent) 14%, transparent);
   font-variant-numeric: tabular-nums;
 }
 
 .statValue {
-  color: var(--accent);
+  color: var(--reply-accent);
   font-weight: 700;
 }
 
@@ -198,26 +280,40 @@
 /*
    The danger weight is reserved for actions that cannot be undone. Spend
    it on anything reversible and it stops working on the day it matters.
-   All three take their hue from the theme so a learner who has chosen a
-   different palette still gets three distinguishable weights.
+   Flat: a tinted surface and a solid round icon, no border and no stripe
+   — the owner rejected a coloured left edge in the mock review. Note (and
+   its round icon) takes the reply accent; warn and danger never do —
+   amber-means-check and red-means-irreversible are conventions an admin's
+   chosen colour must not be allowed to override.
 */
 
 .callout {
+  --c: var(--reply-accent);
   display: grid;
-  grid-template-columns: 1.05rem 1fr;
-  gap: 0.55rem;
+  grid-template-columns: 1.75rem 1fr;
+  gap: 0.6rem;
+  align-items: start;
   margin-block: 0.6rem;
   padding: 0.65rem 0.75rem;
-  border: 1px solid;
-  border-radius: 0.6rem;
+  border-radius: 0.7rem;
+  background-color: color-mix(in oklab, var(--c) 12%, transparent);
   font-size: 0.95em;
 }
 
 .calloutIcon {
+  display: grid;
   flex: none;
-  inline-size: 1.05rem;
-  block-size: 1.05rem;
-  margin-block-start: 0.1rem;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: 50%;
+  color: var(--reply-accent-ink);
+  background-color: var(--c);
+
+  svg {
+    inline-size: 0.85rem;
+    block-size: 0.85rem;
+  }
 }
 
 .calloutBody {
@@ -231,58 +327,98 @@
 }
 
 .calloutNote {
-  border-color: color-mix(in oklab, var(--accent) 28%, transparent);
-  background-color: color-mix(in oklab, var(--accent) 9%, transparent);
-
-  .calloutIcon {
-    color: var(--accent);
-  }
+  --c: var(--reply-accent);
 }
 
+/* The warn and danger hues are named directly rather than tokenised: they
+   are a fixed convention, not a themeable choice, so a custom accent (or a
+   learner's own custom theme) cannot turn "cannot be undone" green. */
 .calloutWarn {
-  border-color: color-mix(in oklab, #e8b45c 40%, transparent);
-  background-color: color-mix(in oklab, #e8b45c 12%, transparent);
+  --c: #b98424;
+}
 
-  .calloutIcon {
-    color: #b98424;
-  }
+:global(html[data-color="keylearn"]) .calloutWarn,
+:global(html[data-color="auto"]) .calloutWarn {
+  --c: #e8b45c;
 }
 
 .calloutDanger {
-  border-color: color-mix(in oklab, #d0503f 42%, transparent);
-  background-color: color-mix(in oklab, #d0503f 12%, transparent);
-
-  .calloutIcon {
-    color: #c4372a;
-  }
+  --c: #c4372a;
 }
 
-/* The warn and danger hues are the one place this file names a colour
-   rather than a token: amber-means-check and red-means-irreversible are
-   conventions a learner's chosen accent must not be allowed to override.
-   A "cannot be undone" note drawn in a cheerful green accent is a lie. */
-:global(.dark) {
-  .calloutWarn .calloutIcon {
-    color: #e8b45c;
-  }
+:global(html[data-color="keylearn"]) .calloutDanger,
+:global(html[data-color="auto"]) .calloutDanger {
+  --c: #ff8a7a;
+}
 
-  .calloutDanger .calloutIcon {
-    color: #ff8a7a;
-  }
+/* "Cannot be undone", always in words, never colour alone. */
+.calloutTag {
+  display: inline-block;
+  vertical-align: 0.1em;
+  margin-inline-start: 0.4rem;
+  padding: 0.06rem 0.4rem;
+  border-radius: 0.3rem;
+  color: var(--reply-accent-ink);
+  background-color: var(--c);
+  font-size: 0.68em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 /* ── The requirement checklist ────────────────────────────────────── */
 /*
    For "not yet, and here's what's left". Showing what is already done is
    half the reason it works — a bare list of what is missing reads as a
-   refusal.
+   refusal. A progress ring sets the expectation before the list is even
+   read: this many of that many, at a glance.
 */
+
+.checklistRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.9rem;
+  align-items: center;
+  margin-block: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.7rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.ring {
+  display: grid;
+  position: relative;
+  flex: none;
+  place-items: center;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+
+  svg {
+    inline-size: 2.6rem;
+    block-size: 2.6rem;
+    transform: rotate(-90deg);
+  }
+}
+
+.ringTrack {
+  stroke: var(--primary-l2);
+}
+
+.ringFill {
+  stroke: var(--reply-accent);
+}
+
+.ringLabel {
+  position: absolute;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
 
 .checklist {
   display: grid;
   gap: 0.4rem;
   list-style: none;
-  margin-block: 0.6rem;
+  margin: 0;
   padding: 0;
 }
 
@@ -313,9 +449,9 @@
 
 .checkDone {
   .checkBox {
-    border-color: var(--accent);
-    color: var(--accent-ink);
-    background-color: var(--accent);
+    border-color: var(--reply-accent);
+    color: var(--reply-accent-ink);
+    background-color: var(--reply-accent);
   }
 
   .checkText {
@@ -334,7 +470,8 @@
 /*
    Not a control. The customer has to find this on their own screen and
    recognise which way it should sit; something they could press here
-   would promise an action this bubble cannot perform.
+   would promise an action this bubble cannot perform. The word carries
+   the state — On/Off in text, never colour alone.
 */
 
 .toggles {
@@ -348,9 +485,8 @@
   gap: 0.8rem;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--separator-color, rgb(0 0 0 / 10%));
-  border-radius: 0.55rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.65rem;
   background-color: color-mix(in oklab, var(--primary) 45%, transparent);
 }
 
@@ -371,7 +507,7 @@
   inline-size: 2.2rem;
   block-size: 1.25rem;
   border-radius: 999px;
-  background-color: var(--separator-color, rgb(0 0 0 / 18%));
+  background-color: var(--primary-l2);
 
   &::after {
     content: "";
@@ -387,11 +523,11 @@
 }
 
 .switchOn {
-  background-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  background-color: color-mix(in oklab, var(--reply-accent) 45%, transparent);
 
   &::after {
     inset-inline-start: 1.125rem;
-    background-color: var(--accent);
+    background-color: var(--reply-accent);
     opacity: 1;
   }
 }
@@ -410,9 +546,8 @@
   display: grid;
   gap: 0.4rem;
   margin-block: 0.6rem;
-  padding: 0.55rem 0.65rem;
-  border: 1px solid var(--separator-color, rgb(0 0 0 / 10%));
-  border-radius: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.7rem;
   background-color: color-mix(in oklab, var(--primary) 45%, transparent);
 }
 
@@ -428,8 +563,9 @@
 }
 
 .rangeValue {
-  color: var(--accent);
-  font-weight: 700;
+  color: var(--reply-accent);
+  font-size: 1.15em;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
@@ -438,7 +574,7 @@
   position: relative;
   block-size: 0.3rem;
   border-radius: 999px;
-  background-color: var(--separator-color, rgb(0 0 0 / 15%));
+  background-color: var(--primary-l2);
 }
 
 .fill {
@@ -446,19 +582,18 @@
   inset-inline-start: 0;
   inset-block: 0;
   border-radius: 999px;
-  background-color: var(--accent);
+  background-color: var(--reply-accent);
 }
 
 .knob {
   position: absolute;
   inset-block-start: 50%;
-  inline-size: 0.75rem;
-  block-size: 0.75rem;
-  margin-inline-start: -0.375rem;
-  margin-block-start: -0.375rem;
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
+  margin-inline-start: -0.425rem;
+  margin-block-start: -0.425rem;
   border-radius: 50%;
-  background-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+  background-color: var(--reply-accent);
 }
 
 .rangeEnds {
@@ -470,6 +605,15 @@
 }
 
 /* ── Two readings of one thing ────────────────────────────────────── */
+/*
+   The block only ever carries a value and a label per side — no separate
+   percentage or delta field. Where both values parse as numbers, the two
+   bars share one scale and the chip in the middle is a signed delta;
+   where they don't (two names, not two numbers), the bars are omitted and
+   the chip is a plain arrow — a bar drawn to a guessed length is a claim
+   the data cannot back up, the same reasoning `RangeView` already applies
+   to its own knob.
+*/
 
 .compare {
   display: grid;
@@ -477,23 +621,17 @@
   gap: 0.6rem;
   align-items: center;
   margin-block: 0.6rem;
-  text-align: center;
 }
 
 .side {
   display: grid;
-  padding: 0.55rem;
-  border: 1px solid var(--separator-color, rgb(0 0 0 / 10%));
-  border-radius: 0.55rem;
+  gap: 0.35rem;
+  padding: 0.6rem 0.65rem;
+  border-radius: 0.65rem;
   background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+  text-align: center;
 }
 
-// Before `.sideNow` below, which overrides the colour from inside a
-// higher-specificity nest. Order does not change which one wins — the
-// nested selector out-specifies this either way — but stylelint's
-// no-descending-specificity reads a plain selector appearing after a
-// compound one as the mistake it usually is, and it is right often enough
-// to be worth keeping.
 .sideValue {
   font-size: 1.2em;
   font-weight: 700;
@@ -501,58 +639,97 @@
 }
 
 .sideNow {
-  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  background-color: color-mix(in oklab, var(--reply-accent) 14%, transparent);
 
   .sideValue {
-    color: var(--accent);
+    color: var(--reply-accent);
   }
 }
 
 .sideLabel {
-  margin-block-start: 0.1rem;
   opacity: 0.7;
   font-size: 0.85em;
 }
 
-.vs {
-  opacity: 0.7;
-  font-size: 0.78em;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.compareBar {
+  display: block;
+  block-size: 0.3rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: var(--primary-l2);
+}
+
+.compareBarFill {
+  display: block;
+  block-size: 100%;
+  background-color: var(--secondary);
+  opacity: 0.6;
+}
+
+.sideNow .compareBarFill {
+  background-color: var(--reply-accent);
+  opacity: 1;
+}
+
+.compareDelta {
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--primary-l2);
+  font-size: 0.85em;
+  font-weight: 800;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Proof the message was read ───────────────────────────────────── */
 
 .quoteBack {
+  position: relative;
   margin-block: 0.6rem;
-  padding-inline-start: 0.7rem;
+  padding-inline-start: 1.1rem;
   padding-block: 0.15rem;
-  border-inline-start: 2px solid
-    color-mix(in oklab, var(--accent) 55%, transparent);
   opacity: 0.85;
   font-style: italic;
+
+  /* The big quote mark, drawn rather than boxed — it is decoration, and
+     giving it its own border-inline-start would be the rejected stripe. */
+  &::before {
+    content: "“";
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: -0.2em;
+    color: var(--reply-accent);
+    font-family: Georgia, serif;
+    font-size: 1.6em;
+    font-style: normal;
+  }
 }
 
 .echo {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.5rem;
   margin-block: 0.6rem;
-  padding: 0.6rem 0.65rem;
-  border-radius: 0.6rem;
-  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
 }
 
 .echoTheirs {
+  justify-self: end;
+  max-inline-size: 88%;
   margin: 0;
-  padding-inline-start: 0.5rem;
-  border-inline-start: 2px solid var(--separator-color, rgb(0 0 0 / 18%));
-  opacity: 0.65;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.9rem 0.9rem 0.2rem 0.9rem;
+  background-color: color-mix(in oklab, var(--primary) 55%, transparent);
+  opacity: 0.8;
   font-size: 0.9em;
   font-style: italic;
 }
 
 .echoOurs {
+  justify-self: start;
+  max-inline-size: 88%;
   margin: 0;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.9rem 0.9rem 0.9rem 0.2rem;
+  background-color: color-mix(in oklab, var(--reply-accent) 14%, transparent);
 }
 
 /* ── Where it came from, and how long it will take ────────────────── */
@@ -562,17 +739,21 @@
   gap: 0.35rem;
   align-items: center;
   margin-block: 0.4rem;
-  padding: 0.18rem 0.5rem;
-  border: 1px dashed var(--separator-color, rgb(0 0 0 / 18%));
-  border-radius: 0.4rem;
-  opacity: 0.8;
+  padding: 0.18rem 0.55rem 0.18rem 0.3rem;
+  border-radius: 999px;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
   font-size: 0.85em;
 
   svg {
+    display: grid;
     flex: none;
-    inline-size: 0.7rem;
-    block-size: 0.7rem;
-    color: var(--accent);
+    place-items: center;
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    padding: 0.22rem;
+    border-radius: 50%;
+    color: var(--secondary);
+    background-color: var(--primary-l2);
   }
 }
 
@@ -597,7 +778,9 @@
 /*
    People recall an experience by its most intense moment and its last one,
    not its average. This is the one place the warmth is unhurried, and
-   nothing is asked of them after it.
+   nothing is asked of them after it. Flat — an early draft carried a
+   gradient sweep here and the owner asked it cut along with every other
+   glow in the mock review.
 */
 
 .sorted {
@@ -606,14 +789,8 @@
   align-items: center;
   margin-block: 0.6rem;
   padding: 0.6rem 0.7rem;
-  border-radius: 0.65rem;
-  background:
-    linear-gradient(
-      120deg,
-      color-mix(in oklab, var(--accent) 16%, transparent),
-      transparent 70%
-    ),
-    color-mix(in oklab, var(--primary) 45%, transparent);
+  border-radius: 0.7rem;
+  background-color: color-mix(in oklab, var(--reply-accent) 14%, transparent);
 }
 
 .sortedTick {
@@ -623,8 +800,8 @@
   inline-size: 1.6rem;
   block-size: 1.6rem;
   border-radius: 50%;
-  color: var(--accent-ink);
-  background-color: var(--accent);
+  color: var(--reply-accent-ink);
+  background-color: var(--reply-accent);
 
   svg {
     inline-size: 0.8rem;
@@ -643,17 +820,502 @@
 }
 
 /* ── A sample, shown rather than described ────────────────────────── */
+/*
+   The dark, fixed-ground look of the on-screen practice line — deliberately
+   NOT the reader's chosen theme, matching the on-screen practice panel,
+   which is always dark. There is no typed/untyped split to draw: the block
+   only ever carries the one string a reply wrote, with no record of which
+   characters were "typed" versus "ahead" — so this shows the sample rather
+   than staging a caret over a position that was never parsed.
+*/
 
 .sample {
   margin-block: 0.6rem;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--separator-color, rgb(0 0 0 / 10%));
-  border-radius: 0.55rem;
-  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.7rem;
+  color: #eceef3;
+  background-color: #12151b;
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 0.85em;
   line-height: 1.7;
   /* The indentation is the point of a code sample. */
   white-space: pre;
   overflow-x: auto;
+}
+
+/* ── Several possible causes, each with its own fix ───────────────── */
+
+.causes {
+  display: grid;
+  gap: 0.4rem;
+  list-style: none;
+  margin-block: 0.6rem;
+  padding: 0;
+}
+
+.causeRow {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.65rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.causeLetter {
+  display: grid;
+  place-items: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  border-radius: 0.5rem;
+  background-color: var(--primary-l2);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.causeWhen {
+  display: block;
+  font-weight: 600;
+}
+
+.causeFix {
+  display: block;
+  margin-block-start: 0.1rem;
+  opacity: 0.85;
+  font-size: 0.92em;
+}
+
+/* ── A refusal, said plainly ───────────────────────────────────────── */
+
+.nope {
+  margin-block: 0.6rem;
+  border-radius: 0.7rem;
+  overflow: hidden;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.nopeHead {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.nopeIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: 50%;
+  color: var(--secondary);
+  background-color: var(--primary-l2);
+
+  svg {
+    inline-size: 0.9rem;
+    block-size: 0.9rem;
+  }
+}
+
+.nopeHeading {
+  display: block;
+  font-size: 0.98em;
+}
+
+.nopeBody {
+  margin: 0.15rem 0 0;
+  opacity: 0.85;
+  font-size: 0.92em;
+}
+
+/* The nested "closest thing" — a real route or step list borrowed from the
+   block that immediately followed the [nope] directive, so the refusal
+   never leaves the reader with nothing to try. */
+.nopeAlt {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.65rem 0.75rem;
+  background-color: color-mix(in oklab, var(--reply-accent) 12%, transparent);
+}
+
+.nopeAltLabel {
+  opacity: 0.75;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── Progress through a fixed sequence of stages ──────────────────── */
+
+.status {
+  margin-block: 0.6rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.7rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.statusStages {
+  display: grid;
+  grid-template-columns: repeat(var(--status-count, 4), 1fr);
+  gap: 0.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.statusStage {
+  display: grid;
+  position: relative;
+  gap: 0.25rem;
+  justify-items: center;
+  text-align: center;
+
+  /* The connector between one stage and the next, drawn behind the dots. */
+  &:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: calc(50% + 0.75rem);
+    inset-inline-end: calc(-50% + 0.75rem);
+    inset-block-start: 0.7rem;
+    block-size: 2px;
+    background-color: var(--primary-l2);
+  }
+}
+
+.statusDone:not(:last-child)::after {
+  background-color: var(--reply-accent);
+}
+
+.statusDot {
+  display: grid;
+  position: relative;
+  z-index: 1;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: 50%;
+  color: var(--reply-accent-ink);
+  background-color: var(--primary-l2);
+
+  svg {
+    inline-size: 0.75rem;
+    block-size: 0.75rem;
+  }
+}
+
+.statusDone .statusDot {
+  background-color: var(--reply-accent);
+}
+
+.statusNow .statusDot {
+  border: 3px solid var(--reply-accent);
+  background-color: var(--primary);
+}
+
+.statusLabel {
+  font-size: 0.78em;
+}
+
+.statusNow .statusLabel {
+  color: var(--reply-accent);
+}
+
+.statusWhen {
+  opacity: 0.65;
+  font-size: 0.7em;
+}
+
+@media (max-width: 420px) {
+  .statusStages {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 0.7rem;
+  }
+
+  .statusStage::after {
+    display: none;
+  }
+}
+
+/* ── A multiple-choice question handed back ───────────────────────── */
+/*
+   Tapping an option sends it as the customer's own reply — but only on the
+   thread's newest desk message, and only until the customer sends anything
+   else. `live` decides which of the two a given render gets; the send
+   itself happens in MySupportSection.tsx / SupportThreadPage.tsx, which
+   already own the outbox and the retry logic — this stays presentational.
+*/
+
+.ask {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr;
+  gap: 0.6rem;
+  margin-block: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border: 1.5px solid var(--reply-accent);
+  border-radius: 0.7rem;
+}
+
+.askIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: 50%;
+  color: var(--reply-accent-ink);
+  background-color: var(--reply-accent);
+
+  svg {
+    inline-size: 0.85rem;
+    block-size: 0.85rem;
+  }
+}
+
+.askQuestion {
+  display: block;
+  font-size: 0.98em;
+}
+
+.askOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block-start: 0.5rem;
+}
+
+.askOption {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  background-color: color-mix(in oklab, var(--reply-accent) 14%, transparent);
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+/* A real button: keyboard-reachable, with its own visible focus ring
+   rather than the browser default, which several of the themes this file
+   is drawn against suppress on the ground colour. */
+button.askOption {
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--reply-accent) 24%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--reply-accent);
+    outline-offset: 2px;
+  }
+}
+
+.askOptionInert {
+  opacity: 0.55;
+}
+
+.askOptionChosen {
+  color: var(--reply-accent-ink);
+  background-color: var(--reply-accent);
+  opacity: 1;
+  font-weight: 700;
+
+  svg {
+    inline-size: 0.7rem;
+    block-size: 0.7rem;
+  }
+}
+
+.askHint {
+  margin: 0.5rem 0 0;
+  opacity: 0.7;
+  font-size: 0.82em;
+}
+
+/* ── A run of timeline entries ─────────────────────────────────────── */
+
+.timeline {
+  display: grid;
+  list-style: none;
+  margin-block: 0.6rem;
+  padding: 0;
+}
+
+.timelineRow {
+  display: grid;
+  position: relative;
+  grid-template-columns: 4.6rem 0.9rem 1fr;
+  gap: 0.6rem;
+  padding-block-end: 0.7rem;
+
+  &:last-child {
+    padding-block-end: 0;
+  }
+
+  &:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 5.05rem;
+    inset-block-start: 1.1rem;
+    inset-block-end: 0;
+    inline-size: 1px;
+    background-color: var(--primary-l2);
+  }
+}
+
+.timelineWhen {
+  padding-block-start: 0.05rem;
+  opacity: 0.7;
+  font-size: 0.78em;
+  font-weight: 700;
+  text-align: end;
+}
+
+.timelineDot {
+  display: block;
+  position: relative;
+  z-index: 1;
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
+  margin-block-start: 0.2rem;
+  border-radius: 50%;
+  background-color: var(--primary-l2);
+}
+
+.timelinePast .timelineDot {
+  background-color: var(--secondary);
+  opacity: 0.6;
+}
+
+.timelineNow .timelineDot {
+  background-color: var(--reply-accent);
+}
+
+.timelineTitle {
+  display: block;
+  font-size: 0.92em;
+}
+
+.timelineNow .timelineWhen,
+.timelineNow .timelineTitle {
+  color: var(--reply-accent);
+}
+
+.timelinePast .timelineTitle,
+.timelinePast .timelineWhen {
+  opacity: 0.65;
+}
+
+.timelineDetail {
+  margin: 0.1rem 0 0;
+  opacity: 0.8;
+  font-size: 0.85em;
+}
+
+@media (max-width: 420px) {
+  .timelineRow {
+    grid-template-columns: 3.6rem 0.9rem 1fr;
+  }
+
+  .timelineRow:not(:last-child)::after {
+    inset-inline-start: 4.05rem;
+  }
+}
+
+/* ── A run of people to reach ──────────────────────────────────────── */
+
+.contacts {
+  display: grid;
+  gap: 0.4rem;
+  margin-block: 0.6rem;
+}
+
+.contactsLabel {
+  opacity: 0.7;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.contact {
+  display: grid;
+  grid-template-columns: 2.15rem 1fr;
+  gap: 0.7rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.65rem;
+  background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.contactIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.15rem;
+  block-size: 2.15rem;
+  border-radius: 0.6rem;
+  color: var(--secondary);
+  background-color: var(--primary-l2);
+
+  svg {
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+  }
+}
+
+.contactWho {
+  display: block;
+  font-size: 0.98em;
+}
+
+.contactDetail {
+  margin: 0.1rem 0 0;
+  opacity: 0.85;
+  font-size: 0.9em;
+}
+
+/* ── High contrast (Windows forced-colours) ───────────────────────── */
+/*
+   Every tint collapses in forced-colours mode, so every module gets a
+   real 1px CanvasText border to keep its own outline; switches and tags
+   already carry their state in words rather than colour, so nothing else
+   changes for them.
+*/
+@media (forced-colors: active) {
+  .control,
+  .rail,
+  .callout,
+  .checklistRow,
+  .toggleRow,
+  .rangeRow,
+  .side,
+  .echoTheirs,
+  .echoOurs,
+  .sorted,
+  .sample,
+  .causeRow,
+  .nope,
+  .status,
+  .ask,
+  .contact {
+    border: 1px solid CanvasText;
+  }
+
+  .switch {
+    border: 2px solid CanvasText;
+  }
+
+  .calloutTag,
+  .askOptionChosen {
+    border: 1px solid CanvasText;
+  }
+
+  .timelineDot,
+  .statusDot {
+    border: 1px solid CanvasText;
+  }
 }

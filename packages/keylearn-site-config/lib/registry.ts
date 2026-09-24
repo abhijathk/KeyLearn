@@ -644,6 +644,34 @@ const BASE_REGISTRY: readonly SettingDef[] = [
     enforcedAt: "support/sweep.ts StaffAuditSweep",
   },
 
+  // ── Support ────────────────────────────────────────────────────────────
+
+  {
+    key: "support.replyAccent",
+    section: "support",
+    label: "Reply accent colour",
+    type: "choice",
+    default: "mint",
+    choices: [
+      "mint",
+      "blue",
+      "ember",
+      "violet",
+      "pink",
+      "teal",
+      "indigo",
+      "lime",
+      "sky",
+      "graphite",
+    ],
+    direction: "free",
+    protection: "free",
+    impact: "tunes",
+    warning:
+      "Never the warning amber or the emergency red: those stay fixed however this is set.",
+    enforcedAt: "page-support/lib/ReplyBody.tsx via PageData.replyAccent",
+  },
+
   // ── Features ───────────────────────────────────────────────────────────
 
   {

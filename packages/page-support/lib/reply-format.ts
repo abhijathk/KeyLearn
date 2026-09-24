@@ -49,6 +49,12 @@
  *   [source]                        → where the answer came from
  *   [sorted]                        → the resolution moment
  *   [reading] about 40 seconds      → expectation-setting
+ *   [cause] Condition | what to do  → a diagnosis line, one of a run
+ *   [nope] Heading | body           → a refusal, said plainly
+ *   [status N] A (12 Sep) | B | C   → progress through a fixed sequence
+ *   [ask] Question? | A | B | C     → a multiple-choice question back
+ *   [past]/[now]/[next] When | …    → a timeline entry, one of a run
+ *   [contact] Who | what they do    → a person to reach, one of a run
  *   ``` … ```                       → a sample of practice text or code
  *
  * and two that sit inside a sentence:
@@ -81,7 +87,12 @@ export type Block =
   /** A path on its own line — rendered as the keycap rail. */
   | { readonly kind: "path"; readonly segments: readonly string[] }
   /** Ordered actions — rendered as the step rail. */
-  | { readonly kind: "steps"; readonly items: readonly StepItem[] }
+  | {
+      readonly kind: "steps";
+      /** The number on the first item, e.g. 5 for a list that opens "5. …" */
+      readonly start: number;
+      readonly items: readonly StepItem[];
+    }
   /** A fact worth knowing, a thing to check, or a thing that cannot be undone. */
   | {
       readonly kind: "callout";
@@ -127,7 +138,32 @@ export type Block =
   /** How long the reply ahead will take to read. */
   | { readonly kind: "reading"; readonly text: string }
   /** Practice text or code, shown rather than described. */
-  | { readonly kind: "sample"; readonly text: string };
+  | { readonly kind: "sample"; readonly text: string }
+  /** A run of diagnosis lines: what might be true, and what to do about it. */
+  | { readonly kind: "causes"; readonly items: readonly CauseItem[] }
+  /** A refusal, said plainly rather than dressed as a callout. */
+  | {
+      readonly kind: "nope";
+      readonly heading: string;
+      readonly body: readonly Span[];
+    }
+  /** Progress through a fixed sequence of stages. */
+  | {
+      readonly kind: "status";
+      /** 0-based index of the current stage into `stages`. */
+      readonly current: number;
+      readonly stages: readonly StatusStage[];
+    }
+  /** A multiple-choice question handed back to them. */
+  | {
+      readonly kind: "ask";
+      readonly question: string;
+      readonly options: readonly string[];
+    }
+  /** A run of timeline entries: what happened, what's happening, what's next. */
+  | { readonly kind: "timeline"; readonly items: readonly TimelineItem[] }
+  /** A run of people to reach, and what each can do. */
+  | { readonly kind: "contacts"; readonly items: readonly ContactItem[] };
 
 export type CalloutTone = "note" | "warn" | "danger";
 
@@ -147,6 +183,32 @@ export type CheckItem = {
 export type ToggleItem = { readonly name: string; readonly on: boolean };
 
 export type CompareSide = { readonly value: string; readonly label: string };
+
+export type CauseItem = {
+  readonly when: string;
+  /** The fix, if the line had one — null when there was no "|". */
+  readonly fix: readonly Span[] | null;
+};
+
+export type StatusStage = {
+  readonly label: string;
+  /** A trailing "(12 Sep)" on the stage, if it had one. */
+  readonly when: string | null;
+};
+
+export type TimelineState = "past" | "now" | "next";
+
+export type TimelineItem = {
+  readonly state: TimelineState;
+  readonly when: string;
+  readonly title: string;
+  readonly detail: string | null;
+};
+
+export type ContactItem = {
+  readonly who: string;
+  readonly detail: readonly Span[];
+};
 
 /**
  * How many arrow-joined segments make a line a path rather than a
@@ -302,6 +364,40 @@ const CONNECTIVES_ANY = CONNECTIVE_WORDS.map(
 const CONNECTIVE = new RegExp(`\\b(?:${CONNECTIVES})\\b`, "i");
 
 const ORDERED_ITEM = /^\s*(\d{1,2})[.)]\s+(.*)$/;
+
+/**
+ * A numbered run is a step rail even when prose touches it. Two shapes Tab
+ * writes all the time used to fall out of the rail and read as plain
+ * numbered text (live, KEY0000084, 24 Sep 2026):
+ *
+ * - a closing sentence on the very next line ("If the button isn't there,
+ *   tell me…"), which made the paragraph not-all-numbered;
+ * - blank lines between the items, which made every step its own
+ *   paragraph — and the delivery chunker re-joined pieces that way.
+ *
+ * So blank lines BETWEEN numbered items are closed up, and a numbered run
+ * is fenced off from the lines around it into its own paragraph.
+ */
+function separateStepRuns(text: string): string {
+  const closed = text.replace(
+    /^([ \t]*\d{1,2}[.)][ \t]+.*)\n(?:[ \t]*\n)+(?=[ \t]*\d{1,2}[.)][ \t])/gm,
+    "$1\n",
+  );
+  const out: string[] = [];
+  for (const line of closed.split("\n")) {
+    const prev = out.at(-1);
+    if (
+      prev != null &&
+      prev.trim() !== "" &&
+      line.trim() !== "" &&
+      ORDERED_ITEM.test(prev) !== ORDERED_ITEM.test(line)
+    ) {
+      out.push("");
+    }
+    out.push(line);
+  }
+  return out.join("\n");
+}
 
 /** Splits a step into what to do and the aside explaining it. */
 const STEP_HINT = /\s+[—–-]\s+(.+)$/;
@@ -658,7 +754,7 @@ export function parseReply(reply: string): readonly Block[] {
       continue;
     }
 
-    for (const para of chunk.text.split(/\n{2,}/)) {
+    for (const para of separateStepRuns(chunk.text).split(/\n{2,}/)) {
       const lines = para.split("\n").filter((l) => l.trim() !== "");
       if (lines.length === 0) {
         continue;
@@ -668,8 +764,10 @@ export function parseReply(reply: string): readonly Block[] {
       // paragraph so "1. …\n2. …\n3. …" stays one block.
       const numbered = lines.filter((l) => ORDERED_ITEM.test(l));
       if (numbered.length >= 2 && numbered.length === lines.length) {
+        const start = Number.parseInt(ORDERED_ITEM.exec(numbered[0]!)![1]!, 10);
         blocks.push({
           kind: "steps",
+          start,
           items: numbered.map((line) => {
             const body = ORDERED_ITEM.exec(line)![2]!.trim();
             const hint = STEP_HINT.exec(body);
@@ -732,7 +830,7 @@ function splitFences(text: string): { fenced: boolean; text: string }[] {
  * invents `[banner]` produces the text "[banner]", never an element.
  */
 const DIRECTIVE =
-  /^\s*\[(note|warn|danger|check|todo|on|off|range|compare|quote|echo|source|sorted|reading)\b([^\][\n]*)\]\s*(.*)$/;
+  /^\s*\[(note|warn|danger|check|todo|on|off|range|compare|quote|echo|source|sorted|reading|cause|nope|status|ask|past|now|next|contact)\b([^\][\n]*)\]\s*(.*)$/;
 
 /** Splits a directive body on the pipe its arguments are separated by. */
 function fields(body: string): string[] {
@@ -790,6 +888,65 @@ function readDirectiveRun(
     }
     if (items.length === 0) return 0;
     out.push({ kind: "toggles", items });
+    return n - from;
+  }
+
+  if (keyword === "cause") {
+    const items: CauseItem[] = [];
+    let n = from;
+    for (; n < lines.length; n++) {
+      const m = DIRECTIVE.exec(lines[n]!);
+      if (m == null || m[1] !== "cause") break;
+      const [whenRaw, ...fixParts] = m[3]!.trim().split("|");
+      const when = stripBold((whenRaw ?? "").trim());
+      if (when === "") break;
+      const fixText = fixParts.join("|").trim();
+      items.push({ when, fix: fixText === "" ? null : spansOf(fixText) });
+    }
+    if (items.length === 0) return 0;
+    out.push({ kind: "causes", items });
+    return n - from;
+  }
+
+  if (keyword === "past" || keyword === "now" || keyword === "next") {
+    const items: TimelineItem[] = [];
+    let n = from;
+    for (; n < lines.length; n++) {
+      const m = DIRECTIVE.exec(lines[n]!);
+      if (m == null || (m[1] !== "past" && m[1] !== "now" && m[1] !== "next"))
+        break;
+      const parts = m[3]!.trim().split("|");
+      const when = stripBold((parts[0] ?? "").trim());
+      const title = stripBold((parts[1] ?? "").trim());
+      if (when === "" || title === "") break;
+      const detailText =
+        parts.length > 2 ? stripBold(parts.slice(2).join("|").trim()) : "";
+      items.push({
+        state: m[1] as TimelineState,
+        when,
+        title,
+        detail: detailText === "" ? null : detailText,
+      });
+    }
+    if (items.length === 0) return 0;
+    out.push({ kind: "timeline", items });
+    return n - from;
+  }
+
+  if (keyword === "contact") {
+    const items: ContactItem[] = [];
+    let n = from;
+    for (; n < lines.length; n++) {
+      const m = DIRECTIVE.exec(lines[n]!);
+      if (m == null || m[1] !== "contact") break;
+      const [whoRaw, ...detailParts] = m[3]!.trim().split("|");
+      const who = stripBold((whoRaw ?? "").trim());
+      const detailText = detailParts.join("|").trim();
+      if (who === "" || detailText === "") break;
+      items.push({ who, detail: spansOf(detailText) });
+    }
+    if (items.length === 0) return 0;
+    out.push({ kind: "contacts", items });
     return n - from;
   }
 
@@ -869,6 +1026,52 @@ function readDirectiveRun(
       out.push({ kind: "reading", text: stripBold(label) });
       return 1;
     }
+    case "nope": {
+      if (rest === "") return 0;
+      const [headingRaw, ...bodyParts] = rest.split("|");
+      const heading = stripBold((headingRaw ?? "").trim());
+      if (heading === "") return 0;
+      const bodyText = bodyParts.join("|").trim();
+      out.push({
+        kind: "nope",
+        heading,
+        body: bodyText === "" ? [] : spansOf(bodyText),
+      });
+      return 1;
+    }
+    case "status": {
+      // "[status N] A (12 Sep) | B | C" — N is 1-based in the text, and
+      // has to fall within the stages actually written; anything else is
+      // not a state a reader could make sense of, so the line degrades.
+      const n = Number.parseInt(args, 10);
+      if (rest === "" || !Number.isFinite(n)) return 0;
+      const stages = rest.split("|").map((part) => {
+        const when = /\(([^()]{1,40})\)\s*$/.exec(part.trim());
+        const label = stripBold(
+          when == null ? part.trim() : part.trim().slice(0, when.index),
+        ).trim();
+        return {
+          label,
+          when: when == null ? null : stripBold(when[1]!).trim(),
+        };
+      });
+      if (stages.length < 2 || stages.length > 6) return 0;
+      if (n < 1 || n > stages.length) return 0;
+      out.push({ kind: "status", current: n - 1, stages });
+      return 1;
+    }
+    case "ask": {
+      if (rest === "") return 0;
+      const [questionRaw, ...optionParts] = rest.split("|");
+      const question = stripBold((questionRaw ?? "").trim());
+      const options = optionParts.map((o) => stripBold(o.trim()));
+      if (question === "" || options.length < 2 || options.length > 5) {
+        return 0;
+      }
+      if (options.some((o) => o === "" || o.length > 40)) return 0;
+      out.push({ kind: "ask", question, options });
+      return 1;
+    }
   }
   return 0;
 }
@@ -891,7 +1094,7 @@ export function plainText(blocks: readonly Block[]): string {
           return b.items
             .map(
               (s, i) =>
-                `${i + 1}. ${s.where}${s.hint == null ? "" : ` — ${s.hint}`}`,
+                `${b.start + i}. ${s.where}${s.hint == null ? "" : ` — ${s.hint}`}`,
             )
             .join("\n");
         case "paragraph":
@@ -929,6 +1132,37 @@ export function plainText(blocks: readonly Block[]): string {
           return b.text;
         case "sample":
           return b.text;
+        case "causes":
+          return b.items
+            .map(
+              (i) =>
+                `${i.when}${i.fix == null ? "" : ` — ${spansText(i.fix)}`}`,
+            )
+            .join("\n");
+        case "nope":
+          return b.body.length === 0
+            ? b.heading
+            : `${b.heading} — ${spansText(b.body)}`;
+        case "status":
+          return b.stages
+            .map(
+              (s, i) =>
+                `${i === b.current ? "→ " : ""}${s.label}${s.when == null ? "" : ` (${s.when})`}`,
+            )
+            .join(" | ");
+        case "ask":
+          return `${b.question} ${b.options.join(" / ")}`;
+        case "timeline":
+          return b.items
+            .map(
+              (i) =>
+                `${i.when} — ${i.title}${i.detail == null ? "" : ` (${i.detail})`}`,
+            )
+            .join("\n");
+        case "contacts":
+          return b.items
+            .map((i) => `${i.who}: ${spansText(i.detail)}`)
+            .join("\n");
       }
     })
     .join("\n\n");

@@ -198,6 +198,38 @@ test("PUT by an admin validates, writes, audits and answers with the entry and t
   equal(malformed.status, 400, "actingStaffUserId is required");
 });
 
+test("the reply accent is a ten-way choice, default mint, refused off the list", async () => {
+  const { request, admin } = await fresh();
+  const get = await request
+    .GET("/_/internal/site-config")
+    .header("x-ops-api-key", OPS_KEY)
+    .send();
+  const { settings } = await get.body.json<{
+    settings: { key: string; value: unknown; default: unknown }[];
+  }>();
+  const row = settings.find((s) => s.key === "support.replyAccent")!;
+  equal(row.default, "mint");
+  equal(row.value, "mint");
+
+  const put = await request
+    .PUT("/_/internal/site-config/support.replyAccent")
+    .header("x-ops-api-key", OPS_KEY)
+    .send({ value: "sky", actingStaffUserId: admin });
+  equal(put.status, 200);
+  const body = await put.body.json<{ entry: { value: unknown } }>();
+  equal(body.entry.value, "sky");
+
+  const invalid = await request
+    .PUT("/_/internal/site-config/support.replyAccent")
+    .header("x-ops-api-key", OPS_KEY)
+    .send({ value: "chartreuse", actingStaffUserId: admin });
+  equal(invalid.status, 400);
+  equal(
+    (await invalid.body.json<{ error: { code: string } }>()).error.code,
+    "choice",
+  );
+});
+
 test("history lists newest first with the actor's name; revert writes a new row; restore drops the row", async () => {
   const { request, admin } = await fresh();
   const send = (value: unknown) =>

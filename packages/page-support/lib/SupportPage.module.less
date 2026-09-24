@@ -1158,34 +1158,121 @@
 }
 
 /* The fixed emergency redirect. Deliberately unlike every other message in
-   the thread: nothing about it should read as the assistant chatting. */
+   the thread: nothing about it should read as the assistant chatting. Flat
+   — a solid header bar and a 2px border carry the alarm, not a glow. */
 .crisis {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
   align-self: stretch;
-  padding: 1.1rem 1.25rem;
   border: 2px solid var(--error);
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--error) 10%, transparent);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--error) 12%, transparent);
+  overflow: hidden;
+  background: var(--primary);
 }
 
+/* Solid, not tinted text on the ground: the one place in the whole reply
+   system red fills the surface rather than tinting it. */
 .crisisHead {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  color: var(--error);
-  font-size: 1.02rem;
+  padding: 0.7rem 1.1rem;
+  color: #fff;
+  background: var(--error);
+  font-size: 1rem;
   font-weight: 800;
   letter-spacing: 0.01em;
 }
 
-.crisis p {
+.crisisBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.1rem 1.25rem;
+}
+
+.crisisBody p {
   margin: 0;
   font-size: 1.02rem;
   line-height: 1.65;
   white-space: pre-wrap;
+}
+
+/* A chunk after the first in the same crisis run: the alarm has already
+   been raised once, so this reads as a steadying follow-up rather than a
+   second alert — a plain bordered card, no red. */
+.crisisCalm {
+  align-self: stretch;
+  border: 1px solid var(--secondary-l2);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--primary-l1);
+}
+
+.crisisCalm .crisisBody {
+  padding: 0.9rem 1.1rem;
+}
+
+/* The AI disclaimer: small print, set off from the script above it by a
+   divider, never styled as another beat of the message. */
+.crisisFine {
+  padding-block-start: 0.6rem;
+  border-block-start: 1px solid var(--secondary-l2);
+  color: var(--secondary-l1);
+  font-size: 0.78rem !important;
+  line-height: 1.5 !important;
+}
+
+/* The number to dial, as a real tel: link. Digits in their own white
+   tiles inside a solid red button — big enough that a panicking person
+   cannot miss it or misread it, and always left-to-right so "112" can
+   never read back as "211" on an RTL page. */
+.dialButton {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.7rem 0.4rem 0.4rem;
+  border-radius: 0.7rem;
+  color: #fff;
+  background: var(--error);
+  text-decoration: none;
+  direction: ltr;
+}
+
+.dialButton:hover {
+  background: var(--error-d1);
+}
+
+.dialButtonSm {
+  padding: 0.25rem 0.55rem 0.25rem 0.25rem;
+  border-radius: 0.55rem;
+}
+
+.dialDigits {
+  display: inline-flex;
+  gap: 0.18em;
+  direction: ltr;
+}
+
+.dialDigit {
+  display: grid;
+  place-items: center;
+  min-inline-size: 1.5em;
+  block-size: 1.5em;
+  padding-inline: 0.1em;
+  border-radius: 0.28em;
+  color: var(--error);
+  background: #fff;
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dialButtonSm .dialDigit {
+  min-inline-size: 1.1em;
+  block-size: 1.1em;
+  font-size: 1.1rem;
 }
 
 .closedNote {
@@ -1421,34 +1508,6 @@
   padding-block: 0.55rem;
 }
 
-/* The number is the largest thing on the screen. Somebody reading this is
-   not reading — they are looking for what to dial. */
-/* The number to dial: every digit its own bright square, big enough that
-   a panicking person cannot miss it or misread it. */
-.dialNumber {
-  display: inline-flex;
-  gap: 0.22em;
-  vertical-align: -0.35em;
-  margin-inline: 0.2em;
-  white-space: nowrap;
-}
-
-.dialDigit {
-  display: grid;
-  place-items: center;
-  min-inline-size: 1.5em;
-  block-size: 1.5em;
-  padding-inline: 0.12em;
-  border: 3px solid var(--error);
-  border-radius: 0.28em;
-  color: var(--error);
-  background: color-mix(in srgb, var(--error) 12%, transparent);
-  font-size: 1.6rem;
-  font-weight: 900;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
 /* Which of the two answered: a person, or the assistant. */
 .fromRole {
   display: inline-block;
@@ -1623,4 +1682,10 @@
   font-size: 0.6875rem;
   line-height: 1.4;
   white-space: nowrap;
+}
+
+/* After every plain `… p` rule above: stylelint's no-descending-specificity. */
+.crisisCalm .crisisBody p {
+  font-size: 0.9rem;
+  line-height: 1.6;
 }

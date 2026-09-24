@@ -284,6 +284,17 @@ export function emailStaffDigest(): boolean {
 }
 
 /**
+ * The reply accent (control centre, Replies): which of the ten fixed
+ * colours a customer's support-reply chrome — route chips, keycaps — is
+ * drawn in. Sent to every page through `PageData.replyAccent`, read by
+ * `page-support`'s `useReplyAccent()`. Never the warning amber or the
+ * emergency red; those stay fixed regardless of this setting.
+ */
+export function replyAccent(): string {
+  return siteChoice("support.replyAccent");
+}
+
+/**
  * The site-wide learner defaults the client applies under every learner's
  * own settings (spec §6.3 Learner defaults): the registry rows for the
  * Features tab, keyed by the settings prop they feed.

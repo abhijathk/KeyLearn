@@ -75,6 +75,14 @@ export type PageData = {
    */
   readonly smartPractice?: boolean;
   /**
+   * The control centre's reply accent (support.replyAccent): one of ten
+   * fixed ids — "mint", "blue", "ember", "violet", "pink", "teal",
+   * "indigo", "lime", "sky" or "graphite" — that page-support's ReplyBody
+   * draws its keycaps and route chips in. Absent means "mint", the shipped
+   * default. Never the warning amber or the emergency red.
+   */
+  readonly replyAccent?: string;
+  /**
    * Base URL.
    */
   readonly base: string;
